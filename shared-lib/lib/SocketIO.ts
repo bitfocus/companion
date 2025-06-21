@@ -346,6 +346,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'connection-collections:add': (collectionName: string) => string
 	'connection-collections:remove': (collectionId: string) => void
 	'connection-collections:set-name': (collectionId: string, collectionName: string) => void
+	'connection-collections:set-enabled': (collectionId: string, enabled: boolean) => void
 	'connection-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
 	'custom-variable-collections:add': (collectionName: string) => string

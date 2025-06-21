@@ -8,11 +8,9 @@ import ejson from 'ejson'
 import os from 'os'
 import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { InstanceModules } from './Modules.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import type { ModuleVersionInfo } from './Types.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionOptionValues } from '@companion-module/base'
 import { Serializable } from 'child_process'
@@ -47,12 +45,21 @@ interface ModuleChild {
 	logger: Logger
 	restartCount: number
 	isReady: boolean
+	targetState: ModuleChildTargetState | null // Null if disabled
+	lastLabel: string
+
 	monitor?: RespawnMonitor
 	handler?: SocketEventsHandler
 	lifeCycleQueue: PQueue
 	authToken?: string
 	crashed?: NodeJS.Timeout
 	skipApiVersionCheck?: boolean
+}
+
+interface ModuleChildTargetState {
+	label: string
+	moduleId: string
+	moduleVersionId: string | null
 }
 
 export class ModuleHost {
@@ -99,13 +106,10 @@ export class ModuleHost {
 			startupFailed(new Error('Restart forced'))
 
 			const sleepDuration = sleepStrategy(child.restartCount)
-			if (!child.crashed) {
+			if (!child.crashed && child.targetState) {
 				child.crashed = setTimeout(() => {
-					const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
-					const moduleInfo = config && this.#modules.getModuleManifest(config.instance_type, config.moduleVersionId)
-
 					// Restart after a short sleep
-					this.queueRestartConnection(child.connectionId, config, moduleInfo)
+					this.queueUpdateConnectionState(child.connectionId, child.targetState, true)
 				}, sleepDuration)
 			}
 
@@ -259,22 +263,20 @@ export class ModuleHost {
 	 * Stop all running instances
 	 */
 	async queueStopAllConnections(): Promise<void> {
-		const ps: Promise<void>[] = []
-
 		for (const connectionId of this.#children.keys()) {
-			ps.push(this.queueStopConnection(connectionId))
+			this.queueUpdateConnectionState(connectionId, null, true)
 		}
 
-		await Promise.all(ps)
-	}
+		// This is not efficient, but this is only used for shutdown, so it doesn't matter
+		for (let i = 0; i < 20; i++) {
+			const runningChildren = Array.from(this.#children.values()).filter((c) => !!c.monitor)
+			if (runningChildren.length === 0) {
+				// No more children running
+				break
+			}
 
-	/**
-	 * Stop an instance process/thread
-	 */
-	async queueStopConnection(connectionId: string): Promise<void> {
-		const child = this.#children.get(connectionId)
-		if (child) {
-			await child.lifeCycleQueue.add(async () => this.#doStopConnectionInner(connectionId, true))
+			// Wait a bit for the children to stop
+			await new Promise<void>((resolve) => setTimeout(resolve, 100))
 		}
 	}
 
@@ -318,6 +320,8 @@ export class ModuleHost {
 
 			// mark connection as disabled
 			this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Disabled')
+			// Cleanup any artifacts
+			this.#cleanupStoppedConnection(connectionId, child.lastLabel)
 		}
 	}
 
@@ -327,6 +331,7 @@ export class ModuleHost {
 	updateChildLabel(connectionId: string, label: string): void {
 		const child = this.#children.get(connectionId)
 		if (child) {
+			child.lastLabel = label
 			child.logger = LogController.createLogger(`Instance/${label}`)
 		}
 	}
@@ -334,199 +339,272 @@ export class ModuleHost {
 	/**
 	 * Start or restart an instance process
 	 */
-	async queueRestartConnection(
+	queueUpdateConnectionState(
 		connectionId: string,
-		config: ConnectionConfig | undefined,
-		moduleInfo: ModuleVersionInfo | undefined
-	): Promise<void> {
-		if (!config || !moduleInfo) return
+		targetState: ModuleChildTargetState | null,
+		forceRestart: boolean
+	): void {
+		let baseChild = this.#children.get(connectionId)
+		if (!baseChild) {
+			if (!targetState) {
+				// Connection is not running, nothing to do
+				return
+			}
 
-		let child = this.#children.get(connectionId)
-		if (!child) {
 			// Create a new child entry
-			child = {
-				connectionId,
+			baseChild = {
+				connectionId: connectionId,
 				lifeCycleQueue: new PQueue({ concurrency: 1 }),
-				logger: LogController.createLogger(`Instance/${config.label}`),
+				logger: LogController.createLogger(`Instance/${targetState.label}`),
 				restartCount: 0,
 				isReady: false,
+				targetState: targetState,
+				lastLabel: targetState.label,
 			}
-			this.#children.set(connectionId, child)
+			this.#children.set(connectionId, baseChild)
+
+			this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Starting')
+
+			forceRestart = true // Force restart if it is a new connection
 		}
 
-		await child.lifeCycleQueue.add(async () => {
-			// Run the start in a separate queue, to limit the concurrency
-			await this.#startQueue
-				.add(async () => {
-					if (config && config.enabled !== false) {
-						this.#logger.info(`Starting connection: "${config.label}" (${connectionId})`)
+		if (!forceRestart && baseChild.targetState && targetState) {
+			// If the target state is the same, then don't do anything
+			if (
+				baseChild.targetState.moduleId === targetState.moduleId &&
+				baseChild.targetState.moduleVersionId === targetState.moduleVersionId &&
+				baseChild.targetState.label === targetState.label
+			) {
+				this.#logger.debug(`Connection "${connectionId}" already in target state, not restarting`)
+				return
+			}
+		}
 
-						// stop any existing child process
-						await this.#doStopConnectionInner(connectionId, false)
+		baseChild.targetState = targetState
+		if (targetState) baseChild.lastLabel = targetState.label
 
-						if (moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
-							this.#logger.error(`Only nodejs-ipc api is supported currently: "${connectionId}"`)
-							return
-						}
+		if (baseChild.lifeCycleQueue.size > 0) {
+			// Already a change waiting to be processed, so don't do anything
+			return
+		}
 
-						const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
-						if (!nodePath) {
-							this.#logger.error(
-								`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${connectionId}"`
-							)
-							return
-						}
-
-						// Determine the module api version
-						let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
-						if (!moduleInfo.isPackaged) {
-							// When not packaged, lookup the version from the library itself
-							try {
-								const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
-									paths: [moduleInfo.basePath],
-								})
-								const moduleLibPackage = require(moduleLibPackagePath)
-								moduleApiVersion = moduleLibPackage.version
-							} catch (e) {
-								this.#logger.error(`Failed to get module api version: "${connectionId}" ${e}`)
-								return
-							}
-						}
-
-						if (!isModuleApiVersionCompatible(moduleApiVersion)) {
-							this.#logger.error(`Module Api version is too new/old: "${connectionId}" ${moduleApiVersion}`)
-							return
-						}
-
-						const child = this.#children.get(connectionId)
-						if (!child) {
-							this.#logger.verbose(`Lost tracking object for connection: "${connectionId}"`)
-							return
-						}
-
-						child.authToken = nanoid()
-						child.skipApiVersionCheck = !moduleInfo.isPackaged
-
-						const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
-						const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
-						if (!(await fs.pathExists(jsFullPath))) {
-							this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
-							return
-						}
-
-						// Allow running node with `--inspect`
-						let inspectPort = undefined
-						if (!moduleInfo.isPackaged) {
-							try {
-								const inspectFilePath = path.join(moduleInfo.basePath, 'DEBUG-INSPECT')
-								const inspectFileStr = await fs.readFile(inspectFilePath)
-								const inspectPortTmp = Number(inspectFileStr.toString().trim())
-								if (!isNaN(inspectPortTmp)) inspectPort = inspectPortTmp
-							} catch (e) {
-								// Ignore
-							}
-						}
-
-						const cmd: string[] = [
-							nodePath,
-							...getNodeJsPermissionArguments(moduleInfo.manifest, moduleApiVersion, moduleInfo.basePath),
-							inspectPort !== undefined ? `--inspect=${inspectPort}` : undefined,
-							jsPath,
-						].filter((v): v is string => !!v)
-						this.#logger.silly(`Connection "${config.label}" command: ${JSON.stringify(cmd)}`)
-
-						const monitor = new RespawnMonitor(cmd, {
-							// name: `Connection "${config.label}"(${connectionId})`,
-							env: {
-								CONNECTION_ID: connectionId,
-								VERIFICATION_TOKEN: child.authToken,
-								MODULE_MANIFEST: 'companion/manifest.json',
-							},
-							maxRestarts: -1,
-							kill: 5000,
-							cwd: moduleInfo.basePath,
-							fork: false,
-							stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-						})
-
-						const debugLogRoom = ConnectionDebugLogRoom(connectionId)
-						this.#deps.io.emitToRoom(
-							debugLogRoom,
-							debugLogRoom,
-							'system',
-							`** Starting Connection from "${path.join(moduleInfo.basePath, jsPath)}" **`
-						)
-
-						monitor.on('start', () => {
-							child.isReady = false
-							child.handler?.cleanup()
-
-							this.#logger.info(`Connection "${config.label}" started process ${monitor.child?.pid}`)
-							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection started **')
-						})
-						monitor.on('stop', () => {
-							child.isReady = false
-							child.handler?.cleanup()
-
-							this.#deps.instanceStatus.updateInstanceStatus(
-								connectionId,
-								child.crashed ? 'crashed' : null,
-								child.crashed ? '' : 'Stopped'
-							)
-							this.#logger.debug(`Connection "${config.label}" stopped`)
-							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection stopped **')
-
-							this.#deps.controls.actionRecorder.connectionAvailabilityChange(connectionId, false)
-						})
-						monitor.on('crash', () => {
-							child.isReady = false
-							child.handler?.cleanup()
-
-							this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Crashed')
-							this.#logger.debug(`Connection "${config.label}" crashed`)
-							this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')
-						})
-						monitor.on('stdout', (data) => {
-							if (moduleInfo.versionId === 'dev') {
-								// Only show stdout for modules which are being developed
-								child.logger.verbose(`stdout: ${data.toString()}`)
-							}
-
-							if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
-								this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'console', data.toString())
-							}
-						})
-						monitor.on('stderr', (data) => {
-							child.logger.verbose(`stderr: ${data.toString()}`)
-							if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
-								this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', data.toString())
-							}
-						})
-
-						child.monitor = monitor
-
-						const initialisedPromise = new Promise<void>((resolve, reject) => {
-							this.#listenToModuleSocket(child, resolve, reject)
-						})
-
-						// Start the child
-						child.monitor.start()
-
-						// Wait for init to complete, or fail
-						await initialisedPromise
-						// Sleep for a tick
-						await new Promise((resolve) => setImmediate(resolve))
-
-						// TODO module-lib - timeout for first contact
-					} else {
-						this.#logger.debug(`Attempting to start missing connection: "${connectionId}"`)
-						await this.#doStopConnectionInner(connectionId, true)
-					}
-				})
-				.catch((e) => {
+		// Queue the work
+		baseChild.lifeCycleQueue
+			.add(async () => {
+				await this.#queueRestartConnectionInner(connectionId, baseChild).catch((e) => {
 					this.#logger.error(`Unhandled error restarting connection: ${e}`)
 				})
+			})
+			.catch((e) => {
+				this.#logger.error(`Configured instance "${connectionId}" failed to start: `, e)
+			})
+	}
+
+	async #queueRestartConnectionInner(connectionId: string, baseChild: ModuleChild) {
+		// No target state, so stop the connection
+		if (!baseChild.targetState) {
+			this.#logger.debug(`Stopping connection: "${connectionId}"`)
+			await this.#doStopConnectionInner(connectionId, true)
+			return
+		}
+
+		// Run the start in a separate queue, to limit the concurrency
+		await this.#startQueue.add(async () => {
+			// If the target state is null, then a stop must be queued now, so don't try to start it
+			if (!baseChild.targetState) {
+				this.#logger.debug(`No target state for connection: "${connectionId}", not starting`)
+				return
+			}
+
+			this.#logger.info(`Starting connection: "${baseChild.targetState.label}" (${connectionId})`)
+
+			// stop any existing child process
+			await this.#doStopConnectionInner(connectionId, false)
+
+			const moduleInfo = this.#modules.getModuleManifest(
+				baseChild.targetState.moduleId,
+				baseChild.targetState.moduleVersionId
+			)
+			if (!moduleInfo) {
+				this.#logger.error(
+					`Configured instance "${baseChild.targetState.moduleId}" could not be loaded, unknown module`
+				)
+				if (this.#modules.hasModule(baseChild.targetState.moduleId)) {
+					this.#deps.instanceStatus.updateInstanceStatus(connectionId, 'system', 'Unknown module version')
+				} else {
+					this.#deps.instanceStatus.updateInstanceStatus(connectionId, 'system', 'Unknown module')
+				}
+				return
+			}
+
+			if (moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
+				this.#logger.error(`Only nodejs-ipc api is supported currently: "${connectionId}"`)
+				return
+			}
+
+			const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
+			if (!nodePath) {
+				this.#logger.error(
+					`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${connectionId}"`
+				)
+				return
+			}
+
+			// Determine the module api version
+			let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
+			if (!moduleInfo.isPackaged) {
+				// When not packaged, lookup the version from the library itself
+				try {
+					const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
+						paths: [moduleInfo.basePath],
+					})
+					const moduleLibPackage = require(moduleLibPackagePath)
+					moduleApiVersion = moduleLibPackage.version
+				} catch (e) {
+					this.#logger.error(`Failed to get module api version: "${connectionId}" ${e}`)
+					return
+				}
+			}
+
+			if (!isModuleApiVersionCompatible(moduleApiVersion)) {
+				this.#logger.error(`Module Api version is too new/old: "${connectionId}" ${moduleApiVersion}`)
+				return
+			}
+
+			const child = this.#children.get(connectionId)
+			if (!child) {
+				this.#logger.verbose(`Lost tracking object for connection: "${connectionId}"`)
+				return
+			}
+
+			child.authToken = nanoid()
+			child.skipApiVersionCheck = !moduleInfo.isPackaged
+
+			const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
+			const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
+			if (!(await fs.pathExists(jsFullPath))) {
+				this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
+				return
+			}
+
+			// Allow running node with `--inspect`
+			let inspectPort = undefined
+			if (!moduleInfo.isPackaged) {
+				try {
+					const inspectFilePath = path.join(moduleInfo.basePath, 'DEBUG-INSPECT')
+					const inspectFileStr = await fs.readFile(inspectFilePath)
+					const inspectPortTmp = Number(inspectFileStr.toString().trim())
+					if (!isNaN(inspectPortTmp)) inspectPort = inspectPortTmp
+				} catch (e) {
+					// Ignore
+				}
+			}
+
+			const cmd: string[] = [
+				nodePath,
+				...getNodeJsPermissionArguments(moduleInfo.manifest, moduleApiVersion, moduleInfo.basePath),
+				inspectPort !== undefined ? `--inspect=${inspectPort}` : undefined,
+				jsPath,
+			].filter((v): v is string => !!v)
+			this.#logger.silly(`Connection "${baseChild.targetState.label}" command: ${JSON.stringify(cmd)}`)
+
+			const monitor = new RespawnMonitor(cmd, {
+				// name: `Connection "${config.label}"(${connectionId})`,
+				env: {
+					CONNECTION_ID: connectionId,
+					VERIFICATION_TOKEN: child.authToken,
+					MODULE_MANIFEST: 'companion/manifest.json',
+				},
+				maxRestarts: -1,
+				kill: 5000,
+				cwd: moduleInfo.basePath,
+				fork: false,
+				stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+			})
+
+			const debugLogRoom = ConnectionDebugLogRoom(connectionId)
+			this.#deps.io.emitToRoom(
+				debugLogRoom,
+				debugLogRoom,
+				'system',
+				`** Starting Connection from "${path.join(moduleInfo.basePath, jsPath)}" **`
+			)
+
+			monitor.on('start', () => {
+				child.isReady = false
+				child.handler?.cleanup()
+
+				child.logger.info(`Connection started process ${monitor.child?.pid}`)
+				this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection started **')
+			})
+			monitor.on('stop', () => {
+				child.isReady = false
+				child.handler?.cleanup()
+
+				this.#deps.instanceStatus.updateInstanceStatus(
+					connectionId,
+					child.crashed ? 'crashed' : null,
+					child.crashed ? '' : 'Stopped'
+				)
+				child.logger.debug(`Connection stopped`)
+				this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection stopped **')
+
+				this.#deps.controls.actionRecorder.connectionAvailabilityChange(connectionId, false)
+
+				// Cleanup any artifacts
+				this.#cleanupStoppedConnection(connectionId, child.lastLabel)
+			})
+			monitor.on('crash', () => {
+				child.isReady = false
+				child.handler?.cleanup()
+
+				this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Crashed')
+				child.logger.debug(`Connection crashed`)
+				this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')
+
+				// Cleanup any artifacts
+				this.#cleanupStoppedConnection(connectionId, child.lastLabel)
+			})
+			monitor.on('stdout', (data) => {
+				if (moduleInfo.versionId === 'dev') {
+					// Only show stdout for modules which are being developed
+					child.logger.verbose(`stdout: ${data.toString()}`)
+				}
+
+				if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
+					this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'console', data.toString())
+				}
+			})
+			monitor.on('stderr', (data) => {
+				child.logger.verbose(`stderr: ${data.toString()}`)
+				if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
+					this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', data.toString())
+				}
+			})
+
+			child.monitor = monitor
+
+			const initialisedPromise = new Promise<void>((resolve, reject) => {
+				this.#listenToModuleSocket(child, resolve, reject)
+			})
+
+			// Start the child
+			child.monitor.start()
+
+			// Wait for init to complete, or fail
+			await initialisedPromise
+			// Sleep for a tick
+			await new Promise((resolve) => setImmediate(resolve))
+
+			// TODO module-lib - timeout for first contact
 		})
+	}
+
+	#cleanupStoppedConnection(connectionId: string, label: string) {
+		this.#deps.instanceDefinitions.forgetConnection(connectionId)
+		this.#deps.variables.values.forgetConnection(connectionId, label)
+		this.#deps.variables.definitions.forgetConnection(connectionId, label)
+		this.#deps.controls.clearConnectionState(connectionId)
 	}
 
 	async connectionEntityUpdate(entityModel: SomeEntityModel, controlId: string): Promise<boolean> {

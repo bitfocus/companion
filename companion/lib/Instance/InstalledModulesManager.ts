@@ -60,8 +60,6 @@ export class InstanceInstalledModulesManager {
 		this.#io.emitToAll('modules:bundle-import:progress', sessionId, null)
 	})
 
-	readonly #restartConnection: (connectionId: string) => void
-
 	constructor(
 		appInfo: AppInfo,
 		_db: DataDatabase,
@@ -69,8 +67,7 @@ export class InstanceInstalledModulesManager {
 		modulesManager: InstanceModules,
 		modulesStore: ModuleStoreService,
 		configStore: ConnectionConfigStore,
-		installedModulesDir: string,
-		restartConnection: (connectionId: string) => void
+		installedModulesDir: string
 	) {
 		this.#appInfo = appInfo
 		// this.#db = db
@@ -79,7 +76,6 @@ export class InstanceInstalledModulesManager {
 		this.#modulesStore = modulesStore
 		this.#configStore = configStore
 		this.#modulesDir = installedModulesDir
-		this.#restartConnection = restartConnection
 	}
 
 	/**
@@ -134,13 +130,10 @@ export class InstanceInstalledModulesManager {
 
 						config.moduleVersionId = versionInfo.id
 						changedConnectionIds.push(connectionId)
-
-						// If enabled, restart it
-						if (config.enabled) this.#restartConnection(connectionId)
 					}
 
 					// Save the changes
-					this.#configStore.commitChanges(changedConnectionIds)
+					this.#configStore.commitChanges(changedConnectionIds, true)
 				}
 			})
 			.catch((e) => {

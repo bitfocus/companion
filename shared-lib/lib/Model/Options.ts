@@ -23,6 +23,7 @@ export type InternalInputFieldType =
 	| 'internal:trigger'
 	| 'internal:trigger_collection'
 	| 'internal:connection_id'
+	| 'internal:connection_collection'
 	| 'internal:surface_serial'
 	| 'internal:page'
 // export type CompanionInputFieldTypeExtended = CompanionInputFieldBase['type']
@@ -53,6 +54,10 @@ export interface InternalInputFieldTriggerCollection extends CompanionInputField
 	type: 'internal:trigger_collection'
 	default?: string
 }
+export interface InternalInputFieldConnectionCollection extends CompanionInputFieldBaseExtended {
+	type: 'internal:connection_collection'
+	default?: string
+}
 export interface InternalInputFieldConnectionId extends CompanionInputFieldBaseExtended {
 	type: 'internal:connection_id'
 	multiple: boolean
@@ -81,6 +86,7 @@ export type InternalInputField =
 	| EncodeIsVisible2<InternalInputFieldTrigger>
 	| EncodeIsVisible2<InternalInputFieldTriggerCollection>
 	| EncodeIsVisible2<InternalInputFieldConnectionId>
+	| EncodeIsVisible2<InternalInputFieldConnectionCollection>
 	| EncodeIsVisible2<InternalInputFieldSurfaceSerial>
 	| EncodeIsVisible2<InternalInputFieldPage>
 

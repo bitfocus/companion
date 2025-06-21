@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { LoadingRetryOrError } from '~/util.js'
+import { isCollectionEnabled, LoadingRetryOrError } from '~/util.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -73,10 +73,13 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	moduleInfo,
 	closeConfigurePanel,
 }: ConnectionEditPanelInnerProps) {
-	const { socket, modules } = useContext(RootAppStoreContext)
+	const { socket, modules, connections } = useContext(RootAppStoreContext)
 
 	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, connectionInfo.moduleVersionId)
-	const connectionShouldBeRunning = connectionInfo.enabled && connectionVersionExists
+	const connectionShouldBeRunning =
+		connectionInfo.enabled &&
+		connectionVersionExists &&
+		isCollectionEnabled(connections.rootCollections(), connectionInfo.collectionId)
 
 	const isModuleOnStore = !!modules.storeList.get(connectionInfo.instance_type)
 	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true)

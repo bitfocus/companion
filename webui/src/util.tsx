@@ -19,6 +19,7 @@ import type {
 import { computed } from 'mobx'
 import { DropTargetMonitor, XYCoord } from 'react-dnd'
 import type { ReadonlyDeep } from 'type-fest'
+import { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
@@ -450,4 +451,25 @@ export function checkDragState<TItem extends { dragState: DragState | null }>(
 	item.dragState.draggedOver.push(hoverId)
 
 	return true
+}
+
+export function isCollectionEnabled<TMetaData extends { enabled?: boolean }>(
+	collections: CollectionBase<TMetaData>[],
+	collectionId: string | null | undefined
+): boolean {
+	if (!collectionId) return true
+
+	for (const collection of collections) {
+		// If found the collection, check if it is enabled
+		if (collection.id === collectionId) {
+			return !!collection.metaData?.enabled
+		}
+
+		if (collection.metaData.enabled && collection.children) {
+			const enabled = isCollectionEnabled(collection.children, collectionId)
+			if (enabled) return true
+		}
+	}
+
+	return false
 }

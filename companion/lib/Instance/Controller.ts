@@ -54,6 +54,7 @@ interface InstanceControllerEvents {
 	connection_added: [connectionId?: string]
 	connection_updated: [connectionId: string]
 	connection_deleted: [connectionId: string]
+	connection_collections_enabled: []
 }
 
 export class InstanceController extends EventEmitter<InstanceControllerEvents> {
@@ -100,8 +101,25 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController = variables
 		this.#controlsController = controls
 
-		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
-		this.#collectionsController = new InstanceCollections(io, db, this.#configStore)
+		this.#configStore = new ConnectionConfigStore(db, (connectionIds, updateConnectionHost) => {
+			// Ensure any changes to collectionId update the enabled state
+			if (updateConnectionHost) {
+				for (const connectionId of connectionIds) {
+					try {
+						this.#queueUpdateConnectionState(connectionId, true, false)
+					} catch (e) {
+						this.#logger.warn(`Error updating connection state for ${connectionId}: `, e)
+					}
+				}
+			}
+
+			this.broadcastChanges(connectionIds)
+		})
+		this.#collectionsController = new InstanceCollections(io, db, this.#configStore, () => {
+			this.emit('connection_collections_enabled')
+
+			this.#queueUpdateAllConnectionState()
+		})
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
@@ -145,11 +163,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.modules,
 			this.modulesStore,
 			this.#configStore,
-			appInfo.modulesDir,
-			(connectionId) => {
-				this.enableDisableInstance(connectionId, false)
-				this.enableDisableInstance(connectionId, true)
-			}
+			appInfo.modulesDir
 		)
 		this.modules.listenToStoreEvents(this.modulesStore)
 
@@ -182,7 +196,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#logger.info('Power: Resuming')
 
 			for (const id of this.#configStore.getAllInstanceIds()) {
-				this.#activate_module(id)
+				this.#queueUpdateConnectionState(id)
 			}
 		} else if (event == 'suspend') {
 			this.#logger.info('Power: Suspending')
@@ -205,7 +219,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const connectionIds = this.#configStore.getAllInstanceIds()
 		this.#logger.silly('instance_init', connectionIds)
 		for (const id of connectionIds) {
-			this.#activate_module(id, false)
+			this.#queueUpdateConnectionState(id)
 		}
 
 		this.emit('connection_added')
@@ -220,8 +234,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			if (config && config.moduleVersionId !== versionId) continue
 
 			// Restart it
-			this.enableDisableInstance(id, false)
-			this.enableDisableInstance(id, true)
+			this.#queueUpdateConnectionState(id, false, true)
 		}
 
 		this.#logger.info(`Reloading ${labels.length} connections: ${labels.join(', ')}`)
@@ -291,7 +304,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.emit('connection_updated', id)
 
-		this.#configStore.commitChanges([id])
+		this.#configStore.commitChanges([id], false)
 
 		const instance = this.moduleHost.getChild(id, true)
 		if (values.label) {
@@ -335,11 +348,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const [id, config] = this.#configStore.addConnection(moduleId, label, product, props)
 
-		this.#activate_module(id, true)
+		this.#queueUpdateConnectionState(id, true)
 
 		this.#logger.silly('instance_add', id)
-		this.#configStore.commitChanges([id])
-
 		this.emit('connection_added', id)
 
 		return [id, config]
@@ -370,25 +381,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				this.#logger.info((state ? 'Enable' : 'Disable') + ' instance ' + label)
 				connectionConfig.enabled = state
 
-				this.#configStore.commitChanges([id])
+				this.#configStore.commitChanges([id], false)
 
-				if (state === false) {
-					this.moduleHost
-						.queueStopConnection(id)
-						.catch((e) => {
-							this.#logger.warn(`Error disabling instance ${label}: ` + e)
-						})
-						.then(() => {
-							this.status.updateInstanceStatus(id, null, 'Disabled')
-
-							this.definitions.forgetConnection(id)
-							this.#variablesController.values.forgetConnection(id, label)
-							this.#variablesController.definitions.forgetConnection(id, label)
-							this.#controlsController.clearConnectionState(id)
-						})
-				} else {
-					this.#activate_module(id)
-				}
+				this.#queueUpdateConnectionState(id, false, true)
 			} else {
 				if (state === true) {
 					this.#logger.warn(`Attempting to enable connection "${label}" that is already enabled`)
@@ -410,7 +405,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#logger.info(`Deleting instance: ${label ?? id}`)
 
 		try {
-			await this.moduleHost.queueStopConnection(id)
+			this.moduleHost.queueUpdateConnectionState(id, null, true)
 		} catch (e) {
 			this.#logger.debug(`Error while deleting instance "${label ?? id}": `, e)
 		}
@@ -531,30 +526,36 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.getConfigForId(connectionId)
 	}
 
+	#queueUpdateAllConnectionState(): void {
+		// Queue an update of all connections
+		for (const id of this.#configStore.getAllInstanceIds()) {
+			try {
+				this.#queueUpdateConnectionState(id)
+			} catch (e) {
+				this.#logger.error(`Error updating connection state for ${id}: `, e)
+			}
+		}
+	}
+
 	/**
 	 * Start an instance running
 	 */
-	#activate_module(id: string, is_being_created = false): void {
+	#queueUpdateConnectionState(id: string, forceCommitChanges = false, forceRestart = false): void {
 		const config = this.#configStore.getConfigForId(id)
 		if (!config) throw new Error('Cannot activate unknown module')
+
+		let changed = false
 
 		// Seamless fixup old configs
 		if (!config.moduleVersionId) {
 			config.moduleVersionId = this.modules.getLatestVersionOfModule(config.instance_type, true)
-		}
-
-		if (config.enabled === false) {
-			this.#logger.silly("Won't load disabled module " + id + ' (' + config.instance_type + ')')
-			this.status.updateInstanceStatus(id, null, 'Disabled')
-			return
-		} else {
-			this.status.updateInstanceStatus(id, null, 'Starting')
+			changed = !!config.moduleVersionId
 		}
 
 		// Ensure that the label is valid according to the new rules
 		// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
 		const safeLabel = makeLabelSafe(config.label)
-		if (!is_being_created && safeLabel !== config.label) {
+		if (safeLabel !== config.label) {
 			this.setInstanceLabelAndConfig(
 				id,
 				{
@@ -566,24 +567,27 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				},
 				{ skipNotifyConnection: true }
 			)
+			changed = true
 		}
 
-		// TODO this could check if anything above changed, or is_being_created
-		this.#configStore.commitChanges([id])
-
-		const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
-		if (!moduleInfo) {
-			this.#logger.error('Configured instance ' + config.instance_type + ' could not be loaded, unknown module')
-			if (this.modules.hasModule(config.instance_type)) {
-				this.status.updateInstanceStatus(id, 'system', 'Unknown module version')
-			} else {
-				this.status.updateInstanceStatus(id, 'system', 'Unknown module')
-			}
-		} else {
-			this.moduleHost.queueRestartConnection(id, config, moduleInfo).catch((e) => {
-				this.#logger.error('Configured instance ' + config.instance_type + ' failed to start: ', e)
-			})
+		if (changed || forceCommitChanges) {
+			// If we changed the config, we need to commit it
+			this.#configStore.commitChanges([id], false)
 		}
+
+		const enableConnection = config.enabled !== false && this.collections.isCollectionEnabled(config.collectionId)
+
+		this.moduleHost.queueUpdateConnectionState(
+			id,
+			enableConnection
+				? {
+						label: config.label,
+						moduleId: config.instance_type,
+						moduleVersionId: config.moduleVersionId,
+					}
+				: null,
+			forceRestart
+		)
 	}
 
 	/**
@@ -611,6 +615,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			// Check if the instance exists
 			const instanceConf = this.#configStore.getConfigForId(id)
 			if (!instanceConf) return null
+
+			// Make sure the collection is enabled
+			if (!this.collections.isCollectionEnabled(instanceConf.collectionId)) return null
 
 			const instance = this.moduleHost.getChild(id)
 			if (!instance) return null
@@ -700,7 +707,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// Update the config
 			if (updatePolicy) config.updatePolicy = updatePolicy
-			this.#configStore.commitChanges([id])
+			this.#configStore.commitChanges([id], false)
 
 			// Install the module if needed
 			const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
@@ -710,8 +717,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// Trigger a restart (or as much as possible)
 			if (config.enabled) {
-				this.enableDisableInstance(id, false)
-				this.enableDisableInstance(id, true)
+				this.#queueUpdateConnectionState(id, false, true)
 			}
 
 			return null
@@ -729,7 +735,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			config.instance_type = moduleId
 			config.moduleVersionId = versionId
 			// if (updatePolicy) config.updatePolicy = updatePolicy
-			this.#configStore.commitChanges([connectionId])
+			this.#configStore.commitChanges([connectionId], false)
 
 			// Install the module if needed
 			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
@@ -739,8 +745,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// Trigger a restart (or as much as possible)
 			if (config.enabled) {
-				this.enableDisableInstance(connectionId, false)
-				this.enableDisableInstance(connectionId, true)
+				this.#queueUpdateConnectionState(connectionId, false, true)
 			}
 
 			return null

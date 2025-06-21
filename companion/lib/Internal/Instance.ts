@@ -61,6 +61,17 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	)
 
+	#debounceCheckConnectionCollectionFeedbacks = debounceFn(
+		(): void => {
+			this.emit('checkFeedbacks', 'connection_collection_enabled')
+		},
+		{
+			maxWait: 100,
+			wait: 20,
+			after: true,
+		}
+	)
+
 	constructor(_internalUrils: InternalModuleUtils, instanceController: InstanceController) {
 		super()
 
@@ -70,6 +81,10 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		this.#instanceController.on('connection_added', this.#debounceRegenerateVariables.bind(this))
 		this.#instanceController.on('connection_updated', this.#debounceRegenerateVariables.bind(this))
 		this.#instanceController.on('connection_deleted', this.#debounceRegenerateVariables.bind(this))
+		this.#instanceController.on(
+			'connection_collections_enabled',
+			this.#debounceCheckConnectionCollectionFeedbacks.bind(this)
+		)
 	}
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {
@@ -121,6 +136,28 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						label: 'Connection',
 						id: 'instance_id',
 						multiple: false,
+					},
+					{
+						type: 'dropdown',
+						label: 'Enable',
+						id: 'enable',
+						default: 'toggle',
+						choices: [
+							{ id: 'toggle', label: 'Toggle' },
+							{ id: 'true', label: 'Yes' },
+							{ id: 'false', label: 'No' },
+						],
+					},
+				],
+			},
+			connection_collection_enabled: {
+				label: 'Connection: Enable or disable connection collection',
+				description: undefined,
+				options: [
+					{
+						type: 'internal:connection_collection',
+						label: 'Collection',
+						id: 'collection_id',
 					},
 					{
 						type: 'dropdown',
@@ -236,6 +273,33 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 					},
 				],
 			},
+			connection_collection_enabled: {
+				feedbackType: 'boolean',
+				label: 'Connection: When collection enabled or disabled',
+				description: undefined,
+				feedbackStyle: {
+					color: 0xffffff,
+					bgcolor: 0xff0000,
+				},
+				showInvert: true,
+				options: [
+					{
+						type: 'internal:connection_collection',
+						label: 'Collection',
+						id: 'collection_id',
+					},
+					{
+						type: 'dropdown',
+						label: 'Enable',
+						id: 'enable',
+						default: 'true',
+						choices: [
+							{ id: 'true', label: 'Yes' },
+							{ id: 'false', label: 'No' },
+						],
+					},
+				],
+			},
 		}
 	}
 
@@ -249,6 +313,12 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			}
 
 			this.#instanceController.enableDisableInstance(action.rawOptions.instance_id, newState)
+			return true
+		} else if (action.definitionId === 'connection_collection_enabled') {
+			let newState: boolean | 'toggle' = action.rawOptions.enable == 'true'
+			if (action.rawOptions.enable == 'toggle') newState = 'toggle'
+
+			this.#instanceController.collections.setCollectionEnabled(action.rawOptions.collection_id, newState)
 			return true
 		} else {
 			return false
@@ -312,6 +382,10 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			const selected_status = this.#instanceStatuses[String(feedback.options.instance_id)]?.category ?? null
 
 			return selected_status == feedback.options.state
+		} else if (feedback.definitionId === 'connection_collection_enabled') {
+			const state = this.#instanceController.collections.isCollectionEnabled(feedback.options.collection_id)
+			const target = feedback.options.enable == 'true'
+			return state == target
 		}
 	}
 
