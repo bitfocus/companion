@@ -101,7 +101,18 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController = variables
 		this.#controlsController = controls
 
-		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
+		this.#configStore = new ConnectionConfigStore(db, (connectionIds) => {
+			// Ensure any changes to collectionId update the enabled state
+			for (const connectionId of connectionIds) {
+				try {
+					this.#queueUpdateConnectionState(connectionId, true, false)
+				} catch (e) {
+					this.#logger.warn(`Error updating connection state for ${connectionId}: `, e)
+				}
+			}
+
+			this.broadcastChanges(connectionIds)
+		})
 		this.#collectionsController = new InstanceCollections(io, db, this.#configStore, () => {
 			this.emit('connection_collections_enabled')
 

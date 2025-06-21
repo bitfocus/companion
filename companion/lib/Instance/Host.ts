@@ -106,7 +106,7 @@ export class ModuleHost {
 			startupFailed(new Error('Restart forced'))
 
 			const sleepDuration = sleepStrategy(child.restartCount)
-			if (!child.crashed) {
+			if (!child.crashed && child.targetState) {
 				child.crashed = setTimeout(() => {
 					// Restart after a short sleep
 					this.queueUpdateConnectionState(child.connectionId, child.targetState, true)
