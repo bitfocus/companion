@@ -106,85 +106,93 @@ export class UIExpress {
 			getResourcePath('webui/build'),
 		])
 		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs')])
+		const webuiServerWithRewriter: Express.RequestHandler = (req, res, next) => {
+			console.log('handle', req.url)
+
+			// This is pretty horrible, but we need to rewrite the ROOT_URL_HERE in the html/js/css files to the correct prefix
+			if (
+				!req.url.endsWith('.png') &&
+				!req.url.endsWith('.woff') &&
+				!req.url.endsWith('.woff2') &&
+				!req.url.endsWith('.svg')
+			) {
+				const customPrefixFromHeader = req.headers['companion-custom-prefix']
+
+				// If there is a prefix in the header, use that to customise the html response
+				let processedPrefix = customPrefixFromHeader ? path.resolve(`/${customPrefixFromHeader}`) : '/'
+				if (processedPrefix.endsWith('/')) processedPrefix = processedPrefix.slice(0, -1)
+
+				// Store original methods
+				const originalEnd = res.end
+				let responseBody = ''
+				let hasEnded = false
+
+				// Override res.write to capture response data without writing it yet
+				res.write = function (
+					chunk: any,
+					encoding?: BufferEncoding | ((error: Error | null | undefined) => void),
+					cb?: (error: Error | null | undefined) => void
+				): boolean {
+					if (hasEnded) return false
+
+					if (chunk) {
+						if (Buffer.isBuffer(chunk)) {
+							responseBody += chunk.toString()
+						} else if (typeof chunk === 'string') {
+							responseBody += chunk
+						}
+					}
+
+					// Call the callback if provided to maintain flow control
+					if (typeof encoding === 'function') {
+						setImmediate(() => encoding(null))
+					} else if (cb) {
+						setImmediate(() => cb(null))
+					}
+
+					return true
+				}
+
+				// Override res.end to modify the final response
+				res.end = function (chunk?: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
+					if (hasEnded) return res
+					hasEnded = true
+
+					if (chunk) {
+						if (Buffer.isBuffer(chunk)) {
+							responseBody += chunk.toString()
+						} else if (typeof chunk === 'string') {
+							responseBody += chunk
+						}
+					}
+
+					// Replace ROOT_URL_HERE with the processed prefix
+					const modifiedBody = responseBody.replace(/\/ROOT_URL_HERE/g, processedPrefix)
+
+					// Remove any existing content-length header since we're changing the content
+					res.removeHeader('content-length')
+
+					return originalEnd.call(this, modifiedBody, encoding as any, cb)
+				}
+
+				// Force the response to be uncompressed, as we need to be able to modify the response body
+				req.headers['accept-encoding'] = ''
+			}
+
+			return webuiServer(req, res, next)
+		}
 
 		// Serve docs folder as static and public
 		this.app.use('/docs', docsServer)
 
-		const responseIndexHtml: Express.RequestHandler = (req, res, next) => {
-			const customPrefixFromHeader = req.headers['companion-custom-prefix']
-
-			// If there is a prefix in the header, use that to customise the html response
-			let processedPrefix = customPrefixFromHeader ? path.resolve(`/${customPrefixFromHeader}`) : '/'
-			if (processedPrefix.endsWith('/')) processedPrefix = processedPrefix.slice(0, -1)
-
-			// Store original methods
-			const originalEnd = res.end
-			let responseBody = ''
-			let hasEnded = false
-
-			// Override res.write to capture response data without writing it yet
-			res.write = function (
-				chunk: any,
-				encoding?: BufferEncoding | ((error: Error | null | undefined) => void),
-				cb?: (error: Error | null | undefined) => void
-			): boolean {
-				if (hasEnded) return false
-
-				if (chunk) {
-					if (Buffer.isBuffer(chunk)) {
-						responseBody += chunk.toString()
-					} else if (typeof chunk === 'string') {
-						responseBody += chunk
-					}
-				}
-
-				// Call the callback if provided to maintain flow control
-				if (typeof encoding === 'function') {
-					setImmediate(() => encoding(null))
-				} else if (cb) {
-					setImmediate(() => cb(null))
-				}
-
-				return true
-			}
-
-			// Override res.end to modify the final response
-			res.end = function (chunk?: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
-				if (hasEnded) return res
-				hasEnded = true
-
-				if (chunk) {
-					if (Buffer.isBuffer(chunk)) {
-						responseBody += chunk.toString()
-					} else if (typeof chunk === 'string') {
-						responseBody += chunk
-					}
-				}
-
-				// Replace ROOT_URL_HERE with the processed prefix
-				const modifiedBody = responseBody.replace(/\/ROOT_URL_HERE/g, processedPrefix)
-
-				// Remove any existing content-length header since we're changing the content
-				res.removeHeader('content-length')
-
-				return originalEnd.call(this, modifiedBody, encoding as any, cb)
-			}
-
-			// Force the response to be uncompressed, as we need to modify the response body first
-			req.headers['accept-encoding'] = ''
-
-			req.url = '/index.html'
-			return webuiServer(req, res, next)
-		}
-
-		// Force the root url to use the special handling
-		this.app.get('/', responseIndexHtml)
-
 		// Serve the webui directory
-		this.app.use(webuiServer)
+		this.app.use(webuiServerWithRewriter)
 
 		// Handle all unknown urls as accessing index.html
-		this.app.get('*all', responseIndexHtml)
+		this.app.get('*all', (req, res, next) => {
+			req.url = '/index.html'
+			return webuiServerWithRewriter(req, res, next)
+		})
 	}
 
 	/**
