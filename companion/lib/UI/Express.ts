@@ -17,6 +17,7 @@ import fs from 'fs'
 // @ts-ignore
 import serveZip from 'express-serve-zip'
 import { fileURLToPath } from 'url'
+import compression from 'compression'
 
 /**
  * Create a zip serve app
@@ -118,6 +119,10 @@ export class UIExpress {
 			) {
 				const customPrefixFromHeader = req.headers['companion-custom-prefix']
 
+				// Force the inner response to be uncompressed, as we need to be able to modify the response body
+				const originalAcceptEncoding = req.headers['accept-encoding']
+				req.headers['accept-encoding'] = 'identity'
+
 				// If there is a prefix in the header, use that to customise the html response
 				let processedPrefix = customPrefixFromHeader ? path.resolve(`/${customPrefixFromHeader}`) : '/'
 				if (processedPrefix.endsWith('/')) processedPrefix = processedPrefix.slice(0, -1)
@@ -172,11 +177,10 @@ export class UIExpress {
 					// Remove any existing content-length header since we're changing the content
 					res.removeHeader('content-length')
 
+					req.headers['accept-encoding'] = originalAcceptEncoding
+
 					return originalEnd.call(this, modifiedBody, encoding as any, cb)
 				}
-
-				// Force the response to be uncompressed, as we need to be able to modify the response body
-				req.headers['accept-encoding'] = ''
 			}
 
 			return webuiServer(req, res, next)
@@ -186,7 +190,7 @@ export class UIExpress {
 		this.app.use('/docs', docsServer)
 
 		// Serve the webui directory
-		this.app.use(webuiServerWithRewriter)
+		this.app.use(compression(), webuiServerWithRewriter)
 
 		// Handle all unknown urls as accessing index.html
 		this.app.get('*all', (req, res, next) => {

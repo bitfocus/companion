@@ -475,8 +475,6 @@ export function isCollectionEnabled<TMetaData extends { enabled?: boolean }>(
 	return false
 }
 
-const baseUrl = window.ROOT_URL === '/ROOT_URL_HERE' ? import.meta.env.BASE_URL : window.ROOT_URL
-
 export function makeAbsolutePath(path: string): string {
-	return joinPaths([baseUrl || '/', path])
+	return joinPaths([import.meta.env.BASE_URL || '/', path])
 }
