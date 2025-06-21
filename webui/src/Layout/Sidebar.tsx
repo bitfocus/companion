@@ -51,6 +51,7 @@ import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
+import { makeAbsolutePath } from '~/util'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -167,12 +168,12 @@ export const MySidebar = memo(function MySidebar() {
 			<CSidebarHeader className="brand">
 				<CSidebarBrand>
 					<div className="sidebar-brand-full">
-						<img src="/img/icons/48x48.png" height="30" alt="logo" />
+						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
 						&nbsp; Bitfocus&nbsp;
 						<span style={{ fontWeight: 'bold' }}>Companion</span>
 					</div>
 					<div className="sidebar-brand-narrow">
-						<img src="/img/icons/48x48.png" height="42px" alt="logo" />
+						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="42px" alt="logo" />
 					</div>
 				</CSidebarBrand>
 			</CSidebarHeader>

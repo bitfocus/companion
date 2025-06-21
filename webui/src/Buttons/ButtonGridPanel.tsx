@@ -1,6 +1,6 @@
 import { CAlert, CButton, CCol, CRow } from '@coreui/react'
 import React, { useCallback, useContext, useRef } from 'react'
-import { KeyReceiver } from '~/util.js'
+import { KeyReceiver, makeAbsolutePath } from '~/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
@@ -83,7 +83,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const exportModalRef = useRef<ConfirmExportModalRef>(null)
 	const showExportModal = useCallback(() => {
-		exportModalRef.current?.show(`/int/export/page/${pageNumber}`)
+		exportModalRef.current?.show(makeAbsolutePath(`/int/export/page/${pageNumber}`))
 	}, [pageNumber])
 
 	const resetPosition = useCallback(() => {

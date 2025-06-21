@@ -111,7 +111,7 @@ export class UIExpress {
 		this.app.use('/docs', docsServer)
 
 		const responseIndexHtml: Express.RequestHandler = (req, res, next) => {
-			const customPrefixFromHeader = req.header('companion-custom-prefix')
+			const customPrefixFromHeader = req.headers['companion-custom-prefix']
 
 			// If there is a prefix in the header, use that to customise the html response
 			let processedPrefix = customPrefixFromHeader ? path.resolve(`/${customPrefixFromHeader}`) : '/'
@@ -169,6 +169,9 @@ export class UIExpress {
 
 				return originalEnd.call(this, modifiedBody, encoding as any, cb)
 			}
+
+			// Force the response to be uncompressed, as we need to modify the response body first
+			req.headers['accept-encoding'] = ''
 
 			req.url = '/index.html'
 			return webuiServer(req, res, next)

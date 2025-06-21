@@ -7,6 +7,7 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import semver from 'semver'
+import { makeAbsolutePath } from '~/util'
 
 export interface HelpModalRef {
 	showFromUrl(moduleId: string, versionDisplayName: string, url: string): void
@@ -39,7 +40,9 @@ export const HelpModal = observer(
 						if (parsed) versionDisplayName = `v${parsed.toString()}`
 					}
 
-					fetch(url)
+					const fixedUrl = makeAbsolutePath(url)
+
+					fetch(fixedUrl)
 						.then(async (response) => {
 							const text = await response.text()
 
@@ -47,7 +50,7 @@ export const HelpModal = observer(
 								moduleId,
 								versionDisplayName: versionDisplayName,
 								markdown: text,
-								baseUrl: url,
+								baseUrl: fixedUrl,
 							})
 							setShow(true)
 						})

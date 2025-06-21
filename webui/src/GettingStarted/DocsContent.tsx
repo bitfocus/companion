@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRefresh } from '@fortawesome/free-solid-svg-icons'
+import { makeAbsolutePath } from '~/util'
 
 interface DocsContentProps {
 	file: string
@@ -16,7 +17,7 @@ export function DocsContent({ file }: DocsContentProps): React.JSX.Element {
 
 	const { isPending, error, data, refetch } = useQuery<string>({
 		queryKey: [`docs_${file}`],
-		queryFn: async () => fetch(`/docs/${file}`).then(async (res) => res.text()),
+		queryFn: async () => fetch(makeAbsolutePath(`/docs/${file}`)).then(async (res) => res.text()),
 		retry: false,
 	})
 
@@ -39,7 +40,7 @@ export function DocsContent({ file }: DocsContentProps): React.JSX.Element {
 						urlTransform={(src, key, _node) => {
 							if (key === 'src' || (key === 'href' && !src.startsWith('http'))) {
 								// img tag
-								return `/docs/${baseUrl}${defaultUrlTransform(src)}`
+								return makeAbsolutePath(`/docs/${baseUrl}${defaultUrlTransform(src)}`)
 							} else {
 								return defaultUrlTransform(src)
 							}

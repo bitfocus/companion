@@ -83,7 +83,7 @@
   "scripts": {
     "start": "vite",
     "dev": "run start",
-    "build": "vite build",
+    "build": "vite build --base=/ROOT_URL_HERE",
     "serve": "vite preview"
   },
   "devDependencies": {
