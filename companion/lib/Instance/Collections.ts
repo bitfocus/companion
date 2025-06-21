@@ -3,21 +3,20 @@ import type { ConnectionCollection, ConnectionCollectionData } from '@companion-
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
-import type { EventEmitter } from 'events'
 
 const ConnectionCollectionsRoom = 'connection-collections'
 
 export class InstanceCollections extends CollectionsBaseController<ConnectionCollectionData> {
 	readonly #io: UIHandler
-	readonly #events: EventEmitter
+	readonly #emitUpdated: () => void
 
 	readonly #configStore: ConnectionConfigStore
 
-	constructor(io: UIHandler, db: DataDatabase, configStore: ConnectionConfigStore, events: EventEmitter) {
+	constructor(io: UIHandler, db: DataDatabase, configStore: ConnectionConfigStore, emitUpdated: () => void) {
 		super(db.getTableView<Record<string, ConnectionCollection>>('connection_collections'))
 
 		this.#io = io
-		this.#events = events
+		this.#emitUpdated = emitUpdated
 		this.#configStore = configStore
 
 		// TODO: remove this soon - fixup existing data
@@ -61,7 +60,7 @@ export class InstanceCollections extends CollectionsBaseController<ConnectionCol
 		this.#io.emitToRoom(ConnectionCollectionsRoom, 'connection-collections:update', rows)
 
 		// Emit event to trigger feedback updates for connection collection enabled states
-		this.#events.emit('connection_collections_enabled')
+		this.#emitUpdated()
 	}
 
 	/**
