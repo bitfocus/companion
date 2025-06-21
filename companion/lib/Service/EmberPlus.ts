@@ -407,7 +407,10 @@ export class ServiceEmberPlus extends ServiceBase {
 			const id: string = typeof value == 'number' ? 'integer' : typeof value == 'boolean' ? 'boolean' : 'string'
 			internalVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
 				i,
-				new EmberModel.EmberNodeImpl(this.#internalVars[i]),
+				new EmberModel.EmberNodeImpl(
+					this.#internalVars[i],
+					this.#serviceApi.getConnectionVariableDescription('internal', this.#internalVars[i]) ?? ''
+				),
 				{
 					0: new EmberModel.NumberedTreeNodeImpl(
 						VARIABLE_VALUE_NODE,
@@ -427,30 +430,37 @@ export class ServiceEmberPlus extends ServiceBase {
 		}
 		for (let i = 0; i < this.#customVars.length; i++) {
 			let value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])
-			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(i, new EmberModel.EmberNodeImpl(this.#customVars[i]), {
-				0: new EmberModel.NumberedTreeNodeImpl(
-					VARIABLE_VALUE_NODE,
-					new EmberModel.ParameterImpl(
-						EmberModel.ParameterType.String,
-						'string',
-						this.#serviceApi.getCustomVariableDescription(this.#customVars[i]),
-						value?.toString() ?? '',
-						undefined,
-						undefined,
-						EmberModel.ParameterAccess.ReadWrite
-					)
+			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
+				i,
+				new EmberModel.EmberNodeImpl(
+					this.#customVars[i],
+					this.#serviceApi.getCustomVariableDescription(this.#customVars[i])
 				),
-			})
+				{
+					0: new EmberModel.NumberedTreeNodeImpl(
+						VARIABLE_VALUE_NODE,
+						new EmberModel.ParameterImpl(
+							EmberModel.ParameterType.String,
+							'string',
+							this.#serviceApi.getCustomVariableDescription(this.#customVars[i]),
+							value?.toString() ?? '',
+							undefined,
+							undefined,
+							EmberModel.ParameterAccess.ReadWrite
+						)
+					),
+				}
+			)
 		}
 
 		output[0] = new EmberModel.NumberedTreeNodeImpl(
 			VARIABLE_INTERNAL_NODE,
-			new EmberModel.EmberNodeImpl('internal'),
+			new EmberModel.EmberNodeImpl('internal', 'Companion internal variables'),
 			internalVarNodes
 		)
 		output[1] = new EmberModel.NumberedTreeNodeImpl(
 			VARIABLE_CUSTOM_NODE,
-			new EmberModel.EmberNodeImpl('custom'),
+			new EmberModel.EmberNodeImpl('custom', 'Companion custom variables'),
 			customVarNodes
 		)
 		return output
@@ -507,7 +517,7 @@ export class ServiceEmberPlus extends ServiceBase {
 					),
 					4: new EmberModel.NumberedTreeNodeImpl(
 						ACTION_RECORDER_NODE,
-						new EmberModel.EmberNodeImpl('action recorder'),
+						new EmberModel.EmberNodeImpl('action recorder', `Action recorder controls`),
 						{
 							0: new EmberModel.NumberedTreeNodeImpl(
 								ACTION_RECORDER_ENABLE_NODE,
