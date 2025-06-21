@@ -51,7 +51,7 @@ import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
-import { makeAbsolutePath } from '~/util'
+import { makeAbsolutePath } from '~/util.js'
 
 export interface SidebarStateProps {
 	showToggle: boolean
