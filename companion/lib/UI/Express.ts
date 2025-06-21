@@ -114,7 +114,8 @@ export class UIExpress {
 				!req.url.endsWith('.png') &&
 				!req.url.endsWith('.woff') &&
 				!req.url.endsWith('.woff2') &&
-				!req.url.endsWith('.svg')
+				!req.url.endsWith('.svg') &&
+				!req.url.endsWith('.map')
 			) {
 				let customPrefixFromHeader = req.headers['companion-custom-prefix']
 				if (customPrefixFromHeader?.includes('://') || customPrefixFromHeader?.includes('..'))
