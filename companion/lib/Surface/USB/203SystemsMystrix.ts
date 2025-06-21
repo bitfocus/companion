@@ -126,7 +126,13 @@ export class SurfaceUSB203SystemsMystrix extends EventEmitter<SurfacePanelEvents
 	}
 
 	quit(): void {
-		this.clearDeck
+		try {
+			this.clearDeck()
+		} catch (_e) {
+			// Ignore errors during close
+		}
+
+		this.#device.close()
 	}
 
 	clearDeck(): void {
@@ -174,7 +180,7 @@ export class SurfaceUSB203SystemsMystrix extends EventEmitter<SurfacePanelEvents
 			return
 		}
 
-		var lastColor = this.#lastColours[x][y]
+		const lastColor = this.#lastColours[x][y]
 
 		if (!forced && color.r == lastColor.r && color.g == lastColor.g && color.b == lastColor.b) {
 			return

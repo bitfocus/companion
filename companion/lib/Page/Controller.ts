@@ -68,7 +68,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	/**
 	 * Setup a new socket client's events
 	 */
-	clientConnect(client: ClientSocket) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('pages:set-name', (pageNumber, name) => {
 			this.#logger.silly(`socket: pages:set-name ${pageNumber}: ${name}`)
 
@@ -765,7 +765,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 */
 	#setupPages(rawPageData: Record<string, PageModel>): void {
 		// Load existing data
-		for (let i = 1; true; i++) {
+		for (let i = 1; ; i++) {
 			const pageInfo = rawPageData[i]
 			if (!pageInfo) break
 

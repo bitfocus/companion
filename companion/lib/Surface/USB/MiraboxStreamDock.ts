@@ -174,7 +174,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 	 */
 	static async create(devicePath: string): Promise<SurfaceUSBMiraboxStreamDock> {
 		const device = await HIDAsync.open(devicePath).catch(() => {
-			throw 'Device not found'
+			throw new Error('Device not found')
 		})
 
 		// if (!device) {
@@ -206,7 +206,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 		} catch (e) {
 			await streamDock.close().catch(() => null)
 
-			throw 'Opening Stream Dock failed ' + e
+			throw e
 		}
 	}
 
@@ -214,7 +214,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 	 * Process the information from the GUI and what is saved in database
 	 * @returns false when nothing happens
 	 */
-	setConfig(config: Record<string, any>, force: boolean = false) {
+	setConfig(config: Record<string, any>, force: boolean = false): void {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 			this.#streamDock.setBrightness(config.brightness).catch((e) => {
 				this.logger.debug(`Set brightness failed: ${e}`)
@@ -233,11 +233,12 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 			.catch((e) => {
 				this.logger.debug(`Clear deck failed: ${e}`)
 			})
-			.then(() => {
+			.then(async () => {
 				//close after the clear has been sent
-				this.#streamDock.close().catch(() => {
-					// Ignore error
-				})
+				await this.#streamDock.close()
+			})
+			.catch(() => {
+				// Ignore error
 			})
 	}
 
@@ -1267,7 +1268,7 @@ class StreamDock extends EventEmitter {
 			)
 		}
 		await this.writeRaw(writebuffer).catch((e) => {
-			throw 'Sending command to Stream Dock failed ' + e
+			throw new Error('Sending command to Stream Dock failed ' + e)
 		})
 
 		if (data.byteLength + prefixbuffer.byteLength > StreamDock.packetSize) {
@@ -1285,7 +1286,7 @@ class StreamDock extends EventEmitter {
 	 * @param data the data to be sent
 	 * @param prefix optional prefix. If not set, the default prefix will be used
 	 */
-	sendCmdSync(data: Buffer | Array<number>, prefix = StreamDock.cmdPrefix): Promise<void> {
+	async sendCmdSync(data: Buffer | Array<number>, prefix = StreamDock.cmdPrefix): Promise<void> {
 		if (!Buffer.isBuffer(data)) {
 			data = Buffer.from(data)
 		}
@@ -1300,8 +1301,8 @@ class StreamDock extends EventEmitter {
 				`Data length problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
 			)
 		}
-		let writepr, sendpr
-		writepr = this.writeRaw(writebuffer)
+		let sendpr: Promise<void> | undefined
+		const writepr = this.writeRaw(writebuffer)
 
 		if (data.byteLength + prefixbuffer.byteLength > StreamDock.packetSize) {
 			const remain = data.subarray(StreamDock.packetSize - prefixbuffer.byteLength)
@@ -1316,7 +1317,7 @@ class StreamDock extends EventEmitter {
 			return writepr
 		}
 
-		return Promise.reject('Unknown error during sync send')
+		throw new Error('Unknown error during sync send')
 	}
 
 	/**
@@ -1367,12 +1368,10 @@ class StreamDock extends EventEmitter {
 
 	async writeRaw(data: Buffer | Array<number>): Promise<void> {
 		const written = await this.device.write(data).catch(() => {
-			throw 'Write to Stream Dock failed!'
+			throw new Error('Write to Stream Dock failed!')
 		})
 		if (typeof written === 'number' && written !== data.length) {
-			return Promise.reject('Write to Stream Dock failed')
-		} else {
-			return Promise.resolve()
+			throw new Error('Write to Stream Dock failed')
 		}
 	}
 
@@ -1418,7 +1417,7 @@ class StreamDock extends EventEmitter {
 
 		for (quality = 90; quality > 11; quality -= 10) {
 			// 90% quality will fit almost all images in the 10k limit
-			let options = {
+			const options = {
 				format: jpg.FORMAT_RGB,
 				width: output.resolutionx,
 				height: output.resolutiony,

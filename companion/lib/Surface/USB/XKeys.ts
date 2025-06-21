@@ -201,7 +201,7 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 
 			return self
 		} catch (e) {
-			panel.close()
+			await panel.close()
 
 			throw e
 		}
@@ -235,9 +235,9 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		const xkeys = this.#myXkeysPanel
 
 		if (xkeys) {
-			try {
-				xkeys.close()
-			} catch (e) {}
+			xkeys.close().catch(() => {
+				// Ignore
+			})
 		}
 	}
 

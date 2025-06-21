@@ -163,15 +163,15 @@ export class SurfaceUSBVECFootpedal extends EventEmitter<SurfacePanelEvents> imp
 		this.config = config
 	}
 
-	quit() {
+	quit(): void {
 		this.#vecFootpedal.stop()
 	}
 
-	draw() {
+	draw(): void {
 		// Should never be fired
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		// Not relevant for this device
 	}
 }
