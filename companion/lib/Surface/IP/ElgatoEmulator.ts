@@ -11,14 +11,12 @@
  */
 
 import { EventEmitter } from 'events'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es'
 import LogController from '../../Log/Controller.js'
-import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
 import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { EmulatorConfig, EmulatorImage, EmulatorImageCache } from '@companion-app/shared/Model/Common.js'
-import type { UIHandler, ClientSocket } from '../../UI/Handler.js'
+import type { EmulatorConfig, EmulatorImage } from '@companion-app/shared/Model/Common.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
@@ -71,18 +69,27 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
+export type EmulatorUpdateEvents = {
+	emulatorConfig: [id: string, diff: EmulatorConfig]
+	emulatorImages: [id: string, images: EmulatorImage[], clearCache: boolean]
+}
+
+function getCacheKey(x: number, y: number): string {
+	return `${x}/${y}`
+}
+
 export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger = LogController.createLogger('Surface/IP/ElgatoEmulator')
 
 	readonly #emulatorId: string
 
-	readonly #io: UIHandler
+	readonly #events: Pick<EventEmitter<EmulatorUpdateEvents>, 'emit' | 'listenerCount'>
 
 	#lastSentConfigJson: EmulatorConfig = cloneDeep(DefaultConfig)
 
 	readonly #pendingBufferUpdates = new Map<string, [number, number]>()
 
-	#imageCache: EmulatorImageCache = {}
+	#imageCache = new Map<string, string>()
 
 	readonly info: SurfacePanelInfo
 
@@ -94,15 +101,14 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 					newImages.push({
 						x,
 						y,
-						buffer: this.#imageCache[y]?.[x] || false,
+						buffer: this.#imageCache.get(getCacheKey(x, y)) ?? false,
 					})
 				}
 
 				this.#pendingBufferUpdates.clear()
 
-				const roomName = EmulatorRoom(this.#emulatorId)
-				if (this.#io.countRoomMembers(roomName) > 0) {
-					this.#io.emitToRoom(roomName, 'emulator:images', newImages)
+				if (this.#events.listenerCount('emulatorImages') > 0) {
+					this.#events.emit('emulatorImages', this.#emulatorId, newImages, false)
 				}
 			}
 		},
@@ -114,10 +120,10 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		}
 	)
 
-	constructor(io: UIHandler, emulatorId: string) {
+	constructor(events: Pick<EventEmitter<EmulatorUpdateEvents>, 'emit' | 'listenerCount'>, emulatorId: string) {
 		super()
 
-		this.#io = io
+		this.#events = events
 		this.#emulatorId = emulatorId
 
 		this.info = {
@@ -128,8 +134,6 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		}
 
 		this.#logger.debug('Adding Elgato Streamdeck Emulator')
-
-		this.#imageCache = {}
 	}
 
 	get gridSize(): GridSize {
@@ -139,10 +143,24 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		}
 	}
 
-	setupClient(client: ClientSocket): EmulatorConfig {
-		client.emit('emulator:images', this.#imageCache)
-
+	latestConfig(): EmulatorConfig {
 		return this.#lastSentConfigJson
+	}
+
+	latestImages(): EmulatorImage[] {
+		const images: EmulatorImage[] = []
+
+		for (let y = 0; y < this.gridSize.rows; y++) {
+			for (let x = 0; x < this.gridSize.columns; x++) {
+				images.push({
+					x,
+					y,
+					buffer: this.#imageCache.get(getCacheKey(x, y)) ?? false,
+				})
+			}
+		}
+
+		return images
 	}
 
 	getDefaultConfig(): EmulatorConfig {
@@ -158,11 +176,9 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		if (!config.emulator_rows) config.emulator_rows = this.getDefaultConfig().emulator_rows
 
 		// Send config to clients
-		const roomName = EmulatorRoom(this.#emulatorId)
-		if (this.#io.countRoomMembers(roomName) > 0) {
-			const patch = jsonPatch.compare(this.#lastSentConfigJson || {}, config || {})
-			if (patch.length > 0) {
-				this.#io.emitToRoom(roomName, `emulator:config`, config)
+		if (this.#events.listenerCount('emulatorConfig') > 0) {
+			if (!isEqual(this.#lastSentConfigJson, config)) {
+				this.#events.emit('emulatorConfig', this.#emulatorId, config)
 			}
 		}
 
@@ -170,7 +186,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		const oldSize = this.gridSize
 		if (config.emulator_columns !== oldSize.columns || config.emulator_rows !== oldSize.rows) {
 			// Clear the cache to ensure no bleed
-			this.#imageCache = {}
+			this.#imageCache.clear()
 
 			for (let y = 0; y < oldSize.rows; y++) {
 				for (let x = 0; x < oldSize.columns; x++) {
@@ -202,9 +218,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 			return
 		}
 
-		let yCache = this.#imageCache[y]
-		if (!yCache) yCache = this.#imageCache[y] = {}
-		yCache[x] = dataUrl || undefined
+		this.#imageCache.set(getCacheKey(x, y), dataUrl)
 
 		this.#trackChanged(x, y)
 		this.#emitChanged()
@@ -221,11 +235,10 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		this.#logger.silly('elgato.prototype.clearDeck()')
 
 		// clear all images
-		this.#imageCache = {}
+		this.#imageCache.clear()
 
-		const roomName = EmulatorRoom(this.#emulatorId)
-		if (this.#io.countRoomMembers(roomName) > 0) {
-			this.#io.emitToRoom(roomName, 'emulator:images', {})
+		if (this.#events.listenerCount('emulatorImages') > 0) {
+			this.#events.emit('emulatorImages', this.#emulatorId, [], true)
 		}
 	}
 }
