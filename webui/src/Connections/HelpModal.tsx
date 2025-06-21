@@ -40,7 +40,7 @@ export const HelpModal = observer(
 						if (parsed) versionDisplayName = `v${parsed.toString()}`
 					}
 
-					const fixedUrl = makeAbsolutePath(url)
+					const fixedUrl = url.startsWith('http') ? url : makeAbsolutePath(url)
 
 					fetch(fixedUrl)
 						.then(async (response) => {

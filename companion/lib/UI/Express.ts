@@ -116,14 +116,16 @@ export class UIExpress {
 				!req.url.endsWith('.woff2') &&
 				!req.url.endsWith('.svg')
 			) {
-				const customPrefixFromHeader = req.headers['companion-custom-prefix']
+				let customPrefixFromHeader = req.headers['companion-custom-prefix']
+				if (customPrefixFromHeader?.includes('://') || customPrefixFromHeader?.includes('..'))
+					customPrefixFromHeader = undefined // Don't allow custom prefixes that are not just a path
 
 				// Force the inner response to be uncompressed, as we need to be able to modify the response body
 				const originalAcceptEncoding = req.headers['accept-encoding']
 				req.headers['accept-encoding'] = 'identity'
 
 				// If there is a prefix in the header, use that to customise the html response
-				let processedPrefix = customPrefixFromHeader ? path.resolve(`/${customPrefixFromHeader}`) : '/'
+				let processedPrefix = customPrefixFromHeader ? `/${customPrefixFromHeader}` : '/'
 				if (processedPrefix.endsWith('/')) processedPrefix = processedPrefix.slice(0, -1)
 
 				// Store original methods

@@ -33,7 +33,8 @@ function getBaseFromArgs(): string {
 
 // Get the base path from Vite's --base argument
 const basePath = getBaseFromArgs()
-const normalizedBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath
+let normalizedBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath
+if (!normalizedBase.startsWith('/')) normalizedBase = `/${normalizedBase}`
 
 export default defineConfig({
 	publicDir: 'public',
@@ -48,16 +49,16 @@ export default defineConfig({
 		proxy: {
 			[`${normalizedBase}/int`]: {
 				target: `http://${upstreamUrl}`,
-				rewrite: (path) => path.replace(/^(.+)\/int/, '/int'),
+				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 			[`${normalizedBase}/docs`]: {
 				target: `http://${upstreamUrl}`,
-				rewrite: (path) => path.replace(/^(.+)\/docs/, '/docs'),
+				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 			[`${normalizedBase}/socket.io`]: {
 				target: `ws://${upstreamUrl}`,
 				ws: true,
-				rewrite: (path) => path.replace(/^(.+)\/socket.io/, '/socket.io'),
+				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 		},
 	},
