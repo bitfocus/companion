@@ -51,6 +51,7 @@ import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
+import type { AppVersionInfo } from '@companion-app/shared/Model/Common.js'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -87,18 +88,21 @@ export function SidebarStateProvider({ children }: React.PropsWithChildren): Rea
 interface SidebarMenuItemProps {
 	name: string
 	subheading?: string
-	icon: IconDefinition | null
+	icon: IconDefinition | null | 'empty'
 	notifications?: React.ComponentType<Record<string, never>>
 	path?: string
 	onClick?: () => void
 	target?: string
+	title?: string
 }
 
 function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 	return (
 		<>
 			<span className="nav-icon-wrapper">
-				{item.icon ? (
+				{item.icon === 'empty' ? (
+					''
+				) : item.icon ? (
 					<FontAwesomeIcon className="nav-icon" icon={item.icon} />
 				) : (
 					<span className="nav-icon">
@@ -107,7 +111,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			<span className="flex-fill">
+			<span className="flex-fill text-truncate">
 				<span>{item.name}</span>
 				{!!item.subheading && (
 					<>
@@ -117,7 +121,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			{item.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
+			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1" />}
 			{!!item.notifications && <item.notifications />}
 		</>
 	)
@@ -131,7 +135,7 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 	}
 	return (
 		<CNavItem idx={item.path}>
-			<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2}>
+			<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2} title={item.title}>
 				<SidebarMenuItemLabel {...item} />
 			</CNavLink>
 		</CNavItem>
@@ -213,6 +217,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
 					<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
 				</SidebarMenuItemGroup>
+				<SidebarVersionInfo />
 			</CSidebarNav>
 			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
 				<CSidebarToggler onClick={() => setUnfoldable((val) => !val)} />
@@ -238,6 +243,53 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 				/>
 			))}
 		</>
+	)
+})
+
+const SidebarVersionInfo = observer(function SidebarVersionInfo() {
+	const { socket } = useContext(RootAppStoreContext)
+	const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null)
+
+	useEffect(() => {
+		if (!socket) return
+
+		socket
+			.emitPromise('app-version-info', [])
+			.then((info) => {
+				setVersionInfo(info)
+			})
+			.catch((e) => {
+				console.error('Failed to load version info', e)
+			})
+	}, [socket])
+
+	let versionString = ''
+	let versionSubheading = ''
+
+	if (versionInfo) {
+		if (versionInfo.appBuild.includes('-stable-')) {
+			versionString = `v${versionInfo.appVersion}`
+		} else {
+			// split appBuild into parts.
+			const splitPoint = versionInfo.appBuild.indexOf('-')
+			if (splitPoint === -1) {
+				versionString = `v${versionInfo.appBuild}`
+			} else {
+				versionString = `v${versionInfo.appBuild.substring(0, splitPoint)}`
+				versionSubheading = versionInfo.appBuild.substring(splitPoint + 1)
+			}
+		}
+	}
+
+	return (
+		<SidebarMenuItem
+			name={versionString ?? 'Unknown'}
+			subheading={versionSubheading}
+			icon="empty"
+			target="_blank"
+			path="https://bitfocus.io/companion/"
+			title={versionInfo ? `Build ${versionInfo.appBuild}` : undefined}
+		/>
 	)
 })
 
