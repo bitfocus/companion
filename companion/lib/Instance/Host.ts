@@ -348,7 +348,6 @@ export class ModuleHost {
 		if (!baseChild) {
 			if (!targetState) {
 				// Connection is not running, nothing to do
-				this.#logger.debug(`No connection info provided for "${connectionId}", not starting`)
 				return
 			}
 

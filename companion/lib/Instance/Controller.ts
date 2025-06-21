@@ -101,13 +101,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController = variables
 		this.#controlsController = controls
 
-		this.#configStore = new ConnectionConfigStore(db, (connectionIds) => {
+		this.#configStore = new ConnectionConfigStore(db, (connectionIds, updateConnectionHost) => {
 			// Ensure any changes to collectionId update the enabled state
-			for (const connectionId of connectionIds) {
-				try {
-					this.#queueUpdateConnectionState(connectionId, true, false)
-				} catch (e) {
-					this.#logger.warn(`Error updating connection state for ${connectionId}: `, e)
+			if (updateConnectionHost) {
+				for (const connectionId of connectionIds) {
+					try {
+						this.#queueUpdateConnectionState(connectionId, true, false)
+					} catch (e) {
+						this.#logger.warn(`Error updating connection state for ${connectionId}: `, e)
+					}
 				}
 			}
 
@@ -161,10 +163,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.modules,
 			this.modulesStore,
 			this.#configStore,
-			appInfo.modulesDir,
-			(connectionId) => {
-				this.#queueUpdateConnectionState(connectionId, false, true)
-			}
+			appInfo.modulesDir
 		)
 		this.modules.listenToStoreEvents(this.modulesStore)
 
@@ -305,7 +304,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.emit('connection_updated', id)
 
-		this.#configStore.commitChanges([id])
+		this.#configStore.commitChanges([id], false)
 
 		const instance = this.moduleHost.getChild(id, true)
 		if (values.label) {
@@ -352,8 +351,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#queueUpdateConnectionState(id, true)
 
 		this.#logger.silly('instance_add', id)
-		this.#configStore.commitChanges([id])
-
 		this.emit('connection_added', id)
 
 		return [id, config]
@@ -384,7 +381,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				this.#logger.info((state ? 'Enable' : 'Disable') + ' instance ' + label)
 				connectionConfig.enabled = state
 
-				this.#configStore.commitChanges([id])
+				this.#configStore.commitChanges([id], false)
 
 				this.#queueUpdateConnectionState(id, false, true)
 			} else {
@@ -543,7 +540,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	/**
 	 * Start an instance running
 	 */
-	#queueUpdateConnectionState(id: string, skipCommitChanges = false, forceRestart = false): void {
+	#queueUpdateConnectionState(id: string, forceCommitChanges = false, forceRestart = false): void {
 		const config = this.#configStore.getConfigForId(id)
 		if (!config) throw new Error('Cannot activate unknown module')
 
@@ -573,9 +570,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			changed = true
 		}
 
-		if (changed && !skipCommitChanges) {
+		if (changed || forceCommitChanges) {
 			// If we changed the config, we need to commit it
-			this.#configStore.commitChanges([id])
+			this.#configStore.commitChanges([id], false)
 		}
 
 		const enableConnection = config.enabled !== false && this.collections.isCollectionEnabled(config.collectionId)
@@ -710,7 +707,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			// Update the config
 			if (updatePolicy) config.updatePolicy = updatePolicy
-			this.#configStore.commitChanges([id])
+			this.#configStore.commitChanges([id], false)
 
 			// Install the module if needed
 			const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
@@ -738,7 +735,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			config.instance_type = moduleId
 			config.moduleVersionId = versionId
 			// if (updatePolicy) config.updatePolicy = updatePolicy
-			this.#configStore.commitChanges([connectionId])
+			this.#configStore.commitChanges([connectionId], false)
 
 			// Install the module if needed
 			const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
