@@ -11,7 +11,7 @@ export const EmberPlusConfig = observer(function EmberPlusConfig(props: UserConf
 		<>
 			<UserConfigHeadingRow label="Ember+" />
 
-			<UserConfigSwitchRow userConfig={props} label="Ember+ Listener" field="emberplus_enabled" />
+			<UserConfigSwitchRow userConfig={props} label="Ember+ Provider" field="emberplus_enabled" />
 
 			{props.config.emberplus_enabled && (
 				<UserConfigStaticTextRow
