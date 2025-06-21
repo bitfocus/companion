@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 // Copied from https://github.com/colinbdclark/osc.js/pull/105
 
 declare module 'osc' {
@@ -18,7 +19,6 @@ declare module 'osc' {
 
 		listeners<E extends keyof T>(event: E): T[E][]
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		emit(event: string | symbol, ...args: any[]): boolean
 		listenerCount(type: keyof T): number
 
@@ -52,7 +52,6 @@ declare module 'osc' {
 		args: Array<MetaArgument>
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-empty-interface
 	export interface OscBundle {}
 
 	export interface SenderInfo {
@@ -97,7 +96,6 @@ declare module 'osc' {
 		 * An array of multicast addresses to join when listening for multicast messages
 		 */
 		multicastMembership?: string[]
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		socket?: any
 
 		/**

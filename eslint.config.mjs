@@ -96,6 +96,17 @@ export default [
 			'@typescript-eslint/ban-ts-comment': 'off',
 		},
 	},
+	{
+		files: ['companion/**/*.ts', 'companion/**/*.js'],
+		rules: {
+			'n/no-missing-import': [
+				'error',
+				{
+					allowModules: ['@companion-app/shared', 'type-fest'],
+				},
+			],
+		},
+	},
 
 	// Add prettier at the end to give it final say on formatting
 	eslintPluginPrettierRecommended,
@@ -120,7 +131,19 @@ export default [
 			'module-local-dev/**/*',
 			'launcher/dev.cjs',
 			// TMP
-			'companion/**/*',
+			'webui/**/*',
+			'companion/lib/Cloud/**/*',
+			'companion/lib/Controls/**/*',
+			'companion/lib/Data/**/*',
+			'companion/lib/Graphics/**/*',
+			'companion/lib/ImportExport/**/*',
+			'companion/lib/Instance/**/*',
+			'companion/lib/Internal/**/*',
+			'companion/lib/Page/**/*',
+			'companion/lib/Resources/**/*',
+			'companion/lib/Service/**/*',
+			'companion/lib/Surface/**/*',
+			'companion/test/**/*',
 			'webui/test/**/*',
 		],
 	},

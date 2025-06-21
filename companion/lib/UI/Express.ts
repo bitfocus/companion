@@ -14,7 +14,7 @@ import path from 'path'
 import { isPackaged } from '../Resources/Util.js'
 import cors from 'cors'
 import fs from 'fs'
-// @ts-ignore
+// @ts-expect-error no types for this package
 import serveZip from 'express-serve-zip'
 import { fileURLToPath } from 'url'
 import compression from 'compression'
@@ -82,13 +82,13 @@ export class UIExpress {
 		})
 
 		// Use the router #connectionApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
-		this.app.use('/instance', (r, s, n) => this.#connectionApiRouter(r, s, n))
+		this.app.use('/instance', async (r, s, n) => this.#connectionApiRouter(r, s, n))
 
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
-		this.app.use('/api', (r, s, n) => this.#apiRouter(r, s, n))
+		this.app.use('/api', async (r, s, n) => this.#apiRouter(r, s, n))
 
 		// Use the router #legacyApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
-		this.app.use((r, s, n) => this.#legacyApiRouter(r, s, n))
+		this.app.use(async (r, s, n) => this.#legacyApiRouter(r, s, n))
 
 		function getResourcePath(subpath: string): string {
 			if (isPackaged()) {
@@ -107,7 +107,7 @@ export class UIExpress {
 			getResourcePath('webui/build'),
 		])
 		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs')])
-		const webuiServerWithRewriter: Express.RequestHandler = (req, res, next) => {
+		const webuiServerWithRewriter: Express.RequestHandler = async (req, res, next) => {
 			// This is pretty horrible, but we need to rewrite the ROOT_URL_HERE in the html/js/css files to the correct prefix
 			// First ignore a few file types that we don't want to rewrite
 			if (
@@ -130,7 +130,7 @@ export class UIExpress {
 				if (processedPrefix.endsWith('/')) processedPrefix = processedPrefix.slice(0, -1)
 
 				// Store original methods
-				const originalEnd = res.end
+				const originalEnd = res.end.bind(res)
 				let responseBody = ''
 				let hasEnded = false
 
@@ -181,7 +181,7 @@ export class UIExpress {
 
 					req.headers['accept-encoding'] = originalAcceptEncoding
 
-					return originalEnd.call(this, modifiedBody, encoding as any, cb)
+					return originalEnd(modifiedBody, encoding as any, cb)
 				}
 			}
 
@@ -195,7 +195,7 @@ export class UIExpress {
 		this.app.use(compression(), webuiServerWithRewriter)
 
 		// Handle all unknown urls as accessing index.html
-		this.app.get('*all', (req, res, next) => {
+		this.app.get('*all', async (req, res, next) => {
 			req.url = '/index.html'
 			return webuiServerWithRewriter(req, res, next)
 		})
