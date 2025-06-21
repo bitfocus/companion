@@ -20,6 +20,7 @@ import { computed } from 'mobx'
 import { DropTargetMonitor, XYCoord } from 'react-dnd'
 import type { ReadonlyDeep } from 'type-fest'
 import { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { joinPaths } from '@tanstack/react-router'
 
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
@@ -472,4 +473,8 @@ export function isCollectionEnabled<TMetaData extends { enabled?: boolean }>(
 	}
 
 	return false
+}
+
+export function makeAbsolutePath(path: string): string {
+	return joinPaths([import.meta.env.BASE_URL || '/', path])
 }

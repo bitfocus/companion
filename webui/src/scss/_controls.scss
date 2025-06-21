@@ -9,7 +9,7 @@
 	}
 
 	input[type='checkbox']:checked {
-		background: 0 0 url('/img/check.png') no-repeat;
+		background: 0 0 var(--companion-img-check) no-repeat;
 	}
 	input[type='checkbox']:disabled {
 		background: #eee;
@@ -65,7 +65,7 @@ label.disabled {
 	width: 60px;
 	height: 60px;
 
-	background-image: url('/img/alignment.png');
+	background-image: var(--companion-img-alignment);
 
 	grid-template-columns: 1fr 1fr 1fr;
 	grid-template-rows: 1fr 1fr 1fr;
