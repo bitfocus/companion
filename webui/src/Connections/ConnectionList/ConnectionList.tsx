@@ -68,8 +68,9 @@ export const ConnectionsList = observer(function ConnectionsList({
 	}, [connections.connections, connectionStatuses])
 
 	const ConnectionsItemRow = useCallback(
-		(item: ClientConnectionConfigWithId) => ConnectionListItemWrapper(visibleConnections.visibility, item),
-		[visibleConnections.visibility]
+		(item: ClientConnectionConfigWithId) =>
+			ConnectionListItemWrapper(visibleConnections.visibility, item, selectedConnectionId),
+		[visibleConnections.visibility, selectedConnectionId]
 	)
 
 	return (
@@ -152,7 +153,11 @@ function ConnectionListNoConnections() {
 	)
 }
 
-function ConnectionListItemWrapper(visibility: VisibleConnectionsState, item: ClientConnectionConfigWithId) {
+function ConnectionListItemWrapper(
+	visibility: VisibleConnectionsState,
+	item: ClientConnectionConfigWithId,
+	selectedItemId: string | null
+) {
 	// Apply visibility filters
 	if (!visibility.disabled && item.enabled === false) {
 		return null
@@ -166,5 +171,5 @@ function ConnectionListItemWrapper(visibility: VisibleConnectionsState, item: Cl
 		}
 	}
 
-	return <ConnectionsTableRow connection={item} />
+	return <ConnectionsTableRow connection={item} isSelected={selectedItemId === item.id} />
 }
