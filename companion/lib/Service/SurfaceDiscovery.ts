@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash-es'
 import { ServiceBase } from './Base.js'
-import { Bonjour, Browser, Service } from '@julusian/bonjour-service'
+import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
 import { StreamDeckTcpDefinition, StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
 import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
@@ -115,7 +115,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		this.#bonjour.destroy()
 	}
 
-	#updateSatelliteService(oldService: Service | undefined, service: Service) {
+	#updateSatelliteService(oldService: DiscoveredService | undefined, service: DiscoveredService) {
 		this.logger.debug(`Found companion satellite device ${service.name} at ${service.addresses?.[0]}:${service.port}`)
 
 		if (oldService) {
@@ -134,14 +134,14 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		})
 	}
 
-	#forgetSatelliteService(service: Service) {
+	#forgetSatelliteService(service: DiscoveredService) {
 		this.#io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
 			type: 'remove',
 			itemId: this.#convertSatelliteServiceForUi(service).id,
 		})
 	}
 
-	#convertSatelliteServiceForUi(service: Service): ClientDiscoveredSurfaceInfo {
+	#convertSatelliteServiceForUi(service: DiscoveredService): ClientDiscoveredSurfaceInfo {
 		return {
 			id: service.fqdn,
 

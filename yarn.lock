@@ -2382,13 +2382,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@julusian/bonjour-service@npm:^1.3.0-2":
-  version: 1.3.0-2
-  resolution: "@julusian/bonjour-service@npm:1.3.0-2"
+"@julusian/bonjour-service@npm:^1.3.0-2, @julusian/bonjour-service@npm:^1.4.2":
+  version: 1.4.2
+  resolution: "@julusian/bonjour-service@npm:1.4.2"
   dependencies:
+    dns-packet: "npm:^5.2.2"
     fast-deep-equal: "npm:^3.1.3"
-    multicast-dns: "npm:^7.2.5"
-  checksum: 10c0/efb004b4c4d3214a166bdd81e04f39dcee6055a2a991192c40059bda302377d909176a3967baeac3714681e88a2b3274763e19897e1ed00e27298f602f90fffd
+    thunky: "npm:^1.0.2"
+  checksum: 10c0/3154d2f55da7ea855e2bb666f30de6d3f6dc2b1cbbfca589674bcf8068e90a5477fa0767651dda46efe9b39cd1280df12f322ed714e96832e56c2ef3e2502a03
   languageName: node
   linkType: hard
 
@@ -6977,7 +6978,7 @@ asn1@evs-broadcast/node-asn1:
     "@companion-module/base": "npm:^1.13.0-0"
     "@elgato-stream-deck/node": "npm:^7.3.1"
     "@elgato-stream-deck/tcp": "npm:^7.3.1"
-    "@julusian/bonjour-service": "npm:^1.3.0-2"
+    "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^1.1.1"
     "@julusian/jpeg-turbo": "npm:^2.2.0"
     "@julusian/segfault-raub": "npm:^2.3.1"
@@ -12206,18 +12207,6 @@ asn1@evs-broadcast/node-asn1:
   version: 2.1.3
   resolution: "ms@npm:2.1.3"
   checksum: 10c0/d924b57e7312b3b63ad21fc5b3dc0af5e78d61a1fc7cfb5457edaf26326bf62be5307cc87ffb6862ef1c2b33b0233cdb5d4f01c4c958cc0d660948b65a287a48
-  languageName: node
-  linkType: hard
-
-"multicast-dns@npm:^7.2.5":
-  version: 7.2.5
-  resolution: "multicast-dns@npm:7.2.5"
-  dependencies:
-    dns-packet: "npm:^5.2.2"
-    thunky: "npm:^1.0.2"
-  bin:
-    multicast-dns: cli.js
-  checksum: 10c0/5120171d4bdb1577764c5afa96e413353bff530d1b37081cb29cccc747f989eb1baf40574fe8e27060fc1aef72b59c042f72b9b208413de33bcf411343c69057
   languageName: node
   linkType: hard
 
