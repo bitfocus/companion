@@ -130,10 +130,16 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 		item.onClick()
 	}
 	return (
-		<CNavItem idx={item.path}>
-			<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2}>
-				<SidebarMenuItemLabel {...item} />
-			</CNavLink>
+		<CNavItem idx={item.path ?? item.name}>
+			{item.path ? (
+				<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2}>
+					<SidebarMenuItemLabel {...item} />
+				</CNavLink>
+			) : (
+				<CNavLink onClick={onClick2} style={{ cursor: 'pointer' }}>
+					<SidebarMenuItemLabel {...item} />
+				</CNavLink>
+			)}
 		</CNavItem>
 	)
 }
