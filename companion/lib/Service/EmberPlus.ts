@@ -175,7 +175,9 @@ export class ServiceEmberPlus extends ServiceBase {
 				} else {
 					const path = buildPathForVariable(id, 'custom', this.#customVars)
 					if (path === undefined) return
-					this.#updateNodeDescription(path, this.#serviceApi.getCustomVariableDescription(id))
+					const description = this.#serviceApi.getCustomVariableDescription(id)
+					this.#updateNodeDescription(path, description)
+					this.#updateNodeDescription(path.substring(0, path.length - 2), description)
 				}
 			}
 		})
