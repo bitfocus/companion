@@ -110,14 +110,78 @@ export class UIExpress {
 		// Serve docs folder as static and public
 		this.app.use('/docs', docsServer)
 
+		const responseIndexHtml: Express.RequestHandler = (req, res, next) => {
+			const customPrefixFromHeader = req.header('companion-custom-prefix')
+
+			// If there is a prefix in the header, use that to customise the html response
+			let processedPrefix = customPrefixFromHeader ? path.resolve(`/${customPrefixFromHeader}`) : '/'
+			if (processedPrefix.endsWith('/')) processedPrefix = processedPrefix.slice(0, -1)
+
+			// Store original methods
+			const originalEnd = res.end
+			let responseBody = ''
+			let hasEnded = false
+
+			// Override res.write to capture response data without writing it yet
+			res.write = function (
+				chunk: any,
+				encoding?: BufferEncoding | ((error: Error | null | undefined) => void),
+				cb?: (error: Error | null | undefined) => void
+			): boolean {
+				if (hasEnded) return false
+
+				if (chunk) {
+					if (Buffer.isBuffer(chunk)) {
+						responseBody += chunk.toString()
+					} else if (typeof chunk === 'string') {
+						responseBody += chunk
+					}
+				}
+
+				// Call the callback if provided to maintain flow control
+				if (typeof encoding === 'function') {
+					setImmediate(() => encoding(null))
+				} else if (cb) {
+					setImmediate(() => cb(null))
+				}
+
+				return true
+			}
+
+			// Override res.end to modify the final response
+			res.end = function (chunk?: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
+				if (hasEnded) return res
+				hasEnded = true
+
+				if (chunk) {
+					if (Buffer.isBuffer(chunk)) {
+						responseBody += chunk.toString()
+					} else if (typeof chunk === 'string') {
+						responseBody += chunk
+					}
+				}
+
+				// Replace ROOT_URL_HERE with the processed prefix
+				const modifiedBody = responseBody.replace(/\/ROOT_URL_HERE/g, processedPrefix)
+
+				// Remove any existing content-length header since we're changing the content
+				res.removeHeader('content-length')
+
+				return originalEnd.call(this, modifiedBody, encoding as any, cb)
+			}
+
+			req.url = '/index.html'
+			return webuiServer(req, res, next)
+		}
+
+		// Force the root url to use the special handling
+		this.app.get('/', responseIndexHtml)
+
 		// Serve the webui directory
 		this.app.use(webuiServer)
 
 		// Handle all unknown urls as accessing index.html
-		this.app.get('*all', (req, res, next) => {
-			req.url = '/index.html'
-			return webuiServer(req, res, next)
-		})
+		this.app.get('*all', responseIndexHtml)
 	}
 
 	/**
