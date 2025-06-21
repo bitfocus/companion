@@ -44,7 +44,11 @@ function convertDatabaseToV6(db: DataStoreBase<any>, _logger: Logger) {
 
 function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'full') {
-		const newObj: ExportFullv6 = { ...cloneDeep(obj), version: 6 }
+		const newObj: ExportFullv6 = {
+			companionBuild: undefined,
+			...cloneDeep(obj),
+			version: 6,
+		}
 
 		if (newObj.pages) {
 			for (const page of Object.values(newObj.pages)) {
@@ -58,7 +62,12 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 
 		return newObj
 	} else if (obj.type == 'page') {
-		const newObj: ExportPageModelv6 = { connectionCollections: undefined, ...cloneDeep(obj), version: 6 }
+		const newObj: ExportPageModelv6 = {
+			connectionCollections: undefined,
+			companionBuild: undefined,
+			...cloneDeep(obj),
+			version: 6,
+		}
 
 		convertPageActionsDelays(newObj.page)
 
@@ -67,6 +76,7 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 		const newObj: ExportTriggersListv6 = {
 			connectionCollections: undefined,
 			triggerCollections: undefined,
+			companionBuild: undefined,
 			...cloneDeep(obj),
 			version: 6,
 		}

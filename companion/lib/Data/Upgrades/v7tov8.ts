@@ -36,6 +36,7 @@ function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'page') {
 		return {
 			connectionCollections: undefined,
+			companionBuild: undefined,
 			...obj,
 			version: 8,
 		}
@@ -43,6 +44,7 @@ function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
 		return {
 			triggerCollections: undefined,
 			connectionCollections: undefined,
+			companionBuild: undefined,
 			...obj,
 			version: 8,
 		}

@@ -145,6 +145,7 @@ export class ExportController {
 			const exp: ExportPageModelv6 = {
 				version: FILE_VERSION,
 				type: 'page',
+				companionBuild: this.#appInfo.appBuild,
 				page: pageExport,
 				instances: instancesExport,
 				connectionCollections: filteredConnectionCollections,
@@ -324,6 +325,7 @@ export class ExportController {
 		return {
 			type: 'trigger_list',
 			version: FILE_VERSION,
+			companionBuild: this.#appInfo.appBuild,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
 			instances: instancesExport,
@@ -424,6 +426,7 @@ export class ExportController {
 		const exp: ExportFullv6 = {
 			version: FILE_VERSION,
 			type: 'full',
+			companionBuild: this.#appInfo.appBuild,
 		}
 
 		const rawControls = this.#controlsController.getAllControls()

@@ -263,6 +263,7 @@ export class ImportExportController {
 				object = {
 					type: 'full',
 					version: FILE_VERSION,
+					companionBuild: object.companionBuild,
 					triggers: object.triggers,
 					triggerCollections: object.triggerCollections,
 					instances: object.instances,
