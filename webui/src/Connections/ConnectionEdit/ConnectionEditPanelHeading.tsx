@@ -31,7 +31,7 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 
 	return (
 		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Connection: {moduleInfo?.display?.shortname ?? connectionInfo.instance_type}</h4>
+			<h4 className="panel-title">Edit Connection: {moduleInfo?.display?.name ?? connectionInfo.instance_type}</h4>
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
 					<div className="float_right" onClick={doShowHelp} title="Show help for this connection">
