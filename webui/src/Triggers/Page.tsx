@@ -136,9 +136,7 @@ export const TriggersPage = observer(function Triggers() {
 			</CCol>
 
 			<CCol xs={12} xl={6} className="secondary-panel">
-				<div className="secondary-panel-inner">
-					<Outlet />
-				</div>
+				<Outlet />
 			</CCol>
 		</CRow>
 	)

@@ -338,7 +338,8 @@ form.row > * {
 
 .secondary-panel {
 	padding-left: 15px;
-	padding-right: 0px;
+	padding-right: 5px;
+	padding-bottom: 5px;
 	padding-top: 5px;
 	display: grid;
 	grid-template-rows: auto 1fr;
@@ -411,6 +412,10 @@ form.row > * {
 		/* Create a new stacking context for sticky positioning */
 		position: relative;
 
+		&.no-scroll {
+			overflow-y: auto;
+		}
+
 		.row-heading {
 			position: sticky;
 			padding: 1.5rem 1.5rem 0.5rem 1.5rem;
@@ -457,6 +462,10 @@ form.row > * {
 
 			.secondary-panel-simple-body {
 				overflow-y: scroll;
+
+				&.no-scroll {
+					overflow-y: auto;
+				}
 			}
 		}
 	}

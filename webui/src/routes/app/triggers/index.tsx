@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_app/triggers/')({
 function RouteComponent() {
 	return (
 		<div className="secondary-panel-simple">
-			<div className="secondary-panel-simple-body">
+			<div className="secondary-panel-simple-body no-scroll">
 				<NonIdealState text="Select a trigger to edit" icon={faClock} />
 			</div>
 		</div>
