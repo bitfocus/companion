@@ -96,8 +96,8 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 							<div className="intro-grid">
 								<div className="intro-text">
 									<p className="mb-2">
-										<strong>Companion currently supports over {modules.storeList.size} different devices</strong>, and
-										the list grows every day.
+										<strong>Companion supports over {modules.storeList.size} different devices</strong> and the list
+										grows every day.
 									</p>
 								</div>
 								<div>
