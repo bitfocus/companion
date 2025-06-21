@@ -352,11 +352,19 @@ export class ServiceEmberPlus extends ServiceBase {
 			this.#server = new EmberServer(this.port)
 			this.#server.on('error', this.handleSocketError.bind(this))
 			this.#server.onSetValue = this.setValue.bind(this)
-			this.#server.init(root)
+
+			this.#server
+				.init(root)
+				.then(() => {
+					this.logger.info('Listening on port ' + this.port)
+				})
+				.catch((e: any) => {
+					this.logger.error(`Could not launch: ${e.message}`)
+					this.#server = undefined
+					this.currentState = false
+				})
 
 			this.currentState = true
-			this.logger.info('Listening on port ' + this.port)
-			this.logger.silly('Listening on port ' + this.port)
 		} catch (e: any) {
 			this.logger.error(`Could not launch: ${e.message}`)
 		}
