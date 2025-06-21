@@ -568,7 +568,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		const enableConnection = config.enabled !== false && this.collections.isCollectionEnabled(config.collectionId)
-		// console.log('Enabling connection', id, enableConnection, config.collectionId, config)
 
 		this.moduleHost.queueUpdateConnectionState(
 			id,

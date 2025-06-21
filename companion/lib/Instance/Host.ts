@@ -389,9 +389,6 @@ export class ModuleHost {
 			return
 		}
 
-		console.log('queueRestartConnection', connectionId, targetState, forceRestart)
-		console.trace()
-
 		// Queue the work
 		baseChild.lifeCycleQueue
 			.add(async () => {
