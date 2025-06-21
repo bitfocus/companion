@@ -11,8 +11,9 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			listId: 'trigger_actions',
 			confirmModal: { current: null }, // TODO this is a hack
 
-			addEntity: (_connectionId: string, _definitionId: string, _ownerId: EntityOwner | null) => {
+			addEntity: async (_connectionId: string, _definitionId: string, _ownerId: EntityOwner | null) => {
 				// Not supported
+				return null
 			},
 			moveCard: (
 				_dragListId: SomeSocketEntityLocation,

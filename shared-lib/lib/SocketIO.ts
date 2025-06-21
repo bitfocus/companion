@@ -184,7 +184,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 		connectionId: string,
 		entityTypeLabel: EntityModelType,
 		entityDefinition: string
-	) => boolean
+	) => string | null
 
 	'controls:action-set:set-run-while-held': (
 		controlId: string,

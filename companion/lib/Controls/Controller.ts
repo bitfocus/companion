@@ -363,7 +363,7 @@ export class ControlsController {
 			'controls:entity:add',
 			(controlId, entityLocation, ownerId, connectionId, entityTypeLabel, entityDefinition) => {
 				const control = this.getControl(controlId)
-				if (!control) return false
+				if (!control) return null
 
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
@@ -372,9 +372,12 @@ export class ControlsController {
 					entityTypeLabel,
 					entityDefinition
 				)
-				if (!newEntity) return false
+				if (!newEntity) return null
 
-				return control.entities.entityAdd(entityLocation, ownerId, newEntity)
+				const added = control.entities.entityAdd(entityLocation, ownerId, newEntity)
+				if (!added) return null
+
+				return newEntity.id
 			}
 		)
 
