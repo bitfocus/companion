@@ -84,70 +84,74 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 
 	return (
 		<>
-			<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} />
-			<div style={{ clear: 'both' }} className="row-heading">
-				<h4>Add connection</h4>
-				{modules.storeList.size > 0 ? (
-					<p>
-						Companion currently supports over {modules.storeList.size} different things, and the list grows every day.
-						If you can't find the device you're looking for, we have{' '}
-						<a target="_blank" href="/getting-started#6_modules.md">
-							some guidance
-						</a>{' '}
-						on ways to get support for your device.
-					</p>
-				) : (
-					<p>
-						Companion currently hundreds of different things, and the list grows every day. If you have an active
-						internet connection you can search for and install modules to support additional devices. Otherwise you can
-						install download and load in a module bundle from the website.
-						<a target="_blank" href="https://user.bitfocus.io/download">
-							the website
-						</a>{' '}
-					</p>
-				)}
-
-				<div className="refresh-and-last-updated">
-					<RefreshModulesList />
-					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
-				</div>
-
-				<div className="table-header-buttons mb-2">
-					<VisibilityButton
-						{...typeFilter}
-						keyId="available"
-						color="info"
-						label="Available"
-						title="Available to be installed from the store"
-					/>
-				</div>
-
-				<SearchBox filter={filter} setFilter={setFilter} />
-				<br />
+			<div className="secondary-panel-simple-header">
+				<h4 className="panel-title">Add New Connection</h4>
 			</div>
-			<div id="connection_add_search_results">
-				{candidates}
 
-				{candidates.length === 0 && allProducts.length > 0 && (
-					<NonIdealState icon={faPlug}>
-						No modules match your search.
-						<br />
-						{!typeFilter.visibility.available && (
-							<a href="#" onClick={includeStoreModules}>
-								Click here to include modules from the store
-							</a>
-						)}
-					</NonIdealState>
-				)}
+			<div className="secondary-panel-simple-body">
+				<AddConnectionModal ref={addRef} doConfigureConnection={doConfigureConnection} />
+				<div style={{ clear: 'both' }} className="row-heading">
+					{modules.storeList.size > 0 ? (
+						<p>
+							Companion currently supports over {modules.storeList.size} different things, and the list grows every day.
+							If you can't find the device you're looking for, we have{' '}
+							<a target="_blank" href="/getting-started#6_modules.md">
+								some guidance
+							</a>{' '}
+							on ways to get support for your device.
+						</p>
+					) : (
+						<p>
+							Companion currently hundreds of different things, and the list grows every day. If you have an active
+							internet connection you can search for and install modules to support additional devices. Otherwise you
+							can install download and load in a module bundle from the website.
+							<a target="_blank" href="https://user.bitfocus.io/download">
+								the website
+							</a>{' '}
+						</p>
+					)}
 
-				{candidates.length === 0 && allProducts.length === 0 && (
-					<NonIdealState icon={faPlug}>
-						No modules are installed.
-						<br />
-						Make sure you have an active internet connection, or load a module bundle into the{' '}
-						<Link to="/modules">Modules tab</Link>
-					</NonIdealState>
-				)}
+					<div className="refresh-and-last-updated">
+						<RefreshModulesList />
+						<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+					</div>
+
+					<div className="table-header-buttons mb-2">
+						<VisibilityButton
+							{...typeFilter}
+							keyId="available"
+							color="info"
+							label="Available"
+							title="Available to be installed from the store"
+						/>
+					</div>
+
+					<SearchBox filter={filter} setFilter={setFilter} />
+				</div>
+				<div id="connection_add_search_results">
+					{candidates}
+
+					{candidates.length === 0 && allProducts.length > 0 && (
+						<NonIdealState icon={faPlug}>
+							No modules match your search.
+							<br />
+							{!typeFilter.visibility.available && (
+								<a href="#" onClick={includeStoreModules}>
+									Click here to include modules from the store
+								</a>
+							)}
+						</NonIdealState>
+					)}
+
+					{candidates.length === 0 && allProducts.length === 0 && (
+						<NonIdealState icon={faPlug}>
+							No modules are installed.
+							<br />
+							Make sure you have an active internet connection, or load a module bundle into the{' '}
+							<Link to="/modules">Modules tab</Link>
+						</NonIdealState>
+					)}
+				</div>
 			</div>
 		</>
 	)
