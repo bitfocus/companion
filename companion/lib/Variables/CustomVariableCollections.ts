@@ -1,9 +1,9 @@
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
-import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import type { CustomVariableCollection } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
 
-const ConnectionCollectionsRoom = 'custom-variable-collections'
+const CustomVariableCollectionsRoom = 'custom-variable-collections'
 
 export class CustomVariableCollections extends CollectionsBaseController<undefined> {
 	readonly #io: UIHandler
@@ -15,7 +15,7 @@ export class CustomVariableCollections extends CollectionsBaseController<undefin
 		db: DataDatabase,
 		cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void
 	) {
-		super(db.getTableView<Record<string, ConnectionCollection>>('custom_variable_collections'))
+		super(db.getTableView<Record<string, CustomVariableCollection>>('custom_variable_collections'))
 
 		this.#io = io
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds
@@ -28,8 +28,8 @@ export class CustomVariableCollections extends CollectionsBaseController<undefin
 		this.#cleanUnknownCollectionIds(this.collectAllCollectionIds())
 	}
 
-	override emitUpdate(rows: ConnectionCollection[]): void {
-		this.#io.emitToRoom(ConnectionCollectionsRoom, 'custom-variable-collections:update', rows)
+	override emitUpdate(rows: CustomVariableCollection[]): void {
+		this.#io.emitToRoom(CustomVariableCollectionsRoom, 'custom-variable-collections:update', rows)
 	}
 
 	/**
@@ -37,13 +37,13 @@ export class CustomVariableCollections extends CollectionsBaseController<undefin
 	 */
 	clientConnect(client: ClientSocket): void {
 		client.onPromise('custom-variable-collections:subscribe', () => {
-			client.join(ConnectionCollectionsRoom)
+			client.join(CustomVariableCollectionsRoom)
 
 			return this.data
 		})
 
 		client.onPromise('custom-variable-collections:unsubscribe', () => {
-			client.leave(ConnectionCollectionsRoom)
+			client.leave(CustomVariableCollectionsRoom)
 		})
 
 		client.onPromise('custom-variable-collections:add', (collectionName: string) => {

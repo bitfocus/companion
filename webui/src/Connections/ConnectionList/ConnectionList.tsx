@@ -1,10 +1,11 @@
 import React, { useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
@@ -107,6 +108,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 						Heading={ConnectionListTableHeading}
 						NoContent={ConnectionListNoConnections}
 						ItemRow={ConnectionsItemRow}
+						GroupHeaderContent={ConnectionGroupHeaderContent}
 						itemName="connection"
 						dragId="connection"
 						collectionsApi={connectionListApi}
@@ -150,6 +152,32 @@ function ConnectionListNoConnections() {
 			Try adding something from the list <span className="d-xl-none">below</span>
 			<span className="d-none d-xl-inline">to the right</span>.
 		</NonIdealState>
+	)
+}
+
+function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCollection }) {
+	const socket = useContext(SocketContext)
+
+	const setEnabled = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const enabled = e.target.checked
+
+			socket.emitPromise('connection-collections:set-enabled', [collection.id, enabled]).catch((e: any) => {
+				console.error('Failed to set collection enabled state', e)
+			})
+		},
+		[socket, collection.id]
+	)
+
+	return (
+		<CFormSwitch
+			className="ms-1"
+			color="success"
+			checked={collection.metaData.enabled}
+			onChange={setEnabled}
+			title={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}
+			size="xl"
+		/>
 	)
 }
 

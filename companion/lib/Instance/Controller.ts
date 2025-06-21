@@ -54,6 +54,7 @@ interface InstanceControllerEvents {
 	connection_added: [connectionId?: string]
 	connection_updated: [connectionId: string]
 	connection_deleted: [connectionId: string]
+	connection_collections_enabled: []
 }
 
 export class InstanceController extends EventEmitter<InstanceControllerEvents> {
@@ -101,7 +102,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#controlsController = controls
 
 		this.#configStore = new ConnectionConfigStore(db, this.broadcastChanges.bind(this))
-		this.#collectionsController = new InstanceCollections(io, db, this.#configStore)
+		this.#collectionsController = new InstanceCollections(io, db, this.#configStore, this)
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
