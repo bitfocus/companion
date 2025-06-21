@@ -15,7 +15,7 @@ import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { nanoid } from 'nanoid'
 import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'
-import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { SomeButtonModel, NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ClientTriggerData, TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { Registry } from '../Registry.js'
@@ -30,6 +30,8 @@ import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressio
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { ButtonControlBase } from './ControlTypes/Button/Base.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -299,6 +301,46 @@ export class ControlsController {
 			// Force a redraw
 			this.#registry.graphics.invalidateButton(fromLocation)
 			this.#registry.graphics.invalidateButton(toLocation)
+
+			return false
+		})
+		client.onPromise('controls:shortcut', (fromLocation, toLocation) => {
+			// Don't try shortcutting to itself
+			if (
+				fromLocation.pageNumber === toLocation.pageNumber &&
+				fromLocation.column === toLocation.column &&
+				fromLocation.row === toLocation.row
+			)
+				return false
+
+			// Make sure target page number is valid
+			if (!this.#registry.page.isPageValid(toLocation.pageNumber)) return false
+
+			// Make sure there is something to shortcut to
+			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
+			if (!fromControlId) return false
+
+			const fromControl = this.getControl(fromControlId)
+			if (!fromControl) return false
+
+			// Delete the control at the destination
+			const toControlId = this.#registry.page.getControlIdAt(toLocation)
+			if (toControlId) {
+				this.deleteControl(toControlId)
+			}
+
+			const createRotaryActions = fromControl.supportsOptions && fromControl.options.rotaryActions
+			const newControlJson = this.createShortcutButtonDefinitionModel(fromLocation, createRotaryActions)
+
+			const newControlId = CreateBankControlId(nanoid())
+			const newControl = this.#createClassForControl(newControlId, 'button', newControlJson, true)
+			if (newControl) {
+				this.#controls.set(newControlId, newControl)
+
+				this.#registry.page.setControlIdAt(toLocation, newControlId)
+
+				return true
+			}
 
 			return false
 		})
@@ -1314,6 +1356,47 @@ export class ControlsController {
 		for (const control of this.#controls.values()) {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)
+		}
+	}
+
+	createShortcutButtonDefinitionModel(
+		targetLocation: ControlLocation,
+		createRotaryActions: boolean
+	): NormalButtonModel {
+		const locationOptions = {
+			location_target: 'text',
+			location_text: formatLocation(targetLocation),
+		}
+
+		const entity = (type: EntityModelType, definitionId: string) => {
+			const entity = this.#registry.instance.definitions.createEntityItem('internal', type, definitionId)
+			if (!entity) {
+				throw new Error(`Failed to create action entity for definition "${definitionId}"`)
+			}
+			entity.options = locationOptions
+			return entity
+		}
+
+		return {
+			type: 'button',
+			style: ControlButtonNormal.DefaultStyle,
+			feedbacks: [entity(EntityModelType.Feedback, 'bank_style')],
+			steps: {
+				'0': {
+					action_sets: {
+						down: [entity(EntityModelType.Action, 'button_pressrelease')],
+						up: [],
+						rotate_left: createRotaryActions ? [entity(EntityModelType.Action, 'button_rotate_left')] : undefined,
+						rotate_right: createRotaryActions ? [entity(EntityModelType.Action, 'button_rotate_right')] : undefined,
+					},
+					options: { runWhileHeld: [] },
+				},
+			},
+			options: {
+				...ButtonControlBase.DefaultOptions,
+				rotaryActions: createRotaryActions,
+			},
+			localVariables: [],
 		}
 	}
 

@@ -2,7 +2,15 @@ import { CButton, CCol } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { SocketContext } from '~/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	faArrowsLeftRight,
+	faArrowsAlt,
+	faCompass,
+	faCopy,
+	faEraser,
+	faLink,
+	faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { useResizeObserver } from 'usehooks-ts'
@@ -134,6 +142,17 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 								setActiveFunctionButton(location)
 							}
 							return true
+						case 'shortcut':
+							if (activeFunctionButton) {
+								const fromInfo = activeFunctionButton
+								socket.emitPromise('controls:shortcut', [fromInfo, location]).catch((e) => {
+									console.error(`shortcut failed: ${e}`)
+								})
+								stopFunction()
+							} else {
+								setActiveFunctionButton(location)
+							}
+							return true
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
@@ -182,6 +201,8 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						{getButton('Copy', faCopy, 'copy')}
 						&nbsp;
 						{getButton('Move', faArrowsAlt, 'move')}
+						&nbsp;
+						{getButton('Shortcut', faLink, 'shortcut')}
 						&nbsp;
 						{getButton('Swap', faArrowsLeftRight, 'swap')}
 						&nbsp;
