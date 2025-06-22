@@ -275,7 +275,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			connection_collection_enabled: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Connection: When collection enabled or disabled',
 				description: undefined,
 				feedbackStyle: {

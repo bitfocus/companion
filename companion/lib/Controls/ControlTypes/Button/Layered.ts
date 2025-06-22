@@ -9,7 +9,11 @@ import type {
 } from '../../IControlFragments.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
-import type { LayeredButtonModel, LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	LayeredButtonModel,
+	LayeredButtonOptions,
+	NormalButtonRuntimeProps,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import {
@@ -160,7 +164,7 @@ export class ControlButtonLayered
 								;(element as any)[key] = (defaults as any)[key]
 							}
 						}
-					} catch (e) {
+					} catch (_e) {
 						// Ignore
 					}
 				}
@@ -393,6 +397,7 @@ export class ControlButtonLayered
 		return true
 	}
 
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	layeredStyleUpdateOptionValue(id: string, key: string, value: any): boolean {
 		// Ignore some fixed properties
 		if (key === 'id' || key === 'type' || key === 'name') return false
@@ -617,7 +622,7 @@ export class ControlButtonLayered
 	/**
 	 * Get any volatile properties for the control
 	 */
-	override toRuntimeJSON() {
+	override toRuntimeJSON(): NormalButtonRuntimeProps {
 		return {
 			current_step_id: this.entities.currentStepId,
 		}

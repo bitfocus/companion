@@ -76,7 +76,7 @@ export abstract class ControlEntityListPoolBase {
 		)
 	}
 
-	protected tryTriggerLocalVariablesChanged(...entitiesOrNames: (ControlEntityInstance | string | null)[]) {
+	protected tryTriggerLocalVariablesChanged(...entitiesOrNames: (ControlEntityInstance | string | null)[]): void {
 		if (!this.localVariablesChanged) return
 
 		if (entitiesOrNames.length === 0) return
@@ -486,6 +486,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param id The id of the entity
 	 * @param value The new value for the variable
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: any): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false

@@ -410,6 +410,7 @@ export class ControlEntityList {
 		}
 	}
 
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setVariableValue(name: string, value: any): boolean {
 		if (!name) return false
 

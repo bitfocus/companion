@@ -88,7 +88,7 @@ export class ControlEntityInstance {
 		if (!entity.variableName) return null
 
 		// Check if the variable name is valid
-		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
 		if (!entity.variableName.match(idCheckRegex)) return null
 
 		return `local:${entity.variableName}`
@@ -101,7 +101,7 @@ export class ControlEntityInstance {
 		if (!entity.variableName) return null
 
 		// Check if the variable name is valid
-		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
 		if (!entity.variableName.match(idCheckRegex)) return null
 
 		return entity.variableName
@@ -793,6 +793,7 @@ export class ControlEntityInstance {
 	/**
 	 * If this is the user value feedback, set the value
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setUserValue(value: any): void {
 		if (!isInternalUserValueFeedback(this)) return
 
