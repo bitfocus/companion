@@ -102,7 +102,7 @@ export class ControlEntityList {
 	 * Inform the instance of any removed/disabled entities
 	 * @access public
 	 */
-	cleanup() {
+	cleanup(): void {
 		for (const entity of this.#entities) {
 			entity.cleanup()
 		}

@@ -466,7 +466,7 @@ export class InternalController {
 	#regenerateActions(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		let actions: Record<string, ClientEntityDefinition> = {}
+		const actions: Record<string, ClientEntityDefinition> = {}
 
 		for (const fragment of this.#fragments) {
 			if ('getActionDefinitions' in fragment && typeof fragment.getActionDefinitions === 'function') {
@@ -493,7 +493,7 @@ export class InternalController {
 	#regenerateFeedbacks(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		let feedbacks: Record<string, ClientEntityDefinition> = {}
+		const feedbacks: Record<string, ClientEntityDefinition> = {}
 
 		for (const fragment of this.#fragments) {
 			if ('getFeedbackDefinitions' in fragment && typeof fragment.getFeedbackDefinitions === 'function') {

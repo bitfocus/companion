@@ -297,6 +297,7 @@ export class SurfaceGroup {
 	 * @param key Config field to change
 	 * @param value New value for the field
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setGroupConfigValue(key: string, value: any): string | undefined {
 		this.#logger.debug(`Set config "${key}" to "${value}"`)
 		switch (key) {

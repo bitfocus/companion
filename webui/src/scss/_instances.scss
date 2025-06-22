@@ -25,28 +25,11 @@
 	}
 }
 
-.connectionlist-dragging {
-	opacity: 0.5;
-}
-
 .connectionlist-selected {
 	background-color: rgba(200, 200, 200, 0.35);
 
 	&:hover {
 		background-color: rgba(200, 200, 200, 0.3) !important;
-	}
-}
-
-.connectionlist-notdragging:hover {
-	background-color: rgba(200, 200, 200, 0.1);
-}
-
-.instance_bug {
-	margin-right: 4px;
-
-	color: inherit;
-	&:hover {
-		color: inherit;
 	}
 }
 
@@ -166,10 +149,6 @@
 	margin: 0 0 1rem 0;
 }
 
-.connection-enabled-switch {
-	margin-left: 1em;
-}
-
 .import-module {
 	margin-bottom: 0.5rem;
 }
@@ -177,4 +156,29 @@
 // Connection groups styling
 .connection-group-actions {
 	margin-bottom: 1rem;
+}
+
+.add-connection-intro-section {
+	.intro-grid {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 0 0.5rem;
+
+		@media (max-width: 768px) {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+
+			.intro-filter {
+				justify-self: auto;
+			}
+		}
+	}
+
+	.intro-text {
+		grid-column: 1 / 3;
+	}
+
+	.intro-filter {
+		justify-self: end;
+	}
 }

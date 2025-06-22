@@ -24,7 +24,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		this.#actions = this.createEntityList({ type: EntityModelType.Action })
 	}
 
-	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean) {
+	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean): void {
 		this.#feedbacks.loadStorage(storage.condition || [], skipSubscribe, isImport)
 		this.#actions.loadStorage(storage.actions || [], skipSubscribe, isImport)
 	}

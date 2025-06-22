@@ -85,6 +85,7 @@ export class DataLegacyStoreBase {
 	 * @param defaultValue - the default value to use if the key doesn't exist
 	 * @param clone - <code>true</code> if a clone is needed instead of a link
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	getKey(key: string, defaultValue?: any, clone = false): any {
 		let out
 		this.logger.silly(`${this.name}_get(${key})`)
@@ -111,7 +112,7 @@ export class DataLegacyStoreBase {
 			this.logger.silly(this.cfgFile, 'exists. trying to read')
 
 			try {
-				let data = fs.readFileSync(this.cfgFile, 'utf8')
+				const data = fs.readFileSync(this.cfgFile, 'utf8')
 
 				if (data.trim().length > 0 || data.startsWith('\0')) {
 					this.store = JSON.parse(data)
@@ -120,10 +121,8 @@ export class DataLegacyStoreBase {
 					this.logger.debug(`${this.name} was empty.  Attempting to recover the configuration.`)
 					this.loadBackupSync()
 				}
-			} catch (e) {
-				try {
-					this.logger.debug(`${this.name} could not be parsed.`)
-				} catch (err) {}
+			} catch (_e) {
+				this.logger.debug(`${this.name} could not be parsed.`)
 
 				this.loadBackupSync()
 			}
@@ -139,7 +138,7 @@ export class DataLegacyStoreBase {
 	protected loadBackupSync(): void {
 		if (fs.existsSync(this.cfgBakFile)) {
 			this.logger.silly(this.cfgBakFile, 'exists. trying to read')
-			let data = fs.readFileSync(this.cfgBakFile, 'utf8')
+			const data = fs.readFileSync(this.cfgBakFile, 'utf8')
 
 			try {
 				if (data.trim().length > 0 || data.startsWith('\0')) {
@@ -150,7 +149,7 @@ export class DataLegacyStoreBase {
 					this.logger.debug(`${this.name}.bak was empty.`)
 					throw new Error(`Could not load legacy ${this.name} file or backup.`)
 				}
-			} catch (e) {
+			} catch (_e) {
 				this.logger.debug(`${this.name}.bak Could not load database backup file`)
 				throw new Error(`Could not load legacy ${this.name} file or backup.`)
 			}

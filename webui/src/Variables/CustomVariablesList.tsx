@@ -33,36 +33,9 @@ export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collec
 type CustomVariableCollectionExt = CollectionsNestingTableCollection
 
 export const CustomVariablesListPage = observer(function CustomVariablesList() {
-	const { socket, notifier, variablesStore: customVariables } = useContext(RootAppStoreContext)
+	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
 
 	const customVariableValues = useCustomVariablesValues()
-
-	const [newName, setNewName] = useState('')
-
-	const doCreateNew = useCallback(
-		(e: FormEvent) => {
-			e?.preventDefault()
-
-			if (isCustomVariableValid(newName)) {
-				socket
-					.emitPromise('custom-variables:create', [newName, ''])
-					.then((res) => {
-						console.log('done with', res)
-						if (res) {
-							notifier.current?.show(`Failed to create variable`, res, 5000)
-						}
-
-						// clear value
-						setNewName('')
-					})
-					.catch((e) => {
-						console.error('Failed to create variable')
-						notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
-					})
-			}
-		},
-		[socket, notifier, newName]
-	)
 
 	const allVariableNames = useComputed(
 		() => [...Array.from(customVariables.customVariables.keys()), ...customVariables.allCustomVariableCollectionIds],
@@ -166,19 +139,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 
 				<h5 className="mt-2">Create custom variable</h5>
 				<div className="mx-1 mb-1">
-					<CForm onSubmit={doCreateNew}>
-						<CInputGroup>
-							<CFormInput
-								type="text"
-								value={newName}
-								onChange={(e) => setNewName(e.currentTarget.value)}
-								placeholder="variableName"
-							/>
-							<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
-								Add
-							</CButton>
-						</CInputGroup>
-					</CForm>
+					<AddVariablePanel />
 				</div>
 
 				<br style={{ clear: 'both' }} />
@@ -222,3 +183,54 @@ const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
 		</>
 	)
 })
+
+function AddVariablePanel() {
+	const { socket, notifier } = useContext(RootAppStoreContext)
+	const panelCollapseHelper = usePanelCollapseHelperContext()
+
+	const [newName, setNewName] = useState('')
+
+	const doCreateNew = useCallback(
+		(e: FormEvent) => {
+			e?.preventDefault()
+
+			if (isCustomVariableValid(newName)) {
+				socket
+					.emitPromise('custom-variables:create', [newName, ''])
+					.then((res) => {
+						console.log('done with', res)
+						if (res) {
+							notifier.current?.show(`Failed to create variable`, res, 5000)
+						}
+
+						// clear value
+						setNewName('')
+
+						// Make sure the panel is open and wont be forgotten on first render
+						setTimeout(() => panelCollapseHelper.setPanelCollapsed(newName, false), 10)
+					})
+					.catch((e) => {
+						console.error('Failed to create variable')
+						notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
+					})
+			}
+		},
+		[socket, notifier, panelCollapseHelper, newName]
+	)
+
+	return (
+		<CForm onSubmit={doCreateNew}>
+			<CInputGroup>
+				<CFormInput
+					type="text"
+					value={newName}
+					onChange={(e) => setNewName(e.currentTarget.value)}
+					placeholder="variableName"
+				/>
+				<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
+					Add
+				</CButton>
+			</CInputGroup>
+		</CForm>
+	)
+}

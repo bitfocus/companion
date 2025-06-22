@@ -1,4 +1,5 @@
 import { EmberServer, Model as EmberModel } from 'emberplus-connection'
+// eslint-disable-next-line n/no-missing-import
 import { getPath } from 'emberplus-connection/dist/Ember/Lib/util.js'
 import { ServiceBase } from './Base.js'
 import { formatLocation, oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
@@ -6,6 +7,7 @@ import { pad } from '@companion-app/shared/Util.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import { LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+// eslint-disable-next-line n/no-missing-import
 import type { EmberValue } from 'emberplus-connection/dist/types/types.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -108,7 +110,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	 * Get the page/bank structure in EmberModel form
 	 */
 	#getPagesTree(): Record<number, EmberModel.NumberedTreeNodeImpl<any>> {
-		let output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
+		const output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 
 		const pageCount = this.#pageController.getPageCount() // TODO - handle resize
 
@@ -346,11 +348,19 @@ export class ServiceEmberPlus extends ServiceBase {
 			this.#server = new EmberServer(this.port)
 			this.#server.on('error', this.handleSocketError.bind(this))
 			this.#server.onSetValue = this.setValue.bind(this)
-			this.#server.init(root)
+
+			this.#server
+				.init(root)
+				.then(() => {
+					this.logger.info('Listening on port ' + this.port)
+				})
+				.catch((e: any) => {
+					this.logger.error(`Could not launch: ${e.message}`)
+					this.#server = undefined
+					this.currentState = false
+				})
 
 			this.currentState = true
-			this.logger.info('Listening on port ' + this.port)
-			this.logger.silly('Listening on port ' + this.port)
 		} catch (e: any) {
 			this.logger.error(`Could not launch: ${e.message}`)
 		}
@@ -576,7 +586,7 @@ export class ServiceEmberPlus extends ServiceBase {
 		const node = this.#server.getElementByPath(path)
 		if (!node) return
 
-		// @ts-ignore
+		// @ts-expect-error node type may not have a value property
 		if (node.contents.value !== newValue) {
 			this.#server.update(node, { value: newValue })
 		}

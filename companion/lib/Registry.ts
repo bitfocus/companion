@@ -1,3 +1,4 @@
+/* eslint-disable n/no-process-exit */
 import EventEmitter from 'events'
 import fs from 'fs-extra'
 import express from 'express'
@@ -40,7 +41,7 @@ try {
 			.trim()
 			.replace(/^-/, '')
 	}
-} catch (e) {
+} catch (_e) {
 	console.error('Companion cannot start as the "BUILD" file is missing')
 	console.error('If you are running from source, you can generate it by running: yarn build:writefile')
 	process.exit(1)
@@ -195,7 +196,7 @@ export class Registry {
 	 * @param bindIp
 	 * @param bindPort
 	 */
-	async ready(extraModulePath: string, bindIp: string, bindPort: number) {
+	async ready(extraModulePath: string, bindIp: string, bindPort: number): Promise<void> {
 		this.#logger.debug('launching core modules')
 
 		try {
@@ -417,13 +418,13 @@ export class Registry {
 	/**
 	 * Request application exit
 	 */
-	exit(fromInternal: boolean, restart: boolean) {
+	exit(fromInternal: boolean, restart: boolean): void {
 		if (!this.#isReady) {
 			this.#logger.debug('exit called before ready')
 			return
 		}
 
-		Promise.resolve().then(async () => {
+		void Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
 			// Save the db to disk
@@ -432,13 +433,13 @@ export class Registry {
 
 			try {
 				this.surfaces.quit()
-			} catch (e) {
+			} catch (_e) {
 				//do nothing
 			}
 
 			try {
 				await this.instance.destroyAllInstances()
-			} catch (e) {
+			} catch (_e) {
 				//do nothing
 			}
 

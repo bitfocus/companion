@@ -61,7 +61,7 @@ export abstract class ControlBase<TJson> {
 	 * This includes, redrawing, writing to the db and informing any interested clients
 	 * @param redraw - whether to redraw the control
 	 */
-	commitChange(redraw = true) {
+	commitChange(redraw = true): void {
 		// Check if the status has changed
 		if (typeof this.checkButtonStatus === 'function' && this.checkButtonStatus(false)) redraw = true
 

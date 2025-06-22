@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { MyErrorBoundary } from '~/util.js'
+import { makeAbsolutePath, MyErrorBoundary } from '~/util.js'
 import { CAlert, CButton, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -174,7 +174,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 			<p>It is recommended to export the system configuration first.</p>
 
-			<CButton color="success" href="/int/export/full" target="_blank">
+			<CButton color="success" href={makeAbsolutePath('/int/export/full')} target="_blank">
 				<FontAwesomeIcon icon={faDownload} /> Export
 			</CButton>
 

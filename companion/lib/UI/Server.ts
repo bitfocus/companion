@@ -24,7 +24,7 @@ export class UIServer extends HttpServer {
 	/**
 	 *
 	 */
-	rebindHttp(bindIp: string, bindPort: number) {
+	rebindHttp(bindIp: string, bindPort: number): void {
 		if (this !== undefined && this.close !== undefined) {
 			this.close()
 		}
@@ -48,9 +48,9 @@ export class UIServer extends HttpServer {
 
 				this.#logger.info(`new url: http://${address?.address}:${address?.port}/`)
 
-				let ip = bindIp == '0.0.0.0' ? '127.0.0.1' : bindIp
-				let url = `http://${ip}:${address?.port}/`
-				let info = bindIp == '0.0.0.0' ? `All Interfaces: e.g. ${url}` : url
+				const ip = bindIp == '0.0.0.0' ? '127.0.0.1' : bindIp
+				const url = `http://${ip}:${address?.port}/`
+				const info = bindIp == '0.0.0.0' ? `All Interfaces: e.g. ${url}` : url
 				sendOverIpc({
 					messageType: 'http-bind-status',
 					appStatus: 'Running',

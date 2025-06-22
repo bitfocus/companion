@@ -38,7 +38,7 @@ export class ServiceSatelliteTcp extends ServiceBase {
 		this.init()
 	}
 
-	listen() {
+	listen(): void {
 		this.#server = net.createServer((socket) => {
 			const name = socket.remoteAddress + ':' + socket.remotePort
 			const socketLogger = LogController.createLogger(`Service/SatelliteTcp/${name}`)
@@ -80,7 +80,7 @@ export class ServiceSatelliteTcp extends ServiceBase {
 
 		try {
 			this.#server.listen(this.port)
-		} catch (e) {
+		} catch (_e) {
 			this.logger.debug(`ERROR opening tcp port ${this.port} for companion satellite devices`)
 		}
 	}
@@ -95,7 +95,7 @@ export class ServiceSatelliteTcp extends ServiceBase {
 		this.#clients.forEach((socket) => {
 			try {
 				socket.destroy()
-			} catch (e) {
+			} catch (_e) {
 				// Ignore failure
 			}
 		})

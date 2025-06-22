@@ -322,7 +322,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
-				if (!!this.panel.setLocked) {
+				if (this.panel.setLocked !== undefined) {
 					this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
 					return
 				}
@@ -622,7 +622,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		if (!this.#isSurfaceLocked) return
 
-		if (!!this.panel.setLocked) {
+		if (this.panel.setLocked !== undefined) {
 			this.panel.setLocked(true, this.#currentPincodeEntry.length)
 		} else {
 			this.#drawButtons([
@@ -652,7 +652,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Reset the config of this surface to defaults
 	 */
-	resetConfig() {
+	resetConfig(): void {
 		this.#surfaceConfig.groupConfig = {
 			...cloneDeep(SurfaceGroup.DefaultOptions),
 			last_page_id: this.#page.getFirstPageId(),

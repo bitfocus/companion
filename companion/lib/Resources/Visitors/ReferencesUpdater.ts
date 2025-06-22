@@ -68,7 +68,7 @@ export class VisitorReferencesUpdaterVisitor {
 	/**
 	 * Visit a connection id property
 	 */
-	visitConnectionId(obj: Record<string, any>, propName: string | number, feedbackId?: string) {
+	visitConnectionId(obj: Record<string, any>, propName: string | number, feedbackId?: string): void {
 		if (!this.connectionIdRemap) return
 
 		const oldId = obj[propName]
@@ -82,7 +82,7 @@ export class VisitorReferencesUpdaterVisitor {
 	/**
 	 * Visit a connection id array property
 	 */
-	visitConnectionIdArray(obj: Record<string, any>, propName: string, feedbackId?: string) {
+	visitConnectionIdArray(obj: Record<string, any>, propName: string, feedbackId?: string): void {
 		if (!this.connectionIdRemap) return
 
 		const array = obj[propName]
@@ -94,7 +94,7 @@ export class VisitorReferencesUpdaterVisitor {
 	/**
 	 * Visit a property containing variables
 	 */
-	visitString(obj: Record<string, any>, propName: string, feedbackId?: string) {
+	visitString(obj: Record<string, any>, propName: string, feedbackId?: string): void {
 		if (!this.connectionLabelsRemap) return
 
 		const labelsRemap = this.connectionLabelsRemap
@@ -132,7 +132,7 @@ export class VisitorReferencesUpdaterVisitor {
 	/**
 	 * Visit a variable name property
 	 */
-	visitVariableName(obj: Record<string, any>, propName: string, feedbackId?: string) {
+	visitVariableName(obj: Record<string, any>, propName: string, feedbackId?: string): void {
 		if (!this.connectionLabelsRemap) return
 
 		const id = TrySplitVariableId(obj[propName])

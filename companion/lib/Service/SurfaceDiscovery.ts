@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash-es'
 import { ServiceBase } from './Base.js'
-import { Bonjour, Browser, Service } from '@julusian/bonjour-service'
+import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
 import { StreamDeckTcpDefinition, StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
 import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
@@ -43,7 +43,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		this.init()
 	}
 
-	listen() {
+	listen(): void {
 		this.currentState = true
 
 		if (!this.#satelliteBrowser) {
@@ -66,7 +66,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				this.#satelliteBrowser.on('srv-update', (newService, oldService) => {
 					this.#updateSatelliteService(oldService, newService)
 				})
-			} catch (e) {
+			} catch (_e) {
 				this.logger.debug(`ERROR failed to start searching for companion satellite devices`)
 			}
 		}
@@ -75,7 +75,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			try {
 				this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
 
-				// @ts-ignore why is this failing?
+				// @ts-expect-error why is this failing?
 				this.#streamDeckDiscovery.on('up', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
@@ -89,7 +89,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 						info: uiService,
 					})
 				})
-				// @ts-ignore why is this failing?
+				// @ts-expect-error why is this failing?
 				this.#streamDeckDiscovery.on('down', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
@@ -103,19 +103,19 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				setImmediate(() => {
 					this.#streamDeckDiscovery?.query()
 				})
-			} catch (e) {
+			} catch (_e) {
 				this.logger.debug(`ERROR failed to start searching for streamdeck tcp devices`)
 			}
 		}
 	}
 
-	close() {
+	close(): void {
 		this.#streamDeckDiscovery?.destroy()
 		this.#streamDeckDiscovery = undefined
 		this.#bonjour.destroy()
 	}
 
-	#updateSatelliteService(oldService: Service | undefined, service: Service) {
+	#updateSatelliteService(oldService: DiscoveredService | undefined, service: DiscoveredService) {
 		this.logger.debug(`Found companion satellite device ${service.name} at ${service.addresses?.[0]}:${service.port}`)
 
 		if (oldService) {
@@ -134,14 +134,14 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		})
 	}
 
-	#forgetSatelliteService(service: Service) {
+	#forgetSatelliteService(service: DiscoveredService) {
 		this.#io.emitToRoom(SurfaceDiscoveryRoom, 'surfaces:discovery:update', {
 			type: 'remove',
 			itemId: this.#convertSatelliteServiceForUi(service).id,
 		})
 	}
 
-	#convertSatelliteServiceForUi(service: Service): ClientDiscoveredSurfaceInfo {
+	#convertSatelliteServiceForUi(service: DiscoveredService): ClientDiscoveredSurfaceInfo {
 		return {
 			id: service.fqdn,
 
@@ -177,7 +177,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	 * @access protected
 	 * @override
 	 */
-	protected disableModule() {
+	protected disableModule(): void {
 		if (this.currentState) {
 			this.currentState = false
 			try {
@@ -258,7 +258,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 						label: systemInfo.hostname,
 					})
 				}
-			} catch (e) {
+			} catch (_e) {
 				// TODO
 			}
 
@@ -304,7 +304,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				})
 
 				return null
-			} catch (e) {
+			} catch (_e) {
 				return 'request failed'
 			}
 		})

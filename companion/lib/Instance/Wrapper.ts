@@ -338,7 +338,7 @@ export class SocketEventsHandler {
 	// 	await this.ipcWrapper.sendWithCb('updateActions', msg)
 	// }
 
-	entityUpdate(entity: SomeEntityModel, controlId: string): Promise<void> {
+	async entityUpdate(entity: SomeEntityModel, controlId: string): Promise<void> {
 		switch (entity.type) {
 			case EntityModelType.Action:
 				return this.#actionUpdate(entity, controlId)
@@ -563,15 +563,15 @@ export class SocketEventsHandler {
 			const requestData: CompanionHTTPRequest = {
 				baseUrl: req.baseUrl,
 				body: req.body,
-				// @ts-ignore TODO
+				// @ts-expect-error TODO not in types
 				headers: req.headers,
 				hostname: req.hostname,
-				// @ts-ignore TODO
+				// @ts-expect-error TODO not in types
 				ip: req.ip,
 				method: req.method,
 				originalUrl: req.originalUrl,
 				path: req.path,
-				// @ts-ignore TODO
+				// @ts-expect-error TODO not in types
 				query: req.query,
 			}
 
@@ -724,7 +724,7 @@ export class SocketEventsHandler {
 	async #handleSetVariableDefinitions(msg: SetVariableDefinitionsMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableDefinitions before init was called`)
 
-		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
 		const invalidIds = []
 
 		const newVariables: VariableDefinitionTmp[] = []

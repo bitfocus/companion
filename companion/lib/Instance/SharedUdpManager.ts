@@ -102,7 +102,7 @@ export class InstanceSharedUdpManager {
 	/**
 	 * Send a message from a shared port
 	 */
-	sendOnPort(ownerId: string, handleId: string, address: string, port: number, message: Uint8Array) {
+	sendOnPort(ownerId: string, handleId: string, address: string, port: number, message: Uint8Array): void {
 		const socket = this.#findSocket(ownerId, handleId)
 		if (!socket) throw new Error(`Not a member of the socket`)
 

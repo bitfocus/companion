@@ -40,7 +40,7 @@ export class SurfaceOutboundController {
 		this.#dbTable = db.getTableView('surfaces_remote')
 		this.#io = io
 
-		// @ts-ignore why is this failing?
+		// @ts-expect-error why is this failing?
 		this.#streamdeckTcpConnectionManager.on('connected', (streamdeck) => {
 			this.#logger.info(
 				`Connected to TCP Streamdeck ${streamdeck.remoteAddress}:${streamdeck.remotePort} (${streamdeck.PRODUCT_NAME})`
@@ -52,7 +52,7 @@ export class SurfaceOutboundController {
 				// streamdeck.close()
 			})
 		})
-		// @ts-ignore why is this failing?
+		// @ts-expect-error why is this failing?
 		this.#streamdeckTcpConnectionManager.on('error', (error) => {
 			this.#logger.error(`Error from TCP Streamdeck: ${error}`)
 		})

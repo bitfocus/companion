@@ -216,7 +216,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 					this.store = this.#createDatabase(this.cfgFile)
 					this.tableCache.clear()
 					this.defaultTableView.get('test')
-				} catch (e) {
+				} catch (_e) {
 					try {
 						try {
 							if (fs.existsSync(this.cfgCorruptFile)) {
@@ -225,7 +225,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 							fs.moveSync(this.cfgFile, this.cfgCorruptFile)
 							this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
-						} catch (e: any) {
+						} catch (_e: any) {
 							this.logger.error(`${this.name} could not be parsed.  A copy could not be saved.`)
 						}
 					} catch (err) {
@@ -263,7 +263,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 				this.create()
 				this.defaultTableView.get('test')
 				this.loadDefaults()
-			} catch (e: any) {
+			} catch (_e: any) {
 				this.setStartupState(DatabaseStartupState.Fatal)
 			}
 		}
@@ -310,7 +310,9 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			try {
 				try {
 					fs.rmSync(this.cfgFile)
-				} catch (e) {}
+				} catch (_e) {
+					// Ignore, we are about to replace the file anyway
+				}
 
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
 				this.store = this.#createDatabase(this.cfgFile)
@@ -335,7 +337,8 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			if (fs.existsSync(this.cfgFile)) {
 				fs.rmSync(this.cfgFile)
 			}
-		} catch (e: any) {
+		} catch (_e: any) {
+			// Ignore, we are about to replace the file anyway
 		} finally {
 			try {
 				this.store = this.#createDatabase(this.cfgFile)
@@ -400,7 +403,7 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 		)
 	}
 
-	private validateKey(key: string | number | Symbol): asserts key is string {
+	private validateKey(key: string | number | symbol): asserts key is string {
 		if (!key || typeof key !== 'string') throw new Error('Invalid key')
 	}
 
@@ -410,7 +413,7 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 	all(): TableContent {
 		// TODO - how to make this safe for json vs string?
 
-		let out: TableContent = {} as any
+		const out: TableContent = {} as any
 
 		this.#logger.silly(`Get table`)
 
@@ -418,10 +421,10 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 			const rows = this.#getAllQuery.all()
 			for (const record of rows) {
 				try {
-					/** @ts-ignore */
+					// @ts-expect-error can't use as index
 					out[record.id] = JSON.parse(record.value)
-				} catch (e) {
-					/** @ts-ignore */
+				} catch (_e) {
+					// @ts-expect-error can't use as index
 					out[record.id] = record.value
 				}
 			}

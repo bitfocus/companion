@@ -88,6 +88,7 @@ function convertPage15To32(oldObj: any): any {
 	return result
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 function convertImport15To32(obj: any): any {
 	if (obj.type == 'full') {
 		obj.version = 2
@@ -155,9 +156,9 @@ function convertImport15To32(obj: any): any {
 function from12to32(key: number): number {
 	key = key - 1
 
-	var rows = Math.floor(key / 4)
-	var col = (key % 4) + 2
-	var res = rows * 8 + col
+	const rows = Math.floor(key / 4)
+	const col = (key % 4) + 2
+	const res = rows * 8 + col
 
 	if (res >= 32) {
 		console.debug('assert: old config had bigger pages than expected')

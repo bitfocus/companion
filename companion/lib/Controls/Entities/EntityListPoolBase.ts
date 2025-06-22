@@ -65,7 +65,7 @@ export abstract class ControlEntityListPoolBase {
 		this.#moduleHost = props.moduleHost
 	}
 
-	protected createEntityList(listDefinition: ControlEntityListDefinition) {
+	protected createEntityList(listDefinition: ControlEntityListDefinition): ControlEntityList {
 		return new ControlEntityList(
 			this.#instanceDefinitions,
 			this.#internalModule,
@@ -399,6 +399,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param key the key/name of the property
 	 * @param value the new value
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	entrySetOptions(listId: SomeSocketEntityLocation, id: string, key: string, value: any): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
@@ -542,6 +543,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param key the key/name of the property
 	 * @param value the new value
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	entitySetStyleValue(listId: SomeSocketEntityLocation, id: string, key: string, value: any): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false

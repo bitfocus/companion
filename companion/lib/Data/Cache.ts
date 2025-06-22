@@ -42,7 +42,7 @@ export class DataCache extends DataStoreBase<DataCacheDefaultTable> {
 			)
 			try {
 				create.run()
-			} catch (e) {
+			} catch (_e) {
 				this.logger.warn(`Error creating table ${this.defaultTable}`)
 			}
 		}

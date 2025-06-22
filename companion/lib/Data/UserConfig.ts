@@ -134,10 +134,10 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		let save = false
 		// copy default values. this will set newly added defaults too
-		for (let k in DataUserConfig.Defaults) {
-			// @ts-ignore
+		for (const k0 in DataUserConfig.Defaults) {
+			const k = k0 as keyof UserConfigModel
 			if (this.#data[k] === undefined) {
-				// @ts-ignore
+				// @ts-expect-error mismatch in key type
 				this.#data[k] = DataUserConfig.Defaults[k]
 				save = true
 			}
@@ -189,7 +189,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			// check if these fields have already been defined
 			let has_been_defined = false
 			for (const k in legacy_config) {
-				// @ts-ignore
+				// @ts-expect-error mismatch in key type
 				if (this.#data[k] !== undefined) {
 					has_been_defined = true
 					break
@@ -199,10 +199,10 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			// copy across the legacy values
 			if (!has_been_defined) {
 				this.#logger.info('Running one-time userconfig v2 upgrade')
-				for (let k in legacy_config) {
-					// @ts-ignore
+				for (const k in legacy_config) {
+					// @ts-expect-error mismatch in key type
 					if (this.#data[k] === undefined) {
-						// @ts-ignore
+						// @ts-expect-error mismatch in key type
 						this.#data[k] = legacy_config[k]
 					}
 				}
@@ -349,6 +349,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * @param value - the object to save
 	 * @param save - <code>false</code> if a DB save is not necessary
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setKey(key: keyof UserConfigModel, value: any, save = true): void {
 		if (!key) throw new Error('Missing key')
 
@@ -361,7 +362,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			checkControlsInBounds = true
 		}
 
-		// @ts-ignore
+		// @ts-expect-error mismatch in key type
 		this.#data[key] = value
 		if (save) {
 			this.#dbTable.set('userconfig', this.#data)
@@ -378,8 +379,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	setKeys(objects: Record<string, any>): void {
 		if (objects !== undefined) {
-			for (let key in objects) {
-				// @ts-ignore
+			for (const key in objects) {
+				// @ts-expect-error mismatch in key type
 				this.setKey(key, objects[key], false)
 			}
 

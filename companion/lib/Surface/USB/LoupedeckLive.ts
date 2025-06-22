@@ -13,6 +13,7 @@ import { EventEmitter } from 'events'
 import {
 	LoupedeckBufferFormat,
 	LoupedeckControlInfo,
+	LoupedeckControlType,
 	LoupedeckDevice,
 	LoupedeckDisplayId,
 	LoupedeckModelId,
@@ -109,7 +110,7 @@ const razerStreamControllerXInfo: ModelInfo = {
  */
 function buttonToXY(modelInfo: ModelInfo, info: LoupedeckControlInfo): [x: number, y: number] | undefined {
 	const index = modelInfo.buttons[info.index]
-	if (info.type === 'button' && index !== undefined) {
+	if (info.type === LoupedeckControlType.Button && index !== undefined) {
 		return index
 	}
 
@@ -129,7 +130,7 @@ const translateTouchKeyIndex = (modelInfo: ModelInfo, key: number): number => {
  */
 function rotaryToXY(modelInfo: ModelInfo, info: LoupedeckControlInfo): [x: number, y: number] | undefined {
 	const index = modelInfo.encoders[info.index]
-	if (info.type === 'rotary' && index !== undefined) {
+	if (info.type === LoupedeckControlType.Rotary && index !== undefined) {
 		return index
 	}
 
@@ -260,11 +261,10 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 			}
 		})
 
-		// @ts-ignore
-		this.#loupedeck.on('disconnect', (error) => {
-			this.#logger.error(`disconnected: ${error}`)
-			this.emit('remove')
-		})
+		// this.#loupedeck.on('disconnect', (error) => {
+		// 	this.#logger.error(`disconnected: ${error}`)
+		// 	this.emit('remove')
+		// })
 
 		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, drawItem) => {
 			const width = this.#loupedeck.lcdKeySize
@@ -372,7 +372,7 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 
 			return self
 		} catch (e) {
-			loupedeck.close()
+			await loupedeck.close()
 
 			throw e
 		}
@@ -393,11 +393,11 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 	}
 
 	quit(): void {
-		try {
-			this.clearDeck()
-		} catch (e) {}
+		this.clearDeck()
 
-		this.#loupedeck.close()
+		this.#loupedeck.close().catch(() => {
+			// Ignore
+		})
 	}
 
 	/**

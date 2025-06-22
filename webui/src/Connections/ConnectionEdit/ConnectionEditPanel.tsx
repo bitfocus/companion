@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { LoadingRetryOrError } from '~/util.js'
+import { isCollectionEnabled, LoadingRetryOrError } from '~/util.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormInput } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -73,10 +73,13 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	moduleInfo,
 	closeConfigurePanel,
 }: ConnectionEditPanelInnerProps) {
-	const { socket, modules } = useContext(RootAppStoreContext)
+	const { socket, modules, connections } = useContext(RootAppStoreContext)
 
 	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, connectionInfo.moduleVersionId)
-	const connectionShouldBeRunning = connectionInfo.enabled && connectionVersionExists
+	const connectionShouldBeRunning =
+		connectionInfo.enabled &&
+		connectionVersionExists &&
+		isCollectionEnabled(connections.rootCollections(), connectionInfo.collectionId)
 
 	const isModuleOnStore = !!modules.storeList.get(connectionInfo.instance_type)
 	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true)
@@ -202,250 +205,258 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	)
 
 	return (
-		<div>
-			<ConnectionEditPanelHeading connectionInfo={connectionInfo} moduleInfo={moduleInfo} />
+		<>
+			<ConnectionEditPanelHeading
+				connectionInfo={connectionInfo}
+				moduleInfo={moduleInfo}
+				closeConfigurePanel={closeConfigurePanel}
+			/>
 
-			<CForm
-				className="row edit-connection"
-				onSubmit={(e) => {
-					e.preventDefault()
-					e.stopPropagation()
-					form.handleSubmit().catch((err) => {
-						console.error('Error submitting form', err)
-					})
-				}}
-			>
-				{saveError && (
-					<CCol className={`fieldtype-textinput`} sm={12}>
-						<CAlert color="danger">{saveError}</CAlert>
-					</CCol>
-				)}
-
-				<form.Field
-					name="label"
-					validators={{
-						onChange: ({ value }) => (!isLabelValid(value) ? 'Invalid label' : undefined),
+			<div className="secondary-panel-simple-body">
+				<CForm
+					className="row edit-connection"
+					onSubmit={(e) => {
+						e.preventDefault()
+						e.stopPropagation()
+						form.handleSubmit().catch((err) => {
+							console.error('Error submitting form', err)
+						})
 					}}
-					children={(field) => (
+				>
+					{saveError && (
 						<CCol className={`fieldtype-textinput`} sm={12}>
-							<label>Label</label>
-							<CFormInput
-								type="text"
-								style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
-								value={field.state.value}
-								onChange={(e) => field.handleChange(e.target.value)}
-								onBlur={field.handleBlur}
-							/>
+							<CAlert color="danger">{saveError}</CAlert>
 						</CCol>
 					)}
-				/>
 
-				<CCol className={`fieldtype-textinput`} sm={12}>
-					<label>
-						Module Version&nbsp;
-						{isModuleOnStore && !connectionShouldBeRunning && (
-							<ModuleVersionsRefresh moduleId={connectionInfo.instance_type} />
-						)}
-					</label>
-					<CInputGroup>
-						<form.Field
-							name="versionId"
-							children={(field) => (
-								<CFormSelect
-									name="colFormVersion"
-									value={field.state.value as string}
+					<form.Field
+						name="label"
+						validators={{
+							onChange: ({ value }) => (!isLabelValid(value) ? 'Invalid label' : undefined),
+						}}
+						children={(field) => (
+							<CCol className={`fieldtype-textinput`} sm={12}>
+								<label>Label</label>
+								<CFormInput
+									type="text"
+									style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
+									value={field.state.value}
 									onChange={(e) => field.handleChange(e.target.value)}
 									onBlur={field.handleBlur}
-									disabled={connectionShouldBeRunning}
-									title={
-										connectionShouldBeRunning
-											? 'Connection must be disabled to change version'
-											: 'Select the version of the module to use for this connection'
-									}
-								>
-									{!connectionVersionExists &&
-										!moduleVersionChoices.find((v) => v.value === connectionInfo.moduleVersionId) && (
-											<option value={connectionInfo.moduleVersionId as string}>
-												{connectionInfo.moduleVersionId} (Missing)
+								/>
+							</CCol>
+						)}
+					/>
+
+					<CCol className={`fieldtype-textinput`} sm={12}>
+						<label>
+							Module Version&nbsp;
+							{isModuleOnStore && !connectionShouldBeRunning && (
+								<ModuleVersionsRefresh moduleId={connectionInfo.instance_type} />
+							)}
+						</label>
+						<CInputGroup>
+							<form.Field
+								name="versionId"
+								children={(field) => (
+									<CFormSelect
+										name="colFormVersion"
+										value={field.state.value as string}
+										onChange={(e) => field.handleChange(e.target.value)}
+										onBlur={field.handleBlur}
+										disabled={connectionShouldBeRunning}
+										title={
+											connectionShouldBeRunning
+												? 'Connection must be disabled to change version'
+												: 'Select the version of the module to use for this connection'
+										}
+									>
+										{!connectionVersionExists &&
+											!moduleVersionChoices.find((v) => v.value === connectionInfo.moduleVersionId) && (
+												<option value={connectionInfo.moduleVersionId as string}>
+													{connectionInfo.moduleVersionId} (Missing)
+												</option>
+											)}
+										{moduleVersionChoices.map((v) => (
+											<option key={v.value} value={v.value}>
+												{v.label}
 											</option>
-										)}
-									{moduleVersionChoices.map((v) => (
-										<option key={v.value} value={v.value}>
-											{v.label}
-										</option>
-									))}
+										))}
+									</CFormSelect>
+								)}
+							/>
+
+							<ConnectionForceVersionButton
+								connectionId={connectionId}
+								disabled={connectionShouldBeRunning}
+								currentModuleId={connectionInfo.instance_type}
+								currentVersionId={connectionInfo.moduleVersionId}
+							/>
+						</CInputGroup>
+					</CCol>
+
+					<CCol className={`fieldtype-textinput`} sm={12}>
+						<label>
+							Update Policy
+							<FontAwesomeIcon
+								style={{ marginLeft: '5px' }}
+								icon={faQuestionCircle}
+								title="How to check whether there are updates available for this connection"
+							/>
+						</label>
+						<form.Field
+							name="updatePolicy"
+							children={(field) => (
+								<CFormSelect
+									name="colFormUpdatePolicy"
+									value={field.state.value}
+									onChange={(e) => field.handleChange(e.currentTarget.value as ConnectionUpdatePolicy)}
+									onBlur={field.handleBlur}
+								>
+									<option value="manual">Manual</option>
+									<option value="stable">Stable</option>
+									<option value="beta">Stable and Beta</option>
 								</CFormSelect>
 							)}
 						/>
-
-						<ConnectionForceVersionButton
-							connectionId={connectionId}
-							disabled={connectionShouldBeRunning}
-							currentModuleId={connectionInfo.instance_type}
-							currentVersionId={connectionInfo.moduleVersionId}
-						/>
-					</CInputGroup>
-				</CCol>
-
-				<CCol className={`fieldtype-textinput`} sm={12}>
-					<label>
-						Update Policy
-						<FontAwesomeIcon
-							style={{ marginLeft: '5px' }}
-							icon={faQuestionCircle}
-							title="How to check whether there are updates available for this connection"
-						/>
-					</label>
-					<form.Field
-						name="updatePolicy"
-						children={(field) => (
-							<CFormSelect
-								name="colFormUpdatePolicy"
-								value={field.state.value}
-								onChange={(e) => field.handleChange(e.currentTarget.value as ConnectionUpdatePolicy)}
-								onBlur={field.handleBlur}
-							>
-								<option value="manual">Manual</option>
-								<option value="stable">Stable</option>
-								<option value="beta">Stable and Beta</option>
-							</CFormSelect>
-						)}
-					/>
-				</CCol>
-
-				<CCol className={`fieldtype-textinput`} sm={12}>
-					<CAlert color="warning">
-						Be careful when downgrading the module version. Some features may not be available in older versions.
-					</CAlert>
-				</CCol>
-
-				{!connectionShouldBeRunning && (
-					<CCol xs={12}>
-						<NonIdealState icon={faGear}>
-							<p>You cannot edit the config of a connection while it is disabled</p>
-						</NonIdealState>
 					</CCol>
-				)}
 
-				{connectionShouldBeRunning && query.isSuccess && (
-					<>
-						{configOptions.map((fieldInfo) => {
-							const isSecret = fieldInfo.type.startsWith('secret')
+					<CCol className={`fieldtype-textinput`} sm={12}>
+						<CAlert color="warning">
+							Be careful when downgrading the module version. Some features may not be available in older versions.
+						</CAlert>
+					</CCol>
 
-							return (
-								<form.Subscribe
-									selector={(state) => {
-										const fn = isVisibleFns[fieldInfo.id]
-										const isVisible = !fn || !!fn(state.values.config)
-
-										return { isVisible }
-									}}
-								>
-									{({ isVisible }) => {
-										if (isSecret) {
-											return (
-												<form.Field
-													key={fieldInfo.id}
-													name={`secrets.${fieldInfo.id}`}
-													validators={{
-														onChange: ({ value, fieldApi }) => {
-															if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
-																// An existing secret value is always valid
-																return undefined
-															}
-															return validateInputValue(fieldInfo, value?.value)
-														},
-														onMount: ({ value, fieldApi }) => {
-															if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
-																// An existing secret value is always valid
-																return undefined
-															}
-															return validateInputValue(fieldInfo, value?.value)
-														},
-													}}
-												>
-													{(field) => (
-														<CCol
-															className={`fieldtype-${fieldInfo.type}`}
-															sm={fieldInfo.width}
-															style={{ display: !isVisible ? 'none' : undefined }}
-														>
-															<ConnectionSecretField
-																label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
-																definition={fieldInfo}
-																hasSavedValue={!!field.state.value?.hasSavedValue}
-																editValue={field.state.value?.value}
-																isDirty={field.state.meta.isDirty}
-																setValue={(value) => field.handleChange((v) => ({ hasSavedValue: false, ...v, value }))}
-																clearValue={() => form.resetField(`secrets.${fieldInfo.id}`)}
-															/>
-														</CCol>
-													)}
-												</form.Field>
-											)
-										} else {
-											return (
-												<form.Field
-													key={fieldInfo.id}
-													name={`config.${fieldInfo.id}`}
-													validators={{
-														onChange: ({ value }) => validateInputValue(fieldInfo, value),
-														onMount: ({ value }) => validateInputValue(fieldInfo, value),
-													}}
-												>
-													{(field) => (
-														<CCol
-															className={`fieldtype-${fieldInfo.type}`}
-															sm={fieldInfo.width}
-															style={{ display: !isVisible ? 'none' : undefined }}
-														>
-															<ConnectionEditField
-																label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
-																definition={fieldInfo}
-																value={field.state.value}
-																setValue={field.handleChange}
-																connectionId={connectionId}
-															/>
-														</CCol>
-													)}
-												</form.Field>
-											)
-										}
-									}}
-								</form.Subscribe>
-							)
-						})}
-					</>
-				)}
-
-				{connectionShouldBeRunning && !query.isSuccess && (
-					<LoadingRetryOrError
-						error={!query.isRefetching ? query.error?.message : undefined}
-						dataReady={false}
-						doRetry={() => {
-							query.refetch().catch((err) => {
-								console.error('Error refetching', err)
-							})
-						}}
-					/>
-				)}
-
-				<form.Subscribe
-					selector={(state) => [state.canSubmit, state.isSubmitting]}
-					children={([canSubmit, isSubmitting]) => (
-						<CCol sm={12}>
-							<CButton color="success" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
-								Save {isSubmitting ? '...' : ''}
-							</CButton>
-
-							<CButton color="secondary" onClick={closeConfigurePanel} disabled={isSubmitting}>
-								Cancel
-							</CButton>
+					{!connectionShouldBeRunning && (
+						<CCol xs={12}>
+							<NonIdealState icon={faGear}>
+								<p>You cannot edit the config of a connection while it is disabled</p>
+							</NonIdealState>
 						</CCol>
 					)}
-				/>
-			</CForm>
-		</div>
+
+					{connectionShouldBeRunning && query.isSuccess && (
+						<>
+							{configOptions.map((fieldInfo) => {
+								const isSecret = fieldInfo.type.startsWith('secret')
+
+								return (
+									<form.Subscribe
+										selector={(state) => {
+											const fn = isVisibleFns[fieldInfo.id]
+											const isVisible = !fn || !!fn(state.values.config)
+
+											return { isVisible }
+										}}
+									>
+										{({ isVisible }) => {
+											if (isSecret) {
+												return (
+													<form.Field
+														key={fieldInfo.id}
+														name={`secrets.${fieldInfo.id}`}
+														validators={{
+															onChange: ({ value, fieldApi }) => {
+																if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
+																	// An existing secret value is always valid
+																	return undefined
+																}
+																return validateInputValue(fieldInfo, value?.value)
+															},
+															onMount: ({ value, fieldApi }) => {
+																if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
+																	// An existing secret value is always valid
+																	return undefined
+																}
+																return validateInputValue(fieldInfo, value?.value)
+															},
+														}}
+													>
+														{(field) => (
+															<CCol
+																className={`fieldtype-${fieldInfo.type}`}
+																sm={fieldInfo.width}
+																style={{ display: !isVisible ? 'none' : undefined }}
+															>
+																<ConnectionSecretField
+																	label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
+																	definition={fieldInfo}
+																	hasSavedValue={!!field.state.value?.hasSavedValue}
+																	editValue={field.state.value?.value}
+																	isDirty={field.state.meta.isDirty}
+																	setValue={(value) =>
+																		field.handleChange((v) => ({ hasSavedValue: false, ...v, value }))
+																	}
+																	clearValue={() => form.resetField(`secrets.${fieldInfo.id}`)}
+																/>
+															</CCol>
+														)}
+													</form.Field>
+												)
+											} else {
+												return (
+													<form.Field
+														key={fieldInfo.id}
+														name={`config.${fieldInfo.id}`}
+														validators={{
+															onChange: ({ value }) => validateInputValue(fieldInfo, value),
+															onMount: ({ value }) => validateInputValue(fieldInfo, value),
+														}}
+													>
+														{(field) => (
+															<CCol
+																className={`fieldtype-${fieldInfo.type}`}
+																sm={fieldInfo.width}
+																style={{ display: !isVisible ? 'none' : undefined }}
+															>
+																<ConnectionEditField
+																	label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
+																	definition={fieldInfo}
+																	value={field.state.value}
+																	setValue={field.handleChange}
+																	connectionId={connectionId}
+																/>
+															</CCol>
+														)}
+													</form.Field>
+												)
+											}
+										}}
+									</form.Subscribe>
+								)
+							})}
+						</>
+					)}
+
+					{connectionShouldBeRunning && !query.isSuccess && (
+						<LoadingRetryOrError
+							error={!query.isRefetching ? query.error?.message : undefined}
+							dataReady={false}
+							doRetry={() => {
+								query.refetch().catch((err) => {
+									console.error('Error refetching', err)
+								})
+							}}
+						/>
+					)}
+
+					<form.Subscribe
+						selector={(state) => [state.canSubmit, state.isSubmitting]}
+						children={([canSubmit, isSubmitting]) => (
+							<CCol sm={12}>
+								<CButton color="success" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
+									Save {isSubmitting ? '...' : ''}
+								</CButton>
+
+								<CButton color="secondary" onClick={closeConfigurePanel} disabled={isSubmitting}>
+									Cancel
+								</CButton>
+							</CCol>
+						)}
+					/>
+				</CForm>
+			</div>
+		</>
 	)
 })
 

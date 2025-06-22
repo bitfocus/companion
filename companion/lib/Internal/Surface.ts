@@ -245,7 +245,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 		if (extras.location) {
 			if (thePageNumber === 0 || thePageNumber === '0')
-				// @ts-ignore
+				// @ts-expect-error handle non-standard page property, for backwards compatibility
 				thePageNumber = extras.location.pageNumber ?? extras.location.page
 		}
 
