@@ -133,9 +133,6 @@ export default [
 			// TMP
 			'webui/**/*',
 			'companion/lib/Cloud/**/*',
-			'companion/lib/ImportExport/**/*',
-			'companion/lib/Instance/**/*',
-			'companion/lib/Service/**/*',
 			'companion/test/**/*',
 			'webui/test/**/*',
 		],

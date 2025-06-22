@@ -301,7 +301,7 @@ export class InstanceModules {
 		})
 	}
 
-	listenToStoreEvents(modulesStore: ModuleStoreService) {
+	listenToStoreEvents(modulesStore: ModuleStoreService): void {
 		modulesStore.on('storeListUpdated', () => {
 			// Invalidate any module upgrade data
 			for (const moduleId of this.#activeModuleUpgradeRooms) {

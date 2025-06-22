@@ -329,8 +329,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		labelBase: string,
 		props: AddConnectionProps
 	): [id: string, config: ConnectionConfig] {
-		let moduleId = data.type
-		let product = data.product
+		const moduleId = data.type
+		const product = data.product
 
 		if (props.versionId === null) {
 			// Get the latest installed version

@@ -495,7 +495,7 @@ export class ModuleHost {
 					const inspectFileStr = await fs.readFile(inspectFilePath)
 					const inspectPortTmp = Number(inspectFileStr.toString().trim())
 					if (!isNaN(inspectPortTmp)) inspectPort = inspectPortTmp
-				} catch (e) {
+				} catch (_e) {
 					// Ignore
 				}
 			}

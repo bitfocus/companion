@@ -133,7 +133,7 @@ export class ServiceHttps extends ServiceBase {
 	 */
 	startServer(credentials: ServiceHttpsCredentials): void {
 		try {
-			this.#server = _https.createServer(credentials, this.#express.app)
+			this.#server = _https.createServer(credentials, this.#express.app as any) // This cast feels bad, but it appears happy
 			this.#server.on('error', this.handleSocketError.bind(this))
 			this.#server.listen(this.port, this.#bindIP ?? undefined)
 			this.#io.bindToHttps(this.#server)
