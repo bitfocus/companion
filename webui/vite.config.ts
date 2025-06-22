@@ -33,8 +33,9 @@ function getBaseFromArgs(): string {
 
 // Get the base path from Vite's --base argument
 const basePath = getBaseFromArgs()
-let normalizedBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath
+let normalizedBase = basePath
 if (!normalizedBase.startsWith('/')) normalizedBase = `/${normalizedBase}`
+normalizedBase = normalizedBase.endsWith('/') ? normalizedBase.slice(0, -1) : normalizedBase
 
 export default defineConfig({
 	publicDir: 'public',
