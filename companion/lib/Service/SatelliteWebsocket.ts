@@ -36,7 +36,7 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 		this.init()
 	}
 
-	listen() {
+	listen(): void {
 		if (this.#server === undefined) {
 			try {
 				this.#server = new WebSocketServer({
@@ -86,10 +86,11 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 					socket.on('message', (data) => {
 						lastReceived = Date.now()
 
+						// eslint-disable-next-line @typescript-eslint/no-base-to-string
 						processMessage(data.toString())
 					})
 				})
-			} catch (e) {
+			} catch (_e) {
 				this.logger.debug(`ERROR opening ws port ${this.port} for companion satellite devices`)
 			}
 		}

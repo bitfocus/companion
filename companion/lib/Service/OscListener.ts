@@ -38,11 +38,9 @@ export class ServiceOscListener extends ServiceOscBase {
 	/**
 	 * Process an incoming message from a client
 	 */
-	protected override processIncoming(message: OscReceivedMessage) {
-		try {
-			this.#api.router.processMessage(message.address, message)
-		} catch (error) {
-			this.logger.warn('OSC Error: ' + error)
-		}
+	protected override processIncoming(message: OscReceivedMessage): void {
+		this.#api.router.processMessage(message.address, message).catch((error) => {
+			this.logger.warn(`OSC Error: ${error}`)
+		})
 	}
 }

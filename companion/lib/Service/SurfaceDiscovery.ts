@@ -43,7 +43,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		this.init()
 	}
 
-	listen() {
+	listen(): void {
 		this.currentState = true
 
 		if (!this.#satelliteBrowser) {
@@ -66,7 +66,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				this.#satelliteBrowser.on('srv-update', (newService, oldService) => {
 					this.#updateSatelliteService(oldService, newService)
 				})
-			} catch (e) {
+			} catch (_e) {
 				this.logger.debug(`ERROR failed to start searching for companion satellite devices`)
 			}
 		}
@@ -75,7 +75,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			try {
 				this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
 
-				// @ts-ignore why is this failing?
+				// @ts-expect-error why is this failing?
 				this.#streamDeckDiscovery.on('up', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
@@ -89,7 +89,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 						info: uiService,
 					})
 				})
-				// @ts-ignore why is this failing?
+				// @ts-expect-error why is this failing?
 				this.#streamDeckDiscovery.on('down', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
@@ -103,13 +103,13 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				setImmediate(() => {
 					this.#streamDeckDiscovery?.query()
 				})
-			} catch (e) {
+			} catch (_e) {
 				this.logger.debug(`ERROR failed to start searching for streamdeck tcp devices`)
 			}
 		}
 	}
 
-	close() {
+	close(): void {
 		this.#streamDeckDiscovery?.destroy()
 		this.#streamDeckDiscovery = undefined
 		this.#bonjour.destroy()
@@ -177,7 +177,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 	 * @access protected
 	 * @override
 	 */
-	protected disableModule() {
+	protected disableModule(): void {
 		if (this.currentState) {
 			this.currentState = false
 			try {
@@ -258,7 +258,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 						label: systemInfo.hostname,
 					})
 				}
-			} catch (e) {
+			} catch (_e) {
 				// TODO
 			}
 
@@ -304,7 +304,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 				})
 
 				return null
-			} catch (e) {
+			} catch (_e) {
 				return 'request failed'
 			}
 		})

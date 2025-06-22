@@ -49,7 +49,7 @@ export class ServiceHttps extends ServiceBase {
 	 * Start the service if it is not already running
 	 * @access protected
 	 */
-	listen() {
+	listen(): void {
 		if (this.portConfig) {
 			this.port = Number(this.userconfig.getKey(this.portConfig))
 		}
@@ -120,7 +120,7 @@ export class ServiceHttps extends ServiceBase {
 		}
 	}
 
-	close() {
+	close(): void {
 		if (this.#server) {
 			this.#server.close()
 			this.#server = undefined

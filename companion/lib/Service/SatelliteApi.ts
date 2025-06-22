@@ -69,8 +69,8 @@ export abstract class SatelliteSocketWrapper {
 }
 
 export interface SatelliteInitSocketResult {
-	processMessage(data: string): void
-	cleanupDevices(): number
+	processMessage: (data: string) => void
+	cleanupDevices: () => number
 }
 
 /**
@@ -163,7 +163,7 @@ export class ServiceSatelliteApi {
 		let transferVariables: SatelliteTransferableValue[]
 		try {
 			transferVariables = parseTransferableValues(params.VARIABLES)
-		} catch (e) {
+		} catch (_e) {
 			return this.#formatAndSendError(socket, messageName, id, 'Invalid VARIABLES')
 		}
 
@@ -285,7 +285,7 @@ export class ServiceSatelliteApi {
 			},
 			cleanupDevices: () => {
 				let count = 0
-				for (let [key, device] of this.#devices.entries()) {
+				for (const [key, device] of this.#devices.entries()) {
 					if (device.socket === socket) {
 						this.#surfaceController.removeDevice(device.id)
 						this.#devices.delete(key)
