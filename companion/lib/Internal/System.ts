@@ -40,7 +40,7 @@ async function getHostnameVariables() {
 
 		const systemInfo = await systeminformation.osInfo()
 		values['hostname_fqdn'] = systemInfo.fqdn
-	} catch (e) {
+	} catch (_e) {
 		// TODO
 	}
 
@@ -77,7 +77,7 @@ async function getNetworkVariables() {
 				allIps += v4Addresses[i] + '\\n'
 			}
 		}
-	} catch (e) {
+	} catch (_e) {
 		// TODO
 	}
 
@@ -112,13 +112,11 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		setInterval(() => this.#updateNetworkVariables(), 30000)
 		setTimeout(() => this.#updateNetworkVariables(), 5000)
 
-		setTimeout(
-			() =>
-				this.#updateHostnameVariablesAtStartup().catch((e) => {
-					this.#logger.error(`Failed to update hostname variables: ${e}`)
-				}),
-			5000
-		)
+		setTimeout(() => {
+			this.#updateHostnameVariablesAtStartup().catch((e) => {
+				this.#logger.error(`Failed to update hostname variables: ${e}`)
+			})
+		}, 5000)
 	}
 
 	async #updateHostnameVariablesAtStartup() {
@@ -172,7 +170,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	 * Update the bind IP address variable
 	 * @param bindIp The IP address being bound to
 	 */
-	updateBindIp(bindIp: string) {
+	updateBindIp(bindIp: string): void {
 		this.emit('setVariables', {
 			bind_ip: bindIp,
 		})

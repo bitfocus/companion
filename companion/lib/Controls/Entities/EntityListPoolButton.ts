@@ -85,7 +85,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#steps.set('0', this.#getNewStepValue(null, null))
 	}
 
-	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean) {
+	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean): void {
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
 
 		// Future:	cleanup the steps/sets

@@ -399,6 +399,9 @@ export class ControlsController {
 					.then(() => {
 						this.#setIsLearning(id, false)
 					})
+					.catch((e) => {
+						this.#logger.error(`Learn cleanup failed: ${e}`)
+					})
 
 				return true
 			} catch (e) {

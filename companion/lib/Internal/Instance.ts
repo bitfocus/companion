@@ -452,7 +452,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				if (action.action === 'instance_control') {
 					visitor.visitConnectionId(action.options, 'instance_id')
 				}
-			} catch (e) {
+			} catch (_e) {
 				//Ignore
 			}
 		}
@@ -465,7 +465,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				} else if (feedback.type === 'instance_custom_state') {
 					visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)
 				}
-			} catch (e) {
+			} catch (_e) {
 				//Ignore
 			}
 		}

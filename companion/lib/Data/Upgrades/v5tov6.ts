@@ -15,7 +15,7 @@ import type {
 /**
  * do the database upgrades to convert from the v4 to the v5 format
  */
-function convertDatabaseToV6(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV6(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
 	const controlsTable = db.getTableView('controls')
@@ -150,7 +150,7 @@ function convertActionsDelay(actions: any[], relativeDelays: boolean | undefined
 		let currentDelay = 0
 		let currentDelayGroupChildren: any[] = []
 
-		let delayGroups: any[] = [wrapActionsInGroup(currentDelayGroupChildren)]
+		const delayGroups: any[] = [wrapActionsInGroup(currentDelayGroupChildren)]
 
 		for (const action of actions) {
 			const delay = Number(action.delay)

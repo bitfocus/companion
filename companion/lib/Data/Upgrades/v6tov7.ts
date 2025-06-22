@@ -17,7 +17,7 @@ import { Complete } from '@companion-module/base/dist/util.js'
 /**
  * do the database upgrades to convert from the v6 to the v7 format
  */
-function convertDatabaseToV7(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV7(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
 	const controlsTable = db.getTableView('controls')

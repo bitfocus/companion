@@ -40,6 +40,7 @@ export function upgradeStartup(db: DataDatabase): void {
 		const message =
 			'You have previously installed a much newer version of companion. Since the configuration files are incompatible between major versions of companion, you need to remove the old config before continuing with this version.'
 		showFatalError('Unbale to start companion', message)
+		// eslint-disable-next-line n/no-process-exit
 		process.exit(1)
 	} else if (currentVersion == targetVersion) {
 		logger.debug(`Upgrade from version ${currentVersion} to ${targetVersion} not necessary`)
@@ -62,12 +63,13 @@ export function upgradeStartup(db: DataDatabase): void {
 /**
  * Upgrade an exported page or full configuration to the latest format
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function upgradeImport(obj: any): SomeExportv6 {
 	const currentVersion = obj.version || 1
 
 	for (let i = currentVersion; i < targetVersion; i++) {
 		// Run if a script is defined
-		if (!!allUpgrades[i - 1].upgradeImport) {
+		if (allUpgrades[i - 1].upgradeImport !== undefined) {
 			obj = allUpgrades[i - 1].upgradeImport(obj, logger)
 		}
 	}

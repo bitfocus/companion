@@ -102,7 +102,7 @@ export default [
 			'n/no-missing-import': [
 				'error',
 				{
-					allowModules: ['@companion-app/shared', 'type-fest'],
+					allowModules: ['@companion-app/shared', '@companion-module/base', 'type-fest'],
 				},
 			],
 		},
@@ -133,11 +133,8 @@ export default [
 			// TMP
 			'webui/**/*',
 			'companion/lib/Cloud/**/*',
-			'companion/lib/Controls/**/*',
-			'companion/lib/Data/**/*',
 			'companion/lib/ImportExport/**/*',
 			'companion/lib/Instance/**/*',
-			'companion/lib/Internal/**/*',
 			'companion/lib/Service/**/*',
 			'companion/test/**/*',
 			'webui/test/**/*',

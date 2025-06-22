@@ -6,7 +6,7 @@ import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 /**
  * do the database upgrades to convert from the v6 to the v7 format
  */
-function convertDatabaseToV8(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV8(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
 	convertRowToTable(db, 'custom_variables', 'custom_variables')

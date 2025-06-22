@@ -14,7 +14,7 @@ import type {
 /**
  * do the database upgrades to convert from the v8 to the v9 format
  */
-function convertDatabaseToV9(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV9(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
 	const controls = db.getTableView('controls')
