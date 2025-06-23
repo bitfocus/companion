@@ -19,8 +19,9 @@ function SessionRoom(id: string): string {
 	return `action-recorder:session:${id}`
 }
 
-interface ActionRecorderEvents {
+export interface ActionRecorderEvents {
 	sessions_changed: [sessionIds: string[]]
+	action_recorder_is_running: [boolean]
 }
 
 /**
@@ -269,6 +270,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		const oldSession = this.#currentSession
 
 		this.#currentSession.isRunning = false
+		this.emit(`action_recorder_is_running`, this.#currentSession.isRunning)
 		this.#syncRecording()
 
 		const newId = nanoid()
@@ -418,6 +420,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	 */
 	setRecording(isRunning: boolean): void {
 		this.#currentSession.isRunning = !!isRunning
+		this.emit(`action_recorder_is_running`, this.#currentSession.isRunning)
 		this.#syncRecording()
 
 		this.commitChanges([this.#currentSession.id])
