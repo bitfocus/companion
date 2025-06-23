@@ -1,11 +1,11 @@
 The following controls are available via emberplus:
 
 | Companion Product Information |                                             |
-| ---------------------------- | ------------------------------------------- |
-| Path:                        | `/Companion Tree/identity/<parameter name>` |
-| Permissions:                 | `Read Only`                                 |
-| Parameters:                  | `product`, `company`, `version`, `build`    |
-| Parameter Types:             | `string`                                    |
+| ----------------------------- | ------------------------------------------- |
+| Path:                         | `/Companion Tree/identity/<parameter name>` |
+| Permissions:                  | `Read Only`                                 |
+| Parameters:                   | `product`, `company`, `version`, `build`    |
+| Parameter Types:              | `string`                                    |
 
 | Button Manipulation |                                                                                        |
 | ------------------- | -------------------------------------------------------------------------------------- |
