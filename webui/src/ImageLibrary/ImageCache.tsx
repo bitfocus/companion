@@ -37,10 +37,10 @@ export class ImageUrlCache {
 	/**
 	 * Clear all cache entries for a specific image ID
 	 */
-	clearImageId(imageId: string): void {
+	clearImageName(imageName: string): void {
 		const keysToDelete: string[] = []
 		for (const key of this.cache.keys()) {
-			if (key.startsWith(`${imageId}-`)) {
+			if (key.startsWith(`${imageName}-`)) {
 				keysToDelete.push(key)
 			}
 		}
@@ -50,8 +50,8 @@ export class ImageUrlCache {
 	/**
 	 * Generate a cache key for an image
 	 */
-	generateKey(imageId: string, type: 'original' | 'preview', checksum: string): string {
-		return `${imageId}-${type}-${checksum}`
+	generateKey(imageName: string, type: 'original' | 'preview', checksum: string): string {
+		return `${imageName}-${type}-${checksum}`
 	}
 }
 

@@ -3,7 +3,7 @@ import { CFormLabel, CAlert } from '@coreui/react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 
-interface ImageIdInputProps {
+interface ImageNameInputProps {
 	value: string
 	onChange: (value: string) => void
 	disabled?: boolean
@@ -14,22 +14,22 @@ interface ImageIdInputProps {
 	errorMessage?: string | null
 }
 
-export function ImageIdInput({
+export function ImageNameInput({
 	value,
 	onChange,
 	disabled = false,
-	placeholder = 'Enter image ID...',
+	placeholder = 'Enter image name...',
 	helpText,
 	showWarning = false,
 	warningText,
 	errorMessage,
-}: ImageIdInputProps): JSX.Element {
+}: ImageNameInputProps): JSX.Element {
 	// Generate tooltip based on validation state
-	const tooltip = !isLabelValid(value) ? 'Invalid ID: Use only letters, numbers, hyphens, and underscores' : undefined
+	const tooltip = !isLabelValid(value) ? 'Invalid name: Use only letters, numbers, hyphens, and underscores' : undefined
 
 	const defaultHelpText = (
 		<>
-			The image ID is used to reference this image in button configurations and other places.
+			The image name is used to reference this image in button configurations and other places.
 			<br />
 			It must contain only letters, numbers, hyphens, and underscores.
 		</>
@@ -50,8 +50,8 @@ export function ImageIdInput({
 			)}
 
 			<div className="mb-3 row">
-				<CFormLabel htmlFor="imageIdInput" className="col-sm-3 col-form-label">
-					Image ID
+				<CFormLabel htmlFor="imageNameInput" className="col-sm-3 col-form-label">
+					Image name
 				</CFormLabel>
 				<div className="col-sm-9">
 					<TextInputField

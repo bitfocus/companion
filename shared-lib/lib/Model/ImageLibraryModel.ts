@@ -1,8 +1,8 @@
 import type { CollectionBase } from './Collections.js'
 
 export interface ImageLibraryInfo {
-	id: string
 	name: string
+	description: string
 	originalSize: number
 	previewSize: number
 	createdAt: number
@@ -25,11 +25,11 @@ export type ImageLibraryUpdate = ImageLibraryUpdateRemoveOp | ImageLibraryUpdate
 
 export interface ImageLibraryUpdateRemoveOp {
 	type: 'remove'
-	itemId: string
+	itemName: string
 }
 
 export interface ImageLibraryUpdateUpdateOp {
 	type: 'update'
-	itemId: string
+	itemName: string
 	info: ImageLibraryInfo
 }

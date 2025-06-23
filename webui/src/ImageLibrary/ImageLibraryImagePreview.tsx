@@ -7,7 +7,7 @@ import { faImage } from '@fortawesome/free-solid-svg-icons'
 import { useImageCache } from './ImageCache.js'
 
 interface ImageLibraryImagePreviewProps {
-	imageId: string
+	imageName: string
 	type: 'original' | 'preview'
 	checksum: string
 	className?: string
@@ -23,7 +23,7 @@ interface LoadState {
 }
 
 export function ImageLibraryImagePreview({
-	imageId,
+	imageName,
 	type,
 	checksum,
 	className,
@@ -39,7 +39,7 @@ export function ImageLibraryImagePreview({
 
 	useEffect(() => {
 		// Check if we have a cached image URL first
-		const cacheKey = imageCache?.generateKey(imageId, type, checksum)
+		const cacheKey = imageCache?.generateKey(imageName, type, checksum)
 		const cachedUrl = cacheKey && imageCache?.get(cacheKey)
 
 		if (typeof cachedUrl === 'string') {
@@ -62,7 +62,7 @@ export function ImageLibraryImagePreview({
 		})
 
 		socket
-			.emitPromise('image-library:get-data', [imageId, type])
+			.emitPromise('image-library:get-data', [imageName, type])
 			.then((response) => {
 				if (abort) return // Ignore if we were aborted
 				const imageData = response as { image: string; checksum: string } | null
@@ -111,7 +111,7 @@ export function ImageLibraryImagePreview({
 		return () => {
 			abort = true
 		}
-	}, [socket, imageId, type, checksum, imageCache])
+	}, [socket, imageName, type, checksum, imageCache])
 
 	if (loadState.loading) {
 		return (

@@ -569,16 +569,16 @@ export class ExportController {
 		const allImages = this.#graphicsController.imageLibrary.exportImageLibraryData()
 		const imageMap = new Map<string, ImageLibraryExportData>()
 		for (const imageData of allImages) {
-			imageMap.set(imageData.info.id, imageData)
+			imageMap.set(imageData.info.name, imageData)
 		}
 
 		// Look for image variables in the format "image:imageId"
 		for (const variable of referencedVariables) {
 			// Variable names that start with 'image:' are image references
 			if (variable.startsWith('image:')) {
-				const imageId = variable.substring(6) // Remove 'image:' prefix
+				const imageName = variable.substring(6) // Remove 'image:' prefix
 
-				const imageData = imageMap.get(imageId)
+				const imageData = imageMap.get(imageName)
 				if (imageData) {
 					referencedImages.push(imageData)
 				}

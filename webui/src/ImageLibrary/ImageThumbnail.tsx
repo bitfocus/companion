@@ -13,14 +13,19 @@ export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps
 	return (
 		<div className={classNames('image-thumbnail', { selected })} onClick={onClick}>
 			<div className="image-preview">
-				<ImageLibraryImagePreview imageId={image.id} type="preview" checksum={image.checksum} alt={image.name} />
+				<ImageLibraryImagePreview
+					imageName={image.name}
+					type="preview"
+					checksum={image.checksum}
+					alt={image.description}
+				/>
 			</div>
 			<div className="p-2">
-				<div className="image-name" title={image.name}>
-					{image.name}
+				<div className="image-name" title={image.description}>
+					{image.description}
 				</div>
-				<div className="image-id" title={image.id}>
-					{image.id}
+				<div className="image-id" title={image.name}>
+					{image.name}
 				</div>
 			</div>
 		</div>

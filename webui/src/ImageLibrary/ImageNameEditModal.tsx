@@ -3,35 +3,35 @@ import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton } 
 import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ImageIdInput } from './ImageIdInput'
+import { ImageNameInput } from './ImageNameInput'
 
-interface ImageIdEditModalProps {
+interface ImageNameEditModalProps {
 	visible: boolean
 	onClose: () => void
-	imageId: string
-	currentId: string
-	onIdChanged?: (oldId: string, newId: string) => void
+	imageName: string
+	currentName: string
+	onNameChanged?: (oldName: string, newName: string) => void
 }
 
-export const ImageIdEditModal = observer(function ImageIdEditModal({
+export const ImageNameEditModal = observer(function ImageNameEditModal({
 	visible,
 	onClose,
-	imageId,
-	currentId,
-	onIdChanged,
-}: ImageIdEditModalProps) {
+	imageName,
+	currentName,
+	onNameChanged,
+}: ImageNameEditModalProps) {
 	const socket = useContext(SocketContext)
-	const [localValue, setLocalValue] = useState(currentId)
+	const [localValue, setLocalValue] = useState(currentName)
 	const [isSaving, setIsSaving] = useState(false)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
 	// Reset state when modal opens
 	useEffect(() => {
 		if (visible) {
-			setLocalValue(currentId)
+			setLocalValue(currentName)
 			setErrorMessage(null)
 		}
-	}, [visible, currentId])
+	}, [visible, currentName])
 
 	const handleSave = useCallback(() => {
 		if (!isLabelValid(localValue)) {
@@ -39,7 +39,7 @@ export const ImageIdEditModal = observer(function ImageIdEditModal({
 			return
 		}
 
-		if (localValue === currentId) {
+		if (localValue === currentName) {
 			// No change, just close
 			onClose()
 			return
@@ -49,59 +49,59 @@ export const ImageIdEditModal = observer(function ImageIdEditModal({
 		setErrorMessage(null)
 
 		socket
-			.emitPromise('image-library:set-id', [imageId, localValue])
+			.emitPromise('image-library:set-name', [imageName, localValue])
 			.then((result) => {
-				// Server returns the sanitized ID on success
+				// Server returns the sanitized name on success
 				if (typeof result === 'string') {
-					const newId = result
-					// Notify parent of the ID change
-					if (onIdChanged && newId !== currentId) {
-						onIdChanged(currentId, newId)
+					const newName = result
+					// Notify parent of the name change
+					if (onNameChanged && newName !== currentName) {
+						onNameChanged(currentName, newName)
 					}
 					onClose()
 				}
 			})
 			.catch((err) => {
-				console.error('Failed to save image ID:', err)
+				console.error('Failed to save image name:', err)
 				// Provide more specific error messages
 				if (err.message || err) {
 					setErrorMessage(err.message || err)
 				} else {
-					setErrorMessage('Failed to save image ID. Check it is valid and try again.')
+					setErrorMessage('Failed to save image name. Check it is valid and try again.')
 				}
 			})
 			.finally(() => {
 				setIsSaving(false)
 			})
-	}, [socket, imageId, currentId, localValue, onIdChanged, onClose])
+	}, [socket, imageName, currentName, localValue, onNameChanged, onClose])
 
 	const handleCancel = useCallback(() => {
-		setLocalValue(currentId)
+		setLocalValue(currentName)
 		setErrorMessage(null)
 		onClose()
-	}, [currentId, onClose])
+	}, [currentName, onClose])
 
 	const handleValueChange = useCallback((newValue: string) => {
 		setLocalValue(newValue)
 		setErrorMessage(null)
 	}, [])
 
-	const canSave = isLabelValid(localValue) && localValue !== currentId
+	const canSave = isLabelValid(localValue) && localValue !== currentName
 
 	const warningText = (
 		<>
-			<strong>Warning:</strong> Changing the image ID will break any existing references to this image in button
-			configurations, actions, or other places where this ID is currently used.
+			<strong>Warning:</strong> Changing the image name will break any existing references to this image in button
+			configurations, actions, or other places where this name is currently used.
 		</>
 	)
 
 	return (
 		<CModal visible={visible} onClose={handleCancel} backdrop="static">
 			<CModalHeader>
-				<CModalTitle>Edit Image ID</CModalTitle>
+				<CModalTitle>Edit Image name</CModalTitle>
 			</CModalHeader>
 			<CModalBody>
-				<ImageIdInput
+				<ImageNameInput
 					value={localValue}
 					onChange={handleValueChange}
 					disabled={isSaving}

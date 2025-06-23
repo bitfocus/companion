@@ -29,7 +29,7 @@ export class ImageLibrary {
 	readonly #dbTable: DataStoreTableView<Record<string, ImageLibraryData>>
 	readonly #multipartUploader: MultipartUploader
 	readonly #io: UIHandler
-	readonly #sessionToImageId = new Map<string, string>()
+	readonly #sessionToImageName = new Map<string, string>()
 	readonly #graphicsController: GraphicsController
 	readonly #variablesController: VariablesController
 	readonly #collections: ImageLibraryCollections
@@ -48,7 +48,7 @@ export class ImageLibrary {
 			this.#cleanUnknownCollectionIds(validCollectionIds)
 		)
 		this.#multipartUploader = new MultipartUploader((sessionId) => {
-			this.#sessionToImageId.delete(sessionId)
+			this.#sessionToImageName.delete(sessionId)
 			this.#io.emitToAll('image-library:upload-cancelled', sessionId)
 		})
 
@@ -61,15 +61,15 @@ export class ImageLibrary {
 	#cleanUnknownCollectionIds(validCollectionIds: ReadonlySet<string>): void {
 		const changes: ImageLibraryUpdate[] = []
 
-		for (const [id, data] of Object.entries(this.#dbTable.all())) {
+		for (const [name, data] of Object.entries(this.#dbTable.all())) {
 			if (!data.info.collectionId) continue
 
 			if (validCollectionIds.has(data.info.collectionId)) continue
 
 			data.info.collectionId = undefined
-			this.#dbTable.set(id, data)
+			this.#dbTable.set(name, data)
 
-			changes.push({ type: 'update', itemId: id, info: data.info })
+			changes.push({ type: 'update', itemName: name, info: data.info })
 		}
 
 		if (this.#io.countRoomMembers('image-library') > 0 && changes.length > 0) {
@@ -96,29 +96,28 @@ export class ImageLibrary {
 			return this.listImages()
 		})
 
-		client.onPromise('image-library:get-data', (imageId: string, type: 'original' | 'preview') => {
-			return this.getImageDataUrl(imageId, type)
+		client.onPromise('image-library:get-data', (imageName: string, type: 'original' | 'preview') => {
+			return this.getImageDataUrl(imageName, type)
 		})
 
-		client.onPromise('image-library:create', (id: string, name: string) => {
-			return this.createEmptyImage(id, name)
+		client.onPromise('image-library:create', (name: string, description: string) => {
+			return this.createEmptyImage(name, description)
 		})
 
-		client.onPromise('image-library:set-name', (imageId: string, name: string) => {
-			return this.setImageName(imageId, name)
+		client.onPromise('image-library:set-description', (imageName: string, name: string) => {
+			return this.setImageDescription(imageName, name)
 		})
 
-		// Set image ID
-		client.onPromise('image-library:set-id', (imageId: string, newId: string) => {
-			return this.setImageId(imageId, newId)
+		client.onPromise('image-library:set-name', (imageName: string, newName: string) => {
+			return this.setImageName(imageName, newName)
 		})
 
-		client.onPromise('image-library:delete', (imageId: string) => {
-			return this.deleteImage(imageId)
+		client.onPromise('image-library:delete', (imageName: string) => {
+			return this.deleteImage(imageName)
 		})
 
-		client.onPromise('image-library:reorder', (collectionId: string | null, imageId: string, dropIndex: number) => {
-			return this.setImageOrder(collectionId, imageId, dropIndex)
+		client.onPromise('image-library:reorder', (collectionId: string | null, imageName: string, dropIndex: number) => {
+			return this.setImageOrder(collectionId, imageName, dropIndex)
 		})
 
 		client.onPromise('image-library:upload-start', (filename: string, size: number) => {
@@ -148,39 +147,42 @@ export class ImageLibrary {
 			return true
 		})
 
-		client.onPromise('image-library:upload-complete', async (sessionId: string, imageId: string, checksum: string) => {
-			this.#logger.debug(`Completing image upload ${sessionId} for image ${imageId}`)
+		client.onPromise(
+			'image-library:upload-complete',
+			async (sessionId: string, imageName: string, checksum: string) => {
+				this.#logger.debug(`Completing image upload ${sessionId} for image ${imageName}`)
 
-			try {
-				const data = this.#multipartUploader.completeSession(sessionId, checksum)
-				if (!data) {
-					throw new Error('Invalid upload session')
+				try {
+					const data = this.#multipartUploader.completeSession(sessionId, checksum)
+					if (!data) {
+						throw new Error('Invalid upload session')
+					}
+
+					// Process the uploaded image data and update the existing image
+					const imageInfo = await this.#updateImageWithData(imageName, data)
+
+					this.#io.emitToAll('image-library:upload-complete', sessionId, imageName)
+
+					this.#io.emitToRoom('image-library', 'image-library:update', [
+						{ type: 'update', itemName: imageName, info: imageInfo.info },
+					])
+
+					return imageName
+				} catch (error) {
+					this.#logger.error(`Image upload failed: ${error}`)
+					this.#io.emitToAll(
+						'image-library:upload-error',
+						sessionId,
+						error instanceof Error ? error.message : 'Unknown error'
+					)
+					throw error
 				}
-
-				// Process the uploaded image data and update the existing image
-				const imageInfo = await this.#updateImageWithData(imageId, data)
-
-				this.#io.emitToAll('image-library:upload-complete', sessionId, imageId)
-
-				this.#io.emitToRoom('image-library', 'image-library:update', [
-					{ type: 'update', itemId: imageId, info: imageInfo.info },
-				])
-
-				return imageId
-			} catch (error) {
-				this.#logger.error(`Image upload failed: ${error}`)
-				this.#io.emitToAll(
-					'image-library:upload-error',
-					sessionId,
-					error instanceof Error ? error.message : 'Unknown error'
-				)
-				throw error
 			}
-		})
+		)
 
 		client.onPromise('image-library:upload-cancel', (sessionId: string) => {
 			this.#logger.debug(`Cancelling image upload ${sessionId}`)
-			this.#sessionToImageId.delete(sessionId)
+			this.#sessionToImageName.delete(sessionId)
 			this.#multipartUploader.cancelSession(sessionId)
 		})
 	}
@@ -198,16 +200,16 @@ export class ImageLibrary {
 	/**
 	 * Get image info by ID
 	 */
-	getImageInfo(imageId: string): ImageLibraryInfo | null {
-		const data = this.#dbTable.get(imageId)
+	getImageInfo(imageName: string): ImageLibraryInfo | null {
+		const data = this.#dbTable.get(imageName)
 		return data?.info || null
 	}
 
 	/**
 	 * Get image data as base64 data URL
 	 */
-	getImageDataUrl(imageId: string, type: 'original' | 'preview'): { image: string; checksum: string } | null {
-		const data = this.#dbTable.get(imageId)
+	getImageDataUrl(imageName: string, type: 'original' | 'preview'): { image: string; checksum: string } | null {
+		const data = this.#dbTable.get(imageName)
 		if (!data) return null
 
 		return {
@@ -219,18 +221,18 @@ export class ImageLibrary {
 	/**
 	 * Delete an image from the library
 	 */
-	deleteImage(imageId: string): boolean {
-		const data = this.#dbTable.get(imageId)
+	deleteImage(imageName: string): boolean {
+		const data = this.#dbTable.get(imageName)
 		if (!data) return false
 
-		this.#dbTable.delete(imageId)
+		this.#dbTable.delete(imageName)
 
-		this.#logger.info(`Deleted image ${imageId} (${data.info.name})`)
+		this.#logger.info(`Deleted image ${imageName} (${data.info.name})`)
 
-		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'remove', itemId: imageId }])
+		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'remove', itemName: imageName }])
 
 		// Remove variable for the deleted image
-		this.#removeImageVariable(imageId)
+		this.#removeImageVariable(imageName)
 
 		return true
 	}
@@ -238,23 +240,23 @@ export class ImageLibrary {
 	/**
 	 * Create a new empty image entry
 	 */
-	createEmptyImage(imageId: string, name: string): string {
-		// Validate and sanitize the ID
-		const safeId = makeLabelSafe(imageId)
-		if (!safeId) {
-			throw new Error('Invalid image ID')
+	createEmptyImage(name: string, description: string): string {
+		// Validate and sanitize the name
+		const sageName = makeLabelSafe(name)
+		if (!sageName) {
+			throw new Error('Invalid image name')
 		}
 
-		// Check if ID already exists
-		if (this.#dbTable.get(safeId)) {
-			throw new Error(`Image with ID "${safeId}" already exists`)
+		// Check if name already exists
+		if (this.#dbTable.get(sageName)) {
+			throw new Error(`Image with name "${sageName}" already exists`)
 		}
 
 		const now = Date.now()
 
 		const info: ImageLibraryInfo = {
-			id: safeId,
-			name: name,
+			name: sageName,
+			description: description,
 			originalSize: 0,
 			previewSize: 0,
 			createdAt: now,
@@ -270,121 +272,121 @@ export class ImageLibrary {
 			info,
 		}
 
-		this.#dbTable.set(safeId, imageData)
+		this.#dbTable.set(sageName, imageData)
 
 		// Create variable for the new image
-		this.#updateImageVariable(safeId, imageData.originalImage)
+		this.#updateImageVariable(sageName, imageData.originalImage)
 
 		// Update variable definitions
 		this.#updateImageVariableDefinitions()
 
-		this.#logger.info(`Created empty image ${safeId} (${name})`)
+		this.#logger.info(`Created empty image ${sageName} (${description})`)
 
 		// Notify clients
-		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'update', itemId: safeId, info }])
+		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'update', itemName: sageName, info }])
 
-		return safeId
+		return sageName
 	}
 
 	/**
 	 * Make an image ID unique by appending a number if it already exists
 	 */
-	makeImageIdUnique(baseId: string): string {
-		const safeBaseId = makeLabelSafe(baseId)
-		if (!safeBaseId) {
-			throw new Error('Invalid base image ID')
+	makeImageNameUnique(baseName: string): string {
+		const safeBaseName = makeLabelSafe(baseName)
+		if (!safeBaseName) {
+			throw new Error('Invalid base image name')
 		}
 
-		if (!this.#dbTable.get(safeBaseId)) {
-			return safeBaseId
+		if (!this.#dbTable.get(safeBaseName)) {
+			return safeBaseName
 		}
 
 		let index = 2
-		while (this.#dbTable.get(`${safeBaseId}_${index}`)) {
+		while (this.#dbTable.get(`${safeBaseName}_${index}`)) {
 			index++
 		}
 
-		return `${safeBaseId}_${index}`
+		return `${safeBaseName}_${index}`
 	}
 
 	/**
 	 * Set the name of an existing image
 	 */
-	setImageName(imageId: string, name: string): boolean {
-		const data = this.#dbTable.get(imageId)
+	setImageDescription(name: string, description: string): boolean {
+		const data = this.#dbTable.get(name)
 		if (!data) return false
 
-		// Update the name and modified timestamp
-		data.info.name = name
+		// Update the description and modified timestamp
+		data.info.description = description
 		data.info.modifiedAt = Date.now()
 
-		this.#dbTable.set(imageId, data)
+		this.#dbTable.set(name, data)
 
 		// Update variable definitions since the name is used as the label
 		this.#updateImageVariableDefinitions()
 
-		this.#logger.info(`Updated image ${imageId} name to "${name}"`)
+		this.#logger.info(`Updated image ${name} description to "${description}"`)
 
 		// Notify clients
-		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'update', itemId: imageId, info: data.info }])
+		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'update', itemName: name, info: data.info }])
 
 		return true
 	}
 
 	/**
-	 * Set the ID of an existing image
+	 * Set the name of an existing image
 	 */
-	setImageId(currentId: string, newId: string): string {
-		const data = this.#dbTable.get(currentId)
+	setImageName(currentName: string, newName: string): string {
+		const data = this.#dbTable.get(currentName)
 		if (!data) {
-			throw new Error(`Image with ID "${currentId}" not found`)
+			throw new Error(`Image with name "${currentName}" not found`)
 		}
 
-		// Validate and sanitize the new ID
-		const safeNewId = makeLabelSafe(newId)
-		if (!safeNewId) {
-			throw new Error('Invalid image ID')
+		// Validate and sanitize the new name
+		const safeNewName = makeLabelSafe(newName)
+		if (!safeNewName) {
+			throw new Error('Invalid image name')
 		}
 
 		// Check if new ID already exists and is different from current
-		if (safeNewId !== currentId && this.#dbTable.get(safeNewId)) {
-			throw new Error(`Image with ID "${safeNewId}" already exists`)
+		if (safeNewName !== currentName && this.#dbTable.get(safeNewName)) {
+			throw new Error(`Image with name "${safeNewName}" already exists`)
 		}
 
-		// If the ID is the same, no change needed
-		if (safeNewId === currentId) return safeNewId
+		// If the name is the same, no change needed
+		if (safeNewName === currentName) return safeNewName
 
-		// Update the ID in the info
-		data.info.id = safeNewId
+		// Update the name in the info
+		data.info.name = safeNewName
 		data.info.modifiedAt = Date.now()
 
 		// Move the data to the new key and delete the old one
-		this.#dbTable.set(safeNewId, data)
-		this.#dbTable.delete(currentId)
+		this.#dbTable.set(safeNewName, data)
+		this.#dbTable.delete(currentName)
 
 		// Update variables: remove old and add new
-		this.#removeImageVariable(currentId)
-		this.#updateImageVariable(safeNewId, data.originalImage)
+		this.#removeImageVariable(currentName)
+		this.#updateImageVariable(safeNewName, data.originalImage)
 
 		// Update variable definitions
 		this.#updateImageVariableDefinitions()
 
-		this.#logger.info(`Updated image ID from "${currentId}" to "${safeNewId}"`)
+		this.#logger.info(`Updated image ID from "${currentName}" to "${safeNewName}"`)
 
 		// Notify clients of the removal of the old ID and addition of the new one
 		this.#io.emitToRoom('image-library', 'image-library:update', [
-			{ type: 'remove', itemId: currentId },
-			{ type: 'update', itemId: safeNewId, info: data.info },
+			{ type: 'remove', itemName: currentName },
+			{ type: 'update', itemName: safeNewName, info: data.info },
 		])
 
-		return safeNewId
+		return safeNewName
 	}
 
 	/**
 	 * Set the order of an image within a collection
 	 */
-	setImageOrder(collectionId: string | null, imageId: string, dropIndex: number): void {
-		const imageData = this.#dbTable.get(imageId)
+	setImageOrder(collectionId: string | null, imageName: string, dropIndex: number): void {
+		const imageData = this.#dbTable.get(imageName)
 		if (!imageData) return
 
 		if (!this.#collections.doesCollectionIdExist(collectionId)) return
@@ -398,29 +400,29 @@ export class ImageLibrary {
 		const sortedImages = Array.from(Object.entries(this.#dbTable.all()))
 			.filter(
 				([imgId, data]) =>
-					imgId !== imageId && ((!data.info.collectionId && !collectionId) || data.info.collectionId === collectionId)
+					imgId !== imageName && ((!data.info.collectionId && !collectionId) || data.info.collectionId === collectionId)
 			)
 			.sort(([, a], [, b]) => (a.info.sortOrder || 0) - (b.info.sortOrder || 0))
 
 		if (dropIndex < 0) {
 			// Push the image to the end of the array
-			sortedImages.push([imageId, imageData])
+			sortedImages.push([imageName, imageData])
 		} else {
 			// Insert the image at the drop index
-			sortedImages.splice(dropIndex, 0, [imageId, imageData])
+			sortedImages.splice(dropIndex, 0, [imageName, imageData])
 		}
 
 		const changes: ImageLibraryUpdate[] = []
 
 		// update the sort order of the images in the store, tracking which ones changed
-		sortedImages.forEach(([id, data], index) => {
-			if (data.info.sortOrder === index && id !== imageId) return // No change
+		sortedImages.forEach(([name, data], index) => {
+			if (data.info.sortOrder === index && name !== imageName) return // No change
 
 			data.info.sortOrder = index // Update the sort order
 			data.info.modifiedAt = Date.now()
-			this.#dbTable.set(id, data)
+			this.#dbTable.set(name, data)
 
-			changes.push({ type: 'update', itemId: id, info: data.info })
+			changes.push({ type: 'update', itemName: name, info: data.info })
 		})
 
 		if (this.#io.countRoomMembers('image-library') > 0 && changes.length > 0) {
@@ -446,8 +448,8 @@ export class ImageLibrary {
 	/**
 	 * Update an existing image with uploaded data
 	 */
-	async #updateImageWithData(imageId: string, data: Buffer): Promise<ImageLibraryData> {
-		const existingData = this.#dbTable.get(imageId)
+	async #updateImageWithData(imageName: string, data: Buffer): Promise<ImageLibraryData> {
+		const existingData = this.#dbTable.get(imageName)
 		if (!existingData) {
 			throw new Error('Image not found')
 		}
@@ -456,7 +458,7 @@ export class ImageLibrary {
 		const dataUrlString = data.toString('utf-8')
 
 		console.log('dataUrlString', dataUrlString.slice(0, 100))
-		const dataUrlMatch = dataUrlString.match(/^data:(image\/[\w\+]+);base64,(.+)$/)
+		const dataUrlMatch = dataUrlString.match(/^data:(image\/[\w+]+);base64,(.+)$/)
 		if (!dataUrlMatch) {
 			throw new Error('Invalid data URL format or unsupported image format')
 		}
@@ -476,14 +478,12 @@ export class ImageLibrary {
 		existingData.previewImage = previewDataUrl
 
 		// Store in database
-		this.#dbTable.set(imageId, existingData)
+		this.#dbTable.set(imageName, existingData)
 
-		this.#logger.info(
-			`Updated image ${imageId} (${existingData.info.name}) - ${width}x${height}, ${dataUrlString.length} bytes`
-		)
+		this.#logger.info(`Updated image ${imageName} - ${width}x${height}, ${dataUrlString.length} bytes`)
 
 		// Update the variable for the image
-		this.#updateImageVariable(imageId, dataUrlString)
+		this.#updateImageVariable(imageName, dataUrlString)
 
 		return existingData
 	}
@@ -494,9 +494,9 @@ export class ImageLibrary {
 	#updateAllImageVariables(): void {
 		const variables: VariableValueEntry[] = []
 
-		for (const [imageId, data] of Object.entries(this.#dbTable.all())) {
+		for (const [imageName, data] of Object.entries(this.#dbTable.all())) {
 			variables.push({
-				id: imageId,
+				id: imageName,
 				value: data.originalImage || '',
 			})
 		}
@@ -508,10 +508,10 @@ export class ImageLibrary {
 	/**
 	 * Update variable for a specific image
 	 */
-	#updateImageVariable(imageId: string, originalImage: string): void {
+	#updateImageVariable(imageName: string, originalImage: string): void {
 		this.#variablesController.values.setVariableValues('image', [
 			{
-				id: imageId,
+				id: imageName,
 				value: originalImage || '',
 			},
 		])
@@ -523,10 +523,10 @@ export class ImageLibrary {
 	#updateImageVariableDefinitions(): void {
 		const definitions: VariableDefinitionTmp[] = []
 
-		for (const [imageId, data] of Object.entries(this.#dbTable.all())) {
+		for (const [imageName, data] of Object.entries(this.#dbTable.all())) {
 			definitions.push({
-				name: imageId,
-				label: data.info.name || imageId,
+				name: imageName,
+				label: data.info.description || imageName,
 			})
 		}
 
@@ -539,10 +539,10 @@ export class ImageLibrary {
 	getVariableDefinitions(): VariableDefinitionTmp[] {
 		const definitions: VariableDefinitionTmp[] = []
 
-		for (const [imageId, data] of Object.entries(this.#dbTable.all())) {
+		for (const [imageName, data] of Object.entries(this.#dbTable.all())) {
 			definitions.push({
-				name: imageId,
-				label: data.info.name || imageId,
+				name: imageName,
+				label: data.info.description || imageName,
 			})
 		}
 
@@ -552,10 +552,10 @@ export class ImageLibrary {
 	/**
 	 * Remove variable for a specific image
 	 */
-	#removeImageVariable(imageId: string): void {
+	#removeImageVariable(imageName: string): void {
 		this.#variablesController.values.setVariableValues('image', [
 			{
-				id: imageId,
+				id: imageName,
 				value: undefined,
 			},
 		])
@@ -579,8 +579,8 @@ export class ImageLibrary {
 				info: { ...imageData.info },
 			}
 
-			this.#dbTable.set(imageData.info.id, fullImageData)
-			this.#logger.info(`Imported image ${imageData.info.id} (${imageData.info.name}) with image data`)
+			this.#dbTable.set(imageData.info.name, fullImageData)
+			this.#logger.info(`Imported image ${imageData.info.name} with image data`)
 		}
 
 		// Update variables for imported images
@@ -590,7 +590,7 @@ export class ImageLibrary {
 		if (this.#io.countRoomMembers('image-library') > 0 && images.length > 0) {
 			const changes: ImageLibraryUpdate[] = images.map((imageData) => ({
 				type: 'update',
-				itemId: imageData.info.id,
+				itemName: imageData.info.name,
 				info: imageData.info,
 			}))
 			this.#io.emitToRoom('image-library', 'image-library:update', changes)
@@ -611,12 +611,12 @@ export class ImageLibrary {
 			const changes: ImageLibraryUpdate[] = []
 			const variables: VariableValueEntry[] = []
 
-			for (const imageId of allImages) {
-				this.#dbTable.delete(imageId)
-				changes.push({ type: 'remove', itemId: imageId })
-				variables.push({ id: imageId, value: undefined })
+			for (const imageName of allImages) {
+				this.#dbTable.delete(imageName)
+				changes.push({ type: 'remove', itemName: imageName })
+				variables.push({ id: imageName, value: undefined })
 
-				this.#logger.info(`Deleted image ${imageId}`)
+				this.#logger.info(`Deleted image ${imageName}`)
 			}
 
 			this.#variablesController.values.setVariableValues('image', variables)

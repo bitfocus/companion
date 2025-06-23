@@ -3,10 +3,10 @@ import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton } 
 import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ImageIdInput } from './ImageIdInput'
+import { ImageNameInput } from './ImageNameInput'
 
 interface ImageAddModalProps {
-	onImageCreated?: (imageId: string) => void
+	onImageCreated?: (imageName: string) => void
 }
 
 export interface ImageAddModalRef {
@@ -46,23 +46,23 @@ export const ImageAddModal = observer(
 			}
 
 			if (!localValue.trim()) {
-				setErrorMessage('Image ID is required')
+				setErrorMessage('Image name is required')
 				return
 			}
 
 			setIsCreating(true)
 			setErrorMessage(null)
 
-			// Use the ID as both the ID and the name
+			// Use the name as both the name and the description
 			socket
 				.emitPromise('image-library:create', [localValue.trim(), localValue.trim()])
 				.then((result) => {
-					// Server returns the sanitized ID on success
+					// Server returns the sanitized name on success
 					if (typeof result === 'string') {
-						const newId = result
+						const newName = result
 						// Notify parent of the new image
 						if (onImageCreated) {
-							onImageCreated(newId)
+							onImageCreated(newName)
 						}
 						setVisible(false)
 					}
@@ -73,7 +73,7 @@ export const ImageAddModal = observer(
 					if (err.message || err) {
 						setErrorMessage(err.message || err)
 					} else {
-						setErrorMessage('Failed to create image. Check the ID is valid and try again.')
+						setErrorMessage('Failed to create image. Check the name is valid and try again.')
 					}
 				})
 				.finally(() => {
@@ -96,9 +96,7 @@ export const ImageAddModal = observer(
 
 		const helpText = (
 			<>
-				The image ID will be used to reference this image in button configurations and other places.
-				<br />
-				The image name will be set to match the ID and can be changed later.
+				The image name will be used to reference this image in button configurations and other places.
 				<br />
 				It must contain only letters, numbers, hyphens, and underscores.
 			</>
@@ -110,7 +108,7 @@ export const ImageAddModal = observer(
 					<CModalTitle>Add New Image</CModalTitle>
 				</CModalHeader>
 				<CModalBody>
-					<ImageIdInput
+					<ImageNameInput
 						value={localValue}
 						onChange={handleValueChange}
 						disabled={isCreating}

@@ -7,21 +7,21 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 
 export const ImageLibraryPage = observer(function ImageLibraryPage() {
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/image-library/$imageId' })
+	const routeMatch = matchRoute({ to: '/image-library/$imageName' })
 
 	const navigate = useNavigate({ from: '/image-library' })
 
-	const selectedImageId = routeMatch ? routeMatch.imageId : null
+	const selectedImageName = routeMatch ? routeMatch.imageName : null
 
 	const handleSelectImage = useCallback(
-		(imageId: string | null) => {
-			if (imageId === null) {
+		(imageName: string | null) => {
+			if (imageName === null) {
 				void navigate({ to: '/image-library' })
 			} else {
 				void navigate({
-					to: `/image-library/$imageId`,
+					to: `/image-library/$imageName`,
 					params: {
-						imageId: imageId,
+						imageName,
 					},
 				})
 			}
@@ -33,7 +33,7 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 		<CRow className="image-library-page split-panels">
 			<CCol xs={12} xl={6} className="primary-panel">
 				<MyErrorBoundary>
-					<ImageLibraryGrid selectedImageId={selectedImageId} onSelectImage={handleSelectImage} />
+					<ImageLibraryGrid selectedImageName={selectedImageName} onSelectImage={handleSelectImage} />
 				</MyErrorBoundary>
 			</CCol>
 

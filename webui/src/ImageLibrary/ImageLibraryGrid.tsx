@@ -27,20 +27,17 @@ interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'child
 }
 
 interface ImageItem extends CollectionsNestingTableItem {
-	id: string
-	collectionId: string | null
-	sortOrder: number
 	// Additional image info
 	imageInfo: ImageLibraryInfo
 }
 
 interface ImageLibraryGridProps {
-	selectedImageId: string | null
-	onSelectImage: (imageId: string | null) => void
+	selectedImageName: string | null
+	onSelectImage: (imageName: string | null) => void
 }
 
 export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
-	selectedImageId,
+	selectedImageName,
 	onSelectImage,
 }: ImageLibraryGridProps) {
 	const socket = useContext(SocketContext)
@@ -59,7 +56,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	const imageItems: ImageItem[] = useComputed(
 		() =>
 			images.map((image) => ({
-				id: image.id,
+				id: image.name,
 				collectionId: image.collectionId ?? null,
 				sortOrder: image.sortOrder,
 				imageInfo: image,
@@ -82,19 +79,19 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 			return (
 				<ImageThumbnail
 					image={item.imageInfo}
-					selected={selectedImageId === item.id}
+					selected={selectedImageName === item.id}
 					onClick={() => onSelectImage(item.id)}
 				/>
 			)
 		},
-		[selectedImageId, onSelectImage, searchQuery]
+		[selectedImageName, onSelectImage, searchQuery]
 	)
 
 	// Listen for image library events to clear cache when images are updated or deleted
 	useEffect(() => {
 		const handleImageUpdate = (changes: ImageLibraryUpdate[]) => {
 			for (const change of changes) {
-				imageCache.clearImageId(change.itemId)
+				imageCache.clearImageName(change.itemName)
 			}
 		}
 
@@ -146,7 +143,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 							itemName="image"
 							dragId="image-library"
 							collectionsApi={collectionsApi}
-							selectedItemId={selectedImageId}
+							selectedItemId={selectedImageName}
 							gridLayout={true}
 							collections={collections}
 							items={imageItems}

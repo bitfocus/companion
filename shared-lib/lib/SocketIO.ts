@@ -434,17 +434,17 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'image-library:unsubscribe': () => void
 	'image-library:list': () => ImageLibraryInfo[]
 	'image-library:get-data': (
-		imageId: string,
+		imageName: string,
 		type: 'original' | 'preview'
 	) => { image: string; checksum: string } | null
-	'image-library:delete': (imageId: string) => boolean
-	'image-library:create': (imageId: string, name: string) => string
-	'image-library:set-name': (imageId: string, name: string) => boolean
-	'image-library:set-id': (currentId: string, newId: string) => string
-	'image-library:reorder': (collectionId: string | null, imageId: string, dropIndex: number) => void
+	'image-library:delete': (imageName: string) => boolean
+	'image-library:create': (imageName: string, name: string) => string
+	'image-library:set-description': (imageName: string, description: string) => boolean
+	'image-library:set-name': (currentName: string, newName: string) => string
+	'image-library:reorder': (collectionId: string | null, imageName: string, dropIndex: number) => void
 	'image-library:upload-start': (filename: string, size: number) => string
 	'image-library:upload-chunk': (sessionId: string, offset: number, data: Uint8Array) => boolean
-	'image-library:upload-complete': (sessionId: string, imageId: string, checksum: string) => string
+	'image-library:upload-complete': (sessionId: string, imageName: string, checksum: string) => string
 	'image-library:upload-cancel': (sessionId: string) => void
 
 	// Image library collections events

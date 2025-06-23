@@ -9,27 +9,27 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 
 const RouteComponent = observer(function RouteComponent() {
-	const { imageId } = Route.useParams()
+	const { imageName } = Route.useParams()
 
-	const navigate = useNavigate({ from: '/image-library/$imageId' })
+	const navigate = useNavigate({ from: '/image-library/$imageName' })
 	const { imageLibrary } = useContext(RootAppStoreContext)
 
 	// Ensure the selected image is valid
 	useComputed(() => {
-		if (imageId && !imageLibrary.getImage(imageId)) {
+		if (imageName && !imageLibrary.getImage(imageName)) {
 			void navigate({ to: `/image-library` })
 		}
-	}, [navigate, imageLibrary, imageId])
+	}, [navigate, imageLibrary, imageName])
 
-	const handleDeleteImage = (deletedImageId: string) => {
-		if (deletedImageId === imageId) {
+	const handleDeleteImage = (deletedImageName: string) => {
+		if (deletedImageName === imageName) {
 			void navigate({ to: `/image-library` })
 		}
 	}
 
-	const handleImageIdChanged = (oldId: string, newId: string) => {
-		if (oldId === imageId) {
-			void navigate({ to: `/image-library/${newId}` })
+	const handleImageNameChanged = (oldName: string, newName: string) => {
+		if (oldName === imageName) {
+			void navigate({ to: `/image-library/${newName}` })
 		}
 	}
 
@@ -46,10 +46,10 @@ const RouteComponent = observer(function RouteComponent() {
 				<CTabPane data-tab="edit" visible>
 					<MyErrorBoundary>
 						<ImageLibraryEditor
-							key={imageId}
-							selectedImageId={imageId}
+							key={imageName}
+							selectedImageName={imageName}
 							onDeleteImage={handleDeleteImage}
-							onImageIdChanged={handleImageIdChanged}
+							onImageNameChanged={handleImageNameChanged}
 						/>
 					</MyErrorBoundary>
 				</CTabPane>
@@ -58,6 +58,6 @@ const RouteComponent = observer(function RouteComponent() {
 	)
 })
 
-export const Route = createFileRoute('/_app/image-library/$imageId')({
+export const Route = createFileRoute('/_app/image-library/$imageName')({
 	component: RouteComponent,
 })

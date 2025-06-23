@@ -7,35 +7,35 @@ import { observer } from 'mobx-react-lite'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
-import { ImageNameEditor } from './ImageNameEditor.js'
-import { ImageIdEditModal } from './ImageIdEditModal.js'
+import { ImageDescriptionEditor } from './imageDescriptionEditor.js'
+import { ImageNameEditModal } from './ImageNameEditModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import CryptoJS from 'crypto-js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 
 interface ImageLibraryEditorProps {
-	selectedImageId: string | null
-	onDeleteImage: (imageId: string) => void
-	onImageIdChanged?: (oldId: string, newId: string) => void
+	selectedImageName: string | null
+	onDeleteImage: (imageName: string) => void
+	onImageNameChanged?: (oldName: string, newName: string) => void
 }
 
 export const ImageLibraryEditor = observer(function ImageLibraryEditor({
-	selectedImageId,
+	selectedImageName,
 	onDeleteImage,
-	onImageIdChanged,
+	onImageNameChanged,
 }: ImageLibraryEditorProps) {
 	const socket = useContext(SocketContext)
 	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
-	const [showIdEditModal, setShowIdEditModal] = useState(false)
+	const [showNameEditModal, setShowNameEditModal] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
 	// Get image info from the store
-	const imageInfo = selectedImageId ? imageLibrary.getImage(selectedImageId) : null
+	const imageInfo = selectedImageName ? imageLibrary.getImage(selectedImageName) : null
 
 	const handleDelete = useCallback(() => {
-		if (!selectedImageId) return
+		if (!selectedImageName) return
 
 		confirmModalRef.current?.show(
 			'Delete Image',
@@ -43,23 +43,23 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			'Delete',
 			() => {
 				socket
-					.emitPromise('image-library:delete', [selectedImageId])
+					.emitPromise('image-library:delete', [selectedImageName])
 					.then(() => {
-						onDeleteImage(selectedImageId)
+						onDeleteImage(selectedImageName)
 					})
 					.catch((err) => {
 						console.error('Failed to delete image:', err)
 					})
 			}
 		)
-	}, [socket, selectedImageId, onDeleteImage])
+	}, [socket, selectedImageName, onDeleteImage])
 
 	const handleDownload = useCallback(() => {
-		if (!selectedImageId || !imageInfo) return
+		if (!selectedImageName || !imageInfo) return
 
 		// Get image data and download
 		socket
-			.emitPromise('image-library:get-data', [selectedImageId, 'original'])
+			.emitPromise('image-library:get-data', [selectedImageName, 'original'])
 			.then((imageData) => {
 				if (imageData?.image) {
 					// Create download link
@@ -74,14 +74,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			.catch((err) => {
 				console.error('Failed to download image:', err)
 			})
-	}, [socket, selectedImageId, imageInfo])
+	}, [socket, selectedImageName, imageInfo])
 
 	const handleReplaceImage = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.currentTarget.files?.[0]
 			event.currentTarget.value = null as any
 
-			if (!file || !selectedImageId) return
+			if (!file || !selectedImageName) return
 
 			setUploading(true)
 
@@ -111,7 +111,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					}
 
 					// Complete upload
-					await socket.emitPromise('image-library:upload-complete', [sessionId, selectedImageId, checksum])
+					await socket.emitPromise('image-library:upload-complete', [sessionId, selectedImageName, checksum])
 
 					// The store will be updated automatically via subscription
 				} catch (err) {
@@ -123,30 +123,30 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 			void uploadFile()
 		},
-		[socket, selectedImageId]
+		[socket, selectedImageName]
 	)
 
-	const handleImageIdChanged = useCallback(
-		(oldId: string, newId: string) => {
-			setShowIdEditModal(false)
-			if (onImageIdChanged) {
-				onImageIdChanged(oldId, newId)
+	const handleImageNameChanged = useCallback(
+		(oldName: string, newName: string) => {
+			setShowNameEditModal(false)
+			if (onImageNameChanged) {
+				onImageNameChanged(oldName, newName)
 			}
 		},
-		[onImageIdChanged]
+		[onImageNameChanged]
 	)
 
 	const handleCopyVariableValue = useCallback(() => {
-		if (notifier.current && selectedImageId) {
+		if (notifier.current && selectedImageName) {
 			notifier.current.show('Copied', 'Copied to clipboard', 5000)
 		}
-	}, [notifier, selectedImageId])
+	}, [notifier, selectedImageName])
 
 	const formatDate = (timestamp: number) => {
 		return new Date(timestamp).toLocaleString()
 	}
 
-	if (!selectedImageId) {
+	if (!selectedImageName) {
 		return (
 			<div className="image-library-editor">
 				<CAlert color="info">Select an image from the library to view and edit its properties.</CAlert>
@@ -166,12 +166,12 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		<div className="image-library-editor">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<ImageIdEditModal
-				visible={showIdEditModal}
-				onClose={() => setShowIdEditModal(false)}
-				imageId={selectedImageId}
-				currentId={imageInfo.id}
-				onIdChanged={handleImageIdChanged}
+			<ImageNameEditModal
+				visible={showNameEditModal}
+				onClose={() => setShowNameEditModal(false)}
+				imageName={selectedImageName}
+				currentName={imageInfo.name}
+				onNameChanged={handleImageNameChanged}
 			/>
 
 			<div className="mb-3">
@@ -200,35 +200,35 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			</div>
 
 			<CForm className="row mb-3">
-				<CFormLabel htmlFor="inputId" className="col-sm-4 col-form-label col-form-label-sm">
-					Id
+				<CFormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
+					Name
 				</CFormLabel>
 				<CCol sm={8} className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
-						<span className="font-monospace">{imageInfo.id}</span>
-						<CopyToClipboard text={`$(image:${imageInfo.id})`} onCopy={handleCopyVariableValue}>
+						<span className="font-monospace">{imageInfo.name}</span>
+						<CopyToClipboard text={`$(image:${imageInfo.name})`} onCopy={handleCopyVariableValue}>
 							<CButton size="sm" title="Copy variable name">
 								<FontAwesomeIcon icon={faCopy} />
 							</CButton>
 						</CopyToClipboard>
 					</div>
-					<CButton color="secondary" size="sm" onClick={() => setShowIdEditModal(true)} title="Edit Image ID">
+					<CButton color="secondary" size="sm" onClick={() => setShowNameEditModal(true)} title="Edit Image ID">
 						<FontAwesomeIcon icon={faEdit} />
 					</CButton>
 				</CCol>
 			</CForm>
 			<CForm className="row mb-3">
 				<CFormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
-					Name
+					Description
 				</CFormLabel>
 				<CCol sm={8}>
-					<ImageNameEditor imageId={selectedImageId} currentName={imageInfo.name} />
+					<ImageDescriptionEditor imageName={selectedImageName} currentName={imageInfo.description} />
 				</CCol>
 			</CForm>
 
 			<div className="image-preview-full">
 				<ImageLibraryImagePreview
-					imageId={selectedImageId}
+					imageName={selectedImageName}
 					type="original"
 					checksum={imageInfo.checksum}
 					alt={imageInfo.name}

@@ -50,7 +50,7 @@ import { Route as SettingsGeneralRouteImport } from './routes/app/settings/gener
 import { Route as SettingsButtonsRouteImport } from './routes/app/settings/buttons.tsx'
 import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/advanced.tsx'
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
-import { Route as ImageLibraryImageIdRouteImport } from './routes/app/image-library/$imageId.tsx'
+import { Route as ImageLibraryImageNameRouteImport } from './routes/app/image-library/$imageName.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
@@ -280,9 +280,9 @@ const ModulesModuleIdRoute = ModulesModuleIdRouteImport.update({
   path: '/$moduleId',
   getParentRoute: () => ModulesRoute,
 } as any)
-const ImageLibraryImageIdRoute = ImageLibraryImageIdRouteImport.update({
-  id: '/$imageId',
-  path: '/$imageId',
+const ImageLibraryImageNameRoute = ImageLibraryImageNameRouteImport.update({
+  id: '/$imageName',
+  path: '/$imageName',
   getParentRoute: () => ImageLibraryRoute,
 } as any)
 const ButtonsPageRoute = ButtonsPageRouteImport.update({
@@ -316,7 +316,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
-  '/image-library/$imageId': typeof ImageLibraryImageIdRoute
+  '/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
   '/settings/buttons': typeof SettingsButtonsRoute
@@ -358,7 +358,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
-  '/image-library/$imageId': typeof ImageLibraryImageIdRoute
+  '/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
   '/settings/buttons': typeof SettingsButtonsRoute
@@ -405,7 +405,7 @@ export interface FileRoutesById {
   '/_app/': typeof IndexRoute
   '/emulator/': typeof EmulatorIndexRoute
   '/_app/buttons/$page': typeof ButtonsPageRoute
-  '/_app/image-library/$imageId': typeof ImageLibraryImageIdRoute
+  '/_app/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
   '/_app/settings/advanced': typeof SettingsAdvancedRoute
   '/_app/settings/buttons': typeof SettingsButtonsRoute
@@ -452,7 +452,7 @@ export interface FileRouteTypes {
     | '/'
     | '/emulator'
     | '/buttons/$page'
-    | '/image-library/$imageId'
+    | '/image-library/$imageName'
     | '/modules/$moduleId'
     | '/settings/advanced'
     | '/settings/buttons'
@@ -494,7 +494,7 @@ export interface FileRouteTypes {
     | '/'
     | '/emulator'
     | '/buttons/$page'
-    | '/image-library/$imageId'
+    | '/image-library/$imageName'
     | '/modules/$moduleId'
     | '/settings/advanced'
     | '/settings/buttons'
@@ -540,7 +540,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/emulator/'
     | '/_app/buttons/$page'
-    | '/_app/image-library/$imageId'
+    | '/_app/image-library/$imageName'
     | '/_app/modules/$moduleId'
     | '/_app/settings/advanced'
     | '/_app/settings/buttons'
@@ -874,11 +874,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModulesModuleIdRouteImport
       parentRoute: typeof ModulesRoute
     }
-    '/_app/image-library/$imageId': {
-      id: '/_app/image-library/$imageId'
-      path: '/$imageId'
-      fullPath: '/image-library/$imageId'
-      preLoaderRoute: typeof ImageLibraryImageIdRouteImport
+    '/_app/image-library/$imageName': {
+      id: '/_app/image-library/$imageName'
+      path: '/$imageName'
+      fullPath: '/image-library/$imageName'
+      preLoaderRoute: typeof ImageLibraryImageNameRouteImport
       parentRoute: typeof ImageLibraryRoute
     }
     '/_app/buttons/$page': {
@@ -903,12 +903,12 @@ const ButtonsRouteWithChildren =
   ButtonsRoute._addFileChildren(ButtonsRouteChildren)
 
 interface ImageLibraryRouteChildren {
-  ImageLibraryImageIdRoute: typeof ImageLibraryImageIdRoute
+  ImageLibraryImageNameRoute: typeof ImageLibraryImageNameRoute
   ImageLibraryIndexRoute: typeof ImageLibraryIndexRoute
 }
 
 const ImageLibraryRouteChildren: ImageLibraryRouteChildren = {
-  ImageLibraryImageIdRoute: ImageLibraryImageIdRoute,
+  ImageLibraryImageNameRoute: ImageLibraryImageNameRoute,
   ImageLibraryIndexRoute: ImageLibraryIndexRoute,
 }
 

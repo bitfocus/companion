@@ -14,7 +14,7 @@ export class ImageLibraryStore {
 
 		if (newData) {
 			for (const image of newData) {
-				this.store.set(image.id, image)
+				this.store.set(image.name, image)
 			}
 		}
 	})
@@ -32,9 +32,9 @@ export class ImageLibraryStore {
 	public processUpdates = action((changes: ImageLibraryUpdate[]): void => {
 		for (const change of changes) {
 			if (change.type === 'update') {
-				this.store.set(change.itemId, change.info)
+				this.store.set(change.itemName, change.info)
 			} else if (change.type === 'remove') {
-				this.store.delete(change.itemId)
+				this.store.delete(change.itemName)
 			}
 		}
 	})
