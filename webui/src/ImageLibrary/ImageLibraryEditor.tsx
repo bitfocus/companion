@@ -107,7 +107,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 						const end = Math.min(start + CHUNK_SIZE, data.length)
 						const chunk = data.slice(start, end)
 
-						await socket.emitPromise('image-library:upload-chunk', [sessionId, chunkIndex, chunk])
+						await socket.emitPromise('image-library:upload-chunk', [sessionId, start, chunk])
 					}
 
 					// Complete upload
