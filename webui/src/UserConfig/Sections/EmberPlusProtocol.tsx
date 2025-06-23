@@ -8,12 +8,12 @@ export const EmberPlusProtocol = observer(function EmberPlusProtocol() {
 	return (
 		<>
 			<p>
-				The EmberPlus provider is accesible on port{' '}
+				The EmberPlus provider is accessible on port{' '}
 				<code>{userConfig.properties?.emberplus_enabled ? '9092' : 'disabled'}</code>.
 			</p>
 			<ul>
 				<li>
-					Companion Product Infomation
+					Companion Product Information
 					<br />
 					Path: <code>/Companion Tree/identity/</code>&lt;parameter name&gt;
 					<br />

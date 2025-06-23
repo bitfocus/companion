@@ -1,6 +1,6 @@
 The following controls are available via emberplus:
 
-| Companion Product Infomation |                                             |
+| Companion Product Information |                                             |
 | ---------------------------- | ------------------------------------------- |
 | Path:                        | `/Companion Tree/identity/<parameter name>` |
 | Permissions:                 | `Read Only`                                 |
