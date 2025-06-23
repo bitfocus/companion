@@ -19,18 +19,25 @@ import { getModuleVersionInfoForConnection } from '../Util.js'
 import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { useConnectionListContext } from './ConnectionListContext.js'
+import { isCollectionEnabled } from '~/util.js'
 
 interface ConnectionsTableRowProps {
 	connection: ClientConnectionConfigWithId
+	isSelected: boolean
 }
-export const ConnectionsTableRow = observer(function ConnectionsTableRow({ connection }: ConnectionsTableRowProps) {
-	const { socket, helpViewer, modules, variablesStore } = useContext(RootAppStoreContext)
+export const ConnectionsTableRow = observer(function ConnectionsTableRow({
+	connection,
+	isSelected,
+}: ConnectionsTableRowProps) {
+	const { socket, helpViewer, modules, connections, variablesStore } = useContext(RootAppStoreContext)
 	const { showVariables, deleteModalRef, configureConnection } = useConnectionListContext()
 
 	const id = connection.id
 	const moduleInfo = modules.modules.get(connection.instance_type)
 
 	const isEnabled = connection.enabled === undefined || connection.enabled
+
+	const showAsEnabled = isEnabled && isCollectionEnabled(connections.rootCollections(), connection.collectionId)
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current?.show(
@@ -59,7 +66,8 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({ conne
 
 	const connectionVariables = variablesStore.variables.get(connection.label)
 
-	const doEdit = useCallback(() => configureConnection(id), [configureConnection, id])
+	const editClickId = isSelected ? null : id // If this row is selected, don't allow editing on click, as it will close the selection
+	const doEdit = useCallback(() => configureConnection(editClickId), [configureConnection, editClickId])
 
 	const openBugUrl = useCallback(() => {
 		const url = moduleInfo?.display?.bugUrl
@@ -103,7 +111,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({ conne
 				<UpdateConnectionToLatestButton connection={connection} />
 			</div>
 			<div className="ms-2">
-				<ConnectionStatusCell isEnabled={isEnabled} status={connection.status} />
+				<ConnectionStatusCell isEnabled={showAsEnabled} status={connection.status} />
 			</div>
 			<div className="flex">
 				<CFormSwitch

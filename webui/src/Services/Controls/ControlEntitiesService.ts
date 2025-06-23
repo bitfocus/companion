@@ -13,7 +13,7 @@ export interface IEntityEditorService {
 	readonly listId: SomeSocketEntityLocation
 	readonly confirmModal: React.RefObject<GenericConfirmModalRef>
 
-	addEntity: (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => void
+	addEntity: (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => Promise<string | null>
 
 	setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: any) => void
 	performDelete: (entityId: string) => void
@@ -66,12 +66,15 @@ export function useControlEntitiesEditorService(
 			listId,
 			confirmModal,
 
-			addEntity: (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => {
-				socket
-					.emitPromise('controls:entity:add', [controlId, listId, ownerId, connectionId, entityModelType, definitionId])
-					.catch((e) => {
-						console.error('Failed to add control entity', e)
-					})
+			addEntity: async (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => {
+				return socket.emitPromise('controls:entity:add', [
+					controlId,
+					listId,
+					ownerId,
+					connectionId,
+					entityModelType,
+					definitionId,
+				])
 			},
 
 			moveCard: (

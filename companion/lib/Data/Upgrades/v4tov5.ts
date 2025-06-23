@@ -6,7 +6,7 @@ import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 /**
  * do the database upgrades to convert from the v4 to the v5 format
  */
-function convertDatabaseToV5(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV5(db: DataStoreBase<any>, _logger: Logger): void {
 	if (db.store) {
 		const batchInsert = function (table: string, heap: any) {
 			if (heap) {
@@ -29,7 +29,9 @@ function convertDatabaseToV5(db: DataStoreBase<any>, _logger: Logger) {
 			const clouddb = new DataLegacyCloudDatabase(db.cfgDir)
 			const cloud = clouddb.getAll()
 			batchInsert('cloud', cloud)
-		} catch (e: any) {}
+		} catch (_e: any) {
+			// Ignore errors here, as the cloud DB may not exist
+		}
 
 		// Move surface-groups to match others
 		const surfaces = mainTable.get('surface-groups') ?? {}

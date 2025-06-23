@@ -25,7 +25,11 @@ export interface ClientConnectionConfig {
 	collectionId: string | null
 }
 
-export type ConnectionCollection = CollectionBase<undefined>
+export interface ConnectionCollectionData {
+	enabled: boolean
+}
+
+export type ConnectionCollection = CollectionBase<ConnectionCollectionData>
 
 export enum ConnectionUpdatePolicy {
 	Manual = 'manual',

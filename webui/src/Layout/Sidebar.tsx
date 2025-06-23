@@ -52,6 +52,7 @@ import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
+import { makeAbsolutePath } from '~/util.js'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -131,10 +132,16 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 		item.onClick()
 	}
 	return (
-		<CNavItem idx={item.path}>
-			<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2}>
-				<SidebarMenuItemLabel {...item} />
-			</CNavLink>
+		<CNavItem idx={item.path ?? item.name}>
+			{item.path ? (
+				<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2}>
+					<SidebarMenuItemLabel {...item} />
+				</CNavLink>
+			) : (
+				<CNavLink onClick={onClick2} style={{ cursor: 'pointer' }}>
+					<SidebarMenuItemLabel {...item} />
+				</CNavLink>
+			)}
 		</CNavItem>
 	)
 }
@@ -162,12 +169,12 @@ export const MySidebar = memo(function MySidebar() {
 			<CSidebarHeader className="brand">
 				<CSidebarBrand>
 					<div className="sidebar-brand-full">
-						<img src="/img/icons/48x48.png" height="30" alt="logo" />
+						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
 						&nbsp; Bitfocus&nbsp;
 						<span style={{ fontWeight: 'bold' }}>Companion</span>
 					</div>
 					<div className="sidebar-brand-narrow">
-						<img src="/img/icons/48x48.png" height="42px" alt="logo" />
+						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="42px" alt="logo" />
 					</div>
 				</CSidebarBrand>
 			</CSidebarHeader>

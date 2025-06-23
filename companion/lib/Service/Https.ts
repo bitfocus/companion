@@ -49,7 +49,7 @@ export class ServiceHttps extends ServiceBase {
 	 * Start the service if it is not already running
 	 * @access protected
 	 */
-	listen() {
+	listen(): void {
 		if (this.portConfig) {
 			this.port = Number(this.userconfig.getKey(this.portConfig))
 		}
@@ -120,7 +120,7 @@ export class ServiceHttps extends ServiceBase {
 		}
 	}
 
-	close() {
+	close(): void {
 		if (this.#server) {
 			this.#server.close()
 			this.#server = undefined
@@ -133,7 +133,7 @@ export class ServiceHttps extends ServiceBase {
 	 */
 	startServer(credentials: ServiceHttpsCredentials): void {
 		try {
-			this.#server = _https.createServer(credentials, this.#express.app)
+			this.#server = _https.createServer(credentials, this.#express.app as any) // This cast feels bad, but it appears happy
 			this.#server.on('error', this.handleSocketError.bind(this))
 			this.#server.listen(this.port, this.#bindIP ?? undefined)
 			this.#io.bindToHttps(this.#server)

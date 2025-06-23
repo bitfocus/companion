@@ -14,7 +14,7 @@ import type {
 /**
  * do the database upgrades to convert from the v8 to the v9 format
  */
-function convertDatabaseToV9(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV9(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
 	const controls = db.getTableView('controls')
@@ -29,7 +29,11 @@ function convertDatabaseToV9(db: DataStoreBase<any>, _logger: Logger) {
 
 function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'full') {
-		const newObj: ExportFullv6 = { ...cloneDeep(obj), version: 9 }
+		const newObj: ExportFullv6 = {
+			companionBuild: undefined,
+			...cloneDeep(obj),
+			version: 9,
+		}
 		if (newObj.pages) {
 			for (const page of Object.values(newObj.pages)) {
 				convertPageControls(page)
@@ -39,6 +43,7 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 	} else if (obj.type == 'page') {
 		const newObj: ExportPageModelv6 = {
 			connectionCollections: undefined,
+			companionBuild: undefined,
 			...cloneDeep(obj),
 			version: 9,
 		}
@@ -48,6 +53,7 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 		const newObj: ExportTriggersListv6 = {
 			triggerCollections: undefined,
 			connectionCollections: undefined,
+			companionBuild: undefined,
 			...cloneDeep(obj),
 			version: 9,
 		}

@@ -68,3 +68,7 @@ export interface LayeredButtonOptions extends NormalButtonOptions {
 }
 
 export type ButtonStatus = 'good' | 'warning' | 'error'
+
+export interface NormalButtonRuntimeProps {
+	current_step_id: string
+}

@@ -2,7 +2,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { defineConfig } from 'vite'
 import reactPlugin from '@vitejs/plugin-react'
 import legacyPlugin from '@vitejs/plugin-legacy'
-import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import fs from 'fs'
 import path from 'path'
 import tsconfigPaths from 'vite-tsconfig-paths'
@@ -11,7 +11,32 @@ const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
 
 const buildFile = fs.readFileSync(path.join(__dirname, '../BUILD')).toString().trim()
 
-// https://vitejs.dev/config/
+/**
+ * Parse --base argument from command line
+ * This is a horrible hack, but Vite does not provide a way to access the base path directly from the config.
+ */
+function getBaseFromArgs(): string {
+	// Handle --base=value format
+	const baseEqualArg = process.argv.find((arg) => arg.startsWith('--base='))
+	if (baseEqualArg) {
+		return baseEqualArg.split('=')[1]
+	}
+
+	// Handle --base value format
+	const baseIndex = process.argv.findIndex((arg) => arg === '--base')
+	if (baseIndex !== -1 && baseIndex + 1 < process.argv.length) {
+		return process.argv[baseIndex + 1]
+	}
+
+	return '/'
+}
+
+// Get the base path from Vite's --base argument
+const basePath = getBaseFromArgs()
+let normalizedBase = basePath
+if (!normalizedBase.startsWith('/')) normalizedBase = `/${normalizedBase}`
+normalizedBase = normalizedBase.endsWith('/') ? normalizedBase.slice(0, -1) : normalizedBase
+
 export default defineConfig({
 	publicDir: 'public',
 	// This changes the out put dir from dist to build
@@ -23,17 +48,24 @@ export default defineConfig({
 	},
 	server: {
 		proxy: {
-			'/int': `http://${upstreamUrl}`,
-			'/docs': `http://${upstreamUrl}`,
-			'/socket.io': {
+			[`${normalizedBase}/int`]: {
+				target: `http://${upstreamUrl}`,
+				rewrite: (path) => path.slice(normalizedBase.length),
+			},
+			[`${normalizedBase}/docs`]: {
+				target: `http://${upstreamUrl}`,
+				rewrite: (path) => path.slice(normalizedBase.length),
+			},
+			[`${normalizedBase}/socket.io`]: {
 				target: `ws://${upstreamUrl}`,
 				ws: true,
+				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 		},
 	},
 	plugins: [
 		tsconfigPaths(),
-		TanStackRouterVite({
+		tanstackRouter({
 			virtualRouteConfig: './src/routes/-routes.ts',
 			addExtensions: true,
 		}),

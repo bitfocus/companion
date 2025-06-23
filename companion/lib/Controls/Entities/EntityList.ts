@@ -102,7 +102,7 @@ export class ControlEntityList {
 	 * Inform the instance of any removed/disabled entities
 	 * @access public
 	 */
-	cleanup() {
+	cleanup(): void {
 		for (const entity of this.#entities) {
 			entity.cleanup()
 		}
@@ -410,6 +410,7 @@ export class ControlEntityList {
 		}
 	}
 
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setVariableValue(name: string, value: any): boolean {
 		if (!name) return false
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
-import { SocketContext, useComputed } from '~/util.js'
+import { makeAbsolutePath, SocketContext, useComputed } from '~/util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -49,7 +49,7 @@ export const TriggersPage = observer(function Triggers() {
 
 	const exportModalRef = useRef<ConfirmExportModalRef>(null)
 	const showExportModal = useCallback(() => {
-		exportModalRef.current?.show(`/int/export/triggers/all`)
+		exportModalRef.current?.show(makeAbsolutePath(`/int/export/triggers/all`))
 	}, [])
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
@@ -136,9 +136,7 @@ export const TriggersPage = observer(function Triggers() {
 			</CCol>
 
 			<CCol xs={12} xl={6} className="secondary-panel">
-				<div className="secondary-panel-inner">
-					<Outlet />
-				</div>
+				<Outlet />
 			</CCol>
 		</CRow>
 	)
@@ -258,7 +256,12 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						size="xl"
 					/>
 
-					<CButton color="white" href={`/int/export/triggers/single/${item.id}`} target="_blank" title="Export">
+					<CButton
+						color="white"
+						href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)}
+						target="_blank"
+						title="Export"
+					>
 						<FontAwesomeIcon icon={faDownload} />
 					</CButton>
 					<CButton color="white" onClick={doClone} title="Clone">

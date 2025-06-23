@@ -73,7 +73,7 @@ export abstract class ServiceBase {
 	/**
 	 * Kill the socket, if exists.
 	 */
-	protected disableModule() {
+	protected disableModule(): void {
 		if (this.currentState) {
 			try {
 				this.currentState = false
@@ -88,7 +88,7 @@ export abstract class ServiceBase {
 	/**
 	 * Call to enable the socket if the module is initialized.
 	 */
-	protected enableModule() {
+	protected enableModule(): void {
 		if (this.initialized === true) {
 			try {
 				this.listen()
@@ -101,7 +101,8 @@ export abstract class ServiceBase {
 	/**
 	 * Process a socket error and disable the module.
 	 */
-	protected handleSocketError(e: any) {
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	protected handleSocketError(e: any): void {
 		let message
 		let disable = false
 
@@ -128,7 +129,7 @@ export abstract class ServiceBase {
 	/**
 	 * Initialize and enable the socket if defaults allow.
 	 */
-	protected init() {
+	protected init(): void {
 		this.initialized = true
 
 		if (!this.enableConfig || (this.enableConfig && this.userconfig.getKey(this.enableConfig) === true)) {
@@ -144,7 +145,7 @@ export abstract class ServiceBase {
 	/**
 	 * Stop and restart the module, if enabled.
 	 */
-	protected restartModule() {
+	protected restartModule(): void {
 		this.disableModule()
 
 		if (!this.enableConfig || (this.enableConfig && this.userconfig.getKey(this.enableConfig) === true)) {
@@ -157,7 +158,7 @@ export abstract class ServiceBase {
 	 * @param key - the saved key
 	 * @param value - the saved value
 	 */
-	updateUserConfig(key: string, value: boolean | number | string) {
+	updateUserConfig(key: string, value: boolean | number | string): void {
 		if (this.enableConfig !== undefined && key == this.enableConfig) {
 			if (this.currentState == false && value == true) {
 				this.enableModule()

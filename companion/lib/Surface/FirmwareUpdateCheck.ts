@@ -63,7 +63,7 @@ export class SurfaceFirmwareUpdateCheck {
 
 						// Perform the update for each surface
 						await Promise.allSettled(
-							surfaceIds.map((surfaceId) => {
+							surfaceIds.map(async (surfaceId) => {
 								const handler = this.#surfaceHandlers.get(surfaceId)
 								if (!handler) return
 
@@ -111,8 +111,8 @@ export class SurfaceFirmwareUpdateCheck {
 		this.#payloadUpdating.set(url, pendingPromise)
 
 		// Fetch new data
-		fetch(url)
-			.then((res) => res.json() as Promise<unknown>)
+		void fetch(url)
+			.then(async (res) => res.json())
 			.catch((e) => {
 				this.#logger.warn(`Failed to fetch firmware update payload from "${url}": ${e}`)
 				return null

@@ -5,6 +5,7 @@ import {
 	ButtonGraphicsDrawBase,
 	SomeButtonGraphicsDrawElement,
 	ButtonGraphicsImageDrawElement,
+	ButtonGraphicsDecorationType,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
@@ -32,10 +33,10 @@ export class GraphicsLayeredProcessedStyleGenerator {
 		let showTopBar: boolean | 'default' = 'default'
 		if (canvasLayer) {
 			switch (canvasLayer.decoration) {
-				case 'topbar':
+				case ButtonGraphicsDecorationType.TopBar:
 					showTopBar = true
 					break
-				case 'border':
+				case ButtonGraphicsDecorationType.Border:
 					showTopBar = false
 					break
 				default:

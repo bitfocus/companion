@@ -107,6 +107,7 @@ export function validateInputValue(
 		}
 
 		case 'internal:connection_id':
+		case 'internal:connection_collection':
 		case 'internal:custom_variable':
 		case 'internal:date':
 		case 'internal:page':

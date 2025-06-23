@@ -73,7 +73,7 @@ export class ControlEntityInstance {
 	 * Get a reference to the options for this action
 	 * Note: This must not be a copy, but the raw object
 	 */
-	get rawOptions() {
+	get rawOptions(): Record<string, any> {
 		return this.#data.options
 	}
 
@@ -88,7 +88,7 @@ export class ControlEntityInstance {
 		if (!entity.variableName) return null
 
 		// Check if the variable name is valid
-		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
 		if (!entity.variableName.match(idCheckRegex)) return null
 
 		return `local:${entity.variableName}`
@@ -101,7 +101,7 @@ export class ControlEntityInstance {
 		if (!entity.variableName) return null
 
 		// Check if the variable name is valid
-		const idCheckRegex = /^([a-zA-Z0-9-_\.]+)$/
+		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
 		if (!entity.variableName.match(idCheckRegex)) return null
 
 		return entity.variableName
@@ -210,7 +210,7 @@ export class ControlEntityInstance {
 	/**
 	 * Inform the instance of a removed/disabled entity
 	 */
-	cleanup() {
+	cleanup(): void {
 		// Inform relevant module
 		if (this.#data.connectionId === 'internal') {
 			this.#internalModule.entityDelete(this.asEntityModel())
@@ -364,6 +364,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set an option for this entity
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setOption(key: string, value: any): void {
 		this.#data.options[key] = value
 
@@ -390,6 +391,7 @@ export class ControlEntityInstance {
 	 * @param value the new value
 	 * @returns success
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setStyleValue(key: string, value: any): boolean {
 		if (this.#data.type !== EntityModelType.Feedback) return false
 
@@ -791,6 +793,7 @@ export class ControlEntityInstance {
 	/**
 	 * If this is the user value feedback, set the value
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setUserValue(value: any): void {
 		if (!isInternalUserValueFeedback(this)) return
 

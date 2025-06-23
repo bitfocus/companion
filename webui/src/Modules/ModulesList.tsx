@@ -113,20 +113,17 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 			<h4>Manage Modules</h4>
 
 			<p>
-				Here you can view and manage the modules you have installed.
-				<br />
-				If you have an active internet connection, you can search for and install modules to support additional devices.
-				If you can't find the device you're looking for, we have{' '}
-				<a target="_blank" href="/getting-started#6_modules.md">
-					some guidance
-				</a>{' '}
-				on ways to get support for your device.
-				<br />
-				If you are on an offline system, you can download the latest module bundle from the{' '}
-				<a href="https://user.bitfocus.io/download" target="_blank">
+				View and manage your installed modules, or search for new ones to support additional devices. Can't find your
+				device?{' '}
+				<a target="_blank" href="/getting-started#6_modules.md" className="text-decoration-none">
+					Check our guidance for getting device support
+				</a>
+				.<br />
+				For offline systems, download module bundles from the{' '}
+				<a href="https://user.bitfocus.io/download" target="_blank" className="text-decoration-none">
 					Bitfocus website
-				</a>{' '}
-				and import it here.
+				</a>
+				.
 			</p>
 
 			<ImportModules />

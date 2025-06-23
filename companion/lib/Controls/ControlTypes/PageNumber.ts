@@ -93,7 +93,7 @@ export class ControlButtonPageNumber
 		_foundConnectionIds: Set<string>,
 		_foundConnectionLabels: Set<string>,
 		_foundVariables: Set<string>
-	) {
+	): void {
 		// Nothing being referenced
 	}
 
@@ -126,10 +126,10 @@ export class ControlButtonPageNumber
 		}
 	}
 
-	getBitmapFeedbackSize() {
+	getBitmapFeedbackSize(): { width: number; height: number } | null {
 		return null
 	}
-	renameVariables(_labelFrom: string, _labelTo: string) {
+	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
 	}
 }

@@ -34,7 +34,7 @@ export class VariablesExpressionStream {
 		this.#variablesController.on('local_variables_changed', this.#onValuesChanged)
 	}
 
-	clientConnect(client: ClientSocket) {
+	clientConnect(client: ClientSocket): void {
 		client.on('disconnect', () => {
 			// Remove from all subscriptions
 			for (const [expressionId, session] of this.#sessions) {

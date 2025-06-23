@@ -303,7 +303,7 @@ export class InternalCustomVariables
 				if (action.action === 'custom_variable_store_variable') {
 					visitor.visitVariableName(action.options, 'variable')
 				}
-			} catch (e) {
+			} catch (_e) {
 				//Ignore
 			}
 		}

@@ -103,7 +103,7 @@ export class ExportController {
 		const triggerControls = this.#controlsController.getAllTriggers()
 		const exp = this.#generateTriggersExport(triggerControls, true)
 
-		const filename = this.#generateFilename(String(req.query.filename), 'trigger_list', 'companionconfig')
+		const filename = this.#generateFilename(String(req.query.filename as any), 'trigger_list', 'companionconfig')
 
 		downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 	}
@@ -114,7 +114,11 @@ export class ExportController {
 			const exp = this.#generateTriggersExport([control], false)
 
 			const triggerName = control.options.name.toLowerCase().replace(/\W/, '')
-			const filename = this.#generateFilename(String(req.query.filename), `trigger_${triggerName}`, 'companionconfig')
+			const filename = this.#generateFilename(
+				String(req.query.filename as any),
+				`trigger_${triggerName}`,
+				'companionconfig'
+			)
 
 			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		} else {
@@ -166,6 +170,7 @@ export class ExportController {
 			const exp: ExportPageModelv6 = {
 				version: FILE_VERSION,
 				type: 'page',
+				companionBuild: this.#appInfo.appBuild,
 				page: pageExport,
 				instances: instancesExport,
 				connectionCollections: filteredConnectionCollections,
@@ -174,7 +179,7 @@ export class ExportController {
 				imageLibraryCollections: filteredImageLibraryCollections,
 			}
 
-			const filename = this.#generateFilename(String(req.query.filename), `page${page}`, 'companionconfig')
+			const filename = this.#generateFilename(String(req.query.filename as any), `page${page}`, 'companionconfig')
 
 			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		}
@@ -183,7 +188,7 @@ export class ExportController {
 	#exportCustomHandler: RequestHandler = (req, res, next) => {
 		const exp = this.#generateCustomExport(req.query as any)
 
-		const filename = this.#generateFilename(String(req.query.filename), '', 'companionconfig')
+		const filename = this.#generateFilename(String(req.query.filename as any), '', 'companionconfig')
 
 		downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 	}
@@ -223,7 +228,7 @@ export class ExportController {
 		res.end(csvOut)
 	}
 
-	#exportSupportBundleHandler: RequestHandler = (_req, res, _next) => {
+	#exportSupportBundleHandler: RequestHandler = async (_req, res, _next) => {
 		// Export support zip
 		const archive = archiver('zip', { zlib: { level: 9 } })
 
@@ -287,13 +292,13 @@ export class ExportController {
 
 		try {
 			const payload = compileUpdatePayload(this.#appInfo)
-			let out = JSON.stringify(payload)
+			const out = JSON.stringify(payload)
 			archive.append(out, { name: 'user.json' })
 		} catch (e) {
 			this.#logger.debug(`Support bundle append user: ${e}`)
 		}
 
-		archive.finalize()
+		await archive.finalize()
 	}
 
 	//Parse variables and generate filename based on export type
@@ -363,6 +368,7 @@ export class ExportController {
 		const result: ExportTriggersListv6 = {
 			type: 'trigger_list',
 			version: FILE_VERSION,
+			companionBuild: this.#appInfo.appBuild,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
 			instances: instancesExport,
@@ -472,6 +478,7 @@ export class ExportController {
 		const exp: ExportFullv6 = {
 			version: FILE_VERSION,
 			type: 'full',
+			companionBuild: this.#appInfo.appBuild,
 		}
 
 		const rawControls = this.#controlsController.getAllControls()

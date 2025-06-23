@@ -13,7 +13,7 @@ import { GraphicsRenderer } from './Renderer.js'
 import workerPool from 'workerpool'
 
 workerPool.worker({
-	drawButtonImage: GraphicsRenderer.drawButtonImageUnwrapped,
-	drawButtonBareImage: GraphicsRenderer.drawButtonBareImageUnwrapped,
-	createImagePreview: GraphicsRenderer.createImagePreview,
+	drawButtonImage: GraphicsRenderer.drawButtonImageUnwrapped.bind(GraphicsRenderer),
+	drawButtonBareImage: GraphicsRenderer.drawButtonBareImageUnwrapped.bind(GraphicsRenderer),
+	createImagePreview: GraphicsRenderer.createImagePreview.bind(GraphicsRenderer),
 })

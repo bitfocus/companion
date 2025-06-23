@@ -223,7 +223,7 @@ function convertTriggerToControl(logger: Logger, entry: any, index: number): any
 					break
 			}
 			break
-		case 'feedback':
+		case 'feedback': {
 			control.events.push({
 				id: nanoid(),
 				type: 'condition_true',
@@ -241,7 +241,8 @@ function convertTriggerToControl(logger: Logger, entry: any, index: number): any
 			}
 
 			break
-		case 'variable':
+		}
+		case 'variable': {
 			// Convert old variable type to new format
 			control.events.push({
 				id: nanoid(),
@@ -251,7 +252,7 @@ function convertTriggerToControl(logger: Logger, entry: any, index: number): any
 			})
 
 			const oldConfig = Array.isArray(entry.config) ? entry.config : [entry.config]
-			for (let conf of oldConfig) {
+			for (const conf of oldConfig) {
 				// the operators were inverted..
 				let check = conf.check
 				if (check == 'lt') check = 'gt'
@@ -271,6 +272,7 @@ function convertTriggerToControl(logger: Logger, entry: any, index: number): any
 			}
 
 			break
+		}
 		default:
 			logger.warn(`Unable to upgrade trigger of unknown type: ${entry.type}`)
 			control.events.push({
@@ -305,7 +307,7 @@ function convertTriggerToControl(logger: Logger, entry: any, index: number): any
 function convertSchedulerToControls(mainTable: DataStoreTableView<any>, logger: Logger) {
 	let scheduler = mainTable.get('scheduler')
 	if (scheduler) {
-		let controls = mainTable.get('controls') ?? {}
+		const controls = mainTable.get('controls') ?? {}
 
 		if (Array.isArray(scheduler)) {
 			// Convert into an object
@@ -476,6 +478,7 @@ function fixUpControl(control: any) {
 	return control
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 function convertImportToSets(obj: any, logger: Logger) {
 	if (obj.type == 'full') {
 		const newObj: any = {

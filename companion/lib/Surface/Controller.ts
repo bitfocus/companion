@@ -19,7 +19,6 @@ import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
 import { isAShuttleDevice } from 'shuttle-node'
-// @ts-ignore
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
@@ -282,7 +281,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return lastInteraction + timeout < Date.now()
 	}
 
-	triggerRefreshDevicesEvent(): void {
+	triggerRefreshDevicesEvent = (): void => {
 		this.triggerRefreshDevices().catch((e) => {
 			this.#logger.warn(`Hotplug device refresh failed: ${e}`)
 		})
@@ -433,7 +432,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 
 			// Find a connected surface
-			for (let surface of this.#surfaceHandlers.values()) {
+			for (const surface of this.#surfaceHandlers.values()) {
 				if (surface && surface.surfaceId == id) {
 					surface.setPanelName(name)
 					this.updateDevicesList()
@@ -463,7 +462,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		})
 
 		client.onPromise('surfaces:config-set', (id, config) => {
-			for (let surface of this.#surfaceHandlers.values()) {
+			for (const surface of this.#surfaceHandlers.values()) {
 				if (surface && surface.surfaceId == id) {
 					surface.setPanelConfig(config)
 
@@ -876,7 +875,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						this.#logger.silly('Elgato software detected, ignoring stream decks')
 					}
 				}
-			} catch (e) {
+			} catch (_e) {
 				// scan for all usb devices anyways
 			}
 
@@ -961,7 +960,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						)
 					),
 					scanForLoupedeck
-						? listLoupedecks().then((deviceInfos) =>
+						? listLoupedecks().then(async (deviceInfos) =>
 								Promise.allSettled(
 									deviceInfos.map(async (deviceInfo) => {
 										this.#logger.info('found loupedeck', deviceInfo)
@@ -997,14 +996,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				}
 			} catch (e) {
 				this.#logger.silly('USB: scan failed ' + e)
-				throw 'Scan failed'
+				return 'Scan failed'
 			}
 		} finally {
 			this.#runningRefreshDevices = false
 		}
 	}
 
-	async addStreamdeckTcpDevice(streamdeck: StreamDeckTcp) {
+	async addStreamdeckTcpDevice(streamdeck: StreamDeckTcp): Promise<SurfaceUSBElgatoStreamDeck> {
 		const fakePath = `tcp://${streamdeck.remoteAddress}:${streamdeck.remotePort}`
 
 		this.removeDevice(fakePath)
@@ -1090,7 +1089,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			try {
 				const devicetest = new HID.HID(devicePath)
 				devicetest.close()
-			} catch (e) {
+			} catch (_e) {
 				this.#logger.error(
 					`Found "${type}" device, but no access. Please quit any other applications using the device, and try again.`
 				)
@@ -1228,7 +1227,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			try {
 				surfaceHandler.unload(purge)
-			} catch (e) {
+			} catch (_e) {
 				// Ignore for now
 			}
 
@@ -1246,7 +1245,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			if (!surface) continue
 			try {
 				surface.unload()
-			} catch (e) {
+			} catch (_e) {
 				// Ignore for now
 			}
 		}
@@ -1356,7 +1355,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 					this.#attachSurfaceToGroup(surface)
 				}
-			} catch (e) {
+			} catch (_e) {
 				this.#logger.warn('Could not reattach a surface')
 			}
 		}

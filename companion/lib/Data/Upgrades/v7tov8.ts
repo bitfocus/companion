@@ -6,7 +6,7 @@ import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 /**
  * do the database upgrades to convert from the v6 to the v7 format
  */
-function convertDatabaseToV8(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV8(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
 	convertRowToTable(db, 'custom_variables', 'custom_variables')
@@ -36,6 +36,7 @@ function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'page') {
 		return {
 			connectionCollections: undefined,
+			companionBuild: undefined,
 			...obj,
 			version: 8,
 		}
@@ -43,6 +44,7 @@ function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
 		return {
 			triggerCollections: undefined,
 			connectionCollections: undefined,
+			companionBuild: undefined,
 			...obj,
 			version: 8,
 		}

@@ -19,6 +19,8 @@ import type {
 import { computed } from 'mobx'
 import { DropTargetMonitor, XYCoord } from 'react-dnd'
 import type { ReadonlyDeep } from 'type-fest'
+import { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { joinPaths } from '@tanstack/react-router'
 
 export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
 
@@ -489,4 +491,29 @@ export function checkGridDragState<TItem extends { dragState: DragState | null }
 
 	item.dragState.draggedOver.push(hoverId)
 	return true
+}
+
+export function isCollectionEnabled<TMetaData extends { enabled?: boolean }>(
+	collections: CollectionBase<TMetaData>[],
+	collectionId: string | null | undefined
+): boolean {
+	if (!collectionId) return true
+
+	for (const collection of collections) {
+		// If found the collection, check if it is enabled
+		if (collection.id === collectionId) {
+			return !!collection.metaData?.enabled
+		}
+
+		if (collection.metaData.enabled && collection.children) {
+			const enabled = isCollectionEnabled(collection.children, collectionId)
+			if (enabled) return true
+		}
+	}
+
+	return false
+}
+
+export function makeAbsolutePath(path: string): string {
+	return joinPaths([import.meta.env.BASE_URL || '/', path])
 }

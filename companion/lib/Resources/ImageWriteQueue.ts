@@ -86,7 +86,7 @@ export class ImageWriteQueue<TKey extends string | number, TArgs extends any[]> 
 			// Track which key is being processed
 			this.#inProgress.add(nextImage.key)
 
-			this.#callback(nextImage.key, ...nextImage.args)
+			void this.#callback(nextImage.key, ...nextImage.args)
 				.catch((e) => {
 					// Ensure it doesnt error out
 					this.#logger.silly('fillImage error:', e)

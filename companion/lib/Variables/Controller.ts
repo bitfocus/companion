@@ -36,7 +36,7 @@ export class VariablesController {
 	/**
 	 * Setup a new socket client's events
 	 */
-	clientConnect(client: ClientSocket) {
+	clientConnect(client: ClientSocket): void {
 		this.values.clientConnect(client)
 		this.custom.clientConnect(client)
 		this.definitions.clientConnect(client)

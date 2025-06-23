@@ -11,7 +11,7 @@
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { convertPanelIndexToXY } from '../Util.js'
-// @ts-ignore
+// @ts-expect-error no types for this package
 import VideohubServer from 'videohub-server'
 import {
 	OffsetConfigFields,
@@ -95,7 +95,7 @@ export class SurfaceIPVideohubPanel extends EventEmitter<SurfacePanelEvents> imp
 		}
 	}
 
-	quit() {}
+	quit(): void {}
 
 	/**
 	 * Draw a button
@@ -129,7 +129,7 @@ export class SurfaceIPVideohubPanel extends EventEmitter<SurfacePanelEvents> imp
 	 * Process the information from the GUI and what is saved in database
 	 * @returns false when nothing happens
 	 */
-	setConfig(config: Record<string, any>, force = false) {
+	setConfig(config: Record<string, any>, force = false): void {
 		console.log('setup', config, force)
 		const newBrightness = Math.floor(config.brightness / 10)
 		if ((force || this._config.brightness != newBrightness) && config.brightness !== undefined) {

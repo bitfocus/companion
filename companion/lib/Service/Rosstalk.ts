@@ -45,10 +45,10 @@ export class ServiceRosstalk extends ServiceTcpBase {
 	 * @param data - the incoming message part
 	 * @access protected
 	 */
-	processIncoming(_client: TcpClientInfo, data: string) {
+	processIncoming(_client: TcpClientInfo, data: string): void {
 		data = data.toString()
 
-		const matchCC = data.match(/CC ([0-9]+)\:([0-9]+)/)
+		const matchCC = data.match(/CC ([0-9]+):([0-9]+)/)
 		if (matchCC) {
 			const xy = oldBankIndexToXY(parseInt(matchCC[2]))
 			if (!xy) {

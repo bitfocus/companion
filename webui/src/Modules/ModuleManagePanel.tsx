@@ -7,11 +7,11 @@ import { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesSt
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
-import { WindowLinkOpen } from '~/Helpers/Window.js'
+import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
-import { useModuleStoreInfo } from './useModuleStoreInfo.js'
+import { WindowLinkOpen } from '~/Helpers/Window.js'
 
 interface ModuleManagePanelProps {
 	moduleId: string
@@ -52,28 +52,31 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
 
 	return (
-		<div>
-			<h5>
-				Manage {baseInfo?.name ?? moduleId}
-				{!!moduleStoreBaseInfo && (
-					<WindowLinkOpen className="float_right" title="Open Store Page" href={moduleStoreBaseInfo.storeUrl}>
-						<FontAwesomeIcon icon={faExternalLink} />
-					</WindowLinkOpen>
-				)}
-				{!!moduleStoreBaseInfo?.githubUrl && (
-					<WindowLinkOpen className="float_right" title="Open GitHub Page" href={moduleStoreBaseInfo.githubUrl}>
-						<FontAwesomeIcon icon={faGithub} />
-					</WindowLinkOpen>
-				)}
-			</h5>
-
-			<div className="refresh-and-last-updated">
-				<RefreshModuleInfo moduleId={moduleId} />
-				<LastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
+		<>
+			<div className="secondary-panel-simple-header">
+				<h4 className="panel-title">Manage {baseInfo?.name ?? moduleId}</h4>
+				<div className="header-buttons">
+					{!!moduleStoreBaseInfo?.githubUrl && (
+						<WindowLinkOpen title="Open GitHub Page" href={moduleStoreBaseInfo.githubUrl}>
+							<FontAwesomeIcon icon={faGithub} size="xl" />
+						</WindowLinkOpen>
+					)}
+					{!!moduleStoreBaseInfo && (
+						<WindowLinkOpen className="ms-1" title="Open Store Page" href={moduleStoreBaseInfo.storeUrl}>
+							<FontAwesomeIcon icon={faExternalLink} size="xl" />
+						</WindowLinkOpen>
+					)}
+				</div>
 			</div>
-			{moduleStoreInfo?.updateWarning && <CAlert color="danger">{moduleStoreInfo.updateWarning}</CAlert>}
+			<div className="secondary-panel-simple-body">
+				<div className="refresh-and-last-updated">
+					<RefreshModuleInfo moduleId={moduleId} />
+					<LastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
+				</div>
+				{moduleStoreInfo?.updateWarning && <CAlert color="danger">{moduleStoreInfo.updateWarning}</CAlert>}
 
-			<ModuleVersionsTable moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
-		</div>
+				<ModuleVersionsTable moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
+			</div>
+		</>
 	)
 })

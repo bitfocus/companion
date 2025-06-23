@@ -1,7 +1,7 @@
 import { Database as SQLiteDB } from 'better-sqlite3'
 import { Logger } from '../../Log/Controller.js'
 
-export function createTables(store: SQLiteDB | undefined, defaultTable: string, logger: Logger) {
+export function createTables(store: SQLiteDB | undefined, defaultTable: string, logger: Logger): void {
 	if (store) {
 		try {
 			store.prepare(`CREATE TABLE IF NOT EXISTS ${defaultTable} (id STRING UNIQUE, value STRING);`).run()

@@ -60,8 +60,6 @@ export class InstanceInstalledModulesManager {
 		this.#io.emitToAll('modules:bundle-import:progress', sessionId, null)
 	})
 
-	readonly #restartConnection: (connectionId: string) => void
-
 	constructor(
 		appInfo: AppInfo,
 		_db: DataDatabase,
@@ -69,8 +67,7 @@ export class InstanceInstalledModulesManager {
 		modulesManager: InstanceModules,
 		modulesStore: ModuleStoreService,
 		configStore: ConnectionConfigStore,
-		installedModulesDir: string,
-		restartConnection: (connectionId: string) => void
+		installedModulesDir: string
 	) {
 		this.#appInfo = appInfo
 		// this.#db = db
@@ -79,13 +76,12 @@ export class InstanceInstalledModulesManager {
 		this.#modulesStore = modulesStore
 		this.#configStore = configStore
 		this.#modulesDir = installedModulesDir
-		this.#restartConnection = restartConnection
 	}
 
 	/**
 	 * Initialise the user modules manager
 	 */
-	async init() {
+	async init(): Promise<void> {
 		await fs.mkdirp(this.#modulesDir)
 		await fs.writeFile(
 			path.join(this.#modulesDir, 'README'),
@@ -94,7 +90,7 @@ export class InstanceInstalledModulesManager {
 	}
 
 	#modulesBeingInstalled = new Set<string>()
-	ensureModuleIsInstalled(moduleId: string, versionId: string | null) {
+	ensureModuleIsInstalled(moduleId: string, versionId: string | null): void {
 		this.#logger.debug(`Ensuring module "${moduleId}" is installed`)
 
 		if (this.#modulesManager.getModuleManifest(moduleId, versionId)) {
@@ -134,13 +130,10 @@ export class InstanceInstalledModulesManager {
 
 						config.moduleVersionId = versionInfo.id
 						changedConnectionIds.push(connectionId)
-
-						// If enabled, restart it
-						if (config.enabled) this.#restartConnection(connectionId)
 					}
 
 					// Save the changes
-					this.#configStore.commitChanges(changedConnectionIds)
+					this.#configStore.commitChanges(changedConnectionIds, true)
 				}
 			})
 			.catch((e) => {
@@ -355,6 +348,7 @@ export class InstanceInstalledModulesManager {
 		// Download into memory with a size limit
 		const chunks: Uint8Array[] = []
 		let bytesReceived = 0
+		// eslint-disable-next-line n/no-unsupported-features/node-builtins
 		for await (const chunk of response.body as ReadableStream<Uint8Array>) {
 			bytesReceived += chunk.byteLength
 			if (bytesReceived > MAX_MODULE_TAR_SIZE) {
@@ -450,6 +444,8 @@ export class InstanceInstalledModulesManager {
 		} catch (e) {
 			// cleanup the dir, just to be sure it doesn't get stranded
 			await fs.rm(moduleDir, { recursive: true }).catch(() => null)
+
+			throw e
 		}
 
 		this.#logger.info(`Installed module ${manifestJson.id} v${manifestJson.version}`)
@@ -499,7 +495,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<ModuleManifest |
 			const filename = rootDir && header.name.startsWith(rootDir) ? header.name.slice(rootDir.length) : header.name
 
 			if (filename === 'companion/manifest.json') {
-				let dataBuffers: Buffer[] = []
+				const dataBuffers: Buffer[] = []
 
 				stream.on('end', () => {
 					// The file we need has been found
@@ -508,7 +504,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<ModuleManifest |
 					try {
 						resolve(JSON.parse(manifestStr))
 					} catch (e) {
-						reject(e)
+						reject(e as Error)
 					}
 
 					extract.destroy()
@@ -536,7 +532,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<ModuleManifest |
 		})
 
 		extract.on('error', (err) => {
-			reject(err)
+			reject(err as Error)
 
 			extract.destroy()
 		})
@@ -573,7 +569,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 				// collect the module names
 				const moduleDirName = filename.slice(0, -suffix.length)
 				if (!moduleDirName.includes('/')) {
-					let dataBuffers: Buffer[] = []
+					const dataBuffers: Buffer[] = []
 
 					stream.on('end', () => {
 						// The file we need has been found
@@ -584,7 +580,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 								subDir: moduleDirName,
 								manifestJson: JSON.parse(manifestStr),
 							})
-						} catch (e) {
+						} catch (_e) {
 							// Ignore
 							// reject(e)
 						}
@@ -616,7 +612,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 		})
 
 		extract.on('error', (err) => {
-			reject(err)
+			reject(err as Error)
 
 			extract.destroy()
 		})

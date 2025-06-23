@@ -37,7 +37,7 @@ export class GraphicsRenderer {
 
 	static #IMAGE_CACHE = new Map<string, Image[]>()
 
-	static calculateTransforms(resolution: { width: number; height: number }) {
+	private static calculateTransforms(resolution: { width: number; height: number }) {
 		// Calculate some constants for drawing without reinventing the numbers
 		const drawScale = Math.min(resolution.width, resolution.height) / 72
 		const xOffset = (resolution.width - 72 * drawScale) / 2
@@ -70,9 +70,11 @@ export class GraphicsRenderer {
 
 		const res = fcn(img)
 		if (isPromise(res)) {
-			res.finally(() => {
-				pool.push(img)
-			})
+			res
+				.finally(() => {
+					pool.push(img)
+				})
+				.catch(() => null)
 			return res
 		} else {
 			pool.push(img)
@@ -99,7 +101,7 @@ export class GraphicsRenderer {
 
 			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
 					GraphicsRenderer.#drawBlankImage(img, options, location)
 
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)
@@ -372,24 +374,30 @@ export class GraphicsRenderer {
 		}
 
 		// Draw background color first
-		!showTopbar
-			? img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
-			: img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
+		if (!showTopbar) {
+			img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
+		} else {
+			img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
+		}
 
 		// Draw background PNG if exists
 		if (drawStyle.png64 !== undefined && drawStyle.png64 !== null) {
 			try {
 				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
 
-				!showTopbar
-					? await img.drawBase64Image(drawStyle.png64, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
-					: await img.drawBase64Image(drawStyle.png64, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
+				if (!showTopbar) {
+					await img.drawBase64Image(drawStyle.png64, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
+				} else {
+					await img.drawBase64Image(drawStyle.png64, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
+				}
 			} catch (e) {
 				console.error('error drawing image:', e)
 				img.box(0, 14, 71, 57, 'black')
-				!showTopbar
-					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
-					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
+				if (!showTopbar) {
+					img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
+				} else {
+					img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
+				}
 
 				if (showTopbar)
 					ButtonDecorationRenderer.drawLegacy(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
@@ -411,11 +419,13 @@ export class GraphicsRenderer {
 					img.drawPixelBuffer(x, y, width, height, image.buffer, image.pixelFormat, image.drawScale)
 				}
 			}
-		} catch (e) {
+		} catch (_e) {
 			img.fillColor('black')
-			!showTopbar
-				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
-				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
+			if (!showTopbar) {
+				img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
+			} else {
+				img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
+			}
 
 			if (showTopbar)
 				ButtonDecorationRenderer.drawLegacy(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
@@ -454,7 +464,7 @@ export class GraphicsRenderer {
 			GraphicsLockingGenerator.generatePincodeChar(img, num)
 			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
 					GraphicsLockingGenerator.generatePincodeChar(img, num)
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)
 				})
@@ -470,7 +480,7 @@ export class GraphicsRenderer {
 			GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
 			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, (img) => {
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
 					GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)
 				})
@@ -530,12 +540,12 @@ export class GraphicsRenderer {
 				height: originalHeight,
 				previewDataUrl,
 			}
-		} catch (error) {
+		} catch (_e) {
 			throw new Error('Failed to process image')
 		}
 	}
 
-	static #RotateAndConvertImage(
+	static async #RotateAndConvertImage(
 		img: Image,
 		width: number,
 		height: number,

@@ -10,6 +10,7 @@ import { FinishStep } from './FinishStep.js'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { WIZARD_CURRENT_VERSION } from './Constants.js'
+import { makeAbsolutePath } from '~/util.js'
 
 export function WizardModal(): React.JSX.Element {
 	const { socket, showWizardEvent } = useContext(RootAppStoreContext)
@@ -156,7 +157,7 @@ export function WizardModal(): React.JSX.Element {
 			<CForm onSubmit={doSave} className={'flex-form'}>
 				<CModalHeader>
 					<h2>
-						<img src="/img/icons/48x48.png" height="30" alt="logo" />
+						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
 						Welcome to Companion
 					</h2>
 				</CModalHeader>

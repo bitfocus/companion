@@ -9,6 +9,7 @@ export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersList
 export interface ExportBase<Type extends string> {
 	readonly version: 6 | 7 | 8 | 9
 	readonly type: Type
+	readonly companionBuild: string | undefined // The build of the companion that exported this
 }
 
 export interface ExportFullv6 extends ExportBase<'full'> {
