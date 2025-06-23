@@ -45,3 +45,7 @@ export interface NormalButtonOptions extends ButtonOptionsBase {
 }
 
 export type ButtonStatus = 'good' | 'warning' | 'error'
+
+export interface NormalButtonRuntimeProps {
+	current_step_id: string
+}

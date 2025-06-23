@@ -7,6 +7,7 @@ import { getFilenameForSection, GettingStartedMenu } from './SideMenu.js'
 import { DocsContent } from './DocsContent.js'
 
 import docsStructure0 from '@docs/structure.json'
+import { makeAbsolutePath } from '~/util.js'
 const docsStructure: DocsSection[] = docsStructure0
 
 export interface DocsSection {
@@ -117,7 +118,7 @@ export function GettingStarted(): React.JSX.Element {
 		<Fragment>
 			<div style={style.header}>
 				<div>
-					<img src="/img/icons/48x48.png" alt="link icon" style={{ width: 72 / 2 }} />
+					<img src={makeAbsolutePath('/img/icons/48x48.png')} alt="link icon" style={{ width: 72 / 2 }} />
 				</div>
 				<div style={style.headerText}>
 					<strong>Bitfocus Companion</strong>
@@ -162,7 +163,7 @@ function RenderSubsection({ subsect, visibleFiles, triggerScroll }: RenderSubsec
 							target="_blank"
 							style={style.contentGithubLink}
 						>
-							{subsect.file} <img src="/img/link.png" alt="Link" style={style.imgLink} />
+							{subsect.file} <img src={makeAbsolutePath('/img/link.png')} alt="Link" style={style.imgLink} />
 						</a>
 						<div>
 							<DocsContent file={subsect.file} />

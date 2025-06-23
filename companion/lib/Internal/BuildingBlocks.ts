@@ -214,9 +214,10 @@ export class InternalBuildingBlocks
 					return booleanAnd(!!feedback.isInverted, childValues)
 				case 'or':
 					return childValues.reduce((acc, val) => acc || val, false)
-				case 'xor':
+				case 'xor': {
 					const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
 					return isSingleTrue === !feedback.isInverted
+				}
 				default:
 					this.#logger.warn(`Unexpected operation: ${feedback.options.operation}`)
 					return false
@@ -246,7 +247,7 @@ export class InternalBuildingBlocks
 				this.#logger.error(`Failed to parse delay: ${expressionResult.error}`)
 			}
 
-			let delay = expressionResult.ok ? Number(expressionResult.value) : 0
+			const delay = expressionResult.ok ? Number(expressionResult.value) : 0
 
 			if (!isNaN(delay) && delay > 0) {
 				// Perform the wait

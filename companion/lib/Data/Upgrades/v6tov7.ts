@@ -17,7 +17,7 @@ import { Complete } from '@companion-module/base/dist/util.js'
 /**
  * do the database upgrades to convert from the v6 to the v7 format
  */
-function convertDatabaseToV7(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV7(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
 	const controlsTable = db.getTableView('controls')
@@ -32,7 +32,11 @@ function convertDatabaseToV7(db: DataStoreBase<any>, _logger: Logger) {
 
 function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'full') {
-		const newObj: ExportFullv6 = { ...cloneDeep(obj), version: 7 }
+		const newObj: ExportFullv6 = {
+			companionBuild: undefined,
+			...cloneDeep(obj),
+			version: 7,
+		}
 		if (newObj.pages) {
 			for (const page of Object.values(newObj.pages)) {
 				convertPageControls(page)
@@ -45,13 +49,19 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 		}
 		return newObj
 	} else if (obj.type == 'page') {
-		const newObj: ExportPageModelv6 = { connectionCollections: undefined, ...cloneDeep(obj), version: 7 }
+		const newObj: ExportPageModelv6 = {
+			connectionCollections: undefined,
+			companionBuild: undefined,
+			...cloneDeep(obj),
+			version: 7,
+		}
 		convertPageControls(newObj.page)
 		return newObj
 	} else if (obj.type == 'trigger_list') {
 		const newObj: ExportTriggersListv6 = {
 			triggerCollections: undefined,
 			connectionCollections: undefined,
+			companionBuild: undefined,
 			...cloneDeep(obj),
 			version: 7,
 		}

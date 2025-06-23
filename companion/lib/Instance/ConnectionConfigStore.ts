@@ -21,11 +21,11 @@ export class ConnectionConfigStore {
 	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
 
 	readonly #dbTable: DataStoreTableView<Record<string, ConnectionConfig>>
-	readonly #afterSave: (connectionIds: string[]) => void
+	readonly #afterSave: (connectionIds: string[], updateConnectionHost: boolean) => void
 
 	#store: Map<string, ConnectionConfig>
 
-	constructor(db: DataDatabase, afterSave: (connectionIds: string[]) => void) {
+	constructor(db: DataDatabase, afterSave: (connectionIds: string[], updateConnectionHost: boolean) => void) {
 		this.#dbTable = db.getTableView('connections')
 		this.#afterSave = afterSave
 
@@ -35,7 +35,7 @@ export class ConnectionConfigStore {
 	/**
 	 * Write the changes to the database, and perform any post-save hooks
 	 */
-	commitChanges(connectionIds: string[]): void {
+	commitChanges(connectionIds: string[], updateConnectionHost: boolean): void {
 		for (const connectionId of connectionIds) {
 			const entry = this.#store.get(connectionId)
 			if (entry) {
@@ -45,7 +45,7 @@ export class ConnectionConfigStore {
 			}
 		}
 
-		this.#afterSave(connectionIds)
+		this.#afterSave(connectionIds, updateConnectionHost)
 	}
 
 	getAllInstanceIds(): string[] {
@@ -112,7 +112,7 @@ export class ConnectionConfigStore {
 	forgetConnection(id: string): void {
 		this.#store.delete(id)
 
-		this.commitChanges([id])
+		this.commitChanges([id], true)
 	}
 
 	exportAll(includeSecrets: boolean): Record<string, ConnectionConfig | undefined> {
@@ -237,7 +237,7 @@ export class ConnectionConfigStore {
 
 		// persist the changes
 		if (changedIds.length > 0) {
-			this.commitChanges(changedIds)
+			this.commitChanges(changedIds, true)
 		}
 
 		return true
@@ -264,7 +264,7 @@ export class ConnectionConfigStore {
 			}
 		}
 
-		this.commitChanges(changedIds)
+		this.commitChanges(changedIds, true)
 	}
 
 	findActiveUsagesOfModule(moduleId: string): { connectionIds: string[]; labels: string[] } {

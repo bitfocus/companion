@@ -37,7 +37,7 @@ export class UIUpdate {
 		this.#appInfo = appInfo
 	}
 
-	startCycle() {
+	startCycle(): void {
 		// Make a request now
 		this.#requestUpdate()
 		setInterval(

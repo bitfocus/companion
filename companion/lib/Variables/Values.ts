@@ -92,7 +92,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			const valuesForLabel = this.#variableValues[label]
 			if (valuesForLabel !== undefined) {
 				const removed_variables = new Set<string>()
-				for (let variable in valuesForLabel) {
+				for (const variable in valuesForLabel) {
 					valuesForLabel[variable] = undefined
 					removed_variables.add(`${label}:${variable}`)
 				}
@@ -112,7 +112,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		if (valuesFrom !== undefined) {
 			const all_changed_variables_set = new Set<string>()
 
-			for (let variable in valuesFrom) {
+			for (const variable in valuesFrom) {
 				valuesTo[variable] = valuesFrom[variable]
 				delete valuesFrom[variable]
 

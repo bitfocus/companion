@@ -87,7 +87,7 @@ export class InstanceDefinitions {
 	/**
 	 * Setup a new socket client's events
 	 */
-	clientConnect(client: ClientSocket) {
+	clientConnect(client: ClientSocket): void {
 		client.onPromise('presets:subscribe', () => {
 			client.join(PresetsRoom)
 
@@ -237,7 +237,7 @@ export class InstanceDefinitions {
 			}
 
 			for (const opt of definition.options) {
-				// @ts-ignore
+				// @ts-expect-error mismatch in key type
 				event.options[opt.id] = cloneDeep(opt.default)
 			}
 
@@ -623,7 +623,7 @@ function convertActionsDelay(
 		let currentDelay = 0
 		let currentDelayGroupChildren: ActionEntityModel[] = []
 
-		let delayGroups: ActionEntityModel[] = [wrapActionsInGroup(currentDelayGroupChildren)]
+		const delayGroups: ActionEntityModel[] = [wrapActionsInGroup(currentDelayGroupChildren)]
 
 		for (const action of actions) {
 			const delay = Number(action.delay)

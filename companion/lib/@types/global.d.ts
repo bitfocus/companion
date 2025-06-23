@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 declare global {
 	const __webpack_require__: Function | void
 	const __non_webpack_require__: Function | void

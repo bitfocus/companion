@@ -62,7 +62,7 @@ export class RegexRouter {
 	addPath(path: string, handler: PathRouteHandler): void {
 		const { regexp, keys } = pathToRegexp(path)
 
-		this.addRegex(regexp, (match, ...args) => {
+		this.addRegex(regexp, async (match, ...args) => {
 			const values: Record<string, string> = {}
 			for (let i = 0; i < keys.length; i++) {
 				const key = keys[i]

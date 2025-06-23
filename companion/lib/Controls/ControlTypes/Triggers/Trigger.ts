@@ -263,7 +263,7 @@ export class ControlTrigger
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
 	 */
-	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>) {
+	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
 		const allEntities = this.entities.getAllEntities()
 
 		for (const entities of allEntities) {
@@ -515,11 +515,12 @@ export class ControlTrigger
 	/**
 	 * Update an option field of this control
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	optionsSetField(key: string, value: any, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
-		// @ts-ignore
+		// @ts-expect-error mistmatch in types
 		this.options[key] = value
 
 		if (key === 'enabled') {
@@ -753,6 +754,7 @@ export class ControlTrigger
 	/**
 	 * Update an option for an event
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	eventSetOptions(id: string, key: string, value: any): boolean {
 		for (const event of this.events) {
 			if (event && event.id === id) {
@@ -778,7 +780,7 @@ export class ControlTrigger
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
 	}
-	getBitmapSize() {
+	getBitmapSize(): { width: number; height: number } | null {
 		return null
 	}
 }

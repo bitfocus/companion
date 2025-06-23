@@ -211,7 +211,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	 * Process the information from the GUI and what is saved in database
 	 * @returns false when nothing happens
 	 */
-	setConfig(config: Record<string, any>, _force = false) {
+	setConfig(config: Record<string, any>, _force = false): void {
 		// This will be a no-op if the value hasn't changed
 		this.#emitTbarValue()
 		this.#emitJogValue()
@@ -231,19 +231,20 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 		this.config = config
 	}
 
-	quit() {
+	quit(): void {
 		this.#device
 			.clearPanel()
 			.catch((e) => {
 				this.#logger.debug(`Clear deck failed: ${e}`)
 			})
-			.then(() => {
+			.then(async () => {
 				//close after the clear has been sent
-				this.#device.close().catch(() => null)
+				await this.#device.close()
 			})
+			.catch(() => null)
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		this.#device.clearPanel().catch((e) => {
 			this.#logger.debug(`Clear deck failed: ${e}`)
 		})
@@ -252,7 +253,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>) {
+	onVariablesChanged(allChangedVariables: Set<string>): void {
 		if (this.#lastTbarDrawReferencedVariables) {
 			for (const variable of allChangedVariables.values()) {
 				if (this.#lastTbarDrawReferencedVariables.has(variable)) {
@@ -287,7 +288,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 			}
 			this.#lastTbarDrawReferencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 
-			let ledValues = new Array(tbarControl.ledSegments).fill(false)
+			const ledValues = new Array(tbarControl.ledSegments).fill(false)
 			const fillLedCount = Number(expressionResult)
 			if (isNaN(fillLedCount)) {
 				return // Future: allow patterns
@@ -372,7 +373,7 @@ export class SurfaceUSBBlackmagicController extends EventEmitter<SurfacePanelEve
 	/**
 	 * Draw multiple buttons
 	 */
-	drawMany(renders: DrawButtonItem[]) {
+	drawMany(renders: DrawButtonItem[]): void {
 		for (const { x, y, image } of renders) {
 			const control = this.#device.CONTROLS.find(
 				(control): control is BlackmagicControllerButtonControlDefinition =>

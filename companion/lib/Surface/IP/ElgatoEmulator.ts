@@ -170,7 +170,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 	/**
 	 * Process the information from the GUI and what is saved in database
 	 */
-	setConfig(config: EmulatorConfig, _force = false) {
+	setConfig(config: EmulatorConfig, _force = false): void {
 		// Populate some defaults
 		if (!config.emulator_columns) config.emulator_columns = this.getDefaultConfig().emulator_columns
 		if (!config.emulator_rows) config.emulator_rows = this.getDefaultConfig().emulator_rows

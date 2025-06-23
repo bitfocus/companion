@@ -13,6 +13,7 @@ import { EventEmitter } from 'events'
 import {
 	LoupedeckBufferFormat,
 	LoupedeckControlInfo,
+	LoupedeckControlType,
 	LoupedeckDevice,
 	LoupedeckDisplayId,
 	openLoupedeck,
@@ -53,7 +54,7 @@ interface ModelInfo {
  */
 function buttonToXY(modelInfo: ModelInfo, info: LoupedeckControlInfo): [x: number, y: number] | undefined {
 	const index = modelInfo.buttons[info.index]
-	if (info.type === 'button' && index !== undefined) {
+	if (info.type === LoupedeckControlType.Button && index !== undefined) {
 		return index
 	}
 
@@ -73,7 +74,7 @@ const translateTouchKeyIndex = (displayInfo: DisplayInfo, key: number): number =
  */
 function rotaryToXY(modelInfo: ModelInfo, info: LoupedeckControlInfo): [x: number, y: number] | undefined {
 	const index = modelInfo.encoders[info.index]
-	if (info.type === 'rotary' && index !== undefined) {
+	if (info.type === LoupedeckControlType.Rotary && index !== undefined) {
 		return index
 	}
 
@@ -186,64 +187,43 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 		 * no multitouch support, the last moved touch wins
 		 * lock will not be obeyed
 		 */
-		this.#loupedeck.on('touchmove', async (data) => {
-			let touch = data.changedTouches.find(
+		this.#loupedeck.on('touchmove', (data) => {
+			const touch = data.changedTouches.find(
 				(touch) => touch.target.screen == LoupedeckDisplayId.Right || touch.target.screen == LoupedeckDisplayId.Left
 			)
 			if (touch && touch.target.screen == LoupedeckDisplayId.Right) {
 				const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
 				this.emit('setVariable', 't-bar', val)
-				try {
-					await this.#loupedeck.drawSolidColour(
-						LoupedeckDisplayId.Right,
-						{ red: 0, green: 0, blue: 0 },
-						60,
-						val + 7,
-						0,
-						0
-					)
-					await this.#loupedeck.drawSolidColour(
-						LoupedeckDisplayId.Right,
-						{ red: 0, green: 127, blue: 0 },
-						60,
-						262 - val,
-						0,
-						val + 7
-					)
-				} catch (err) {
-					this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + err)
-				}
+				this.#loupedeck
+					.drawSolidColour(LoupedeckDisplayId.Right, { red: 0, green: 0, blue: 0 }, 60, val + 7, 0, 0)
+					.catch((e) => {
+						this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + e)
+					})
+				this.#loupedeck
+					.drawSolidColour(LoupedeckDisplayId.Right, { red: 0, green: 127, blue: 0 }, 60, 262 - val, 0, val + 7)
+					.catch((e) => {
+						this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + e)
+					})
 			} else if (touch && touch.target.screen == LoupedeckDisplayId.Left) {
 				const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
 				this.emit('setVariable', 'shuttle', val)
-				try {
-					await this.#loupedeck.drawSolidColour(
-						LoupedeckDisplayId.Left,
-						{ red: 0, green: 0, blue: 0 },
-						60,
-						val + 7,
-						0,
-						0
-					)
-					await this.#loupedeck.drawSolidColour(
-						LoupedeckDisplayId.Left,
-						{ red: 127, green: 0, blue: 0 },
-						60,
-						262 - val,
-						0,
-						val + 7
-					)
-				} catch (err) {
-					this.#logger.error('Drawing left fader value ' + touch.y + ' to loupedeck failed: ' + err)
-				}
+				this.#loupedeck
+					.drawSolidColour(LoupedeckDisplayId.Left, { red: 0, green: 0, blue: 0 }, 60, val + 7, 0, 0)
+					.catch((e) => {
+						this.#logger.error('Drawing left fader value ' + touch.y + ' to loupedeck failed: ' + e)
+					})
+				this.#loupedeck
+					.drawSolidColour(LoupedeckDisplayId.Left, { red: 127, green: 0, blue: 0 }, 60, 262 - val, 0, val + 7)
+					.catch((e) => {
+						this.#logger.error('Drawing left fader value ' + touch.y + ' to loupedeck failed: ' + e)
+					})
 			}
 		})
 
-		// @ts-ignore
-		this.#loupedeck.on('disconnect', (error) => {
-			this.#logger.error(`disconnected: ${error}`)
-			this.emit('remove')
-		})
+		// this.#loupedeck.on('disconnect', (error) => {
+		// 	this.#logger.error(`disconnected: ${error}`)
+		// 	this.emit('remove')
+		// })
 
 		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, render) => {
 			let width = this.#loupedeck.lcdKeySize
@@ -369,7 +349,7 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 
 			return self
 		} catch (e) {
-			loupedeck.close()
+			await loupedeck.close()
 
 			throw e
 		}
@@ -389,18 +369,18 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 	}
 
 	quit(): void {
-		try {
-			this.clearDeck()
-		} catch (e) {}
+		this.clearDeck()
 
-		this.#loupedeck.close()
+		this.#loupedeck.close().catch(() => {
+			// Ignore
+		})
 	}
 
 	/**
 	 * Draw a button
 	 */
 	draw(x: number, y: number, render: ImageResult): void {
-		let screen = this.#modelInfo.displays.center
+		const screen = this.#modelInfo.displays.center
 		const lcdX = x - screen.lcdXOffset
 
 		if (x === 3 && y === 4) {

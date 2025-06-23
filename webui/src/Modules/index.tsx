@@ -27,7 +27,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 			</CCol>
 
 			<CCol xl={6} className="connections-panel secondary-panel add-connections-panel">
-				<div className="secondary-panel-inner">
+				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>
 			</CCol>

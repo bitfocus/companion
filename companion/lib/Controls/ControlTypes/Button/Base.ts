@@ -220,13 +220,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	/**
 	 * Update an option field of this control
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	optionsSetField(key: string, value: any): boolean {
 		// Check if rotary_actions should be added/remove
 		if (key === 'rotaryActions') {
 			this.entities.setupRotaryActionSets(!!value, true)
 		}
 
-		// @ts-ignore
+		// @ts-expect-error mismatch in key type
 		this.options[key] = value
 
 		this.commitChange()
@@ -317,10 +318,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 					if (!actions) return
 
 					this.logger.silly(`found ${actions.length} actions`)
-					this.actionRunner.runActions(actions, {
-						surfaceId,
-						location,
-					})
+					this.actionRunner
+						.runActions(actions, {
+							surfaceId,
+							location,
+						})
+						.catch((e) => {
+							this.logger.error(`action execution failed: ${e}`)
+						})
 				}
 
 				if (pressed && holdState && holdState.timers.length === 0) {
@@ -359,10 +364,14 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		const location = this.deps.page.getLocationOfControlId(this.controlId)
 
 		this.logger.silly(`found ${actions.length} actions`)
-		this.actionRunner.runActions(actions, {
-			surfaceId,
-			location,
-		})
+		this.actionRunner
+			.runActions(actions, {
+				surfaceId,
+				location,
+			})
+			.catch((e) => {
+				this.logger.error(`action execution failed: ${e}`)
+			})
 	}
 
 	/**

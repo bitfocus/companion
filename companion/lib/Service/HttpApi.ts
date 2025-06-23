@@ -218,7 +218,7 @@ export class ServiceHttpApi {
 			const newFields: Partial<ButtonStyleProperties> = {}
 
 			if (req.query.bgcolor) {
-				const value = String(req.query.bgcolor).replace(/#/, '')
+				const value = String(req.query.bgcolor as any).replace(/#/, '')
 				const color = rgb(value.substr(0, 2), value.substr(2, 2), value.substr(4, 2), 16)
 				if (color !== false) {
 					newFields.bgcolor = color
@@ -226,7 +226,7 @@ export class ServiceHttpApi {
 			}
 
 			if (req.query.color) {
-				const value = String(req.query.color).replace(/#/, '')
+				const value = String(req.query.color as any).replace(/#/, '')
 				const color = rgb(value.substr(0, 2), value.substr(2, 2), value.substr(4, 2), 16)
 				if (color !== false) {
 					newFields.color = color
@@ -234,40 +234,40 @@ export class ServiceHttpApi {
 			}
 
 			if (req.query.size) {
-				const value = Number(String(req.query.size).replace(/pt/i, ''))
+				const value = Number(String(req.query.size as any).replace(/pt/i, ''))
 				newFields.size = value
 			}
 
 			if (req.query.text || req.query.text === '') {
-				newFields.text = String(req.query.text)
+				newFields.text = String(req.query.text as any)
 			}
 
 			if (req.query.png64 || req.query.png64 === '') {
 				if (req.query.png64 === '') {
 					newFields.png64 = null
-				} else if (!String(req.query.png64).match(/data:.*?image\/png/)) {
+				} else if (!String(req.query.png64 as any).match(/data:.*?image\/png/)) {
 					res.status(400)
 					res.send('png64 must be a base64 encoded png file')
 					return
 				} else {
-					newFields.png64 = String(req.query.png64)
+					newFields.png64 = String(req.query.png64 as any)
 				}
 			}
 
 			if (req.query.alignment) {
 				try {
-					const [, , alignment] = ParseAlignment(String(req.query.alignment))
+					const [, , alignment] = ParseAlignment(String(req.query.alignment as any))
 					newFields.alignment = alignment
-				} catch (e) {
+				} catch (_e) {
 					// Ignore
 				}
 			}
 
 			if (req.query.pngalignment) {
 				try {
-					const [, , alignment] = ParseAlignment(String(req.query.pngalignment))
+					const [, , alignment] = ParseAlignment(String(req.query.pngalignment as any))
 					newFields.pngalignment = alignment
-				} catch (e) {
+				} catch (_e) {
 					// Ignore
 				}
 			}
@@ -289,8 +289,8 @@ export class ServiceHttpApi {
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
-			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value}`)
-			const result = this.#serviceApi.setCustomVariableValue(req.params.name, String(req.query.value))
+			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value as any}`)
+			const result = this.#serviceApi.setCustomVariableValue(req.params.name, String(req.query.value as any))
 			if (result) {
 				res.send(result)
 			} else {

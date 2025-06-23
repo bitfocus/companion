@@ -21,13 +21,13 @@ export function argb(
 	b: number | string,
 	base = 10
 ): number | false {
-	// @ts-ignore
+	// @ts-expect-error TypeScript doesn't like parseInt with a number
 	a = parseInt(a, base)
-	// @ts-ignore
+	// @ts-expect-error TypeScript doesn't like parseInt with a number
 	r = parseInt(r, base)
-	// @ts-ignore
+	// @ts-expect-error TypeScript doesn't like parseInt with a number
 	g = parseInt(g, base)
-	// @ts-ignore
+	// @ts-expect-error TypeScript doesn't like parseInt with a number
 	b = parseInt(b, base)
 
 	const rgbVal = rgb(r, g, b)
@@ -57,11 +57,11 @@ export const decimalToRgb = (decimal: number): { red: number; green: number; blu
  * @param base
  */
 export const rgb = (r: number | string, g: number | string, b: number | string, base = 10): number | false => {
-	// @ts-ignore
+	// @ts-expect-error TypeScript doesn't like parseInt with a number
 	r = parseInt(r, base)
-	// @ts-ignore
+	// @ts-expect-error TypeScript doesn't like parseInt with a number
 	g = parseInt(g, base)
-	// @ts-ignore
+	// @ts-expect-error TypeScript doesn't like parseInt with a number
 	b = parseInt(b, base)
 
 	if (isNaN(r) || isNaN(g) || isNaN(b)) return false
@@ -124,18 +124,18 @@ export const parseColorToNumber = (color: string | number | Uint8Array): number 
 /**
  * @param milliseconds
  */
-export const delay = (milliseconds: number) => {
+export const delay = async (milliseconds: number): Promise<void> => {
 	return new Promise((resolve) => setTimeout(resolve, milliseconds || 0))
 }
 
 export const getTimestamp = (): string => {
-	let d = new Date()
-	let year = d.getFullYear().toString()
-	let month = convert2Digit(d.getMonth() + 1)
-	let day = convert2Digit(d.getDate())
-	let hrs = convert2Digit(d.getHours())
-	let mins = convert2Digit(d.getMinutes())
-	let out = year + month + day + '-' + hrs + mins
+	const d = new Date()
+	const year = d.getFullYear().toString()
+	const month = convert2Digit(d.getMonth() + 1)
+	const day = convert2Digit(d.getDate())
+	const hrs = convert2Digit(d.getHours())
+	const mins = convert2Digit(d.getMinutes())
+	const out = year + month + day + '-' + hrs + mins
 	return out
 }
 
@@ -153,13 +153,16 @@ export const convert2Digit = (num: number): string => {
 /**
  * Check if Satellite API value is falsey
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const isFalsey = (val: any): boolean => {
+	// eslint-disable-next-line no-extra-boolean-cast
 	return (typeof val === 'string' && val.toLowerCase() == 'false') || val == '0' || !Boolean(val)
 }
 
 /**
  * Check if Satellite API value is truthy
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const isTruthy = (val: any): boolean => {
 	return (
 		!isFalsey(val) &&
@@ -177,7 +180,7 @@ export function parseLineParameters(line: string): ParsedParams {
 		return index === -1 ? Number.POSITIVE_INFINITY : index
 	}
 
-	let fragments = ['']
+	const fragments = ['']
 	let quotes = 0
 
 	let i = 0
@@ -188,7 +191,7 @@ export function parseLineParameters(line: string): ParsedParams {
 		const quoteIndex = makeSafe(line.indexOf('"', i))
 
 		// Find which is closest
-		let o = Math.min(spaceIndex, slashIndex, quoteIndex)
+		const o = Math.min(spaceIndex, slashIndex, quoteIndex)
 		if (!isFinite(o)) {
 			// None were found, copy the remainder and stop
 			const slice = line.substring(i)
@@ -353,6 +356,7 @@ export function showFatalError(title: string, message: string): void {
 	})
 
 	console.error(message)
+	// eslint-disable-next-line n/no-process-exit
 	process.exit(1)
 }
 
@@ -372,7 +376,8 @@ export function showErrorMessage(title: string, message: string): void {
 /**
  * Send message over IPC to parent
  */
-export function sendOverIpc(data: any) {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function sendOverIpc(data: any): void {
 	if (process.env.COMPANION_IPC_PARENT && process.send) {
 		process.send(data)
 	}

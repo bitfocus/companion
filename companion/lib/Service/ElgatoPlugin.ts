@@ -330,7 +330,8 @@ export class ServiceElgatoPlugin extends ServiceBase {
 
 		socket.on('message', (message) => {
 			try {
-				let data = JSON.parse(message.toString())
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
+				const data = JSON.parse(message.toString())
 				wrappedSocket.emit(data.command, data.arguments)
 				//this.logger.silly('emitting command ' + data.command);
 			} catch (e) {

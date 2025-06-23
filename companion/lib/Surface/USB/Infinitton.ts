@@ -57,7 +57,7 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 
 			this.#infinitton = new Infinitton(devicePath)
 
-			// @ts-ignore
+			// @ts-expect-error poking at private property
 			const serialNumber = this.#infinitton.device.getDeviceInfo().serialNumber
 
 			this.info = {
@@ -145,9 +145,11 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 		if (dev !== undefined) {
 			try {
 				this.clearDeck()
-			} catch (e) {}
 
-			dev.close()
+				dev.close()
+			} catch (_e) {
+				// Ignore errors during close
+			}
 		}
 	}
 

@@ -84,7 +84,7 @@ export class ControlButtonPageUp
 	 * @param foundConnectionIds - connection ids being referenced
 	 * @param foundConnectionLabels - connection labels being referenced
 	 */
-	collectReferencedConnections(_foundConnectionIds: Set<string>, _foundConnectionLabels: Set<string>) {
+	collectReferencedConnections(_foundConnectionIds: Set<string>, _foundConnectionLabels: Set<string>): void {
 		// Nothing being referenced
 	}
 
@@ -100,7 +100,7 @@ export class ControlButtonPageUp
 	 * @param pressed Whether the control is pressed
 	 * @param surfaceId The surface that initiated this press
 	 */
-	pressControl(pressed: boolean, surfaceId: string | undefined) {
+	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {
 			this.deps.surfaces.devicePageUp(surfaceId)
 		}
@@ -117,10 +117,10 @@ export class ControlButtonPageUp
 		}
 	}
 
-	getBitmapSize() {
+	getBitmapSize(): { width: number; height: number } | null {
 		return null
 	}
-	renameVariables(_labelFrom: string, _labelTo: string) {
+	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
 	}
 }

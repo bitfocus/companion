@@ -1,6 +1,6 @@
 import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
-import { PreventDefaultHandler } from '~/util.js'
+import { makeAbsolutePath, PreventDefaultHandler } from '~/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import type { ClientResetSelection } from '@companion-app/shared/Model/ImportExport.js'
@@ -155,7 +155,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 			<CForm onSubmit={PreventDefaultHandler}>
 				<CModalHeader>
 					<h2>
-						<img src="/img/icons/48x48.png" height="30" alt="logo" />
+						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
 						Reset Configuration
 					</h2>
 				</CModalHeader>
@@ -186,7 +186,7 @@ function ResetBeginStep() {
 			</p>
 			<p>It is recommended to export the system configuration first.</p>
 
-			<CButton color="success" href="/int/export/full" target="_blank">
+			<CButton color="success" href={makeAbsolutePath('/int/export/full')} target="_blank">
 				<FontAwesomeIcon icon={faDownload} /> Export
 			</CButton>
 		</div>

@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { SocketContext } from '~/util.js'
+import { makeAbsolutePath, SocketContext } from '~/util.js'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -63,7 +63,7 @@ export const LogPanel = memo(function LogPanel() {
 			],
 			'Export',
 			() => {
-				window.open('/int/export/support')
+				window.open(makeAbsolutePath('/int/export/support'))
 			}
 		)
 	}, [])
@@ -96,7 +96,7 @@ export const LogPanel = memo(function LogPanel() {
 									marginLeft: 10,
 								}}
 								size="sm"
-								href={`/int/export/log`}
+								href={makeAbsolutePath(`/int/export/log`)}
 								target="_blank"
 							>
 								<FontAwesomeIcon icon={faFileExport} /> Export log

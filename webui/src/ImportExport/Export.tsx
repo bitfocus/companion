@@ -1,6 +1,6 @@
 import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState, useContext } from 'react'
 import { CButton, CForm, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { PreventDefaultHandler } from '~/util.js'
+import { makeAbsolutePath, PreventDefaultHandler } from '~/util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
@@ -47,7 +47,7 @@ export const ExportWizardModal = observer(
 
 				const link = document.createElement('a')
 				link.setAttribute('download', 'export.companionconfig')
-				link.href = `/int/export/custom?${params}`
+				link.href = makeAbsolutePath(`/int/export/custom?${params}`)
 				document.body.appendChild(link)
 				link.click()
 				link.remove()
@@ -97,7 +97,7 @@ export const ExportWizardModal = observer(
 					<CForm className={'flex-form'} onSubmit={PreventDefaultHandler}>
 						<CModalHeader>
 							<h2>
-								<img src="/img/icons/48x48.png" height="30" alt="logo" />
+								<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
 								Export Configuration
 							</h2>
 						</CModalHeader>

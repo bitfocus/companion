@@ -20,14 +20,15 @@ export class FeedbackStyleBuilder {
 	/**
 	 * Apply a simple layer of style
 	 */
-	applySimpleStyle(style: Partial<ButtonStyleProperties> | undefined) {
+	applySimpleStyle(style: Partial<ButtonStyleProperties> | undefined): void {
 		this.#combinedStyle = {
 			...this.#combinedStyle,
 			...style,
 		}
 	}
 
-	applyComplexStyle(rawValue: any) {
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	applyComplexStyle(rawValue: any): void {
 		if (typeof rawValue === 'object' && rawValue !== undefined) {
 			// Prune off some special properties
 			const prunedValue = { ...rawValue }
