@@ -25,6 +25,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 		triggers: true,
 		customVariables: true,
 		userconfig: true,
+		imageLibrary: true,
 	})
 
 	const doClose = useCallback(() => {
@@ -101,6 +102,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 						triggers: true,
 						customVariables: true,
 						userconfig: true,
+						imageLibrary: true,
 					})
 
 					setCurrentStep(1)
@@ -261,6 +263,13 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 					label="Settings"
 				/>
 			</div>
+			<div className="indent3">
+				<CFormCheck
+					checked={config.imageLibrary}
+					onChange={(e) => setValue('imageLibrary', e.currentTarget.checked)}
+					label="Image Library"
+				/>
+			</div>
 		</div>
 	)
 }
@@ -300,6 +309,10 @@ function ResetApplyStep({ config }: ResetApplyStepProps) {
 
 	if (config.userconfig) {
 		changes.push(<li key="userconfig">All settings, including enabled remote control services.</li>)
+	}
+
+	if (config.imageLibrary) {
+		changes.push(<li key="imageLibrary">All images in the image library.</li>)
 	}
 
 	if (changes.length === 0) {

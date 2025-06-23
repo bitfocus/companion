@@ -209,7 +209,9 @@ export class Registry {
 				this.controls,
 				this.page,
 				this.userconfig,
-				this.variables.values,
+				this.variables,
+				this.db,
+				this.io,
 				this.#internalApiRouter
 			)
 			this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.controls)
@@ -320,6 +322,7 @@ export class Registry {
 				this.#data.clientConnect(client)
 				this.page.clientConnect(client)
 				this.controls.clientConnect(client)
+				this.graphics.clientConnect(client)
 				this.#preview.clientConnect(client)
 				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)

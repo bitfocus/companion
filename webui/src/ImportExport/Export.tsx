@@ -23,6 +23,7 @@ export const ExportWizardModal = observer(
 			surfaces: true,
 			triggers: true,
 			customVariables: true,
+			imageLibrary: true,
 			// userconfig: true,
 			format: ExportFormatDefault,
 			filename: userConfig.properties?.default_export_filename,
@@ -76,6 +77,7 @@ export const ExportWizardModal = observer(
 						surfaces: true,
 						triggers: true,
 						customVariables: true,
+						imageLibrary: true,
 						// userconfig: true,
 						format: ExportFormatDefault,
 						filename: defaultExportFilename,
@@ -170,6 +172,13 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 					checked={config.surfaces}
 					onChange={(e) => setValue('surfaces', e.currentTarget.checked)}
 					label="Surfaces"
+				/>
+			</div>
+			<div className="indent3">
+				<CFormCheck
+					checked={config.imageLibrary}
+					onChange={(e) => setValue('imageLibrary', e.currentTarget.checked)}
+					label="Image Library"
 				/>
 			</div>
 			{/* <div className="indent3">

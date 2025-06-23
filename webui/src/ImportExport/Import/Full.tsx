@@ -139,6 +139,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		surfaces: true,
 		triggers: true,
 		customVariables: true,
+		imageLibrary: true,
 		// userconfig: true,
 	}))
 
@@ -211,6 +212,14 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			/>
 
 			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="surfaces" setValue={setValue} label="Surfaces" />
+
+			<InputCheckbox
+				config={config}
+				allowKeys={snapshotKeys}
+				keyName="imageLibrary"
+				setValue={setValue}
+				label="Image Library"
+			/>
 
 			{/* <InputCheckbox
 				config={config}

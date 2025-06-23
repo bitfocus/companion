@@ -4,6 +4,7 @@ import { useEventListener, useIsomorphicLayoutEffect } from 'usehooks-ts'
 export default function useElementclientSize<TElement extends HTMLElement>(): [
 	(elm: TElement | null) => void,
 	{ width: number; height: number },
+	TElement | null,
 ] {
 	const [ref, setRef] = useState<TElement | null>(null)
 	const [size, setSize] = useState({
@@ -23,5 +24,5 @@ export default function useElementclientSize<TElement extends HTMLElement>(): [
 		handleSize()
 	}, [!ref ? 0 : ref.clientHeight, !ref ? 0 : ref.clientWidth])
 
-	return [setRef, size]
+	return [setRef, size, ref]
 }
