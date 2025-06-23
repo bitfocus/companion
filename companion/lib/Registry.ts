@@ -116,7 +116,7 @@ export class Registry {
 	/**
 	 * The core service controller
 	 */
-	#services!: ServiceController
+	services!: ServiceController
 	/**
 	 * The core device controller
 	 */
@@ -268,7 +268,7 @@ export class Registry {
 			)
 
 			this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
-			this.#services = new ServiceController(
+			this.services = new ServiceController(
 				serviceApi,
 				this.userconfig,
 				oscSender,
@@ -294,7 +294,7 @@ export class Registry {
 				setImmediate(() => {
 					// give the change a chance to be pushed to the ui first
 					this.graphics.updateUserConfig(key, value)
-					this.#services.updateUserConfig(key, value)
+					this.services.updateUserConfig(key, value)
 					this.surfaces.updateUserConfig(key, value)
 				})
 
@@ -318,7 +318,7 @@ export class Registry {
 				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)
 				this.#cloud.clientConnect(client)
-				this.#services.clientConnect(client)
+				this.services.clientConnect(client)
 				this.#importExport.clientConnect(client)
 			})
 
@@ -331,7 +331,7 @@ export class Registry {
 			})
 
 			this.graphics.on('button_drawn', (location, render) => {
-				this.#services.onButtonDrawn(location, render)
+				this.services.onButtonDrawn(location, render)
 			})
 
 			// old 'modules_loaded' events
@@ -457,7 +457,7 @@ export class Registry {
 
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
-		this.#services.https.updateBindIp(bindIp)
+		this.services.https.updateBindIp(bindIp)
 		this.internalModule.updateBindIp(bindIp)
 	}
 }

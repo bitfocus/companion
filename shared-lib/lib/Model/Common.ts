@@ -64,6 +64,16 @@ export interface ClientBonjourService {
 	addresses: string[]
 }
 
+export type ClientBonjourEvent =
+	| {
+			type: 'up'
+			service: ClientBonjourService
+	  }
+	| {
+			type: 'down'
+			fqdn: string
+	  }
+
 export interface EventDefinition {
 	name: string
 	description?: string

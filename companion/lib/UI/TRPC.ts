@@ -39,13 +39,9 @@ export const protectedProcedure = t.procedure
  */
 export function createTrpcRouter(registry: Registry) {
 	return router({
-		// ...
-
-		userList: publicProcedure.query(async () => {
-			return [1, 2, 3]
-		}),
-
 		appInfo: registry.ui.update.createTrpcRouter(),
+
+		bonjour: registry.services.bonjourDiscovery.createTrpcRouter(),
 
 		surfaces: registry.surfaces.createTrpcRouter(),
 	})

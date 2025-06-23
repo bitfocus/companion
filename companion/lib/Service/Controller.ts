@@ -81,7 +81,7 @@ export class ServiceController {
 		this.satelliteWebsocket = new ServiceSatelliteWebsocket(serviceApi.appInfo, surfaceController, userconfig)
 		this.elgatoPlugin = new ServiceElgatoPlugin(serviceApi, surfaceController, userconfig)
 		this.videohubPanel = new ServiceVideohubPanel(surfaceController, userconfig)
-		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, io, instanceController)
+		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
 		this.surfaceDiscovery = new ServiceSurfaceDiscovery(userconfig, io)
 
 		controlEvents.on('updateButtonState', (location, pushed, surfaceId) => {
@@ -121,7 +121,6 @@ export class ServiceController {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.bonjourDiscovery.clientConnect(client)
 		this.surfaceDiscovery.clientConnect(client)
 	}
 }

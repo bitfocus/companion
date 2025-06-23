@@ -2,7 +2,6 @@ import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { UserConfigModel } from './Model/UserConfigModel.js'
 import type { ClientLogLine } from './Model/LogLine.js'
 import type {
-	ClientBonjourService,
 	ClientEditConnectionConfig,
 	ClientEventDefinition,
 	ConnectionStatusEntry,
@@ -62,9 +61,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	ssl_certificate_create(): never
 	ssl_certificate_delete(): never
 	ssl_certificate_renew(): never
-
-	'bonjour:subscribe': (connectionId: string, queryId: string) => string[]
-	'bonjour:unsubscribe': (subIds: string[]) => never
 
 	'connection-debug:subscribe': (connectionId: string) => boolean
 	'connection-debug:unsubscribe': (connectionId: string) => void
@@ -432,9 +428,6 @@ export interface BackendToClientEventsMap {
 	'modules-store:info:progress': (moduleId: string, percent: number) => void
 	'modules-upgrade-to-other:data': (moduleId: string, data: ModuleUpgradeToOtherVersion[]) => void
 	'modules:bundle-import:progress': (sessionId: string, percent: number | null) => void
-
-	'bonjour:service:up': (svc: ClientBonjourService) => void
-	'bonjour:service:down': (subId: string, fqdn: string) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void
