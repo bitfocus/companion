@@ -8,10 +8,13 @@ export interface TrpcContext {
 	val: null
 }
 // created for each request
-export const createTrpcExpressContext = ({} /* req, res */ : trpcExpress.CreateExpressContextOptions): TrpcContext => ({
+export const createTrpcExpressContext = ({
+	req: _req,
+	res: _res,
+}: trpcExpress.CreateExpressContextOptions): TrpcContext => ({
 	val: null,
 }) // no context
-export const createTrpcWsContext = ({} /* req, res */ : trpcWs.CreateWSSContextFnOptions): TrpcContext => ({
+export const createTrpcWsContext = ({ req: _req, res: _res }: trpcWs.CreateWSSContextFnOptions): TrpcContext => ({
 	val: null,
 }) // no context
 

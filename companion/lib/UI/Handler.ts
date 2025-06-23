@@ -215,7 +215,7 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 	}
 
 	#boundTrpcRouter = false
-	bindTrpcRouter(trpcRouter: AppRouter) {
+	bindTrpcRouter(trpcRouter: AppRouter): void {
 		if (this.#boundTrpcRouter) throw new Error('tRPC router already bound')
 		this.#boundTrpcRouter = true
 

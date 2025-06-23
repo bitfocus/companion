@@ -73,7 +73,6 @@ export default [
 			'@typescript-eslint/no-explicit-any': 'off',
 			'@typescript-eslint/interface-name-prefix': 'off',
 			'@typescript-eslint/no-floating-promises': 'error',
-			'@typescript-eslint/explicit-module-boundary-types': ['error'],
 			'@typescript-eslint/promise-function-async': 'error',
 			'@typescript-eslint/require-await': 'off', // conflicts with 'promise-function-async'
 
@@ -86,7 +85,17 @@ export default [
 			'@typescript-eslint/restrict-template-expressions': 0,
 			'@typescript-eslint/restrict-plus-operands': 0,
 			'@typescript-eslint/no-redundant-type-constituents': 0,
+			'@typescript-eslint/no-this-alias': 0, // Needed for some TRPC routers
 			/** End 'recommended-requiring-type-checking' overrides */
+
+			'@typescript-eslint/explicit-module-boundary-types': [
+				'error',
+				{
+					allowedNames: [
+						'createTrpcRouter', // The router wants to be inferred
+					],
+				},
+			],
 		},
 	},
 	{

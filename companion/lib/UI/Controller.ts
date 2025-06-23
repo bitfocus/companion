@@ -18,7 +18,7 @@ export class UIController {
 		this.update = new UIUpdate(appInfo)
 	}
 
-	close() {
+	close(): void {
 		this.io.close()
 	}
 }
