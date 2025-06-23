@@ -100,6 +100,6 @@ export class InstanceModuleScanner {
 	}
 }
 
-export function getHelpPathForInstalledModule(moduleId: string, versionId: string) {
+export function getHelpPathForInstalledModule(moduleId: string, versionId: string): string {
 	return `/int/help/module/${moduleId}/${versionId}/HELP.md`
 }

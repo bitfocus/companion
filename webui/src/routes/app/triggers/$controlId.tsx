@@ -1,6 +1,3 @@
-import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
-import { faClock } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useContext } from 'react'
 import { EditTriggerPanel } from '~/Triggers/EditPanel.js'
@@ -25,22 +22,13 @@ const RouteComponent = observer(function RouteComponent() {
 	}, [navigate, triggersList, fullControlId])
 
 	return (
-		<>
-			<CNav variant="tabs" role="tablist">
-				<CNavItem>
-					<CNavLink active>
-						<FontAwesomeIcon icon={faClock} /> Edit Trigger
-					</CNavLink>
-				</CNavItem>
-			</CNav>
-			<CTabContent>
-				<CTabPane data-tab="edit" visible>
-					<MyErrorBoundary>
-						<EditTriggerPanel key={controlId} controlId={fullControlId} />
-					</MyErrorBoundary>
-				</CTabPane>
-			</CTabContent>
-		</>
+		<div className="secondary-panel-simple">
+			<div className="secondary-panel-simple-body">
+				<MyErrorBoundary>
+					<EditTriggerPanel key={controlId} controlId={fullControlId} />
+				</MyErrorBoundary>
+			</div>
+		</div>
 	)
 })
 

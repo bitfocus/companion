@@ -22,7 +22,7 @@ export abstract class ServiceOscBase extends ServiceBase {
 	/**
 	 * Start the service if it is not already running
 	 */
-	protected listen() {
+	protected listen(): void {
 		if (this.portConfig) {
 			this.port = Number(this.userconfig.getKey(this.portConfig))
 		}
@@ -54,7 +54,7 @@ export abstract class ServiceOscBase extends ServiceBase {
 		}
 	}
 
-	protected close() {
+	protected close(): void {
 		if (this.server) {
 			this.server.close()
 			this.server = undefined

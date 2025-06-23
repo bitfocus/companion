@@ -30,7 +30,7 @@ export class ServiceOscSender extends ServiceOscBase {
 	/**
 	 * Process an incoming message from a client
 	 */
-	protected override processIncoming() {}
+	protected override processIncoming(): void {}
 
 	/**
 	 * Send an OSC command to a host
@@ -39,7 +39,7 @@ export class ServiceOscSender extends ServiceOscBase {
 	 * @param path - the OSC path
 	 * @param args - arguments to include
 	 */
-	send(host: string, port: number, path: string, args: OSCSomeArguments) {
+	send(host: string, port: number, path: string, args: OSCSomeArguments): void {
 		if (this.server !== undefined) {
 			this.server.send(
 				{
@@ -59,11 +59,11 @@ export class ServiceOscSender extends ServiceOscBase {
 	 * @param time - OSC 64-bit time tag (see OSC specification); <code>0</code> to send immediately
 	 * @param bundle - the packages to send
 	 */
-	sendBundle(host: string, port: number, time: number, bundle: ServiceOscSender_CompanionOSCBundle) {
+	sendBundle(host: string, port: number, time: number, bundle: ServiceOscSender_CompanionOSCBundle): void {
 		if (this.server !== undefined && bundle !== undefined) {
 			this.server.send(
 				{
-					// @ts-ignore
+					// @ts-expect-error Bad typescript definitions
 					timeTag: OSC.timeTag(time),
 					packets: bundle,
 				},

@@ -84,7 +84,7 @@ export class ControlButtonPageDown
 	 * @param foundConnectionIds - connection ids being referenced
 	 * @param foundConnectionLabels - connection labels being referenced
 	 */
-	collectReferencedConnections(_foundConnectionIds: Set<string>, _foundConnectionLabels: Set<string>) {
+	collectReferencedConnections(_foundConnectionIds: Set<string>, _foundConnectionLabels: Set<string>): void {
 		// Nothing being referenced
 	}
 
@@ -117,10 +117,10 @@ export class ControlButtonPageDown
 		}
 	}
 
-	getBitmapSize() {
+	getBitmapSize(): { width: number; height: number } | null {
 		return null
 	}
-	renameVariables(_labelFrom: string, _labelTo: string) {
+	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
 	}
 }

@@ -80,7 +80,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	/**
 	 * Setup a new socket client's events
 	 */
-	clientConnect(client: ClientSocket) {
+	clientConnect(client: ClientSocket): void {
 		this.#collections.clientConnect(client)
 
 		client.onPromise('custom-variables:subscribe', () => {

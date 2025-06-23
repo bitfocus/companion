@@ -8,6 +8,7 @@ import { DropdownChoice } from '@companion-module/base'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
+import { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 
 export function InternalModuleField(
 	option: InternalInputField,
@@ -74,6 +75,8 @@ export function InternalModuleField(
 			)
 		case 'internal:trigger_collection':
 			return <InternalTriggerCollectionDropdown disabled={readonly} value={value} setValue={setValue} />
+		case 'internal:connection_collection':
+			return <InternalConnectionCollectionDropdown disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:time':
 			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:date':
@@ -430,6 +433,41 @@ const InternalTriggerCollectionDropdown = observer(function InternalTriggerColle
 
 		return choices
 	}, [triggersList])
+
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+})
+
+interface InternalConnectionCollectionDropdownProps {
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+}
+
+const InternalConnectionCollectionDropdown = observer(function InternalConnectionCollectionDropdown({
+	value,
+	setValue,
+	disabled,
+}: InternalConnectionCollectionDropdownProps) {
+	const { connections } = useContext(RootAppStoreContext)
+
+	const choices = useComputed(() => {
+		const choices: DropdownChoice[] = []
+
+		const processCollections = (collections: ConnectionCollection[]) => {
+			for (const collection of collections) {
+				choices.push({
+					id: collection.id,
+					label: collection.label || `Collection #${collection.id}`,
+				})
+				if (collection.children) {
+					processCollections(collection.children)
+				}
+			}
+		}
+		processCollections(connections.rootCollections())
+
+		return choices
+	}, [connections])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })

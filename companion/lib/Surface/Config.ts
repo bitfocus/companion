@@ -47,7 +47,7 @@ export function createOrSanitizeSurfaceHandlerConfig(
 			startup_page: panelConfig.page ?? 1,
 			// Fill in the new field based on previous behaviour:
 			// If a page had been chosen, then it would start on that
-			use_last_page: panelConfig.use_last_page ?? panelConfig.page === undefined ?? false,
+			use_last_page: panelConfig.use_last_page ?? panelConfig.page === undefined,
 		},
 
 		// Use existing config

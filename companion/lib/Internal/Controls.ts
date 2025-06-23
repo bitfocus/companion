@@ -613,7 +613,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					const newStyle: Record<string, any> = {}
 
 					for (const prop of feedback.options.properties) {
-						// @ts-ignore
+						// @ts-expect-error mismatch in prop type
 						newStyle[prop] = render.style[prop]
 					}
 

@@ -65,7 +65,7 @@ export class DataMetrics {
 					}
 				}
 			}
-		} catch (e) {
+		} catch (_e) {
 			// don't care
 		}
 
@@ -95,7 +95,7 @@ export class DataMetrics {
 
 			// push metrics back home - if we can!
 			this.#pushMetrics(payload)
-		} catch (e) {
+		} catch (_e) {
 			// don't care
 		}
 	}

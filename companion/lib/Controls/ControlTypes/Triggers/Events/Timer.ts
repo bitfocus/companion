@@ -186,7 +186,6 @@ export class TriggersEventTimer {
 	getTimeOfDayDescription(event: EventInstance): string {
 		let day_str = 'Unknown'
 		if (event.options.days) {
-			// @ts-ignore
 			const days = [...event.options.days].sort()
 			const days_tmp = days.toString()
 
@@ -199,7 +198,7 @@ export class TriggersEventTimer {
 			} else {
 				try {
 					day_str = days.map((d) => dayjs().day(d).format('ddd')).join(', ')
-				} catch (e) {
+				} catch (_e) {
 					day_str = 'Error'
 				}
 			}
@@ -238,12 +237,12 @@ export class TriggersEventTimer {
 	 */
 
 	#getNextSunExecuteTime(input: Record<string, any>): number {
-		let latitude = input.latitude
-		let longitude = input.longitude
-		let offset = input.offset
+		const latitude = input.latitude
+		const longitude = input.longitude
+		const offset = input.offset
 
 		// convert 0 or 1 to sunrise or sunset
-		let sunset = input.type == 'sunset'
+		const sunset = input.type == 'sunset'
 
 		// get sunrise/set time for today (nextDay is set to 0)
 		let time = getSunEvent(sunset, latitude, longitude, offset, 0)
@@ -264,18 +263,18 @@ export class TriggersEventTimer {
 			res.setDate(res.getDate() + nextDay)
 			const now = res
 
-			let start = new Date(now.getFullYear(), 0, 0)
-			// @ts-ignore
-			let diff = now - start + (start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000
-			let oneDay = 1000 * 60 * 60 * 24
-			let day = Math.floor(diff / oneDay)
+			const start = new Date(now.getFullYear(), 0, 0)
+			// @ts-expect-error TS claims dates can't be subtracted, this should be revisited but I don't want to touch what works
+			const diff = now - start + (start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000
+			const oneDay = 1000 * 60 * 60 * 24
+			const day = Math.floor(diff / oneDay)
 
 			const zenith = 90.83333333333333
 			const D2R = Math.PI / 180
 			const R2D = 180 / Math.PI
 
 			// convert the longitude to hour value and calculate an approximate time
-			let lnHour = longitude / 15
+			const lnHour = longitude / 15
 			let t
 			if (!sunset) {
 				t = day + (6 - lnHour) / 24

@@ -227,7 +227,7 @@ export class ImportExportController {
 						else resolve(data?.toString() || dataStr)
 					})
 				})
-			} catch (e) {
+			} catch (_e) {
 				// Ignore, it is probably not compressed
 				dataStr = dataBytes.toString('utf-8')
 			}
@@ -236,7 +236,7 @@ export class ImportExportController {
 			try {
 				// YAML parser will handle JSON too
 				rawObject = yaml.parse(dataStr)
-			} catch (e) {
+			} catch (_e) {
 				return ['File is corrupted or unknown format']
 			}
 
@@ -263,6 +263,7 @@ export class ImportExportController {
 				object = {
 					type: 'full',
 					version: FILE_VERSION,
+					companionBuild: object.companionBuild,
 					triggers: object.triggers,
 					triggerCollections: object.triggerCollections,
 					instances: object.instances,
@@ -349,10 +350,10 @@ export class ImportExportController {
 				...controlObj.style,
 				style: controlObj.type,
 			})
-			return !!res?.style ? (res?.asDataUrl ?? null) : null
+			return res?.style ? (res?.asDataUrl ?? null) : null
 		})
 
-		client.onPromise('loadsave:reset', (config) => {
+		client.onPromise('loadsave:reset', async (config) => {
 			if (!config) throw new Error('Missing reset config')
 
 			return this.#checkOrRunImportTask('reset', async () => {
@@ -803,7 +804,7 @@ export class ImportExportController {
 						continue
 					}
 
-					const newActions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(action_set) as any)
+					const newActions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(action_set))
 
 					newStepSets[setIdSafe] = newActions
 					allEntities.push(...newActions)

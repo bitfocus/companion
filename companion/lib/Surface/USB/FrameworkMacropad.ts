@@ -120,7 +120,7 @@ export class SurfaceUSBFrameworkMacropad extends EventEmitter<SurfacePanelEvents
 	 * Process the information from the GUI and what is saved in database
 	 * @returns false when nothing happens
 	 */
-	setConfig(config: Record<string, any>, force = false) {
+	setConfig(config: Record<string, any>, force = false): void {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 			for (let y = 0; y < this.gridSize.rows; y++) {
 				for (let x = 0; x < this.gridSize.columns; x++) {
@@ -138,9 +138,12 @@ export class SurfaceUSBFrameworkMacropad extends EventEmitter<SurfacePanelEvents
 			.catch((e) => {
 				this.#logger.debug(`Clear deck failed: ${e}`)
 			})
-			.then(() => {
+			.then(async () => {
 				//close after the clear has been sent
-				this.#device.close()
+				await this.#device.close()
+			})
+			.catch(() => {
+				// Ignore errors during close
 			})
 	}
 

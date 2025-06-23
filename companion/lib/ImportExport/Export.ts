@@ -46,6 +46,7 @@ import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
+import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
@@ -97,7 +98,7 @@ export class ExportController {
 		const triggerControls = this.#controlsController.getAllTriggers()
 		const exp = this.#generateTriggersExport(triggerControls, true)
 
-		const filename = this.#generateFilename(String(req.query.filename), 'trigger_list', 'companionconfig')
+		const filename = this.#generateFilename(String(req.query.filename as any), 'trigger_list', 'companionconfig')
 
 		downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 	}
@@ -108,7 +109,11 @@ export class ExportController {
 			const exp = this.#generateTriggersExport([control], false)
 
 			const triggerName = control.options.name.toLowerCase().replace(/\W/, '')
-			const filename = this.#generateFilename(String(req.query.filename), `trigger_${triggerName}`, 'companionconfig')
+			const filename = this.#generateFilename(
+				String(req.query.filename as any),
+				`trigger_${triggerName}`,
+				'companionconfig'
+			)
 
 			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		} else {
@@ -129,22 +134,29 @@ export class ExportController {
 
 			const pageExport = this.#generatePageExportInfo(pageInfo, referencedConnectionIds, referencedConnectionLabels)
 
+			// Collect referenced connections and  collections
 			const instancesExport = this.#generateReferencedConnectionConfigs(
 				referencedConnectionIds,
 				referencedConnectionLabels
+			)
+			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(instancesExport))
+			const filteredConnectionCollections = this.#filterReferencedCollections(
+				this.#instancesController.collections.collectionData,
+				referencedConnectionCollectionIds
 			)
 
 			// Export file protocol version
 			const exp: ExportPageModelv6 = {
 				version: FILE_VERSION,
 				type: 'page',
+				companionBuild: this.#appInfo.appBuild,
 				page: pageExport,
 				instances: instancesExport,
-				connectionCollections: this.#instancesController.collections.collectionData,
+				connectionCollections: filteredConnectionCollections,
 				oldPageNumber: page,
 			}
 
-			const filename = this.#generateFilename(String(req.query.filename), `page${page}`, 'companionconfig')
+			const filename = this.#generateFilename(String(req.query.filename as any), `page${page}`, 'companionconfig')
 
 			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 		}
@@ -153,7 +165,7 @@ export class ExportController {
 	#exportCustomHandler: RequestHandler = (req, res, next) => {
 		const exp = this.#generateCustomExport(req.query as any)
 
-		const filename = this.#generateFilename(String(req.query.filename), '', 'companionconfig')
+		const filename = this.#generateFilename(String(req.query.filename as any), '', 'companionconfig')
 
 		downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
 	}
@@ -193,7 +205,7 @@ export class ExportController {
 		res.end(csvOut)
 	}
 
-	#exportSupportBundleHandler: RequestHandler = (_req, res, _next) => {
+	#exportSupportBundleHandler: RequestHandler = async (_req, res, _next) => {
 		// Export support zip
 		const archive = archiver('zip', { zlib: { level: 9 } })
 
@@ -257,13 +269,13 @@ export class ExportController {
 
 		try {
 			const payload = compileUpdatePayload(this.#appInfo)
-			let out = JSON.stringify(payload)
+			const out = JSON.stringify(payload)
 			archive.append(out, { name: 'user.json' })
 		} catch (e) {
 			this.#logger.debug(`Support bundle append user: ${e}`)
 		}
 
-		archive.finalize()
+		await archive.finalize()
 	}
 
 	//Parse variables and generate filename based on export type
@@ -281,32 +293,87 @@ export class ExportController {
 		const triggersExport: ExportTriggerContentv6 = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
+		const referencedCollectionIds = new Set<string>()
+
 		for (const control of triggerControls) {
 			const parsedId = ParseControlId(control.controlId)
 			if (parsedId?.type === 'trigger') {
 				triggersExport[parsedId.trigger] = control.toJSON(false)
 
 				control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+
+				// Collect referenced collection IDs
+				if (control.options.collectionId) {
+					referencedCollectionIds.add(control.options.collectionId)
+				}
 			}
 		}
 
+		// Filter collections to only include those explicitly referenced or their parents
+		const allTriggerCollections = includeCollections ? this.#controlsController.exportTriggerCollections() : []
 		const triggerCollections: TriggerCollection[] = includeCollections
-			? this.#controlsController.exportTriggerCollections()
+			? this.#filterReferencedCollections(allTriggerCollections, referencedCollectionIds)
 			: []
 
+		// Collect referenced connection and collections
 		const instancesExport = this.#generateReferencedConnectionConfigs(
 			referencedConnectionIds,
 			referencedConnectionLabels
+		)
+		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(instancesExport))
+		const filteredConnectionCollections = this.#filterReferencedCollections(
+			this.#instancesController.collections.collectionData,
+			referencedConnectionCollectionIds
 		)
 
 		return {
 			type: 'trigger_list',
 			version: FILE_VERSION,
+			companionBuild: this.#appInfo.appBuild,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
 			instances: instancesExport,
-			connectionCollections: this.#instancesController.collections.collectionData,
+			connectionCollections: filteredConnectionCollections,
 		}
+	}
+
+	/**
+	 * Filter collections to only include those explicitly referenced by items,
+	 * or any parent collections of those which are referenced.
+	 * This ensures we don't export unnecessary collections but maintain the collection hierarchy.
+	 *
+	 * @param allCollections - All available collections
+	 * @param referencedCollectionIds - Set of collection IDs that are actually referenced by items
+	 * @returns Filtered collections array with shallow cloning to avoid mutation
+	 */
+	#filterReferencedCollections<T>(
+		allCollections: CollectionBase<T>[],
+		referencedCollectionIds: Set<string>
+	): CollectionBase<T>[] {
+		if (referencedCollectionIds.size === 0) {
+			return []
+		}
+
+		const filterCollections = (collections: CollectionBase<T>[]): CollectionBase<T>[] => {
+			return collections
+				.map((collection) => {
+					const shouldIncludeSelf = referencedCollectionIds.has(collection.id)
+
+					const childCollections = filterCollections(collection.children)
+
+					if (shouldIncludeSelf || childCollections.length > 0) {
+						return {
+							...collection,
+							children: childCollections,
+						}
+					} else {
+						return null
+					}
+				})
+				.filter((collection) => !!collection)
+		}
+
+		return filterCollections(allCollections)
 	}
 
 	#generateReferencedConnectionConfigs(
@@ -363,6 +430,7 @@ export class ExportController {
 		const exp: ExportFullv6 = {
 			version: FILE_VERSION,
 			type: 'full',
+			companionBuild: this.#appInfo.appBuild,
 		}
 
 		const rawControls = this.#controlsController.getAllControls()
@@ -415,7 +483,12 @@ export class ExportController {
 				referencedConnectionLabels,
 				true
 			)
-			exp.connectionCollections = this.#instancesController.collections.collectionData
+
+			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(exp.instances))
+			exp.connectionCollections = this.#filterReferencedCollections(
+				this.#instancesController.collections.collectionData,
+				referencedConnectionCollectionIds
+			)
 		}
 
 		if (!config || !isFalsey(config.surfaces)) {
@@ -424,6 +497,16 @@ export class ExportController {
 		}
 
 		return exp
+	}
+
+	#collectReferencedCollectionIds<TItem extends { collectionId?: string }>(items: TItem[]): Set<string> {
+		const referencedCollectionIds = new Set<string>()
+		for (const item of items) {
+			if (item.collectionId) {
+				referencedCollectionIds.add(item.collectionId)
+			}
+		}
+		return referencedCollectionIds
 	}
 }
 

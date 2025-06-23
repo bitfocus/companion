@@ -8,7 +8,11 @@ import type {
 	ControlWithoutEvents,
 } from '../../IControlFragments.js'
 import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
-import type { NormalButtonModel, NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	NormalButtonModel,
+	NormalButtonOptions,
+	NormalButtonRuntimeProps,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -124,7 +128,7 @@ export class ControlButtonNormal
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleButtonModel {
-		let style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
+		const style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
 
 		if (style.text) {
 			// Block out the button text
@@ -231,6 +235,7 @@ export class ControlButtonNormal
 	/**
 	 * Update an option field of this control
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	optionsSetField(key: string, value: any): boolean {
 		const changed = super.optionsSetField(key, value)
 
@@ -295,7 +300,7 @@ export class ControlButtonNormal
 	/**
 	 * Get any volatile properties for the control
 	 */
-	override toRuntimeJSON() {
+	override toRuntimeJSON(): NormalButtonRuntimeProps {
 		return {
 			current_step_id: this.entities.currentStepId,
 		}

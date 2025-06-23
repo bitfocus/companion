@@ -6,7 +6,7 @@ import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 
-export const RefreshModulesList = observer(function RefreshModulesList() {
+export const RefreshModulesList = observer(function RefreshModulesList({ btnSize }: { btnSize?: 'sm' | 'lg' }) {
 	const { socket, moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
 
 	const refreshProgress = moduleStoreRefreshProgress.get(null) ?? 1
@@ -25,12 +25,12 @@ export const RefreshModulesList = observer(function RefreshModulesList() {
 			{refreshError ? <CAlert color="warning">{refreshError}</CAlert> : ''}
 
 			{refreshProgress !== 1 ? (
-				<CButton color="primary" disabled>
+				<CButton color="primary" disabled size={btnSize}>
 					<FontAwesomeIcon icon={faSync} spin={true} />
 					&nbsp;Refreshing modules list {Math.round(refreshProgress * 100)}%
 				</CButton>
 			) : (
-				<CButton color="primary" onClick={doRefreshModules}>
+				<CButton color="primary" onClick={doRefreshModules} size={btnSize}>
 					<FontAwesomeIcon icon={faSync} />
 					&nbsp;Refresh modules list
 				</CButton>

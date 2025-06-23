@@ -241,7 +241,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 					visitor.visitVariableName(feedback.options, 'variable', feedback.id)
 					visitor.visitVariableName(feedback.options, 'variable2', feedback.id)
 				}
-			} catch (e) {
+			} catch (_e) {
 				//Ignore
 			}
 		}

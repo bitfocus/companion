@@ -39,7 +39,7 @@ export class ServiceArtnet extends ServiceUdpBase {
 	 * @param data - the incoming message
 	 * @param _remote - remote address information
 	 */
-	processIncoming(data: Buffer, _remote: DgramRemoteInfo) {
+	processIncoming(data: Buffer, _remote: DgramRemoteInfo): void {
 		try {
 			if (data.length >= 18 + 255) {
 				// const sequence = data.readUInt8(12)
@@ -78,9 +78,8 @@ export class ServiceArtnet extends ServiceUdpBase {
 							// up
 							else if (dmxDir >= 10) {
 								this.#serviceApi.pressControl(controlId, true, 'artnet')
-							}
-							// nothing.
-							else {
+							} else {
+								// nothing.
 							}
 						}
 					}

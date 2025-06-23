@@ -195,26 +195,32 @@ export class GraphicsRenderer {
 		}
 
 		// Draw background color first
-		!showTopbar
-			? img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
-			: img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
+		if (!showTopbar) {
+			img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
+		} else {
+			img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
+		}
 
 		// Draw background PNG if exists
 		if (drawStyle.png64 !== undefined && drawStyle.png64 !== null) {
 			try {
-				let png64 = drawStyle.png64.startsWith('data:image/png;base64,') ? drawStyle.png64.slice(22) : drawStyle.png64
-				let data = Buffer.from(png64, 'base64')
+				const png64 = drawStyle.png64.startsWith('data:image/png;base64,') ? drawStyle.png64.slice(22) : drawStyle.png64
+				const data = Buffer.from(png64, 'base64')
 				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
 
-				!showTopbar
-					? await img.drawFromPNGdata(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
-					: await img.drawFromPNGdata(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
+				if (!showTopbar) {
+					await img.drawFromPNGdata(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
+				} else {
+					await img.drawFromPNGdata(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
+				}
 			} catch (e) {
 				console.error('error drawing image:', e)
 				img.box(0, 14, 71, 57, 'black')
-				!showTopbar
-					? img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
-					: img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
+				if (!showTopbar) {
+					img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
+				} else {
+					img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
+				}
 
 				GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
 				return
@@ -235,11 +241,13 @@ export class GraphicsRenderer {
 					img.drawPixelBuffer(x, y, width, height, image.buffer, image.pixelFormat, image.drawScale)
 				}
 			}
-		} catch (e) {
+		} catch (_e) {
 			img.fillColor('black')
-			!showTopbar
-				? img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
-				: img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
+			if (!showTopbar) {
+				img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
+			} else {
+				img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
+			}
 
 			GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
 			return

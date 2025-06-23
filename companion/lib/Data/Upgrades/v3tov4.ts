@@ -42,7 +42,7 @@ function addControlIdsToPages(mainTable: DataStoreTableView<any>): void {
 /**
  * do the database upgrades to convert from the v3 to the v4 format
  */
-function convertDatabaseToV4(db: DataStoreBase<any>, _logger: Logger) {
+function convertDatabaseToV4(db: DataStoreBase<any>, _logger: Logger): void {
 	const mainTable = db.defaultTableView
 
 	addControlIdsToPages(mainTable)
@@ -87,7 +87,8 @@ function ensureTriggersAreObject(obj: { triggers?: TriggerModel[] | Record<strin
 	}
 }
 
-function convertImportToV4(obj: any) {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+function convertImportToV4(obj: any): any {
 	if (obj.type == 'full') {
 		const newObj = { ...obj }
 		newObj.pages = cloneDeep(newObj.pages)

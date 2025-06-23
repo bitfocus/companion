@@ -1,10 +1,11 @@
 import React, { useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
@@ -68,8 +69,9 @@ export const ConnectionsList = observer(function ConnectionsList({
 	}, [connections.connections, connectionStatuses])
 
 	const ConnectionsItemRow = useCallback(
-		(item: ClientConnectionConfigWithId) => ConnectionListItemWrapper(visibleConnections.visibility, item),
-		[visibleConnections.visibility]
+		(item: ClientConnectionConfigWithId) =>
+			ConnectionListItemWrapper(visibleConnections.visibility, item, selectedConnectionId),
+		[visibleConnections.visibility, selectedConnectionId]
 	)
 
 	return (
@@ -106,6 +108,7 @@ export const ConnectionsList = observer(function ConnectionsList({
 						Heading={ConnectionListTableHeading}
 						NoContent={ConnectionListNoConnections}
 						ItemRow={ConnectionsItemRow}
+						GroupHeaderContent={ConnectionGroupHeaderContent}
 						itemName="connection"
 						dragId="connection"
 						collectionsApi={connectionListApi}
@@ -152,7 +155,37 @@ function ConnectionListNoConnections() {
 	)
 }
 
-function ConnectionListItemWrapper(visibility: VisibleConnectionsState, item: ClientConnectionConfigWithId) {
+function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCollection }) {
+	const socket = useContext(SocketContext)
+
+	const setEnabled = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const enabled = e.target.checked
+
+			socket.emitPromise('connection-collections:set-enabled', [collection.id, enabled]).catch((e: any) => {
+				console.error('Failed to set collection enabled state', e)
+			})
+		},
+		[socket, collection.id]
+	)
+
+	return (
+		<CFormSwitch
+			className="ms-1"
+			color="success"
+			checked={collection.metaData.enabled}
+			onChange={setEnabled}
+			title={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}
+			size="xl"
+		/>
+	)
+}
+
+function ConnectionListItemWrapper(
+	visibility: VisibleConnectionsState,
+	item: ClientConnectionConfigWithId,
+	selectedItemId: string | null
+) {
 	// Apply visibility filters
 	if (!visibility.disabled && item.enabled === false) {
 		return null
@@ -166,5 +199,5 @@ function ConnectionListItemWrapper(visibility: VisibleConnectionsState, item: Cl
 		}
 	}
 
-	return <ConnectionsTableRow connection={item} />
+	return <ConnectionsTableRow connection={item} isSelected={selectedItemId === item.id} />
 }

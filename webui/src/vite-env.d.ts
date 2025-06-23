@@ -14,3 +14,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
 	readonly env: ImportMetaEnv
 }
+
+declare global {
+	interface Window {
+		// Injected in the html file, to be populated by vite
+		ROOT_URL: string
+	}
+}

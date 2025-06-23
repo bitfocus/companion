@@ -184,7 +184,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 		connectionId: string,
 		entityTypeLabel: EntityModelType,
 		entityDefinition: string
-	) => boolean
+	) => string | null
 
 	'controls:action-set:set-run-while-held': (
 		controlId: string,
@@ -346,6 +346,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'connection-collections:add': (collectionName: string) => string
 	'connection-collections:remove': (collectionId: string) => void
 	'connection-collections:set-name': (collectionId: string, collectionName: string) => void
+	'connection-collections:set-enabled': (collectionId: string, enabled: boolean) => void
 	'connection-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
 	'custom-variable-collections:add': (collectionName: string) => string

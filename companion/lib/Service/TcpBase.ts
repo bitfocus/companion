@@ -27,7 +27,7 @@ export abstract class ServiceTcpBase extends ServiceBase {
 	/**
 	 * Start the service if it is not already running
 	 */
-	protected listen() {
+	protected listen(): void {
 		if (this.portConfig) {
 			this.port = this.userconfig.getKey(this.portConfig)
 		}
@@ -69,7 +69,7 @@ export abstract class ServiceTcpBase extends ServiceBase {
 		}
 	}
 
-	protected close() {
+	protected close(): void {
 		if (this.server) {
 			this.server.close()
 			this.server = undefined
@@ -78,7 +78,7 @@ export abstract class ServiceTcpBase extends ServiceBase {
 		this.clients.forEach((socket) => {
 			try {
 				socket.destroy()
-			} catch (e) {
+			} catch (_e) {
 				// Ignore failure
 			}
 		})

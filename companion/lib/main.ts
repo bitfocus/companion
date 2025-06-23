@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+/* eslint-disable n/no-process-exit */
 
 // Setup some fixes before loading any imports
 import './Resources/FixImports.js'
@@ -102,8 +102,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	let configDir = options.configDir
 	if (!configDir) {
 		// Check the old location first
-		// @ts-ignore
-		configDir = path.join(process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME'], 'companion')
+		configDir = path.join(process.env[process.platform == 'win32' ? 'USERPROFILE' : 'HOME']!, 'companion')
 		if (!fs.pathExistsSync(configDir)) {
 			// Creating a new folder, so use the proper place
 			const paths = envPaths('companion')
@@ -128,7 +127,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 
 	try {
 		fs.ensureDirSync(configDir)
-	} catch (e) {
+	} catch (_e) {
 		console.error(`Failed to create config directory. Do you have the correct permissions?`)
 		process.exit(1)
 	}

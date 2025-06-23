@@ -9,6 +9,7 @@ import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefini
 import { EntityEditorHeading } from './EntityEditorHeadingProps.js'
 import { AddEntityPanel } from './AddEntityPanel.js'
 import { observer } from 'mobx-react-lite'
+import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 
 interface EditableEntityListProps {
 	controlId: string
@@ -36,9 +37,23 @@ export const EditableEntityList = observer(function EditableEntityList({
 	onlyFeedbackType,
 	readonly,
 }: EditableEntityListProps) {
+	const panelCollapseHelper = usePanelCollapseHelperContext()
+
 	const addEntity = useCallback(
-		(connectionId: string, definitionId: string) => serviceFactory.addEntity(connectionId, definitionId, ownerId),
-		[serviceFactory, ownerId]
+		(connectionId: string, definitionId: string) => {
+			serviceFactory
+				.addEntity(connectionId, definitionId, ownerId)
+				.then((newId) => {
+					if (newId) {
+						// Make sure the panel is open and wont be forgotten on first render
+						setTimeout(() => panelCollapseHelper.setPanelCollapsed(newId, false), 10)
+					}
+				})
+				.catch((e) => {
+					console.error('Failed to add entity', e)
+				})
+		},
+		[serviceFactory, ownerId, panelCollapseHelper]
 	)
 
 	return (

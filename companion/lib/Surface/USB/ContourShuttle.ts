@@ -150,8 +150,6 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			// No config currently present
 		}
 
-		contourShuttle.devicePath
-
 		this.#logger.debug(`Adding Contour Shuttle USB device ${devicePath}`)
 
 		// The devices don't have serialnumbers, so fake something based on the path. Not the most stable, but the best we can do
@@ -256,7 +254,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 
 			return self
 		} catch (e) {
-			contourShuttle.close()
+			await contourShuttle.close()
 
 			throw e
 		}
@@ -266,22 +264,22 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 	 * Process the information from the GUI and what is saved in database
 	 * @returns false when nothing happens
 	 */
-	setConfig(config: Record<string, any>, _force = false) {
+	setConfig(config: Record<string, any>, _force = false): void {
 		// No config currently present
 		this.config = config
 	}
 
-	quit() {
+	quit(): void {
 		this.contourShuttle.close().catch((e) => {
 			this.#logger.error(`Failed to close contour shuttle: ${e}`)
 		})
 	}
 
-	draw() {
+	draw(): void {
 		// Should never be fired
 	}
 
-	clearDeck() {
+	clearDeck(): void {
 		// Not relevant for this device
 	}
 }

@@ -348,7 +348,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @param key - the saved key
 	 * @param value - the saved value
 	 */
-	updateUserConfig(key: string, value: boolean | number | string) {
+	updateUserConfig(key: string, value: boolean | number | string): void {
 		if (key == 'page_direction_flipped') {
 			this.#drawOptions.page_direction_flipped = !!value
 			this.invalidatePageControls()

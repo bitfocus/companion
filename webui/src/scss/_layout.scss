@@ -338,7 +338,8 @@ form.row > * {
 
 .secondary-panel {
 	padding-left: 15px;
-	padding-right: 0px;
+	padding-right: 5px;
+	padding-bottom: 5px;
 	padding-top: 5px;
 	display: grid;
 	grid-template-rows: auto 1fr;
@@ -348,7 +349,8 @@ form.row > * {
 		height: 100%;
 		padding: 0;
 
-		.tab-content {
+		.tab-content,
+		.secondary-panel-simple-body {
 			overflow-y: scroll;
 		}
 	}
@@ -367,6 +369,64 @@ form.row > * {
 .secondary-panel .tab-content {
 	border-bottom-width: 0;
 	border-right-width: 0;
+}
+
+.secondary-panel-simple {
+	background: white;
+	border-radius: 12px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	overflow: hidden;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	grid-row: 2;
+	margin-right: 12px;
+
+	.secondary-panel-simple-header {
+		background: #e9ecef; /* Darker gray background */
+		border-bottom: 1px solid #dee2e6; /* Subtle border */
+		padding: 1.25rem 1.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-shrink: 0;
+
+		.panel-title {
+			margin: 0;
+			font-size: 1.25rem;
+			font-weight: 600;
+			color: #343a40; /* Darker text for better contrast */
+		}
+
+		.header-buttons {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+	}
+
+	.secondary-panel-simple-body {
+		flex: 1;
+		overflow-y: auto;
+		padding: 1.5rem;
+		/* Create a new stacking context for sticky positioning */
+		position: relative;
+
+		&.no-scroll {
+			overflow-y: auto;
+		}
+
+		.row-heading {
+			position: sticky;
+			padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+			margin: -1.5rem -1.5rem 1rem -1.5rem;
+			top: -1.5rem; // Negate the parent padding
+			left: 0;
+			background-color: #fff;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			z-index: 1;
+		}
+	}
 }
 
 // scroll if side-by-side
@@ -393,6 +453,18 @@ form.row > * {
 					&.default-scroll {
 						overflow: inherit;
 					}
+				}
+			}
+
+			.secondary-panel-simple {
+				margin-right: 0px;
+			}
+
+			.secondary-panel-simple-body {
+				overflow-y: scroll;
+
+				&.no-scroll {
+					overflow-y: auto;
 				}
 			}
 		}

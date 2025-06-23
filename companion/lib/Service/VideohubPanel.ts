@@ -1,5 +1,5 @@
 import { ServiceBase } from './Base.js'
-// @ts-ignore
+// @ts-expect-error No types for videohub-server
 import VideohubServer from 'videohub-server'
 import type { SurfaceIPVideohubPanel } from '../Surface/IP/VideohubPanel.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -38,7 +38,7 @@ export class ServiceVideohubPanel extends ServiceBase {
 		this.init()
 	}
 
-	protected listen() {
+	protected listen(): void {
 		this.#server = new VideohubServer({
 			manualConfigure: true,
 		})
@@ -54,12 +54,12 @@ export class ServiceVideohubPanel extends ServiceBase {
 		try {
 			this.#server.start()
 			this.currentState = true
-		} catch (e) {
+		} catch (_e) {
 			this.logger.debug(`ERROR opening videohub server port`)
 		}
 	}
 
-	protected close() {
+	protected close(): void {
 		if (this.#server) {
 			this.#server.destroy()
 			this.#server = undefined

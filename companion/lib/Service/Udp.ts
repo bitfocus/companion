@@ -37,7 +37,7 @@ export class ServiceUdp extends ServiceUdpBase {
 	/**
 	 * Process an incoming message from a remote
 	 */
-	protected override processIncoming(data: Buffer, remote: DgramRemoteInfo) {
+	protected override processIncoming(data: Buffer, remote: DgramRemoteInfo): void {
 		this.logger.silly(`${remote.address}:${remote.port} received packet: "${data.toString().trim()}"`)
 
 		this.#api

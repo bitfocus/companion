@@ -234,7 +234,7 @@ export class ServiceTcpUdpApi {
 
 			try {
 				await this.#serviceApi.triggerRescanForSurfaces()
-			} catch (e) {
+			} catch (_e) {
 				throw new ApiMessageError('Scan failed')
 			}
 		})
@@ -463,7 +463,7 @@ export class ServiceTcpUdpApi {
 
 		try {
 			await this.#serviceApi.triggerRescanForSurfaces()
-		} catch (e) {
+		} catch (_e) {
 			throw new ApiMessageError('Scan failed')
 		}
 	}

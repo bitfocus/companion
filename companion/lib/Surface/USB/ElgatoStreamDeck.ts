@@ -402,7 +402,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 	 * Process the information from the GUI and what is saved in database
 	 * @returns false when nothing happens
 	 */
-	setConfig(config: Record<string, any>, force: boolean = false) {
+	setConfig(config: Record<string, any>, force: boolean = false): void {
 		if ((force || this.config.brightness != config.brightness) && config.brightness !== undefined) {
 			this.#streamDeck.setBrightness(config.brightness).catch((e) => {
 				this.#logger.debug(`Set brightness failed: ${e}`)
@@ -420,11 +420,12 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			.catch((e) => {
 				this.#logger.debug(`Clear deck failed: ${e}`)
 			})
-			.then(() => {
+			.then(async () => {
 				//close after the clear has been sent
-				this.#streamDeck.close().catch(() => {
-					// Ignore error
-				})
+				await this.#streamDeck.close()
+			})
+			.catch(() => {
+				// Ignore error
 			})
 	}
 

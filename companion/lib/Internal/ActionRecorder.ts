@@ -225,7 +225,7 @@ export class InternalActionRecorder
 			else if (setId === 'release') setId = 'up'
 
 			let page = Number(pageRaw)
-			let bank = Number(bankRaw)
+			const bank = Number(bankRaw)
 			if (!isNaN(page) && !isNaN(bank) && setId && stepId) {
 				let controlId: string | null = null
 
@@ -344,7 +344,7 @@ export class InternalActionRecorder
 		}
 	}
 
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]) {
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
 		for (const action of actions) {
 			if (action.action === 'action_recorder_set_connections') {
 				visitor.visitConnectionIdArray(action.options, 'connections')

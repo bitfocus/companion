@@ -52,13 +52,13 @@ export class ClientSocket {
 	 * Join a room
 	 */
 	join(room: string): void {
-		this.#socket.join(room)
+		void this.#socket.join(room)
 	}
 	/**
 	 * Leave a room
 	 */
 	leave(room: string): void {
-		this.#socket.leave(room)
+		void this.#socket.leave(room)
 	}
 
 	/**
@@ -76,7 +76,7 @@ export class ClientSocket {
 		this.#socket.on(name, (...args) => {
 			try {
 				// @ts-expect-error Types are hard
-				fcn(...args)
+				void fcn(...args)
 			} catch (e: any) {
 				this.logger.warn(`Error in client handler '${name}': ${e} ${e?.stack}`)
 			}
@@ -90,7 +90,7 @@ export class ClientSocket {
 	onPromise<T extends keyof IOListenEventsWithResponse>(name: T, fcn: IOListenEvents[T]): ClientSocket {
 		// @ts-expect-error Types are hard
 		this.#socket.on(name, (args, cb) => {
-			Promise.resolve().then(async () => {
+			void Promise.resolve().then(async () => {
 				try {
 					const result = await fcn(...args)
 					cb(null, result)
@@ -131,7 +131,6 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 			maxHttpBufferSize: 5 * 1024 * 1024, // bytes. The multipart uploader is typically set to use 1MB chunks, give it some space for overhead
 			cors: {
 				// Allow everything
-				// @ts-ignore
 				origin: (o, cb) => cb(null, o),
 				credentials: true,
 			},

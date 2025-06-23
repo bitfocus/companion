@@ -53,7 +53,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 	/**
 	 * Start the service if it is not already running
 	 */
-	protected listen() {
+	protected listen(): void {
 		if (this.#server === undefined) {
 			try {
 				this.#server = new Bonjour()
@@ -69,7 +69,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 	 * Close the socket before deleting it
 	 * @access protected
 	 */
-	protected close() {
+	protected close(): void {
 		if (this.#server) {
 			this.#server.destroy()
 			this.#server = undefined
