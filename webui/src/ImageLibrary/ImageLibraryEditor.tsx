@@ -212,7 +212,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 							</CButton>
 						</CopyToClipboard>
 					</div>
-					<CButton color="secondary" size="sm" onClick={() => setShowNameEditModal(true)} title="Edit Image ID">
+					<CButton color="secondary" size="sm" onClick={() => setShowNameEditModal(true)} title="Edit Image name">
 						<FontAwesomeIcon icon={faEdit} />
 					</CButton>
 				</CCol>

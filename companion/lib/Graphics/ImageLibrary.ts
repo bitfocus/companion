@@ -289,7 +289,7 @@ export class ImageLibrary {
 	}
 
 	/**
-	 * Make an image ID unique by appending a number if it already exists
+	 * Make an image name unique by appending a number if it already exists
 	 */
 	makeImageNameUnique(baseName: string): string {
 		const safeBaseName = makeLabelSafe(baseName)
@@ -371,9 +371,9 @@ export class ImageLibrary {
 		// Update variable definitions
 		this.#updateImageVariableDefinitions()
 
-		this.#logger.info(`Updated image ID from "${currentName}" to "${safeNewName}"`)
+		this.#logger.info(`Updated image name from "${currentName}" to "${safeNewName}"`)
 
-		// Notify clients of the removal of the old ID and addition of the new one
+		// Notify clients of the removal of the old name and addition of the new one
 		this.#io.emitToRoom('image-library', 'image-library:update', [
 			{ type: 'remove', itemName: currentName },
 			{ type: 'update', itemName: safeNewName, info: data.info },

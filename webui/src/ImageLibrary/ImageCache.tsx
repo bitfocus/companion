@@ -35,7 +35,7 @@ export class ImageUrlCache {
 	}
 
 	/**
-	 * Clear all cache entries for a specific image ID
+	 * Clear all cache entries for a specific image name
 	 */
 	clearImageName(imageName: string): void {
 		const keysToDelete: string[] = []
