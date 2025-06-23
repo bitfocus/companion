@@ -15,9 +15,6 @@ import type {
 	OutboundSurfacesUpdate,
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
-	ClientDiscoveredSurfaceInfo,
-	CompanionExternalAddresses,
-	SurfacesDiscoveryUpdate,
 	SurfacesUpdate,
 } from './Model/Surfaces.js'
 import type {
@@ -252,14 +249,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'surfaces:config-set': (surfaceId: string, panelConfig: SurfacePanelConfig) => SurfacePanelConfig | string
 	'surfaces:group-config-get': (groupId: string) => SurfaceGroupConfig
 
-	'surfaces:discovery:join': () => Record<string, ClientDiscoveredSurfaceInfo>
-	'surfaces:discovery:leave': () => void
-	'surfaces:discovery:get-external:addresses': () => CompanionExternalAddresses
-	'surfaces:discovery:setup-satellite': (
-		satelliteInfo: ClientDiscoveredSurfaceInfo,
-		companionAddress: string
-	) => string | null
-
 	'surfaces:outbound:subscribe': () => Record<string, OutboundSurfaceInfo | undefined>
 	'surfaces:outbound:unsubscribe': () => void
 	'surfaces:outbound:add': (type: string, address: string, port: number | undefined, name?: string) => string
@@ -419,8 +408,6 @@ export interface BackendToClientEventsMap {
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
-
-	'surfaces:discovery:update': (update: SurfacesDiscoveryUpdate) => void
 
 	'modules-store:list:data': (data: ModuleStoreListCacheStore) => void
 	'modules-store:list:progress': (percent: number) => void

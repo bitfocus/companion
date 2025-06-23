@@ -155,7 +155,10 @@ export interface ClientDiscoveredSurfaceInfoStreamDeck {
 	serialnumber: string | undefined
 }
 
-export type SurfacesDiscoveryUpdate = SurfaceDiscoveryUpdateRemoveOp | SurfaceDiscoveryUpdateUpdateOp
+export type SurfacesDiscoveryUpdate =
+	| SurfaceDiscoveryUpdateInitOp
+	| SurfaceDiscoveryUpdateRemoveOp
+	| SurfaceDiscoveryUpdateUpdateOp
 
 export interface SurfaceDiscoveryUpdateRemoveOp {
 	type: 'remove'
@@ -166,6 +169,10 @@ export interface SurfaceDiscoveryUpdateUpdateOp {
 	// itemId: string
 
 	info: ClientDiscoveredSurfaceInfo
+}
+export interface SurfaceDiscoveryUpdateInitOp {
+	type: 'init'
+	infos: ClientDiscoveredSurfaceInfo[]
 }
 
 export interface CompanionExternalAddresses {

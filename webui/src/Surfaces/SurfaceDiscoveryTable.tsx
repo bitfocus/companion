@@ -3,8 +3,8 @@ import {
 	ClientDiscoveredSurfaceInfoSatellite,
 	ClientDiscoveredSurfaceInfoStreamDeck,
 } from '@companion-app/shared/Model/Surfaces.js'
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { assertNever, SocketContext } from '~/util.js'
+import React, { useCallback, useContext, useRef, useState } from 'react'
+import { assertNever } from '~/util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { faBan, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -12,6 +12,8 @@ import { SetupSatelliteModalRef, SetupSatelliteModal } from './SetupSatelliteMod
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { observer } from 'mobx-react-lite'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC.js'
 
 export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 	const discoveredSurfaces = useSurfaceDiscoverySubscription()
@@ -24,7 +26,6 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 	}, [])
 	const addRemoteStreamDeck = useCallback(
 		(surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck) => {
-			// TODO
 			socket
 				.emitPromise('surfaces:outbound:add', ['elgato', surfaceInfo.address, surfaceInfo.port, surfaceInfo.name])
 				.then(() => {
@@ -88,67 +89,47 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 })
 
 function useSurfaceDiscoverySubscription() {
-	const socket = useContext(SocketContext)
-
 	const [discoveredSurfaces, setDiscoveredSurfaces] = useState<Record<string, ClientDiscoveredSurfaceInfo | undefined>>(
 		{}
 	)
 
-	// Start/Stop the subscription
-	useEffect(() => {
-		let killed = false
-		socket
-			.emitPromise('surfaces:discovery:join', [])
-			.then((services) => {
-				// Make sure it hasnt been terminated
-				if (killed) {
-					socket.emitPromise('surfaces:discovery:leave', []).catch(() => {
-						console.error('Failed to leave discovery')
-					})
-					return
-				}
+	/*const discoverySub = */ useSubscription(
+		trpc.surfaceDiscovery.watchForSurfaces.subscriptionOptions(undefined, {
+			onStarted: () => {
+				setDiscoveredSurfaces({}) // Clear when the subscription starts
+			},
+			onData: (data) => {
+				// TODO - should this debounce?
 
-				setDiscoveredSurfaces(services)
-			})
-			.catch((e) => {
-				console.error('Bonjour subscription failed: ', e)
-			})
-
-		const unsubUpdates = socket.on('surfaces:discovery:update', (update) => {
-			switch (update.type) {
-				case 'remove':
-					setDiscoveredSurfaces((svcs) => {
-						const res = { ...svcs }
-						delete res[update.itemId]
-						return res
-					})
-					break
-				case 'update':
-					setDiscoveredSurfaces((svcs) => {
-						return {
-							...svcs,
-							[update.info.id]: update.info,
+				setDiscoveredSurfaces((surfaces) => {
+					switch (data.type) {
+						case 'init': {
+							const newSurfaces: typeof surfaces = {}
+							for (const svc of data.infos) {
+								// TODO - how to avoid this cast?
+								newSurfaces[svc.id] = svc as ClientDiscoveredSurfaceInfo
+							}
+							return newSurfaces
 						}
-					})
-					break
-				default:
-					assertNever(update)
-					break
-			}
+						case 'update': {
+							const newSurfaces = { ...surfaces }
+							// TODO - how to avoid this cast?
+							newSurfaces[data.info.id] = data.info as ClientDiscoveredSurfaceInfo
+							return newSurfaces
+						}
+						case 'remove': {
+							const newSurfaces = { ...surfaces }
+							delete newSurfaces[data.itemId]
+							return newSurfaces
+						}
+						default:
+							console.warn('Unknown bonjour event type', data)
+							return surfaces
+					}
+				})
+			},
 		})
-
-		return () => {
-			killed = true
-
-			unsubUpdates()
-
-			setDiscoveredSurfaces({})
-
-			socket.emitPromise('surfaces:discovery:leave', []).catch(() => {
-				console.error('Failed to leave discovery')
-			})
-		}
-	}, [socket])
+	)
 
 	return discoveredSurfaces
 }

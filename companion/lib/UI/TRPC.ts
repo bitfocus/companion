@@ -44,6 +44,7 @@ export function createTrpcRouter(registry: Registry) {
 		bonjour: registry.services.bonjourDiscovery.createTrpcRouter(),
 
 		surfaces: registry.surfaces.createTrpcRouter(),
+		surfaceDiscovery: registry.services.surfaceDiscovery.createTrpcRouter(),
 	})
 }
 

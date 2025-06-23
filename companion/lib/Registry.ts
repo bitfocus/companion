@@ -318,7 +318,6 @@ export class Registry {
 				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)
 				this.#cloud.clientConnect(client)
-				this.services.clientConnect(client)
 				this.#importExport.clientConnect(client)
 			})
 
