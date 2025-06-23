@@ -79,7 +79,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	const handleReplaceImage = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.currentTarget.files?.[0]
-			event.currentTarget.value = null as any
+			event.currentTarget.value = '' // Reset file input
 
 			if (!file || !selectedImageName) return
 
