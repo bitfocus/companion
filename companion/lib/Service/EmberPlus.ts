@@ -401,7 +401,7 @@ export class ServiceEmberPlus extends ServiceBase {
 		this.logger.silly(`Internal Variable Count: ${this.#internalVars.length}\n${this.#internalVars}`)
 		this.logger.silly(`Custom Variable Count: ${this.#customVars.length}\n${this.#customVars}`)
 		for (let i = 0; i < this.#internalVars.length; i++) {
-			let value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
+			const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
 			const type: EmberModel.ParameterType =
 				typeof value == 'number'
 					? EmberModel.ParameterType.Integer
@@ -433,7 +433,7 @@ export class ServiceEmberPlus extends ServiceBase {
 			)
 		}
 		for (let i = 0; i < this.#customVars.length; i++) {
-			let value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])
+			const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])
 			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
 				i,
 				new EmberModel.EmberNodeImpl(
@@ -838,7 +838,7 @@ export class ServiceEmberPlus extends ServiceBase {
 		const node = this.#server.getElementByPath(path)
 		if (!node) return
 
-		// @ts-ignore
+		// @ts-expect-error node type may not have a description property
 		if (node.contents.description !== newDescription) {
 			this.#server.update(node, { description: newDescription })
 		}
