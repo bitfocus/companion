@@ -13,15 +13,9 @@ import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { filterProducts, FuzzyProduct, useAllConnectionProducts } from '~/Hooks/useFilteredProducts.js'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 
-interface AddConnectionsPanelProps {
-	doConfigureConnection: (connectionId: string) => void
-}
-
-export const AddConnectionsPanel = observer(function AddConnectionsPanel({
-	doConfigureConnection,
-}: AddConnectionsPanelProps) {
+export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 	const { modules } = useContext(RootAppStoreContext)
 	const [filter, setFilter] = useState('')
 
@@ -80,6 +74,14 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel({
 			typeFilter.toggleVisibility('available', true)
 		},
 		[typeFilter]
+	)
+
+	const navigate = useNavigate({ from: '/connections/' })
+	const doConfigureConnection = useCallback(
+		(connectionId: string) => {
+			void navigate({ to: `/connections/${connectionId}` })
+		},
+		[navigate]
 	)
 
 	return (
