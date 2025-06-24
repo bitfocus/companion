@@ -19,6 +19,7 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
 import { useComputed } from '~/util.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
+import { useNavigate } from '@tanstack/react-router'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -28,17 +29,21 @@ export interface VisibleConnectionsState {
 }
 
 interface ConnectionsListProps {
-	doConfigureConnection: (connectionId: string | null) => void
 	selectedConnectionId: string | null
 }
 
-export const ConnectionsList = observer(function ConnectionsList({
-	doConfigureConnection,
-	selectedConnectionId,
-}: ConnectionsListProps) {
+export const ConnectionsList = observer(function ConnectionsList({ selectedConnectionId }: ConnectionsListProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const connectionStatuses = useConnectionStatuses()
+
+	const navigate = useNavigate({ from: '/connections' })
+	const doConfigureConnection = useCallback(
+		(connectionId: string | null) => {
+			void navigate({ to: `/connections/${connectionId}` })
+		},
+		[navigate]
+	)
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const variablesModalRef = useRef<ConnectionVariablesModalRef>(null)
