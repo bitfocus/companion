@@ -24,10 +24,13 @@
 
    If you are running headless, run as root:
    $ cp 50-companion-headless.rules /etc/udev/rules.d/50-companion.rules
-   Or for desktop Companion, run as root:
+   Or for desktop Companion (except WSL), run as root:
    $ cp 50-companion-desktop.rules /etc/udev/rules.d/50-companion.rules
-
-   Apply the new rules:
+   Or for desktop Companion on WSL, (run as root):
+   $ sudo cp 50-companion-WSL.rules /etc/udev/rules.d/
+     (if this is your first time running on WSL, please see the instruction for using USB devices at https://github.com/bitfocus/companion/wiki/Setting-up-Developer-Environment)
+     
+   Apply the new rules (run as root):
    $ udevadm control --reload-rules
    And replugging any usb devices that Companion should be able to use.
 
