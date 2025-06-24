@@ -10,7 +10,6 @@
  */
 
 import EventEmitter from 'events'
-import crypto from 'crypto'
 import { Shuttle, setupShuttle, ProductModelId } from 'shuttle-node'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
@@ -138,6 +137,22 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 
+	private static devices = new Set<string>() // ids of currently-attached devices
+	private static makeDeviceId(devname: string): string {
+		// this function ensures we don't assign the same id twice.
+		// for example with two devices, if user unplugs dev1 and replugs it, then
+		//   if we were simply tracking the number of devices, both devices would be assigned "dev2"
+		//  This code will reassign "dev1" instead...
+		let n = 1
+		while (true) {
+			const deviceId = `contourshuttle:${devname}-dev${n++}`
+			if (!SurfaceUSBContourShuttle.devices.has(deviceId)) {
+				SurfaceUSBContourShuttle.devices.add(deviceId)
+				return deviceId
+			}
+		}
+	}
+
 	constructor(devicePath: string, contourShuttle: Shuttle, modelInfo: ShuttleModelInfo) {
 		super()
 
@@ -152,17 +167,14 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 
 		this.#logger.debug(`Adding Contour Shuttle USB device ${devicePath}`)
 
-		// The devices don't have serialnumbers, so fake something based on the path. Not the most stable, but the best we can do
-		const fakeDeviceId = crypto
-			.createHash('sha1')
-			.update(`${contourShuttle.info.productModelId}-${devicePath}`)
-			.digest('hex')
+		// The devices don't have serialnumbers, so assign device IDs serially
+		const fakeDeviceId = SurfaceUSBContourShuttle.makeDeviceId(contourShuttle.info.productModelId)
 
 		this.info = {
 			type: `Contour Shuttle ${contourShuttle.info.name}`,
 			devicePath: devicePath,
 			configFields: configFields,
-			deviceId: `contourshuttle:${fakeDeviceId}`,
+			deviceId: fakeDeviceId,
 		}
 
 		this.gridSize = {
@@ -270,6 +282,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 	}
 
 	quit(): void {
+		SurfaceUSBContourShuttle.devices.delete(this.info.deviceId)
 		this.contourShuttle.close().catch((e) => {
 			this.#logger.error(`Failed to close contour shuttle: ${e}`)
 		})
