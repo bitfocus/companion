@@ -76,7 +76,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		if (options.syslogHost) opt.host = options.syslogHost
 		if (options.syslogPort) {
 			const port = Number.parseInt(options.syslogPort)
-			if (!Number.isNaN(port)) opt.port = port
+			if (!Number.isNaN(port) && port > 100 && port <= 65535) opt.port = port
 		}
 		if (options.syslogTcp) opt.protocol = 'tcp4'
 		if (options.syslogLocalhost) opt.localhost = options.syslogLocalhost
