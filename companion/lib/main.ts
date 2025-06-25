@@ -47,8 +47,8 @@ program
 	.option('--disable-admin-password', 'Disables password lockout for the admin UI')
 	.option('--syslog-enable', 'Enable syslog transport')
 	.option('--syslog-host <string>', 'Syslog server to write to (default: localhost)')
-	.option('--syslog-port <string>', 'Port on syslog server to write to (default: UDP 514, TCP 1468)')
-	.option('--syslog-tcp', 'Use TCP for transport')
+	.option('--syslog-port <string>', 'Port on syslog server to write to')
+	.option('--syslog-tcp', 'Use TCP for transport (default: udp)')
 	.option('--syslog-localhost <string>', 'Hostname of this machine')
 
 program.command('start', { isDefault: true, hidden: true }).action(() => {
