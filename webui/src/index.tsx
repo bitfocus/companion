@@ -65,11 +65,11 @@ if (window.location.hash && window.location.hash.includes('debug_socket')) {
 	})
 }
 
-const rootElm = document.getElementById('root')!
 // This is not nice, but we need to load these images not by a url, but as a data url
-rootElm.style.setProperty('--companion-img-alignment', `url(${alignmentImg})`)
-rootElm.style.setProperty('--companion-img-check', `url(${checkImg})`)
+document.body.style.setProperty('--companion-img-alignment', `url(${alignmentImg})`)
+document.body.style.setProperty('--companion-img-check', `url(${checkImg})`)
 
+const rootElm = document.getElementById('root')!
 const root = createRoot(rootElm)
 root.render(
 	<React.StrictMode>
