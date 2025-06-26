@@ -7,7 +7,7 @@ import { useCollectionsNestingTableContext } from './CollectionsNestingTableCont
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionsListItemDrop, CollectionsNestingTableItemDragItem } from './useItemDrop.js'
-import { CollectionsNestingTableCollectionDragItem } from './useCollectionDrop.js'
+import { CollectionsNestingTableCollectionDragItem, useCollectionListCollectionDrop } from './useCollectionDrop.js'
 import { observer } from 'mobx-react-lite'
 
 export const CollectionsNestingTableItemRow = observer(function CollectionsNestingTableItemRow<
@@ -62,17 +62,29 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 	function CollectionsNestingTableCollectionRowWrapper<TCollection extends CollectionsNestingTableCollection>({
 		collection,
 		parentId,
+		index,
 		nestingLevel,
+		isCollapsed,
 		children,
 	}: React.PropsWithChildren<{
 		collection: TCollection
 		parentId: string | null
+		index: number
 		nestingLevel: number
+		isCollapsed: boolean
 	}>) {
 		const { dragId, collectionsApi } = useCollectionsNestingTableContext<TCollection, CollectionsNestingTableItem>()
 
 		// Allow dropping items onto the collection, to add them to the collection
 		const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, collection.id, null, -1)
+		const { drop: collectionDrop } = useCollectionListCollectionDrop(
+			collectionsApi,
+			dragId,
+			parentId,
+			index,
+			collection.id,
+			isCollapsed
+		)
 
 		const [{ isDragging }, drag, preview] = useDrag<
 			CollectionsNestingTableCollectionDragItem,
@@ -82,6 +94,7 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 			type: `${dragId}-collection`,
 			item: {
 				collectionId: collection.id,
+				index,
 				parentId: parentId,
 				dragState: null,
 			},
@@ -93,7 +106,7 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 		return (
 			<CollectionsNestingTableRowBase
 				drag={drag}
-				drop={drop}
+				drop={(e) => drop(collectionDrop(e))}
 				preview={preview}
 				isDragging={isDragging}
 				isSelected={false}

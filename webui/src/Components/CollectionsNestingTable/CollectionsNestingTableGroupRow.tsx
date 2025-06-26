@@ -10,6 +10,7 @@ import { CollectionsNestingTableCollectionRowWrapper } from './CollectionsNestin
 export interface CollectionsNestingTableCollectionRowProps {
 	collection: CollectionsNestingTableCollection
 	parentId: string | null
+	index: number
 	isCollapsed: boolean
 	toggleExpanded: () => void
 	collectionsApi: NestingCollectionsApi
@@ -19,6 +20,7 @@ export interface CollectionsNestingTableCollectionRowProps {
 export const CollectionsNestingTableCollectionRow = observer(function CollectionsNestingTableCollectionRow({
 	collection,
 	parentId,
+	index,
 	isCollapsed,
 	toggleExpanded,
 	collectionsApi,
@@ -67,7 +69,9 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 		<CollectionsNestingTableCollectionRowWrapper
 			collection={collection}
 			parentId={parentId}
+			index={index}
 			nestingLevel={nestingLevel}
+			isCollapsed={isCollapsed}
 		>
 			<div className="d-flex align-items-center justify-content-between" onClick={toggleExpanded2}>
 				<div className="d-flex align-items-center flex-grow-1">

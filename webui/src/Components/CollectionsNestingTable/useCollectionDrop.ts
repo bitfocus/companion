@@ -4,6 +4,7 @@ import { NestingCollectionsApi } from './Types.js'
 
 export interface CollectionsNestingTableCollectionDragItem {
 	collectionId: string
+	index: number
 	parentId: string | null
 	dragState: DragState | null
 }
@@ -15,7 +16,10 @@ export interface CollectionsNestingTableCollectionDragItem {
 export function useCollectionListCollectionDrop(
 	collectionApi: NestingCollectionsApi,
 	dragId: string,
-	collectionId: string | null
+	parentId: string | null,
+	index: number,
+	collectionId: string,
+	enabled: boolean
 ): {
 	isOver: boolean
 	canDrop: boolean
@@ -34,17 +38,19 @@ export function useCollectionListCollectionDrop(
 			dragCollectionId: monitor.canDrop() ? monitor.getItem()?.collectionId : undefined,
 		}),
 		hover(item, monitor) {
+			if (!enabled) return
+
 			// If this is the root area (collectionId is null), make the dropped collectionId top-level
 
 			// Ensure the hover targets this element, and not a child element
 			if (!monitor.isOver({ shallow: true })) return
 
-			if (!checkDragState(item, monitor, `${collectionId}-content`)) return
+			if (!checkDragState(item, monitor, `${parentId}-${collectionId}`)) return
 
-			if (collectionId === item.parentId) return // Don't allow dropping into the same collectionId
+			if (parentId === item.parentId && (index === -1 || index === item.index)) return // Don't allow dropping into the same collectionId
 
 			if (item.collectionId !== null) {
-				collectionApi.moveCollection(item.collectionId, collectionId, -1)
+				collectionApi.moveCollection(item.collectionId, parentId, index)
 				return { parentChanged: true }
 			}
 			return {} // Always return an object
