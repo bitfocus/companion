@@ -74,6 +74,8 @@ export interface UserConfigModel {
 
 	/** Whether to run the mdns  */
 	discoveryEnabled: boolean
+
+	backups: BackupRulesConfig[]
 }
 
 export interface UserConfigGridSize {
@@ -81,6 +83,27 @@ export interface UserConfigGridSize {
 	maxColumn: number
 	minRow: number
 	maxRow: number
+}
+
+export interface BackupRulesConfig {
+	id: string
+	name: string
+	cron: string
+	enabled: boolean
+	keep: number
+	backupType: 'db' | 'export-gz' | 'export-json' | 'export-yaml'
+	backupPath: string
+	backupNamePattern: string
+
+	lastRan: number
+
+	previousBackups: PreviousBackupInfo[]
+}
+
+export interface PreviousBackupInfo {
+	filePath: string
+	fileSize: number
+	createdAt: number
 }
 
 export type UserConfigUpdate = UserConfigUpdateInit | UserConfigUpdateKey

@@ -197,8 +197,8 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
 					<SidebarMenuItem name="Surfaces" icon={null} path="/settings/surfaces" />
 					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />
+					<SidebarMenuItem name="Backups" icon={null} path="/settings/backups" />
 					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
-					<></>
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
