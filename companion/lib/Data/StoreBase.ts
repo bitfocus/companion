@@ -40,9 +40,9 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 */
 	private backupCycle: NodeJS.Timeout | undefined
 	/**
-	 * The interval to fire a backup to disk when dirty
+	 * The interval to slowly write a backup to disk to minimise risk of corruption
 	 */
-	private readonly backupInterval: number = 60000
+	private readonly backupInterval: number = 10 * 60 * 1000
 	/**
 	 * The full backup file path
 	 */

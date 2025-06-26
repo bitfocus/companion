@@ -51,6 +51,8 @@ import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js
 import { ExportController } from './Export.js'
 import { FILE_VERSION } from './Constants.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
+import { BackupController } from './Backups.js'
+import type { DataDatabase } from '../Data/Database.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -98,6 +100,7 @@ export class ImportExportController {
 	readonly #surfacesController: SurfaceController
 	readonly #userConfigController: DataUserConfig
 	readonly #variablesController: VariablesController
+	readonly #backupController: BackupController
 
 	readonly #exportController: ExportController
 
@@ -115,6 +118,7 @@ export class ImportExportController {
 		appInfo: AppInfo,
 		apiRouter: express.Router,
 		io: UIHandler,
+		db: DataDatabase,
 		controls: ControlsController,
 		graphics: GraphicsController,
 		instance: InstanceController,
@@ -144,6 +148,19 @@ export class ImportExportController {
 			userconfig,
 			variablesController
 		)
+
+		// Initialize the backup controller
+		this.#backupController = new BackupController(
+			appInfo,
+			db,
+			this.#userConfigController,
+			variablesController.values,
+			this.#exportController
+		)
+
+		// Initialize with current user config for backups
+		const backupRules = this.#userConfigController.getKey('backups')
+		this.#backupController.initializeWithConfig(backupRules || [])
 	}
 
 	async #checkOrRunImportTask<T>(newTaskType: 'reset' | 'import', executeFn: () => Promise<T>): Promise<T> {
@@ -165,6 +182,7 @@ export class ImportExportController {
 	 */
 	clientConnect(client: ClientSocket): void {
 		this.#exportController.clientConnect(client)
+		this.#backupController.clientConnect(client)
 
 		if (this.#currentImportTask) {
 			// Inform about in progress task

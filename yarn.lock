@@ -7033,6 +7033,7 @@ asn1@evs-broadcast/node-asn1:
     lodash-es: "npm:^4.17.21"
     lru-cache: "npm:^11.1.0"
     nanoid: "npm:^5.1.5"
+    node-cron: "npm:^4.1.1"
     node-machine-id: "npm:^1.1.12"
     openapi-fetch: "npm:^0.14.0"
     osc: "npm:2.4.5"
@@ -12408,6 +12409,13 @@ asn1@evs-broadcast/node-asn1:
   dependencies:
     semver: "npm:^7.3.5"
   checksum: 10c0/a5bdc7559237d2acebadc9ac0f29dd1279726e4226a8b3256ea605f6ad4a5c48528a2b6684d09237d33f0b714a95573d7f14a2a628642d31e05c79395e2c7873
+  languageName: node
+  linkType: hard
+
+"node-cron@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "node-cron@npm:4.1.1"
+  checksum: 10c0/4798e3bc4a234512eae22e4a69dd24f82b5516e92011bfdeedb09270ab47a982c991c7fa5c4a9e22167123a1f01350dd041485560be1fd4abf174be15910b91c
   languageName: node
   linkType: hard
 
