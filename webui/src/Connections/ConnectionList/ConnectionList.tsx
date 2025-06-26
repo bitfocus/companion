@@ -40,7 +40,11 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 	const navigate = useNavigate({ from: '/connections' })
 	const doConfigureConnection = useCallback(
 		(connectionId: string | null) => {
-			void navigate({ to: `/connections/${connectionId}` })
+			if (!connectionId) {
+				void navigate({ to: '/connections' })
+			} else {
+				void navigate({ to: `/connections/$connectionId`, params: { connectionId } })
+			}
 		},
 		[navigate]
 	)
