@@ -4386,6 +4386,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/glossy@npm:*":
+  version: 0.1.3
+  resolution: "@types/glossy@npm:0.1.3"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/82ea349a27212cd200daffc4ae756a99bfc00e2180c83041ed73c434f2f8f3b6ff6f48202e494651e428d0d6378683f4e1ed4c7c8602023f200a2d6b4159a1cb
+  languageName: node
+  linkType: hard
+
 "@types/hast@npm:^3.0.0":
   version: 3.0.4
   resolution: "@types/hast@npm:3.0.4"
@@ -4876,6 +4885,18 @@ __metadata:
   version: 1.0.10
   resolution: "@types/w3c-web-usb@npm:1.0.10"
   checksum: 10c0/3df5733a334c5fd22ef3fa1e97a70c029542591058d11905d1304c26bab8705d975168818b5b7ec21fef5591cdea776dbdb31d4c04aa433e7fe7d61dd7ebdecf
+  languageName: node
+  linkType: hard
+
+"@types/winston-syslog@npm:^2":
+  version: 2.4.3
+  resolution: "@types/winston-syslog@npm:2.4.3"
+  dependencies:
+    "@types/glossy": "npm:*"
+    "@types/node": "npm:*"
+    winston: "npm:^3.0.0"
+    winston-transport: "npm:^4.3.0"
+  checksum: 10c0/53a5b954c2befa1f3d4510820d6fd814024bd75361903d0265f7e356606ae0aa45150207357e70ca962774eccb62d3b749ddab3624a95c43c1f2d1c3ef98d824
   languageName: node
   linkType: hard
 
@@ -7010,6 +7031,7 @@ asn1@evs-broadcast/node-asn1:
     "@types/tar-fs": "npm:^2.0.4"
     "@types/tar-stream": "npm:^3.1.4"
     "@types/uuid": "npm:^10.0.0"
+    "@types/winston-syslog": "npm:^2"
     "@types/ws": "npm:^8.18.1"
     archiver: "npm:^7.0.1"
     better-sqlite3: "npm:^11.10.0"
@@ -7059,6 +7081,7 @@ asn1@evs-broadcast/node-asn1:
     webpack: "npm:^5.99.9"
     webpack-cli: "npm:^6.0.1"
     winston: "npm:^3.17.0"
+    winston-syslog: "npm:^2.7.1"
     workerpool: "npm:^9.3.2"
     ws: "npm:^8.18.2"
     xkeys: "npm:^3.3.0"
@@ -9620,6 +9643,13 @@ asn1@evs-broadcast/node-asn1:
   version: 0.1.2
   resolution: "globrex@npm:0.1.2"
   checksum: 10c0/a54c029520cf58bda1d8884f72bd49b4cd74e977883268d931fd83bcbd1a9eb96d57c7dbd4ad80148fb9247467ebfb9b215630b2ed7563b2a8de02e1ff7f89d1
+  languageName: node
+  linkType: hard
+
+"glossy@npm:^0.1.7":
+  version: 0.1.7
+  resolution: "glossy@npm:0.1.7"
+  checksum: 10c0/005cd3368a8b02b670437cedbd40bd62248865d71f501c01fa06501c31ab80c3ce302b7e40cfbbbcf1950a12e0b3facf54233577e81f28f6466adc7bb291f04c
   languageName: node
   linkType: hard
 
@@ -16589,6 +16619,13 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
+"unix-dgram@npm:empty-npm-package@1.0.0":
+  version: 1.0.0
+  resolution: "empty-npm-package@npm:1.0.0"
+  checksum: 10c0/86dc2266288d7e3456205b8fe69ef30a1561d2365783439df0870124e5f4cf64b845ef3fea9b3312107d5a08e8d0b56813392be80a98825b4ad75d22b7e68ce0
+  languageName: node
+  linkType: hard
+
 "unpipe@npm:1.0.0":
   version: 1.0.0
   resolution: "unpipe@npm:1.0.0"
@@ -17344,7 +17381,24 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"winston-transport@npm:^4.9.0":
+"winston-syslog@npm:^2.7.1":
+  version: 2.7.1
+  resolution: "winston-syslog@npm:2.7.1"
+  dependencies:
+    glossy: "npm:^0.1.7"
+    triple-beam: "npm:^1.3.0"
+    unix-dgram: "npm:2.0.6"
+    winston-transport: "npm:^4.5.0"
+  peerDependencies:
+    winston: ^3.8.2
+  dependenciesMeta:
+    unix-dgram:
+      optional: true
+  checksum: 10c0/2d39d2ad3fc5bc184e8712311f0f113076b51245fff32ee8990367e696a3726ad104baf3058dc386d100d9f309114e3250e7a8fbaac3402fee11d20b6e5c8051
+  languageName: node
+  linkType: hard
+
+"winston-transport@npm:^4.3.0, winston-transport@npm:^4.5.0, winston-transport@npm:^4.9.0":
   version: 4.9.0
   resolution: "winston-transport@npm:4.9.0"
   dependencies:
@@ -17355,7 +17409,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"winston@npm:^3.17.0":
+"winston@npm:^3.0.0, winston@npm:^3.17.0":
   version: 3.17.0
   resolution: "winston@npm:3.17.0"
   dependencies:
