@@ -12292,15 +12292,6 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.16.0":
-  version: 2.22.2
-  resolution: "nan@npm:2.22.2"
-  dependencies:
-    node-gyp: "npm:latest"
-  checksum: 10c0/971f963b8120631880fa47a389c71b00cadc1c1b00ef8f147782a3f4387d4fc8195d0695911272d57438c11562fb27b24c4ae5f8c05d5e4eeb4478ba51bb73c5
-  languageName: node
-  linkType: hard
-
 "nano-css@npm:^5.6.2":
   version: 5.6.2
   resolution: "nano-css@npm:5.6.2"
@@ -16628,14 +16619,10 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"unix-dgram@npm:2.0.6":
-  version: 2.0.6
-  resolution: "unix-dgram@npm:2.0.6"
-  dependencies:
-    bindings: "npm:^1.5.0"
-    nan: "npm:^2.16.0"
-    node-gyp: "npm:latest"
-  checksum: 10c0/d3725a575a74803b625e3784e12d3edad2289e636938edf622c5c65b0437d6da3f73c393abe9ebeb6ad08d012e058683db965438d8f8eb73070e641d3f097128
+"unix-dgram@npm:empty-npm-package@1.0.0":
+  version: 1.0.0
+  resolution: "empty-npm-package@npm:1.0.0"
+  checksum: 10c0/86dc2266288d7e3456205b8fe69ef30a1561d2365783439df0870124e5f4cf64b845ef3fea9b3312107d5a08e8d0b56813392be80a98825b4ad75d22b7e68ce0
   languageName: node
   linkType: hard
 
