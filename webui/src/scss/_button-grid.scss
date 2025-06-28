@@ -1,3 +1,5 @@
+@use '@coreui/coreui/scss/coreui' as *;
+
 .button-grid-header {
 	display: grid;
 	grid-template-columns: 1fr auto;

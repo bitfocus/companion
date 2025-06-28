@@ -1,39 +1,9 @@
-@use 'sass:color';
+// Define variables that are *not* defined in @coreui
+// For variables meant to override @coreui, see App.scss
 
-$primary: #d50215;
-$secondary: #ccc;
-$body-bg: #333;
-$light: #e9e9e9;
-
-$header-bg: #d50215;
+// note $header-border appears to be defined but never used
 $header-border: (
 	bottom: none,
 );
-$header-color: #fff;
-$header-brand-color: #fff;
-$header-brand-hover-color: #fff;
-$sidebar-bg: #111;
-$sidebar-brand-bg: color.adjust($header-bg, $lightness: -10%);
-
-$form-switch-color: #fff;
-$form-switch-checked-color: #fff;
-$form-switch-focus-color: #fff;
-$form-switch-widths: (
-	xl: (
-		width: 2.75em,
-		height: 1.5em,
-	),
-) !default;
-
-$btn-font-size-sm: 12px;
-$btn-font-size: 0.9rem;
-
-$modal-content-bg: #fff;
-$table-bg: #fff;
-$dropdown-bg: #fff;
-
-$card-bg: #f7f7f7;
-
-$sidebar-nav-link-padding-x: 0.5rem;
 
 $variable-padding: 1px 3px 0px;

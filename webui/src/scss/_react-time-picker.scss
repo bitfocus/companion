@@ -1,3 +1,6 @@
+@use '@coreui/coreui/scss/coreui' as *;
+@use 'common'; // updates .form-control background-color (rearranging the @use lines in App.scss doesn't work)
+
 @import 'react-time-picker/dist/TimePicker.css';
 
 .react-time-picker {
