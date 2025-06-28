@@ -38,3 +38,5 @@
 4. Launching
 
    To run companion, either run companion-launcher to get the desktop build, or run the ./companion_headless.sh script to start it headless.
+
+   If when launching it gives an error "Using GTK 2/3 and GTK 4 in the same process is not supported", you can resolve this by appending the argument: --gtk-version=3
