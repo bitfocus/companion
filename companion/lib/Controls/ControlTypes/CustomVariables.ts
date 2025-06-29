@@ -13,7 +13,7 @@ import type {
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type {
 	ClientCustomVariableEntityModel,
@@ -23,9 +23,14 @@ import type {
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ControlEntityListPoolCustomVariables } from '../Entities/EntityListPoolCustomVariables.js'
 import type { VariableValueEntry } from '../../Variables/Values.js'
+import EventEmitter from 'node:events'
 
 export const CustomVariablesControlRoom = 'control:custom_variables'
 const CUSTOM_LABEL = 'custom'
+
+export interface ControlCustomVariablesEvents {
+	definition_changed: [id: string, info: FeedbackEntityModel | null]
+}
 
 /**
  * Class for holding the custom variables.
@@ -74,6 +79,8 @@ export class ControlCustomVariables
 	options: Record<string, never>
 
 	readonly entities: ControlEntityListPoolCustomVariables
+
+	readonly events = new EventEmitter<ControlCustomVariablesEvents>()
 
 	#lastSentCustomVariablesJson: CustomVariablesModel | null = null
 
@@ -248,50 +255,54 @@ export class ControlCustomVariables
 	 */
 	#sendCustomVariablesChange(): void {
 		const newJson = cloneDeep(this.toClientJson(true))
-		if (this.deps.io.countRoomMembers(CustomVariablesControlRoom) > 0) {
-			if (this.#lastSentCustomVariablesJson) {
-				const allIds = new Set<string>([...Object.keys(newJson), ...Object.keys(this.#lastSentCustomVariablesJson)])
+		if (this.#lastSentCustomVariablesJson) {
+			const allIds = new Set<string>([...Object.keys(newJson), ...Object.keys(this.#lastSentCustomVariablesJson)])
 
-				const updates: CustomVariableUpdate[] = []
+			const updates: CustomVariableUpdate[] = []
 
-				for (const id of allIds) {
-					const oldInfo = this.#lastSentCustomVariablesJson?.[id]
-					const newInfo = newJson[id]
+			for (const id of allIds) {
+				const oldInfo = this.#lastSentCustomVariablesJson?.[id]
+				const newInfo = newJson[id]
 
-					if (!newInfo) {
-						// This variable has been removed
-						updates.push({
-							type: 'remove',
-							itemId: id,
-						})
-					} else if (!oldInfo || JSON.stringify(oldInfo) !== JSON.stringify(newInfo)) {
-						// This variable has been updated
-						updates.push({
+				if (!newInfo) {
+					// This variable has been removed
+					updates.push({
+						type: 'remove',
+						itemId: id,
+					})
+					this.events.emit('definition_changed', id, null)
+				} else if (!oldInfo || JSON.stringify(oldInfo) !== JSON.stringify(newInfo)) {
+					// This variable has been updated
+					updates.push({
+						type: 'update',
+						itemId: id,
+						info: newInfo,
+					})
+					this.events.emit('definition_changed', id, newInfo)
+				}
+			}
+
+			if (updates.length > 0) {
+				this.deps.io.emitToRoom(CustomVariablesControlRoom, `custom-variables:update`, updates)
+			}
+		} else {
+			this.deps.io.emitToRoom(
+				CustomVariablesControlRoom,
+				`custom-variables:update`,
+				Object.entries(newJson).map(
+					(entity) =>
+						({
 							type: 'update',
-							itemId: id,
-							info: newInfo,
-						})
-					}
-				}
-
-				if (updates.length > 0) {
-					this.deps.io.emitToRoom(CustomVariablesControlRoom, `custom-variables:update`, updates)
-				}
-			} else {
-				this.deps.io.emitToRoom(
-					CustomVariablesControlRoom,
-					`custom-variables:update`,
-					Object.entries(newJson).map(
-						(entity) =>
-							({
-								type: 'update',
-								itemId: entity[0],
-								info: entity[1],
-							}) satisfies CustomVariableUpdate
-					)
+							itemId: entity[0],
+							info: entity[1],
+						}) satisfies CustomVariableUpdate
 				)
+			)
+			for (const entity of Object.entries(newJson)) {
+				this.events.emit('definition_changed', entity[0], entity[1])
 			}
 		}
+
 		this.#lastSentCustomVariablesJson = newJson
 	}
 
@@ -367,5 +378,23 @@ export class ControlCustomVariables
 	}
 	getBitmapFeedbackSize(): { width: number; height: number } | null {
 		return null
+	}
+
+	getVariableDescription(name: string): string {
+		throw new Error('Method not implemented.')
+	}
+	setUserValue(name: string, value: string | number | boolean | undefined, createIfMissing = false): string | null {
+		throw new Error('Method not implemented.')
+	}
+
+	clearAllVariables(): void {
+		// TODO
+	}
+
+	syncUserValueToDefault(name: any) {
+		throw new Error('Method not implemented.')
+	}
+	resetUserValueToDefault(name: any) {
+		throw new Error('Method not implemented.')
 	}
 }

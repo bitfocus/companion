@@ -841,7 +841,7 @@ export class SocketEventsHandler {
 	 */
 	async #handleSetCustomVariable(msg: SetCustomVariableMessage): Promise<void> {
 		try {
-			this.#deps.variables.custom.setValue(msg.customVariableId, msg.value)
+			this.#deps.controls.getCustomVariablesControl().setUserValue(msg.customVariableId, msg.value)
 		} catch (e: any) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}

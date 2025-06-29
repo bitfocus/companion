@@ -3,16 +3,16 @@ import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import { VariablesValuesEvents } from '../Variables/Values.js'
+import type { VariablesValuesEvents } from '../Variables/Values.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
-import { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
+import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
+import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import EventEmitter from 'events'
-import type { CustomVariablesController, VariablesCustomVariableEvents } from '../CustomVariables/Controller.js'
+import type { ControlCustomVariablesEvents } from '../Controls/ControlTypes/CustomVariables.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -33,7 +33,7 @@ import type { CustomVariablesController, VariablesCustomVariableEvents } from '.
 type ServiceApiEvents =
 	| Pick<VariablesValuesEvents, 'variables_changed'>
 	| Pick<ActionRecorderEvents, 'action_recorder_is_running'>
-	| Pick<VariablesCustomVariableEvents, 'definition_changed'>
+	| Pick<ControlCustomVariablesEvents, 'definition_changed'>
 
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
@@ -41,7 +41,6 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #controlController: ControlsController
 	readonly #surfaceController: SurfaceController
 	readonly #variablesController: VariablesController
-	readonly #customVariableController: CustomVariablesController
 	readonly #graphicsController: GraphicsController
 
 	get appInfo(): AppInfo {
@@ -54,7 +53,6 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		controlController: ControlsController,
 		surfaceController: SurfaceController,
 		variablesController: VariablesController,
-		customVariableController: CustomVariablesController,
 		graphicsController: GraphicsController
 	) {
 		super()
@@ -63,7 +61,6 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		this.#controlController = controlController
 		this.#surfaceController = surfaceController
 		this.#variablesController = variablesController
-		this.#customVariableController = customVariableController
 		this.#graphicsController = graphicsController
 
 		this.#controlController.actionRecorder.on('action_recorder_is_running', (...args) => {
@@ -73,7 +70,11 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		this.#variablesController.values.on('variables_changed', (...args) => {
 			this.emit('variables_changed', ...args)
 		})
-		this.#customVariableController.on('definition_changed', (...args) => {
+	}
+
+	initEvents(): void {
+		// TODO: could the control change and cause this to be rebound?
+		this.#controlController.getCustomVariablesControl().events.on('definition_changed', (...args) => {
 			this.emit('definition_changed', ...args)
 		})
 	}
@@ -85,7 +86,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @returns Failure reason, if any
 	 */
 	setCustomVariableValue(name: string, value: CompanionVariableValue): string | null {
-		return this.#customVariableController.setValue(name, value)
+		return this.#controlController.getCustomVariablesControl().setUserValue(name, value)
 	}
 
 	/**
@@ -94,7 +95,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @returns The value of the variable
 	 */
 	getCustomVariableValue(name: string): CompanionVariableValue | undefined {
-		return this.#customVariableController.getValue(name)
+		return this.#variablesController.values.getVariableValue('custom', name)
 	}
 
 	/**
@@ -104,7 +105,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 */
 
 	getCustomVariableDescription(name: string): string {
-		return this.#customVariableController.getVariableDescription(name)
+		return this.#controlController.getCustomVariablesControl().getVariableDescription(name)
 	}
 
 	/**

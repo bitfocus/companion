@@ -944,12 +944,10 @@ export class ControlsController {
 		})
 
 		client.onPromise('custom-variables:subscribe', () => {
-			this.#ensureCustomVariablesControlExists()
 			client.join(CustomVariablesControlRoom)
 
-			const control = this.getControl(CustomVariableControlId)
-			if (!control || !(control instanceof ControlCustomVariables))
-				throw new Error(`Custom Variables Control is missing!`)
+			const control = this.getCustomVariablesControl()
+			if (!control) throw new Error(`Custom Variables Control is missing!`)
 
 			return control.toClientJson(false)
 		})
@@ -1055,6 +1053,34 @@ export class ControlsController {
 	}
 
 	/**
+	 * Get the custom variables control
+	 * @returns the control housing the custom variables
+	 */
+	getCustomVariablesControl(): ControlCustomVariables {
+		let control = this.#controls.get(CustomVariableControlId)
+
+		if (!control) {
+			control =
+				this.#createClassForControl(
+					CustomVariableControlId,
+					'all',
+					{
+						type: 'custom_variables',
+						options: {},
+						variables: [],
+					},
+					false
+				) ?? undefined
+			if (control) this.#controls.set(CustomVariableControlId, control)
+		}
+
+		if (!(control instanceof ControlCustomVariables)) {
+			throw new Error(`Control with id "${CustomVariableControlId}" is not a Custom Variables Control!`)
+		}
+		return control
+	}
+
+	/**
 	 * Get a Trigger control if it exists
 	 */
 	getTrigger(triggerId: string): ControlTrigger | undefined {
@@ -1134,26 +1160,11 @@ export class ControlsController {
 			}
 		}
 
-		this.#ensureCustomVariablesControlExists()
+		// Ensure the custom variables control exists
+		this.getCustomVariablesControl()
 
 		// Ensure all trigger collections are valid
 		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
-	}
-
-	#ensureCustomVariablesControlExists(): void {
-		if (!this.#controls.has(CustomVariableControlId)) {
-			const inst = this.#createClassForControl(
-				CustomVariableControlId,
-				'all',
-				{
-					type: 'custom_variables',
-					options: {},
-					variables: [],
-				},
-				false
-			)
-			if (inst) this.#controls.set(CustomVariableControlId, inst)
-		}
 	}
 
 	/**
@@ -1374,7 +1385,10 @@ export class ControlsController {
 	 * Prune any items on controls which belong to an unknown connectionId
 	 * @access public
 	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): void {
+	verifyConnectionIds(): void {
+		const knownConnectionIds = new Set(this.#registry.instance.getAllInstanceIds())
+		knownConnectionIds.add('internal')
+
 		for (const control of this.#controls.values()) {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)

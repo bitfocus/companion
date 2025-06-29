@@ -672,7 +672,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Set the value of a custom variable
 	 */
 	#onSetCustomVariable(name: string, value: CompanionVariableValue): void {
-		this.#variables.custom.setValue(name, value)
+		this.#controls.getCustomVariablesControl().setUserValue(name, value)
 	}
 
 	/**
