@@ -3,7 +3,7 @@ import { CButtonGroup, CButton, CFormSwitch } from '@coreui/react'
 import { faPencil, faExpandArrowsAlt, faCompressArrowsAlt, faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
-import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 
@@ -18,6 +18,7 @@ interface EntityCellControlProps {
 	headlineExpanded: boolean
 	setHeadlineExpanded: () => void
 	readonly: boolean
+	isLocalVariablesList: boolean
 }
 
 export const EntityRowHeader = observer(function EntityRowHeader({
@@ -31,6 +32,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	headlineExpanded,
 	setHeadlineExpanded,
 	readonly,
+	isLocalVariablesList,
 }: EntityCellControlProps) {
 	const innerSetEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled?.(e.target.checked),
@@ -40,11 +42,20 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	const doCollapse = useCallback(() => setPanelCollapsed(true), [setPanelCollapsed])
 	const doExpand = useCallback(() => setPanelCollapsed(false), [setPanelCollapsed])
 
+	let headline = entity.headline || definitionName
+	if (isPanelCollapsed && isLocalVariablesList && entity.type === EntityModelType.Feedback) {
+		if (entity.variableName) {
+			headline = `$(local:${entity.variableName}) ${entity.headline || ''}`
+		} else {
+			headline = `Unnamed: ${entity.headline || ''}`
+		}
+	}
+
 	return (
 		<div className="editor-grid-header">
 			<div className="cell-name">
 				{!service.setHeadline || !headlineExpanded || isPanelCollapsed ? (
-					entity.headline || definitionName
+					headline
 				) : (
 					<TextInputField
 						value={entity.headline ?? ''}
