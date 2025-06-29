@@ -121,6 +121,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'controls:set-style-fields': (controlId: string, styleFields: Record<string, any>) => boolean
 	'controls:move': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:copy': (from: ControlLocation, to: ControlLocation) => boolean
+	'controls:shortcut': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:swap': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:reset': (location: ControlLocation, newType?: string) => void
 	'controls:import-preset': (connectionId: string, presetId: string, location: ControlLocation) => string | null

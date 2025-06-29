@@ -301,7 +301,7 @@ export class GraphicsRenderer {
 			}
 		} else if (drawStyle.style === 'button') {
 			const textAlign = ParseAlignment(drawStyle.alignment)
-			const pngAlign = ParseAlignment(drawStyle.pngalignment)
+			const pngAlign = ParseAlignment(drawStyle.pngalignment ?? 'center:center') // For some reason, pngalignment is not always set (undefined) when using the `bank_style` feedback, while we do expect it to be. This is an existing issue, I haven't looked into it yet.
 
 			processedStyle = {
 				type: 'button',
