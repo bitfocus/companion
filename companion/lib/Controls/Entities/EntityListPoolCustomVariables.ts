@@ -25,7 +25,7 @@ export class ControlEntityListPoolCustomVariables extends ControlEntityListPoolB
 	}
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
-		return this.#localVariables.getAllEntities()
+		return this.#localVariables.getDirectEntities()
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {

@@ -128,8 +128,10 @@ export abstract class ControlEntityListPoolBase {
 		for (const entity of entities) {
 			const variableName = entity.localVariableName
 			if (variableName) {
+				const definition = entity.getEntityDefinition()
 				// Strip off the prefix, as the ui doesn't expect that
-				values[variableName.slice('local:'.length)] = entity.feedbackValue
+				values[variableName.slice('local:'.length)] =
+					definition?.feedbackType === 'boolean' ? entity.getBooleanFeedbackValue() : entity.feedbackValue
 			}
 		}
 
