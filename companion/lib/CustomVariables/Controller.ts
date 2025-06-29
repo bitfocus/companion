@@ -83,17 +83,17 @@ export class CustomVariablesController extends EventEmitter<VariablesCustomVaria
 	clientConnect(client: ClientSocket): void {
 		this.#collections.clientConnect(client)
 
-		client.onPromise('custom-variables:subscribe', () => {
-			client.join(CustomVariablesRoom)
+		// client.onPromise('custom-variables:subscribe', () => {
+		// 	client.join(CustomVariablesRoom)
 
-			return this.#entities
-				.getLocalVariableEntities()
-				.map((entity) => entity.asEntityModel(true) as FeedbackEntityModel)
-		})
+		// 	return this.#entities
+		// 		.getLocalVariableEntities()
+		// 		.map((entity) => entity.asEntityModel(true) as FeedbackEntityModel)
+		// })
 
-		client.onPromise('custom-variables:unsubscribe', () => {
-			client.leave(CustomVariablesRoom)
-		})
+		// client.onPromise('custom-variables:unsubscribe', () => {
+		// 	client.leave(CustomVariablesRoom)
+		// })
 
 		// client.onPromise('custom-variables:create', this.createVariable.bind(this))
 		// client.onPromise('custom-variables:delete', this.deleteVariable.bind(this))

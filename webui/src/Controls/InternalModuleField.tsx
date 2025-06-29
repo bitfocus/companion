@@ -241,9 +241,10 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		)
 
 		for (const [id, info] of customVariablesSorted) {
+			if (!info.variableName) continue
 			choices.push({
 				id,
-				label: `${info.description} (custom:${id})`,
+				label: `${info.headline} (custom:${info.variableName})`,
 			})
 		}
 

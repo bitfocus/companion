@@ -1,6 +1,6 @@
 import type {
+	ClientCustomVariableEntityModel,
 	CustomVariableCollection,
-	CustomVariableDefinition,
 	CustomVariableUpdate,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ObservableMap, action, computed, observable } from 'mobx'
@@ -14,17 +14,17 @@ import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 
 export class VariablesStore {
-	readonly customVariables = observable.map<string, CustomVariableDefinition>()
+	readonly customVariables = observable.map<string, ClientCustomVariableEntityModel>()
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
 	readonly customVariableCollections = observable.map<string, CustomVariableCollection>()
 
-	public resetCustomVariables = action((newData: Record<string, CustomVariableDefinition | undefined> | null): void => {
+	public resetCustomVariables = action((newData: Record<string, ClientCustomVariableEntityModel> | null): void => {
 		this.customVariables.clear()
 
 		if (newData) {
-			for (const [id, item] of Object.entries(newData)) {
+			for (const item of Object.values(newData)) {
 				if (item) {
-					this.customVariables.set(id, item)
+					this.customVariables.set(item.id, item)
 				}
 			}
 		}
@@ -116,11 +116,14 @@ export class VariablesStore {
 		const definitions: VariableDefinitionExt[] = []
 
 		// Custom variables
-		for (const [id, info] of this.customVariables) {
+		for (const info of this.customVariables.values()) {
+			// Don't show ones without a variable name
+			if (!info.variableName) continue
+
 			definitions.push({
-				label: info.description,
+				label: info.headline || info.variableName,
 				connectionLabel: 'custom',
-				name: id,
+				name: info.variableName,
 			})
 		}
 

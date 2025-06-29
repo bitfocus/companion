@@ -30,6 +30,8 @@ import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressio
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
+import { ControlCustomVariables, CustomVariablesControlRoom } from './ControlTypes/CustomVariables.js'
+import { CustomVariableControlId } from '@companion-app/shared/Model/CustomVariableModel.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -940,6 +942,20 @@ export class ControlsController {
 
 			return control.entities.getLocalVariableValues()
 		})
+
+		client.onPromise('custom-variables:subscribe', () => {
+			this.#ensureCustomVariablesControlExists()
+			client.join(CustomVariablesControlRoom)
+
+			const control = this.getControl(CustomVariableControlId)
+			if (!control || !(control instanceof ControlCustomVariables))
+				throw new Error(`Custom Variables Control is missing!`)
+
+			return control.toClientJson(false)
+		})
+		client.onPromise('custom-variables:unsubscribe', () => {
+			client.leave(CustomVariablesControlRoom)
+		})
 	}
 
 	/**
@@ -985,6 +1001,12 @@ export class ControlsController {
 					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
 				})
 				return trigger
+			}
+		}
+
+		if (category === 'all') {
+			if (controlObj2?.type === 'custom_variables' || (controlType === 'custom_variables' && !controlObj2)) {
+				return new ControlCustomVariables(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			}
 		}
 
@@ -1112,8 +1134,26 @@ export class ControlsController {
 			}
 		}
 
+		this.#ensureCustomVariablesControlExists()
+
 		// Ensure all trigger collections are valid
 		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
+	}
+
+	#ensureCustomVariablesControlExists(): void {
+		if (!this.#controls.has(CustomVariableControlId)) {
+			const inst = this.#createClassForControl(
+				CustomVariableControlId,
+				'all',
+				{
+					type: 'custom_variables',
+					options: {},
+					variables: [],
+				},
+				false
+			)
+			if (inst) this.#controls.set(CustomVariableControlId, inst)
+		}
 	}
 
 	/**
@@ -1185,7 +1225,13 @@ export class ControlsController {
 	/**
 	 * Delete a control
 	 */
-	deleteControl(controlId: string): void {
+	deleteControl(controlId: string, force = false): void {
+		if (controlId === CustomVariableControlId && !force) {
+			// Cannot delete the custom variables control
+			this.#logger.warn('Tried to delete the custom variables control, but this is not allowed')
+			throw new Error('Cannot delete the custom variables control')
+		}
+
 		const control = this.getControl(controlId)
 		if (control) {
 			control.destroy()

@@ -216,7 +216,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				headlineExpanded={headlineExpanded}
 				setHeadlineExpanded={doEditHeadline}
 				readonly={readonly}
-				isLocalVariablesList={isLocalVariablesList}
+				localVariablePrefix={isLocalVariablesList}
 			/>
 
 			{!isCollapsed && (

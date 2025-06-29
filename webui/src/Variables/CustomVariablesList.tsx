@@ -13,7 +13,7 @@ import {
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
-import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
+import { CustomVariableControlId, CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -28,6 +28,8 @@ import { useCustomVariablesApi } from './CustomVariablesApi'
 import { CustomVariablesTableContextProvider } from './CustomVariablesTableContext'
 import { useCustomVariablesValues } from './useCustomVariableValues'
 import { CustomVariableRow } from './CustomVariablesListRow'
+import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor'
+import { EntityModelType, FeedbackEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 
 export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collectionId'> & CollectionsNestingTableItem
 type CustomVariableCollectionExt = CollectionsNestingTableCollection
@@ -60,6 +62,10 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 
 		return <CustomVariableRow info={item} />
 	}
+
+	const allEntities: FeedbackEntityModel[] = useComputed(() => {
+		return Array.from(customVariables.customVariables.values()).sort((a, b) => a.sortOrder - b.sortOrder)
+	}, [customVariables.customVariables])
 
 	const allCustomVariables: CustomVariableDefinitionExt[] = useComputed(() => {
 		const defs: CustomVariableDefinitionExt[] = []
@@ -115,6 +121,20 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						<FontAwesomeIcon icon={faTimes} />
 					</CButton>
 				</CInputGroup>
+
+				<ControlEntitiesEditor
+					heading={null}
+					controlId={CustomVariableControlId}
+					entities={allEntities}
+					location={undefined}
+					listId="variables"
+					entityType={EntityModelType.Feedback}
+					entityTypeLabel="variable"
+					feedbackListType={FeedbackEntitySubType.Value}
+					localVariablesStore={null} // No local variables for custom variables
+					// TODO - is this ok?
+					isLocalVariablesList={true}
+				/>
 
 				<div className="variables-table-scroller ">
 					<CustomVariablesTableContextProvider

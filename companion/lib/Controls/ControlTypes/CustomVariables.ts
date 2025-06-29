@@ -1,7 +1,5 @@
 import { ControlBase } from '../ControlBase.js'
-import { TriggersListRoom } from '../Controller.js'
 import { cloneDeep } from 'lodash-es'
-import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
 import type {
 	ControlWithoutActions,
@@ -17,11 +15,22 @@ import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesC
 import type { ControlDependencies } from '../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import type { CustomVariablesControlModel } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type {
+	ClientCustomVariableEntityModel,
+	CustomVariablesControlModel,
+	CustomVariablesModel,
+	CustomVariableUpdate,
+} from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ControlEntityListPoolCustomVariables } from '../Entities/EntityListPoolCustomVariables.js'
+import type { VariableValueEntry } from '../../Variables/Values.js'
+
+export const CustomVariablesControlRoom = 'control:custom_variables'
+const CUSTOM_LABEL = 'custom'
 
 /**
  * Class for holding the custom variables.
+ * This is a bit of a hack, as this is not really a control, but it requires a very similar lifecycle and
+ * ui hooks, so this allows us to avoid some repetition and risk of errors
  *
  * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
@@ -64,7 +73,9 @@ export class ControlCustomVariables
 	 */
 	options: Record<string, never>
 
-	readonly #entities: ControlEntityListPoolCustomVariables
+	readonly entities: ControlEntityListPoolCustomVariables
+
+	#lastSentCustomVariablesJson: CustomVariablesModel | null = null
 
 	/**
 	 * @param registry - the application core
@@ -81,11 +92,24 @@ export class ControlCustomVariables
 	) {
 		super(deps, controlId, `Controls/ControlTypes/CustomVariables/${controlId}`)
 
-		this.#entities = new ControlEntityListPoolCustomVariables({
+		this.entities = new ControlEntityListPoolCustomVariables({
 			controlId,
 			commitChange: this.commitChange.bind(this),
 			invalidateControl: this.triggerRedraw.bind(this),
-			localVariablesChanged: null,
+			localVariablesChanged: (changedVariables) => {
+				const variables = this.entities.getLocalVariableValues()
+
+				const changedValues: VariableValueEntry[] = []
+				for (const id of changedVariables) {
+					const trimmedId = id.slice('local:'.length)
+					changedValues.push({
+						id: trimmedId,
+						value: variables[trimmedId],
+					})
+				}
+
+				this.deps.variables.values.setVariableValues(CUSTOM_LABEL, changedValues)
+			},
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			moduleHost: deps.instance.moduleHost,
@@ -104,34 +128,22 @@ export class ControlCustomVariables
 			if (storage.type !== 'custom_variables')
 				throw new Error(`Invalid type given to ControlCustomVariables: "${storage.type}"`)
 
-			this.#entities.loadStorage(storage, true, isImport)
+			this.entities.loadStorage(storage, true, isImport)
 
 			if (isImport) this.postProcessImport()
 		}
 
 		// Ensure trigger is stored before setup
 		setImmediate(() => {
-			// this.#setupEvents()
+			this.triggerRedraw()
 		})
-	}
-
-	checkCollectionIdIsValid(validCollectionIds: Set<string>): boolean {
-		// if (this.options.collectionId && !validCollectionIds.has(this.options.collectionId)) {
-		// 	// collectionId is not valid, remove it
-		// 	this.options.collectionId = undefined
-		// 	// The parent collection is now enabled
-		// 	this.setCollectionEnabled(true)
-		// 	this.commitChange(false)
-		// 	return true
-		// }
-		// return false
 	}
 
 	/**
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {
-		this.#entities.clearConnectionState(connectionId)
+		this.entities.clearConnectionState(connectionId)
 	}
 
 	/**
@@ -140,7 +152,7 @@ export class ControlCustomVariables
 	 * @param foundConnectionLabels - instance labels being referenced
 	 */
 	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
-		const allEntities = this.#entities.getAllEntities()
+		const allEntities = this.entities.getAllEntities()
 
 		for (const entities of allEntities) {
 			foundConnectionIds.add(entities.connectionId)
@@ -156,7 +168,7 @@ export class ControlCustomVariables
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
 	triggerLocationHasChanged(): void {
-		this.#entities.resubscribeEntities(EntityModelType.Feedback, 'internal')
+		this.entities.resubscribeEntities(EntityModelType.Feedback, 'internal')
 	}
 
 	/**
@@ -168,7 +180,7 @@ export class ControlCustomVariables
 		const obj: CustomVariablesControlModel = {
 			type: this.type,
 			options: this.options,
-			variables: this.#entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
+			variables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
 		return clone ? cloneDeep(obj) : obj
 	}
@@ -177,7 +189,7 @@ export class ControlCustomVariables
 	 * Remove any actions and feedbacks referencing a specified connectionId
 	 */
 	forgetConnection(connectionId: string): void {
-		const changed = this.#entities.forgetConnection(connectionId)
+		const changed = this.entities.forgetConnection(connectionId)
 
 		if (changed) {
 			this.commitChange(true)
@@ -191,7 +203,7 @@ export class ControlCustomVariables
 	 * @access public
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
-		const allEntities = this.#entities.getAllEntities()
+		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
 		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
@@ -214,11 +226,6 @@ export class ControlCustomVariables
 		// @ts-expect-error mistmatch in types
 		this.options[key] = value
 
-		if (key === 'enabled') {
-			// Pretend the collection changed, to re-trigger the events
-			this.setCollectionEnabled(this.#collectionEnabled)
-		}
-
 		this.commitChange()
 
 		return true
@@ -228,7 +235,7 @@ export class ControlCustomVariables
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	postProcessImport(): void {
-		this.#entities.resubscribeEntities()
+		this.entities.resubscribeEntities()
 
 		this.commitChange()
 		this.sendRuntimePropsChange()
@@ -239,66 +246,103 @@ export class ControlCustomVariables
 	 * This is for any properties that the ui may want about this control which are not persisted in toJSON()
 	 * This is done via this.toRuntimeJSON()
 	 */
-	#sendTriggerJsonChange(): void {
-		const newJson = cloneDeep(this.toTriggerJSON())
+	#sendCustomVariablesChange(): void {
+		const newJson = cloneDeep(this.toClientJson(true))
+		if (this.deps.io.countRoomMembers(CustomVariablesControlRoom) > 0) {
+			if (this.#lastSentCustomVariablesJson) {
+				const allIds = new Set<string>([...Object.keys(newJson), ...Object.keys(this.#lastSentCustomVariablesJson)])
 
-		if (this.deps.io.countRoomMembers(TriggersListRoom) > 0) {
-			if (this.#lastSentTriggerJson) {
-				const patch = jsonPatch.compare(this.#lastSentTriggerJson || {}, newJson || {})
-				if (patch.length > 0) {
-					this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
-						type: 'update',
-						controlId: this.controlId,
-						patch,
-					})
+				const updates: CustomVariableUpdate[] = []
+
+				for (const id of allIds) {
+					const oldInfo = this.#lastSentCustomVariablesJson?.[id]
+					const newInfo = newJson[id]
+
+					if (!newInfo) {
+						// This variable has been removed
+						updates.push({
+							type: 'remove',
+							itemId: id,
+						})
+					} else if (!oldInfo || JSON.stringify(oldInfo) !== JSON.stringify(newInfo)) {
+						// This variable has been updated
+						updates.push({
+							type: 'update',
+							itemId: id,
+							info: newInfo,
+						})
+					}
+				}
+
+				if (updates.length > 0) {
+					this.deps.io.emitToRoom(CustomVariablesControlRoom, `custom-variables:update`, updates)
 				}
 			} else {
-				this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
-					type: 'add',
-					controlId: this.controlId,
-					info: newJson,
-				})
+				this.deps.io.emitToRoom(
+					CustomVariablesControlRoom,
+					`custom-variables:update`,
+					Object.entries(newJson).map(
+						(entity) =>
+							({
+								type: 'update',
+								itemId: entity[0],
+								info: entity[1],
+							}) satisfies CustomVariableUpdate
+					)
+				)
 			}
 		}
+		this.#lastSentCustomVariablesJson = newJson
+	}
 
-		this.#lastSentTriggerJson = newJson
+	toClientJson(regenerate: boolean): CustomVariablesModel {
+		if (!regenerate && this.#lastSentCustomVariablesJson) return this.#lastSentCustomVariablesJson
+
+		const entities: Record<string, ClientCustomVariableEntityModel> = {}
+
+		this.entities.getLocalVariableEntities().forEach((entity, i) => {
+			entities[entity.id] = {
+				...(entity.asEntityModel(true) as ClientCustomVariableEntityModel),
+				sortOrder: i,
+			}
+		})
+
+		return entities
 	}
 
 	commitChange(redraw = true): void {
 		super.commitChange(redraw)
 
-		this.#sendTriggerJsonChange()
+		this.#sendCustomVariablesChange()
 	}
 
 	destroy(): void {
 		// This should only happen at shutdown, so we don't need to notify the ui
 
-		this.#entities.destroy()
+		this.entities.destroy()
 
 		super.destroy()
 	}
 
 	/**
-	 * Trigger a recheck of the condition, as something has changed and it might be the 'condition'
+	 * Trigger an invalidation of all contained variables
 	 * @access protected
 	 */
 	triggerRedraw = debounceFn(
 		() => {
 			try {
-				// const newStatus = this.entities.checkConditionValue()
-				// const runOnTrue = this.events.some((event) => event.enabled && event.type === 'condition_true')
-				// const runOnFalse = this.events.some((event) => event.enabled && event.type === 'condition_false')
-				// if (
-				// 	this.options.enabled &&
-				// 	this.#conditionCheckEvents.size > 0 &&
-				// 	((runOnTrue && newStatus && !this.#conditionCheckLastValue) ||
-				// 		(runOnFalse && !newStatus && this.#conditionCheckLastValue))
-				// ) {
-				// 	setImmediate(() => {
-				// 		this.executeActions(Date.now(), TriggerExecutionSource.ConditionChange)
-				// 	})
-				// }
-				// this.#conditionCheckLastValue = newStatus
+				const variables = this.entities.getLocalVariableValues()
+
+				const changedValues: VariableValueEntry[] = []
+				for (const [id, value] of Object.entries(variables)) {
+					const trimmedId = id.slice('local:'.length)
+					changedValues.push({
+						id: trimmedId,
+						value: value,
+					})
+				}
+
+				this.deps.variables.values.setVariableValues(CUSTOM_LABEL, changedValues)
 			} catch (e) {
 				this.logger.warn(`Failed to recheck condition: ${e}`)
 			}

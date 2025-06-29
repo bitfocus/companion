@@ -482,7 +482,7 @@ export interface BackendToClientEventsMap {
 	'triggers:update': (change: TriggersUpdate) => void
 	'trigger-collections:update': (patch: TriggerCollection[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
-	// 'custom-variables:update': (changes: CustomVariableUpdate[]) => void
+	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'custom-variable-collections:update': (patch: CustomVariableCollection[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
