@@ -93,7 +93,7 @@ export function EditActionsRelease({
 					entityTypeLabel="action"
 					feedbackListType={null}
 					localVariablesStore={localVariablesStore}
-					isLocalVariablesList={false}
+					localVariablePrefix={null}
 				/>
 			</MyErrorBoundary>
 		)
@@ -114,7 +114,7 @@ export function EditActionsRelease({
 					entityTypeLabel="action"
 					feedbackListType={null}
 					localVariablesStore={localVariablesStore}
-					isLocalVariablesList={false}
+					localVariablePrefix={null}
 				/>
 			</MyErrorBoundary>
 

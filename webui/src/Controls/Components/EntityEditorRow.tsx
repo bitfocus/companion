@@ -41,7 +41,7 @@ interface EntityTableRowProps {
 
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
-	isLocalVariablesList: boolean
+	localVariablePrefix: string | null
 }
 
 export const EntityTableRow = observer(function EntityTableRow({
@@ -57,7 +57,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 	feedbackListType,
 	readonly,
 	localVariablesStore,
-	isLocalVariablesList,
+	localVariablePrefix,
 }: EntityTableRowProps): JSX.Element | null {
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EntityListDragItem>({
@@ -144,7 +144,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 						feedbackListType={feedbackListType}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
-						isLocalVariablesList={isLocalVariablesList}
+						localVariablePrefix={localVariablePrefix}
 					/>
 				) : (
 					<p>Entity is not a {entityTypeLabel}!</p>
@@ -165,7 +165,7 @@ interface EntityEditorRowContentProps {
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
-	isLocalVariablesList: boolean
+	localVariablePrefix: string | null
 }
 
 export const EntityEditorRowContent = observer(function EntityEditorRowContent({
@@ -179,7 +179,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	feedbackListType,
 	readonly,
 	localVariablesStore,
-	isLocalVariablesList,
+	localVariablePrefix,
 }: EntityEditorRowContentProps) {
 	const entityService = useControlEntityService(serviceFactory, entity)
 
@@ -216,7 +216,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				headlineExpanded={headlineExpanded}
 				setHeadlineExpanded={doEditHeadline}
 				readonly={readonly}
-				localVariablePrefix={isLocalVariablesList}
+				localVariablePrefix={localVariablePrefix}
 			/>
 
 			{!isCollapsed && (
@@ -230,7 +230,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						headlineExpanded={headlineExpanded}
 						definitionName={definitionName}
 						isLocatedInGrid={!!location}
-						isLocalVariablesList={isLocalVariablesList}
+						localVariablePrefix={localVariablePrefix}
 						controlId={controlId}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
@@ -244,7 +244,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						serviceFactory={serviceFactory}
 						readonly={readonly}
 						localVariablesStore={localVariablesStore}
-						isLocalVariablesList={isLocalVariablesList}
+						localVariablePrefix={localVariablePrefix}
 					/>
 				</div>
 			)}

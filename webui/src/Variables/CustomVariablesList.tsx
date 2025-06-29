@@ -132,8 +132,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 					entityTypeLabel="variable"
 					feedbackListType={FeedbackEntitySubType.Value}
 					localVariablesStore={null} // No local variables for custom variables
-					// TODO - is this ok?
-					isLocalVariablesList={true}
+					localVariablePrefix={'custom'}
 				/>
 
 				<div className="variables-table-scroller ">

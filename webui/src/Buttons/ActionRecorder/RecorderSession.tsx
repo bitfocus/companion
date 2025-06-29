@@ -29,7 +29,7 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 				entityTypeLabel="action"
 				feedbackListType={null}
 				localVariablesStore={null}
-				isLocalVariablesList={false}
+				localVariablePrefix={null}
 			/>
 			{sessionInfo.actions.length === 0 ? <CCallout color="info">No actions have been recorded</CCallout> : ''}
 		</CCol>

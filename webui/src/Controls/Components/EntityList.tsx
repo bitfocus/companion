@@ -25,7 +25,7 @@ interface EditableEntityListProps {
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
-	isLocalVariablesList: boolean
+	localVariablePrefix: string | null
 }
 export const EditableEntityList = observer(function EditableEntityList({
 	controlId,
@@ -40,7 +40,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 	feedbackListType,
 	readonly,
 	localVariablesStore,
-	isLocalVariablesList,
+	localVariablePrefix,
 }: EditableEntityListProps) {
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
@@ -81,7 +81,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 				entities={entities}
 				serviceFactory={serviceFactory}
 				localVariablesStore={localVariablesStore}
-				isLocalVariablesList={isLocalVariablesList}
+				localVariablePrefix={localVariablePrefix}
 			/>
 			<AddEntityPanel
 				addEntity={addEntity}
@@ -105,7 +105,7 @@ interface MinimalEntityListProps {
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
-	isLocalVariablesList: boolean
+	localVariablePrefix: string | null
 }
 
 export const MinimalEntityList = observer(function MinimalEntityList({
@@ -119,7 +119,7 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 	feedbackListType,
 	readonly,
 	localVariablesStore,
-	isLocalVariablesList,
+	localVariablePrefix,
 }: MinimalEntityListProps) {
 	const dragId = `${controlId}_${entityType}`
 
@@ -143,7 +143,7 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 								feedbackListType={feedbackListType}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
-								isLocalVariablesList={isLocalVariablesList}
+								localVariablePrefix={localVariablePrefix}
 							/>
 						</MyErrorBoundary>
 					))}

@@ -142,7 +142,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 									feedbackListType={FeedbackEntitySubType.Boolean}
 									location={undefined}
 									localVariablesStore={localVariablesStore}
-									isLocalVariablesList={false}
+									localVariablePrefix={null}
 								/>
 							</MyErrorBoundary>
 
@@ -162,7 +162,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 									entityTypeLabel="action"
 									feedbackListType={null}
 									localVariablesStore={localVariablesStore}
-									isLocalVariablesList={false}
+									localVariablePrefix={null}
 								/>
 							</MyErrorBoundary>
 						</>

@@ -111,7 +111,7 @@ export function ControlActionStepTab({
 								entityTypeLabel="action"
 								feedbackListType={null}
 								localVariablesStore={localVariablesStore}
-								isLocalVariablesList={false}
+								localVariablePrefix={null}
 							/>
 						</MyErrorBoundary>
 
@@ -126,7 +126,7 @@ export function ControlActionStepTab({
 								entityTypeLabel="action"
 								feedbackListType={null}
 								localVariablesStore={localVariablesStore}
-								isLocalVariablesList={false}
+								localVariablePrefix={null}
 							/>
 						</MyErrorBoundary>
 					</>
@@ -145,7 +145,7 @@ export function ControlActionStepTab({
 								entityTypeLabel="action"
 								feedbackListType={null}
 								localVariablesStore={localVariablesStore}
-								isLocalVariablesList={false}
+								localVariablePrefix={null}
 							/>
 						</MyErrorBoundary>
 

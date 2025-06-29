@@ -29,7 +29,7 @@ interface EntityCommonCellsProps {
 	headlineExpanded: boolean
 	definitionName: string
 	isLocatedInGrid: boolean
-	isLocalVariablesList: boolean
+	localVariablePrefix: string | null
 	controlId: string
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
@@ -44,7 +44,7 @@ export function EntityCommonCells({
 	headlineExpanded,
 	definitionName,
 	isLocatedInGrid,
-	isLocalVariablesList,
+	localVariablePrefix,
 	controlId,
 	readonly,
 	localVariablesStore,
@@ -75,7 +75,7 @@ export function EntityCommonCells({
 				)}
 
 				<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
-					{!!entity && isLocalVariablesList && (
+					{!!entity && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
 								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
