@@ -4,26 +4,49 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useRef } from 'react'
 import { AddEntitiesModal, AddEntitiesModalRef } from './AddEntitiesModal.js'
 import { MyErrorBoundary } from '~/util.js'
-import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { AddEntityDropdown } from './AddEntityDropdown.js'
+import { IEntityEditorService } from '~/Services/Controls/ControlEntitiesService.js'
+import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 
 interface AddEntityPanelProps {
-	addEntity: (connectionId: string, definitionId: string) => void
+	serviceFactory: IEntityEditorService
 	entityType: EntityModelType
+	ownerId: EntityOwner | null
 	feedbackListType: FeedbackEntitySubType | null
 	entityTypeLabel: string
 	readonly: boolean
 }
 
 export function AddEntityPanel({
-	addEntity,
+	serviceFactory,
 	entityType,
+	ownerId,
 	feedbackListType,
 	entityTypeLabel,
 	readonly,
 }: AddEntityPanelProps): React.JSX.Element {
 	const addEntitiesRef = useRef<AddEntitiesModalRef>(null)
 	const showAddModal = useCallback(() => addEntitiesRef.current?.show(), [])
+
+	const panelCollapseHelper = usePanelCollapseHelperContext()
+
+	const addEntity = useCallback(
+		(connectionId: string, definitionId: string) => {
+			serviceFactory
+				.addEntity(connectionId, definitionId, ownerId)
+				.then((newId) => {
+					if (newId) {
+						// Make sure the panel is open and wont be forgotten on first render
+						setTimeout(() => panelCollapseHelper.setPanelCollapsed(newId, false), 10)
+					}
+				})
+				.catch((e) => {
+					console.error('Failed to add entity', e)
+				})
+		},
+		[serviceFactory, ownerId, panelCollapseHelper]
+	)
 
 	return (
 		<div className="add-dropdown-wrapper">

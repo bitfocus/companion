@@ -1,5 +1,5 @@
-import React, { FormEvent, useCallback, useContext, useRef, useState } from 'react'
-import { CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
+import { CButton, CButtonGroup, CFormInput, CInputGroup } from '@coreui/react'
 import { useComputed } from '~/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -11,7 +11,6 @@ import {
 	faTimes,
 } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { CustomVariableControlId, CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -30,6 +29,10 @@ import { useCustomVariablesValues } from './useCustomVariableValues'
 import { CustomVariableRow } from './CustomVariablesListRow'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor'
 import { EntityModelType, FeedbackEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { findAllEntityIdsDeep } from '~/Controls/Util'
+import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEntitiesService'
+import { AddEntityPanel } from '~/Controls/Components/AddEntityPanel'
+import { MinimalEntityList } from '~/Controls/Components/EntityList'
 
 export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collectionId'> & CollectionsNestingTableItem
 type CustomVariableCollectionExt = CollectionsNestingTableCollection
@@ -38,11 +41,6 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
 
 	const customVariableValues = useCustomVariablesValues()
-
-	const allVariableNames = useComputed(
-		() => [...Array.from(customVariables.customVariables.keys()), ...customVariables.allCustomVariableCollectionIds],
-		[customVariables]
-	)
 
 	const [filter, setFilter] = useState('')
 	const clearFilter = useCallback(() => setFilter(''), [])
@@ -85,11 +83,21 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 
 	const customVariablesApi = useCustomVariablesApi(confirmModalRef)
 
+	const serviceFactory = useControlEntitiesEditorService(
+		CustomVariableControlId,
+		'variables',
+		'variable',
+		EntityModelType.Feedback,
+		confirmModalRef
+	)
+
+	const entityIds = useComputed(() => findAllEntityIdsDeep(allEntities ?? []), [allEntities])
+
 	return (
 		<div className="variables-panel">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<PanelCollapseHelperProvider storageId="custom_variables" knownPanelIds={allVariableNames}>
+			<PanelCollapseHelperProvider storageId="custom_variables" knownPanelIds={entityIds}>
 				<div>
 					<h4 style={{ marginBottom: '0.8rem' }}>Custom Variables</h4>
 					<CButtonGroup size="sm">
@@ -122,21 +130,22 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 					</CButton>
 				</CInputGroup>
 
-				<ControlEntitiesEditor
-					heading={null}
-					controlId={CustomVariableControlId}
-					entities={allEntities}
-					location={undefined}
-					listId="variables"
-					entityType={EntityModelType.Feedback}
-					entityTypeLabel="variable"
-					feedbackListType={FeedbackEntitySubType.Value}
-					localVariablesStore={null} // No local variables for custom variables
-					localVariablePrefix={'custom'}
-				/>
-
 				<div className="variables-table-scroller ">
-					<CustomVariablesTableContextProvider
+					<MinimalEntityList
+						location={undefined}
+						controlId={CustomVariableControlId}
+						ownerId={null}
+						readonly={false}
+						entityType={EntityModelType.Feedback}
+						entityTypeLabel="variable"
+						feedbackListType={FeedbackEntitySubType.Value}
+						entities={allEntities}
+						serviceFactory={serviceFactory}
+						localVariablesStore={null} // No local variables for custom variables
+						localVariablePrefix="custom"
+					/>
+
+					{/* <CustomVariablesTableContextProvider
 						customVariablesApi={customVariablesApi}
 						customVariableValues={customVariableValues}
 					>
@@ -153,12 +162,19 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 								selectedItemId={null}
 							/>
 						</div>
-					</CustomVariablesTableContextProvider>
+					</CustomVariablesTableContextProvider> */}
 				</div>
 
 				<h5 className="mt-2">Create custom variable</h5>
 				<div className="mx-1 mb-1">
-					<AddVariablePanel />
+					<AddEntityPanel
+						serviceFactory={serviceFactory}
+						entityType={EntityModelType.Feedback}
+						ownerId={null}
+						feedbackListType={FeedbackEntitySubType.Value}
+						entityTypeLabel={'variable'}
+						readonly={false}
+					/>
 				</div>
 
 				<br style={{ clear: 'both' }} />
@@ -202,54 +218,3 @@ const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
 		</>
 	)
 })
-
-function AddVariablePanel() {
-	const { socket, notifier } = useContext(RootAppStoreContext)
-	const panelCollapseHelper = usePanelCollapseHelperContext()
-
-	const [newName, setNewName] = useState('')
-
-	const doCreateNew = useCallback(
-		(e: FormEvent) => {
-			e?.preventDefault()
-
-			if (isCustomVariableValid(newName)) {
-				socket
-					.emitPromise('custom-variables:create', [newName, ''])
-					.then((res) => {
-						console.log('done with', res)
-						if (res) {
-							notifier.current?.show(`Failed to create variable`, res, 5000)
-						}
-
-						// clear value
-						setNewName('')
-
-						// Make sure the panel is open and wont be forgotten on first render
-						setTimeout(() => panelCollapseHelper.setPanelCollapsed(newName, false), 10)
-					})
-					.catch((e) => {
-						console.error('Failed to create variable')
-						notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
-					})
-			}
-		},
-		[socket, notifier, panelCollapseHelper, newName]
-	)
-
-	return (
-		<CForm onSubmit={doCreateNew}>
-			<CInputGroup>
-				<CFormInput
-					type="text"
-					value={newName}
-					onChange={(e) => setNewName(e.currentTarget.value)}
-					placeholder="variableName"
-				/>
-				<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
-					Add
-				</CButton>
-			</CInputGroup>
-		</CForm>
-	)
-}

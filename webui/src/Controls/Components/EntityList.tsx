@@ -1,6 +1,6 @@
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityOwner, SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import React, { useCallback } from 'react'
+import React from 'react'
 import { IEntityEditorService } from '~/Services/Controls/ControlEntitiesService.js'
 import { MyErrorBoundary } from '~/util.js'
 import { EntityTableRow } from './EntityEditorRow.js'
@@ -10,7 +10,6 @@ import { EntityEditorHeading } from './EntityEditorHeadingProps.js'
 import { AddEntityPanel } from './AddEntityPanel.js'
 import { observer } from 'mobx-react-lite'
 import { LocalVariablesStore } from '../LocalVariablesStore.js'
-import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 
 interface EditableEntityListProps {
 	controlId: string
@@ -42,25 +41,6 @@ export const EditableEntityList = observer(function EditableEntityList({
 	localVariablesStore,
 	localVariablePrefix,
 }: EditableEntityListProps) {
-	const panelCollapseHelper = usePanelCollapseHelperContext()
-
-	const addEntity = useCallback(
-		(connectionId: string, definitionId: string) => {
-			serviceFactory
-				.addEntity(connectionId, definitionId, ownerId)
-				.then((newId) => {
-					if (newId) {
-						// Make sure the panel is open and wont be forgotten on first render
-						setTimeout(() => panelCollapseHelper.setPanelCollapsed(newId, false), 10)
-					}
-				})
-				.catch((e) => {
-					console.error('Failed to add entity', e)
-				})
-		},
-		[serviceFactory, ownerId, panelCollapseHelper]
-	)
-
 	return (
 		<>
 			<EntityEditorHeading
@@ -84,8 +64,9 @@ export const EditableEntityList = observer(function EditableEntityList({
 				localVariablePrefix={localVariablePrefix}
 			/>
 			<AddEntityPanel
-				addEntity={addEntity}
+				serviceFactory={serviceFactory}
 				entityType={entityType}
+				ownerId={ownerId}
 				feedbackListType={feedbackListType}
 				entityTypeLabel={entityTypeLabel}
 				readonly={readonly}
