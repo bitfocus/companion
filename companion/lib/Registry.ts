@@ -6,7 +6,6 @@ import LogController, { Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
 import { GraphicsController } from './Graphics/Controller.js'
-import { GraphicsPreview } from './Graphics/Preview.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
 import { DataUserConfig } from './Data/UserConfig.js'
@@ -27,6 +26,7 @@ import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
 import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { PageStore } from './Page/Store.js'
+import { PreviewController } from './Preview/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -112,7 +112,7 @@ export class Registry {
 	/**
 	 * The core page controller
 	 */
-	#preview!: GraphicsPreview
+	#preview!: PreviewController
 	/**
 	 * The core service controller
 	 */
@@ -150,7 +150,7 @@ export class Registry {
 	 */
 	readonly #internalApiRouter = express.Router()
 
-	variables!: VariablesController
+	readonly variables: VariablesController
 
 	readonly #appInfo: AppInfo
 
@@ -189,6 +189,8 @@ export class Registry {
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
+
+		this.variables = new VariablesController(this.db, this.io)
 	}
 
 	/**
@@ -205,7 +207,6 @@ export class Registry {
 
 			const pageStore = new PageStore(this.db.getTableView('pages'))
 			this.controls = new ControlsController(this, controlEvents)
-			this.variables = new VariablesController(this.db, this.io, pageStore, this.controls)
 			this.graphics = new GraphicsController(
 				this.controls,
 				pageStore,
@@ -213,7 +214,7 @@ export class Registry {
 				this.variables.values,
 				this.#internalApiRouter
 			)
-			this.#preview = new GraphicsPreview(this.graphics, this.io, pageStore, this.controls)
+			this.#preview = new PreviewController(this.graphics, this.io, pageStore, this.controls, this.variables.values)
 			this.surfaces = new SurfaceController(
 				this.db,
 				{

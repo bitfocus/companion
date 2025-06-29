@@ -1,5 +1,5 @@
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
-import type { VariablesValues } from './Values.js'
+import type { VariablesValues } from '../Variables/Values.js'
 import LogController from '../Log/Controller.js'
 import type {
 	ExecuteExpressionResult,
@@ -9,7 +9,7 @@ import { nanoid } from 'nanoid'
 import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 
-export class VariablesExpressionStream {
+export class PreviewExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
 
 	// readonly #ioController: UIHandler

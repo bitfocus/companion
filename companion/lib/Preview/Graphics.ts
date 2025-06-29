@@ -2,10 +2,10 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlConfigRoom } from '../Controls/ControlBase.js'
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
-import type { GraphicsController } from './Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { IPageStore } from '../Page/Store.js'
-import type { ImageResult } from './ImageResult.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ControlsController } from '../Controls/Controller.js'
 
 /**
@@ -41,7 +41,7 @@ function ensureLocationIsNumber(location: ControlLocation): ControlLocation {
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class GraphicsPreview {
+export class PreviewGraphics {
 	readonly #logger = LogController.createLogger('Graphics/Preview')
 
 	readonly #graphicsController: GraphicsController
