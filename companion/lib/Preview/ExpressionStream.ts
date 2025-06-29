@@ -54,49 +54,46 @@ export class PreviewExpressionStream {
 			}
 		})
 
-		client.onPromise(
-			'variables:stream-expression:subscribe',
-			(expression, controlId, requiredType, isVariableString) => {
-				const subId = nanoid()
-				const fullSubId = `${client.id}::${subId}`
+		client.onPromise('preview:stream-expression:subscribe', (expression, controlId, requiredType, isVariableString) => {
+			const subId = nanoid()
+			const fullSubId = `${client.id}::${subId}`
 
-				const expressionId = `${controlId}::${expression}::${requiredType}::${isVariableString ? 'variable' : 'expression'}`
-				const existingSession = this.#sessions.get(expressionId)
-				if (existingSession) {
-					// Add to the existing session
-					existingSession.clients.set(fullSubId, client)
+			const expressionId = `${controlId}::${expression}::${requiredType}::${isVariableString ? 'variable' : 'expression'}`
+			const existingSession = this.#sessions.get(expressionId)
+			if (existingSession) {
+				// Add to the existing session
+				existingSession.clients.set(fullSubId, client)
 
-					this.#logger.debug(`Client "${client.id}" subscribed to existing session: ${expressionId}`)
+				this.#logger.debug(`Client "${client.id}" subscribed to existing session: ${expressionId}`)
 
-					// Retrun the latest value
-					return {
-						subId,
-						result: existingSession.latestResult,
-					}
+				// Retrun the latest value
+				return {
+					subId,
+					result: existingSession.latestResult,
 				}
-
-				this.#logger.debug(`Client "${client.id}" subscribed to new session: ${expressionId}`)
-
-				const initialValue = isVariableString
-					? this.#parseVariables(expression, controlId)
-					: this.#executeExpression(expression, controlId, requiredType)
-				const newSession: ExpressionStreamSession = {
-					expressionId,
-					controlId,
-					expression,
-					requiredType,
-					isVariableString,
-
-					latestResult: initialValue,
-					clients: new Map([[fullSubId, client]]),
-				}
-				this.#sessions.set(expressionId, newSession)
-
-				return { subId, result: convertExpressionResult(initialValue) }
 			}
-		)
 
-		client.onPromise('variables:stream-expression:unsubscribe', (subId) => {
+			this.#logger.debug(`Client "${client.id}" subscribed to new session: ${expressionId}`)
+
+			const initialValue = isVariableString
+				? this.#parseVariables(expression, controlId)
+				: this.#executeExpression(expression, controlId, requiredType)
+			const newSession: ExpressionStreamSession = {
+				expressionId,
+				controlId,
+				expression,
+				requiredType,
+				isVariableString,
+
+				latestResult: initialValue,
+				clients: new Map([[fullSubId, client]]),
+			}
+			this.#sessions.set(expressionId, newSession)
+
+			return { subId, result: convertExpressionResult(initialValue) }
+		})
+
+		client.onPromise('preview:stream-expression:unsubscribe', (subId) => {
 			if (!subId) throw new Error('Invalid')
 
 			const fullSubId = `${client.id}::${subId}`
@@ -145,7 +142,7 @@ export class PreviewExpressionStream {
 
 						// TODO - maybe this should use rooms instead?
 						client.emit(
-							'variables:stream-expression:update',
+							'preview:stream-expression:update',
 							session.expression,
 							convertedValue,
 							session.isVariableString

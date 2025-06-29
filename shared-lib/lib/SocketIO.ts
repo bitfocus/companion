@@ -348,6 +348,14 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 		options: Record<string, any>
 	) => string | null
 	'preview:button-reference:unsubscribe': (subId: string) => void
+	'preview:render-preset': (connectionId: string, presetId: string) => string | null
+	'preview:stream-expression:subscribe': (
+		expression: string,
+		controlId: string | null,
+		requiredType: string | undefined,
+		isVariableString: boolean
+	) => ExpressionStreamResultWithSubId
+	'preview:stream-expression:unsubscribe': (subId: string) => void
 
 	'pages:subscribe': () => ClientPagesInfo
 	'pages:unsubscribe': () => void
@@ -408,17 +416,9 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'modules-upgrade-to-other:unsubscribe': (moduleId: string) => void
 
 	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
-	'variables:stream-expression:subscribe': (
-		expression: string,
-		controlId: string | null,
-		requiredType: string | undefined,
-		isVariableString: boolean
-	) => ExpressionStreamResultWithSubId
-	'variables:stream-expression:unsubscribe': (subId: string) => void
 
 	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
 	'presets:unsubscribe': () => void
-	'presets:preview_render': (connectionId: string, presetId: string) => string | null
 
 	cloud_state_get: () => never
 	cloud_state_set: (newState: Partial<CloudControllerState>) => never
@@ -465,6 +465,11 @@ export interface BackendToClientEventsMap {
 
 	'preview:location:render': (renderLocation: ControlLocation, image: string | null, isUsed: boolean) => void
 	[id: `preview:button-reference:update:${string}`]: (newImage: string | null) => void
+	'preview:stream-expression:update': (
+		expression: string,
+		result: ExpressionStreamResult,
+		isVariableString: boolean
+	) => void
 
 	'action-recorder:session-list': (newSessions: JsonPatchOperation[]) => void
 	[selectedSessionId: `action-recorder:session:update:${string}`]: (patch: JsonPatchOperation[]) => void
@@ -497,12 +502,6 @@ export interface BackendToClientEventsMap {
 
 	'bonjour:service:up': (svc: ClientBonjourService) => void
 	'bonjour:service:down': (subId: string, fqdn: string) => void
-
-	'variables:stream-expression:update': (
-		expression: string,
-		result: ExpressionStreamResult,
-		isVariableString: boolean
-	) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void

@@ -214,7 +214,6 @@ export class Registry {
 				this.variables.values,
 				this.#internalApiRouter
 			)
-			this.#preview = new PreviewController(this.graphics, this.io, pageStore, this.controls, this.variables.values)
 			this.surfaces = new SurfaceController(
 				this.db,
 				{
@@ -235,7 +234,6 @@ export class Registry {
 				this.#data.cache,
 				this.#internalApiRouter,
 				this.controls,
-				this.graphics,
 				pageStore,
 				this.variables,
 				oscSender
@@ -298,9 +296,20 @@ export class Registry {
 				pageStore
 			)
 
+			this.#preview = new PreviewController(
+				this.graphics,
+				this.io,
+				pageStore,
+				this.controls,
+				this.variables.values,
+				this.instance.definitions
+			)
+
 			controlEvents.on('invalidateControlRender', (controlId) => {
 				this.graphics.invalidateControl(controlId)
 			})
+
+			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
 				this.io.emitToAll('set_userconfig_key', key, value)

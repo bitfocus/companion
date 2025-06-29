@@ -145,7 +145,7 @@ function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIco
 		setPreviewError(false)
 
 		socket
-			.emitPromise('presets:preview_render', [connectionId, presetId])
+			.emitPromise('preview:render-preset', [connectionId, presetId])
 			.then((img) => {
 				setPreviewImage(img)
 			})
