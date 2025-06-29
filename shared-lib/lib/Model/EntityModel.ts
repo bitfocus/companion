@@ -75,7 +75,7 @@ export type SomeSocketEntityLocation =
 	// | 'trigger_events'
 	| 'feedbacks'
 	| 'trigger_actions'
-	| 'local-variables'
+	| 'variables'
 	| {
 			// button actions
 			stepId: string

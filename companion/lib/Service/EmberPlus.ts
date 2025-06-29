@@ -169,7 +169,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				}
 			})
 		})
-		this.#serviceApi.on('custom_variable_definition_changed', (id, _info) => {
+		this.#serviceApi.on('definition_changed', (id, _info) => {
 			if (this.#server) {
 				if (!this.#customVars.includes(id)) {
 					this.debounceRestart()

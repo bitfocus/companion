@@ -1328,10 +1328,7 @@ export class ControlsController {
 	 * Prune any items on controls which belong to an unknown connectionId
 	 * @access public
 	 */
-	verifyConnectionIds(): void {
-		const knownConnectionIds = new Set(this.#registry.instance.getAllInstanceIds())
-		knownConnectionIds.add('internal')
-
+	verifyConnectionIds(knownConnectionIds: Set<string>): void {
 		for (const control of this.#controls.values()) {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)

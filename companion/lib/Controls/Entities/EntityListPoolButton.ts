@@ -159,7 +159,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		if (listId === 'feedbacks') return this.#feedbacks
-		if (listId === 'local-variables') return this.#localVariables
+		if (listId === 'variables') return this.#localVariables
 
 		if (typeof listId === 'object' && 'setId' in listId && 'stepId' in listId) {
 			return this.#steps.get(listId.stepId)?.sets.get(listId.setId)

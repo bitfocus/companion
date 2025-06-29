@@ -575,7 +575,7 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Prune all actions/feedbacks referencing unknown conncetions
+	 * Prune all actions/feedbacks referencing unknown connections
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
 	verifyConnectionIds(knownConnectionIds: Set<string>): void {

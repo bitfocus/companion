@@ -27,7 +27,7 @@ export function LocalVariablesEditor({
 				controlId={controlId}
 				entities={variables}
 				location={location}
-				listId="local-variables"
+				listId="variables"
 				entityType={EntityModelType.Feedback}
 				entityTypeLabel="variable"
 				feedbackListType={FeedbackEntitySubType.Value}

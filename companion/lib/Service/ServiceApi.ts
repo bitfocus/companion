@@ -4,7 +4,6 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { VariablesValuesEvents } from '../Variables/Values.js'
-import { VariablesCustomVariableEvents } from '../Variables/CustomVariable.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
@@ -13,6 +12,7 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 import { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
 import { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import EventEmitter from 'events'
+import type { CustomVariablesController, VariablesCustomVariableEvents } from '../CustomVariables/Controller.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -33,7 +33,7 @@ import EventEmitter from 'events'
 type ServiceApiEvents =
 	| Pick<VariablesValuesEvents, 'variables_changed'>
 	| Pick<ActionRecorderEvents, 'action_recorder_is_running'>
-	| Pick<VariablesCustomVariableEvents, 'custom_variable_definition_changed'>
+	| Pick<VariablesCustomVariableEvents, 'definition_changed'>
 
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
@@ -41,6 +41,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #controlController: ControlsController
 	readonly #surfaceController: SurfaceController
 	readonly #variablesController: VariablesController
+	readonly #customVariableController: CustomVariablesController
 	readonly #graphicsController: GraphicsController
 
 	get appInfo(): AppInfo {
@@ -53,6 +54,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		controlController: ControlsController,
 		surfaceController: SurfaceController,
 		variablesController: VariablesController,
+		customVariableController: CustomVariablesController,
 		graphicsController: GraphicsController
 	) {
 		super()
@@ -61,6 +63,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		this.#controlController = controlController
 		this.#surfaceController = surfaceController
 		this.#variablesController = variablesController
+		this.#customVariableController = customVariableController
 		this.#graphicsController = graphicsController
 
 		this.#controlController.actionRecorder.on('action_recorder_is_running', (...args) => {
@@ -70,8 +73,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		this.#variablesController.values.on('variables_changed', (...args) => {
 			this.emit('variables_changed', ...args)
 		})
-		this.#variablesController.custom.on('custom_variable_definition_changed', (...args) => {
-			this.emit('custom_variable_definition_changed', ...args)
+		this.#customVariableController.on('definition_changed', (...args) => {
+			this.emit('definition_changed', ...args)
 		})
 	}
 
@@ -82,7 +85,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @returns Failure reason, if any
 	 */
 	setCustomVariableValue(name: string, value: CompanionVariableValue): string | null {
-		return this.#variablesController.custom.setValue(name, value)
+		return this.#customVariableController.setValue(name, value)
 	}
 
 	/**
@@ -91,7 +94,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @returns The value of the variable
 	 */
 	getCustomVariableValue(name: string): CompanionVariableValue | undefined {
-		return this.#variablesController.custom.getValue(name)
+		return this.#customVariableController.getValue(name)
 	}
 
 	/**
@@ -101,7 +104,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 */
 
 	getCustomVariableDescription(name: string): string {
-		return this.#variablesController.custom.getVariableDescription(name)
+		return this.#customVariableController.getVariableDescription(name)
 	}
 
 	/**

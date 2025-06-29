@@ -414,7 +414,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 		if (!isInternalUserValueFeedback(variableEntity)) return
 
-		updateValue(control.entities, 'local-variables', variableEntity) // TODO - dynamic listId
+		updateValue(control.entities, 'variables', variableEntity) // TODO - dynamic listId
 	}
 
 	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {

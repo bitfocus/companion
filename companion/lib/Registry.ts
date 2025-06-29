@@ -27,6 +27,7 @@ import { ServiceApi } from './Service/ServiceApi.js'
 import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import { CustomVariablesController } from './CustomVariables/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -85,6 +86,10 @@ export class Registry {
 	 * The core controls controller
 	 */
 	controls!: ControlsController
+	/**
+	 * The custom variables controller
+	 */
+	customVariables!: CustomVariablesController
 	/**
 	 * The core database library
 	 */
@@ -190,7 +195,7 @@ export class Registry {
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 
-		this.variables = new VariablesController(this.db, this.io)
+		this.variables = new VariablesController(this.io)
 	}
 
 	/**
@@ -206,6 +211,7 @@ export class Registry {
 			const controlEvents = new EventEmitter<ControlCommonEvents>()
 
 			const pageStore = new PageStore(this.db.getTableView('pages'))
+			this.customVariables = new CustomVariablesController(this.db, this.io, this.variables.values)
 			this.controls = new ControlsController(this, controlEvents)
 			this.graphics = new GraphicsController(
 				this.controls,
@@ -337,6 +343,7 @@ export class Registry {
 				this.#data.clientConnect(client)
 				this.page.clientConnect(client)
 				this.controls.clientConnect(client)
+				this.customVariables.clientConnect(client)
 				this.#preview.clientConnect(client)
 				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)
@@ -370,9 +377,13 @@ export class Registry {
 			this.#metrics.startCycle()
 			this.ui.update.startCycle()
 
+			const knownConnectionIds = new Set(this.instance.getAllInstanceIds())
+			knownConnectionIds.add('internal')
+
 			this.controls.init()
-			this.controls.verifyConnectionIds()
-			this.variables.custom.init()
+			this.controls.verifyConnectionIds(knownConnectionIds)
+			this.customVariables.init(this.instance.definitions, this.internalModule, this.instance.moduleHost)
+			this.customVariables.verifyConnectionIds(knownConnectionIds)
 			this.internalModule.firstUpdate()
 			this.graphics.regenerateAll(false)
 
@@ -426,6 +437,7 @@ export class Registry {
 
 			this.#logger.error(`Failed to start companion: ${e}`)
 			this.#logger.debug(e)
+			this.#logger.debug(e.stack)
 			this.exit(true, false)
 		} finally {
 			this.#isReady = true
