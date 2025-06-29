@@ -304,7 +304,51 @@ form.row > * {
 
 	.sidebar-header.sidebar-header-toggler {
 		justify-content: left;
-		padding-left: 1.5rem;
+		padding: 0.5rem 1rem;
+	}
+
+	.sidebar-header-toggler2 {
+		display: flex;
+		overflow: hidden;
+
+		background: none !important;
+		border: none !important;
+
+		&:hover {
+			background: none !important;
+			border: none !important;
+		}
+
+		.nav-icon-wrapper {
+			cursor: pointer;
+
+			display: flex;
+			align-items: center;
+
+			.sidebar-toggler {
+				display: block;
+				width: 100%;
+			}
+		}
+
+		.version,
+		.version-sub {
+			display: block;
+
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+
+		.version {
+			font-size: 0.95em;
+			color: #aaa;
+			display: block;
+		}
+		.version-sub {
+			font-size: 0.85em;
+			color: #888;
+		}
 	}
 
 	.sidebar-header.brand {
