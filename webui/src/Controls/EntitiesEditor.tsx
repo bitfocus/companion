@@ -23,7 +23,7 @@ interface ControlEntitiesEditorProps {
 	entityTypeLabel: string
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	entities: SomeEntityModel[] | undefined
-	heading: JSX.Element | string
+	heading: JSX.Element | string | null
 	headingActions?: JSX.Element[]
 	localVariablesStore: LocalVariablesStore | null
 	isLocalVariablesList: boolean
