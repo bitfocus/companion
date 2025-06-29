@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleUp, faCog, faFolderOpen, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCircleUp, faCog, faCopy, faFolderOpen, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
@@ -11,6 +11,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
+import CopyToClipboard from 'react-copy-to-clipboard'
 
 export const KnownSurfacesTable = observer(function KnownSurfacesTable() {
 	const { surfaces, socket } = useContext(RootAppStoreContext)
@@ -222,6 +223,8 @@ const SurfaceRow = observer(function SurfaceRow({
 	forgetSurface,
 	noBorder,
 }: SurfaceRowProps) {
+	const { notifier } = useContext(RootAppStoreContext)
+
 	const updateName2 = useCallback((val: string) => updateName(surface.id, val), [updateName, surface.id])
 	const configureSurface2 = useCallback(() => configureSurface(surface.id), [configureSurface, surface.id])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
@@ -245,7 +248,12 @@ const SurfaceRow = observer(function SurfaceRow({
 					</>
 				)}
 				<br />
-				{surface.id}
+				{surface.id}{' '}
+				<CopyToClipboard text={surface.id} onCopy={() => notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)}>
+					<CButton size="sm" title="Copy surface id" className="p-0 px-1">
+						<FontAwesomeIcon icon={faCopy} color="#000" />
+					</CButton>
+				</CopyToClipboard>
 			</td>
 			<td>
 				<TextInputField value={surface.name} setValue={updateName2} />
