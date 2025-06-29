@@ -123,6 +123,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'controls:copy': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:swap': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:reset': (location: ControlLocation, newType?: string) => void
+	'controls:import-preset': (connectionId: string, presetId: string, location: ControlLocation) => string | null
 
 	'controls:entity:set-headline': (
 		controlId: string,
@@ -418,7 +419,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
 	'presets:unsubscribe': () => void
 	'presets:preview_render': (connectionId: string, presetId: string) => string | null
-	'presets:import-to-location': (connectionId: string, presetId: string, location: ControlLocation) => boolean
 
 	cloud_state_get: () => never
 	cloud_state_set: (newState: Partial<CloudControllerState>) => never

@@ -14,10 +14,8 @@ import type {
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionPresetAction, CompanionPresetDefinition } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
-import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
@@ -56,7 +54,6 @@ export class InstanceDefinitions {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
 	readonly #io: UIHandler
-	readonly #controlsController: ControlsController
 	readonly #graphicsController: GraphicsController
 	readonly #variablesValuesController: VariablesValues
 
@@ -73,14 +70,8 @@ export class InstanceDefinitions {
 	 */
 	#presetDefinitions: Record<string, Record<string, PresetDefinition>> = {}
 
-	constructor(
-		io: UIHandler,
-		controls: ControlsController,
-		graphics: GraphicsController,
-		variablesValues: VariablesValues
-	) {
+	constructor(io: UIHandler, graphics: GraphicsController, variablesValues: VariablesValues) {
 		this.#io = io
-		this.#controlsController = controls
 		this.#graphicsController = graphics
 		this.#variablesValuesController = variablesValues
 	}
@@ -137,8 +128,6 @@ export class InstanceDefinitions {
 		client.onPromise('event-definitions:get', () => {
 			return EventDefinitions
 		})
-
-		client.onPromise('presets:import-to-location', this.importPresetToLocation.bind(this))
 
 		client.onPromise('presets:preview_render', async (connectionId, presetId) => {
 			const definition = this.#presetDefinitions[connectionId]?.[presetId]
@@ -296,9 +285,9 @@ export class InstanceDefinitions {
 	/**
 	 * Import a preset to a location
 	 */
-	importPresetToLocation(connectionId: string, presetId: string, location: ControlLocation): boolean {
+	convertPresetToControlModel(connectionId: string, presetId: string): NormalButtonModel | null {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
-		if (!definition || definition.type !== 'button') return false
+		if (!definition || definition.type !== 'button') return null
 
 		const result: NormalButtonModel = {
 			type: 'button',
@@ -361,9 +350,7 @@ export class InstanceDefinitions {
 			}))
 		}
 
-		this.#controlsController.importControl(location, result)
-
-		return true
+		return result
 	}
 
 	/**

@@ -298,6 +298,10 @@ export class Registry {
 				pageStore
 			)
 
+			controlEvents.on('invalidateControlRender', (controlId) => {
+				this.graphics.invalidateControl(controlId)
+			})
+
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
 				this.io.emitToAll('set_userconfig_key', key, value)
 				setImmediate(() => {
