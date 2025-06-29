@@ -1,72 +1,37 @@
-@use 'sass:color';
+// IMPORTANT: 'scss/variables' MUST be the first @use rule: it overrides the defaults in @coreui
+//  See Sass @use documentation: "A module will keep the same configuration ... even if it’s loaded multiple times"
 @use 'scss/variables'; // local definitions not related to @coreui definitions
 
-$local-header-bg: #d50215; // needed for both $header-bg and the adjust() call, below.
+// let coreui (with the overrides defined in _variables.scss) be the default source of variables.
+@use '@coreui/coreui/scss/coreui' as *;
 
-// pass all remaining local definitions that are meant to override @coreui defaults:
-// note that Sass will issue a strange error message if a variable specified here is not already in coreui. (As of Sass 1.89)
-@use '@coreui/coreui/scss/coreui' as * with (
-	$primary: #d50215,
-	$secondary: #ccc,
-	$body-bg: #333,
-	$light: #e9e9e9,
+// note: if a variable is defined in the following imports, they will need to be reference below by module name.
+@use 'scss/react-time-picker';
+@use 'scss/react-date-picker';
 
-	$header-bg: $local-header-bg,
-	//$header-border: ( // can't do: causes @use "redifined" error (because it's not defined in coreui, apparently)
-	$header-color: #fff,
-	$header-brand-color: #fff,
-	$header-brand-hover-color: #fff,
-	$sidebar-bg: #111,
-	$sidebar-brand-bg: color.adjust($local-header-bg, $lightness: -10%),
-	$form-switch-color: #fff,
-	$form-switch-checked-color: #fff,
-	$form-switch-focus-color: #fff,
-	$form-switch-widths: (
-		xl: (
-			width: 2.75em,
-			height: 1.5em,
-		),
-	),
+@use 'scss/layout';
+@use 'scss/common';
+@use 'scss/tablet';
+@use 'scss/emulator';
+@use 'scss/modules-manage';
 
-	$btn-font-size-sm: 12px,
-	$btn-font-size: 0.9rem,
+@use 'scss/action-recorder';
+@use 'scss/button-control';
+@use 'scss/button-edit';
+@use 'scss/button-grid';
+@use 'scss/page-list';
+@use 'scss/cloud';
+@use 'scss/controls';
+@use 'scss/instances';
+@use 'scss/loading';
+@use 'scss/log';
+@use 'scss/presets';
+@use 'scss/settings';
+@use 'scss/wizard';
+@use 'scss/import-export';
+@use 'scss/collections-nesting-table';
 
-	$modal-content-bg: #fff,
-	$table-bg: #fff,
-	$dropdown-bg: #fff,
-
-	$card-bg: #f7f7f7,
-
-	$sidebar-nav-link-padding-x: 0.5rem
-	// $variable-padding: 1px 3px 0px // can't do; not in coreui
-);
-
-// note: the following could be imported without the ""as *" as long as they don't define new variables
-//  but there's no harm in doing it this way, and it could avoid headaches down the line.
-@use 'scss/react-time-picker' as *;
-@use 'scss/react-date-picker' as *;
-
-@use 'scss/layout' as *;
-@use 'scss/common' as *;
-@use 'scss/tablet' as *;
-@use 'scss/emulator' as *;
-@use 'scss/modules-manage' as *;
-
-@use 'scss/action-recorder' as *;
-@use 'scss/button-control' as *;
-@use 'scss/button-edit' as *;
-@use 'scss/button-grid' as *;
-@use 'scss/page-list' as *;
-@use 'scss/cloud' as *;
-@use 'scss/controls' as *;
-@use 'scss/instances' as *;
-@use 'scss/loading' as *;
-@use 'scss/log' as *;
-@use 'scss/presets' as *;
-@use 'scss/settings' as *;
-@use 'scss/wizard' as *;
-@use 'scss/import-export' as *;
-@use 'scss/collections-nesting-table' as *;
+//@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
 
 body {
 	overflow: hidden;

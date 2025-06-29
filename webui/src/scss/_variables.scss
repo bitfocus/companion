@@ -1,5 +1,47 @@
-// Define variables that are *not* defined in @coreui
-// For variables meant to override @coreui, see App.scss
+@use 'sass:color';
+// NOTE: files other than App.scss should load this file ONLY if they need the non-@coreui variables defined in part 2, below.
+//   Otherwise they should load @coreui, which will use the values shown here.
+
+// PART 1:
+// Define variables that should override @coreui defaults:
+// note that Sass will issue a strange error message if a variable specified here is not already in coreui. (As of Sass 1.89)
+$_private-header-bg: #d50215; // needed for both $header-bg and the adjust() call, below.
+@use '@coreui/coreui/scss/coreui' with (
+	$primary: #d50215,
+	$secondary: #ccc,
+	$body-bg: #333,
+	$light: #e9e9e9,
+
+	$header-bg: $_private-header-bg,
+	$header-color: #fff,
+	$header-brand-color: #fff,
+	$header-brand-hover-color: #fff,
+	$sidebar-bg: #111,
+	$sidebar-brand-bg: color.adjust($_private-header-bg, $lightness: -10%),
+	$form-switch-color: #fff,
+	$form-switch-checked-color: #fff,
+	$form-switch-focus-color: #fff,
+	$form-switch-widths: (
+		xl: (
+			width: 2.75em,
+			height: 1.5em,
+		),
+	),
+
+	$btn-font-size-sm: 12px,
+	$btn-font-size: 0.9rem,
+
+	$modal-content-bg: #fff,
+	$table-bg: #fff,
+	$dropdown-bg: #fff,
+
+	$card-bg: #f7f7f7,
+
+	$sidebar-nav-link-padding-x: 0.5rem
+);
+
+// PART 2:
+// Define variables that do *not* have defaults in @coreui
 
 // note $header-border appears to be defined but never used
 $header-border: (
