@@ -1439,6 +1439,34 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
+	 * Set the position offset of a surface
+	 * @param surfaceId
+	 * @param xOffset
+	 * @param yOffset
+	 * @param looseIdMatching
+	 */
+	setDevicePosition(surfaceId: string, xOffset: number, yOffset: number, looseIdMatching = false): void {
+		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
+		if (device) {
+			device.setPosition(xOffset, yOffset)
+		}
+	}
+
+	/**
+	 * Adjust the position offset of a surface by a relative amount
+	 * @param surfaceId
+	 * @param xAdjustment
+	 * @param yAdjustment
+	 * @param looseIdMatching
+	 */
+	adjustDevicePosition(surfaceId: string, xAdjustment: number, yAdjustment: number, looseIdMatching = false): void {
+		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
+		if (device) {
+			device.adjustPosition(xAdjustment, yAdjustment)
+		}
+	}
+
+	/**
 	 * Get the `SurfaceGroup` for a surfaceId or groupId
 	 */
 	#getGroupForId(surfaceOrGroupId: string, looseIdMatching = false): SurfaceGroup | undefined {

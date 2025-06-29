@@ -3,11 +3,16 @@ import type { PageController } from '../Page/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import { VariablesValuesEvents } from '../Variables/Values.js'
+import { VariablesCustomVariableEvents } from '../Variables/CustomVariable.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
+import { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
+import EventEmitter from 'events'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -24,7 +29,13 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ServiceApi {
+
+type ServiceApiEvents =
+	| Pick<VariablesValuesEvents, 'variables_changed'>
+	| Pick<ActionRecorderEvents, 'action_recorder_is_running'>
+	| Pick<VariablesCustomVariableEvents, 'custom_variable_definition_changed'>
+
+export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
 	readonly #pageController: PageController
 	readonly #controlController: ControlsController
@@ -44,12 +55,24 @@ export class ServiceApi {
 		variablesController: VariablesController,
 		graphicsController: GraphicsController
 	) {
+		super()
 		this.#appInfo = appInfo
 		this.#pageController = pageController
 		this.#controlController = controlController
 		this.#surfaceController = surfaceController
 		this.#variablesController = variablesController
 		this.#graphicsController = graphicsController
+
+		this.#controlController.actionRecorder.on('action_recorder_is_running', (...args) => {
+			this.emit('action_recorder_is_running', ...args)
+		})
+
+		this.#variablesController.values.on('variables_changed', (...args) => {
+			this.emit('variables_changed', ...args)
+		})
+		this.#variablesController.custom.on('custom_variable_definition_changed', (...args) => {
+			this.emit('custom_variable_definition_changed', ...args)
+		})
 	}
 
 	/**
@@ -72,6 +95,16 @@ export class ServiceApi {
 	}
 
 	/**
+	 * Get the description of a custom variable
+	 * @param name
+	 * @returns The description of the variable
+	 */
+
+	getCustomVariableDescription(name: string): string {
+		return this.#variablesController.custom.getVariableDescription(name)
+	}
+
+	/**
 	 * Get the value of a connection variable
 	 * @param connectionLabel
 	 * @param variableName
@@ -79,6 +112,34 @@ export class ServiceApi {
 	 */
 	getConnectionVariableValue(connectionLabel: string, variableName: string): CompanionVariableValue | undefined {
 		return this.#variablesController.values.getVariableValue(connectionLabel, variableName)
+	}
+
+	/**
+	 * Get the description of a connection variable
+	 * @param connectionLabel
+	 * @param variableName
+	 * @returns The description of the variable
+	 */
+
+	getConnectionVariableDescription(connectionLabel: string, variableName: string): string | undefined {
+		return this.#variablesController.definitions.getVariableLabel(connectionLabel, variableName)
+	}
+
+	/**
+	 * Get the a connections defined variable names
+	 * @param connectionLabel
+	 * @returns Array of defined variable names
+	 */
+	getConnectionVariableDefinitions(connectionLabel: string): string[] | undefined {
+		return this.#variablesController.values.getVariableDefinitions(connectionLabel)
+	}
+
+	/**
+	 * Get the a defined custom variable names
+	 * @returns Array of defined variable names
+	 */
+	getCustomVariableDefinitions(): string[] | undefined {
+		return this.#variablesController.values.getVariableDefinitions('custom')
 	}
 
 	async triggerRescanForSurfaces(): Promise<void> {
@@ -156,6 +217,18 @@ export class ServiceApi {
 
 	getCachedRender(location: ControlLocation): ImageResult | undefined {
 		return this.#graphicsController.getCachedRender(location)
+	}
+
+	actionRecorderDiscardActions(): void {
+		this.#controlController.actionRecorder.discardActions()
+	}
+
+	actionRecorderSetRecording(isRunning: boolean): void {
+		this.#controlController.actionRecorder.setRecording(isRunning)
+	}
+
+	actionRecorderGetSession(): RecordSessionInfo {
+		return this.#controlController.actionRecorder.getSession()
 	}
 }
 

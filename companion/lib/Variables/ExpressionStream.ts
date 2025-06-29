@@ -30,7 +30,7 @@ export class VariablesExpressionStream {
 		this.#variablesController = variablesController
 		this.#controlsController = controlsController
 
-		this.#variablesController.on('variables_changed', this.#onValuesChanged)
+		this.#variablesController.on('variables_changed', (changedVariables) => this.#onValuesChanged(changedVariables))
 		this.#variablesController.on('local_variables_changed', this.#onValuesChanged)
 	}
 

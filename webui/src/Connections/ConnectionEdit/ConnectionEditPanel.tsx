@@ -22,19 +22,19 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ConnectionSecretField } from './ConnectionSecretField.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { validateInputValue } from '~/Helpers/validateInputValue.js'
+import { useNavigate } from '@tanstack/react-router'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
-	doConfigureConnection: (connectionId: string | null) => void
 }
 
-export const ConnectionEditPanel = observer(function ConnectionEditPanel({
-	connectionId,
-	doConfigureConnection,
-}: ConnectionEditPanelProps) {
+export const ConnectionEditPanel = observer(function ConnectionEditPanel({ connectionId }: ConnectionEditPanelProps) {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const closeConfigurePanel = useCallback(() => doConfigureConnection(null), [doConfigureConnection])
+	const navigate = useNavigate({ from: `/connections/$connectionId` })
+	const closeConfigurePanel = useCallback(() => {
+		void navigate({ to: `/connections` })
+	}, [navigate])
 
 	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)
 

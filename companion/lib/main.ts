@@ -19,6 +19,7 @@ import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
 import logger from './Log/Controller.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
+import { type SyslogTransportOptions } from 'winston-syslog'
 
 const program = new Command()
 
@@ -44,6 +45,11 @@ program
 	.option('--machine-id <string>', 'Unique id for this installation')
 	.option('--log-level <string>', 'Log level to output to console')
 	.option('--disable-admin-password', 'Disables password lockout for the admin UI')
+	.option('--syslog-enable', 'Enable syslog transport')
+	.option('--syslog-host <string>', 'Syslog server to write to (default: localhost)')
+	.option('--syslog-port <string>', 'Port on syslog server to write to')
+	.option('--syslog-tcp', 'Use TCP for transport (default: udp)')
+	.option('--syslog-localhost <string>', 'Hostname of this machine')
 
 program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const options = program.opts()
@@ -63,6 +69,18 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 
 		process.exit(0)
+	}
+
+	if (options.syslogEnable) {
+		const opt: SyslogTransportOptions = {}
+		if (options.syslogHost) opt.host = options.syslogHost
+		if (options.syslogPort) {
+			const port = Number.parseInt(options.syslogPort)
+			if (!Number.isNaN(port) && port > 100 && port <= 65535) opt.port = port
+		}
+		if (options.syslogTcp) opt.protocol = 'tcp4'
+		if (options.syslogLocalhost) opt.localhost = options.syslogLocalhost
+		logger.addSyslogHost(opt)
 	}
 
 	logger.createLogger('Main').info('Application starting')

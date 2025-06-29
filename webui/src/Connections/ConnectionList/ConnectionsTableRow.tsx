@@ -84,8 +84,8 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	)
 
 	return (
-		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
-			<div className="flex flex-column grow">
+		<div className="flex flex-row align-items-center gap-2 hand">
+			<div onClick={doEdit} className="flex flex-column grow">
 				<b>{connection.label}</b>
 				{moduleInfo ? (
 					<span>
@@ -96,7 +96,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 				)}
 			</div>
 
-			<div className="no-break">
+			<div onClick={doEdit} className="no-break">
 				{moduleVersion?.isLegacy && (
 					<>
 						<FontAwesomeIcon
@@ -110,7 +110,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 
 				<UpdateConnectionToLatestButton connection={connection} />
 			</div>
-			<div className="ms-2">
+			<div onClick={doEdit} className="ms-2">
 				<ConnectionStatusCell isEnabled={showAsEnabled} status={connection.status} />
 			</div>
 			<div className="flex">

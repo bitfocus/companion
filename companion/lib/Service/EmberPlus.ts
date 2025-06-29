@@ -14,6 +14,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { PageController } from '../Page/Controller.js'
+import debounceFn from 'debounce-fn'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1
@@ -25,6 +26,17 @@ const LEGACY_NODE_STATE = 0
 const LEGACY_NODE_TEXT = 1
 const LEGACY_NODE_TEXT_COLOR = 2
 const LEGACY_NODE_BG_COLOR = 3
+
+const DEBOUNCE_REINIT_DELAY = 2500
+
+const VARIABLE_NODE = 3
+const VARIABLE_INTERNAL_NODE = 1
+const VARIABLE_CUSTOM_NODE = 2
+const VARIABLE_VALUE_NODE = 1
+
+const ACTION_RECORDER_NODE = 4
+const ACTION_RECORDER_ENABLE_NODE = 0
+const ACTION_RECORDER_DISCARD_NODE = 1
 
 /**
  * Generate ember+ path
@@ -41,6 +53,16 @@ function buildPathForLocation(gridSize: UserConfigGridSize, location: ControlLoc
 function buildPathForButton(page: number, bank: number, node: number): string {
 	return `0.1.${page}.${bank}.${node}`
 }
+
+/**
+ * Generate ember+ path
+ */
+function buildPathForVariable(name: string, type: 'internal' | 'custom', variableArray: string[]): string | undefined {
+	const index = variableArray.indexOf(name)
+	if (index === -1) return undefined
+	return `0.${VARIABLE_NODE}.${type == 'internal' ? VARIABLE_INTERNAL_NODE : VARIABLE_CUSTOM_NODE}.${index}.1`
+}
+
 /**
  * Convert internal color to hex
  */
@@ -75,8 +97,9 @@ function parseHexColor(hex: string): number {
 export class ServiceEmberPlus extends ServiceBase {
 	readonly #serviceApi: ServiceApi
 	readonly #pageController: PageController
-
 	#server: EmberServer | undefined = undefined
+	#customVars: string[] = []
+	#internalVars: string[] = []
 
 	/**
 	 * Bank state array
@@ -92,8 +115,8 @@ export class ServiceEmberPlus extends ServiceBase {
 		this.port = 9092
 
 		this.#pageController.on('pagecount', this.#pageCountChange.bind(this))
-
 		this.init()
+		this.startEventListeners()
 	}
 
 	/**
@@ -104,6 +127,68 @@ export class ServiceEmberPlus extends ServiceBase {
 			this.#server.discard()
 			this.#server = undefined
 		}
+	}
+
+	/**
+	 * Handle events relayed via #serviceApi
+	 */
+
+	private startEventListeners(): void {
+		this.#serviceApi.on('variables_changed', (variables, connection_labels) => {
+			if ((!connection_labels.has('internal') && !connection_labels.has('custom')) || this.#server == undefined) return // We don't care about any other variables
+			variables.forEach((changedVariable) => {
+				if (this.#server == undefined) return
+				let label = changedVariable.split(':')[0]
+				let name = changedVariable.split(':')[1]
+				if (label == 'internal' && name.startsWith('custom')) {
+					label = 'custom'
+					name = name.substring(7)
+				}
+				if (label === 'custom') {
+					const i = this.#customVars.indexOf(name)
+					const path = buildPathForVariable(name, 'custom', this.#customVars)
+					if (i == -1 || path == undefined) {
+						this.logger.debug(`New custom variable: ${name} restarting server`)
+						this.debounceRestart()
+					} else {
+						const value = this.#serviceApi.getCustomVariableValue(name)?.toString()
+						if (value === undefined) return
+						this.#updateNodePath(path, value)
+					}
+				} else if (label === 'internal') {
+					const i = this.#internalVars.indexOf(name)
+					const path = buildPathForVariable(name, 'internal', this.#internalVars)
+					if (i == -1 || path == undefined) {
+						this.logger.debug(`New internal variable: ${name} restarting server`)
+						this.debounceRestart()
+					} else {
+						const value = this.#serviceApi.getConnectionVariableValue('internal', name)
+						if (value === undefined) return
+						this.#updateNodePath(path, value)
+					}
+				}
+			})
+		})
+		this.#serviceApi.on('custom_variable_definition_changed', (id, _info) => {
+			if (this.#server) {
+				if (!this.#customVars.includes(id)) {
+					this.debounceRestart()
+					this.logger.debug(`New Custom variable definition: ${id} restarting server`)
+				} else {
+					const path = buildPathForVariable(id, 'custom', this.#customVars)
+					if (path === undefined) return
+					const description = this.#serviceApi.getCustomVariableDescription(id)
+					this.#updateNodeDescription(path, description)
+					this.#updateNodeDescription(path.substring(0, path.length - 2), description)
+				}
+			}
+		})
+		this.#serviceApi.on('action_recorder_is_running', (is_running) => {
+			if (this.#server) {
+				//check action recorder status
+				this.#updateNodePath(`0.${ACTION_RECORDER_NODE}.${ACTION_RECORDER_ENABLE_NODE}`, is_running)
+			}
+		})
 	}
 
 	/**
@@ -299,6 +384,87 @@ export class ServiceEmberPlus extends ServiceBase {
 	}
 
 	/**
+	 * Get variable structure in EmberModel form
+	 */
+	#getVariableTree(): Record<number, EmberModel.NumberedTreeNodeImpl<any>> {
+		this.#customVars = this.#serviceApi.getCustomVariableDefinitions() ?? []
+		this.#internalVars = this.#serviceApi.getConnectionVariableDefinitions('internal') ?? []
+		const customVarNodes: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
+		const internalVarNodes: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
+		const output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
+		this.logger.silly(`Internal Variable Count: ${this.#internalVars.length}\n${this.#internalVars}`)
+		this.logger.silly(`Custom Variable Count: ${this.#customVars.length}\n${this.#customVars}`)
+		for (let i = 0; i < this.#internalVars.length; i++) {
+			const value = this.#serviceApi.getConnectionVariableValue('internal', this.#internalVars[i])
+			const type: EmberModel.ParameterType =
+				typeof value == 'number'
+					? EmberModel.ParameterType.Integer
+					: typeof value == 'boolean'
+						? EmberModel.ParameterType.Boolean
+						: EmberModel.ParameterType.String
+			const id: string = typeof value == 'number' ? 'integer' : typeof value == 'boolean' ? 'boolean' : 'string'
+			internalVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
+				i,
+				new EmberModel.EmberNodeImpl(
+					this.#internalVars[i],
+					this.#serviceApi.getConnectionVariableDescription('internal', this.#internalVars[i]) ?? ''
+				),
+				{
+					0: new EmberModel.NumberedTreeNodeImpl(
+						VARIABLE_VALUE_NODE,
+						new EmberModel.ParameterImpl(
+							type,
+							id,
+							this.#serviceApi.getConnectionVariableDescription('internal', this.#internalVars[i]) ??
+								`Internal variable: ${this.#internalVars[i]}`,
+							value,
+							undefined,
+							undefined,
+							EmberModel.ParameterAccess.Read
+						)
+					),
+				}
+			)
+		}
+		for (let i = 0; i < this.#customVars.length; i++) {
+			const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])
+			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
+				i,
+				new EmberModel.EmberNodeImpl(
+					this.#customVars[i],
+					this.#serviceApi.getCustomVariableDescription(this.#customVars[i])
+				),
+				{
+					0: new EmberModel.NumberedTreeNodeImpl(
+						VARIABLE_VALUE_NODE,
+						new EmberModel.ParameterImpl(
+							EmberModel.ParameterType.String,
+							'string',
+							this.#serviceApi.getCustomVariableDescription(this.#customVars[i]),
+							value?.toString() ?? '',
+							undefined,
+							undefined,
+							EmberModel.ParameterAccess.ReadWrite
+						)
+					),
+				}
+			)
+		}
+
+		output[0] = new EmberModel.NumberedTreeNodeImpl(
+			VARIABLE_INTERNAL_NODE,
+			new EmberModel.EmberNodeImpl('internal', 'Companion internal variables'),
+			internalVarNodes
+		)
+		output[1] = new EmberModel.NumberedTreeNodeImpl(
+			VARIABLE_CUSTOM_NODE,
+			new EmberModel.EmberNodeImpl('custom', 'Companion custom variables'),
+			customVarNodes
+		)
+		return output
+	}
+
+	/**
 	 * Start the service if it is not already running
 	 */
 	protected listen(): void {
@@ -342,6 +508,41 @@ export class ServiceEmberPlus extends ServiceBase {
 					}),
 					1: new EmberModel.NumberedTreeNodeImpl(1, new EmberModel.EmberNodeImpl('pages'), this.#getPagesTree()),
 					2: new EmberModel.NumberedTreeNodeImpl(2, new EmberModel.EmberNodeImpl('location'), this.#getLocationTree()),
+					3: new EmberModel.NumberedTreeNodeImpl(
+						VARIABLE_NODE,
+						new EmberModel.EmberNodeImpl('variables'),
+						this.#getVariableTree()
+					),
+					4: new EmberModel.NumberedTreeNodeImpl(
+						ACTION_RECORDER_NODE,
+						new EmberModel.EmberNodeImpl('action recorder', `Action recorder controls`),
+						{
+							0: new EmberModel.NumberedTreeNodeImpl(
+								ACTION_RECORDER_ENABLE_NODE,
+								new EmberModel.ParameterImpl(
+									EmberModel.ParameterType.Boolean,
+									'Enable',
+									'Start / Stop Action Recorder',
+									this.#serviceApi.actionRecorderGetSession().isRunning,
+									undefined,
+									undefined,
+									EmberModel.ParameterAccess.ReadWrite
+								)
+							),
+							1: new EmberModel.NumberedTreeNodeImpl(
+								ACTION_RECORDER_DISCARD_NODE,
+								new EmberModel.ParameterImpl(
+									EmberModel.ParameterType.Boolean,
+									'Discard',
+									'Discard Recorded Actions',
+									false,
+									undefined,
+									undefined,
+									EmberModel.ParameterAccess.Write
+								)
+							),
+						}
+					),
 				}),
 			}
 
@@ -373,6 +574,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	 * @returns <code>true</code> if the command was successfully parsed
 	 */
 	async setValue(parameter: EmberModel.NumberedTreeNodeImpl<any>, value: EmberValue): Promise<boolean> {
+		if (this.#server === undefined) return false
 		const path = getPath(parameter)
 
 		const pathInfo = path.split('.')
@@ -502,6 +704,29 @@ export class ServiceEmberPlus extends ServiceBase {
 					return false
 				}
 			}
+		} else if (
+			pathInfo[0] === '0' &&
+			pathInfo[1] === VARIABLE_NODE.toString() &&
+			pathInfo[2] === VARIABLE_CUSTOM_NODE.toString() &&
+			pathInfo[4] === VARIABLE_VALUE_NODE.toString()
+		) {
+			const customVar = this.#customVars[parseInt(pathInfo[3])]
+			if (value !== undefined && value !== null) {
+				this.#serviceApi.setCustomVariableValue(customVar, value.toString())
+			}
+		} else if (pathInfo[0] === '0' && pathInfo[1] === ACTION_RECORDER_NODE.toString()) {
+			switch (pathInfo[2]) {
+				case ACTION_RECORDER_ENABLE_NODE.toString():
+					this.#serviceApi.actionRecorderSetRecording(Boolean(value))
+					this.#updateNodePath(path, this.#serviceApi.actionRecorderGetSession().isRunning)
+					break
+				case ACTION_RECORDER_DISCARD_NODE.toString():
+					if (value) {
+						this.#serviceApi.actionRecorderDiscardActions()
+						this.#updateNodePath(path, false)
+					}
+					break
+			}
 		}
 
 		return false
@@ -512,7 +737,8 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 	#pageCountChange(_pageCount: number): void {
 		// TODO: This is excessive, but further research is needed to figure out how to edit the ember tree structure
-		this.restartModule()
+		this.logger.debug(`Page count change restarting server`)
+		this.debounceRestart()
 	}
 
 	/**
@@ -580,6 +806,10 @@ export class ServiceEmberPlus extends ServiceBase {
 		)
 	}
 
+	/**
+	 * Update parameter value in ember tree
+	 */
+
 	#updateNodePath(path: string, newValue: EmberValue): void {
 		if (!this.#server) return
 
@@ -593,13 +823,40 @@ export class ServiceEmberPlus extends ServiceBase {
 	}
 
 	/**
+	 * Update parameter description in ember tree
+	 */
+
+	#updateNodeDescription(path: string, newDescription: string): void {
+		if (!this.#server) return
+
+		const node = this.#server.getElementByPath(path)
+		if (!node) return
+
+		// @ts-expect-error node type may not have a description property
+		if (node.contents.description !== newDescription) {
+			this.#server.update(node, { description: newDescription })
+		}
+	}
+
+	/**
 	 * Process an updated userconfig value and enable/disable the module, if necessary.
 	 */
 	updateUserConfig(key: string, value: boolean | number | string): void {
 		super.updateUserConfig(key, value)
-
 		if (key == 'gridSize') {
-			this.restartModule()
+			this.logger.debug(`Grid Size change restarting server`)
+			this.debounceRestart()
 		}
 	}
+
+	/**
+	 * Debounce provider restarts
+	 */
+
+	debounceRestart = debounceFn(
+		() => {
+			this.restartModule()
+		},
+		{ wait: DEBOUNCE_REINIT_DELAY, maxWait: 4 * DEBOUNCE_REINIT_DELAY }
+	)
 }

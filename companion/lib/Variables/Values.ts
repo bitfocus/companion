@@ -18,8 +18,8 @@ import type { CompanionVariableValue, CompanionVariableValues } from '@companion
 import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 
-interface VariablesValuesEvents {
-	variables_changed: [changed: Set<string>]
+export interface VariablesValuesEvents {
+	variables_changed: [changed: Set<string>, connection_labels: Set<string>]
 	local_variables_changed: [changed: Set<string>, fromControlId: string]
 }
 
@@ -41,6 +41,11 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		return this.getVariableValue('custom', name)
 	}
 
+	getVariableDefinitions(label: string): string[] | undefined {
+		if (this.#variableValues[label] == undefined) return undefined
+		return Object.keys(this.#variableValues[label])
+	}
+
 	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
 		localValues: ControlEntityInstance[] | null,
@@ -57,11 +62,13 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			const valuesForLabel = this.#variableValues[label]
 			if (valuesForLabel !== undefined) {
 				const removed_variables = new Set<string>()
+				const removed_variable_connection = new Set<string>()
 				for (const variable in valuesForLabel) {
 					valuesForLabel[variable] = undefined
 					removed_variables.add(`${label}:${variable}`)
 				}
-				this.#emitVariablesChanged(removed_variables)
+				removed_variable_connection.add(label)
+				this.#emitVariablesChanged(removed_variables, removed_variable_connection)
 			}
 
 			delete this.#variableValues[label]
@@ -76,6 +83,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		const valuesFrom = this.#variableValues[labelFrom]
 		if (valuesFrom !== undefined) {
 			const all_changed_variables_set = new Set<string>()
+			const connection_labels = new Set<string>()
 
 			for (const variable in valuesFrom) {
 				valuesTo[variable] = valuesFrom[variable]
@@ -84,9 +92,10 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				all_changed_variables_set.add(`${labelFrom}:${variable}`)
 				all_changed_variables_set.add(`${labelTo}:${variable}`)
 			}
-
+			connection_labels.add(labelFrom)
+			connection_labels.add(labelTo)
 			delete this.#variableValues[labelFrom]
-			this.#emitVariablesChanged(all_changed_variables_set)
+			this.#emitVariablesChanged(all_changed_variables_set, connection_labels)
 		}
 	}
 
@@ -104,13 +113,17 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		this.#variableValues[label] = moduleValues
 
 		const all_changed_variables_set = new Set<string>()
+		const connection_labels = new Set<string>()
 		for (const variable of variables) {
 			if (moduleValues[variable.id] !== variable.value) {
 				moduleValues[variable.id] = variable.value
 
 				all_changed_variables_set.add(`${label}:${variable.id}`)
+
 				// Also report the old custom variable names as having changed
-				if (label === 'custom') all_changed_variables_set.add(`internal:custom_${variable.id}`)
+				if (label === 'custom') {
+					all_changed_variables_set.add(`internal:custom_${variable.id}`)
+				}
 
 				// Skip debug if it's just internal:time_* spamming.
 				if (this.#logger.isSillyEnabled() && !(label === 'internal' && variable.id.startsWith('time_'))) {
@@ -118,14 +131,15 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				}
 			}
 		}
+		connection_labels.add(label)
 
-		this.#emitVariablesChanged(all_changed_variables_set)
+		this.#emitVariablesChanged(all_changed_variables_set, connection_labels)
 	}
 
-	#emitVariablesChanged(all_changed_variables_set: Set<string>) {
+	#emitVariablesChanged(all_changed_variables_set: Set<string>, connection_labels: Set<string>) {
 		try {
 			if (all_changed_variables_set.size > 0) {
-				this.emit('variables_changed', all_changed_variables_set)
+				this.emit('variables_changed', all_changed_variables_set, connection_labels)
 			}
 		} catch (e) {
 			this.#logger.error(`Failed to process variables update: ${e}`)

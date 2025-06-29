@@ -6,6 +6,7 @@ import stripAnsi from 'strip-ansi'
 import fs from 'fs-extra'
 import winston from 'winston'
 import Transport from 'winston-transport'
+import { Syslog, SyslogTransportOptions } from 'winston-syslog'
 import supportsColor from 'supports-color'
 import { LogColors } from './Colors.js'
 import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
@@ -239,6 +240,20 @@ class LogController {
 			return cloneDeep(this.#history)
 		} else {
 			return this.#history
+		}
+	}
+
+	/**
+	 * Initialize send messages to syslog host
+	 */
+
+	addSyslogHost(options: SyslogTransportOptions): void {
+		try {
+			options.app_name = 'Companion'
+			this.#logger.add(new Syslog(options))
+			this.#logger.debug(`Syslog transport initialized. Options: ${JSON.stringify(options)}`)
+		} catch (e) {
+			this.#logger.error(`Failied to initialise syslog transport ${e}`)
 		}
 	}
 

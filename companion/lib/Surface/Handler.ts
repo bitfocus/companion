@@ -488,6 +488,32 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		}
 	}
 
+	/**
+	 * Set the position offset of the surface
+	 * @param xOffset
+	 * @param yOffset
+	 */
+	setPosition(xOffset: number, yOffset: number): void {
+		this.#surfaceConfig.config.xOffset = Math.floor(xOffset)
+		this.#surfaceConfig.config.yOffset = Math.floor(yOffset)
+
+		this.#saveConfig()
+		this.triggerRedraw()
+	}
+
+	/**
+	 * Adjust the position offset of the surface by a relative amount
+	 * @param xAdjustment
+	 * @param yAdjustment
+	 */
+	adjustPosition(xAdjustment: number, yAdjustment: number): void {
+		const currentOffset = this.#getCurrentOffset()
+		const newXOffset = currentOffset.xOffset + Math.floor(xAdjustment)
+		const newYOffset = currentOffset.yOffset + Math.floor(yAdjustment)
+
+		this.setPosition(newXOffset, newYOffset)
+	}
+
 	#onDeviceRemove() {
 		if (!this.panel) return
 

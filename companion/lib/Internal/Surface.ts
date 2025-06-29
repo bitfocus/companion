@@ -494,6 +494,60 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				description: undefined,
 				options: [],
 			},
+
+			surface_set_position: {
+				label: 'Surface: Set position',
+				description: 'Set the absolute position offset of a surface',
+				options: [
+					...CHOICES_SURFACE_ID_WITH_VARIABLES,
+
+					{
+						type: 'number',
+						label: 'X Offset',
+						id: 'x_offset',
+						default: 0,
+						min: 0,
+						max: 100,
+						step: 1,
+					},
+					{
+						type: 'number',
+						label: 'Y Offset',
+						id: 'y_offset',
+						default: 0,
+						min: 0,
+						max: 100,
+						step: 1,
+					},
+				],
+			},
+
+			surface_adjust_position: {
+				label: 'Surface: Adjust position',
+				description: 'Adjust the position offset of a surface by a relative amount',
+				options: [
+					...CHOICES_SURFACE_ID_WITH_VARIABLES,
+
+					{
+						type: 'number',
+						label: 'X Offset Adjustment',
+						id: 'x_adjustment',
+						default: 0,
+						min: -500,
+						max: 500,
+						step: 1,
+					},
+					{
+						type: 'number',
+						label: 'Y Offset Adjustment',
+						id: 'y_adjustment',
+						default: 0,
+						min: -500,
+						max: 500,
+						step: 1,
+					},
+				],
+			},
 		}
 	}
 
@@ -602,6 +656,34 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			this.#surfaceController.triggerRefreshDevices().catch(() => {
 				// TODO
 			})
+			return true
+		} else if (action.definitionId === 'surface_set_position') {
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
+			if (!surfaceId) return true
+
+			const xOffset = Number(action.rawOptions.x_offset)
+			const yOffset = Number(action.rawOptions.y_offset)
+
+			if (isNaN(xOffset) || isNaN(yOffset)) {
+				this.#logger.warn(`Invalid position offsets: x=${xOffset}, y=${yOffset}`)
+				return true
+			}
+
+			this.#surfaceController.setDevicePosition(surfaceId, xOffset, yOffset, true)
+			return true
+		} else if (action.definitionId === 'surface_adjust_position') {
+			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
+			if (!surfaceId) return true
+
+			const xAdjustment = Number(action.rawOptions.x_adjustment)
+			const yAdjustment = Number(action.rawOptions.y_adjustment)
+
+			if (isNaN(xAdjustment) || isNaN(yAdjustment)) {
+				this.#logger.warn(`Invalid position adjustments: x=${xAdjustment}, y=${yAdjustment}`)
+				return true
+			}
+
+			this.#surfaceController.adjustDevicePosition(surfaceId, xAdjustment, yAdjustment, true)
 			return true
 		} else {
 			return false
