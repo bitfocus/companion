@@ -1,6 +1,7 @@
 .form-check:not(.form-switch) {
 	input[type='checkbox'] {
 		-webkit-appearance: none;
+		appearance: none;
 		width: 22px;
 		height: 22px;
 		background: white;

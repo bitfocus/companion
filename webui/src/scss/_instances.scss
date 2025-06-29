@@ -1,3 +1,6 @@
+@use '@coreui/coreui/scss/coreui' as *;
+@use 'variables';
+
 .float_right {
 	float: right;
 }
@@ -109,7 +112,7 @@
 
 	.variable-description {
 		word-break: normal;
-		padding: $variable-padding;
+		padding: variables.$variable-padding;
 	}
 
 	.editor-grid {
