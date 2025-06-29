@@ -23,7 +23,7 @@ import type {
 	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
@@ -140,7 +140,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	readonly #internalUtils: InternalModuleUtils
 	readonly #controlsController: ControlsController
 	readonly #surfaceController: SurfaceController
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 
 	/**
 	 * Page history for surfaces
@@ -151,14 +151,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		internalUtils: InternalModuleUtils,
 		surfaceController: SurfaceController,
 		controlsController: ControlsController,
-		pageController: PageController
+		pageStore: IPageStore
 	) {
 		super()
 
 		this.#internalUtils = internalUtils
 		this.#surfaceController = surfaceController
 		this.#controlsController = controlsController
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 
 		setImmediate(() => {
 			this.emit('setVariables', {
@@ -251,13 +251,13 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 		if (thePageNumber === 'startup') {
 			const thePageId = surfaceId && this.#surfaceController.devicePageGetStartup(surfaceId)
-			return thePageId || this.#pageController.getFirstPageId()
+			return thePageId || this.#pageStore.getFirstPageId()
 		}
 		if (thePageNumber === 'back' || thePageNumber === 'forward' || thePageNumber === '+1' || thePageNumber === '-1') {
 			return thePageNumber
 		}
 
-		return this.#pageController.getPageInfo(Number(thePageNumber))?.id
+		return this.#pageStore.getPageInfo(Number(thePageNumber))?.id
 	}
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {
@@ -344,8 +344,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				values[`surface_${surfaceId}_location`] = surface.location ?? 'Local'
 
 				const surfacePageId = this.#surfaceController.devicePageGet(surface.id)
-				values[`surface_${surfaceId}_page`] =
-					(surfacePageId && this.#pageController.getPageNumber(surfacePageId)) || '0'
+				values[`surface_${surfaceId}_page`] = (surfacePageId && this.#pageStore.getPageNumber(surfacePageId)) || '0'
 			}
 
 			if (!surfaceGroup.isAutoGroup) {
@@ -355,7 +354,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 				const surfaceGroupPageId = this.#surfaceController.devicePageGet(surfaceGroup.id)
 				values[`surface_group_${groupId}_page`] =
-					(surfaceGroupPageId && this.#pageController.getPageNumber(surfaceGroupPageId)) || '0'
+					(surfaceGroupPageId && this.#pageStore.getPageNumber(surfaceGroupPageId)) || '0'
 			}
 		}
 
@@ -727,13 +726,13 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			} else {
 				let newPage: string | null = toPage
 				if (newPage === '+1') {
-					newPage = this.#pageController.getOffsetPageId(currentPage, 1)
+					newPage = this.#pageStore.getOffsetPageId(currentPage, 1)
 				} else if (newPage === '-1') {
-					newPage = this.#pageController.getOffsetPageId(currentPage, -1)
+					newPage = this.#pageStore.getOffsetPageId(currentPage, -1)
 				} else {
 					newPage = String(newPage)
 				}
-				if (!newPage || !this.#pageController.isPageIdValid(newPage)) newPage = this.#pageController.getFirstPageId()
+				if (!newPage || !this.#pageStore.isPageIdValid(newPage)) newPage = this.#pageStore.getFirstPageId()
 
 				// Change page
 				this.#surfaceController.devicePageSet(groupId, newPage, true, true)

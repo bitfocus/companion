@@ -26,6 +26,7 @@ import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
 import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
+import { PageStore } from './Page/Store.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -202,23 +203,23 @@ export class Registry {
 		try {
 			const controlEvents = new EventEmitter<ControlCommonEvents>()
 
-			this.page = new PageController(this)
+			const pageStore = new PageStore(this.db.getTableView('pages'))
 			this.controls = new ControlsController(this, controlEvents)
-			this.variables = new VariablesController(this.db, this.io, this.page, this.controls)
+			this.variables = new VariablesController(this.db, this.io, pageStore, this.controls)
 			this.graphics = new GraphicsController(
 				this.controls,
-				this.page,
+				pageStore,
 				this.userconfig,
 				this.variables.values,
 				this.#internalApiRouter
 			)
-			this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.controls)
+			this.#preview = new GraphicsPreview(this.graphics, this.io, pageStore, this.controls)
 			this.surfaces = new SurfaceController(
 				this.db,
 				{
 					controls: this.controls,
 					graphics: this.graphics,
-					page: this.page,
+					pageStore: pageStore,
 					userconfig: this.userconfig,
 					variables: this.variables,
 				},
@@ -234,7 +235,7 @@ export class Registry {
 				this.#internalApiRouter,
 				this.controls,
 				this.graphics,
-				this.page,
+				pageStore,
 				this.variables,
 				oscSender
 			)
@@ -242,13 +243,15 @@ export class Registry {
 
 			this.internalModule = new InternalController(
 				this.controls,
-				this.page,
+				pageStore,
 				this.instance,
 				this.variables,
 				this.surfaces,
 				this.graphics,
 				this.exit.bind(this)
 			)
+
+			this.page = new PageController(this, pageStore)
 			this.#importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
@@ -265,7 +268,7 @@ export class Registry {
 
 			const serviceApi = new ServiceApi(
 				this.#appInfo,
-				this.page,
+				pageStore,
 				this.controls,
 				this.surfaces,
 				this.variables,
@@ -279,7 +282,7 @@ export class Registry {
 				oscSender,
 				controlEvents,
 				this.surfaces,
-				this.page,
+				pageStore,
 				this.instance,
 				this.io,
 				this.ui.express
@@ -291,7 +294,7 @@ export class Registry {
 				this.controls,
 				this.graphics,
 				this.io,
-				this.page
+				pageStore
 			)
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {

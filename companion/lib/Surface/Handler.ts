@@ -24,7 +24,7 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController, PincodeBitmaps } from '../Graphics/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -169,7 +169,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * The core page controller
 	 */
-	readonly #page: PageController
+	readonly #pageStore: IPageStore
 	/**
 	 * The core device controller
 	 */
@@ -200,14 +200,14 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#surfaces = surfaceController
 		this.#controls = deps.controls
 		this.#graphics = deps.graphics
-		this.#page = deps.page
+		this.#pageStore = deps.pageStore
 		this.#userconfig = deps.userconfig
 		this.#variables = deps.variables
 
 		this.panel = panel
 		this.#surfaceConfig = surfaceConfig
 
-		this.#currentPageId = this.#page.getFirstPageId()
+		this.#currentPageId = this.#pageStore.getFirstPageId()
 
 		// Setup logger to use the name
 		this.#recreateLogger()
@@ -356,7 +356,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 				const gridSize = this.panelGridSize
 
-				const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+				const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
 
 				const rawEntries: DrawButtonItem[] = []
 
@@ -452,7 +452,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		// If surface is locked ignore updates. pincode updates are handled separately
 		if (this.#isSurfaceLocked) return
 
-		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
 		if (location.pageNumber == pageNumber) {
 			// normal mode
 			const { xOffset, yOffset } = this.#getCurrentOffset()
@@ -536,7 +536,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#onDeviceClick(x: number, y: number, pressed: boolean, pageOffset?: number): void {
 		if (!this.panel) return
 
-		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
 		if (!pageNumber) return
 
 		try {
@@ -565,10 +565,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				thisPage += pageOffset ?? 0
 
 				// loop after last page
-				const pageCount = this.#page.getPageCount()
+				const pageCount = this.#pageStore.getPageCount()
 				if (thisPage > pageCount) thisPage = 1
 
-				const controlId = this.#page.getControlIdAt({
+				const controlId = this.#pageStore.getControlIdAt({
 					pageNumber: thisPage,
 					column: x2 + xOffset,
 					row: y2 + yOffset,
@@ -593,7 +593,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#onDeviceRotate(x: number, y: number, direction: boolean, pageOffset?: number): void {
 		if (!this.panel) return
 
-		const pageNumber = this.#page.getPageNumber(this.#currentPageId)
+		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
 		if (!pageNumber) return
 
 		try {
@@ -610,10 +610,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				// allow the xkeys (legacy mode) to span pages
 				thisPage += pageOffset ?? 0
 				// loop after last page
-				const pageCount = this.#page.getPageCount()
+				const pageCount = this.#pageStore.getPageCount()
 				if (thisPage > pageCount) thisPage = 1
 
-				const controlId = this.#page.getControlIdAt({
+				const controlId = this.#pageStore.getControlIdAt({
 					pageNumber: thisPage,
 					column: x2 + xOffset,
 					row: y2 + yOffset,
@@ -681,8 +681,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	resetConfig(): void {
 		this.#surfaceConfig.groupConfig = {
 			...cloneDeep(SurfaceGroup.DefaultOptions),
-			last_page_id: this.#page.getFirstPageId(),
-			startup_page_id: this.#page.getFirstPageId(),
+			last_page_id: this.#pageStore.getFirstPageId(),
+			startup_page_id: this.#pageStore.getFirstPageId(),
 		}
 		this.#surfaceConfig.groupId = null
 		this.setPanelConfig(cloneDeep(PanelDefaults))

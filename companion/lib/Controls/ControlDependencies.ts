@@ -1,7 +1,7 @@
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { UIHandler } from '../UI/Handler.js'
 import type { SurfaceController } from '../Surface/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { InternalController } from '../Internal/Controller.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { ActionRunner } from './ActionRunner.js'
@@ -21,7 +21,7 @@ export interface ControlDependencies {
 
 	readonly graphics: GraphicsController
 	readonly surfaces: SurfaceController
-	readonly page: PageController
+	readonly pageStore: IPageStore
 
 	readonly internalModule: InternalController
 	readonly instance: InstanceController

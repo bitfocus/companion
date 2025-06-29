@@ -10,7 +10,7 @@
  */
 
 import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -21,30 +21,31 @@ import type {
 import type { CompanionVariableValues } from '@companion-module/base'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 
 export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	// #logger = LogController.createLogger('Internal/Page')
 
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 
-	constructor(_internalUtils: InternalModuleUtils, pageController: PageController) {
+	constructor(_internalUtils: InternalModuleUtils, pageStore: IPageStore) {
 		super()
 
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 
-		this.#pageController.on('name', this.#nameChange.bind(this))
-		this.#pageController.on('pagecount', () => this.emit('regenerateVariables'))
+		this.#pageStore.on('pageDataChanged', this.#nameChange.bind(this))
+		this.#pageStore.on('pagecount', () => this.emit('regenerateVariables'))
 	}
 
-	#nameChange(page: number, name: string | undefined): void {
+	#nameChange(page: number, pageData: PageModel | undefined): void {
 		this.emit('setVariables', {
-			[`page_number_${page}_name`]: name,
+			[`page_number_${page}_name`]: pageData?.name,
 		})
 	}
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {
 		const variables: VariableDefinitionTmp[] = []
-		for (let i = 1; i <= this.#pageController.getPageCount(); i++) {
+		for (let i = 1; i <= this.#pageStore.getPageCount(); i++) {
 			variables.push({
 				name: `page_number_${i}_name`,
 				label: `Page ${i} name`,
@@ -55,8 +56,8 @@ export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> imp
 
 	updateVariables(): void {
 		const variables: CompanionVariableValues = {}
-		for (let i = 1; i <= this.#pageController.getPageCount(); i++) {
-			variables[`page_number_${i}_name`] = this.#pageController.getPageName(i)
+		for (let i = 1; i <= this.#pageStore.getPageCount(); i++) {
+			variables[`page_number_${i}_name`] = this.#pageStore.getPageName(i)
 		}
 		this.emit('setVariables', variables)
 	}

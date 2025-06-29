@@ -212,7 +212,7 @@ export class ControlButtonLayered
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
 		// Block out the button text
 		const injectedVariableValues: CompanionVariableValues = {}
-		const location = this.deps.page.getLocationOfControlId(this.controlId)
+		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 		if (location) {
 			// Ensure we don't enter into an infinite loop
 			// TODO - legacy location variables?

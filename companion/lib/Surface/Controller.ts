@@ -155,7 +155,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				const newGroup = new SurfaceGroup(
 					this,
 					this.#dbTableGroups,
-					this.#handlerDependencies.page,
+					this.#handlerDependencies.pageStore,
 					this.#handlerDependencies.userconfig,
 					groupId,
 					null,
@@ -522,7 +522,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			const newGroup = new SurfaceGroup(
 				this,
 				this.#dbTableGroups,
-				this.#handlerDependencies.page,
+				this.#handlerDependencies.pageStore,
 				this.#handlerDependencies.userconfig,
 				groupId,
 				null,
@@ -622,7 +622,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			const newGroup = new SurfaceGroup(
 				this,
 				this.#dbTableGroups,
-				this.#handlerDependencies.page,
+				this.#handlerDependencies.pageStore,
 				this.#handlerDependencies.userconfig,
 				surfaceGroupId,
 				!rawSurfaceGroupId ? surfaceHandler : null,
@@ -1059,7 +1059,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		const device = new SurfaceIPElgatoPlugin(
 			this.#handlerDependencies.controls,
-			this.#handlerDependencies.page,
+			this.#handlerDependencies.pageStore,
 			devicePath,
 			socket
 		)
@@ -1167,7 +1167,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				group = new SurfaceGroup(
 					this,
 					this.#dbTableGroups,
-					this.#handlerDependencies.page,
+					this.#handlerDependencies.pageStore,
 					this.#handlerDependencies.userconfig,
 					id,
 					null,

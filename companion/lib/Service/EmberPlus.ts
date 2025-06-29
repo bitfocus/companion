@@ -13,7 +13,7 @@ import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import debounceFn from 'debounce-fn'
 
 // const LOCATION_NODE_CONTROLID = 0
@@ -96,7 +96,7 @@ function parseHexColor(hex: string): number {
  */
 export class ServiceEmberPlus extends ServiceBase {
 	readonly #serviceApi: ServiceApi
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 	#server: EmberServer | undefined = undefined
 	#customVars: string[] = []
 	#internalVars: string[] = []
@@ -106,15 +106,15 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 	#pushedButtons = new Set<string>()
 
-	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig, pageController: PageController) {
+	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig, pageStore: IPageStore) {
 		super(userconfig, 'Service/EmberPlus', 'emberplus_enabled', null)
 
 		this.#serviceApi = serviceApi
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 
 		this.port = 9092
 
-		this.#pageController.on('pagecount', this.#pageCountChange.bind(this))
+		this.#pageStore.on('pagecount', this.#pageCountChange.bind(this))
 		this.init()
 		this.startEventListeners()
 	}
@@ -197,7 +197,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	#getPagesTree(): Record<number, EmberModel.NumberedTreeNodeImpl<any>> {
 		const output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 
-		const pageCount = this.#pageController.getPageCount() // TODO - handle resize
+		const pageCount = this.#pageStore.getPageCount() // TODO - handle resize
 
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
 			const children: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
@@ -261,7 +261,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				)
 			}
 
-			const pageName = this.#pageController.getPageName(pageNumber)
+			const pageName = this.#pageStore.getPageName(pageNumber)
 			output[pageNumber] = new EmberModel.NumberedTreeNodeImpl(
 				pageNumber,
 				new EmberModel.EmberNodeImpl(!pageName || pageName === 'PAGE' ? 'Page ' + pageNumber : pageName),
@@ -284,7 +284,7 @@ export class ServiceEmberPlus extends ServiceBase {
 
 		const output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 
-		const pageCount = this.#pageController.getPageCount() // TODO - handle resize
+		const pageCount = this.#pageStore.getPageCount() // TODO - handle resize
 
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
 			// TODO - the numbers won't be stable  when resizing the `min` grid values
@@ -372,7 +372,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				)
 			}
 
-			const pageName = this.#pageController.getPageName(pageNumber)
+			const pageName = this.#pageStore.getPageName(pageNumber)
 			output[pageNumber] = new EmberModel.NumberedTreeNodeImpl(
 				pageNumber,
 				new EmberModel.EmberNodeImpl(!pageName || pageName === 'PAGE' ? 'Page ' + pageNumber : pageName),
@@ -586,7 +586,7 @@ export class ServiceEmberPlus extends ServiceBase {
 
 			if (isNaN(page) || isNaN(bank) || isNaN(node)) return false
 
-			const controlId = this.#pageController.getControlIdAtOldBankIndex(page, bank)
+			const controlId = this.#pageStore.getControlIdAtOldBankIndex(page, bank)
 			if (!controlId) return false
 
 			switch (node) {
@@ -647,7 +647,7 @@ export class ServiceEmberPlus extends ServiceBase {
 
 			if (isNaN(pageNumber) || isNaN(row) || isNaN(column) || isNaN(node)) return false
 
-			const controlId = this.#pageController.getControlIdAt({
+			const controlId = this.#pageStore.getControlIdAt({
 				pageNumber,
 				row,
 				column,

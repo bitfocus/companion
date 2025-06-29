@@ -104,12 +104,12 @@ export class CloudRegion {
 
 		// TODO: Deprecated: remove
 		if (args.bank && args.page) {
-			const controlId = this.#cloud.page.getControlIdAtOldBankIndex(args.page, args.bank)
+			const controlId = this.#cloud.pageStore.getControlIdAtOldBankIndex(args.page, args.bank)
 			if (controlId) {
 				this.#cloud.controls.pressControl(controlId, true, 'cloud')
 			}
 		} else if (location) {
-			const controlId = this.#cloud.page.getControlIdAt(location)
+			const controlId = this.#cloud.pageStore.getControlIdAt(location)
 			if (controlId) {
 				this.#cloud.controls.pressControl(controlId, true, 'cloud')
 			}
@@ -127,12 +127,12 @@ export class CloudRegion {
 
 		// TODO: Deprecated: remove
 		if (args.bank && args.page) {
-			const controlId = this.#cloud.page.getControlIdAtOldBankIndex(args.page, args.bank)
+			const controlId = this.#cloud.pageStore.getControlIdAtOldBankIndex(args.page, args.bank)
 			if (controlId) {
 				this.#cloud.controls.pressControl(controlId, false, 'cloud')
 			}
 		} else if (location) {
-			const controlId = this.#cloud.page.getControlIdAt(location)
+			const controlId = this.#cloud.pageStore.getControlIdAt(location)
 			if (controlId) {
 				this.#cloud.controls.pressControl(controlId, false, 'cloud')
 			}

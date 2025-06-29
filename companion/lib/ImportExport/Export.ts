@@ -39,7 +39,7 @@ import type { InstanceController } from '../Instance/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { RequestHandler } from 'express'
@@ -54,7 +54,7 @@ export class ExportController {
 	readonly #appInfo: AppInfo
 	readonly #controlsController: ControlsController
 	readonly #instancesController: InstanceController
-	readonly #pagesController: PageController
+	readonly #pageStore: IPageStore
 	readonly #surfacesController: SurfaceController
 	readonly #userConfigController: DataUserConfig
 	readonly #variablesController: VariablesController
@@ -64,7 +64,7 @@ export class ExportController {
 		apiRouter: express.Router,
 		controls: ControlsController,
 		instance: InstanceController,
-		page: PageController,
+		pageStore: IPageStore,
 		surfaces: SurfaceController,
 		userconfig: DataUserConfig,
 		variablesController: VariablesController
@@ -72,7 +72,7 @@ export class ExportController {
 		this.#appInfo = appInfo
 		this.#controlsController = controls
 		this.#instancesController = instance
-		this.#pagesController = page
+		this.#pageStore = pageStore
 		this.#surfacesController = surfaces
 		this.#userConfigController = userconfig
 		this.#variablesController = variablesController
@@ -126,7 +126,7 @@ export class ExportController {
 		if (isNaN(page)) {
 			next()
 		} else {
-			const pageInfo = this.#pagesController.getPageInfo(page, true)
+			const pageInfo = this.#pageStore.getPageInfo(page, true)
 			if (!pageInfo) throw new Error(`Page "${page}" not found!`)
 
 			const referencedConnectionIds = new Set<string>()
@@ -442,7 +442,7 @@ export class ExportController {
 		if (!config || !isFalsey(config.buttons)) {
 			exp.pages = {}
 
-			const pageInfos = this.#pagesController.getAll()
+			const pageInfos = this.#pageStore.getAll()
 			for (const [pageNumber, rawPageInfo] of Object.entries(pageInfos)) {
 				exp.pages[Number(pageNumber)] = this.#generatePageExportInfo(
 					rawPageInfo,

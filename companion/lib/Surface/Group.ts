@@ -14,7 +14,7 @@ import LogController, { type Logger } from '../Log/Controller.js'
 import type { SurfaceHandler } from './Handler.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfaceController } from './Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 
@@ -74,7 +74,7 @@ export class SurfaceGroup {
 	/**
 	 * The core page controller
 	 */
-	#pageController: PageController
+	#pageStore: IPageStore
 	/**
 	 * The core user config manager
 	 */
@@ -83,7 +83,7 @@ export class SurfaceGroup {
 	constructor(
 		surfaceController: SurfaceController,
 		dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>,
-		pageController: PageController,
+		pageStore: IPageStore,
 		userconfig: DataUserConfig,
 		groupId: string,
 		soleHandler: SurfaceHandler | null,
@@ -93,7 +93,7 @@ export class SurfaceGroup {
 
 		this.#surfaceController = surfaceController
 		this.#dbTable = dbTable
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 		this.#userconfig = userconfig
 
 		this.groupId = groupId
@@ -117,13 +117,13 @@ export class SurfaceGroup {
 		// Live fixup the last_page config
 		if (this.groupConfig.last_page) {
 			this.groupConfig.last_page_id =
-				this.#pageController.getPageInfo(this.groupConfig.last_page)?.id ?? this.groupConfig.last_page_id
+				this.#pageStore.getPageInfo(this.groupConfig.last_page)?.id ?? this.groupConfig.last_page_id
 			delete this.groupConfig.last_page
 		}
 		// Live fixup the startup_page config
 		if (this.groupConfig.startup_page) {
 			this.groupConfig.startup_page_id =
-				this.#pageController.getPageInfo(this.groupConfig.startup_page)?.id ?? this.groupConfig.startup_page_id
+				this.#pageStore.getPageInfo(this.groupConfig.startup_page)?.id ?? this.groupConfig.startup_page_id
 			delete this.groupConfig.startup_page
 		}
 
@@ -135,24 +135,24 @@ export class SurfaceGroup {
 		}
 
 		// validate the current page id
-		if (!this.#pageController.isPageIdValid(this.#currentPageId)) {
-			this.#currentPageId = this.#pageController.getFirstPageId()
+		if (!this.#pageStore.isPageIdValid(this.#currentPageId)) {
+			this.#currentPageId = this.#pageStore.getFirstPageId()
 		}
 
 		// Now attach and setup the surface
 		if (soleHandler) this.attachSurface(soleHandler)
 
 		this.#saveConfig()
-		this.#pageController.on('pagecount', this.#pageCountChange)
-		this.#pageController.on('pageindexchange', this.#pageIndexChange)
+		this.#pageStore.on('pagecount', this.#pageCountChange)
+		this.#pageStore.on('pageindexchange', this.#pageIndexChange)
 	}
 
 	/**
 	 * Stop anything processing this group, it is being marked as inactive
 	 */
 	dispose(): void {
-		this.#pageController.off('pagecount', this.#pageCountChange)
-		this.#pageController.off('pageindexchange', this.#pageIndexChange)
+		this.#pageStore.off('pagecount', this.#pageCountChange)
+		this.#pageStore.off('pageindexchange', this.#pageIndexChange)
 	}
 
 	/**
@@ -217,7 +217,7 @@ export class SurfaceGroup {
 	 * Set the current page of this surface group
 	 */
 	setCurrentPage(newPageId: string, defer = false): void {
-		if (!this.#pageController.isPageIdValid(newPageId)) return
+		if (!this.#pageStore.isPageIdValid(newPageId)) return
 
 		this.#storeNewPage(newPageId, defer)
 	}
@@ -241,13 +241,13 @@ export class SurfaceGroup {
 	}
 
 	#increasePage() {
-		const newPageId = this.#pageController.getOffsetPageId(this.#currentPageId, 1)
+		const newPageId = this.#pageStore.getOffsetPageId(this.#currentPageId, 1)
 		if (!newPageId) return
 		this.setCurrentPage(newPageId)
 	}
 
 	#decreasePage() {
-		const newPageId = this.#pageController.getOffsetPageId(this.#currentPageId, -1)
+		const newPageId = this.#pageStore.getOffsetPageId(this.#currentPageId, -1)
 		if (!newPageId) return
 		this.setCurrentPage(newPageId)
 	}
@@ -256,9 +256,9 @@ export class SurfaceGroup {
 	 * Update the current page if the total number of pages change
 	 */
 	#pageCountChange = (_pageCount: number): void => {
-		if (!this.#pageController.isPageIdValid(this.#currentPageId)) {
+		if (!this.#pageStore.isPageIdValid(this.#currentPageId)) {
 			// TODO - choose a better value?
-			this.#storeNewPage(this.#pageController.getFirstPageId(), true)
+			this.#storeNewPage(this.#pageStore.getFirstPageId(), true)
 		}
 	}
 
@@ -311,7 +311,7 @@ export class SurfaceGroup {
 			}
 			case 'startup_page_id': {
 				value = String(value)
-				if (!this.#pageController.isPageIdValid(value)) {
+				if (!this.#pageStore.isPageIdValid(value)) {
 					this.#logger.warn(`Invalid startup_page "${value}"`)
 					return 'invalid value'
 				}
@@ -323,7 +323,7 @@ export class SurfaceGroup {
 			}
 			case 'last_page_id': {
 				value = String(value)
-				if (!this.#pageController.isPageIdValid(value)) {
+				if (!this.#pageStore.isPageIdValid(value)) {
 					this.#logger.warn(`Invalid current_page "${value}"`)
 					return 'invalid value'
 				}

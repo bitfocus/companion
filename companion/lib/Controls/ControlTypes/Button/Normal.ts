@@ -140,7 +140,7 @@ export class ControlButtonNormal
 			// Block out the button text
 			const overrideVariableValues: CompanionVariableValues = {}
 
-			const location = this.deps.page.getLocationOfControlId(this.controlId)
+			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 			if (location) {
 				// Ensure we don't enter into an infinite loop
 				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'

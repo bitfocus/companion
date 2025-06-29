@@ -106,7 +106,7 @@ export class ControlButtonPageNumber
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {
-			this.deps.surfaces.devicePageSet(surfaceId, this.deps.page.getFirstPageId())
+			this.deps.surfaces.devicePageSet(surfaceId, this.deps.pageStore.getFirstPageId())
 		}
 	}
 

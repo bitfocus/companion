@@ -6,14 +6,14 @@ import type {
 	ExpressionStreamResult,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { nanoid } from 'nanoid'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 
 export class VariablesExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
 
 	// readonly #ioController: UIHandler
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 	readonly #variablesController: VariablesValues
 	readonly #controlsController: ControlsController
 
@@ -21,12 +21,12 @@ export class VariablesExpressionStream {
 
 	constructor(
 		_ioController: UIHandler,
-		pageController: PageController,
+		pageStore: IPageStore,
 		variablesController: VariablesValues,
 		controlsController: ControlsController
 	) {
 		// this.#ioController = ioController
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 		this.#variablesController = variablesController
 		this.#controlsController = controlsController
 
@@ -163,7 +163,7 @@ export class VariablesExpressionStream {
 		controlId: string | null,
 		requiredType: string | undefined
 	): ExecuteExpressionResult => {
-		const location = controlId ? this.#pageController.getLocationOfControlId(controlId) : undefined
+		const location = controlId ? this.#pageStore.getLocationOfControlId(controlId) : undefined
 		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
 
 		// TODO - make reactive to control moving?
@@ -171,7 +171,7 @@ export class VariablesExpressionStream {
 	}
 
 	#parseVariables = (str: string, controlId: string | null): ExecuteExpressionResult => {
-		const location = controlId ? this.#pageController.getLocationOfControlId(controlId) : undefined
+		const location = controlId ? this.#pageStore.getLocationOfControlId(controlId) : undefined
 		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
 
 		// TODO - make reactive to control moving?
