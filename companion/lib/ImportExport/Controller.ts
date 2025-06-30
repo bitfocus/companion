@@ -145,7 +145,7 @@ export class ImportExportController {
 			controls,
 			graphics,
 			instance,
-			page,
+			page.store,
 			surfaces,
 			userconfig,
 			variablesController
@@ -407,10 +407,10 @@ export class ImportExportController {
 						}
 
 						// Ensure the page exists
-						const insertPageCount = pageNumber - this.#pagesController.getPageCount()
+						const insertPageCount = pageNumber - this.#pagesController.store.getPageCount()
 						if (insertPageCount > 0) {
 							this.#pagesController.insertPages(
-								this.#pagesController.getPageCount() + 1,
+								this.#pagesController.store.getPageCount() + 1,
 								new Array(insertPageCount).fill('Page')
 							)
 						}
@@ -519,11 +519,11 @@ export class ImportExportController {
 
 				if (topage === -1) {
 					// Add a new page at the end
-					const currentPageCount = this.#pagesController.getPageCount()
+					const currentPageCount = this.#pagesController.store.getPageCount()
 					topage = currentPageCount + 1
 					this.#pagesController.insertPages(topage, ['Importing Page'])
 				} else {
-					const oldPageInfo = this.#pagesController.getPageInfo(topage, false)
+					const oldPageInfo = this.#pagesController.store.getPageInfo(topage, false)
 					if (!oldPageInfo) throw new Error('Invalid target page')
 				}
 
@@ -628,7 +628,7 @@ export class ImportExportController {
 			this.#graphicsController.clearAllForPage(1)
 
 			// Delete other pages
-			const pageCount = this.#pagesController.getPageCount()
+			const pageCount = this.#pagesController.store.getPageCount()
 			for (let pageNumber = pageCount; pageNumber >= 2; pageNumber--) {
 				this.#pagesController.deletePage(pageNumber) // Note: controls were already deleted above
 			}

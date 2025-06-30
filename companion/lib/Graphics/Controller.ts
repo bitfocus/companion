@@ -26,7 +26,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
@@ -55,7 +55,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #logger = LogController.createLogger('Graphics/Controller')
 
 	readonly #controlsController: ControlsController
-	readonly #pagesController: PageController
+	readonly #pageStore: IPageStore
 	readonly #userConfigController: DataUserConfig
 	readonly #variableValuesController: VariablesValues
 
@@ -124,7 +124,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 	constructor(
 		controlsController: ControlsController,
-		pagesController: PageController,
+		pageStore: IPageStore,
 		userConfigController: DataUserConfig,
 		variablesController: VariablesController,
 		db: DataDatabase,
@@ -134,7 +134,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		super()
 
 		this.#controlsController = controlsController
-		this.#pagesController = pagesController
+		this.#pageStore = pageStore
 		this.#userConfigController = userConfigController
 		this.#variableValuesController = variablesController.values
 
@@ -159,7 +159,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						location.row <= gridSize.maxRow &&
 						location.row >= gridSize.minRow
 
-					const controlId = this.#pagesController.getControlIdAt(location)
+					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.#controlsController.getControl(controlId) : undefined
 					const buttonStyle = (await control?.getDrawStyle()) ?? undefined
 
@@ -212,7 +212,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
-						const pagename = this.#pagesController.getPageName(location.pageNumber)
+						const pagename = this.#pageStore.getPageName(location.pageNumber)
 
 						// Check if the image is already present in the render cache and if so, return it
 						let keyLocation: ControlLocation | undefined
@@ -419,7 +419,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Regenerate the render of a control
 	 */
 	invalidateControl(controlId: string): void {
-		const location = this.#pagesController.getLocationOfControlId(controlId)
+		const location = this.#pageStore.getLocationOfControlId(controlId)
 		if (location) {
 			this.invalidateButton(location)
 		}
@@ -437,9 +437,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @param skipInvalidation whether to skip reporting invalidations of each button
 	 */
 	regenerateAll(skipInvalidation = false): void {
-		const pageCount = this.#pagesController.getPageCount()
+		const pageCount = this.#pageStore.getPageCount()
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
-			const populatedLocations = this.#pagesController.getAllPopulatedLocationsOnPage(pageNumber)
+			const populatedLocations = this.#pageStore.getAllPopulatedLocationsOnPage(pageNumber)
 			for (const location of populatedLocations) {
 				this.#drawAndCacheButton(location, skipInvalidation)
 			}

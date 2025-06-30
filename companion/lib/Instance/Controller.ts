@@ -33,8 +33,7 @@ import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import express from 'express'
 import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
@@ -90,8 +89,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		cache: DataCache,
 		apiRouter: express.Router,
 		controls: ControlsController,
-		graphics: GraphicsController,
-		page: PageController,
+		pageStore: IPageStore,
 		variables: VariablesController,
 		oscSender: ServiceOscSender
 	) {
@@ -122,7 +120,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
-		this.definitions = new InstanceDefinitions(io, controls, graphics, variables.values)
+		this.definitions = new InstanceDefinitions(io)
 		this.status = new InstanceStatus(io, controls)
 		this.modules = new InstanceModules(io, this, apiRouter, appInfo.modulesDir)
 		this.moduleHost = new ModuleHost(
@@ -130,7 +128,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				controls: controls,
 				io: io,
 				variables: variables,
-				page: page,
+				pageStore: pageStore,
 				oscSender: oscSender,
 
 				instanceDefinitions: this.definitions,
@@ -166,8 +164,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			appInfo.modulesDir
 		)
 		this.modules.listenToStoreEvents(this.modulesStore)
-
-		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())
 
 		this.connectionApiRouter.use('/:label', (req, res, _next) => {
 			const label = req.params.label

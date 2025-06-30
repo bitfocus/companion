@@ -40,7 +40,7 @@ class LayeredButtonDrawStyleParser {
 		this.#controlId = controlId
 		this.#changed = changed
 
-		this.#unsubSocket = this.#socket.on('variables:stream-expression:update', this.#streamUpdate)
+		this.#unsubSocket = this.#socket.on('preview:stream-expression:update', this.#streamUpdate)
 	}
 
 	dispose() {
@@ -81,7 +81,7 @@ class LayeredButtonDrawStyleParser {
 
 				// Start a new stream
 				const newValuePromise = this.#socket
-					.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, requiredType, false])
+					.emitPromise('preview:stream-expression:subscribe', [str, this.#controlId, requiredType, false])
 					.catch((e) => {
 						console.error('Failed to subscribe to expression', e)
 						return {
@@ -110,7 +110,7 @@ class LayeredButtonDrawStyleParser {
 
 				// Start a new stream
 				const newValuePromise = this.#socket
-					.emitPromise('variables:stream-expression:subscribe', [str, this.#controlId, undefined, true])
+					.emitPromise('preview:stream-expression:subscribe', [str, this.#controlId, undefined, true])
 					.catch((e) => {
 						console.error('Failed to subscribe to expression', e)
 						return {
@@ -172,7 +172,7 @@ class LayeredButtonDrawStyleParser {
 	#unsubscribeExpression(stream: ExpressionStreamResultWithSubId | Promise<ExpressionStreamResultWithSubId>): void {
 		Promise.resolve(stream)
 			.then(async (stream) => {
-				return this.#socket.emitPromise('variables:stream-expression:unsubscribe', [stream.subId])
+				return this.#socket.emitPromise('preview:stream-expression:unsubscribe', [stream.subId])
 			})
 			.catch((e) => {
 				console.error('Failed to unsubscribe from stream', e)

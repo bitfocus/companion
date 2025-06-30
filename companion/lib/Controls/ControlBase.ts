@@ -183,7 +183,7 @@ export abstract class ControlBase<TJson> {
 
 			this.#pendingDraw = true
 			setImmediate(() => {
-				this.deps.graphics.invalidateControl(this.controlId)
+				this.deps.events.emit('invalidateControlRender', this.controlId)
 				this.#pendingDraw = false
 			})
 		},

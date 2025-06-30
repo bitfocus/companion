@@ -31,7 +31,7 @@ import type { ControlsController } from '../Controls/Controller.js'
 import { CHOICES_DYNAMIC_LOCATION } from './Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
@@ -67,23 +67,19 @@ function compareValues(op: any, value: any, value2: any): boolean {
 export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #internalUtils: InternalModuleUtils
 	readonly #controlsController: ControlsController
-	readonly #pagesController: PageController
+	readonly #pageStore: IPageStore
 
 	/**
 	 * The dependencies of variables that should retrigger each feedback
 	 */
 	#variableSubscriptions = new Map<string, { controlId: string; variables: ReadonlySet<string> }>()
 
-	constructor(
-		internalUtils: InternalModuleUtils,
-		controlsController: ControlsController,
-		pagesController: PageController
-	) {
+	constructor(internalUtils: InternalModuleUtils, controlsController: ControlsController, pageStore: IPageStore) {
 		super()
 
 		this.#internalUtils = internalUtils
 		this.#controlsController = controlsController
-		this.#pagesController = pagesController
+		this.#pageStore = pageStore
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -382,7 +378,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			useVariableFields
 		)
 
-		const theControlId = result.location ? this.#pagesController.getControlIdAt(result.location) : null
+		const theControlId = result.location ? this.#pageStore.getControlIdAt(result.location) : null
 
 		return {
 			theControlId,

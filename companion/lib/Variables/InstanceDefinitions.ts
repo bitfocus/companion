@@ -114,4 +114,8 @@ export class VariablesInstanceDefinitions {
 			}
 		}
 	}
+
+	getVariableLabel(connectionLabel: string, variableId: string): string | undefined {
+		return this.#variableDefinitions[connectionLabel]?.[variableId]?.label
+	}
 }

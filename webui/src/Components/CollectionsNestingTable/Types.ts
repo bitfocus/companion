@@ -12,7 +12,6 @@ export interface NestingCollectionsApi {
 export interface CollectionsNestingTableCollection {
 	id: string
 	label?: string
-	sortOrder?: number
 	children: this[]
 }
 

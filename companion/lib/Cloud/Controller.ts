@@ -11,7 +11,7 @@ import type { ImageResult } from '../Graphics/ImageResult.js'
 import nodeMachineId from 'node-machine-id'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
@@ -66,7 +66,7 @@ export class CloudController {
 	readonly controls: ControlsController
 	readonly #graphics: GraphicsController
 	readonly io: UIHandler
-	readonly page: PageController
+	readonly pageStore: IPageStore
 
 	/**
 	 * A clist of known cloud regions
@@ -120,7 +120,7 @@ export class CloudController {
 		controls: ControlsController,
 		graphics: GraphicsController,
 		io: UIHandler,
-		page: PageController
+		pageStore: IPageStore
 	) {
 		this.appInfo = appInfo
 		this.#dbTable = db.getTableView(CLOUD_TABLE)
@@ -128,7 +128,7 @@ export class CloudController {
 		this.controls = controls
 		this.#graphics = graphics
 		this.io = io
-		this.page = page
+		this.pageStore = pageStore
 
 		this.data = this.#dbTable.getOrDefault('auth', {
 			token: '',
@@ -173,7 +173,7 @@ export class CloudController {
 
 		this.#updateAllBanks()
 
-		this.page.on('name', this.#handlePageNameUpdate.bind(this))
+		this.pageStore.on('pageDataChanged', this.#handlePageNameUpdate.bind(this))
 	}
 
 	/**
@@ -223,7 +223,7 @@ export class CloudController {
 		const retval = []
 
 		for (const controlId of this.controls.getAllControls().keys()) {
-			const location = this.page.getLocationOfControlId(controlId)
+			const location = this.pageStore.getLocationOfControlId(controlId)
 			if (!location) {
 				continue
 			}
@@ -366,7 +366,7 @@ export class CloudController {
 	 * @param _id - the page ID
 	 * @param _name - the new name
 	 */
-	#handlePageNameUpdate(_pageNumber: number, _name: string | undefined): void {
+	#handlePageNameUpdate(_pageNumber: number): void {
 		for (let region in this.#regionInstances) {
 			if (!!this.#regionInstances[region]?.socketTransmit) {
 				//TODO: Push page name

@@ -2,10 +2,10 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlConfigRoom } from '../Controls/ControlBase.js'
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
-import type { GraphicsController } from './Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 import type { UIHandler, ClientSocket } from '../UI/Handler.js'
-import type { PageController } from '../Page/Controller.js'
-import type { ImageResult } from './ImageResult.js'
+import type { IPageStore } from '../Page/Store.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ControlsController } from '../Controls/Controller.js'
 
 /**
@@ -41,12 +41,12 @@ function ensureLocationIsNumber(location: ControlLocation): ControlLocation {
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class GraphicsPreview {
+export class PreviewGraphics {
 	readonly #logger = LogController.createLogger('Graphics/Preview')
 
 	readonly #graphicsController: GraphicsController
 	readonly #ioController: UIHandler
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 	readonly #controlsController: ControlsController
 
 	readonly #buttonReferencePreviews = new Map<string, PreviewSession>()
@@ -54,12 +54,12 @@ export class GraphicsPreview {
 	constructor(
 		graphicsController: GraphicsController,
 		ioController: UIHandler,
-		pageController: PageController,
+		pageStore: IPageStore,
 		controlsController: ControlsController
 	) {
 		this.#graphicsController = graphicsController
 		this.#ioController = ioController
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 		this.#controlsController = controlsController
 
 		this.#graphicsController.on('button_drawn', this.#updateButton.bind(this))
@@ -112,7 +112,7 @@ export class GraphicsPreview {
 
 			if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
 
-			const location = this.#pageController.getLocationOfControlId(controlId)
+			const location = this.#pageStore.getLocationOfControlId(controlId)
 			const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
 
 			// Do a resolve of the reference for the starting image
@@ -144,7 +144,7 @@ export class GraphicsPreview {
 	 */
 	#updateButton(location: ControlLocation, render: ImageResult): void {
 		// Push the updated render to any clients viewing a preview of a control
-		const controlId = this.#pageController.getControlIdAt(location)
+		const controlId = this.#pageStore.getControlIdAt(location)
 		if (controlId) {
 			const controlRoom = ControlConfigRoom(controlId)
 			if (this.#ioController.countRoomMembers(controlRoom) > 0) {
@@ -199,7 +199,7 @@ export class GraphicsPreview {
 	}
 
 	#triggerRecheck(previewSession: PreviewSession): void {
-		const location = this.#pageController.getLocationOfControlId(previewSession.controlId)
+		const location = this.#pageStore.getLocationOfControlId(previewSession.controlId)
 		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
 
 		// Resolve the new location

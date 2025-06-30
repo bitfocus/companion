@@ -43,17 +43,21 @@ export function getNodeJsPermissionArguments(
 		`--allow-fs-read=${moduleDir}`,
 	]
 
-	const manifestPermissions = manifest.runtime.permissions
-	if (manifestPermissions) {
-		if (manifestPermissions['worker-threads']) args.push('--allow-worker')
-		if (manifestPermissions['child-process'] || manifestPermissions['native-addons']) args.push('--allow-child-process')
-		if (manifestPermissions['native-addons']) args.push('--allow-addons')
-		if (manifestPermissions['native-addons'] || manifestPermissions['filesystem']) {
-			// Note: Using native addons usually means probing random filesystem paths to check the current platform
+	let forceReadWriteAll = false
+	if (process.platform === 'win32' && moduleDir.startsWith('\\\\')) {
+		// This is a network path, which nodejs does not support for the permissions model
+		forceReadWriteAll = true
+	}
 
-			// Future: This should be scoped to some limited directories as specified by the user in the connection settings
-			args.push('--allow-fs-read=*', '--allow-fs-write=*')
-		}
+	const manifestPermissions = manifest.runtime.permissions || {}
+	if (manifestPermissions['worker-threads']) args.push('--allow-worker')
+	if (manifestPermissions['child-process'] || manifestPermissions['native-addons']) args.push('--allow-child-process')
+	if (manifestPermissions['native-addons']) args.push('--allow-addons')
+	if (manifestPermissions['native-addons'] || manifestPermissions['filesystem'] || forceReadWriteAll) {
+		// Note: Using native addons usually means probing random filesystem paths to check the current platform
+
+		// Future: This should be scoped to some limited directories as specified by the user in the connection settings
+		args.push('--allow-fs-read=*', '--allow-fs-write=*')
 	}
 
 	return args

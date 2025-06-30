@@ -29,11 +29,12 @@ export const CollectionsNestingTableCollectionsList = observer(function Collecti
 }: CollectionsNestingTableCollectionsListProps<TCollection, TItem>) {
 	return (
 		<>
-			{collections.map((childCollection) => (
+			{collections.map((childCollection, index) => (
 				<CollectionsNestingTableCollectionSingle
 					key={childCollection.id}
 					collection={childCollection}
 					parentId={parentId}
+					index={index}
 					groupedItems={groupedItems}
 					nestingLevel={nestingLevel}
 				/>
@@ -48,6 +49,7 @@ interface CollectionsNestingTableCollectionSingleProps<
 > {
 	collection: TCollection
 	parentId: string | null
+	index: number
 	groupedItems: Map<string, TItem[]>
 	nestingLevel: number
 }
@@ -59,12 +61,20 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 >({
 	collection,
 	parentId,
+	index,
 	groupedItems,
 	nestingLevel,
 }: CollectionsNestingTableCollectionSingleProps<TCollection, TItem>) {
 	const { dragId, collectionsApi, GroupHeaderContent } = useCollectionsNestingTableContext<TCollection, TItem>()
 
-	const { canDrop, dragCollectionId, drop } = useCollectionListCollectionDrop(collectionsApi, dragId, collection.id)
+	const { canDrop, dragCollectionId, drop } = useCollectionListCollectionDrop(
+		collectionsApi,
+		dragId,
+		collection.id,
+		-1,
+		'contents',
+		true
+	)
 
 	const collapseHelper = usePanelCollapseHelperContextForPanel(null, collection.id)
 
@@ -77,6 +87,7 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 				collectionsApi={collectionsApi}
 				collection={collection}
 				parentId={parentId}
+				index={index}
 				toggleExpanded={collapseHelper.toggleCollapsed}
 				isCollapsed={isCollapsed}
 				nestingLevel={nestingLevel}

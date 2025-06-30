@@ -14,12 +14,12 @@ import type {
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { CompanionPresetAction, CompanionPresetDefinition } from '@companion-module/base'
+import type {
+	CompanionPresetAction,
+	CompanionPresetDefinition,
+	CompanionButtonStyleProps,
+} from '@companion-module/base'
 import LogController from '../Log/Controller.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import {
 	ActionEntityModel,
@@ -56,9 +56,6 @@ export class InstanceDefinitions {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
 	readonly #io: UIHandler
-	readonly #controlsController: ControlsController
-	readonly #graphicsController: GraphicsController
-	readonly #variablesValuesController: VariablesValues
 
 	/**
 	 * The action definitions
@@ -73,16 +70,8 @@ export class InstanceDefinitions {
 	 */
 	#presetDefinitions: Record<string, Record<string, PresetDefinition>> = {}
 
-	constructor(
-		io: UIHandler,
-		controls: ControlsController,
-		graphics: GraphicsController,
-		variablesValues: VariablesValues
-	) {
+	constructor(io: UIHandler) {
 		this.#io = io
-		this.#controlsController = controls
-		this.#graphicsController = graphics
-		this.#variablesValuesController = variablesValues
 	}
 
 	/**
@@ -136,43 +125,6 @@ export class InstanceDefinitions {
 
 		client.onPromise('event-definitions:get', () => {
 			return EventDefinitions
-		})
-
-		client.onPromise('presets:import-to-location', this.importPresetToLocation.bind(this))
-
-		client.onPromise('presets:preview_render', async (connectionId, presetId) => {
-			const definition = this.#presetDefinitions[connectionId]?.[presetId]
-			if (definition && definition.type === 'button') {
-				const style = {
-					...(definition.previewStyle ? definition.previewStyle : definition.style),
-					style: definition.type,
-				}
-
-				if (style.text) {
-					const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
-					if (style.textExpression) {
-						const parseResult = parser.executeExpression(style.text, undefined)
-						if (parseResult.ok) {
-							style.text = parseResult.value + ''
-						} else {
-							this.#logger.error(`Expression parse error: ${parseResult.error}`)
-							style.text = 'ERR'
-						}
-					} else {
-						const parseResult = parser.parseVariables(style.text)
-						style.text = parseResult.text
-					}
-				}
-
-				const render = await this.#graphicsController.drawPreview(style)
-				if (render) {
-					return render.asDataUrl
-				} else {
-					return null
-				}
-			} else {
-				return null
-			}
 		})
 	}
 
@@ -294,11 +246,28 @@ export class InstanceDefinitions {
 	}
 
 	/**
+	 * Get the draw style for a preset
+	 * @param connectionId - the id of the instance
+	 * @param presetId - the id of the preset
+	 */
+	getPresetDrawStyle(connectionId: string, presetId: string): (CompanionButtonStyleProps & { style: 'button' }) | null {
+		const definition = this.#presetDefinitions[connectionId]?.[presetId]
+		if (definition && definition.type === 'button') {
+			return {
+				...(definition.previewStyle ? definition.previewStyle : definition.style),
+				style: definition.type,
+			}
+		} else {
+			return null
+		}
+	}
+
+	/**
 	 * Import a preset to a location
 	 */
-	importPresetToLocation(connectionId: string, presetId: string, location: ControlLocation): boolean {
+	convertPresetToControlModel(connectionId: string, presetId: string): NormalButtonModel | null {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
-		if (!definition || definition.type !== 'button') return false
+		if (!definition || definition.type !== 'button') return null
 
 		const result: NormalButtonModel = {
 			type: 'button',
@@ -361,9 +330,7 @@ export class InstanceDefinitions {
 			}))
 		}
 
-		this.#controlsController.importControl(location, result)
-
-		return true
+		return result
 	}
 
 	/**

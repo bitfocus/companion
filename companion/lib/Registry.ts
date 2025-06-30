@@ -6,7 +6,6 @@ import LogController, { Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
 import { GraphicsController } from './Graphics/Controller.js'
-import { GraphicsPreview } from './Graphics/Preview.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
 import { DataUserConfig } from './Data/UserConfig.js'
@@ -26,6 +25,8 @@ import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
 import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
+import { PageStore } from './Page/Store.js'
+import { PreviewController } from './Preview/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -111,7 +112,7 @@ export class Registry {
 	/**
 	 * The core page controller
 	 */
-	#preview!: GraphicsPreview
+	#preview!: PreviewController
 	/**
 	 * The core service controller
 	 */
@@ -149,7 +150,7 @@ export class Registry {
 	 */
 	readonly #internalApiRouter = express.Router()
 
-	variables!: VariablesController
+	readonly variables: VariablesController
 
 	readonly #appInfo: AppInfo
 
@@ -188,6 +189,8 @@ export class Registry {
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
+
+		this.variables = new VariablesController(this.db, this.io)
 	}
 
 	/**
@@ -202,25 +205,23 @@ export class Registry {
 		try {
 			const controlEvents = new EventEmitter<ControlCommonEvents>()
 
-			this.page = new PageController(this)
+			const pageStore = new PageStore(this.db.getTableView('pages'))
 			this.controls = new ControlsController(this, controlEvents)
-			this.variables = new VariablesController(this.db, this.io, this.page, this.controls)
 			this.graphics = new GraphicsController(
 				this.controls,
-				this.page,
+				pageStore,
 				this.userconfig,
 				this.variables,
 				this.db,
 				this.io,
 				this.#internalApiRouter
 			)
-			this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.controls)
 			this.surfaces = new SurfaceController(
 				this.db,
 				{
 					controls: this.controls,
 					graphics: this.graphics,
-					page: this.page,
+					pageStore: pageStore,
 					userconfig: this.userconfig,
 					variables: this.variables,
 				},
@@ -235,8 +236,7 @@ export class Registry {
 				this.#data.cache,
 				this.#internalApiRouter,
 				this.controls,
-				this.graphics,
-				this.page,
+				pageStore,
 				this.variables,
 				oscSender
 			)
@@ -244,13 +244,15 @@ export class Registry {
 
 			this.internalModule = new InternalController(
 				this.controls,
-				this.page,
+				pageStore,
 				this.instance,
 				this.variables,
 				this.surfaces,
 				this.graphics,
 				this.exit.bind(this)
 			)
+
+			this.page = new PageController(this, pageStore)
 			this.#importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
@@ -267,7 +269,7 @@ export class Registry {
 
 			const serviceApi = new ServiceApi(
 				this.#appInfo,
-				this.page,
+				pageStore,
 				this.controls,
 				this.surfaces,
 				this.variables,
@@ -281,7 +283,7 @@ export class Registry {
 				oscSender,
 				controlEvents,
 				this.surfaces,
-				this.page,
+				pageStore,
 				this.instance,
 				this.io,
 				this.ui.express
@@ -293,8 +295,23 @@ export class Registry {
 				this.controls,
 				this.graphics,
 				this.io,
-				this.page
+				pageStore
 			)
+
+			this.#preview = new PreviewController(
+				this.graphics,
+				this.io,
+				pageStore,
+				this.controls,
+				this.variables.values,
+				this.instance.definitions
+			)
+
+			controlEvents.on('invalidateControlRender', (controlId) => {
+				this.graphics.invalidateControl(controlId)
+			})
+
+			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
 				this.io.emitToAll('set_userconfig_key', key, value)

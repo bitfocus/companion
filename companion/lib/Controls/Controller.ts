@@ -140,9 +140,8 @@ export class ControlsController {
 		return {
 			dbTable: this.#dbTable,
 			io: this.#registry.ui.io,
-			graphics: this.#registry.graphics,
 			surfaces: this.#registry.surfaces,
-			page: this.#registry.page,
+			pageStore: this.#registry.page.store,
 			internalModule: this.#registry.internalModule,
 			instance: this.#registry.instance,
 			variables: this.#registry.variables,
@@ -196,7 +195,7 @@ export class ControlsController {
 
 			setImmediate(() => {
 				// Send the preview image shortly after
-				const location = this.#registry.page.getLocationOfControlId(controlId)
+				const location = this.#registry.page.store.getLocationOfControlId(controlId)
 				if (location) {
 					const img = this.#registry.graphics.getCachedRenderOrGeneratePlaceholder(location)
 					// TODO - rework this to use the shared render cache concept
@@ -216,7 +215,7 @@ export class ControlsController {
 		})
 
 		client.onPromise('controls:reset', (location, type) => {
-			const controlId = this.#registry.page.getControlIdAt(location)
+			const controlId = this.#registry.page.store.getControlIdAt(location)
 
 			if (controlId) {
 				this.deleteControl(controlId)
@@ -226,6 +225,8 @@ export class ControlsController {
 				this.createButtonControl(location, type)
 			}
 		})
+		client.onPromise('controls:import-preset', this.#createControlFromPreset.bind(this))
+
 		client.onPromise('controls:copy', (fromLocation, toLocation) => {
 			// Don't try copying over itself
 			if (
@@ -236,10 +237,10 @@ export class ControlsController {
 				return false
 
 			// Make sure target page number is valid
-			if (!this.#registry.page.isPageValid(toLocation.pageNumber)) return false
+			if (!this.#registry.page.store.isPageValid(toLocation.pageNumber)) return false
 
 			// Make sure there is something to copy
-			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
+			const fromControlId = this.#registry.page.store.getControlIdAt(fromLocation)
 			if (!fromControlId) return false
 
 			const fromControl = this.getControl(fromControlId)
@@ -247,7 +248,7 @@ export class ControlsController {
 			const controlJson = fromControl.toJSON(true)
 
 			// Delete the control at the destination
-			const toControlId = this.#registry.page.getControlIdAt(toLocation)
+			const toControlId = this.#registry.page.store.getControlIdAt(toLocation)
 			if (toControlId) {
 				this.deleteControl(toControlId)
 			}
@@ -257,7 +258,7 @@ export class ControlsController {
 			if (newControl) {
 				this.#controls.set(newControlId, newControl)
 
-				this.#registry.page.setControlIdAt(toLocation, newControlId)
+				this.#registry.page.store.setControlIdAt(toLocation, newControlId)
 
 				newControl.triggerRedraw()
 
@@ -276,21 +277,21 @@ export class ControlsController {
 				return false
 
 			// Make sure target page number is valid
-			if (!this.#registry.page.isPageValid(toLocation.pageNumber)) return false
+			if (!this.#registry.page.store.isPageValid(toLocation.pageNumber)) return false
 
 			// Make sure there is something to move
-			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
+			const fromControlId = this.#registry.page.store.getControlIdAt(fromLocation)
 			if (!fromControlId) return false
 
 			// Delete the control at the destination
-			const toControlId = this.#registry.page.getControlIdAt(toLocation)
+			const toControlId = this.#registry.page.store.getControlIdAt(toLocation)
 			if (toControlId) {
 				this.deleteControl(toControlId)
 			}
 
 			// Perform the move
-			this.#registry.page.setControlIdAt(fromLocation, null)
-			this.#registry.page.setControlIdAt(toLocation, fromControlId)
+			this.#registry.page.store.setControlIdAt(fromLocation, null)
+			this.#registry.page.store.setControlIdAt(toLocation, fromControlId)
 
 			// Inform the control it was moved
 			const control = this.getControl(fromControlId)
@@ -313,19 +314,19 @@ export class ControlsController {
 
 			// Make sure both page numbers are valid
 			if (
-				!this.#registry.page.isPageValid(toLocation.pageNumber) ||
-				!this.#registry.page.isPageValid(fromLocation.pageNumber)
+				!this.#registry.page.store.isPageValid(toLocation.pageNumber) ||
+				!this.#registry.page.store.isPageValid(fromLocation.pageNumber)
 			)
 				return false
 
 			// Find the ids to move
-			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
-			const toControlId = this.#registry.page.getControlIdAt(toLocation)
+			const fromControlId = this.#registry.page.store.getControlIdAt(fromLocation)
+			const toControlId = this.#registry.page.store.getControlIdAt(toLocation)
 
 			// Perform the swap
-			this.#registry.page.setControlIdAt(toLocation, null)
-			this.#registry.page.setControlIdAt(fromLocation, toControlId)
-			this.#registry.page.setControlIdAt(toLocation, fromControlId)
+			this.#registry.page.store.setControlIdAt(toLocation, null)
+			this.#registry.page.store.setControlIdAt(fromLocation, toControlId)
+			this.#registry.page.store.setControlIdAt(toLocation, fromControlId)
 
 			// Inform the controls they were moved
 			const controlA = fromControlId && this.getControl(fromControlId)
@@ -527,7 +528,7 @@ export class ControlsController {
 			this.#logger.silly(`being told from gui to hot press ${formatLocation(location)} ${direction} ${surfaceId}`)
 			if (!surfaceId) throw new Error('Missing surfaceId')
 
-			const controlId = this.#registry.page.getControlIdAt(location)
+			const controlId = this.#registry.page.store.getControlIdAt(location)
 			if (!controlId) return
 
 			this.pressControl(controlId, direction, `hot:${surfaceId}`)
@@ -536,7 +537,7 @@ export class ControlsController {
 		client.onPromise('controls:hot-rotate', (location, direction, surfaceId) => {
 			this.#logger.silly(`being told from gui to hot rotate ${formatLocation(location)} ${direction} ${surfaceId}`)
 
-			const controlId = this.#registry.page.getControlIdAt(location)
+			const controlId = this.#registry.page.store.getControlIdAt(location)
 			if (!controlId) return
 
 			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
@@ -1044,14 +1045,14 @@ export class ControlsController {
 	/**
 	 * Import a control
 	 */
-	importControl(location: ControlLocation, definition: SomeButtonModel, forceControlId?: string): boolean {
+	importControl(location: ControlLocation, definition: SomeButtonModel, forceControlId?: string): string | null {
 		if (forceControlId && !this.#validateBankControlId(forceControlId)) {
 			// Control id is not valid!
-			return false
+			return null
 		}
 
 		// Delete old control at the coordinate
-		const oldControlId = this.#registry.page.getControlIdAt(location)
+		const oldControlId = this.#registry.page.store.getControlIdAt(location)
 		if (oldControlId) {
 			this.deleteControl(oldControlId)
 		}
@@ -1061,17 +1062,17 @@ export class ControlsController {
 		if (newControl) {
 			this.#controls.set(newControlId, newControl)
 
-			this.#registry.page.setControlIdAt(location, newControlId)
+			this.#registry.page.store.setControlIdAt(location, newControlId)
 
 			newControl.triggerRedraw()
 
 			// Ensure it is stored to the db
 			newControl.commitChange()
 
-			return true
+			return newControlId
 		}
 
-		return false
+		return null
 	}
 
 	/**
@@ -1193,9 +1194,9 @@ export class ControlsController {
 			this.#dbTable.delete(controlId)
 		}
 
-		const location = this.#registry.page.getLocationOfControlId(controlId)
+		const location = this.#registry.page.store.getLocationOfControlId(controlId)
 		if (location) {
-			this.#registry.page.setControlIdAt(location, null)
+			this.#registry.page.store.setControlIdAt(location, null)
 
 			// Notify interested parties
 			this.#controlEvents.emit('updateButtonState', location, false, undefined)
@@ -1226,14 +1227,14 @@ export class ControlsController {
 	 * @access public
 	 */
 	createButtonControl(location: ControlLocation, newType: string): string | null {
-		if (!this.#registry.page.isPageValid(location.pageNumber)) return null
+		if (!this.#registry.page.store.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
 		const newControl = this.#createClassForControl(controlId, 'button', newType, false)
 		if (!newControl) return null
 
 		this.#controls.set(controlId, newControl)
-		this.#registry.page.setControlIdAt(location, controlId)
+		this.#registry.page.store.setControlIdAt(location, controlId)
 
 		// Notify interested parties
 		this.#controlEvents.emit('updateButtonState', location, false, undefined)
@@ -1242,6 +1243,20 @@ export class ControlsController {
 		this.#registry.graphics.invalidateButton(location)
 
 		return controlId
+	}
+
+	/**
+	 * Create a control from a preset
+	 * @param connectionId The connection to get the preset from
+	 * @param presetId The id of the preset to import
+	 * @param location The location to place the control in the grid
+	 * @returns controlId
+	 */
+	#createControlFromPreset(connectionId: string, presetId: string, location: ControlLocation): string | null {
+		const model = this.#registry.instance.definitions.convertPresetToControlModel(connectionId, presetId)
+		if (!model) return null
+
+		return this.importControl(location, model)
 	}
 
 	/**
@@ -1327,7 +1342,7 @@ export class ControlsController {
 		controlLocation: ControlLocation | null | undefined,
 		overrideVariableValues: CompanionVariableValues | null
 	): VariablesAndExpressionParser {
-		const controlId = controlLocation && this.#registry.page.getControlIdAt(controlLocation)
+		const controlId = controlLocation && this.#registry.page.store.getControlIdAt(controlLocation)
 		const control = controlId && this.getControl(controlId)
 
 		const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
