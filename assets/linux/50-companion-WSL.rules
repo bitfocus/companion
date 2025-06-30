@@ -1,0 +1,2 @@
+SUBSYSTEM=="usb", GROUP="plugdev", MODE:="0666"
+SUBSYSTEM=="hidraw", GROUP="plugdev", MODE:="0666"
