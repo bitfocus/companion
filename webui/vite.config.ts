@@ -61,6 +61,10 @@ export default defineConfig({
 				ws: true,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
+			'/trpc': {
+				target: `ws://${upstreamUrl}`,
+				ws: true,
+			},
 		},
 	},
 	plugins: [
