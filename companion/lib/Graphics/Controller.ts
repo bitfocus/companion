@@ -28,6 +28,7 @@ import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import type { GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
@@ -36,6 +37,10 @@ import compressionMiddleware from 'compression'
 import fs from 'fs'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type imageRs from '@julusian/image-rs'
+import type { DataDatabase } from '../Data/Database.js'
+import type { UIHandler } from '../UI/Handler.js'
+import type { ClientSocket } from '../UI/Handler.js'
+import { ImageLibrary } from './ImageLibrary.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
@@ -70,6 +75,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #renderLRUCache = new LRUCache<string, ImageResult>({ max: 100 })
 
 	readonly #renderQueue: ImageWriteQueue<string, [ControlLocation, boolean]>
+
+	/**
+	 * Image library for storing and managing images
+	 */
+	readonly imageLibrary: ImageLibrary
 
 	#pool = workerPool.pool(
 		isPackaged() ? path.join(__dirname, './RenderThread.js') : fileURLToPath(new URL('./Thread.js', import.meta.url)),
@@ -116,7 +126,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		controlsController: ControlsController,
 		pageStore: IPageStore,
 		userConfigController: DataUserConfig,
-		variableValuesController: VariablesValues,
+		variablesController: VariablesController,
+		db: DataDatabase,
+		io: UIHandler,
 		internalApiRouter: Express.Router
 	) {
 		super()
@@ -124,7 +136,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#controlsController = controlsController
 		this.#pageStore = pageStore
 		this.#userConfigController = userConfigController
-		this.#variableValuesController = variableValuesController
+		this.#variableValuesController = variablesController.values
 
 		this.setMaxListeners(0)
 
@@ -256,6 +268,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 
 		this.#logger.info('Fonts loaded')
+
+		// Initialize the image library
+		this.imageLibrary = new ImageLibrary(db, io, this, variablesController)
 
 		// Serve font files to clients
 		internalApiRouter.get('/graphics/font/:font', compressionMiddleware(), (req, res) => {
@@ -580,6 +595,38 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				throw e
 			}
 		}
+	}
+
+	/**
+	 * Create a preview image in the worker pool
+	 */
+	async executeCreatePreview(
+		originalDataUrl: string,
+		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
+	): Promise<{ width: number; height: number; previewDataUrl: string }> {
+		const args: Parameters<typeof GraphicsRenderer.createImagePreview> = [originalDataUrl]
+
+		if (DEBUG_DISABLE_RENDER_THREADING) {
+			return GraphicsRenderer.createImagePreview(...args)
+		}
+
+		try {
+			return this.#pool.exec('createImagePreview', args)
+		} catch (e: any) {
+			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
+			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
+				return this.executeCreatePreview(originalDataUrl, remainingAttempts - 1)
+			} else {
+				throw e
+			}
+		}
+	}
+
+	/**
+	 * Setup a new socket client's events
+	 */
+	clientConnect(client: ClientSocket): void {
+		this.imageLibrary.clientConnect(client)
 	}
 }
 

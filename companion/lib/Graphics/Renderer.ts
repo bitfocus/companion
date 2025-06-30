@@ -24,6 +24,7 @@ import { GraphicsLockingGenerator } from './Locking.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type imageRs from '@julusian/image-rs'
+import { Canvas, loadImage } from '@napi-rs/canvas'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -485,6 +486,63 @@ export class GraphicsRenderer {
 				})
 			})
 		})
+	}
+
+	/**
+	 * Create a 200px preview WebP from the original image
+	 */
+	static async createImagePreview(
+		originalDataUrl: string
+	): Promise<{ width: number; height: number; previewDataUrl: string }> {
+		try {
+			// Load the original image data directly from data URL
+			const originalImage = await loadImage(originalDataUrl)
+
+			// Get original dimensions
+			const originalWidth = originalImage.width
+			const originalHeight = originalImage.height
+
+			// Calculate preview dimensions (max 200px on longest side, but don't upsize small images)
+			const maxSize = 200
+			let previewWidth: number
+			let previewHeight: number
+
+			// Check if the image is smaller than the target preview size
+			const largestDimension = Math.max(originalWidth, originalHeight)
+
+			if (largestDimension <= maxSize) {
+				// Image is smaller than target size - don't upsize, just use original dimensions
+				previewWidth = originalWidth
+				previewHeight = originalHeight
+			} else {
+				// Image is larger than target size - downsize to fit within maxSize
+				if (originalWidth > originalHeight) {
+					previewWidth = maxSize
+					previewHeight = Math.round((originalHeight * previewWidth) / originalWidth)
+				} else {
+					previewHeight = maxSize
+					previewWidth = Math.round((originalWidth * previewHeight) / originalHeight)
+				}
+			}
+
+			// Create preview canvas
+			const canvas = new Canvas(previewWidth, previewHeight)
+			const ctx = canvas.getContext('2d')
+
+			// Draw resized image
+			ctx.drawImage(originalImage, 0, 0, previewWidth, previewHeight)
+
+			// Convert to data URL (WebP format with 75% quality)
+			const previewDataUrl = canvas.toDataURL('image/webp', 0.75)
+
+			return {
+				width: originalWidth,
+				height: originalHeight,
+				previewDataUrl,
+			}
+		} catch (_e) {
+			throw new Error('Failed to process image')
+		}
 	}
 
 	static async #RotateAndConvertImage(

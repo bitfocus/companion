@@ -2,6 +2,7 @@ import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { ConnectionCollection, ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
 import type { TriggerCollection } from './TriggerModel.js'
+import type { ImageLibraryExportData, ImageLibraryCollection } from './ImageLibraryModel.js'
 
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
@@ -21,6 +22,8 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	connectionCollections?: ConnectionCollection[] // Added in v4.1
 	surfaces?: unknown
 	surfaceGroups?: unknown
+	imageLibrary?: ImageLibraryExportData[]
+	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
 export interface ExportPageModelv6 extends ExportBase<'page'> {
@@ -28,6 +31,8 @@ export interface ExportPageModelv6 extends ExportBase<'page'> {
 	instances: ExportInstancesv6
 	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
 	oldPageNumber: number
+	imageLibrary?: ImageLibraryExportData[]
+	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
 export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
@@ -35,6 +40,8 @@ export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
 	triggerCollections: TriggerCollection[] | undefined // Added in v4.1
 	instances: ExportInstancesv6
 	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
+	imageLibrary?: ImageLibraryExportData[]
+	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
 export type ExportTriggerContentv6 = Record<string, any> // TODO

@@ -33,13 +33,14 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 	dragId,
 	collectionsApi,
 	selectedItemId,
+	gridLayout,
 
 	collections,
 	items,
 }: CollectionsNestingTableProps<TCollection, TItem>) {
 	const { groupedItems, ungroupedItems } = getGroupedItems(items, new Set(collections.map((g) => g.id)))
 
-	const { isDragging } = useCollectionsListItemDrop(collectionsApi, dragId, null, null, 0) // Assuming null for root level collections
+	const { isDragging } = useCollectionsListItemDrop(collectionsApi, dragId, null, null, 0, gridLayout ?? false) // Assuming null for root level collections
 
 	return (
 		<CollectionsNestingTableContextProvider
@@ -49,6 +50,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 			collectionsApi={collectionsApi}
 			dragId={dragId}
 			selectedItemId={selectedItemId}
+			gridLayout={gridLayout}
 		>
 			<div className="collections-nesting-table">
 				{!!Heading && (

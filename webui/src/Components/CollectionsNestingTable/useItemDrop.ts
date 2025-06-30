@@ -1,6 +1,6 @@
 import { useDeferredValue } from 'react'
 import { ConnectDropTarget, useDrop } from 'react-dnd'
-import { checkDragState, type DragState } from '../../util.js'
+import { checkDragState, checkGridDragState, type DragState } from '../../util.js'
 import type { NestingCollectionsApi } from './Types.js'
 
 export interface CollectionsNestingTableItemDragItem {
@@ -19,7 +19,8 @@ export function useCollectionsListItemDrop(
 	dragId: string,
 	collectionId: string | null,
 	hoverItemId: string | null,
-	hoverIndex: number
+	hoverIndex: number,
+	gridLayout: boolean
 ): {
 	isDragging: boolean
 	drop: ConnectDropTarget
@@ -32,7 +33,10 @@ export function useCollectionsListItemDrop(
 		hover(item, monitor) {
 			if (hoverItemId === item.itemId) return // Don't allow dropping into the same item
 
-			if (!checkDragState(item, monitor, hoverItemId ?? `collection-drop-${collectionId}`)) return
+			const hoverItemIdFull = hoverItemId ?? `collection-drop-${collectionId}`
+
+			if (!gridLayout && !checkDragState(item, monitor, hoverItemIdFull)) return
+			if (gridLayout && !checkGridDragState(item, monitor, hoverItemIdFull)) return
 
 			// Time to actually perform the action
 			collectionsApi.moveItemToCollection(item.itemId, collectionId, hoverIndex)

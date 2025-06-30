@@ -12,6 +12,7 @@ export interface CollectionsNestingTableContextType<
 	dragId: string
 	collectionsApi: NestingCollectionsApi
 	selectedItemId: string | null
+	gridLayout?: boolean
 }
 
 const CollectionsNestingTableContext = createContext<CollectionsNestingTableContextType<any, any> | null>(null)
@@ -41,6 +42,7 @@ export function CollectionsNestingTableContextProvider<
 	dragId,
 	collectionsApi,
 	selectedItemId,
+	gridLayout,
 	children,
 }: React.PropsWithChildren<CollectionsNestingTableContextProviderProps<TCollection, TItem>>): React.JSX.Element {
 	const value = useMemo<CollectionsNestingTableContextType<TCollection, TItem>>(() => {
@@ -51,8 +53,9 @@ export function CollectionsNestingTableContextProvider<
 			dragId,
 			collectionsApi,
 			selectedItemId,
+			gridLayout,
 		}
-	}, [ItemRow, GroupHeaderContent, itemName, dragId, collectionsApi, selectedItemId])
+	}, [ItemRow, GroupHeaderContent, itemName, dragId, collectionsApi, selectedItemId, gridLayout])
 
 	return <CollectionsNestingTableContext.Provider value={value}>{children}</CollectionsNestingTableContext.Provider>
 }

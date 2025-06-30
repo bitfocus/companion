@@ -211,7 +211,9 @@ export class Registry {
 				this.controls,
 				pageStore,
 				this.userconfig,
-				this.variables.values,
+				this.variables,
+				this.db,
+				this.io,
 				this.#internalApiRouter
 			)
 			this.surfaces = new SurfaceController(
@@ -337,6 +339,7 @@ export class Registry {
 				this.#data.clientConnect(client)
 				this.page.clientConnect(client)
 				this.controls.clientConnect(client)
+				this.graphics.clientConnect(client)
 				this.#preview.clientConnect(client)
 				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)
