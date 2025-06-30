@@ -27,6 +27,7 @@ import { ServiceApi } from './Service/ServiceApi.js'
 import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import { ActiveLearningStore } from './Resources/ActiveLearningStore.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -205,8 +206,10 @@ export class Registry {
 		try {
 			const controlEvents = new EventEmitter<ControlCommonEvents>()
 
+			const activeLearningStore = new ActiveLearningStore(this.io)
 			const pageStore = new PageStore(this.db.getTableView('pages'))
-			this.controls = new ControlsController(this, controlEvents)
+			this.controls = new ControlsController(this, controlEvents, activeLearningStore)
+
 			this.graphics = new GraphicsController(
 				this.controls,
 				pageStore,
@@ -346,6 +349,7 @@ export class Registry {
 				this.#cloud.clientConnect(client)
 				this.#services.clientConnect(client)
 				this.#importExport.clientConnect(client)
+				activeLearningStore.clientConnect(client)
 			})
 
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {

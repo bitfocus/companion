@@ -30,9 +30,9 @@ import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressio
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
+import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 
 export const TriggersListRoom = 'triggers:list'
-const ActiveLearnRoom = 'learn:active'
 
 /**
  * The class that manages the controls
@@ -79,17 +79,22 @@ export class ControlsController {
 	readonly triggers: TriggerEvents
 
 	/**
-	 * Active learn requests. Ids of actions & feedbacks
+	 * Active learning store
 	 */
-	readonly #activeLearnRequests = new Set<string>()
+	readonly #activeLearningStore: ActiveLearningStore
 
 	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
 	readonly #triggerCollections: TriggerCollections
 
-	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
+	constructor(
+		registry: Registry,
+		controlEvents: EventEmitter<ControlCommonEvents>,
+		activeLearningStore: ActiveLearningStore
+	) {
 		this.#registry = registry
 		this.#controlEvents = controlEvents
+		this.#activeLearningStore = activeLearningStore
 
 		this.#dbTable = registry.db.getTableView('controls')
 
@@ -391,27 +396,13 @@ export class ControlsController {
 
 			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
-			if (this.#activeLearnRequests.has(id)) throw new Error('Learn is already running')
-			try {
-				this.#setIsLearning(id, true)
-
-				control.entities
-					.entityLearn(entityLocation, id)
-					.catch((e) => {
-						this.#logger.error(`Learn failed: ${e}`)
-					})
-					.then(() => {
-						this.#setIsLearning(id, false)
-					})
-					.catch((e) => {
-						this.#logger.error(`Learn cleanup failed: ${e}`)
-					})
-
-				return true
-			} catch (e) {
-				this.#setIsLearning(id, false)
-				throw e
-			}
+			await this.#activeLearningStore.runLearnRequest(id, async () => {
+				await control.entities.entityLearn(entityLocation, id).catch((e) => {
+					this.#logger.error(`Learn failed: ${e}`)
+					throw e
+				})
+			})
+			return true
 		})
 
 		client.onPromise('controls:entity:enabled', (controlId, entityLocation, id, enabled) => {
@@ -866,15 +857,6 @@ export class ControlsController {
 			}
 		})
 
-		client.onPromise('controls:subscribe:learn', async () => {
-			client.join(ActiveLearnRoom)
-
-			return Array.from(this.#activeLearnRequests)
-		})
-		client.onPromise('controls:unsubscribe:learn', async () => {
-			client.leave(ActiveLearnRoom)
-		})
-
 		client.onPromise('controls:style:add-element', async (controlId, type, index) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
@@ -1257,19 +1239,6 @@ export class ControlsController {
 		if (!model) return null
 
 		return this.importControl(location, model)
-	}
-
-	/**
-	 * Set an item as learning, or not
-	 */
-	#setIsLearning(id: string, isActive: boolean): void {
-		if (isActive) {
-			this.#activeLearnRequests.add(id)
-			this.#registry.io.emitToRoom(ActiveLearnRoom, 'learn:add', id)
-		} else {
-			this.#activeLearnRequests.delete(id)
-			this.#registry.io.emitToRoom(ActiveLearnRoom, 'learn:remove', id)
-		}
 	}
 
 	setTriggerCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {
