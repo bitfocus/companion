@@ -177,6 +177,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				service={entityService}
 				entityTypeLabel={entityTypeLabel}
 				entity={entity}
+				ownerId={ownerId}
 				isPanelCollapsed={isCollapsed}
 				setPanelCollapsed={setCollapsed}
 				definitionName={definitionName}

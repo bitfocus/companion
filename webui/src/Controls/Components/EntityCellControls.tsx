@@ -3,7 +3,7 @@ import { CButtonGroup, CButton, CFormSwitch } from '@coreui/react'
 import { faPencil, faExpandArrowsAlt, faCompressArrowsAlt, faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, EntityOwner, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 
@@ -11,6 +11,7 @@ interface EntityCellControlProps {
 	service: IEntityEditorActionService
 	entityTypeLabel: string
 	entity: SomeEntityModel
+	ownerId: EntityOwner | null
 	isPanelCollapsed: boolean
 	setPanelCollapsed: (collapsed: boolean) => void
 	definitionName: string
@@ -25,6 +26,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	service,
 	entityTypeLabel,
 	entity,
+	ownerId,
 	isPanelCollapsed,
 	setPanelCollapsed,
 	definitionName,
@@ -43,7 +45,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	const doExpand = useCallback(() => setPanelCollapsed(false), [setPanelCollapsed])
 
 	let headline = entity.headline || definitionName
-	if (isPanelCollapsed && isLocalVariablesList && entity.type === EntityModelType.Feedback) {
+	if (isPanelCollapsed && isLocalVariablesList && entity.type === EntityModelType.Feedback && !ownerId) {
 		if (entity.variableName) {
 			headline = `$(local:${entity.variableName}) ${entity.headline || ''}`
 		} else {
