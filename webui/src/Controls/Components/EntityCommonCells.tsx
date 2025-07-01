@@ -38,7 +38,7 @@ export function EntityCommonCells({
 	headlineExpanded,
 	definitionName,
 }: EntityCommonCellsProps): React.JSX.Element {
-	const { location, isLocalVariablesList, controlId, readonly, localVariablesStore } = useEntityEditorContext()
+	const { location, localVariablePrefix, controlId, readonly, localVariablesStore } = useEntityEditorContext()
 
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
@@ -66,11 +66,13 @@ export function EntityCommonCells({
 				)}
 
 				<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
-					{!!entity && isLocalVariablesList && (
+					{!!entity && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
 								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
-									<InlineHelp help="The name to give this value as a local variable">Variable name</InlineHelp>
+									<InlineHelp help={`The name to give this value as a ${localVariablePrefix} variable`}>
+										Variable name
+									</InlineHelp>
 								</CFormLabel>
 								<CCol sm={8}>
 									<TextInputField

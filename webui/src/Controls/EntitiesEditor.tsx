@@ -27,7 +27,7 @@ interface ControlEntitiesEditorProps {
 	heading: JSX.Element | string | null
 	headingActions?: JSX.Element[]
 	localVariablesStore: LocalVariablesStore | null
-	isLocalVariablesList: boolean
+	localVariablePrefix: string | null
 }
 
 export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
@@ -41,7 +41,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	heading,
 	headingActions,
 	localVariablesStore,
-	isLocalVariablesList,
+	localVariablePrefix,
 }: ControlEntitiesEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
@@ -57,7 +57,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 				serviceFactory={serviceFactory}
 				readonly={false}
 				localVariablesStore={localVariablesStore}
-				isLocalVariablesList={isLocalVariablesList}
+				localVariablePrefix={localVariablePrefix}
 			>
 				<PanelCollapseHelperProvider
 					storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}

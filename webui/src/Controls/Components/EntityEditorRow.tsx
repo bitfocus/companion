@@ -148,7 +148,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	entity,
 	feedbackListType,
 }: EntityEditorRowContentProps) {
-	const { serviceFactory, readonly, isLocalVariablesList } = useEntityEditorContext()
+	const { serviceFactory, readonly, localVariablePrefix } = useEntityEditorContext()
 	const entityService = useControlEntityService(serviceFactory, entity, entityTypeLabel)
 
 	const { connections, entityDefinitions } = useContext(RootAppStoreContext)
@@ -185,7 +185,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				headlineExpanded={headlineExpanded}
 				setHeadlineExpanded={doEditHeadline}
 				readonly={readonly}
-				isLocalVariablesList={isLocalVariablesList}
+				localVariablePrefix={localVariablePrefix}
 			/>
 
 			{!isCollapsed && (

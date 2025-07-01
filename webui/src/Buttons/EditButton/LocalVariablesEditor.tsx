@@ -32,7 +32,7 @@ export function LocalVariablesEditor({
 				entityTypeLabel="variable"
 				feedbackListType={FeedbackEntitySubType.Value}
 				localVariablesStore={localVariablesStore}
-				isLocalVariablesList={true}
+				localVariablePrefix="local"
 			/>
 		</>
 	)

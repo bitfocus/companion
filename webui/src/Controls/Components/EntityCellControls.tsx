@@ -19,7 +19,7 @@ interface EntityCellControlProps {
 	headlineExpanded: boolean
 	setHeadlineExpanded: () => void
 	readonly: boolean
-	isLocalVariablesList: boolean
+	localVariablePrefix: string | null
 }
 
 export const EntityRowHeader = observer(function EntityRowHeader({
@@ -34,7 +34,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	headlineExpanded,
 	setHeadlineExpanded,
 	readonly,
-	isLocalVariablesList,
+	localVariablePrefix,
 }: EntityCellControlProps) {
 	const innerSetEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled?.(e.target.checked),
@@ -45,7 +45,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	const doExpand = useCallback(() => setPanelCollapsed(false), [setPanelCollapsed])
 
 	let headline = entity.headline || definitionName
-	if (isPanelCollapsed && isLocalVariablesList && entity.type === EntityModelType.Feedback && !ownerId) {
+	if (isPanelCollapsed && localVariablePrefix && entity.type === EntityModelType.Feedback && !ownerId) {
 		if (entity.variableName) {
 			headline = `$(local:${entity.variableName}) ${entity.headline || ''}`
 		} else {

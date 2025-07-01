@@ -10,7 +10,7 @@ export interface EntityEditorContextType {
 	serviceFactory: IEntityEditorService
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
-	isLocalVariablesList: boolean
+	localVariablePrefix: string | null
 }
 
 const EntityEditorContext = createContext<EntityEditorContextType | null>(null)
@@ -29,7 +29,7 @@ export function EntityEditorContextProvider({
 	serviceFactory,
 	readonly,
 	localVariablesStore,
-	isLocalVariablesList,
+	localVariablePrefix,
 	children,
 }: React.PropsWithChildren<EntityEditorContextProviderProps>): React.JSX.Element {
 	const value = useMemo<EntityEditorContextType>(() => {
@@ -39,9 +39,9 @@ export function EntityEditorContextProvider({
 			serviceFactory,
 			readonly,
 			localVariablesStore,
-			isLocalVariablesList,
+			localVariablePrefix,
 		}
-	}, [controlId, location, serviceFactory, readonly, localVariablesStore, isLocalVariablesList])
+	}, [controlId, location, serviceFactory, readonly, localVariablesStore, localVariablePrefix])
 
 	return <EntityEditorContext.Provider value={value}>{children}</EntityEditorContext.Provider>
 }
