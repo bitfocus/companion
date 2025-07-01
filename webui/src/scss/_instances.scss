@@ -1,5 +1,5 @@
-@use '@coreui/coreui/scss/coreui' as *;
-@use 'variables';
+@use 'variables' as *;
+@use '@coreui/coreui/scss/coreui';  // not strictly necessary, but it allows us to clarify the origin of mixins
 
 .float_right {
 	float: right;
@@ -112,7 +112,7 @@
 
 	.variable-description {
 		word-break: normal;
-		padding: variables.$variable-padding;
+		padding: $variable-padding;
 	}
 
 	.editor-grid {
@@ -133,13 +133,13 @@
 			display: grid;
 			grid-template-columns: 0.25fr 1fr;
 
-			@include media-breakpoint-up(sm) {
+			@include coreui.media-breakpoint-up(sm) {
 				.align-right {
 					text-align: right;
 					align-self: center;
 				}
 			}
-			@include media-breakpoint-down(sm) {
+			@include coreui.media-breakpoint-down(sm) {
 				.align-right {
 					margin-bottom: 0;
 				}

@@ -1,4 +1,5 @@
-@use '@coreui/coreui/scss/coreui' as *;
+@use 'variables' as *;
+@use '@coreui/coreui/scss/coreui';  // not strictly necessary, but it allows us to clarify the origin of mixins
 
 body {
 	-webkit-text-size-adjust: 100%;
@@ -31,7 +32,7 @@ body {
 	height: 100vh;
 	overflow-y: hidden;
 
-	@include ltr-rtl('padding-left', var(--cui-sidebar-occupy-start, 0));
+	@include coreui.ltr-rtl('padding-left', var(--cui-sidebar-occupy-start, 0));
 }
 
 .body {
@@ -181,7 +182,7 @@ form.row > * {
 			color: rgba(0, 0, 0, 0.3);
 		}
 
-		@include media-breakpoint-down('lg') {
+		@include coreui.media-breakpoint-down('lg') {
 			padding: 10px;
 			border-radius: 0px;
 			padding: 5px 10px;
@@ -432,7 +433,7 @@ form.row > * {
 }
 
 // scroll if side-by-side
-@include media-breakpoint-up('xl') {
+@include coreui.media-breakpoint-up('xl') {
 	.split-panels {
 		height: 100%;
 
