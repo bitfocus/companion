@@ -14,6 +14,7 @@ import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEnti
 import { EditableEntityList } from './Components/EntityList.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { LocalVariablesStore } from './LocalVariablesStore.js'
+import { EntityEditorContextProvider } from './Components/EntityEditorContext.js'
 
 interface ControlEntitiesEditorProps {
 	controlId: string
@@ -44,34 +45,37 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 }: ControlEntitiesEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const serviceFactory = useControlEntitiesEditorService(controlId, listId, entityTypeLabel, entityType, confirmModal)
+	const serviceFactory = useControlEntitiesEditorService(controlId, listId, confirmModal)
 
 	const entityIds = useMemo(() => findAllEntityIdsDeep(entities ?? []), [entities])
 
 	return (
 		<div className="entity-category">
-			<PanelCollapseHelperProvider
-				storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}
-				knownPanelIds={entityIds}
+			<EntityEditorContextProvider
+				controlId={controlId}
+				location={location}
+				serviceFactory={serviceFactory}
+				readonly={false}
+				localVariablesStore={localVariablesStore}
+				isLocalVariablesList={isLocalVariablesList}
 			>
-				<GenericConfirmModal ref={confirmModal} />
+				<PanelCollapseHelperProvider
+					storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}
+					knownPanelIds={entityIds}
+				>
+					<GenericConfirmModal ref={confirmModal} />
 
-				<EditableEntityList
-					controlId={controlId}
-					heading={heading}
-					headingActions={headingActions}
-					entities={entities}
-					location={location}
-					serviceFactory={serviceFactory}
-					ownerId={null}
-					entityType={entityType}
-					entityTypeLabel={entityTypeLabel}
-					feedbackListType={feedbackListType}
-					readonly={false}
-					localVariablesStore={localVariablesStore}
-					isLocalVariablesList={isLocalVariablesList}
-				/>
-			</PanelCollapseHelperProvider>
+					<EditableEntityList
+						heading={heading}
+						headingActions={headingActions}
+						entities={entities}
+						ownerId={null}
+						entityType={entityType}
+						entityTypeLabel={entityTypeLabel}
+						feedbackListType={feedbackListType}
+					/>
+				</PanelCollapseHelperProvider>
+			</EntityEditorContextProvider>
 		</div>
 	)
 })

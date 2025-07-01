@@ -1,7 +1,12 @@
 import { useContext, useMemo } from 'react'
 import { SocketContext } from '~/util.js'
 import type { IEntityEditorService } from './ControlEntitiesService.js'
-import type { EntityOwner, SomeEntityModel, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import type {
+	EntityModelType,
+	EntityOwner,
+	SomeEntityModel,
+	SomeSocketEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
 
 export function useActionRecorderActionService(sessionId: string): IEntityEditorService {
 	const socket = useContext(SocketContext)
@@ -11,7 +16,12 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			listId: 'trigger_actions',
 			confirmModal: { current: null }, // TODO this is a hack
 
-			addEntity: async (_connectionId: string, _definitionId: string, _ownerId: EntityOwner | null) => {
+			addEntity: async (
+				_connectionId: string,
+				_entityModelType: EntityModelType,
+				_definitionId: string,
+				_ownerId: EntityOwner | null
+			) => {
 				// Not supported
 				return null
 			},

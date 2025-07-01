@@ -13,10 +13,15 @@ export interface IEntityEditorService {
 	readonly listId: SomeSocketEntityLocation
 	readonly confirmModal: React.RefObject<GenericConfirmModalRef>
 
-	addEntity: (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => Promise<string | null>
+	addEntity: (
+		connectionId: string,
+		entityModelType: EntityModelType,
+		definitionId: string,
+		ownerId: EntityOwner | null
+	) => Promise<string | null>
 
 	setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: any) => void
-	performDelete: (entityId: string) => void
+	performDelete: (entityId: string, entityTypeLabel: string) => void
 	performDuplicate: (entityId: string) => void
 	setConnection: (entityId: string, connectionId: string) => void
 	moveCard: (
@@ -55,8 +60,6 @@ export interface IEntityEditorActionService {
 export function useControlEntitiesEditorService(
 	controlId: string,
 	listId: SomeSocketEntityLocation,
-	entityTypeLabel: string,
-	entityModelType: EntityModelType,
 	confirmModal: React.RefObject<GenericConfirmModalRef>
 ): IEntityEditorService {
 	const socket = useContext(SocketContext)
@@ -66,7 +69,12 @@ export function useControlEntitiesEditorService(
 			listId,
 			confirmModal,
 
-			addEntity: async (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => {
+			addEntity: async (
+				connectionId: string,
+				entityModelType: EntityModelType,
+				definitionId: string,
+				ownerId: EntityOwner | null
+			) => {
 				return socket.emitPromise('controls:entity:add', [
 					controlId,
 					listId,
@@ -104,7 +112,7 @@ export function useControlEntitiesEditorService(
 				})
 			},
 
-			performDelete: (entityId: string) => {
+			performDelete: (entityId: string, entityTypeLabel: string) => {
 				confirmModal.current?.show(`Delete ${entityTypeLabel}`, `Delete ${entityTypeLabel}?`, 'Delete', () => {
 					socket.emitPromise('controls:entity:remove', [controlId, listId, entityId]).catch((e) => {
 						console.error('Failed to remove control entity', e)
@@ -165,13 +173,14 @@ export function useControlEntitiesEditorService(
 			},
 		}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId), entityTypeLabel, entityModelType]
+		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId)]
 	)
 }
 
 export function useControlEntityService(
 	serviceFactory: IEntityEditorService,
-	entity: SomeEntityModel
+	entity: SomeEntityModel,
+	entityTypeLabel: string
 ): IEntityEditorActionService {
 	const entityRef = useRef<SomeEntityModel>()
 	entityRef.current = entity
@@ -181,7 +190,7 @@ export function useControlEntityService(
 	return useMemo(
 		() => ({
 			setValue: (key: string, val: any) => serviceFactory.setValue(entityId, entityRef.current, key, val),
-			performDelete: () => serviceFactory.performDelete(entityId),
+			performDelete: () => serviceFactory.performDelete(entityId, entityTypeLabel),
 			performDuplicate: () => serviceFactory.performDuplicate(entityId),
 			setConnection: (connectionId: string) => serviceFactory.setConnection(entityId, connectionId),
 			performLearn: serviceFactory.performLearn ? () => serviceFactory.performLearn?.(entityId) : undefined,
@@ -197,6 +206,6 @@ export function useControlEntityService(
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
 			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 		}),
-		[serviceFactory, entityId]
+		[serviceFactory, entityId, entityTypeLabel]
 	)
 }

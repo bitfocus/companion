@@ -19,36 +19,27 @@ import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
 import { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { TextInputField } from '../../Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
+import { useEntityEditorContext } from './EntityEditorContext.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
-	entityType: EntityModelType
 	feedbackListType: FeedbackEntitySubType | null
 	entityDefinition: ClientEntityDefinition | undefined
 	service: IEntityEditorActionService
 	headlineExpanded: boolean
 	definitionName: string
-	isLocatedInGrid: boolean
-	isLocalVariablesList: boolean
-	controlId: string
-	readonly: boolean
-	localVariablesStore: LocalVariablesStore | null
 }
 
 export function EntityCommonCells({
 	entity,
-	entityType,
 	feedbackListType,
 	entityDefinition,
 	service,
 	headlineExpanded,
 	definitionName,
-	isLocatedInGrid,
-	isLocalVariablesList,
-	controlId,
-	readonly,
-	localVariablesStore,
 }: EntityCommonCellsProps): React.JSX.Element {
+	const { location, isLocalVariablesList, controlId, readonly, localVariablesStore } = useEntityEditorContext()
+
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
 	const [optionFields, optionVisibility] = useOptionsAndIsVisible(entityDefinition?.options, entity?.options)
@@ -121,8 +112,8 @@ export function EntityCommonCells({
 						<MyErrorBoundary key={i}>
 							<OptionsInputField
 								key={i}
-								isLocatedInGrid={isLocatedInGrid}
-								entityType={entityType}
+								isLocatedInGrid={!!location}
+								entityType={entity.type}
 								connectionId={entity.connectionId}
 								option={opt}
 								value={(entity.options || {})[opt.id]}
@@ -141,16 +132,16 @@ export function EntityCommonCells({
 						service={service}
 					/>
 
-					{!!entity && entityType === EntityModelType.Feedback && feedbackListType === null && (
+					{!!entity && entity.type === EntityModelType.Feedback && feedbackListType === null && (
 						<>
 							<FeedbackManageStyles
 								feedbackSpec={entityDefinition}
-								feedback={entity as FeedbackEntityModel}
+								feedback={entity}
 								setSelectedStyleProps={service.setSelectedStyleProps}
 							/>
 							<FeedbackStyles
 								feedbackSpec={entityDefinition}
-								feedback={entity as FeedbackEntityModel}
+								feedback={entity}
 								setStylePropsValue={service.setStylePropsValue}
 								localVariablesStore={localVariablesStore}
 							/>

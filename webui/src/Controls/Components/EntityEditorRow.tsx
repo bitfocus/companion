@@ -1,4 +1,3 @@
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityOwner,
 	EntityModelType,
@@ -8,7 +7,7 @@ import {
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useState, useCallback, useRef } from 'react'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
-import { IEntityEditorService, useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
+import { useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { stringifyEntityOwnerId } from '../Util.js'
 import { EntityRowHeader } from './EntityCellControls.js'
@@ -20,7 +19,7 @@ import { useDrop, useDrag } from 'react-dnd'
 import { checkDragState } from '~/util.js'
 import { EntityListDragItem } from './EntityListDropZone.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { LocalVariablesStore } from '../LocalVariablesStore.js'
+import { useEntityEditorContext } from './EntityEditorContext.js'
 
 interface EntityTableRowDragStatus {
 	isDragging: boolean
@@ -28,37 +27,26 @@ interface EntityTableRowDragStatus {
 
 interface EntityTableRowProps {
 	entity: SomeEntityModel
-	controlId: string
 	ownerId: EntityOwner | null
-	location: ControlLocation | undefined
 	index: number
 	dragId: string
-	serviceFactory: IEntityEditorService
 
 	entityType: EntityModelType
 	entityTypeLabel: string
 	feedbackListType: ClientEntityDefinition['feedbackType']
-
-	readonly: boolean
-	localVariablesStore: LocalVariablesStore | null
-	isLocalVariablesList: boolean
 }
 
 export const EntityTableRow = observer(function EntityTableRow({
 	entity,
-	controlId,
 	ownerId,
-	location,
 	index,
 	dragId,
-	serviceFactory,
 	entityType,
 	entityTypeLabel,
 	feedbackListType,
-	readonly,
-	localVariablesStore,
-	isLocalVariablesList,
 }: EntityTableRowProps): JSX.Element | null {
+	const { serviceFactory, readonly } = useEntityEditorContext()
+
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EntityListDragItem>({
 		accept: dragId,
@@ -134,17 +122,10 @@ export const EntityTableRow = observer(function EntityTableRow({
 			<td>
 				{entity.type === entityType ? (
 					<EntityEditorRowContent
-						controlId={controlId}
 						ownerId={ownerId}
-						entityType={entityType}
 						entityTypeLabel={entityTypeLabel}
-						location={location}
 						entity={entity}
-						serviceFactory={serviceFactory}
 						feedbackListType={feedbackListType}
-						readonly={readonly}
-						localVariablesStore={localVariablesStore}
-						isLocalVariablesList={isLocalVariablesList}
 					/>
 				) : (
 					<p>Entity is not a {entityTypeLabel}!</p>
@@ -155,40 +136,27 @@ export const EntityTableRow = observer(function EntityTableRow({
 })
 
 interface EntityEditorRowContentProps {
-	controlId: string
 	ownerId: EntityOwner | null
-	entityType: EntityModelType
 	entityTypeLabel: string
 	entity: SomeEntityModel
-	location: ControlLocation | undefined
-	serviceFactory: IEntityEditorService
 	feedbackListType: ClientEntityDefinition['feedbackType']
-	readonly: boolean
-	localVariablesStore: LocalVariablesStore | null
-	isLocalVariablesList: boolean
 }
 
 export const EntityEditorRowContent = observer(function EntityEditorRowContent({
-	controlId,
 	ownerId,
-	entityType,
 	entityTypeLabel,
 	entity,
-	location,
-	serviceFactory,
 	feedbackListType,
-	readonly,
-	localVariablesStore,
-	isLocalVariablesList,
 }: EntityEditorRowContentProps) {
-	const entityService = useControlEntityService(serviceFactory, entity)
+	const { serviceFactory, readonly, isLocalVariablesList } = useEntityEditorContext()
+	const entityService = useControlEntityService(serviceFactory, entity, entityTypeLabel)
 
 	const { connections, entityDefinitions } = useContext(RootAppStoreContext)
 
 	const connectionInfo = connections.getInfo(entity.connectionId)
 	const connectionLabel = connectionInfo?.label ?? entity.connectionId
 
-	const entityDefinition = entityDefinitions.getEntityDefinition(entityType, entity.connectionId, entity.definitionId)
+	const entityDefinition = entityDefinitions.getEntityDefinition(entity.type, entity.connectionId, entity.definitionId)
 
 	const definitionName = entityDefinition
 		? `${connectionLabel}: ${entityDefinition.label}`
@@ -223,29 +191,14 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				<div className="editor-grid">
 					<EntityCommonCells
 						entity={entity}
-						entityType={entityType}
 						feedbackListType={feedbackListType}
 						entityDefinition={entityDefinition}
 						service={entityService}
 						headlineExpanded={headlineExpanded}
 						definitionName={definitionName}
-						isLocatedInGrid={!!location}
-						isLocalVariablesList={isLocalVariablesList}
-						controlId={controlId}
-						readonly={readonly}
-						localVariablesStore={localVariablesStore}
 					/>
 
-					<EntityManageChildGroups
-						entity={entity}
-						entityDefinition={entityDefinition}
-						controlId={controlId}
-						location={location}
-						serviceFactory={serviceFactory}
-						readonly={readonly}
-						localVariablesStore={localVariablesStore}
-						isLocalVariablesList={isLocalVariablesList}
-					/>
+					<EntityManageChildGroups entity={entity} entityDefinition={entityDefinition} />
 				</div>
 			)}
 		</>
