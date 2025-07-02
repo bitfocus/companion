@@ -35,8 +35,10 @@ import type {
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from './Model/TriggerModel.js'
 import type {
+	ClientCustomVariableData,
 	CustomVariableCollection,
 	CustomVariableUpdate,
+	CustomVariableUpdate2,
 	CustomVariablesModel,
 } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
@@ -113,6 +115,8 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'triggers:unsubscribe': () => void
 	'trigger-collections:subscribe': () => TriggerCollection[]
 	'trigger-collections:unsubscribe': () => void
+	'custom-variables2:subscribe': () => Record<string, ClientCustomVariableData | undefined>
+	'custom-variables2:unsubscribe': () => void
 
 	'controls:subscribe': (controlId: string) => { config: unknown; runtime: unknown } | undefined
 	'controls:unsubscribe': (controlId: string) => void
@@ -261,6 +265,12 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'triggers:delete': (controlId: string) => boolean
 	'triggers:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
 	'triggers:test': (controlId: string) => boolean
+
+	'custom-variables2:create': () => string
+	'custom-variables2:clone': (controlId: string) => string | false
+	'custom-variables2:delete': (controlId: string) => boolean
+	// 'custom-variables2:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
+	// 'custom-variables2:test': (controlId: string) => boolean
 
 	'trigger-collections:add': (collectionName: string) => string
 	'trigger-collections:remove': (collectionId: string) => void
@@ -510,6 +520,7 @@ export interface BackendToClientEventsMap {
 	'trigger-collections:update': (patch: TriggerCollection[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
+	'custom-variables2:update': (changes: CustomVariableUpdate2) => void
 	'custom-variable-collections:update': (patch: CustomVariableCollection[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void

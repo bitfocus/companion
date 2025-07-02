@@ -11,8 +11,9 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
 
-export type SomeControlModel = SomeButtonModel | TriggerModel
+export type SomeControlModel = SomeButtonModel | TriggerModel | CustomVariableModel2
 
 export interface ControlDependencies {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>

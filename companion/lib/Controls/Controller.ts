@@ -4,6 +4,7 @@ import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import {
 	CreateBankControlId,
+	CreateCustomVariableControlId,
 	CreateTriggerControlId,
 	ParseControlId,
 	formatLocation,
@@ -31,8 +32,11 @@ import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
+import { ControlCustomVariable } from './ControlTypes/CustomVariable.js'
+import { ClientCustomVariableData, CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
 
 export const TriggersListRoom = 'triggers:list'
+export const CustomVariablesListRoom = 'custom-variables:list'
 
 /**
  * The class that manages the controls
@@ -775,6 +779,119 @@ export class ControlsController {
 			return true
 		})
 
+		client.onPromise('custom-variables2:subscribe', () => {
+			client.join(CustomVariablesListRoom)
+
+			const variables: Record<string, ClientCustomVariableData> = {}
+
+			for (const [controlId, control] of this.#controls.entries()) {
+				if (control instanceof ControlCustomVariable) {
+					variables[controlId] = control.toClientJSON()
+				}
+			}
+
+			return variables
+		})
+		client.onPromise('custom-variables2:unsubscribe', () => {
+			client.leave(CustomVariablesListRoom)
+		})
+		client.onPromise('custom-variables2:create', () => {
+			const controlId = CreateCustomVariableControlId(nanoid())
+
+			const newControl = new ControlCustomVariable(this.#createControlDependencies(), controlId, null, false)
+			this.#controls.set(controlId, newControl)
+
+			// Add variable to the end of the list
+			const allCustomVariables = this.getAllCustomVariables()
+			const maxRank = Math.max(0, ...allCustomVariables.map((control) => control.options.sortOrder))
+			newControl.optionsSetField('sortOrder', maxRank, true)
+
+			// Ensure it is stored to the db
+			newControl.commitChange()
+
+			return controlId
+		})
+		client.onPromise('custom-variables2:delete', (controlId) => {
+			if (!this.#validateCustomVariableControlId(controlId)) {
+				// Control id is not valid!
+				return false
+			}
+
+			const control = this.getControl(controlId)
+			if (control) {
+				control.destroy()
+
+				this.#controls.delete(controlId)
+
+				this.#dbTable.delete(controlId)
+
+				return true
+			}
+
+			return false
+		})
+		client.onPromise('custom-variables2:clone', (controlId) => {
+			if (!this.#validateCustomVariableControlId(controlId)) {
+				// Control id is not valid!
+				return false
+			}
+
+			const newControlId = CreateCustomVariableControlId(nanoid())
+
+			const fromControl = this.getControl(controlId)
+			if (fromControl) {
+				const controlJson = fromControl.toJSON(true)
+
+				const newControl = this.#createClassForControl(newControlId, 'custom-variable', controlJson, true)
+				if (newControl) {
+					this.#controls.set(newControlId, newControl)
+
+					return newControlId
+				}
+			}
+
+			return false
+		})
+		// client.onPromise('triggers:reorder', (collectionId: string | null, controlId: string, dropIndex: number) => {
+		// 	const thisTrigger = this.#controls.get(controlId)
+		// 	if (!thisTrigger || !(thisTrigger instanceof ControlTrigger)) return false
+
+		// 	if (!this.#triggerCollections.doesCollectionIdExist(collectionId)) return false
+
+		// 	// update the collectionId of the trigger being moved if needed
+		// 	if (thisTrigger.options.collectionId !== (collectionId ?? undefined)) {
+		// 		thisTrigger.optionsSetField('collectionId', collectionId ?? undefined, true)
+		// 		thisTrigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(collectionId))
+		// 	}
+
+		// 	// find all the other triggers with the matching collectionId
+		// 	const sortedTriggers = Array.from(this.#controls.values())
+		// 		.filter(
+		// 			(control): control is ControlTrigger =>
+		// 				control.controlId !== controlId &&
+		// 				control instanceof ControlTrigger &&
+		// 				((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
+		// 		)
+		// 		.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
+
+		// 	if (dropIndex < 0) {
+		// 		// Push the trigger to the end of the array
+		// 		sortedTriggers.push(thisTrigger)
+		// 	} else {
+		// 		// Insert the trigger at the drop index
+		// 		sortedTriggers.splice(dropIndex, 0, thisTrigger)
+		// 	}
+
+		// 	// update the sort order of the connections in the store, tracking which ones changed
+		// 	sortedTriggers.forEach((trigger, index) => {
+		// 		if (trigger.options.sortOrder === index) return // No change
+
+		// 		trigger.optionsSetField('sortOrder', index, true)
+		// 	})
+
+		// 	return true
+		// })
+
 		client.onPromise('controls:event:add', (controlId, eventType) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
@@ -927,13 +1044,13 @@ export class ControlsController {
 	/**
 	 * Create a new control class instance
 	 * @param controlId Id of the control
-	 * @param category 'button' | 'trigger' | 'all'
+	 * @param category 'button' | 'trigger' | 'custom-variable' | 'all'
 	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param isImport Whether this is an import, and needs additional processing
 	 */
 	#createClassForControl(
 		controlId: string,
-		category: 'button' | 'trigger' | 'all',
+		category: 'button' | 'trigger' | 'custom-variable' | 'all',
 		controlObj: SomeControlModel | string,
 		isImport: boolean
 	): SomeControl<any> | null {
@@ -967,6 +1084,17 @@ export class ControlsController {
 					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
 				})
 				return trigger
+			}
+		}
+
+		if (category === 'all' || category === 'custom-variable') {
+			if (controlObj2?.type === 'custom-variable' || (controlType === 'custom-variable' && !controlObj2)) {
+				const variable = new ControlCustomVariable(this.#createControlDependencies(), controlId, controlObj2, isImport)
+				// setImmediate(() => {
+				// 	// Ensure the trigger is enabled, on a slight debounce
+				// 	trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
+				// })
+				return variable
 			}
 		}
 
@@ -1004,6 +1132,19 @@ export class ControlsController {
 			}
 		}
 		return triggers
+	}
+
+	/**
+	 * Get all of the custom variable controls
+	 */
+	getAllCustomVariables(): ControlCustomVariable[] {
+		const variables: ControlCustomVariable[] = []
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlCustomVariable) {
+				variables.push(control)
+			}
+		}
+		return variables
 	}
 
 	/**
@@ -1069,6 +1210,30 @@ export class ControlsController {
 		if (this.#controls.has(controlId)) throw new Error(`Trigger ${controlId} already exists`)
 
 		const newControl = this.#createClassForControl(controlId, 'trigger', definition, true)
+		if (newControl) {
+			this.#controls.set(controlId, newControl)
+
+			// Ensure it is stored to the db
+			newControl.commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
+	 * Import a custom variable
+	 */
+	importCustomVariable(controlId: string, definition: CustomVariableModel2): boolean {
+		if (!this.#validateCustomVariableControlId(controlId)) {
+			// Control id is not valid!
+			return false
+		}
+
+		if (this.#controls.has(controlId)) throw new Error(`CustomVariable ${controlId} already exists`)
+
+		const newControl = this.#createClassForControl(controlId, 'custom-variable', definition, true)
 		if (newControl) {
 			this.#controls.set(controlId, newControl)
 
@@ -1289,6 +1454,16 @@ export class ControlsController {
 	#validateTriggerControlId(controlId: string): boolean {
 		const parsed = ParseControlId(controlId)
 		if (parsed?.type !== 'trigger') return false
+
+		return true
+	}
+
+	/**
+	 * Verify a controlId is valid for the current id scheme and grid size
+	 */
+	#validateCustomVariableControlId(controlId: string): boolean {
+		const parsed = ParseControlId(controlId)
+		if (parsed?.type !== 'custom-variable') return false
 
 		return true
 	}

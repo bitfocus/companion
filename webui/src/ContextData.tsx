@@ -34,6 +34,8 @@ import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVaria
 import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
 import { useImageLibrarySubscription } from './Hooks/useImageLibrarySubscription.js'
 import { useImageLibraryCollectionsSubscription } from './Hooks/useImageLibraryCollectionsSubscription.js'
+import { CustomVariablesListStore } from './Stores/CustomVariablesListStore.js'
+import { useCustomVariablesListSubscription } from './Hooks/useCustomVariablesListSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -67,6 +69,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			surfaces: new SurfacesStore(),
 			variablesStore: new VariablesStore(),
 			triggersList: new TriggersListStore(),
+			customVariablesList: new CustomVariablesListStore(),
 
 			userConfig: new UserConfigStore(),
 
@@ -97,7 +100,12 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(socket, rootStore.surfaces)
 	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
-	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(socket, rootStore.variablesStore)
+	const customVariablesListReady = useCustomVariablesListSubscription(socket, rootStore.customVariablesList)
+	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(
+		socket,
+		rootStore.variablesStore,
+		rootStore.customVariablesList
+	)
 	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(
 		socket,
 		rootStore.moduleStoreRefreshProgress
@@ -131,6 +139,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
 		customVariablesReady,
+		customVariablesListReady,
 		customVariableCollectionsReady,
 		userConfigReady,
 		surfacesReady,
