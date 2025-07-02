@@ -9,13 +9,13 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
-import { useTriggerCollectionsApi } from '../Triggers/TriggerCollectionsApi'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
-import { TriggersTableContextProvider, useTriggersTableContext } from '../Triggers//TriggersTableContext'
 import { ClientCustomVariableData, CustomVariableCollection } from '@companion-app/shared/Model/CustomVariableModel.js'
+import { CustomVariablesTableContextProvider, useCustomVariablesTableContext } from './CustomVariablesTableContext'
+import { useCustomVariablesCollectionsApi } from '~/Variables/CustomVariablesCollectionsApi'
 
-export const CustomVariablesPage = observer(function Triggers() {
+export const CustomVariablesPage = observer(function CustomVariablesPage() {
 	const { socket, customVariablesList } = useContext(RootAppStoreContext)
 
 	const navigate = useNavigate({ from: '/custom-variables' })
@@ -37,7 +37,7 @@ export const CustomVariablesPage = observer(function Triggers() {
 	}, [socket, navigate])
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
-	const customVariablesGroupsApi = useTriggerCollectionsApi(confirmModalRef)
+	const customVariablesGroupsApi = useCustomVariablesCollectionsApi(confirmModalRef)
 
 	const allCustomVariables = useComputed(() => {
 		const allCustomVariables: CustomVariableDataWithId[] = []
@@ -97,9 +97,12 @@ export const CustomVariablesPage = observer(function Triggers() {
 					knownPanelIds={customVariablesList.allCollectionIds}
 					defaultCollapsed
 				>
-					<TriggersTableContextProvider deleteModalRef={confirmModalRef} selectTrigger={selectCustomVariable}>
+					<CustomVariablesTableContextProvider
+						deleteModalRef={confirmModalRef}
+						selectCustomVariable={selectCustomVariable}
+					>
 						<CollectionsNestingTable<CustomVariableCollection, CustomVariableDataWithId>
-							// Heading={TriggerListTableHeading}
+							// Heading={CustomVariablesListTableHeading}
 							NoContent={CustomVariablesListNoContent}
 							ItemRow={CustomVariableItemRow}
 							itemName="custom variable"
@@ -109,7 +112,7 @@ export const CustomVariablesPage = observer(function Triggers() {
 							items={allCustomVariables}
 							selectedItemId={selectedVariableId}
 						/>
-					</TriggersTableContextProvider>
+					</CustomVariablesTableContextProvider>
 				</PanelCollapseHelperProvider>
 			</CCol>
 
@@ -140,7 +143,7 @@ interface CustomVariableTableRowProps {
 const CustomVariableTableRow = observer(function CustomVariableTableRow2({ item }: CustomVariableTableRowProps) {
 	const socket = useContext(SocketContext)
 
-	const tableContext = useTriggersTableContext()
+	const tableContext = useCustomVariablesTableContext()
 
 	const doDelete = useCallback(() => {
 		tableContext.deleteModalRef.current?.show(
@@ -155,7 +158,7 @@ const CustomVariableTableRow = observer(function CustomVariableTableRow2({ item 
 		)
 	}, [socket, tableContext.deleteModalRef, item.id])
 	const doEdit = useCallback(() => {
-		tableContext.selectTrigger(item.id)
+		tableContext.selectCustomVariable(item.id)
 	}, [tableContext, item.id])
 	const doClone = useCallback(() => {
 		socket

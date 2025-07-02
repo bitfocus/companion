@@ -1,4 +1,4 @@
-import { faClock, faDollarSign } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
 import React from 'react'
 import { NonIdealState } from '~/Components/NonIdealState.js'

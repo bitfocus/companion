@@ -32,7 +32,7 @@ export interface CustomVariableModel2 {
 	readonly type: 'custom-variable'
 	options: CustomVariableOptions
 
-	entities: SomeEntityModel[]
+	entity: SomeEntityModel | null
 }
 
 export interface CustomVariableOptions {

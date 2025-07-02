@@ -22,7 +22,7 @@ export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 	}
 
 	loadStorage(storage: CustomVariableModel2, skipSubscribe: boolean, isImport: boolean): void {
-		this.#entities.loadStorage(storage.entities || [], skipSubscribe, isImport)
+		this.#entities.loadStorage(storage.entity ? [storage.entity] : [], skipSubscribe, isImport)
 	}
 
 	// /**
@@ -39,8 +39,8 @@ export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 	/**
 	 * Get direct the entities
 	 */
-	getMainEntities(): ControlEntityInstance[] {
-		return this.#entities.getDirectEntities()
+	getRootEntity(): ControlEntityInstance | undefined {
+		return this.#entities.getDirectEntities()[0]
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {

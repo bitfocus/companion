@@ -50,9 +50,9 @@ export function EditCustomVariablePanel({ controlId }: EditCustomVariablePanelPr
 				setConfigError(null)
 			})
 			.catch((e) => {
-				console.error('Failed to load trigger config', e)
+				console.error('Failed to load custom variable config', e)
 				setConfig(null)
-				setConfigError('Failed to load trigger config')
+				setConfigError('Failed to load custom variable config')
 			})
 
 		const unsubConfig = socket.on(`controls:config-${controlId}`, (patch) => {
@@ -79,7 +79,7 @@ export function EditCustomVariablePanel({ controlId }: EditCustomVariablePanelPr
 			unsubRuntimeProps()
 
 			socket.emitPromise('controls:unsubscribe', [controlId]).catch((e) => {
-				console.error('Failed to unsubscribe trigger config', e)
+				console.error('Failed to unsubscribe custom variable config', e)
 			})
 		}
 	}, [socket, controlId, reloadConfigToken])
@@ -106,7 +106,7 @@ export function EditCustomVariablePanel({ controlId }: EditCustomVariablePanelPr
 					{config && runtimeProps ? (
 						<>
 							<MyErrorBoundary>
-								<CustomVariableEntityEditor controlId={controlId} entity={config.entities[0]} />
+								<CustomVariableEntityEditor controlId={controlId} entity={config.entity} />
 							</MyErrorBoundary>
 						</>
 					) : (

@@ -185,7 +185,7 @@ export class ControlCustomVariable
 		const obj: CustomVariableModel2 = {
 			type: this.type,
 			options: this.options,
-			entities: this.entities.getMainEntities().map((e) => e.asEntityModel(true)),
+			entity: this.entities.getRootEntity()?.asEntityModel(true) || null,
 		}
 		return clone ? cloneDeep(obj) : obj
 	}
