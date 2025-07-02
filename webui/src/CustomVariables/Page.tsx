@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { SocketContext, useComputed } from '~/util.js'
+import { useComputed } from '~/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faClone, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faClone, faCopy, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { CreateCustomVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { observer } from 'mobx-react-lite'
@@ -14,6 +14,7 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import { ClientCustomVariableData, CustomVariableCollection } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { CustomVariablesTableContextProvider, useCustomVariablesTableContext } from './CustomVariablesTableContext'
 import { useCustomVariablesCollectionsApi } from '~/Variables/CustomVariablesCollectionsApi'
+import CopyToClipboard from 'react-copy-to-clipboard'
 
 export const CustomVariablesPage = observer(function CustomVariablesPage() {
 	const { socket, customVariablesList } = useContext(RootAppStoreContext)
@@ -141,7 +142,7 @@ interface CustomVariableTableRowProps {
 }
 
 const CustomVariableTableRow = observer(function CustomVariableTableRow2({ item }: CustomVariableTableRowProps) {
-	const socket = useContext(SocketContext)
+	const { socket, notifier } = useContext(RootAppStoreContext)
 
 	const tableContext = useCustomVariablesTableContext()
 
@@ -171,10 +172,28 @@ const CustomVariableTableRow = observer(function CustomVariableTableRow2({ item 
 			})
 	}, [socket, item.id])
 
+	const fullname = item.variableName ? `$(custom:${item.variableName})` : null
+
+	const onCopied = useCallback(() => {
+		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
+	}, [notifier])
+
 	return (
 		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
 			<div className="flex flex-column grow">
-				<b>{item.variableName ? `$(custom:${item.variableName})` : 'Unnamed'}</b>
+				{fullname ? (
+					<span className="variable-style">
+						{fullname}
+						<CopyToClipboard text={fullname} onCopy={onCopied}>
+							<CButton size="sm" title="Copy variable name">
+								<FontAwesomeIcon icon={faCopy} color="#d50215" />
+							</CButton>
+						</CopyToClipboard>
+					</span>
+				) : (
+					<b>Unnamed</b>
+				)}
+
 				<br />
 				{item.description ?? ''}
 			</div>

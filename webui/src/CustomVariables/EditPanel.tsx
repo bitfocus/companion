@@ -10,13 +10,16 @@ import { EntityModelType, FeedbackEntitySubType, SomeEntityModel } from '@compan
 import type { CustomVariableModel2, CustomVariableOptions } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { AddEntityPanel } from '~/Controls/Components/AddEntityPanel.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
-import { EntityEditorContextProvider } from '~/Controls/Components/EntityEditorContext.js'
+import { EntityEditorContextProvider, useEntityEditorContext } from '~/Controls/Components/EntityEditorContext.js'
 import { findAllEntityIdsDeep } from '~/Controls/Util.js'
-import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEntitiesService.js'
-import { EntityEditorRowContent } from '~/Controls/Components/EntityEditorRow'
+import { useControlEntitiesEditorService, useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import { EntityManageChildGroups } from '~/Controls/Components/EntityChildGroup'
+import { EntityCommonCells } from '~/Controls/Components/EntityCommonCells'
 
 interface EditCustomVariablePanelProps {
 	controlId: string
@@ -143,22 +146,22 @@ function CustomVariableConfig({ controlId, options }: CustomVariableConfigProps)
 
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm onSubmit={PreventDefaultHandler}>
-				<CForm className="row flex-form">
-					<CCol xs={12}>
-						<CFormLabel>Name</CFormLabel>
-						<p>
-							<TextInputField setValue={setName} value={options.variableName} />
-						</p>
-					</CCol>
+			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
+				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+					Name
+					<FontAwesomeIcon
+						icon={faQuestionCircle}
+						title="The name for the variable. It will get wrapped with $(custom:X) for you"
+					/>
+				</CFormLabel>
+				<CCol xs={8}>
+					<TextInputField setValue={setName} value={options.variableName} />
+				</CCol>
 
-					<CCol xs={12}>
-						<CFormLabel>Description</CFormLabel>
-						<p>
-							<TextInputField setValue={setDescription} value={options.description} />
-						</p>
-					</CCol>
-				</CForm>
+				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Description</CFormLabel>
+				<CCol xs={8}>
+					<TextInputField setValue={setDescription} value={options.description} />
+				</CCol>
 			</CForm>
 		</CCol>
 	)
@@ -201,14 +204,15 @@ const CustomVariableEntityEditor = observer(function CustomVariableEntityEditor(
 
 const CustomVariableAddRootEntity = observer(function CustomVariableAddRootEntity() {
 	return (
-		<NonIdealState text="Choose the root type of the custom variable to begin" icon={faDollarSign}>
+		<>
+			<NonIdealState text="Choose the root type of the custom variable below to begin" icon={faDollarSign} />
 			<AddEntityPanel
 				ownerId={null}
 				entityType={EntityModelType.Feedback}
 				feedbackListType={FeedbackEntitySubType.Value}
-				entityTypeLabel="type"
+				entityTypeLabel="definition"
 			/>
-		</NonIdealState>
+		</>
 	)
 })
 
@@ -219,12 +223,49 @@ interface CustomVariableSoleEntityEditorProps {
 const CustomVariableSoleEntityEditor = observer(function CustomVariableSoleEntityEditor({
 	entity,
 }: CustomVariableSoleEntityEditorProps) {
+	const { connections, entityDefinitions } = useContext(RootAppStoreContext)
+
+	const { serviceFactory } = useEntityEditorContext()
+	const entityService = useControlEntityService(serviceFactory, entity, 'variable')
+
+	const connectionInfo = connections.getInfo(entity.connectionId)
+	const connectionLabel = connectionInfo?.label ?? entity.connectionId
+
+	const entityDefinition = entityDefinitions.getEntityDefinition(entity.type, entity.connectionId, entity.definitionId)
+
+	const definitionName = entityDefinition
+		? `${connectionLabel}: ${entityDefinition.label}`
+		: `${connectionLabel}: ${entity.definitionId} (undefined)`
+
 	return (
-		<EntityEditorRowContent
-			ownerId={null}
-			entityTypeLabel={'variable'}
-			entity={entity}
-			feedbackListType={FeedbackEntitySubType.Value}
-		/>
+		<>
+			<CCol sm={12} className="p-0">
+				<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
+					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+						Variable Type
+						<FontAwesomeIcon
+							icon={faQuestionCircle}
+							title="The name for the variable. It will get wrapped with $(custom:X) for you"
+						/>
+					</CFormLabel>
+					<CCol xs={8}>
+						<b>{definitionName}</b>
+						<br />
+						<small>{entityDefinition?.description ?? ''}</small>
+					</CCol>
+				</CForm>
+			</CCol>
+
+			<div className="editor-grid">
+				<EntityCommonCells
+					entity={entity}
+					feedbackListType={FeedbackEntitySubType.Value}
+					entityDefinition={entityDefinition}
+					service={entityService}
+				/>
+
+				<EntityManageChildGroups entity={entity} entityDefinition={entityDefinition} />
+			</div>
+		</>
 	)
 })

@@ -188,6 +188,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/outbound" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
+				<SidebarMenuItem name="Custom Variables" icon={faDollarSign} path="/custom-variables" />
 				<SidebarMenuItemGroup name="Variables" icon={faDollarSign} path="/variables">
 					<SidebarMenuItem name="Custom Variables" icon={null} path="/variables/custom" />
 					<SidebarMenuItem name="Internal" icon={null} path="/variables/internal" />
