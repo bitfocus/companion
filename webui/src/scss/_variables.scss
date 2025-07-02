@@ -26,7 +26,8 @@ $_private-header-bg: #d50215; // needed for both $header-bg and the adjust() cal
 			width: 2.75em,
 			height: 1.5em,
 		),
-	) !default,
+	)
+	!default,
 
 	$btn-font-size-sm: 12px,
 	$btn-font-size: 0.9rem,

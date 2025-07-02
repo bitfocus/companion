@@ -1,7 +1,7 @@
 // IMPORTANT: 'scss/variables' MUST be the first @use rule: it loads and overrides the defaults in @coreui
 //  See Sass @use documentation: "A module will keep the same configuration ... even if it’s loaded multiple times"
 @use 'scss/variables' as *; // local definitions not related to @coreui definitions
-@use '@coreui/coreui/scss/coreui';  // note this is not strictly necessary, since it's forwarded by _variables, above.
+@use '@coreui/coreui/scss/coreui'; // note this is not strictly necessary, since it's forwarded by _variables, above.
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
 @use 'scss/react-time-picker';

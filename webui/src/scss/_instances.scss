@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/coreui';  // not strictly necessary, but it allows us to clarify the origin of mixins
+@use '@coreui/coreui/scss/coreui'; // not strictly necessary, but it allows us to clarify the origin of mixins
 
 .float_right {
 	float: right;
