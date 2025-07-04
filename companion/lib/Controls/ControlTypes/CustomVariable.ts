@@ -314,6 +314,14 @@ export class ControlCustomVariable
 	 */
 	triggerRedraw = debounceFn(
 		() => {
+			const name = this.options.variableName
+			if (!name) return
+
+			// TODO - check for duplicates
+
+			this.deps.variables.values.setVariableValues('custom', [
+				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
+			])
 			// TODO - check and emit value
 		},
 		{

@@ -676,6 +676,18 @@ export class ControlEntityInstance {
 		return changed
 	}
 
+	getResolvedFeedbackValue(): any {
+		if (this.#data.type !== EntityModelType.Feedback) return null
+
+		const definition = this.getEntityDefinition()
+
+		if (definition?.feedbackType === FeedbackEntitySubType.Boolean) {
+			return this.getBooleanFeedbackValue()
+		} else {
+			return this.feedbackValue
+		}
+	}
+
 	/**
 	 * Get the value of this feedback as a boolean
 	 */

@@ -50,6 +50,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const rootStore = useMemo(() => {
 		const showWizardEvent = new EventTarget()
 
+		const customVariables = new CustomVariablesListStore()
+
 		return {
 			socket,
 			notifier: notifierRef,
@@ -66,9 +68,9 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
-			variablesStore: new VariablesStore(),
+			variablesStore: new VariablesStore(customVariables),
 			triggersList: new TriggersListStore(),
-			customVariablesList: new CustomVariablesListStore(),
+			customVariablesList: customVariables,
 
 			userConfig: new UserConfigStore(),
 

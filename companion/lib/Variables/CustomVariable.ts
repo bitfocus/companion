@@ -19,7 +19,7 @@ import type {
 	CustomVariableUpdateRemoveOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
+import type { UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import EventEmitter from 'events'
@@ -53,28 +53,28 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		this.#custom_variables = this.#dbTable.all()
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('custom-variables:subscribe', () => {
-			client.join(CustomVariablesRoom)
+	// /**
+	//  * Setup a new socket client's events
+	//  */
+	// clientConnect(client: ClientSocket): void {
+	// 	client.onPromise('custom-variables:subscribe', () => {
+	// 		client.join(CustomVariablesRoom)
 
-			return this.#custom_variables
-		})
+	// 		return this.#custom_variables
+	// 	})
 
-		client.onPromise('custom-variables:unsubscribe', () => {
-			client.leave(CustomVariablesRoom)
-		})
+	// 	client.onPromise('custom-variables:unsubscribe', () => {
+	// 		client.leave(CustomVariablesRoom)
+	// 	})
 
-		client.onPromise('custom-variables:create', this.createVariable.bind(this))
-		client.onPromise('custom-variables:delete', this.deleteVariable.bind(this))
-		client.onPromise('custom-variables:set-default', this.setVariableDefaultValue.bind(this))
-		client.onPromise('custom-variables:set-current', this.setValue.bind(this))
-		client.onPromise('custom-variables:set-description', this.setVariableDescription.bind(this))
-		client.onPromise('custom-variables:set-persistence', this.setPersistence.bind(this))
-		client.onPromise('custom-variables:reorder', this.setOrder.bind(this))
-	}
+	// 	client.onPromise('custom-variables:create', this.createVariable.bind(this))
+	// 	client.onPromise('custom-variables:delete', this.deleteVariable.bind(this))
+	// 	client.onPromise('custom-variables:set-default', this.setVariableDefaultValue.bind(this))
+	// 	client.onPromise('custom-variables:set-current', this.setValue.bind(this))
+	// 	client.onPromise('custom-variables:set-description', this.setVariableDescription.bind(this))
+	// 	client.onPromise('custom-variables:set-persistence', this.setPersistence.bind(this))
+	// 	client.onPromise('custom-variables:reorder', this.setOrder.bind(this))
+	// }
 
 	/**
 	 * Emit to any room members an update of the named variable

@@ -7,9 +7,16 @@ import type {
 } from '@companion-app/shared/Model/Variables.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
+import { CustomVariablesListStore } from './CustomVariablesListStore'
 
 export class VariablesStore {
+	readonly #customVariables: CustomVariablesListStore
+
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
+
+	constructor(customVariables: CustomVariablesListStore) {
+		this.#customVariables = customVariables
+	}
 
 	public resetVariables = action((newData: AllVariableDefinitions | null): void => {
 		this.variables.clear()
@@ -70,7 +77,16 @@ export class VariablesStore {
 			definitions.push(...this.variableDefinitionsForLabel(label))
 		}
 
-		definitions.push(...this.customVariableDefinitions.get())
+		// Custom variables
+		for (const info of this.#customVariables.customVariables.values()) {
+			if (!info.variableName) continue
+
+			definitions.push({
+				label: info.description || 'A custom variable',
+				connectionLabel: 'custom',
+				name: info.variableName,
+			})
+		}
 
 		return definitions
 	})
