@@ -380,17 +380,13 @@ export class ImportExportController {
 
 				// import custom variables
 				if (!config || config.customVariables) {
-					if (data.customVariablesCollections) {
-						this.#controlsController.replaceCustomVariableCollections(data.customVariablesCollections)
-					}
+					this.#controlsController.replaceCustomVariableCollections(data.customVariablesCollections || [])
 
 					this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
 				}
 
 				// Import connection collections if provided
-				if (data.connectionCollections) {
-					this.#instancesController.collections.replaceCollections(data.connectionCollections)
-				}
+				this.#instancesController.collections.replaceCollections(data.connectionCollections || [])
 
 				// Always Import instances
 				const instanceIdMap = this.#importInstances(data.instances, {})
@@ -656,7 +652,12 @@ export class ImportExportController {
 
 		if (!config || config.customVariables) {
 			this.#controlsController.replaceCustomVariableCollections([])
-			this.#variablesController.custom.reset()
+
+			// Delete existing custom variables
+			const existingCustomVariables = this.#controlsController.getAllCustomVariables()
+			for (const control of existingCustomVariables) {
+				this.#controlsController.deleteControl(control.controlId)
+			}
 		}
 
 		if (!config || config.userconfig) {

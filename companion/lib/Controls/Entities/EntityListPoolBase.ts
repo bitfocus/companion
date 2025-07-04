@@ -496,13 +496,11 @@ export abstract class ControlEntityListPoolBase {
 
 		if (!isInternalUserValueFeedback(entity)) return false
 
-		entity.setUserValue(value)
+		const needsPersistence = entity.setUserValue(value)
 
 		// Persist value if needed
-		if (entity.rawOptions.persist_value) {
-			entity.rawOptions.startup_value = value
-
-			this.commitChange()
+		if (needsPersistence) {
+			this.commitChange(false)
 		}
 
 		this.tryTriggerLocalVariablesChanged(entity)

@@ -24,6 +24,7 @@ import {
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import jsonPatch from 'fast-json-patch'
 import { CompanionVariableValue } from '@companion-module/base'
+import { isInternalUserValueFeedback } from '../Entities/EntityInstance.js'
 
 /**
  * Class for a custom variable.
@@ -322,7 +323,6 @@ export class ControlCustomVariable
 			this.deps.variables.values.setVariableValues('custom', [
 				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
 			])
-			// TODO - check and emit value
 		},
 		{
 			before: false,
@@ -347,14 +347,48 @@ export class ControlCustomVariable
 	}
 
 	setUserValue(value: CompanionVariableValue | undefined): void {
-		// TODO
+		const entity = this.#getUserValueEntity()
+		if (!entity) {
+			this.logger.info(`Variable is not a User Value and cannot be set manually`)
+			return
+		}
+
+		if (entity.setUserValue(value)) {
+			this.commitChange(true)
+		} else {
+			this.triggerRedraw()
+		}
 	}
 
 	resetValueToDefault(): void {
-		// TODO
+		const entity = this.#getUserValueEntity()
+		if (!entity) {
+			this.logger.info(`Variable is not a User Value and cannot be set manually`)
+			return
+		}
+
+		entity.setUserValue(entity.rawOptions.startup_value)
+
+		this.commitChange(true)
 	}
 
 	syncValueToDefault(): void {
-		// TODO
+		const entity = this.#getUserValueEntity()
+		if (!entity) {
+			this.logger.info(`Variable is not a User Value and cannot be set manually`)
+			return
+		}
+
+		entity.rawOptions.startup_value = entity.feedbackValue
+
+		this.commitChange(true)
+	}
+
+	#getUserValueEntity() {
+		const entity = this.entities.getRootEntity()
+		if (!entity) return undefined
+
+		if (isInternalUserValueFeedback(entity)) return entity
+		return undefined
 	}
 }

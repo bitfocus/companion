@@ -481,8 +481,6 @@ export class ExportController {
 			companionBuild: this.#appInfo.appBuild,
 		}
 
-		const rawControls = this.#controlsController.getAllControls()
-
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
@@ -503,18 +501,17 @@ export class ExportController {
 
 		if (!config || !isFalsey(config.triggers)) {
 			const triggersExport: ExportTriggerContentv6 = {}
-			for (const control of rawControls.values()) {
-				if (control.type === 'trigger') {
-					const parsedId = ParseControlId(control.controlId)
-					if (parsedId?.type === 'trigger') {
-						triggersExport[parsedId.trigger] = control.toJSON(false)
+			const triggerControls = this.#controlsController.getAllTriggers()
+			for (const control of triggerControls) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'trigger') {
+					triggersExport[parsedId.trigger] = control.toJSON(false)
 
-						control.collectReferencedConnectionsAndVariables(
-							referencedConnectionIds,
-							referencedConnectionLabels,
-							referencedVariables
-						)
-					}
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
 				}
 			}
 			exp.triggers = triggersExport

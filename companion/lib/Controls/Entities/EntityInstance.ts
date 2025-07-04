@@ -804,12 +804,22 @@ export class ControlEntityInstance {
 
 	/**
 	 * If this is the user value feedback, set the value
+	 * @returns Whether the entity options were changed and need to be persisted
 	 */
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setUserValue(value: any): void {
-		if (!isInternalUserValueFeedback(this)) return
+	setUserValue(value: any): boolean {
+		if (!isInternalUserValueFeedback(this)) return false
 
 		this.#cachedFeedbackValue = value
+
+		// Persist value if needed
+		if (this.#data.options.persist_value) {
+			this.#data.options.startup_value = value
+
+			return true
+		}
+
+		return false
 	}
 
 	getUserValue(): any {

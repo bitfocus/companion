@@ -434,18 +434,18 @@ export class ControlEntityList {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setVariableValue(name: string, value: any): boolean {
-		if (!name) return false
+	// // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	// setVariableValue(name: string, value: any): boolean {
+	// 	if (!name) return false
 
-		for (const entity of this.getAllEntities()) {
-			if (entity.rawLocalVariableName === name) {
-				entity.setUserValue(value)
+	// 	for (const entity of this.getAllEntities()) {
+	// 		if (entity.rawLocalVariableName === name) {
+	// 			entity.setUserValue(value)
 
-				return true
-			}
-		}
+	// 			return true
+	// 		}
+	// 	}
 
-		return false
-	}
+	// 	return false
+	// }
 }
