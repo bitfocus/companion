@@ -1283,10 +1283,10 @@ export class ControlsController {
 	/**
 	 * Import a custom variable
 	 */
-	importCustomVariable(controlId: string, definition: CustomVariableModel2): boolean {
+	importCustomVariable(controlId: string, definition: CustomVariableModel2): ControlCustomVariable | undefined {
 		if (!this.#validateCustomVariableControlId(controlId)) {
 			// Control id is not valid!
-			return false
+			return undefined
 		}
 
 		if (this.#controls.has(controlId)) throw new Error(`CustomVariable ${controlId} already exists`)
@@ -1302,10 +1302,10 @@ export class ControlsController {
 			// Ensure it is stored to the db
 			newControl.commitChange()
 
-			return true
+			return newControl as ControlCustomVariable
 		}
 
-		return false
+		return undefined
 	}
 
 	/**

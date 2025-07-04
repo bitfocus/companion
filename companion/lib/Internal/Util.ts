@@ -1,4 +1,4 @@
-import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
+import { CreateCustomVariableControlId, oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
@@ -9,7 +9,12 @@ import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { FeedbackEntityModelExt } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { ControlCustomVariable } from '../Controls/ControlTypes/CustomVariable.js'
+import { ControlCustomVariable } from '../Controls/ControlTypes/CustomVariable.js'
+import { nanoid } from 'nanoid'
+import { cloneDeep } from 'lodash-es'
+import { Complete } from '@companion-module/base/dist/util.js'
+import { EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { CustomVariableOptionDefaultKey } from '../Controls/CustomVariableConstants.js'
 
 /**
  *
@@ -255,7 +260,38 @@ export class InternalModuleUtils {
 	}
 
 	getCustomVariableByName(name: string, createIfMissing = false): ControlCustomVariable | undefined {
-		return this.#controlsController.getCustomVariableByName(name)
+		const variableControl = this.#controlsController.getCustomVariableByName(name)
+		if (variableControl || !createIfMissing) return variableControl
+
+		// Variable is missing and must be created
+		const controlId = CreateCustomVariableControlId(nanoid())
+		return this.#controlsController.importCustomVariable(controlId, {
+			type: 'custom-variable',
+			options: {
+				...cloneDeep(ControlCustomVariable.DefaultOptions),
+				variableName: name,
+			},
+			entity: {
+				type: EntityModelType.Feedback,
+
+				isInverted: false,
+				variableName: undefined, // Not a local variable
+				style: undefined,
+
+				id: nanoid(),
+				definitionId: 'user_value',
+				connectionId: 'internal',
+				headline: undefined,
+				options: {
+					[CustomVariableOptionDefaultKey]: '',
+					persist_value: false,
+				},
+				disabled: false,
+				upgradeIndex: undefined,
+
+				children: {},
+			} satisfies Complete<FeedbackEntityModel>,
+		})
 	}
 
 	setCustomVariableValue(name: string, value: CompanionVariableValue | undefined, createIfMissing = false): void {
