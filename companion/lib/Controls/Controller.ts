@@ -1165,6 +1165,10 @@ export class ControlsController {
 		return variables
 	}
 
+	getCustomVariableByName(name: string): ControlCustomVariable | undefined {
+		// TODO - implement me!
+	}
+
 	/**
 	 * Get a control if it has been populated
 	 */

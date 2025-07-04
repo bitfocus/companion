@@ -4,11 +4,12 @@ import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpr
 import { InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { FeedbackEntityModelExt } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ControlCustomVariable } from '../Controls/ControlTypes/CustomVariable.js'
 
 /**
  *
@@ -251,6 +252,19 @@ export class InternalModuleUtils {
 		)
 
 		return ParseInternalControlReference(this.#logger, parser, extras.location, options, useVariableFields)
+	}
+
+	getCustomVariableByName(name: string, createIfMissing = false): ControlCustomVariable | undefined {
+		return this.#controlsController.getCustomVariableByName(name)
+	}
+
+	setCustomVariableValue(name: string, value: CompanionVariableValue | undefined, createIfMissing = false): void {
+		const variableControl = this.getCustomVariableByName(name, createIfMissing)
+		if (variableControl) {
+			variableControl.setUserValue(value)
+		} else {
+			this.#logger.warn(`Unable to set value of variable $(custom:${name}): variable not found`)
+		}
 	}
 
 	/**

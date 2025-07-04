@@ -156,21 +156,6 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	}
 
 	/**
-	 * Initialise the custom variables
-	 */
-	init(): void {
-		// Load the startup values of custom variables
-		if (Object.keys(this.#custom_variables).length > 0) {
-			const newValues: VariableValueEntry[] = []
-			for (const [name, info] of Object.entries(this.#custom_variables)) {
-				newValues.push({ id: name, value: info.defaultValue })
-				this.#emitVariableDefinitionChange(name, info)
-			}
-			this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
-		}
-	}
-
-	/**
 	 * Replace all of the current custom variables with new ones
 	 */
 	replaceDefinitions(custom_variables: CustomVariablesModel): void {

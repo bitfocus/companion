@@ -13,6 +13,7 @@ import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import EventEmitter from 'events'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import LogController from '../Log/Controller.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -36,6 +37,8 @@ type ServiceApiEvents =
 	| Pick<ControlCommonEvents, 'updateButtonState' | 'customVariableDefinitionChanged'>
 
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
+	readonly #logger = LogController.createLogger('Service/ServiceApi')
+
 	readonly #appInfo: AppInfo
 	readonly #pageStore: IPageStore
 	readonly #controlController: ControlsController
@@ -87,16 +90,14 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @returns Failure reason, if any
 	 */
 	setCustomVariableValue(name: string, value: CompanionVariableValue): string | null {
-		return this.#variablesController.custom.setValue(name, value)
-	}
-
-	/**
-	 * Get the value of a custom variable
-	 * @param name
-	 * @returns The value of the variable
-	 */
-	getCustomVariableValue(name: string): CompanionVariableValue | undefined {
-		return this.#variablesController.custom.getValue(name)
+		const variableControl = this.#controlController.getCustomVariableByName(name)
+		if (variableControl) {
+			variableControl.setUserValue(value)
+			return null
+		} else {
+			this.#logger.warn(`Unable to set the value of variable $(custom:${name}): variable not found`)
+			return 'not found'
+		}
 	}
 
 	/**
@@ -105,8 +106,11 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @returns The description of the variable
 	 */
 
-	getCustomVariableDescription(name: string): string {
-		return this.#variablesController.custom.getVariableDescription(name)
+	getCustomVariableDescription(name: string): string | undefined {
+		const variableControl = this.#controlController.getCustomVariableByName(name)
+		if (!variableControl) return undefined
+
+		return variableControl.options.description
 	}
 
 	/**

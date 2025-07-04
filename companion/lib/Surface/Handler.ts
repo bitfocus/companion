@@ -672,7 +672,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Set the value of a custom variable
 	 */
 	#onSetCustomVariable(name: string, value: CompanionVariableValue): void {
-		this.#variables.custom.setValue(name, value)
+		const variableControl = this.#controls.getCustomVariableByName(name)
+		if (variableControl) {
+			variableControl.setUserValue(value)
+		} else {
+			this.#logger.warn(`Unable to set the value of variable $(custom:${name}): variable not found`)
+		}
 	}
 
 	/**

@@ -379,7 +379,6 @@ export class Registry {
 
 			this.controls.init()
 			this.controls.verifyConnectionIds()
-			this.variables.custom.init()
 			this.internalModule.firstUpdate()
 			this.graphics.regenerateAll(false)
 

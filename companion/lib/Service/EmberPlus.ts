@@ -155,7 +155,7 @@ export class ServiceEmberPlus extends ServiceBase {
 						this.logger.debug(`New custom variable: ${name} restarting server`)
 						this.debounceRestart()
 					} else {
-						const value = this.#serviceApi.getCustomVariableValue(name)?.toString()
+						const value = this.#serviceApi.getConnectionVariableValue('custom', name)?.toString()
 						if (value === undefined) return
 						this.#updateNodePath(path, value)
 					}
@@ -181,7 +181,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				} else {
 					const path = buildPathForVariable(id, 'custom', this.#customVars)
 					if (path === undefined) return
-					const description = this.#serviceApi.getCustomVariableDescription(id)
+					const description = this.#serviceApi.getCustomVariableDescription(id) || 'Unknown name'
 					this.#updateNodeDescription(path, description)
 					this.#updateNodeDescription(path.substring(0, path.length - 2), description)
 				}
@@ -431,7 +431,7 @@ export class ServiceEmberPlus extends ServiceBase {
 			)
 		}
 		for (let i = 0; i < this.#customVars.length; i++) {
-			const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])
+			const value = this.#serviceApi.getConnectionVariableValue('custom', this.#customVars[i])
 			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
 				i,
 				new EmberModel.EmberNodeImpl(
@@ -444,7 +444,7 @@ export class ServiceEmberPlus extends ServiceBase {
 						new EmberModel.ParameterImpl(
 							EmberModel.ParameterType.String,
 							'string',
-							this.#serviceApi.getCustomVariableDescription(this.#customVars[i]),
+							this.#serviceApi.getCustomVariableDescription(this.#customVars[i]) || 'Unknown name',
 							value?.toString() ?? '',
 							undefined,
 							undefined,

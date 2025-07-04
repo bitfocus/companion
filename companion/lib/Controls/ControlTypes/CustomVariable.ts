@@ -23,6 +23,7 @@ import {
 	CustomVariableOptions,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import jsonPatch from 'fast-json-patch'
+import { CompanionVariableValue } from '@companion-module/base'
 
 /**
  * Class for a custom variable.
@@ -335,5 +336,17 @@ export class ControlCustomVariable
 	}
 	getBitmapFeedbackSize(): { width: number; height: number } | null {
 		return null
+	}
+
+	setUserValue(value: CompanionVariableValue | undefined): void {
+		// TODO
+	}
+
+	resetValueToDefault(): void {
+		// TODO
+	}
+
+	syncValueToDefault(): void {
+		// TODO
 	}
 }
