@@ -194,6 +194,7 @@ export class ControlCustomVariable
 		return {
 			type: this.type,
 			...this.options,
+			isActive: this.deps.isCustomVariableActive(this.controlId),
 			// lastExecuted: this.#lastExecuted,
 			// description: eventStrings.join('<br />'),
 		}
@@ -315,11 +316,12 @@ export class ControlCustomVariable
 			const name = this.options.variableName
 			if (!name) return
 
-			// TODO - check for duplicates
-
-			this.deps.variables.values.setVariableValues('custom', [
-				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
-			])
+			// Only emit variable value if this control is the active one for this variable name
+			if (this.deps.isCustomVariableActive(this.controlId)) {
+				this.deps.variables.values.setVariableValues('custom', [
+					{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
+				])
+			}
 		},
 		{
 			before: false,

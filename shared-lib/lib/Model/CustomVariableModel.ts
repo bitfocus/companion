@@ -47,6 +47,7 @@ export interface CustomVariableOptions {
 
 export interface ClientCustomVariableData extends CustomVariableOptions {
 	type: 'custom-variable'
+	isActive: boolean
 	// id: string
 	// TODO - define me
 	// lastExecuted: number | undefined

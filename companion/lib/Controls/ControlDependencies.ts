@@ -31,6 +31,8 @@ export interface ControlDependencies {
 	readonly actionRunner: ActionRunner
 
 	readonly events: EventEmitter<ControlCommonEvents>
+
+	readonly isCustomVariableActive: (controlId: string) => boolean
 }
 
 export interface ControlCommonEvents {

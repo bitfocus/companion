@@ -95,7 +95,16 @@ export class ControlsController {
 	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
 	readonly #triggerCollections: TriggerCollections
+	/**
+	 * The custom variable collections
+	 */
 	readonly #customVariableCollections: CustomVariableCollections
+
+	/**
+	 * Map to track custom variable naming conflicts
+	 * Key: variableName, Value: { activeControlId, otherControlIds[] }
+	 */
+	#customVariableNamesMap = new Map<string, { activeControlId: string; otherControlIds: string[] }>()
 
 	constructor(
 		registry: Registry,
@@ -174,6 +183,7 @@ export class ControlsController {
 			userconfig: this.#registry.userconfig,
 			actionRunner: this.actionRunner,
 			events: this.#controlEvents,
+			isCustomVariableActive: this.isCustomVariableActive.bind(this),
 		}
 	}
 
@@ -384,7 +394,19 @@ export class ControlsController {
 			if (!control) return false
 
 			if (control.supportsOptions) {
-				return control.optionsSetField(key, value)
+				// Handle custom variable name changes to update the names map
+				if (control instanceof ControlCustomVariable && key === 'variableName') {
+					const oldVariableName = control.options.variableName
+					const result = control.optionsSetField(key, value)
+
+					if (result) {
+						this.#updateCustomVariableInNamesMap(controlId, oldVariableName, value)
+					}
+
+					return result
+				} else {
+					return control.optionsSetField(key, value)
+				}
 			} else {
 				throw new Error(`Control "${controlId}" does not support options`)
 			}
@@ -824,6 +846,9 @@ export class ControlsController {
 			const maxRank = Math.max(0, ...allCustomVariables.map((control) => control.options.sortOrder))
 			newControl.optionsSetField('sortOrder', maxRank, true)
 
+			// Add to names map (initially empty variableName, will be added when name is set)
+			this.#addCustomVariableToNamesMap(controlId, newControl.options.variableName)
+
 			// Ensure it is stored to the db
 			newControl.commitChange()
 
@@ -863,6 +888,10 @@ export class ControlsController {
 				const newControl = this.#createClassForControl(newControlId, 'custom-variable', controlJson, true)
 				if (newControl) {
 					this.#controls.set(newControlId, newControl)
+
+					// Add the cloned control to the names map
+					const customVariableControl = newControl as ControlCustomVariable
+					this.#addCustomVariableToNamesMap(newControlId, customVariableControl.options.variableName)
 
 					return newControlId
 				}
@@ -1168,7 +1197,12 @@ export class ControlsController {
 	}
 
 	getCustomVariableByName(name: string): ControlCustomVariable | undefined {
-		// TODO - implement me!
+		if (!name) return undefined
+
+		const nameEntry = this.#customVariableNamesMap.get(name)
+		if (!nameEntry) return undefined
+
+		return this.getControl(nameEntry.activeControlId) as ControlCustomVariable | undefined
 	}
 
 	/**
@@ -1261,6 +1295,10 @@ export class ControlsController {
 		if (newControl) {
 			this.#controls.set(controlId, newControl)
 
+			// Add to names map
+			const customVariableControl = newControl as ControlCustomVariable
+			this.#addCustomVariableToNamesMap(controlId, customVariableControl.options.variableName)
+
 			// Ensure it is stored to the db
 			newControl.commitChange()
 
@@ -1286,6 +1324,9 @@ export class ControlsController {
 		// Ensure all collections are valid
 		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
 		this.#cleanUnknownCustomVariableCollectionIds(this.#customVariableCollections.collectAllCollectionIds())
+
+		// Initialize custom variable names map
+		this.#rebuildCustomVariableNamesMap()
 	}
 
 	/**
@@ -1360,6 +1401,11 @@ export class ControlsController {
 	deleteControl(controlId: string): void {
 		const control = this.getControl(controlId)
 		if (control) {
+			// Handle custom variable removal from names map
+			if (control instanceof ControlCustomVariable) {
+				this.#removeCustomVariableFromNamesMap(controlId, control.options.variableName)
+			}
+
 			control.destroy()
 			this.#controls.delete(controlId)
 
@@ -1533,6 +1579,96 @@ export class ControlsController {
 			variableEntities,
 			overrideVariableValues
 		)
+	}
+
+	/**
+	 * Rebuild the custom variable names map from all current custom variables
+	 */
+	#rebuildCustomVariableNamesMap(): void {
+		this.#customVariableNamesMap.clear()
+
+		const allCustomVariables = this.getAllCustomVariables()
+		// Sort by controlId to ensure consistent order in conflicts
+		allCustomVariables.sort((a, b) => a.controlId.localeCompare(b.controlId))
+
+		for (const control of allCustomVariables) {
+			this.#addCustomVariableToNamesMap(control.controlId, control.options.variableName)
+		}
+	}
+
+	/**
+	 * Add a custom variable to the names map
+	 */
+	#addCustomVariableToNamesMap(controlId: string, variableName: string): void {
+		if (!variableName || variableName.length === 0) return
+
+		const existing = this.#customVariableNamesMap.get(variableName)
+		if (existing) {
+			// Variable name already exists, add to conflicts
+			existing.otherControlIds.push(controlId)
+		} else {
+			// First control with this name becomes active
+			this.#customVariableNamesMap.set(variableName, {
+				activeControlId: controlId,
+				otherControlIds: [],
+			})
+		}
+	}
+
+	/**
+	 * Remove a custom variable from the names map
+	 */
+	#removeCustomVariableFromNamesMap(controlId: string, variableName: string): void {
+		if (!variableName || variableName.length === 0) return
+
+		const existing = this.#customVariableNamesMap.get(variableName)
+		if (!existing) return
+
+		if (existing.activeControlId === controlId) {
+			// Active control is being removed
+			if (existing.otherControlIds.length > 0) {
+				// Promote the first other control to active
+				const newActiveControlId = existing.otherControlIds.shift()!
+				existing.activeControlId = newActiveControlId
+
+				// Invalidate the newly promoted control so it updates its variable value
+				const newActiveControl = this.getControl(newActiveControlId) as ControlCustomVariable | undefined
+				if (newActiveControl) {
+					newActiveControl.triggerRedraw()
+				}
+			} else {
+				// No other controls, remove the entry entirely
+				this.#customVariableNamesMap.delete(variableName)
+			}
+		} else {
+			// Non-active control is being removed, just remove from others list
+			const index = existing.otherControlIds.indexOf(controlId)
+			if (index >= 0) {
+				existing.otherControlIds.splice(index, 1)
+			}
+		}
+	}
+
+	/**
+	 * Update custom variable name in the map when a control's variableName changes
+	 */
+	#updateCustomVariableInNamesMap(controlId: string, oldVariableName: string, newVariableName: string): void {
+		// Remove from old name
+		this.#removeCustomVariableFromNamesMap(controlId, oldVariableName)
+
+		// Add to new name
+		this.#addCustomVariableToNamesMap(controlId, newVariableName)
+	}
+
+	/**
+	 * Check if a custom variable control is the active one for its variableName
+	 */
+	isCustomVariableActive(controlId: string): boolean {
+		const control = this.getControl(controlId) as ControlCustomVariable | undefined
+		if (!control || !control.options.variableName) return false
+
+		const nameEntry = this.#customVariableNamesMap.get(control.options.variableName)
+		return nameEntry?.activeControlId === controlId
 	}
 }
 
