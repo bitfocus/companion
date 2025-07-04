@@ -68,6 +68,11 @@ export interface EntitySupportedChildGroupDefinition {
 
 	/** Only valid for feedback entities */
 	feedbackListType?: FeedbackEntitySubType.Boolean | FeedbackEntitySubType.Value
+
+	/**
+	 * Limit the maximum number of direct children in this group.
+	 */
+	maximumChildren?: number
 }
 
 // TODO: confirm this is sensible

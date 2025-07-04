@@ -224,7 +224,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 	includeNone,
 	disabled,
 }: Readonly<InternalCustomVariableDropdownProps>) {
-	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
+	const { customVariablesList } = useContext(RootAppStoreContext)
 
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
@@ -236,7 +236,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			})
 		}
 
-		const customVariablesSorted = Array.from(customVariables.customVariables.entries()).sort(
+		const customVariablesSorted = Array.from(customVariablesList.customVariables.entries()).sort(
 			(a, b) => a[1].sortOrder - b[1].sortOrder
 		)
 
@@ -248,7 +248,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		}
 
 		return choices
-	}, [customVariables, includeNone])
+	}, [customVariablesList, includeNone])
 
 	return (
 		<DropdownInputField label={label} disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />

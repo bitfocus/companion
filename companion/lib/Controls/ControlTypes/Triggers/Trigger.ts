@@ -202,7 +202,7 @@ export class ControlTrigger
 		this.#actionRunner.abortSingle(exceptSignal)
 	}
 
-	checkCollectionIdIsValid(validCollectionIds: Set<string>): boolean {
+	checkCollectionIdIsValid(validCollectionIds: ReadonlySet<string>): boolean {
 		if (this.options.collectionId && !validCollectionIds.has(this.options.collectionId)) {
 			// collectionId is not valid, remove it
 			this.options.collectionId = undefined
@@ -273,10 +273,6 @@ export class ControlTrigger
 		foundVariables: Set<string>
 	): void {
 		const allEntities = this.entities.getAllEntities()
-
-		for (const entities of allEntities) {
-			foundConnectionIds.add(entities.connectionId)
-		}
 
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
 			.visitEntities(allEntities, [])

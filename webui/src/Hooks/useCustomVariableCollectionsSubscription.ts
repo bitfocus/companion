@@ -1,34 +1,34 @@
 import { useEffect, useState } from 'react'
 import { CompanionSocketWrapped } from '../util.js'
-import type { VariablesStore } from '~/Stores/VariablesStore.js'
+import type { CustomVariablesListStore } from '~/Stores/CustomVariablesListStore.js'
 
 export function useCustomVariableCollectionsSubscription(
 	socket: CompanionSocketWrapped,
-	store: VariablesStore
+	store: CustomVariablesListStore
 ): boolean {
 	const [ready, setReady] = useState(false)
 
 	useEffect(() => {
-		store.resetCustomVariableCollections(null)
+		store.resetCollection(null)
 		setReady(false)
 
 		socket
 			.emitPromise('custom-variable-collections:subscribe', [])
 			.then((collections) => {
-				store.resetCustomVariableCollections(collections)
+				store.resetCollection(collections)
 				setReady(true)
 			})
 			.catch((e) => {
-				store.resetCustomVariableCollections(null)
+				store.resetCollection(null)
 				console.error('Failed to load connection collections list', e)
 			})
 
 		const unsubUpdates = socket.on('custom-variable-collections:update', (update) => {
-			store.resetCustomVariableCollections(update)
+			store.resetCollection(update)
 		})
 
 		return () => {
-			store.resetCustomVariableCollections(null)
+			store.resetCollection(null)
 			unsubUpdates()
 
 			socket.emitPromise('custom-variable-collections:unsubscribe', []).catch((e) => {

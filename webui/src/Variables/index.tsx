@@ -21,10 +21,6 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				live updating of messages, making customization quick and easy.
 			</p>
 			<div className="variables-category-grid">
-				<CButton color="primary" as={Link} to="/variables/custom">
-					Custom Variables
-				</CButton>
-
 				<CButton color="primary" as={Link} to="/variables/internal">
 					Internal
 				</CButton>

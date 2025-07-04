@@ -10,7 +10,7 @@ import type {
 	ExportTriggerContentv6,
 	ExportTriggersListv6,
 	SomeExportv6,
-} from '@companion-app/shared/Model/ExportModel.js'
+} from '@companion-app/shared/Model/ExportModelv6.js'
 
 /**
  * do the database upgrades to convert from the v4 to the v5 format

@@ -24,7 +24,6 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { promisify } from 'util'
 import type { InternalModuleUtils } from './Util.js'
@@ -91,21 +90,15 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	readonly #customMessageLogger = LogController.createLogger('Custom')
 
 	readonly #internalUtils: InternalModuleUtils
-	readonly #variableController: VariablesController
 	readonly #requestExit: (fromInternal: boolean, restart: boolean) => void
 
 	#interfacesDefinitions: VariableDefinitionTmp[] = []
 	#interfacesValues: CompanionVariableValues = {}
 
-	constructor(
-		internalUtils: InternalModuleUtils,
-		variableController: VariablesController,
-		requestExit: (fromInternal: boolean, restart: boolean) => void
-	) {
+	constructor(internalUtils: InternalModuleUtils, requestExit: (fromInternal: boolean, restart: boolean) => void) {
 		super()
 
 		this.#internalUtils = internalUtils
-		this.#variableController = variableController
 		this.#requestExit = requestExit
 
 		// Update interfaces on an interval, but also soon after launch
@@ -280,7 +273,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 					if (stdoutStr.endsWith(os.EOL)) stdoutStr = stdoutStr.substring(0, stdoutStr.length - os.EOL.length)
 
 					if (action.rawOptions.targetVariable) {
-						this.#variableController.custom.setValue(action.rawOptions.targetVariable, stdoutStr)
+						this.#internalUtils.setCustomVariableValue(action.rawOptions.targetVariable, stdoutStr)
 					}
 				} catch (error) {
 					this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))

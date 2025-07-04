@@ -1,6 +1,6 @@
 import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { ConnectionConfig } from './Connections.js'
-import type { CustomVariablesModel } from './CustomVariableModel.js'
+import type { CustomVariablesModelv6 } from './ExportModelv6.js'
 
 export type SomeExportv4 = ExportFullv4 | ExportPageModelv4 | ExportTriggersListv4
 
@@ -12,7 +12,7 @@ export interface ExportBase<Type extends string> {
 export interface ExportFullv4 extends ExportBase<'full'> {
 	pages?: Record<number, ExportPageContentv4>
 	triggers?: Record<string, ExportTriggerContentv4>
-	custom_variables?: CustomVariablesModel
+	custom_variables?: CustomVariablesModelv6
 	instances?: ExportInstancesv4
 	surfaces?: unknown
 	surfaceGroups?: unknown

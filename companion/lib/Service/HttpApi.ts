@@ -612,7 +612,7 @@ export class ServiceHttpApi {
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
 
-		const result = this.#serviceApi.getCustomVariableValue(variableName)
+		const result = this.#serviceApi.getConnectionVariableValue('custom', variableName)
 		if (result === undefined) {
 			res.status(404).send('Not found')
 		} else {
