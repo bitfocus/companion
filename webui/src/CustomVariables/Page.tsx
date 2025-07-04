@@ -13,7 +13,7 @@ import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ClientCustomVariableData, CustomVariableCollection } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { CustomVariablesTableContextProvider, useCustomVariablesTableContext } from './CustomVariablesTableContext'
-import { useCustomVariablesCollectionsApi } from '~/Variables/CustomVariablesCollectionsApi'
+import { useCustomVariablesCollectionsApi } from './CustomVariablesCollectionsApi'
 import CopyToClipboard from 'react-copy-to-clipboard'
 
 export const CustomVariablesPage = observer(function CustomVariablesPage() {

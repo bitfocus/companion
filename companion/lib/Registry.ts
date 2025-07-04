@@ -191,7 +191,7 @@ export class Registry {
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 
-		this.variables = new VariablesController(this.db, this.io)
+		this.variables = new VariablesController(this.io)
 	}
 
 	/**

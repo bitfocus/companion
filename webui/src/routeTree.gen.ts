@@ -40,7 +40,6 @@ import { Route as ModulesIndexRouteImport } from './routes/app/modules/index.tsx
 import { Route as ImageLibraryIndexRouteImport } from './routes/app/image-library/index.tsx'
 import { Route as CustomVariablesIndexRouteImport } from './routes/app/custom-variables/index.tsx'
 import { Route as ConnectionsIndexRouteImport } from './routes/app/connections/index.tsx'
-import { Route as VariablesCustomRouteImport } from './routes/app/variables/custom.tsx'
 import { Route as VariablesLabelRouteImport } from './routes/app/variables/$label.tsx'
 import { Route as TriggersControlIdRouteImport } from './routes/app/triggers/$controlId.tsx'
 import { Route as SurfacesOutboundRouteImport } from './routes/app/surfaces/outbound.tsx'
@@ -235,11 +234,6 @@ const ConnectionsIndexRoute = ConnectionsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ConnectionsRoute,
 } as any)
-const VariablesCustomRoute = VariablesCustomRouteImport.update({
-  id: '/variables/custom',
-  path: '/variables/custom',
-  getParentRoute: () => appRoute,
-} as any)
 const VariablesLabelRoute = VariablesLabelRouteImport.update({
   id: '/variables/$label',
   path: '/variables/$label',
@@ -363,7 +357,6 @@ export interface FileRoutesByFullPath {
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
-  '/variables/custom': typeof VariablesCustomRoute
   '/connections/': typeof ConnectionsIndexRoute
   '/custom-variables/': typeof CustomVariablesIndexRoute
   '/image-library/': typeof ImageLibraryIndexRoute
@@ -408,7 +401,6 @@ export interface FileRoutesByTo {
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
-  '/variables/custom': typeof VariablesCustomRoute
   '/connections': typeof ConnectionsIndexRoute
   '/custom-variables': typeof CustomVariablesIndexRoute
   '/image-library': typeof ImageLibraryIndexRoute
@@ -460,7 +452,6 @@ export interface FileRoutesById {
   '/_app/surfaces/outbound': typeof SurfacesOutboundRoute
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
   '/_app/variables/$label': typeof VariablesLabelRoute
-  '/_app/variables/custom': typeof VariablesCustomRoute
   '/_app/connections/': typeof ConnectionsIndexRoute
   '/_app/custom-variables/': typeof CustomVariablesIndexRoute
   '/_app/image-library/': typeof ImageLibraryIndexRoute
@@ -512,7 +503,6 @@ export interface FileRouteTypes {
     | '/surfaces/outbound'
     | '/triggers/$controlId'
     | '/variables/$label'
-    | '/variables/custom'
     | '/connections/'
     | '/custom-variables/'
     | '/image-library/'
@@ -557,7 +547,6 @@ export interface FileRouteTypes {
     | '/surfaces/outbound'
     | '/triggers/$controlId'
     | '/variables/$label'
-    | '/variables/custom'
     | '/connections'
     | '/custom-variables'
     | '/image-library'
@@ -608,7 +597,6 @@ export interface FileRouteTypes {
     | '/_app/surfaces/outbound'
     | '/_app/triggers/$controlId'
     | '/_app/variables/$label'
-    | '/_app/variables/custom'
     | '/_app/connections/'
     | '/_app/custom-variables/'
     | '/_app/image-library/'
@@ -861,13 +849,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConnectionsIndexRouteImport
       parentRoute: typeof ConnectionsRoute
     }
-    '/_app/variables/custom': {
-      id: '/_app/variables/custom'
-      path: '/variables/custom'
-      fullPath: '/variables/custom'
-      preLoaderRoute: typeof VariablesCustomRouteImport
-      parentRoute: typeof appRoute
-    }
     '/_app/variables/$label': {
       id: '/_app/variables/$label'
       path: '/variables/$label'
@@ -1085,7 +1066,6 @@ interface appRouteChildren {
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
   VariablesLabelRoute: typeof VariablesLabelRoute
-  VariablesCustomRoute: typeof VariablesCustomRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   VariablesIndexRoute: typeof VariablesIndexRoute
 }
@@ -1112,7 +1092,6 @@ const appRouteChildren: appRouteChildren = {
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
   VariablesLabelRoute: VariablesLabelRoute,
-  VariablesCustomRoute: VariablesCustomRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   VariablesIndexRoute: VariablesIndexRoute,
 }

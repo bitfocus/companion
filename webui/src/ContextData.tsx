@@ -18,7 +18,6 @@ import { useSurfacesSubscription } from './Hooks/useSurfacesSubscription.js'
 import { SurfacesStore } from '~/Stores/SurfacesStore.js'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { VariablesStore } from '~/Stores/VariablesStore.js'
-import { useCustomVariablesSubscription } from './Hooks/useCustomVariablesSubscription.js'
 import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 import { useOutboundSurfacesSubscription } from './Hooks/useOutboundSurfacesSubscription.js'
 import { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
@@ -99,13 +98,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(socket, rootStore.surfaces)
 	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
-	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
 	const customVariablesListReady = useCustomVariablesListSubscription(socket, rootStore.customVariablesList)
-	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(
-		socket,
-		rootStore.variablesStore,
-		rootStore.customVariablesList
-	)
+	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(socket, rootStore.customVariablesList)
 	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(
 		socket,
 		rootStore.moduleStoreRefreshProgress
@@ -138,7 +132,6 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		variablesReady,
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
-		customVariablesReady,
 		customVariablesListReady,
 		customVariableCollectionsReady,
 		userConfigReady,

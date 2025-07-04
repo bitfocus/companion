@@ -3,6 +3,7 @@ import type { CollectionBase } from './Collections.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
+/** @deprecated */
 export interface CustomVariableDefinition {
 	description: string
 	defaultValue: CompanionVariableValue
@@ -13,8 +14,10 @@ export interface CustomVariableDefinition {
 
 export type CustomVariableCollection = CollectionBase<undefined>
 
+/** @deprecated */
 export type CustomVariablesModel = Record<string, CustomVariableDefinition>
 
+/** @deprecated */
 export type CustomVariableUpdate = CustomVariableUpdateRemoveOp | CustomVariableUpdateUpdateOp
 
 export interface CustomVariableUpdateRemoveOp {

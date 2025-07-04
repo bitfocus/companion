@@ -37,9 +37,7 @@ import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from './Mod
 import type {
 	ClientCustomVariableData,
 	CustomVariableCollection,
-	CustomVariableUpdate,
 	CustomVariableUpdate2,
-	CustomVariablesModel,
 } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -86,17 +84,15 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'controls:subscribe:learn': () => string[]
 	'controls:unsubscribe:learn': () => void
 
-	'custom-variables:create': (name: string, value: string) => string | null
-	'custom-variables:set-default': (name: string, value: string) => string | null
-	'custom-variables:set-current': (name: string, value: string) => string | null
-	'custom-variables:set-description': (name: string, description: string) => string | null
-	'custom-variables:set-persistence': (name: string, value: boolean) => string | null
-	'custom-variables:delete': (name: string) => void
-	'custom-variables:reorder': (collectionId: string | null, name: string, dropIndex: number) => void
+	// 'custom-variables:create': (name: string, value: string) => string | null
+	// 'custom-variables:set-default': (name: string, value: string) => string | null
+	// 'custom-variables:set-current': (name: string, value: string) => string | null
+	// 'custom-variables:set-description': (name: string, description: string) => string | null
+	// 'custom-variables:set-persistence': (name: string, value: boolean) => string | null
+	// 'custom-variables:delete': (name: string) => void
+	// 'custom-variables:reorder': (collectionId: string | null, name: string, dropIndex: number) => void
 
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
-	'custom-variables:subscribe': () => CustomVariablesModel
-	'custom-variables:unsubscribe': () => void
 	'modules:subscribe': () => Record<string, ClientModuleInfo>
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
@@ -519,7 +515,6 @@ export interface BackendToClientEventsMap {
 	'triggers:update': (change: TriggersUpdate) => void
 	'trigger-collections:update': (patch: TriggerCollection[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
-	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'custom-variables2:update': (changes: CustomVariableUpdate2) => void
 	'custom-variable-collections:update': (patch: CustomVariableCollection[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
