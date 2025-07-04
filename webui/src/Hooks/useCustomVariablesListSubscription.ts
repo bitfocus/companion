@@ -13,7 +13,7 @@ export function useCustomVariablesListSubscription(
 		setReady(false)
 
 		socket
-			.emitPromise('custom-variables2:subscribe', [])
+			.emitPromise('custom-variables:subscribe', [])
 			.then((variables) => {
 				store.resetCustomVariables(variables)
 				setReady(true)
@@ -23,7 +23,7 @@ export function useCustomVariablesListSubscription(
 				store.resetCustomVariables(null)
 			})
 
-		const unsubUpdates = socket.on('custom-variables2:update', (change) => {
+		const unsubUpdates = socket.on('custom-variables:update', (change) => {
 			store.applyCustomVariablesChange(change)
 		})
 
@@ -32,7 +32,7 @@ export function useCustomVariablesListSubscription(
 
 			unsubUpdates()
 
-			socket.emitPromise('custom-variables2:unsubscribe', []).catch((e) => {
+			socket.emitPromise('custom-variables:unsubscribe', []).catch((e) => {
 				console.error('Failed to unsubscribe to custom-variables definitions list', e)
 			})
 		}

@@ -84,14 +84,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'controls:subscribe:learn': () => string[]
 	'controls:unsubscribe:learn': () => void
 
-	// 'custom-variables:create': (name: string, value: string) => string | null
-	// 'custom-variables:set-default': (name: string, value: string) => string | null
-	// 'custom-variables:set-current': (name: string, value: string) => string | null
-	// 'custom-variables:set-description': (name: string, description: string) => string | null
-	// 'custom-variables:set-persistence': (name: string, value: boolean) => string | null
-	// 'custom-variables:delete': (name: string) => void
-	// 'custom-variables:reorder': (collectionId: string | null, name: string, dropIndex: number) => void
-
 	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'modules:subscribe': () => Record<string, ClientModuleInfo>
 	'modules:unsubscribe': () => void
@@ -111,8 +103,8 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'triggers:unsubscribe': () => void
 	'trigger-collections:subscribe': () => TriggerCollection[]
 	'trigger-collections:unsubscribe': () => void
-	'custom-variables2:subscribe': () => Record<string, ClientCustomVariableData | undefined>
-	'custom-variables2:unsubscribe': () => void
+	'custom-variables:subscribe': () => Record<string, ClientCustomVariableData | undefined>
+	'custom-variables:unsubscribe': () => void
 
 	'controls:subscribe': (controlId: string) => { config: unknown; runtime: unknown } | undefined
 	'controls:unsubscribe': (controlId: string) => void
@@ -262,11 +254,12 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'triggers:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
 	'triggers:test': (controlId: string) => boolean
 
-	'custom-variables2:create': () => string
-	'custom-variables2:clone': (controlId: string) => string | false
-	'custom-variables2:delete': (controlId: string) => boolean
-	// 'custom-variables2:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
-	// 'custom-variables2:test': (controlId: string) => boolean
+	// 'custom-variables:set-current': (name: string, value: string) => string | null
+
+	'custom-variables:create': () => string
+	'custom-variables:clone': (controlId: string) => string | false
+	'custom-variables:delete': (controlId: string) => boolean
+	// 'custom-variables:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
 
 	'trigger-collections:add': (collectionName: string) => string
 	'trigger-collections:remove': (collectionId: string) => void
@@ -515,7 +508,7 @@ export interface BackendToClientEventsMap {
 	'triggers:update': (change: TriggersUpdate) => void
 	'trigger-collections:update': (patch: TriggerCollection[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
-	'custom-variables2:update': (changes: CustomVariableUpdate2) => void
+	'custom-variables:update': (changes: CustomVariableUpdate2) => void
 	'custom-variable-collections:update': (patch: CustomVariableCollection[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void

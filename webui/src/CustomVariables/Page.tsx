@@ -23,7 +23,7 @@ export const CustomVariablesPage = observer(function CustomVariablesPage() {
 
 	const doAddNew = useCallback(() => {
 		socket
-			.emitPromise('custom-variables2:create', [])
+			.emitPromise('custom-variables:create', [])
 			.then(async (controlId) => {
 				console.log('created custom variable', controlId)
 
@@ -152,7 +152,7 @@ const CustomVariableTableRow = observer(function CustomVariableTableRow2({ item 
 			'Are you sure you wish to delete this custom variable?',
 			'Delete',
 			() => {
-				socket.emitPromise('custom-variables2:delete', [CreateCustomVariableControlId(item.id)]).catch((e) => {
+				socket.emitPromise('custom-variables:delete', [CreateCustomVariableControlId(item.id)]).catch((e) => {
 					console.error('Failed to delete', e)
 				})
 			}
@@ -163,7 +163,7 @@ const CustomVariableTableRow = observer(function CustomVariableTableRow2({ item 
 	}, [tableContext, item.id])
 	const doClone = useCallback(() => {
 		socket
-			.emitPromise('custom-variables2:clone', [CreateCustomVariableControlId(item.id)])
+			.emitPromise('custom-variables:clone', [CreateCustomVariableControlId(item.id)])
 			.then((newControlId) => {
 				console.log('cloned to control', newControlId)
 			})

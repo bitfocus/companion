@@ -797,7 +797,7 @@ export class ControlsController {
 			return true
 		})
 
-		client.onPromise('custom-variables2:subscribe', () => {
+		client.onPromise('custom-variables:subscribe', () => {
 			client.join(CustomVariablesListRoom)
 
 			const variables: Record<string, ClientCustomVariableData> = {}
@@ -810,10 +810,10 @@ export class ControlsController {
 
 			return variables
 		})
-		client.onPromise('custom-variables2:unsubscribe', () => {
+		client.onPromise('custom-variables:unsubscribe', () => {
 			client.leave(CustomVariablesListRoom)
 		})
-		client.onPromise('custom-variables2:create', () => {
+		client.onPromise('custom-variables:create', () => {
 			const controlId = CreateCustomVariableControlId(nanoid())
 
 			const newControl = new ControlCustomVariable(this.#createControlDependencies(), controlId, null, false)
@@ -829,7 +829,7 @@ export class ControlsController {
 
 			return controlId
 		})
-		client.onPromise('custom-variables2:delete', (controlId) => {
+		client.onPromise('custom-variables:delete', (controlId) => {
 			if (!this.#validateCustomVariableControlId(controlId)) {
 				// Control id is not valid!
 				return false
@@ -848,7 +848,7 @@ export class ControlsController {
 
 			return false
 		})
-		client.onPromise('custom-variables2:clone', (controlId) => {
+		client.onPromise('custom-variables:clone', (controlId) => {
 			if (!this.#validateCustomVariableControlId(controlId)) {
 				// Control id is not valid!
 				return false

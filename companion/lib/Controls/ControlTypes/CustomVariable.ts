@@ -269,14 +269,14 @@ export class ControlCustomVariable
 			if (this.#lastSentDefinitionJson) {
 				const patch = jsonPatch.compare(this.#lastSentDefinitionJson || {}, newJson || {})
 				if (patch.length > 0) {
-					this.deps.io.emitToRoom(CustomVariablesListRoom, `custom-variables2:update`, {
+					this.deps.io.emitToRoom(CustomVariablesListRoom, `custom-variables:update`, {
 						type: 'update',
 						controlId: this.controlId,
 						patch,
 					})
 				}
 			} else {
-				this.deps.io.emitToRoom(CustomVariablesListRoom, `custom-variables2:update`, {
+				this.deps.io.emitToRoom(CustomVariablesListRoom, `custom-variables:update`, {
 					type: 'add',
 					controlId: this.controlId,
 					info: newJson,
@@ -302,7 +302,7 @@ export class ControlCustomVariable
 		this.deps.events.emit('customVariableDefinitionChanged', this.controlId, null)
 
 		if (this.deps.io.countRoomMembers(CustomVariablesListRoom) > 0) {
-			this.deps.io.emitToRoom(CustomVariablesListRoom, `custom-variables2:update`, {
+			this.deps.io.emitToRoom(CustomVariablesListRoom, `custom-variables:update`, {
 				type: 'remove',
 				controlId: this.controlId,
 			})
@@ -353,6 +353,7 @@ export class ControlCustomVariable
 			return
 		}
 
+		this.logger.silly(`Set value "${this.options.variableName}":${value}`)
 		if (entity.setUserValue(value)) {
 			this.commitChange(true)
 		} else {
@@ -367,6 +368,7 @@ export class ControlCustomVariable
 			return
 		}
 
+		this.logger.silly(`Set from default value "${this.options.variableName}":${entity.rawOptions.startup_value}`)
 		entity.setUserValue(entity.rawOptions.startup_value)
 
 		this.commitChange(true)
@@ -379,6 +381,7 @@ export class ControlCustomVariable
 			return
 		}
 
+		this.logger.silly(`Set default value "${this.options.variableName}":${entity.feedbackValue}`)
 		entity.rawOptions.startup_value = entity.feedbackValue
 
 		this.commitChange(true)
