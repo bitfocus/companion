@@ -276,7 +276,8 @@ export class Registry {
 				this.controls,
 				this.surfaces,
 				this.variables,
-				this.graphics
+				this.graphics,
+				controlEvents
 			)
 
 			this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
@@ -284,7 +285,6 @@ export class Registry {
 				serviceApi,
 				this.userconfig,
 				oscSender,
-				controlEvents,
 				this.surfaces,
 				pageStore,
 				this.instance,

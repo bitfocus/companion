@@ -116,6 +116,7 @@ export class ControlCustomVariable
 			this.entities.loadStorage(storage, true, isImport)
 
 			if (isImport) this.postProcessImport()
+			else this.commitChange()
 		}
 
 		// // Ensure trigger is stored before setup
@@ -287,12 +288,16 @@ export class ControlCustomVariable
 		super.commitChange(redraw)
 
 		this.#sendTriggerJsonChange()
+
+		this.deps.events.emit('customVariableDefinitionChanged', this.controlId, this.toClientJSON())
 	}
 
 	destroy(): void {
 		this.entities.destroy()
 
 		super.destroy()
+
+		this.deps.events.emit('customVariableDefinitionChanged', this.controlId, null)
 
 		if (this.deps.io.countRoomMembers(CustomVariablesListRoom) > 0) {
 			this.deps.io.emitToRoom(CustomVariablesListRoom, `custom-variables2:update`, {
