@@ -6,11 +6,12 @@ import v3tov4 from './Upgrades/v3tov4.js'
 import v4tov5 from './Upgrades/v4tov5.js'
 import { showFatalError } from '../Resources/Util.js'
 import type { DataDatabase } from './Database.js'
-import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { SomeExportv10 } from '@companion-app/shared/Model/ExportModel.js'
 import v5tov6 from './Upgrades/v5tov6.js'
 import v6tov7 from './Upgrades/v6tov7.js'
 import v7tov8 from './Upgrades/v7tov8.js'
 import v8tov9 from './Upgrades/v8tov9.js'
+import v9tov10 from './Upgrades/v9tov10.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -23,6 +24,7 @@ const allUpgrades = [
 	v6tov7, // v4.0 - rework 'entities' for better nesting https://github.com/bitfocus/companion/pull/3185
 	v7tov8, // v4.0 - break out into more tables
 	v8tov9, // v4.1 - convert button stepAutoProgress to stepProgression
+	v9tov10, // v4.x - convert custom variables to entity format
 ]
 const targetVersion = allUpgrades.length + 1
 
@@ -64,7 +66,7 @@ export function upgradeStartup(db: DataDatabase): void {
  * Upgrade an exported page or full configuration to the latest format
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function upgradeImport(obj: any): SomeExportv6 {
+export function upgradeImport(obj: any): SomeExportv10 {
 	const currentVersion = obj.version || 1
 
 	for (let i = currentVersion; i < targetVersion; i++) {

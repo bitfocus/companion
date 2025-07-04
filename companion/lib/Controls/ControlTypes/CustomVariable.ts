@@ -25,6 +25,7 @@ import {
 import jsonPatch from 'fast-json-patch'
 import { CompanionVariableValue } from '@companion-module/base'
 import { isInternalUserValueFeedback } from '../Entities/EntityInstance.js'
+import { CustomVariableOptionDefaultKey } from '../CustomVariableConstants.js'
 
 /**
  * Class for a custom variable.
@@ -159,10 +160,6 @@ export class ControlCustomVariable
 		foundVariables: Set<string>
 	): void {
 		const allEntities = this.entities.getAllEntities()
-
-		for (const entities of allEntities) {
-			foundConnectionIds.add(entities.connectionId)
-		}
 
 		new VisitorReferencesCollector(
 			this.deps.internalModule,
@@ -368,8 +365,10 @@ export class ControlCustomVariable
 			return
 		}
 
-		this.logger.silly(`Set from default value "${this.options.variableName}":${entity.rawOptions.startup_value}`)
-		entity.setUserValue(entity.rawOptions.startup_value)
+		this.logger.silly(
+			`Set from default value "${this.options.variableName}":${entity.rawOptions[CustomVariableOptionDefaultKey]}`
+		)
+		entity.setUserValue(entity.rawOptions[CustomVariableOptionDefaultKey])
 
 		this.commitChange(true)
 	}
@@ -382,7 +381,7 @@ export class ControlCustomVariable
 		}
 
 		this.logger.silly(`Set default value "${this.options.variableName}":${entity.feedbackValue}`)
-		entity.rawOptions.startup_value = entity.feedbackValue
+		entity.rawOptions[CustomVariableOptionDefaultKey] = entity.feedbackValue
 
 		this.commitChange(true)
 	}

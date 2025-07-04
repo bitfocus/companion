@@ -194,10 +194,6 @@ export class ControlButtonNormal
 	): void {
 		const allEntities = this.entities.getAllEntities()
 
-		for (const entity of allEntities) {
-			foundConnectionIds.add(entity.connectionId)
-		}
-
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
 			.visitButtonDrawStlye(this.#baseStyle)
 			.visitEntities(allEntities, [])

@@ -18,6 +18,7 @@ import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { CustomVariableOptionDefaultKey } from '../../Controls/CustomVariableConstants.js'
 
 export class ControlEntityInstance {
 	/**
@@ -259,7 +260,7 @@ export class ControlEntityInstance {
 	#getStartupValue(): any {
 		if (!isInternalUserValueFeedback(this)) return undefined
 
-		return this.#data.options.startup_value
+		return this.#data.options[CustomVariableOptionDefaultKey]
 	}
 
 	/**
@@ -814,7 +815,7 @@ export class ControlEntityInstance {
 
 		// Persist value if needed
 		if (this.#data.options.persist_value) {
-			this.#data.options.startup_value = value
+			this.#data.options[CustomVariableOptionDefaultKey] = value
 
 			return true
 		}

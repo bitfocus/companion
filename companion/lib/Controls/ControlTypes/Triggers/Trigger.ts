@@ -274,10 +274,6 @@ export class ControlTrigger
 	): void {
 		const allEntities = this.entities.getAllEntities()
 
-		for (const entities of allEntities) {
-			foundConnectionIds.add(entities.connectionId)
-		}
-
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
 			.visitEntities(allEntities, [])
 			.visitEvents(this.events)
