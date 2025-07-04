@@ -44,7 +44,9 @@ export const CustomVariablesPage = observer(function CustomVariablesPage() {
 		const allCustomVariables: CustomVariableDataWithId[] = []
 
 		for (const [variableId, variable] of customVariablesList.customVariables) {
-			allCustomVariables.push({ ...variable, id: variableId, collectionId: variable.collectionId || null })
+			const parsedId = ParseControlId(variableId)
+			if (!parsedId || parsedId.type !== 'custom-variable') continue
+			allCustomVariables.push({ ...variable, id: parsedId.variableId, collectionId: variable.collectionId || null })
 		}
 
 		return allCustomVariables

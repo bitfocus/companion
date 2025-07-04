@@ -1639,6 +1639,9 @@ export class ControlsController {
 			} else {
 				// No other controls, remove the entry entirely
 				this.#customVariableNamesMap.delete(variableName)
+
+				// Clear cached values
+				this.#registry.variables.values.setVariableValues('custom', [{ id: variableName, value: undefined }])
 			}
 		} else {
 			// Non-active control is being removed, just remove from others list
