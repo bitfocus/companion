@@ -524,7 +524,7 @@ export class ExportController {
 
 		if (!config || !isFalsey(config.customVariables)) {
 			exp.custom_variables = this.#variablesController.custom.getDefinitions()
-			exp.customVariablesCollections = this.#variablesController.custom.exportCollections()
+			exp.customVariablesCollections = this.#controlsController.exportCustomVariableCollections()
 		}
 
 		if (!config || !isFalsey(config.connections)) {

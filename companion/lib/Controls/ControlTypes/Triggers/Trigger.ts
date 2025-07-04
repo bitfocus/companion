@@ -202,7 +202,7 @@ export class ControlTrigger
 		this.#actionRunner.abortSingle(exceptSignal)
 	}
 
-	checkCollectionIdIsValid(validCollectionIds: Set<string>): boolean {
+	checkCollectionIdIsValid(validCollectionIds: ReadonlySet<string>): boolean {
 		if (this.options.collectionId && !validCollectionIds.has(this.options.collectionId)) {
 			// collectionId is not valid, remove it
 			this.options.collectionId = undefined

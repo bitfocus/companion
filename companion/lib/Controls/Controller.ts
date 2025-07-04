@@ -33,7 +33,12 @@ import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { ControlCustomVariable } from './ControlTypes/CustomVariable.js'
-import { ClientCustomVariableData, CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
+import {
+	ClientCustomVariableData,
+	CustomVariableCollection,
+	CustomVariableModel2,
+} from '@companion-app/shared/Model/CustomVariableModel.js'
+import { CustomVariableCollections } from '../Variables/CustomVariableCollections.js'
 
 export const TriggersListRoom = 'triggers:list'
 export const CustomVariablesListRoom = 'custom-variables:list'
@@ -90,6 +95,7 @@ export class ControlsController {
 	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
 	readonly #triggerCollections: TriggerCollections
+	readonly #customVariableCollections: CustomVariableCollections
 
 	constructor(
 		registry: Registry,
@@ -110,12 +116,15 @@ export class ControlsController {
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
 			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
+		this.#customVariableCollections = new CustomVariableCollections(registry.io, registry.db, (validCollectionIds) =>
+			this.#cleanUnknownCustomVariableCollectionIds(validCollectionIds)
+		)
 
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
 	}
 
-	#cleanUnknownTriggerCollectionIds(validCollectionIds: Set<string>): void {
+	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
 		for (const control of this.#controls.values()) {
 			if (control instanceof ControlTrigger) {
 				control.checkCollectionIdIsValid(validCollectionIds)
@@ -129,6 +138,14 @@ export class ControlsController {
 				control.setCollectionEnabled(
 					!control.options.collectionId || enabledCollectionIds.has(control.options.collectionId)
 				)
+			}
+		}
+	}
+
+	#cleanUnknownCustomVariableCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlCustomVariable) {
+				control.checkCollectionIdIsValid(validCollectionIds)
 			}
 		}
 	}
@@ -196,6 +213,7 @@ export class ControlsController {
 	clientConnect(client: ClientSocket): void {
 		this.actionRecorder.clientConnect(client)
 		this.#triggerCollections.clientConnect(client)
+		this.#customVariableCollections.clientConnect(client)
 
 		this.triggers.emit('client_connect')
 
@@ -1259,8 +1277,9 @@ export class ControlsController {
 			}
 		}
 
-		// Ensure all trigger collections are valid
+		// Ensure all collections are valid
 		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
+		this.#cleanUnknownCustomVariableCollectionIds(this.#customVariableCollections.collectAllCollectionIds())
 	}
 
 	/**
@@ -1363,6 +1382,18 @@ export class ControlsController {
 
 	replaceTriggerCollections(collections: TriggerCollection[]): void {
 		this.#triggerCollections.replaceCollections(collections)
+	}
+
+	discardCustomVariableCollections(): void {
+		this.#customVariableCollections.discardAllCollections()
+	}
+
+	exportCustomVariableCollections(): CustomVariableCollection[] {
+		return this.#customVariableCollections.collectionData
+	}
+
+	replaceCustomVariableCollections(collections: CustomVariableCollection[]): void {
+		this.#customVariableCollections.replaceCollections(collections)
 	}
 
 	/**

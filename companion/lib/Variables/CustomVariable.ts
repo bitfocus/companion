@@ -13,7 +13,6 @@ import LogController from '../Log/Controller.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import type { VariablesValues, VariableValueEntry } from './Values.js'
 import type {
-	CustomVariableCollection,
 	CustomVariableDefinition,
 	CustomVariablesModel,
 	CustomVariableUpdate,
@@ -23,7 +22,6 @@ import type { DataDatabase } from '../Data/Database.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { DataStoreTableView } from '../Data/StoreBase.js'
-import { CustomVariableCollections } from './CustomVariableCollections.js'
 import EventEmitter from 'events'
 
 const CustomVariablesRoom = 'custom-variables'
@@ -36,7 +34,6 @@ export interface VariablesCustomVariableEvents {
 export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariableEvents> {
 	readonly #logger = LogController.createLogger('Variables/CustomVariable')
 	readonly #variableValues: VariablesValues
-	readonly #collections: CustomVariableCollections
 
 	/**
 	 * Custom variable definitions
@@ -51,38 +48,14 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		this.#dbTable = db.getTableView('custom_variables')
 		this.#io = io
 		this.#variableValues = variableValues
-		this.#collections = new CustomVariableCollections(io, db, (validCollectionIds) =>
-			this.#cleanUnknownCollectionIds(validCollectionIds)
-		)
 
 		this.#custom_variables = this.#dbTable.all()
-	}
-
-	#cleanUnknownCollectionIds(validCollectionIds: ReadonlySet<string>): void {
-		const changes: CustomVariableUpdate[] = []
-
-		for (const [id, info] of Object.entries(this.#custom_variables)) {
-			if (!info || !info.collectionId) continue
-
-			if (validCollectionIds.has(info.collectionId)) continue
-
-			info.collectionId = undefined
-			this.#dbTable.set(id, info)
-
-			changes.push({ type: 'update', itemId: id, info })
-		}
-
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
-		}
 	}
 
 	/**
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.#collections.clientConnect(client)
-
 		client.onPromise('custom-variables:subscribe', () => {
 			client.join(CustomVariablesRoom)
 
@@ -112,14 +85,6 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 				{ type: 'update', itemId: name, info: this.#custom_variables[name] },
 			])
 		}
-	}
-
-	exportCollections(): CustomVariableCollection[] {
-		return this.#collections.collectionData
-	}
-
-	replaceCollections(collections: CustomVariableCollection[]): void {
-		this.#collections.replaceCollections(collections)
 	}
 
 	/**
@@ -202,8 +167,6 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 			}
 			this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 		}
-
-		this.#cleanUnknownCollectionIds(this.#collections.collectAllCollectionIds())
 	}
 
 	/**
@@ -273,7 +236,6 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 			)
 		}
 
-		this.#collections.discardAllCollections()
 		namesBefore.forEach((name) => {
 			this.#emitVariableDefinitionChange(name, null)
 		})
@@ -314,7 +276,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		const thisVariable = this.#custom_variables[name]
 		if (!thisVariable) return
 
-		if (!this.#collections.doesCollectionIdExist(collectionId)) return
+		// if (!this.#collections.doesCollectionIdExist(collectionId)) return
 
 		// update the collectionId of the variable being moved if needed
 		if (thisVariable.collectionId !== (collectionId ?? undefined)) {

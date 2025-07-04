@@ -381,7 +381,7 @@ export class ImportExportController {
 				// import custom variables
 				if (!config || config.customVariables) {
 					if (data.customVariablesCollections) {
-						this.#variablesController.custom.replaceCollections(data.customVariablesCollections)
+						this.#controlsController.replaceCustomVariableCollections(data.customVariablesCollections)
 					}
 
 					this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
@@ -655,6 +655,7 @@ export class ImportExportController {
 		}
 
 		if (!config || config.customVariables) {
+			this.#controlsController.replaceCustomVariableCollections([])
 			this.#variablesController.custom.reset()
 		}
 
