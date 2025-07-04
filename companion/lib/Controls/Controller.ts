@@ -870,45 +870,47 @@ export class ControlsController {
 
 			return false
 		})
-		// client.onPromise('triggers:reorder', (collectionId: string | null, controlId: string, dropIndex: number) => {
-		// 	const thisTrigger = this.#controls.get(controlId)
-		// 	if (!thisTrigger || !(thisTrigger instanceof ControlTrigger)) return false
+		client.onPromise(
+			'custom-variables:reorder',
+			(collectionId: string | null, controlId: string, dropIndex: number) => {
+				const thisCustomVariable = this.#controls.get(controlId)
+				if (!thisCustomVariable || !(thisCustomVariable instanceof ControlCustomVariable)) return false
 
-		// 	if (!this.#triggerCollections.doesCollectionIdExist(collectionId)) return false
+				if (!this.#customVariableCollections.doesCollectionIdExist(collectionId)) return false
 
-		// 	// update the collectionId of the trigger being moved if needed
-		// 	if (thisTrigger.options.collectionId !== (collectionId ?? undefined)) {
-		// 		thisTrigger.optionsSetField('collectionId', collectionId ?? undefined, true)
-		// 		thisTrigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(collectionId))
-		// 	}
+				// update the collectionId of the trigger being moved if needed
+				if (thisCustomVariable.options.collectionId !== (collectionId ?? undefined)) {
+					thisCustomVariable.optionsSetField('collectionId', collectionId ?? undefined, true)
+				}
 
-		// 	// find all the other triggers with the matching collectionId
-		// 	const sortedTriggers = Array.from(this.#controls.values())
-		// 		.filter(
-		// 			(control): control is ControlTrigger =>
-		// 				control.controlId !== controlId &&
-		// 				control instanceof ControlTrigger &&
-		// 				((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
-		// 		)
-		// 		.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
+				// find all the other triggers with the matching collectionId
+				const sortedCustomVariables = Array.from(this.#controls.values())
+					.filter(
+						(control): control is ControlCustomVariable =>
+							control.controlId !== controlId &&
+							control instanceof ControlCustomVariable &&
+							((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
+					)
+					.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
 
-		// 	if (dropIndex < 0) {
-		// 		// Push the trigger to the end of the array
-		// 		sortedTriggers.push(thisTrigger)
-		// 	} else {
-		// 		// Insert the trigger at the drop index
-		// 		sortedTriggers.splice(dropIndex, 0, thisTrigger)
-		// 	}
+				if (dropIndex < 0) {
+					// Push the trigger to the end of the array
+					sortedCustomVariables.push(thisCustomVariable)
+				} else {
+					// Insert the trigger at the drop index
+					sortedCustomVariables.splice(dropIndex, 0, thisCustomVariable)
+				}
 
-		// 	// update the sort order of the connections in the store, tracking which ones changed
-		// 	sortedTriggers.forEach((trigger, index) => {
-		// 		if (trigger.options.sortOrder === index) return // No change
+				// update the sort order of the connections in the store, tracking which ones changed
+				sortedCustomVariables.forEach((customVariable, index) => {
+					if (customVariable.options.sortOrder === index) return // No change
 
-		// 		trigger.optionsSetField('sortOrder', index, true)
-		// 	})
+					customVariable.optionsSetField('sortOrder', index, true)
+				})
 
-		// 	return true
-		// })
+				return true
+			}
+		)
 
 		client.onPromise('controls:event:add', (controlId, eventType) => {
 			const control = this.getControl(controlId)

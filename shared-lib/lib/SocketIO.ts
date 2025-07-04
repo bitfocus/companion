@@ -259,7 +259,7 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'custom-variables:create': () => string
 	'custom-variables:clone': (controlId: string) => string | false
 	'custom-variables:delete': (controlId: string) => boolean
-	// 'custom-variables:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
+	'custom-variables:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
 
 	'trigger-collections:add': (collectionName: string) => string
 	'trigger-collections:remove': (collectionId: string) => void
