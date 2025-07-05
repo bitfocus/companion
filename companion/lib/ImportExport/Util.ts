@@ -1,7 +1,7 @@
 import zlib from 'node:zlib'
 import yaml from 'yaml'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { SomeExportv10 } from '@companion-app/shared/Model/ExportModel.js'
 import type { Logger } from 'winston'
 import { promisify } from 'node:util'
 
@@ -16,7 +16,7 @@ export interface StringifiedExportData {
 
 export async function stringifyExport(
 	logger: Logger,
-	data: SomeExportv6,
+	data: SomeExportv10,
 	filename: string,
 	format: ExportFormat | undefined
 ): Promise<StringifiedExportData | null> {

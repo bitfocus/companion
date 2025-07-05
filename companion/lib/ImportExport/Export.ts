@@ -20,13 +20,13 @@ import LogController, { Logger } from '../Log/Controller.js'
 import type express from 'express'
 import type { ParsedQs } from 'qs'
 import type {
-	ExportFullv6,
-	ExportInstancesv6,
-	ExportPageContentv6,
-	ExportPageModelv6,
-	ExportTriggerContentv6,
-	ExportTriggersListv6,
-	SomeExportv6,
+	ExportFullv10,
+	ExportConnectionsv10,
+	ExportPageContentv10,
+	ExportPageModelv10,
+	ExportTriggerContentv10,
+	ExportTriggersListv10,
+	SomeExportv10,
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ImageLibraryExportData } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import type { AppInfo } from '../Registry.js'
@@ -137,11 +137,11 @@ export class ExportController {
 			)
 
 			// Collect referenced connections and  collections
-			const instancesExport = this.#generateReferencedConnectionConfigs(
+			const connectionsExport = this.#generateReferencedConnectionConfigs(
 				referencedConnectionIds,
 				referencedConnectionLabels
 			)
-			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(instancesExport))
+			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 			const filteredConnectionCollections = this.#filterReferencedCollections(
 				this.#instancesController.collections.collectionData,
 				referencedConnectionCollectionIds
@@ -158,12 +158,12 @@ export class ExportController {
 			)
 
 			// Export file protocol version
-			const exp: ExportPageModelv6 = {
+			const exp: ExportPageModelv10 = {
 				version: FILE_VERSION,
 				type: 'page',
 				companionBuild: this.#appInfo.appBuild,
 				page: pageExport,
-				instances: instancesExport,
+				connections: connectionsExport,
 				connectionCollections: filteredConnectionCollections,
 				oldPageNumber: page,
 				imageLibrary: referencedImages,
@@ -302,8 +302,8 @@ export class ExportController {
 			: `${os.hostname()}_${getTimestamp()}_${exportType}.${fileExt}`
 	}
 
-	#generateTriggersExport(triggerControls: ControlTrigger[], includeCollections: boolean): ExportTriggersListv6 {
-		const triggersExport: ExportTriggerContentv6 = {}
+	#generateTriggersExport(triggerControls: ControlTrigger[], includeCollections: boolean): ExportTriggersListv10 {
+		const triggersExport: ExportTriggerContentv10 = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
@@ -334,11 +334,11 @@ export class ExportController {
 			: []
 
 		// Collect referenced connection and collections
-		const instancesExport = this.#generateReferencedConnectionConfigs(
+		const connectionsExport = this.#generateReferencedConnectionConfigs(
 			referencedConnectionIds,
 			referencedConnectionLabels
 		)
-		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(instancesExport))
+		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 		const filteredConnectionCollections = this.#filterReferencedCollections(
 			this.#instancesController.collections.collectionData,
 			referencedConnectionCollectionIds
@@ -354,13 +354,13 @@ export class ExportController {
 			referencedImageLibraryCollectionIds
 		)
 
-		const result: ExportTriggersListv6 = {
+		const result: ExportTriggersListv10 = {
 			type: 'trigger_list',
 			version: FILE_VERSION,
 			companionBuild: this.#appInfo.appBuild,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
-			instances: instancesExport,
+			connections: connectionsExport,
 			connectionCollections: filteredConnectionCollections,
 			imageLibrary: referencedImages,
 			imageLibraryCollections: filteredImageLibraryCollections,
@@ -412,8 +412,8 @@ export class ExportController {
 		referencedConnectionIds: Set<string>,
 		referencedConnectionLabels: Set<string>,
 		minimalExport = false
-	): ExportInstancesv6 {
-		const instancesExport: ExportInstancesv6 = {}
+	): ExportConnectionsv10 {
+		const instancesExport: ExportConnectionsv10 = {}
 
 		referencedConnectionIds.delete('internal') // Ignore the internal module
 		for (const connectionId of referencedConnectionIds) {
@@ -436,8 +436,8 @@ export class ExportController {
 		referencedConnectionIds: Set<string>,
 		referencedConnectionLabels: Set<string>,
 		referencedVariables: Set<string>
-	): ExportPageContentv6 {
-		const pageExport: ExportPageContentv6 = {
+	): ExportPageContentv10 {
+		const pageExport: ExportPageContentv10 = {
 			id: pageInfo.id,
 			name: pageInfo.name,
 			controls: {},
@@ -463,15 +463,13 @@ export class ExportController {
 		return pageExport
 	}
 
-	generateCustomExport(config: ClientExportSelection | null): ExportFullv6 {
+	generateCustomExport(config: ClientExportSelection | null): ExportFullv10 {
 		// Export file protocol version
-		const exp: ExportFullv6 = {
+		const exp: ExportFullv10 = {
 			version: FILE_VERSION,
 			type: 'full',
 			companionBuild: this.#appInfo.appBuild,
 		}
-
-		const rawControls = this.#controlsController.getAllControls()
 
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
@@ -492,19 +490,18 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.triggers)) {
-			const triggersExport: ExportTriggerContentv6 = {}
-			for (const control of rawControls.values()) {
-				if (control.type === 'trigger') {
-					const parsedId = ParseControlId(control.controlId)
-					if (parsedId?.type === 'trigger') {
-						triggersExport[parsedId.trigger] = control.toJSON(false)
+			const triggersExport: ExportTriggerContentv10 = {}
+			const triggerControls = this.#controlsController.getAllTriggers()
+			for (const control of triggerControls) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'trigger') {
+					triggersExport[parsedId.trigger] = control.toJSON(false)
 
-						control.collectReferencedConnectionsAndVariables(
-							referencedConnectionIds,
-							referencedConnectionLabels,
-							referencedVariables
-						)
-					}
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
 				}
 			}
 			exp.triggers = triggersExport
@@ -513,22 +510,36 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.customVariables)) {
-			exp.custom_variables = this.#variablesController.custom.getDefinitions()
-			exp.customVariablesCollections = this.#variablesController.custom.exportCollections()
+			exp.customVariables = {}
+			exp.customVariablesCollections = this.#controlsController.exportCustomVariableCollections()
+
+			const customVariableControls = this.#controlsController.getAllCustomVariables()
+			for (const control of customVariableControls) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'custom-variable') {
+					exp.customVariables[parsedId.variableId] = control.toJSON(false)
+
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				}
+			}
 		}
 
 		if (!config || !isFalsey(config.connections)) {
 			// TODO: whether to include secrets should be configurable. Perhaps these should be encrypted too?
-			exp.instances = this.#instancesController.exportAll(false)
+			exp.connections = this.#instancesController.exportAll(false)
 			exp.connectionCollections = this.#instancesController.collections.collectionData
 		} else {
-			exp.instances = this.#generateReferencedConnectionConfigs(
+			exp.connections = this.#generateReferencedConnectionConfigs(
 				referencedConnectionIds,
 				referencedConnectionLabels,
 				true
 			)
 
-			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(exp.instances))
+			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(exp.connections))
 			exp.connectionCollections = this.#filterReferencedCollections(
 				this.#instancesController.collections.collectionData,
 				referencedConnectionCollectionIds
@@ -607,7 +618,7 @@ function downloadBlob(
 	logger: Logger,
 	res: express.Response,
 	next: express.NextFunction,
-	data: SomeExportv6,
+	data: SomeExportv10,
 	filename: string,
 	formatStr: string
 ): void {

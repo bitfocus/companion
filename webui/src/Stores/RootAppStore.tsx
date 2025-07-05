@@ -14,6 +14,7 @@ import type { HelpModalRef } from '~/Connections/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
 import type { WhatsNewModalRef } from '~/WhatsNewModal.js'
 import type { ImageLibraryStore } from './ImageLibraryStore.js'
+import type { CustomVariablesListStore } from './CustomVariablesListStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -36,6 +37,7 @@ export interface RootAppStore {
 	readonly variablesStore: VariablesStore
 
 	readonly triggersList: TriggersListStore
+	readonly customVariablesList: CustomVariablesListStore
 
 	readonly userConfig: UserConfigStore
 

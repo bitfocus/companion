@@ -22,7 +22,7 @@ import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
-import { validateBankControlId, validateTriggerControlId } from './Util.js'
+import { validateBankControlId, validateCustomVariableControlId, validateTriggerControlId } from './Util.js'
 import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
@@ -34,6 +34,11 @@ import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/C
 import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { ControlCustomVariable } from './ControlTypes/CustomVariable.js'
+import type { CustomVariableCollection, CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
+import { CustomVariableCollections } from '../Variables/CustomVariableCollections.js'
+import { createCustomVariablesTrpcRouter } from './CustomVariablesTrpcRouter.js'
+import { CustomVariableNameMap } from './CustomVariableNameMap.js'
 
 /**
  * The class that manages the controls
@@ -87,6 +92,12 @@ export class ControlsController {
 	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
 	readonly #triggerCollections: TriggerCollections
+	/**
+	 * The custom variable collections
+	 */
+	readonly #customVariableCollections: CustomVariableCollections
+
+	readonly #customVariableNamesMap: CustomVariableNameMap
 
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
@@ -108,12 +119,17 @@ export class ControlsController {
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
 			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
+		this.#customVariableCollections = new CustomVariableCollections(registry.db, (validCollectionIds) =>
+			this.#cleanUnknownCustomVariableCollectionIds(validCollectionIds)
+		)
+
+		this.#customVariableNamesMap = new CustomVariableNameMap(this.#registry.variables.values, this.#controls)
 
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
 	}
 
-	#cleanUnknownTriggerCollectionIds(validCollectionIds: Set<string>): void {
+	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
 		for (const control of this.#controls.values()) {
 			if (control instanceof ControlTrigger) {
 				control.checkCollectionIdIsValid(validCollectionIds)
@@ -127,6 +143,14 @@ export class ControlsController {
 				control.setCollectionEnabled(
 					!control.options.collectionId || enabledCollectionIds.has(control.options.collectionId)
 				)
+			}
+		}
+	}
+
+	#cleanUnknownCustomVariableCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlCustomVariable) {
+				control.checkCollectionIdIsValid(validCollectionIds)
 			}
 		}
 	}
@@ -155,6 +179,7 @@ export class ControlsController {
 			actionRunner: this.actionRunner,
 			events: this.#controlEvents,
 			changeEvents: this.#controlChangeEvents,
+			customVariableNamesMap: this.#customVariableNamesMap,
 		}
 	}
 
@@ -198,6 +223,14 @@ export class ControlsController {
 				this.#dbTable,
 				this.#controls,
 				this.triggers,
+				this.#createControlDependencies()
+			),
+			customVariables: createCustomVariablesTrpcRouter(
+				this.#controlChangeEvents,
+				this.#customVariableCollections,
+				this.#dbTable,
+				this.#controls,
+				this.#customVariableNamesMap,
 				this.#createControlDependencies()
 			),
 			events: createEventsTrpcRouter(this.#controls, this.#registry.instance.definitions),
@@ -248,13 +281,13 @@ export class ControlsController {
 	 * Create a new control class instance
 	 * TODO: This should be private
 	 * @param controlId Id of the control
-	 * @param category 'button' | 'trigger' | 'all'
+	 * @param category 'button' | 'trigger' | 'custom-variable' | 'all'
 	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param isImport Whether this is an import, and needs additional processing
 	 */
 	createClassForControl(
 		controlId: string,
-		category: 'button' | 'trigger' | 'all',
+		category: 'button' | 'trigger' | 'custom-variable' | 'all',
 		controlObj: SomeControlModel | string,
 		isImport: boolean
 	): SomeControl<any> | null {
@@ -288,6 +321,17 @@ export class ControlsController {
 					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
 				})
 				return trigger
+			}
+		}
+
+		if (category === 'all' || category === 'custom-variable') {
+			if (controlObj2?.type === 'custom-variable' || (controlType === 'custom-variable' && !controlObj2)) {
+				const variable = new ControlCustomVariable(this.#createControlDependencies(), controlId, controlObj2, isImport)
+				// setImmediate(() => {
+				// 	// Ensure the trigger is enabled, on a slight debounce
+				// 	trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
+				// })
+				return variable
 			}
 		}
 
@@ -325,6 +369,28 @@ export class ControlsController {
 			}
 		}
 		return triggers
+	}
+
+	/**
+	 * Get all of the custom variable controls
+	 */
+	getAllCustomVariables(): ControlCustomVariable[] {
+		const variables: ControlCustomVariable[] = []
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlCustomVariable) {
+				variables.push(control)
+			}
+		}
+		return variables
+	}
+
+	getCustomVariableByName(name: string): ControlCustomVariable | undefined {
+		if (!name) return undefined
+
+		const controlId = this.#customVariableNamesMap.getControlIdByName(name)
+		if (!controlId) return undefined
+
+		return this.getControl(controlId) as ControlCustomVariable | undefined
 	}
 
 	/**
@@ -403,6 +469,34 @@ export class ControlsController {
 	}
 
 	/**
+	 * Import a custom variable
+	 */
+	importCustomVariable(controlId: string, definition: CustomVariableModel2): ControlCustomVariable | undefined {
+		if (!validateCustomVariableControlId(controlId)) {
+			// Control id is not valid!
+			return undefined
+		}
+
+		if (this.#controls.has(controlId)) throw new Error(`CustomVariable ${controlId} already exists`)
+
+		const newControl = this.createClassForControl(controlId, 'custom-variable', definition, true)
+		if (newControl) {
+			this.#controls.set(controlId, newControl)
+
+			// Add to names map
+			const customVariableControl = newControl as ControlCustomVariable
+			this.#customVariableNamesMap.addCustomVariable(controlId, customVariableControl.options.variableName)
+
+			// Ensure it is stored to the db
+			newControl.commitChange()
+
+			return newControl as ControlCustomVariable
+		}
+
+		return undefined
+	}
+
+	/**
 	 * Initialise the controls
 	 */
 	init(): void {
@@ -415,8 +509,12 @@ export class ControlsController {
 			}
 		}
 
-		// Ensure all trigger collections are valid
+		// Ensure all collections are valid
 		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
+		this.#cleanUnknownCustomVariableCollectionIds(this.#customVariableCollections.collectAllCollectionIds())
+
+		// Initialize custom variable names map
+		this.#customVariableNamesMap.rebuildMap()
 	}
 
 	/**
@@ -491,6 +589,11 @@ export class ControlsController {
 	deleteControl(controlId: string): void {
 		const control = this.getControl(controlId)
 		if (control) {
+			// Handle custom variable removal from names map
+			if (control instanceof ControlCustomVariable) {
+				this.#customVariableNamesMap.removeCustomVariable(controlId, control.options.variableName)
+			}
+
 			control.destroy()
 			this.#controls.delete(controlId)
 
@@ -519,6 +622,18 @@ export class ControlsController {
 
 	replaceTriggerCollections(collections: TriggerCollection[]): void {
 		this.#triggerCollections.replaceCollections(collections)
+	}
+
+	discardCustomVariableCollections(): void {
+		this.#customVariableCollections.discardAllCollections()
+	}
+
+	exportCustomVariableCollections(): CustomVariableCollection[] {
+		return this.#customVariableCollections.collectionData
+	}
+
+	replaceCustomVariableCollections(collections: CustomVariableCollection[]): void {
+		this.#customVariableCollections.replaceCollections(collections)
 	}
 
 	/**

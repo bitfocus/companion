@@ -13,6 +13,16 @@ export function validateBankControlId(controlId: string): boolean {
 /**
  * Verify a controlId is valid for the current id scheme and grid size
  */
+export function validateCustomVariableControlId(controlId: string): boolean {
+	const parsed = ParseControlId(controlId)
+	if (parsed?.type !== 'custom-variable') return false
+
+	return true
+}
+
+/**
+ * Verify a controlId is valid for the current id scheme and grid size
+ */
 export function validateTriggerControlId(controlId: string): boolean {
 	const parsed = ParseControlId(controlId)
 	if (parsed?.type !== 'trigger') return false

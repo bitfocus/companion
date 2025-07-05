@@ -266,10 +266,6 @@ export class ControlButtonLayered
 	): void {
 		const allEntities = this.entities.getAllEntities()
 
-		for (const entity of allEntities) {
-			foundConnectionIds.add(entity.connectionId)
-		}
-
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
 			.visitEntities(allEntities, [])
 			.visitDrawElements(this.#drawElements)

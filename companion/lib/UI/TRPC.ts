@@ -3,7 +3,7 @@ import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
 import { EventEmitter, on } from 'events'
-import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportFullv10, ExportPageModelv10 } from '@companion-app/shared/Model/ExportModel.js'
 import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
 import { isPackaged } from '../Resources/Util.js'
@@ -13,7 +13,7 @@ export interface TrpcContext {
 	clientIp: string | undefined
 
 	pendingImport?: {
-		object: ExportFullv6 | ExportPageModelv6
+		object: ExportFullv10 | ExportPageModelv10
 		timeout: null
 	}
 }
@@ -81,7 +81,6 @@ export function createTrpcRouter(registry: Registry) {
 		controls: registry.controls.createTrpcRouter(),
 
 		variables: registry.variables.createTrpcRouter(),
-		customVariables: registry.variables.custom.createTrpcRouter(),
 		pages: registry.page.createTrpcRouter(),
 		importExport: registry.importExport.createTrpcRouter(),
 		logs: LogController.createTrpcRouter(),
