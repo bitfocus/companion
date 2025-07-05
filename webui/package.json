@@ -5,7 +5,7 @@
   "type": "module",
   "dependencies": {
     "@companion-app/shared": "*",
-    "@coreui/coreui": "^5.4.0",
+    "@coreui/coreui": "^5.4.1",
     "@coreui/react": "patch:@coreui/react@patch%3A@coreui/react@npm%253A5.4.0%23~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch%3A%3Aversion=5.4.0&hash=56767e#~/.yarn/patches/@coreui-react-patch-c088eb466e.patch",
     "@fontsource/fira-code": "^5.2.6",
     "@fontsource/roboto": "^5.2.6",

@@ -1283,7 +1283,7 @@ __metadata:
   resolution: "@companion-app/webui@workspace:webui"
   dependencies:
     "@companion-app/shared": "npm:*"
-    "@coreui/coreui": "npm:^5.4.0"
+    "@coreui/coreui": "npm:^5.4.1"
     "@coreui/react": "patch:@coreui/react@patch%3A@coreui/react@npm%253A5.4.0%23~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch%3A%3Aversion=5.4.0&hash=56767e#~/.yarn/patches/@coreui-react-patch-c088eb466e.patch"
     "@fontsource/fira-code": "npm:^5.2.6"
     "@fontsource/roboto": "npm:^5.2.6"
@@ -1411,7 +1411,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@coreui/coreui@npm:^5.1.2, @coreui/coreui@npm:^5.4.0":
+"@coreui/coreui@npm:^5.1.2":
   version: 5.4.0
   resolution: "@coreui/coreui@npm:5.4.0"
   dependencies:
@@ -1420,6 +1420,18 @@ __metadata:
   peerDependencies:
     "@popperjs/core": ^2.11.8
   checksum: 10c0/cdfb3587fc5dddbcd7f4729226bfb443a26d17ac26b425edfec7d4e6c0ea0f1cbc769374b9cb487d4bfce3f1dc6be639f718549f4685f9ae143926a392488ec9
+  languageName: node
+  linkType: hard
+
+"@coreui/coreui@npm:^5.4.1":
+  version: 5.4.1
+  resolution: "@coreui/coreui@npm:5.4.1"
+  dependencies:
+    html-entities: "npm:^2.6.0"
+    html-to-md: "npm:^0.8.8"
+  peerDependencies:
+    "@popperjs/core": ^2.11.8
+  checksum: 10c0/9ee57768734939b7a5c27a86ca47a507bf2a0091f2bdfb35769d14fcceccbb432ba7ecd1f40078702fe8247c75fe503876f3b10bd6ed0eee83ce3367eb7276b7
   languageName: node
   linkType: hard
 
