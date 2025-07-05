@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ConfiguredSurfacesTab } from '~/Surfaces/index.js'
+import { ConfiguredSurfacesPage } from '~/Surfaces/ConfiguredSurfacesPage'
 
 export const Route = createFileRoute('/_app/surfaces/configured')({
-	component: ConfiguredSurfacesTab,
+	component: ConfiguredSurfacesPage,
 })
