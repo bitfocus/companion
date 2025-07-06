@@ -12,6 +12,7 @@ import { fetchNodejs } from './fetch_nodejs.mts'
 import { determinePlatformInfo } from './build/util.mts'
 import { ChildProcess } from 'child_process'
 import semver from 'semver'
+import { parseEnv } from 'util'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -28,10 +29,6 @@ if (!semver.satisfies(process.versions.node, nodeJsValidRange)) {
 	console.error('Please update your Node.js installation.')
 	process.exit(1)
 }
-
-dotenv.config({
-	path: path.resolve(process.cwd(), '..', '.env'),
-})
 
 let node: ChildProcess | null = null
 const nodeArgs: string[] = []

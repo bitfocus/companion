@@ -1397,7 +1397,6 @@ __metadata:
     "@vitest/ui": "npm:^3.2.4"
     chokidar: "npm:^3.6.0"
     concurrently: "npm:^9.2.0"
-    dotenv: "npm:^16.6.1"
     eslint: "npm:^9.30.1"
     eslint-config-prettier: "npm:^10.1.5"
     eslint-plugin-n: "npm:^17.21.0"
@@ -7956,7 +7955,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"dotenv@npm:^16.3.1, dotenv@npm:^16.4.5, dotenv@npm:^16.6.1":
+"dotenv@npm:^16.3.1, dotenv@npm:^16.4.5":
   version: 16.6.1
   resolution: "dotenv@npm:16.6.1"
   checksum: 10c0/15ce56608326ea0d1d9414a5c8ee6dcf0fffc79d2c16422b4ac2268e7e2d76ff5a572d37ffe747c377de12005f14b3cc22361e79fc7f1061cce81f77d2c973dc
