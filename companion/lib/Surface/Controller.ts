@@ -22,7 +22,7 @@ import { isAShuttleDevice } from 'shuttle-node'
 import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
-import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
+import { SurfaceIPElgatoEmulator, EmulatorRoom, EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
 import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
@@ -60,6 +60,9 @@ import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { getMXCreativeConsoleDeviceInfo } from '@logitech-mx-creative-console/node'
 import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
+import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -82,6 +85,11 @@ export interface SurfaceControllerEvents {
 	'group-delete': [surfaceId: string]
 }
 
+type UpdateEvents = EmulatorUpdateEvents & {
+	emulatorPageConfig: [info: EmulatorPageConfig]
+	emulatorList: [list: EmulatorListItem[]]
+}
+
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
@@ -89,6 +97,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #dbTableGroups: DataStoreTableView<Record<string, SurfaceGroupConfig>>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 	readonly #io: UIHandler
+
+	readonly #updateEvents = new EventEmitter<UpdateEvents>()
 
 	/**
 	 * The last sent json object
@@ -231,7 +241,35 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				// Ensure all are unlocked
 				this.setAllLocked(false, true)
 			}
+		} else if (key === 'installName') {
+			if (this.#updateEvents.listenerCount('emulatorPageConfig') > 0) {
+				this.#updateEvents.emit('emulatorPageConfig', this.#compileEmulatorPageConfig())
+			}
 		}
+	}
+
+	#compileEmulatorPageConfig(): EmulatorPageConfig {
+		return {
+			installName: this.#handlerDependencies.userconfig.getKey('installName'),
+		}
+	}
+
+	#compileEmulatorList(): EmulatorListItem[] {
+		const items: EmulatorListItem[] = []
+
+		for (const [id, surface] of this.#surfaceHandlers) {
+			if (surface && id.startsWith('emulator:')) {
+				//&& surface.panel instanceof SurfaceIPElgatoEmulator) {
+
+				const trimmedId = id.slice('emulator:'.length)
+				items.push({
+					id: trimmedId,
+					name: surface.getFullConfig().name ?? `Emulator (${trimmedId})`,
+				})
+			}
+		}
+
+		return items.sort((a, b) => a.name.localeCompare(b.name))
 	}
 
 	#startStopLockoutTimer() {
@@ -299,7 +337,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			throw new Error(`Emulator "${id}" already exists!`)
 		}
 
-		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#io, id))
+		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#updateEvents, id))
 		if (name !== undefined) handler.setPanelName(name)
 
 		if (!skipUpdate) this.updateDevicesList()
@@ -359,51 +397,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 */
 	clientConnect(client: ClientSocket): void {
 		this.#outboundController.clientConnect(client)
-
-		client.onPromise('emulator:startup', (id) => {
-			const fullId = EmulatorRoom(id)
-
-			const surface = this.#surfaceHandlers.get(fullId)
-			if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
-				throw new Error(`Emulator "${id}" does not exist!`)
-			}
-
-			// Subscribe to the bitmaps
-			client.join(fullId)
-
-			return surface.panel.setupClient(client)
-		})
-
-		client.onPromise('emulator:press', (id, x, y) => {
-			const fullId = EmulatorRoom(id)
-
-			const surface = this.#surfaceHandlers.get(fullId)
-			if (!surface) {
-				throw new Error(`Emulator "${id}" does not exist!`)
-			}
-
-			surface.panel.emit('click', x, y, true)
-		})
-
-		client.onPromise('emulator:release', (id, x, y) => {
-			const fullId = EmulatorRoom(id)
-
-			const surface = this.#surfaceHandlers.get(fullId)
-			if (!surface) {
-				throw new Error(`Emulator "${id}" does not exist!`)
-			}
-
-			surface.panel.emit('click', x, y, false)
-		})
-
-		// client.onPromise(
-		// 	'emulator:stop',
-		// 	(id) => {
-		// 		const fullId = EmulatorRoom(id)
-
-		// 		client.leave(fullId)
-		// 	}
-		// )
 
 		client.onPromise('surfaces:subscribe', () => {
 			client.join(SurfacesRoom)
@@ -589,6 +582,85 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			if (err) return err
 
 			return group.groupConfig
+		})
+	}
+
+	createTrpcRouter() {
+		const self = this
+		return router({
+			emulatorPageConfig: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'emulatorPageConfig', signal)
+
+				yield self.#compileEmulatorPageConfig()
+
+				for await (const [info] of changes) {
+					yield info
+				}
+			}),
+
+			emulatorList: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'emulatorList', signal)
+
+				yield self.#compileEmulatorList()
+
+				for await (const [info] of changes) {
+					yield info
+				}
+			}),
+
+			emulatorConfig: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
+				signal,
+				input,
+			}) {
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					throw new Error(`Emulator "${input.id}" does not exist!`)
+				}
+
+				const changes = toIterable(self.#updateEvents, 'emulatorConfig', signal)
+
+				yield surface.panel.latestConfig()
+
+				for await (const [changeId, changeData] of changes) {
+					if (changeId === input.id) yield changeData
+				}
+			}),
+
+			emulatorImages: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
+				signal,
+				input,
+			}) {
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					throw new Error(`Emulator "${input.id}" does not exist!`)
+				}
+
+				const changes = toIterable(self.#updateEvents, 'emulatorImages', signal)
+
+				yield { images: surface.panel.latestImages(), clearCache: true }
+
+				for await (const [changeId, changeData, clearCache] of changes) {
+					if (changeId === input.id) yield { images: changeData, clearCache }
+				}
+			}),
+
+			emulatorPressed: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+						column: z.number(),
+						row: z.number(),
+						pressed: z.boolean(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const surface = this.#surfaceHandlers.get(EmulatorRoom(input.id))
+					if (!surface) {
+						throw new Error(`Emulator "${input.id}" does not exist!`)
+					}
+
+					surface.panel.emit('click', input.column, input.row, input.pressed)
+				}),
 		})
 	}
 
@@ -802,6 +874,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	updateDevicesList(): void {
 		const newJsonArr = cloneDeep(this.getDevicesList())
+
+		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
+			this.#updateEvents.emit('emulatorList', this.#compileEmulatorList())
+		}
 
 		const hasSubscribers = this.#io.countRoomMembers(SurfacesRoom) > 0
 

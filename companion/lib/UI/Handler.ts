@@ -15,6 +15,9 @@ import type { AppInfo } from '../Registry.js'
 import type { Server as HttpServer } from 'http'
 import type { Server as HttpsServer } from 'https'
 import { EventEmitter } from 'events'
+import { applyWSSHandler } from '@trpc/server/adapters/ws'
+import { WebSocketServer } from 'ws'
+import { AppRouter, createTrpcWsContext } from './TRPC.js'
 
 type IOListenEvents = import('@companion-app/shared/SocketIO.js').ClientToBackendEventsListenMap
 type IOEmitEvents = import('@companion-app/shared/SocketIO.js').BackendToClientEventsMap
@@ -111,8 +114,6 @@ interface UIHandlerEvents {
 export class UIHandler extends EventEmitter<UIHandlerEvents> {
 	readonly #logger = LogController.createLogger('UI/Handler')
 
-	readonly #appInfo: AppInfo
-
 	/**
 	 * Socket.IO Server options
 	 */
@@ -121,10 +122,16 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 	readonly #httpIO: IOServerType
 	#httpsIO: IOServerType | undefined
 
-	constructor(appInfo: AppInfo, http: HttpServer) {
-		super()
+	#http: HttpServer
 
-		this.#appInfo = appInfo
+	#wss = new WebSocketServer({
+		noServer: true,
+		path: '/trpc',
+	})
+	#broadcastDisconnect?: () => void
+
+	constructor(_appInfo: AppInfo, http: HttpServer) {
+		super()
 
 		this.#socketIOOptions = {
 			allowEIO3: true,
@@ -136,6 +143,7 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 			},
 		}
 
+		this.#http = http
 		this.#httpIO = new SocketIOServer(http, this.#socketIOOptions)
 
 		this.#httpIO.on('connect', this.#clientConnect.bind(this))
@@ -148,13 +156,6 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 		this.#logger.debug(`socket ${rawClient.id} connected`)
 
 		const client = new ClientSocket(rawClient, this.#logger)
-
-		client.onPromise('app-version-info', () => {
-			return {
-				appVersion: this.#appInfo.appVersion,
-				appBuild: this.#appInfo.appBuild,
-			}
-		})
 
 		this.emit('clientConnect', client)
 
@@ -211,5 +212,49 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 
 			this.#httpsIO.on('connect', this.#clientConnect.bind(this))
 		}
+	}
+
+	#boundTrpcRouter = false
+	bindTrpcRouter(trpcRouter: AppRouter): void {
+		if (this.#boundTrpcRouter) throw new Error('tRPC router already bound')
+		this.#boundTrpcRouter = true
+
+		// TODO - this shouldnt be here like this..
+		const handler = applyWSSHandler({
+			wss: this.#wss as any,
+			router: trpcRouter,
+			createContext: createTrpcWsContext,
+			// Enable heartbeat messages to keep connection open (disabled by default)
+			keepAlive: {
+				enabled: true,
+				// server ping message interval in milliseconds
+				pingMs: 30000,
+				// connection is terminated if pong message is not received in this many milliseconds
+				pongWaitMs: 5000,
+			},
+		})
+
+		this.#broadcastDisconnect = handler.broadcastReconnectNotification
+
+		this.#http.on('upgrade', (request, socket, head) => {
+			// TODO - is this guard needed?
+			if (request.url === '/trpc') {
+				this.#wss.handleUpgrade(request, socket, head, (websocket) => {
+					this.#wss.emit('connection', websocket, request)
+				})
+			}
+		})
+
+		this.#wss.on('connection', (ws) => {
+			console.log(`➕➕ Connection (${this.#wss.clients.size})`)
+			ws.once('close', () => {
+				console.log(`➖➖ Connection (${this.#wss.clients.size})`)
+			})
+		})
+	}
+
+	close(): void {
+		this.#broadcastDisconnect?.()
+		this.#wss.close()
 	}
 }

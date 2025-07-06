@@ -1,3 +1,14 @@
+.page-emulator-base {
+	background-color: #181818;
+	color: #d69e2e;
+
+	height: 100vh;
+
+	.loading {
+		margin: 20% 0;
+	}
+}
+
 .page-emulator-list {
 	h1 {
 		margin-top: 1rem;
@@ -17,9 +28,6 @@
 }
 
 .page-emulator {
-	background-color: #181818;
-	color: #d69e2e;
-
 	height: 100vh;
 
 	display: grid;
