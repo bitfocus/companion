@@ -458,6 +458,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					return surface.getPanelConfig()
 				}
 			}
+
+			// Maybe surface exists, but is offline?
+			const surfaceConfig = this.#dbTableSurfaces.get(id)
+			if (surfaceConfig) {
+				return surfaceConfig.config
+			}
+
 			return null
 		})
 
@@ -562,23 +569,43 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			const surfaceHandler = Array.from(this.#surfaceHandlers.values()).find(
 				(surface) => surface && surface.surfaceId === surfaceId
 			)
-			if (!surfaceHandler) throw new Error(`Surface does not exist or is not connected: ${surfaceId}`)
-			// TODO - we can handle this if it is still in the config
+			if (surfaceHandler) {
+				// TODO - we can handle this if it is still in the config
 
-			this.#detachSurfaceFromGroup(surfaceHandler)
+				this.#detachSurfaceFromGroup(surfaceHandler)
 
-			surfaceHandler.setGroupId(groupId)
+				surfaceHandler.setGroupId(groupId)
 
-			this.#attachSurfaceToGroup(surfaceHandler)
+				this.#attachSurfaceToGroup(surfaceHandler)
 
-			this.updateDevicesList()
+				this.updateDevicesList()
+				return
+			}
+
+			// Surface not found, perhaps it is an offline surface?
+			const surfaceConfig = this.#dbTableSurfaces.get(surfaceId)
+			if (surfaceConfig) {
+				surfaceConfig.groupId = groupId
+				this.#dbTableSurfaces.set(surfaceId, surfaceConfig)
+
+				this.updateDevicesList()
+				return
+			}
+
+			throw new Error(`Surface does not exist or is not connected: ${surfaceId}`)
 		})
 
 		client.onPromise('surfaces:group-config-get', (groupId) => {
 			const group = this.#surfaceGroups.get(groupId)
-			if (!group) throw new Error(`Group does not exist: ${groupId}`)
+			if (group) return group.groupConfig
 
-			return group.groupConfig
+			// Perhaps this is an auto-group for an offline surface?
+			const surfaceConfig = this.#dbTableSurfaces.get(groupId)
+			if (surfaceConfig) {
+				return surfaceConfig.groupConfig
+			}
+
+			throw new Error(`Group does not exist: ${groupId}`)
 		})
 
 		client.onPromise('surfaces:group-config-set', (groupId, key, value) => {

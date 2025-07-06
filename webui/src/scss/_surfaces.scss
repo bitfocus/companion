@@ -3,3 +3,136 @@
 	grid-auto-flow: row;
 	grid-template-rows: auto 1fr auto;
 }
+
+// Grid-based surfaces table styles
+.surfaces-grid-container {
+	display: grid;
+	grid-template-columns: min-content 1fr min-content;
+	margin-top: 1rem;
+	border: 1px solid #ddd;
+	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
+	color: #111;
+	width: 100%;
+
+	.grid-header-cell {
+		padding: 6px 10px;
+		font-weight: 600;
+		background-color: #f0f0f0;
+		border-bottom: 1px solid #ddd;
+		white-space: nowrap;
+	}
+
+	.grid-row {
+		display: contents;
+
+		&:hover .grid-cell {
+			background-color: rgba(0, 0, 0, 0.05);
+		}
+
+		&.grid-row-selected .grid-cell {
+			background-color: var(--bs-table-active-bg);
+		}
+
+		// Remove bottom border from last row
+		&:last-of-type .grid-cell {
+			border-bottom: none;
+		}
+
+		// Handle noBorder class for grouped surfaces
+		&.grid-row-no-border .grid-cell {
+			border-bottom: none;
+		}
+	}
+
+	.grid-cell {
+		padding: 5px 10px;
+		display: flex;
+		align-items: center;
+		min-width: 0;
+		border-bottom: 1px solid #ddd;
+		transition: background-color 0.15s ease-in-out;
+		cursor: pointer;
+
+		// First column - NO column
+		&:nth-child(3n + 1) {
+			white-space: nowrap;
+			justify-content: center;
+		}
+
+		// Second column - Info column (flexible, can wrap)
+		&:nth-child(3n + 2) {
+			flex-direction: column;
+			align-items: flex-start;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			min-width: 200px;
+
+			b {
+				margin-bottom: 2px;
+			}
+
+			.surface-id-row {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				width: 100%;
+				min-width: 0;
+			}
+
+			.surface-id {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				min-width: 0;
+				font-family: monospace;
+				font-size: 0.9em;
+				max-width: fit-content;
+			}
+
+			.surface-location {
+				white-space: nowrap;
+				font-size: 0.9em;
+				color: #666;
+				margin-left: auto;
+			}
+		}
+
+		// Third column - Actions column
+		&:nth-child(3n) {
+			text-align: right;
+			justify-content: flex-end;
+			white-space: nowrap;
+
+			.btn {
+				text-transform: uppercase;
+				padding: 4px;
+
+				&:disabled {
+					opacity: 0.2;
+				}
+			}
+
+			.btn-primary.disabled {
+				opacity: 0.5;
+			}
+		}
+	}
+
+	.grid-no-results {
+		grid-column: 1 / -1;
+		padding: 2rem;
+		text-align: center;
+	}
+
+	// Responsive design for smaller screens
+	@media (max-width: 768px) {
+		.grid-cell {
+			padding: 4px 6px;
+			font-size: 0.875rem;
+		}
+
+		.grid-header-cell {
+			padding: 4px 6px;
+		}
+	}
+}

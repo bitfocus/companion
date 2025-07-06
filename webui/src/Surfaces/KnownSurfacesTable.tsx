@@ -1,10 +1,8 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleUp, faCog, faCopy, faFolderOpen, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { faCircleUp, faCopy, faFolderOpen, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { SurfaceEditModal, SurfaceEditModalRef } from './EditModal.js'
 import classNames from 'classnames'
 import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -13,10 +11,17 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import CopyToClipboard from 'react-copy-to-clipboard'
 
-export const KnownSurfacesTable = observer(function KnownSurfacesTable() {
+interface KnownSurfacesTableProps {
+	selectedItemId: string | null
+	selectItem: (itemId: string | null) => void
+}
+
+export const KnownSurfacesTable = observer(function KnownSurfacesTable({
+	selectedItemId,
+	selectItem,
+}: KnownSurfacesTableProps) {
 	const { surfaces, socket } = useContext(RootAppStoreContext)
 
-	const editModalRef = useRef<SurfaceEditModalRef>(null)
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const deleteEmulator = useCallback(
@@ -41,14 +46,6 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable() {
 		[socket]
 	)
 
-	const configureSurface = useCallback((surfaceId: string) => {
-		editModalRef.current?.show(surfaceId, null)
-	}, [])
-
-	const configureGroup = useCallback((groupId: string) => {
-		editModalRef.current?.show(null, groupId)
-	}, [])
-
 	const forgetSurface = useCallback(
 		(surfaceId: string) => {
 			confirmRef.current?.show(
@@ -65,15 +62,6 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable() {
 		[socket]
 	)
 
-	const updateName = useCallback(
-		(surfaceId: string, name: string) => {
-			socket.emitPromise('surfaces:set-name', [surfaceId, name]).catch((err) => {
-				console.error('Update name failed', err)
-			})
-		},
-		[socket]
-	)
-
 	const surfacesList = Array.from(surfaces.store.values()).sort((a, b) => {
 		if (a.index === undefined && b.index === undefined) {
 			return a.id.localeCompare(b.id)
@@ -84,120 +72,123 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable() {
 
 	return (
 		<>
-			<SurfaceEditModal ref={editModalRef} />
 			<GenericConfirmModal ref={confirmRef} />
 
-			<table className="table table-responsive-sm table-margin-top">
-				<thead>
-					<tr>
-						<th>NO</th>
-						<th>Info</th>
-						<th>Name</th>
-						<th>Location</th>
-						<th>&nbsp;</th>
-					</tr>
-				</thead>
-				<tbody>
-					{surfacesList.map((group) => {
-						if (group.isAutoGroup && (group.surfaces || []).length === 1) {
-							return (
-								<SurfaceRow
-									key={group.id}
-									surface={group.surfaces[0]}
-									index={group.index}
-									updateName={updateName}
-									configureSurface={configureSurface}
-									deleteEmulator={deleteEmulator}
-									forgetSurface={forgetSurface}
-									noBorder={false}
-								/>
-							)
-						} else {
-							return (
-								<ManualGroupRow
-									key={group.id}
-									group={group}
-									configureGroup={configureGroup}
-									deleteGroup={deleteGroup}
-									updateName={updateName}
-									configureSurface={configureSurface}
-									deleteEmulator={deleteEmulator}
-									forgetSurface={forgetSurface}
-								/>
-							)
-						}
-					})}
+			<div className="surfaces-grid-container">
+				<div className="grid-header-cell">NO</div>
+				<div className="grid-header-cell">Info</div>
+				<div className="grid-header-cell"></div>
+				{surfacesList.map((group) => {
+					if (group.isAutoGroup && (group.surfaces || []).length === 1) {
+						return (
+							<SurfaceRow
+								key={group.id}
+								surface={group.surfaces[0]}
+								index={group.index}
+								deleteEmulator={deleteEmulator}
+								forgetSurface={forgetSurface}
+								noBorder={false}
+								isSelected={selectedItemId === group.surfaces[0].id}
+								selectItem={selectItem}
+							/>
+						)
+					} else {
+						return (
+							<ManualGroupRow
+								key={group.id}
+								group={group}
+								deleteGroup={deleteGroup}
+								deleteEmulator={deleteEmulator}
+								forgetSurface={forgetSurface}
+								isGroupSelected={selectedItemId === group.id}
+								selectedItemId={selectedItemId}
+								selectItem={selectItem}
+							/>
+						)
+					}
+				})}
 
-					{surfacesList.length === 0 && (
-						<tr>
-							<td colSpan={7}>
-								<NonIdealState icon={faSearch} text="No surfaces found" />
-							</td>
-						</tr>
-					)}
-				</tbody>
-			</table>
+				{surfacesList.length === 0 && (
+					<div className="grid-no-results">
+						<NonIdealState icon={faSearch} text="No surfaces found" />
+					</div>
+				)}
+			</div>
 		</>
 	)
 })
 
 interface ManualGroupRowProps {
 	group: ClientDevicesListItem
-	configureGroup: (groupId: string) => void
 	deleteGroup: (groupId: string) => void
-	updateName: (surfaceId: string, name: string) => void
-	configureSurface: (surfaceId: string) => void
 	deleteEmulator: (surfaceId: string) => void
 	forgetSurface: (surfaceId: string) => void
+	isGroupSelected: boolean
+	selectedItemId: string | null
+	selectItem: (itemId: string | null) => void
 }
 function ManualGroupRow({
 	group,
-	configureGroup,
 	deleteGroup,
-	updateName,
-	configureSurface,
 	deleteEmulator,
 	forgetSurface,
+	isGroupSelected,
+	selectedItemId,
+	selectItem,
 }: ManualGroupRowProps) {
-	const configureGroup2 = useCallback(() => configureGroup(group.id), [configureGroup, group.id])
+	const { notifier } = useContext(RootAppStoreContext)
+
 	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
-	const updateName2 = useCallback((val: string) => updateName(group.id, val), [updateName, group.id])
+
+	const handleGroupClick = useCallback(
+		(e: React.MouseEvent) => {
+			// Don't trigger row click if clicking on input field or buttons
+			if ((e.target as HTMLElement).closest('input, button')) {
+				return
+			}
+			selectItem(group.id)
+		},
+		[selectItem, group.id]
+	)
 
 	return (
 		<>
-			<tr className="noBorder">
-				<td>#{group.index}</td>
-				<td>
-					<b>Surface Group</b>
-					<br />
-					{group.id}
-				</td>
-				<td>
-					<TextInputField value={group.displayName} setValue={updateName2} />
-				</td>
-				<td>-</td>
-				<td className="text-right action-buttons">
+			<div className={classNames('grid-row', { 'grid-row-selected': isGroupSelected })} onClick={handleGroupClick}>
+				<div className="grid-cell">#{group.index}</div>
+				<div className="grid-cell">
+					<b>{group.displayName || 'Surface Group'}</b>
+					<div className="surface-id-row">
+						<span className="surface-id" title={group.id}>
+							{group.id}
+						</span>
+						<CopyToClipboard
+							text={group.id}
+							onCopy={() => notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)}
+						>
+							<CButton size="sm" title="Copy group id" className="p-0 px-1">
+								<FontAwesomeIcon icon={faCopy} color="#000" />
+							</CButton>
+						</CopyToClipboard>
+					</div>
+				</div>
+				<div className="grid-cell">
 					<CButtonGroup>
-						<CButton onClick={configureGroup2} title="Configure">
-							<FontAwesomeIcon icon={faCog} />
-						</CButton>
-
 						<CButton onClick={deleteGroup2} title="Delete group">
 							<FontAwesomeIcon icon={faTrash} />
 						</CButton>
 					</CButtonGroup>
-				</td>
-			</tr>
+				</div>
+			</div>
 			{(group.surfaces || []).map((surface, i, arr) => (
 				<SurfaceRow
 					key={surface.id}
 					surface={surface}
 					index={undefined}
-					updateName={updateName}
-					configureSurface={configureSurface}
 					deleteEmulator={deleteEmulator}
 					forgetSurface={forgetSurface}
 					noBorder={i !== arr.length - 1} // No border on the last item
+					isSelected={selectedItemId === surface.id}
+					selectItem={selectItem}
 				/>
 			))}
 		</>
@@ -207,38 +198,49 @@ function ManualGroupRow({
 interface SurfaceRowProps {
 	surface: ClientSurfaceItem
 	index: number | undefined
-	updateName: (surfaceId: string, name: string) => void
-	configureSurface: (surfaceId: string) => void
 	deleteEmulator: (surfaceId: string) => void
 	forgetSurface: (surfaceId: string) => void
 	noBorder: boolean
+	isSelected: boolean
+	selectItem: (itemId: string | null) => void
 }
 
 const SurfaceRow = observer(function SurfaceRow({
 	surface,
 	index,
-	updateName,
-	configureSurface,
 	deleteEmulator,
 	forgetSurface,
 	noBorder,
+	isSelected,
+	selectItem,
 }: SurfaceRowProps) {
 	const { notifier } = useContext(RootAppStoreContext)
 
-	const updateName2 = useCallback((val: string) => updateName(surface.id, val), [updateName, surface.id])
-	const configureSurface2 = useCallback(() => configureSurface(surface.id), [configureSurface, surface.id])
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
 	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])
 
+	const handleSurfaceClick = useCallback(
+		(e: React.MouseEvent) => {
+			// Don't trigger row click if clicking on input field or buttons
+			if ((e.target as HTMLElement).closest('input, button')) {
+				return
+			}
+			selectItem(surface.id)
+		},
+		[selectItem, surface.id]
+	)
+
 	return (
-		<tr
-			className={classNames({
-				noBorder,
+		<div
+			className={classNames('grid-row', {
+				'grid-row-no-border': noBorder,
+				'grid-row-selected': isSelected,
 			})}
+			onClick={handleSurfaceClick}
 		>
-			<td>{index !== undefined ? `#${index}` : ''}</td>
-			<td>
-				<b>{surface.type}</b>
+			<div className="grid-cell">{index !== undefined ? `#${index}` : ''}</div>
+			<div className="grid-cell">
+				<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
 				{!!surface.hasFirmwareUpdates && (
 					<>
 						{' '}
@@ -247,25 +249,24 @@ const SurfaceRow = observer(function SurfaceRow({
 						</WindowLinkOpen>
 					</>
 				)}
-				<br />
-				{surface.id}{' '}
-				<CopyToClipboard text={surface.id} onCopy={() => notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)}>
-					<CButton size="sm" title="Copy surface id" className="p-0 px-1">
-						<FontAwesomeIcon icon={faCopy} color="#000" />
-					</CButton>
-				</CopyToClipboard>
-			</td>
-			<td>
-				<TextInputField value={surface.name} setValue={updateName2} />
-			</td>
-			<td>{surface.isConnected ? surface.location || 'Local' : 'Offline'}</td>
-			<td className="text-right action-buttons">
+				<div className="surface-id-row">
+					<span className="surface-id" title={surface.id}>
+						{surface.id}
+					</span>
+					<CopyToClipboard
+						text={surface.id}
+						onCopy={() => notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)}
+					>
+						<CButton size="sm" title="Copy surface id" className="p-0 px-1">
+							<FontAwesomeIcon icon={faCopy} color="#000" />
+						</CButton>
+					</CopyToClipboard>
+					<span className="surface-location">{surface.isConnected ? surface.location || 'Local' : 'Offline'}</span>
+				</div>
+			</div>
+			<div className="grid-cell">
 				{surface.isConnected ? (
 					<CButtonGroup className="no-break">
-						<CButton onClick={configureSurface2} title="Configure">
-							<FontAwesomeIcon icon={faCog} />
-						</CButton>
-
 						{surface.integrationType === 'emulator' && (
 							<>
 								<CButton href={`/emulator/${surface.id.substring(9)}`} target="_blank" title="Open Emulator">
@@ -282,7 +283,7 @@ const SurfaceRow = observer(function SurfaceRow({
 						<FontAwesomeIcon icon={faTrash} />
 					</CButton>
 				)}
-			</td>
-		</tr>
+			</div>
+		</div>
 	)
 })
