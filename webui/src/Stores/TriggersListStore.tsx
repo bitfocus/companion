@@ -14,21 +14,23 @@ export class TriggersListStore implements GenericCollectionsStore<TriggerCollect
 	readonly triggers = observable.map<string, ClientTriggerData>()
 	readonly collections = observable.map<string, TriggerCollection>()
 
-	public resetTriggers = action((newData: Record<string, ClientTriggerData | undefined> | null) => {
-		this.triggers.clear()
-
-		if (newData) {
-			for (const [triggerId, triggerInfo] of Object.entries(newData)) {
-				if (!triggerInfo) continue
-
-				this.triggers.set(triggerId, triggerInfo)
-			}
+	public updateTriggers = action((change: TriggersUpdate | null) => {
+		if (!change) {
+			this.triggers.clear()
+			return
 		}
-	})
 
-	public applyTriggersChange = action((change: TriggersUpdate) => {
 		const changeType = change.type
 		switch (change.type) {
+			case 'init':
+				this.triggers.clear()
+
+				for (const [triggerId, triggerInfo] of Object.entries(change.triggers)) {
+					if (!triggerInfo) continue
+
+					this.triggers.set(triggerId, triggerInfo)
+				}
+				break
 			case 'add':
 				this.triggers.set(change.controlId, change.info)
 				break

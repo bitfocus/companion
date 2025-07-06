@@ -24,7 +24,6 @@ import type {
 	ConnectionRemappings,
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
-import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -77,8 +76,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'entity-definitions:unsubscribe': (type: EntityModelType) => void
 	'variable-definitions:subscribe': () => AllVariableDefinitions
 	'variable-definitions:unsubscribe': () => void
-	'triggers:subscribe': () => Record<string, ClientTriggerData | undefined>
-	'triggers:unsubscribe': () => void
 
 	'controls:subscribe': (controlId: string) => { config: unknown; runtime: unknown } | undefined
 	'controls:unsubscribe': (controlId: string) => void
@@ -185,12 +182,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'controls:event:set-option': (controlId: string, eventId: string, key: string, val: any) => boolean
 	'controls:event:reorder': (controlId: string, dragIndex: number, hoverIndex: number) => boolean
 	'controls:event:add': (controlId: string, eventType: string) => boolean
-
-	'triggers:create': () => string
-	'triggers:clone': (controlId: string) => string | false
-	'triggers:delete': (controlId: string) => boolean
-	'triggers:reorder': (collectionId: string | null, controlId: string, dropIndex: number) => boolean
-	'triggers:test': (controlId: string) => boolean
 
 	'surfaces:subscribe': () => Record<string, ClientDevicesListItem | undefined>
 	'surfaces:unsubscribe': () => void
@@ -343,7 +334,6 @@ export interface BackendToClientEventsMap {
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
-	'triggers:update': (change: TriggersUpdate) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void

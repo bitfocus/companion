@@ -11,7 +11,7 @@ import type { EventEmitter } from 'events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { TriggerModel, TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 
 export type SomeControlModel = SomeButtonModel | TriggerModel
 
@@ -31,8 +31,14 @@ export interface ControlDependencies {
 	readonly actionRunner: ActionRunner
 
 	readonly events: EventEmitter<ControlCommonEvents>
+
+	readonly changeEvents: EventEmitter<ControlChangeEvents>
 }
 
 export interface ControlCommonEvents {
 	updateButtonState: [location: ControlLocation, pushed: boolean, surfaceId: string | undefined]
+}
+
+export type ControlChangeEvents = {
+	triggerChange: [controlId: string, diff: TriggersUpdate]
 }

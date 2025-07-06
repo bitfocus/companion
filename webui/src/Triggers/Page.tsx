@@ -28,13 +28,15 @@ import { TriggersTableContextProvider, useTriggersTableContext } from './Trigger
 import { trpc, useMutationExt } from '~/TRPC'
 
 export const TriggersPage = observer(function Triggers() {
-	const { socket, triggersList } = useContext(RootAppStoreContext)
+	const { triggersList } = useContext(RootAppStoreContext)
 
 	const navigate = useNavigate({ from: '/triggers' })
 
+	const createMutation = useMutationExt(trpc.controls.triggers.create.mutationOptions())
+
 	const doAddNew = useCallback(() => {
-		socket
-			.emitPromise('triggers:create', [])
+		createMutation
+			.mutateAsync()
 			.then(async (controlId) => {
 				console.log('created trigger', controlId)
 
@@ -46,7 +48,7 @@ export const TriggersPage = observer(function Triggers() {
 			.catch((e) => {
 				console.error('failed to create trigger', e)
 			})
-	}, [socket, navigate])
+	}, [createMutation, navigate])
 
 	const exportModalRef = useRef<ConfirmExportModalRef>(null)
 	const showExportModal = useCallback(() => {
@@ -157,7 +159,7 @@ function TriggerItemRow(item: TriggerDataWithId) {
 }
 
 function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollection }) {
-	const setEnabledMutation = useMutationExt(trpc.controls.triggerCollections.setEnabled.mutationOptions())
+	const setEnabledMutation = useMutationExt(trpc.controls.triggers.collections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,6 +193,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 	const tableContext = useTriggersTableContext()
 
+	const deleteMutation = useMutationExt(trpc.controls.triggers.delete.mutationOptions())
+	const cloneMutation = useMutationExt(trpc.controls.triggers.clone.mutationOptions())
+
 	const doEnableDisable = useCallback(() => {
 		socket
 			.emitPromise('controls:set-options-field', [CreateTriggerControlId(item.id), 'enabled', !item.enabled])
@@ -204,25 +209,25 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 			'Are you sure you wish to delete this trigger?',
 			'Delete',
 			() => {
-				socket.emitPromise('triggers:delete', [CreateTriggerControlId(item.id)]).catch((e) => {
+				deleteMutation.mutateAsync({ controlId: CreateTriggerControlId(item.id) }).catch((e) => {
 					console.error('Failed to delete', e)
 				})
 			}
 		)
-	}, [socket, tableContext.deleteModalRef, item.id])
+	}, [deleteMutation, tableContext.deleteModalRef, item.id])
 	const doEdit = useCallback(() => {
 		tableContext.selectTrigger(item.id)
 	}, [tableContext, item.id])
 	const doClone = useCallback(() => {
-		socket
-			.emitPromise('triggers:clone', [CreateTriggerControlId(item.id)])
+		cloneMutation
+			.mutateAsync({ controlId: CreateTriggerControlId(item.id) })
 			.then((newControlId) => {
 				console.log('cloned to control', newControlId)
 			})
 			.catch((e) => {
 				console.error('Failed to clone', e)
 			})
-	}, [socket, item.id])
+	}, [cloneMutation, item.id])
 
 	const descriptionHtml = useMemo(
 		() => ({
@@ -276,7 +281,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 })
 
 function CreateCollectionButton() {
-	const createMutation = useMutationExt(trpc.controls.triggerCollections.add.mutationOptions())
+	const createMutation = useMutationExt(trpc.controls.triggers.collections.add.mutationOptions())
 
 	const doCreateCollection = useCallback(() => {
 		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {

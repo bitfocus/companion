@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -81,10 +82,6 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 
 	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
 
-	const hotPressDown = useCallback(() => {
-		socket.emitPromise('triggers:test', [controlId]).catch((e) => console.error(`Hot press failed: ${e}`))
-	}, [socket, controlId])
-
 	const errors: string[] = []
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
@@ -99,7 +96,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 			{config ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>
-						<TriggerConfig options={config.options} controlId={controlId} hotPressDown={hotPressDown} />
+						<TriggerConfig options={config.options} controlId={controlId} />
 					</MyErrorBoundary>
 
 					{config && runtimeProps ? (
@@ -173,10 +170,9 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 interface TriggerConfigProps {
 	controlId: string
 	options: Record<string, any>
-	hotPressDown: () => void
 }
 
-function TriggerConfig({ controlId, options, hotPressDown }: TriggerConfigProps) {
+function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 	const socket = useContext(SocketContext)
 
 	const setValueInner = useCallback(
@@ -200,14 +196,25 @@ function TriggerConfig({ controlId, options, hotPressDown }: TriggerConfigProps)
 						<p>
 							<CInputGroup>
 								<TextInputField setValue={setName} value={options.name} />
-								<CButton color="warning" hidden={!options} onMouseDown={hotPressDown}>
-									Test actions
-								</CButton>
+								<TestActionsButton controlId={controlId} hidden={!options} />
 							</CInputGroup>
 						</p>
 					</CCol>
 				</CForm>
 			</CForm>
 		</CCol>
+	)
+}
+
+function TestActionsButton({ controlId, hidden }: { controlId: string; hidden: boolean }): React.JSX.Element {
+	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
+
+	const hotPressDown = useCallback(() => {
+		testActionsMutation.mutateAsync({ controlId }).catch((e) => console.error(`Hot press failed: ${e}`))
+	}, [testActionsMutation, controlId])
+	return (
+		<CButton color="warning" hidden={hidden} onMouseDown={hotPressDown}>
+			Test actions
+		</CButton>
 	)
 }

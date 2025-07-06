@@ -1,5 +1,4 @@
-import { useContext, useMemo } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useMemo } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
@@ -10,11 +9,10 @@ export type TriggerCollectionsApi = NestingCollectionsApi
 export function useTriggerCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 ): TriggerCollectionsApi {
-	const { socket } = useContext(RootAppStoreContext)
-
-	const renameMutation = useMutationExt(trpc.controls.triggerCollections.setName.mutationOptions())
-	const deleteMutation = useMutationExt(trpc.controls.triggerCollections.remove.mutationOptions())
-	const reorderMutation = useMutationExt(trpc.controls.triggerCollections.reorder.mutationOptions())
+	const renameMutation = useMutationExt(trpc.controls.triggers.collections.setName.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.controls.triggers.collections.remove.mutationOptions())
+	const reorderMutation = useMutationExt(trpc.controls.triggers.collections.reorder.mutationOptions())
+	const moveItemMutation = useMutationExt(trpc.controls.triggers.reorder.mutationOptions())
 
 	return useMemo(
 		() =>
@@ -44,13 +42,17 @@ export function useTriggerCollectionsApi(
 					})
 				},
 				moveItemToCollection: (itemId: string, collectionId: string | null, dropIndex: number) => {
-					socket
-						.emitPromise('triggers:reorder', [collectionId, CreateTriggerControlId(itemId), dropIndex])
+					moveItemMutation
+						.mutateAsync({
+							collectionId,
+							controlId: CreateTriggerControlId(itemId),
+							dropIndex,
+						})
 						.catch((e) => {
 							console.error('Reorder failed', e)
 						})
 				},
 			}) satisfies TriggerCollectionsApi,
-		[socket, confirmModalRef, renameMutation, deleteMutation, reorderMutation]
+		[confirmModalRef, renameMutation, deleteMutation, reorderMutation, moveItemMutation]
 	)
 }

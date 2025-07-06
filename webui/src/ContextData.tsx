@@ -89,10 +89,10 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		trpc.connections.collections.watchQuery,
 		undefined
 	)
-	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
+	const triggersListReady = useTriggersListSubscription(rootStore.triggersList)
 	const triggerGroupsReady = useGenericCollectionsSubscription(
 		rootStore.triggersList,
-		trpc.controls.triggerCollections.watchQuery,
+		trpc.controls.triggers.collections.watchQuery,
 		undefined
 	)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)

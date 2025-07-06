@@ -2,12 +2,7 @@ import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
-import {
-	CreateBankControlId,
-	CreateTriggerControlId,
-	ParseControlId,
-	formatLocation,
-} from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, CreateTriggerControlId, formatLocation } from '@companion-app/shared/ControlId.js'
 import { ControlConfigRoom } from './ControlBase.js'
 import { ActionRunner } from './ActionRunner.js'
 import { ActionRecorder } from './ActionRecorder.js'
@@ -16,20 +11,25 @@ import { nanoid } from 'nanoid'
 import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ClientTriggerData, TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { Registry } from '../Registry.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
-import type { ControlCommonEvents, ControlDependencies, SomeControlModel } from './ControlDependencies.js'
-import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
+import type {
+	ControlChangeEvents,
+	ControlCommonEvents,
+	ControlDependencies,
+	SomeControlModel,
+} from './ControlDependencies.js'
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { router } from '../UI/TRPC.js'
+import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
+import { validateBankControlId, validateTriggerControlId } from './Util.js'
 
-export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
 
 /**
@@ -69,7 +69,7 @@ export class ControlsController {
 	/**
 	 * The currently configured controls
 	 */
-	#controls = new Map<string, SomeControl<any>>()
+	readonly #controls = new Map<string, SomeControl<any>>()
 
 	/**
 	 * Triggers events
@@ -84,6 +84,8 @@ export class ControlsController {
 	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
 	readonly #triggerCollections: TriggerCollections
+
+	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
 		this.#registry = registry
@@ -146,6 +148,7 @@ export class ControlsController {
 			userconfig: this.#registry.userconfig,
 			actionRunner: this.actionRunner,
 			events: this.#controlEvents,
+			changeEvents: this.#controlChangeEvents,
 		}
 	}
 
@@ -181,7 +184,14 @@ export class ControlsController {
 
 	createTrpcRouter() {
 		return router({
-			triggerCollections: this.#triggerCollections.createTrpcRouter(),
+			triggers: createTriggersTrpcRouter(
+				this.#controlChangeEvents,
+				this.#triggerCollections,
+				this.#dbTable,
+				this.#controls,
+				this.triggers,
+				this.#createControlDependencies()
+			),
 		})
 	}
 
@@ -633,140 +643,6 @@ export class ControlsController {
 			}
 		})
 
-		client.onPromise('triggers:subscribe', () => {
-			client.join(TriggersListRoom)
-
-			const triggers: Record<string, ClientTriggerData> = {}
-
-			for (const [controlId, control] of this.#controls.entries()) {
-				if (control instanceof ControlTrigger) {
-					triggers[controlId] = control.toTriggerJSON()
-				}
-			}
-
-			return triggers
-		})
-		client.onPromise('triggers:unsubscribe', () => {
-			client.leave(TriggersListRoom)
-		})
-		client.onPromise('triggers:create', () => {
-			const controlId = CreateTriggerControlId(nanoid())
-
-			const newControl = new ControlTrigger(this.#createControlDependencies(), this.triggers, controlId, null, false)
-			this.#controls.set(controlId, newControl)
-
-			// Add trigger to the end of the list
-			const allTriggers: ControlTrigger[] = []
-			for (const control of this.#controls.values()) {
-				if (control instanceof ControlTrigger) {
-					allTriggers.push(control)
-				}
-			}
-			const maxRank = Math.max(0, ...allTriggers.map((control) => control.options.sortOrder))
-			newControl.optionsSetField('sortOrder', maxRank, true)
-
-			// Ensure it is stored to the db
-			newControl.commitChange()
-
-			// No collectionId yet so mark as enabled
-			newControl.setCollectionEnabled(true)
-
-			return controlId
-		})
-		client.onPromise('triggers:delete', (controlId) => {
-			if (!this.#validateTriggerControlId(controlId)) {
-				// Control id is not valid!
-				return false
-			}
-
-			const control = this.getControl(controlId)
-			if (control) {
-				control.destroy()
-
-				this.#controls.delete(controlId)
-
-				this.#dbTable.delete(controlId)
-
-				return true
-			}
-
-			return false
-		})
-		client.onPromise('triggers:clone', (controlId) => {
-			if (!this.#validateTriggerControlId(controlId)) {
-				// Control id is not valid!
-				return false
-			}
-
-			const newControlId = CreateTriggerControlId(nanoid())
-
-			const fromControl = this.getControl(controlId)
-			if (fromControl) {
-				const controlJson = fromControl.toJSON(true)
-
-				const newControl = this.#createClassForControl(newControlId, 'trigger', controlJson, true)
-				if (newControl) {
-					this.#controls.set(newControlId, newControl)
-
-					return newControlId
-				}
-			}
-
-			return false
-		})
-		client.onPromise('triggers:test', (controlId) => {
-			if (!this.#validateTriggerControlId(controlId)) {
-				// Control id is not valid!
-				return false
-			}
-
-			const control = this.getControl(controlId)
-			if (control && control instanceof ControlTrigger) {
-				control.executeActions(Date.now(), TriggerExecutionSource.Test)
-			}
-
-			return false
-		})
-		client.onPromise('triggers:reorder', (collectionId: string | null, controlId: string, dropIndex: number) => {
-			const thisTrigger = this.#controls.get(controlId)
-			if (!thisTrigger || !(thisTrigger instanceof ControlTrigger)) return false
-
-			if (!this.#triggerCollections.doesCollectionIdExist(collectionId)) return false
-
-			// update the collectionId of the trigger being moved if needed
-			if (thisTrigger.options.collectionId !== (collectionId ?? undefined)) {
-				thisTrigger.optionsSetField('collectionId', collectionId ?? undefined, true)
-				thisTrigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(collectionId))
-			}
-
-			// find all the other triggers with the matching collectionId
-			const sortedTriggers = Array.from(this.#controls.values())
-				.filter(
-					(control): control is ControlTrigger =>
-						control.controlId !== controlId &&
-						control instanceof ControlTrigger &&
-						((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
-				)
-				.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
-
-			if (dropIndex < 0) {
-				// Push the trigger to the end of the array
-				sortedTriggers.push(thisTrigger)
-			} else {
-				// Insert the trigger at the drop index
-				sortedTriggers.splice(dropIndex, 0, thisTrigger)
-			}
-
-			// update the sort order of the connections in the store, tracking which ones changed
-			sortedTriggers.forEach((trigger, index) => {
-				if (trigger.options.sortOrder === index) return // No change
-
-				trigger.optionsSetField('sortOrder', index, true)
-			})
-
-			return true
-		})
-
 		client.onPromise('controls:event:add', (controlId, eventType) => {
 			const control = this.getControl(controlId)
 			if (!control) return false
@@ -961,7 +837,7 @@ export class ControlsController {
 	 * Import a control
 	 */
 	importControl(location: ControlLocation, definition: SomeButtonModel, forceControlId?: string): string | null {
-		if (forceControlId && !this.#validateBankControlId(forceControlId)) {
+		if (forceControlId && !validateBankControlId(forceControlId)) {
 			// Control id is not valid!
 			return null
 		}
@@ -994,7 +870,7 @@ export class ControlsController {
 	 * Import a trigger
 	 */
 	importTrigger(controlId: string, definition: TriggerModel): boolean {
-		if (!this.#validateTriggerControlId(controlId)) {
+		if (!validateTriggerControlId(controlId)) {
 			// Control id is not valid!
 			return false
 		}
@@ -1214,26 +1090,6 @@ export class ControlsController {
 				control.entities.updateFeedbackValues(connectionId, newValues)
 			}
 		}
-	}
-
-	/**
-	 * Verify a controlId is valid for the current id scheme and grid size
-	 */
-	#validateBankControlId(controlId: string): boolean {
-		const parsed = ParseControlId(controlId)
-		if (parsed?.type !== 'bank') return false
-
-		return true
-	}
-
-	/**
-	 * Verify a controlId is valid for the current id scheme and grid size
-	 */
-	#validateTriggerControlId(controlId: string): boolean {
-		const parsed = ParseControlId(controlId)
-		if (parsed?.type !== 'trigger') return false
-
-		return true
 	}
 
 	/**
