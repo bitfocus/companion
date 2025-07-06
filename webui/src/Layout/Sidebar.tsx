@@ -177,7 +177,7 @@ export const MySidebar = memo(function MySidebar() {
 					</div>
 				</CSidebarBrand>
 			</CSidebarHeader>
-			<CSidebarNav>
+			<CSidebarNav className="nav-main-scroller">
 				<SidebarMenuItem name="Connections" icon={faPlug} path="/connections" />
 				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
 				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
@@ -211,7 +211,10 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_blank" />
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
-			<CSidebarNav className="nav-secondary">
+			<div className="sidebar-bottom-shadow-container">
+				<div className="sidebar-bottom-shadow" />
+			</div>
+			<CSidebarNav className="nav-secondary border-top">
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
 				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_blank" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>

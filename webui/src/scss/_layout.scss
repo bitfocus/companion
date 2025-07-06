@@ -234,8 +234,9 @@ form.row > * {
 	}
 
 	.nav-link {
-		background-color: #151515;
-		border-bottom: 1px solid #262626;
+		background-color: #191919;
+
+		margin-bottom: 0.15rem;
 
 		small {
 			color: #aaa;
@@ -285,6 +286,10 @@ form.row > * {
 			margin-left: 16px;
 			margin-right: 16px;
 		}
+
+		.nav-link {
+			margin-bottom: 0;
+		}
 	}
 	.nav-group-toggle-basic::after,
 	.nav-group-items .nav-link {
@@ -303,6 +308,24 @@ form.row > * {
 	.sidebar-header.brand {
 		justify-content: left;
 		padding-left: 11px;
+	}
+
+	.nav-main-scroller {
+		padding-bottom: 20px;
+	}
+	.sidebar-bottom-shadow-container {
+		position: relative;
+
+		.sidebar-bottom-shadow {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 20px;
+			background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 1));
+			pointer-events: none;
+			z-index: 1;
+		}
 	}
 }
 
