@@ -18,6 +18,7 @@ import { EventEmitter } from 'events'
 import { applyWSSHandler } from '@trpc/server/adapters/ws'
 import { WebSocketServer } from 'ws'
 import { AppRouter, createTrpcWsContext } from './TRPC.js'
+import { nanoid } from 'nanoid'
 
 type IOListenEvents = import('@companion-app/shared/SocketIO.js').ClientToBackendEventsListenMap
 type IOEmitEvents = import('@companion-app/shared/SocketIO.js').BackendToClientEventsMap
@@ -246,9 +247,10 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 		})
 
 		this.#wss.on('connection', (ws) => {
-			console.log(`➕➕ Connection (${this.#wss.clients.size})`)
+			const socketId = nanoid()
+			this.#logger.debug(`trpc socket ${socketId} connected`)
 			ws.once('close', () => {
-				console.log(`➖➖ Connection (${this.#wss.clients.size})`)
+				this.#logger.debug(`trpc socket ${socketId} disconnected`)
 			})
 		})
 	}
