@@ -59,7 +59,7 @@
     "@loupedeck/node": "^1.2.0",
     "@napi-rs/canvas": "0.1.68",
     "@sentry/node": "^9.35.0",
-    "@trpc/server": "^11.4.3",
+    "@trpc/server": "~11.3.1",
     "archiver": "^7.0.1",
     "better-sqlite3": "^12.2.0",
     "bufferutil": "^4.0.9",

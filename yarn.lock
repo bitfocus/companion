@@ -1324,8 +1324,8 @@ __metadata:
     "@tanstack/react-router-devtools": "npm:^1.125.4"
     "@tanstack/router-plugin": "npm:^1.125.4"
     "@tanstack/virtual-file-routes": "npm:^1.121.21"
-    "@trpc/client": "npm:^11.4.3"
-    "@trpc/tanstack-react-query": "npm:^11.4.3"
+    "@trpc/client": "npm:~11.3.1"
+    "@trpc/tanstack-react-query": "npm:~11.3.1"
     "@types/crypto-js": "npm:^4.2.2"
     "@types/react": "npm:^18.3.23"
     "@types/react-copy-to-clipboard": "npm:^5.0.7"
@@ -4140,36 +4140,36 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@trpc/client@npm:^11.4.3":
-  version: 11.4.3
-  resolution: "@trpc/client@npm:11.4.3"
+"@trpc/client@npm:~11.3.1":
+  version: 11.3.1
+  resolution: "@trpc/client@npm:11.3.1"
   peerDependencies:
-    "@trpc/server": 11.4.3
+    "@trpc/server": 11.3.1
     typescript: ">=5.7.2"
-  checksum: 10c0/7ce11fc99f9238a2dad4755f320516f9afb4bce3f1b38508b076a88dfa2d8f340f2576b8b8a9a3fc06bb7073638d8cc29154bcc061a208c2a3a6b17b718cefd2
+  checksum: 10c0/fd249de46c49837e8e1447b648b2ba66d8f02d29be0146c5d4eebab4da7ae7b7266fda018045fd8af69cb8863974c97c356396713fcb392e7e6caa4d5e6e6c1e
   languageName: node
   linkType: hard
 
-"@trpc/server@npm:^11.4.3":
-  version: 11.4.3
-  resolution: "@trpc/server@npm:11.4.3"
+"@trpc/server@npm:~11.3.1":
+  version: 11.3.1
+  resolution: "@trpc/server@npm:11.3.1"
   peerDependencies:
     typescript: ">=5.7.2"
-  checksum: 10c0/3d3fd2a52cb36de5a02c3454d66ac5c739ba53442546aa9a06c79e277951a31827f21b9c135f551c98a197d28f1d6c87aba590dc08c98c15b8ba7a4b9a7653d2
+  checksum: 10c0/9e4ae2d86de5229aed52b38e7c7ef8d72a09144d45f7e543f32ef67e584b7b5177ccb7b060120685e8cf0fdc1f281d41f5186bebf93bf5109a2f4a4be6b5e7ef
   languageName: node
   linkType: hard
 
-"@trpc/tanstack-react-query@npm:^11.4.3":
-  version: 11.4.3
-  resolution: "@trpc/tanstack-react-query@npm:11.4.3"
+"@trpc/tanstack-react-query@npm:~11.3.1":
+  version: 11.3.1
+  resolution: "@trpc/tanstack-react-query@npm:11.3.1"
   peerDependencies:
     "@tanstack/react-query": ^5.80.3
-    "@trpc/client": 11.4.3
-    "@trpc/server": 11.4.3
+    "@trpc/client": 11.3.1
+    "@trpc/server": 11.3.1
     react: ">=18.2.0"
     react-dom: ">=18.2.0"
     typescript: ">=5.7.2"
-  checksum: 10c0/ebbd90a973e85ddd0a9b25a251db54bc07ff61ea620a6123fcf23274c78c9e9b2beadae0f08a5819ad706c68f868047fdffd9fe4b91643efdf997a7a67fa6795
+  checksum: 10c0/9b48dfed19866de2fdf0c6849c740eefae47dfdf25bd58c58c9683686d726e847d852fb980d7e86f57a5f25acca3cf96814b3cb4a1dce8c9c72a4dda9947b84f
   languageName: node
   linkType: hard
 
@@ -7101,7 +7101,7 @@ asn1@evs-broadcast/node-asn1:
     "@napi-rs/canvas": "npm:0.1.68"
     "@sentry/node": "npm:^9.35.0"
     "@sentry/webpack-plugin": "npm:^3.5.0"
-    "@trpc/server": "npm:^11.4.3"
+    "@trpc/server": "npm:~11.3.1"
     "@types/archiver": "npm:^6.0.3"
     "@types/better-sqlite3": "npm:^7.6.13"
     "@types/compression": "npm:^1.8.1"
