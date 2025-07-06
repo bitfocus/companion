@@ -28,6 +28,7 @@ import { useCustomVariablesApi } from './CustomVariablesApi'
 import { CustomVariablesTableContextProvider } from './CustomVariablesTableContext'
 import { useCustomVariablesValues } from './useCustomVariableValues'
 import { CustomVariableRow } from './CustomVariablesListRow'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collectionId'> & CollectionsNestingTableItem
 type CustomVariableCollectionExt = CollectionsNestingTableCollection
@@ -234,13 +235,13 @@ function AddVariablePanel() {
 }
 
 function CreateCollectionButton() {
-	const { socket } = useContext(RootAppStoreContext)
+	const createMutation = useMutationExt(trpc.customVariables.collections.add.mutationOptions())
 
 	const doCreateCollection = useCallback(() => {
-		socket.emitPromise('custom-variable-collections:add', ['New Collection']).catch((e) => {
+		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
 			console.error('Failed to add collection', e)
 		})
-	}, [socket])
+	}, [createMutation])
 
 	return (
 		<CButton color="info" size="sm" onClick={doCreateCollection}>

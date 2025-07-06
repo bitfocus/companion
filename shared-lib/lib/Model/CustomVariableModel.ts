@@ -9,7 +9,7 @@ export interface CustomVariableDefinition {
 	collectionId?: string
 }
 
-export type CustomVariableCollection = CollectionBase<undefined>
+export type CustomVariableCollection = CollectionBase<null>
 
 export type CustomVariablesModel = Record<string, CustomVariableDefinition>
 

@@ -49,6 +49,8 @@ export function createTrpcRouter(registry: Registry) {
 
 		controls: registry.controls.createTrpcRouter(),
 
+		customVariables: registry.variables.custom.createTrpcRouter(),
+
 		connections: router({
 			// Future: move this into the connections controller
 			collections: registry.instance.collections.createTrpcRouter(),

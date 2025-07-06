@@ -25,6 +25,7 @@ import type { CompanionVariableValue } from '@companion-module/base'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { CustomVariableCollections } from './CustomVariableCollections.js'
 import EventEmitter from 'events'
+import { router } from '../UI/TRPC.js'
 
 const CustomVariablesRoom = 'custom-variables'
 const CUSTOM_LABEL = 'custom'
@@ -51,7 +52,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		this.#dbTable = db.getTableView('custom_variables')
 		this.#io = io
 		this.#variableValues = variableValues
-		this.#collections = new CustomVariableCollections(io, db, (validCollectionIds) =>
+		this.#collections = new CustomVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownCollectionIds(validCollectionIds)
 		)
 
@@ -81,8 +82,6 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.#collections.clientConnect(client)
-
 		client.onPromise('custom-variables:subscribe', () => {
 			client.join(CustomVariablesRoom)
 
@@ -100,6 +99,12 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		client.onPromise('custom-variables:set-description', this.setVariableDescription.bind(this))
 		client.onPromise('custom-variables:set-persistence', this.setPersistence.bind(this))
 		client.onPromise('custom-variables:reorder', this.setOrder.bind(this))
+	}
+
+	createTrpcRouter() {
+		return router({
+			collections: this.#collections.createTrpcRouter(),
+		})
 	}
 
 	/**

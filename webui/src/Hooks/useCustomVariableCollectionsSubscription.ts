@@ -1,41 +1,25 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
+import { useState } from 'react'
 import type { VariablesStore } from '~/Stores/VariablesStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC.js'
 
-export function useCustomVariableCollectionsSubscription(
-	socket: CompanionSocketWrapped,
-	store: VariablesStore
-): boolean {
+export function useCustomVariableCollectionsSubscription(store: VariablesStore): boolean {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		store.resetCustomVariableCollections(null)
-		setReady(false)
-
-		socket
-			.emitPromise('custom-variable-collections:subscribe', [])
-			.then((collections) => {
-				store.resetCustomVariableCollections(collections)
+	useSubscription(
+		trpc.customVariables.collections.watchQuery.subscriptionOptions(undefined, {
+			onStarted: () => {
+				setReady(false)
+				store.resetCustomVariableCollections([])
+			},
+			onData: (data) => {
 				setReady(true)
-			})
-			.catch((e) => {
-				store.resetCustomVariableCollections(null)
-				console.error('Failed to load connection collections list', e)
-			})
+				// TODO - should this debounce?
 
-		const unsubUpdates = socket.on('custom-variable-collections:update', (update) => {
-			store.resetCustomVariableCollections(update)
+				store.resetCustomVariableCollections(data)
+			},
 		})
-
-		return () => {
-			store.resetCustomVariableCollections(null)
-			unsubUpdates()
-
-			socket.emitPromise('custom-variable-collections:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe from custom-variable collections list:', e)
-			})
-		}
-	}, [socket, store])
+	)
 
 	return ready
 }

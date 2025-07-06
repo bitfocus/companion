@@ -2,6 +2,7 @@ import { useContext, useMemo } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export type CustomVariablesCollectionsApi = NestingCollectionsApi
 
@@ -10,11 +11,15 @@ export function useCustomVariablesCollectionsApi(
 ): CustomVariablesCollectionsApi {
 	const { socket } = useContext(RootAppStoreContext)
 
+	const renameMutation = useMutationExt(trpc.customVariables.collections.setName.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.customVariables.collections.remove.mutationOptions())
+	const reorderMutation = useMutationExt(trpc.customVariables.collections.reorder.mutationOptions())
+
 	return useMemo(
 		() =>
 			({
 				renameCollection: (collectionId: string, newName: string) => {
-					socket.emitPromise('custom-variable-collections:set-name', [collectionId, newName]).catch((e) => {
+					renameMutation.mutateAsync({ collectionId, collectionName: newName }).catch((e) => {
 						console.error('Failed to rename collection', e)
 					})
 				},
@@ -25,7 +30,7 @@ export function useCustomVariablesCollectionsApi(
 						'Are you sure you want to delete this collection? All custom variables in this collection will be moved to Ungrouped Custom Variables.',
 						'Delete',
 						() => {
-							socket.emitPromise('custom-variable-collections:remove', [collectionId]).catch((e) => {
+							deleteMutation.mutateAsync({ collectionId }).catch((e) => {
 								console.error('Failed to delete collection', e)
 							})
 						}
@@ -33,7 +38,7 @@ export function useCustomVariablesCollectionsApi(
 				},
 
 				moveCollection: (collectionId: string, parentId: string | null, dropIndex: number) => {
-					socket.emitPromise('custom-variable-collections:reorder', [collectionId, parentId, dropIndex]).catch((e) => {
+					reorderMutation.mutateAsync({ collectionId, parentId, dropIndex }).catch((e) => {
 						console.error('Failed to reorder collection', e)
 					})
 				},
@@ -43,6 +48,6 @@ export function useCustomVariablesCollectionsApi(
 					})
 				},
 			}) satisfies CustomVariablesCollectionsApi,
-		[socket, confirmModalRef]
+		[socket, confirmModalRef, renameMutation, deleteMutation, reorderMutation]
 	)
 }

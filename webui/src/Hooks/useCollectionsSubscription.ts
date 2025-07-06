@@ -18,11 +18,11 @@ export function useGenericCollectionsSubscription<TInput, TOutput, TErrorShape>(
 	useSubscription(
 		procedure.subscriptionOptions(input, {
 			onStarted: () => {
-				// TODO - clear on termination?
-				setReady(true)
+				setReady(false)
 				store.resetCollections([])
 			},
 			onData: (data) => {
+				setReady(true)
 				// TODO - should this debounce?
 
 				store.resetCollections(data)

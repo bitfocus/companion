@@ -25,11 +25,7 @@ import type {
 } from './Model/ImportExport.js'
 import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { ClientTriggerData, TriggersUpdate } from './Model/TriggerModel.js'
-import type {
-	CustomVariableCollection,
-	CustomVariableUpdate,
-	CustomVariablesModel,
-} from './Model/CustomVariableModel.js'
+import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
@@ -75,8 +71,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'custom-variable-collections:subscribe': () => CustomVariableCollection[]
-	'custom-variable-collections:unsubscribe': () => void
 	'entity-definitions:subscribe': (
 		type: EntityModelType
 	) => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
@@ -281,11 +275,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'custom-variable-collections:add': (collectionName: string) => string
-	'custom-variable-collections:remove': (collectionId: string) => void
-	'custom-variable-collections:set-name': (collectionId: string, collectionName: string) => void
-	'custom-variable-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
-
 	'modules:install-all-missing': () => void
 	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
 	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
@@ -357,7 +346,6 @@ export interface BackendToClientEventsMap {
 	'triggers:update': (change: TriggersUpdate) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
-	'custom-variable-collections:update': (patch: CustomVariableCollection[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
