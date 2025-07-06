@@ -3,8 +3,7 @@ import type {
 	ExtendedInputField,
 	InternalInputField,
 } from '@companion-app/shared/Model/Options.js'
-import { useEffect, useMemo, useState } from 'react'
-import { assertNever, deepFreeze, sandbox } from '~/util.js'
+import { assertNever, deepFreeze, sandbox, useComputed } from '~/util.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { cloneDeep } from 'lodash-es'
 import { toJS } from 'mobx'
@@ -20,9 +19,7 @@ export function useOptionsAndIsVisible<
 ): [options: Array<T>, optionVisibility: Record<string, boolean | undefined>] {
 	const [options, isVisibleFns] = useOptionsAndIsVisibleFns(itemOptions)
 
-	const [optionVisibility, setOptionVisibility] = useState<Record<string, boolean | undefined>>({})
-
-	useEffect(() => {
+	const optionVisibility = useComputed<Record<string, boolean | undefined>>(() => {
 		const visibility: Record<string, boolean> = {}
 
 		if (optionValues) {
@@ -37,11 +34,7 @@ export function useOptionsAndIsVisible<
 			}
 		}
 
-		setOptionVisibility(visibility)
-
-		return () => {
-			setOptionVisibility({})
-		}
+		return visibility
 	}, [isVisibleFns, optionValues])
 
 	return [options, optionVisibility]
@@ -52,7 +45,7 @@ export function useOptionsAndIsVisibleFns<
 >(
 	itemOptions: Array<T> | undefined | null
 ): [options: Array<T>, isVisibleFns: Record<string, ((options: CompanionOptionValues) => boolean) | undefined>] {
-	const [options, isVisibleFns] = useMemo(() => {
+	const [options, isVisibleFns] = useComputed(() => {
 		const options = itemOptions ?? []
 		const isVisibleFns: Record<string, (options: CompanionOptionValues) => boolean> = {}
 
@@ -65,6 +58,7 @@ export function useOptionsAndIsVisibleFns<
 						const fn = sandbox(option.isVisibleUi.fn)
 						const userData = deepFreeze(toJS(option.isVisibleUi.data))
 						isVisibleFns[option.id] = (options) => fn(options, userData)
+
 						break
 					}
 					case 'expression': {

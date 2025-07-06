@@ -33,7 +33,6 @@ import type {
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
-import type { RecordSessionInfo, RecordSessionListInfo } from './Model/ActionRecorderModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
 import type {
@@ -214,26 +213,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'trigger-collections:set-enabled': (collectionId: string, enabled: boolean) => void
 	'trigger-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
 
-	'action-recorder:subscribe': () => Record<string, RecordSessionListInfo | undefined>
-	'action-recorder:unsubscribe': () => void
-	'action-recorder:session:subscribe': (sessionId: string) => RecordSessionInfo
-	'action-recorder:session:unsubscribe': (sessionId: string) => void
-	'action-recorder:session:recording': (sessionId: string, recording: boolean) => void
-	'action-recorder:session:abort': (sessionId: string) => void
-	'action-recorder:session:save-to-control': (
-		sessionId: string,
-		controlId: string,
-		stepId: string,
-		setId: ActionSetId,
-		mode: 'replace' | 'append'
-	) => void
-	'action-recorder:session:discard-actions': (sessionId: string) => void
-	'action-recorder:session:set-connections': (sessionId: string, connectionIds: string[]) => void
-	'action-recorder:session:action-reorder': (sessionId: string, actionId: string, dropIndex: number) => void
-	'action-recorder:session:action-set-value': (sessionId: string, actionId: string, key: string, value: any) => void
-	'action-recorder:session:action-delete': (sessionId: string, actionId: string) => void
-	'action-recorder:session:action-duplicate': (sessionId: string, actionId: string) => void
-
 	'surfaces:subscribe': () => Record<string, ClientDevicesListItem | undefined>
 	'surfaces:unsubscribe': () => void
 	'surfaces:forget': (surfaceId: string) => string | boolean
@@ -391,9 +370,6 @@ export interface BackendToClientEventsMap {
 
 	'preview:location:render': (renderLocation: ControlLocation, image: string | null, isUsed: boolean) => void
 	[id: `preview:button-reference:update:${string}`]: (newImage: string | null) => void
-
-	'action-recorder:session-list': (newSessions: JsonPatchOperation[]) => void
-	[selectedSessionId: `action-recorder:session:update:${string}`]: (patch: JsonPatchOperation[]) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
 	'connection-collections:update': (patch: ConnectionCollection[]) => void

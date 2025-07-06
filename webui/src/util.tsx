@@ -134,7 +134,7 @@ const freezePrototypes = () => {
 	// freeze global objects that can be used within the sandbox
 	Object.freeze(console)
 	Object.freeze(Array.prototype)
-	Object.freeze(Function.prototype)
+	// Object.freeze(Function.prototype) // TODO - this should be enabled, but breaks mobx...
 	// @ts-expect-error Suppress error
 	Object.freeze(Math.prototype)
 	Object.freeze(Number.prototype)

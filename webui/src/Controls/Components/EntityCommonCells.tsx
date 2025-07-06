@@ -12,6 +12,7 @@ import { EntityChangeConnection } from './EntityChangeConnection.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
+import { observer } from 'mobx-react-lite'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -25,7 +26,7 @@ interface EntityCommonCellsProps {
 	readonly: boolean
 }
 
-export function EntityCommonCells({
+export const EntityCommonCells = observer(function EntityCommonCells({
 	entity,
 	entityType,
 	onlyFeedbackType,
@@ -119,4 +120,4 @@ export function EntityCommonCells({
 			</div>
 		</>
 	)
-}
+})

@@ -183,7 +183,6 @@ export class ControlsController {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.actionRecorder.clientConnect(client)
 		this.#triggerCollections.clientConnect(client)
 
 		this.triggers.emit('client_connect')
