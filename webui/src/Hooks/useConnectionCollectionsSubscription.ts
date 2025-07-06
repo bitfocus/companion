@@ -1,38 +1,25 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '../util.js'
+import { useState } from 'react'
 import type { ConnectionsStore } from '../Stores/ConnectionsStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC.js'
 
-export function useConnectionCollectionsSubscription(socket: CompanionSocketWrapped, store: ConnectionsStore): boolean {
+export function useConnectionCollectionsSubscription(store: ConnectionsStore): boolean {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		store.resetCollections(null)
-		setReady(false)
-
-		socket
-			.emitPromise('connection-collections:subscribe', [])
-			.then((collections) => {
-				store.resetCollections(collections)
+	useSubscription(
+		trpc.connections.collections.watchQuery.subscriptionOptions(undefined, {
+			onStarted: () => {
+				// TODO - clear on termination?
 				setReady(true)
-			})
-			.catch((e) => {
-				store.resetCollections(null)
-				console.error('Failed to load connection collections list', e)
-			})
+				store.resetCollections([])
+			},
+			onData: (data) => {
+				// TODO - should this debounce?
 
-		const unsubUpdates = socket.on('connection-collections:update', (update) => {
-			store.resetCollections(update)
+				store.resetCollections(data)
+			},
 		})
-
-		return () => {
-			store.resetCollections(null)
-			unsubUpdates()
-
-			socket.emitPromise('connection-collections:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe from connection collections list:', e)
-			})
-		}
-	}, [socket, store])
+	)
 
 	return ready
 }

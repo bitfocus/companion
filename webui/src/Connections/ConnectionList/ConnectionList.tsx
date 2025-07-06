@@ -5,7 +5,6 @@ import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
@@ -20,6 +19,7 @@ import { ConnectionListContextProvider, useConnectionListContext } from './Conne
 import { useComputed } from '~/util.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { useNavigate } from '@tanstack/react-router'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -165,17 +165,17 @@ function ConnectionListNoConnections() {
 }
 
 function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCollection }) {
-	const socket = useContext(SocketContext)
+	const setEnabledMutation = useMutationExt(trpc.connections.collections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const enabled = e.target.checked
 
-			socket.emitPromise('connection-collections:set-enabled', [collection.id, enabled]).catch((e: any) => {
+			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e: any) => {
 				console.error('Failed to set collection enabled state', e)
 			})
 		},
-		[socket, collection.id]
+		[setEnabledMutation, collection.id]
 	)
 
 	return (

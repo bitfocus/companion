@@ -46,6 +46,11 @@ export function createTrpcRouter(registry: Registry) {
 		actionRecorder: registry.controls.actionRecorder.createTrpcRouter(),
 		surfaces: registry.surfaces.createTrpcRouter(),
 		surfaceDiscovery: registry.services.surfaceDiscovery.createTrpcRouter(),
+
+		connections: router({
+			// Future: move this into the connections controller
+			collections: registry.instance.collections.createTrpcRouter(),
+		}),
 	})
 }
 

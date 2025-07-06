@@ -88,7 +88,7 @@ export class TriggerCollections extends CollectionsBaseController<TriggerCollect
 		this.#cleanUnknownCollectionIds(this.collectAllCollectionIds())
 	}
 
-	override emitUpdate(rows: TriggerCollection[]): void {
+	override emitUpdateUser(rows: TriggerCollection[]): void {
 		this.#io.emitToRoom(TriggerCollectionsRoom, 'trigger-collections:update', rows)
 
 		// Intercept this changed event, to rebuild the enabledCollectionIds set and apply it to the triggers

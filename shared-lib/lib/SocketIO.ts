@@ -35,12 +35,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import type { UIPresetDefinition } from './Model/Presets.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
-import type {
-	ClientConnectionsUpdate,
-	ClientConnectionConfig,
-	ConnectionUpdatePolicy,
-	ConnectionCollection,
-} from './Model/Connections.js'
+import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
 import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
@@ -80,8 +75,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'connection-collections:subscribe': () => ConnectionCollection[]
-	'connection-collections:unsubscribe': () => void
 	'custom-variable-collections:subscribe': () => CustomVariableCollection[]
 	'custom-variable-collections:unsubscribe': () => void
 	'entity-definitions:subscribe': (
@@ -296,12 +289,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'connection-collections:add': (collectionName: string) => string
-	'connection-collections:remove': (collectionId: string) => void
-	'connection-collections:set-name': (collectionId: string, collectionName: string) => void
-	'connection-collections:set-enabled': (collectionId: string, enabled: boolean) => void
-	'connection-collections:reorder': (collectionId: string, parentId: string | null, dropIndex: number) => void
-
 	'custom-variable-collections:add': (collectionName: string) => string
 	'custom-variable-collections:remove': (collectionId: string) => void
 	'custom-variable-collections:set-name': (collectionId: string, collectionName: string) => void
@@ -372,7 +359,6 @@ export interface BackendToClientEventsMap {
 	[id: `preview:button-reference:update:${string}`]: (newImage: string | null) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
-	'connection-collections:update': (patch: ConnectionCollection[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void

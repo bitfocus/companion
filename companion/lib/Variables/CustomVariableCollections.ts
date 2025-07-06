@@ -28,7 +28,7 @@ export class CustomVariableCollections extends CollectionsBaseController<undefin
 		this.#cleanUnknownCollectionIds(this.collectAllCollectionIds())
 	}
 
-	override emitUpdate(rows: CustomVariableCollection[]): void {
+	override emitUpdateUser(rows: CustomVariableCollection[]): void {
 		this.#io.emitToRoom(CustomVariableCollectionsRoom, 'custom-variable-collections:update', rows)
 	}
 

@@ -1,14 +1,13 @@
 import { useMemo } from 'react'
 import type { IEntityEditorService } from './ControlEntitiesService.js'
 import type { EntityOwner, SomeEntityModel, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-import { useMutation } from '@tanstack/react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export function useActionRecorderActionService(sessionId: string): IEntityEditorService {
-	const deleteActionMutation = useMutation(trpc.actionRecorder.session.action.delete.mutationOptions())
-	const duplicateActionMutation = useMutation(trpc.actionRecorder.session.action.duplicate.mutationOptions())
-	const setValueMutation = useMutation(trpc.actionRecorder.session.action.setValue.mutationOptions())
-	const reorderActionMutation = useMutation(trpc.actionRecorder.session.action.reorder.mutationOptions())
+	const deleteActionMutation = useMutationExt(trpc.actionRecorder.session.action.delete.mutationOptions())
+	const duplicateActionMutation = useMutationExt(trpc.actionRecorder.session.action.duplicate.mutationOptions())
+	const setValueMutation = useMutationExt(trpc.actionRecorder.session.action.setValue.mutationOptions())
+	const reorderActionMutation = useMutationExt(trpc.actionRecorder.session.action.reorder.mutationOptions())
 
 	return useMemo(
 		() => ({

@@ -115,7 +115,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			this.broadcastChanges(connectionIds)
 		})
-		this.#collectionsController = new InstanceCollections(io, db, this.#configStore, () => {
+		this.#collectionsController = new InstanceCollections(db, this.#configStore, () => {
 			this.emit('connection_collections_enabled')
 
 			this.#queueUpdateAllConnectionState()
@@ -600,7 +600,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.modules.clientConnect(client)
 		this.modulesStore.clientConnect(client)
 		this.userModulesManager.clientConnect(client)
-		this.#collectionsController.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)

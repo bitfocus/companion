@@ -84,7 +84,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
-	const connectionGroupsReady = useConnectionCollectionsSubscription(socket, rootStore.connections)
+	const connectionGroupsReady = useConnectionCollectionsSubscription(rootStore.connections)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
 	const triggerGroupsReady = useTriggerCollectionsSubscription(socket, rootStore.triggersList)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)

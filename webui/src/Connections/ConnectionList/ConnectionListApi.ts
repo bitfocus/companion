@@ -2,6 +2,7 @@ import { useContext, useMemo } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export type ConnectionCollectionsApi = NestingCollectionsApi
 
@@ -10,17 +11,21 @@ export function useConnectionCollectionsApi(
 ): ConnectionCollectionsApi {
 	const { socket } = useContext(RootAppStoreContext)
 
+	const createMutation = useMutationExt(trpc.connections.collections.add.mutationOptions())
+	const renameMutation = useMutationExt(trpc.connections.collections.setName.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.connections.collections.remove.mutationOptions())
+	const reorderMutation = useMutationExt(trpc.connections.collections.reorder.mutationOptions())
+
 	return useMemo(
 		() =>
 			({
 				createCollection: (collectionName = 'New Collection') => {
-					socket.emitPromise('connection-collections:add', [collectionName]).catch((e) => {
+					createMutation.mutateAsync({ collectionName }).catch((e) => {
 						console.error('Failed to add collection', e)
 					})
 				},
-
 				renameCollection: (collectionId: string, newName: string) => {
-					socket.emitPromise('connection-collections:set-name', [collectionId, newName]).catch((e) => {
+					renameMutation.mutateAsync({ collectionId, collectionName: newName }).catch((e) => {
 						console.error('Failed to rename collection', e)
 					})
 				},
@@ -31,7 +36,7 @@ export function useConnectionCollectionsApi(
 						'Are you sure you want to delete this collection? All connections in this collection will be moved to Ungrouped Connections.',
 						'Delete',
 						() => {
-							socket.emitPromise('connection-collections:remove', [collectionId]).catch((e) => {
+							deleteMutation.mutateAsync({ collectionId }).catch((e) => {
 								console.error('Failed to delete collection', e)
 							})
 						}
@@ -39,7 +44,7 @@ export function useConnectionCollectionsApi(
 				},
 
 				moveCollection: (collectionId: string, parentId: string | null, dropIndex: number) => {
-					socket.emitPromise('connection-collections:reorder', [collectionId, parentId, dropIndex]).catch((e) => {
+					reorderMutation.mutateAsync({ collectionId, parentId, dropIndex }).catch((e) => {
 						console.error('Failed to reorder collection', e)
 					})
 				},
@@ -49,6 +54,6 @@ export function useConnectionCollectionsApi(
 					})
 				},
 			}) satisfies ConnectionCollectionsApi,
-		[socket, confirmModalRef]
+		[socket, confirmModalRef, createMutation, renameMutation, deleteMutation, reorderMutation]
 	)
 }
