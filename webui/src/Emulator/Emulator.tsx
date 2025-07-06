@@ -9,8 +9,7 @@ import { ControlLocation, EmulatorConfig } from '@companion-app/shared/Model/Com
 import { observer } from 'mobx-react-lite'
 import { useParams } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC.js'
-import { useMutation } from '@tanstack/react-query'
+import { trpc, useMutationExt } from '~/TRPC.js'
 import { observable, ObservableMap, runInAction } from 'mobx'
 
 function getCacheKey(x: number, y: number): string {
@@ -22,7 +21,7 @@ export const Emulator = observer(function Emulator() {
 
 	const config = useSubscription(trpc.surfaces.emulatorConfig.subscriptionOptions({ id: emulatorId }))
 
-	const pressedMutation = useMutation(trpc.surfaces.emulatorPressed.mutationOptions())
+	const pressedMutation = useMutationExt(trpc.surfaces.emulatorPressed.mutationOptions())
 
 	const doRetryLoad = useCallback(() => config.reset(), [config])
 

@@ -1391,6 +1391,7 @@ __metadata:
   resolution: "@companion-app/workspace@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.31.0"
+    "@tanstack/eslint-plugin-query": "npm:^5.81.2"
     "@types/node": "npm:^22.16.3"
     "@types/ps-tree": "npm:^1.1.6"
     "@vitest/coverage-v8": "npm:^3.2.4"
@@ -3928,6 +3929,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/eslint-plugin-query@npm:^5.81.2":
+  version: 5.81.2
+  resolution: "@tanstack/eslint-plugin-query@npm:5.81.2"
+  dependencies:
+    "@typescript-eslint/utils": "npm:^8.18.1"
+  peerDependencies:
+    eslint: ^8.57.0 || ^9.0.0
+  checksum: 10c0/cef8b06c7d56dc8fb2429c5e9de9446fbabae81275d289da7ff79b58c24dfa83905577bb376911d14390617d42ada3700603738d8138e6bea4b29e1b9b58c797
+  languageName: node
+  linkType: hard
+
 "@tanstack/form-core@npm:1.14.0":
   version: 1.14.0
   resolution: "@tanstack/form-core@npm:1.14.0"
@@ -5157,7 +5169,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:8.36.0":
+"@typescript-eslint/utils@npm:8.36.0, @typescript-eslint/utils@npm:^8.18.1":
   version: 8.36.0
   resolution: "@typescript-eslint/utils@npm:8.36.0"
   dependencies:

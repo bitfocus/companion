@@ -5,8 +5,8 @@ import { CButton, CForm, CModalBody, CModalFooter, CModalHeader } from '@coreui/
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { trpc } from '~/TRPC'
+import { useQuery } from '@tanstack/react-query'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface SetupSatelliteModalRef {
 	show(surfaceInfo: ClientDiscoveredSurfaceInfoSatellite): void
@@ -25,7 +25,7 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 		}
 	}
 
-	const saveMutation = useMutation(trpc.surfaceDiscovery.setupSatellite.mutationOptions())
+	const saveMutation = useMutationExt(trpc.surfaceDiscovery.setupSatellite.mutationOptions())
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {

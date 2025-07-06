@@ -21,15 +21,14 @@ import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { ButtonPicker } from './ButtonPicker.js'
 import { TriggerPicker } from './TriggerPicker.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { useMutation } from '@tanstack/react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface RecorderSessionFinishModalProps {
 	doClose: () => void
 	sessionId: string
 }
 export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessionFinishModalProps): React.JSX.Element {
-	const saveToControlMutation = useMutation(trpc.actionRecorder.session.saveToControl.mutationOptions())
+	const saveToControlMutation = useMutationExt(trpc.actionRecorder.session.saveToControl.mutationOptions())
 
 	const doSave = useCallback(
 		(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append') => {

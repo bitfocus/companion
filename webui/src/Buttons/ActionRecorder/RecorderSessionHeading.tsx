@@ -7,8 +7,7 @@ import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecord
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useMutation } from '@tanstack/react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
@@ -23,10 +22,10 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 }: RecorderSessionHeadingProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const discardActionsMutation = useMutation(trpc.actionRecorder.session.discardActions.mutationOptions())
-	const abortSessionMutation = useMutation(trpc.actionRecorder.session.abort.mutationOptions())
-	const setRecordingMutation = useMutation(trpc.actionRecorder.session.setRecording.mutationOptions())
-	const setConnectionsMutation = useMutation(trpc.actionRecorder.session.setConnections.mutationOptions())
+	const discardActionsMutation = useMutationExt(trpc.actionRecorder.session.discardActions.mutationOptions())
+	const abortSessionMutation = useMutationExt(trpc.actionRecorder.session.abort.mutationOptions())
+	const setRecordingMutation = useMutationExt(trpc.actionRecorder.session.setRecording.mutationOptions())
+	const setConnectionsMutation = useMutationExt(trpc.actionRecorder.session.setConnections.mutationOptions())
 
 	const sessionId = sessionInfo.id
 	const doClearActions = useCallback(() => {

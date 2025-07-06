@@ -7,6 +7,7 @@ import tseslint from 'typescript-eslint'
 import reacteslint from 'eslint-plugin-react'
 import hookseslint from 'eslint-plugin-react-hooks'
 import reactRefreshEslint from 'eslint-plugin-react-refresh'
+import pluginQuery from '@tanstack/eslint-plugin-query'
 
 export default [
 	// setup the parser first
@@ -184,4 +185,9 @@ export default [
 			'@typescript-eslint/no-duplicate-type-constituents': 'off',
 		},
 	},
+
+	...pluginQuery.configs['flat/recommended'].map((config) => ({
+		...config,
+		files: ['webui/**/*.tsx', 'webui/**/*.jsx', 'webui/**/*.ts', 'webui/**/*.js'],
+	})),
 ]
