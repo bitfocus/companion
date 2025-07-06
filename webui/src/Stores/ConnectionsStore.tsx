@@ -4,9 +4,11 @@ import type {
 	ClientConnectionsUpdate,
 	ClientConnectionConfig,
 	ConnectionCollection,
+	ConnectionCollectionData,
 } from '@companion-app/shared/Model/Connections.js'
+import type { GenericCollectionsStore } from './GenericCollectionsStore'
 
-export class ConnectionsStore {
+export class ConnectionsStore implements GenericCollectionsStore<ConnectionCollectionData> {
 	readonly connections = observable.map<string, ClientConnectionConfig>()
 	readonly collections = observable.map<string, ConnectionCollection>()
 

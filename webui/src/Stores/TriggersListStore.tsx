@@ -2,9 +2,15 @@ import { action, observable } from 'mobx'
 import { assertNever } from '~/util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
+import type {
+	ClientTriggerData,
+	TriggerCollection,
+	TriggerCollectionData,
+	TriggersUpdate,
+} from '@companion-app/shared/Model/TriggerModel.js'
+import type { GenericCollectionsStore } from './GenericCollectionsStore'
 
-export class TriggersListStore {
+export class TriggersListStore implements GenericCollectionsStore<TriggerCollectionData> {
 	readonly triggers = observable.map<string, ClientTriggerData>()
 	readonly collections = observable.map<string, TriggerCollection>()
 
@@ -62,7 +68,7 @@ export class TriggersListStore {
 		return Array.from(this.collections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}
 
-	public resetCollection = action((newData: TriggerCollection[] | null) => {
+	public resetCollections = action((newData: TriggerCollection[] | null) => {
 		this.collections.clear()
 
 		if (newData) {

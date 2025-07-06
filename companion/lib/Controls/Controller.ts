@@ -27,6 +27,7 @@ import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecution
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
+import { router } from '../UI/TRPC.js'
 
 export const TriggersListRoom = 'triggers:list'
 const ActiveLearnRoom = 'learn:active'
@@ -92,7 +93,6 @@ export class ControlsController {
 
 		this.triggers = new TriggerEvents()
 		this.#triggerCollections = new TriggerCollections(
-			registry.io,
 			registry.db,
 			this.triggers,
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
@@ -179,12 +179,16 @@ export class ControlsController {
 		}
 	}
 
+	createTrpcRouter() {
+		return router({
+			triggerCollections: this.#triggerCollections.createTrpcRouter(),
+		})
+	}
+
 	/**
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.#triggerCollections.clientConnect(client)
-
 		this.triggers.emit('client_connect')
 
 		client.onPromise('controls:subscribe', (controlId) => {

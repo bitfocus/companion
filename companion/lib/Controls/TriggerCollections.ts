@@ -1,13 +1,11 @@
-import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
 import type { TriggerCollection, TriggerCollectionData } from '@companion-app/shared/Model/TriggerModel.js'
 import type { TriggerEvents } from './TriggerEvents.js'
-
-const TriggerCollectionsRoom = 'trigger-collections'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import z from 'zod'
 
 export class TriggerCollections extends CollectionsBaseController<TriggerCollectionData> {
-	readonly #io: UIHandler
 	readonly #events: TriggerEvents
 
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void
@@ -16,7 +14,6 @@ export class TriggerCollections extends CollectionsBaseController<TriggerCollect
 	#enabledCollectionIds: ReadonlySet<string> = new Set()
 
 	constructor(
-		io: UIHandler,
 		db: DataDatabase,
 		events: TriggerEvents,
 		cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void,
@@ -24,7 +21,6 @@ export class TriggerCollections extends CollectionsBaseController<TriggerCollect
 	) {
 		super(db.getTableView<Record<string, TriggerCollection>>('trigger_collections'))
 
-		this.#io = io
 		this.#events = events
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds
 		this.#recheckTriggersEnabled = recheckTriggersEnabled
@@ -88,43 +84,35 @@ export class TriggerCollections extends CollectionsBaseController<TriggerCollect
 		this.#cleanUnknownCollectionIds(this.collectAllCollectionIds())
 	}
 
-	override emitUpdateUser(rows: TriggerCollection[]): void {
-		this.#io.emitToRoom(TriggerCollectionsRoom, 'trigger-collections:update', rows)
-
+	override emitUpdateUser(_rows: TriggerCollection[]): void {
 		// Intercept this changed event, to rebuild the enabledCollectionIds set and apply it to the triggers
 		this.#rebuildEnabledCollectionIds()
 		this.#events.emit('trigger_collections_enabled')
 		this.#recheckTriggersEnabled(this.#enabledCollectionIds)
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('trigger-collections:subscribe', () => {
-			client.join(TriggerCollectionsRoom)
+	public createTrpcRouter() {
+		return router({
+			...super.createTrpcRouterBase(),
 
-			return this.data
-		})
+			add: publicProcedure.input(z.object({ collectionName: z.string() })).mutation(async ({ input }) => {
+				return this.collectionCreate(input.collectionName, {
+					enabled: true,
+				})
+			}),
 
-		client.onPromise('trigger-collections:unsubscribe', () => {
-			client.leave(TriggerCollectionsRoom)
-		})
-
-		client.onPromise('trigger-collections:add', (collectionName: string) => {
-			return this.collectionCreate(collectionName, {
-				enabled: true,
-			})
-		})
-
-		client.onPromise('trigger-collections:remove', this.collectionRemove)
-		client.onPromise('trigger-collections:set-name', this.collectionSetName)
-		client.onPromise('trigger-collections:reorder', this.collectionMove)
-
-		client.onPromise('trigger-collections:set-enabled', (collectionId: string, enabled: boolean) => {
-			this.collectionModifyMetaData(collectionId, (collection) => {
-				collection.metaData.enabled = enabled
-			})
+			setEnabled: publicProcedure
+				.input(
+					z.object({
+						collectionId: z.string(),
+						enabled: z.boolean(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					this.collectionModifyMetaData(input.collectionId, (collection) => {
+						collection.metaData.enabled = input.enabled
+					})
+				}),
 		})
 	}
 }

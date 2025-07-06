@@ -25,6 +25,7 @@ import { useTriggerCollectionsApi } from './TriggerCollectionsApi'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export const TriggersPage = observer(function Triggers() {
 	const { socket, triggersList } = useContext(RootAppStoreContext)
@@ -156,17 +157,17 @@ function TriggerItemRow(item: TriggerDataWithId) {
 }
 
 function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollection }) {
-	const socket = useContext(SocketContext)
+	const setEnabledMutation = useMutationExt(trpc.controls.triggerCollections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const enabled = e.target.checked
 
-			socket.emitPromise('trigger-collections:set-enabled', [collection.id, enabled]).catch((e) => {
+			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e: any) => {
 				console.error('Failed to reorder collection', e)
 			})
 		},
-		[socket, collection.id]
+		[setEnabledMutation, collection.id]
 	)
 
 	return (
@@ -275,13 +276,13 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 })
 
 function CreateCollectionButton() {
-	const socket = useContext(SocketContext)
+	const createMutation = useMutationExt(trpc.controls.triggerCollections.add.mutationOptions())
 
 	const doCreateCollection = useCallback(() => {
-		socket.emitPromise('trigger-collections:add', ['New Collection']).catch((e) => {
+		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
 			console.error('Failed to add collection', e)
 		})
-	}, [socket])
+	}, [createMutation])
 
 	return (
 		<CButton color="info" size="sm" onClick={doCreateCollection}>

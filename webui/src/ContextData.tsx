@@ -28,9 +28,9 @@ import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscr
 import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
 import { ViewControlStore } from '~/Stores/ViewControlStore.js'
 import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
-import { useConnectionCollectionsSubscription } from './Hooks/useConnectionCollectionsSubscription.js'
-import { useTriggerCollectionsSubscription } from './Hooks/useTriggerCollectionsSubscription.js'
+import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
+import { trpc } from './TRPC.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -84,9 +84,17 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
-	const connectionGroupsReady = useConnectionCollectionsSubscription(rootStore.connections)
+	const connectionGroupsReady = useGenericCollectionsSubscription(
+		rootStore.connections,
+		trpc.connections.collections.watchQuery,
+		undefined
+	)
 	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
-	const triggerGroupsReady = useTriggerCollectionsSubscription(socket, rootStore.triggersList)
+	const triggerGroupsReady = useGenericCollectionsSubscription(
+		rootStore.triggersList,
+		trpc.controls.triggerCollections.watchQuery,
+		undefined
+	)
 	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
 	const userConfigReady = useUserConfigSubscription(socket, rootStore.userConfig)
 	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
