@@ -31,10 +31,8 @@ export function validateInputValue(
 
 			const compiledRegex = compileRegex(definition.regex)
 			if (compiledRegex) {
-				if (typeof value !== 'string') {
-					return 'Value must be a string'
-				}
-
+				if (value === undefined || value === null) value = ''
+				else value = String(value)
 				if (!compiledRegex.exec(value)) {
 					return `Value does not match regex: ${definition.regex}`
 				}
