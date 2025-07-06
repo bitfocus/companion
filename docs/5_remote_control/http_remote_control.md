@@ -40,7 +40,7 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 - Change text of button
   Method: POST  
   Path: `/api/location/<page>/<row>/<column>/style?text=<text>`
-- Change text color of button
+- Change text of button
   Method: POST  
   Path: `/api/location/<page>/<row>/<column>/style`  
   Body: `{ "text": "<text>" }`
