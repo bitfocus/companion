@@ -6,7 +6,7 @@
 // Define variables that should override @coreui defaults:
 // note that Sass will issue a strange error message if a variable specified here is not already in coreui. (As of Sass 1.89)
 $_private-header-bg: #d50215; // needed for both $header-bg and the adjust() call, below.
-@use '@coreui/coreui/scss/coreui' with (
+@forward '@coreui/coreui/scss/coreui' with (
 	$primary: #d50215,
 	$secondary: #ccc,
 	$body-bg: #333,
@@ -26,7 +26,8 @@ $_private-header-bg: #d50215; // needed for both $header-bg and the adjust() cal
 			width: 2.75em,
 			height: 1.5em,
 		),
-	),
+	)
+	!default,
 
 	$btn-font-size-sm: 12px,
 	$btn-font-size: 0.9rem,
