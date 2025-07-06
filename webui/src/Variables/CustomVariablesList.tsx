@@ -94,9 +94,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						<CButton color="secondary" disabled>
 							Custom Variables
 						</CButton>
-						<CButton color="info" size="sm" onClick={() => collectionsApi.createCollection()}>
-							<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-						</CButton>
+						<CreateCollectionButton />
 						{(customVariables.customVariables.size > 0 || customVariables.customVariableCollections.size > 0) && (
 							<ExpandCollapseButtons />
 						)}
@@ -232,5 +230,21 @@ function AddVariablePanel() {
 				</CButton>
 			</CInputGroup>
 		</CForm>
+	)
+}
+
+function CreateCollectionButton() {
+	const { socket } = useContext(RootAppStoreContext)
+
+	const doCreateCollection = useCallback(() => {
+		socket.emitPromise('custom-variable-collections:add', ['New Collection']).catch((e) => {
+			console.error('Failed to add collection', e)
+		})
+	}, [socket])
+
+	return (
+		<CButton color="info" size="sm" onClick={doCreateCollection}>
+			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+		</CButton>
 	)
 }

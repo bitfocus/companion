@@ -13,12 +13,6 @@ export function useCustomVariablesCollectionsApi(
 	return useMemo(
 		() =>
 			({
-				createCollection: (collectionName = 'New Collection') => {
-					socket.emitPromise('custom-variable-collections:add', [collectionName]).catch((e) => {
-						console.error('Failed to add collection', e)
-					})
-				},
-
 				renameCollection: (collectionId: string, newName: string) => {
 					socket.emitPromise('custom-variable-collections:set-name', [collectionId, newName]).catch((e) => {
 						console.error('Failed to rename collection', e)

@@ -11,7 +11,6 @@ export function useConnectionCollectionsApi(
 ): ConnectionCollectionsApi {
 	const { socket } = useContext(RootAppStoreContext)
 
-	const createMutation = useMutationExt(trpc.connections.collections.add.mutationOptions())
 	const renameMutation = useMutationExt(trpc.connections.collections.setName.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.connections.collections.remove.mutationOptions())
 	const reorderMutation = useMutationExt(trpc.connections.collections.reorder.mutationOptions())
@@ -19,11 +18,6 @@ export function useConnectionCollectionsApi(
 	return useMemo(
 		() =>
 			({
-				createCollection: (collectionName = 'New Collection') => {
-					createMutation.mutateAsync({ collectionName }).catch((e) => {
-						console.error('Failed to add collection', e)
-					})
-				},
 				renameCollection: (collectionId: string, newName: string) => {
 					renameMutation.mutateAsync({ collectionId, collectionName: newName }).catch((e) => {
 						console.error('Failed to rename collection', e)
@@ -54,6 +48,6 @@ export function useConnectionCollectionsApi(
 					})
 				},
 			}) satisfies ConnectionCollectionsApi,
-		[socket, confirmModalRef, createMutation, renameMutation, deleteMutation, reorderMutation]
+		[socket, confirmModalRef, renameMutation, deleteMutation, reorderMutation]
 	)
 }

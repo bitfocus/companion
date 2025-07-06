@@ -14,12 +14,6 @@ export function useTriggerCollectionsApi(
 	return useMemo(
 		() =>
 			({
-				createCollection: (collectionName = 'New Collection') => {
-					socket.emitPromise('trigger-collections:add', [collectionName]).catch((e) => {
-						console.error('Failed to add collection', e)
-					})
-				},
-
 				renameCollection: (collectionId: string, newName: string) => {
 					socket.emitPromise('trigger-collections:set-name', [collectionId, newName]).catch((e) => {
 						console.error('Failed to rename collection', e)

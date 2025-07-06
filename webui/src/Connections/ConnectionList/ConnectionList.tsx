@@ -98,9 +98,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 			<ConnectionVariablesModal ref={variablesModalRef} />
 
 			<div className="connection-group-actions mb-2">
-				<CButton color="info" size="sm" onClick={() => connectionListApi.createCollection()}>
-					<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-				</CButton>
+				<CreateCollectionButton />
 			</div>
 			<PanelCollapseHelperProvider
 				storageId="connection-collections"
@@ -209,4 +207,20 @@ function ConnectionListItemWrapper(
 	}
 
 	return <ConnectionsTableRow connection={item} isSelected={selectedItemId === item.id} />
+}
+
+function CreateCollectionButton() {
+	const createMutation = useMutationExt(trpc.connections.collections.add.mutationOptions())
+
+	const doCreateCollection = useCallback(() => {
+		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
+			console.error('Failed to add collection', e)
+		})
+	}, [createMutation])
+
+	return (
+		<CButton color="info" size="sm" onClick={doCreateCollection}>
+			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+		</CButton>
+	)
 }

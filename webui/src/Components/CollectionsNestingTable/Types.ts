@@ -2,7 +2,6 @@
  * Generic group API interface for reusable collapsible group operations
  */
 export interface NestingCollectionsApi {
-	createCollection: (collectionName?: string) => void
 	renameCollection: (collectionId: string, newName: string) => void
 	deleteCollection: (collectionId: string) => void
 	moveCollection: (collectionId: string, parentId: string | null, dropIndex: number) => void

@@ -103,9 +103,7 @@ export const TriggersPage = observer(function Triggers() {
 						<CButton color="primary" onClick={doAddNew} size="sm">
 							<FontAwesomeIcon icon={faAdd} /> Add Trigger
 						</CButton>
-						<CButton color="info" size="sm" onClick={() => triggerGroupsApi.createCollection()}>
-							<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-						</CButton>
+						<CreateCollectionButton />
 					</CButtonGroup>
 
 					<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
@@ -275,3 +273,19 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 		</div>
 	)
 })
+
+function CreateCollectionButton() {
+	const socket = useContext(SocketContext)
+
+	const doCreateCollection = useCallback(() => {
+		socket.emitPromise('trigger-collections:add', ['New Collection']).catch((e) => {
+			console.error('Failed to add collection', e)
+		})
+	}, [socket])
+
+	return (
+		<CButton color="info" size="sm" onClick={doCreateCollection}>
+			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+		</CButton>
+	)
+}
