@@ -565,13 +565,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		client.onPromise('surfaces:add-to-group', (groupId, surfaceId) => {
 			const group = groupId ? this.#surfaceGroups.get(groupId) : null
 			if (groupId && !group) throw new Error(`Group does not exist: ${groupId}`)
+			if (group && group.isAutoGroup) throw new Error(`Cannot add to an auto group: ${groupId}`)
 
+			// Check for an active surface
 			const surfaceHandler = Array.from(this.#surfaceHandlers.values()).find(
 				(surface) => surface && surface.surfaceId === surfaceId
 			)
 			if (surfaceHandler) {
-				// TODO - we can handle this if it is still in the config
-
 				this.#detachSurfaceFromGroup(surfaceHandler)
 
 				surfaceHandler.setGroupId(groupId)

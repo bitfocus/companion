@@ -223,10 +223,6 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 	if (!dataReady || configLoadError) {
 		return (
 			<>
-				<p>surfaceId={surfaceId}</p>
-				<p>surfaceConfig={JSON.stringify(surfaceConfig)}</p>
-				<p>groupId={groupId}</p>
-				<p>groupConfig={JSON.stringify(groupConfig)}</p>
 				<LoadingRetryOrError error={configLoadError} dataReady={dataReady} doRetry={doRetryConfigLoad} size="large" />
 			</>
 		)
