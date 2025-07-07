@@ -30,6 +30,7 @@ import { router } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
 import { validateBankControlId, validateTriggerControlId } from './Util.js'
 import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
+import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 
 const ActiveLearnRoom = 'learn:active'
 
@@ -194,6 +195,7 @@ export class ControlsController {
 				this.#createControlDependencies()
 			),
 			events: createEventsTrpcRouter(this.#controls, this.#registry.instance.definitions),
+			steps: createStepsTrpcRouter(this.#controls),
 		})
 	}
 
@@ -568,70 +570,6 @@ export class ControlsController {
 				return control.actionSets.actionSetRunWhileHeld(stepId, setId, runWhileHeld)
 			} else {
 				throw new Error(`Control "${controlId}" does not support this operation`)
-			}
-		})
-
-		client.onPromise('controls:step:add', (controlId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.stepAdd()
-			} else {
-				throw new Error(`Control "${controlId}" does not support steps`)
-			}
-		})
-		client.onPromise('controls:step:duplicate', (controlId, stepId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.stepDuplicate(stepId)
-			} else {
-				throw new Error(`Control "${controlId}" does not support steps`)
-			}
-		})
-		client.onPromise('controls:step:remove', (controlId, stepId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.stepRemove(stepId)
-			} else {
-				throw new Error(`Control "${controlId}" does not support steps`)
-			}
-		})
-
-		client.onPromise('controls:step:swap', (controlId, stepId1, stepId2) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.stepSwap(stepId1, stepId2)
-			} else {
-				throw new Error(`Control "${controlId}" does not support steps`)
-			}
-		})
-
-		client.onPromise('controls:step:set-current', (controlId, stepId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.stepSelectCurrent(stepId)
-			} else {
-				throw new Error(`Control "${controlId}" does not support steps`)
-			}
-		})
-
-		client.onPromise('controls:step:rename', (controlId, stepId, newName) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.stepRename(stepId, newName)
-			} else {
-				throw new Error(`Control "${controlId}" does not support steps`)
 			}
 		})
 
