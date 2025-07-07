@@ -5,7 +5,7 @@ import '@fontsource/fira-code'
 import './App.scss'
 import './Constants.js'
 import alignmentImg from '~/scss/img/alignment.png'
-import checkImg from '~/scss/img/check.png'
+import checkImg from '~/../public/img/check.svg'
 
 if (process.env.NODE_ENV === 'development') {
 	const defineProperties = Object.defineProperties

@@ -497,7 +497,7 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.userconfig)) {
-			exp.userconfig = this.userconfig.getAll(false)
+			exp.userconfig = this.#userConfigController.getAll(false)
 		}
 		
 		return exp

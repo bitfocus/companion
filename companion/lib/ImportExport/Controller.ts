@@ -374,7 +374,7 @@ export class ImportExportController {
 
 				// import userconfig
 				if (!config || config.userconfig) {
-					this.userconfig.setKeys(data.userconfig || {})
+					this.#userConfigController.setKeys(data.userconfig || {})
 				}
 
 				// import custom variables
