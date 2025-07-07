@@ -112,11 +112,18 @@ export interface OutboundSurfaceInfo {
 	type: 'elgato'
 	enabled: boolean
 	address: string
-	port: number | undefined
+	port: number
 }
 
-export type OutboundSurfacesUpdate = OutboundSurfacesUpdateRemoveOp | OutboundSurfacesUpdateAddOp
+export type OutboundSurfacesUpdate =
+	| OutboundSurfacesUpdateInitOp
+	| OutboundSurfacesUpdateRemoveOp
+	| OutboundSurfacesUpdateAddOp
 
+export interface OutboundSurfacesUpdateInitOp {
+	type: 'init'
+	items: Record<string, OutboundSurfaceInfo>
+}
 export interface OutboundSurfacesUpdateRemoveOp {
 	type: 'remove'
 	itemId: string

@@ -51,21 +51,20 @@ export class SurfacesStore {
 		}
 	})
 
-	public resetOutboundSurfaces = action((newData: Record<string, OutboundSurfaceInfo | undefined> | null): void => {
-		this.outboundSurfaces.clear()
-
-		if (newData) {
-			for (const [id, item] of Object.entries(newData)) {
-				if (item) {
-					this.outboundSurfaces.set(id, item)
-				}
-			}
+	public updateOutboundSurfaces = action((change: OutboundSurfacesUpdate | null) => {
+		if (!change) {
+			this.outboundSurfaces.clear()
+			return
 		}
-	})
 
-	public applyOutboundSurfacesChange = action((change: OutboundSurfacesUpdate) => {
 		const changeType = change.type
 		switch (change.type) {
+			case 'init':
+				this.outboundSurfaces.clear()
+				for (const [id, item] of Object.entries(change.items)) {
+					this.outboundSurfaces.set(id, item)
+				}
+				break
 			case 'add':
 				this.outboundSurfaces.set(change.itemId, change.info)
 				break

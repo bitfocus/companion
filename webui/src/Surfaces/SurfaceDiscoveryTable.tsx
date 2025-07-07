@@ -13,21 +13,28 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { observer } from 'mobx-react-lite'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 	const discoveredSurfaces = useSurfaceDiscoverySubscription()
-	const { userConfig, socket } = useContext(RootAppStoreContext)
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	const setupSatelliteRef = useRef<SetupSatelliteModalRef>(null)
 
 	const showSetupSatellite = useCallback((surfaceInfo: ClientDiscoveredSurfaceInfoSatellite) => {
 		setupSatelliteRef.current?.show(surfaceInfo)
 	}, [])
+
+	const addRemoteStreamDeckMutation = useMutationExt(trpc.surfaces.outbound.add.mutationOptions())
 	const addRemoteStreamDeck = useCallback(
 		(surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck) => {
-			socket
-				.emitPromise('surfaces:outbound:add', ['elgato', surfaceInfo.address, surfaceInfo.port, surfaceInfo.name])
+			addRemoteStreamDeckMutation
+				.mutateAsync({
+					type: 'elgato',
+					address: surfaceInfo.address,
+					port: surfaceInfo.port,
+					name: surfaceInfo.name,
+				})
 				.then(() => {
 					console.log('added streamdeck', surfaceInfo)
 				})
@@ -35,7 +42,7 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 					console.error('Failed to add streamdeck: ', e)
 				})
 		},
-		[socket]
+		[addRemoteStreamDeckMutation]
 	)
 
 	return (

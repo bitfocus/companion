@@ -153,7 +153,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#handlerDependencies = handlerDependencies
 		this.#io = io
 
-		this.#outboundController = new SurfaceOutboundController(this, db, io)
+		this.#outboundController = new SurfaceOutboundController(this, db)
 		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.updateDevicesList())
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
@@ -396,8 +396,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.#outboundController.clientConnect(client)
-
 		client.onPromise('surfaces:subscribe', () => {
 			client.join(SurfacesRoom)
 
@@ -615,6 +613,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	createTrpcRouter() {
 		const self = this
 		return router({
+			outbound: this.#outboundController.createTrpcRouter(),
+
 			emulatorPageConfig: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(self.#updateEvents, 'emulatorPageConfig', signal)
 

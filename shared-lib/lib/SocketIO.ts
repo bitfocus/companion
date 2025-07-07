@@ -8,14 +8,7 @@ import type {
 	ConnectionStatusUpdate,
 	ControlLocation,
 } from './Model/Common.js'
-import type {
-	ClientDevicesListItem,
-	OutboundSurfaceInfo,
-	OutboundSurfacesUpdate,
-	SurfaceGroupConfig,
-	SurfacePanelConfig,
-	SurfacesUpdate,
-} from './Model/Surfaces.js'
+import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig, SurfacesUpdate } from './Model/Surfaces.js'
 import type {
 	ClientImportObject,
 	ClientImportSelection,
@@ -182,13 +175,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'surfaces:config-set': (surfaceId: string, panelConfig: SurfacePanelConfig) => SurfacePanelConfig | string
 	'surfaces:group-config-get': (groupId: string) => SurfaceGroupConfig
 
-	'surfaces:outbound:subscribe': () => Record<string, OutboundSurfaceInfo | undefined>
-	'surfaces:outbound:unsubscribe': () => void
-	'surfaces:outbound:add': (type: string, address: string, port: number | undefined, name?: string) => string
-	'surfaces:outbound:remove': (id: string) => void
-	'surfaces:outbound:set-name': (surfaceId: string, name: string) => void
-	'surfaces:outbound:set-enabled': (surfaceId: string, enabled: boolean) => void
-
 	'logs:subscribe': () => ClientLogLine[]
 	'logs:unsubscribe': () => void
 	'logs:clear': () => void
@@ -311,7 +297,6 @@ export interface BackendToClientEventsMap {
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
-	'surfaces:outbound:update': (patch: OutboundSurfacesUpdate[]) => void
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
