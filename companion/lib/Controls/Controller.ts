@@ -32,6 +32,7 @@ import { validateBankControlId, validateTriggerControlId } from './Util.js'
 import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
+import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
 
 /**
  * The class that manages the controls
@@ -195,6 +196,11 @@ export class ControlsController {
 				this.#createControlDependencies()
 			),
 			events: createEventsTrpcRouter(this.#controls, this.#registry.instance.definitions),
+			entities: createEntitiesTrpcRouter(
+				this.#controls,
+				this.#registry.instance.definitions,
+				this.#activeLearningStore
+			),
 			steps: createStepsTrpcRouter(this.#controls),
 		})
 	}
@@ -366,135 +372,6 @@ export class ControlsController {
 			} else {
 				throw new Error(`Control "${controlId}" does not support options`)
 			}
-		})
-
-		client.onPromise(
-			'controls:entity:add',
-			(controlId, entityLocation, ownerId, connectionId, entityTypeLabel, entityDefinition) => {
-				const control = this.getControl(controlId)
-				if (!control) return null
-
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				const newEntity = this.#registry.instance.definitions.createEntityItem(
-					connectionId,
-					entityTypeLabel,
-					entityDefinition
-				)
-				if (!newEntity) return null
-
-				const added = control.entities.entityAdd(entityLocation, ownerId, newEntity)
-				if (!added) return null
-
-				return newEntity.id
-			}
-		)
-
-		client.onPromise('controls:entity:learn', async (controlId, entityLocation, id) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			await this.#activeLearningStore.runLearnRequest(id, async () => {
-				await control.entities.entityLearn(entityLocation, id).catch((e) => {
-					this.#logger.error(`Learn failed: ${e}`)
-					throw e
-				})
-			})
-			return true
-		})
-
-		client.onPromise('controls:entity:enabled', (controlId, entityLocation, id, enabled) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			return control.entities.entityEnabled(entityLocation, id, enabled)
-		})
-
-		client.onPromise('controls:entity:set-headline', (controlId, entityLocation, id, headline) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			return control.entities.entityHeadline(entityLocation, id, headline)
-		})
-
-		client.onPromise('controls:entity:remove', (controlId, entityLocation, id) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			return control.entities.entityRemove(entityLocation, id)
-		})
-
-		client.onPromise('controls:entity:duplicate', (controlId, entityLocation, id) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			return control.entities.entityDuplicate(entityLocation, id)
-		})
-
-		client.onPromise('controls:entity:set-option', (controlId, entityLocation, id, key, value) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			return control.entities.entrySetOptions(entityLocation, id, key, value)
-		})
-
-		client.onPromise('controls:entity:set-connection', (controlId, entityLocation, id, connectionId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			return control.entities.entitySetConnection(entityLocation, id, connectionId)
-		})
-
-		client.onPromise('controls:entity:set-inverted', (controlId, entityLocation, id, isInverted) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			return control.entities.entitySetInverted(entityLocation, id, isInverted)
-		})
-
-		client.onPromise(
-			'controls:entity:move',
-			(controlId, moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex) => {
-				const control = this.getControl(controlId)
-				if (!control) return false
-
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entityMoveTo(moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex)
-			}
-		)
-		client.onPromise('controls:entity:set-style-selection', (controlId, entityLocation, id, selected) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities || !control.supportsStyle)
-				throw new Error(`Control "${controlId}" does not support entities or styles`)
-
-			return control.entities.entitySetStyleSelection(entityLocation, control.baseStyle, id, selected)
-		})
-		client.onPromise('controls:entity:set-style-value', (controlId, entityLocation, id, key, value) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-			return control.entities.entitySetStyleValue(entityLocation, id, key, value)
 		})
 
 		client.onPromise('controls:hot-press', (location, direction, surfaceId) => {

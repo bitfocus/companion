@@ -1297,6 +1297,7 @@ __metadata:
     semver: "npm:^7.7.2"
     typescript: "npm:~5.8.3"
     unicode-segmenter: "npm:^0.13.1"
+    zod: "npm:^3.25.74"
   languageName: unknown
   linkType: soft
 

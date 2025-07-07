@@ -7,6 +7,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { useContext, useMemo, useRef } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { trpc, useMutationExt } from '~/TRPC'
 import { SocketContext } from '~/util.js'
 
 export interface IEntityEditorService {
@@ -57,97 +58,186 @@ export function useControlEntitiesEditorService(
 ): IEntityEditorService {
 	const socket = useContext(SocketContext)
 
+	const addMutation = useMutationExt(trpc.controls.entities.add.mutationOptions())
+	const moveMutation = useMutationExt(trpc.controls.entities.move.mutationOptions())
+	const setOptionMutation = useMutationExt(trpc.controls.entities.setOption.mutationOptions())
+	const setConnectionMutation = useMutationExt(trpc.controls.entities.setConnection.mutationOptions())
+	const removeMutation = useMutationExt(trpc.controls.entities.remove.mutationOptions())
+	const duplicateMutation = useMutationExt(trpc.controls.entities.duplicate.mutationOptions())
+	const learnOptionsMutation = useMutationExt(trpc.controls.entities.learnOptions.mutationOptions())
+	const setEnabledMutation = useMutationExt(trpc.controls.entities.setEnabled.mutationOptions())
+	const setHeadlineMutation = useMutationExt(trpc.controls.entities.setHeadline.mutationOptions())
+	const setInvertedMutation = useMutationExt(trpc.controls.entities.setInverted.mutationOptions())
+	const setStyleSelectionMutation = useMutationExt(trpc.controls.entities.setStyleSelection.mutationOptions())
+	const setStyleValueMutation = useMutationExt(trpc.controls.entities.setStyleValue.mutationOptions())
+
 	return useMemo(
 		() => ({
 			listId,
 			confirmModal,
 
 			addEntity: async (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => {
-				return socket.emitPromise('controls:entity:add', [
+				return addMutation.mutateAsync({
 					controlId,
-					listId,
+					entityLocation: listId,
 					ownerId,
 					connectionId,
-					entityModelType,
-					definitionId,
-				])
+					entityType: entityModelType,
+					entityDefinition: definitionId,
+				})
 			},
 
 			moveCard: (
-				dragListId: SomeSocketEntityLocation,
-				dragEntityId: string,
-				dropOwnerId: EntityOwner | null,
-				dropIndex: number
+				moveEntityLocation: SomeSocketEntityLocation,
+				moveEntityId: string,
+				newOwnerId: EntityOwner | null,
+				newIndex: number
 			) => {
-				socket
-					.emitPromise('controls:entity:move', [controlId, dragListId, dragEntityId, dropOwnerId, listId, dropIndex])
+				moveMutation
+					.mutateAsync({
+						controlId,
+						moveEntityLocation,
+						moveEntityId,
+						newOwnerId,
+						newEntityLocation: listId,
+						newIndex,
+					})
 					.catch((e) => {
 						console.error('Failed to reorder control entities', e)
 					})
 			},
 
-			setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: any) => {
-				if (!entity?.options || entity.options[key] !== val) {
-					socket.emitPromise('controls:entity:set-option', [controlId, listId, entityId, key, val]).catch((e) => {
-						console.error('Failed to set control entity option', e)
-					})
+			setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, value: any) => {
+				if (!entity?.options || entity.options[key] !== value) {
+					setOptionMutation
+						.mutateAsync({
+							controlId,
+							entityLocation: listId,
+							entityId,
+							key,
+							value,
+						})
+						.catch((e) => {
+							console.error('Failed to set control entity option', e)
+						})
 				}
 			},
 
 			setConnection: (entityId: string, connectionId: string) => {
-				socket.emitPromise('controls:entity:set-connection', [controlId, listId, entityId, connectionId]).catch((e) => {
-					console.error('Failed to set control entity connection', e)
-				})
+				setConnectionMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						connectionId,
+					})
+					.catch((e) => {
+						console.error('Failed to set control entity connection', e)
+					})
 			},
 
 			performDelete: (entityId: string) => {
 				confirmModal.current?.show(`Delete ${entityTypeLabel}`, `Delete ${entityTypeLabel}?`, 'Delete', () => {
-					socket.emitPromise('controls:entity:remove', [controlId, listId, entityId]).catch((e) => {
-						console.error('Failed to remove control entity', e)
-					})
+					removeMutation
+						.mutateAsync({
+							controlId,
+							entityLocation: listId,
+							entityId,
+						})
+						.catch((e) => {
+							console.error('Failed to remove control entity', e)
+						})
 				})
 			},
 
 			performDuplicate: (entityId: string) => {
-				socket.emitPromise('controls:entity:duplicate', [controlId, listId, entityId]).catch((e) => {
-					console.error('Failed to duplicate control entity', e)
-				})
+				duplicateMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+					})
+					.catch((e) => {
+						console.error('Failed to duplicate control entity', e)
+					})
 			},
 
 			performLearn: (entityId: string) => {
-				socket.emitPromise('controls:entity:learn', [controlId, listId, entityId]).catch((e) => {
-					console.error('Failed to learn control entity values', e)
-				})
+				learnOptionsMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+					})
+					.catch((e) => {
+						console.error('Failed to learn control entity values', e)
+					})
 			},
 
 			setEnabled: (entityId: string, enabled: boolean) => {
-				socket.emitPromise('controls:entity:enabled', [controlId, listId, entityId, enabled]).catch((e) => {
-					console.error('Failed to enable/disable entity', e)
-				})
+				setEnabledMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						enabled,
+					})
+					.catch((e) => {
+						console.error('Failed to enable/disable entity', e)
+					})
 			},
 
 			setHeadline: (entityId: string, headline: string) => {
-				socket.emitPromise('controls:entity:set-headline', [controlId, listId, entityId, headline]).catch((e) => {
-					console.error('Failed to set entity headline', e)
-				})
+				setHeadlineMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						headline,
+					})
+					.catch((e) => {
+						console.error('Failed to set entity headline', e)
+					})
 			},
 
-			setInverted: (entityId: string, inverted: boolean) => {
-				socket.emitPromise('controls:entity:set-inverted', [controlId, listId, entityId, inverted]).catch((e) => {
-					console.error('Failed to set entity inverted', e)
-				})
+			setInverted: (entityId: string, isInverted: boolean) => {
+				setInvertedMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						isInverted,
+					})
+					.catch((e) => {
+						console.error('Failed to set entity inverted', e)
+					})
 			},
 
-			setSelectedStyleProps: (entityId: string, keys: string[]) => {
-				socket.emitPromise('controls:entity:set-style-selection', [controlId, listId, entityId, keys]).catch((e) => {
-					console.error('Failed to set entity style selected props', e)
-				})
+			setSelectedStyleProps: (entityId: string, selected: string[]) => {
+				setStyleSelectionMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						selected,
+					})
+					.catch((e) => {
+						console.error('Failed to set entity style selected props', e)
+					})
 			},
 
 			setStylePropsValue: (entityId: string, key: string, value: any) => {
-				socket.emitPromise('controls:entity:set-style-value', [controlId, listId, entityId, key, value]).catch((e) => {
-					console.error('Failed to set entity style value', e)
-				})
+				setStyleValueMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						key,
+						value,
+					})
+					.catch((e) => {
+						console.error('Failed to set entity style value', e)
+					})
 			},
 		}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps

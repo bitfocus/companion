@@ -24,7 +24,7 @@ import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
-import type { EntityModelType, EntityOwner, SomeSocketEntityLocation } from './Model/EntityModel.js'
+import type { EntityModelType } from './Model/EntityModel.js'
 import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
 import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
@@ -77,70 +77,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'controls:swap': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:reset': (location: ControlLocation, newType?: string) => void
 	'controls:import-preset': (connectionId: string, presetId: string, location: ControlLocation) => string | null
-
-	'controls:entity:set-headline': (
-		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
-		id: string,
-		headline: string
-	) => boolean
-	'controls:entity:enabled': (
-		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
-		id: string,
-		enabled: boolean
-	) => boolean
-	'controls:entity:set-style-selection': (
-		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
-		id: string,
-		selected: string[]
-	) => boolean
-	'controls:entity:set-style-value': (
-		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
-		id: string,
-		key: string,
-		value: any
-	) => boolean
-	'controls:entity:learn': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
-	'controls:entity:duplicate': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
-	'controls:entity:remove': (controlId: string, entityLocation: SomeSocketEntityLocation, id: string) => boolean
-	'controls:entity:set-connection': (
-		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
-		id: string,
-		connectionId: string | number
-	) => boolean
-	'controls:entity:set-inverted': (
-		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
-		id: string,
-		isInverted: boolean
-	) => boolean
-	'controls:entity:set-option': (
-		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
-		id: string,
-		key: string,
-		val: any
-	) => boolean
-	'controls:entity:move': (
-		controlId: string,
-		dragEntityLocation: SomeSocketEntityLocation,
-		dragEntityId: string,
-		hoverOwnerId: EntityOwner | null,
-		hoverEntityLocation: SomeSocketEntityLocation,
-		hoverIndex: number
-	) => boolean
-	'controls:entity:add': (
-		controlId: string,
-		entityLocation: SomeSocketEntityLocation,
-		ownerId: EntityOwner | null,
-		connectionId: string,
-		entityTypeLabel: EntityModelType,
-		entityDefinition: string
-	) => string | null
 
 	'controls:action-set:set-run-while-held': (
 		controlId: string,
