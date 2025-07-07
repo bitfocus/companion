@@ -9088,8 +9088,8 @@ asn1@evs-broadcast/node-asn1:
 
 "fast-json-patch@patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch":
   version: 3.1.1
-  resolution: "fast-json-patch@patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch::version=3.1.1&hash=c5abc7"
-  checksum: 10c0/3511853ab1f229eee566b6d31e6fb30c3581771e5b319d02d1243680ce7804780ef69ddfdd496f6e8f909503904d2fdde1b73417d0ad5d05c82b1044159086d5
+  resolution: "fast-json-patch@patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch::version=3.1.1&hash=090f77"
+  checksum: 10c0/9b660feeb3366249d704814da8f0208c0038e5f7cdcac1477c7ee9fffe78894ce45bbe953e00e8e3f9aca184337773347c1765fabe07217d33bd1618a4d2893d
   languageName: node
   linkType: hard
 

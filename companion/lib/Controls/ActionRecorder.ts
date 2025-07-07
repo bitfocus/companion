@@ -82,7 +82,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	}
 
 	readonly #updateEvents = new EventEmitter<{
-		[patch: `patchSession:${string}`]: [patch: jsonPatch.Operation[]]
+		[patch: `patchSession:${string}`]: [update: RecordSessionUpdate]
 	}>()
 
 	createTrpcRouter() {
@@ -176,11 +176,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 					}
 
 					// Listen for changes
-					for await (const [patch] of changes) {
-						yield {
-							type: 'patch',
-							patch,
-						} satisfies RecordSessionUpdate
+					for await (const [change] of changes) {
+						yield change
 					}
 				}),
 
@@ -283,9 +280,30 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 				const eventName = `patchSession:${sessionId}` as const
 
 				if (this.#updateEvents.listenerCount(eventName) > 0) {
-					const patch = jsonPatch.compare(this.#lastSentSessionInfoJsons[sessionId] || {}, newSessionBlob || {})
-					if (patch.length > 0) {
-						this.#updateEvents.emit(eventName, patch)
+					if (this.#lastSentSessionInfoJsons[sessionId] && newSessionBlob) {
+						const patch = jsonPatch.compare<RecordSessionInfo>(
+							this.#lastSentSessionInfoJsons[sessionId],
+							newSessionBlob
+						)
+						if (patch.length > 0) {
+							this.#updateEvents.emit(eventName, {
+								type: 'patch',
+								patch,
+							})
+						}
+					} else if (newSessionBlob) {
+						// Send initial session info
+						this.#updateEvents.emit(eventName, {
+							type: 'init',
+							session: newSessionBlob,
+						})
+					} else if (this.#lastSentSessionInfoJsons[sessionId]) {
+						// Send removal of session info
+						this.#updateEvents.emit(eventName, {
+							type: 'remove',
+						})
+					} else {
+						// Nothing to do
 					}
 				}
 

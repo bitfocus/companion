@@ -323,8 +323,8 @@ export interface BackendToClientEventsMap {
 
 	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void
 
-	[id: `controls:config-${string}`]: (patch: JsonPatchOperation[] | false) => void
-	[id: `controls:runtime-${string}`]: (patch: JsonPatchOperation[] | false) => void
+	[id: `controls:config-${string}`]: (patch: JsonPatchOperation<any>[] | false) => void
+	[id: `controls:runtime-${string}`]: (patch: JsonPatchOperation<any>[] | false) => void
 	[id: `controls:preview-${string}`]: (img: string | null) => void
 
 	'preview:location:render': (renderLocation: ControlLocation, image: string | null, isUsed: boolean) => void
@@ -337,7 +337,10 @@ export interface BackendToClientEventsMap {
 	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
-	'presets:update': (id: string, patch: JsonPatchOperation[] | Record<string, UIPresetDefinition> | null) => void
+	'presets:update': (
+		id: string,
+		patch: JsonPatchOperation<Record<string, UIPresetDefinition>>[] | Record<string, UIPresetDefinition> | null
+	) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
 
 	'modules-store:list:data': (data: ModuleStoreListCacheStore) => void

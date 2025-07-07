@@ -3,7 +3,7 @@ import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 export interface ObjectsDiff<T> {
 	added: Record<string, T>
-	changed: Record<string, JsonPatchOperation[]>
+	changed: Record<string, JsonPatchOperation<T>[]>
 	removed: string[]
 }
 

@@ -4,7 +4,7 @@ export interface VariableDefinition {
 	label: string
 }
 
-export type ModuleVariableDefinitions = Record<string, VariableDefinition | undefined>
+export type ModuleVariableDefinitions = Record<string, VariableDefinition>
 
 export type AllVariableDefinitions = Record<string, ModuleVariableDefinitions | undefined>
 
@@ -13,9 +13,9 @@ export type VariableDefinitionUpdate = VariableDefinitionUpdateSetOp | VariableD
 export interface VariableDefinitionUpdateSetOp {
 	type: 'set'
 
-	variables: Record<string, VariableDefinition | undefined>
+	variables: ModuleVariableDefinitions
 }
 export interface VariableDefinitionUpdatePatchOp {
 	type: 'patch'
-	patch: JsonPatchOperation[]
+	patch: JsonPatchOperation<ModuleVariableDefinitions>[]
 }

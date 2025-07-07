@@ -359,7 +359,7 @@ export function LoadingRetryOrError({
 export function applyPatchOrReplaceSubObject<T extends object | undefined>(
 	oldDefinitions: Record<string, T>,
 	key: string,
-	patch: JsonPatchOperation[] | T | null,
+	patch: JsonPatchOperation<T>[] | T | null,
 	defVal: T | null
 ): Record<string, T> {
 	if (oldDefinitions) {
@@ -382,7 +382,7 @@ export function applyPatchOrReplaceSubObject<T extends object | undefined>(
 		return oldDefinitions
 	}
 }
-export function applyPatchOrReplaceObject<T extends object>(oldObj: T, patch: JsonPatchOperation[] | T): T {
+export function applyPatchOrReplaceObject<T extends object>(oldObj: T, patch: JsonPatchOperation<T>[] | T): T {
 	const oldEntry = oldObj ?? {}
 
 	if (Array.isArray(patch)) {

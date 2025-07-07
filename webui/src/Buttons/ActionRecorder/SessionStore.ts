@@ -44,6 +44,9 @@ export class ActionRecorderSessionStore {
 				this.#selectedSessionInfo.set(applyPatch(toJS(existingSession), update.patch).newDocument)
 				break
 			}
+			case 'remove':
+				this.#selectedSessionInfo.set(null)
+				break
 			default:
 				assertNever(update)
 				break

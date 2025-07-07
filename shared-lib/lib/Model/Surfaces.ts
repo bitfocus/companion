@@ -103,7 +103,7 @@ export interface SurfacesUpdateUpdateOp {
 	type: 'update'
 	itemId: string
 
-	patch: JsonPatchOperation[]
+	patch: JsonPatchOperation<ClientDevicesListItem>[]
 }
 
 export interface OutboundSurfaceInfo {

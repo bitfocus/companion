@@ -23,5 +23,9 @@ export type RecordSessionUpdate =
 	  }
 	| {
 			type: 'patch'
-			patch: jsonPatch.Operation[]
+			patch: jsonPatch.Operation<RecordSessionInfo>[]
+	  }
+	| {
+			type: 'remove'
+			// patch: jsonPatch.Operation<RecordSessionInfo>[]
 	  }

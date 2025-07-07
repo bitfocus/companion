@@ -50,7 +50,7 @@ export interface TriggersUpdateUpdateOp {
 	type: 'update'
 	controlId: string
 
-	patch: JsonPatchOperation[]
+	patch: JsonPatchOperation<ClientTriggerData>[]
 }
 
 export interface TriggerCollectionData {

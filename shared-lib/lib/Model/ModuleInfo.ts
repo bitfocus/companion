@@ -46,7 +46,7 @@ export interface ModuleInfoUpdateUpdateOp {
 	type: 'update'
 	id: string
 
-	patch: JsonPatchOperation[]
+	patch: JsonPatchOperation<ClientModuleInfo>[]
 }
 
 /**
