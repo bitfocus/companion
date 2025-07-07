@@ -112,7 +112,7 @@ export class Registry {
 	/**
 	 * The core page controller
 	 */
-	#preview!: GraphicsPreview
+	preview!: GraphicsPreview
 	/**
 	 * The core service controller
 	 */
@@ -207,7 +207,7 @@ export class Registry {
 			this.controls = new ControlsController(this, controlEvents)
 			this.variables = new VariablesController(this.db, this.io)
 			this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
-			this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
+			this.preview = new GraphicsPreview(this.graphics, this.page, this.variables.values)
 			this.surfaces = new SurfaceController(
 				this.db,
 				{
@@ -314,7 +314,6 @@ export class Registry {
 				this.#data.clientConnect(client)
 				this.page.clientConnect(client)
 				this.controls.clientConnect(client)
-				this.#preview.clientConnect(client)
 				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)
 				this.#cloud.clientConnect(client)
@@ -325,7 +324,7 @@ export class Registry {
 				this.internalModule.variablesChanged(all_changed_variables_set)
 				this.controls.onVariablesChanged(all_changed_variables_set)
 				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-				this.#preview.onVariablesChanged(all_changed_variables_set)
+				this.preview.onVariablesChanged(all_changed_variables_set)
 				this.surfaces.onVariablesChanged(all_changed_variables_set)
 			})
 

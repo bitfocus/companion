@@ -16,7 +16,7 @@ import { SocketContext } from '~/util.js'
 import classNames from 'classnames'
 import useScrollPosition from '~/Hooks/useScrollPosition.js'
 import useElementInnerSize from '~/Hooks/useElementInnerSize.js'
-import { useButtonRenderCache } from '~/Hooks/useSharedRenderCache.js'
+import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import { CButton, CFormInput } from '@coreui/react'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -288,7 +288,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 type ButtonGridIconProps = ButtonGridIconBaseProps
 
 export const ButtonGridIcon = memo(function ButtonGridIcon({ ...props }: ButtonGridIconProps) {
-	const { image, isUsed } = useButtonRenderCache({
+	const { image, isUsed } = useButtonImageForLocation({
 		pageNumber: Number(props.pageNumber),
 		column: props.column,
 		row: props.row,

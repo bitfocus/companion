@@ -18,6 +18,7 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -31,7 +32,6 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 
 	const controlId = pages.getControlIdAtLocation(location)
 
-	const [previewImage, setPreviewImage] = useState<string | null>(null)
 	const [config, setConfig] = useState<SomeButtonModel | null | false>(null)
 	const [runtimeProps, setRuntimeProps] = useState<Record<string, any> | null | false>(null)
 
@@ -39,19 +39,19 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 
 	const [reloadConfigToken, setReloadConfigToken] = useState(nanoid())
 
+	const previewImage = useButtonImageForControlId(controlId || '', !controlId)
+
 	useEffect(() => {
 		if (!controlId) {
 			setConfig(false)
 			setRuntimeProps({})
 			setConfigError(null)
-			setPreviewImage(null)
 
 			return
 		}
 
 		setConfig(null)
 		setConfigError(null)
-		setPreviewImage(null)
 		setRuntimeProps(null)
 
 		socket
@@ -89,14 +89,9 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 			})
 		})
 
-		const unsubPreview = socket.on(`controls:preview-${controlId}`, (img) => {
-			setPreviewImage(img)
-		})
-
 		return () => {
 			unsubConfig()
 			unsubRuntimeProps()
-			unsubPreview()
 
 			socket.emitPromise('controls:unsubscribe', [controlId]).catch((e) => {
 				console.error('Failed to unsubscribe bank config', e)

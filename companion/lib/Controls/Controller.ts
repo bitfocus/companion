@@ -204,16 +204,6 @@ export class ControlsController {
 		client.onPromise('controls:subscribe', (controlId) => {
 			client.join(ControlConfigRoom(controlId))
 
-			setImmediate(() => {
-				// Send the preview image shortly after
-				const location = this.#registry.page.getLocationOfControlId(controlId)
-				if (location) {
-					const img = this.#registry.graphics.getCachedRenderOrGeneratePlaceholder(location)
-					// TODO - rework this to use the shared render cache concept
-					client.emit(`controls:preview-${controlId}`, img?.asDataUrl)
-				}
-			})
-
 			const control = this.getControl(controlId)
 			return {
 				config: control?.toJSON(false),

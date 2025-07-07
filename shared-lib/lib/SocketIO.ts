@@ -7,7 +7,6 @@ import type {
 	ConnectionStatusEntry,
 	ConnectionStatusUpdate,
 	ControlLocation,
-	WrappedImage,
 } from './Model/Common.js'
 import type {
 	ClientDevicesListItem,
@@ -224,14 +223,12 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'loadsave:control-preview': (location: ControlLocation) => string | null
 	'loadsave:import-full': (config: ClientImportSelection | null) => void
 
-	'preview:location:subscribe': (location: ControlLocation, subId: string) => WrappedImage
-	'preview:location:unsubscribe': (location: ControlLocation, subId: string) => void
-	'preview:button-reference:subscribe': (
-		subId: string,
-		location: ControlLocation | undefined,
-		options: Record<string, any>
-	) => string | null
-	'preview:button-reference:unsubscribe': (subId: string) => void
+	// 'preview:button-reference:subscribe': (
+	// 	subId: string,
+	// 	location: ControlLocation | undefined,
+	// 	options: Record<string, any>
+	// ) => string | null
+	// 'preview:button-reference:unsubscribe': (subId: string) => void
 
 	'pages:subscribe': () => ClientPagesInfo
 	'pages:unsubscribe': () => void
@@ -325,10 +322,6 @@ export interface BackendToClientEventsMap {
 
 	[id: `controls:config-${string}`]: (patch: JsonPatchOperation<any>[] | false) => void
 	[id: `controls:runtime-${string}`]: (patch: JsonPatchOperation<any>[] | false) => void
-	[id: `controls:preview-${string}`]: (img: string | null) => void
-
-	'preview:location:render': (renderLocation: ControlLocation, image: string | null, isUsed: boolean) => void
-	[id: `preview:button-reference:update:${string}`]: (newImage: string | null) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void

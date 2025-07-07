@@ -3,7 +3,7 @@ import { SocketContext } from '~/util.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useInView } from 'react-intersection-observer'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { useButtonRenderCache } from '~/Hooks/useSharedRenderCache.js'
+import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
@@ -139,7 +139,7 @@ export const ButtonWrapper = memo(function ButtonWrapper({
 }: ButtonWrapperProps) {
 	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 
-	const { image } = useButtonRenderCache(location)
+	const { image } = useButtonImageForLocation(location)
 
 	const buttonStyle = useMemo(
 		() => ({
