@@ -174,14 +174,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'controls:step:set-current': (controlId: string, stepId: string) => boolean
 	'controls:step:rename': (controlId: string, stepId: string, newName: string) => boolean
 
-	'controls:event:set-headline': (controlId: string, eventId: string, headline: string) => boolean
-	'controls:event:enabled': (controlId: string, eventId: string, enabled: boolean) => boolean
-	'controls:event:duplicate': (controlId: string, eventId: string) => boolean
-	'controls:event:remove': (controlId: string, eventId: string) => boolean
-	'controls:event:set-option': (controlId: string, eventId: string, key: string, val: any) => boolean
-	'controls:event:reorder': (controlId: string, dragIndex: number, hoverIndex: number) => boolean
-	'controls:event:add': (controlId: string, eventType: string) => boolean
-
 	'surfaces:subscribe': () => Record<string, ClientDevicesListItem | undefined>
 	'surfaces:unsubscribe': () => void
 	'surfaces:forget': (surfaceId: string) => string | boolean

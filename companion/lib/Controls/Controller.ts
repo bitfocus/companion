@@ -29,6 +29,7 @@ import { TriggerCollections } from './TriggerCollections.js'
 import { router } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
 import { validateBankControlId, validateTriggerControlId } from './Util.js'
+import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
 
 const ActiveLearnRoom = 'learn:active'
 
@@ -192,6 +193,7 @@ export class ControlsController {
 				this.triggers,
 				this.#createControlDependencies()
 			),
+			events: createEventsTrpcRouter(this.#controls, this.#registry.instance.definitions),
 		})
 	}
 
@@ -630,88 +632,6 @@ export class ControlsController {
 				return control.actionSets.stepRename(stepId, newName)
 			} else {
 				throw new Error(`Control "${controlId}" does not support steps`)
-			}
-		})
-
-		client.onPromise('controls:event:add', (controlId, eventType) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsEvents) {
-				const eventItem = this.#registry.instance.definitions.createEventItem(eventType)
-				if (eventItem) {
-					return control.eventAdd(eventItem)
-				} else {
-					return false
-				}
-			} else {
-				throw new Error(`Control "${controlId}" does not support events`)
-			}
-		})
-
-		client.onPromise('controls:event:enabled', (controlId, id, enabled) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsEvents) {
-				return control.eventEnabled(id, enabled)
-			} else {
-				throw new Error(`Control "${controlId}" does not support events`)
-			}
-		})
-
-		client.onPromise('controls:event:set-headline', (controlId, id, headline) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsEvents) {
-				return control.eventHeadline(id, headline)
-			} else {
-				throw new Error(`Control "${controlId}" does not support events`)
-			}
-		})
-
-		client.onPromise('controls:event:remove', (controlId, id) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsEvents) {
-				return control.eventRemove(id)
-			} else {
-				throw new Error(`Control "${controlId}" does not support events`)
-			}
-		})
-
-		client.onPromise('controls:event:duplicate', (controlId, id) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsEvents) {
-				return control.eventDuplicate(id)
-			} else {
-				throw new Error(`Control "${controlId}" does not support events`)
-			}
-		})
-
-		client.onPromise('controls:event:set-option', (controlId, id, key, value) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsEvents) {
-				return control.eventSetOptions(id, key, value)
-			} else {
-				throw new Error(`Control "${controlId}" does not support events`)
-			}
-		})
-
-		client.onPromise('controls:event:reorder', (controlId, oldIndex, newIndex) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsEvents) {
-				return control.eventReorder(oldIndex, newIndex)
-			} else {
-				throw new Error(`Control "${controlId}" does not support events`)
 			}
 		})
 

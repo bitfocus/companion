@@ -1,8 +1,8 @@
-import { useContext, useMemo, useRef } from 'react'
-import { SocketContext } from '~/util.js'
+import { useMemo, useRef } from 'react'
 import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import type { DropdownChoiceId } from '@companion-module/base'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface IEventEditorService {
 	addEvent: (eventType: DropdownChoiceId) => void
@@ -27,24 +27,30 @@ export function useControlEventsEditorService(
 	controlId: string,
 	confirmModal: React.RefObject<GenericConfirmModalRef>
 ): IEventEditorService {
-	const socket = useContext(SocketContext)
+	const addMutation = useMutationExt(trpc.controls.events.add.mutationOptions())
+	const reorderMutation = useMutationExt(trpc.controls.events.reorder.mutationOptions())
+	const setOptionMutation = useMutationExt(trpc.controls.events.setOption.mutationOptions())
+	const setEnabledMutation = useMutationExt(trpc.controls.events.setEnabled.mutationOptions())
+	const setHeadlineMutation = useMutationExt(trpc.controls.events.setHeadline.mutationOptions())
+	const duplicateMutation = useMutationExt(trpc.controls.events.duplicate.mutationOptions())
+	const removeMutation = useMutationExt(trpc.controls.events.remove.mutationOptions())
 
 	return useMemo(
 		() => ({
 			addEvent: (eventType: DropdownChoiceId) => {
-				socket.emitPromise('controls:event:add', [controlId, String(eventType)]).catch((e) => {
+				addMutation.mutateAsync({ controlId, eventType: String(eventType) }).catch((e) => {
 					console.error('Failed to add trigger event', e)
 				})
 			},
 			moveCard: (dragIndex: number, hoverIndex: number) => {
-				socket.emitPromise('controls:event:reorder', [controlId, dragIndex, hoverIndex]).catch((e) => {
+				reorderMutation.mutateAsync({ controlId, oldIndex: dragIndex, newIndex: hoverIndex }).catch((e) => {
 					console.error(`Move failed: ${e}`)
 				})
 			},
 
-			setValue: (eventId: string, event: EventInstance | undefined, key: string, val: any) => {
-				if (!event?.options || event.options[key] !== val) {
-					socket.emitPromise('controls:event:set-option', [controlId, eventId, key, val]).catch((e) => {
+			setValue: (eventId: string, event: EventInstance | undefined, key: string, value: any) => {
+				if (!event?.options || event.options[key] !== value) {
+					setOptionMutation.mutateAsync({ controlId, eventId, key, value }).catch((e) => {
 						console.error(`Set-option failed: ${e}`)
 					})
 				}
@@ -52,31 +58,41 @@ export function useControlEventsEditorService(
 
 			performDelete: (eventId: string) => {
 				confirmModal.current?.show('Delete event', 'Delete event?', 'Delete', () => {
-					socket.emitPromise('controls:event:remove', [controlId, eventId]).catch((e) => {
+					removeMutation.mutateAsync({ controlId, eventId }).catch((e) => {
 						console.error(`Failed to delete event: ${e}`)
 					})
 				})
 			},
 
 			performDuplicate: (eventId: string) => {
-				socket.emitPromise('controls:event:duplicate', [controlId, eventId]).catch((e) => {
+				duplicateMutation.mutateAsync({ controlId, eventId }).catch((e) => {
 					console.error(`Failed to duplicate feeeventdback: ${e}`)
 				})
 			},
 
 			setEnabled: (eventId: string, enabled: boolean) => {
-				socket.emitPromise('controls:event:enabled', [controlId, eventId, enabled]).catch((e) => {
+				setEnabledMutation.mutateAsync({ controlId, eventId, enabled }).catch((e) => {
 					console.error('Failed to enable/disable event', e)
 				})
 			},
 
 			setHeadline: (eventId: string, headline: string) => {
-				socket.emitPromise('controls:event:set-headline', [controlId, eventId, headline]).catch((e) => {
+				setHeadlineMutation.mutateAsync({ controlId, eventId, headline }).catch((e) => {
 					console.error('Failed to set event headline', e)
 				})
 			},
 		}),
-		[socket, confirmModal, controlId]
+		[
+			confirmModal,
+			controlId,
+			addMutation,
+			reorderMutation,
+			setOptionMutation,
+			setEnabledMutation,
+			setHeadlineMutation,
+			duplicateMutation,
+			removeMutation,
+		]
 	)
 }
 
