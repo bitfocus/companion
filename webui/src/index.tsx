@@ -5,7 +5,8 @@ import '@fontsource/fira-code'
 import './App.scss'
 import './Constants.js'
 import alignmentImg from '~/scss/img/alignment.png'
-import checkImg from '~/../public/img/check.svg'
+import checkImg from '~/scss/img/check.svg'
+import indeterminateImg from '~/scss/img/indeterminate.svg'
 
 if (process.env.NODE_ENV === 'development') {
 	const defineProperties = Object.defineProperties
@@ -68,6 +69,7 @@ if (window.location.hash && window.location.hash.includes('debug_socket')) {
 // This is not nice, but we need to load these images not by a url, but as a data url
 document.body.style.setProperty('--companion-img-alignment', `url(${alignmentImg})`)
 document.body.style.setProperty('--companion-img-check', `url(${checkImg})`)
+document.body.style.setProperty('--companion-img-indeterminate', `url(${indeterminateImg})`)
 
 const rootElm = document.getElementById('root')!
 const root = createRoot(rootElm)

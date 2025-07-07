@@ -10,7 +10,7 @@
 	}
 
 	input[type='checkbox']:checked {
-		background: 0 0 url('/img/check.svg');
+		background: 0 0 var(--companion-img-check);
 		background-repeat: no-repeat;
 		background-position: center;
 		background-size: contain;
@@ -19,7 +19,7 @@
 		background: #eee;
 	}
 	input[type='checkbox']:indeterminate {
-		background: 0 0 url('/img/indeterminate.svg');
+		background: 0 0 var(--companion-img-indeterminate);
 		background-repeat: no-repeat;
 		background-position: center;
 		background-size: contain;
