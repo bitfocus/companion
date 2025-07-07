@@ -121,7 +121,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		}
 	}, [socket, rootStore])
 
-	const activeLearnRequestsReady = useActiveLearnRequests(socket, rootStore.activeLearns)
+	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
 
 	const steps: boolean[] = [
 		loadedEventDefinitions,

@@ -44,9 +44,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'connection-debug:unsubscribe': (connectionId: string) => void
 	'connections:set-enabled': (connectionId: string, enabled: boolean) => void
 
-	'controls:subscribe:learn': () => string[]
-	'controls:unsubscribe:learn': () => void
-
 	'custom-variables:create': (name: string, value: string) => string | null
 	'custom-variables:set-default': (name: string, value: string) => string | null
 	'custom-variables:set-current': (name: string, value: string) => string | null
@@ -279,9 +276,6 @@ export type MultipartUploaderMethods<Prefix extends string, TComplete> = {
 export interface BackendToClientEventsMap {
 	'logs:lines': (rawItems: ClientLogLine[]) => void
 	'logs:clear': () => void
-
-	'learn:add': (id: string) => void
-	'learn:remove': (id: string) => void
 
 	set_userconfig_key: (key: keyof UserConfigModel, value: any) => void
 	'pages:update': (changes: PageModelChanges) => void

@@ -80,7 +80,7 @@ export class ControlsController {
 	/**
 	 * Active learning store
 	 */
-	readonly #activeLearningStore: ActiveLearningStore
+	readonly #activeLearningStore = new ActiveLearningStore()
 
 	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
@@ -91,7 +91,6 @@ export class ControlsController {
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
 		this.#registry = registry
 		this.#controlEvents = controlEvents
-		this.#activeLearningStore = new ActiveLearningStore(registry.ui.io)
 
 		this.#dbTable = registry.db.getTableView('controls')
 
@@ -186,6 +185,7 @@ export class ControlsController {
 
 	createTrpcRouter() {
 		return router({
+			activeLearn: this.#activeLearningStore.createTrpcRouter(),
 			triggers: createTriggersTrpcRouter(
 				this.#controlChangeEvents,
 				this.#triggerCollections,
@@ -203,8 +203,6 @@ export class ControlsController {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.#activeLearningStore.clientConnect(client)
-
 		this.triggers.emit('client_connect')
 
 		client.onPromise('controls:subscribe', (controlId) => {
