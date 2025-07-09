@@ -47,6 +47,7 @@ import { FILE_VERSION } from './Constants.js'
 import type { ClientSocket } from '../UI/Handler.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
@@ -438,10 +439,10 @@ export class ExportController {
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 
+		const pageInfos = this.#pagesController.getAll() // needed also for surfaces.
 		if (!config || !isFalsey(config.buttons)) {
 			exp.pages = {}
 
-			const pageInfos = this.#pagesController.getAll()
 			for (const [pageNumber, rawPageInfo] of Object.entries(pageInfos)) {
 				exp.pages[Number(pageNumber)] = this.#generatePageExportInfo(
 					rawPageInfo,
@@ -492,8 +493,25 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.surfaces)) {
-			exp.surfaces = this.#surfacesController.exportAll()
-			exp.surfaceGroups = this.#surfacesController.exportAllGroups()
+			const surfaces = this.#surfacesController.exportAll()
+			const surfaceGroups = this.#surfacesController.exportAllGroups()
+			const findPage = (id: string) => this.#pagesController.getPageNumber(id)
+			// Convert internal page refs to "export-record id's", i.e. page numbers.
+			// Note that `page`, which is a holdover from previous times, is already recorded as a number...
+			const setExportPageId = (groupConfig: SurfaceGroupConfig) => {
+				groupConfig.last_page_id = String(findPage(groupConfig.last_page_id) ?? '1')
+				groupConfig.startup_page_id = String(findPage(groupConfig.startup_page_id) ?? '1')
+			}
+
+			for (const surface of Object.values(surfaces)) {
+				setExportPageId(surface.groupConfig)
+			}
+			for (const groupConfig of Object.values(surfaceGroups)) {
+				setExportPageId(groupConfig)
+			}
+
+			exp.surfaces = surfaces
+			exp.surfaceGroups = surfaceGroups
 		}
 
 		return exp

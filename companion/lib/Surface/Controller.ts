@@ -1227,11 +1227,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	exportAll(): any {
+	exportAll(): Record<number, SurfaceConfig> {
 		return this.#dbTableSurfaces.all()
 	}
 
-	exportAllGroups(): any {
+	exportAllGroups(): Record<number, SurfaceGroupConfig> {
 		return this.#dbTableGroups.all()
 	}
 
