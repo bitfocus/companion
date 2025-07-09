@@ -246,6 +246,7 @@ export class SocketEventsHandler {
 
 			const imageSize = control.getBitmapSize()
 			for (const entity of controlEntities) {
+				if (entity.connectionId !== this.connectionId) continue
 				if (entity.type !== EntityModelType.Feedback) continue
 
 				const entityModel = entity.asEntityModel(false) as FeedbackEntityModel
