@@ -25,7 +25,7 @@ import {
 	ConnectionUpdatePolicy,
 } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleManifest } from '@companion-module/base'
-import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportConnectionFullv10, ExportConnectionMinimalv10 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import { AddConnectionProps, ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { EventEmitter } from 'events'
@@ -486,7 +486,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		instanceId: string,
 		minimal = false,
 		clone = true
-	): ExportInstanceFullv6 | ExportInstanceMinimalv6 | undefined {
+	): ExportConnectionFullv10 | ExportConnectionMinimalv10 | undefined {
 		const rawObj = this.#configStore.getConfigForId(instanceId)
 		if (!rawObj) return undefined
 
@@ -495,11 +495,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					instance_type: rawObj.instance_type,
 					label: rawObj.label,
 					lastUpgradeIndex: rawObj.lastUpgradeIndex,
-				} satisfies ExportInstanceMinimalv6)
+				} satisfies ExportConnectionMinimalv10)
 			: ({
 					...rawObj,
 					moduleVersionId: rawObj.moduleVersionId ?? undefined,
-				} satisfies ExportInstanceFullv6)
+				} satisfies ExportConnectionFullv10)
 
 		return clone ? cloneDeep(obj) : obj
 	}

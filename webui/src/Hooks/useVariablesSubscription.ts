@@ -12,7 +12,7 @@ export function useVariablesSubscription(
 
 	useEffect(() => {
 		setLoadError?.(null)
-		store.resetCustomVariables(null)
+		store.resetVariables(null)
 		setReady(false)
 
 		socket
@@ -33,7 +33,7 @@ export function useVariablesSubscription(
 		})
 
 		return () => {
-			store.resetCustomVariables(null)
+			store.resetVariables(null)
 
 			unsubUpdates()
 

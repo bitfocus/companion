@@ -2,6 +2,7 @@ import { useContext, useMemo } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
+import { CreateCustomVariableControlId } from '@companion-app/shared/ControlId.js'
 
 export type CustomVariablesCollectionsApi = NestingCollectionsApi
 
@@ -44,9 +45,11 @@ export function useCustomVariablesCollectionsApi(
 					})
 				},
 				moveItemToCollection: (itemId: string, collectionId: string | null, dropIndex: number) => {
-					socket.emitPromise('custom-variables:reorder', [collectionId, itemId, dropIndex]).catch((e) => {
-						console.error('Reorder failed', e)
-					})
+					socket
+						.emitPromise('custom-variables:reorder', [collectionId, CreateCustomVariableControlId(itemId), dropIndex])
+						.catch((e) => {
+							console.error('Reorder failed', e)
+						})
 				},
 			}) satisfies CustomVariablesCollectionsApi,
 		[socket, confirmModalRef]

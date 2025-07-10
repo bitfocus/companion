@@ -49,6 +49,13 @@ export function CreateTriggerControlId(triggerId: string): string {
 	return `trigger:${triggerId}`
 }
 
+/**
+ * Create full custom variable control id
+ */
+export function CreateCustomVariableControlId(variableId: string): string {
+	return `custom-variable:${variableId}`
+}
+
 export interface ParsedControlIdBank {
 	type: 'bank'
 	control: string
@@ -57,26 +64,38 @@ export interface ParsedControlIdTrigger {
 	type: 'trigger'
 	trigger: string
 }
-export type ParsedControlIdType = ParsedControlIdBank | ParsedControlIdTrigger
+export interface ParsedControlIdCustomVariable {
+	type: 'custom-variable'
+	variableId: string
+}
+export type ParsedControlIdType = ParsedControlIdBank | ParsedControlIdTrigger | ParsedControlIdCustomVariable
 
 /**
  * Parse a controlId
  */
 export function ParseControlId(controlId: string): ParsedControlIdType | undefined {
 	if (typeof controlId === 'string') {
-		const match = controlId.match(/^bank:(.*)$/)
-		if (match) {
+		const matchBank = controlId.match(/^bank:(.*)$/)
+		if (matchBank) {
 			return {
 				type: 'bank',
-				control: match[1],
+				control: matchBank[1],
 			}
 		}
 
-		const match2 = controlId.match(/^trigger:(.*)$/)
-		if (match2) {
+		const matchTrigger = controlId.match(/^trigger:(.*)$/)
+		if (matchTrigger) {
 			return {
 				type: 'trigger',
-				trigger: match2[1],
+				trigger: matchTrigger[1],
+			}
+		}
+
+		const matchCv = controlId.match(/^custom-variable:(.*)$/)
+		if (matchCv) {
+			return {
+				type: 'custom-variable',
+				variableId: matchCv[1],
 			}
 		}
 	}

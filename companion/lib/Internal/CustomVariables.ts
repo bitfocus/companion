@@ -259,14 +259,12 @@ export class InternalCustomVariables
 
 	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
 		if (action.definitionId === 'custom_variable_set_value') {
-			this.#variableController.custom.setValue(action.rawOptions.name, action.rawOptions.value)
+			this.#internalUtils.setCustomVariableValue(action.rawOptions.name, action.rawOptions.value)
+
 			return true
 		} else if (action.definitionId === 'custom_variable_create_value') {
-			if (this.#variableController.custom.hasCustomVariable(action.rawOptions.name)) {
-				this.#variableController.custom.setValue(action.rawOptions.name, action.rawOptions.value)
-			} else {
-				this.#variableController.custom.createVariable(action.rawOptions.name, action.rawOptions.value)
-			}
+			this.#internalUtils.setCustomVariableValue(action.rawOptions.name, action.rawOptions.value, true)
+
 			return true
 		} else if (action.definitionId === 'custom_variable_set_expression') {
 			const result = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
@@ -274,7 +272,7 @@ export class InternalCustomVariables
 				extras
 			)
 			if (result.ok) {
-				this.#variableController.custom.setValue(action.rawOptions.name, result.value)
+				this.#internalUtils.setCustomVariableValue(action.rawOptions.name, result.value)
 			} else {
 				this.#logger.warn(`${result.error}, in expression: "${action.rawOptions.expression}"`)
 			}
@@ -283,13 +281,27 @@ export class InternalCustomVariables
 		} else if (action.definitionId === 'custom_variable_store_variable') {
 			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
 			const value = this.#variableController.values.getVariableValue(connectionLabel, variableName)
-			this.#variableController.custom.setValue(action.rawOptions.name, value)
+			this.#internalUtils.setCustomVariableValue(action.rawOptions.name, value)
 			return true
 		} else if (action.definitionId === 'custom_variable_reset_to_default') {
-			this.#variableController.custom.resetValueToDefault(action.rawOptions.name)
+			const variableControl = this.#internalUtils.getCustomVariableByName(action.rawOptions.name)
+			if (variableControl) {
+				variableControl.resetValueToDefault()
+			} else {
+				this.#logger.warn(
+					`Unable to reset the value of variable $(custom:${action.rawOptions.name}) to default: variable not found`
+				)
+			}
 			return true
 		} else if (action.definitionId === 'custom_variable_sync_to_default') {
-			this.#variableController.custom.syncValueToDefault(action.rawOptions.name)
+			const variableControl = this.#internalUtils.getCustomVariableByName(action.rawOptions.name)
+			if (variableControl) {
+				variableControl.syncValueToDefault()
+			} else {
+				this.#logger.warn(
+					`Unable to sync current value of variable $(custom:${action.rawOptions.name}) to default: variable not found`
+				)
+			}
 			return true
 		} else {
 			return false

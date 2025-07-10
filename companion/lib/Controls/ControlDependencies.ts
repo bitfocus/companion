@@ -11,8 +11,9 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ClientCustomVariableData, CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
 
-export type SomeControlModel = SomeButtonModel | TriggerModel
+export type SomeControlModel = SomeButtonModel | TriggerModel | CustomVariableModel2
 
 export interface ControlDependencies {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
@@ -30,9 +31,12 @@ export interface ControlDependencies {
 	readonly actionRunner: ActionRunner
 
 	readonly events: EventEmitter<ControlCommonEvents>
+
+	readonly isCustomVariableActive: (controlId: string) => boolean
 }
 
 export interface ControlCommonEvents {
 	updateButtonState: [location: ControlLocation, pushed: boolean, surfaceId: string | undefined]
 	invalidateControlRender: [controlId: string]
+	customVariableDefinitionChanged: [id: string, info: ClientCustomVariableData | null]
 }

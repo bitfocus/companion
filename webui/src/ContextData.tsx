@@ -18,7 +18,6 @@ import { useSurfacesSubscription } from './Hooks/useSurfacesSubscription.js'
 import { SurfacesStore } from '~/Stores/SurfacesStore.js'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { VariablesStore } from '~/Stores/VariablesStore.js'
-import { useCustomVariablesSubscription } from './Hooks/useCustomVariablesSubscription.js'
 import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 import { useOutboundSurfacesSubscription } from './Hooks/useOutboundSurfacesSubscription.js'
 import { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
@@ -34,6 +33,8 @@ import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVaria
 import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
 import { useImageLibrarySubscription } from './Hooks/useImageLibrarySubscription.js'
 import { useImageLibraryCollectionsSubscription } from './Hooks/useImageLibraryCollectionsSubscription.js'
+import { CustomVariablesListStore } from './Stores/CustomVariablesListStore.js'
+import { useCustomVariablesListSubscription } from './Hooks/useCustomVariablesListSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -48,6 +49,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 	const rootStore = useMemo(() => {
 		const showWizardEvent = new EventTarget()
+
+		const customVariables = new CustomVariablesListStore()
 
 		return {
 			socket,
@@ -65,8 +68,9 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
-			variablesStore: new VariablesStore(),
+			variablesStore: new VariablesStore(customVariables),
 			triggersList: new TriggersListStore(),
+			customVariablesList: customVariables,
 
 			userConfig: new UserConfigStore(),
 
@@ -96,8 +100,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(socket, rootStore.surfaces)
 	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
-	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
-	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(socket, rootStore.variablesStore)
+	const customVariablesListReady = useCustomVariablesListSubscription(socket, rootStore.customVariablesList)
+	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(socket, rootStore.customVariablesList)
 	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(
 		socket,
 		rootStore.moduleStoreRefreshProgress
@@ -130,7 +134,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		variablesReady,
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
-		customVariablesReady,
+		customVariablesListReady,
 		customVariableCollectionsReady,
 		userConfigReady,
 		surfacesReady,

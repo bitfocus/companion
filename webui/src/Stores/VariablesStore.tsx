@@ -1,8 +1,3 @@
-import type {
-	CustomVariableCollection,
-	CustomVariableDefinition,
-	CustomVariableUpdate,
-} from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ObservableMap, action, computed, observable } from 'mobx'
 import { assertNever } from '~/util.js'
 import type {
@@ -12,23 +7,16 @@ import type {
 } from '@companion-app/shared/Model/Variables.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
+import { CustomVariablesListStore } from './CustomVariablesListStore'
 
 export class VariablesStore {
-	readonly customVariables = observable.map<string, CustomVariableDefinition>()
+	readonly #customVariables: CustomVariablesListStore
+
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
-	readonly customVariableCollections = observable.map<string, CustomVariableCollection>()
 
-	public resetCustomVariables = action((newData: Record<string, CustomVariableDefinition | undefined> | null): void => {
-		this.customVariables.clear()
-
-		if (newData) {
-			for (const [id, item] of Object.entries(newData)) {
-				if (item) {
-					this.customVariables.set(id, item)
-				}
-			}
-		}
-	})
+	constructor(customVariables: CustomVariablesListStore) {
+		this.#customVariables = customVariables
+	}
 
 	public resetVariables = action((newData: AllVariableDefinitions | null): void => {
 		this.variables.clear()
@@ -46,24 +34,6 @@ export class VariablesStore {
 				}
 
 				this.variables.set(label, newVariables)
-			}
-		}
-	})
-
-	public applyCustomVariablesChanges = action((changes: CustomVariableUpdate[]) => {
-		for (const change of changes) {
-			const changeType = change.type
-			switch (change.type) {
-				case 'update':
-					this.customVariables.set(change.itemId, change.info)
-					break
-				case 'remove':
-					this.customVariables.delete(change.itemId)
-					break
-				default:
-					console.error(`Unknown custom variable change: ${changeType}`)
-					assertNever(change)
-					break
 			}
 		}
 	})
@@ -107,20 +77,14 @@ export class VariablesStore {
 			definitions.push(...this.variableDefinitionsForLabel(label))
 		}
 
-		definitions.push(...this.customVariableDefinitions.get())
-
-		return definitions
-	})
-
-	public customVariableDefinitions = computed((): VariableDefinitionExt[] => {
-		const definitions: VariableDefinitionExt[] = []
-
 		// Custom variables
-		for (const [id, info] of this.customVariables) {
+		for (const info of this.#customVariables.customVariables.values()) {
+			if (!info.variableName) continue
+
 			definitions.push({
-				label: info.description,
+				label: info.description || 'A custom variable',
 				connectionLabel: 'custom',
-				name: id,
+				name: info.variableName,
 			})
 		}
 
@@ -144,37 +108,6 @@ export class VariablesStore {
 
 		return definitions
 	}
-
-	public get allCustomVariableCollectionIds(): string[] {
-		const collectionIds: string[] = []
-
-		const collectCollectionIds = (collections: Iterable<CustomVariableCollection>): void => {
-			for (const collection of collections || []) {
-				collectionIds.push(collection.id)
-				collectCollectionIds(collection.children)
-			}
-		}
-
-		collectCollectionIds(this.customVariableCollections.values())
-
-		return collectionIds
-	}
-
-	public rootCustomVariableCollections(): CustomVariableCollection[] {
-		return Array.from(this.customVariableCollections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
-	}
-
-	public resetCustomVariableCollections = action((newData: CustomVariableCollection[] | null) => {
-		this.customVariableCollections.clear()
-
-		if (newData) {
-			for (const collection of newData) {
-				if (!collection) continue
-
-				this.customVariableCollections.set(collection.id, collection)
-			}
-		}
-	})
 }
 
 export interface VariableDefinitionExt extends VariableDefinition {
