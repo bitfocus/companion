@@ -410,7 +410,12 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 
 			this.#writeQueue.queue(button, item)
 		}
-		if (this.#loupedeck.modelId === LoupedeckModelId.LoupedeckLive && (item.x === 1 || item.x === 6) && item.y < 3) {
+		if (
+			(this.#loupedeck.modelId === LoupedeckModelId.LoupedeckLive ||
+				this.#loupedeck.modelId === LoupedeckModelId.RazerStreamController) &&
+			(item.x === 1 || item.x === 6) &&
+			item.y < 3
+		) {
 			// Draw the vertical strips on the Loupedeck Live
 			this.#stripWriteQueue.queue(item.x + item.y, item)
 		}
