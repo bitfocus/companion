@@ -46,7 +46,13 @@ import { makeAbsolutePath, SocketContext, wrapSocket } from '~/util.js'
 import { routeTree } from './routeTree.gen.js'
 
 // Create a new router instance
-const router = createRouter({ routeTree })
+const router = createRouter({
+	routeTree,
+
+	pathParamsAllowedCharacters: [
+		':', // Allow colons for surfaceIds
+	],
+})
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {

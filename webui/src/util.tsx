@@ -4,7 +4,7 @@ import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { PRIMARY_COLOR } from './Constants.js'
-import { BarLoader } from 'react-spinners'
+import { BarLoader, PuffLoader } from 'react-spinners'
 import { Operation as JsonPatchOperation, applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
@@ -288,12 +288,14 @@ interface LoadingRetryOrErrorProps {
 	dataReady: boolean
 	doRetry?: () => void
 	autoRetryAfter?: number | null
+	size?: 'normal' | 'large'
 }
 export function LoadingRetryOrError({
 	error,
 	dataReady,
 	doRetry,
 	autoRetryAfter = null,
+	size = 'normal',
 }: LoadingRetryOrErrorProps): React.JSX.Element {
 	const [countdown, setCountdown] = useState(autoRetryAfter)
 
@@ -337,7 +339,13 @@ export function LoadingRetryOrError({
 			)}
 			{!dataReady && !error && (
 				<CCol sm={12}>
-					<LoadingBar />
+					{size === 'large' ? (
+						<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
+						</div>
+					) : (
+						<LoadingBar />
+					)}
 				</CCol>
 			)}
 		</>

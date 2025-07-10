@@ -6,9 +6,17 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { AddEmulatorModalRef, AddEmulatorModal } from './AddEmulatorModal'
 import { AddSurfaceGroupModalRef, AddSurfaceGroupModal } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
+import { MyErrorBoundary } from '~/util.js'
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
+import { observer } from 'mobx-react-lite'
 
-export function ConfiguredSurfacesPage(): React.JSX.Element {
+export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
 	const { socket } = useContext(RootAppStoreContext)
+	const navigate = useNavigate()
+	const matchRoute = useMatchRoute()
+
+	const routeMatch = matchRoute({ to: '/surfaces/configured/$itemId' })
+	const selectedItemId = routeMatch ? routeMatch.itemId : null
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
 	const addEmulatorModalRef = useRef<AddEmulatorModalRef>(null)
@@ -40,9 +48,25 @@ export function ConfiguredSurfacesPage(): React.JSX.Element {
 		addGroupModalRef.current?.show()
 	}, [])
 
+	const selectItem = useCallback(
+		(itemId: string | null) => {
+			if (itemId === null) {
+				void navigate({ to: '/surfaces/configured' })
+			} else {
+				void navigate({
+					to: '/surfaces/configured/$itemId',
+					params: {
+						itemId: itemId,
+					},
+				})
+			}
+		},
+		[navigate]
+	)
+
 	return (
-		<CRow>
-			<CCol xs={12}>
+		<CRow className="surfaces-page split-panels">
+			<CCol xs={12} xl={6} className="primary-panel">
 				<h4>Configured Surfaces</h4>
 
 				<p style={{ marginBottom: '0.5rem' }}>
@@ -70,7 +94,7 @@ export function ConfiguredSurfacesPage(): React.JSX.Element {
 				<AddSurfaceGroupModal ref={addGroupModalRef} />
 				<AddEmulatorModal ref={addEmulatorModalRef} />
 
-				<KnownSurfacesTable />
+				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
 
 				<CCallout color="info">
 					Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
@@ -80,6 +104,14 @@ export function ConfiguredSurfacesPage(): React.JSX.Element {
 					?
 				</CCallout>
 			</CCol>
+
+			<CCol xs={12} xl={6} className="secondary-panel">
+				<div className="secondary-panel-simple">
+					<MyErrorBoundary>
+						<Outlet />
+					</MyErrorBoundary>
+				</div>
+			</CCol>
 		</CRow>
 	)
-}
+})

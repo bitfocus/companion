@@ -52,6 +52,8 @@ import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/adva
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
 import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
+import { Route as SurfacesConfiguredIndexRouteImport } from './routes/app/surfaces/configured/index.tsx'
+import { Route as SurfacesConfiguredItemIdRouteImport } from './routes/app/surfaces/configured/$itemId.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
 const GettingStartedDotlazyRouteImport = createFileRoute('/getting-started')()
@@ -290,6 +292,17 @@ const ButtonsPageRoute = ButtonsPageRouteImport.update({
   path: '/$page',
   getParentRoute: () => ButtonsRoute,
 } as any)
+const SurfacesConfiguredIndexRoute = SurfacesConfiguredIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SurfacesConfiguredRoute,
+} as any)
+const SurfacesConfiguredItemIdRoute =
+  SurfacesConfiguredItemIdRouteImport.update({
+    id: '/$itemId',
+    path: '/$itemId',
+    getParentRoute: () => SurfacesConfiguredRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/emulator': typeof EmulatorRouteWithChildren
@@ -324,7 +337,7 @@ export interface FileRoutesByFullPath {
   '/settings/protocols': typeof SettingsProtocolsRoute
   '/settings/surfaces': typeof SettingsSurfacesRoute
   '/surfaces/$': typeof SurfacesSplatRoute
-  '/surfaces/configured': typeof SurfacesConfiguredRoute
+  '/surfaces/configured': typeof SurfacesConfiguredRouteWithChildren
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
@@ -335,6 +348,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsIndexRoute
   '/triggers/': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
+  '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
@@ -365,7 +380,6 @@ export interface FileRoutesByTo {
   '/settings/protocols': typeof SettingsProtocolsRoute
   '/settings/surfaces': typeof SettingsSurfacesRoute
   '/surfaces/$': typeof SurfacesSplatRoute
-  '/surfaces/configured': typeof SurfacesConfiguredRoute
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
@@ -376,6 +390,8 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsIndexRoute
   '/triggers': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
+  '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/surfaces/configured': typeof SurfacesConfiguredIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -412,7 +428,7 @@ export interface FileRoutesById {
   '/_app/settings/protocols': typeof SettingsProtocolsRoute
   '/_app/settings/surfaces': typeof SettingsSurfacesRoute
   '/_app/surfaces/$': typeof SurfacesSplatRoute
-  '/_app/surfaces/configured': typeof SurfacesConfiguredRoute
+  '/_app/surfaces/configured': typeof SurfacesConfiguredRouteWithChildren
   '/_app/surfaces/discover': typeof SurfacesDiscoverRoute
   '/_app/surfaces/outbound': typeof SurfacesOutboundRoute
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
@@ -423,6 +439,8 @@ export interface FileRoutesById {
   '/_app/settings/': typeof SettingsIndexRoute
   '/_app/triggers/': typeof TriggersIndexRoute
   '/_app/variables/': typeof VariablesIndexRoute
+  '/_app/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/_app/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -470,6 +488,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/triggers/'
     | '/variables'
+    | '/surfaces/configured/$itemId'
+    | '/surfaces/configured/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -500,7 +520,6 @@ export interface FileRouteTypes {
     | '/settings/protocols'
     | '/settings/surfaces'
     | '/surfaces/$'
-    | '/surfaces/configured'
     | '/surfaces/discover'
     | '/surfaces/outbound'
     | '/triggers/$controlId'
@@ -511,6 +530,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/triggers'
     | '/variables'
+    | '/surfaces/configured/$itemId'
+    | '/surfaces/configured'
   id:
     | '__root__'
     | '/_app'
@@ -557,6 +578,8 @@ export interface FileRouteTypes {
     | '/_app/settings/'
     | '/_app/triggers/'
     | '/_app/variables/'
+    | '/_app/surfaces/configured/$itemId'
+    | '/_app/surfaces/configured/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -885,6 +908,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ButtonsPageRouteImport
       parentRoute: typeof ButtonsRoute
     }
+    '/_app/surfaces/configured/': {
+      id: '/_app/surfaces/configured/'
+      path: '/'
+      fullPath: '/surfaces/configured/'
+      preLoaderRoute: typeof SurfacesConfiguredIndexRouteImport
+      parentRoute: typeof SurfacesConfiguredRoute
+    }
+    '/_app/surfaces/configured/$itemId': {
+      id: '/_app/surfaces/configured/$itemId'
+      path: '/$itemId'
+      fullPath: '/surfaces/configured/$itemId'
+      preLoaderRoute: typeof SurfacesConfiguredItemIdRouteImport
+      parentRoute: typeof SurfacesConfiguredRoute
+    }
   }
 }
 
@@ -940,6 +977,19 @@ const TriggersRouteWithChildren = TriggersRoute._addFileChildren(
   TriggersRouteChildren,
 )
 
+interface SurfacesConfiguredRouteChildren {
+  SurfacesConfiguredItemIdRoute: typeof SurfacesConfiguredItemIdRoute
+  SurfacesConfiguredIndexRoute: typeof SurfacesConfiguredIndexRoute
+}
+
+const SurfacesConfiguredRouteChildren: SurfacesConfiguredRouteChildren = {
+  SurfacesConfiguredItemIdRoute: SurfacesConfiguredItemIdRoute,
+  SurfacesConfiguredIndexRoute: SurfacesConfiguredIndexRoute,
+}
+
+const SurfacesConfiguredRouteWithChildren =
+  SurfacesConfiguredRoute._addFileChildren(SurfacesConfiguredRouteChildren)
+
 interface appRouteChildren {
   SplatRoute: typeof SplatRoute
   ButtonsRoute: typeof ButtonsRouteWithChildren
@@ -956,7 +1006,7 @@ interface appRouteChildren {
   SettingsProtocolsRoute: typeof SettingsProtocolsRoute
   SettingsSurfacesRoute: typeof SettingsSurfacesRoute
   SurfacesSplatRoute: typeof SurfacesSplatRoute
-  SurfacesConfiguredRoute: typeof SurfacesConfiguredRoute
+  SurfacesConfiguredRoute: typeof SurfacesConfiguredRouteWithChildren
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
   VariablesLabelRoute: typeof VariablesLabelRoute
@@ -981,7 +1031,7 @@ const appRouteChildren: appRouteChildren = {
   SettingsProtocolsRoute: SettingsProtocolsRoute,
   SettingsSurfacesRoute: SettingsSurfacesRoute,
   SurfacesSplatRoute: SurfacesSplatRoute,
-  SurfacesConfiguredRoute: SurfacesConfiguredRoute,
+  SurfacesConfiguredRoute: SurfacesConfiguredRouteWithChildren,
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
   VariablesLabelRoute: VariablesLabelRoute,
