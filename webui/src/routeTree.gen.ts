@@ -48,10 +48,13 @@ import { Route as SettingsSurfacesRouteImport } from './routes/app/settings/surf
 import { Route as SettingsProtocolsRouteImport } from './routes/app/settings/protocols.tsx'
 import { Route as SettingsGeneralRouteImport } from './routes/app/settings/general.tsx'
 import { Route as SettingsButtonsRouteImport } from './routes/app/settings/buttons.tsx'
+import { Route as SettingsBackupsRouteImport } from './routes/app/settings/backups.tsx'
 import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/advanced.tsx'
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
 import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
+import { Route as SettingsBackupsIndexRouteImport } from './routes/app/settings/backups/index.tsx'
+import { Route as SettingsBackupsRuleIdRouteImport } from './routes/app/settings/backups/$ruleId.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
 const GettingStartedDotlazyRouteImport = createFileRoute('/getting-started')()
@@ -270,6 +273,11 @@ const SettingsButtonsRoute = SettingsButtonsRouteImport.update({
   path: '/settings/buttons',
   getParentRoute: () => appRoute,
 } as any)
+const SettingsBackupsRoute = SettingsBackupsRouteImport.update({
+  id: '/settings/backups',
+  path: '/settings/backups',
+  getParentRoute: () => appRoute,
+} as any)
 const SettingsAdvancedRoute = SettingsAdvancedRouteImport.update({
   id: '/settings/advanced',
   path: '/settings/advanced',
@@ -289,6 +297,16 @@ const ButtonsPageRoute = ButtonsPageRouteImport.update({
   id: '/$page',
   path: '/$page',
   getParentRoute: () => ButtonsRoute,
+} as any)
+const SettingsBackupsIndexRoute = SettingsBackupsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsBackupsRoute,
+} as any)
+const SettingsBackupsRuleIdRoute = SettingsBackupsRuleIdRouteImport.update({
+  id: '/$ruleId',
+  path: '/$ruleId',
+  getParentRoute: () => SettingsBackupsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -319,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
+  '/settings/backups': typeof SettingsBackupsRouteWithChildren
   '/settings/buttons': typeof SettingsButtonsRoute
   '/settings/general': typeof SettingsGeneralRoute
   '/settings/protocols': typeof SettingsProtocolsRoute
@@ -335,6 +354,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsIndexRoute
   '/triggers/': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
+  '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
+  '/settings/backups/': typeof SettingsBackupsIndexRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
@@ -376,6 +397,8 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsIndexRoute
   '/triggers': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
+  '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
+  '/settings/backups': typeof SettingsBackupsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -407,6 +430,7 @@ export interface FileRoutesById {
   '/_app/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
   '/_app/settings/advanced': typeof SettingsAdvancedRoute
+  '/_app/settings/backups': typeof SettingsBackupsRouteWithChildren
   '/_app/settings/buttons': typeof SettingsButtonsRoute
   '/_app/settings/general': typeof SettingsGeneralRoute
   '/_app/settings/protocols': typeof SettingsProtocolsRoute
@@ -423,6 +447,8 @@ export interface FileRoutesById {
   '/_app/settings/': typeof SettingsIndexRoute
   '/_app/triggers/': typeof TriggersIndexRoute
   '/_app/variables/': typeof VariablesIndexRoute
+  '/_app/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
+  '/_app/settings/backups/': typeof SettingsBackupsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -454,6 +480,7 @@ export interface FileRouteTypes {
     | '/connections/$connectionId'
     | '/modules/$moduleId'
     | '/settings/advanced'
+    | '/settings/backups'
     | '/settings/buttons'
     | '/settings/general'
     | '/settings/protocols'
@@ -470,6 +497,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/triggers/'
     | '/variables'
+    | '/settings/backups/$ruleId'
+    | '/settings/backups/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -511,6 +540,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/triggers'
     | '/variables'
+    | '/settings/backups/$ruleId'
+    | '/settings/backups'
   id:
     | '__root__'
     | '/_app'
@@ -541,6 +572,7 @@ export interface FileRouteTypes {
     | '/_app/connections/$connectionId'
     | '/_app/modules/$moduleId'
     | '/_app/settings/advanced'
+    | '/_app/settings/backups'
     | '/_app/settings/buttons'
     | '/_app/settings/general'
     | '/_app/settings/protocols'
@@ -557,6 +589,8 @@ export interface FileRouteTypes {
     | '/_app/settings/'
     | '/_app/triggers/'
     | '/_app/variables/'
+    | '/_app/settings/backups/$ruleId'
+    | '/_app/settings/backups/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -857,6 +891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsButtonsRouteImport
       parentRoute: typeof appRoute
     }
+    '/_app/settings/backups': {
+      id: '/_app/settings/backups'
+      path: '/settings/backups'
+      fullPath: '/settings/backups'
+      preLoaderRoute: typeof SettingsBackupsRouteImport
+      parentRoute: typeof appRoute
+    }
     '/_app/settings/advanced': {
       id: '/_app/settings/advanced'
       path: '/settings/advanced'
@@ -884,6 +925,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/buttons/$page'
       preLoaderRoute: typeof ButtonsPageRouteImport
       parentRoute: typeof ButtonsRoute
+    }
+    '/_app/settings/backups/': {
+      id: '/_app/settings/backups/'
+      path: '/'
+      fullPath: '/settings/backups/'
+      preLoaderRoute: typeof SettingsBackupsIndexRouteImport
+      parentRoute: typeof SettingsBackupsRoute
+    }
+    '/_app/settings/backups/$ruleId': {
+      id: '/_app/settings/backups/$ruleId'
+      path: '/$ruleId'
+      fullPath: '/settings/backups/$ruleId'
+      preLoaderRoute: typeof SettingsBackupsRuleIdRouteImport
+      parentRoute: typeof SettingsBackupsRoute
     }
   }
 }
@@ -940,6 +995,20 @@ const TriggersRouteWithChildren = TriggersRoute._addFileChildren(
   TriggersRouteChildren,
 )
 
+interface SettingsBackupsRouteChildren {
+  SettingsBackupsRuleIdRoute: typeof SettingsBackupsRuleIdRoute
+  SettingsBackupsIndexRoute: typeof SettingsBackupsIndexRoute
+}
+
+const SettingsBackupsRouteChildren: SettingsBackupsRouteChildren = {
+  SettingsBackupsRuleIdRoute: SettingsBackupsRuleIdRoute,
+  SettingsBackupsIndexRoute: SettingsBackupsIndexRoute,
+}
+
+const SettingsBackupsRouteWithChildren = SettingsBackupsRoute._addFileChildren(
+  SettingsBackupsRouteChildren,
+)
+
 interface appRouteChildren {
   SplatRoute: typeof SplatRoute
   ButtonsRoute: typeof ButtonsRouteWithChildren
@@ -951,6 +1020,7 @@ interface appRouteChildren {
   TriggersRoute: typeof TriggersRouteWithChildren
   IndexRoute: typeof IndexRoute
   SettingsAdvancedRoute: typeof SettingsAdvancedRoute
+  SettingsBackupsRoute: typeof SettingsBackupsRouteWithChildren
   SettingsButtonsRoute: typeof SettingsButtonsRoute
   SettingsGeneralRoute: typeof SettingsGeneralRoute
   SettingsProtocolsRoute: typeof SettingsProtocolsRoute
@@ -976,6 +1046,7 @@ const appRouteChildren: appRouteChildren = {
   TriggersRoute: TriggersRouteWithChildren,
   IndexRoute: IndexRoute,
   SettingsAdvancedRoute: SettingsAdvancedRoute,
+  SettingsBackupsRoute: SettingsBackupsRouteWithChildren,
   SettingsButtonsRoute: SettingsButtonsRoute,
   SettingsGeneralRoute: SettingsGeneralRoute,
   SettingsProtocolsRoute: SettingsProtocolsRoute,

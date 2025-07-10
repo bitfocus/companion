@@ -288,6 +288,12 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	) => ConnectionRemappings
 	'loadsave:control-preview': (location: ControlLocation) => string | null
 	'loadsave:import-full': (config: ClientImportSelection | null) => void
+	'backup-rules:run-backup-now': (ruleId: string) => void
+	'backup-rules:delete-backup-file': (ruleId: string, filePath: string) => boolean
+	'backup-rules:update-field': (ruleId: string, field: string, value: any) => boolean
+	'backup-rules:create': (name: string) => string
+	'backup-rules:delete': (ruleId: string) => boolean
+	'backup-rules:reorder': (itemId: string, targetId: string) => boolean
 
 	'preview:location:subscribe': (location: ControlLocation, subId: string) => WrappedImage
 	'preview:location:unsubscribe': (location: ControlLocation, subId: string) => void

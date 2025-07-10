@@ -248,6 +248,7 @@ export class Registry {
 				this.#appInfo,
 				this.#internalApiRouter,
 				this.io,
+				this.db,
 				this.controls,
 				this.graphics,
 				this.instance,
