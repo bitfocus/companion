@@ -15,7 +15,7 @@ export function StaticTextFieldText({
 }): JSX.Element | null {
 	if (value && value != label) {
 		const descriptionHtml = {
-			__html: sanitizeHtml(parse(value ?? '') as string, {
+			__html: sanitizeHtml(parse(value?.trim() ?? '') as string, {
 				allowedTags: sanitizeHtml.defaults.allowedTags.concat(allowImages ? ['img'] : []),
 				disallowedTagsMode: 'escape',
 			}),
