@@ -10,7 +10,7 @@ import z from 'zod'
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 
-const zodLocation: z.ZodSchema<ControlLocation> = z.object({
+export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),
 	row: z.number(),
 	column: z.number(),

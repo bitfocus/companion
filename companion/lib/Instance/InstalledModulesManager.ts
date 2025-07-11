@@ -55,7 +55,6 @@ export class InstanceInstalledModulesManager {
 	readonly #multipartUploader = new MultipartUploader(
 		'Instance/UserModulesManager',
 		MAX_MODULE_BUNDLE_TAR_SIZE,
-		null,
 		async (_name, data, updateProgress) => {
 			const decompressedData = await gunzipP(data)
 			if (!decompressedData) {

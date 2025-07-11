@@ -23,16 +23,17 @@ import type {
 	ExportFullv6,
 	ExportInstancesv6,
 	ExportPageContentv6,
-	ExportPageModelv6,
 	ExportTriggerContentv6,
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { AppInfo } from '../Registry.js'
-import type {
-	ClientImportObject,
-	ClientPageInfo,
-	ClientResetSelection,
-	ConnectionRemappings,
+import {
+	zodClientImportSelection,
+	zodClientResetSelection,
+	type ClientImportObject,
+	type ClientPageInfo,
+	type ClientResetSelection,
+	type ConnectionRemappings,
 } from '@companion-app/shared/Model/ImportExport.js'
 import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
@@ -51,6 +52,9 @@ import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js
 import { ExportController } from './Export.js'
 import { FILE_VERSION } from './Constants.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import { zodLocation } from '../Graphics/Preview.js'
+import z from 'zod'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -99,17 +103,124 @@ export class ImportExportController {
 	readonly #userConfigController: DataUserConfig
 	readonly #variablesController: VariablesController
 
+	// @ts-expect-error  Not used directly
+	// eslint-disable-next-line no-unused-private-class-members
 	readonly #exportController: ExportController
 
-	readonly #multipartUploader = new MultipartUploader(
+	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null]>(
 		'ImportExport/Controller',
 		MAX_IMPORT_FILE_SIZE,
-		(sessionId) => {
-			this.#logger.info(`Config import session "${sessionId}" timed out`)
-			// this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, null)
-		},
-		async () => {
-			throw new Error('Not implemented!')
+		async (_name, data, _updateProgress, sessionCtx) => {
+			let dataStr: string
+			try {
+				dataStr = await new Promise((resolve, reject) => {
+					zlib.gunzip(data, (err, data) => {
+						if (err) reject(err)
+						else resolve(data?.toString() || dataStr)
+					})
+				})
+			} catch (_e) {
+				// Ignore, it is probably not compressed
+				dataStr = data.toString('utf-8')
+			}
+
+			let rawObject
+			try {
+				// YAML parser will handle JSON too
+				rawObject = yaml.parse(dataStr)
+			} catch (_e) {
+				return ['File is corrupted or unknown format', null]
+			}
+
+			if (rawObject.version > FILE_VERSION) {
+				return ['File was saved with a newer unsupported version of Companion', null]
+			}
+
+			if (rawObject.type !== 'full' && rawObject.type !== 'page' && rawObject.type !== 'trigger_list') {
+				return ['Unknown import type', null]
+			}
+
+			let object = upgradeImport(rawObject)
+
+			// fix any db instances missing the upgradeIndex property
+			if (object.instances) {
+				for (const inst of Object.values(object.instances)) {
+					if (inst) {
+						inst.lastUpgradeIndex = inst.lastUpgradeIndex ?? -1
+					}
+				}
+			}
+
+			if (object.type === 'trigger_list') {
+				object = {
+					type: 'full',
+					version: FILE_VERSION,
+					companionBuild: object.companionBuild,
+					triggers: object.triggers,
+					triggerCollections: object.triggerCollections,
+					instances: object.instances,
+					connectionCollections: object.connectionCollections,
+				} satisfies ExportFullv6
+			}
+
+			// Store the object on the client
+			sessionCtx.pendingImport = {
+				object,
+				timeout: null, // TODO
+			}
+
+			// Build a minimal object to send back to the client
+			const clientObject: ClientImportObject = {
+				type: object.type,
+				instances: {},
+				controls: 'pages' in object,
+				customVariables: 'custom_variables' in object,
+				surfaces: 'surfaces' in object,
+				triggers: 'triggers' in object,
+			}
+
+			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
+				if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
+
+				clientObject.instances[instanceId] = {
+					instance_type: instance.instance_type,
+					moduleVersionId: instance.moduleVersionId ?? null,
+					label: instance.label,
+					sortOrder: instance.sortOrder,
+				}
+			}
+
+			function simplifyPageForClient(pageInfo: ExportPageContentv6): ClientPageInfo {
+				return {
+					name: pageInfo.name,
+					gridSize: find_smallest_grid_for_page(pageInfo),
+				}
+			}
+
+			if (object.type === 'page') {
+				clientObject.page = simplifyPageForClient(object.page)
+				clientObject.oldPageNumber = object.oldPageNumber || 1
+			} else {
+				if (object.pages) {
+					clientObject.pages = Object.fromEntries(
+						Object.entries(object.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
+					)
+				}
+
+				// Simplify triggers
+				if (object.triggers) {
+					clientObject.triggers = {}
+
+					for (const [id, trigger] of Object.entries(object.triggers)) {
+						clientObject.triggers[id] = {
+							name: trigger.options.name,
+						}
+					}
+				}
+			}
+
+			// rest is done from browser
+			return [null, clientObject]
 		}
 	)
 
@@ -167,422 +278,297 @@ export class ImportExportController {
 		}
 	}
 
+	createTrpcRouter() {
+		return router({
+			prepareImport: this.#multipartUploader.createTrpcRouter(),
+
+			abort: publicProcedure.mutation(async ({ ctx }) => {
+				// Clear the pending import
+				delete ctx.pendingImport
+			}),
+
+			resetConfiguration: publicProcedure.input(zodClientResetSelection).mutation(async ({ input, ctx }) => {
+				// Make sure no import is pending
+				delete ctx.pendingImport
+
+				return this.#checkOrRunImportTask('reset', async () => {
+					return this.#reset(input)
+				})
+			}),
+
+			controlPreview: publicProcedure
+				.input(
+					z.object({
+						location: zodLocation,
+					})
+				)
+				.query(async ({ input, ctx }) => {
+					const importObject = ctx.pendingImport?.object
+					if (!importObject) return null
+
+					let importPage
+					if (importObject.type === 'page') {
+						importPage = importObject.page
+					} else if (importObject.type === 'full') {
+						importPage = importObject.pages?.[input.location.pageNumber]
+					}
+					if (!importPage) return null
+
+					const controlObj = importPage.controls?.[input.location.row]?.[input.location.column]
+					if (!controlObj) return null
+
+					const res = await this.#graphicsController.drawPreview({
+						...controlObj.style,
+						style: controlObj.type,
+					})
+					return res?.style ? (res?.asDataUrl ?? null) : null
+				}),
+
+			importSinglePage: publicProcedure
+				.input(
+					z.object({
+						targetPage: z.number().int().min(1),
+						sourcePage: z.number().int().min(1),
+						connectionIdRemapping: z.record(z.string(), z.string().optional()),
+					})
+				)
+				.mutation(async ({ input, ctx }) => {
+					return this.#checkOrRunImportTask('import', async () => {
+						const data = ctx.pendingImport?.object
+						if (!data) throw new Error('No in-progress import object')
+
+						let topage = input.targetPage
+						let frompage = input.sourcePage
+
+						if (topage === -1) {
+							// Add a new page at the end
+							const currentPageCount = this.#pagesController.getPageCount()
+							topage = currentPageCount + 1
+							this.#pagesController.insertPages(topage, ['Importing Page'])
+						} else {
+							const oldPageInfo = this.#pagesController.getPageInfo(topage, false)
+							if (!oldPageInfo) throw new Error('Invalid target page')
+						}
+
+						let pageInfo
+
+						if (data.type === 'full' && data.pages) {
+							pageInfo = data.pages[frompage]
+
+							// continue below
+						} else if (data.type === 'page') {
+							pageInfo = data.page
+
+							frompage = data.oldPageNumber || 1
+
+							// continue below
+						} else {
+							throw new Error('Cannot import page ')
+						}
+
+						if (!pageInfo) throw new Error(`No matching page to import`)
+
+						// Setup the new instances
+						const instanceIdMap = this.#importInstances(data.instances, input.connectionIdRemapping)
+
+						// Cleanup the old page
+						const discardedControlIds = this.#pagesController.resetPage(topage)
+						for (const controlId of discardedControlIds) {
+							this.#controlsController.deleteControl(controlId)
+						}
+						this.#graphicsController.clearAllForPage(topage)
+
+						this.#performPageImport(pageInfo, topage, instanceIdMap)
+
+						// Report the used remap to the ui, for future imports
+						const instanceRemap2: ConnectionRemappings = {}
+						for (const [id, obj] of Object.entries(instanceIdMap)) {
+							instanceRemap2[id] = obj.id
+						}
+
+						return instanceRemap2
+					})
+				}),
+
+			importTriggers: publicProcedure
+				.input(
+					z.object({
+						selectedTriggerIds: z.array(z.string()),
+						connectionIdRemapping: z.record(z.string(), z.string().optional()),
+						replaceExisting: z.boolean(),
+					})
+				)
+				.mutation(async ({ input, ctx }) => {
+					return this.#checkOrRunImportTask('import', async () => {
+						const data = ctx.pendingImport?.object
+						if (!data) throw new Error('No in-progress import object')
+
+						if (data.type === 'page' || !data.triggers) throw new Error('No triggers in import')
+
+						// Remove existing triggers
+						if (input.replaceExisting) {
+							const controls = this.#controlsController.getAllControls()
+							for (const [controlId, control] of controls.entries()) {
+								if (control.type === 'trigger') {
+									this.#controlsController.deleteControl(controlId)
+								}
+							}
+						}
+
+						// Setup the new instances
+						const instanceIdMap = this.#importInstances(data.instances, input.connectionIdRemapping)
+
+						const idsToImport = new Set(input.selectedTriggerIds)
+						for (const id of idsToImport) {
+							const trigger = data.triggers[id]
+
+							let controlId = CreateTriggerControlId(id)
+							// If trigger already exists, generate a new id
+							if (this.#controlsController.getControl(controlId)) controlId = CreateTriggerControlId(nanoid())
+
+							const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
+							this.#controlsController.importTrigger(controlId, fixedControlObj)
+						}
+
+						// Report the used remap to the ui, for future imports
+						const instanceRemap2: ConnectionRemappings = {}
+						for (const [id, obj] of Object.entries(instanceIdMap)) {
+							instanceRemap2[id] = obj.id
+						}
+
+						return instanceRemap2
+					})
+				}),
+
+			importFull: publicProcedure.input(zodClientImportSelection).mutation(async ({ input, ctx }) => {
+				return this.#checkOrRunImportTask('import', async () => {
+					const data = ctx.pendingImport?.object
+					if (!data) throw new Error('No in-progress import object')
+
+					if (data.type !== 'full') throw new Error('Invalid import object')
+
+					// Destroy old stuff
+					await this.#reset(undefined, !input || input.buttons)
+
+					// import custom variables
+					if (!input || input.customVariables) {
+						if (data.customVariablesCollections) {
+							this.#variablesController.custom.replaceCollections(data.customVariablesCollections)
+						}
+
+						this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
+					}
+
+					// Import connection collections if provided
+					if (data.connectionCollections) {
+						this.#instancesController.collections.replaceCollections(data.connectionCollections)
+					}
+
+					// Always Import instances
+					const instanceIdMap = this.#importInstances(data.instances, {})
+
+					if (data.pages && (!input || input.buttons)) {
+						// Import pages
+						for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
+							if (!pageInfo) continue
+
+							const pageNumber = Number(pageNumber0)
+							if (isNaN(pageNumber)) {
+								this.#logger.warn(`Invalid page number: ${pageNumber0}`)
+								continue
+							}
+
+							// Ensure the page exists
+							const insertPageCount = pageNumber - this.#pagesController.getPageCount()
+							if (insertPageCount > 0) {
+								this.#pagesController.insertPages(
+									this.#pagesController.getPageCount() + 1,
+									new Array(insertPageCount).fill('Page')
+								)
+							}
+
+							this.#performPageImport(pageInfo, pageNumber, instanceIdMap)
+						}
+					}
+
+					if (!input || input.surfaces) {
+						this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
+					}
+
+					if (!input || input.triggers) {
+						// Import trigger collections if provided
+						if (data.triggerCollections) {
+							this.#controlsController.replaceTriggerCollections(data.triggerCollections)
+						}
+
+						for (const [id, trigger] of Object.entries(data.triggers || {})) {
+							const controlId = CreateTriggerControlId(id)
+							const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
+							this.#controlsController.importTrigger(controlId, fixedControlObj)
+						}
+					}
+
+					// trigger startup triggers to run
+					setImmediate(() => {
+						this.#controlsController.triggers.emit('startup')
+					})
+				})
+			}),
+		})
+	}
+
+	#performPageImport = (
+		pageInfo: ExportPageContentv6,
+		topage: number,
+		instanceIdMap: InstanceAppliedRemappings
+	): void => {
+		{
+			// Ensure the configured grid size is large enough for the import
+			const requiredSize = pageInfo.gridSize || find_smallest_grid_for_page(pageInfo)
+			const currentSize = this.#userConfigController.getKey('gridSize')
+			const updatedSize: Partial<UserConfigGridSize> = {}
+			if (currentSize.minColumn > requiredSize.minColumn) updatedSize.minColumn = Number(requiredSize.minColumn)
+			if (currentSize.maxColumn < requiredSize.maxColumn) updatedSize.maxColumn = Number(requiredSize.maxColumn)
+			if (currentSize.minRow > requiredSize.minRow) updatedSize.minRow = Number(requiredSize.minRow)
+			if (currentSize.maxRow < requiredSize.maxRow) updatedSize.maxRow = Number(requiredSize.maxRow)
+
+			if (Object.keys(updatedSize).length > 0) {
+				this.#userConfigController.setKey('gridSize', {
+					...currentSize,
+					...updatedSize,
+				})
+			}
+		}
+
+		// Import the new page
+		this.#pagesController.setPageName(topage, pageInfo.name)
+
+		// Import the controls
+		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
+			for (const [column, control] of Object.entries(rowObj)) {
+				if (control) {
+					// Import the control
+					const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
+
+					const location: ControlLocation = {
+						pageNumber: Number(topage),
+						column: Number(column),
+						row: Number(row),
+					}
+					this.#controlsController.importControl(location, fixedControlObj)
+				}
+			}
+		}
+	}
+
 	/**
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.#exportController.clientConnect(client)
-
 		if (this.#currentImportTask) {
 			// Inform about in progress task
 			client.emit('load-save:task', this.#currentImportTask)
 		}
-
-		let clientPendingImport: ClientPendingImport | null = null
-
-		client.onPromise('loadsave:abort', () => {
-			if (clientPendingImport) {
-				// TODO - stop timer
-				clientPendingImport = null
-			}
-
-			return true
-		})
-
-		client.onPromise('loadsave:prepare-import:start', async (name, size) => {
-			this.#logger.info(`Starting upload of import file ${name} (${size} bytes)`)
-
-			if (size > MAX_IMPORT_FILE_SIZE) throw new Error('Import too large to upload')
-
-			const sessionId = this.#multipartUploader.initSession(name, size)
-			if (sessionId === null) return null
-
-			this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, 0)
-
-			return sessionId
-		})
-		client.onPromise('loadsave:prepare-import:chunk', async (sessionId, offset, data) => {
-			this.#logger.silly(`Upload import file chunk ${sessionId} (@${offset} = ${data.length} bytes)`)
-
-			const progress = this.#multipartUploader.addChunk(sessionId, offset, data)
-			if (progress === null) return false
-
-			this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, progress / 2)
-
-			return true
-		})
-		client.onPromise('loadsave:prepare-import:cancel', async (sessionId) => {
-			this.#logger.silly(`Canel import file upload ${sessionId}`)
-
-			this.#multipartUploader.cancelSession(sessionId)
-		})
-		client.onPromise('loadsave:prepare-import:complete', async (sessionId, checksum) => {
-			this.#logger.silly(`Attempt import file complete ${sessionId}`)
-
-			const dataBytes = this.#multipartUploader.completeSession(sessionId, checksum)
-			if (dataBytes === null) return ['File is corrupted or unknown format']
-
-			this.#logger.info(`Importing config ${sessionId} (${dataBytes.length} bytes)`)
-
-			this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, 0.5)
-
-			let dataStr: string
-			try {
-				dataStr = await new Promise((resolve, reject) => {
-					zlib.gunzip(dataBytes, (err, data) => {
-						if (err) reject(err)
-						else resolve(data?.toString() || dataStr)
-					})
-				})
-			} catch (_e) {
-				// Ignore, it is probably not compressed
-				dataStr = dataBytes.toString('utf-8')
-			}
-
-			let rawObject
-			try {
-				// YAML parser will handle JSON too
-				rawObject = yaml.parse(dataStr)
-			} catch (_e) {
-				return ['File is corrupted or unknown format']
-			}
-
-			if (rawObject.version > FILE_VERSION) {
-				return ['File was saved with a newer unsupported version of Companion']
-			}
-
-			if (rawObject.type !== 'full' && rawObject.type !== 'page' && rawObject.type !== 'trigger_list') {
-				return ['Unknown import type']
-			}
-
-			let object = upgradeImport(rawObject)
-
-			// fix any db instances missing the upgradeIndex property
-			if (object.instances) {
-				for (const inst of Object.values(object.instances)) {
-					if (inst) {
-						inst.lastUpgradeIndex = inst.lastUpgradeIndex ?? -1
-					}
-				}
-			}
-
-			if (object.type === 'trigger_list') {
-				object = {
-					type: 'full',
-					version: FILE_VERSION,
-					companionBuild: object.companionBuild,
-					triggers: object.triggers,
-					triggerCollections: object.triggerCollections,
-					instances: object.instances,
-					connectionCollections: object.connectionCollections,
-				} satisfies ExportFullv6
-			}
-
-			// Store the object on the client
-			clientPendingImport = {
-				object,
-				timeout: null, // TODO
-			}
-
-			// Build a minimal object to send back to the client
-			const clientObject: ClientImportObject = {
-				type: object.type,
-				instances: {},
-				controls: 'pages' in object,
-				customVariables: 'custom_variables' in object,
-				surfaces: 'surfaces' in object,
-				triggers: 'triggers' in object,
-			}
-
-			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
-				if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
-
-				clientObject.instances[instanceId] = {
-					instance_type: instance.instance_type,
-					moduleVersionId: instance.moduleVersionId ?? null,
-					label: instance.label,
-					sortOrder: instance.sortOrder,
-				}
-			}
-
-			function simplifyPageForClient(pageInfo: ExportPageContentv6): ClientPageInfo {
-				return {
-					name: pageInfo.name,
-					gridSize: find_smallest_grid_for_page(pageInfo),
-				}
-			}
-
-			if (object.type === 'page') {
-				clientObject.page = simplifyPageForClient(object.page)
-				clientObject.oldPageNumber = object.oldPageNumber || 1
-			} else {
-				if (object.pages) {
-					clientObject.pages = Object.fromEntries(
-						Object.entries(object.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
-					)
-				}
-
-				// Simplify triggers
-				if (object.triggers) {
-					clientObject.triggers = {}
-
-					for (const [id, trigger] of Object.entries(object.triggers)) {
-						clientObject.triggers[id] = {
-							name: trigger.options.name,
-						}
-					}
-				}
-			}
-
-			// rest is done from browser
-			return [null, clientObject]
-		})
-
-		client.onPromise('loadsave:control-preview', async (location) => {
-			const importObject = clientPendingImport?.object
-			if (!importObject) return null
-
-			let importPage
-			if (importObject.type === 'page') {
-				importPage = importObject.page
-			} else if (importObject.type === 'full') {
-				importPage = importObject.pages?.[location.pageNumber]
-			}
-			if (!importPage) return null
-
-			const controlObj = importPage.controls?.[location.row]?.[location.column]
-			if (!controlObj) return null
-
-			const res = await this.#graphicsController.drawPreview({
-				...controlObj.style,
-				style: controlObj.type,
-			})
-			return res?.style ? (res?.asDataUrl ?? null) : null
-		})
-
-		client.onPromise('loadsave:reset', async (config) => {
-			if (!config) throw new Error('Missing reset config')
-
-			return this.#checkOrRunImportTask('reset', async () => {
-				return this.#reset(config)
-			})
-		})
-
-		client.onPromise('loadsave:import-full', async (config) => {
-			return this.#checkOrRunImportTask('import', async () => {
-				const data = clientPendingImport?.object
-				if (!data) throw new Error('No in-progress import object')
-
-				if (data.type !== 'full') throw new Error('Invalid import object')
-
-				// Destroy old stuff
-				await this.#reset(undefined, !config || config.buttons)
-
-				// import custom variables
-				if (!config || config.customVariables) {
-					if (data.customVariablesCollections) {
-						this.#variablesController.custom.replaceCollections(data.customVariablesCollections)
-					}
-
-					this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
-				}
-
-				// Import connection collections if provided
-				if (data.connectionCollections) {
-					this.#instancesController.collections.replaceCollections(data.connectionCollections)
-				}
-
-				// Always Import instances
-				const instanceIdMap = this.#importInstances(data.instances, {})
-
-				if (data.pages && (!config || config.buttons)) {
-					// Import pages
-					for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
-						if (!pageInfo) continue
-
-						const pageNumber = Number(pageNumber0)
-						if (isNaN(pageNumber)) {
-							this.#logger.warn(`Invalid page number: ${pageNumber0}`)
-							continue
-						}
-
-						// Ensure the page exists
-						const insertPageCount = pageNumber - this.#pagesController.getPageCount()
-						if (insertPageCount > 0) {
-							this.#pagesController.insertPages(
-								this.#pagesController.getPageCount() + 1,
-								new Array(insertPageCount).fill('Page')
-							)
-						}
-
-						doPageImport(pageInfo, pageNumber, instanceIdMap)
-					}
-				}
-
-				if (!config || config.surfaces) {
-					this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
-				}
-
-				if (!config || config.triggers) {
-					// Import trigger collections if provided
-					if (data.triggerCollections) {
-						this.#controlsController.replaceTriggerCollections(data.triggerCollections)
-					}
-
-					for (const [id, trigger] of Object.entries(data.triggers || {})) {
-						const controlId = CreateTriggerControlId(id)
-						const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-						this.#controlsController.importTrigger(controlId, fixedControlObj)
-					}
-				}
-
-				// trigger startup triggers to run
-				setImmediate(() => {
-					this.#controlsController.triggers.emit('startup')
-				})
-			})
-		})
-
-		const doPageImport = (
-			pageInfo: ExportPageContentv6,
-			topage: number,
-			instanceIdMap: InstanceAppliedRemappings
-		): void => {
-			{
-				// Ensure the configured grid size is large enough for the import
-				const requiredSize = pageInfo.gridSize || find_smallest_grid_for_page(pageInfo)
-				const currentSize = this.#userConfigController.getKey('gridSize')
-				const updatedSize: Partial<UserConfigGridSize> = {}
-				if (currentSize.minColumn > requiredSize.minColumn) updatedSize.minColumn = Number(requiredSize.minColumn)
-				if (currentSize.maxColumn < requiredSize.maxColumn) updatedSize.maxColumn = Number(requiredSize.maxColumn)
-				if (currentSize.minRow > requiredSize.minRow) updatedSize.minRow = Number(requiredSize.minRow)
-				if (currentSize.maxRow < requiredSize.maxRow) updatedSize.maxRow = Number(requiredSize.maxRow)
-
-				if (Object.keys(updatedSize).length > 0) {
-					this.#userConfigController.setKey('gridSize', {
-						...currentSize,
-						...updatedSize,
-					})
-				}
-			}
-
-			// Import the new page
-			this.#pagesController.setPageName(topage, pageInfo.name)
-
-			// Import the controls
-			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
-				for (const [column, control] of Object.entries(rowObj)) {
-					if (control) {
-						// Import the control
-						const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
-
-						const location: ControlLocation = {
-							pageNumber: Number(topage),
-							column: Number(column),
-							row: Number(row),
-						}
-						this.#controlsController.importControl(location, fixedControlObj)
-					}
-				}
-			}
-		}
-
-		client.onPromise('loadsave:import-page', async (topage, frompage, instanceRemapping) => {
-			return this.#checkOrRunImportTask('import', async () => {
-				const data = clientPendingImport?.object
-				if (!data) throw new Error('No in-progress import object')
-
-				if (topage === -1) {
-					// Add a new page at the end
-					const currentPageCount = this.#pagesController.getPageCount()
-					topage = currentPageCount + 1
-					this.#pagesController.insertPages(topage, ['Importing Page'])
-				} else {
-					const oldPageInfo = this.#pagesController.getPageInfo(topage, false)
-					if (!oldPageInfo) throw new Error('Invalid target page')
-				}
-
-				let pageInfo
-
-				if (data.type === 'full' && data.pages) {
-					pageInfo = data.pages[frompage]
-
-					// continue below
-				} else if (data.type === 'page') {
-					pageInfo = data.page
-
-					frompage = data.oldPageNumber || 1
-
-					// continue below
-				} else {
-					throw new Error('Cannot import page ')
-				}
-
-				if (!pageInfo) throw new Error(`No matching page to import`)
-
-				// Setup the new instances
-				const instanceIdMap = this.#importInstances(data.instances, instanceRemapping)
-
-				// Cleanup the old page
-				const discardedControlIds = this.#pagesController.resetPage(topage)
-				for (const controlId of discardedControlIds) {
-					this.#controlsController.deleteControl(controlId)
-				}
-				this.#graphicsController.clearAllForPage(topage)
-
-				doPageImport(pageInfo, topage, instanceIdMap)
-
-				// Report the used remap to the ui, for future imports
-				const instanceRemap2: ConnectionRemappings = {}
-				for (const [id, obj] of Object.entries(instanceIdMap)) {
-					instanceRemap2[id] = obj.id
-				}
-
-				return instanceRemap2
-			})
-		})
-
-		client.onPromise('loadsave:import-triggers', async (idsToImport0, instanceRemapping, replaceExisting) => {
-			return this.#checkOrRunImportTask('import', async () => {
-				const data = clientPendingImport?.object
-				if (!data) throw new Error('No in-progress import object')
-
-				if (data.type === 'page' || !data.triggers) throw new Error('No triggers in import')
-
-				// Remove existing triggers
-				if (replaceExisting) {
-					const controls = this.#controlsController.getAllControls()
-					for (const [controlId, control] of controls.entries()) {
-						if (control.type === 'trigger') {
-							this.#controlsController.deleteControl(controlId)
-						}
-					}
-				}
-
-				// Setup the new instances
-				const instanceIdMap = this.#importInstances(data.instances, instanceRemapping)
-
-				const idsToImport = new Set(idsToImport0)
-				for (const id of idsToImport) {
-					const trigger = data.triggers[id]
-
-					let controlId = CreateTriggerControlId(id)
-					// If trigger already exists, generate a new id
-					if (this.#controlsController.getControl(controlId)) controlId = CreateTriggerControlId(nanoid())
-
-					const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-					this.#controlsController.importTrigger(controlId, fixedControlObj)
-				}
-
-				// Report the used remap to the ui, for future imports
-				const instanceRemap2: ConnectionRemappings = {}
-				for (const [id, obj] of Object.entries(instanceIdMap)) {
-					instanceRemap2[id] = obj.id
-				}
-
-				return instanceRemap2
-			})
-		})
 	}
 
 	async #reset(config: ClientResetSelection | undefined, skipNavButtons = false): Promise<'ok'> {
@@ -840,11 +826,6 @@ type InstanceAppliedRemappings = Record<
 	string,
 	{ id: string; label: string; lastUpgradeIndex?: number; oldLabel?: string }
 >
-
-type ClientPendingImport = {
-	object: ExportFullv6 | ExportPageModelv6
-	timeout: null
-}
 
 function fixupEntitiesRecursive(
 	instanceIdMap: InstanceAppliedRemappings,

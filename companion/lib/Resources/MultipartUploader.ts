@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import crypto from 'crypto'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { publicProcedure, router, toIterable, TrpcContext } from '../UI/TRPC.js'
 import z from 'zod'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { EventEmitter } from 'node:events'
@@ -16,11 +16,11 @@ export class MultipartUploader<TRes> {
 	#inactiveTimeout: NodeJS.Timeout | null = null
 
 	readonly #maxUploadSize: number
-	readonly #sessionTimeoutCallback: ((sessionId: string) => void) | null
 	readonly #sessionCompleteCallback: (
 		name: string,
-		data: Uint8Array,
-		updateProgress: (percent: number) => void
+		data: Buffer,
+		updateProgress: (percent: number) => void,
+		ctx: TrpcContext
 	) => Promise<TRes>
 
 	readonly #progressEvents = new EventEmitter<{ [id: `progress:${string}`]: [progress: number | null] }>()
@@ -28,16 +28,15 @@ export class MultipartUploader<TRes> {
 	constructor(
 		logPrefix: string,
 		maxUploadSize: number,
-		sessionTimeoutCallback: ((sessionId: string) => void) | null,
 		sessionCompleteCallback: (
 			name: string,
-			data: Uint8Array,
-			updateProgress: (percent: number) => void
+			data: Buffer,
+			updateProgress: (percent: number) => void,
+			ctx: TrpcContext
 		) => Promise<TRes>
 	) {
 		this.#logger = LogController.createLogger(logPrefix)
 		this.#maxUploadSize = maxUploadSize
-		this.#sessionTimeoutCallback = sessionTimeoutCallback
 		this.#sessionCompleteCallback = sessionCompleteCallback
 
 		this.#progressEvents.setMaxListeners(0)
@@ -119,7 +118,7 @@ export class MultipartUploader<TRes> {
 						expectedChecksum: z.string().length(40), // SHA-1 checksum is 40
 					})
 				)
-				.mutation(async ({ input }) => {
+				.mutation(async ({ input, ctx }) => {
 					this.#logger.info(`Completing upload session ${input.sessionId}`)
 
 					const data = this.completeSession(input.sessionId, input.expectedChecksum)
@@ -133,7 +132,7 @@ export class MultipartUploader<TRes> {
 						this.#progressEvents.emit(`progress:${input.sessionId}`, 0.5 + percent / 2)
 					}
 
-					return this.#sessionCompleteCallback(input.sessionId, data, updateProgress)
+					return this.#sessionCompleteCallback(input.sessionId, data, updateProgress, ctx)
 						.catch((e) => {
 							this.#logger.error(`Failed to complete upload`, e)
 							hasFinished = true
@@ -174,12 +173,8 @@ export class MultipartUploader<TRes> {
 					const sessionId = this.#session.id
 					this.#session = null
 
-					if (this.#sessionTimeoutCallback) {
-						this.#sessionTimeoutCallback(sessionId)
-					} else {
-						this.#logger.info(`Upload session "${sessionId}" timed out`)
-						this.#progressEvents.emit(`progress:${sessionId}`, null)
-					}
+					this.#logger.info(`Upload session "${sessionId}" timed out`)
+					this.#progressEvents.emit(`progress:${sessionId}`, null)
 				}
 			}, 1000)
 		}

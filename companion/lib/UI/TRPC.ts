@@ -3,9 +3,14 @@ import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
 import { EventEmitter, on } from 'events'
+import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
 
 export interface TrpcContext {
 	val: null
+	pendingImport?: {
+		object: ExportFullv6 | ExportPageModelv6
+		timeout: null
+	}
 }
 // created for each request
 export const createTrpcExpressContext = ({
@@ -51,6 +56,7 @@ export function createTrpcRouter(registry: Registry) {
 
 		customVariables: registry.variables.custom.createTrpcRouter(),
 		pages: registry.page.createTrpcRouter(),
+		importExport: registry.importExport.createTrpcRouter(),
 
 		connections: router({
 			// Future: move this into the connections controller

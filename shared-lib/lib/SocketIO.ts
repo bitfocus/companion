@@ -8,12 +8,6 @@ import type {
 	ControlLocation,
 } from './Model/Common.js'
 import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig, SurfacesUpdate } from './Model/Surfaces.js'
-import type {
-	ClientImportObject,
-	ClientImportSelection,
-	ClientResetSelection,
-	ConnectionRemappings,
-} from './Model/ImportExport.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -22,7 +16,7 @@ import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } 
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
-export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
+export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
 
 	set_userconfig_key(key: keyof UserConfigModel, value: any): never
@@ -86,21 +80,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'logs:unsubscribe': () => void
 	'logs:clear': () => void
 
-	'loadsave:abort': () => boolean
-	'loadsave:reset': (config: ClientResetSelection) => 'ok'
-	'loadsave:import-page': (
-		toPage: number,
-		fromPage: number,
-		connectionRemap: ConnectionRemappings
-	) => ConnectionRemappings
-	'loadsave:import-triggers': (
-		selectedTriggers: string[],
-		connectionRemap: ConnectionRemappings,
-		doReplace: boolean
-	) => ConnectionRemappings
-	'loadsave:control-preview': (location: ControlLocation) => string | null
-	'loadsave:import-full': (config: ClientImportSelection | null) => void
-
 	'connections:add': (info: { type: string; product: string | undefined }, label: string, versionId: string) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
 	'connections:set-label-and-config': (
@@ -147,21 +126,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	cloud_region_state_set: (id: string, newState: Partial<CloudRegionState>) => never
 }
 
-type AllMultipartUploaderMethods = MultipartUploaderMethods<
-	'loadsave:prepare-import',
-	[err: null, config: ClientImportObject] | [err: string]
->
-
-interface MultipartUploaderMethodsBase<TComplete> {
-	start: (name: string, size: number) => string | null
-	chunk: (sessionId: string, offset: number, data: Uint8Array) => boolean
-	complete: (sessionId: string, checksum: string) => TComplete
-	cancel: (sessionId: string) => void
-}
-export type MultipartUploaderMethods<Prefix extends string, TComplete> = {
-	[K in keyof MultipartUploaderMethodsBase<TComplete> as `${Prefix}:${string & K}`]: MultipartUploaderMethodsBase<TComplete>[K]
-}
-
 export interface BackendToClientEventsMap {
 	'logs:lines': (rawItems: ClientLogLine[]) => void
 	'logs:clear': () => void
@@ -169,7 +133,6 @@ export interface BackendToClientEventsMap {
 	set_userconfig_key: (key: keyof UserConfigModel, value: any) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void
-	'loadsave:prepare-import:progress': (sessionId: string, percent: number | null) => void
 
 	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void
 

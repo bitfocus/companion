@@ -1,6 +1,6 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
-import { MyErrorBoundary, SocketContext } from '~/util.js'
+import { MyErrorBoundary } from '~/util.js'
 import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '~/Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import {
@@ -19,6 +19,8 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from '~/Buttons/ButtonGridZoomControl.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
+import { useQuery } from '@tanstack/react-query'
+import { trpc } from '~/TRPC'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject
@@ -286,27 +288,15 @@ const ImportRemapRow = observer(function ImportRemapRow({
 })
 
 function ButtonImportPreview({ ...props }: ButtonInfiniteGridButtonProps) {
-	const socket = useContext(SocketContext)
-	const [previewImage, setPreviewImage] = useState<string | null>(null)
+	const query = useQuery(
+		trpc.importExport.controlPreview.queryOptions({
+			location: {
+				pageNumber: props.pageNumber,
+				row: props.row,
+				column: props.column,
+			},
+		})
+	)
 
-	useEffect(() => {
-		setPreviewImage(null)
-
-		socket
-			.emitPromise('loadsave:control-preview', [
-				{
-					pageNumber: props.pageNumber,
-					column: props.column,
-					row: props.row,
-				},
-			])
-			.then((img) => {
-				setPreviewImage(img)
-			})
-			.catch((e) => {
-				console.error(`Failed to preview button: ${e}`)
-			})
-	}, [props.pageNumber, props.column, props.row, socket])
-
-	return <ButtonGridIconBase {...props} image={previewImage} />
+	return <ButtonGridIconBase {...props} image={query.data || null} />
 }

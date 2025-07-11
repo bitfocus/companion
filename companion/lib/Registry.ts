@@ -131,7 +131,7 @@ export class Registry {
 	 */
 	internalModule!: InternalController
 
-	#importExport!: ImportExportController
+	importExport!: ImportExportController
 
 	#metrics!: DataMetrics
 
@@ -244,7 +244,7 @@ export class Registry {
 				this.graphics,
 				this.exit.bind(this)
 			)
-			this.#importExport = new ImportExportController(
+			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
 				this.io,
@@ -316,7 +316,7 @@ export class Registry {
 				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)
 				this.#cloud.clientConnect(client)
-				this.#importExport.clientConnect(client)
+				this.importExport.clientConnect(client)
 			})
 
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
