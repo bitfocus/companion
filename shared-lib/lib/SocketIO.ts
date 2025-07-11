@@ -21,7 +21,6 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
-import type { ActionSetId } from './Model/ActionModel.js'
 import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
 export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
@@ -68,21 +67,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'controls:swap': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:reset': (location: ControlLocation, newType?: string) => void
 	'controls:import-preset': (connectionId: string, presetId: string, location: ControlLocation) => string | null
-
-	'controls:action-set:set-run-while-held': (
-		controlId: string,
-		stepId: string,
-		newSetId: ActionSetId,
-		runWhileHeld: boolean
-	) => boolean
-	'controls:action-set:rename': (
-		controlId: string,
-		stepId: string,
-		oldSetId: ActionSetId,
-		newSetId: ActionSetId
-	) => boolean
-	'controls:action-set:add': (controlId: string, stepId: string) => boolean
-	'controls:action-set:remove': (controlId: string, stepId: string, setId: ActionSetId) => boolean
 
 	'surfaces:subscribe': () => Record<string, ClientDevicesListItem | undefined>
 	'surfaces:unsubscribe': () => void

@@ -33,6 +33,7 @@ import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
+import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 
 /**
  * The class that manages the controls
@@ -201,6 +202,7 @@ export class ControlsController {
 				this.#registry.instance.definitions,
 				this.#activeLearningStore
 			),
+			actionSets: createActionSetsTrpcRouter(this.#controls),
 			steps: createStepsTrpcRouter(this.#controls),
 		})
 	}
@@ -391,49 +393,6 @@ export class ControlsController {
 			if (!controlId) return
 
 			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
-		})
-
-		client.onPromise('controls:action-set:add', (controlId, stepId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.actionSetAdd(stepId)
-			} else {
-				throw new Error(`Control "${controlId}" does not support this operation`)
-			}
-		})
-		client.onPromise('controls:action-set:remove', (controlId, stepId, setId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.actionSetRemove(stepId, setId)
-			} else {
-				throw new Error(`Control "${controlId}" does not support this operation`)
-			}
-		})
-
-		client.onPromise('controls:action-set:rename', (controlId, stepId, oldSetId, newSetId) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.actionSetRename(stepId, oldSetId, newSetId)
-			} else {
-				throw new Error(`Control "${controlId}" does not support this operation`)
-			}
-		})
-
-		client.onPromise('controls:action-set:set-run-while-held', (controlId, stepId, setId, runWhileHeld) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsActionSets) {
-				return control.actionSets.actionSetRunWhileHeld(stepId, setId, runWhileHeld)
-			} else {
-				throw new Error(`Control "${controlId}" does not support this operation`)
-			}
 		})
 	}
 
