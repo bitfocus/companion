@@ -312,7 +312,6 @@ export class Registry {
 			this.ui.io.on('clientConnect', (client) => {
 				LogController.clientConnect(client)
 				this.#data.clientConnect(client)
-				this.page.clientConnect(client)
 				this.controls.clientConnect(client)
 				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)

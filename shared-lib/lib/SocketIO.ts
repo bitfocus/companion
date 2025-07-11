@@ -14,7 +14,6 @@ import type {
 	ClientResetSelection,
 	ConnectionRemappings,
 } from './Model/ImportExport.js'
-import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -102,22 +101,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'loadsave:control-preview': (location: ControlLocation) => string | null
 	'loadsave:import-full': (config: ClientImportSelection | null) => void
 
-	// 'preview:button-reference:subscribe': (
-	// 	subId: string,
-	// 	location: ControlLocation | undefined,
-	// 	options: Record<string, any>
-	// ) => string | null
-	// 'preview:button-reference:unsubscribe': (subId: string) => void
-
-	'pages:subscribe': () => ClientPagesInfo
-	'pages:unsubscribe': () => void
-	'pages:set-name': (pageNumber: number, pageName: string) => void
-	'pages:insert-pages': (beforePageNumber: number, pageNames: string[]) => 'ok' | 'fail'
-	'pages:delete-page': (pageNumber: number) => 'ok' | 'fail'
-	'pages:move-page': (pageId: string, newPageNumber: number) => 'ok' | 'fail'
-	'pages:reset-page-nav': (pageNumber: number) => 'ok'
-	'pages:reset-page-clear': (pageNumber: number) => 'ok'
-
 	'connections:add': (info: { type: string; product: string | undefined }, label: string, versionId: string) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
 	'connections:set-label-and-config': (
@@ -187,7 +170,6 @@ export interface BackendToClientEventsMap {
 	'logs:clear': () => void
 
 	set_userconfig_key: (key: keyof UserConfigModel, value: any) => void
-	'pages:update': (changes: PageModelChanges) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void
 	'loadsave:prepare-import:progress': (sessionId: string, percent: number | null) => void

@@ -1,5 +1,5 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ClientPagesInfo, PageModel, PageModelChanges } from '@companion-app/shared/Model/PageModel.js'
+import type { PageModelChanges, PageModel } from '@companion-app/shared/Model/PageModel.js'
 import { ObservableMap, action, makeObservable, observable } from 'mobx'
 
 export class PagesStoreModel {
@@ -42,18 +42,23 @@ export class PagesStore {
 		return this.getControlIdAt(location.pageNumber, location.row, location.column)
 	}
 
-	public reset = action((newData: ClientPagesInfo | null): void => {
-		this.store.clear()
+	public updateStore = action((change: PageModelChanges | null) => {
+		if (!change) {
+			this.store.clear()
+			return
+		}
 
-		if (newData) {
-			for (const id of newData.order) {
-				const newPageModel = this.#createModelForPage(id, newData.pages[id])
+		if (change.type === 'init') {
+			this.store.clear()
+
+			for (const id of change.order) {
+				const newPageModel = this.#createModelForPage(id, change.pages[id])
 				this.store.push(newPageModel)
 			}
-		}
-	})
 
-	public updatePage = action((change: PageModelChanges) => {
+			return
+		}
+
 		const existingPagesMap = new Map<string, PagesStoreModel>()
 		for (const pageModel of this.store) {
 			existingPagesMap.set(pageModel.id, pageModel)

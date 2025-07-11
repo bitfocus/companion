@@ -9,10 +9,10 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface EditPagePropertiesModalRef {
 	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void
@@ -23,7 +23,6 @@ interface EditPagePropertiesModalProps {
 
 export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, EditPagePropertiesModalProps>(
 	function EditPagePropertiesModal({ includeName }, ref) {
-		const socket = useContext(SocketContext)
 		const [pageNumber, setPageNumber] = useState<number | null>(null)
 		const [show, setShow] = useState(false)
 
@@ -37,6 +36,8 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 			}
 		}
 
+		const setNameMutation = useMutationExt(trpc.pages.setName.mutationOptions())
+
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => setPageNumber(null), [])
 		const doAction = useCallback(
@@ -47,11 +48,16 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 
 				if (pageNumber === null) return
 
-				socket.emitPromise('pages:set-name', [pageNumber, pageName ?? '']).catch((e) => {
-					console.error('Failed to set name', e)
-				})
+				setNameMutation
+					.mutateAsync({
+						pageNumber,
+						name: pageName ?? '',
+					})
+					.catch((e) => {
+						console.error('Failed to set name', e)
+					})
 			},
-			[socket, pageNumber, pageName]
+			[setNameMutation, pageNumber, pageName]
 		)
 
 		useImperativeHandle(

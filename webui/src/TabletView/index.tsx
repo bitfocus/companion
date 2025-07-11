@@ -56,14 +56,18 @@ export const TabletView = observer(function TabletView() {
 	}, [queryUrl])
 
 	const [retryToken, setRetryToken] = useState(nanoid())
-	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
 
 	const pagesStore = useMemo(() => new PagesStore(), [])
-	const pagesReady = usePagesInfoSubscription(socket, pagesStore, setLoadError, retryToken)
+	const { ready: pagesReady, reset: pagesResetSub } = usePagesInfoSubscription(pagesStore, setLoadError)
 
 	const userConfigStore = useMemo(() => new UserConfigStore(), [])
 	useUserConfigSubscription(socket, userConfigStore, setLoadError, retryToken)
 	const rawGridSize = userConfigStore.properties?.gridSize
+
+	const doRetryLoad = useCallback(() => {
+		setRetryToken(nanoid())
+		pagesResetSub()
+	}, [pagesResetSub])
 
 	useEffect(() => {
 		document.title =

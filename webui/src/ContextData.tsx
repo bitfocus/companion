@@ -100,7 +100,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		trpc.controls.triggers.collections.watchQuery,
 		undefined
 	)
-	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
+	const { ready: pagesReady } = usePagesInfoSubscription(rootStore.pages)
 	const userConfigReady = useUserConfigSubscription(socket, rootStore.userConfig)
 	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(rootStore.surfaces)
