@@ -2,7 +2,6 @@ import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
 import type { InstanceModules } from './Modules.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import zlib from 'node:zlib'
 import * as ts from 'tar-stream'
 import { Readable } from 'node:stream'
@@ -13,10 +12,11 @@ import type { AppInfo } from '../Registry.js'
 import { promisify } from 'util'
 import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import type { DataDatabase } from '../Data/Database.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import crypto from 'node:crypto'
 import semver from 'semver'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import z from 'zod'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -31,10 +31,6 @@ export class InstanceInstalledModulesManager {
 	readonly #logger = LogController.createLogger('Instance/UserModulesManager')
 
 	readonly #appInfo: AppInfo
-
-	// readonly #db: DataDatabase
-
-	readonly #io: UIHandler
 
 	/**
 	 * The modules manager. To be notified when a module is installed or uninstalled
@@ -56,23 +52,62 @@ export class InstanceInstalledModulesManager {
 	 */
 	readonly #modulesDir: string
 
-	readonly #multipartUploader = new MultipartUploader((sessionId) => {
-		this.#logger.info(`Module upload session "${sessionId}" timed out`)
-		this.#io.emitToAll('modules:bundle-import:progress', sessionId, null)
-	})
+	readonly #multipartUploader = new MultipartUploader(
+		'Instance/UserModulesManager',
+		MAX_MODULE_BUNDLE_TAR_SIZE,
+		null,
+		async (_name, data, updateProgress) => {
+			const decompressedData = await gunzipP(data)
+			if (!decompressedData) {
+				this.#logger.error(`Failed to decompress module data`)
+				throw new Error('Failed to decompress data')
+			}
+
+			const moduleInfos = await listModuleDirsInTar(decompressedData)
+			this.#logger.info(`Module bundle contains ${moduleInfos.length} modules`)
+			if (moduleInfos.length === 0) {
+				this.#logger.warn(`No modules found in bundle`)
+				throw new Error('No modules found in bundle')
+			}
+
+			let completed = 0
+			for (const moduleInfo of moduleInfos) {
+				try {
+					const moduleDir = path.join(
+						this.#modulesDir,
+						`${moduleInfo.manifestJson.id}-${moduleInfo.manifestJson.version}`
+					)
+					if (!fs.existsSync(moduleDir)) {
+						await this.#installModuleFromTarBuffer(
+							moduleDir,
+							moduleInfo.manifestJson,
+							decompressedData,
+							moduleInfo.subDir
+						)
+					}
+				} catch (e) {
+					this.#logger.warn(`Failed to install module from bundle`, e)
+				}
+
+				completed++
+
+				updateProgress(completed / moduleInfos.length)
+
+				if (completed % 10 === 0) await new Promise((resolve) => setTimeout(resolve, 10)) // Ensure cpu time is given to other tasks
+			}
+
+			return true
+		}
+	)
 
 	constructor(
 		appInfo: AppInfo,
-		_db: DataDatabase,
-		io: UIHandler,
 		modulesManager: InstanceModules,
 		modulesStore: ModuleStoreService,
 		configStore: ConnectionConfigStore,
 		installedModulesDir: string
 	) {
 		this.#appInfo = appInfo
-		// this.#db = db
-		this.#io = io
 		this.#modulesManager = modulesManager
 		this.#modulesStore = modulesStore
 		this.#configStore = configStore
@@ -146,172 +181,91 @@ export class InstanceInstalledModulesManager {
 			})
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('modules:install-all-missing', async () => {
-			this.#logger.debug('modules:install-all-missing')
+	createTrpcRouter() {
+		return router({
+			bundleUpload: this.#multipartUploader.createTrpcRouter(),
 
-			for (const connectionId of this.#configStore.getAllInstanceIds()) {
-				const config = this.#configStore.getConfigForId(connectionId)
-				if (!config) continue
+			installAllMissing: publicProcedure.mutation(async () => {
+				this.#logger.debug('modules:install-all-missing')
 
-				this.ensureModuleIsInstalled(config.instance_type, config.moduleVersionId)
-			}
-		})
+				for (const connectionId of this.#configStore.getAllInstanceIds()) {
+					const config = this.#configStore.getConfigForId(connectionId)
+					if (!config) continue
 
-		client.onPromise('modules:install-module-tar', async (data) => {
-			// this.#logger.debug('modules:install-module-tar', data)
+					this.ensureModuleIsInstalled(config.instance_type, config.moduleVersionId)
+				}
+			}),
 
-			if (!(data instanceof Uint8Array)) return 'Invalid data. Expected UInt8Array'
+			installModuleTar: publicProcedure
+				.input(
+					z.object({
+						tarBuffer: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					// this.#logger.debug('modules:install-module-tar', data)
 
-			// TODO - error handling for this whole function
+					const tarBuffer = Buffer.from(input.tarBuffer, 'base64')
 
-			const decompressedData = await gunzipP(data)
-			if (!decompressedData) {
-				this.#logger.warn(`Failed to decompress module data`)
-				return 'Failed to decompress data'
-			}
+					// TODO - error handling for this whole function
 
-			const manifestJson = await extractManifestFromTar(decompressedData).catch((e) => {
-				this.#logger.error(`Failed to extract manifest from module`, e)
-			})
-			if (!manifestJson) {
-				this.#logger.warn(`Failed to find manifest in module archive`)
-				return "Doesn't look like a valid module, missing manifest"
-			}
-
-			if (!semver.parse(manifestJson.version, { loose: true })) {
-				this.#logger.warn(`Invalid version "${manifestJson.version}" in module manifest`)
-				return `Invalid module version: ${manifestJson.version}`
-			}
-
-			const moduleDir = path.join(this.#modulesDir, `${manifestJson.id}-${manifestJson.version}`)
-			if (fs.existsSync(moduleDir)) {
-				this.#logger.warn(`Module ${manifestJson.id} v${manifestJson.version} already exists on disk`)
-				return `Module ${manifestJson.id} v${manifestJson.version} already exists`
-			}
-
-			return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, null)
-		})
-
-		client.onPromise('modules:install-store-module', async (moduleId, moduleVersion) => {
-			this.#logger.info(`Installing ${moduleId} v${moduleVersion} from store`)
-
-			const versionInfo = this.#modulesStore.getCachedModuleVersionInfo(moduleId, moduleVersion)
-			if (!versionInfo) {
-				this.#logger.warn(`Unable to install ${moduleId} v${moduleVersion}, it is not known in the store`)
-				return `Module ${moduleId} v${moduleVersion} not found`
-			}
-
-			return this.#installModuleVersionFromStore(moduleId, versionInfo)
-		})
-
-		// client.onPromise('modules:install-store-module:latest', async (moduleId) => {
-		// 	this.#logger.info(`Installing latest version of module ${moduleId}`)
-
-		// 	const versionInfo = await this.#modulesStore.fetchModuleVersionInfo(moduleId, null, true)
-		// 	if (!versionInfo) {
-		// 		this.#logger.warn(`Unable to install latest version of ${moduleId}, it is not known in the store`)
-		// 		return `Latest version of module "${moduleId}" not found`
-		// 	}
-
-		// 	this.#logger.info(`Installing ${moduleId} v${versionInfo} from store`)
-
-		// 	return this.#installModuleVersionFromStore(moduleId, versionInfo)
-		// })
-
-		client.onPromise('modules:uninstall-store-module', async (moduleId, versionId) => {
-			return this.#uninstallModule(moduleId, versionId)
-		})
-
-		client.onPromise('modules:bundle-import:start', async (name, size) => {
-			this.#logger.info(`Starting upload of module bundle ${name} (${size} bytes)`)
-
-			if (size > MAX_MODULE_BUNDLE_TAR_SIZE) throw new Error('Module bundle too large to upload')
-
-			const sessionId = this.#multipartUploader.initSession(name, size)
-			if (sessionId === null) return null
-
-			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0)
-
-			return sessionId
-		})
-		client.onPromise('modules:bundle-import:chunk', async (sessionId, offset, data) => {
-			this.#logger.silly(`Upload module bundle chunk ${sessionId} (@${offset} = ${data.length} bytes)`)
-
-			const progress = this.#multipartUploader.addChunk(sessionId, offset, data)
-			if (progress === null) return false
-
-			this.#io.emitToAll('modules:bundle-import:progress', sessionId, progress / 2)
-
-			return true
-		})
-		client.onPromise('modules:bundle-import:cancel', async (sessionId) => {
-			this.#logger.silly(`Canel module bundle upload ${sessionId}`)
-
-			this.#multipartUploader.cancelSession(sessionId)
-		})
-		client.onPromise('modules:bundle-import:complete', async (sessionId, checksum) => {
-			this.#logger.silly(`Attempt module bundle complete ${sessionId}`)
-
-			const data = this.#multipartUploader.completeSession(sessionId, checksum)
-			if (data === null) return false
-
-			this.#logger.info(`Importing module bundle ${sessionId} (${data.length} bytes)`)
-
-			this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0.5)
-
-			// Upload is complete, now load it
-			Promise.resolve()
-				.then(async () => {
-					const decompressedData = await gunzipP(data)
+					const decompressedData = await gunzipP(tarBuffer)
 					if (!decompressedData) {
-						this.#logger.error(`Failed to decompress module data`)
-						throw new Error('Failed to decompress data')
+						this.#logger.warn(`Failed to decompress module data`)
+						return 'Failed to decompress data'
 					}
 
-					const moduleInfos = await listModuleDirsInTar(decompressedData)
-					this.#logger.info(`Module bundle contains ${moduleInfos.length} modules`)
-					if (moduleInfos.length === 0) {
-						this.#logger.warn(`No modules found in bundle`)
-						throw new Error('No modules found in bundle')
+					const manifestJson = await extractManifestFromTar(decompressedData).catch((e) => {
+						this.#logger.error(`Failed to extract manifest from module`, e)
+					})
+					if (!manifestJson) {
+						this.#logger.warn(`Failed to find manifest in module archive`)
+						return "Doesn't look like a valid module, missing manifest"
 					}
 
-					let completed = 0
-					for (const moduleInfo of moduleInfos) {
-						try {
-							const moduleDir = path.join(
-								this.#modulesDir,
-								`${moduleInfo.manifestJson.id}-${moduleInfo.manifestJson.version}`
-							)
-							if (!fs.existsSync(moduleDir)) {
-								await this.#installModuleFromTarBuffer(
-									moduleDir,
-									moduleInfo.manifestJson,
-									decompressedData,
-									moduleInfo.subDir
-								)
-							}
-						} catch (e) {
-							this.#logger.warn(`Failed to install module from bundle`, e)
-						}
-
-						completed++
-						this.#io.emitToAll('modules:bundle-import:progress', sessionId, 0.5 + completed / moduleInfos.length / 2)
-
-						if (completed % 10 === 0) await new Promise((resolve) => setTimeout(resolve, 10)) // Ensure cpu time is given to other tasks
+					if (!semver.parse(manifestJson.version, { loose: true })) {
+						this.#logger.warn(`Invalid version "${manifestJson.version}" in module manifest`)
+						return `Invalid module version: ${manifestJson.version}`
 					}
 
-					this.#io.emitToAll('modules:bundle-import:progress', sessionId, null)
-				})
-				.catch((e) => {
-					this.#logger.error(`Failed to import module bundle`, e)
-					this.#io.emitToAll('modules:bundle-import:progress', sessionId, null) // TODO - report failure?
-				})
+					const moduleDir = path.join(this.#modulesDir, `${manifestJson.id}-${manifestJson.version}`)
+					if (fs.existsSync(moduleDir)) {
+						this.#logger.warn(`Module ${manifestJson.id} v${manifestJson.version} already exists on disk`)
+						return `Module ${manifestJson.id} v${manifestJson.version} already exists`
+					}
 
-			return true
+					return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, null)
+				}),
+
+			installStoreModule: publicProcedure
+				.input(
+					z.object({
+						moduleId: z.string(),
+						versionId: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					this.#logger.info(`Installing ${input.moduleId} v${input.versionId} from store`)
+
+					const versionInfo = this.#modulesStore.getCachedModuleVersionInfo(input.moduleId, input.versionId)
+					if (!versionInfo) {
+						this.#logger.warn(`Unable to install ${input.moduleId} v${input.versionId}, it is not known in the store`)
+						return `Module ${input.moduleId} v${input.versionId} not found`
+					}
+
+					return this.#installModuleVersionFromStore(input.moduleId, versionInfo)
+				}),
+
+			uninstallModule: publicProcedure
+				.input(
+					z.object({
+						moduleId: z.string(),
+						versionId: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					return this.#uninstallModule(input.moduleId, input.versionId)
+				}),
 		})
 	}
 

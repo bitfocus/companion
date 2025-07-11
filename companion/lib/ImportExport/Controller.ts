@@ -101,10 +101,17 @@ export class ImportExportController {
 
 	readonly #exportController: ExportController
 
-	readonly #multipartUploader = new MultipartUploader((sessionId) => {
-		this.#logger.info(`Config import session "${sessionId}" timed out`)
-		// this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, null)
-	})
+	readonly #multipartUploader = new MultipartUploader(
+		'ImportExport/Controller',
+		MAX_IMPORT_FILE_SIZE,
+		(sessionId) => {
+			this.#logger.info(`Config import session "${sessionId}" timed out`)
+			// this.#io.emitToAll('loadsave:prepare-import:progress', sessionId, null)
+		},
+		async () => {
+			throw new Error('Not implemented!')
+		}
+	)
 
 	/**
 	 * If there is a current import task that clients should be aware of, this will be set

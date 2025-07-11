@@ -125,11 +125,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'modules:install-all-missing': () => void
-	'modules:install-module-tar': (moduleTar: Uint8Array) => string | null
-	'modules:install-store-module': (moduleId: string, versionId: string) => string | null
-	'modules:uninstall-store-module': (moduleId: string, versionId: string) => string | null
-
 	'modules-store:list:subscribe': () => ModuleStoreListCacheStore
 	'modules-store:list:unsubscribe': () => void
 	'modules-store:list:refresh': () => void
@@ -152,8 +147,10 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	cloud_region_state_set: (id: string, newState: Partial<CloudRegionState>) => never
 }
 
-type AllMultipartUploaderMethods = MultipartUploaderMethods<'modules:bundle-import', boolean> &
-	MultipartUploaderMethods<'loadsave:prepare-import', [err: null, config: ClientImportObject] | [err: string]>
+type AllMultipartUploaderMethods = MultipartUploaderMethods<
+	'loadsave:prepare-import',
+	[err: null, config: ClientImportObject] | [err: string]
+>
 
 interface MultipartUploaderMethodsBase<TComplete> {
 	start: (name: string, size: number) => string | null
@@ -191,7 +188,6 @@ export interface BackendToClientEventsMap {
 	'modules-store:info:data': (moduleId: string, data: ModuleStoreModuleInfoStore) => void
 	'modules-store:info:progress': (moduleId: string, percent: number) => void
 	'modules-upgrade-to-other:data': (moduleId: string, data: ModuleUpgradeToOtherVersion[]) => void
-	'modules:bundle-import:progress': (sessionId: string, percent: number | null) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void

@@ -4,10 +4,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { trpc, useMutationExt } from '~/TRPC'
 import { useComputed } from '~/util.js'
 
 export const MissingVersionsWarning = observer(function MissingVersionsWarning() {
-	const { socket, connections, modules } = useContext(RootAppStoreContext)
+	const { connections, modules } = useContext(RootAppStoreContext)
 
 	const missingCount = useComputed(() => {
 		let count = 0
@@ -35,11 +36,13 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning()
 		return count
 	}, [connections, modules])
 
+	const installMissingMutation = useMutationExt(trpc.connections.modulesManager.installAllMissing.mutationOptions())
+
 	const doInstallAllMissing = useCallback(() => {
-		socket.emitPromise('modules:install-all-missing', []).catch((e) => {
+		installMissingMutation.mutateAsync().catch((e) => {
 			console.error('Install all missing failed', e)
 		})
-	}, [socket])
+	}, [installMissingMutation])
 
 	if (missingCount === 0) return null
 

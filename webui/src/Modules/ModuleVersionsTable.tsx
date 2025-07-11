@@ -21,6 +21,7 @@ import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 dayjs.extend(relativeTime)
 
@@ -228,14 +229,18 @@ interface ModuleUninstallButtonProps {
 }
 
 function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstallButtonProps) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
 
+	const uninstallModuleMutation = useMutationExt(trpc.connections.modulesManager.uninstallModule.mutationOptions())
 	const doRemove = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
-		socket
-			.emitPromise('modules:uninstall-store-module', [moduleId, versionId])
+		uninstallModuleMutation
+			.mutateAsync({
+				moduleId,
+				versionId,
+			})
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to uninstall module', failureReason)
@@ -249,7 +254,7 @@ function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstal
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [socket, notifier, moduleId, versionId])
+	}, [uninstallModuleMutation, notifier, moduleId, versionId])
 
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
@@ -273,14 +278,20 @@ interface ModuleInstallButtonProps {
 }
 
 function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: ModuleInstallButtonProps) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
 
+	const installStoreModuleMutation = useMutationExt(
+		trpc.connections.modulesManager.installStoreModule.mutationOptions()
+	)
 	const doInstall = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
-		socket
-			.emitPromise('modules:install-store-module', [moduleId, versionId], 30000)
+		installStoreModuleMutation // TODO: 30s timeout?
+			.mutateAsync({
+				moduleId,
+				versionId,
+			})
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to install module', failureReason)
@@ -294,7 +305,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [socket, notifier, moduleId, versionId])
+	}, [installStoreModuleMutation, notifier, moduleId, versionId])
 
 	if (!hasTarUrl) {
 		return (

@@ -451,3 +451,13 @@ export function isCollectionEnabled<TMetaData extends { enabled?: boolean }>(
 export function makeAbsolutePath(path: string): string {
 	return joinPaths([import.meta.env.BASE_URL || '/', path])
 }
+
+export function base64EncodeUint8Array(buffer: Uint8Array): string {
+	// Convert ArrayBuffer to base64 in a cross-browser way
+	const uint8Array = new Uint8Array(buffer)
+	let binaryString = ''
+	for (let i = 0; i < uint8Array.length; i++) {
+		binaryString += String.fromCharCode(uint8Array[i])
+	}
+	return btoa(binaryString)
+}
