@@ -87,6 +87,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 	createTrpcRouter() {
 		const self = this
+		const selfEmitter: EventEmitter<ActionRecorderEvents> = this
 		return router({
 			sessionList: publicProcedure.subscription<AsyncIterable<Record<string, RecordSessionListInfo>>>(
 				async function* (opts) {
@@ -94,7 +95,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 					yield self.#lastSentSessionListJson
 
 					// Listen for changes
-					const changes = toIterable(self, 'sessions_changed', opts.signal)
+					const changes = toIterable(selfEmitter, 'sessions_changed', opts.signal)
 					for await (const [_sessionIds] of changes) {
 						yield self.#lastSentSessionListJson
 					}

@@ -73,9 +73,11 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 	createTrpcRouter() {
 		const self = this
+		const selfEmitter: EventEmitter<PageControllerEvents> = this
+
 		return router({
 			watch: publicProcedure.subscription(async function* ({ signal }) {
-				const changes = toIterable(self, 'clientUpdate', signal)
+				const changes = toIterable(selfEmitter, 'clientUpdate', signal)
 
 				yield { type: 'init', order: self.#pageIds, pages: self.#pagesById } satisfies PageModelChangesInit
 

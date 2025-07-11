@@ -64,6 +64,7 @@ export function createTrpcRouter(registry: Registry) {
 			definitions: registry.instance.definitions.createTrpcRouter(),
 
 			modulesManager: registry.instance.userModulesManager.createTrpcRouter(),
+			modulesStore: registry.instance.modulesStore.createTrpcRouter(),
 		}),
 
 		preview: router({
@@ -76,10 +77,12 @@ export function createTrpcRouter(registry: Registry) {
 // NOT the router itself.
 export type AppRouter = ReturnType<typeof createTrpcRouter>
 
-export function toIterable<T extends Record<string, any[]>, TKey extends string & keyof T>(
-	ee: EventEmitter<T>,
+type TEventMap<TEmitter extends EventEmitter> = TEmitter extends EventEmitter<infer E> ? E : never
+
+export function toIterable<TEmitter extends EventEmitter, TKey extends string & keyof TEventMap<TEmitter>>(
+	ee: TEmitter,
 	key: TKey,
 	signal: AbortSignal | undefined
-): NodeJS.AsyncIterator<T[TKey]> {
-	return on(ee as any, key, { signal }) as NodeJS.AsyncIterator<T[TKey]>
+): NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]> {
+	return on(ee as any, key, { signal }) as NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]>
 }

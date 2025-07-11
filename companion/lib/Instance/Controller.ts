@@ -155,7 +155,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.modules,
 			this.#configStore
 		)
-		this.modulesStore = new ModuleStoreService(appInfo, io, cache)
+		this.modulesStore = new ModuleStoreService(appInfo, cache)
 		this.userModulesManager = new InstanceInstalledModulesManager(
 			appInfo,
 			this.modules,
@@ -596,7 +596,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
 		this.modules.clientConnect(client)
-		this.modulesStore.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)

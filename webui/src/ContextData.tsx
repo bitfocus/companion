@@ -87,7 +87,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		trpc.connections.definitions.feedbacks
 	)
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
-	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
+	const moduleStoreReady = useModuleStoreListSubscription(rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
 	const connectionGroupsReady = useGenericCollectionsSubscription(
 		rootStore.connections,
@@ -107,10 +107,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
 	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(rootStore.variablesStore)
-	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(
-		socket,
-		rootStore.moduleStoreRefreshProgress
-	)
+	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.moduleStoreRefreshProgress)
 	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
 

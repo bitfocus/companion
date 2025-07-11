@@ -14,7 +14,6 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
-import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
@@ -104,12 +103,6 @@ export interface ClientToBackendEventsMap {
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'modules-store:list:subscribe': () => ModuleStoreListCacheStore
-	'modules-store:list:unsubscribe': () => void
-	'modules-store:list:refresh': () => void
-	'modules-store:info:subscribe': (moduleId: string) => ModuleStoreModuleInfoStore | null
-	'modules-store:info:unsubscribe': (moduleId: string) => void
-	'modules-store:info:refresh': (moduleId: string) => void
 	'modules-upgrade-to-other:subscribe': (moduleId: string) => ModuleUpgradeToOtherVersion[]
 	'modules-upgrade-to-other:unsubscribe': (moduleId: string) => void
 
@@ -146,10 +139,6 @@ export interface BackendToClientEventsMap {
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
 
-	'modules-store:list:data': (data: ModuleStoreListCacheStore) => void
-	'modules-store:list:progress': (percent: number) => void
-	'modules-store:info:data': (moduleId: string, data: ModuleStoreModuleInfoStore) => void
-	'modules-store:info:progress': (moduleId: string, percent: number) => void
 	'modules-upgrade-to-other:data': (moduleId: string, data: ModuleUpgradeToOtherVersion[]) => void
 
 	cloud_state: (newState: CloudControllerState) => void

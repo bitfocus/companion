@@ -13,6 +13,7 @@ import {
 	ModuleStoreModuleInfoStore,
 } from '@companion-app/shared/Model/ModulesStore.js'
 import { nanoid } from 'nanoid'
+import { trpc } from '~/TRPC'
 
 export class ModuleInfoStore {
 	// TODO - should this be more granular/observable?
@@ -71,7 +72,14 @@ export class ModuleInfoStore {
 		}
 	})
 
-	public updateStoreInfo = action((storeInfo: ModuleStoreListCacheStore) => {
+	public updateStoreInfo = action((storeInfo: ModuleStoreListCacheStore | null) => {
+		storeInfo = storeInfo || {
+			lastUpdated: 0,
+			lastUpdateAttempt: 0,
+			updateWarning: null,
+			modules: {},
+		}
+
 		this.storeUpdateInfo.lastUpdated = storeInfo.lastUpdated
 		this.storeUpdateInfo.lastUpdateAttempt = storeInfo.lastUpdateAttempt
 		this.storeUpdateInfo.updateWarning = storeInfo.updateWarning
@@ -85,11 +93,19 @@ export class ModuleInfoStore {
 	}
 }
 
+interface VersionSubsInfo {
+	subscribers: Set<string>
+	sub: Unsubscribable
+}
+interface Unsubscribable {
+	unsubscribe(): void
+}
+
 export class ModuleStoreVersionsStore {
 	readonly #socket: CompanionSocketWrapped
 
 	readonly #versionsState = observable.map<string, ModuleStoreModuleInfoStore>()
-	readonly #versionsSubscribers = new Map<string, Set<string>>()
+	readonly #versionsSubscribers = new Map<string, VersionSubsInfo>()
 
 	readonly #upgradeToVersionsState = observable.map<string, ModuleUpgradeToOtherVersion[]>()
 	readonly #upgradeToVersionsSubscribers = new Map<string, Set<string>>()
@@ -97,13 +113,6 @@ export class ModuleStoreVersionsStore {
 	constructor(socket: CompanionSocketWrapped) {
 		this.#socket = socket
 
-		socket.on('modules-store:info:data', (msgModuleId, data) => {
-			if (!this.#versionsSubscribers.has(msgModuleId)) return
-
-			runInAction(() => {
-				this.#versionsState.set(msgModuleId, data)
-			})
-		})
 		socket.on('modules-upgrade-to-other:data', (msgModuleId, data) => {
 			if (!this.#upgradeToVersionsSubscribers.has(msgModuleId)) return
 
@@ -123,41 +132,46 @@ export class ModuleStoreVersionsStore {
 			const subs = this.#versionsSubscribers.get(moduleId)
 			if (!subs) return
 
-			subs.delete(sessionId)
+			subs.subscribers.delete(sessionId)
 
-			if (subs.size === 0) {
+			if (subs.subscribers.size === 0) {
 				this.#versionsSubscribers.delete(moduleId)
-				this.#socket.emitPromise('modules-store:info:unsubscribe', [moduleId]).catch((err) => {
-					console.error('Failed to unsubscribe to module store', err)
-				})
+
+				subs.sub.unsubscribe()
 			}
 		}
 
 		let subscribers = this.#versionsSubscribers.get(moduleId)
 		if (subscribers) {
 			// Add to existing
-			subscribers.add(sessionId)
+			subscribers.subscribers.add(sessionId)
 
 			return unsub
 		}
 
-		// Setup new store
-		subscribers = new Set([sessionId])
-		this.#versionsSubscribers.set(moduleId, subscribers)
-
 		// First subscriber, actually subscribe
-		this.#socket
-			.emitPromise('modules-store:info:subscribe', [moduleId])
-			.then((data) => {
-				if (!data || !this.#versionsSubscribers.has(moduleId)) return
+		const sub = trpc.connections.modulesStore.watchModuleInfo
+			.subscriptionOptions({
+				moduleId,
+			})
+			.subscribe({
+				onData: (data) => {
+					runInAction(() => {
+						if (data) {
+							this.#versionsState.set(moduleId, data)
+						} else {
+							this.#versionsState.delete(moduleId)
+						}
+					})
+				},
+				onError: (err) => {
+					console.error('Failed to subscribe to module store', err)
+				},
+			})
 
-				runInAction(() => {
-					this.#versionsState.set(moduleId, data)
-				})
-			})
-			.catch((err) => {
-				console.error('Failed to subscribe to module store', err)
-			})
+		// Setup new store
+		subscribers = { subscribers: new Set([sessionId]), sub: sub }
+		this.#versionsSubscribers.set(moduleId, subscribers)
 
 		return unsub
 	}
