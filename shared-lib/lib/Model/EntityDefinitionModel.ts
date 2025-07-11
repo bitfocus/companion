@@ -19,10 +19,15 @@ export interface ClientEntityDefinition {
 }
 
 export type EntityDefinitionUpdate =
+	| EntityDefinitionUpdateInit
 	| EntityDefinitionUpdateForgetConnection
 	| EntityDefinitionUpdateAddConnection
 	| EntityDefinitionUpdateUpdateConnection
 
+export interface EntityDefinitionUpdateInit {
+	type: 'init'
+	definitions: Record<string, Record<string, ClientEntityDefinition>>
+}
 export interface EntityDefinitionUpdateForgetConnection {
 	type: 'forget-connection'
 	connectionId: string

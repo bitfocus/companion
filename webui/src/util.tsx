@@ -5,8 +5,6 @@ import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { PRIMARY_COLOR } from './Constants.js'
 import { BarLoader, PuffLoader } from 'react-spinners'
-import { Operation as JsonPatchOperation, applyPatch } from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
 import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { Socket } from 'socket.io-client'
@@ -354,44 +352,6 @@ export function LoadingRetryOrError({
 			)}
 		</>
 	)
-}
-
-export function applyPatchOrReplaceSubObject<T extends object | undefined>(
-	oldDefinitions: Record<string, T>,
-	key: string,
-	patch: JsonPatchOperation<T>[] | T | null,
-	defVal: T | null
-): Record<string, T> {
-	if (oldDefinitions) {
-		const oldEntry = oldDefinitions[key] ?? defVal
-		if (!oldEntry) return oldDefinitions
-
-		const newDefinitions = { ...oldDefinitions }
-		if (!patch) {
-			delete newDefinitions[key]
-		} else if (Array.isArray(patch)) {
-			// If its an array we assume it is a patch
-			newDefinitions[key] = applyPatch(cloneDeep(oldEntry), patch).newDocument
-		} else {
-			// If its any other type, then its not a patch and is likely a complete value
-			newDefinitions[key] = patch
-		}
-
-		return newDefinitions
-	} else {
-		return oldDefinitions
-	}
-}
-export function applyPatchOrReplaceObject<T extends object>(oldObj: T, patch: JsonPatchOperation<T>[] | T): T {
-	const oldEntry = oldObj ?? {}
-
-	if (Array.isArray(patch)) {
-		// If its an array we assume it is a patch
-		return applyPatch(cloneDeep(oldEntry), patch).newDocument
-	} else {
-		// If its any other type, then its not a patch and is likely a complete value
-		return patch
-	}
 }
 
 /**

@@ -3,7 +3,6 @@ import type { UserConfigModel } from './Model/UserConfigModel.js'
 import type { ClientLogLine } from './Model/LogLine.js'
 import type {
 	ClientEditConnectionConfig,
-	ClientEventDefinition,
 	ConnectionStatusEntry,
 	ConnectionStatusUpdate,
 	ControlLocation,
@@ -19,13 +18,10 @@ import type { ClientPagesInfo, PageModelChanges } from './Model/PageModel.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type { UIPresetDefinition } from './Model/Presets.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 import type { ActionSetId } from './Model/ActionModel.js'
-import type { EntityModelType } from './Model/EntityModel.js'
-import { ClientEntityDefinition, EntityDefinitionUpdate } from './Model/EntityDefinitionModel.js'
 import { ModuleStoreListCacheStore, ModuleStoreModuleInfoStore } from './Model/ModulesStore.js'
 
 export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
@@ -52,17 +48,12 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 	'custom-variables:delete': (name: string) => void
 	'custom-variables:reorder': (collectionId: string | null, name: string, dropIndex: number) => void
 
-	'event-definitions:get': () => Record<string, ClientEventDefinition | undefined>
 	'custom-variables:subscribe': () => CustomVariablesModel
 	'custom-variables:unsubscribe': () => void
 	'modules:subscribe': () => Record<string, ClientModuleInfo>
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'entity-definitions:subscribe': (
-		type: EntityModelType
-	) => Record<string, Record<string, ClientEntityDefinition | undefined> | undefined>
-	'entity-definitions:unsubscribe': (type: EntityModelType) => void
 	'variable-definitions:subscribe': () => AllVariableDefinitions
 	'variable-definitions:unsubscribe': () => void
 
@@ -183,8 +174,6 @@ export interface ClientToBackendEventsMap extends AllMultipartUploaderMethods {
 
 	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
 
-	'presets:subscribe': () => Record<string, Record<string, UIPresetDefinition> | undefined>
-	'presets:unsubscribe': () => void
 	'presets:preview_render': (connectionId: string, presetId: string) => string | null
 
 	cloud_state_get: () => never
@@ -227,13 +216,8 @@ export interface BackendToClientEventsMap {
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'surfaces:update': (patch: SurfacesUpdate[]) => void
-	'entity-definitions:update': (type: EntityModelType, change: EntityDefinitionUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
-	'presets:update': (
-		id: string,
-		patch: JsonPatchOperation<Record<string, UIPresetDefinition>>[] | Record<string, UIPresetDefinition> | null
-	) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
 
 	'modules-store:list:data': (data: ModuleStoreListCacheStore) => void

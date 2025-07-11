@@ -12,9 +12,10 @@ import type {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { PresetDragItem } from './PresetDragItem.js'
+import { observer } from 'mobx-react-lite'
 
 export interface PresetsButtonListProps {
-	presets: Record<string, UIPresetDefinition>
+	presets: Map<string, UIPresetDefinition> | undefined
 	selectedConnectionId: string
 	selectedConnectionLabel: string
 	selectedCategory: string
@@ -27,10 +28,10 @@ interface PresetButtonGroup {
 }
 
 function groupPresetsForCategory(
-	presets: Record<string, UIPresetDefinition>,
+	presets: Map<string, UIPresetDefinition> | undefined,
 	category: string
 ): (PresetButtonGroup | UIPresetDefinitionText)[] {
-	const filteredPresets = Object.values(presets)
+	const filteredPresets = Array.from(presets?.values() || [])
 		.filter((p) => p.category === category)
 		.sort((a, b) => a.order - b.order)
 
@@ -59,7 +60,7 @@ function groupPresetsForCategory(
 	return result
 }
 
-export function PresetsButtonList({
+export const PresetsButtonList = observer(function PresetsButtonList({
 	presets,
 	selectedConnectionId,
 	selectedConnectionLabel,
@@ -110,7 +111,8 @@ export function PresetsButtonList({
 			</CCallout>
 		</div>
 	)
-}
+})
+
 interface PresetTextProps {
 	preset: UIPresetDefinitionText
 }

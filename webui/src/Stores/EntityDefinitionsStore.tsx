@@ -65,23 +65,23 @@ export class EntityDefinitionsForTypeStore {
 		this.entityType = entityType
 	}
 
-	public reset = action(
-		(newData: Record<string, Record<string, ClientEntityDefinition | undefined> | undefined> | null) => {
+	public updateStore = action((change: EntityDefinitionUpdate | null) => {
+		if (!change) {
 			this.connections.clear()
+			return
+		}
 
-			if (newData) {
-				for (const [connectionId, entitySet] of Object.entries(newData)) {
+		const changeType = change.type
+		switch (change.type) {
+			case 'init':
+				this.connections.clear()
+
+				for (const [connectionId, entitySet] of Object.entries(change.definitions)) {
 					if (!entitySet) continue
 
 					this.#replaceConnection(connectionId, entitySet)
 				}
-			}
-		}
-	)
-
-	public applyChanges = action((change: EntityDefinitionUpdate) => {
-		const changeType = change.type
-		switch (change.type) {
+				break
 			case 'add-connection':
 				this.#replaceConnection(change.connectionId, change.entities)
 				break

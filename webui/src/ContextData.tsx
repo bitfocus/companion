@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useMemo, useRef } from 'react'
 import { SocketContext } from '~/util.js'
 import { NotificationsManager, NotificationsManagerRef } from '~/Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
@@ -31,6 +31,7 @@ import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
 import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { trpc } from './TRPC.js'
+import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -77,10 +78,14 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		} satisfies RootAppStore
 	}, [socket])
 
-	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
-
-	const actionDefinitionsReady = useEntityDefinitionsSubscription(socket, rootStore.entityDefinitions.actions)
-	const feedbackDefinitionsReady = useEntityDefinitionsSubscription(socket, rootStore.entityDefinitions.feedbacks)
+	const actionDefinitionsReady = useEntityDefinitionsSubscription(
+		rootStore.entityDefinitions.actions,
+		trpc.connections.definitions.actions
+	)
+	const feedbackDefinitionsReady = useEntityDefinitionsSubscription(
+		rootStore.entityDefinitions.feedbacks,
+		trpc.connections.definitions.feedbacks
+	)
 	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
@@ -106,25 +111,10 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		socket,
 		rootStore.moduleStoreRefreshProgress
 	)
-
-	useEffect(() => {
-		if (socket) {
-			socket
-				.emitPromise('event-definitions:get', [])
-				.then((definitions) => {
-					setLoadedEventDefinitions(true)
-					rootStore.eventDefinitions.setDefinitions(definitions)
-				})
-				.catch((e) => {
-					console.error('Failed to load event definitions', e)
-				})
-		}
-	}, [socket, rootStore])
-
+	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
 
 	const steps: boolean[] = [
-		loadedEventDefinitions,
 		moduleInfoReady,
 		moduleStoreReady,
 		connectionsReady,
@@ -140,6 +130,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		pagesReady,
 		triggersListReady,
 		triggerGroupsReady,
+		entityDefinitionsReady,
 		activeLearnRequestsReady,
 		moduleStoreProgressReady,
 	]
