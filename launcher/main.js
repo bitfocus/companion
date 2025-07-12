@@ -113,6 +113,11 @@ if (!lock) {
 
 		enable_developer: false,
 		dev_modules_path: '',
+		enable_syslog: false,
+		syslog_host: '127.0.0.1',
+		syslog_port: '514',
+		syslog_tcp: false,
+		syslog_localhost: 'Companion',
 	}
 
 	try {
@@ -473,6 +478,63 @@ if (!lock) {
 			triggerRestart()
 			restartWatcher()
 		})
+		ipcMain.on('launcher-enable-syslog', (_e, msg) => {
+			console.log(`launcher-enable-syslog: ${msg}`)
+			uiConfig.set('enable_syslog', !uiConfig.get('enable_syslog'))
+
+			sendAppInfo()
+			triggerRestart()
+			restartWatcher()
+		})
+		ipcMain.on('launcher-enable-syslog-tcp', (_e, msg) => {
+			console.log(`launcher-enable-syslog-tcp: ${msg}`)
+			uiConfig.set('syslog_tcp', !uiConfig.get('syslog_tcp'))
+			if (uiConfig.get('enable_syslog')) {
+				sendAppInfo()
+				triggerRestart()
+				restartWatcher()
+			}
+		})
+		ipcMain.on('launcher-set-syslog-host', (_e, msg) => {
+			console.log(`launcher-set-syslog-host: ${msg}`)
+			uiConfig.set('syslog_host', msg)
+
+			if (uiConfig.get('enable_syslog')) {
+				sendAppInfo()
+				triggerRestart()
+				restartWatcher()
+			}
+		})
+		ipcMain.on('launcher-set-syslog-localhost', (_e, msg) => {
+			console.log(`launcher-set-syslog-localhost: ${msg}`)
+			uiConfig.set('syslog_localhost', msg)
+
+			if (uiConfig.get('enable_syslog')) {
+				sendAppInfo()
+				triggerRestart()
+				restartWatcher()
+			}
+		})
+		ipcMain.on('launcher-set-syslog-port', (_e, msg) => {
+			console.log(`launcher-set-syslog-port: ${msg}`)
+			const newPort = Number.parseInt(msg)
+			if (Number.isNaN(newPort) || newPort < 20 || newPort > 65535) {
+				electron.dialog
+					.showMessageBox(thisWindow, {
+						type: 'warning',
+						message: 'Port must be between 20 and 65535',
+					})
+					.catch(() => null)
+				return
+			}
+			uiConfig.set('syslog_port', newPort)
+
+			if (uiConfig.get('enable_syslog')) {
+				sendAppInfo()
+				triggerRestart()
+				restartWatcher()
+			}
+		})
 
 		ipcMain.on('network-interfaces:get', () => {
 			systeminformation.networkInterfaces().then((list) => {
@@ -815,6 +877,19 @@ if (!lock) {
 						`--admin-address=${uiConfig.get('bind_ip')}`,
 						uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
 						disableAdminPassword || process.env.DISABLE_ADMIN_PASSWORD ? `--disable-admin-password` : undefined,
+						uiConfig.get('enable_developer') && uiConfig.get('enable_syslog') ? `--syslog-enable` : undefined,
+						uiConfig.get('enable_developer') && uiConfig.get('enable_syslog') && uiConfig.get('syslog_host')
+							? `--syslog-host=${uiConfig.get('syslog_host')}`
+							: undefined,
+						uiConfig.get('enable_developer') && uiConfig.get('enable_syslog') && uiConfig.get('syslog_port')
+							? `--syslog-port=${uiConfig.get('syslog_port')}`
+							: undefined,
+						uiConfig.get('enable_developer') && uiConfig.get('enable_syslog') && uiConfig.get('syslog_tcp')
+							? `--syslog-tcp`
+							: undefined,
+						uiConfig.get('enable_developer') && uiConfig.get('enable_syslog') && uiConfig.get('syslog_localhost')
+							? `--syslog-localhost=${uiConfig.get('syslog_localhost')}`
+							: undefined,
 					].filter((v) => !!v),
 				{
 					name: `Companion process`,
