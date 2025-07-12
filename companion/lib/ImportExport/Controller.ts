@@ -51,6 +51,7 @@ import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js
 import { ExportController } from './Export.js'
 import { FILE_VERSION } from './Constants.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
+import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -413,6 +414,22 @@ export class ImportExportController {
 				}
 
 				if (!config || config.surfaces) {
+					const surfaces = data.surfaces as Record<number, SurfaceConfig>
+					const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
+					const getPageId = (val: string) => this.#pagesController.getPageId(Number(val))
+					const fixPageId = (groupConfig: SurfaceGroupConfig) => {
+						groupConfig.last_page_id = getPageId(groupConfig.last_page_id) ?? ''
+						groupConfig.startup_page_id = getPageId(groupConfig.startup_page_id) ?? ''
+					}
+
+					// Convert external page refs, i.e. page numbers, to internal ids.
+					for (const surface of Object.values(surfaces)) {
+						fixPageId(surface.groupConfig)
+					}
+					for (const groupConfig of Object.values(surfaceGroups)) {
+						fixPageId(groupConfig)
+					}
+
 					this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
 				}
 
