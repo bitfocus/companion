@@ -29,7 +29,7 @@ import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel } from './Types.js'
+import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { PanelDefaults } from './Config.js'
 import debounceFn from 'debounce-fn'
@@ -93,7 +93,7 @@ export function getSurfaceName(config: Record<string, any>, surfaceId: string): 
 interface SurfaceHandlerEvents {
 	interaction: []
 	unlocked: []
-	configUpdated: [Record<string, any> | undefined]
+	configUpdated: [SurfaceConfig | undefined]
 }
 
 export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
@@ -184,11 +184,14 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	readonly #variables: VariablesController
 
+	readonly #updateEvents: EventEmitter<UpdateEvents>
+
 	readonly panel: SurfacePanel
 
 	constructor(
 		surfaceController: SurfaceController,
 		deps: SurfaceHandlerDependencies,
+		updateEvents: EventEmitter<UpdateEvents>,
 		panel: SurfacePanel,
 		surfaceConfig: SurfaceConfig
 	) {
@@ -203,6 +206,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#page = deps.page
 		this.#userconfig = deps.userconfig
 		this.#variables = deps.variables
+		this.#updateEvents = updateEvents
 
 		this.panel = panel
 		this.#surfaceConfig = surfaceConfig
@@ -405,7 +409,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Get the panel configuration
 	 */
-	getPanelConfig(): any {
+	getPanelConfig(): SurfacePanelConfig {
 		return this.#surfaceConfig.config
 	}
 
@@ -707,6 +711,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		this.#surfaceConfig.groupConfig = groupConfig
 		this.#saveConfig()
+
+		this.#updateEvents.emit(`groupConfig:${this.surfaceId}`, this.#surfaceConfig.groupConfig)
 	}
 
 	/**

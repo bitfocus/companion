@@ -7,7 +7,6 @@ import type {
 	ConnectionStatusUpdate,
 	ControlLocation,
 } from './Model/Common.js'
-import type { ClientDevicesListItem, SurfaceGroupConfig, SurfacePanelConfig, SurfacesUpdate } from './Model/Surfaces.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -59,21 +58,6 @@ export interface ClientToBackendEventsMap {
 	'controls:swap': (from: ControlLocation, to: ControlLocation) => boolean
 	'controls:reset': (location: ControlLocation, newType?: string) => void
 	'controls:import-preset': (connectionId: string, presetId: string, location: ControlLocation) => string | null
-
-	'surfaces:subscribe': () => Record<string, ClientDevicesListItem | undefined>
-	'surfaces:unsubscribe': () => void
-	'surfaces:forget': (surfaceId: string) => string | boolean
-	'surfaces:set-name': (surfaceId: string, name: string) => void
-	'surfaces:add-to-group': (groupId: string | null, surfaceId: string) => void
-	'surfaces:group-add': (baseId: string, groupName: string) => string
-	'surfaces:group-remove': (groupId: string) => string
-	'surfaces:group-config-set': (groupId: string, key: string, value: any) => SurfaceGroupConfig | string
-	'surfaces:emulator-remove': (surfaceId: string) => boolean
-	'surfaces:emulator-add': (baseId: string, name: string) => string
-	'surfaces:rescan': () => string | undefined
-	'surfaces:config-get': (surfaceId: string) => SurfacePanelConfig | null
-	'surfaces:config-set': (surfaceId: string, panelConfig: SurfacePanelConfig) => SurfacePanelConfig | string
-	'surfaces:group-config-get': (groupId: string) => SurfaceGroupConfig
 
 	'logs:subscribe': () => ClientLogLine[]
 	'logs:unsubscribe': () => void
@@ -134,7 +118,6 @@ export interface BackendToClientEventsMap {
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
-	'surfaces:update': (patch: SurfacesUpdate[]) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void

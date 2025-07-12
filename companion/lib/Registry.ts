@@ -208,17 +208,13 @@ export class Registry {
 			this.variables = new VariablesController(this.db, this.io)
 			this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
 			this.preview = new GraphicsPreview(this.graphics, this.page, this.variables.values)
-			this.surfaces = new SurfaceController(
-				this.db,
-				{
-					controls: this.controls,
-					graphics: this.graphics,
-					page: this.page,
-					userconfig: this.userconfig,
-					variables: this.variables,
-				},
-				this.io
-			)
+			this.surfaces = new SurfaceController(this.db, {
+				controls: this.controls,
+				graphics: this.graphics,
+				page: this.page,
+				userconfig: this.userconfig,
+				variables: this.variables,
+			})
 
 			const oscSender = new ServiceOscSender(this.userconfig)
 			this.instance = new InstanceController(
@@ -313,7 +309,6 @@ export class Registry {
 				LogController.clientConnect(client)
 				this.#data.clientConnect(client)
 				this.controls.clientConnect(client)
-				this.surfaces.clientConnect(client)
 				this.instance.clientConnect(client)
 				this.#cloud.clientConnect(client)
 				this.importExport.clientConnect(client)

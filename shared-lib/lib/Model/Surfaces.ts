@@ -40,7 +40,7 @@ export interface ClientSurfaceItem {
 
 export interface ClientDevicesListItem {
 	id: string
-	index: number | undefined
+	index: number | null
 	displayName: string
 	isAutoGroup: boolean
 	surfaces: ClientSurfaceItem[]
@@ -87,8 +87,16 @@ export interface SurfacePanelConfig {
 	[key: string]: any
 }
 
-export type SurfacesUpdate = SurfacesUpdateRemoveOp | SurfacesUpdateAddOp | SurfacesUpdateUpdateOp
+export type SurfacesUpdate =
+	| SurfacesUpdateInitOp
+	| SurfacesUpdateRemoveOp
+	| SurfacesUpdateAddOp
+	| SurfacesUpdateUpdateOp
 
+export interface SurfacesUpdateInitOp {
+	type: 'init'
+	info: Record<string, ClientDevicesListItem>
+}
 export interface SurfacesUpdateRemoveOp {
 	type: 'remove'
 	itemId: string

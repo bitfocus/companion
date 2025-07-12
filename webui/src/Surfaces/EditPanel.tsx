@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CForm, CFormSelect, CCol, CFormLabel, CFormSwitch } from '@coreui/react'
 import { LoadingRetryOrError, PreventDefaultHandler } from '~/util.js'
-import { nanoid } from 'nanoid'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
@@ -16,6 +15,8 @@ import { observer } from 'mobx-react-lite'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { EditPanelConfigField } from './EditPanelConfigField'
 import { NonIdealState } from '~/Components/NonIdealState'
+import { trpc, useMutationExt } from '~/TRPC'
+import { useSubscription } from '@trpc/tanstack-react-query'
 
 type SurfaceInfo = ClientSurfaceItem & { groupId: string | null }
 
@@ -78,51 +79,92 @@ interface SurfaceEditPanelOldProps {
 	groupInfo: ClientDevicesListItem | null
 }
 
+function useSurfaceConfig(surfaceId: string | null) {
+	const [surfaceConfig, setSurfaceConfig] = useState<SurfacePanelConfig | null>(null)
+	const [configLoadError, setConfigLoadError] = useState<string | null>(null)
+
+	const configSub = useSubscription(
+		trpc.surfaces.watchSurfaceConfig.subscriptionOptions(
+			{
+				surfaceId: surfaceId ?? '',
+			},
+			{
+				enabled: !!surfaceId,
+				onStarted: () => {
+					setConfigLoadError(null)
+					setSurfaceConfig(null)
+				},
+				onData: (data) => {
+					setSurfaceConfig(data)
+				},
+				onError: (err) => {
+					console.error('Failed to load surface config', err)
+				},
+			}
+		)
+	)
+
+	useEffect(() => setSurfaceConfig(null), [surfaceId])
+
+	return {
+		reset: configSub.reset,
+		error: configLoadError,
+		config: surfaceConfig,
+	}
+}
+function useGroupConfig(groupId: string | null) {
+	const [groupConfig, setGroupConfig] = useState<SurfaceGroupConfig | null>(null)
+	const [configLoadError, setConfigLoadError] = useState<string | null>(null)
+
+	const configSub = useSubscription(
+		trpc.surfaces.watchGroupConfig.subscriptionOptions(
+			{
+				groupId: groupId ?? '',
+			},
+			{
+				enabled: !!groupId,
+				onStarted: () => {
+					setConfigLoadError(null)
+					setGroupConfig(null)
+				},
+				onData: (data) => {
+					setGroupConfig(data)
+				},
+				onError: (err) => {
+					console.error('Failed to load group config', err)
+					setConfigLoadError(`Failed to load group config: ${err.message}`)
+				},
+			}
+		)
+	)
+
+	useEffect(() => setGroupConfig(null), [groupId])
+
+	return {
+		reset: configSub.reset,
+		error: configLoadError,
+		config: groupConfig,
+	}
+}
+
 const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function SurfaceEditPanelContent({
 	surfaceInfo,
 	groupInfo,
 }) {
-	const { surfaces, socket } = useContext(RootAppStoreContext)
+	const { surfaces } = useContext(RootAppStoreContext)
 
 	const surfaceId = surfaceInfo?.id ?? null
 	const groupId = groupInfo?.id ?? null
 
-	const [surfaceConfig, setSurfaceConfig] = useState<SurfacePanelConfig | null>(null)
-	const [groupConfig, setGroupConfig] = useState<SurfaceGroupConfig | null | false>(null)
-	const [configLoadError, setConfigLoadError] = useState<string | null>(null)
-	const [reloadToken, setReloadToken] = useState(nanoid())
+	const surfaceConfig = useSurfaceConfig(surfaceId)
+	const groupConfig = useGroupConfig(groupId)
 
-	const doRetryConfigLoad = useCallback(() => setReloadToken(nanoid()), [])
-
-	useEffect(() => {
-		setConfigLoadError(null)
-		setSurfaceConfig(null)
-		setGroupConfig(null)
-
-		if (surfaceId) {
-			socket
-				.emitPromise('surfaces:config-get', [surfaceId])
-				.then((config) => {
-					setSurfaceConfig(config)
-				})
-				.catch((err: any) => {
-					console.error('Failed to load surface config', err)
-					setConfigLoadError(`Failed to load surface config`)
-				})
-		}
-		if (groupId) {
-			socket
-				.emitPromise('surfaces:group-config-get', [groupId])
-				.then((config) => {
-					setGroupConfig(config)
-				})
-				.catch((err: any) => {
-					setGroupConfig(false)
-					console.error('Failed to load group config', err)
-					setConfigLoadError(`Failed to load surface group config`)
-				})
-		}
-	}, [socket, surfaceId, groupId, reloadToken])
+	const surfaceConfigReset = surfaceConfig.reset
+	const groupConfigReset = groupConfig.reset
+	const doRetryConfigLoad = useCallback(() => {
+		surfaceConfigReset()
+		groupConfigReset()
+	}, [surfaceConfigReset, groupConfigReset])
 
 	// Remove unused onlineSurfaceIds for now - could be used for validation later
 	// const onlineSurfaceIds = useComputed(() => {
@@ -138,92 +180,87 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 	// 	return onlineSurfaceIds
 	// }, [surfaces])
 
+	const surfaceSetConfigKeyMutation = useMutationExt(trpc.surfaces.surfaceSetConfigKey.mutationOptions())
 	const setSurfaceConfigValue = useCallback(
 		(key: string, value: any) => {
 			console.log('update surface', key, value)
 			if (surfaceId) {
-				setSurfaceConfig((oldConfig) => {
-					if (!oldConfig) return oldConfig
-
-					const newConfig: SurfacePanelConfig = {
-						...oldConfig,
-						[key]: value,
-					}
-
-					socket
-						.emitPromise('surfaces:config-set', [surfaceId, newConfig])
-						.then((newConfig) => {
-							if (typeof newConfig === 'string') {
-								console.log('Config update failed', newConfig)
-							} else {
-								setSurfaceConfig(newConfig)
-							}
-						})
-						.catch((e) => {
-							console.log('Config update failed', e)
-						})
-					return newConfig
-				})
+				surfaceSetConfigKeyMutation
+					.mutateAsync({
+						surfaceId,
+						key,
+						value,
+					})
+					.then((error) => {
+						if (error) {
+							console.log('Config update failed', error)
+						}
+					})
+					.catch((e) => {
+						console.log('Config update failed', e)
+					})
 			}
 		},
-		[socket, surfaceId]
+		[surfaceSetConfigKeyMutation, surfaceId]
 	)
 
+	const setGroupConfigKeyMutation = useMutationExt(trpc.surfaces.groupSetConfigKey.mutationOptions())
 	const setGroupConfigValue = useCallback(
 		(key: string, value: any) => {
 			console.log('update group', key, value)
 			if (groupId) {
-				socket
-					.emitPromise('surfaces:group-config-set', [groupId, key, value])
-					.then((newConfig) => {
-						if (typeof newConfig === 'string') {
-							console.log('group config update failed', newConfig)
-						} else {
-							setGroupConfig(newConfig)
+				setGroupConfigKeyMutation
+					.mutateAsync({
+						groupId,
+						key,
+						value,
+					})
+					.then((error) => {
+						if (error) {
+							console.log('group config update failed', error)
 						}
 					})
 					.catch((e) => {
 						console.log('group config update failed', e)
 					})
-
-				setGroupConfig((oldConfig) => {
-					if (!oldConfig) return oldConfig
-					return {
-						...oldConfig,
-						[key]: value,
-					}
-				})
 			}
 		},
-		[socket, groupId]
+		[setGroupConfigKeyMutation, groupId]
 	)
 
+	const surfaceSetGroupMutation = useMutationExt(trpc.surfaces.surfaceSetGroup.mutationOptions())
 	const setSurfaceGroupId = useCallback(
 		(groupId0: string) => {
 			if (!surfaceId) return
 			const groupId = !groupId0 || groupId0 === 'null' ? null : groupId0
-			socket.emitPromise('surfaces:add-to-group', [groupId, surfaceId]).catch((e) => {
+			surfaceSetGroupMutation.mutateAsync({ groupId, surfaceId }).catch((e) => {
 				console.log('Config update failed', e)
 			})
 		},
-		[socket, surfaceId]
+		[surfaceSetGroupMutation, surfaceId]
 	)
 
+	const setNameMutation = useMutationExt(trpc.surfaces.surfaceOrGroupSetName.mutationOptions())
 	const updateName = useCallback(
-		(itemId: string, name: string) => {
-			socket.emitPromise('surfaces:set-name', [itemId, name]).catch((err) => {
+		(surfaceOrGroupId: string, name: string) => {
+			setNameMutation.mutateAsync({ surfaceOrGroupId, name }).catch((err) => {
 				console.error('Update name failed', err)
 			})
 		},
-		[socket]
+		[setNameMutation]
 	)
 
 	// Show loading or error state
-	const dataReady = (!surfaceId || !!surfaceConfig) && (!groupId || groupConfig !== null)
-	if (!dataReady || configLoadError) {
+	const dataReady = (!surfaceId || !!surfaceConfig.config) && (!groupId || groupConfig.config !== null)
+	if (!dataReady || surfaceConfig.error || groupConfig.error) {
 		return (
 			<>
-				<LoadingRetryOrError error={configLoadError} dataReady={dataReady} doRetry={doRetryConfigLoad} design="pulse" />
+				<LoadingRetryOrError
+					error={surfaceConfig.error || groupConfig.error}
+					dataReady={dataReady}
+					doRetry={doRetryConfigLoad}
+					design="pulse"
+				/>
 			</>
 		)
 	}
@@ -267,7 +304,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 					</>
 				)}
 
-				{groupConfig && groupInfo && (
+				{groupConfig.config && groupInfo && (
 					<>
 						{!groupInfo.isAutoGroup && (
 							<>
@@ -288,7 +325,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 								name="colFormUseLastPage"
 								className="mx-2"
 								size="xl"
-								checked={!!groupConfig.use_last_page}
+								checked={!!groupConfig.config.use_last_page}
 								onChange={(e) => setGroupConfigValue('use_last_page', !!e.currentTarget.checked)}
 							/>
 						</CCol>
@@ -298,10 +335,10 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 						</CFormLabel>
 						<CCol sm={8}>
 							<InternalPageIdDropdown
-								disabled={!!groupConfig.use_last_page}
+								disabled={!!groupConfig.config.use_last_page}
 								includeDirection={false}
 								includeStartup={false}
-								value={groupConfig.startup_page_id}
+								value={groupConfig.config.startup_page_id}
 								setValue={(val) => setGroupConfigValue('startup_page_id', val)}
 							/>
 						</CCol>
@@ -314,25 +351,25 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 								disabled={false}
 								includeDirection={false}
 								includeStartup={false}
-								value={groupConfig.last_page_id}
+								value={groupConfig.config.last_page_id}
 								setValue={(val) => setGroupConfigValue('last_page_id', val)}
 							/>
 						</CCol>
 					</>
 				)}
 
-				{surfaceConfig &&
+				{surfaceConfig.config &&
 					surfaceInfo &&
 					surfaceInfo.configFields.map((field) => (
 						<EditPanelConfigField
 							key={field.id}
 							definition={field}
-							value={surfaceConfig[field.id]}
+							value={surfaceConfig.config?.[field.id]}
 							setValue={setSurfaceConfigValue}
 						/>
 					))}
 
-				{surfaceConfig && surfaceInfo && !surfaceInfo.isConnected && (
+				{surfaceConfig.config && surfaceInfo && !surfaceInfo.isConnected && (
 					<CCol sm={12}>
 						<NonIdealState
 							icon={faQuestionCircle}

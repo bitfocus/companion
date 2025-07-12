@@ -41,7 +41,7 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 export function useMutationExt<TData = unknown, TError = DefaultError, TVariables = void, TContext = unknown>(
 	options: UseMutationOptions<TData, TError, TVariables, TContext>,
 	queryClient?: QueryClient
-): Pick<UseMutationResult<TData, TError, TVariables, TContext>, 'mutateAsync' | 'mutate' | 'isPending'> {
+): Pick<UseMutationResult<TData, TError, TVariables, TContext>, 'mutateAsync' | 'mutate' | 'isPending' | 'error'> {
 	const rawUseMutation = useMutation(options, queryClient)
 
 	return useMemo(
@@ -49,7 +49,8 @@ export function useMutationExt<TData = unknown, TError = DefaultError, TVariable
 			mutateAsync: rawUseMutation.mutateAsync,
 			mutate: rawUseMutation.mutate,
 			isPending: rawUseMutation.isPending,
+			error: rawUseMutation.error,
 		}),
-		[rawUseMutation.mutateAsync, rawUseMutation.mutate, rawUseMutation.isPending]
+		[rawUseMutation.mutateAsync, rawUseMutation.mutate, rawUseMutation.isPending, rawUseMutation.error]
 	)
 }

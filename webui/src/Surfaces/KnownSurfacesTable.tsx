@@ -11,6 +11,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import { makeAbsolutePath } from '~/util'
+import { trpc, useMutationExt } from '~/TRPC'
 
 interface KnownSurfacesTableProps {
 	selectedItemId: string | null
@@ -21,32 +22,35 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 	selectedItemId,
 	selectItem,
 }: KnownSurfacesTableProps) {
-	const { surfaces, socket } = useContext(RootAppStoreContext)
+	const { surfaces } = useContext(RootAppStoreContext)
 
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
+	const deleteEmulatorMutation = useMutationExt(trpc.surfaces.emulatorRemove.mutationOptions())
 	const deleteEmulator = useCallback(
 		(surfaceId: string) => {
 			confirmRef?.current?.show('Remove Emulator', 'Are you sure?', 'Remove', () => {
-				socket.emitPromise('surfaces:emulator-remove', [surfaceId]).catch((err) => {
+				deleteEmulatorMutation.mutateAsync({ id: surfaceId }).catch((err) => {
 					console.error('Emulator remove failed', err)
 				})
 			})
 		},
-		[socket]
+		[deleteEmulatorMutation]
 	)
 
+	const deleteGroupMutation = useMutationExt(trpc.surfaces.groupRemove.mutationOptions())
 	const deleteGroup = useCallback(
 		(groupId: string) => {
 			confirmRef?.current?.show('Remove Group', 'Are you sure?', 'Remove', () => {
-				socket.emitPromise('surfaces:group-remove', [groupId]).catch((err) => {
+				deleteGroupMutation.mutateAsync({ groupId }).catch((err) => {
 					console.error('Group remove failed', err)
 				})
 			})
 		},
-		[socket]
+		[deleteGroupMutation]
 	)
 
+	const forgetSurfaceMutation = useMutationExt(trpc.surfaces.surfaceForget.mutationOptions())
 	const forgetSurface = useCallback(
 		(surfaceId: string) => {
 			confirmRef.current?.show(
@@ -54,13 +58,13 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 				'Are you sure you want to forget this surface? Any settings will be lost',
 				'Forget',
 				() => {
-					socket.emitPromise('surfaces:forget', [surfaceId]).catch((err) => {
-						console.error('fotget failed', err)
+					forgetSurfaceMutation.mutateAsync({ surfaceId }).catch((err) => {
+						console.error('forget failed', err)
 					})
 				}
 			)
 		},
-		[socket]
+		[forgetSurfaceMutation]
 	)
 
 	const surfacesList = Array.from(surfaces.store.values()).sort((a, b) => {
@@ -185,7 +189,7 @@ function ManualGroupRow({
 				<SurfaceRow
 					key={surface.id}
 					surface={surface}
-					index={undefined}
+					index={null}
 					isInGroup={true}
 					deleteEmulator={deleteEmulator}
 					forgetSurface={forgetSurface}
@@ -200,7 +204,7 @@ function ManualGroupRow({
 
 interface SurfaceRowProps {
 	surface: ClientSurfaceItem
-	index: number | undefined
+	index: number | null
 	isInGroup: boolean
 	deleteEmulator: (surfaceId: string) => void
 	forgetSurface: (surfaceId: string) => void
@@ -243,7 +247,7 @@ const SurfaceRow = observer(function SurfaceRow({
 			})}
 			onClick={handleSurfaceClick}
 		>
-			<div className="grid-cell">{index !== undefined ? `#${index}` : ''}</div>
+			<div className="grid-cell">{index !== null ? `#${index}` : ''}</div>
 			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
 				<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
 				{!!surface.hasFirmwareUpdates && (
