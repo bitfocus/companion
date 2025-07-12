@@ -212,6 +212,8 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 			this.#httpsIO = new SocketIOServer(https, this.#socketIOOptions)
 
 			this.#httpsIO.on('connect', this.#clientConnect.bind(this))
+
+			this.#bindToHtttpServer(https)
 		}
 	}
 
@@ -237,14 +239,7 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 
 		this.#broadcastDisconnect = handler.broadcastReconnectNotification
 
-		this.#http.on('upgrade', (request, socket, head) => {
-			// TODO - is this guard needed?
-			if (request.url === '/trpc') {
-				this.#wss.handleUpgrade(request, socket, head, (websocket) => {
-					this.#wss.emit('connection', websocket, request)
-				})
-			}
-		})
+		this.#bindToHtttpServer(this.#http)
 
 		this.#wss.on('connection', (ws) => {
 			const socketId = nanoid()
@@ -252,6 +247,17 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 			ws.once('close', () => {
 				this.#logger.debug(`trpc socket ${socketId} disconnected`)
 			})
+		})
+	}
+
+	#bindToHtttpServer(httpServer: HttpServer): void {
+		httpServer.on('upgrade', (request, socket, head) => {
+			// TODO - is this guard needed?
+			if (request.url === '/trpc') {
+				this.#wss.handleUpgrade(request, socket, head, (websocket) => {
+					this.#wss.emit('connection', websocket, request)
+				})
+			}
 		})
 	}
 
