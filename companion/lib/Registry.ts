@@ -306,8 +306,8 @@ export class Registry {
 			})
 
 			this.ui.io.on('clientConnect', (client) => {
+				this.controls.triggers.emit('client_connect')
 				this.#data.clientConnect(client)
-				this.controls.clientConnect(client)
 				this.instance.clientConnect(client)
 				this.#cloud.clientConnect(client)
 				this.importExport.clientConnect(client)

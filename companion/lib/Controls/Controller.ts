@@ -3,7 +3,6 @@ import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import { ControlConfigRoom } from './ControlBase.js'
 import { ActionRunner } from './ActionRunner.js'
 import { ActionRecorder } from './ActionRecorder.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
@@ -14,19 +13,13 @@ import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js
 import type { TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { Registry } from '../Registry.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
-import type {
-	ControlChangeEvents,
-	ControlCommonEvents,
-	ControlDependencies,
-	SomeControlModel,
-} from './ControlDependencies.js'
+import type { ControlChangeEvents, ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
-import { router } from '../UI/TRPC.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
 import { validateBankControlId, validateTriggerControlId } from './Util.js'
 import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
@@ -35,6 +28,8 @@ import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
+import z from 'zod'
+import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 
 /**
  * The class that manages the controls
@@ -142,7 +137,6 @@ export class ControlsController {
 		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
 		return {
 			dbTable: this.#dbTable,
-			io: this.#registry.ui.io,
 			graphics: this.#registry.graphics,
 			surfaces: this.#registry.surfaces,
 			page: this.#registry.page,
@@ -187,6 +181,7 @@ export class ControlsController {
 	}
 
 	createTrpcRouter() {
+		const self = this
 		return router({
 			activeLearn: this.#activeLearningStore.createTrpcRouter(),
 			triggers: createTriggersTrpcRouter(
@@ -214,27 +209,29 @@ export class ControlsController {
 				this.#registry.graphics,
 				this
 			),
-		})
-	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		this.triggers.emit('client_connect')
+			watchControl: publicProcedure
+				.input(
+					z.object({
+						controlId: z.string(),
+					})
+				)
+				.subscription(async function* ({ input, signal }) {
+					const control = self.getControl(input.controlId)
+					if (!control) throw new Error(`Control ${input.controlId} not found`)
 
-		client.onPromise('controls:subscribe', (controlId) => {
-			client.join(ControlConfigRoom(controlId))
+					const changes = toIterable(control.updateEvents, 'update', signal)
 
-			const control = this.getControl(controlId)
-			return {
-				config: control?.toJSON(false),
-				runtime: control?.toRuntimeJSON(),
-			}
-		})
+					yield {
+						type: 'init',
+						config: control.toJSON(false),
+						runtime: control.toRuntimeJSON(),
+					} satisfies UIControlUpdate
 
-		client.onPromise('controls:unsubscribe', (controlId) => {
-			client.leave(ControlConfigRoom(controlId))
+					for await (const [change] of changes) {
+						yield change
+					}
+				}),
 		})
 	}
 

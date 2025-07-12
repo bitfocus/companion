@@ -1,4 +1,3 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { UserConfigModel } from './Model/UserConfigModel.js'
 import type { ClientEditConnectionConfig, ConnectionStatusEntry, ConnectionStatusUpdate } from './Model/Common.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
@@ -33,9 +32,6 @@ export interface ClientToBackendEventsMap {
 	'custom-variables:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-
-	'controls:subscribe': (controlId: string) => { config: unknown; runtime: unknown } | undefined
-	'controls:unsubscribe': (controlId: string) => void
 
 	'connections:add': (info: { type: string; product: string | undefined }, label: string, versionId: string) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
@@ -78,9 +74,6 @@ export interface BackendToClientEventsMap {
 	'load-save:task': (task: 'reset' | 'import' | null) => void
 
 	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void
-
-	[id: `controls:config-${string}`]: (patch: JsonPatchOperation<any>[] | false) => void
-	[id: `controls:runtime-${string}`]: (patch: JsonPatchOperation<any>[] | false) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void

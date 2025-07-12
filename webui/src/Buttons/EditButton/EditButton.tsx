@@ -1,13 +1,10 @@
-import { CCol } from '@coreui/react'
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { nanoid } from 'nanoid'
+import { CAlert, CCol } from '@coreui/react'
+import React, { useContext, useRef } from 'react'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { KeyReceiver, LoadingRetryOrError, MyErrorBoundary } from '~/util.js'
-import jsonPatch from 'fast-json-patch'
 import { ButtonStyleConfig } from '~/Controls/ButtonStyleConfig.js'
 import { ControlOptionsEditor } from '~/Controls/ControlOptionsEditor.js'
-import { cloneDeep } from 'lodash-es'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -19,6 +16,7 @@ import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
+import { useControlConfig } from '~/Hooks/useControlConfig.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -26,104 +24,42 @@ interface EditButtonProps {
 }
 
 export const EditButton = observer(function EditButton({ location, onKeyUp }: EditButtonProps) {
-	const { socket, pages } = useContext(RootAppStoreContext)
+	const { pages } = useContext(RootAppStoreContext)
 
 	const resetModalRef = useRef<GenericConfirmModalRef>(null)
 
 	const controlId = pages.getControlIdAtLocation(location)
 
-	const [config, setConfig] = useState<SomeButtonModel | null | false>(null)
-	const [runtimeProps, setRuntimeProps] = useState<Record<string, any> | null | false>(null)
-
-	const [configError, setConfigError] = useState<string | null>(null)
-
-	const [reloadConfigToken, setReloadConfigToken] = useState(nanoid())
-
 	const previewImage = useButtonImageForControlId(controlId || '', !controlId)
 
-	useEffect(() => {
-		if (!controlId) {
-			setConfig(false)
-			setRuntimeProps({})
-			setConfigError(null)
-
-			return
-		}
-
-		setConfig(null)
-		setConfigError(null)
-		setRuntimeProps(null)
-
-		socket
-			.emitPromise('controls:subscribe', [controlId])
-			.then((config) => {
-				console.log(config)
-				setConfig((config as any)?.config ?? false)
-				setRuntimeProps(config?.runtime ?? {})
-				setConfigError(null)
-			})
-			.catch((e) => {
-				console.error('Failed to load control config', e)
-				setConfig(null)
-				setConfigError('Failed to load control config')
-			})
-
-		const unsubConfig = socket.on(`controls:config-${controlId}`, (patch) => {
-			setConfig((oldConfig) => {
-				if (!oldConfig) return oldConfig
-				if (patch === false) {
-					return false
-				} else {
-					return jsonPatch.applyPatch(cloneDeep(oldConfig), patch).newDocument
-				}
-			})
-		})
-		const unsubRuntimeProps = socket.on(`controls:runtime-${controlId}`, (patch) => {
-			setRuntimeProps((oldProps) => {
-				if (!oldProps) return oldProps
-				if (patch === false) {
-					return {}
-				} else {
-					return jsonPatch.applyPatch(cloneDeep(oldProps), patch).newDocument
-				}
-			})
-		})
-
-		return () => {
-			unsubConfig()
-			unsubRuntimeProps()
-
-			socket.emitPromise('controls:unsubscribe', [controlId]).catch((e) => {
-				console.error('Failed to unsubscribe bank config', e)
-			})
-		}
-	}, [socket, controlId, reloadConfigToken])
-
-	const doRetryLoad = useCallback(() => setReloadConfigToken(nanoid()), [])
+	const { controlConfig, error: configError, reloadConfig } = useControlConfig(controlId)
 
 	const errors: string[] = []
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
-	const hasConfig = !!config
-	const hasRuntimeProps = !!runtimeProps || runtimeProps === false
-	const dataReady = !loadError && hasConfig && hasRuntimeProps
+	const dataReady = !loadError && !!controlConfig
 
 	return (
 		<KeyReceiver onKeyUp={onKeyUp} tabIndex={0} className="edit-button-panel flex-form">
 			{controlId ? (
 				<>
 					<GenericConfirmModal ref={resetModalRef} />
-					<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} design="pulse" />
-					{hasConfig && dataReady && (
-						<EditButtonContent
-							resetModalRef={resetModalRef}
-							controlId={controlId}
-							location={location}
-							previewImage={previewImage}
-							config={config}
-							runtimeProps={runtimeProps}
-						/>
-					)}
+					<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
+					{dataReady &&
+						(controlConfig.config.type === 'trigger' ? (
+							<CAlert color="warning">
+								An incompatible control was selected! This is likely a bug, please report it.
+							</CAlert>
+						) : (
+							<EditButtonContent
+								resetModalRef={resetModalRef}
+								controlId={controlId}
+								location={location}
+								previewImage={previewImage}
+								config={controlConfig.config}
+								runtimeProps={controlConfig.runtime}
+							/>
+						))}
 				</>
 			) : (
 				<>

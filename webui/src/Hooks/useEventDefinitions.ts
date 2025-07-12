@@ -4,11 +4,11 @@ import { EventDefinitionsStore } from '~/Stores/EventDefinitionsStore'
 import { trpc } from '~/TRPC'
 
 export function useEventDefinitions(store: EventDefinitionsStore): boolean {
-	const query = useQuery(trpc.connections.definitions.events.queryOptions(undefined, {}))
+	const { data, isSuccess } = useQuery(trpc.connections.definitions.events.queryOptions(undefined, {}))
 
 	useEffect(() => {
-		store.setDefinitions(query.data)
-	}, [query.data, query.isSuccess])
+		store.setDefinitions(data)
+	}, [store, data, isSuccess])
 
-	return query.isSuccess
+	return isSuccess
 }

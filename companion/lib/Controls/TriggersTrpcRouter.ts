@@ -5,7 +5,7 @@ import type { TriggerCollections } from './TriggerCollections.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 import { nanoid } from 'nanoid'
-import type { ControlChangeEvents, ControlDependencies, SomeControlModel } from './ControlDependencies.js'
+import type { ControlChangeEvents, ControlDependencies } from './ControlDependencies.js'
 import z from 'zod'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { validateTriggerControlId } from './Util.js'
@@ -16,6 +16,7 @@ import type {
 	TriggersUpdate,
 	TriggersUpdateInitOp,
 } from '@companion-app/shared/Model/TriggerModel.js'
+import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createTriggersTrpcRouter(
