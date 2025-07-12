@@ -46,8 +46,6 @@ export interface ClientToBackendEventsMap {
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'presets:preview_render': (connectionId: string, presetId: string) => string | null
-
 	cloud_state_get: () => never
 	cloud_state_set: (newState: Partial<CloudControllerState>) => never
 	cloud_login: (user: string, pass: string) => never

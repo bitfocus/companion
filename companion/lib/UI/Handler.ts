@@ -235,6 +235,9 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 				// connection is terminated if pong message is not received in this many milliseconds
 				pongWaitMs: 5000,
 			},
+			onError: (error) => {
+				this.#logger.error(`tRPC error: ${error.error.message} ${error.error.stack}`)
+			},
 		})
 
 		this.#broadcastDisconnect = handler.broadcastReconnectNotification

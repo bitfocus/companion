@@ -12,7 +12,6 @@ import type {
 	UIPresetDefinition,
 	UIPresetDefinitionUpdate,
 } from '@companion-app/shared/Model/Presets.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { CompanionPresetAction, CompanionPresetDefinition } from '@companion-module/base'
@@ -34,6 +33,7 @@ import type {
 import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
+import z from 'zod'
 
 type DefinitionsEvents = {
 	presets: [update: UIPresetDefinitionUpdate]
@@ -128,45 +128,47 @@ export class InstanceDefinitions {
 					yield update
 				}
 			}),
-		})
-	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('presets:preview_render', async (connectionId, presetId) => {
-			const definition = this.#presetDefinitions[connectionId]?.[presetId]
-			if (definition && definition.type === 'button') {
-				const style = {
-					...(definition.previewStyle ? definition.previewStyle : definition.style),
-					style: definition.type,
-				}
+			previewRender: publicProcedure
+				.input(
+					z.object({
+						connectionId: z.string(),
+						presetId: z.string(),
+					})
+				)
+				.query(async ({ input }) => {
+					const definition = this.#presetDefinitions[input.connectionId]?.[input.presetId]
+					if (definition && definition.type === 'button') {
+						const style = {
+							...(definition.previewStyle ? definition.previewStyle : definition.style),
+							style: definition.type,
+						}
 
-				if (style.text) {
-					if (style.textExpression) {
-						const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
-						if (parseResult.ok) {
-							style.text = parseResult.value + ''
+						if (style.text) {
+							if (style.textExpression) {
+								const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
+								if (parseResult.ok) {
+									style.text = parseResult.value + ''
+								} else {
+									this.#logger.error(`Expression parse error: ${parseResult.error}`)
+									style.text = 'ERR'
+								}
+							} else {
+								const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
+								style.text = parseResult.text
+							}
+						}
+
+						const render = await this.#graphicsController.drawPreview(style)
+						if (render) {
+							return render.asDataUrl
 						} else {
-							this.#logger.error(`Expression parse error: ${parseResult.error}`)
-							style.text = 'ERR'
+							return null
 						}
 					} else {
-						const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
-						style.text = parseResult.text
+						return null
 					}
-				}
-
-				const render = await this.#graphicsController.drawPreview(style)
-				if (render) {
-					return render.asDataUrl
-				} else {
-					return null
-				}
-			} else {
-				return null
-			}
+				}),
 		})
 	}
 
