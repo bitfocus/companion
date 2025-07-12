@@ -64,6 +64,7 @@ export function createTrpcRouter(registry: Registry) {
 			collections: registry.instance.collections.createTrpcRouter(),
 			definitions: registry.instance.definitions.createTrpcRouter(),
 
+			modules: registry.instance.modules.createTrpcRouter(),
 			modulesManager: registry.instance.userModulesManager.createTrpcRouter(),
 			modulesStore: registry.instance.modulesStore.createTrpcRouter(),
 		}),

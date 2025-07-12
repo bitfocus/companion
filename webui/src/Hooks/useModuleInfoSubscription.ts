@@ -1,38 +1,27 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useState } from 'react'
 import { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
 
-export function useModuleInfoSubscription(socket: CompanionSocketWrapped, store: ModuleInfoStore): boolean {
+export function useModuleInfoSubscription(store: ModuleInfoStore): boolean {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		store.resetModules(null)
-		setReady(false)
-
-		socket
-			.emitPromise('modules:subscribe', [])
-			.then((modules) => {
-				store.resetModules(modules)
+	useSubscription(
+		trpc.connections.modules.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
+				store.updateStore(null)
+				setReady(false)
+			},
+			onData: (data) => {
 				setReady(true)
-			})
-			.catch((e) => {
-				store.resetModules(null)
-				console.error('Failed to load modules list', e)
-			})
-
-		const unsubUpdates = socket.on('modules:patch', (change) => {
-			store.applyModuleChange(change)
+				store.updateStore(data)
+			},
+			onError: (err) => {
+				store.updateStore(null)
+				console.error('Failed to subscribe to module info updates', err)
+			},
 		})
-
-		return () => {
-			store.resetModules(null)
-			unsubUpdates()
-
-			socket.emitPromise('modules:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe from modules list:', e)
-			})
-		}
-	}, [socket, store])
+	)
 
 	return ready
 }

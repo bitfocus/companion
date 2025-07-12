@@ -124,7 +124,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(graphics, variables.values)
 		this.status = new InstanceStatus(io, controls)
-		this.modules = new InstanceModules(io, this, apiRouter, appInfo.modulesDir)
+		this.modules = new InstanceModules(this, apiRouter, appInfo.modulesDir)
 		this.moduleHost = new ModuleHost(
 			{
 				controls: controls,
@@ -595,7 +595,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController.clientConnect(client)
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
-		this.modules.clientConnect(client)
 
 		client.onPromise('connections:subscribe', () => {
 			client.join(InstancesRoom)

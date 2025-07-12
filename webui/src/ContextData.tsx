@@ -53,7 +53,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			helpViewer: helpModalRef,
 			whatsNewModal: whatsNewModalRef,
 
-			modules: new ModuleInfoStore(socket),
+			modules: new ModuleInfoStore(),
 			connections: new ConnectionsStore(),
 
 			activeLearns: observable.set(),
@@ -86,7 +86,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		rootStore.entityDefinitions.feedbacks,
 		trpc.connections.definitions.feedbacks
 	)
-	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
+	const moduleInfoReady = useModuleInfoSubscription(rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
 	const connectionGroupsReady = useGenericCollectionsSubscription(

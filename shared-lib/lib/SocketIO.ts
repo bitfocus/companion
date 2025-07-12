@@ -10,7 +10,6 @@ import type {
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
-import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 
 export interface ClientToBackendEventsMap {
@@ -39,8 +38,6 @@ export interface ClientToBackendEventsMap {
 
 	'custom-variables:subscribe': () => CustomVariablesModel
 	'custom-variables:unsubscribe': () => void
-	'modules:subscribe': () => Record<string, ClientModuleInfo>
-	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
 
@@ -84,9 +81,6 @@ export interface ClientToBackendEventsMap {
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
 
-	'modules-upgrade-to-other:subscribe': (moduleId: string) => ModuleUpgradeToOtherVersion[]
-	'modules-upgrade-to-other:unsubscribe': (moduleId: string) => void
-
 	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
 
 	'presets:preview_render': (connectionId: string, presetId: string) => string | null
@@ -114,11 +108,8 @@ export interface BackendToClientEventsMap {
 	[id: `controls:runtime-${string}`]: (patch: JsonPatchOperation<any>[] | false) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
-	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
-
-	'modules-upgrade-to-other:data': (moduleId: string, data: ModuleUpgradeToOtherVersion[]) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void
