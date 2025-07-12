@@ -54,6 +54,7 @@ export function createTrpcRouter(registry: Registry) {
 
 		controls: registry.controls.createTrpcRouter(),
 
+		variables: registry.variables.createTrpcRouter(),
 		customVariables: registry.variables.custom.createTrpcRouter(),
 		pages: registry.page.createTrpcRouter(),
 		importExport: registry.importExport.createTrpcRouter(),

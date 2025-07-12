@@ -8,7 +8,6 @@ import type {
 	ControlLocation,
 } from './Model/Common.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
-import type { AllVariableDefinitions, VariableDefinitionUpdate } from './Model/Variables.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ModuleInfoUpdate, ClientModuleInfo, ModuleUpgradeToOtherVersion } from './Model/ModuleInfo.js'
@@ -44,8 +43,6 @@ export interface ClientToBackendEventsMap {
 	'modules:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
-	'variable-definitions:subscribe': () => AllVariableDefinitions
-	'variable-definitions:unsubscribe': () => void
 
 	'controls:subscribe': (controlId: string) => { config: unknown; runtime: unknown } | undefined
 	'controls:unsubscribe': (controlId: string) => void
@@ -119,7 +116,6 @@ export interface BackendToClientEventsMap {
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
 	'modules:patch': (patch: ModuleInfoUpdate) => void
 	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
-	'variable-definitions:update': (label: string, changes: VariableDefinitionUpdate | null) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
 
 	'modules-upgrade-to-other:data': (moduleId: string, data: ModuleUpgradeToOtherVersion[]) => void

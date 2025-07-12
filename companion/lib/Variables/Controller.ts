@@ -15,6 +15,7 @@ import { VariablesValues } from './Values.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { UIHandler } from '../UI/Handler.js'
 import { ClientSocket } from '../UI/Handler.js'
+import { router } from '../UI/TRPC.js'
 
 export class VariablesController {
 	readonly custom: VariablesCustomVariable
@@ -24,7 +25,7 @@ export class VariablesController {
 	constructor(db: DataDatabase, io: UIHandler) {
 		this.values = new VariablesValues()
 		this.custom = new VariablesCustomVariable(db, io, this.values)
-		this.definitions = new VariablesInstanceDefinitions(io)
+		this.definitions = new VariablesInstanceDefinitions()
 	}
 
 	/**
@@ -33,6 +34,11 @@ export class VariablesController {
 	clientConnect(client: ClientSocket): void {
 		this.values.clientConnect(client)
 		this.custom.clientConnect(client)
-		this.definitions.clientConnect(client)
+	}
+
+	createTrpcRouter() {
+		return router({
+			definitions: this.definitions.createTrpcRouter(),
+		})
 	}
 }
