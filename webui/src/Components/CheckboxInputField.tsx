@@ -62,13 +62,14 @@ export function CheckboxInputField({
 				style={
 					inline
 						? {
-								display: 'inline-block',
+								display: 'inline-flex',
+								alignItems: 'center',
 								verticalAlign: 'middle',
 								marginLeft: '1em',
 								paddingBottom: '.5em',
 								paddingTop: '.3em',
 							}
-						: {}
+						: { display: 'flex', alignItems: 'center' }
 				}
 			>
 				<CFormCheck
