@@ -1,19 +1,9 @@
-import type { UserConfigModel } from './Model/UserConfigModel.js'
 import type { ClientEditConnectionConfig, ConnectionStatusEntry, ConnectionStatusUpdate } from './Model/Common.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
-
-	set_userconfig_key(key: keyof UserConfigModel, value: any): never
-	reset_userconfig_key(key: keyof UserConfigModel): never
-	set_userconfig_keys(values: Partial<UserConfigModel>): never
-	'userconfig:get-all': () => UserConfigModel
-
-	ssl_certificate_create(): never
-	ssl_certificate_delete(): never
-	ssl_certificate_renew(): never
 
 	'connection-debug:subscribe': (connectionId: string) => boolean
 	'connection-debug:unsubscribe': (connectionId: string) => void
@@ -56,8 +46,6 @@ export interface ClientToBackendEventsMap {
 }
 
 export interface BackendToClientEventsMap {
-	set_userconfig_key: (key: keyof UserConfigModel, value: any) => void
-
 	'load-save:task': (task: 'reset' | 'import' | null) => void
 
 	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void

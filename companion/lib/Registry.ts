@@ -286,7 +286,6 @@ export class Registry {
 			)
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
-				this.io.emitToAll('set_userconfig_key', key, value)
 				setImmediate(() => {
 					// give the change a chance to be pushed to the ui first
 					this.graphics.updateUserConfig(key, value)
@@ -307,7 +306,6 @@ export class Registry {
 
 			this.ui.io.on('clientConnect', (client) => {
 				this.controls.triggers.emit('client_connect')
-				this.#data.clientConnect(client)
 				this.instance.clientConnect(client)
 				this.#cloud.clientConnect(client)
 				this.importExport.clientConnect(client)

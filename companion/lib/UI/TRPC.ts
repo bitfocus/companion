@@ -61,6 +61,8 @@ export function createTrpcRouter(registry: Registry) {
 		importExport: registry.importExport.createTrpcRouter(),
 		logs: LogController.createTrpcRouter(),
 
+		userConfig: registry.userconfig.createTrpcRouter(),
+
 		connections: router({
 			// Future: move this into the connections controller
 			collections: registry.instance.collections.createTrpcRouter(),

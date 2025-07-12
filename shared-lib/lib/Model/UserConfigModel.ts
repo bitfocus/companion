@@ -82,3 +82,15 @@ export interface UserConfigGridSize {
 	minRow: number
 	maxRow: number
 }
+
+export type UserConfigUpdate = UserConfigUpdateInit | UserConfigUpdateKey
+
+export interface UserConfigUpdateInit {
+	type: 'init'
+	config: UserConfigModel
+}
+export interface UserConfigUpdateKey {
+	type: 'key'
+	key: keyof UserConfigModel
+	value: any
+}

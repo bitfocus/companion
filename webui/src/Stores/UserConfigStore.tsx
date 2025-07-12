@@ -1,6 +1,7 @@
 import { action, makeObservable, observable } from 'mobx'
 import { cloneDeep } from 'lodash-es'
-import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
+import { assertNever } from '~/util'
 
 export class UserConfigStore {
 	private hasProperties_ = false // properties_ can't be null, so we need a separate flag to check if it's initialized
@@ -19,17 +20,25 @@ export class UserConfigStore {
 		return this.properties_
 	}
 
-	public reset = action((newData: UserConfigModel | null): void => {
-		if (newData) {
-			this.hasProperties_ = true
-			this.properties_ = cloneDeep(newData)
-		} else {
+	public updateStore = action((change: UserConfigUpdate | null) => {
+		if (!change) {
 			this.hasProperties_ = false
 			this.properties_ = {} as any
+			return
 		}
-	})
 
-	public updateStoreValue = action((key: keyof UserConfigModel, value: any): void => {
-		;(this.properties_ as any)[key] = value
+		switch (change.type) {
+			case 'init':
+				this.hasProperties_ = true
+				this.properties_ = cloneDeep(change.config)
+				break
+			case 'key':
+				;(this.properties_ as any)[change.key] = change.value
+				break
+
+			default:
+				assertNever(change)
+				break
+		}
 	})
 }
