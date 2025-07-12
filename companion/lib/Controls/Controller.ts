@@ -223,6 +223,8 @@ export class ControlsController {
 				this.createButtonControl(location, type)
 			}
 		})
+		client.onPromise('controls:import-preset', this.#createControlFromPreset.bind(this))
+
 		client.onPromise('controls:copy', (fromLocation, toLocation) => {
 			// Don't try copying over itself
 			if (
@@ -955,10 +957,10 @@ export class ControlsController {
 	/**
 	 * Import a control
 	 */
-	importControl(location: ControlLocation, definition: SomeButtonModel, forceControlId?: string): boolean {
+	importControl(location: ControlLocation, definition: SomeButtonModel, forceControlId?: string): string | null {
 		if (forceControlId && !this.#validateBankControlId(forceControlId)) {
 			// Control id is not valid!
-			return false
+			return null
 		}
 
 		// Delete old control at the coordinate
@@ -979,10 +981,10 @@ export class ControlsController {
 			// Ensure it is stored to the db
 			newControl.commitChange()
 
-			return true
+			return newControlId
 		}
 
-		return false
+		return null
 	}
 
 	/**
@@ -1150,6 +1152,20 @@ export class ControlsController {
 		this.#registry.graphics.invalidateButton(location)
 
 		return controlId
+	}
+
+	/**
+	 * Create a control from a preset
+	 * @param connectionId The connection to get the preset from
+	 * @param presetId The id of the preset to import
+	 * @param location The location to place the control in the grid
+	 * @returns controlId
+	 */
+	#createControlFromPreset(connectionId: string, presetId: string, location: ControlLocation): string | null {
+		const model = this.#registry.instance.definitions.convertPresetToControlModel(connectionId, presetId)
+		if (!model) return null
+
+		return this.importControl(location, model)
 	}
 
 	/**
