@@ -1,4 +1,4 @@
-import type { UserConfigGridSize } from './UserConfigModel.js'
+import type { UserConfigGridSize, UserConfigModel } from './UserConfigModel.js'
 import type { ConnectionCollection, ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
 import type { TriggerCollection } from './TriggerModel.js'
@@ -21,6 +21,7 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	connectionCollections?: ConnectionCollection[] // Added in v4.1
 	surfaces?: unknown
 	surfaceGroups?: unknown
+	userconfig?: UserConfigModel
 }
 
 export interface ExportPageModelv6 extends ExportBase<'page'> {

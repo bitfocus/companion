@@ -496,6 +496,10 @@ export class ExportController {
 			exp.surfaceGroups = this.#surfacesController.exportAllGroups()
 		}
 
+		if (!config || !isFalsey(config.userconfig)) {
+			exp.userconfig = this.#userConfigController.getAll(false)
+		}
+
 		return exp
 	}
 

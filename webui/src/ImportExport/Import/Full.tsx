@@ -139,7 +139,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		surfaces: true,
 		triggers: true,
 		customVariables: true,
-		// userconfig: true,
+		userconfig: true,
 	}))
 
 	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
@@ -212,13 +212,13 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="surfaces" setValue={setValue} label="Surfaces" />
 
-			{/* <InputCheckbox
+			<InputCheckbox
 				config={config}
 				allowKeys={snapshotKeys}
 				keyName="userconfig"
 				setValue={setValue}
 				label="Settings"
-			/> */}
+			/>
 
 			<CAlert color="info" className="margin-top">
 				All the connections will be imported, as they are required to be able to import any actions and feedbacks.
