@@ -4,6 +4,7 @@ import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
 import { EventEmitter, on } from 'events'
 import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
+import LogController from '../Log/Controller.js'
 
 export interface TrpcContext {
 	val: null
@@ -58,6 +59,7 @@ export function createTrpcRouter(registry: Registry) {
 		customVariables: registry.variables.custom.createTrpcRouter(),
 		pages: registry.page.createTrpcRouter(),
 		importExport: registry.importExport.createTrpcRouter(),
+		logs: LogController.createTrpcRouter(),
 
 		connections: router({
 			// Future: move this into the connections controller

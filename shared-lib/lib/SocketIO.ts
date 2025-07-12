@@ -1,6 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { UserConfigModel } from './Model/UserConfigModel.js'
-import type { ClientLogLine } from './Model/LogLine.js'
 import type {
 	ClientEditConnectionConfig,
 	ConnectionStatusEntry,
@@ -53,10 +52,6 @@ export interface ClientToBackendEventsMap {
 	'controls:reset': (location: ControlLocation, newType?: string) => void
 	'controls:import-preset': (connectionId: string, presetId: string, location: ControlLocation) => string | null
 
-	'logs:subscribe': () => ClientLogLine[]
-	'logs:unsubscribe': () => void
-	'logs:clear': () => void
-
 	'connections:add': (info: { type: string; product: string | undefined }, label: string, versionId: string) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
 	'connections:set-label-and-config': (
@@ -95,9 +90,6 @@ export interface ClientToBackendEventsMap {
 }
 
 export interface BackendToClientEventsMap {
-	'logs:lines': (rawItems: ClientLogLine[]) => void
-	'logs:clear': () => void
-
 	set_userconfig_key: (key: keyof UserConfigModel, value: any) => void
 
 	'load-save:task': (task: 'reset' | 'import' | null) => void

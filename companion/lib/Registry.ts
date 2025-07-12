@@ -184,7 +184,7 @@ export class Registry {
 
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		this.io = this.ui.io
-		LogController.init(this.#appInfo, this.ui.io)
+		LogController.init(this.#appInfo)
 
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
@@ -306,7 +306,6 @@ export class Registry {
 			})
 
 			this.ui.io.on('clientConnect', (client) => {
-				LogController.clientConnect(client)
 				this.#data.clientConnect(client)
 				this.controls.clientConnect(client)
 				this.instance.clientConnect(client)
