@@ -205,7 +205,7 @@ export class Registry {
 
 			this.page = new PageController(this)
 			this.controls = new ControlsController(this, controlEvents)
-			this.variables = new VariablesController(this.db, this.io)
+			this.variables = new VariablesController(this.db)
 			this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
 			this.preview = new GraphicsPreview(this.graphics, this.page, this.variables.values)
 			this.surfaces = new SurfaceController(this.db, {

@@ -105,7 +105,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const surfacesReady = useSurfacesSubscription(rootStore.surfaces)
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(rootStore.surfaces)
 	const variablesReady = useVariablesSubscription(rootStore.variablesStore)
-	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
+	const customVariablesReady = useCustomVariablesSubscription(rootStore.variablesStore)
 	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(rootStore.variablesStore)
 	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.moduleStoreRefreshProgress)
 	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)

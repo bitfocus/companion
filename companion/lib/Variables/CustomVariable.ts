@@ -20,14 +20,13 @@ import type {
 	CustomVariableUpdateRemoveOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { CustomVariableCollections } from './CustomVariableCollections.js'
 import EventEmitter from 'events'
-import { router } from '../UI/TRPC.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
 
-const CustomVariablesRoom = 'custom-variables'
 const CUSTOM_LABEL = 'custom'
 
 export interface VariablesCustomVariableEvents {
@@ -45,18 +44,20 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	#custom_variables: CustomVariablesModel
 
 	readonly #dbTable: DataStoreTableView<Record<string, CustomVariableDefinition>>
-	readonly #io: UIHandler
 
-	constructor(db: DataDatabase, io: UIHandler, variableValues: VariablesValues) {
+	readonly #events = new EventEmitter<{ update: [CustomVariableUpdate[]] }>()
+
+	constructor(db: DataDatabase, variableValues: VariablesValues) {
 		super()
 		this.#dbTable = db.getTableView('custom_variables')
-		this.#io = io
 		this.#variableValues = variableValues
 		this.#collections = new CustomVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownCollectionIds(validCollectionIds)
 		)
 
 		this.#custom_variables = this.#dbTable.all()
+
+		this.#events.setMaxListeners(0)
 	}
 
 	#cleanUnknownCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -73,37 +74,107 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 			changes.push({ type: 'update', itemId: id, info })
 		}
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
+		if (this.#events.listenerCount('update') > 0 && changes.length > 0) {
+			this.#events.emit('update', changes)
 		}
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('custom-variables:subscribe', () => {
-			client.join(CustomVariablesRoom)
-
-			return this.#custom_variables
-		})
-
-		client.onPromise('custom-variables:unsubscribe', () => {
-			client.leave(CustomVariablesRoom)
-		})
-
-		client.onPromise('custom-variables:create', this.createVariable.bind(this))
-		client.onPromise('custom-variables:delete', this.deleteVariable.bind(this))
-		client.onPromise('custom-variables:set-default', this.setVariableDefaultValue.bind(this))
-		client.onPromise('custom-variables:set-current', this.setValue.bind(this))
-		client.onPromise('custom-variables:set-description', this.setVariableDescription.bind(this))
-		client.onPromise('custom-variables:set-persistence', this.setPersistence.bind(this))
-		client.onPromise('custom-variables:reorder', this.setOrder.bind(this))
-	}
-
 	createTrpcRouter() {
+		const self = this
 		return router({
 			collections: this.#collections.createTrpcRouter(),
+
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'update', signal)
+
+				yield [
+					{
+						type: 'init',
+						info: self.#custom_variables,
+					},
+				] satisfies CustomVariableUpdate[]
+
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
+
+			create: publicProcedure
+				.input(
+					z.object({
+						name: z.string(),
+						defaultVal: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.createVariable(input.name, input.defaultVal)
+				}),
+
+			delete: publicProcedure
+				.input(
+					z.object({
+						name: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					this.deleteVariable(input.name)
+				}),
+
+			setDefault: publicProcedure
+				.input(
+					z.object({
+						name: z.string(),
+						value: z.any(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setVariableDefaultValue(input.name, input.value)
+				}),
+
+			setCurrent: publicProcedure
+				.input(
+					z.object({
+						name: z.string(),
+						value: z.any(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setValue(input.name, input.value)
+				}),
+
+			setDescription: publicProcedure
+				.input(
+					z.object({
+						name: z.string(),
+						description: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setVariableDescription(input.name, input.description)
+				}),
+
+			setPersistence: publicProcedure
+				.input(
+					z.object({
+						name: z.string(),
+						value: z.boolean(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setPersistence(input.name, input.value)
+				}),
+
+			reorder: publicProcedure
+				.input(
+					z.object({
+						collectionId: z.string().nullable(),
+						name: z.string(),
+						dropIndex: z.number(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setOrder(input.collectionId, input.name, input.dropIndex)
+				}),
 		})
 	}
 
@@ -112,10 +183,8 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 * @param name
 	 */
 	#emitUpdateOneVariable(name: string): void {
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [
-				{ type: 'update', itemId: name, info: this.#custom_variables[name] },
-			])
+		if (this.#events.listenerCount('update') > 0) {
+			this.#events.emit('update', [{ type: 'update', itemId: name, info: this.#custom_variables[name] }])
 		}
 	}
 
@@ -173,8 +242,8 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 
 		this.#dbTable.delete(name)
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', [{ type: 'remove', itemId: name }])
+		if (this.#events.listenerCount('update') > 0) {
+			this.#events.emit('update', [{ type: 'remove', itemId: name }])
 		}
 
 		this.#setValueInner(name, undefined)
@@ -256,8 +325,8 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		// apply the default values
 		this.#variableValues.setVariableValues(CUSTOM_LABEL, newValues)
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
+		if (this.#events.listenerCount('update') > 0 && changes.length > 0) {
+			this.#events.emit('update', changes)
 		}
 	}
 
@@ -270,10 +339,9 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		this.#custom_variables = {}
 		this.#dbTable.clear()
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && namesBefore.length > 0) {
-			this.#io.emitToRoom(
-				CustomVariablesRoom,
-				'custom-variables:update',
+		if (this.#events.listenerCount('update') > 0 && namesBefore.length > 0) {
+			this.#events.emit(
+				'update',
 				namesBefore.map((name): CustomVariableUpdateRemoveOp => ({ type: 'remove', itemId: name }))
 			)
 		}
@@ -354,8 +422,8 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 			changes.push({ type: 'update', itemId: id, info: variable })
 		})
 
-		if (this.#io.countRoomMembers(CustomVariablesRoom) > 0 && changes.length > 0) {
-			this.#io.emitToRoom(CustomVariablesRoom, 'custom-variables:update', changes)
+		if (this.#events.listenerCount('update') > 0 && changes.length > 0) {
+			this.#events.emit('update', changes)
 		}
 	}
 

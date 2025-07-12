@@ -184,37 +184,38 @@ const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
 })
 
 function AddVariablePanel() {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
 	const [newName, setNewName] = useState('')
+
+	const createMutation = useMutationExt(trpc.customVariables.create.mutationOptions())
 
 	const doCreateNew = useCallback(
 		(e: FormEvent) => {
 			e?.preventDefault()
 
-			if (isCustomVariableValid(newName)) {
-				socket
-					.emitPromise('custom-variables:create', [newName, ''])
-					.then((res) => {
-						console.log('done with', res)
-						if (res) {
-							notifier.current?.show(`Failed to create variable`, res, 5000)
-						}
+			if (!isCustomVariableValid(newName)) return
+			createMutation
+				.mutateAsync({ name: newName, defaultVal: '' })
+				.then((res) => {
+					console.log('done with', res)
+					if (res) {
+						notifier.current?.show(`Failed to create variable`, res, 5000)
+					}
 
-						// clear value
-						setNewName('')
+					// clear value
+					setNewName('')
 
-						// Make sure the panel is open and wont be forgotten on first render
-						setTimeout(() => panelCollapseHelper.setPanelCollapsed(newName, false), 10)
-					})
-					.catch((e) => {
-						console.error('Failed to create variable')
-						notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
-					})
-			}
+					// Make sure the panel is open and wont be forgotten on first render
+					setTimeout(() => panelCollapseHelper.setPanelCollapsed(newName, false), 10)
+				})
+				.catch((e) => {
+					console.error('Failed to create variable')
+					notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
+				})
 		},
-		[socket, notifier, panelCollapseHelper, newName]
+		[createMutation, notifier, panelCollapseHelper, newName]
 	)
 
 	return (

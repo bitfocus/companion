@@ -14,22 +14,18 @@ export class VariablesStore {
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
 	readonly customVariableCollections = observable.map<string, CustomVariableCollection>()
 
-	public resetCustomVariables = action((newData: Record<string, CustomVariableDefinition | undefined> | null): void => {
-		this.customVariables.clear()
-
-		if (newData) {
-			for (const [id, item] of Object.entries(newData)) {
-				if (item) {
-					this.customVariables.set(id, item)
-				}
-			}
+	public updateCustomVariables = action((changes: CustomVariableUpdate[] | null) => {
+		if (!changes) {
+			this.customVariables.clear()
+			return
 		}
-	})
 
-	public applyCustomVariablesChanges = action((changes: CustomVariableUpdate[]) => {
 		for (const change of changes) {
 			const changeType = change.type
 			switch (change.type) {
+				case 'init':
+					this.customVariables.replace(change.info)
+					break
 				case 'update':
 					this.customVariables.set(change.itemId, change.info)
 					break

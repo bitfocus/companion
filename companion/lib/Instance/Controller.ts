@@ -592,7 +592,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.#variablesController.clientConnect(client)
 		this.definitions.clientConnect(client)
 		this.status.clientConnect(client)
 

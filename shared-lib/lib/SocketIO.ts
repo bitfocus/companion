@@ -1,6 +1,5 @@
 import type { UserConfigModel } from './Model/UserConfigModel.js'
 import type { ClientEditConnectionConfig, ConnectionStatusEntry, ConnectionStatusUpdate } from './Model/Common.js'
-import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 
@@ -20,16 +19,6 @@ export interface ClientToBackendEventsMap {
 	'connection-debug:unsubscribe': (connectionId: string) => void
 	'connections:set-enabled': (connectionId: string, enabled: boolean) => void
 
-	'custom-variables:create': (name: string, value: string) => string | null
-	'custom-variables:set-default': (name: string, value: string) => string | null
-	'custom-variables:set-current': (name: string, value: string) => string | null
-	'custom-variables:set-description': (name: string, description: string) => string | null
-	'custom-variables:set-persistence': (name: string, value: boolean) => string | null
-	'custom-variables:delete': (name: string) => void
-	'custom-variables:reorder': (collectionId: string | null, name: string, dropIndex: number) => void
-
-	'custom-variables:subscribe': () => CustomVariablesModel
-	'custom-variables:unsubscribe': () => void
 	'connections:subscribe': () => Record<string, ClientConnectionConfig>
 	'connections:unsubscribe': () => void
 
@@ -76,7 +65,6 @@ export interface BackendToClientEventsMap {
 	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void
 
 	'connections:patch': (patch: ClientConnectionsUpdate[]) => void
-	'custom-variables:update': (changes: CustomVariableUpdate[]) => void
 	'connections:update-statuses': (patch: ConnectionStatusUpdate[]) => void
 
 	cloud_state: (newState: CloudControllerState) => void

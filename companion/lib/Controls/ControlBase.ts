@@ -4,7 +4,7 @@ import debounceFn from 'debounce-fn'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import LogController, { Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
-import { EventEmitter } from 'stream'
+import { EventEmitter } from 'node:events'
 import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 
 export type ControlUpdateEvents = {
