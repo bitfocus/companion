@@ -32,13 +32,13 @@ export class VariablesController {
 	 * Setup a new socket client's events
 	 */
 	clientConnect(client: ClientSocket): void {
-		this.values.clientConnect(client)
 		this.custom.clientConnect(client)
 	}
 
 	createTrpcRouter() {
 		return router({
 			definitions: this.definitions.createTrpcRouter(),
+			values: this.values.createTrpcRouter(),
 		})
 	}
 }

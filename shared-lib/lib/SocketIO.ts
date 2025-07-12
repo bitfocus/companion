@@ -7,7 +7,6 @@ import type {
 	ControlLocation,
 } from './Model/Common.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
 
@@ -75,8 +74,6 @@ export interface ClientToBackendEventsMap {
 	'connections:reorder': (collectionId: string | null, connectionId: string, dropIndex: number) => void
 	'connections:delete': (connectionId: string) => void
 	'connections:get-statuses': () => Record<string, ConnectionStatusEntry>
-
-	'variables:connection-values': (label: string) => CompanionVariableValues | undefined
 
 	'presets:preview_render': (connectionId: string, presetId: string) => string | null
 

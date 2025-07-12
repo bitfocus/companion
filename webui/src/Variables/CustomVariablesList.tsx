@@ -26,7 +26,7 @@ import {
 import { useCustomVariablesCollectionsApi } from './CustomVariablesCollectionsApi'
 import { useCustomVariablesApi } from './CustomVariablesApi'
 import { CustomVariablesTableContextProvider } from './CustomVariablesTableContext'
-import { useCustomVariablesValues } from './useCustomVariableValues'
+import { useVariablesValuesForLabel } from './useVariablesValuesForLabel'
 import { CustomVariableRow } from './CustomVariablesListRow'
 import { trpc, useMutationExt } from '~/TRPC'
 
@@ -36,7 +36,7 @@ type CustomVariableCollectionExt = CollectionsNestingTableCollection
 export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
 
-	const customVariableValues = useCustomVariablesValues()
+	const customVariableValues = useVariablesValuesForLabel('custom')
 
 	const allVariableNames = useComputed(
 		() => [...Array.from(customVariables.customVariables.keys()), ...customVariables.allCustomVariableCollectionIds],
