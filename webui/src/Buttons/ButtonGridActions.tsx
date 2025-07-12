@@ -1,6 +1,5 @@
 import { CButton, CCol } from '@coreui/react'
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
@@ -23,8 +22,6 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	{ isHot, pageNumber, clearSelectedButton },
 	ref
 ) {
-	const socket = useContext(SocketContext)
-
 	const resetRef = useRef<GenericConfirmModalRef>(null)
 
 	const [activeFunction, setActiveFunction] = useState<string | null>(null)
@@ -120,6 +117,11 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		)
 	}, [recreateNavMutation, pageNumber, clearSelectedButton])
 
+	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
+	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
+	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
+
 	useImperativeHandle(
 		ref,
 		() => ({
@@ -128,7 +130,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current?.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
-								socket.emitPromise('controls:reset', [location]).catch((e) => {
+								resetControlMutation.mutateAsync({ location }).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							})
@@ -138,7 +140,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'copy':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socket.emitPromise('controls:copy', [fromInfo, location]).catch((e) => {
+								copyControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
 									console.error(`copy failed: ${e}`)
 								})
 								stopFunction()
@@ -149,7 +151,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socket.emitPromise('controls:move', [fromInfo, location]).catch((e) => {
+								moveControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
 									console.error(`move failed: ${e}`)
 								})
 								stopFunction()
@@ -160,7 +162,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'swap':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socket.emitPromise('controls:swap', [fromInfo, location]).catch((e) => {
+								swapControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
 									console.error(`swap failed: ${e}`)
 								})
 								stopFunction()
@@ -181,7 +183,15 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 				}
 			},
 		}),
-		[socket, activeFunction, activeFunctionButton, stopFunction]
+		[
+			resetControlMutation,
+			copyControlMutation,
+			moveControlMutation,
+			swapControlMutation,
+			activeFunction,
+			activeFunctionButton,
+			stopFunction,
+		]
 	)
 
 	return (

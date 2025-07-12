@@ -3,9 +3,9 @@ import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CButton } from '@coreui/react'
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useContext, useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export function ControlClearButton({
 	location,
@@ -14,7 +14,7 @@ export function ControlClearButton({
 	location: ControlLocation
 	resetModalRef: React.MutableRefObject<GenericConfirmModalRef | null>
 }): React.JSX.Element {
-	const { socket } = useContext(RootAppStoreContext)
+	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
 
 	const clearButton = useCallback(() => {
 		resetModalRef.current?.show(
@@ -22,12 +22,12 @@ export function ControlClearButton({
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				socket.emitPromise('controls:reset', [location]).catch((e) => {
+				resetControlMutation.mutateAsync({ location }).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
 		)
-	}, [socket, location, resetModalRef])
+	}, [resetControlMutation, location, resetModalRef])
 
 	return (
 		<CButton color="danger" onClick={clearButton} title="Clear Button">

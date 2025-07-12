@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
-import { makeAbsolutePath, SocketContext, useComputed } from '~/util.js'
+import { makeAbsolutePath, useComputed } from '~/util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -189,20 +189,24 @@ interface TriggersTableRowProps {
 }
 
 const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersTableRowProps) {
-	const socket = useContext(SocketContext)
-
 	const tableContext = useTriggersTableContext()
 
 	const deleteMutation = useMutationExt(trpc.controls.triggers.delete.mutationOptions())
 	const cloneMutation = useMutationExt(trpc.controls.triggers.clone.mutationOptions())
 
+	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+
 	const doEnableDisable = useCallback(() => {
-		socket
-			.emitPromise('controls:set-options-field', [CreateTriggerControlId(item.id), 'enabled', !item.enabled])
+		setOptionsFieldMutation
+			.mutateAsync({
+				controlId: CreateTriggerControlId(item.id),
+				key: 'enabled',
+				value: !item.enabled,
+			})
 			.catch((e) => {
 				console.error('failed to toggle trigger state', e)
 			})
-	}, [socket, item.id, item.enabled])
+	}, [setOptionsFieldMutation, item.id, item.enabled])
 	const doDelete = useCallback(() => {
 		tableContext.deleteModalRef.current?.show(
 			'Delete trigger',

@@ -1,11 +1,11 @@
-import React, { memo, useCallback, useContext, useMemo } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { memo, useCallback, useMemo } from 'react'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useInView } from 'react-intersection-observer'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface TabletGridSize extends UserConfigGridSize {
 	columnCount: number
@@ -26,15 +26,14 @@ export function SectionOfButtons({
 	gridSize,
 	buttonSize,
 }: SectionOfButtonsProps): React.JSX.Element {
-	const socket = useContext(SocketContext)
-
+	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 	const buttonClick = useCallback(
 		(location: ControlLocation, pressed: boolean) => {
-			socket
-				.emitPromise('controls:hot-press', [location, pressed, 'tablet'])
+			hotPressMutation
+				.mutateAsync({ location, direction: pressed, surfaceId: 'tablet' })
 				.catch((e) => console.error(`Hot press failed: ${e}`))
 		},
-		[socket]
+		[hotPressMutation]
 	)
 
 	const { ref: inViewRef, inView } = useInView({

@@ -2,7 +2,7 @@ import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
-import { CreateBankControlId, CreateTriggerControlId, formatLocation } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { ControlConfigRoom } from './ControlBase.js'
 import { ActionRunner } from './ActionRunner.js'
 import { ActionRecorder } from './ActionRecorder.js'
@@ -34,6 +34,7 @@ import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
+import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 
 /**
  * The class that manages the controls
@@ -204,6 +205,15 @@ export class ControlsController {
 			),
 			actionSets: createActionSetsTrpcRouter(this.#controls),
 			steps: createStepsTrpcRouter(this.#controls),
+
+			...createControlsTrpcRouter(
+				this.#logger,
+				this.#controls,
+				this.#registry.page,
+				this.#registry.instance.definitions,
+				this.#registry.graphics,
+				this
+			),
 		})
 	}
 
@@ -226,184 +236,17 @@ export class ControlsController {
 		client.onPromise('controls:unsubscribe', (controlId) => {
 			client.leave(ControlConfigRoom(controlId))
 		})
-
-		client.onPromise('controls:reset', (location, type) => {
-			const controlId = this.#registry.page.getControlIdAt(location)
-
-			if (controlId) {
-				this.deleteControl(controlId)
-			}
-
-			if (type) {
-				this.createButtonControl(location, type)
-			}
-		})
-		client.onPromise('controls:import-preset', this.#createControlFromPreset.bind(this))
-
-		client.onPromise('controls:copy', (fromLocation, toLocation) => {
-			// Don't try copying over itself
-			if (
-				fromLocation.pageNumber === toLocation.pageNumber &&
-				fromLocation.column === toLocation.column &&
-				fromLocation.row === toLocation.row
-			)
-				return false
-
-			// Make sure target page number is valid
-			if (!this.#registry.page.isPageValid(toLocation.pageNumber)) return false
-
-			// Make sure there is something to copy
-			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
-			if (!fromControlId) return false
-
-			const fromControl = this.getControl(fromControlId)
-			if (!fromControl) return false
-			const controlJson = fromControl.toJSON(true)
-
-			// Delete the control at the destination
-			const toControlId = this.#registry.page.getControlIdAt(toLocation)
-			if (toControlId) {
-				this.deleteControl(toControlId)
-			}
-
-			const newControlId = CreateBankControlId(nanoid())
-			const newControl = this.#createClassForControl(newControlId, 'button', controlJson, true)
-			if (newControl) {
-				this.#controls.set(newControlId, newControl)
-
-				this.#registry.page.setControlIdAt(toLocation, newControlId)
-
-				newControl.triggerRedraw()
-
-				return true
-			}
-
-			return false
-		})
-		client.onPromise('controls:move', (fromLocation, toLocation) => {
-			// Don't try moving over itself
-			if (
-				fromLocation.pageNumber === toLocation.pageNumber &&
-				fromLocation.column === toLocation.column &&
-				fromLocation.row === toLocation.row
-			)
-				return false
-
-			// Make sure target page number is valid
-			if (!this.#registry.page.isPageValid(toLocation.pageNumber)) return false
-
-			// Make sure there is something to move
-			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
-			if (!fromControlId) return false
-
-			// Delete the control at the destination
-			const toControlId = this.#registry.page.getControlIdAt(toLocation)
-			if (toControlId) {
-				this.deleteControl(toControlId)
-			}
-
-			// Perform the move
-			this.#registry.page.setControlIdAt(fromLocation, null)
-			this.#registry.page.setControlIdAt(toLocation, fromControlId)
-
-			// Inform the control it was moved
-			const control = this.getControl(fromControlId)
-			if (control) control.triggerLocationHasChanged()
-
-			// Force a redraw
-			this.#registry.graphics.invalidateButton(fromLocation)
-			this.#registry.graphics.invalidateButton(toLocation)
-
-			return false
-		})
-		client.onPromise('controls:swap', (fromLocation, toLocation) => {
-			// Don't try moving over itself
-			if (
-				fromLocation.pageNumber === toLocation.pageNumber &&
-				fromLocation.column === toLocation.column &&
-				fromLocation.row === toLocation.row
-			)
-				return false
-
-			// Make sure both page numbers are valid
-			if (
-				!this.#registry.page.isPageValid(toLocation.pageNumber) ||
-				!this.#registry.page.isPageValid(fromLocation.pageNumber)
-			)
-				return false
-
-			// Find the ids to move
-			const fromControlId = this.#registry.page.getControlIdAt(fromLocation)
-			const toControlId = this.#registry.page.getControlIdAt(toLocation)
-
-			// Perform the swap
-			this.#registry.page.setControlIdAt(toLocation, null)
-			this.#registry.page.setControlIdAt(fromLocation, toControlId)
-			this.#registry.page.setControlIdAt(toLocation, fromControlId)
-
-			// Inform the controls they were moved
-			const controlA = fromControlId && this.getControl(fromControlId)
-			if (controlA) controlA.triggerLocationHasChanged()
-			const controlB = toControlId && this.getControl(toControlId)
-			if (controlB) controlB.triggerLocationHasChanged()
-
-			// Force a redraw
-			this.#registry.graphics.invalidateButton(fromLocation)
-			this.#registry.graphics.invalidateButton(toLocation)
-
-			return true
-		})
-
-		client.onPromise('controls:set-style-fields', (controlId, diff) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsStyle) {
-				return control.styleSetFields(diff)
-			} else {
-				throw new Error(`Control "${controlId}" does not support config`)
-			}
-		})
-
-		client.onPromise('controls:set-options-field', (controlId, key, value) => {
-			const control = this.getControl(controlId)
-			if (!control) return false
-
-			if (control.supportsOptions) {
-				return control.optionsSetField(key, value)
-			} else {
-				throw new Error(`Control "${controlId}" does not support options`)
-			}
-		})
-
-		client.onPromise('controls:hot-press', (location, direction, surfaceId) => {
-			this.#logger.silly(`being told from gui to hot press ${formatLocation(location)} ${direction} ${surfaceId}`)
-			if (!surfaceId) throw new Error('Missing surfaceId')
-
-			const controlId = this.#registry.page.getControlIdAt(location)
-			if (!controlId) return
-
-			this.pressControl(controlId, direction, `hot:${surfaceId}`)
-		})
-
-		client.onPromise('controls:hot-rotate', (location, direction, surfaceId) => {
-			this.#logger.silly(`being told from gui to hot rotate ${formatLocation(location)} ${direction} ${surfaceId}`)
-
-			const controlId = this.#registry.page.getControlIdAt(location)
-			if (!controlId) return
-
-			this.rotateControl(controlId, direction, surfaceId ? `hot:${surfaceId}` : undefined)
-		})
 	}
 
 	/**
 	 * Create a new control class instance
+	 * TODO: This should be private
 	 * @param controlId Id of the control
 	 * @param category 'button' | 'trigger' | 'all'
 	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param isImport Whether this is an import, and needs additional processing
 	 */
-	#createClassForControl(
+	createClassForControl(
 		controlId: string,
 		category: 'button' | 'trigger' | 'all',
 		controlObj: SomeControlModel | string,
@@ -510,7 +353,7 @@ export class ControlsController {
 		}
 
 		const newControlId = forceControlId || CreateBankControlId(nanoid())
-		const newControl = this.#createClassForControl(newControlId, 'button', definition, true)
+		const newControl = this.createClassForControl(newControlId, 'button', definition, true)
 		if (newControl) {
 			this.#controls.set(newControlId, newControl)
 
@@ -538,7 +381,7 @@ export class ControlsController {
 
 		if (this.#controls.has(controlId)) throw new Error(`Trigger ${controlId} already exists`)
 
-		const newControl = this.#createClassForControl(controlId, 'trigger', definition, true)
+		const newControl = this.createClassForControl(controlId, 'trigger', definition, true)
 		if (newControl) {
 			this.#controls.set(controlId, newControl)
 
@@ -559,7 +402,7 @@ export class ControlsController {
 		const config = this.#dbTable.all()
 		for (const [controlId, controlObj] of Object.entries(config)) {
 			if (controlObj && controlObj.type) {
-				const inst = this.#createClassForControl(controlId, 'all', controlObj, false)
+				const inst = this.createClassForControl(controlId, 'all', controlObj, false)
 				if (inst) this.#controls.set(controlId, inst)
 			}
 		}
@@ -679,7 +522,7 @@ export class ControlsController {
 		if (!this.#registry.page.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
-		const newControl = this.#createClassForControl(controlId, 'button', newType, false)
+		const newControl = this.createClassForControl(controlId, 'button', newType, false)
 		if (!newControl) return null
 
 		this.#controls.set(controlId, newControl)
@@ -692,20 +535,6 @@ export class ControlsController {
 		this.#registry.graphics.invalidateButton(location)
 
 		return controlId
-	}
-
-	/**
-	 * Create a control from a preset
-	 * @param connectionId The connection to get the preset from
-	 * @param presetId The id of the preset to import
-	 * @param location The location to place the control in the grid
-	 * @returns controlId
-	 */
-	#createControlFromPreset(connectionId: string, presetId: string, location: ControlLocation): string | null {
-		const model = this.#registry.instance.definitions.convertPresetToControlModel(connectionId, presetId)
-		if (!model) return null
-
-		return this.importControl(location, model)
 	}
 
 	setTriggerCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {

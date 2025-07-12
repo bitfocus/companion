@@ -173,16 +173,22 @@ interface TriggerConfigProps {
 }
 
 function TriggerConfig({ controlId, options }: TriggerConfigProps) {
-	const socket = useContext(SocketContext)
+	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	const setValueInner = useCallback(
 		(key: string, value: any) => {
 			console.log('set', controlId, key, value)
-			socket.emitPromise('controls:set-options-field', [controlId, key, value]).catch((e) => {
-				console.error(`Set field failed: ${e}`)
-			})
+			setOptionsFieldMutation
+				.mutateAsync({
+					controlId,
+					key,
+					value,
+				})
+				.catch((e) => {
+					console.error(`Set field failed: ${e}`)
+				})
 		},
-		[socket, controlId]
+		[setOptionsFieldMutation, controlId]
 	)
 
 	const setName = useCallback((val: string) => setValueInner('name', val), [setValueInner])

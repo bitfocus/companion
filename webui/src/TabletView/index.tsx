@@ -14,6 +14,7 @@ import { observer } from 'mobx-react-lite'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { useNavigate } from '@tanstack/react-router'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export const TabletView = observer(function TabletView() {
 	const socket = useContext(SocketContext)
@@ -275,15 +276,14 @@ const InfiniteButtons = observer(function InfiniteButtons({
 	gridSize,
 	buttonSize,
 }: InfiniteButtonsProps) {
-	const socket = useContext(SocketContext)
-
+	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 	const buttonClick = useCallback(
 		(location: ControlLocation, pressed: boolean) => {
-			socket
-				.emitPromise('controls:hot-press', [location, pressed, 'tablet'])
+			hotPressMutation
+				.mutateAsync({ location, direction: pressed, surfaceId: 'tablet' })
 				.catch((e) => console.error(`Hot press failed: ${e}`))
 		},
-		[socket]
+		[hotPressMutation]
 	)
 
 	const allLocations: ControlLocation[] = []

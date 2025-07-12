@@ -1,11 +1,6 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { UserConfigModel } from './Model/UserConfigModel.js'
-import type {
-	ClientEditConnectionConfig,
-	ConnectionStatusEntry,
-	ConnectionStatusUpdate,
-	ControlLocation,
-} from './Model/Common.js'
+import type { ClientEditConnectionConfig, ConnectionStatusEntry, ConnectionStatusUpdate } from './Model/Common.js'
 import type { CustomVariableUpdate, CustomVariablesModel } from './Model/CustomVariableModel.js'
 import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 import type { ClientConnectionsUpdate, ClientConnectionConfig, ConnectionUpdatePolicy } from './Model/Connections.js'
@@ -41,15 +36,6 @@ export interface ClientToBackendEventsMap {
 
 	'controls:subscribe': (controlId: string) => { config: unknown; runtime: unknown } | undefined
 	'controls:unsubscribe': (controlId: string) => void
-	'controls:set-options-field': (controlId: string, key: string, value: any) => boolean
-	'controls:hot-press': (location: ControlLocation, pressed: boolean, surfaceId: string) => void
-	'controls:hot-rotate': (location: ControlLocation, rotateRight: boolean, surfaceId: string) => void
-	'controls:set-style-fields': (controlId: string, styleFields: Record<string, any>) => boolean
-	'controls:move': (from: ControlLocation, to: ControlLocation) => boolean
-	'controls:copy': (from: ControlLocation, to: ControlLocation) => boolean
-	'controls:swap': (from: ControlLocation, to: ControlLocation) => boolean
-	'controls:reset': (location: ControlLocation, newType?: string) => void
-	'controls:import-preset': (connectionId: string, presetId: string, location: ControlLocation) => string | null
 
 	'connections:add': (info: { type: string; product: string | undefined }, label: string, versionId: string) => string
 	'connections:edit': (connectionId: string) => ClientEditConnectionConfig | null
