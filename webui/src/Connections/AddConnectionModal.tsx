@@ -22,6 +22,7 @@ import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export interface AddConnectionModalRef {
 	show(info: FuzzyProduct): void
@@ -33,7 +34,7 @@ interface AddConnectionModalProps {
 
 export const AddConnectionModal = observer(
 	forwardRef<AddConnectionModalRef, AddConnectionModalProps>(function AddActionsModal({ doConfigureConnection }, ref) {
-		const { socket, helpViewer, notifier, connections, modules } = useContext(RootAppStoreContext)
+		const { helpViewer, notifier, connections, modules } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<FuzzyProduct | null>(null)
@@ -49,18 +50,20 @@ export const AddConnectionModal = observer(
 			setConnectionLabel('')
 		}, [])
 
+		const addMutation = useMutationExt(trpc.connections.add.mutationOptions())
+
 		const doAction = () => {
 			if (!moduleInfo || !connectionLabel || !selectedVersion) return
 
-			socket
-				.emitPromise('connections:add', [
-					{
+			addMutation
+				.mutateAsync({
+					module: {
 						type: moduleInfo.id,
 						product: moduleInfo.product,
 					},
-					connectionLabel,
-					selectedVersion,
-				])
+					label: connectionLabel,
+					versionId: selectedVersion,
+				})
 				.then((id) => {
 					console.log('NEW CONNECTION', id)
 					setShow(false)

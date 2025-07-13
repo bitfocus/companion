@@ -40,11 +40,18 @@ export type EmulatorImageCache = Record<number, Record<number, string | false | 
 export interface ConnectionStatusEntry {
 	category: string | null
 	level: string | null
-	message: string | undefined
+	message: string | null
 }
 
-export type ConnectionStatusUpdate = ConnectionStatusUpdateRemoveOp | ConnectionStatusUpdateUpdateOp
+export type ConnectionStatusUpdate =
+	| ConnectionStatusUpdateInitOp
+	| ConnectionStatusUpdateRemoveOp
+	| ConnectionStatusUpdateUpdateOp
 
+export interface ConnectionStatusUpdateInitOp {
+	type: 'init'
+	statuses: Record<string, ConnectionStatusEntry>
+}
 export interface ConnectionStatusUpdateRemoveOp {
 	type: 'remove'
 	connectionId: string

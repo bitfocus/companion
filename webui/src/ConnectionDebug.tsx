@@ -7,6 +7,7 @@ import AutoSizer from 'react-virtualized-auto-sizer'
 import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { useParams } from '@tanstack/react-router'
+import { trpc, useMutationExt } from './TRPC'
 
 interface DebugLogLine {
 	level: string
@@ -117,18 +118,19 @@ export function ConnectionDebug(): React.JSX.Element {
 		link.remove()
 	}, [linesBuffer])
 
+	const setEnabledMutation = useMutationExt(trpc.connections.setEnabled.mutationOptions())
 	const doStopConnection = useCallback(() => {
 		if (!connectionId) return
-		socket.emitPromise('connections:set-enabled', [connectionId, false]).catch((e) => {
+		setEnabledMutation.mutateAsync({ connectionId, enabled: false }).catch((e) => {
 			console.error('Failed', e)
 		})
-	}, [socket, connectionId])
+	}, [setEnabledMutation, connectionId])
 	const doStartConnection = useCallback(() => {
 		if (!connectionId) return
-		socket.emitPromise('connections:set-enabled', [connectionId, true]).catch((e) => {
+		setEnabledMutation.mutateAsync({ connectionId, enabled: true }).catch((e) => {
 			console.error('Failed', e)
 		})
-	}, [socket, connectionId])
+	}, [setEnabledMutation, connectionId])
 
 	const [config, setConfig] = useState<DebugConfig>(() => loadConfig(connectionId ?? ''))
 	// Save the config when it changes

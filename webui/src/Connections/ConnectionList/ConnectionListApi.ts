@@ -1,5 +1,4 @@
-import { useContext, useMemo } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useMemo } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
 import { trpc, useMutationExt } from '~/TRPC'
@@ -9,11 +8,10 @@ export type ConnectionCollectionsApi = NestingCollectionsApi
 export function useConnectionCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 ): ConnectionCollectionsApi {
-	const { socket } = useContext(RootAppStoreContext)
-
 	const renameMutation = useMutationExt(trpc.connections.collections.setName.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.connections.collections.remove.mutationOptions())
 	const reorderMutation = useMutationExt(trpc.connections.collections.reorder.mutationOptions())
+	const reorderItemsMutation = useMutationExt(trpc.connections.reorder.mutationOptions())
 
 	return useMemo(
 		() =>
@@ -42,12 +40,12 @@ export function useConnectionCollectionsApi(
 						console.error('Failed to reorder collection', e)
 					})
 				},
-				moveItemToCollection: (itemId: string, collectionId: string | null, dropIndex: number) => {
-					socket.emitPromise('connections:reorder', [collectionId, itemId, dropIndex]).catch((e) => {
+				moveItemToCollection: (connectionId: string, collectionId: string | null, dropIndex: number) => {
+					reorderItemsMutation.mutateAsync({ connectionId, collectionId, dropIndex }).catch((e) => {
 						console.error('Reorder failed', e)
 					})
 				},
 			}) satisfies ConnectionCollectionsApi,
-		[socket, confirmModalRef, renameMutation, deleteMutation, reorderMutation]
+		[confirmModalRef, renameMutation, deleteMutation, reorderMutation, reorderItemsMutation]
 	)
 }

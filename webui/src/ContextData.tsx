@@ -88,7 +88,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	)
 	const moduleInfoReady = useModuleInfoSubscription(rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(rootStore.modules)
-	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
+	const connectionsReady = useConnectionsConfigSubscription(rootStore.connections)
 	const connectionGroupsReady = useGenericCollectionsSubscription(
 		rootStore.connections,
 		trpc.connections.collections.watchQuery,

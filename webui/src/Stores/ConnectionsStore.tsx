@@ -47,22 +47,18 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 		return Array.from(this.connections.entries()).filter(([_id, info]) => info && info.instance_type === moduleType)
 	}
 
-	public resetConnections = action((newData: Record<string, ClientConnectionConfig | undefined> | null) => {
-		this.connections.clear()
-
-		if (newData) {
-			for (const [connectionId, connectionConfig] of Object.entries(newData)) {
-				if (!connectionConfig) continue
-
-				this.connections.set(connectionId, connectionConfig)
-			}
+	public updateConnections = action((changes: ClientConnectionsUpdate[] | null) => {
+		if (!changes) {
+			this.connections.clear()
+			return
 		}
-	})
 
-	public applyConnectionsChange = action((changes: ClientConnectionsUpdate[]) => {
 		for (const change of changes) {
 			const changeType = change.type
 			switch (change.type) {
+				case 'init':
+					this.connections.replace(change.info)
+					break
 				case 'remove':
 					this.connections.delete(change.id)
 					break
