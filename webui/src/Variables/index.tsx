@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -14,31 +14,32 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 	const sortedConnections = useSortedConnectionsThatHaveVariables()
 
 	return (
-		<div>
-			<h4>Variables</h4>
-			<p>
-				We use variables as placeholders in text, allowing dynamic updates based on the provided content. This enables
-				live updating of messages, making customization quick and easy.
-			</p>
-			<div className="variables-category-grid">
-				<CButton color="primary" as={Link} to="/variables/custom">
-					Custom Variables
-				</CButton>
+		<CRow>
+			<CCol xs={12}>
+				<h4>Variables</h4>
+				<p>
+					We use variables as placeholders in text, allowing dynamic updates based on the provided content. This enables
+					live updating of messages, making customization quick and easy.
+				</p>
+				<div className="variables-category-grid">
+					<CButton color="primary" as={Link} to="/variables/custom">
+						Custom Variables
+					</CButton>
+					<CButton color="primary" as={Link} to="/variables/internal">
+						Internal
+					</CButton>
+					{sortedConnections.map((connectionInfo) => {
+						const compactName = modules.getModuleFriendlyName(connectionInfo.instance_type)
 
-				<CButton color="primary" as={Link} to="/variables/internal">
-					Internal
-				</CButton>
-				{sortedConnections.map((connectionInfo) => {
-					const compactName = modules.getModuleFriendlyName(connectionInfo.instance_type)
-
-					return (
-						<CButton key={connectionInfo.id} color="primary" as={Link} to={`/variables/${connectionInfo.label}`}>
-							<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
-						</CButton>
-					)
-				})}
-			</div>
-		</div>
+						return (
+							<CButton key={connectionInfo.id} color="primary" as={Link} to={`/variables/${connectionInfo.label}`}>
+								<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
+							</CButton>
+						)
+					})}
+				</div>
+			</CCol>
+		</CRow>
 	)
 })
 
