@@ -1,19 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { DependencyList, FormEvent, useEffect, useMemo, useState } from 'react'
-import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { PRIMARY_COLOR } from './Constants.js'
 import { BarLoader, PuffLoader } from 'react-spinners'
 import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
-import { Socket } from 'socket.io-client'
-import type {
-	ClientToBackendEventsMap,
-	BackendToClientEventsMap,
-	AddCallbackParamToEvents,
-	StripNever,
-} from '@companion-app/shared/SocketIO.js'
 import { computed } from 'mobx'
 import { DropTargetMonitor, XYCoord } from 'react-dnd'
 import type { ReadonlyDeep } from 'type-fest'
@@ -21,108 +13,8 @@ import { TRPCClientErrorLike } from '@trpc/client'
 import { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import { joinPaths } from '@tanstack/react-router'
 
-export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
-
-export interface CompanionSocketWrapped {
-	readonly connected: boolean
-
-	onConnect(listener: () => void): () => void
-	onDisconnect(listener: () => void): () => void
-
-	/**
-	 * Listen for a message
-	 * @param ev Event name
-	 * @param listener Listener function
-	 * @returns Unsubscribe function
-	 */
-	on<Ev extends keyof BackendToClientEventsMap>(ev: Ev, listener: BackendToClientEventsMap[Ev]): () => void
-
-	emitPromise<T extends keyof SocketEmitPromiseEvents>(
-		name: T,
-		args: Parameters<SocketEmitPromiseEvents[T]>,
-		timeout?: number,
-		timeoutMessage?: string
-	): Promise<ReturnType<SocketEmitPromiseEvents[T]>>
-
-	emit<T extends keyof SocketEmitEvents>(name: T, ...args: Parameters<SocketEmitEvents[T]>): void
-}
-
-export const SocketContext = React.createContext<CompanionSocketWrapped>(null as any) // TODO - fix this
-
-type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
-
-type SocketEmitPromiseEvents = StripNever<{
-	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
-		? IfReturnIsNever<ClientToBackendEventsMap[K]>
-		: never
-}>
-
 // type VoidIfReturnIsNever<T extends (...args: any[]) => void> =
 // 	ReturnType<T> extends never ? (...args: Parameters<T>) => void : never
-
-type SocketEmitEvents = StripNever<{
-	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
-		? IfReturnIsNever<ClientToBackendEventsMap[K]> extends never
-			? ClientToBackendEventsMap[K]
-			: never
-		: never
-}>
-
-export function wrapSocket(socket: CompanionSocketType): CompanionSocketWrapped {
-	return {
-		get connected() {
-			return socket.connected
-		},
-		onConnect: (listener) => {
-			socket.on('connect', listener)
-
-			return () => {
-				socket.off('connect', listener)
-			}
-		},
-		onDisconnect: (listener) => {
-			socket.on('disconnect', listener)
-
-			return () => {
-				socket.off('disconnect', listener)
-			}
-		},
-
-		on: (key, listener) => {
-			socket.on(key, listener as any)
-
-			return () => {
-				socket.off(key, listener as any)
-			}
-		},
-
-		emit: (key, ...args) => {
-			socket.emit(key, ...args)
-		},
-
-		emitPromise: async (name, args, timeout, timeoutMessage) => {
-			const p = new Promise<ReturnType<SocketEmitPromiseEvents[typeof name]>>((resolve, reject) => {
-				console.log('send', name, ...args)
-
-				socket.emit(
-					name,
-					// @ts-expect-error types are unhappy because of the complex setup
-					args,
-					(err, res) => {
-						if (err) reject(err)
-						else resolve(res)
-					}
-				)
-			})
-
-			timeout = timeout ?? 5000
-			return pTimeout(p, {
-				milliseconds: timeout,
-				message: timeoutMessage ?? `Timed out after ${timeout / 1000}s`,
-			})
-		},
-	}
-}
 
 const freezePrototypes = () => {
 	if (Object.isFrozen(console)) {

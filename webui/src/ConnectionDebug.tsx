@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useState, useContext, memo, useRef, useMemo } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { useCallback, useEffect, useState, memo, useRef, useMemo } from 'react'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
@@ -9,6 +8,7 @@ import { stringify as csvStringify } from 'csv-stringify/sync'
 import { useParams } from '@tanstack/react-router'
 import { trpc, useMutationExt } from './TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus'
 
 interface DebugLogLine {
 	level: string
@@ -31,7 +31,7 @@ const LogsOnDiskInfoLine: DebugLogLine = {
 // const route = getRouteApi('/connection-debug/$connectionId')
 
 export function ConnectionDebug(): React.JSX.Element {
-	const socket = useContext(SocketContext)
+	const trpcStatus = useTRPCConnectionStatus()
 
 	const { connectionId } = useParams({ from: '/connection-debug/$connectionId' })
 
@@ -40,24 +40,13 @@ export function ConnectionDebug(): React.JSX.Element {
 
 	const [isConnected, setIsConnected] = useState(false)
 	useEffect(() => {
-		const onConnected = () => {
+		if (trpcStatus.status === TRPCConnectionStatus.Connected) {
 			setIsConnected(true)
 			setLinesBuffer([])
-		}
-		const onDisconnected = () => {
+		} else {
 			setIsConnected(false)
 		}
-
-		const unsubConnect = socket.onConnect(onConnected)
-		const unsubDisconnect = socket.onDisconnect(onDisconnected)
-
-		if (socket.connected) onConnected()
-
-		return () => {
-			unsubConnect()
-			unsubDisconnect()
-		}
-	}, [socket])
+	}, [trpcStatus.status])
 
 	useSubscription(
 		trpc.connections.debugLog.subscriptionOptions(

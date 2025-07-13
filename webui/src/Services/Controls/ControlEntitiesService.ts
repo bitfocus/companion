@@ -5,10 +5,9 @@ import {
 	stringifySocketEntityLocation,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { useContext, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/TRPC'
-import { SocketContext } from '~/util.js'
 
 export interface IEntityEditorService {
 	readonly listId: SomeSocketEntityLocation
@@ -56,8 +55,6 @@ export function useControlEntitiesEditorService(
 	entityModelType: EntityModelType,
 	confirmModal: React.RefObject<GenericConfirmModalRef>
 ): IEntityEditorService {
-	const socket = useContext(SocketContext)
-
 	const addMutation = useMutationExt(trpc.controls.entities.add.mutationOptions())
 	const moveMutation = useMutationExt(trpc.controls.entities.move.mutationOptions())
 	const setOptionMutation = useMutationExt(trpc.controls.entities.setOption.mutationOptions())
@@ -241,7 +238,27 @@ export function useControlEntitiesEditorService(
 			},
 		}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[socket, confirmModal, controlId, stringifySocketEntityLocation(listId), entityTypeLabel, entityModelType]
+		[
+			addMutation,
+			moveMutation,
+			setOptionMutation,
+			setConnectionMutation,
+			removeMutation,
+			duplicateMutation,
+			learnOptionsMutation,
+			setEnabledMutation,
+			setHeadlineMutation,
+			setInvertedMutation,
+			setStyleSelectionMutation,
+			setStyleValueMutation,
+
+			confirmModal,
+			controlId,
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+			stringifySocketEntityLocation(listId),
+			entityTypeLabel,
+			entityModelType,
+		]
 	)
 }
 

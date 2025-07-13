@@ -1,6 +1,6 @@
 import React, { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { CContainer, CRow, CCol, CProgress, CFormInput, CForm, CButton } from '@coreui/react'
-import { useMountEffect, SocketContext, MyErrorBoundary } from '~/util.js'
+import { useMountEffect, MyErrorBoundary } from '~/util.js'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
@@ -15,16 +15,17 @@ import { observer } from 'mobx-react-lite'
 import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from './TRPC.js'
+import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
 export default function App(): React.JSX.Element {
-	const socket = useContext(SocketContext)
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
 
+	const trpcStatus = useTRPCConnectionStatus()
 	useEffect(() => {
-		const onConnected = () => {
+		if (trpcStatus.status === TRPCConnectionStatus.Connected) {
 			setWasConnected((wasConnected0) => {
 				if (wasConnected0) {
 					window.location.reload()
@@ -33,24 +34,10 @@ export default function App(): React.JSX.Element {
 				}
 				return wasConnected0
 			})
+		} else {
+			setConnected(false)
 		}
-		const onDisconnected = () => {
-			setConnected((val) => {
-				setWasConnected(val)
-				return false
-			})
-		}
-
-		const unsubConnect = socket.onConnect(onConnected)
-		const unsubDisconnect = socket.onDisconnect(onDisconnected)
-
-		if (socket.connected) onConnected()
-
-		return () => {
-			unsubConnect()
-			unsubDisconnect()
-		}
-	}, [socket])
+	}, [trpcStatus.status])
 
 	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
 	useSubscription(
