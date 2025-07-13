@@ -239,7 +239,7 @@ const SurfaceRow = observer(function SurfaceRow({
 			onClick={handleSurfaceClick}
 		>
 			<div className="grid-cell">{index !== undefined ? `#${index}` : ''}</div>
-			<div className="grid-cell" style={{ paddingLeft: index === undefined ? '2em' : 'default' }}>
+			<div className={classNames('grid-cell', { 'ps-4': index === undefined })}>
 				<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
 				{!!surface.hasFirmwareUpdates && (
 					<>
