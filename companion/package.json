@@ -66,6 +66,7 @@
     "colord": "^2.9.3",
     "commander": "^13.1.0",
     "compression": "^1.8.0",
+    "cors": "^2.8.5",
     "csv-stringify": "^6.6.0",
     "dayjs": "^1.11.13",
     "debounce-fn": "^6.0.0",
