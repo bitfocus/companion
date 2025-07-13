@@ -418,8 +418,17 @@ export class ImportExportController {
 					const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
 					const getPageId = (val: string) => this.#pagesController.getPageId(Number(val))
 					const fixPageId = (groupConfig: SurfaceGroupConfig) => {
-						groupConfig.last_page_id = getPageId(groupConfig.last_page_id) ?? ''
-						groupConfig.startup_page_id = getPageId(groupConfig.startup_page_id) ?? ''
+						// update from v3.4, if necessary
+						if ('last_page' in groupConfig) {
+							groupConfig.last_page_id = String(groupConfig.last_page)
+							delete groupConfig.last_page
+						}
+						if ('startup_page' in groupConfig) {
+							groupConfig.startup_page_id = String(groupConfig.startup_page)
+							delete groupConfig.startup_page
+						}
+						groupConfig.last_page_id = getPageId(groupConfig.last_page_id) ?? '1'
+						groupConfig.startup_page_id = getPageId(groupConfig.startup_page_id) ?? '1'
 					}
 
 					// Convert external page refs, i.e. page numbers, to internal ids.

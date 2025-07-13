@@ -439,10 +439,10 @@ export class ExportController {
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 
-		const pageInfos = this.#pagesController.getAll() // needed also for surfaces.
 		if (!config || !isFalsey(config.buttons)) {
 			exp.pages = {}
 
+			const pageInfos = this.#pagesController.getAll()
 			for (const [pageNumber, rawPageInfo] of Object.entries(pageInfos)) {
 				exp.pages[Number(pageNumber)] = this.#generatePageExportInfo(
 					rawPageInfo,
