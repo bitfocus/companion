@@ -219,7 +219,6 @@ export class Registry {
 			const oscSender = new ServiceOscSender(this.userconfig)
 			this.instance = new InstanceController(
 				this.#appInfo,
-				this.io,
 				this.db,
 				this.#data.cache,
 				this.#internalApiRouter,
@@ -306,7 +305,6 @@ export class Registry {
 
 			this.ui.io.on('clientConnect', (client) => {
 				this.controls.triggers.emit('client_connect')
-				this.instance.clientConnect(client)
 				this.#cloud.clientConnect(client)
 				this.importExport.clientConnect(client)
 			})

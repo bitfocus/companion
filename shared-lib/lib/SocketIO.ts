@@ -3,9 +3,6 @@ import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
 
-	'connection-debug:subscribe': (connectionId: string) => boolean
-	'connection-debug:unsubscribe': (connectionId: string) => void
-
 	cloud_state_get: () => never
 	cloud_state_set: (newState: Partial<CloudControllerState>) => never
 	cloud_login: (user: string, pass: string) => never
@@ -17,8 +14,6 @@ export interface ClientToBackendEventsMap {
 
 export interface BackendToClientEventsMap {
 	'load-save:task': (task: 'reset' | 'import' | null) => void
-
-	[id: `connection-debug:update:${string}`]: (level: string, message: string) => void
 
 	cloud_state: (newState: CloudControllerState) => void
 	cloud_region_state: (id: string, newState: CloudRegionState) => void

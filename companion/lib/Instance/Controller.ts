@@ -10,7 +10,7 @@
  */
 
 import { InstanceDefinitions } from './Definitions.js'
-import { ModuleHost, ConnectionDebugLogRoom } from './Host.js'
+import { ModuleHost } from './Host.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
@@ -26,7 +26,6 @@ import {
 } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import { AddConnectionProps, ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
@@ -57,6 +56,7 @@ interface InstanceControllerEvents {
 	connection_collections_enabled: []
 
 	uiUpdate: [changes: ClientConnectionsUpdate[]]
+	[id: `debugLog:${string}`]: [level: string, message: string]
 }
 
 export class InstanceController extends EventEmitter<InstanceControllerEvents> {
@@ -86,7 +86,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	constructor(
 		appInfo: AppInfo,
-		io: UIHandler,
 		db: DataDatabase,
 		cache: DataCache,
 		apiRouter: express.Router,
@@ -129,7 +128,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.moduleHost = new ModuleHost(
 			{
 				controls: controls,
-				io: io,
 				variables: variables,
 				page: page,
 				oscSender: oscSender,
@@ -151,6 +149,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 							skipNotifyConnection: true,
 						}
 					)
+				},
+				debugLogLine: (connectionId: string, level: string, message: string) => {
+					this.emit(`debugLog:${connectionId}`, level, message)
 				},
 			},
 			this.modules,
@@ -843,23 +844,23 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 					return null
 				}),
-		})
-	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('connection-debug:subscribe', (connectionId) => {
-			if (!this.#configStore.getConfigForId(connectionId)) return false
+			debugLog: publicProcedure
+				.input(
+					z.object({
+						connectionId: z.string(),
+					})
+				)
+				.subscription(async function* ({ signal, input }) {
+					if (!self.#configStore.getConfigForId(input.connectionId))
+						throw new Error(`Unknown connectionId ${input.connectionId}`)
 
-			client.join(ConnectionDebugLogRoom(connectionId))
+					const lines = toIterable(selfEvents, `debugLog:${input.connectionId}`, signal)
 
-			return true
-		})
-
-		client.onPromise('connection-debug:unsubscribe', (connectionId) => {
-			client.leave(ConnectionDebugLogRoom(connectionId))
+					for await (const [level, message] of lines) {
+						yield { level, message }
+					}
+				}),
 		})
 	}
 

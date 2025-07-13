@@ -33,13 +33,6 @@ function sleepStrategy(i: number): number {
 	}
 }
 
-/**
- *
- */
-export function ConnectionDebugLogRoom(id: string): `connection-debug:update:${string}` {
-	return `connection-debug:update:${id}`
-}
-
 interface ModuleChild {
 	connectionId: string
 	logger: Logger
@@ -119,17 +112,14 @@ export class ModuleHost {
 			delete child.handler
 		}
 
-		const debugLogRoom = ConnectionDebugLogRoom(child.connectionId)
-
 		const initHandler = (msg0: Serializable): void => {
 			const msg = msg0 as Record<string, any>
 			if (msg.direction === 'call' && msg.name === 'register' && msg.callbackId && msg.payload) {
 				const { apiVersion, connectionId, verificationToken } = ejson.parse(msg.payload)
 				if (!child.skipApiVersionCheck && !isModuleApiVersionCompatible(apiVersion)) {
 					this.#logger.debug(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`)
-					this.#deps.io.emitToRoom(
-						debugLogRoom,
-						debugLogRoom,
+					this.#deps.debugLogLine(
+						child.connectionId,
 						'error',
 						`Got register for unsupported api version "${apiVersion}"`
 					)
@@ -207,7 +197,7 @@ export class ModuleHost {
 					})
 					.catch((e) => {
 						this.#logger.warn(`Instance "${config.label || child.connectionId}" failed to init: ${e} ${e?.stack}`)
-						this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', `Failed to init: ${e} ${e?.stack}`)
+						this.#deps.debugLogLine(child.connectionId, 'error', `Failed to init: ${e} ${e?.stack}`)
 
 						forceRestart()
 					})
@@ -522,10 +512,8 @@ export class ModuleHost {
 				stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 			})
 
-			const debugLogRoom = ConnectionDebugLogRoom(connectionId)
-			this.#deps.io.emitToRoom(
-				debugLogRoom,
-				debugLogRoom,
+			this.#deps.debugLogLine(
+				connectionId,
 				'system',
 				`** Starting Connection from "${path.join(moduleInfo.basePath, jsPath)}" **`
 			)
@@ -535,7 +523,7 @@ export class ModuleHost {
 				child.handler?.cleanup()
 
 				child.logger.info(`Connection started process ${monitor.child?.pid}`)
-				this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection started **')
+				this.#deps.debugLogLine(connectionId, 'system', '** Connection started **')
 			})
 			monitor.on('stop', () => {
 				child.isReady = false
@@ -547,7 +535,7 @@ export class ModuleHost {
 					child.crashed ? '' : 'Stopped'
 				)
 				child.logger.debug(`Connection stopped`)
-				this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection stopped **')
+				this.#deps.debugLogLine(connectionId, 'system', '** Connection stopped **')
 
 				this.#deps.controls.actionRecorder.connectionAvailabilityChange(connectionId, false)
 
@@ -560,7 +548,7 @@ export class ModuleHost {
 
 				this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Crashed')
 				child.logger.debug(`Connection crashed`)
-				this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'system', '** Connection crashed **')
+				this.#deps.debugLogLine(connectionId, 'system', '** Connection crashed **')
 
 				// Cleanup any artifacts
 				this.#cleanupStoppedConnection(connectionId, child.lastLabel)
@@ -571,15 +559,11 @@ export class ModuleHost {
 					child.logger.verbose(`stdout: ${data.toString()}`)
 				}
 
-				if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
-					this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'console', data.toString())
-				}
+				this.#deps.debugLogLine(connectionId, 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
 				child.logger.verbose(`stderr: ${data.toString()}`)
-				if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
-					this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, 'error', data.toString())
-				}
+				this.#deps.debugLogLine(connectionId, 'error', data.toString())
 			})
 
 			child.monitor = monitor

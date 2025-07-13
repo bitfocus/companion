@@ -8,6 +8,7 @@ import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { useParams } from '@tanstack/react-router'
 import { trpc, useMutationExt } from './TRPC'
+import { useSubscription } from '@trpc/tanstack-react-query'
 
 interface DebugLogLine {
 	level: string
@@ -37,14 +38,11 @@ export function ConnectionDebug(): React.JSX.Element {
 	// const [loadError, setLoadError]=useState(null)
 	const [linesBuffer, setLinesBuffer] = useState<DebugLogLine[]>([])
 
-	// A unique identifier which changes upon each reconnection
-	const [connectionToken, setConnectionToken] = useState(nanoid())
-
 	const [isConnected, setIsConnected] = useState(false)
 	useEffect(() => {
 		const onConnected = () => {
 			setIsConnected(true)
-			setConnectionToken(nanoid())
+			setLinesBuffer([])
 		}
 		const onDisconnected = () => {
 			setIsConnected(false)
@@ -61,39 +59,30 @@ export function ConnectionDebug(): React.JSX.Element {
 		}
 	}, [socket])
 
-	useEffect(() => {
-		setLinesBuffer([])
-
-		const onNewLines = (level: string, message: string) => {
-			console.log('line', level, message)
-			setLinesBuffer((oldLines) => [...oldLines, { level, message }])
-		}
-
-		if (connectionId) {
-			const unsubLines = socket.on(`connection-debug:update:${connectionId}`, onNewLines)
-
-			socket
-				.emitPromise('connection-debug:subscribe', [connectionId])
-				.then((info) => {
-					if (!info) {
-						onNewLines('system', 'Connection was not found')
-					}
-					console.log('subscribed', info)
-				})
-				.catch((err) => {
-					console.error('Subscribe failure', err)
-				})
-
-			return () => {
-				socket.emitPromise('connection-debug:unsubscribe', [connectionId]).catch((err) => {
-					console.error('Unsubscribe failure', err)
-				})
-				unsubLines()
+	useSubscription(
+		trpc.connections.debugLog.subscriptionOptions(
+			{
+				connectionId,
+			},
+			{
+				enabled: !!connectionId,
+				onStarted: () => {
+					setLinesBuffer([])
+					console.log('Subscribed to connection debug log', connectionId)
+				},
+				onData: (data) => {
+					setLinesBuffer((oldLines) => [...oldLines, data])
+				},
+				onError: (err) => {
+					console.error('Error in connection debug log subscription', err)
+					setLinesBuffer((oldLines) => [
+						...oldLines,
+						{ level: 'system', message: `Log subscription failed: ${err.message}` },
+					])
+				},
 			}
-		} else {
-			return undefined
-		}
-	}, [socket, connectionId, connectionToken])
+		)
+	)
 
 	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
 
