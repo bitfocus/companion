@@ -21,6 +21,7 @@ export function useConnectionCurrentConfig(connectionId: string): UseQueryResult
 		},
 		retryDelay: 2000,
 		retry: 3, // Retry 3 times before reporting an error
+		refetchOnMount: true,
 	})
 
 	return query

@@ -99,6 +99,12 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		}
 	}
 
+	useEffect(() => {
+		// Reset the form when the query data updates
+		form.reset()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [query.dataUpdatedAt])
+
 	const form = useForm({
 		defaultValues: {
 			label: connectionInfo.label,
@@ -132,6 +138,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						} else {
 							// Done
 							closeConfigurePanel()
+							form.reset()
 						}
 					})
 					.catch((e) => {
@@ -167,6 +174,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						} else {
 							// Done
 							closeConfigurePanel()
+							form.reset()
 						}
 					})
 					.catch((e) => {
