@@ -538,7 +538,7 @@ export class SocketEventsHandler {
 			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
 		}
 
-		// Stop socket.io commands being received
+		// Stop ipc commands being received
 		this.#unsubListeners()
 
 		// Cleanup any db collections

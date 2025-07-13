@@ -91,7 +91,6 @@
     "selfsigned": "^2.4.1",
     "semver": "^7.7.2",
     "shuttle-node": "^0.1.2",
-    "socket.io": "^4.8.1",
     "socketcluster-client": "^19.2.7",
     "supports-color": "^10.0.0",
     "systeminformation": "^5.27.7",
