@@ -80,7 +80,7 @@ export class Registry {
 	/**
 	 * The cloud controller
 	 */
-	#cloud!: CloudController
+	cloud!: CloudController
 	/**
 	 * The core controls controller
 	 */
@@ -273,13 +273,12 @@ export class Registry {
 				this.io,
 				this.ui.express
 			)
-			this.#cloud = new CloudController(
+			this.cloud = new CloudController(
 				this.#appInfo,
 				this.db,
 				this.#data.cache,
 				this.controls,
 				this.graphics,
-				this.io,
 				this.page
 			)
 
@@ -300,10 +299,6 @@ export class Registry {
 
 					this.graphics.discardAllOutOfBoundsControls()
 				}
-			})
-
-			this.ui.io.on('clientConnect', (client) => {
-				this.#cloud.clientConnect(client)
 			})
 
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {

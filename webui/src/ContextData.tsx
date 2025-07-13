@@ -1,5 +1,4 @@
-import React, { useContext, useMemo, useRef } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { useMemo, useRef } from 'react'
 import { NotificationsManager, NotificationsManagerRef } from '~/Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
@@ -38,8 +37,6 @@ interface ContextDataProps {
 }
 
 export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX.Element {
-	const socket = useContext(SocketContext)
-
 	const notifierRef = useRef<NotificationsManagerRef>(null)
 	const helpModalRef = useRef<HelpModalRef>(null)
 	const whatsNewModalRef = useRef<WhatsNewModalRef>(null)
@@ -48,7 +45,6 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		const showWizardEvent = new EventTarget()
 
 		return {
-			socket,
 			notifier: notifierRef,
 			helpViewer: helpModalRef,
 			whatsNewModal: whatsNewModalRef,
@@ -76,7 +72,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore
-	}, [socket])
+	}, [])
 
 	const actionDefinitionsReady = useEntityDefinitionsSubscription(
 		rootStore.entityDefinitions.actions,

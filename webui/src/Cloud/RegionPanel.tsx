@@ -1,8 +1,9 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
-import { SocketContext, type CompanionSocketWrapped } from '~/util.js'
 import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 import classNames from 'classnames'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc, useMutationExt } from '~/TRPC'
 
 interface CloudRegionPanelProps {
 	regionId: string
@@ -10,13 +11,16 @@ interface CloudRegionPanelProps {
 }
 
 export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelProps): React.JSX.Element | null {
-	const socket = useContext(SocketContext)
+	const setEnabledMutation = useMutationExt(trpc.cloud.setRegionEnabled.mutationOptions())
 
 	const cloudSetStateEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const enabled = !!e.currentTarget.checked
 			if (!hideDisabled) {
-				socket.emit('cloud_region_state_set', regionId, { enabled })
+				setEnabledMutation.mutate({
+					regionId,
+					enabled,
+				})
 
 				// 	// Reset the error message if the user changes the enabled state
 				// 	if (newState.enabled !== undefined) {
@@ -24,10 +28,10 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 				// 	}
 			}
 		},
-		[socket, regionId, hideDisabled]
+		[setEnabledMutation, regionId, hideDisabled]
 	)
 
-	const regionState = useRegionState(socket, regionId)
+	const regionState = useRegionState(regionId)
 	if (!regionState || (hideDisabled && !regionState.enabled)) return null
 
 	return (
@@ -52,23 +56,29 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 	)
 }
 
-function useRegionState(socket: CompanionSocketWrapped, regionId: string) {
-	const [regionState, setRegionState] = useState<CloudRegionState>()
+function useRegionState(regionId: string) {
+	const [regionState, setRegionState] = useState<CloudRegionState | null>(null)
 
-	useEffect(() => {
-		console.log(`Mounted CLOUD REGION ${regionId}`)
-		const unsubUpdates = socket.on('cloud_region_state', (updateRegionId, newState) => {
-			if (regionId === updateRegionId) {
-				setRegionState(newState)
+	useSubscription(
+		trpc.cloud.watchRegionState.subscriptionOptions(
+			{
+				regionId,
+			},
+			{
+				onStarted: () => {
+					console.log(`Started watching region state for ${regionId}`)
+					setRegionState(null)
+				},
+				onData: (data) => {
+					setRegionState(data)
+				},
+				onError: (error) => {
+					console.error(`Error watching region state for ${regionId}:`, error)
+					setRegionState(null)
+				},
 			}
-		})
-		socket.emit('cloud_region_state_get', regionId)
-
-		return () => {
-			console.log(`Unmounted CLOUD REGION ${regionId}`)
-			unsubUpdates()
-		}
-	}, [socket, regionId])
+		)
+	)
 
 	return regionState
 }

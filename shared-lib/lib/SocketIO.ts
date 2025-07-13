@@ -1,20 +1,11 @@
-import type { CloudControllerState, CloudRegionState } from './Model/Cloud.js'
+import type { CloudRegionState } from './Model/Cloud.js'
 
 export interface ClientToBackendEventsMap {
 	disconnect: () => never // Hack because type is missing
-
-	cloud_state_get: () => never
-	cloud_state_set: (newState: Partial<CloudControllerState>) => never
-	cloud_login: (user: string, pass: string) => never
-	cloud_logout: () => never
-	cloud_regenerate_uuid: () => never
-	cloud_region_state_get: (id: string) => never
-	cloud_region_state_set: (id: string, newState: Partial<CloudRegionState>) => never
 }
 
 export interface BackendToClientEventsMap {
-	cloud_state: (newState: CloudControllerState) => void
-	cloud_region_state: (id: string, newState: CloudRegionState) => void
+	old_do_not_use: (id: string, newState: CloudRegionState) => void
 }
 
 type ChangeSignatureToHaveCallback<T extends (...args: any[]) => any> = (

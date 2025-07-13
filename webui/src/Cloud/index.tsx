@@ -1,4 +1,4 @@
-import React, { memo, useContext, useEffect, useState } from 'react'
+import React, { memo, useState } from 'react'
 import {
 	CFormInput,
 	CButton,
@@ -14,13 +14,13 @@ import {
 } from '@coreui/react'
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
-import { SocketContext, type CompanionSocketWrapped, LoadingRetryOrError } from '~/util.js'
+import { LoadingRetryOrError } from '~/util.js'
 import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export function CloudPage(): React.JSX.Element {
-	const socket = useContext(SocketContext)
-
-	const cloudState = useCloudState(socket)
+	const cloudState = useCloudState()
 
 	return (
 		<div className="cloud-region-panel">
@@ -54,23 +54,24 @@ export function CloudPage(): React.JSX.Element {
 	)
 }
 
-function useCloudState(socket: CompanionSocketWrapped) {
-	const [cloudState, setCloudState] = useState<CloudControllerState>()
+function useCloudState() {
+	const [cloudState, setCloudState] = useState<CloudControllerState | null>(null)
 
-	useEffect(() => {
-		const unsubUpdates = socket.on('cloud_state', (newState) => {
-			setCloudState(newState)
+	useSubscription(
+		trpc.cloud.watchState.subscriptionOptions(undefined, {
+			onStarted: () => {
+				console.log('Started cloud state subscription')
+				setCloudState(null)
+			},
+			onData: (newState) => {
+				setCloudState(newState)
+			},
+			onError: (err) => {
+				console.error('Error in cloud state subscription', err)
+				setCloudState(null)
+			},
 		})
-		socket.emit('cloud_state_get')
-		console.log('Mounted CLOUD')
-		socket.emit('cloud_state_set', { ping: true })
-
-		return () => {
-			socket.emit('cloud_state_set', { ping: false })
-			console.log('Unmounted CLOUD')
-			unsubUpdates()
-		}
-	}, [socket])
+	)
 
 	return cloudState
 }
@@ -120,7 +121,7 @@ interface AuthStateProps {
 }
 
 function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps) {
-	const socket = useContext(SocketContext)
+	const logoutMutation = useMutationExt(trpc.cloud.logout.mutationOptions())
 
 	return (
 		<CCol sm={6} className="cloud-auth-state">
@@ -132,7 +133,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 						color="success"
 						onClick={() => {
 							clearError()
-							socket.emit('cloud_logout')
+							logoutMutation.mutate()
 						}}
 					>
 						Log out
@@ -150,7 +151,7 @@ interface RegionsListProps {
 }
 
 function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) {
-	const socket = useContext(SocketContext)
+	const setCloudActiveMutation = useMutationExt(trpc.cloud.setCloudActive.mutationOptions())
 
 	return (
 		<CCol sm={12}>
@@ -181,7 +182,7 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 						disabled={!cloudActive && !canActivate}
 						title="Activate Companion Cloud"
 						checked={cloudActive}
-						onChange={(e) => socket.emit('cloud_state_set', { cloudActive: !!e.target.checked })}
+						onChange={(e) => setCloudActiveMutation.mutate({ active: !!e.target.checked })}
 					/>
 				</CCardBody>
 			</CCard>
@@ -190,7 +191,7 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 }
 
 const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) {
-	const socket = useContext(SocketContext)
+	const regenerateUUIDMutation = useMutationExt(trpc.cloud.regenerateUUID.mutationOptions())
 
 	return (
 		<CCol sm={12} className="super-secret-key">
@@ -205,7 +206,7 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 			<CAlert color="success">{uuid}</CAlert>
 
 			<p>
-				<CButton color="primary" onClick={() => socket.emit('cloud_regenerate_uuid')}>
+				<CButton color="primary" onClick={() => regenerateUUIDMutation.mutate()}>
 					Regenerate secret key
 				</CButton>
 			</p>
