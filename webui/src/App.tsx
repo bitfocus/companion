@@ -13,6 +13,8 @@ import { useIdleTimer } from 'react-idle-timer'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { Outlet } from '@tanstack/react-router'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from './TRPC.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
@@ -20,7 +22,6 @@ export default function App(): React.JSX.Element {
 	const socket = useContext(SocketContext)
 	const [connected, setConnected] = useState(false)
 	const [wasConnected, setWasConnected] = useState(false)
-	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
 
 	useEffect(() => {
 		const onConnected = () => {
@@ -43,17 +44,29 @@ export default function App(): React.JSX.Element {
 		const unsubConnect = socket.onConnect(onConnected)
 		const unsubDisconnect = socket.onDisconnect(onDisconnected)
 
-		const unsubTask = socket.on('load-save:task', setCurrentImportTask)
-
 		if (socket.connected) onConnected()
 
 		return () => {
 			unsubConnect()
 			unsubDisconnect()
-
-			unsubTask()
 		}
 	}, [socket])
+
+	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
+	useSubscription(
+		trpc.importExport.importExportTaskStatus.subscriptionOptions(undefined, {
+			onStarted: () => {
+				setCurrentImportTask(null)
+			},
+			onData: (data) => {
+				setCurrentImportTask(data)
+			},
+			onError: (error) => {
+				console.error('Error in importExportTaskStatus subscription:', error)
+				setCurrentImportTask(null)
+			},
+		})
+	)
 
 	return (
 		<ContextData>

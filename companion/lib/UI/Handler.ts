@@ -218,7 +218,7 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 	}
 
 	#boundTrpcRouter = false
-	bindTrpcRouter(trpcRouter: AppRouter): void {
+	bindTrpcRouter(trpcRouter: AppRouter, onConnection: () => void): void {
 		if (this.#boundTrpcRouter) throw new Error('tRPC router already bound')
 		this.#boundTrpcRouter = true
 
@@ -250,6 +250,8 @@ export class UIHandler extends EventEmitter<UIHandlerEvents> {
 			ws.once('close', () => {
 				this.#logger.debug(`trpc socket ${socketId} disconnected`)
 			})
+
+			onConnection()
 		})
 	}
 

@@ -242,7 +242,6 @@ export class Registry {
 			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
-				this.io,
 				this.controls,
 				this.graphics,
 				this.instance,
@@ -304,9 +303,7 @@ export class Registry {
 			})
 
 			this.ui.io.on('clientConnect', (client) => {
-				this.controls.triggers.emit('client_connect')
 				this.#cloud.clientConnect(client)
-				this.importExport.clientConnect(client)
 			})
 
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
@@ -336,7 +333,9 @@ export class Registry {
 
 			// Instances are loaded, start up http
 			const router = createTrpcRouter(this)
-			this.ui.io.bindTrpcRouter(router)
+			this.ui.io.bindTrpcRouter(router, () => {
+				this.controls.triggers.emit('client_connect')
+			})
 			this.rebindHttp(bindIp, bindPort)
 
 			// Startup has completed, run triggers

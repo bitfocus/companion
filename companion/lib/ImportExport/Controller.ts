@@ -35,7 +35,6 @@ import {
 	type ClientResetSelection,
 	type ConnectionRemappings,
 } from '@companion-app/shared/Model/ImportExport.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -52,9 +51,10 @@ import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js
 import { ExportController } from './Export.js'
 import { FILE_VERSION } from './Constants.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import { publicProcedure, router } from '../UI/TRPC.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { zodLocation } from '../Graphics/Preview.js'
 import z from 'zod'
+import { EventEmitter } from 'node:stream'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -93,7 +93,6 @@ const find_smallest_grid_for_page = (pageInfo: ExportPageContentv6): UserConfigG
 export class ImportExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
 
-	readonly #io: UIHandler
 	readonly #controlsController: ControlsController
 	readonly #graphicsController: GraphicsController
 	readonly #instancesController: InstanceController
@@ -229,10 +228,11 @@ export class ImportExportController {
 	 */
 	#currentImportTask: 'reset' | 'import' | null = null
 
+	readonly #taskEvents = new EventEmitter<{ taskChange: [status: 'reset' | 'import' | null] }>()
+
 	constructor(
 		appInfo: AppInfo,
 		apiRouter: express.Router,
-		io: UIHandler,
 		controls: ControlsController,
 		graphics: GraphicsController,
 		instance: InstanceController,
@@ -242,7 +242,6 @@ export class ImportExportController {
 		userconfig: DataUserConfig,
 		variablesController: VariablesController
 	) {
-		this.#io = io
 		this.#controlsController = controls
 		this.#graphicsController = graphics
 		this.#instancesController = instance
@@ -251,6 +250,8 @@ export class ImportExportController {
 		this.#surfacesController = surfaces
 		this.#userConfigController = userconfig
 		this.#variablesController = variablesController
+
+		this.#taskEvents.setMaxListeners(0)
 
 		this.#exportController = new ExportController(
 			appInfo,
@@ -268,19 +269,30 @@ export class ImportExportController {
 		if (this.#currentImportTask) throw new Error('Another operation is in progress')
 
 		this.#currentImportTask = newTaskType
-		this.#io.emitToAll('load-save:task', this.#currentImportTask)
+		this.#taskEvents.emit('taskChange', this.#currentImportTask)
 
 		try {
 			return await executeFn()
 		} finally {
 			this.#currentImportTask = null
-			this.#io.emitToAll('load-save:task', this.#currentImportTask)
+			this.#taskEvents.emit('taskChange', this.#currentImportTask)
 		}
 	}
 
 	createTrpcRouter() {
+		const self = this
 		return router({
 			prepareImport: this.#multipartUploader.createTrpcRouter(),
+
+			importExportTaskStatus: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#taskEvents, 'taskChange', signal)
+
+				yield self.#currentImportTask
+
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
 
 			abort: publicProcedure.mutation(async ({ ctx }) => {
 				// Clear the pending import
@@ -558,16 +570,6 @@ export class ImportExportController {
 					this.#controlsController.importControl(location, fixedControlObj)
 				}
 			}
-		}
-	}
-
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		if (this.#currentImportTask) {
-			// Inform about in progress task
-			client.emit('load-save:task', this.#currentImportTask)
 		}
 	}
 
