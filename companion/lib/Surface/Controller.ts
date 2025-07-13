@@ -1281,15 +1281,18 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				// it appears that #surfaceHandlers and #surfaceGroups have independent copies of `groupConfig`...
 				//  and the one in #surfaceGroups is the one that controls the surface's ..page.. values.
+				// Note that #surfaceGroups includes both user-defined groups and surfaces that are not in groups (aka Auto Groups)
 				const group = this.#surfaceGroups.get(surfaceId)
-				// now copy the surfaceGroup into #surfaceGroups (does it matter that we don't copy `name`?)
+				// now copy the surfaceGroup into #surfaceGroups
 				// it appears that `surfaceHandlers` is empty if a surface is in a user-specified group
 				//  (note: I tried moving `&& group.surfaceHandlers.length > 0` to `group.#isAutoGroup` in Group.ts,
 				//  but it resulted in bogus groups being created when a device was attached -- and these groups only show up on next restart or on export.)
 				if (group && group.surfaceHandlers.length > 0) {
-					group.setGroupConfigValue('use_last_page', surfaceConfig.groupConfig.use_last_page)
-					group.setGroupConfigValue('startup_page_id', surfaceConfig.groupConfig.startup_page_id)
-					group.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+					group.setName(surfaceConfig.groupConfig.name ?? '')
+					for (const [key, value] of Object.entries(surfaceConfig.groupConfig)) {
+						if (key === 'name') continue
+						group.setGroupConfigValue(key, value)
+					}
 				}
 			} else {
 				// Device is not loaded
