@@ -242,6 +242,7 @@ export class Registry {
 			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
+				this.db,
 				this.controls,
 				this.graphics,
 				this.instance,

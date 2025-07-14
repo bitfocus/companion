@@ -116,6 +116,22 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		installName: '',
 		default_export_filename: '$(internal:hostname)_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
 
+		backups: [
+			// Create a disabled backup rule by default
+			{
+				id: 'default',
+				enabled: false,
+				name: 'Daily Backup',
+				backupType: 'db',
+				backupPath: '', // Default
+				cron: '0 0 * * *', // Daily at midnight
+				backupNamePattern: 'backup-$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
+				keep: 5,
+				previousBackups: [],
+				lastRan: 0,
+			},
+		],
+
 		discoveryEnabled: true,
 	}
 	/**
@@ -401,6 +417,27 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setKey(key: keyof UserConfigModel, value: any, save = true): void {
+		if (!key) throw new Error('Missing key')
+
+		// Block direct updates to backup configuration
+		if (key === 'backups') {
+			this.#logger.warn(
+				`Direct updates to 'backups' configuration are not allowed. Use backup-rules endpoints instead.`
+			)
+			return
+		}
+
+		this.setKeyUnchecked(key, value, save)
+	}
+
+	/**
+	 * Save/update a key/value pair to the user config, without checking for blocked keys
+	 * @param key - the key to save under
+	 * @param value - the object to save
+	 * @param save - <code>false</code> if a DB save is not necessary
+	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	setKeyUnchecked(key: keyof UserConfigModel, value: any, save = true): void {
 		if (!key) throw new Error('Missing key')
 
 		let checkControlsInBounds = false

@@ -55,6 +55,8 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { zodLocation } from '../Graphics/Preview.js'
 import z from 'zod'
 import { EventEmitter } from 'node:events'
+import { BackupController } from './Backups.js'
+import type { DataDatabase } from '../Data/Database.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -101,9 +103,8 @@ export class ImportExportController {
 	readonly #surfacesController: SurfaceController
 	readonly #userConfigController: DataUserConfig
 	readonly #variablesController: VariablesController
+	readonly #backupController: BackupController
 
-	// @ts-expect-error  Not used directly
-	// eslint-disable-next-line no-unused-private-class-members
 	readonly #exportController: ExportController
 
 	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null]>(
@@ -233,6 +234,7 @@ export class ImportExportController {
 	constructor(
 		appInfo: AppInfo,
 		apiRouter: express.Router,
+		db: DataDatabase,
 		controls: ControlsController,
 		graphics: GraphicsController,
 		instance: InstanceController,
@@ -263,6 +265,19 @@ export class ImportExportController {
 			userconfig,
 			variablesController
 		)
+
+		// Initialize the backup controller
+		this.#backupController = new BackupController(
+			appInfo,
+			db,
+			this.#userConfigController,
+			variablesController.values,
+			this.#exportController
+		)
+
+		// Initialize with current user config for backups
+		const backupRules = this.#userConfigController.getKey('backups')
+		this.#backupController.initializeWithConfig(backupRules || [])
 	}
 
 	async #checkOrRunImportTask<T>(newTaskType: 'reset' | 'import', executeFn: () => Promise<T>): Promise<T> {
@@ -283,6 +298,7 @@ export class ImportExportController {
 		const self = this
 		return router({
 			prepareImport: this.#multipartUploader.createTrpcRouter(),
+			backupRules: this.#backupController.createTrpcRouter(),
 
 			importExportTaskStatus: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(self.#taskEvents, 'taskChange', signal)
