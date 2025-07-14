@@ -5,23 +5,26 @@ import type * as trpcWs from '@trpc/server/adapters/ws'
 import { EventEmitter, on } from 'events'
 import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
 import LogController from '../Log/Controller.js'
+import { nanoid } from 'nanoid'
+import { isPackaged } from '../Resources/Util.js'
 
 export interface TrpcContext {
-	val: null
+	clientId: string
+	clientIp: string | undefined
+
 	pendingImport?: {
 		object: ExportFullv6 | ExportPageModelv6
 		timeout: null
 	}
 }
 // created for each request
-export const createTrpcExpressContext = ({
-	req: _req,
-	res: _res,
-}: trpcExpress.CreateExpressContextOptions): TrpcContext => ({
-	val: null,
+export const createTrpcExpressContext = ({ req, res: _res }: trpcExpress.CreateExpressContextOptions): TrpcContext => ({
+	clientId: nanoid(),
+	clientIp: req.ip,
 }) // no context
-export const createTrpcWsContext = ({ req: _req, res: _res }: trpcWs.CreateWSSContextFnOptions): TrpcContext => ({
-	val: null,
+export const createTrpcWsContext = ({ req, res: _res }: trpcWs.CreateWSSContextFnOptions): TrpcContext => ({
+	clientId: nanoid(),
+	clientIp: req.socket.remoteAddress,
 }) // no context
 
 /**
@@ -30,13 +33,35 @@ export const createTrpcWsContext = ({ req: _req, res: _res }: trpcWs.CreateWSSCo
  */
 const t = initTRPC.context<TrpcContext>().create()
 
+const loggerMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
+	const start = Date.now()
+
+	const result = await next()
+
+	const end = Date.now()
+
+	// TODO - putting this outside results in a 'before initialization' loop
+	const trpcCallLogger = LogController.createLogger('TRPC/Call')
+
+	// Log the request at varying levels depending on whether companion is packaged or not
+	const logLine = `${ctx.clientIp ?? ''} - ${ctx.clientId ?? '-'} "${path}/${type}" ${result.ok ? 200 : result.error.code} in ${end - start}ms`
+	if (isPackaged()) {
+		trpcCallLogger.silly(logLine)
+	} else {
+		trpcCallLogger.debug(logLine)
+	}
+
+	return result
+})
+
 /**
  * Export reusable router and procedure helpers
  * that can be used throughout the router
  */
 export const router = t.router
-export const publicProcedure = t.procedure
-export const protectedProcedure = t.procedure
+
+export const publicProcedure = t.procedure.use(loggerMiddleware)
+// export const protectedProcedure = t.procedure
 
 /**
  * Create the root TRPC router
