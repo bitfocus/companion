@@ -12,12 +12,12 @@
 import LogController from '../Log/Controller.js'
 import EventEmitter from 'events'
 import { VARIABLE_UNKNOWN_VALUE, VariableValueData, VariablesCache } from './Util.js'
-import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { router, publicProcedure } from '../UI/TRPC.js'
 import z from 'zod'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 
 export interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>, connection_labels: Set<string>]

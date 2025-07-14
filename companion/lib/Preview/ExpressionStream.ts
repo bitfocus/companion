@@ -1,4 +1,3 @@
-import type { VariablesValues } from '../Variables/Values.js'
 import LogController from '../Log/Controller.js'
 import type {
 	ExecuteExpressionResult,
@@ -13,27 +12,19 @@ import EventEmitter from 'node:events'
 export class PreviewExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
 
-	// readonly #ioController: UIHandler
 	readonly #pageStore: IPageStore
-	readonly #variablesController: VariablesValues
 	readonly #controlsController: ControlsController
 
 	readonly #sessions = new Map<string, ExpressionStreamSession>()
 
-	constructor(pageStore: IPageStore, variablesController: VariablesValues, controlsController: ControlsController) {
-		// this.#ioController = ioController
+	constructor(pageStore: IPageStore, controlsController: ControlsController) {
 		this.#pageStore = pageStore
-		this.#variablesController = variablesController
 		this.#controlsController = controlsController
-
-		this.#variablesController.on('variables_changed', (changedVariables) => this.#onValuesChanged(changedVariables))
-		this.#variablesController.on('local_variables_changed', this.#onValuesChanged)
 	}
 
 	createTrpcRouter() {
 		const self = this
 		return router({
-			//
 			watchExpression: publicProcedure
 				.input(
 					z.object({
@@ -91,7 +82,7 @@ export class PreviewExpressionStream {
 		})
 	}
 
-	#onValuesChanged = (changed: Set<string>, fromControlId?: string) => {
+	onVariablesChanged = (changed: Set<string>, fromControlId: string | null): void => {
 		for (const [expressionId, session] of this.#sessions) {
 			if (fromControlId && session.controlId !== fromControlId) continue
 

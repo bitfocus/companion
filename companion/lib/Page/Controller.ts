@@ -7,12 +7,14 @@ import type {
 	PageModelChangesItem,
 	PageModelChangesUpdate,
 } from '@companion-app/shared/Model/PageModel.js'
-import type { Registry } from '../Registry.js'
 import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
-import _ from 'lodash'
+import { compact } from 'lodash-es'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 interface PageControllerEvents {
 	controlIdsMoved: [controlIds: string[]]
@@ -38,14 +40,24 @@ interface PageControllerEvents {
 export class PageController extends EventEmitter<PageControllerEvents> {
 	readonly #logger = LogController.createLogger('Page/Controller')
 
-	readonly #registry: Pick<Registry, 'io' | 'graphics' | 'controls' | 'userconfig'>
+	readonly #graphicsController: GraphicsController
+	readonly #controlsController: ControlsController
+	readonly #userconfigController: DataUserConfig
+
 	readonly store: PageStore
 
-	constructor(registry: Registry, store: PageStore) {
+	constructor(
+		graphicsController: GraphicsController,
+		controlsController: ControlsController,
+		userconfigController: DataUserConfig,
+		store: PageStore
+	) {
 		super()
 		this.setMaxListeners(0)
 
-		this.#registry = registry
+		this.#graphicsController = graphicsController
+		this.#controlsController = controlsController
+		this.#userconfigController = userconfigController
 		this.store = store
 
 		// Listen to store events to emit controller events
@@ -108,7 +120,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 					// Delete the controls, and allow them to redraw
 					const controlIds = this.store.getAllControlIdsOnPage(input.pageNumber)
 					for (const controlId of controlIds) {
-						this.#registry.controls.deleteControl(controlId)
+						this.#controlsController.deleteControl(controlId)
 					}
 
 					// Delete the page
@@ -150,7 +162,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 					// Delete the controls, and allow them to redraw
 					const controlIds = this.store.getAllControlIdsOnPage(input.pageNumber)
 					for (const controlId of controlIds) {
-						this.#registry.controls.deleteControl(controlId)
+						this.#controlsController.deleteControl(controlId)
 					}
 
 					// Clear the references on the page
@@ -247,7 +259,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		const missingPageNumber = this.store.getPageIds().length + 1
 		changedPageNumbers.push(missingPageNumber)
-		this.#registry.graphics.clearAllForPage(missingPageNumber)
+		this.#graphicsController.clearAllForPage(missingPageNumber)
 		changedPageIds.add(pageInfo.id)
 
 		this.emit('clientUpdate', {
@@ -362,7 +374,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				],
 			})
 
-			this.emit('controlIdsMoved', _.compact([oldControlId, controlId]))
+			this.emit('controlIdsMoved', compact([oldControlId, controlId]))
 		}
 
 		return success
@@ -433,9 +445,9 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				pageNumber,
 			}
 			const oldControlId = this.store.getControlIdAt(fullLocation)
-			if (oldControlId) this.#registry.controls.deleteControl(oldControlId)
+			if (oldControlId) this.#controlsController.deleteControl(oldControlId)
 
-			this.#registry.controls.createButtonControl(fullLocation, type)
+			this.#controlsController.createButtonControl(fullLocation, type)
 		}
 	}
 
@@ -445,7 +457,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	findAllOutOfBoundsControls(): string[] {
 		const foundControlIds: string[] = []
 
-		const { minColumn, maxColumn, minRow, maxRow } = this.#registry.userconfig.getKey('gridSize')
+		const { minColumn, maxColumn, minRow, maxRow } = this.#userconfigController.getKey('gridSize')
 		const pagesById = this.store.getPagesById()
 
 		for (const page of Object.values(pagesById)) {
@@ -510,9 +522,9 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 			for (const [column, controlId] of Object.entries(rowObj)) {
-				const control = this.#registry.controls.getControl(controlId)
+				const control = this.#controlsController.getControl(controlId)
 				if (control && control.type === 'pagenum') {
-					this.#registry.graphics.invalidateButton({
+					this.#graphicsController.invalidateButton({
 						pageNumber: Number(pageNumber),
 						column: Number(column),
 						row: Number(row),
@@ -527,13 +539,13 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 */
 	#invalidateAllControlsOnPageNumber(pageNumber: number, pageInfo: PageModel): void {
 		if (!pageInfo?.controls) return
-		this.#registry.graphics.clearAllForPage(pageNumber)
+		this.#graphicsController.clearAllForPage(pageNumber)
 
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 			for (const [column, controlId] of Object.entries(rowObj)) {
-				const control = this.#registry.controls.getControl(controlId)
+				const control = this.#controlsController.getControl(controlId)
 				if (control) {
-					this.#registry.graphics.invalidateButton({
+					this.#graphicsController.invalidateButton({
 						pageNumber: pageNumber,
 						column: Number(column),
 						row: Number(row),

@@ -15,7 +15,6 @@ import { PageController } from './Page/Controller.js'
 import { ServiceController } from './Service/Controller.js'
 import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
-import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
@@ -25,10 +24,10 @@ import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
 import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
-import { PageStore } from './Page/Store.js'
-import { PreviewController } from './Preview/Controller.js'
 import { ActiveLearningStore } from './Resources/ActiveLearningStore.js'
 import { createTrpcRouter } from './UI/TRPC.js'
+import { PageStore } from './Page/Store.js'
+import { PreviewController } from './Preview/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -99,10 +98,6 @@ export class Registry {
 	 * The core instance controller
 	 */
 	instance!: InstanceController
-	/**
-	 * The core interface client
-	 */
-	readonly io: UIHandler
 	/**
 	 * The logger
 	 */
@@ -185,7 +180,6 @@ export class Registry {
 		this.#logger.debug('constructing core modules')
 
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
-		this.io = this.ui.io
 		LogController.init(this.#appInfo)
 
 		this.db = new DataDatabase(this.#appInfo.configDir)
@@ -250,7 +244,7 @@ export class Registry {
 				this.exit.bind(this)
 			)
 
-			this.page = new PageController(this, pageStore)
+			this.page = new PageController(this.graphics, this.controls, this.userconfig, pageStore)
 			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
@@ -283,7 +277,7 @@ export class Registry {
 				this.surfaces,
 				pageStore,
 				this.instance,
-				this.io,
+				this.ui.io,
 				this.ui.express
 			)
 			this.cloud = new CloudController(
@@ -339,6 +333,10 @@ export class Registry {
 				this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
 				this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
 				this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+			})
+
+			this.page.on('controlIdsMoved', (controlIds) => {
+				this.preview.onControlIdsLocationChanged(controlIds)
 			})
 
 			this.page.on('controlIdsMoved', (controlIds) => {
@@ -413,6 +411,7 @@ export class Registry {
 
 			this.#logger.error(`Failed to start companion: ${e}`)
 			this.#logger.debug(e)
+			this.#logger.debug((e as Error)?.stack)
 			this.exit(true, false)
 		} finally {
 			this.#isReady = true

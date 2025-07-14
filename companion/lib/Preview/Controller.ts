@@ -21,7 +21,7 @@ export class PreviewController {
 		instanceDefinitions: InstanceDefinitions
 	) {
 		this.#graphics = new PreviewGraphics(graphicsController, pageStore, controlsController)
-		this.#expressionStream = new PreviewExpressionStream(pageStore, variablesValuesController, controlsController)
+		this.#expressionStream = new PreviewExpressionStream(pageStore, controlsController)
 		this.#presets = new PreviewPresets(graphicsController, variablesValuesController, instanceDefinitions)
 	}
 
@@ -39,5 +39,6 @@ export class PreviewController {
 
 	onVariablesChanged(allChangedSet: Set<string>, fromControlId: string | null): void {
 		this.#graphics.onVariablesChanged(allChangedSet, fromControlId)
+		this.#expressionStream.onVariablesChanged(allChangedSet, fromControlId)
 	}
 }

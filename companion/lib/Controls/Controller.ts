@@ -16,8 +16,6 @@ import type { Registry } from '../Registry.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
-import { CompanionVariableValues } from '@companion-module/base'
-import { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type { ControlChangeEvents, ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
@@ -34,6 +32,8 @@ import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
 import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
+import { CompanionVariableValues } from '@companion-module/base'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 /**
  * The class that manages the controls
@@ -55,7 +55,7 @@ export class ControlsController {
 
 	readonly #registry: Pick<
 		Registry,
-		'db' | 'page' | 'ui' | 'io' | 'graphics' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
+		'db' | 'page' | 'ui' | 'graphics' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
 	>
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 

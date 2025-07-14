@@ -27,7 +27,6 @@ import {
 	SomeSocketEntityLocation,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlsController } from '../Controls/Controller.js'
 import { CHOICES_DYNAMIC_LOCATION } from './Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
@@ -37,6 +36,7 @@ import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListP
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
+import type { ControlsController } from '../Controls/Controller.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',

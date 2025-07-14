@@ -55,7 +55,7 @@ export class ExportController {
 	readonly #controlsController: ControlsController
 	readonly #graphicsController: GraphicsController
 	readonly #instancesController: InstanceController
-	readonly #pageStore: IPageStore
+	readonly #pagesStore: IPageStore
 	readonly #surfacesController: SurfaceController
 	readonly #userConfigController: DataUserConfig
 	readonly #variablesController: VariablesController
@@ -75,7 +75,7 @@ export class ExportController {
 		this.#controlsController = controls
 		this.#graphicsController = graphics
 		this.#instancesController = instance
-		this.#pageStore = pageStore
+		this.#pagesStore = pageStore
 		this.#surfacesController = surfaces
 		this.#userConfigController = userconfig
 		this.#variablesController = variablesController
@@ -122,7 +122,7 @@ export class ExportController {
 		if (isNaN(page)) {
 			next()
 		} else {
-			const pageInfo = this.#pageStore.getPageInfo(page, true)
+			const pageInfo = this.#pagesStore.getPageInfo(page, true)
 			if (!pageInfo) throw new Error(`Page "${page}" not found!`)
 
 			const referencedConnectionIds = new Set<string>()
@@ -480,7 +480,7 @@ export class ExportController {
 		if (!config || !isFalsey(config.buttons)) {
 			exp.pages = {}
 
-			const pageInfos = this.#pageStore.getAll()
+			const pageInfos = this.#pagesStore.getAll()
 			for (const [pageNumber, rawPageInfo] of Object.entries(pageInfos)) {
 				exp.pages[Number(pageNumber)] = this.#generatePageExportInfo(
 					rawPageInfo,

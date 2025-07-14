@@ -13,10 +13,10 @@ import LogController from '../Log/Controller.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { SplitVariableId } from '../Resources/Util.js'
-import { type CompanionVariableValue } from '@companion-module/base'
-import { ReadonlyDeep } from 'type-fest'
+import type { CompanionVariableValue } from '@companion-module/base'
+import type { ReadonlyDeep } from 'type-fest'
 
 export const VARIABLE_UNKNOWN_VALUE = '$NA'
 
