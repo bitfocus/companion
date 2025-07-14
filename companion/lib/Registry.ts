@@ -290,6 +290,12 @@ export class Registry {
 				this.instance.definitions
 			)
 
+			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
+			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
+			controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
+
+			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
+
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
 				setImmediate(() => {
 					// give the change a chance to be pushed to the ui first

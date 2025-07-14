@@ -1,4 +1,3 @@
-import type { GraphicsController } from '../Graphics/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { InternalController } from '../Internal/Controller.js'
@@ -15,7 +14,6 @@ import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 export interface ControlDependencies {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
-	readonly graphics: GraphicsController
 	readonly surfaces: SurfaceController
 	readonly pageStore: IPageStore
 
@@ -33,6 +31,8 @@ export interface ControlDependencies {
 
 export interface ControlCommonEvents {
 	updateButtonState: [location: ControlLocation, pushed: boolean, surfaceId: string | undefined]
+	invalidateControlRender: [controlId: string]
+	invalidateLocationRender: [location: ControlLocation]
 }
 
 export type ControlChangeEvents = {
