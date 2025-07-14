@@ -16,6 +16,7 @@ import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import crypto from 'node:crypto'
+import semver from 'semver'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -181,6 +182,11 @@ export class InstanceInstalledModulesManager {
 				return "Doesn't look like a valid module, missing manifest"
 			}
 
+			if (!semver.parse(manifestJson.version, { loose: true })) {
+				this.#logger.warn(`Invalid version "${manifestJson.version}" in module manifest`)
+				return `Invalid module version: ${manifestJson.version}`
+			}
+
 			const moduleDir = path.join(this.#modulesDir, `${manifestJson.id}-${manifestJson.version}`)
 			if (fs.existsSync(moduleDir)) {
 				this.#logger.warn(`Module ${manifestJson.id} v${manifestJson.version} already exists on disk`)
@@ -314,6 +320,11 @@ export class InstanceInstalledModulesManager {
 		versionInfo: ModuleStoreModuleInfoVersion
 	): Promise<string | null> {
 		const moduleVersion = versionInfo.id
+
+		if (!semver.parse(moduleVersion, { loose: true })) {
+			this.#logger.warn(`Invalid version "${moduleVersion}" in module manifest`)
+			return `Invalid module version: ${moduleVersion}`
+		}
 
 		const moduleDir = path.join(this.#modulesDir, `${moduleId}-${moduleVersion}`)
 		if (fs.existsSync(moduleDir)) {
