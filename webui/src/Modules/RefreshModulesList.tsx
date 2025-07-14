@@ -5,20 +5,23 @@ import { CAlert, CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export const RefreshModulesList = observer(function RefreshModulesList({ btnSize }: { btnSize?: 'sm' | 'lg' }) {
-	const { socket, moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
+	const { moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
 
 	const refreshProgress = moduleStoreRefreshProgress.get(null) ?? 1
 
 	const [refreshError, setLoadError] = useState<string | null>(null)
 
+	const refreshListMutation = useMutationExt(trpc.connections.modulesStore.refreshList.mutationOptions())
+
 	const doRefreshModules = useCallback(() => {
-		socket.emitPromise('modules-store:list:refresh', []).catch((err) => {
+		refreshListMutation.mutateAsync().catch((err) => {
 			console.error('Failed to refresh modules', err)
 			setLoadError('Failed to refresh modules: ' + err)
 		})
-	}, [socket])
+	}, [refreshListMutation])
 
 	return (
 		<div>

@@ -1,30 +1,29 @@
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { ControlConfigRoom } from '../Controls/ControlBase.js'
+import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
 import type { GraphicsController } from './Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
-import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { PageController } from '../Page/Controller.js'
 import { ImageResult } from './ImageResult.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
+import EventEmitter from 'node:events'
+import { nanoid } from 'nanoid'
 
-/**
- * Get Socket.io room for preview updates
- */
-function PreviewLocationRoom(location: ControlLocation): string {
-	return `preview:location:${location.pageNumber}:${location.row}:${location.column}`
+export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
+	pageNumber: z.number().min(1),
+	row: z.number(),
+	column: z.number(),
+})
+
+type PreviewRenderEvents = {
+	[id: `location:${string}`]: [image: WrappedImage]
+	[id: `controlId:${string}`]: [dataUrl: string | null]
+	[id: `reference:${string}`]: [dataUrl: string | null]
 }
 
-/**
- * Ensure a location is correctly formed as numbers
- */
-function ensureLocationIsNumber(location: ControlLocation): ControlLocation {
-	return {
-		pageNumber: Number(location.pageNumber),
-		row: Number(location.row),
-		column: Number(location.column),
-	}
-}
+const getLocationSubId = (location: ControlLocation): string =>
+	`${location.pageNumber}_${location.row}_${location.column}`
 
 /**
  * The class that manages button preview generation/relay for interfaces
@@ -45,94 +44,118 @@ export class GraphicsPreview {
 	readonly #logger = LogController.createLogger('Graphics/Preview')
 
 	readonly #graphicsController: GraphicsController
-	readonly #ioController: UIHandler
 	readonly #pageController: PageController
 	readonly #variablesController: VariablesValues
 
 	readonly #buttonReferencePreviews = new Map<string, PreviewSession>()
 
+	readonly #renderEvents = new EventEmitter<PreviewRenderEvents>()
+
 	constructor(
 		graphicsController: GraphicsController,
-		ioController: UIHandler,
 		pageController: PageController,
 		variablesController: VariablesValues
 	) {
 		this.#graphicsController = graphicsController
-		this.#ioController = ioController
 		this.#pageController = pageController
 		this.#variablesController = variablesController
 
 		this.#graphicsController.on('button_drawn', this.#updateButton.bind(this))
+		this.#renderEvents.setMaxListeners(0)
 	}
 
-	/**
-	 * Setup a client's calls
-	 */
-	clientConnect(client: ClientSocket): void {
-		const locationSubsForClient = new Map<string, Set<string>>()
-		const getLocationSubId = (location: ControlLocation): string =>
-			`${location.pageNumber}_${location.row}_${location.column}`
+	createTrpcRouter() {
+		const self = this
+		return router({
+			location: publicProcedure
+				.input(
+					z.object({
+						location: zodLocation,
+					})
+				)
+				.subscription(async function* ({ signal, input }) {
+					const { location } = input
+					const locationId = getLocationSubId(location)
 
-		client.onPromise('preview:location:subscribe', (location, subId) => {
-			if (!location || !subId) throw new Error('Invalid')
+					const changes = toIterable(self.#renderEvents, `location:${locationId}`, signal)
 
-			location = ensureLocationIsNumber(location)
+					const render = self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
+					yield { image: render.asDataUrl, isUsed: !!render.style } satisfies WrappedImage
 
-			const locationId = getLocationSubId(location)
-			let entry = locationSubsForClient.get(locationId)
-			if (!entry) {
-				locationSubsForClient.set(locationId, (entry = new Set()))
-			}
-			entry.add(subId)
+					for await (const [image] of changes) {
+						yield image
+					}
+				}),
 
-			client.join(PreviewLocationRoom(location))
+			controlId: publicProcedure
+				.input(
+					z.object({
+						controlId: z.string(),
+					})
+				)
+				.subscription(async function* ({ signal, input }) {
+					const { controlId } = input
 
-			const render = this.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
-			return { image: render.asDataUrl, isUsed: !!render.style }
-		})
-		client.onPromise('preview:location:unsubscribe', (location, subId) => {
-			if (!location || !subId) throw new Error('Invalid')
+					const changes = toIterable(self.#renderEvents, `controlId:${controlId}`, signal)
 
-			location = ensureLocationIsNumber(location)
+					// Send the preview image shortly after
+					const location = self.#pageController.getLocationOfControlId(controlId)
+					const originalImg = location ? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location) : null
+					yield originalImg?.asDataUrl ?? null
 
-			const locationId = getLocationSubId(location)
-			const entry = locationSubsForClient.get(locationId)
-			if (!entry) return
+					for await (const [image] of changes) {
+						yield image
+					}
+				}),
 
-			entry.delete(subId)
-			if (entry.size === 0) {
-				locationSubsForClient.delete(locationId)
+			reference: publicProcedure
+				.input(
+					z.object({
+						location: zodLocation.optional(),
+						options: z.object({}).catchall(z.any()),
+					})
+				)
+				.subscription(async function* ({ signal, input }) {
+					const { location, options } = input
+					const id = nanoid()
 
-				client.leave(PreviewLocationRoom(location))
-			}
-		})
+					try {
+						if (self.#buttonReferencePreviews.get(id)) throw new Error('Session id is already in use')
 
-		client.onPromise('preview:button-reference:subscribe', (id, location, options) => {
-			const fullId = `${client.id}::${id}`
+						// Start wathing for changes to the reference
+						const changes = toIterable(self.#renderEvents, `reference:${id}`, signal)
 
-			if (this.#buttonReferencePreviews.get(fullId)) throw new Error('Session id is already in use')
+						// Do a resolve of the reference for the starting image
+						const result = ParseInternalControlReference(
+							self.#logger,
+							self.#variablesController,
+							location,
+							options,
+							true
+						)
 
-			// Do a resolve of the reference for the starting image
-			const result = ParseInternalControlReference(this.#logger, this.#variablesController, location, options, true)
+						// Track the subscription, to allow it to be invalidated
+						self.#buttonReferencePreviews.set(id, {
+							id,
+							location,
+							options,
+							resolvedLocation: result.location,
+							referencedVariableIds: Array.from(result.referencedVariables),
+						})
 
-			// Track the subscription, to allow it to be invalidated
-			this.#buttonReferencePreviews.set(fullId, {
-				id,
-				location,
-				options,
-				resolvedLocation: result.location,
-				referencedVariableIds: Array.from(result.referencedVariables),
-				client,
-			})
+						// Emit the initial image
+						yield result.location
+							? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
+							: null
 
-			return result.location
-				? this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
-				: null
-		})
-		client.onPromise('preview:button-reference:unsubscribe', (id) => {
-			const fullId = `${client.id}::${id}`
-
-			this.#buttonReferencePreviews.delete(fullId)
+						for await (const [image] of changes) {
+							yield image
+						}
+					} finally {
+						// Cleanup the session on termination
+						self.#buttonReferencePreviews.delete(id)
+					}
+				}),
 		})
 	}
 
@@ -143,16 +166,13 @@ export class GraphicsPreview {
 		// Push the updated render to any clients viewing a preview of a control
 		const controlId = this.#pageController.getControlIdAt(location)
 		if (controlId) {
-			const controlRoom = ControlConfigRoom(controlId)
-			if (this.#ioController.countRoomMembers(controlRoom) > 0) {
-				this.#ioController.emitToRoom(controlRoom, `controls:preview-${controlId}`, render.asDataUrl)
-			}
+			this.#renderEvents.emit(`controlId:${controlId}`, render.asDataUrl)
 		}
 
-		const locationRoom = PreviewLocationRoom(location)
-		if (this.#ioController.countRoomMembers(locationRoom) > 0) {
-			this.#ioController.emitToRoom(locationRoom, `preview:location:render`, location, render.asDataUrl, !!render.style)
-		}
+		this.#renderEvents.emit(`location:${getLocationSubId(location)}`, {
+			image: render.asDataUrl,
+			isUsed: !!render.style,
+		})
 
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
@@ -161,7 +181,7 @@ export class GraphicsPreview {
 			if (previewSession.resolvedLocation.row != location.row) continue
 			if (previewSession.resolvedLocation.column != location.column) continue
 
-			previewSession.client.emit(`preview:button-reference:update:${previewSession.id}`, render.asDataUrl)
+			this.#renderEvents.emit(`reference:${previewSession.id}`, render.asDataUrl)
 		}
 	}
 
@@ -191,7 +211,7 @@ export class GraphicsPreview {
 
 			if (!result.location) {
 				// Now has an invalid location
-				previewSession.client.emit(`preview:button-reference:update:${previewSession.id}`, null)
+				this.#renderEvents.emit(`reference:${previewSession.id}`, null)
 				continue
 			}
 
@@ -204,8 +224,8 @@ export class GraphicsPreview {
 			)
 				continue
 
-			previewSession.client.emit(
-				`preview:button-reference:update:${previewSession.id}`,
+			this.#renderEvents.emit(
+				`reference:${previewSession.id}`,
 				this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
 			)
 		}
@@ -218,5 +238,4 @@ interface PreviewSession {
 	options: Record<string, any>
 	resolvedLocation: ControlLocation | null
 	referencedVariableIds: string[]
-	client: ClientSocket
 }

@@ -3,7 +3,7 @@ import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 export interface ObjectsDiff<T> {
 	added: Record<string, T>
-	changed: Record<string, JsonPatchOperation[]>
+	changed: Record<string, JsonPatchOperation<T>[]>
 	removed: string[]
 }
 
@@ -40,11 +40,18 @@ export type EmulatorImageCache = Record<number, Record<number, string | false | 
 export interface ConnectionStatusEntry {
 	category: string | null
 	level: string | null
-	message: string | undefined
+	message: string | null
 }
 
-export type ConnectionStatusUpdate = ConnectionStatusUpdateRemoveOp | ConnectionStatusUpdateUpdateOp
+export type ConnectionStatusUpdate =
+	| ConnectionStatusUpdateInitOp
+	| ConnectionStatusUpdateRemoveOp
+	| ConnectionStatusUpdateUpdateOp
 
+export interface ConnectionStatusUpdateInitOp {
+	type: 'init'
+	statuses: Record<string, ConnectionStatusEntry>
+}
 export interface ConnectionStatusUpdateRemoveOp {
 	type: 'remove'
 	connectionId: string
@@ -63,6 +70,16 @@ export interface ClientBonjourService {
 	port: number
 	addresses: string[]
 }
+
+export type ClientBonjourEvent =
+	| {
+			type: 'up'
+			service: ClientBonjourService
+	  }
+	| {
+			type: 'down'
+			fqdn: string
+	  }
 
 export interface EventDefinition {
 	name: string

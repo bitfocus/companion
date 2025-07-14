@@ -1,21 +1,18 @@
-import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { ConnectionCollection, ConnectionCollectionData } from '@companion-app/shared/Model/Connections.js'
 import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
-
-const ConnectionCollectionsRoom = 'connection-collections'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import z from 'zod'
 
 export class InstanceCollections extends CollectionsBaseController<ConnectionCollectionData> {
-	readonly #io: UIHandler
 	readonly #emitUpdated: () => void
 
 	readonly #configStore: ConnectionConfigStore
 
-	constructor(io: UIHandler, db: DataDatabase, configStore: ConnectionConfigStore, emitUpdated: () => void) {
+	constructor(db: DataDatabase, configStore: ConnectionConfigStore, emitUpdated: () => void) {
 		super(db.getTableView<Record<string, ConnectionCollection>>('connection_collections'))
 
-		this.#io = io
 		this.#emitUpdated = emitUpdated
 		this.#configStore = configStore
 
@@ -56,40 +53,33 @@ export class InstanceCollections extends CollectionsBaseController<ConnectionCol
 		this.#configStore.cleanUnknownCollectionIds(this.collectAllCollectionIds())
 	}
 
-	override emitUpdate(rows: ConnectionCollection[]): void {
-		this.#io.emitToRoom(ConnectionCollectionsRoom, 'connection-collections:update', rows)
-
+	override emitUpdateUser(_rows: ConnectionCollection[]): void {
 		// Emit event to trigger feedback updates for connection collection enabled states
 		this.#emitUpdated()
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('connection-collections:subscribe', () => {
-			client.join(ConnectionCollectionsRoom)
+	public createTrpcRouter() {
+		return router({
+			...super.createTrpcRouterBase(),
 
-			return this.data
-		})
+			add: publicProcedure.input(z.object({ collectionName: z.string() })).mutation(async ({ input }) => {
+				return this.collectionCreate(input.collectionName, {
+					enabled: true,
+				})
+			}),
 
-		client.onPromise('connection-collections:unsubscribe', () => {
-			client.leave(ConnectionCollectionsRoom)
-		})
-
-		client.onPromise('connection-collections:add', (collectionName: string) => {
-			return this.collectionCreate(collectionName, {
-				enabled: true,
-			})
-		})
-
-		client.onPromise('connection-collections:remove', this.collectionRemove)
-		client.onPromise('connection-collections:set-name', this.collectionSetName)
-		client.onPromise('connection-collections:reorder', this.collectionMove)
-		client.onPromise('connection-collections:set-enabled', (collectionId: string, enabled: boolean) => {
-			this.collectionModifyMetaData(collectionId, (collection) => {
-				collection.metaData.enabled = enabled
-			})
+			setEnabled: publicProcedure
+				.input(
+					z.object({
+						collectionId: z.string(),
+						enabled: z.boolean(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					this.collectionModifyMetaData(input.collectionId, (collection) => {
+						collection.metaData.enabled = input.enabled
+					})
+				}),
 		})
 	}
 }

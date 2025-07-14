@@ -4,12 +4,11 @@ import debounceFn from 'debounce-fn'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import LogController, { Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
+import { EventEmitter } from 'node:events'
+import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 
-/**
- * Get Socket.io room to use for changes to a control config
- */
-export function ControlConfigRoom(controlId: string): string {
-	return `controls:${controlId}`
+export type ControlUpdateEvents = {
+	update: [change: UIControlUpdate]
 }
 
 /**
@@ -50,10 +49,13 @@ export abstract class ControlBase<TJson> {
 
 	readonly controlId: string
 
+	readonly updateEvents = new EventEmitter<ControlUpdateEvents>()
+
 	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
 		this.logger = LogController.createLogger(debugNamespace)
 		this.deps = deps
 		this.controlId = controlId
+		this.updateEvents.setMaxListeners(0)
 	}
 
 	/**
@@ -74,12 +76,10 @@ export abstract class ControlBase<TJson> {
 		this.deps.dbTable.set(this.controlId, newJson as any)
 
 		// Now broadcast to any interested clients
-		const roomName = ControlConfigRoom(this.controlId)
-
-		if (this.deps.io.countRoomMembers(roomName) > 0) {
-			const patch = jsonPatch.compare(this.#lastSentConfigJson || {}, newJson || {})
+		if (this.updateEvents.listenerCount('update') > 0) {
+			const patch = jsonPatch.compare<any>(this.#lastSentConfigJson || {}, newJson || {})
 			if (patch.length > 0) {
-				this.deps.io.emitToRoom(roomName, `controls:config-${this.controlId}`, patch)
+				this.updateEvents.emit('update', { type: 'config', patch })
 			}
 		}
 
@@ -92,11 +92,7 @@ export abstract class ControlBase<TJson> {
 	 */
 	destroy(): void {
 		// Inform clients
-		const roomName = ControlConfigRoom(this.controlId)
-		if (this.deps.io.countRoomMembers(roomName) > 0) {
-			this.deps.io.emitToRoom(roomName, `controls:config-${this.controlId}`, false)
-			this.deps.io.emitToRoom(roomName, `controls:runtime-${this.controlId}`, false)
-		}
+		this.updateEvents.emit('update', { type: 'destroy' })
 	}
 
 	/**
@@ -133,12 +129,10 @@ export abstract class ControlBase<TJson> {
 		const newJson = cloneDeep(this.toRuntimeJSON())
 
 		// Now broadcast to any interested clients
-		const roomName = ControlConfigRoom(this.controlId)
-
-		if (this.deps.io.countRoomMembers(roomName) > 0) {
+		if (this.updateEvents.listenerCount('update') > 0) {
 			const patch = jsonPatch.compare(this.#lastSentRuntimeJson || {}, newJson || {})
 			if (patch.length > 0) {
-				this.deps.io.emitToRoom(roomName, `controls:runtime-${this.controlId}`, patch)
+				this.updateEvents.emit('update', { type: 'runtime', patch })
 			}
 		}
 

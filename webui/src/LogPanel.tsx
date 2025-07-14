@@ -1,6 +1,6 @@
-import React, { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { makeAbsolutePath, SocketContext } from '~/util.js'
+import { assertNever, makeAbsolutePath } from '~/util.js'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -9,6 +9,8 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/Generi
 import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
+import { trpc, useMutationExt } from './TRPC'
+import { useSubscription } from '@trpc/tanstack-react-query'
 
 interface LogConfig {
 	debug: boolean | undefined
@@ -28,7 +30,6 @@ const LogsOnDiskInfoLine: ClientLogLineExt = {
 }
 
 export const LogPanel = memo(function LogPanel() {
-	const socket = useContext(SocketContext)
 	const [config, setConfig] = useState<LogConfig>(() => loadConfig())
 	const exportRef = useRef<GenericConfirmModalRef>(null)
 
@@ -37,11 +38,12 @@ export const LogPanel = memo(function LogPanel() {
 		window.localStorage.setItem('debug_config', JSON.stringify(config))
 	}, [config])
 
+	const clearLogMutation = useMutationExt(trpc.logs.clear.mutationOptions())
 	const doClearLog = useCallback(() => {
-		socket.emitPromise('logs:clear', []).catch((e) => {
+		clearLogMutation.mutateAsync().catch((e) => {
 			console.error('Log clear failed', e)
 		})
-	}, [socket])
+	}, [clearLogMutation])
 
 	const doToggleConfig = useCallback((key: keyof LogConfig) => {
 		setConfig((oldConfig) => ({
@@ -125,61 +127,59 @@ export const LogPanel = memo(function LogPanel() {
 	)
 })
 
+function useLogHistory() {
+	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
+	const [history, setHistory] = useState<ClientLogLineExt[]>([])
+
+	useSubscription(
+		trpc.logs.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
+				// Reset history on start
+				setHistory([])
+			},
+			onData: (data) => {
+				switch (data.type) {
+					case 'clear':
+						setHistory([])
+						break
+					case 'lines': {
+						if (data.lines.length === 0) return
+
+						const newItems: ClientLogLineExt[] = data.lines.map((item) => ({ ...item, id: nanoid() }))
+
+						setHistory((history) => {
+							const newArray = [...history, ...newItems]
+
+							if (newArray.length > 5000) {
+								setListChunkClearedToken(nanoid())
+								return newArray.slice(-4500)
+							} else {
+								return newArray
+							}
+						})
+						break
+					}
+
+					default:
+						assertNever(data)
+						break
+				}
+			},
+			onError: (error) => {
+				console.error('Log subscription error', error)
+			},
+		})
+	)
+
+	return { history, listChunkClearedToken }
+}
+
 interface LogPanelContentsProps {
 	config: LogConfig
 }
 function LogPanelContents({ config }: LogPanelContentsProps) {
-	const socket = useContext(SocketContext)
+	const { history, listChunkClearedToken } = useLogHistory()
 
-	const [history, setHistory] = useState<ClientLogLineExt[]>([])
-	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
-
-	// on 'Mount' setup
-	useEffect(() => {
-		const getClearLog = () => setHistory([])
-		const logRecv = (rawItems: ClientLogLine[]) => {
-			if (!rawItems || rawItems.length === 0) return
-
-			const newItems = rawItems.map((item) => ({ ...item, id: nanoid() }))
-
-			setHistory((history) => {
-				const newArray = [...history, ...newItems]
-
-				if (newArray.length > 5000) {
-					setListChunkClearedToken(nanoid())
-					return newArray.slice(-4500)
-				} else {
-					return newArray
-				}
-			})
-		}
-
-		socket
-			.emitPromise('logs:subscribe', [])
-			.then((lines: ClientLogLine[]) => {
-				const items = lines.map((item) => ({
-					...item,
-					id: nanoid(),
-				}))
-
-				setHistory(items)
-			})
-			.catch((e) => {
-				console.error('log subscribe error', e)
-			})
-
-		const unsubLines = socket.on('logs:lines', logRecv)
-		const unsubClear = socket.on('logs:clear', getClearLog)
-
-		return () => {
-			unsubLines()
-			unsubClear()
-
-			socket.emitPromise('logs:unsubscribe', []).catch((e) => {
-				console.error('log unsubscribe error', e)
-			})
-		}
-	}, [socket])
 	const listRef = useRef<List>(null)
 	const rowHeights = useRef<Record<string, number | undefined>>({})
 

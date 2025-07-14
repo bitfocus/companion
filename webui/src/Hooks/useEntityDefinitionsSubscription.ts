@@ -1,49 +1,31 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useState } from 'react'
 import { EntityDefinitionsForTypeStore } from '~/Stores/EntityDefinitionsStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
+import { EntityDefinitionUpdate } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
 export function useEntityDefinitionsSubscription(
-	socket: CompanionSocketWrapped,
-	store: EntityDefinitionsForTypeStore
+	store: EntityDefinitionsForTypeStore,
+	endpoint: typeof trpc.connections.definitions.actions | typeof trpc.connections.definitions.feedbacks
 ): boolean {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		let disposed = false
-
-		const entityType = store.entityType
-
-		store.reset(null)
-		setReady(false)
-
-		socket
-			.emitPromise('entity-definitions:subscribe', [entityType])
-			.then((data) => {
-				store.reset(data)
+	useSubscription(
+		endpoint.subscriptionOptions(undefined, {
+			onStarted: () => {
+				store.updateStore(null)
+				setReady(false)
+			},
+			onData: (data) => {
+				store.updateStore(data as EntityDefinitionUpdate) // TODO - some type errors due to optionals
 				setReady(true)
-			})
-			.catch((e) => {
-				store.reset(null)
-				console.error(`Failed to load ${entityType} definitions list`, e)
-			})
-
-		const unsubUpdates = socket.on('entity-definitions:update', (type, change) => {
-			if (disposed || type !== entityType) return
-
-			store.applyChanges(change)
+			},
+			onError: (e) => {
+				store.updateStore(null)
+				console.error(`Failed to load ${store.entityType} definitions list`, e)
+			},
 		})
-
-		return () => {
-			disposed = true
-
-			store.reset(null)
-			unsubUpdates()
-
-			socket.emitPromise('entity-definitions:unsubscribe', [entityType]).catch((e) => {
-				console.error(`Failed to unsubscribe to ${entityType} definitions list`, e)
-			})
-		}
-	}, [socket, store])
+	)
 
 	return ready
 }

@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.31.0",
+    "@tanstack/eslint-plugin-query": "^5.81.2",
     "@types/node": "^22.16.3",
     "@types/ps-tree": "^1.1.6",
     "@vitest/coverage-v8": "^3.2.4",

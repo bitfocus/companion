@@ -1,7 +1,6 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, MyErrorBoundary, SocketContext } from '~/util.js'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { LoadingRetryOrError, MyErrorBoundary } from '~/util.js'
 import { CCol, CContainer, CRow } from '@coreui/react'
-import { nanoid } from 'nanoid'
 import queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
 import { usePagesInfoSubscription } from '~/Hooks/usePagesInfoSubscription.js'
@@ -14,10 +13,9 @@ import { observer } from 'mobx-react-lite'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { useNavigate } from '@tanstack/react-router'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export const TabletView = observer(function TabletView() {
-	const socket = useContext(SocketContext)
-
 	const navigate = useNavigate({ from: '/tablet' })
 
 	const [loadError, setLoadError] = useState<string | null>(null)
@@ -55,15 +53,17 @@ export const TabletView = observer(function TabletView() {
 		}
 	}, [queryUrl])
 
-	const [retryToken, setRetryToken] = useState(nanoid())
-	const doRetryLoad = useCallback(() => setRetryToken(nanoid()), [])
-
 	const pagesStore = useMemo(() => new PagesStore(), [])
-	const pagesReady = usePagesInfoSubscription(socket, pagesStore, setLoadError, retryToken)
+	const { ready: pagesReady, reset: pagesResetSub } = usePagesInfoSubscription(pagesStore, setLoadError)
 
 	const userConfigStore = useMemo(() => new UserConfigStore(), [])
-	useUserConfigSubscription(socket, userConfigStore, setLoadError, retryToken)
+	const { ready: userConfigReady, reset: userConfigResetSub } = useUserConfigSubscription(userConfigStore, setLoadError)
 	const rawGridSize = userConfigStore.properties?.gridSize
+
+	const doRetryLoad = useCallback(() => {
+		pagesResetSub()
+		userConfigResetSub()
+	}, [pagesResetSub, userConfigResetSub])
 
 	useEffect(() => {
 		document.title =
@@ -71,14 +71,6 @@ export const TabletView = observer(function TabletView() {
 				? `${userConfigStore.properties?.installName} - Web Buttons (Bitfocus Companion)`
 				: 'Bitfocus Companion - Web Buttons'
 	}, [userConfigStore.properties?.installName])
-
-	useEffect(() => {
-		const unsub = socket.onConnect(() => {
-			setRetryToken(nanoid())
-		})
-
-		return unsub
-	}, [socket])
 
 	const updateQueryUrl = useCallback(
 		(key: string, value: any) => {
@@ -174,7 +166,7 @@ export const TabletView = observer(function TabletView() {
 		<div className="page-tablet">
 			<div className="scroller">
 				<CContainer fluid className="d-flex flex-column">
-					{pagesReady && rawGridSize ? (
+					{pagesReady && userConfigReady && rawGridSize ? (
 						<>
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} gridSize={rawGridSize} />
 
@@ -271,15 +263,14 @@ const InfiniteButtons = observer(function InfiniteButtons({
 	gridSize,
 	buttonSize,
 }: InfiniteButtonsProps) {
-	const socket = useContext(SocketContext)
-
+	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 	const buttonClick = useCallback(
 		(location: ControlLocation, pressed: boolean) => {
-			socket
-				.emitPromise('controls:hot-press', [location, pressed, 'tablet'])
+			hotPressMutation
+				.mutateAsync({ location, direction: pressed, surfaceId: 'tablet' })
 				.catch((e) => console.error(`Hot press failed: ${e}`))
 		},
-		[socket]
+		[hotPressMutation]
 	)
 
 	const allLocations: ControlLocation[] = []

@@ -1,43 +1,24 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useState } from 'react'
 import type { TriggersListStore } from '~/Stores/TriggersListStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
 
-export function useTriggersListSubscription(socket: CompanionSocketWrapped, store: TriggersListStore): boolean {
+export function useTriggersListSubscription(store: TriggersListStore): boolean {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		store.resetTriggers(null)
-		setReady(false)
-
-		socket
-			.emitPromise('triggers:subscribe', [])
-			.then((triggers) => {
-				store.resetTriggers(triggers)
+	useSubscription(
+		trpc.controls.triggers.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
+				setReady(false)
+				store.updateTriggers(null)
+			},
+			onData: (data) => {
 				setReady(true)
-			})
-			.catch((e) => {
-				console.error('Failed to load triggers list:', e)
-				store.resetTriggers(null)
-			})
 
-		// const updateFeedbackDefinitions = (change: FeedbackDefinitionUpdate) => {
-		// 	store.applyChanges(change)
-		// }
-
-		const unsubUpdates = socket.on('triggers:update', (change) => {
-			store.applyTriggersChange(change)
+				store.updateTriggers(data)
+			},
 		})
-
-		return () => {
-			store.resetTriggers(null)
-
-			unsubUpdates()
-
-			socket.emitPromise('triggers:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe to action definitions list', e)
-			})
-		}
-	}, [socket, store])
+	)
 
 	return ready
 }

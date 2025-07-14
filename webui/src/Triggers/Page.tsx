@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
-import { makeAbsolutePath, SocketContext, useComputed } from '~/util.js'
+import { makeAbsolutePath, useComputed } from '~/util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -25,15 +25,18 @@ import { useTriggerCollectionsApi } from './TriggerCollectionsApi'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export const TriggersPage = observer(function Triggers() {
-	const { socket, triggersList } = useContext(RootAppStoreContext)
+	const { triggersList } = useContext(RootAppStoreContext)
 
 	const navigate = useNavigate({ from: '/triggers' })
 
+	const createMutation = useMutationExt(trpc.controls.triggers.create.mutationOptions())
+
 	const doAddNew = useCallback(() => {
-		socket
-			.emitPromise('triggers:create', [])
+		createMutation
+			.mutateAsync()
 			.then(async (controlId) => {
 				console.log('created trigger', controlId)
 
@@ -45,7 +48,7 @@ export const TriggersPage = observer(function Triggers() {
 			.catch((e) => {
 				console.error('failed to create trigger', e)
 			})
-	}, [socket, navigate])
+	}, [createMutation, navigate])
 
 	const exportModalRef = useRef<ConfirmExportModalRef>(null)
 	const showExportModal = useCallback(() => {
@@ -103,9 +106,7 @@ export const TriggersPage = observer(function Triggers() {
 						<CButton color="primary" onClick={doAddNew} size="sm">
 							<FontAwesomeIcon icon={faAdd} /> Add Trigger
 						</CButton>
-						<CButton color="info" size="sm" onClick={() => triggerGroupsApi.createCollection()}>
-							<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-						</CButton>
+						<CreateCollectionButton />
 					</CButtonGroup>
 
 					<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
@@ -158,17 +159,17 @@ function TriggerItemRow(item: TriggerDataWithId) {
 }
 
 function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollection }) {
-	const socket = useContext(SocketContext)
+	const setEnabledMutation = useMutationExt(trpc.controls.triggers.collections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const enabled = e.target.checked
 
-			socket.emitPromise('trigger-collections:set-enabled', [collection.id, enabled]).catch((e) => {
+			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e: any) => {
 				console.error('Failed to reorder collection', e)
 			})
 		},
-		[socket, collection.id]
+		[setEnabledMutation, collection.id]
 	)
 
 	return (
@@ -188,42 +189,49 @@ interface TriggersTableRowProps {
 }
 
 const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersTableRowProps) {
-	const socket = useContext(SocketContext)
-
 	const tableContext = useTriggersTableContext()
 
+	const deleteMutation = useMutationExt(trpc.controls.triggers.delete.mutationOptions())
+	const cloneMutation = useMutationExt(trpc.controls.triggers.clone.mutationOptions())
+
+	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+
 	const doEnableDisable = useCallback(() => {
-		socket
-			.emitPromise('controls:set-options-field', [CreateTriggerControlId(item.id), 'enabled', !item.enabled])
+		setOptionsFieldMutation
+			.mutateAsync({
+				controlId: CreateTriggerControlId(item.id),
+				key: 'enabled',
+				value: !item.enabled,
+			})
 			.catch((e) => {
 				console.error('failed to toggle trigger state', e)
 			})
-	}, [socket, item.id, item.enabled])
+	}, [setOptionsFieldMutation, item.id, item.enabled])
 	const doDelete = useCallback(() => {
 		tableContext.deleteModalRef.current?.show(
 			'Delete trigger',
 			'Are you sure you wish to delete this trigger?',
 			'Delete',
 			() => {
-				socket.emitPromise('triggers:delete', [CreateTriggerControlId(item.id)]).catch((e) => {
+				deleteMutation.mutateAsync({ controlId: CreateTriggerControlId(item.id) }).catch((e) => {
 					console.error('Failed to delete', e)
 				})
 			}
 		)
-	}, [socket, tableContext.deleteModalRef, item.id])
+	}, [deleteMutation, tableContext.deleteModalRef, item.id])
 	const doEdit = useCallback(() => {
 		tableContext.selectTrigger(item.id)
 	}, [tableContext, item.id])
 	const doClone = useCallback(() => {
-		socket
-			.emitPromise('triggers:clone', [CreateTriggerControlId(item.id)])
+		cloneMutation
+			.mutateAsync({ controlId: CreateTriggerControlId(item.id) })
 			.then((newControlId) => {
 				console.log('cloned to control', newControlId)
 			})
 			.catch((e) => {
 				console.error('Failed to clone', e)
 			})
-	}, [socket, item.id])
+	}, [cloneMutation, item.id])
 
 	const descriptionHtml = useMemo(
 		() => ({
@@ -275,3 +283,19 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 		</div>
 	)
 })
+
+function CreateCollectionButton() {
+	const createMutation = useMutationExt(trpc.controls.triggers.collections.add.mutationOptions())
+
+	const doCreateCollection = useCallback(() => {
+		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
+			console.error('Failed to add collection', e)
+		})
+	}, [createMutation])
+
+	return (
+		<CButton color="info" size="sm" onClick={doCreateCollection}>
+			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+		</CButton>
+	)
+}

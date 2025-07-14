@@ -1,6 +1,7 @@
 import { useContext, useMemo } from 'react'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface CustomVariablesApi {
 	onCopied: () => void
@@ -12,7 +13,13 @@ export interface CustomVariablesApi {
 }
 
 export function useCustomVariablesApi(confirmModalRef: React.RefObject<GenericConfirmModalRef>): CustomVariablesApi {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
+
+	const setDefaultMutation = useMutationExt(trpc.customVariables.setDefault.mutationOptions())
+	const setCurrentMutation = useMutationExt(trpc.customVariables.setCurrent.mutationOptions())
+	const setPersistenceMutation = useMutationExt(trpc.customVariables.setPersistence.mutationOptions())
+	const setDescriptionMutation = useMutationExt(trpc.customVariables.setDescription.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.customVariables.delete.mutationOptions())
 
 	return useMemo(
 		() =>
@@ -22,24 +29,24 @@ export function useCustomVariablesApi(confirmModalRef: React.RefObject<GenericCo
 				},
 
 				setStartupValue: (name: string, value: any) => {
-					socket.emitPromise('custom-variables:set-default', [name, value]).catch(() => {
+					setDefaultMutation.mutateAsync({ name, value }).catch(() => {
 						console.error('Failed to update variable')
 					})
 				},
 				setCurrentValue: (name: string, value: any) => {
-					socket.emitPromise('custom-variables:set-current', [name, value]).catch(() => {
+					setCurrentMutation.mutateAsync({ name, value }).catch(() => {
 						console.error('Failed to update variable')
 					})
 				},
 
 				setPersistenceValue: (name: string, value: boolean) => {
-					socket.emitPromise('custom-variables:set-persistence', [name, value]).catch(() => {
+					setPersistenceMutation.mutateAsync({ name, value }).catch(() => {
 						console.error('Failed to update variable')
 					})
 				},
 
 				setDescription: (name: string, description: string) => {
-					socket.emitPromise('custom-variables:set-description', [name, description]).catch(() => {
+					setDescriptionMutation.mutateAsync({ name, description }).catch(() => {
 						console.error('Failed to update variable description')
 					})
 				},
@@ -50,13 +57,21 @@ export function useCustomVariablesApi(confirmModalRef: React.RefObject<GenericCo
 						`Are you sure you want to delete the custom variable "${name}"?`,
 						'Delete',
 						() => {
-							socket.emitPromise('custom-variables:delete', [name]).catch(() => {
+							deleteMutation.mutateAsync({ name }).catch(() => {
 								console.error('Failed to delete variable')
 							})
 						}
 					)
 				},
 			}) satisfies CustomVariablesApi,
-		[socket, notifier, confirmModalRef]
+		[
+			setDefaultMutation,
+			setCurrentMutation,
+			setPersistenceMutation,
+			setDescriptionMutation,
+			deleteMutation,
+			notifier,
+			confirmModalRef,
+		]
 	)
 }

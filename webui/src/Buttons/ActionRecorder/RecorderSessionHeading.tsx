@@ -7,27 +7,32 @@ import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecord
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
-	sessionId: string
 	sessionInfo: RecordSessionInfo
 	doFinish: () => void
 }
 
 export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	confirmRef,
-	sessionId,
 	sessionInfo,
 	doFinish,
 }: RecorderSessionHeadingProps) {
-	const { connections, socket } = useContext(RootAppStoreContext)
+	const { connections } = useContext(RootAppStoreContext)
 
+	const discardActionsMutation = useMutationExt(trpc.actionRecorder.session.discardActions.mutationOptions())
+	const abortSessionMutation = useMutationExt(trpc.actionRecorder.session.abort.mutationOptions())
+	const setRecordingMutation = useMutationExt(trpc.actionRecorder.session.setRecording.mutationOptions())
+	const setConnectionsMutation = useMutationExt(trpc.actionRecorder.session.setConnections.mutationOptions())
+
+	const sessionId = sessionInfo.id
 	const doClearActions = useCallback(() => {
-		socket.emitPromise('action-recorder:session:discard-actions', [sessionId]).catch((e) => {
+		discardActionsMutation.mutateAsync({ sessionId }).catch((e) => {
 			console.error(e)
 		})
-	}, [socket, sessionId])
+	}, [discardActionsMutation, sessionId])
 
 	const doAbort = useCallback(() => {
 		if (confirmRef.current) {
@@ -36,23 +41,22 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 				'Are you sure you wish to discard the current session?',
 				'Discard',
 				() => {
-					socket.emitPromise('action-recorder:session:abort', [sessionId]).catch((e) => {
+					abortSessionMutation.mutateAsync({ sessionId }).catch((e) => {
 						console.error(e)
 					})
 				}
 			)
 		}
-	}, [socket, sessionId, confirmRef])
+	}, [abortSessionMutation, sessionId, confirmRef])
 
 	const changeRecording = useCallback(
 		(e: ChangeEvent<HTMLInputElement> | boolean) => {
-			socket
-				.emitPromise('action-recorder:session:recording', [sessionId, typeof e === 'boolean' ? e : e.target.checked])
-				.catch((e) => {
-					console.error(e)
-				})
+			const isRunning = typeof e === 'boolean' ? e : e.target.checked
+			setRecordingMutation.mutateAsync({ sessionId, isRunning }).catch((e) => {
+				console.error(e)
+			})
 		},
-		[socket, sessionId]
+		[setRecordingMutation, sessionId]
 	)
 
 	const doFinish2 = useCallback(() => {
@@ -64,11 +68,11 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	const changeConnectionIds = useCallback(
 		(ids: DropdownChoiceId[]) => {
 			const connectionIds = ids.map((id) => String(id))
-			socket.emitPromise('action-recorder:session:set-connections', [sessionId, connectionIds]).catch((e) => {
+			setConnectionsMutation.mutateAsync({ sessionId, connectionIds }).catch((e) => {
 				console.error(e)
 			})
 		},
-		[socket, sessionId]
+		[setConnectionsMutation, sessionId]
 	)
 
 	const connectionsWhichCanRecord = useComputed(() => {

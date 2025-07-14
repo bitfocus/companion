@@ -44,7 +44,6 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 
@@ -85,13 +84,6 @@ export class ExportController {
 		apiRouter.get('/export/full', this.#exportFullHandler)
 		apiRouter.get('/export/log', this.#exportLogHandler)
 		apiRouter.get('/export/support', this.#exportSupportBundleHandler)
-	}
-
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(_client: ClientSocket): void {
-		// Noop
 	}
 
 	#exportTriggerListHandler: RequestHandler = (req, res, next) => {

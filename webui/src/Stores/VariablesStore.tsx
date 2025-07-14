@@ -5,11 +5,7 @@ import type {
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ObservableMap, action, computed, observable } from 'mobx'
 import { assertNever } from '~/util.js'
-import type {
-	AllVariableDefinitions,
-	VariableDefinition,
-	VariableDefinitionUpdate,
-} from '@companion-app/shared/Model/Variables.js'
+import type { VariableDefinition, VariableDefinitionUpdate } from '@companion-app/shared/Model/Variables.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
 
@@ -18,42 +14,18 @@ export class VariablesStore {
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
 	readonly customVariableCollections = observable.map<string, CustomVariableCollection>()
 
-	public resetCustomVariables = action((newData: Record<string, CustomVariableDefinition | undefined> | null): void => {
-		this.customVariables.clear()
-
-		if (newData) {
-			for (const [id, item] of Object.entries(newData)) {
-				if (item) {
-					this.customVariables.set(id, item)
-				}
-			}
+	public updateCustomVariables = action((changes: CustomVariableUpdate[] | null) => {
+		if (!changes) {
+			this.customVariables.clear()
+			return
 		}
-	})
 
-	public resetVariables = action((newData: AllVariableDefinitions | null): void => {
-		this.variables.clear()
-
-		if (newData) {
-			for (const [label, variables] of Object.entries(newData)) {
-				if (!variables) continue
-
-				const newVariables = observable.map<string, VariableDefinition>()
-
-				for (const [name, variable] of Object.entries(variables)) {
-					if (!variable) continue
-
-					newVariables.set(name, variable)
-				}
-
-				this.variables.set(label, newVariables)
-			}
-		}
-	})
-
-	public applyCustomVariablesChanges = action((changes: CustomVariableUpdate[]) => {
 		for (const change of changes) {
 			const changeType = change.type
 			switch (change.type) {
+				case 'init':
+					this.customVariables.replace(change.info)
+					break
 				case 'update':
 					this.customVariables.set(change.itemId, change.info)
 					break
@@ -68,34 +40,52 @@ export class VariablesStore {
 		}
 	})
 
-	public applyVariablesChange = action((label: string, change: VariableDefinitionUpdate | null) => {
-		if (change) {
-			const changeType = change.type
-			switch (change.type) {
-				case 'set': {
-					const variablesMap = this.variables.get(label) || observable.map<string, VariableDefinition>()
+	public updateDefinitions = action((change: VariableDefinitionUpdate | null) => {
+		if (!change) {
+			this.variables.clear()
+			return
+		}
 
-					for (const [name, info] of Object.entries(change.variables)) {
-						if (info) variablesMap.set(name, info)
+		const changeType = change.type
+		switch (change.type) {
+			case 'init': {
+				this.variables.clear()
+				for (const [label, variables] of Object.entries(change.variables)) {
+					if (variables) {
+						const variablesMap = observable.map<string, VariableDefinition>()
+						for (const [name, info] of Object.entries(variables)) {
+							if (info) variablesMap.set(name, info)
+						}
+						this.variables.set(label, variablesMap)
 					}
-
-					this.variables.set(label, variablesMap)
-					break
 				}
-				case 'patch': {
-					const oldObj = this.variables.get(label)
-					if (!oldObj) throw new Error(`Got variables update for unknown instance: ${label}`)
-					const newObj = applyPatch(cloneDeep(Object.fromEntries(oldObj.toJSON())), change.patch)
-					oldObj.replace(newObj.newDocument)
-					break
-				}
-				default:
-					console.error(`Unknown custom variable change: ${changeType}`)
-					assertNever(change)
-					break
+				break
 			}
-		} else {
-			this.variables.delete(label)
+			case 'set': {
+				const variablesMap = this.variables.get(change.label) || observable.map<string, VariableDefinition>()
+
+				for (const [name, info] of Object.entries(change.variables)) {
+					if (info) variablesMap.set(name, info)
+				}
+
+				this.variables.set(change.label, variablesMap)
+				break
+			}
+			case 'patch': {
+				const oldObj = this.variables.get(change.label)
+				if (!oldObj) throw new Error(`Got variables update for unknown instance: ${change.label}`)
+				const newObj = applyPatch(cloneDeep(Object.fromEntries(oldObj.toJSON())), change.patch)
+				oldObj.replace(newObj.newDocument)
+				break
+			}
+			case 'remove': {
+				this.variables.delete(change.label)
+				break
+			}
+			default:
+				console.error(`Unknown custom variable change: ${changeType}`)
+				assertNever(change)
+				break
 		}
 	})
 

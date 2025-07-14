@@ -1,17 +1,16 @@
 import { CRow, CCol, CAlert, CButtonGroup, CButton, CCallout } from '@coreui/react'
 import { faSync, faAdd } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useContext, useRef, useState, useCallback } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import React, { useRef, useState, useCallback } from 'react'
 import { AddEmulatorModalRef, AddEmulatorModal } from './AddEmulatorModal'
 import { AddSurfaceGroupModalRef, AddSurfaceGroupModal } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
 import { MyErrorBoundary } from '~/util.js'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
-	const { socket } = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 	const matchRoute = useMatchRoute()
 
@@ -21,25 +20,21 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
 	const addEmulatorModalRef = useRef<AddEmulatorModalRef>(null)
 
-	const [scanning, setScanning] = useState(false)
 	const [scanError, setScanError] = useState<string | null>(null)
 
+	const rescanUsbMutation = useMutationExt(trpc.surfaces.rescanUsb.mutationOptions())
 	const refreshUSB = useCallback(() => {
-		setScanning(true)
 		setScanError(null)
 
-		socket
-			.emitPromise('surfaces:rescan', [], 30000)
+		rescanUsbMutation // TODO: 30s timeout?
+			.mutateAsync()
 			.then((errorMsg) => {
 				setScanError(errorMsg || null)
-				setScanning(false)
 			})
 			.catch((err) => {
 				console.error('Refresh USB failed', err)
-
-				setScanning(false)
 			})
-	}, [socket])
+	}, [rescanUsbMutation])
 
 	const addEmulator = useCallback(() => {
 		addEmulatorModalRef.current?.show()
@@ -80,8 +75,8 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 				<CButtonGroup size="sm">
 					<CButton color="warning" onClick={refreshUSB}>
-						<FontAwesomeIcon icon={faSync} spin={scanning} />
-						{scanning ? ' Checking for new surfaces...' : ' Rescan USB'}
+						<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} />
+						{rescanUsbMutation.isPending ? ' Checking for new surfaces...' : ' Rescan USB'}
 					</CButton>
 					<CButton color="primary" onClick={addEmulator}>
 						<FontAwesomeIcon icon={faAdd} /> Add Emulator

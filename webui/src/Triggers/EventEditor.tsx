@@ -194,7 +194,7 @@ interface EventEditorProps {
 const EventEditor = observer(function EventEditor({ event, service, panelCollapseHelper }: EventEditorProps) {
 	const { eventDefinitions } = useContext(RootAppStoreContext)
 
-	const eventSpec = eventDefinitions.definitions[event.type]
+	const eventSpec = eventDefinitions.definitions.get(event.type)
 
 	const [eventOptions, optionVisibility] = useOptionsAndIsVisible(eventSpec?.options, event?.options)
 

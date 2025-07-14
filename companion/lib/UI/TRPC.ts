@@ -3,9 +3,15 @@ import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
 import { EventEmitter, on } from 'events'
+import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
+import LogController from '../Log/Controller.js'
 
 export interface TrpcContext {
 	val: null
+	pendingImport?: {
+		object: ExportFullv6 | ExportPageModelv6
+		timeout: null
+	}
 }
 // created for each request
 export const createTrpcExpressContext = ({
@@ -39,15 +45,29 @@ export const protectedProcedure = t.procedure
  */
 export function createTrpcRouter(registry: Registry) {
 	return router({
-		// ...
-
-		userList: publicProcedure.query(async () => {
-			return [1, 2, 3]
-		}),
-
 		appInfo: registry.ui.update.createTrpcRouter(),
 
+		bonjour: registry.services.bonjourDiscovery.createTrpcRouter(),
+
+		actionRecorder: registry.controls.actionRecorder.createTrpcRouter(),
 		surfaces: registry.surfaces.createTrpcRouter(),
+		surfaceDiscovery: registry.services.surfaceDiscovery.createTrpcRouter(),
+
+		controls: registry.controls.createTrpcRouter(),
+
+		variables: registry.variables.createTrpcRouter(),
+		customVariables: registry.variables.custom.createTrpcRouter(),
+		pages: registry.page.createTrpcRouter(),
+		importExport: registry.importExport.createTrpcRouter(),
+		logs: LogController.createTrpcRouter(),
+
+		userConfig: registry.userconfig.createTrpcRouter(),
+		connections: registry.instance.createTrpcRouter(),
+		cloud: registry.cloud.createTrpcRouter(),
+
+		preview: router({
+			graphics: registry.preview.createTrpcRouter(),
+		}),
 	})
 }
 
@@ -55,10 +75,12 @@ export function createTrpcRouter(registry: Registry) {
 // NOT the router itself.
 export type AppRouter = ReturnType<typeof createTrpcRouter>
 
-export function toIterable<T extends Record<string, any[]>, TKey extends string & keyof T>(
-	ee: EventEmitter<T>,
+type TEventMap<TEmitter extends EventEmitter> = TEmitter extends EventEmitter<infer E> ? E : never
+
+export function toIterable<TEmitter extends EventEmitter, TKey extends string & keyof TEventMap<TEmitter>>(
+	ee: TEmitter,
 	key: TKey,
 	signal: AbortSignal | undefined
-): NodeJS.AsyncIterator<T[TKey]> {
-	return on(ee as any, key, { signal }) as NodeJS.AsyncIterator<T[TKey]>
+): NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]> {
+	return on(ee as any, key, { signal }) as NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]>
 }

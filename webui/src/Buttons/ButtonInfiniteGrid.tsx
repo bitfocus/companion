@@ -1,26 +1,16 @@
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
-import React, {
-	forwardRef,
-	memo,
-	useCallback,
-	useContext,
-	useEffect,
-	useImperativeHandle,
-	useMemo,
-	useRef,
-	useState,
-} from 'react'
+import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDrop } from 'react-dnd'
-import { SocketContext } from '~/util.js'
 import classNames from 'classnames'
 import useScrollPosition from '~/Hooks/useScrollPosition.js'
 import useElementInnerSize from '~/Hooks/useElementInnerSize.js'
-import { useButtonRenderCache } from '~/Hooks/useSharedRenderCache.js'
+import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import { CButton, CFormInput } from '@coreui/react'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { PresetDragItem } from './Presets/PresetDragItem.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
@@ -265,16 +255,21 @@ interface PresetDragState {
 }
 
 export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...props }: ButtonInfiniteGridButtonProps) {
-	const socket = useContext(SocketContext)
+	const importPresetMutation = useMutationExt(trpc.controls.importPreset.mutationOptions())
 
 	const [{ isOver, canDrop }, drop] = useDrop<PresetDragItem, unknown, PresetDragState>({
 		accept: 'preset',
 		drop: (dropData) => {
 			console.log('preset drop', dropData)
-			const location = { pageNumber: props.pageNumber, column: props.column, row: props.row }
-			socket.emitPromise('controls:import-preset', [dropData.connectionId, dropData.presetId, location]).catch(() => {
-				console.error('Preset import failed')
-			})
+			importPresetMutation
+				.mutateAsync({
+					connectionId: dropData.connectionId,
+					presetId: dropData.presetId,
+					location: { pageNumber: props.pageNumber, column: props.column, row: props.row },
+				})
+				.catch(() => {
+					console.error('Preset import failed')
+				})
 		},
 		collect: (monitor) => ({
 			isOver: !!monitor.isOver(),
@@ -288,7 +283,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 type ButtonGridIconProps = ButtonGridIconBaseProps
 
 export const ButtonGridIcon = memo(function ButtonGridIcon({ ...props }: ButtonGridIconProps) {
-	const { image, isUsed } = useButtonRenderCache({
+	const { image, isUsed } = useButtonImageForLocation({
 		pageNumber: Number(props.pageNumber),
 		column: props.column,
 		row: props.row,

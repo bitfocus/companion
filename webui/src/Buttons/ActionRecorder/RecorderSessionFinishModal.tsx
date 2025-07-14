@@ -1,5 +1,5 @@
-import React, { useCallback, useContext, useState } from 'react'
-import { SocketContext, PreventDefaultHandler } from '~/util.js'
+import React, { useCallback, useState } from 'react'
+import { PreventDefaultHandler } from '~/util.js'
 import {
 	CButton,
 	CCol,
@@ -21,18 +21,19 @@ import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { ButtonPicker } from './ButtonPicker.js'
 import { TriggerPicker } from './TriggerPicker.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface RecorderSessionFinishModalProps {
 	doClose: () => void
 	sessionId: string
 }
 export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessionFinishModalProps): React.JSX.Element {
-	const socket = useContext(SocketContext)
+	const saveToControlMutation = useMutationExt(trpc.actionRecorder.session.saveToControl.mutationOptions())
 
 	const doSave = useCallback(
 		(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append') => {
-			socket
-				.emitPromise('action-recorder:session:save-to-control', [sessionId, controlId, stepId, setId, mode])
+			saveToControlMutation
+				.mutateAsync({ sessionId, controlId, stepId, setId, mode })
 				.then(() => {
 					doClose()
 				})
@@ -40,7 +41,7 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 					console.error(e)
 				})
 		},
-		[socket, sessionId, doClose]
+		[saveToControlMutation, sessionId, doClose]
 	)
 
 	const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)

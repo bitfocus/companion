@@ -16,56 +16,55 @@ export class SurfacesStore {
 
 	readonly outboundSurfaces = observable.map<string, OutboundSurfaceInfo>()
 
-	public resetSurfaces = action((newData: Record<string, ClientDevicesListItem | undefined> | null): void => {
-		this.store.clear()
+	public updateSurfaces = action((changes: SurfacesUpdate[] | null) => {
+		if (!changes) {
+			this.store.clear()
+			return
+		}
 
-		if (newData) {
-			for (const [id, item] of Object.entries(newData)) {
-				if (item) {
-					this.store.set(id, item)
+		console.log('updateSurfaces', changes)
+
+		for (const change of changes) {
+			const changeType = change.type
+			switch (change.type) {
+				case 'init':
+					this.store.replace(change.info)
+					break
+				case 'add':
+					this.store.set(change.itemId, change.info)
+					break
+				case 'remove':
+					this.store.delete(change.itemId)
+					break
+				case 'update': {
+					const oldObj = this.store.get(change.itemId)
+					if (!oldObj) throw new Error(`Got update for unknown surface item: ${change.itemId}`)
+					const newObj = applyPatch(cloneDeep(oldObj), change.patch)
+					this.store.set(change.itemId, newObj.newDocument)
+					break
 				}
+				default:
+					console.error(`Unknown surfaces change change: ${changeType}`)
+					assertNever(change)
+					break
 			}
 		}
 	})
 
-	public applySurfacesChange = action((change: SurfacesUpdate) => {
+	public updateOutboundSurfaces = action((change: OutboundSurfacesUpdate | null) => {
+		if (!change) {
+			this.outboundSurfaces.clear()
+			return
+		}
+
 		const changeType = change.type
 		switch (change.type) {
-			case 'add':
-				this.store.set(change.itemId, change.info)
-				break
-			case 'remove':
-				this.store.delete(change.itemId)
-				break
-			case 'update': {
-				const oldObj = this.store.get(change.itemId)
-				if (!oldObj) throw new Error(`Got update for unknown surface item: ${change.itemId}`)
-				const newObj = applyPatch(cloneDeep(oldObj), change.patch)
-				this.store.set(change.itemId, newObj.newDocument)
-				break
-			}
-			default:
-				console.error(`Unknown surfaces change change: ${changeType}`)
-				assertNever(change)
-				break
-		}
-	})
-
-	public resetOutboundSurfaces = action((newData: Record<string, OutboundSurfaceInfo | undefined> | null): void => {
-		this.outboundSurfaces.clear()
-
-		if (newData) {
-			for (const [id, item] of Object.entries(newData)) {
-				if (item) {
+			case 'init':
+				this.outboundSurfaces.clear()
+				for (const [id, item] of Object.entries(change.items)) {
 					this.outboundSurfaces.set(id, item)
 				}
-			}
-		}
-	})
-
-	public applyOutboundSurfacesChange = action((change: OutboundSurfacesUpdate) => {
-		const changeType = change.type
-		switch (change.type) {
+				break
 			case 'add':
 				this.outboundSurfaces.set(change.itemId, change.info)
 				break

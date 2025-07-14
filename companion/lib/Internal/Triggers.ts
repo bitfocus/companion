@@ -210,7 +210,6 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 			return state == target
 		} else if (feedback.definitionId === 'trigger_collection_enabled') {
 			const state = this.#controlsController.isTriggerCollectionEnabled(feedback.options.collection_id, true)
-			console.log('check', feedback.options, state)
 			const target = feedback.options.enable == 'true'
 			return state == target
 		}

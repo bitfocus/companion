@@ -30,8 +30,15 @@ export interface ClientModuleInfo {
 	installedVersions: ClientModuleVersionInfo[]
 }
 
-export type ModuleInfoUpdate = ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp | ModuleInfoUpdateRemoveOp
-
+export type ModuleInfoUpdate =
+	| ModuleInfoUpdateInitOp
+	| ModuleInfoUpdateAddOp
+	| ModuleInfoUpdateUpdateOp
+	| ModuleInfoUpdateRemoveOp
+export interface ModuleInfoUpdateInitOp {
+	type: 'init'
+	info: Record<string, ClientModuleInfo>
+}
 export interface ModuleInfoUpdateRemoveOp {
 	type: 'remove'
 	id: string
@@ -46,7 +53,7 @@ export interface ModuleInfoUpdateUpdateOp {
 	type: 'update'
 	id: string
 
-	patch: JsonPatchOperation[]
+	patch: JsonPatchOperation<ClientModuleInfo>[]
 }
 
 /**

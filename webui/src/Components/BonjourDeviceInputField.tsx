@@ -1,8 +1,9 @@
-import React, { useContext, useRef, useState, useMemo, useEffect } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { useState, useMemo } from 'react'
 import { DropdownInputField } from './DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC.js'
 
 interface BonjourDeviceInputFieldProps {
 	label: React.ReactNode
@@ -19,76 +20,39 @@ export function BonjourDeviceInputField({
 	connectionId,
 	queryId,
 }: BonjourDeviceInputFieldProps): React.JSX.Element {
-	const socket = useContext(SocketContext)
-
-	const [_subIds, setSubIds] = useState<string[] | null>(null)
-	const subIdsRef = useRef<string[] | null>(null)
-
 	const [services, setServices] = useState<Record<string, ClientBonjourService | undefined>>({})
 
-	// Listen for data
-	useEffect(() => {
-		const unsubUp = socket.on('bonjour:service:up', (svc) => {
-			if (!subIdsRef.current?.includes(svc.subId)) return
+	/*const bonjourSub = */ useSubscription(
+		trpc.bonjour.watchQuery.subscriptionOptions(
+			{ connectionId, queryId },
+			{
+				onStarted: () => {
+					setServices({}) // Clear services when the subscription starts
+				},
+				onData: (data) => {
+					// TODO - should this debounce?
 
-			// console.log('up', svc)
-			setServices((svcs) => {
-				return {
-					...svcs,
-					[svc.fqdn]: svc,
-				}
-			})
-		})
-		const unsubDown = socket.on('bonjour:service:down', (subId, fqdn) => {
-			if (!subIdsRef.current?.includes(subId)) return
+					setServices((services) => {
+						const newServices = { ...services }
+						switch (data.type) {
+							case 'up': {
+								newServices[data.service.fqdn] = data.service
+								break
+							}
+							case 'down': {
+								delete newServices[data.fqdn]
+								break
+							}
+							default:
+								console.warn('Unknown bonjour event type', data)
+						}
 
-			// console.log('down', svc)
-			setServices((svcs) => {
-				const res = { ...svcs }
-				delete res[fqdn]
-				return res
-			})
-		})
-
-		return () => {
-			unsubUp()
-			unsubDown()
-		}
-	}, [socket])
-
-	// Start/Stop the subscription
-	useEffect(() => {
-		let killed = false
-		let mySubIds: string[] | null = null
-		socket
-			.emitPromise('bonjour:subscribe', [connectionId, queryId])
-			.then((newSubIds) => {
-				// Make sure it hasnt been terminated
-				if (killed) {
-					socket.emit('bonjour:unsubscribe', newSubIds)
-					return
-				}
-
-				// Sub is good, set it up
-				mySubIds = newSubIds
-				subIdsRef.current = newSubIds
-				setSubIds(newSubIds)
-				setServices({})
-			})
-			.catch((e) => {
-				console.error('Bonjour subscription failed: ', e)
-			})
-
-		return () => {
-			killed = true
-
-			subIdsRef.current = null
-			setSubIds(null)
-			setServices({})
-
-			if (mySubIds) socket.emit('bonjour:unsubscribe', mySubIds)
-		}
-	}, [socket, connectionId, queryId])
+						return newServices
+					})
+				},
+			}
+		)
+	)
 
 	const choicesRaw = useMemo(() => {
 		const choices: DropdownChoice[] = []

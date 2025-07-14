@@ -3,7 +3,8 @@ import type {
 	CompanionButtonStyleProps,
 	CompanionOptionValues,
 } from '@companion-module/base'
-import { ActionStepOptions } from './ActionModel.js'
+import type { ActionStepOptions } from './ActionModel.js'
+import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 export interface PresetFeedbackInstance {
 	type: string
@@ -69,4 +70,29 @@ export interface UIPresetDefinitionButton extends UIPresetDefinitionBase {
 export interface UIPresetDefinitionText extends UIPresetDefinitionBase {
 	type: 'text'
 	text: string
+}
+
+export type UIPresetDefinitionUpdate =
+	| UIPresetDefinitionUpdateInit
+	| UIPresetDefinitionUpdateAdd
+	| UIPresetDefinitionUpdateRemove
+	| UIPresetDefinitionUpdatePatch
+
+export interface UIPresetDefinitionUpdateInit {
+	type: 'init'
+	definitions: Record<string, Record<string, UIPresetDefinition>>
+}
+export interface UIPresetDefinitionUpdateAdd {
+	type: 'add'
+	connectionId: string
+	definitions: Record<string, UIPresetDefinition>
+}
+export interface UIPresetDefinitionUpdateRemove {
+	type: 'remove'
+	connectionId: string
+}
+export interface UIPresetDefinitionUpdatePatch {
+	type: 'patch'
+	connectionId: string
+	patch: JsonPatchOperation<Record<string, UIPresetDefinition>>[]
 }

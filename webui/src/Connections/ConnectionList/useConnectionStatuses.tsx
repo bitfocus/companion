@@ -1,58 +1,43 @@
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
 import { ObservableMap, observable, runInAction } from 'mobx'
-import { useContext, useEffect, useMemo } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useMemo } from 'react'
+import { trpc } from '~/TRPC'
 import { assertNever } from '~/util.js'
 
 export function useConnectionStatuses(): ObservableMap<string, ConnectionStatusEntry> {
-	const { socket } = useContext(RootAppStoreContext)
-
 	const connectionStatuses = useMemo(() => observable.map<string, ConnectionStatusEntry>(), [])
 
-	useEffect(() => {
-		let mounted = true
-		socket
-			.emitPromise('connections:get-statuses', [])
-			.then((statuses) => {
-				if (!mounted) return
-
+	useSubscription(
+		trpc.connections.statuses.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
 				runInAction(() => {
-					connectionStatuses.replace(statuses)
+					connectionStatuses.clear()
 				})
-			})
-			.catch((e) => {
-				console.error(`Failed to load connection statuses`, e)
-			})
-
-		const unsubStatuses = socket.on('connections:update-statuses', (changes) => {
-			if (!mounted) return
-
-			runInAction(() => {
-				for (const change of changes) {
-					switch (change.type) {
+			},
+			onData: (data) => {
+				runInAction(() => {
+					switch (data.type) {
+						case 'init':
+							connectionStatuses.replace(data.statuses)
+							break
 						case 'remove':
-							connectionStatuses.delete(change.connectionId)
+							connectionStatuses.delete(data.connectionId)
 							break
 						case 'update':
-							connectionStatuses.set(change.connectionId, change.status)
+							connectionStatuses.set(data.connectionId, data.status)
 							break
 						default:
-							assertNever(change)
+							assertNever(data)
 							break
 					}
-				}
-			})
+				})
+			},
+			onError: (error) => {
+				console.error('Error in connection statuses subscription', error)
+			},
 		})
-
-		return () => {
-			mounted = false
-			unsubStatuses()
-
-			runInAction(() => {
-				connectionStatuses.clear()
-			})
-		}
-	}, [socket, connectionStatuses])
+	)
 
 	return connectionStatuses
 }

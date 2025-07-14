@@ -1,16 +1,17 @@
-import { ActionSetsModel, ActionStepOptions, ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import { ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { CButton } from '@coreui/react'
 import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useContext, useRef, useCallback } from 'react'
+import React, { useRef, useCallback } from 'react'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
-import { SocketContext, MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/util.js'
 import {
 	EditDurationGroupPropertiesModalRef,
 	EditDurationGroupPropertiesModal,
 } from './EditDurationGroupPropertiesModal.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface EditActionsReleaseProps {
 	controlId: string
@@ -18,7 +19,7 @@ interface EditActionsReleaseProps {
 	action_sets: ActionSetsModel
 	stepOptions: ActionStepOptions
 	stepId: string
-	removeSet: (stepId: string, setId: ActionSetId) => void
+	removeSet: (stepId: string, setId: number) => void
 }
 
 export function EditActionsRelease({
@@ -29,9 +30,10 @@ export function EditActionsRelease({
 	stepId,
 	removeSet,
 }: EditActionsReleaseProps): React.JSX.Element {
-	const socket = useContext(SocketContext)
-
 	const editRef = useRef<EditDurationGroupPropertiesModalRef>(null)
+
+	const renameMutation = useMutationExt(trpc.controls.actionSets.rename.mutationOptions())
+	const setRunWhileHeldMutation = useMutationExt(trpc.controls.actionSets.setRunWhileHeld.mutationOptions())
 
 	const configureSet = useCallback(
 		(oldId: string | number) => {
@@ -42,11 +44,11 @@ export function EditActionsRelease({
 				const runWhileHeld = stepOptions.runWhileHeld.includes(oldIdNumber)
 				editRef.current?.show(oldIdNumber, runWhileHeld, (newId: number, runWhileHeld: boolean) => {
 					if (!isNaN(newId)) {
-						socket
-							.emitPromise('controls:action-set:rename', [controlId, stepId, oldIdNumber, newId])
-							.then(() => {
-								socket
-									.emitPromise('controls:action-set:set-run-while-held', [controlId, stepId, newId, runWhileHeld])
+						renameMutation
+							.mutateAsync({ controlId, stepId, oldSetId: oldIdNumber, newSetId: newId })
+							.then(async () => {
+								await setRunWhileHeldMutation
+									.mutateAsync({ controlId, stepId, setId: newId, runWhileHeld })
 									.catch((e) => {
 										console.error('Failed to set runWhileHeld:', e)
 									})
@@ -58,7 +60,7 @@ export function EditActionsRelease({
 				})
 			}
 		},
-		[socket, controlId, stepId, stepOptions]
+		[renameMutation, setRunWhileHeldMutation, controlId, stepId, stepOptions]
 	)
 
 	const candidate_sets = Object.entries(action_sets)
