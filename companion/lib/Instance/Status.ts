@@ -2,7 +2,6 @@ import { isEqual } from 'lodash-es'
 // import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import type { ConnectionStatusEntry, ConnectionStatusUpdate } from '@companion-app/shared/Model/Common.js'
-import type { ControlsController } from '../Controls/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
 export interface InstanceStatusEvents {
@@ -18,14 +17,6 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 	readonly #instanceStatuses: Record<string, ConnectionStatusEntry> = {}
 
 	// readonly #logger = LogController.createLogger('Instance/Status')
-
-	readonly #controls: ControlsController
-
-	constructor(controls: ControlsController) {
-		super()
-
-		this.#controls = controls
-	}
 
 	createTrpcRouter() {
 		const self = this
@@ -116,8 +107,6 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 			})
 
 			this.emit('status_change', this.#instanceStatuses)
-
-			this.#controls.checkAllStatus()
 		}
 	}
 
@@ -140,7 +129,5 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 		})
 
 		this.emit('status_change', this.#instanceStatuses)
-
-		this.#controls.checkAllStatus()
 	}
 }

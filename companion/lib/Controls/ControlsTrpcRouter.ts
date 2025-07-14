@@ -7,8 +7,9 @@ import type { ControlsController } from './Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import { CreateBankControlId, formatLocation } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
-import type { GraphicsController } from '../Graphics/Controller.js'
 import type { Logger } from '../Log/Controller.js'
+import type { ControlCommonEvents } from './ControlDependencies.js'
+import type EventEmitter from 'node:events'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createControlsTrpcRouter(
@@ -16,7 +17,7 @@ export function createControlsTrpcRouter(
 	controlsMap: Map<string, SomeControl<any>>,
 	pageStore: IPageStore,
 	instanceDefinitions: InstanceDefinitions,
-	graphicsController: GraphicsController,
+	controlEvents: EventEmitter<ControlCommonEvents>,
 	controlsController: ControlsController
 ) {
 	return {
@@ -96,8 +97,8 @@ export function createControlsTrpcRouter(
 				if (control) control.triggerLocationHasChanged()
 
 				// Force a redraw
-				graphicsController.invalidateButton(fromLocation)
-				graphicsController.invalidateButton(toLocation)
+				controlEvents.emit('invalidateLocationRender', fromLocation)
+				controlEvents.emit('invalidateLocationRender', toLocation)
 
 				return false
 			}),
@@ -190,8 +191,8 @@ export function createControlsTrpcRouter(
 				if (controlB) controlB.triggerLocationHasChanged()
 
 				// Force a redraw
-				graphicsController.invalidateButton(fromLocation)
-				graphicsController.invalidateButton(toLocation)
+				controlEvents.emit('invalidateLocationRender', fromLocation)
+				controlEvents.emit('invalidateLocationRender', toLocation)
 
 				return true
 			}),

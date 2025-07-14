@@ -297,9 +297,9 @@ export class Registry {
 				this.instance.definitions
 			)
 
-			controlEvents.on('invalidateControlRender', (controlId) => {
-				this.graphics.invalidateControl(controlId)
-			})
+			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
+			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
+			controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
 
 			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
 

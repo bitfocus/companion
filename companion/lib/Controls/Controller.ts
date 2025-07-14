@@ -55,7 +55,7 @@ export class ControlsController {
 
 	readonly #registry: Pick<
 		Registry,
-		'db' | 'page' | 'ui' | 'graphics' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
+		'db' | 'page' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
 	>
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
@@ -215,7 +215,7 @@ export class ControlsController {
 				this.#controls,
 				this.#registry.page.store,
 				this.#registry.instance.definitions,
-				this.#registry.graphics,
+				this.#controlEvents,
 				this
 			),
 
@@ -505,7 +505,7 @@ export class ControlsController {
 			this.#controlEvents.emit('updateButtonState', location, false, undefined)
 
 			// Force a redraw
-			this.#registry.graphics.invalidateButton(location)
+			this.#controlEvents.emit('invalidateLocationRender', location)
 		}
 	}
 
@@ -543,7 +543,7 @@ export class ControlsController {
 		this.#controlEvents.emit('updateButtonState', location, false, undefined)
 
 		// Force a redraw
-		this.#registry.graphics.invalidateButton(location)
+		this.#controlEvents.emit('invalidateLocationRender', location)
 
 		return controlId
 	}
