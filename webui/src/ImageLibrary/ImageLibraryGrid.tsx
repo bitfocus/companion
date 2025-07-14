@@ -84,21 +84,6 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 		[selectedImageName, onSelectImage, searchQuery]
 	)
 
-	// // Listen for image library events to clear cache when images are updated or deleted
-	// useEffect(() => {
-	// 	const handleImageUpdate = (changes: ImageLibraryUpdate[]) => {
-	// 		for (const change of changes) {
-	// 			imageCache.clearImageName(change.itemName)
-	// 		}
-	// 	}
-
-	// 	const unsubUpdate = socket.on('image-library:update', handleImageUpdate)
-
-	// 	return () => {
-	// 		unsubUpdate()
-	// 	}
-	// }, [socket, imageCache])
-
 	return (
 		<div className="image-library-grid">
 			<GenericConfirmModal ref={confirmModalRef} />
