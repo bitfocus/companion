@@ -110,9 +110,5 @@
     "xkeys": "^3.3.0",
     "yaml": "^2.8.0",
     "zod": "^3.25.76"
-  },
-  "collective": {
-    "type": "donorbox",
-    "url": "https://donorbox.org/bitfocus-opensource"
   }
 }
