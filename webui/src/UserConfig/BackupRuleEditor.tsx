@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { CAlert, CButton, CForm, CFormSelect, CInputGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
@@ -80,9 +80,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const runBackupNowMutation = useMutationExt(trpc.importExport.backupRules.runBackupNow.mutationOptions())
 
 	// Find the rule in the config
-	const rule = useMemo(() => {
-		return userConfig.properties?.backups?.find((r) => r.id === ruleId)
-	}, [userConfig.properties?.backups, ruleId])
+	const rule = userConfig.properties?.backups?.find((r) => r.id === ruleId)
 
 	// Function to update a specific field in the rule
 	const updateField = useCallback(
