@@ -36,3 +36,94 @@ index 10d7278164a7f5491685454a8f483c78702b501b..00000000000000000000000000000000
 -    unescapePathComponent
 -}
 \ No newline at end of file
+diff --git a/module/core.d.ts b/module/core.d.ts
+index 437a1f76e8e577a05c57b33ee98fe590476ee32f..805ec39820a352b9600d4219a379090ba13a66e4 100644
+--- a/module/core.d.ts
++++ b/module/core.d.ts
+@@ -1,9 +1,9 @@
+ import { PatchError, _deepClone } from './helpers.js';
+ export declare const JsonPatchError: typeof PatchError;
+ export declare const deepClone: typeof _deepClone;
+-export declare type Operation = AddOperation<any> | RemoveOperation | ReplaceOperation<any> | MoveOperation | CopyOperation | TestOperation<any> | GetOperation<any>;
++export declare type Operation<TObj> = AddOperation<TObj> | RemoveOperation | ReplaceOperation<TObj> | MoveOperation | CopyOperation | TestOperation<TObj> | GetOperation<TObj>;
+ export interface Validator<T> {
+-    (operation: Operation, index: number, document: T, existingPathFragment: string): void;
++    (operation: Operation<T>, index: number, document: T, existingPathFragment: string): void;
+ }
+ export interface OperationResult<T> {
+     removed?: any;
+@@ -66,7 +66,7 @@ export declare function getValueByPointer(document: any, pointer: string): any;
+  * @param banPrototypeModifications Whether to ban modifications to `__proto__`, defaults to `true`.
+  * @return `{newDocument, result}` after the operation
+  */
+-export declare function applyOperation<T>(document: T, operation: Operation, validateOperation?: boolean | Validator<T>, mutateDocument?: boolean, banPrototypeModifications?: boolean, index?: number): OperationResult<T>;
++export declare function applyOperation<T>(document: T, operation: Operation<T>, validateOperation?: boolean | Validator<T>, mutateDocument?: boolean, banPrototypeModifications?: boolean, index?: number): OperationResult<T>;
+ /**
+  * Apply a full JSON Patch array on a JSON document.
+  * Returns the {newDocument, result} of the patch.
+@@ -81,7 +81,7 @@ export declare function applyOperation<T>(document: T, operation: Operation, val
+  * @param banPrototypeModifications Whether to ban modifications to `__proto__`, defaults to `true`.
+  * @return An array of `{newDocument, result}` after the patch
+  */
+-export declare function applyPatch<T>(document: T, patch: ReadonlyArray<Operation>, validateOperation?: boolean | Validator<T>, mutateDocument?: boolean, banPrototypeModifications?: boolean): PatchResult<T>;
++export declare function applyPatch<T>(document: T, patch: ReadonlyArray<Operation<T>>, validateOperation?: boolean | Validator<T>, mutateDocument?: boolean, banPrototypeModifications?: boolean): PatchResult<T>;
+ /**
+  * Apply a single JSON Patch Operation on a JSON document.
+  * Returns the updated document.
+@@ -91,7 +91,7 @@ export declare function applyPatch<T>(document: T, patch: ReadonlyArray<Operatio
+  * @param operation The operation to apply
+  * @return The updated document
+  */
+-export declare function applyReducer<T>(document: T, operation: Operation, index: number): T;
++export declare function applyReducer<T>(document: T, operation: Operation<T>, index: number): T;
+ /**
+  * Validates a single operation. Called from `jsonpatch.validate`. Throws `JsonPatchError` in case of an error.
+  * @param {object} operation - operation object (patch)
+@@ -99,7 +99,7 @@ export declare function applyReducer<T>(document: T, operation: Operation, index
+  * @param {object} [document] - object where the operation is supposed to be applied
+  * @param {string} [existingPathFragment] - comes along with `document`
+  */
+-export declare function validator(operation: Operation, index: number, document?: any, existingPathFragment?: string): void;
++export declare function validator(operation: Operation<any>, index: number, document?: any, existingPathFragment?: string): void;
+ /**
+  * Validates a sequence of operations. If `document` parameter is provided, the sequence is additionally validated against the object document.
+  * If error is encountered, returns a JsonPatchError object
+@@ -107,5 +107,5 @@ export declare function validator(operation: Operation, index: number, document?
+  * @param document
+  * @returns {JsonPatchError|undefined}
+  */
+-export declare function validate<T>(sequence: ReadonlyArray<Operation>, document?: T, externalValidator?: Validator<T>): PatchError;
++export declare function validate<T>(sequence: ReadonlyArray<Operation<T>>, document?: T, externalValidator?: Validator<T>): PatchError;
+ export declare function _areEquals(a: any, b: any): boolean;
+diff --git a/module/duplex.d.ts b/module/duplex.d.ts
+index 75f82fb8f9cf5ddfc003b2a66f75947f25ea918e..0a49ac2e323a399c77f50b12d820629bc477c3c3 100644
+--- a/module/duplex.d.ts
++++ b/module/duplex.d.ts
+@@ -1,9 +1,9 @@
+ import { Operation } from './core.js';
+ export interface Observer<T> {
+     object: T;
+-    patches: Operation[];
++    patches: Operation<T>[];
+     unobserve: () => void;
+-    callback: (patches: Operation[]) => void;
++    callback: (patches: Operation<T>[]) => void;
+ }
+ /**
+  * Detach an observer from an object
+@@ -12,12 +12,12 @@ export declare function unobserve<T>(root: T, observer: Observer<T>): void;
+ /**
+  * Observes changes made to an object, which can then be retrieved using generate
+  */
+-export declare function observe<T>(obj: Object | Array<T>, callback?: (patches: Operation[]) => void): Observer<T>;
++export declare function observe<T>(obj: Object | Array<T>, callback?: (patches: Operation<T>[]) => void): Observer<T>;
+ /**
+  * Generate an array of patches from an observer
+  */
+-export declare function generate<T>(observer: Observer<Object>, invertible?: boolean): Operation[];
++export declare function generate<T>(observer: Observer<T>, invertible?: boolean): Operation<T>[];
+ /**
+  * Create an array of patches from the differences in two objects
+  */
+-export declare function compare(tree1: Object | Array<any>, tree2: Object | Array<any>, invertible?: boolean): Operation[];
++export declare function compare<T>(tree1: T, tree2: T, invertible?: boolean): Operation<T>[];

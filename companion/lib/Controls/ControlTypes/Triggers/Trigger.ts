@@ -1,5 +1,4 @@
 import { ControlBase } from '../../ControlBase.js'
-import { TriggersListRoom } from '../../Controller.js'
 import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
@@ -89,7 +88,7 @@ export class ControlTrigger
 	/**
 	 * The last time the trigger was executed
 	 */
-	#lastExecuted: number | undefined = undefined
+	#lastExecuted: number | null = null
 
 	/**
 	 * The last sent trigger json object
@@ -551,18 +550,18 @@ export class ControlTrigger
 	#sendTriggerJsonChange(): void {
 		const newJson = cloneDeep(this.toTriggerJSON())
 
-		if (this.deps.io.countRoomMembers(TriggersListRoom) > 0) {
+		if (this.deps.changeEvents.listenerCount('triggerChange') > 0) {
 			if (this.#lastSentTriggerJson) {
 				const patch = jsonPatch.compare(this.#lastSentTriggerJson || {}, newJson || {})
 				if (patch.length > 0) {
-					this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+					this.deps.changeEvents.emit('triggerChange', this.controlId, {
 						type: 'update',
 						controlId: this.controlId,
 						patch,
 					})
 				}
 			} else {
-				this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+				this.deps.changeEvents.emit('triggerChange', this.controlId, {
 					type: 'add',
 					controlId: this.controlId,
 					info: newJson,
@@ -602,8 +601,8 @@ export class ControlTrigger
 
 		super.destroy()
 
-		if (this.deps.io.countRoomMembers(TriggersListRoom) > 0) {
-			this.deps.io.emitToRoom(TriggersListRoom, `triggers:update`, {
+		if (this.deps.changeEvents.listenerCount('triggerChange') > 0) {
+			this.deps.changeEvents.emit('triggerChange', this.controlId, {
 				type: 'remove',
 				controlId: this.controlId,
 			})

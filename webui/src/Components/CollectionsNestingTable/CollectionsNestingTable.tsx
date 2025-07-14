@@ -37,7 +37,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 	collections,
 	items,
 }: CollectionsNestingTableProps<TCollection, TItem>) {
-	const { groupedItems, ungroupedItems } = getGroupedItems(items, new Set(collections.map((g) => g.id)))
+	const { groupedItems, ungroupedItems } = getGroupedItems(items, collections)
 
 	const { isDragging } = useCollectionsListItemDrop(collectionsApi, dragId, null, null, 0) // Assuming null for root level collections
 
@@ -89,8 +89,19 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 
 function getGroupedItems<TItem extends CollectionsNestingTableItem>(
 	allItems: TItem[],
-	validCollectionIds: Set<string>
+	validCollections: CollectionsNestingTableCollection[]
 ) {
+	const validCollectionIds = new Set<string>()
+	const addCollectionIds = (collections: CollectionsNestingTableCollection[]) => {
+		for (const collection of collections) {
+			validCollectionIds.add(collection.id)
+			if (collection.children) {
+				addCollectionIds(collection.children)
+			}
+		}
+	}
+	addCollectionIds(validCollections)
+
 	const groupedItems = new Map<string, TItem[]>()
 	const ungroupedItems: TItem[] = []
 

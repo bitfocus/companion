@@ -1,10 +1,13 @@
-import { useContext, useMemo } from 'react'
-import { SocketContext } from '~/util.js'
+import { useMemo } from 'react'
 import type { IEntityEditorService } from './ControlEntitiesService.js'
 import type { EntityOwner, SomeEntityModel, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export function useActionRecorderActionService(sessionId: string): IEntityEditorService {
-	const socket = useContext(SocketContext)
+	const deleteActionMutation = useMutationExt(trpc.actionRecorder.session.action.delete.mutationOptions())
+	const duplicateActionMutation = useMutationExt(trpc.actionRecorder.session.action.duplicate.mutationOptions())
+	const setValueMutation = useMutationExt(trpc.actionRecorder.session.action.setValue.mutationOptions())
+	const reorderActionMutation = useMutationExt(trpc.actionRecorder.session.action.reorder.mutationOptions())
 
 	return useMemo(
 		() => ({
@@ -21,15 +24,13 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				_dropOwnerId: EntityOwner | null,
 				dropIndex: number
 			) => {
-				socket
-					.emitPromise('action-recorder:session:action-reorder', [sessionId, dragEntityId, dropIndex])
-					.catch((e) => {
-						console.error(e)
-					})
+				reorderActionMutation.mutateAsync({ sessionId, actionId: dragEntityId, newIndex: dropIndex }).catch((e) => {
+					console.error(e)
+				})
 			},
 
 			setValue: (entityId: string, _action: SomeEntityModel | undefined, key: string, value: any) => {
-				socket.emitPromise('action-recorder:session:action-set-value', [sessionId, entityId, key, value]).catch((e) => {
+				setValueMutation.mutateAsync({ sessionId, actionId: entityId, key, value }).catch((e) => {
 					console.error(e)
 				})
 			},
@@ -39,13 +40,13 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			},
 
 			performDelete: (actionId: string) => {
-				socket.emitPromise('action-recorder:session:action-delete', [sessionId, actionId]).catch((e) => {
+				deleteActionMutation.mutateAsync({ sessionId, actionId }).catch((e) => {
 					console.error(e)
 				})
 			},
 
 			performDuplicate: (entityId: string) => {
-				socket.emitPromise('action-recorder:session:action-duplicate', [sessionId, entityId]).catch((e) => {
+				duplicateActionMutation.mutateAsync({ sessionId, actionId: entityId }).catch((e) => {
 					console.error(e)
 				})
 			},
@@ -66,6 +67,6 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				// Not supported
 			},
 		}),
-		[socket, sessionId]
+		[sessionId, deleteActionMutation, duplicateActionMutation, setValueMutation, reorderActionMutation]
 	)
 }

@@ -1,6 +1,5 @@
 import { CButton, CCol } from '@coreui/react'
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
@@ -8,6 +7,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/Generi
 import { useResizeObserver } from 'usehooks-ts'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface ButtonGridActionsRef {
 	buttonClick: (location: ControlLocation, isDown: boolean) => void
@@ -22,8 +22,6 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	{ isHot, pageNumber, clearSelectedButton },
 	ref
 ) {
-	const socket = useContext(SocketContext)
-
 	const resetRef = useRef<GenericConfirmModalRef>(null)
 
 	const [activeFunction, setActiveFunction] = useState<string | null>(null)
@@ -79,6 +77,9 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		)
 	}
 
+	const clearPageMutation = useMutationExt(trpc.pages.clearPage.mutationOptions())
+	const recreateNavMutation = useMutationExt(trpc.pages.recreateNav.mutationOptions())
+
 	const resetPage = useCallback(() => {
 		clearSelectedButton()
 
@@ -87,12 +88,16 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 			`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
 			'Reset',
 			() => {
-				socket.emitPromise('pages:reset-page-clear', [pageNumber]).catch((e) => {
-					console.error(`Clear page failed: ${e}`)
-				})
+				clearPageMutation
+					.mutateAsync({
+						pageNumber,
+					})
+					.catch((e) => {
+						console.error(`Clear page failed: ${e}`)
+					})
 			}
 		)
-	}, [socket, pageNumber, clearSelectedButton])
+	}, [clearPageMutation, pageNumber, clearSelectedButton])
 	const resetPageNav = useCallback(() => {
 		clearSelectedButton()
 
@@ -101,12 +106,21 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 			`Are you sure you want to reset navigation buttons? This will completely erase button ${pageNumber}/0/0, ${pageNumber}/1/0 and ${pageNumber}/2/0`,
 			'Reset',
 			() => {
-				socket.emitPromise('pages:reset-page-nav', [pageNumber]).catch((e) => {
-					console.error(`Reset nav failed: ${e}`)
-				})
+				recreateNavMutation
+					.mutateAsync({
+						pageNumber,
+					})
+					.catch((e) => {
+						console.error(`Reset nav failed: ${e}`)
+					})
 			}
 		)
-	}, [socket, pageNumber, clearSelectedButton])
+	}, [recreateNavMutation, pageNumber, clearSelectedButton])
+
+	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
+	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
+	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
 
 	useImperativeHandle(
 		ref,
@@ -116,7 +130,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 					switch (activeFunction) {
 						case 'delete':
 							resetRef.current?.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
-								socket.emitPromise('controls:reset', [location]).catch((e) => {
+								resetControlMutation.mutateAsync({ location }).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							})
@@ -126,7 +140,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'copy':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socket.emitPromise('controls:copy', [fromInfo, location]).catch((e) => {
+								copyControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
 									console.error(`copy failed: ${e}`)
 								})
 								stopFunction()
@@ -137,7 +151,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socket.emitPromise('controls:move', [fromInfo, location]).catch((e) => {
+								moveControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
 									console.error(`move failed: ${e}`)
 								})
 								stopFunction()
@@ -148,7 +162,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'swap':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								socket.emitPromise('controls:swap', [fromInfo, location]).catch((e) => {
+								swapControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
 									console.error(`swap failed: ${e}`)
 								})
 								stopFunction()
@@ -169,7 +183,15 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 				}
 			},
 		}),
-		[socket, activeFunction, activeFunctionButton, stopFunction]
+		[
+			resetControlMutation,
+			copyControlMutation,
+			moveControlMutation,
+			swapControlMutation,
+			activeFunction,
+			activeFunctionButton,
+			stopFunction,
+		]
 	)
 
 	return (

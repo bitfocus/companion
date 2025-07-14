@@ -1,43 +1,41 @@
-import type { ObservableSet } from 'mobx'
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { runInAction, type ObservableSet } from 'mobx'
+import { useState } from 'react'
+import { trpc } from '~/TRPC'
+import { assertNever } from '~/util.js'
 
-export function useActiveLearnRequests(socket: CompanionSocketWrapped, activeIds: ObservableSet<string>): boolean {
+export function useActiveLearnRequests(activeIds: ObservableSet<string>): boolean {
 	const [isReady, setIsReady] = useState<boolean>(false)
 
-	useEffect(() => {
-		let aborted = false
-		socket
-			.emitPromise('controls:subscribe:learn', [])
-			.then((active) => {
-				if (aborted) return
-				activeIds.clear()
-				for (const id of active) {
-					activeIds.add(id)
-				}
-
+	useSubscription(
+		trpc.controls.activeLearn.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
+				runInAction(() => {
+					activeIds.clear()
+					setIsReady(false)
+				})
+			},
+			onData: (data) => {
 				setIsReady(true)
-			})
-			.catch((e) => {
-				console.error('subscribe to learn failed', e)
-			})
-
-		const unsubAdd = socket.on('learn:add', (id) => activeIds.add(id))
-		const unsubRemove = socket.on('learn:remove', (id) => activeIds.delete(id))
-
-		return () => {
-			setIsReady(false)
-			activeIds.clear()
-
-			aborted = true
-			socket.emitPromise('controls:unsubscribe:learn', []).catch((e) => {
-				console.error('unsubscribe to learn failed', e)
-			})
-
-			unsubAdd()
-			unsubRemove()
-		}
-	}, [activeIds, socket])
+				runInAction(() => {
+					switch (data.type) {
+						case 'init':
+							activeIds.replace(data.ids)
+							break
+						case 'add':
+							activeIds.add(data.id)
+							break
+						case 'remove':
+							activeIds.delete(data.id)
+							break
+						default:
+							assertNever(data)
+							break
+					}
+				})
+			},
+		})
+	)
 
 	return isReady
 }

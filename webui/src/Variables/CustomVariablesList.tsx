@@ -26,8 +26,9 @@ import {
 import { useCustomVariablesCollectionsApi } from './CustomVariablesCollectionsApi'
 import { useCustomVariablesApi } from './CustomVariablesApi'
 import { CustomVariablesTableContextProvider } from './CustomVariablesTableContext'
-import { useCustomVariablesValues } from './useCustomVariableValues'
+import { useVariablesValuesForLabel } from './useVariablesValuesForLabel'
 import { CustomVariableRow } from './CustomVariablesListRow'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collectionId'> & CollectionsNestingTableItem
 type CustomVariableCollectionExt = CollectionsNestingTableCollection
@@ -35,7 +36,7 @@ type CustomVariableCollectionExt = CollectionsNestingTableCollection
 export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
 
-	const customVariableValues = useCustomVariablesValues()
+	const customVariableValues = useVariablesValuesForLabel('custom')
 
 	const allVariableNames = useComputed(
 		() => [...Array.from(customVariables.customVariables.keys()), ...customVariables.allCustomVariableCollectionIds],
@@ -94,9 +95,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						<CButton color="secondary" disabled>
 							Custom Variables
 						</CButton>
-						<CButton color="info" size="sm" onClick={() => collectionsApi.createCollection()}>
-							<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-						</CButton>
+						<CreateCollectionButton />
 						{(customVariables.customVariables.size > 0 || customVariables.customVariableCollections.size > 0) && (
 							<ExpandCollapseButtons />
 						)}
@@ -185,37 +184,38 @@ const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
 })
 
 function AddVariablePanel() {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
 	const [newName, setNewName] = useState('')
+
+	const createMutation = useMutationExt(trpc.customVariables.create.mutationOptions())
 
 	const doCreateNew = useCallback(
 		(e: FormEvent) => {
 			e?.preventDefault()
 
-			if (isCustomVariableValid(newName)) {
-				socket
-					.emitPromise('custom-variables:create', [newName, ''])
-					.then((res) => {
-						console.log('done with', res)
-						if (res) {
-							notifier.current?.show(`Failed to create variable`, res, 5000)
-						}
+			if (!isCustomVariableValid(newName)) return
+			createMutation
+				.mutateAsync({ name: newName, defaultVal: '' })
+				.then((res) => {
+					console.log('done with', res)
+					if (res) {
+						notifier.current?.show(`Failed to create variable`, res, 5000)
+					}
 
-						// clear value
-						setNewName('')
+					// clear value
+					setNewName('')
 
-						// Make sure the panel is open and wont be forgotten on first render
-						setTimeout(() => panelCollapseHelper.setPanelCollapsed(newName, false), 10)
-					})
-					.catch((e) => {
-						console.error('Failed to create variable')
-						notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
-					})
-			}
+					// Make sure the panel is open and wont be forgotten on first render
+					setTimeout(() => panelCollapseHelper.setPanelCollapsed(newName, false), 10)
+				})
+				.catch((e) => {
+					console.error('Failed to create variable')
+					notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
+				})
 		},
-		[socket, notifier, panelCollapseHelper, newName]
+		[createMutation, notifier, panelCollapseHelper, newName]
 	)
 
 	return (
@@ -232,5 +232,21 @@ function AddVariablePanel() {
 				</CButton>
 			</CInputGroup>
 		</CForm>
+	)
+}
+
+function CreateCollectionButton() {
+	const createMutation = useMutationExt(trpc.customVariables.collections.add.mutationOptions())
+
+	const doCreateCollection = useCallback(() => {
+		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
+			console.error('Failed to add collection', e)
+		})
+	}, [createMutation])
+
+	return (
+		<CButton color="info" size="sm" onClick={doCreateCollection}>
+			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+		</CButton>
 	)
 }

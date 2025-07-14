@@ -20,10 +20,9 @@ import 'intersection-observer'
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import io from 'socket.io-client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 
-import { makeAbsolutePath, SocketContext, wrapSocket } from '~/util.js'
+import { makeAbsolutePath } from '~/util.js'
 
 // import i18n from 'i18next'
 // import Backend from 'i18next-http-backend'
@@ -47,23 +46,19 @@ import { makeAbsolutePath, SocketContext, wrapSocket } from '~/util.js'
 import { routeTree } from './routeTree.gen.js'
 
 // Create a new router instance
-const router = createRouter({ routeTree })
+const router = createRouter({
+	routeTree,
+
+	pathParamsAllowedCharacters: [
+		':', // Allow colons for surfaceIds
+	],
+})
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {
 	interface Register {
 		router: typeof router
 	}
-}
-
-const socket = io({
-	path: makeAbsolutePath('socket.io'),
-})
-const socketWrapped = wrapSocket(socket)
-if (window.location.hash && window.location.hash.includes('debug_socket')) {
-	socket.onAny(function (name, ...data) {
-		console.log('received event', name, data)
-	})
 }
 
 // This is not nice, but we need to load these images not by a url, but as a data url
@@ -75,8 +70,6 @@ const rootElm = document.getElementById('root')!
 const root = createRoot(rootElm)
 root.render(
 	<React.StrictMode>
-		<SocketContext.Provider value={socketWrapped}>
-			<RouterProvider router={router} notFoundMode="fuzzy" basepath={makeAbsolutePath('/')} />
-		</SocketContext.Provider>
+		<RouterProvider router={router} notFoundMode="fuzzy" basepath={makeAbsolutePath('/')} />
 	</React.StrictMode>
 )

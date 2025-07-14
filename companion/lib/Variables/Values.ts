@@ -22,7 +22,8 @@ import {
 } from './Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
-import type { ClientSocket } from '../UI/Handler.js'
+import { router, publicProcedure } from '../UI/TRPC.js'
+import z from 'zod'
 
 export interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>, connection_labels: Set<string>]
@@ -134,12 +135,17 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		}
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('variables:connection-values', (label) => {
-			return this.#variableValues[label]
+	createTrpcRouter() {
+		return router({
+			connection: publicProcedure
+				.input(
+					z.object({
+						label: z.string(),
+					})
+				)
+				.query(({ input }) => {
+					return this.#variableValues[input.label]
+				}),
 		})
 	}
 

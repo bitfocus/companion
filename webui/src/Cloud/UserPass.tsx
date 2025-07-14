@@ -1,8 +1,8 @@
-import React, { memo, useContext, useState } from 'react'
+import React, { memo, useState } from 'react'
 import { CAlert, CButton, CCol, CForm, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
-import { SocketContext } from '~/util.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 interface CloudUserPassProps {
 	username: string | undefined
@@ -15,9 +15,10 @@ export const CloudUserPass = memo(function CloudUserPass({
 	working,
 	onClearError,
 }: CloudUserPassProps) {
-	const socket = useContext(SocketContext)
-	const [username, setUsername] = useState(defaultUsername || '')
+	const [email, setEmail] = useState(defaultUsername || '')
 	const [password, setPassword] = useState('')
+
+	const loginMutation = useMutationExt(trpc.cloud.login.mutationOptions())
 
 	return (
 		<CForm
@@ -30,15 +31,15 @@ export const CloudUserPass = memo(function CloudUserPass({
 					onClearError()
 				}
 
-				if (username === '' || password === '') return
+				if (email === '' || password === '') return
 
-				socket.emit('cloud_login', username, password)
+				loginMutation.mutate({ email, password })
 			}}
 		>
 			<CRow>
 				<CCol sm={6}>
 					<CFormLabel>Email address</CFormLabel>
-					<CFormInput type="text" value={username} onChange={(e) => setUsername(e.currentTarget.value)} />
+					<CFormInput type="text" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
 				</CCol>
 				<CCol sm={6}></CCol>
 
@@ -49,7 +50,7 @@ export const CloudUserPass = memo(function CloudUserPass({
 				<CCol sm={6}></CCol>
 
 				<CCol sm={6}>
-					<CButton color="success" type="submit" disabled={working || !username || !password}>
+					<CButton color="success" type="submit" disabled={working || !email || !password}>
 						Log in
 					</CButton>
 				</CCol>

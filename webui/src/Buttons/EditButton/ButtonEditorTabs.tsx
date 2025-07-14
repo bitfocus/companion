@@ -5,11 +5,11 @@ import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CNav, CNavItem, CNavLink, CButton } from '@coreui/react'
 import { faPlus, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react'
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { GenericConfirmModalRef, GenericConfirmModal } from '~/Components/GenericConfirmModal.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
-import { SocketContext } from '~/util.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export interface ButtonEditorExtraTabs {
 	id: string
@@ -154,8 +154,6 @@ function ActionSetTab({
 	active,
 	onClick,
 }: Readonly<ActionSetTabProps>) {
-	const socket = useContext(SocketContext)
-
 	let linkClassname: string | undefined = undefined
 
 	const name = stepOptions?.name
@@ -166,13 +164,15 @@ function ActionSetTab({
 		else if (isCurrent) linkClassname = 'only-current'
 	}
 
+	const renameStepMutation = useMutationExt(trpc.controls.steps.rename.mutationOptions())
+
 	const renameStep = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
-			socket.emitPromise('controls:step:rename', [controlId, stepId, e.target.value]).catch((e) => {
+			renameStepMutation.mutateAsync({ controlId, stepId, newName: e.target.value }).catch((e) => {
 				console.error('Failed to rename step:', e)
 			})
 		},
-		[socket, controlId, stepId]
+		[renameStepMutation, controlId, stepId]
 	)
 
 	const [showInputField, setShowInputField] = useState(false)

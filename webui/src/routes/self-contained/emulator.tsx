@@ -28,7 +28,7 @@ function RouteComponent() {
 				<Outlet />
 			) : (
 				<CRow className={'loading'}>
-					<LoadingRetryOrError dataReady={false} error={status.error || emulatorPageConfig.error} />
+					<LoadingRetryOrError dataReady={false} error={status.error || emulatorPageConfig.error} design="pulse-xl" />
 				</CRow>
 			)}
 		</div>

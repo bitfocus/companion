@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useState, useContext, memo, useRef, useMemo } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { useCallback, useEffect, useState, memo, useRef, useMemo } from 'react'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
 import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
@@ -7,6 +6,9 @@ import AutoSizer from 'react-virtualized-auto-sizer'
 import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { useParams } from '@tanstack/react-router'
+import { trpc, useMutationExt } from './TRPC'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus'
 
 interface DebugLogLine {
 	level: string
@@ -29,70 +31,47 @@ const LogsOnDiskInfoLine: DebugLogLine = {
 // const route = getRouteApi('/connection-debug/$connectionId')
 
 export function ConnectionDebug(): React.JSX.Element {
-	const socket = useContext(SocketContext)
+	const trpcStatus = useTRPCConnectionStatus()
 
 	const { connectionId } = useParams({ from: '/connection-debug/$connectionId' })
 
 	// const [loadError, setLoadError]=useState(null)
 	const [linesBuffer, setLinesBuffer] = useState<DebugLogLine[]>([])
 
-	// A unique identifier which changes upon each reconnection
-	const [connectionToken, setConnectionToken] = useState(nanoid())
-
 	const [isConnected, setIsConnected] = useState(false)
 	useEffect(() => {
-		const onConnected = () => {
+		if (trpcStatus.status === TRPCConnectionStatus.Connected) {
 			setIsConnected(true)
-			setConnectionToken(nanoid())
-		}
-		const onDisconnected = () => {
+			setLinesBuffer([])
+		} else {
 			setIsConnected(false)
 		}
+	}, [trpcStatus.status])
 
-		const unsubConnect = socket.onConnect(onConnected)
-		const unsubDisconnect = socket.onDisconnect(onDisconnected)
-
-		if (socket.connected) onConnected()
-
-		return () => {
-			unsubConnect()
-			unsubDisconnect()
-		}
-	}, [socket])
-
-	useEffect(() => {
-		setLinesBuffer([])
-
-		const onNewLines = (level: string, message: string) => {
-			console.log('line', level, message)
-			setLinesBuffer((oldLines) => [...oldLines, { level, message }])
-		}
-
-		if (connectionId) {
-			const unsubLines = socket.on(`connection-debug:update:${connectionId}`, onNewLines)
-
-			socket
-				.emitPromise('connection-debug:subscribe', [connectionId])
-				.then((info) => {
-					if (!info) {
-						onNewLines('system', 'Connection was not found')
-					}
-					console.log('subscribed', info)
-				})
-				.catch((err) => {
-					console.error('Subscribe failure', err)
-				})
-
-			return () => {
-				socket.emitPromise('connection-debug:unsubscribe', [connectionId]).catch((err) => {
-					console.error('Unsubscribe failure', err)
-				})
-				unsubLines()
+	useSubscription(
+		trpc.connections.debugLog.subscriptionOptions(
+			{
+				connectionId,
+			},
+			{
+				enabled: !!connectionId,
+				onStarted: () => {
+					setLinesBuffer([])
+					console.log('Subscribed to connection debug log', connectionId)
+				},
+				onData: (data) => {
+					setLinesBuffer((oldLines) => [...oldLines, data])
+				},
+				onError: (err) => {
+					console.error('Error in connection debug log subscription', err)
+					setLinesBuffer((oldLines) => [
+						...oldLines,
+						{ level: 'system', message: `Log subscription failed: ${err.message}` },
+					])
+				},
 			}
-		} else {
-			return undefined
-		}
-	}, [socket, connectionId, connectionToken])
+		)
+	)
 
 	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
 
@@ -117,18 +96,19 @@ export function ConnectionDebug(): React.JSX.Element {
 		link.remove()
 	}, [linesBuffer])
 
+	const setEnabledMutation = useMutationExt(trpc.connections.setEnabled.mutationOptions())
 	const doStopConnection = useCallback(() => {
 		if (!connectionId) return
-		socket.emitPromise('connections:set-enabled', [connectionId, false]).catch((e) => {
+		setEnabledMutation.mutateAsync({ connectionId, enabled: false }).catch((e) => {
 			console.error('Failed', e)
 		})
-	}, [socket, connectionId])
+	}, [setEnabledMutation, connectionId])
 	const doStartConnection = useCallback(() => {
 		if (!connectionId) return
-		socket.emitPromise('connections:set-enabled', [connectionId, true]).catch((e) => {
+		setEnabledMutation.mutateAsync({ connectionId, enabled: true }).catch((e) => {
 			console.error('Failed', e)
 		})
-	}, [socket, connectionId])
+	}, [setEnabledMutation, connectionId])
 
 	const [config, setConfig] = useState<DebugConfig>(() => loadConfig(connectionId ?? ''))
 	// Save the config when it changes

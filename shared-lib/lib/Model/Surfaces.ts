@@ -40,7 +40,7 @@ export interface ClientSurfaceItem {
 
 export interface ClientDevicesListItem {
 	id: string
-	index: number | undefined
+	index: number | null
 	displayName: string
 	isAutoGroup: boolean
 	surfaces: ClientSurfaceItem[]
@@ -87,8 +87,16 @@ export interface SurfacePanelConfig {
 	[key: string]: any
 }
 
-export type SurfacesUpdate = SurfacesUpdateRemoveOp | SurfacesUpdateAddOp | SurfacesUpdateUpdateOp
+export type SurfacesUpdate =
+	| SurfacesUpdateInitOp
+	| SurfacesUpdateRemoveOp
+	| SurfacesUpdateAddOp
+	| SurfacesUpdateUpdateOp
 
+export interface SurfacesUpdateInitOp {
+	type: 'init'
+	info: Record<string, ClientDevicesListItem>
+}
 export interface SurfacesUpdateRemoveOp {
 	type: 'remove'
 	itemId: string
@@ -103,7 +111,7 @@ export interface SurfacesUpdateUpdateOp {
 	type: 'update'
 	itemId: string
 
-	patch: JsonPatchOperation[]
+	patch: JsonPatchOperation<ClientDevicesListItem>[]
 }
 
 export interface OutboundSurfaceInfo {
@@ -112,11 +120,18 @@ export interface OutboundSurfaceInfo {
 	type: 'elgato'
 	enabled: boolean
 	address: string
-	port: number | undefined
+	port: number
 }
 
-export type OutboundSurfacesUpdate = OutboundSurfacesUpdateRemoveOp | OutboundSurfacesUpdateAddOp
+export type OutboundSurfacesUpdate =
+	| OutboundSurfacesUpdateInitOp
+	| OutboundSurfacesUpdateRemoveOp
+	| OutboundSurfacesUpdateAddOp
 
+export interface OutboundSurfacesUpdateInitOp {
+	type: 'init'
+	items: Record<string, OutboundSurfaceInfo>
+}
 export interface OutboundSurfacesUpdateRemoveOp {
 	type: 'remove'
 	itemId: string
@@ -155,7 +170,10 @@ export interface ClientDiscoveredSurfaceInfoStreamDeck {
 	serialnumber: string | undefined
 }
 
-export type SurfacesDiscoveryUpdate = SurfaceDiscoveryUpdateRemoveOp | SurfaceDiscoveryUpdateUpdateOp
+export type SurfacesDiscoveryUpdate =
+	| SurfaceDiscoveryUpdateInitOp
+	| SurfaceDiscoveryUpdateRemoveOp
+	| SurfaceDiscoveryUpdateUpdateOp
 
 export interface SurfaceDiscoveryUpdateRemoveOp {
 	type: 'remove'
@@ -166,6 +184,10 @@ export interface SurfaceDiscoveryUpdateUpdateOp {
 	// itemId: string
 
 	info: ClientDiscoveredSurfaceInfo
+}
+export interface SurfaceDiscoveryUpdateInitOp {
+	type: 'init'
+	infos: ClientDiscoveredSurfaceInfo[]
 }
 
 export interface CompanionExternalAddresses {

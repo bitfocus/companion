@@ -80,7 +80,7 @@ export class Registry {
 	/**
 	 * The cloud controller
 	 */
-	#cloud!: CloudController
+	cloud!: CloudController
 	/**
 	 * The core controls controller
 	 */
@@ -112,11 +112,11 @@ export class Registry {
 	/**
 	 * The core page controller
 	 */
-	#preview!: GraphicsPreview
+	preview!: GraphicsPreview
 	/**
 	 * The core service controller
 	 */
-	#services!: ServiceController
+	services!: ServiceController
 	/**
 	 * The core device controller
 	 */
@@ -131,7 +131,7 @@ export class Registry {
 	 */
 	internalModule!: InternalController
 
-	#importExport!: ImportExportController
+	importExport!: ImportExportController
 
 	#metrics!: DataMetrics
 
@@ -184,7 +184,7 @@ export class Registry {
 
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		this.io = this.ui.io
-		LogController.init(this.#appInfo, this.ui.io)
+		LogController.init(this.#appInfo)
 
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
@@ -205,25 +205,20 @@ export class Registry {
 
 			this.page = new PageController(this)
 			this.controls = new ControlsController(this, controlEvents)
-			this.variables = new VariablesController(this.db, this.io)
+			this.variables = new VariablesController(this.db)
 			this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
-			this.#preview = new GraphicsPreview(this.graphics, this.io, this.page, this.variables.values)
-			this.surfaces = new SurfaceController(
-				this.db,
-				{
-					controls: this.controls,
-					graphics: this.graphics,
-					page: this.page,
-					userconfig: this.userconfig,
-					variables: this.variables,
-				},
-				this.io
-			)
+			this.preview = new GraphicsPreview(this.graphics, this.page, this.variables.values)
+			this.surfaces = new SurfaceController(this.db, {
+				controls: this.controls,
+				graphics: this.graphics,
+				page: this.page,
+				userconfig: this.userconfig,
+				variables: this.variables,
+			})
 
 			const oscSender = new ServiceOscSender(this.userconfig)
 			this.instance = new InstanceController(
 				this.#appInfo,
-				this.io,
 				this.db,
 				this.#data.cache,
 				this.#internalApiRouter,
@@ -244,10 +239,10 @@ export class Registry {
 				this.graphics,
 				this.exit.bind(this)
 			)
-			this.#importExport = new ImportExportController(
+			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
-				this.io,
+				this.db,
 				this.controls,
 				this.graphics,
 				this.instance,
@@ -268,7 +263,7 @@ export class Registry {
 			)
 
 			this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
-			this.#services = new ServiceController(
+			this.services = new ServiceController(
 				serviceApi,
 				this.userconfig,
 				oscSender,
@@ -279,22 +274,20 @@ export class Registry {
 				this.io,
 				this.ui.express
 			)
-			this.#cloud = new CloudController(
+			this.cloud = new CloudController(
 				this.#appInfo,
 				this.db,
 				this.#data.cache,
 				this.controls,
 				this.graphics,
-				this.io,
 				this.page
 			)
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
-				this.io.emitToAll('set_userconfig_key', key, value)
 				setImmediate(() => {
 					// give the change a chance to be pushed to the ui first
 					this.graphics.updateUserConfig(key, value)
-					this.#services.updateUserConfig(key, value)
+					this.services.updateUserConfig(key, value)
 					this.surfaces.updateUserConfig(key, value)
 				})
 
@@ -309,29 +302,16 @@ export class Registry {
 				}
 			})
 
-			this.ui.io.on('clientConnect', (client) => {
-				LogController.clientConnect(client)
-				this.#data.clientConnect(client)
-				this.page.clientConnect(client)
-				this.controls.clientConnect(client)
-				this.#preview.clientConnect(client)
-				this.surfaces.clientConnect(client)
-				this.instance.clientConnect(client)
-				this.#cloud.clientConnect(client)
-				this.#services.clientConnect(client)
-				this.#importExport.clientConnect(client)
-			})
-
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
 				this.internalModule.variablesChanged(all_changed_variables_set)
 				this.controls.onVariablesChanged(all_changed_variables_set)
 				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-				this.#preview.onVariablesChanged(all_changed_variables_set)
+				this.preview.onVariablesChanged(all_changed_variables_set)
 				this.surfaces.onVariablesChanged(all_changed_variables_set)
 			})
 
 			this.graphics.on('button_drawn', (location, render) => {
-				this.#services.onButtonDrawn(location, render)
+				this.services.onButtonDrawn(location, render)
 			})
 
 			// old 'modules_loaded' events
@@ -349,7 +329,9 @@ export class Registry {
 
 			// Instances are loaded, start up http
 			const router = createTrpcRouter(this)
-			this.ui.io.bindTrpcRouter(router)
+			this.ui.io.bindTrpcRouter(router, () => {
+				this.controls.triggers.emit('client_connect')
+			})
 			this.rebindHttp(bindIp, bindPort)
 
 			// Startup has completed, run triggers
@@ -457,7 +439,7 @@ export class Registry {
 
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
-		this.#services.https.updateBindIp(bindIp)
+		this.services.https.updateBindIp(bindIp)
 		this.internalModule.updateBindIp(bindIp)
 	}
 }

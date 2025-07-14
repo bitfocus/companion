@@ -1,9 +1,9 @@
 import { CModalHeader, CFormInput, CModalBody, CModalFooter, CButton, CButtonGroup } from '@coreui/react'
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface AddPagesModalRef {
 	show(beforePageNumber: number): void
@@ -24,8 +24,6 @@ const defaultState: ModalState = {
 }
 
 export const AddPagesModal = forwardRef<AddPagesModalRef>(function AddPagesModal(_props, ref) {
-	const socket = useContext(SocketContext)
-
 	const [state, setState] = useState<ModalState>(defaultState)
 
 	const doClose = useCallback(
@@ -57,17 +55,24 @@ export const AddPagesModal = forwardRef<AddPagesModalRef>(function AddPagesModal
 		[]
 	)
 
+	const insertMutation = useMutationExt(trpc.pages.insert.mutationOptions())
+
 	const doSave = useCallback(() => {
-		socket.emitPromise('pages:insert-pages', [state.beforePage, state.names]).catch((e) => {
-			console.error('Page insert failed', e)
-		})
+		insertMutation
+			.mutateAsync({
+				asPageNumber: state.beforePage,
+				pageNames: state.names,
+			})
+			.catch((e) => {
+				console.error('Page insert failed', e)
+			})
 		setState((oldPage) => {
 			return {
 				...oldPage,
 				show: false,
 			}
 		})
-	}, [socket, state])
+	}, [insertMutation, state])
 
 	const changeName = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		const pageNumber = Number(e.currentTarget.getAttribute('data-page'))

@@ -6,8 +6,6 @@ import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { DropdownInputField } from '~/Components/index.js'
 import { ButtonGridHeader } from '../ButtonGridHeader.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
-import { cloneDeep } from 'lodash-es'
-import jsonPatch from 'fast-json-patch'
 import { ButtonGridIcon, ButtonInfiniteGrid, ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
@@ -16,6 +14,7 @@ import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import { useControlConfig } from '~/Hooks/useControlConfig.js'
 
 interface ButtonPickerProps {
 	selectButton: (
@@ -26,7 +25,7 @@ interface ButtonPickerProps {
 	) => void
 }
 export const ButtonPicker = observer(function ButtonPicker({ selectButton }: ButtonPickerProps) {
-	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
+	const { pages, userConfig } = useContext(RootAppStoreContext)
 
 	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
 
@@ -54,40 +53,9 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 			selectButton(selectedControl, selectedStep, selectedSet, 'append')
 	}, [selectedControl, selectedStep, selectedSet, selectButton])
 
-	const [controlInfo, setControlInfo] = useState<NormalButtonModel | null>(null)
-	useEffect(() => {
-		setControlInfo(null)
-
-		if (!selectedControl) return
-		socket
-			.emitPromise('controls:subscribe', [selectedControl])
-			.then((config) => {
-				console.log(config)
-				setControlInfo((config as any)?.config ?? false)
-			})
-			.catch((e) => {
-				console.error('Failed to load control config', e)
-				setControlInfo(null)
-			})
-
-		const unsubUpdates = socket.on(`controls:config-${selectedControl}`, (patch) => {
-			setControlInfo((oldConfig) => {
-				if (!oldConfig || patch === false) {
-					return null
-				} else {
-					return jsonPatch.applyPatch(cloneDeep(oldConfig) || {}, patch).newDocument
-				}
-			})
-		})
-
-		return () => {
-			unsubUpdates()
-
-			socket.emitPromise('controls:unsubscribe', [selectedControl]).catch((e) => {
-				console.error('Failed to unsubscribe control config', e)
-			})
-		}
-	}, [socket, selectedControl])
+	const { controlConfig: rawControlConfig } = useControlConfig(selectedControl)
+	const controlInfo: NormalButtonModel | null =
+		rawControlConfig?.config.type === 'button' ? rawControlConfig.config : null
 
 	const actionStepOptions = useMemo(() => {
 		switch (controlInfo?.type) {

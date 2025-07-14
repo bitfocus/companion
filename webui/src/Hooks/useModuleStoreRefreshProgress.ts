@@ -1,33 +1,22 @@
-import { useEffect } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
 import { ObservableMap, runInAction } from 'mobx'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
 
 export function useModuleStoreRefreshProgressSubscription(
-	socket: CompanionSocketWrapped,
 	moduleStoreRefreshProgress: ObservableMap<string | null, number>
 ): boolean {
-	useEffect(() => {
-		// Clear any previous progress
-		runInAction(() => moduleStoreRefreshProgress.clear())
-
-		const unsubProgress = socket.on('modules-store:list:progress', (progress) => {
-			runInAction(() => {
-				moduleStoreRefreshProgress.set(null, progress)
-			})
+	useSubscription(
+		trpc.connections.modulesStore.watchRefreshProgress.subscriptionOptions(undefined, {
+			onStarted: () => {
+				runInAction(() => moduleStoreRefreshProgress.clear())
+			},
+			onData: (info) => {
+				runInAction(() => {
+					moduleStoreRefreshProgress.set(info.moduleId, info.percent)
+				})
+			},
 		})
-		const unsubProgress2 = socket.on('modules-store:info:progress', (moduleId, progress) => {
-			runInAction(() => {
-				moduleStoreRefreshProgress.set(moduleId, progress)
-			})
-		})
-
-		return () => {
-			runInAction(() => moduleStoreRefreshProgress.clear())
-
-			unsubProgress()
-			unsubProgress2()
-		}
-	}, [socket, moduleStoreRefreshProgress])
+	)
 
 	return true // always ready
 }

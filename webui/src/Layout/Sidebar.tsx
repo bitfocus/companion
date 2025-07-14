@@ -10,15 +10,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react'
-import {
-	CSidebarNav,
-	CNavItem,
-	CNavLink,
-	CSidebarBrand,
-	CSidebarToggler,
-	CSidebarHeader,
-	CBackdrop,
-} from '@coreui/react'
+import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop } from '@coreui/react'
 import {
 	faFileImport,
 	faCog,
@@ -52,6 +44,8 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
 import { makeAbsolutePath } from '~/util.js'
+import { trpc } from '~/TRPC'
+import { useQuery } from '@tanstack/react-query'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -88,18 +82,21 @@ export function SidebarStateProvider({ children }: React.PropsWithChildren): Rea
 interface SidebarMenuItemProps {
 	name: string
 	subheading?: string
-	icon: IconDefinition | null
+	icon: IconDefinition | null | 'empty'
 	notifications?: React.ComponentType<Record<string, never>>
 	path?: string
 	onClick?: () => void
 	target?: string
+	title?: string
 }
 
 function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 	return (
 		<>
 			<span className="nav-icon-wrapper">
-				{item.icon ? (
+				{item.icon === 'empty' ? (
+					''
+				) : item.icon ? (
 					<FontAwesomeIcon className="nav-icon" icon={item.icon} />
 				) : (
 					<span className="nav-icon">
@@ -108,7 +105,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			<span className="flex-fill">
+			<span className="flex-fill text-truncate">
 				<span>{item.name}</span>
 				{!!item.subheading && (
 					<>
@@ -118,7 +115,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			{item.target === '_new' && <FontAwesomeIcon icon={faExternalLinkSquare} />}
+			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1" />}
 			{!!item.notifications && <item.notifications />}
 		</>
 	)
@@ -133,11 +130,11 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 	return (
 		<CNavItem idx={item.path ?? item.name}>
 			{item.path ? (
-				<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2}>
+				<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2} title={item.title}>
 					<SidebarMenuItemLabel {...item} />
 				</CNavLink>
 			) : (
-				<CNavLink onClick={onClick2} style={{ cursor: 'pointer' }}>
+				<CNavLink onClick={onClick2} style={{ cursor: 'pointer' }} title={item.title}>
 					<SidebarMenuItemLabel {...item} />
 				</CNavLink>
 			)}
@@ -160,6 +157,8 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
+
+	const doToggle = useCallback(() => setUnfoldable((val) => !val), [setUnfoldable])
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
@@ -198,8 +197,8 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
 					<SidebarMenuItem name="Surfaces" icon={null} path="/settings/surfaces" />
 					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />
+					<SidebarMenuItem name="Backups" icon={null} path="/settings/backups" />
 					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
-					<></>
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
@@ -225,7 +224,7 @@ export const MySidebar = memo(function MySidebar() {
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
-				<CSidebarToggler onClick={() => setUnfoldable((val) => !val)} />
+				<SidebarTogglerAndVersion doToggle={doToggle} />
 			</CSidebarHeader>
 		</CSidebar>
 	)
@@ -248,6 +247,42 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 				/>
 			))}
 		</>
+	)
+})
+
+const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ doToggle }: { doToggle: () => void }) {
+	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
+
+	let versionString = ''
+	let versionSubheading = ''
+
+	if (versionInfo.data) {
+		if (versionInfo.data.appBuild.includes('-stable-')) {
+			versionString = `v${versionInfo.data.appVersion}`
+		} else {
+			// split appBuild into parts.
+			const splitPoint = versionInfo.data.appBuild.indexOf('-')
+			if (splitPoint === -1) {
+				versionString = `v${versionInfo.data.appBuild}`
+			} else {
+				versionString = `v${versionInfo.data.appBuild.substring(0, splitPoint)}`
+				versionSubheading = versionInfo.data.appBuild.substring(splitPoint + 1)
+			}
+		}
+	}
+
+	return (
+		<div className="nav-link sidebar-header-toggler2">
+			<span className="nav-icon-wrapper" onClick={doToggle}>
+				<span className="nav-icon sidebar-toggler"></span>
+			</span>
+
+			<span className="flex-fill text-truncate">
+				<span className="version">{versionString || 'Unknown'}</span>
+				{/* <br /> */}
+				<span className="version-sub">{versionSubheading}</span>
+			</span>
+		</div>
 	)
 })
 

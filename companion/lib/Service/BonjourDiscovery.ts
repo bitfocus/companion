@@ -1,19 +1,12 @@
-import { isEqual } from 'lodash-es'
 import { ServiceBase } from './Base.js'
 import { Bonjour, Browser } from '@julusian/bonjour-service'
-import { nanoid } from 'nanoid'
 import { isIPv4 } from 'net'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
-import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
+import type { ClientBonjourEvent, ClientBonjourService } from '@companion-app/shared/Model/Common.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { InstanceController } from '../Instance/Controller.js'
-
-/**
- * Generate socket.io room name
- */
-function BonjourRoom(id: string): string {
-	return `bonjour:${id}`
-}
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
+import EventEmitter from 'events'
 
 /**
  * Class providing Bonjour discovery for modules.
@@ -31,8 +24,9 @@ function BonjourRoom(id: string): string {
  * this program.
  */
 export class ServiceBonjourDiscovery extends ServiceBase {
-	readonly #io: UIHandler
 	readonly #instanceController: InstanceController
+
+	readonly #serviceEvents = new EventEmitter<{ [id: string]: [ClientBonjourEvent] }>()
 
 	/**
 	 * Active browsers running
@@ -41,10 +35,9 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 	#server: Bonjour | undefined
 
-	constructor(userconfig: DataUserConfig, io: UIHandler, instanceController: InstanceController) {
+	constructor(userconfig: DataUserConfig, instanceController: InstanceController) {
 		super(userconfig, 'Service/BonjourDiscovery', null, null)
 
-		this.#io = io
 		this.#instanceController = instanceController
 
 		this.init()
@@ -76,21 +69,43 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		}
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.on('disconnect', () => {
-			// Ensure any sessions the client was part of are cleaned up
-			for (const subId of this.#browsers.keys()) {
-				this.#removeClientFromSession(client.id, subId)
-			}
-		})
+	createTrpcRouter() {
+		const self = this
+		return router({
+			watchQuery: publicProcedure
+				.input(
+					z.object({
+						connectionId: z.string(),
+						queryId: z.string(),
+					})
+				)
+				.subscription(async function* (opts) {
+					let session: BonjourBrowserSession | undefined
+					try {
+						// Join the session
+						session = self.#joinOrCreateSession(opts.input.connectionId, opts.input.queryId)
 
-		client.onPromise('bonjour:subscribe', (connectionId, queryId) =>
-			this.#joinOrCreateSession(client, connectionId, queryId)
-		)
-		client.on('bonjour:unsubscribe', (subIds) => this.#leaveSession(client, subIds))
+						// Start the changes listener
+						const changes = toIterable(self.#serviceEvents, session.id, opts.signal)
+
+						// Send the initial data
+						for (const query of session.queries) {
+							for (const svc of query.browser.services) {
+								const uiSvc = self.#convertService(session.id, svc, query.filter)
+								if (uiSvc) yield { type: 'up', service: uiSvc } satisfies ClientBonjourEvent
+							}
+						}
+
+						// Stream any changes
+						for await (const [data] of changes) {
+							yield data
+						}
+					} finally {
+						// Make sure we clean up the session when there are no more listeners
+						if (session) self.#leaveSession(session.id)
+					}
+				}),
+		})
 	}
 
 	#convertService(id: string, svc: any, filter: BonjourBrowserFilter): ClientBonjourService | null {
@@ -114,8 +129,16 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 	/**
 	 * Client is starting or joining a session
 	 */
-	#joinOrCreateSession(client: ClientSocket, connectionId: string, queryId: string): string[] {
+	#joinOrCreateSession(connectionId: string, queryId: string): BonjourBrowserSession {
 		if (!this.#server) throw new Error('Bonjour not running')
+
+		const id = `${connectionId}::${queryId}`
+		const existingSession = this.#browsers.get(id)
+		if (existingSession) {
+			// If the session already exists, just return it
+			this.logger.info(`Client joined ${id}`)
+			return existingSession
+		}
 
 		const manifest = this.#instanceController.getManifestForInstance(connectionId)
 		let bonjourQueries = manifest?.bonjourQueries?.[queryId]
@@ -124,7 +147,6 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		if (!Array.isArray(bonjourQueries)) bonjourQueries = [bonjourQueries]
 
 		const filters: BonjourBrowserFilter[] = []
-
 		for (const query of bonjourQueries) {
 			const filter: BonjourBrowserFilter = {
 				type: query.type,
@@ -138,100 +160,64 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 			filters.push(filter)
 		}
 
-		const ids: string[] = []
-
+		const session: BonjourBrowserSession = {
+			id,
+			queries: [],
+		}
 		for (const filter of filters) {
-			let foundExisting = false
+			// Create new browser
+			this.logger.info(`Starting discovery of: ${JSON.stringify(filter)}`)
+			const browser = this.#server.find(filter)
+			session.queries.push({
+				browser,
+				filter,
+			})
 
-			// Find existing browser
-			for (const [id, session] of this.#browsers.entries()) {
-				if (isEqual(session.filter, filter)) {
-					session.clientIds.add(client.id)
-
-					client.join(BonjourRoom(id))
-					this.logger.info(`Client ${client.id} joined ${id}`)
-
-					// After this message, send already known services to the client
-					setImmediate(() => {
-						for (const svc of session.browser.services) {
-							const uiSvc = this.#convertService(id, svc, filter)
-							if (uiSvc) client.emit(`bonjour:service:up`, uiSvc)
-						}
-					})
-
-					foundExisting = true
-					ids.push(id)
-					break
-				}
-			}
-
-			if (!foundExisting) {
-				// Create new browser
-				this.logger.info(`Starting discovery of: ${JSON.stringify(filter)}`)
-				const browser = this.#server.find(filter)
-				const id = nanoid()
-				const room = BonjourRoom(id)
-				this.#browsers.set(id, {
-					browser,
-					filter,
-					clientIds: new Set([client.id]),
-				})
-
-				// Setup event handlers
-				browser.on('up', (svc) => {
-					const uiSvc = this.#convertService(id, svc, filter)
-					if (uiSvc) this.#io.emitToRoom(room, `bonjour:service:up`, uiSvc)
-				})
-				browser.on('down', (svc) => {
-					this.#io.emitToRoom(room, `bonjour:service:down`, id, svc.fqdn)
-				})
-
-				// Report to client
-				client.join(room)
-				this.logger.info(`Client ${client.id} joined ${id}`)
-				ids.push(id)
-			}
+			// Setup event handlers
+			browser.on('up', (svc) => {
+				const uiSvc = this.#convertService(id, svc, filter)
+				if (uiSvc) this.#serviceEvents.emit(id, { type: 'up', service: uiSvc })
+			})
+			browser.on('down', (svc) => {
+				this.#serviceEvents.emit(id, { type: 'down', fqdn: svc.fqdn })
+			})
 		}
 
-		return ids
+		// Report to client
+		this.logger.info(`Client started ${id}`)
+		this.#browsers.set(id, session)
+
+		return session
 	}
 
 	/**
 	 * Client is leaving a session
 	 */
-	#leaveSession(client: ClientSocket, subIds: string[]): void {
-		for (const subId of subIds) {
-			this.logger.info(`Client ${client.id} left ${subId}`)
-			client.leave(BonjourRoom(subId))
-
-			this.#removeClientFromSession(client.id, subId)
-		}
-	}
-
-	/**
-	 * Remove a client from a session
-	 */
-	#removeClientFromSession(clientId: string, subId: string): void {
-		const session = this.#browsers.get(subId)
-		if (!session || !session.clientIds.delete(clientId)) return
+	#leaveSession(subId: string): void {
+		this.logger.info(`Client left ${subId}`)
 
 		// Cleanup after a timeout, as restarting the same query immediately causes it to fail
 		setTimeout(() => {
-			if (this.#browsers.has(subId) && session.clientIds.size === 0) {
-				this.logger.info(`Stopping discovery of: ${JSON.stringify(session.filter)}`)
-
+			const session = this.#browsers.get(subId)
+			if (session && this.#serviceEvents.listenerCount(subId) === 0) {
 				this.#browsers.delete(subId)
 
-				session.browser.stop()
+				for (const query of session.queries) {
+					this.logger.info(`Stopping discovery of: ${JSON.stringify(query.filter)}`)
+
+					query.browser.stop()
+				}
 			}
 		}, 500)
 	}
 }
 
 interface BonjourBrowserSession {
-	browser: Browser
-	filter: BonjourBrowserFilter
-	clientIds: Set<string>
+	readonly id: string
+	queries: Array<{
+		browser: Browser
+		filter: BonjourBrowserFilter
+	}>
 }
 
 interface BonjourBrowserFilter {

@@ -19,17 +19,19 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { isSurfaceGroupIdValid } from '@companion-app/shared/Label.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface AddSurfaceGroupModalRef {
 	show(): void
 }
 
 export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function SurfaceEditModal(_props, ref) {
-	const { socket, surfaces } = useContext(RootAppStoreContext)
+	const { surfaces } = useContext(RootAppStoreContext)
 
 	const [show, setShow] = useState(false)
 	const [saveError, setSaveError] = useState<string | null>(null)
 
+	const addGroupMutation = useMutationExt(trpc.surfaces.groupAdd.mutationOptions())
 	const form = useForm({
 		defaultValues: {
 			id: nanoid(),
@@ -39,7 +41,10 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 			setSaveError(null)
 
 			try {
-				await socket.emitPromise('surfaces:group-add', [value.id, value.name])
+				await addGroupMutation.mutateAsync({
+					baseId: value.id,
+					name: value.name,
+				})
 				setShow(false)
 			} catch (err: any) {
 				setSaveError(`Failed to add group: ${err?.message ?? err?.toString() ?? err}`)

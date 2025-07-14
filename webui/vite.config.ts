@@ -56,11 +56,6 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
-			[`${normalizedBase}/socket.io`]: {
-				target: `ws://${upstreamUrl}`,
-				ws: true,
-				rewrite: (path) => path.slice(normalizedBase.length),
-			},
 			'/trpc': {
 				target: `ws://${upstreamUrl}`,
 				ws: true,

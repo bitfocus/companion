@@ -1,47 +1,33 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useState } from 'react'
 import type { VariablesStore } from '~/Stores/VariablesStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
 
 export function useVariablesSubscription(
-	socket: CompanionSocketWrapped,
 	store: VariablesStore,
-	setLoadError?: ((error: string | null) => void) | undefined,
-	retryToken?: string
+	setLoadError?: ((error: string | null) => void) | undefined
 ): boolean {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		setLoadError?.(null)
-		store.resetCustomVariables(null)
-		setReady(false)
-
-		socket
-			.emitPromise('variable-definitions:subscribe', [])
-			.then((variables) => {
+	useSubscription(
+		trpc.variables.definitions.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
 				setLoadError?.(null)
-				store.resetVariables(variables)
+				store.updateDefinitions(null)
+				setReady(false)
+			},
+			onData: (data) => {
+				setLoadError?.(null)
+				store.updateDefinitions(data)
 				setReady(true)
-			})
-			.catch((e) => {
-				setLoadError?.(`Failed to load  variable-definitions list`)
-				console.error('Failed to load  variable-definitions list:', e)
-				store.resetVariables(null)
-			})
-
-		const unsubUpdates = socket.on('variable-definitions:update', (label, change) => {
-			store.applyVariablesChange(label, change)
+			},
+			onError: (error) => {
+				setLoadError?.(`Failed to load variable definitions: ${error.message}`)
+				console.error('Failed to load variable definitions:', error)
+				store.updateDefinitions(null)
+			},
 		})
-
-		return () => {
-			store.resetCustomVariables(null)
-
-			unsubUpdates()
-
-			socket.emitPromise('variable-definitions:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe to variable-definitions list', e)
-			})
-		}
-	}, [socket, store, setLoadError, retryToken])
+	)
 
 	return ready
 }

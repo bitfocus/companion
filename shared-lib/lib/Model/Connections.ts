@@ -37,8 +37,15 @@ export enum ConnectionUpdatePolicy {
 	Beta = 'beta',
 }
 
-export type ClientConnectionsUpdate = ClientConnectionsUpdateUpdateOp | ClientConnectionsUpdateRemoveOp
+export type ClientConnectionsUpdate =
+	| ClientConnectionsUpdateInitOp
+	| ClientConnectionsUpdateUpdateOp
+	| ClientConnectionsUpdateRemoveOp
 
+export interface ClientConnectionsUpdateInitOp {
+	type: 'init'
+	info: Record<string, ClientConnectionConfig>
+}
 export interface ClientConnectionsUpdateRemoveOp {
 	type: 'remove'
 	id: string

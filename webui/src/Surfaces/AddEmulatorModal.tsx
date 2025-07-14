@@ -19,16 +19,19 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface AddEmulatorModalRef {
 	show(): void
 }
 
 export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function SurfaceEditModal(_props, ref) {
-	const { socket, surfaces } = useContext(RootAppStoreContext)
+	const { surfaces } = useContext(RootAppStoreContext)
 
 	const [show, setShow] = useState(false)
 	const [saveError, setSaveError] = useState<string | null>(null)
+
+	const addEmulatorMutation = useMutationExt(trpc.surfaces.emulatorAdd.mutationOptions())
 
 	const form = useForm({
 		defaultValues: {
@@ -39,7 +42,10 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 			setSaveError(null)
 
 			try {
-				await socket.emitPromise('surfaces:emulator-add', [value.id, value.name])
+				await addEmulatorMutation.mutateAsync({
+					baseId: value.id,
+					name: value.name,
+				})
 				setShow(false)
 			} catch (err: any) {
 				setSaveError(`Failed to add emulator: ${err?.message ?? err?.toString() ?? err}`)

@@ -11,37 +11,36 @@
 
 import LogController from '../Log/Controller.js'
 import jsonPatch from 'fast-json-patch'
-import type { UIHandler } from '../UI/Handler.js'
 import type {
 	AllVariableDefinitions,
 	ModuleVariableDefinitions,
 	VariableDefinition,
+	VariableDefinitionUpdate,
+	VariableDefinitionUpdateInitOp,
 } from '@companion-app/shared/Model/Variables.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
-
-const VariableDefinitionsRoom = 'variable-definitions'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import EventEmitter from 'node:events'
 
 /**
  * Variable definitions as defined by the instances/connections
  */
 export class VariablesInstanceDefinitions {
 	readonly #logger = LogController.createLogger('Variables/Definitions')
-	readonly #io: UIHandler
 
 	readonly #variableDefinitions: AllVariableDefinitions = {}
 
-	constructor(io: UIHandler) {
-		this.#io = io
+	readonly #events = new EventEmitter<{ update: [VariableDefinitionUpdate] }>()
+
+	constructor() {
+		this.#events.setMaxListeners(0)
 	}
 
 	forgetConnection(_id: string, label: string): void {
 		if (label !== undefined) {
 			delete this.#variableDefinitions[label]
 
-			if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', label, null)
-			}
+			this.#events.emit('update', { type: 'remove', label: label })
 		}
 	}
 
@@ -52,28 +51,26 @@ export class VariablesInstanceDefinitions {
 			const definitions = (this.#variableDefinitions[labelTo] = oldDefinitions)
 			delete this.#variableDefinitions[labelFrom]
 
-			if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelTo, {
-					type: 'set',
-					variables: definitions,
-				})
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', labelFrom, null)
-			}
+			this.#events.emit('update', { type: 'set', label: labelTo, variables: definitions })
+			this.#events.emit('update', { type: 'remove', label: labelFrom })
 		}
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('variable-definitions:subscribe', () => {
-			client.join(VariableDefinitionsRoom)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'update', signal)
 
-			return this.#variableDefinitions
-		})
+				yield {
+					type: 'init',
+					variables: self.#variableDefinitions,
+				} satisfies VariableDefinitionUpdateInitOp
 
-		client.onPromise('variable-definitions:unsubscribe', () => {
-			client.leave(VariableDefinitionsRoom)
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
 		})
 	}
 
@@ -96,20 +93,14 @@ export class VariablesInstanceDefinitions {
 		const variablesBefore = this.#variableDefinitions[connectionLabel]
 		this.#variableDefinitions[connectionLabel] = variablesObj
 
-		if (this.#io.countRoomMembers(VariableDefinitionsRoom) > 0) {
+		if (this.#events.listenerCount('update') > 0) {
 			if (!variablesBefore) {
-				this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', connectionLabel, {
-					type: 'set',
-					variables: variablesObj,
-				})
+				this.#events.emit('update', { type: 'set', label: connectionLabel, variables: variablesObj })
 			} else {
 				const patch = jsonPatch.compare(variablesBefore, variablesObj || {})
 
 				if (patch.length > 0) {
-					this.#io.emitToRoom(VariableDefinitionsRoom, 'variable-definitions:update', connectionLabel, {
-						type: 'patch',
-						patch: patch,
-					})
+					this.#events.emit('update', { type: 'patch', label: connectionLabel, patch })
 				}
 			}
 		}

@@ -1,7 +1,6 @@
-import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { useContext, useMemo } from 'react'
+import { useMemo } from 'react'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { SocketContext } from '~/util.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface IControlActionStepsAndSetsService {
 	// readonly listId: SomeSocketEntityLocation
@@ -13,7 +12,7 @@ export interface IControlActionStepsAndSetsService {
 	swapSteps: (stepId1: string, stepId2: string) => void
 	setCurrentStep: (stepId: string) => void
 	appendSet: (stepId: string) => void
-	removeSet: (stepId: string, setId: ActionSetId) => void
+	removeSet: (stepId: string, setId: number) => void
 }
 
 export function useControlActionStepsAndSetsService(
@@ -21,17 +20,24 @@ export function useControlActionStepsAndSetsService(
 	confirmModal: React.RefObject<GenericConfirmModalRef>,
 	setSelectedStep: (stepId: string) => void
 ): IControlActionStepsAndSetsService {
-	const socket = useContext(SocketContext)
+	const addStepMutation = useMutationExt(trpc.controls.steps.add.mutationOptions())
+	const removeStepMutation = useMutationExt(trpc.controls.steps.remove.mutationOptions())
+	const duplicateStepMutation = useMutationExt(trpc.controls.steps.duplicate.mutationOptions())
+	const swapStepsMutation = useMutationExt(trpc.controls.steps.swap.mutationOptions())
+	const setCurrentStepMutation = useMutationExt(trpc.controls.steps.setCurrent.mutationOptions())
+
+	const addSetMutation = useMutationExt(trpc.controls.actionSets.add.mutationOptions())
+	const removeSetMutation = useMutationExt(trpc.controls.actionSets.remove.mutationOptions())
 
 	return useMemo(
 		() => ({
 			confirmModal,
 
 			appendStep: () => {
-				socket
-					.emitPromise('controls:step:add', [controlId])
+				addStepMutation
+					.mutateAsync({ controlId })
 					.then((newStep) => {
-						if (newStep) {
+						if (typeof newStep === 'string') {
 							setSelectedStep(`step:${newStep}`)
 							setTimeout(() => setSelectedStep(`step:${newStep}`), 500)
 						}
@@ -42,21 +48,21 @@ export function useControlActionStepsAndSetsService(
 			},
 			removeStep: (stepId: string) => {
 				confirmModal.current?.show('Remove step', 'Are you sure you wish to remove this step?', 'Remove', () => {
-					socket.emitPromise('controls:step:remove', [controlId, stepId]).catch((e) => {
+					removeStepMutation.mutateAsync({ controlId, stepId }).catch((e) => {
 						console.error('Failed to delete step:', e)
 					})
 				})
 			},
 
 			duplicateStep: (stepId: string) => {
-				socket.emitPromise('controls:step:duplicate', [controlId, stepId]).catch((e) => {
+				duplicateStepMutation.mutateAsync({ controlId, stepId }).catch((e) => {
 					console.error('Failed to duplicate step:', e)
 				})
 			},
 
 			swapSteps: (stepId1: string, stepId2: string) => {
-				socket
-					.emitPromise('controls:step:swap', [controlId, stepId1, stepId2])
+				swapStepsMutation
+					.mutateAsync({ controlId, stepId1, stepId2 })
 					.then(() => {
 						setSelectedStep(`step:${stepId2}`)
 					})
@@ -66,25 +72,36 @@ export function useControlActionStepsAndSetsService(
 			},
 
 			setCurrentStep: (stepId: string) => {
-				socket.emitPromise('controls:step:set-current', [controlId, stepId]).catch((e) => {
+				setCurrentStepMutation.mutateAsync({ controlId, stepId }).catch((e) => {
 					console.error('Failed to set step:', e)
 				})
 			},
 
 			appendSet: (stepId: string) => {
-				socket.emitPromise('controls:action-set:add', [controlId, stepId]).catch((e) => {
+				addSetMutation.mutateAsync({ controlId, stepId }).catch((e) => {
 					console.error('Failed to append set:', e)
 				})
 			},
 
-			removeSet: (stepId: string, setId: ActionSetId) => {
+			removeSet: (stepId: string, setId: number) => {
 				confirmModal.current?.show('Remove set', 'Are you sure you wish to remove this group?', 'Remove', () => {
-					socket.emitPromise('controls:action-set:remove', [controlId, stepId, setId]).catch((e) => {
+					removeSetMutation.mutateAsync({ controlId, stepId, setId }).catch((e) => {
 						console.error('Failed to delete set:', e)
 					})
 				})
 			},
 		}),
-		[socket, controlId, confirmModal, setSelectedStep]
+		[
+			controlId,
+			confirmModal,
+			setSelectedStep,
+			addStepMutation,
+			removeStepMutation,
+			duplicateStepMutation,
+			swapStepsMutation,
+			setCurrentStepMutation,
+			addSetMutation,
+			removeSetMutation,
+		]
 	)
 }

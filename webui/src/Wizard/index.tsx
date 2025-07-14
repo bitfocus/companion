@@ -11,9 +11,11 @@ import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { WIZARD_CURRENT_VERSION } from './Constants.js'
 import { makeAbsolutePath } from '~/util.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
+import { toJS } from 'mobx'
 
 export function WizardModal(): React.JSX.Element {
-	const { socket, showWizardEvent } = useContext(RootAppStoreContext)
+	const { showWizardEvent, userConfig } = useContext(RootAppStoreContext)
 
 	const [currentStep, setCurrentStep] = useState(1)
 	const [maxSteps, setMaxSteps] = useState(7)
@@ -26,36 +28,40 @@ export function WizardModal(): React.JSX.Element {
 	const [clear, setClear] = useState(true)
 
 	const getConfig = useCallback(() => {
-		socket
-			.emitPromise('userconfig:get-all', [])
-			.then((config) => {
-				setStartConfig(config)
-				setOldConfig(config)
-				setNewConfig(config)
+		if (!userConfig.properties) {
+			setError('Config is not loaded')
+			return
+		}
 
-				if (config.gridSize.minColumn === 0 && config.gridSize.minRow === 0) {
-					setMaxSteps(7)
-					setApplyStep(6)
-					setAllowGridStep(1)
-				} else {
-					setMaxSteps(6)
-					setApplyStep(5)
-					setAllowGridStep(0)
-				}
-			})
-			.catch((e) => {
-				setError('Could not load configuration for wizard.  Please close and try again.')
-				console.error('Failed to load user config', e)
-			})
-	}, [socket])
+		// Copy the config from the main store
+		const config = toJS(userConfig.properties)
+
+		setError(null)
+		setStartConfig(config)
+		setOldConfig(config)
+		setNewConfig(config)
+
+		if (config.gridSize.minColumn === 0 && config.gridSize.minRow === 0) {
+			setMaxSteps(7)
+			setApplyStep(6)
+			setAllowGridStep(1)
+		} else {
+			setMaxSteps(6)
+			setApplyStep(5)
+			setAllowGridStep(0)
+		}
+	}, [userConfig])
 
 	const [show, setShow] = useState(false)
 
+	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
+	const setConfigKeysMutation = useMutationExt(trpc.userConfig.setConfigKeys.mutationOptions())
+
 	const doClose = useCallback(() => {
-		socket.emit('set_userconfig_key', 'setup_wizard', WIZARD_CURRENT_VERSION)
+		setConfigKeyMutation.mutate({ key: 'setup_wizard', value: WIZARD_CURRENT_VERSION })
 		setShow(false)
 		setClear(true)
-	}, [socket])
+	}, [setConfigKeyMutation])
 
 	const doNextStep = useCallback(() => {
 		setCurrentStep((currentStep) => {
@@ -93,13 +99,13 @@ export function WizardModal(): React.JSX.Element {
 				}
 			}
 
-			socket.emit('set_userconfig_keys', saveConfig)
+			setConfigKeysMutation.mutate({ values: saveConfig })
 
 			setOldConfig(newConfig)
 
 			doNextStep()
 		},
-		[socket, newConfig, oldConfig, doNextStep]
+		[setConfigKeysMutation, newConfig, oldConfig, doNextStep]
 	)
 
 	const setValue = (key: keyof UserConfigModel, value: any) => {

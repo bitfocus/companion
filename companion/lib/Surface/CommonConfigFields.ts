@@ -27,6 +27,7 @@ export const BrightnessConfigField: CompanionSurfaceConfigField = {
 	min: 1,
 	step: 1,
 	max: 100,
+	range: true,
 }
 
 export const RotationConfigField: CompanionSurfaceConfigField = {
