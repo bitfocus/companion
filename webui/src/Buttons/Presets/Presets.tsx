@@ -68,7 +68,7 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 		// Show loading or an error
 		return (
 			<CRow>
-				<LoadingRetryOrError error={presetsError} dataReady={!!presetsMap} doRetry={doRetryPresetsLoad} />
+				<LoadingRetryOrError error={presetsError} dataReady={false} doRetry={doRetryPresetsLoad} design="pulse" />
 			</CRow>
 		)
 	}

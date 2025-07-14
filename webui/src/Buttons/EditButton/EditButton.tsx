@@ -118,7 +118,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 			{controlId ? (
 				<>
 					<GenericConfirmModal ref={resetModalRef} />
-					<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
+					<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} design="pulse" />
 					{hasConfig && dataReady && (
 						<EditButtonContent
 							resetModalRef={resetModalRef}

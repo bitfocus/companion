@@ -95,7 +95,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 		<div className="edit-button-panel flex-form">
 			<GenericConfirmModal ref={resetModalRef} />
 
-			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} />
+			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={doRetryLoad} design="pulse" />
 			{config ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					<MyErrorBoundary>

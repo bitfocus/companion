@@ -207,7 +207,7 @@ export const TabletView = observer(function TabletView() {
 						<CRow className="flex-grow-1">
 							<div className="cycle-layout">
 								<div></div>
-								<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} />
+								<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} design="pulse-xl" />
 							</div>
 						</CRow>
 					)}

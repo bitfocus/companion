@@ -445,6 +445,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 									console.error('Error refetching', err)
 								})
 							}}
+							design="pulse"
 						/>
 					)}
 

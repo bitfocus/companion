@@ -139,7 +139,12 @@ export const Emulator = observer(function Emulator() {
 				</>
 			) : (
 				<CRow className={'loading'}>
-					<LoadingRetryOrError dataReady={false} error={config.error || imagesSub.error} doRetry={doRetryLoad} />
+					<LoadingRetryOrError
+						dataReady={false}
+						error={config.error || imagesSub.error}
+						doRetry={doRetryLoad}
+						design="pulse-xl"
+					/>
 				</CRow>
 			)}
 		</div>

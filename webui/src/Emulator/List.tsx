@@ -56,7 +56,7 @@ export const EmulatorList = observer(function EmulatorList() {
 					</CRow>
 				) : (
 					<CRow style={{ margin: '20% 0' }}>
-						<LoadingRetryOrError error={emulatorList.error} dataReady={!!emulatorList.data} doRetry={doRetryLoad} />
+						<LoadingRetryOrError error={emulatorList.error} dataReady={false} doRetry={doRetryLoad} design="pulse-xl" />
 					</CRow>
 				)}
 

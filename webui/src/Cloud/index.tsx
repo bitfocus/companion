@@ -45,7 +45,11 @@ export function CloudPage(): React.JSX.Element {
 				.
 			</p>
 
-			{cloudState ? <CloudPageContent cloudState={cloudState} /> : <LoadingRetryOrError dataReady={false} />}
+			{cloudState ? (
+				<CloudPageContent cloudState={cloudState} />
+			) : (
+				<LoadingRetryOrError dataReady={false} design="pulse" />
+			)}
 		</div>
 	)
 }

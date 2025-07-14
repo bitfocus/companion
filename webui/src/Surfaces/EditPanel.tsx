@@ -223,7 +223,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 	if (!dataReady || configLoadError) {
 		return (
 			<>
-				<LoadingRetryOrError error={configLoadError} dataReady={dataReady} doRetry={doRetryConfigLoad} size="large" />
+				<LoadingRetryOrError error={configLoadError} dataReady={dataReady} doRetry={doRetryConfigLoad} design="pulse" />
 			</>
 		)
 	}

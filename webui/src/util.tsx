@@ -288,14 +288,14 @@ interface LoadingRetryOrErrorProps {
 	dataReady: boolean
 	doRetry?: () => void
 	autoRetryAfter?: number | null
-	size?: 'normal' | 'large'
+	design: 'bar' | 'pulse' | 'pulse-xl'
 }
 export function LoadingRetryOrError({
 	error,
 	dataReady,
 	doRetry,
 	autoRetryAfter = null,
-	size = 'normal',
+	design,
 }: LoadingRetryOrErrorProps): React.JSX.Element {
 	const [countdown, setCountdown] = useState(autoRetryAfter)
 
@@ -339,9 +339,13 @@ export function LoadingRetryOrError({
 			)}
 			{!dataReady && !error && (
 				<CCol sm={12}>
-					{size === 'large' ? (
+					{design === 'pulse' ? (
 						<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
 							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
+						</div>
+					) : design === 'pulse-xl' ? (
+						<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+							<PuffLoader loading={true} size={160} color={PRIMARY_COLOR} />
 						</div>
 					) : (
 						<LoadingBar />
