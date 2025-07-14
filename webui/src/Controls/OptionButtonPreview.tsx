@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/TRPC'
 
 interface OptionButtonPreviewProps {
-	location: ControlLocation | undefined
+	controlId: string
 	options: Record<string, any>
 }
 
@@ -14,11 +13,11 @@ interface OptionButtonPreviewProps {
  * @param {string} param.location where this preview is located (if any)
  * @returns
  */
-export function OptionButtonPreview({ location, options }: OptionButtonPreviewProps): React.JSX.Element {
+export function OptionButtonPreview({ controlId, options }: OptionButtonPreviewProps): React.JSX.Element {
 	const [image, setImage] = useState<string | null>(null)
 	useSubscription(
 		trpc.preview.graphics.reference.subscriptionOptions(
-			{ location, options },
+			{ controlId, options },
 			{
 				onStarted: () => {
 					setImage(null)

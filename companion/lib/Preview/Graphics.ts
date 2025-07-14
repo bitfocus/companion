@@ -1,14 +1,14 @@
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
-import type { GraphicsController } from './Controller.js'
-import type { IPageStore } from '../Page/Store.js'
-import type { ImageResult } from './ImageResult.js'
+import { ImageResult } from '../Graphics/ImageResult.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
-import type { ControlsController } from '../Controls/Controller.js'
+import { GraphicsController } from '../Graphics/Controller.js'
+import { IPageStore } from '../Page/Store.js'
+import { ControlsController } from '../Controls/Controller.js'
 
 export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),
@@ -40,7 +40,7 @@ const getLocationSubId = (location: ControlLocation): string =>
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class GraphicsPreview {
+export class PreviewGraphics {
 	readonly #logger = LogController.createLogger('Graphics/Preview')
 
 	readonly #graphicsController: GraphicsController
@@ -107,12 +107,12 @@ export class GraphicsPreview {
 			reference: publicProcedure
 				.input(
 					z.object({
-						location: zodLocation.optional(),
+						controlId: z.string(),
 						options: z.object({}).catchall(z.any()),
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
-					const { location, options } = input
+					const { controlId, options } = input
 					const id = nanoid()
 
 					try {
@@ -121,6 +121,7 @@ export class GraphicsPreview {
 						// Start wathing for changes to the reference
 						const changes = toIterable(self.#renderEvents, `reference:${id}`, signal)
 
+						const location = self.#pageStore.getLocationOfControlId(controlId)
 						const parser = self.#controlsController.createVariablesAndExpressionParser(location, null)
 
 						// Do a resolve of the reference for the starting image
@@ -129,7 +130,7 @@ export class GraphicsPreview {
 						// Track the subscription, to allow it to be invalidated
 						self.#buttonReferencePreviews.set(id, {
 							id,
-							location,
+							controlId,
 							options,
 							resolvedLocation: result.location,
 							referencedVariableIds: Array.from(result.referencedVariables),
@@ -177,58 +178,73 @@ export class GraphicsPreview {
 		}
 	}
 
-	onVariablesChanged(allChangedSet: Set<string>): void {
+	onControlIdsLocationChanged(controlIds: string[]): void {
+		const controlIdsSet = new Set(controlIds)
+
+		// Lookup any sessions
+		for (const previewSession of this.#buttonReferencePreviews.values()) {
+			if (!controlIdsSet.has(previewSession.controlId)) continue
+
+			// Recheck the reference
+			this.#triggerRecheck(previewSession)
+		}
+	}
+
+	onVariablesChanged(allChangedSet: Set<string>, fromControlId: string | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.length) continue
+
+			// If the changed variables belong to a control, only update if the query is for that control
+			if (fromControlId && previewSession.controlId != fromControlId) continue
 
 			const matchingChangedVariable = previewSession.referencedVariableIds.some((variable) =>
 				allChangedSet.has(variable)
 			)
 			if (!matchingChangedVariable) continue
 
-			const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.location, null)
-
-			// Resolve the new location
-			const result = ParseInternalControlReference(
-				this.#logger,
-				parser,
-				previewSession.location,
-				previewSession.options,
-				true
-			)
-
-			const lastResolvedLocation = previewSession.resolvedLocation
-
-			previewSession.referencedVariableIds = Array.from(result.referencedVariables)
-			previewSession.resolvedLocation = result.location
-
-			if (!result.location) {
-				// Now has an invalid location
-				this.#renderEvents.emit(`reference:${previewSession.id}`, null)
-				continue
-			}
-
-			// Check if it has changed
-			if (
-				lastResolvedLocation &&
-				result.location.pageNumber == lastResolvedLocation.pageNumber &&
-				result.location.row == lastResolvedLocation.row &&
-				result.location.column == lastResolvedLocation.column
-			)
-				continue
-
-			this.#renderEvents.emit(
-				`reference:${previewSession.id}`,
-				this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
-			)
+			// Recheck the reference
+			this.#triggerRecheck(previewSession)
 		}
+	}
+
+	#triggerRecheck(previewSession: PreviewSession): void {
+		const location = this.#pageStore.getLocationOfControlId(previewSession.controlId)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+
+		// Resolve the new location
+		const result = ParseInternalControlReference(this.#logger, parser, location, previewSession.options, true)
+
+		const lastResolvedLocation = previewSession.resolvedLocation
+
+		previewSession.referencedVariableIds = Array.from(result.referencedVariables)
+		previewSession.resolvedLocation = result.location
+
+		if (!result.location) {
+			// Now has an invalid location
+			this.#renderEvents.emit(`reference:${previewSession.id}`, null)
+			return
+		}
+
+		// Check if it has changed
+		if (
+			lastResolvedLocation &&
+			result.location.pageNumber == lastResolvedLocation.pageNumber &&
+			result.location.row == lastResolvedLocation.row &&
+			result.location.column == lastResolvedLocation.column
+		)
+			return
+
+		this.#renderEvents.emit(
+			`reference:${previewSession.id}`,
+			this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
+		)
 	}
 }
 
 interface PreviewSession {
-	id: string
-	location: ControlLocation | undefined
+	readonly id: string
+	readonly controlId: string
 	options: Record<string, any>
 	resolvedLocation: ControlLocation | null
 	referencedVariableIds: string[]

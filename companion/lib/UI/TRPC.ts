@@ -90,9 +90,7 @@ export function createTrpcRouter(registry: Registry) {
 		connections: registry.instance.createTrpcRouter(),
 		cloud: registry.cloud.createTrpcRouter(),
 
-		preview: router({
-			graphics: registry.preview.createTrpcRouter(),
-		}),
+		preview: registry.preview.createTrpcRouter(),
 	})
 }
 

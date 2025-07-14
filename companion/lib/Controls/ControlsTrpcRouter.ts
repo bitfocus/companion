@@ -1,7 +1,7 @@
 import { publicProcedure } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
 import z from 'zod'
-import { zodLocation } from '../Graphics/Preview.js'
+import { zodLocation } from '../Preview/Graphics.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { ControlsController } from './Controller.js'
 import type { IPageStore } from '../Page/Store.js'

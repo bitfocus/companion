@@ -218,6 +218,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 						headlineExpanded={headlineExpanded}
 						definitionName={definitionName}
 						location={location}
+						controlId={controlId}
 						readonly={readonly}
 					/>
 

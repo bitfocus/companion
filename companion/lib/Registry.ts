@@ -6,7 +6,6 @@ import LogController, { Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
 import { GraphicsController } from './Graphics/Controller.js'
-import { GraphicsPreview } from './Graphics/Preview.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
 import { DataUserConfig } from './Data/UserConfig.js'
@@ -27,6 +26,7 @@ import { ServiceApi } from './Service/ServiceApi.js'
 import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
+import { PreviewController } from './Preview/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -108,7 +108,7 @@ export class Registry {
 	/**
 	 * The core page controller
 	 */
-	preview!: GraphicsPreview
+	preview!: PreviewController
 	/**
 	 * The core service controller
 	 */
@@ -204,7 +204,7 @@ export class Registry {
 
 			this.controls = new ControlsController(this, controlEvents)
 			this.graphics = new GraphicsController(this.controls, pageStore, this.userconfig, this.variables.values)
-			this.preview = new GraphicsPreview(this.graphics, pageStore, this.controls)
+
 			this.surfaces = new SurfaceController(this.db, {
 				controls: this.controls,
 				graphics: this.graphics,
@@ -282,6 +282,14 @@ export class Registry {
 				pageStore
 			)
 
+			this.preview = new PreviewController(
+				this.graphics,
+				pageStore,
+				this.controls,
+				this.variables.values,
+				this.instance.definitions
+			)
+
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
 				setImmediate(() => {
 					// give the change a chance to be pushed to the ui first
@@ -305,8 +313,12 @@ export class Registry {
 				this.internalModule.variablesChanged(all_changed_variables_set)
 				this.controls.onVariablesChanged(all_changed_variables_set)
 				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-				this.preview.onVariablesChanged(all_changed_variables_set)
+				this.preview.onVariablesChanged(all_changed_variables_set, null)
 				this.surfaces.onVariablesChanged(all_changed_variables_set)
+			})
+
+			this.page.on('controlIdsMoved', (controlIds) => {
+				this.preview.onControlIdsLocationChanged(controlIds)
 			})
 
 			this.graphics.on('button_drawn', (location, render) => {
@@ -377,6 +389,7 @@ export class Registry {
 
 			this.#logger.error(`Failed to start companion: ${e}`)
 			this.#logger.debug(e)
+			this.#logger.debug((e as Error)?.stack)
 			this.exit(true, false)
 		} finally {
 			this.#isReady = true

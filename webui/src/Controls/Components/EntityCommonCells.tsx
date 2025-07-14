@@ -23,6 +23,7 @@ interface EntityCommonCellsProps {
 	headlineExpanded: boolean
 	definitionName: string
 	location: ControlLocation | undefined
+	controlId: string
 	readonly: boolean
 }
 
@@ -35,6 +36,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	headlineExpanded,
 	definitionName,
 	location,
+	controlId,
 	readonly,
 }: EntityCommonCellsProps): React.JSX.Element {
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
@@ -58,7 +60,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 			<div className="entity-cells-wrapper">
 				{showButtonPreview && (
 					<div className="cell-button-preview">
-						<OptionButtonPreview location={location} options={entity.options} />
+						<OptionButtonPreview controlId={controlId} options={entity.options} />
 					</div>
 				)}
 
