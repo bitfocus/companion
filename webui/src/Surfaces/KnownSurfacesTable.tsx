@@ -86,6 +86,7 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 								key={group.id}
 								surface={group.surfaces[0]}
 								index={group.index}
+								isInGroup={false}
 								deleteEmulator={deleteEmulator}
 								forgetSurface={forgetSurface}
 								noBorder={false}
@@ -185,6 +186,7 @@ function ManualGroupRow({
 					key={surface.id}
 					surface={surface}
 					index={undefined}
+					isInGroup={true}
 					deleteEmulator={deleteEmulator}
 					forgetSurface={forgetSurface}
 					noBorder={i !== arr.length - 1} // No border on the last item
@@ -199,6 +201,7 @@ function ManualGroupRow({
 interface SurfaceRowProps {
 	surface: ClientSurfaceItem
 	index: number | undefined
+	isInGroup: boolean
 	deleteEmulator: (surfaceId: string) => void
 	forgetSurface: (surfaceId: string) => void
 	noBorder: boolean
@@ -209,6 +212,7 @@ interface SurfaceRowProps {
 const SurfaceRow = observer(function SurfaceRow({
 	surface,
 	index,
+	isInGroup,
 	deleteEmulator,
 	forgetSurface,
 	noBorder,
@@ -240,7 +244,7 @@ const SurfaceRow = observer(function SurfaceRow({
 			onClick={handleSurfaceClick}
 		>
 			<div className="grid-cell">{index !== undefined ? `#${index}` : ''}</div>
-			<div className={classNames('grid-cell', { 'ps-4': index === undefined })}>
+			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
 				<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
 				{!!surface.hasFirmwareUpdates && (
 					<>
