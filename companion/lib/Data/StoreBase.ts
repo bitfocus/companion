@@ -153,15 +153,18 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * Save a backup of the db
 	 */
 	private saveBackup(): void {
+		const timeBefore = performance.now()
 		this.store
 			?.backup(`${this.cfgBakFile}`)
 			.then(() => {
 				// perform a flush of the WAL file. It may be a little aggressive for this to be a TRUNCATE vs FULL, but it ensures the WAL doesn't grow infinitely
 				this.store.pragma('wal_checkpoint(TRUNCATE)')
 
+				const saveDuration = performance.now() - timeBefore
+
 				this.lastsave = Date.now()
 				this.dirty = false
-				this.logger.debug('backup complete')
+				this.logger.info(`backup complete in ${saveDuration}ms`)
 			})
 			.catch((err) => {
 				this.logger.warn(`backup failed: ${err.message}`)
