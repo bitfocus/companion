@@ -5,8 +5,8 @@ import { CButton, CForm, CModalBody, CModalFooter, CModalHeader } from '@coreui/
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
-import { useQuery } from '@tanstack/react-query'
-import { trpc, useMutationExt } from '~/TRPC'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { trpc } from '~/TRPC'
 
 export interface SetupSatelliteModalRef {
 	show(surfaceInfo: ClientDiscoveredSurfaceInfoSatellite): void
@@ -25,7 +25,8 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 		}
 	}
 
-	const saveMutation = useMutationExt(trpc.surfaceDiscovery.setupSatellite.mutationOptions())
+	const saveMutation = useMutation(trpc.surfaceDiscovery.setupSatellite.mutationOptions())
+	const saveMutationAsync = saveMutation.mutateAsync
 
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {
@@ -37,20 +38,18 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 		// setData(null)
 		// setShow(false)
 
-		saveMutation
-			.mutateAsync({
-				satelliteInfo: data,
-				companionAddress: selectedAddress,
-			})
-			.then(
-				() => {
-					setShow(false)
-				},
-				(e) => {
-					console.error('Failed to setup satellite: ', e)
-				}
-			)
-	}, [saveMutation, data, selectedAddress])
+		saveMutationAsync({
+			satelliteInfo: data,
+			companionAddress: selectedAddress,
+		}).then(
+			() => {
+				setShow(false)
+			},
+			(e) => {
+				console.error('Failed to setup satellite: ', e)
+			}
+		)
+	}, [saveMutationAsync, data, selectedAddress])
 
 	const externalAddressesQuery = useQuery(
 		trpc.surfaceDiscovery.externalAddresses.queryOptions(undefined, {

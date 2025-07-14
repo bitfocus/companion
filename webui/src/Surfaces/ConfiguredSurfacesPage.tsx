@@ -8,7 +8,8 @@ import { KnownSurfacesTable } from './KnownSurfacesTable'
 import { MyErrorBoundary } from '~/util.js'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc } from '~/TRPC'
+import { useMutation } from '@tanstack/react-query'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
 	const navigate = useNavigate()
@@ -22,19 +23,20 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 	const [scanError, setScanError] = useState<string | null>(null)
 
-	const rescanUsbMutation = useMutationExt(trpc.surfaces.rescanUsb.mutationOptions())
+	const rescanUsbMutation = useMutation(trpc.surfaces.rescanUsb.mutationOptions())
+	const rescanUsbMutationAsync = rescanUsbMutation.mutateAsync
+
 	const refreshUSB = useCallback(() => {
 		setScanError(null)
 
-		rescanUsbMutation // TODO: 30s timeout?
-			.mutateAsync()
+		rescanUsbMutationAsync() // TODO: 30s timeout?
 			.then((errorMsg) => {
 				setScanError(errorMsg || null)
 			})
 			.catch((err) => {
 				console.error('Refresh USB failed', err)
 			})
-	}, [rescanUsbMutation])
+	}, [rescanUsbMutationAsync])
 
 	const addEmulator = useCallback(() => {
 		addEmulatorModalRef.current?.show()

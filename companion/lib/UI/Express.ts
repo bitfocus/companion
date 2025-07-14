@@ -62,6 +62,8 @@ export class UIExpress {
 	constructor(internalApiRouter: Express.Router) {
 		this.app.use(cors())
 
+		// this.app.set('trust proxy', 'loopback') // TODO - set this from an env variable
+
 		this.app.use((_req, res, next) => {
 			res.set('X-App', 'Bitfocus Companion')
 			next()

@@ -47,6 +47,7 @@ export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
 export type ExportTriggerContentv6 = Record<string, any> // TODO
 
 export interface ExportPageContentv6 {
+	id?: string // Added in v4.0.4
 	name: string
 	controls: Record<number, Record<number, ExportControlv6>>
 

@@ -7,6 +7,7 @@ import {
 	faTerminal,
 	faTrash,
 	faEllipsisV,
+	faFlask,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -108,6 +109,11 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 							color="#f80"
 							title="This module has not been updated for Companion 3.0, and may not work fully"
 						/>{' '}
+					</>
+				)}
+				{moduleVersion?.isBeta && (
+					<>
+						<FontAwesomeIcon icon={faFlask} title="Beta" />{' '}
 					</>
 				)}
 				{moduleVersion?.displayName ?? connection.moduleVersionId}
