@@ -355,6 +355,7 @@ export class ImportExportController {
 			referencedConnectionLabels: Set<string>
 		): ExportPageContentv6 => {
 			const pageExport: ExportPageContentv6 = {
+				id: pageInfo.id,
 				name: pageInfo.name,
 				controls: {},
 				gridSize: this.#userConfigController.getKey('gridSize'),
