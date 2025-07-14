@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { SocketContext } from '~/util.js'
+import React, { useMemo, useRef } from 'react'
 import { NotificationsManager, NotificationsManagerRef } from '~/Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
@@ -28,17 +27,16 @@ import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscr
 import { HelpModal, HelpModalRef } from './Connections/HelpModal.js'
 import { ViewControlStore } from '~/Stores/ViewControlStore.js'
 import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
-import { useConnectionCollectionsSubscription } from './Hooks/useConnectionCollectionsSubscription.js'
-import { useTriggerCollectionsSubscription } from './Hooks/useTriggerCollectionsSubscription.js'
+import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
+import { trpc } from './TRPC.js'
+import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
 }
 
 export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX.Element {
-	const socket = useContext(SocketContext)
-
 	const notifierRef = useRef<NotificationsManagerRef>(null)
 	const helpModalRef = useRef<HelpModalRef>(null)
 	const whatsNewModalRef = useRef<WhatsNewModalRef>(null)
@@ -47,12 +45,11 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		const showWizardEvent = new EventTarget()
 
 		return {
-			socket,
 			notifier: notifierRef,
 			helpViewer: helpModalRef,
 			whatsNewModal: whatsNewModalRef,
 
-			modules: new ModuleInfoStore(socket),
+			modules: new ModuleInfoStore(),
 			connections: new ConnectionsStore(),
 
 			activeLearns: observable.set(),
@@ -75,48 +72,42 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore
-	}, [socket])
+	}, [])
 
-	const [loadedEventDefinitions, setLoadedEventDefinitions] = useState(false)
-
-	const actionDefinitionsReady = useEntityDefinitionsSubscription(socket, rootStore.entityDefinitions.actions)
-	const feedbackDefinitionsReady = useEntityDefinitionsSubscription(socket, rootStore.entityDefinitions.feedbacks)
-	const moduleInfoReady = useModuleInfoSubscription(socket, rootStore.modules)
-	const moduleStoreReady = useModuleStoreListSubscription(socket, rootStore.modules)
-	const connectionsReady = useConnectionsConfigSubscription(socket, rootStore.connections)
-	const connectionGroupsReady = useConnectionCollectionsSubscription(socket, rootStore.connections)
-	const triggersListReady = useTriggersListSubscription(socket, rootStore.triggersList)
-	const triggerGroupsReady = useTriggerCollectionsSubscription(socket, rootStore.triggersList)
-	const pagesReady = usePagesInfoSubscription(socket, rootStore.pages)
-	const userConfigReady = useUserConfigSubscription(socket, rootStore.userConfig)
-	const surfacesReady = useSurfacesSubscription(socket, rootStore.surfaces)
-	const outboundSurfacesReady = useOutboundSurfacesSubscription(socket, rootStore.surfaces)
-	const variablesReady = useVariablesSubscription(socket, rootStore.variablesStore)
-	const customVariablesReady = useCustomVariablesSubscription(socket, rootStore.variablesStore)
-	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(socket, rootStore.variablesStore)
-	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(
-		socket,
-		rootStore.moduleStoreRefreshProgress
+	const actionDefinitionsReady = useEntityDefinitionsSubscription(
+		rootStore.entityDefinitions.actions,
+		trpc.connections.definitions.actions
 	)
-
-	useEffect(() => {
-		if (socket) {
-			socket
-				.emitPromise('event-definitions:get', [])
-				.then((definitions) => {
-					setLoadedEventDefinitions(true)
-					rootStore.eventDefinitions.setDefinitions(definitions)
-				})
-				.catch((e) => {
-					console.error('Failed to load event definitions', e)
-				})
-		}
-	}, [socket, rootStore])
-
-	const activeLearnRequestsReady = useActiveLearnRequests(socket, rootStore.activeLearns)
+	const feedbackDefinitionsReady = useEntityDefinitionsSubscription(
+		rootStore.entityDefinitions.feedbacks,
+		trpc.connections.definitions.feedbacks
+	)
+	const moduleInfoReady = useModuleInfoSubscription(rootStore.modules)
+	const moduleStoreReady = useModuleStoreListSubscription(rootStore.modules)
+	const connectionsReady = useConnectionsConfigSubscription(rootStore.connections)
+	const connectionGroupsReady = useGenericCollectionsSubscription(
+		rootStore.connections,
+		trpc.connections.collections.watchQuery,
+		undefined
+	)
+	const triggersListReady = useTriggersListSubscription(rootStore.triggersList)
+	const triggerGroupsReady = useGenericCollectionsSubscription(
+		rootStore.triggersList,
+		trpc.controls.triggers.collections.watchQuery,
+		undefined
+	)
+	const { ready: pagesReady } = usePagesInfoSubscription(rootStore.pages)
+	const { ready: userConfigReady } = useUserConfigSubscription(rootStore.userConfig)
+	const surfacesReady = useSurfacesSubscription(rootStore.surfaces)
+	const outboundSurfacesReady = useOutboundSurfacesSubscription(rootStore.surfaces)
+	const variablesReady = useVariablesSubscription(rootStore.variablesStore)
+	const customVariablesReady = useCustomVariablesSubscription(rootStore.variablesStore)
+	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(rootStore.variablesStore)
+	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.moduleStoreRefreshProgress)
+	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)
+	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
 
 	const steps: boolean[] = [
-		loadedEventDefinitions,
 		moduleInfoReady,
 		moduleStoreReady,
 		connectionsReady,
@@ -132,6 +123,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		pagesReady,
 		triggersListReady,
 		triggerGroupsReady,
+		entityDefinitionsReady,
 		activeLearnRequestsReady,
 		moduleStoreProgressReady,
 	]

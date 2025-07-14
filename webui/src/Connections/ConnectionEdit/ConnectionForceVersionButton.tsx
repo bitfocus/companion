@@ -22,6 +22,7 @@ import { DropdownChoice } from '@companion-module/base'
 import { useComputed } from '~/util.js'
 import { useConnectionVersionSelectOptions } from './useConnectionVersionSelectOptions.js'
 import { ModuleVersionsRefresh } from '../ModuleVersionsRefresh.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface ConnectionForceVersionButtonProps {
 	connectionId: string
@@ -36,7 +37,7 @@ export function ConnectionForceVersionButton({
 	currentModuleId,
 	currentVersionId,
 }: ConnectionForceVersionButtonProps): React.JSX.Element {
-	const { socket, modules } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 
 	const [show, setShow] = useState(false)
 
@@ -45,6 +46,8 @@ export function ConnectionForceVersionButton({
 		buttonRef.current?.focus()
 	}
 
+	const setModuleAndVersionMutation = useMutationExt(trpc.connections.setModuleAndVersion.mutationOptions())
+
 	const [saveError, setSaveError] = useState<string | null>(null)
 	const form = useForm({
 		defaultValues: {
@@ -52,11 +55,11 @@ export function ConnectionForceVersionButton({
 			versionId: currentVersionId,
 		},
 		onSubmit: async ({ value }) => {
-			const error = await socket.emitPromise('connections:set-module-and-version', [
+			const error = await setModuleAndVersionMutation.mutateAsync({
 				connectionId,
-				value.moduleId,
-				value.versionId,
-			])
+				moduleId: value.moduleId,
+				versionId: value.versionId,
+			})
 			if (error) {
 				setSaveError(error)
 			} else {

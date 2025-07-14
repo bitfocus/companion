@@ -267,12 +267,17 @@ export class ConnectionConfigStore {
 		this.commitChanges(changedIds, true)
 	}
 
-	findActiveUsagesOfModule(moduleId: string): { connectionIds: string[]; labels: string[] } {
+	findActiveUsagesOfModule(moduleId: string, versionId?: string): { connectionIds: string[]; labels: string[] } {
 		const connectionIds: string[] = []
 		const labels: string[] = []
 
 		for (const [id, config] of this.#store) {
-			if (config && config.instance_type === moduleId && config.enabled) {
+			if (
+				config &&
+				config.instance_type === moduleId &&
+				config.enabled &&
+				(versionId === undefined || config.moduleVersionId === versionId)
+			) {
 				connectionIds.push(id)
 				labels.push(config.label)
 			}

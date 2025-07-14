@@ -1,23 +1,23 @@
 import React, { useContext } from 'react'
 import { CButton, CCallout } from '@coreui/react'
-import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { PresetDefinitionsStore } from './PresetDefinitionsStore'
 
 interface PresetsConnectionListProps {
-	presets: Record<string, Record<string, UIPresetDefinition> | undefined>
+	presetsDefinitionsStore: PresetDefinitionsStore
 	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
 }
 export const PresetsConnectionList = observer(function PresetsConnectionList({
-	presets,
+	presetsDefinitionsStore,
 	setConnectionAndCategory,
 }: PresetsConnectionListProps) {
 	const { modules, connections } = useContext(RootAppStoreContext)
 
 	// Sort the connections by the same order as the connections list
-	const sortedPresets = Object.entries(presets).sort(
+	const sortedPresets = Array.from(presetsDefinitionsStore.presets).sort(
 		([a], [b]) =>
 			(connections.getInfo(a)?.sortOrder ?? Number.POSITIVE_INFINITY) -
 			(connections.getInfo(b)?.sortOrder ?? Number.POSITIVE_INFINITY)

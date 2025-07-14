@@ -1,3 +1,4 @@
+import z from 'zod'
 import { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
 
@@ -56,16 +57,24 @@ export interface EntitySupportedChildGroupDefinition {
 	booleanFeedbacksOnly?: boolean
 }
 
-// TODO: confirm this is sensible
-export type SomeSocketEntityLocation =
-	// | 'trigger_events'
-	| 'feedbacks'
-	| 'trigger_actions'
-	| {
-			// button actions
-			stepId: string
-			setId: ActionSetId
-	  }
+const zodActionSetId: z.ZodSchema<ActionSetId> = z.union([
+	z.literal('down'),
+	z.literal('up'),
+	z.literal('rotate_left'),
+	z.literal('rotate_right'),
+	z.number(),
+])
+
+export const zodEntityLocation = z.union([
+	z.literal('feedbacks'),
+	z.literal('trigger_actions'),
+	z.object({
+		stepId: z.string(),
+		setId: zodActionSetId,
+	}),
+])
+
+export type SomeSocketEntityLocation = z.infer<typeof zodEntityLocation>
 
 export function stringifySocketEntityLocation(location: SomeSocketEntityLocation): string {
 	if (typeof location === 'string') return location

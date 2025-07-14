@@ -3,21 +3,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { trpc, useMutationExt } from '~/TRPC'
 
 interface ModuleVersionsRefreshProps {
 	moduleId: string | null
 }
 export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({ moduleId }: ModuleVersionsRefreshProps) {
-	const { socket, moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
+	const { moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
 
 	const refreshProgress = (moduleId ? moduleStoreRefreshProgress.get(moduleId) : null) ?? 1
 
+	const refreshInfoMutation = useMutationExt(trpc.connections.modulesStore.refreshModuleInfo.mutationOptions())
 	const doRefreshModules = useCallback(() => {
 		if (!moduleId) return
-		socket.emitPromise('modules-store:info:refresh', [moduleId]).catch((err) => {
+		refreshInfoMutation.mutateAsync({ moduleId }).catch((err) => {
 			console.error('Failed to refresh module versions', err)
 		})
-	}, [socket, moduleId])
+	}, [refreshInfoMutation, moduleId])
 
 	if (refreshProgress === 1) {
 		return (

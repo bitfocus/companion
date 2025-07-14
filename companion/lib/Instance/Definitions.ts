@@ -10,14 +10,12 @@ import type {
 	PresetActionSets,
 	PresetDefinition,
 	UIPresetDefinition,
+	UIPresetDefinitionUpdate,
 } from '@companion-app/shared/Model/Presets.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionPresetAction, CompanionPresetDefinition } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
-import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
@@ -28,12 +26,20 @@ import {
 	SomeEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type {
+	ClientEntityDefinition,
+	EntityDefinitionUpdate,
+} from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { EventEmitter } from 'node:events'
+import z from 'zod'
 
-const PresetsRoom = 'presets'
-const ActionsRoom = 'action-definitions'
-const FeedbacksRoom = 'feedback-definitions'
+type DefinitionsEvents = {
+	presets: [update: UIPresetDefinitionUpdate]
+	actions: [update: EntityDefinitionUpdate]
+	feedbacks: [update: EntityDefinitionUpdate]
+}
 
 /**
  * Class to handle and store the 'definitions' produced by instances.
@@ -54,8 +60,6 @@ const FeedbacksRoom = 'feedback-definitions'
 export class InstanceDefinitions {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
-	readonly #io: UIHandler
-	readonly #controlsController: ControlsController
 	readonly #graphicsController: GraphicsController
 	readonly #variablesValuesController: VariablesValues
 
@@ -72,106 +76,99 @@ export class InstanceDefinitions {
 	 */
 	#presetDefinitions: Record<string, Record<string, PresetDefinition>> = {}
 
-	constructor(
-		io: UIHandler,
-		controls: ControlsController,
-		graphics: GraphicsController,
-		variablesValues: VariablesValues
-	) {
-		this.#io = io
-		this.#controlsController = controls
+	#events = new EventEmitter<DefinitionsEvents>()
+
+	constructor(graphics: GraphicsController, variablesValues: VariablesValues) {
 		this.#graphicsController = graphics
 		this.#variablesValuesController = variablesValues
+
+		this.#events.setMaxListeners(0)
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('presets:subscribe', () => {
-			client.join(PresetsRoom)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			events: publicProcedure.query(() => {
+				return EventDefinitions
+			}),
 
-			const result: Record<string, Record<string, UIPresetDefinition>> = {}
-			for (const [id, presets] of Object.entries(this.#presetDefinitions)) {
-				if (Object.keys(presets).length > 0) {
-					result[id] = this.#simplifyPresetsForUi(presets)
-				}
-			}
+			presets: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'presets', signal)
 
-			return result
-		})
-		client.onPromise('presets:unsubscribe', () => {
-			client.leave(PresetsRoom)
-		})
-
-		client.onPromise('entity-definitions:subscribe', (type) => {
-			switch (type) {
-				case EntityModelType.Action:
-					client.join(ActionsRoom)
-
-					return this.#actionDefinitions
-				case EntityModelType.Feedback:
-					client.join(FeedbacksRoom)
-
-					return this.#feedbackDefinitions
-
-				default:
-					assertNever(type)
-					return {}
-			}
-		})
-		client.onPromise('entity-definitions:unsubscribe', (type) => {
-			switch (type) {
-				case EntityModelType.Action:
-					client.leave(ActionsRoom)
-					break
-				case EntityModelType.Feedback:
-					client.leave(FeedbacksRoom)
-					break
-				default:
-					assertNever(type)
-					break
-			}
-		})
-
-		client.onPromise('event-definitions:get', () => {
-			return EventDefinitions
-		})
-
-		client.onPromise('presets:import-to-location', this.importPresetToLocation.bind(this))
-
-		client.onPromise('presets:preview_render', async (connectionId, presetId) => {
-			const definition = this.#presetDefinitions[connectionId]?.[presetId]
-			if (definition && definition.type === 'button') {
-				const style = {
-					...(definition.previewStyle ? definition.previewStyle : definition.style),
-					style: definition.type,
-				}
-
-				if (style.text) {
-					if (style.textExpression) {
-						const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
-						if (parseResult.ok) {
-							style.text = parseResult.value + ''
-						} else {
-							this.#logger.error(`Expression parse error: ${parseResult.error}`)
-							style.text = 'ERR'
-						}
-					} else {
-						const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
-						style.text = parseResult.text
+				const result: Record<string, Record<string, UIPresetDefinition>> = {}
+				for (const [id, presets] of Object.entries(self.#presetDefinitions)) {
+					if (Object.keys(presets).length > 0) {
+						result[id] = self.#simplifyPresetsForUi(presets)
 					}
 				}
 
-				const render = await this.#graphicsController.drawPreview(style)
-				if (render) {
-					return render.asDataUrl
-				} else {
-					return null
+				yield { type: 'init', definitions: result } satisfies UIPresetDefinitionUpdate
+
+				for await (const [update] of changes) {
+					yield update
 				}
-			} else {
-				return null
-			}
+			}),
+
+			actions: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'actions', signal)
+
+				yield { type: 'init', definitions: self.#actionDefinitions } satisfies EntityDefinitionUpdate
+
+				for await (const [update] of changes) {
+					yield update
+				}
+			}),
+
+			feedbacks: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'feedbacks', signal)
+
+				yield { type: 'init', definitions: self.#feedbackDefinitions } satisfies EntityDefinitionUpdate
+
+				for await (const [update] of changes) {
+					yield update
+				}
+			}),
+
+			previewRender: publicProcedure
+				.input(
+					z.object({
+						connectionId: z.string(),
+						presetId: z.string(),
+					})
+				)
+				.query(async ({ input }) => {
+					const definition = this.#presetDefinitions[input.connectionId]?.[input.presetId]
+					if (definition && definition.type === 'button') {
+						const style = {
+							...(definition.previewStyle ? definition.previewStyle : definition.style),
+							style: definition.type,
+						}
+
+						if (style.text) {
+							if (style.textExpression) {
+								const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
+								if (parseResult.ok) {
+									style.text = parseResult.value + ''
+								} else {
+									this.#logger.error(`Expression parse error: ${parseResult.error}`)
+									style.text = 'ERR'
+								}
+							} else {
+								const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
+								style.text = parseResult.text
+							}
+						}
+
+						const render = await this.#graphicsController.drawPreview(style)
+						if (render) {
+							return render.asDataUrl
+						} else {
+							return null
+						}
+					} else {
+						return null
+					}
+				}),
 		})
 	}
 
@@ -252,21 +249,24 @@ export class InstanceDefinitions {
 	 */
 	forgetConnection(connectionId: string): void {
 		delete this.#presetDefinitions[connectionId]
-		if (this.#io.countRoomMembers(PresetsRoom) > 0) {
-			this.#io.emitToRoom(PresetsRoom, 'presets:update', connectionId, null)
+		if (this.#events.listenerCount('presets') > 0) {
+			this.#events.emit('presets', {
+				type: 'remove',
+				connectionId,
+			})
 		}
 
 		delete this.#actionDefinitions[connectionId]
-		if (this.#io.countRoomMembers(ActionsRoom) > 0) {
-			this.#io.emitToRoom(ActionsRoom, 'entity-definitions:update', EntityModelType.Action, {
+		if (this.#events.listenerCount('actions') > 0) {
+			this.#events.emit('actions', {
 				type: 'forget-connection',
 				connectionId,
 			})
 		}
 
 		delete this.#feedbackDefinitions[connectionId]
-		if (this.#io.countRoomMembers(FeedbacksRoom) > 0) {
-			this.#io.emitToRoom(FeedbacksRoom, 'entity-definitions:update', EntityModelType.Feedback, {
+		if (this.#events.listenerCount('feedbacks') > 0) {
+			this.#events.emit('feedbacks', {
 				type: 'forget-connection',
 				connectionId,
 			})
@@ -295,9 +295,9 @@ export class InstanceDefinitions {
 	/**
 	 * Import a preset to a location
 	 */
-	importPresetToLocation(connectionId: string, presetId: string, location: ControlLocation): boolean {
+	convertPresetToControlModel(connectionId: string, presetId: string): NormalButtonModel | null {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
-		if (!definition || definition.type !== 'button') return false
+		if (!definition || definition.type !== 'button') return null
 
 		const result: NormalButtonModel = {
 			type: 'button',
@@ -359,9 +359,7 @@ export class InstanceDefinitions {
 			}))
 		}
 
-		this.#controlsController.importControl(location, result)
-
-		return true
+		return result
 	}
 
 	/**
@@ -371,9 +369,9 @@ export class InstanceDefinitions {
 		const lastActionDefinitions = this.#actionDefinitions[connectionId]
 		this.#actionDefinitions[connectionId] = cloneDeep(actionDefinitions)
 
-		if (this.#io.countRoomMembers(ActionsRoom) > 0) {
+		if (this.#events.listenerCount('actions') > 0) {
 			if (!lastActionDefinitions) {
-				this.#io.emitToRoom(ActionsRoom, 'entity-definitions:update', EntityModelType.Action, {
+				this.#events.emit('actions', {
 					type: 'add-connection',
 					connectionId,
 
@@ -382,7 +380,7 @@ export class InstanceDefinitions {
 			} else {
 				const diff = diffObjects(lastActionDefinitions, actionDefinitions || {})
 				if (diff) {
-					this.#io.emitToRoom(ActionsRoom, 'entity-definitions:update', EntityModelType.Action, {
+					this.#events.emit('actions', {
 						type: 'update-connection',
 						connectionId,
 
@@ -400,9 +398,9 @@ export class InstanceDefinitions {
 		const lastFeedbackDefinitions = this.#feedbackDefinitions[connectionId]
 		this.#feedbackDefinitions[connectionId] = cloneDeep(feedbackDefinitions)
 
-		if (this.#io.countRoomMembers(FeedbacksRoom) > 0) {
+		if (this.#events.listenerCount('feedbacks') > 0) {
 			if (!lastFeedbackDefinitions) {
-				this.#io.emitToRoom(FeedbacksRoom, 'entity-definitions:update', EntityModelType.Feedback, {
+				this.#events.emit('feedbacks', {
 					type: 'add-connection',
 					connectionId,
 
@@ -411,7 +409,7 @@ export class InstanceDefinitions {
 			} else {
 				const diff = diffObjects(lastFeedbackDefinitions, feedbackDefinitions || {})
 				if (diff) {
-					this.#io.emitToRoom(FeedbacksRoom, 'entity-definitions:update', EntityModelType.Feedback, {
+					this.#events.emit('feedbacks', {
 						type: 'update-connection',
 						connectionId,
 
@@ -569,15 +567,23 @@ export class InstanceDefinitions {
 		const lastPresetDefinitions = this.#presetDefinitions[connectionId]
 		this.#presetDefinitions[connectionId] = cloneDeep(presets)
 
-		if (this.#io.countRoomMembers(PresetsRoom) > 0) {
+		if (this.#events.listenerCount('presets') > 0) {
 			const newSimplifiedPresets = this.#simplifyPresetsForUi(presets)
 			if (!lastPresetDefinitions) {
-				this.#io.emitToRoom(PresetsRoom, 'presets:update', connectionId, newSimplifiedPresets)
+				this.#events.emit('presets', {
+					type: 'add',
+					connectionId,
+					definitions: newSimplifiedPresets,
+				})
 			} else {
 				const lastSimplifiedPresets = this.#simplifyPresetsForUi(lastPresetDefinitions)
 				const patch = jsonPatch.compare(lastSimplifiedPresets, newSimplifiedPresets)
 				if (patch.length > 0) {
-					this.#io.emitToRoom(PresetsRoom, 'presets:update', connectionId, patch)
+					this.#events.emit('presets', {
+						type: 'patch',
+						connectionId,
+						patch: patch,
+					})
 				}
 			}
 		}

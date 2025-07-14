@@ -14,18 +14,24 @@ import { cloneDeep } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import type express from 'express'
 import { type ModuleManifest } from '@companion-module/base'
-import type { ClientModuleInfo, ModuleUpgradeToOtherVersion } from '@companion-app/shared/Model/ModuleInfo.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
+import type {
+	ClientModuleInfo,
+	ModuleInfoUpdate,
+	ModuleUpgradeToOtherVersion,
+} from '@companion-app/shared/Model/ModuleInfo.js'
 import LogController from '../Log/Controller.js'
 import type { InstanceController } from './Controller.js'
 import jsonPatch from 'fast-json-patch'
 import type { ModuleVersionInfo } from './Types.js'
 import { InstanceModuleInfo } from './ModuleInfo.js'
 import { ModuleStoreService } from './ModuleStore.js'
+import { router, publicProcedure, toIterable } from '../UI/TRPC.js'
+import EventEmitter from 'node:events'
+import z from 'zod'
 
-const ModulesRoom = 'modules'
-function ModuleUpgradeToVersionsRoom(moduleId: string): string {
-	return `modules-upgrade-to-other:${moduleId}`
+type InstanceModulesEvents = {
+	modulesUpdate: [change: ModuleInfoUpdate]
+	[id: `upgradeToOther:${string}`]: [data: ModuleUpgradeToOtherVersion[]]
 }
 
 export class InstanceModules {
@@ -35,11 +41,6 @@ export class InstanceModules {
 	 * The core instance controller
 	 */
 	readonly #instanceController: InstanceController
-
-	/**
-	 * The core interface client
-	 */
-	readonly #io: UIHandler
 
 	/**
 	 * Last module info sent to clients
@@ -64,10 +65,13 @@ export class InstanceModules {
 
 	readonly #installedModulesDir: string
 
-	constructor(io: UIHandler, instance: InstanceController, apiRouter: express.Router, installedModulesDir: string) {
-		this.#io = io
+	readonly #events = new EventEmitter<InstanceModulesEvents>()
+
+	constructor(instance: InstanceController, apiRouter: express.Router, installedModulesDir: string) {
 		this.#instanceController = instance
 		this.#installedModulesDir = installedModulesDir
+
+		this.#events.setMaxListeners(0)
 
 		apiRouter.get('/help/module/:moduleId/:versionId/*path', this.#getHelpAsset)
 	}
@@ -111,14 +115,21 @@ export class InstanceModules {
 		const moduleInfo = this.#knownModules.get(moduleId)
 		if (!moduleInfo) throw new Error('Module not found when removing version')
 
+		// Make sure the module is not in use
+		const { labels } = this.#instanceController.findActiveUsagesOfModule(moduleId, versionId)
+		if (labels.length > 0)
+			throw new Error(
+				`Cannot uninstall module ${moduleId} version ${versionId} while it is in use by connections: ${labels.join(', ')}`
+			)
+
 		delete moduleInfo.installedVersions[versionId]
 
 		// Notify clients
 		this.#emitModuleUpdate(moduleId)
 		this.#invalidateModuleUpgradeRoom(moduleId)
 
-		// Ensure any modules using this version are started
-		await this.#instanceController.reloadUsesOfModule(moduleId, versionId)
+		// // Ensure any modules using this version are started
+		// await this.#instanceController.reloadUsesOfModule(moduleId, versionId)
 	}
 
 	/**
@@ -234,24 +245,24 @@ export class InstanceModules {
 		const newObj = newJson[changedModuleId]
 
 		// Now broadcast to any interested clients
-		if (this.#io.countRoomMembers(ModulesRoom) > 0) {
+		if (this.#events.listenerCount('modulesUpdate') > 0) {
 			const oldObj = this.#lastModulesJson?.[changedModuleId]
 			if (!newObj) {
-				this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
+				this.#events.emit('modulesUpdate', {
 					type: 'remove',
 					id: changedModuleId,
 				})
 			} else if (oldObj) {
 				const patch = jsonPatch.compare(oldObj, newObj)
 				if (patch.length > 0) {
-					this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
+					this.#events.emit('modulesUpdate', {
 						type: 'update',
 						id: changedModuleId,
 						patch,
 					})
 				}
 			} else {
-				this.#io.emitToRoom(ModulesRoom, `modules:patch`, {
+				this.#events.emit('modulesUpdate', {
 					type: 'add',
 					id: changedModuleId,
 					info: newObj,
@@ -271,33 +282,47 @@ export class InstanceModules {
 		return moduleInfo.getLatestVersion(false)?.versionId ?? null
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('modules:subscribe', () => {
-			client.join(ModulesRoom)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'modulesUpdate', signal)
 
-			return this.#lastModulesJson || this.getModulesJson()
-		})
+				yield {
+					type: 'init',
+					info: self.#lastModulesJson || self.getModulesJson(),
+				} satisfies ModuleInfoUpdate
 
-		client.onPromise('modules:unsubscribe', () => {
-			client.leave(ModulesRoom)
-		})
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
 
-		client.onPromise('modules-upgrade-to-other:subscribe', (moduleId: string) => {
-			client.join(ModuleUpgradeToVersionsRoom(moduleId))
-			this.#activeModuleUpgradeRooms.add(moduleId)
+			watchUpgradeToOther: publicProcedure
+				.input(
+					z.object({
+						moduleId: z.string(),
+					})
+				)
+				.subscription(async function* ({ input, signal }) {
+					try {
+						const changes = toIterable(self.#events, `upgradeToOther:${input.moduleId}`, signal)
 
-			// Future: maybe this should be cached, but it may not be worth the cost
-			return this.#getModuleUpgradeCandidates(moduleId)
-		})
+						self.#activeModuleUpgradeRooms.add(input.moduleId)
 
-		client.onPromise('modules-upgrade-to-other:unsubscribe', (moduleId: string) => {
-			client.leave(ModuleUpgradeToVersionsRoom(moduleId))
+						// Future: maybe this should be cached, but it may not be worth the cost
+						yield self.#getModuleUpgradeCandidates(input.moduleId)
 
-			// Note: we could update `this.#activeModuleUpgradeRooms`, here but then we would also need to handle the case where the client disconnects
-			// It is simpler to forget about it, and skip the update when it gets invalidated
+						for await (const [change] of changes) {
+							yield change
+						}
+					} finally {
+						if (self.#events.listenerCount(`upgradeToOther:${input.moduleId}`) === 0) {
+							// If no listeners are left, remove the room
+							self.#activeModuleUpgradeRooms.delete(input.moduleId)
+						}
+					}
+				}),
 		})
 	}
 
@@ -311,8 +336,7 @@ export class InstanceModules {
 	}
 
 	#invalidateModuleUpgradeRoom = (moduleId: string): void => {
-		const roomId = ModuleUpgradeToVersionsRoom(moduleId)
-		if (this.#io.countRoomMembers(roomId) == 0) {
+		if (this.#events.listenerCount(`upgradeToOther:${moduleId}`) == 0) {
 			// Abort if no clients are listening
 			this.#activeModuleUpgradeRooms.delete(moduleId)
 			return
@@ -320,7 +344,7 @@ export class InstanceModules {
 
 		// Compile and emit data
 		const newData = this.#getModuleUpgradeCandidates(moduleId)
-		this.#io.emitToRoom(roomId, 'modules-upgrade-to-other:data', moduleId, newData)
+		this.#events.emit(`upgradeToOther:${moduleId}`, newData)
 	}
 
 	/**

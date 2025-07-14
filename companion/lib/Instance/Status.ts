@@ -1,12 +1,13 @@
 import { isEqual } from 'lodash-es'
 // import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
-import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import type { UIHandler, ClientSocket } from '../UI/Handler.js'
+import type { ConnectionStatusEntry, ConnectionStatusUpdate } from '@companion-app/shared/Model/Common.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
 export interface InstanceStatusEvents {
 	status_change: [statuses: Record<string, ConnectionStatusEntry>]
+	uiChange: [change: ConnectionStatusUpdate]
 }
 
 export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
@@ -18,22 +19,27 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 
 	// readonly #logger = LogController.createLogger('Instance/Status')
 
-	readonly #io: UIHandler
 	readonly #controls: ControlsController
 
-	constructor(io: UIHandler, controls: ControlsController) {
+	constructor(controls: ControlsController) {
 		super()
 
-		this.#io = io
 		this.#controls = controls
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('connections:get-statuses', () => {
-			return this.#instanceStatuses
+	createTrpcRouter() {
+		const self = this
+		const selfEvents: EventEmitter<InstanceStatusEvents> = this
+		return router({
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(selfEvents, 'uiChange', signal)
+
+				yield { type: 'init', statuses: self.#instanceStatuses } satisfies ConnectionStatusUpdate
+
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
 		})
 	}
 
@@ -98,18 +104,16 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 		const newStatusForConnection: ConnectionStatusEntry = {
 			category: category,
 			level: level,
-			message: msg?.toString?.(),
+			message: msg?.toString?.() ?? null,
 		}
 		this.#instanceStatuses[connectionId] = newStatusForConnection
 
 		if (!oldStatusForConnection || !isEqual(oldStatusForConnection, newStatusForConnection)) {
-			this.#io.emitToAll(`connections:update-statuses`, [
-				{
-					type: 'update',
-					connectionId: connectionId,
-					status: newStatusForConnection,
-				},
-			])
+			this.emit('uiChange', {
+				type: 'update',
+				connectionId: connectionId,
+				status: newStatusForConnection,
+			})
 
 			this.emit('status_change', this.#instanceStatuses)
 
@@ -130,12 +134,10 @@ export class InstanceStatus extends EventEmitter<InstanceStatusEvents> {
 	forgetConnectionStatus(connectionId: string): void {
 		delete this.#instanceStatuses[connectionId]
 
-		this.#io.emitToAll(`connections:update-statuses`, [
-			{
-				type: 'remove',
-				connectionId: connectionId,
-			},
-		])
+		this.emit('uiChange', {
+			type: 'remove',
+			connectionId: connectionId,
+		})
 
 		this.emit('status_change', this.#instanceStatuses)
 

@@ -15,8 +15,6 @@ import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import archiver from 'archiver'
 import path from 'path'
 import fs from 'fs'
-import yaml from 'yaml'
-import zlib from 'node:zlib'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import LogController, { Logger } from '../Log/Controller.js'
 import type express from 'express'
@@ -44,10 +42,10 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import { formatAttachmentFilename, StringifiedExportData, stringifyExport } from './Util.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
@@ -88,20 +86,13 @@ export class ExportController {
 		apiRouter.get('/export/support', this.#exportSupportBundleHandler)
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(_client: ClientSocket): void {
-		// Noop
-	}
-
 	#exportTriggerListHandler: RequestHandler = (req, res, next) => {
 		const triggerControls = this.#controlsController.getAllTriggers()
 		const exp = this.#generateTriggersExport(triggerControls, true)
 
 		const filename = this.#generateFilename(String(req.query.filename as any), 'trigger_list', 'companionconfig')
 
-		downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+		downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 	}
 
 	#exportTriggerSingleHandler: RequestHandler = (req, res, next) => {
@@ -116,7 +107,7 @@ export class ExportController {
 				'companionconfig'
 			)
 
-			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+			downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 		} else {
 			next()
 		}
@@ -159,20 +150,20 @@ export class ExportController {
 
 			const filename = this.#generateFilename(String(req.query.filename as any), `page${page}`, 'companionconfig')
 
-			downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+			downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 		}
 	}
 
 	#exportCustomHandler: RequestHandler = (req, res, next) => {
-		const exp = this.#generateCustomExport(req.query as any)
+		const exp = this.generateCustomExport(req.query as any)
 
 		const filename = this.#generateFilename(String(req.query.filename as any), '', 'companionconfig')
 
-		downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+		downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 	}
 
 	#exportFullHandler: RequestHandler = (req, res, next) => {
-		const exp = this.#generateCustomExport(null)
+		const exp = this.generateCustomExport(null)
 
 		const filename = this.#generateFilename(
 			String(this.#userConfigController.getKey('default_export_filename')),
@@ -180,7 +171,7 @@ export class ExportController {
 			'companionconfig'
 		)
 
-		downloadBlob(this.#logger, res, next, exp, filename, parseDownloadFormat(req.query.format))
+		downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 	}
 
 	#exportLogHandler: RequestHandler = (_req, res, _next) => {
@@ -192,18 +183,16 @@ export class ExportController {
 			'csv'
 		)
 
-		res.status(200)
-		res.set({
-			'Content-Type': 'text/csv',
-			'Content-Disposition': attachmentWithFilename(filename),
-		})
-
 		const csvOut = csvStringify([
 			['Date', 'Module', 'Type', 'Log'],
 			...logs.map((line) => [new Date(line.time).toISOString(), line.source, line.level, line.message]),
 		])
 
-		res.end(csvOut)
+		sendExportData(res, {
+			data: csvOut,
+			contentType: 'text/csv',
+			...formatAttachmentFilename(filename),
+		})
 	}
 
 	#exportSupportBundleHandler: RequestHandler = async (_req, res, _next) => {
@@ -406,6 +395,7 @@ export class ExportController {
 		referencedConnectionLabels: Set<string>
 	): ExportPageContentv6 {
 		const pageExport: ExportPageContentv6 = {
+			id: pageInfo.id,
 			name: pageInfo.name,
 			controls: {},
 			gridSize: this.#userConfigController.getKey('gridSize'),
@@ -426,7 +416,7 @@ export class ExportController {
 		return pageExport
 	}
 
-	#generateCustomExport(config: ClientExportSelection | null): ExportFullv6 {
+	generateCustomExport(config: ClientExportSelection | null): ExportFullv6 {
 		// Export file protocol version
 		const exp: ExportFullv6 = {
 			version: FILE_VERSION,
@@ -533,50 +523,13 @@ function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 	return undefined
 }
 
-/**
- * Replacer that splits "png64" values into multiple lines.
- *
- * These are base64 encoded PNGs and can get very long. A length of 60 characters is used to allow
- * for indentation in the YAML.
- *
- * @param key - The key of the value being processed.
- * @param value - The value to be processed.
- * @returns The modified value or the original value if the conditions are not met.
- */
-function splitLongPng64Values(key: string, value: string): string {
-	if (key === 'png64' && typeof value === 'string' && value.length > 60) {
-		return btoa(atob(value)).replace(/(.{60})/g, '$1\n') + '\n'
-	}
-	return value
-}
-
-/**
- * Compute a Content-Disposition header specifying an attachment with the
- * given filename.
- */
-function attachmentWithFilename(filename: string): string {
-	function quotedAscii(s: string): string {
-		// Boil away combining characters and non-ASCII code points and escape
-		// quotes.  Modern browsers don't use this, so don't bother going all-out.
-		// Don't percent-encode anything, because browsers don't agree on whether
-		// quoted filenames should be percent-decoded (Firefox and Chrome yes,
-		// Safari no).
-		return (
-			'"' +
-			[...s.normalize('NFKD')]
-				.filter((c) => '\x20' <= c && c <= '\x7e')
-				.map((c) => (c === '"' || c === '\\' ? '\\' : '') + c)
-				.join('') +
-			'"'
-		)
-	}
-
-	// The filename parameter is used primarily by legacy browsers.  Strangely, it
-	// must be present for at least some versions of Safari to use the modern
-	// filename* parameter.
-	const quotedFallbackAsciiFilename = quotedAscii(filename)
-	const modernUnicodeFilename = encodeURIComponent(filename)
-	return `attachment; filename=${quotedFallbackAsciiFilename}; filename*=UTF-8''${modernUnicodeFilename}`
+function sendExportData(res: express.Response, data: StringifiedExportData) {
+	res.status(200)
+	res.set({
+		'Content-Type': data.contentType,
+		'Content-Disposition': `attachment; filename=${data.asciiFilename}; filename*=UTF-8''${data.utf8Filename}`,
+	})
+	res.end(data.data)
 }
 
 function downloadBlob(
@@ -585,37 +538,18 @@ function downloadBlob(
 	next: express.NextFunction,
 	data: SomeExportv6,
 	filename: string,
-	format: ExportFormat | undefined
+	formatStr: string
 ): void {
-	if (!format || format === 'json-gz') {
-		zlib.gzip(JSON.stringify(data), (err, result) => {
-			if (err) {
-				logger.warn(`Failed to gzip data, retrying uncompressed: ${err}`)
-				downloadBlob(logger, res, next, data, filename, 'json')
+	stringifyExport(logger, data, filename, parseDownloadFormat(formatStr))
+		.then((data) => {
+			if (data) {
+				sendExportData(res, data)
 			} else {
-				res.status(200)
-				res.set({
-					'Content-Type': 'application/gzip',
-					'Content-Disposition': attachmentWithFilename(filename),
-				})
-				res.end(result)
+				next(new Error(`Unknown format: ${formatStr}`))
 			}
 		})
-	} else if (format === 'json') {
-		res.status(200)
-		res.set({
-			'Content-Type': 'application/json',
-			'Content-Disposition': attachmentWithFilename(filename),
+		.catch((err) => {
+			logger.error(`Failed to stringify export data: ${err}`)
+			next(err)
 		})
-		res.end(JSON.stringify(data, undefined, '\t'))
-	} else if (format === 'yaml') {
-		res.status(200)
-		res.set({
-			'Content-Type': 'application/yaml',
-			'Content-Disposition': attachmentWithFilename(filename),
-		})
-		res.end(yaml.stringify(data, splitLongPng64Values))
-	} else {
-		next(new Error(`Unknown format: ${format}`))
-	}
 }

@@ -7,6 +7,7 @@ import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import { UserConfigProps } from '../Components/Common.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export const GridConfig = observer(function GridConfig(props: UserConfigProps) {
 	const gridSizeRef = useRef<GridSizeModalRef>(null)
@@ -60,7 +61,7 @@ interface GridSizeModalRef {
 
 const GridSizeModal = observer<object, GridSizeModalRef>(
 	function GridSizeModal(_props, ref) {
-		const { userConfig, socket } = useContext(RootAppStoreContext)
+		const { userConfig } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
 
@@ -84,6 +85,7 @@ const GridSizeModal = observer<object, GridSizeModalRef>(
 				setNewGridSize(null)
 			}, 1500)
 		}, [])
+		const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 		const doAction = useCallback(
 			(e: FormEvent) => {
 				if (e) e.preventDefault()
@@ -94,9 +96,9 @@ const GridSizeModal = observer<object, GridSizeModalRef>(
 				if (!newGridSize) return
 
 				console.log('set gridSize', newGridSize)
-				socket.emit('set_userconfig_key', 'gridSize', newGridSize)
+				setConfigKeyMutation.mutate({ key: 'gridSize', value: newGridSize })
 			},
-			[socket, newGridSize]
+			[setConfigKeyMutation, newGridSize]
 		)
 
 		useImperativeHandle(

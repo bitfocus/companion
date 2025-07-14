@@ -2,7 +2,6 @@ import React, { useCallback, useContext, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-	faAsterisk,
 	faEyeSlash,
 	faPlus,
 	faQuestionCircle,
@@ -10,6 +9,7 @@ import {
 	faCircleMinus,
 	faTrash,
 	faWarning,
+	faFlask,
 } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -21,6 +21,7 @@ import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 dayjs.extend(relativeTime)
 
@@ -146,7 +147,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 	installedInfo,
 	storeInfo,
 }: ModuleVersionRowProps) {
-	const { helpViewer } = useContext(RootAppStoreContext)
+	const { helpViewer, connections } = useContext(RootAppStoreContext)
 
 	const versionDisplayName = installedInfo?.versionId ?? storeInfo?.id ?? ''
 	const helpPath = installedInfo?.helpPath ?? storeInfo?.helpUrl
@@ -158,11 +159,20 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 
 	if (!storeInfo && !installedInfo) return null // Should never happen
 
+	let matchingConnections = 0
+	for (const connection of connections.connections.values()) {
+		if (connection.instance_type !== moduleId) continue
+
+		if (versionId && connection.moduleVersionId === versionId) {
+			matchingConnections++
+		}
+	}
+
 	return (
 		<tr>
 			<td>
 				{installedInfo ? (
-					<ModuleUninstallButton moduleId={moduleId} versionId={versionId} />
+					<ModuleUninstallButton moduleId={moduleId} versionId={versionId} disabled={matchingConnections > 0} />
 				) : (
 					<ModuleInstallButton
 						moduleId={moduleId}
@@ -174,9 +184,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				{versionId}
-				{storeInfo?.releaseChannel === 'beta' && (
-					<FontAwesomeIcon className="pad-left" icon={faAsterisk} title="Beta" />
-				)}
+				{storeInfo?.releaseChannel === 'beta' && <FontAwesomeIcon className="pad-left" icon={faFlask} title="Beta" />}
 				{storeInfo?.deprecationReason && <FontAwesomeIcon className="pad-left" icon={faWarning} title="Deprecated" />}
 			</td>
 			<td>
@@ -187,7 +195,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 				)}
 			</td>
 			<td>
-				<ModuleVersionUsageIcon moduleId={moduleId} moduleVersionId={versionId} isInstalled={!!installedInfo} />
+				<ModuleVersionUsageIcon matchingConnections={matchingConnections} isInstalled={!!installedInfo} />
 				{helpPath && (
 					<div className="float_right" onClick={doShowHelp}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
@@ -215,17 +223,22 @@ function LastUpdatedTimestamp({ releasedAt }: { releasedAt: number | undefined }
 interface ModuleUninstallButtonProps {
 	moduleId: string
 	versionId: string
+	disabled: boolean
 }
 
-function ModuleUninstallButton({ moduleId, versionId }: ModuleUninstallButtonProps) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstallButtonProps) {
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
 
+	const uninstallModuleMutation = useMutationExt(trpc.connections.modulesManager.uninstallModule.mutationOptions())
 	const doRemove = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
-		socket
-			.emitPromise('modules:uninstall-store-module', [moduleId, versionId])
+		uninstallModuleMutation
+			.mutateAsync({
+				moduleId,
+				versionId,
+			})
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to uninstall module', failureReason)
@@ -239,14 +252,17 @@ function ModuleUninstallButton({ moduleId, versionId }: ModuleUninstallButtonPro
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [socket, notifier, moduleId, versionId])
+	}, [uninstallModuleMutation, notifier, moduleId, versionId])
 
 	return (
-		<CButton color="white" disabled={isRunningInstallOrUninstall} onClick={doRemove}>
+		<CButton color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
 			{isRunningInstallOrUninstall ? (
 				<FontAwesomeIcon icon={faSync} spin title="Removing" />
 			) : (
-				<FontAwesomeIcon icon={faTrash} title="Remove version" />
+				<FontAwesomeIcon
+					icon={faTrash}
+					title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}
+				/>
 			)}
 		</CButton>
 	)
@@ -260,14 +276,20 @@ interface ModuleInstallButtonProps {
 }
 
 function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: ModuleInstallButtonProps) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
 
+	const installStoreModuleMutation = useMutationExt(
+		trpc.connections.modulesManager.installStoreModule.mutationOptions()
+	)
 	const doInstall = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
-		socket
-			.emitPromise('modules:install-store-module', [moduleId, versionId], 30000)
+		installStoreModuleMutation // TODO: 30s timeout?
+			.mutateAsync({
+				moduleId,
+				versionId,
+			})
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to install module', failureReason)
@@ -281,7 +303,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [socket, notifier, moduleId, versionId])
+	}, [installStoreModuleMutation, notifier, moduleId, versionId])
 
 	if (!hasTarUrl) {
 		return (

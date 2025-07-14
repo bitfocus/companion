@@ -4,6 +4,7 @@ import { upgradeStartup } from './Upgrade.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
 import { createTables as createTablesV8 } from './Schema/v8.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import fs from 'fs/promises'
 
 export interface DataDatabaseDefaultTable {
 	page_config_version: number
@@ -65,6 +66,28 @@ export class DataDatabase extends DataStoreBase<DataDatabaseDefaultTable> {
 
 		for (const [key, value] of Object.entries(data)) {
 			this.defaultTableView.set(key as any, value)
+		}
+	}
+
+	/**
+	 * Create a backup copy of the database to the specified path
+	 * @param filePath Path to save the backup
+	 * @returns Promise resolving to the file size in bytes
+	 */
+	public async createBackup(filePath: string): Promise<number> {
+		// Ensure the database is synced to disk before backing up
+		this.store.pragma('wal_checkpoint(TRUNCATE)')
+
+		// Use SQLite's backup functionality to copy the database
+		await this.store.backup(filePath)
+
+		// Get the file size of the created backup
+		try {
+			const stats = await fs.stat(filePath)
+			return stats.size
+		} catch (error) {
+			this.logger.error(`Failed to get file size for backup: ${error}`)
+			return 0
 		}
 	}
 }

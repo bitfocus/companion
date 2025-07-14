@@ -9,15 +9,12 @@ import type {
 	RecordActionEntityModel,
 	RecordSessionInfo,
 	RecordSessionListInfo,
+	RecordSessionUpdate,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { EntityModelType, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-
-const SessionListRoom = 'action-recorder:session-list'
-function SessionRoom(id: string): string {
-	return `action-recorder:session:${id}`
-}
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
 
 export interface ActionRecorderEvents {
 	sessions_changed: [sessionIds: string[]]
@@ -84,133 +81,188 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		this.commitChanges([this.#currentSession.id])
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('action-recorder:subscribe', () => {
-			client.join(SessionListRoom)
+	readonly #updateEvents = new EventEmitter<{
+		[patch: `patchSession:${string}`]: [update: RecordSessionUpdate]
+	}>()
 
-			return this.#lastSentSessionListJson
-		})
-		client.onPromise('action-recorder:unsubscribe', () => {
-			client.leave(SessionListRoom)
-		})
+	createTrpcRouter() {
+		const self = this
+		const selfEmitter: EventEmitter<ActionRecorderEvents> = this
+		return router({
+			sessionList: publicProcedure.subscription<AsyncIterable<Record<string, RecordSessionListInfo>>>(
+				async function* (opts) {
+					// Send initial data
+					yield self.#lastSentSessionListJson
 
-		// Future: for now we require there to always be exactly one session
-		// client.onPromise('action-recorder:create', (instanceIds0) => {
-		// 	if (this.#currentSession) throw new Error('Already active')
+					// Listen for changes
+					const changes = toIterable(selfEmitter, 'sessions_changed', opts.signal)
+					for await (const [_sessionIds] of changes) {
+						yield self.#lastSentSessionListJson
+					}
+				}
+			),
 
-		// 	if (!Array.isArray(instanceIds0)) throw new Error('Expected array of instance ids')
-		// 	const allValidIds = new Set(this.instance.getAllInstanceIds())
-		// 	const instanceIds = instanceIds0.filter((id) => allValidIds.has(id))
-		// 	if (instanceIds.length === 0) throw new Error('No instance ids provided')
+			// Future: for now we require there to always be exactly one session
+			// client.onPromise('action-recorder:create', (instanceIds0) => {
+			// 	if (this.#currentSession) throw new Error('Already active')
 
-		// 	const id = nanoid()
-		// 	this.#currentSession = {
-		// 		id,
-		// 		instanceIds,
-		// 		isRunning: false,
-		// 		actions: [],
-		// 	}
+			// 	if (!Array.isArray(instanceIds0)) throw new Error('Expected array of instance ids')
+			// 	const allValidIds = new Set(this.instance.getAllInstanceIds())
+			// 	const instanceIds = instanceIds0.filter((id) => allValidIds.has(id))
+			// 	if (instanceIds.length === 0) throw new Error('No instance ids provided')
 
-		// 	// Broadcast changes
-		// 	this.commitChanges(id)
+			// 	const id = nanoid()
+			// 	this.#currentSession = {
+			// 		id,
+			// 		instanceIds,
+			// 		isRunning: false,
+			// 		actions: [],
+			// 	}
 
-		// 	return id
-		// })
-		client.onPromise('action-recorder:session:abort', (sessionId) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+			// 	// Broadcast changes
+			// 	this.commitChanges(id)
 
-			this.destroySession()
-		})
-		client.onPromise('action-recorder:session:discard-actions', (sessionId) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+			// 	return id
+			// })
 
-			this.discardActions()
-		})
-		client.onPromise('action-recorder:session:recording', (sessionId, isRunning) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+			session: router({
+				abort: publicProcedure.input(z.object({ sessionId: z.string() })).mutation(async ({ input }) => {
+					if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+						throw new Error(`Invalid session: ${input.sessionId}`)
 
-			this.setRecording(isRunning)
-		})
-		client.onPromise('action-recorder:session:set-connections', (sessionId, connectionIds) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+					this.destroySession()
+				}),
 
-			this.setSelectedConnectionIds(connectionIds)
-		})
+				discardActions: publicProcedure.input(z.object({ sessionId: z.string() })).mutation(async ({ input }) => {
+					if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+						throw new Error(`Invalid session: ${input.sessionId}`)
 
-		client.onPromise('action-recorder:session:subscribe', (sessionId) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+					this.discardActions()
+				}),
 
-			client.join(SessionRoom(sessionId))
+				setRecording: publicProcedure
+					.input(z.object({ sessionId: z.string(), isRunning: z.boolean() }))
+					.mutation(async ({ input }) => {
+						if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+							throw new Error(`Invalid session: ${input.sessionId}`)
 
-			return this.#lastSentSessionInfoJsons[sessionId]
-		})
-		client.onPromise('action-recorder:session:unsubscribe', (sessionId) => {
-			client.leave(SessionRoom(sessionId))
-		})
+						this.setRecording(input.isRunning)
+					}),
 
-		client.onPromise('action-recorder:session:action-delete', (sessionId, actionId) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+				setConnections: publicProcedure
+					.input(z.object({ sessionId: z.string(), connectionIds: z.array(z.string()) }))
+					.mutation(async ({ input }) => {
+						if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+							throw new Error(`Invalid session: ${input.sessionId}`)
 
-			// Filter out the action
-			this.#currentSession.actions = this.#currentSession.actions.filter((a) => a.id !== actionId)
+						this.setSelectedConnectionIds(input.connectionIds)
+					}),
 
-			this.commitChanges([sessionId])
-		})
-		client.onPromise('action-recorder:session:action-duplicate', (sessionId, actionId) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+				/**
+				 * Watch for session changes
+				 */
+				watch: publicProcedure.input(z.object({ sessionId: z.string() })).subscription(async function* (opts) {
+					if (!self.#currentSession || self.#currentSession.id !== opts.input.sessionId)
+						throw new Error(`Invalid session: ${opts.input.sessionId}`)
 
-			// Filter out the action
-			const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
-			if (index !== -1) {
-				const newAction = cloneDeep(this.#currentSession.actions[index])
-				newAction.id = nanoid()
-				this.#currentSession.actions.splice(index + 1, 0, newAction)
+					const changes = toIterable(self.#updateEvents, `patchSession:${opts.input.sessionId}`, opts.signal)
 
-				this.commitChanges([sessionId])
-			}
-		})
-		client.onPromise('action-recorder:session:action-set-value', (sessionId, actionId, key, value) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+					// Send initial session data
+					const sessionInfo = self.#lastSentSessionInfoJsons[opts.input.sessionId]
+					if (sessionInfo) {
+						yield {
+							type: 'init',
+							session: sessionInfo,
+						} satisfies RecordSessionUpdate
+					}
 
-			// Find and update the action
-			const index = this.#currentSession.actions.findIndex((a) => a.id === actionId)
-			if (index !== -1) {
-				const action = this.#currentSession.actions[index]
+					// Listen for changes
+					for await (const [change] of changes) {
+						yield change
+					}
+				}),
 
-				if (!action.options) action.options = {}
-				action.options[key] = value
+				action: router({
+					delete: publicProcedure
+						.input(z.object({ sessionId: z.string(), actionId: z.string() }))
+						.mutation(async ({ input }) => {
+							if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+								throw new Error(`Invalid session: ${input.sessionId}`)
 
-				this.commitChanges([sessionId])
-			}
-		})
-		client.onPromise('action-recorder:session:action-reorder', (sessionId, actionId, newIndex) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+							// Filter out the action
+							this.#currentSession.actions = this.#currentSession.actions.filter((a) => a.id !== input.actionId)
 
-			const oldIndex = this.#currentSession.actions.findIndex((a) => a.id === actionId)
-			if (oldIndex === -1) throw new Error(`Invalid action: ${actionId}`)
+							this.commitChanges([input.sessionId])
+						}),
 
-			newIndex = clamp(newIndex, 0, this.#currentSession.actions.length)
-			this.#currentSession.actions.splice(newIndex, 0, ...this.#currentSession.actions.splice(oldIndex, 1))
+					duplicate: publicProcedure
+						.input(z.object({ sessionId: z.string(), actionId: z.string() }))
+						.mutation(async ({ input }) => {
+							if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+								throw new Error(`Invalid session: ${input.sessionId}`)
 
-			this.commitChanges([sessionId])
-		})
-		client.onPromise('action-recorder:session:save-to-control', (sessionId, controlId, stepId, setId, mode) => {
-			if (!this.#currentSession || this.#currentSession.id !== sessionId)
-				throw new Error(`Invalid session: ${sessionId}`)
+							// Filter out the action
+							const index = this.#currentSession.actions.findIndex((a) => a.id === input.actionId)
+							if (index !== -1) {
+								const newAction = cloneDeep(this.#currentSession.actions[index])
+								newAction.id = nanoid()
+								this.#currentSession.actions.splice(index + 1, 0, newAction)
 
-			this.saveToControlId(controlId, stepId, setId, mode)
+								this.commitChanges([input.sessionId])
+							}
+						}),
+
+					setValue: publicProcedure
+						.input(z.object({ sessionId: z.string(), actionId: z.string(), key: z.string(), value: z.any() }))
+						.mutation(async ({ input }) => {
+							if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+								throw new Error(`Invalid session: ${input.sessionId}`)
+
+							// Find and update the action
+							const index = this.#currentSession.actions.findIndex((a) => a.id === input.actionId)
+							if (index !== -1) {
+								const action = this.#currentSession.actions[index]
+
+								if (!action.options) action.options = {}
+								action.options[input.key] = input.value
+
+								this.commitChanges([input.sessionId])
+							}
+						}),
+
+					reorder: publicProcedure
+						.input(z.object({ sessionId: z.string(), actionId: z.string(), newIndex: z.number() }))
+						.mutation(async ({ input }) => {
+							if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+								throw new Error(`Invalid session: ${input.sessionId}`)
+
+							const oldIndex = this.#currentSession.actions.findIndex((a) => a.id === input.actionId)
+							if (oldIndex === -1) throw new Error(`Invalid action: ${input.actionId}`)
+
+							const newIndex = clamp(input.newIndex, 0, this.#currentSession.actions.length)
+							this.#currentSession.actions.splice(newIndex, 0, ...this.#currentSession.actions.splice(oldIndex, 1))
+
+							this.commitChanges([input.sessionId])
+						}),
+				}),
+
+				saveToControl: publicProcedure
+					.input(
+						z.object({
+							sessionId: z.string(),
+							controlId: z.string(),
+							stepId: z.string(),
+							setId: z.union([z.enum(['down', 'up', 'rotate_left', 'rotate_right']), z.number()]),
+							mode: z.enum(['replace', 'append']),
+						})
+					)
+					.mutation(async ({ input }) => {
+						if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
+							throw new Error(`Invalid session: ${input.sessionId}`)
+
+						this.saveToControlId(input.controlId, input.stepId, input.setId, input.mode)
+					}),
+			}),
 		})
 	}
 
@@ -226,11 +278,33 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 				const newSessionBlob = sessionInfo ? cloneDeep(sessionInfo) : null
 
-				const room = SessionRoom(sessionId)
-				if (this.#registry.io.countRoomMembers(room) > 0) {
-					const patch = jsonPatch.compare(this.#lastSentSessionInfoJsons[sessionId] || {}, newSessionBlob || {})
-					if (patch.length > 0) {
-						this.#registry.io.emitToRoom(room, `action-recorder:session:update:${sessionId}`, patch)
+				const eventName = `patchSession:${sessionId}` as const
+
+				if (this.#updateEvents.listenerCount(eventName) > 0) {
+					if (this.#lastSentSessionInfoJsons[sessionId] && newSessionBlob) {
+						const patch = jsonPatch.compare<RecordSessionInfo>(
+							this.#lastSentSessionInfoJsons[sessionId],
+							newSessionBlob
+						)
+						if (patch.length > 0) {
+							this.#updateEvents.emit(eventName, {
+								type: 'patch',
+								patch,
+							})
+						}
+					} else if (newSessionBlob) {
+						// Send initial session info
+						this.#updateEvents.emit(eventName, {
+							type: 'init',
+							session: newSessionBlob,
+						})
+					} else if (this.#lastSentSessionInfoJsons[sessionId]) {
+						// Send removal of session info
+						this.#updateEvents.emit(eventName, {
+							type: 'remove',
+						})
+					} else {
+						// Nothing to do
 					}
 				}
 
@@ -250,13 +324,6 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			}
 		}
 
-		if (this.#registry.io.countRoomMembers(SessionListRoom) > 0) {
-			const patch = jsonPatch.compare(this.#lastSentSessionListJson, newSessionListJson || {})
-			if (patch.length > 0) {
-				this.#registry.io.emitToRoom(SessionListRoom, `action-recorder:session-list`, patch)
-			}
-		}
-
 		this.#lastSentSessionListJson = newSessionListJson
 
 		this.emit('sessions_changed', sessionIds)
@@ -270,7 +337,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		const oldSession = this.#currentSession
 
 		this.#currentSession.isRunning = false
-		this.emit(`action_recorder_is_running`, this.#currentSession.isRunning)
+		this.emit('action_recorder_is_running', this.#currentSession.isRunning)
 		this.#syncRecording()
 
 		const newId = nanoid()
@@ -420,7 +487,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	 */
 	setRecording(isRunning: boolean): void {
 		this.#currentSession.isRunning = !!isRunning
-		this.emit(`action_recorder_is_running`, this.#currentSession.isRunning)
+		this.emit('action_recorder_is_running', this.#currentSession.isRunning)
 		this.#syncRecording()
 
 		this.commitChanges([this.#currentSession.id])

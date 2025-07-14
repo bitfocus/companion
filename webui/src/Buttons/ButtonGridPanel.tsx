@@ -15,6 +15,7 @@ import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { GridZoomController } from './GridZoom.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -39,7 +40,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	gridZoomValue,
 	gridZoomController,
 }: ButtonsGridPanelProps) {
-	const { socket, pages, userConfig } = useContext(RootAppStoreContext)
+	const { pages, userConfig } = useContext(RootAppStoreContext)
 
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
@@ -96,38 +97,52 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const gridSize = userConfig.properties?.gridSize
 
+	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
+
 	const doGrow = useCallback(
 		(direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => {
 			if (amount <= 0 || !gridSize) return
 
 			switch (direction) {
 				case 'left':
-					socket.emit('set_userconfig_key', 'gridSize', {
-						...gridSize,
-						minColumn: gridSize.minColumn - (amount || 2),
+					setConfigKeyMutation.mutate({
+						key: 'gridSize',
+						value: {
+							...gridSize,
+							minColumn: gridSize.minColumn - (amount || 2),
+						},
 					})
 					break
 				case 'right':
-					socket.emit('set_userconfig_key', 'gridSize', {
-						...gridSize,
-						maxColumn: gridSize.maxColumn + (amount || 2),
+					setConfigKeyMutation.mutate({
+						key: 'gridSize',
+						value: {
+							...gridSize,
+							maxColumn: gridSize.maxColumn + (amount || 2),
+						},
 					})
 					break
 				case 'top':
-					socket.emit('set_userconfig_key', 'gridSize', {
-						...gridSize,
-						minRow: gridSize.minRow - (amount || 2),
+					setConfigKeyMutation.mutate({
+						key: 'gridSize',
+						value: {
+							...gridSize,
+							minRow: gridSize.minRow - (amount || 2),
+						},
 					})
 					break
 				case 'bottom':
-					socket.emit('set_userconfig_key', 'gridSize', {
-						...gridSize,
-						maxRow: gridSize.maxRow + (amount || 2),
+					setConfigKeyMutation.mutate({
+						key: 'gridSize',
+						value: {
+							...gridSize,
+							maxRow: gridSize.maxRow + (amount || 2),
+						},
 					})
 					break
 			}
 		},
-		[socket, gridSize]
+		[setConfigKeyMutation, gridSize]
 	)
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()

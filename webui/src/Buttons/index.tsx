@@ -17,6 +17,7 @@ import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { useMatchRoute, useNavigate, UseNavigateResult } from '@tanstack/react-router'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
 
@@ -44,7 +45,7 @@ function getLastPageNumber(): number {
 }
 
 export const ButtonsPage = observer(function ButtonsPage() {
-	const { userConfig, socket, pages, viewControl } = useContext(RootAppStoreContext)
+	const { userConfig, pages, viewControl } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
@@ -73,11 +74,12 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		})
 	}, [])
 
+	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 	const doButtonGridClick = useCallback(
 		(location: ControlLocation, isDown: boolean) => {
 			if (viewControl.buttonGridHotPress) {
-				socket
-					.emitPromise('controls:hot-press', [location, isDown, 'grid'])
+				hotPressMutation
+					.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
 					.catch((e) => console.error(`Hot press failed: ${e}`))
 			} else if (isDown) {
 				setActiveTab('edit')
@@ -86,13 +88,17 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				setTabResetToken(nanoid())
 			}
 		},
-		[socket, viewControl]
+		[hotPressMutation, viewControl]
 	)
 	const clearSelectedButton = useCallback(() => {
 		doChangeTab('pages')
 	}, [doChangeTab])
 
 	const gridSize = userConfig.properties?.gridSize
+
+	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
+	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
 
 	const handleKeyDownInButtons = useCallback(
 		(e: React.KeyboardEvent) => {
@@ -203,7 +209,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								socket.emitPromise('controls:reset', [selectedButton]).catch((e) => {
+								resetControlMutation.mutateAsync({ location: selectedButton }).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							}
@@ -221,14 +227,18 @@ export const ButtonsPage = observer(function ButtonsPage() {
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[1] === 'copy') {
-							socket.emitPromise('controls:copy', [copyFromButton[0], selectedButton]).catch((e) => {
-								console.error(`copy failed: ${e}`)
-							})
+							copyControlMutation
+								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
+								.catch((e) => {
+									console.error(`copy failed: ${e}`)
+								})
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[1] === 'cut') {
-							socket.emitPromise('controls:move', [copyFromButton[0], selectedButton]).catch((e) => {
-								console.error(`move failed: ${e}`)
-							})
+							moveControlMutation
+								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
+								.catch((e) => {
+									console.error(`move failed: ${e}`)
+								})
 							setCopyFromButton(null)
 							setTabResetToken(nanoid())
 						} else {
@@ -238,7 +248,17 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				}
 			}
 		},
-		[socket, selectedButton, copyFromButton, gridSize, setPageNumber, gridZoomController, pages.data.length]
+		[
+			resetControlMutation,
+			copyControlMutation,
+			moveControlMutation,
+			selectedButton,
+			copyFromButton,
+			gridSize,
+			setPageNumber,
+			gridZoomController,
+			pages.data.length,
+		]
 	)
 
 	if (pageNumber === null) {

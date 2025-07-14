@@ -3,20 +3,26 @@ import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
 import { default_nav_buttons_definitions } from './Defaults.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { PageModel, PageModelChangesItem } from '@companion-app/shared/Model/PageModel.js'
+import type {
+	PageModel,
+	PageModelChangesInit,
+	PageModelChangesItem,
+	PageModelChangesUpdate,
+} from '@companion-app/shared/Model/PageModel.js'
 import type { Registry } from '../Registry.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { DataStoreTableView } from '../Data/StoreBase.js'
-
-const PagesRoom = 'pages'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
 
 interface PageControllerEvents {
 	pagecount: [count: number]
 	pageindexchange: [pageIds: Set<string>]
 
 	name: [pageNumber: number, name: string | undefined]
+
+	clientUpdate: [update: PageModelChangesUpdate]
 }
 
 /**
@@ -65,138 +71,159 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.#setupPages(this.#dbTable.all())
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('pages:set-name', (pageNumber, name) => {
-			this.#logger.silly(`socket: pages:set-name ${pageNumber}: ${name}`)
+	createTrpcRouter() {
+		const self = this
+		const selfEmitter: EventEmitter<PageControllerEvents> = this
 
-			const existingData = this.getPageInfo(pageNumber)
-			if (!existingData) throw new Error(`Page "${pageNumber}" does not exist`)
+		return router({
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(selfEmitter, 'clientUpdate', signal)
 
-			this.#logger.silly('Set page name ' + pageNumber + ' to ', name)
-			existingData.name = name
+				yield { type: 'init', order: self.#pageIds, pages: self.#pagesById } satisfies PageModelChangesInit
 
-			this.#commitChanges([pageNumber], true)
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
 
-			this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
-				updatedOrder: null,
-				added: [],
-				changes: [
-					{
-						id: existingData.id,
-						name: name,
-						controls: [],
-					},
-				],
-			})
-		})
+			setName: publicProcedure
+				.input(
+					z.object({
+						pageNumber: z.number(),
+						name: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					this.#logger.silly(`trpc: pages:setName ${input.pageNumber}: ${input.name}`)
 
-		client.onPromise('pages:subscribe', () => {
-			this.#logger.silly('socket: get_page_all')
+					this.setPageName(input.pageNumber, input.name, true)
+				}),
 
-			client.join(PagesRoom)
+			remove: publicProcedure
+				.input(
+					z.object({
+						pageNumber: z.number(),
+					})
+				)
+				.mutation(({ input }) => {
+					this.#logger.silly(`trpc: pages:remove ${input.pageNumber}`)
 
-			return {
-				order: this.#pageIds,
-				pages: this.#pagesById,
-			}
-		})
-		client.onPromise('pages:unsubscribe', () => {
-			client.leave(PagesRoom)
-		})
+					if (this.getPageCount() === 1) return 'fail'
 
-		client.onPromise('pages:delete-page', (pageNumber) => {
-			this.#logger.silly(`Delete page ${pageNumber}`)
+					// Delete the controls, and allow them to redraw
+					const controlIds = this.getAllControlIdsOnPage(input.pageNumber)
+					for (const controlId of controlIds) {
+						this.#registry.controls.deleteControl(controlId)
+					}
 
-			if (this.getPageCount() === 1) return 'fail'
+					// Delete the page
+					this.deletePage(input.pageNumber)
 
-			// Delete the controls, and allow them to redraw
-			const controlIds = this.getAllControlIdsOnPage(pageNumber)
-			for (const controlId of controlIds) {
-				this.#registry.controls.deleteControl(controlId)
-			}
+					return 'ok'
+				}),
 
-			// Delete the page
-			this.deletePage(pageNumber)
+			insert: publicProcedure
+				.input(
+					z.object({
+						asPageNumber: z.number(),
+						pageNames: z.array(z.string()),
+					})
+				)
+				.mutation(({ input }) => {
+					this.#logger.silly(`trpc: pages:insert ${input.asPageNumber}`)
 
-			return 'ok'
-		})
+					const pageIds = this.insertPages(input.asPageNumber, input.pageNames)
+					if (pageIds.length === 0) throw new Error(`Failed to insert pages`)
 
-		client.onPromise('pages:insert-pages', (asPageNumber, pageNames) => {
-			this.#logger.silly(`Insert new page ${asPageNumber}`)
+					// Add nav buttons
+					for (let i = 0; i < pageIds.length; i++) {
+						this.createPageDefaultNavButtons(input.asPageNumber + i)
+					}
 
-			// Delete the page
-			const pageIds = this.insertPages(asPageNumber, pageNames)
-			if (pageIds.length === 0) throw new Error(`Failed to insert pages`)
+					return 'ok'
+				}),
 
-			// Add nav buttons
-			for (let i = 0; i < pageIds.length; i++) {
-				this.createPageDefaultNavButtons(asPageNumber + i)
-			}
+			clearPage: publicProcedure
+				.input(
+					z.object({
+						pageNumber: z.number(),
+					})
+				)
+				.mutation(({ input }) => {
+					this.#logger.silly(`trpc: pages:clearPage ${input.pageNumber}`)
 
-			return 'ok'
-		})
+					// Delete the controls, and allow them to redraw
+					const controlIds = this.getAllControlIdsOnPage(input.pageNumber)
+					for (const controlId of controlIds) {
+						this.#registry.controls.deleteControl(controlId)
+					}
 
-		client.onPromise('pages:reset-page-clear', (pageNumber) => {
-			this.#logger.silly(`Reset page ${pageNumber}`)
+					// Clear the references on the page
+					this.resetPage(input.pageNumber)
 
-			// Delete the controls, and allow them to redraw
-			const controlIds = this.getAllControlIdsOnPage(pageNumber)
-			for (const controlId of controlIds) {
-				this.#registry.controls.deleteControl(controlId)
-			}
+					// Re-add the nav buttons
+					this.createPageDefaultNavButtons(input.pageNumber)
 
-			// Clear the references on the page
-			this.resetPage(pageNumber)
+					return 'ok'
+				}),
 
-			// Re-add the nav buttons
-			this.createPageDefaultNavButtons(pageNumber)
+			move: publicProcedure
+				.input(
+					z.object({
+						pageId: z.string(),
+						pageNumber: z.number(),
+					})
+				)
+				.mutation(({ input }) => {
+					this.#logger.silly(`trpc: pages:move ${input.pageId} to ${input.pageNumber}`)
 
-			return 'ok'
-		})
+					// Bounds checks
+					if (this.getPageCount() === 1) return 'fail'
+					if (input.pageNumber < 1 || input.pageNumber > this.getPageCount()) return 'fail'
 
-		client.onPromise('pages:move-page', (pageId, pageNumber) => {
-			this.#logger.silly(`Move page ${pageId} to ${pageNumber}`)
+					// Find current index of the page
+					const currentPageIndex = this.#pageIds.indexOf(input.pageId)
+					if (currentPageIndex === -1) return 'fail'
 
-			// Bounds checks
-			if (this.getPageCount() === 1) return 'fail'
-			if (pageNumber < 1 || pageNumber > this.getPageCount()) return 'fail'
+					// move the page
+					this.#pageIds.splice(currentPageIndex, 1)
+					this.#pageIds.splice(input.pageNumber - 1, 0, input.pageId)
 
-			// Find current index of the page
-			const currentPageIndex = this.#pageIds.indexOf(pageId)
-			if (currentPageIndex === -1) return 'fail'
+					// Update cache for controls on later pages
+					const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesAfter(
+						Math.min(currentPageIndex + 1, input.pageNumber),
+						Math.max(currentPageIndex + 1, input.pageNumber)
+					)
 
-			// move the page
-			this.#pageIds.splice(currentPageIndex, 1)
-			this.#pageIds.splice(pageNumber - 1, 0, pageId)
+					// save and report changes
+					this.#commitChanges(changedPageNumbers, false)
+					this.emit('clientUpdate', {
+						type: 'update',
+						updatedOrder: this.#pageIds,
+						added: [],
+						changes: [],
+					})
 
-			// Update cache for controls on later pages
-			const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesAfter(
-				Math.min(currentPageIndex + 1, pageNumber),
-				Math.max(currentPageIndex + 1, pageNumber)
-			)
+					// inform other interested controllers
+					this.emit('pageindexchange', changedPageIds)
 
-			// save and report changes
-			this.#commitChanges(changedPageNumbers, false)
-			this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
-				updatedOrder: this.#pageIds,
-				added: [],
-				changes: [],
-			})
+					return 'ok'
+				}),
 
-			// inform other interested controllers
-			this.emit('pageindexchange', changedPageIds)
+			recreateNav: publicProcedure
+				.input(
+					z.object({
+						pageNumber: z.number(),
+					})
+				)
+				.mutation(({ input }) => {
+					this.#logger.silly(`trpc: pages:recreateNav ${input.pageNumber}`)
 
-			return 'ok'
-		})
+					// make magical page buttons!
+					this.createPageDefaultNavButtons(input.pageNumber)
 
-		client.onPromise('pages:reset-page-nav', (pageNumber) => {
-			// make magical page buttons!
-			this.createPageDefaultNavButtons(pageNumber)
-
-			return 'ok'
+					return 'ok'
+				}),
 		})
 	}
 
@@ -231,7 +258,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		changedPageIds.add(pageInfo.id)
 
 		this.#commitChanges(changedPageNumbers, false)
-		this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
+		this.emit('clientUpdate', {
+			type: 'update',
 			updatedOrder: this.#pageIds,
 			added: [],
 			changes: [],
@@ -280,7 +308,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.#commitChanges(changedPageNumbers, false)
 
 		// inform clients
-		this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
+		this.emit('clientUpdate', {
+			type: 'update',
 			updatedOrder: this.#pageIds,
 			added: insertedPages,
 			changes: [],
@@ -458,7 +487,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			}
 
 			this.#commitChanges([location.pageNumber], false)
-			this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
+			this.emit('clientUpdate', {
+				type: 'update',
 				updatedOrder: null,
 				added: [],
 				changes: [
@@ -594,7 +624,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		pageInfo.controls = {}
 
 		this.#commitChanges([pageNumber], redraw)
-		this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
+		this.emit('clientUpdate', {
+			type: 'update',
 			updatedOrder: null,
 			added: [],
 			changes: [
@@ -672,7 +703,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.#logger.silly('Set page ' + pageNumber + ' to ', name)
 
 		this.#commitChanges([pageNumber], redraw)
-		this.#registry.io.emitToRoom(PagesRoom, 'pages:update', {
+		this.emit('clientUpdate', {
+			type: 'update',
 			updatedOrder: null,
 			added: [],
 			changes: [

@@ -1,12 +1,13 @@
 import selfsigned from 'selfsigned'
 import { cloneDeep } from 'lodash-es'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { ClientSocket } from '../UI/Handler.js'
+import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { pki } from 'node-forge'
 import { EventEmitter } from 'events'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
 import LogController from '../Log/Controller.js'
 import { DataStoreTableView } from './StoreBase.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
 
 export interface DataUserConfigEvents {
 	keyChanged: [key: keyof UserConfigModel, value: any, checkControlsInBounds: boolean]
@@ -115,6 +116,22 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		installName: '',
 		default_export_filename: '$(internal:hostname)_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
 
+		backups: [
+			// Create a disabled backup rule by default
+			{
+				id: 'default',
+				enabled: false,
+				name: 'Daily Backup',
+				backupType: 'db',
+				backupPath: '', // Default
+				cron: '0 0 * * *', // Daily at midnight
+				backupNamePattern: 'backup-$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
+				keep: 5,
+				previousBackups: [],
+				lastRan: 0,
+			},
+		],
+
 		discoveryEnabled: true,
 	}
 	/**
@@ -124,6 +141,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 	constructor(db: DataDatabase) {
 		super()
+		this.setMaxListeners(0)
 
 		this.#db = db
 		this.#dbTable = db.defaultTableView
@@ -149,18 +167,66 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		}
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.on('set_userconfig_key', this.setKey.bind(this))
-		client.on('set_userconfig_keys', this.setKeys.bind(this))
-		client.on('reset_userconfig_key', this.resetKey.bind(this))
-		client.onPromise('userconfig:get-all', () => this.#data)
+	createTrpcRouter() {
+		const self = this
+		const selfEvents: EventEmitter<DataUserConfigEvents> = self
+		const zodUserConfigKey = z.enum(Object.keys(DataUserConfig.Defaults) as [keyof UserConfigModel])
+		return router({
+			sslCertificateCreate: publicProcedure.mutation(() => {
+				return this.createSslCertificate()
+			}),
+			sslCertificateDelete: publicProcedure.mutation(() => {
+				return this.deleteSslCertificate()
+			}),
+			sslCertificateRenew: publicProcedure.mutation(() => {
+				return this.renewSslCertificate()
+			}),
 
-		client.on('ssl_certificate_create', this.createSslCertificate.bind(this))
-		client.on('ssl_certificate_delete', this.deleteSslCertificate.bind(this))
-		client.on('ssl_certificate_renew', this.renewSslCertificate.bind(this))
+			getConfig: publicProcedure.query(() => {
+				return this.#data
+			}),
+
+			watchConfig: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(selfEvents, 'keyChanged', signal)
+
+				yield { type: 'init', config: self.#data } satisfies UserConfigUpdate
+
+				for await (const [key, value] of changes) {
+					yield { type: 'key', key, value } satisfies UserConfigUpdate
+				}
+			}),
+
+			setConfigKey: publicProcedure
+				.input(
+					z.object({
+						key: zodUserConfigKey,
+						value: z.any(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setKey(input.key, input.value)
+				}),
+
+			setConfigKeys: publicProcedure
+				.input(
+					z.object({
+						values: z.record(z.any()),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setKeys(input.values)
+				}),
+
+			resetConfigKey: publicProcedure
+				.input(
+					z.object({
+						key: zodUserConfigKey,
+					})
+				)
+				.mutation(({ input }) => {
+					return this.resetKey(input.key)
+				}),
+		})
 	}
 
 	/**
@@ -351,6 +417,27 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setKey(key: keyof UserConfigModel, value: any, save = true): void {
+		if (!key) throw new Error('Missing key')
+
+		// Block direct updates to backup configuration
+		if (key === 'backups') {
+			this.#logger.warn(
+				`Direct updates to 'backups' configuration are not allowed. Use backup-rules endpoints instead.`
+			)
+			return
+		}
+
+		this.setKeyUnchecked(key, value, save)
+	}
+
+	/**
+	 * Save/update a key/value pair to the user config, without checking for blocked keys
+	 * @param key - the key to save under
+	 * @param value - the object to save
+	 * @param save - <code>false</code> if a DB save is not necessary
+	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	setKeyUnchecked(key: keyof UserConfigModel, value: any, save = true): void {
 		if (!key) throw new Error('Missing key')
 
 		let checkControlsInBounds = false

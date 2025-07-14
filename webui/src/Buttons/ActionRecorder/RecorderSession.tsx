@@ -14,7 +14,7 @@ interface RecorderSessionProps {
 export const RecorderSession = observer(function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 	const actionsService = useActionRecorderActionService(sessionId)
 
-	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} />
+	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} design="pulse" />
 
 	return (
 		<CCol xs={12} className="flex-form">

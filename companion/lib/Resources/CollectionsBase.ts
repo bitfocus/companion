@@ -1,9 +1,13 @@
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { nanoid } from 'nanoid'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { publicProcedure, toIterable } from '../UI/TRPC.js'
+import EventEmitter from 'node:events'
+import z from 'zod'
 
 export abstract class CollectionsBaseController<TCollectionMetadata> {
 	readonly #dbTable: DataStoreTableView<Record<string, CollectionBase<TCollectionMetadata>>>
+	readonly #events = new EventEmitter<{ change: [rows: CollectionBase<TCollectionMetadata>[]] }>()
 
 	protected data: CollectionBase<TCollectionMetadata>[]
 
@@ -70,7 +74,12 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	/**
 	 * Some of the collections have been modified in some way, emit an update to interested parties (eg the UI)
 	 */
-	protected abstract emitUpdate(rows: CollectionBase<TCollectionMetadata>[]): void
+	protected emitUpdate(rows: CollectionBase<TCollectionMetadata>[]): void {
+		this.#events.emit('change', rows)
+		this.emitUpdateUser(rows)
+	}
+
+	protected abstract emitUpdateUser(rows: CollectionBase<TCollectionMetadata>[]): void
 
 	/**
 	 * Ensure that all collectionIds in the data are valid collections
@@ -231,27 +240,27 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 			return
 		}
 
-		const matchedCollcetion = this.findCollectionAndParent(collectionId)
-		if (!matchedCollcetion) throw new Error(`Collection ${collectionId} not found`)
+		const matchedCollection = this.findCollectionAndParent(collectionId)
+		if (!matchedCollection) throw new Error(`Collection ${collectionId} not found`)
 
 		const newParentCollection = parentId ? this.findCollectionAndParent(parentId) : null
 		if (parentId && !newParentCollection) {
 			throw new Error(`Parent collection ${parentId} not found`)
 		}
 
-		if (parentId && this.#doesCollectionContainOtherCollection(matchedCollcetion.collection, parentId)) {
+		if (parentId && this.#doesCollectionContainOtherCollection(matchedCollection.collection, parentId)) {
 			// Can't move collection into its own child
 			return
 		}
 
-		const currentParentArray = matchedCollcetion.parentCollection
-			? matchedCollcetion.parentCollection.children
+		const currentParentArray = matchedCollection.parentCollection
+			? matchedCollection.parentCollection.children
 			: this.data
 
 		const currentIndex = currentParentArray.findIndex((child) => child.id === collectionId)
 		if (currentIndex === -1)
 			throw new Error(
-				`Collection ${collectionId} not found in parent ${matchedCollcetion.parentCollection?.id || 'root'}`
+				`Collection ${collectionId} not found in parent ${matchedCollection.parentCollection?.id || 'root'}`
 			)
 
 		// Remove from the old position
@@ -261,7 +270,7 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		})
 
 		const newParentArray = newParentCollection ? newParentCollection.collection.children : this.data
-		newParentArray.splice(dropIndex, 0, matchedCollcetion.collection) // Insert at the new position
+		newParentArray.splice(dropIndex, 0, matchedCollection.collection) // Insert at the new position
 		newParentArray.forEach((child, i) => {
 			child.sortOrder = i // Reset sortOrder for children
 		})
@@ -270,6 +279,11 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		// Note: this is being lazy, by writing every row, it could be optimized
 		for (const row of this.data) {
 			this.#dbTable.set(row.id, row)
+		}
+
+		// If the collection is being moved out of the root level, delete it from the db
+		if (!matchedCollection.parentCollection && newParentCollection) {
+			this.#dbTable.delete(collectionId)
 		}
 
 		// Inform the ui of the shuffle
@@ -319,5 +333,44 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		}
 
 		return null
+	}
+
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	protected createTrpcRouterBase() {
+		const self = this
+		return {
+			watchQuery: publicProcedure.subscription(async function* (opts) {
+				// Start the changes listener
+				const changes = toIterable(self.#events, 'change', opts.signal)
+
+				yield self.data // Initial data
+
+				// Stream any changes
+				for await (const [data] of changes) {
+					yield data
+				}
+			}),
+
+			// Note: add often requires some metadata, so is easier to define by the caller
+
+			remove: publicProcedure.input(z.object({ collectionId: z.string() })).mutation(async (opts) => {
+				const { collectionId } = opts.input
+				self.collectionRemove(collectionId)
+			}),
+
+			setName: publicProcedure
+				.input(z.object({ collectionId: z.string(), collectionName: z.string() }))
+				.mutation(async (opts) => {
+					const { collectionId, collectionName } = opts.input
+					self.collectionSetName(collectionId, collectionName)
+				}),
+
+			reorder: publicProcedure
+				.input(z.object({ collectionId: z.string(), parentId: z.string().nullable(), dropIndex: z.number() }))
+				.mutation(async (opts) => {
+					const { collectionId, parentId, dropIndex } = opts.input
+					self.collectionMove(collectionId, parentId, dropIndex)
+				}),
+		}
 	}
 }

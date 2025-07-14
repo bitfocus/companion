@@ -10,13 +10,14 @@ import { observer } from 'mobx-react-lite'
 import { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { TextInputField } from '~/Components/TextInputField.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface PagesListProps {
 	setPageNumber: (page: number) => void
 }
 
 export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
-	const { socket, pages } = useContext(RootAppStoreContext)
+	const { pages } = useContext(RootAppStoreContext)
 
 	const addRef = useRef<AddPagesModalRef>(null)
 	const deleteRef = useRef<GenericConfirmModalRef>(null)
@@ -48,6 +49,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 		}
 	}, [])
 
+	const removeMutation = useMutationExt(trpc.pages.remove.mutationOptions())
 	const doDeletePage = useCallback(
 		(e: React.MouseEvent<HTMLButtonElement>) => {
 			const pageNumber = Number(e.currentTarget.getAttribute('data-page'))
@@ -63,13 +65,13 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 				],
 				'Delete',
 				() => {
-					socket.emitPromise('pages:delete-page', [pageNumber]).catch((e) => {
+					removeMutation.mutateAsync({ pageNumber }).catch((e) => {
 						console.error('Page delete failed', e)
 					})
 				}
 			)
 		},
-		[socket]
+		[removeMutation]
 	)
 
 	return (
@@ -161,15 +163,21 @@ const PageListRow = observer(function PageListRow({
 	doInsertPage,
 	doDeletePage,
 }: PageListRowProps) {
-	const { socket } = useContext(RootAppStoreContext)
+	const setNameMutation = useMutationExt(trpc.pages.setName.mutationOptions())
+	const moveMutation = useMutationExt(trpc.pages.move.mutationOptions())
 
 	const changeName = useCallback(
 		(newName: string) => {
-			socket.emitPromise('pages:set-name', [pageNumber, newName ?? '']).catch((e) => {
-				console.error('Failed to set name', e)
-			})
+			setNameMutation
+				.mutateAsync({
+					pageNumber,
+					name: newName ?? '',
+				})
+				.catch((e) => {
+					console.error('Failed to set name', e)
+				})
 		},
-		[socket, pageNumber]
+		[setNameMutation, pageNumber]
 	)
 
 	const ref = useRef<HTMLTableRowElement>(null)
@@ -190,9 +198,14 @@ const PageListRow = observer(function PageListRow({
 			// Time to actually perform the action
 			// serviceFactory.moveCard(item.stepId, item.setId, item.index, index)
 			console.log('do move', item, hoverPageNumber)
-			socket.emitPromise('pages:move-page', [item.pageId, hoverPageNumber]).catch((e) => {
-				console.error('Page move failed', e)
-			})
+			moveMutation
+				.mutateAsync({
+					pageId: item.pageId,
+					pageNumber: hoverPageNumber,
+				})
+				.catch((e) => {
+					console.error('Page move failed', e)
+				})
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,

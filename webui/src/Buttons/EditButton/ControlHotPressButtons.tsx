@@ -2,8 +2,8 @@ import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CButtonGroup, CButton } from '@coreui/react'
 import { faPlay, faUndo, faRedo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useContext, useCallback } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import React, { useCallback } from 'react'
+import { trpc, useMutationExt } from '~/TRPC'
 import { MyErrorBoundary } from '~/util.js'
 
 export function ControlHotPressButtons({
@@ -13,28 +13,29 @@ export function ControlHotPressButtons({
 	location: ControlLocation
 	showRotaries: boolean
 }): React.JSX.Element {
-	const { socket } = useContext(RootAppStoreContext)
+	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
+	const hotRotateMutation = useMutationExt(trpc.controls.hotRotateControl.mutationOptions())
 
 	const hotPressDown = useCallback(() => {
-		socket
-			.emitPromise('controls:hot-press', [location, true, 'edit'])
+		hotPressMutation
+			.mutateAsync({ location, direction: true, surfaceId: 'edit' })
 			.catch((e) => console.error(`Hot press failed: ${e}`))
-	}, [socket, location])
+	}, [hotPressMutation, location])
 	const hotPressUp = useCallback(() => {
-		socket
-			.emitPromise('controls:hot-press', [location, false, 'edit'])
+		hotPressMutation
+			.mutateAsync({ location, direction: false, surfaceId: 'edit' })
 			.catch((e) => console.error(`Hot press failed: ${e}`))
-	}, [socket, location])
+	}, [hotPressMutation, location])
 	const hotRotateLeft = useCallback(() => {
-		socket
-			.emitPromise('controls:hot-rotate', [location, false, 'edit'])
+		hotRotateMutation
+			.mutateAsync({ location, direction: false, surfaceId: 'edit' })
 			.catch((e) => console.error(`Hot rotate failed: ${e}`))
-	}, [socket, location])
+	}, [hotRotateMutation, location])
 	const hotRotateRight = useCallback(() => {
-		socket
-			.emitPromise('controls:hot-rotate', [location, true, 'edit'])
+		hotRotateMutation
+			.mutateAsync({ location, direction: true, surfaceId: 'edit' })
 			.catch((e) => console.error(`Hot rotate failed: ${e}`))
-	}, [socket, location])
+	}, [hotRotateMutation, location])
 
 	return (
 		<>

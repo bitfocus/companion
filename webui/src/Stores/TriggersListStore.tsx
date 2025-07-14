@@ -2,27 +2,35 @@ import { action, observable } from 'mobx'
 import { assertNever } from '~/util.js'
 import { applyPatch } from 'fast-json-patch'
 import { cloneDeep } from 'lodash-es'
-import type { ClientTriggerData, TriggerCollection, TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
+import type {
+	ClientTriggerData,
+	TriggerCollection,
+	TriggerCollectionData,
+	TriggersUpdate,
+} from '@companion-app/shared/Model/TriggerModel.js'
+import type { GenericCollectionsStore } from './GenericCollectionsStore'
 
-export class TriggersListStore {
+export class TriggersListStore implements GenericCollectionsStore<TriggerCollectionData> {
 	readonly triggers = observable.map<string, ClientTriggerData>()
 	readonly collections = observable.map<string, TriggerCollection>()
 
-	public resetTriggers = action((newData: Record<string, ClientTriggerData | undefined> | null) => {
-		this.triggers.clear()
-
-		if (newData) {
-			for (const [triggerId, triggerInfo] of Object.entries(newData)) {
-				if (!triggerInfo) continue
-
-				this.triggers.set(triggerId, triggerInfo)
-			}
+	public updateTriggers = action((change: TriggersUpdate | null) => {
+		if (!change) {
+			this.triggers.clear()
+			return
 		}
-	})
 
-	public applyTriggersChange = action((change: TriggersUpdate) => {
 		const changeType = change.type
 		switch (change.type) {
+			case 'init':
+				this.triggers.clear()
+
+				for (const [triggerId, triggerInfo] of Object.entries(change.triggers)) {
+					if (!triggerInfo) continue
+
+					this.triggers.set(triggerId, triggerInfo)
+				}
+				break
 			case 'add':
 				this.triggers.set(change.controlId, change.info)
 				break
@@ -62,7 +70,7 @@ export class TriggersListStore {
 		return Array.from(this.collections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}
 
-	public resetCollection = action((newData: TriggerCollection[] | null) => {
+	public resetCollections = action((newData: TriggerCollection[] | null) => {
 		this.collections.clear()
 
 		if (newData) {

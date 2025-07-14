@@ -18,7 +18,7 @@ export const AddEventDropdown = observer(function AddEventDropdown({ onSelect }:
 
 	const options = useComputed(() => {
 		const options: DropdownChoice[] = []
-		for (const [eventId, event] of Object.entries(eventDefinitions.definitions)) {
+		for (const [eventId, event] of eventDefinitions.definitions) {
 			if (!event) continue
 
 			options.push({

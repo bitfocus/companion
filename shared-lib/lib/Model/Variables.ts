@@ -4,18 +4,31 @@ export interface VariableDefinition {
 	label: string
 }
 
-export type ModuleVariableDefinitions = Record<string, VariableDefinition | undefined>
+export type ModuleVariableDefinitions = Record<string, VariableDefinition>
 
 export type AllVariableDefinitions = Record<string, ModuleVariableDefinitions | undefined>
 
-export type VariableDefinitionUpdate = VariableDefinitionUpdateSetOp | VariableDefinitionUpdatePatchOp
+export type VariableDefinitionUpdate =
+	| VariableDefinitionUpdateInitOp
+	| VariableDefinitionUpdateSetOp
+	| VariableDefinitionUpdatePatchOp
+	| VariableDefinitionUpdateRemoveOp
 
+export interface VariableDefinitionUpdateInitOp {
+	type: 'init'
+	variables: AllVariableDefinitions
+}
 export interface VariableDefinitionUpdateSetOp {
 	type: 'set'
-
-	variables: Record<string, VariableDefinition | undefined>
+	label: string
+	variables: ModuleVariableDefinitions
 }
 export interface VariableDefinitionUpdatePatchOp {
 	type: 'patch'
-	patch: JsonPatchOperation[]
+	label: string
+	patch: JsonPatchOperation<ModuleVariableDefinitions>[]
+}
+export interface VariableDefinitionUpdateRemoveOp {
+	type: 'remove'
+	label: string
 }

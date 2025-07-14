@@ -21,11 +21,10 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 **Donations**
 
 - https://opencollective.com/companion
-- https://donorbox.org/bitfocus-opensource
 
 ## Modules (Supported devices/software)
 
-- https://bitfocus.io/connections (200+!)
+- https://bitfocus.io/connections (600+!)
 
 ## Contributors
 
@@ -34,13 +33,13 @@ This project exists thanks to all the people who contribute.
 
 ## Backers
 
-Thank you to all our backers! 🙏 [[Become a backer](https://donorbox.org/bitfocus-opensource)]
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/companion)]
 
 <a href="https://opencollective.com/companion#backers" target="_blank"><img src="https://opencollective.com/companion/backers.svg?width=890"></a>
 
 ## Sponsors
 
-Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://donorbox.org/bitfocus-opensource)]
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/companion)]
 
 <a href="https://opencollective.com/companion/sponsor/0/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/0/avatar.svg"></a>
 <a href="https://opencollective.com/companion/sponsor/1/website" target="_blank"><img src="https://opencollective.com/companion/sponsor/1/avatar.svg"></a>

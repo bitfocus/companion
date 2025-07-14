@@ -1,47 +1,36 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useState } from 'react'
 import { PagesStore } from '~/Stores/PagesStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
 
 export function usePagesInfoSubscription(
-	socket: CompanionSocketWrapped,
 	store: PagesStore,
-	setLoadError?: ((error: string | null) => void) | undefined,
-	retryToken?: string
-): boolean {
+	setLoadError?: ((error: string | null) => void) | undefined
+): {
+	ready: boolean
+	reset: () => void
+} {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		setLoadError?.(null)
-		store.reset(null)
-		setReady(false)
-
-		socket
-			.emitPromise('pages:subscribe', [])
-			.then((newPages) => {
+	const sub = useSubscription(
+		trpc.pages.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
 				setLoadError?.(null)
-				store.reset(newPages)
+				store.updateStore(null)
+				setReady(false)
+			},
+			onData: (data) => {
+				setLoadError?.(null)
+				store.updateStore(data)
 				setReady(true)
-			})
-			.catch((e) => {
-				console.error('Failed to load pages list:', e)
-				setLoadError?.(`Failed to load pages list`)
-				store.reset(null)
-			})
-
-		const unsubUpdates = socket.on('pages:update', (change) => {
-			store.updatePage(change)
+			},
+			onError: (error) => {
+				console.error('Failed to load pages list:', error)
+				setLoadError?.(`Failed to load pages list: ${error.message}`)
+				store.updateStore(null)
+			},
 		})
+	)
 
-		return () => {
-			store.reset(null)
-
-			unsubUpdates()
-
-			socket.emitPromise('pages:unsubscribe', []).catch((e) => {
-				console.error('Failed to cleanup web-buttons:', e)
-			})
-		}
-	}, [retryToken, socket, store, setLoadError])
-
-	return ready
+	return { ready, reset: sub.reset }
 }

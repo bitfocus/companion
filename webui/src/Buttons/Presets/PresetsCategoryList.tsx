@@ -5,22 +5,23 @@ import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { observer } from 'mobx-react-lite'
 
 interface PresetsCategoryListProps {
-	presets: Record<string, UIPresetDefinition>
+	presets: Map<string, UIPresetDefinition> | undefined
 	connectionInfo: ClientConnectionConfig | undefined
 	moduleInfo: ClientModuleInfo | undefined
 	selectedConnectionId: string
 	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
 }
-export function PresetsCategoryList({
+export const PresetsCategoryList = observer(function PresetsCategoryList({
 	presets,
 	connectionInfo,
 	selectedConnectionId,
 	setConnectionAndCategory,
 }: Readonly<PresetsCategoryListProps>): React.JSX.Element {
 	const categories = new Set<string>()
-	for (const preset of Object.values(presets)) {
+	for (const preset of presets?.values() || []) {
 		categories.add(preset.category)
 	}
 
@@ -61,4 +62,4 @@ export function PresetsCategoryList({
 			)}
 		</div>
 	)
-}
+})

@@ -1,102 +1,68 @@
-import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
-import { SocketContext, applyPatchOrReplaceObject } from '~/util.js'
+import React, { useCallback, useRef, useMemo } from 'react'
 import { CCallout, CCol, CRow } from '@coreui/react'
-import { GenericConfirmModal } from '~/Components/GenericConfirmModal.js'
-import type { RecordSessionInfo, RecordSessionListInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import type { RecordSessionUpdate } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { RecorderSessionFinishModal } from './RecorderSessionFinishModal.js'
 import { RecorderSessionHeading } from './RecorderSessionHeading.js'
 import { RecorderSession } from './RecorderSession.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC.js'
+import { useComputed } from '~/util.js'
+import { observer } from 'mobx-react-lite'
+import { ActionRecorderSessionStore } from './SessionStore.js'
 
-export function ActionRecorder(): React.JSX.Element {
-	const socket = useContext(SocketContext)
+export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Element {
+	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
-	const confirmRef = useRef(null)
+	const sessionsStore = useMemo(() => new ActionRecorderSessionStore(), [])
 
-	const [sessions, setSessions] = useState<Record<string, RecordSessionListInfo | undefined> | null>(null)
-	const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
-	const [isFinishing, setIsFinishing] = useState(false)
-
-	// Subscribe to the list of sessions
-	useEffect(() => {
-		socket
-			.emitPromise('action-recorder:subscribe', [])
-			.then((newSessions) => {
-				setSessions(newSessions)
-
-				setSelectedSessionId(Object.keys(newSessions).sort()[0] || null)
-				setIsFinishing(false)
-			})
-			.catch((e) => {
+	// Subscribe to the list of sessions using tRPC
+	useSubscription(
+		trpc.actionRecorder.sessionList.subscriptionOptions(undefined, {
+			onData: (newSessions) => {
+				sessionsStore.updateSessionList(newSessions)
+			},
+			onError: (e) => {
 				console.error('Action record subscribe', e)
-			})
-
-		const unsubList = socket.on('action-recorder:session-list', (newSessions) => {
-			setSessions((oldSessions) => oldSessions && applyPatchOrReplaceObject(oldSessions, newSessions))
+			},
 		})
+	)
 
-		return () => {
-			socket.emitPromise('action-recorder:unsubscribe', []).catch((e) => {
-				console.error('Action record subscribe', e)
-			})
-
-			unsubList()
-		}
-	}, [socket])
-
-	// Ensure the sessionId remains valid
-	useEffect(() => {
-		setSelectedSessionId((oldId) => {
-			return sessions && oldId && sessions[oldId] ? oldId : Object.keys(sessions || {}).sort()[0] || null
-		})
-	}, [sessions])
-
-	useEffect(() => {
-		setIsFinishing(false)
-	}, [selectedSessionId])
-
-	const [sessionInfo, setSessionInfo] = useState<RecordSessionInfo | null>(null)
-
-	useEffect(() => {
-		setSessionInfo(null)
-
-		if (!selectedSessionId) return
-		socket
-			.emitPromise('action-recorder:session:subscribe', [selectedSessionId])
-			.then((info) => {
-				setSessionInfo(info)
-			})
-			.catch((e) => {
-				console.error('Action record session subscribe', e)
-			})
-
-		const unsubUpdate = socket.on(`action-recorder:session:update:${selectedSessionId}`, (patch) => {
-			setSessionInfo((oldInfo) => oldInfo && applyPatchOrReplaceObject(oldInfo, patch))
-		})
-
-		return () => {
-			socket.emitPromise('action-recorder:session:unsubscribe', [selectedSessionId]).catch((e) => {
-				console.error('Action record subscribe', e)
-			})
-
-			unsubUpdate()
-		}
-	}, [socket, selectedSessionId])
+	// Subscribe to specific session info using tRPC
+	const selectedSessionId = sessionsStore.selectedSessionId
+	useSubscription(
+		trpc.actionRecorder.session.watch.subscriptionOptions(
+			{ sessionId: selectedSessionId || '' },
+			{
+				enabled: !!selectedSessionId,
+				onData: (info) => {
+					sessionsStore.updateSessionInfo(info as RecordSessionUpdate) // TODO - some ts mismatch
+				},
+				onError: (e) => {
+					console.error('Action record session subscribe', e)
+				},
+			}
+		)
+	)
 
 	const closeFinishingModal = useCallback(() => {
-		setIsFinishing(false)
-	}, [])
+		sessionsStore.isFinishing = false
+	}, [sessionsStore])
 	const openFinishingModal = useCallback(() => {
-		setIsFinishing(true)
-	}, [])
+		sessionsStore.isFinishing = true
+	}, [sessionsStore])
 
-	const actionIds = useMemo(() => sessionInfo?.actions?.map((a) => a.id) ?? [], [sessionInfo?.actions])
+	const actionIds = useComputed(
+		() => sessionsStore.selectedSessionInfo?.actions?.map((a) => a.id) ?? [],
+		[sessionsStore]
+	)
 
 	return (
 		<CRow className="action-recorder-panel">
 			<GenericConfirmModal ref={confirmRef} />
 
-			{isFinishing && selectedSessionId ? (
+			{sessionsStore.isFinishing && selectedSessionId ? (
 				<RecorderSessionFinishModal doClose={closeFinishingModal} sessionId={selectedSessionId} />
 			) : (
 				''
@@ -109,11 +75,10 @@ export function ActionRecorder(): React.JSX.Element {
 					Not many modules support this, and they don't support it for every action.
 				</p>
 				<div style={{ margin: -12, marginTop: 10 }}>
-					{selectedSessionId && sessionInfo && (
+					{sessionsStore.selectedSessionInfo && (
 						<RecorderSessionHeading
 							confirmRef={confirmRef}
-							sessionId={selectedSessionId}
-							sessionInfo={sessionInfo}
+							sessionInfo={sessionsStore.selectedSessionInfo}
 							doFinish={openFinishingModal}
 						/>
 					)}
@@ -122,11 +87,11 @@ export function ActionRecorder(): React.JSX.Element {
 
 			{selectedSessionId ? (
 				<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
-					<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionInfo} />
+					<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionsStore.selectedSessionInfo} />
 				</PanelCollapseHelperProvider>
 			) : (
 				<CCallout color="danger">There is no session, this looks like a bug!</CCallout>
 			)}
 		</CRow>
 	)
-}
+})

@@ -1,26 +1,21 @@
-import {
-	ClientDiscoveredSurfaceInfoSatellite,
-	CompanionExternalAddresses,
-} from '@companion-app/shared/Model/Surfaces.js'
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
-import { SocketContext, LoadingBar } from '~/util.js'
+import { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { LoadingBar } from '~/util.js'
 import { CButton, CForm, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { trpc } from '~/TRPC'
 
 export interface SetupSatelliteModalRef {
 	show(surfaceInfo: ClientDiscoveredSurfaceInfoSatellite): void
 }
 export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function SetupSatelliteModal(_props, ref) {
-	const socket = useContext(SocketContext)
-
 	const [show, setShow] = useState(false)
 	const [data, setData] = useState<ClientDiscoveredSurfaceInfoSatellite | null>(null)
 
-	const [externalAddresses, setExternalAddresses] = useState<CompanionExternalAddresses | null>(null)
 	const [selectedAddress, setSelectedAddress] = useState<string | null>(null)
-	const [isExecuting, setIsExecuting] = useState(false)
 
 	const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -30,31 +25,41 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 		}
 	}
 
+	const saveMutation = useMutation(trpc.surfaceDiscovery.setupSatellite.mutationOptions())
+	const saveMutationAsync = saveMutation.mutateAsync
+
 	const doClose = useCallback(() => setShow(false), [])
 	const onClosed = useCallback(() => {
 		setData(null)
-		setExternalAddresses(null)
-		setIsExecuting(false)
 	}, [])
 	const doAction = useCallback(() => {
 		if (!data || !selectedAddress) return
 
 		// setData(null)
 		// setShow(false)
-		setIsExecuting(true)
 
-		socket
-			.emitPromise('surfaces:discovery:setup-satellite', [data, selectedAddress], 10000)
-			.then((_failureReason) => {
-				// TODO
-
+		saveMutationAsync({
+			satelliteInfo: data,
+			companionAddress: selectedAddress,
+		}).then(
+			() => {
 				setShow(false)
-			})
-			.catch((e) => {
+			},
+			(e) => {
 				console.error('Failed to setup satellite: ', e)
-				setIsExecuting(false)
-			})
-	}, [socket, data, selectedAddress])
+			}
+		)
+	}, [saveMutationAsync, data, selectedAddress])
+
+	const externalAddressesQuery = useQuery(
+		trpc.surfaceDiscovery.externalAddresses.queryOptions(undefined, {
+			enabled: show,
+		})
+	)
+	useEffect(() => {
+		setSelectedAddress((address) => (address || externalAddressesQuery.data?.addresses[0]?.id?.toString()) ?? null)
+	}, [externalAddressesQuery.data])
+	const refetchExternalAddresses = externalAddressesQuery.refetch
 
 	useImperativeHandle(
 		ref,
@@ -62,24 +67,15 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 			show(surfaceInfo) {
 				setData(surfaceInfo)
 				setShow(true)
-				setExternalAddresses(null)
-				setIsExecuting(false)
-
-				socket
-					.emitPromise('surfaces:discovery:get-external:addresses', [])
-					.then((externalAddresses) => {
-						setExternalAddresses(externalAddresses)
-						setSelectedAddress((address) => (address || externalAddresses.addresses[0]?.id?.toString()) ?? null)
-					})
-					.catch((e) => {
-						console.error('Failed to list possible addresses: ', e)
-					})
+				refetchExternalAddresses().catch((e) => {
+					console.error('Failed to refetch external addresses: ', e)
+				})
 
 				// Focus the button asap. It also gets focused once the open is complete
 				setTimeout(buttonFocus, 50)
 			},
 		}),
-		[socket]
+		[refetchExternalAddresses]
 	)
 
 	const [modalRef, setModalRef] = useState<HTMLElement | null>(null)
@@ -94,17 +90,18 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 					<CForm onSubmit={doAction}>
 						<p>This will configure the selected Companion Satellite installation to connect to Companion</p>
 
-						{!externalAddresses ? (
+						{!externalAddressesQuery.data ? (
+							// TODO - show error?
 							<LoadingBar />
 						) : (
 							<>
 								<DropdownInputField
 									label="Companion Address"
-									choices={externalAddresses.addresses}
+									choices={externalAddressesQuery.data?.addresses}
 									value={selectedAddress ?? ''}
 									setValue={(selected) => setSelectedAddress(selected?.toString() ?? '')}
 									allowCustom={true}
-									disabled={isExecuting}
+									disabled={saveMutation.isPending}
 								/>
 								<p>Select the address of Companion that satellite should connect to</p>
 							</>
@@ -119,7 +116,7 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 						ref={buttonRef}
 						color="primary"
 						onClick={doAction}
-						disabled={!externalAddresses || !selectedAddress || isExecuting}
+						disabled={!externalAddressesQuery.data || !selectedAddress || saveMutation.isPending}
 					>
 						Setup
 					</CButton>
