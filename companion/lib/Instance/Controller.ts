@@ -227,17 +227,17 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	async reloadUsesOfModule(moduleId: string, versionId: string): Promise<void> {
 		// restart usages of this module
-		const { connectionIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleId)
+		const { connectionIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleId, versionId)
 		for (const id of connectionIds) {
-			// Skip any that we know are not using this version
-			const config = this.#configStore.getConfigForId(id)
-			if (config && config.moduleVersionId !== versionId) continue
-
 			// Restart it
 			this.#queueUpdateConnectionState(id, false, true)
 		}
 
 		this.#logger.info(`Reloading ${labels.length} connections: ${labels.join(', ')}`)
+	}
+
+	findActiveUsagesOfModule(moduleId: string, versionId?: string): { connectionIds: string[]; labels: string[] } {
+		return this.#configStore.findActiveUsagesOfModule(moduleId, versionId)
 	}
 
 	/**

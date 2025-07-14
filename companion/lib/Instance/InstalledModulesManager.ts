@@ -478,10 +478,16 @@ export class InstanceInstalledModulesManager {
 			await this.#modulesManager.uninstallModule(moduleId, versionId)
 
 			// Delete the module code
-			await fs.rm(moduleDir, { recursive: true }).catch(() => null)
-		} catch (_e) {
-			this.#logger.error(`Error uninstalling module`, _e)
-			return 'Internal error uninstalling module'
+			await fs
+				.rm(moduleDir, {
+					recursive: true,
+					retryDelay: 1000, // Give it a second to ensure no files are in use
+					maxRetries: 5, // Try a few times, just in case
+				})
+				.catch(() => null)
+		} catch (e) {
+			this.#logger.error(`Error uninstalling module`, e)
+			return `Internal error uninstalling module: ${(e as Error).message}`
 		}
 
 		return null

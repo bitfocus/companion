@@ -111,14 +111,21 @@ export class InstanceModules {
 		const moduleInfo = this.#knownModules.get(moduleId)
 		if (!moduleInfo) throw new Error('Module not found when removing version')
 
+		// Make sure the module is not in use
+		const { labels } = this.#instanceController.findActiveUsagesOfModule(moduleId, versionId)
+		if (labels.length > 0)
+			throw new Error(
+				`Cannot uninstall module ${moduleId} version ${versionId} while it is in use by connections: ${labels.join(', ')}`
+			)
+
 		delete moduleInfo.installedVersions[versionId]
 
 		// Notify clients
 		this.#emitModuleUpdate(moduleId)
 		this.#invalidateModuleUpgradeRoom(moduleId)
 
-		// Ensure any modules using this version are started
-		await this.#instanceController.reloadUsesOfModule(moduleId, versionId)
+		// // Ensure any modules using this version are started
+		// await this.#instanceController.reloadUsesOfModule(moduleId, versionId)
 	}
 
 	/**
