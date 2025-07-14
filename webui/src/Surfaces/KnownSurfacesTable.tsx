@@ -10,6 +10,7 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import CopyToClipboard from 'react-copy-to-clipboard'
+import { makeAbsolutePath } from '~/util'
 
 interface KnownSurfacesTableProps {
 	selectedItemId: string | null
@@ -269,7 +270,11 @@ const SurfaceRow = observer(function SurfaceRow({
 					<CButtonGroup className="no-break">
 						{surface.integrationType === 'emulator' && (
 							<>
-								<CButton href={`/emulator/${surface.id.substring(9)}`} target="_blank" title="Open Emulator">
+								<CButton
+									href={makeAbsolutePath(`/emulator/${surface.id.substring(9)}`)}
+									target="_blank"
+									title="Open Emulator"
+								>
 									<FontAwesomeIcon icon={faFolderOpen} />
 								</CButton>
 								<CButton onClick={deleteEmulator2} title="Delete Emulator">
