@@ -2,7 +2,6 @@ import React, { useCallback, useContext, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-	faAsterisk,
 	faEyeSlash,
 	faPlus,
 	faQuestionCircle,
@@ -10,6 +9,7 @@ import {
 	faCircleMinus,
 	faTrash,
 	faWarning,
+	faFlask,
 } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -184,9 +184,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				{versionId}
-				{storeInfo?.releaseChannel === 'beta' && (
-					<FontAwesomeIcon className="pad-left" icon={faAsterisk} title="Beta" />
-				)}
+				{storeInfo?.releaseChannel === 'beta' && <FontAwesomeIcon className="pad-left" icon={faFlask} title="Beta" />}
 				{storeInfo?.deprecationReason && <FontAwesomeIcon className="pad-left" icon={faWarning} title="Deprecated" />}
 			</td>
 			<td>
