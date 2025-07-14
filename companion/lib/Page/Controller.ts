@@ -43,7 +43,7 @@ interface PageControllerEvents {
 export class PageController extends EventEmitter<PageControllerEvents> {
 	readonly #logger = LogController.createLogger('Page/Controller')
 
-	readonly #registry: Pick<Registry, 'io' | 'graphics' | 'controls' | 'userconfig'>
+	readonly #registry: Pick<Registry, 'graphics' | 'controls' | 'userconfig'>
 	readonly #dbTable: DataStoreTableView<Record<string, PageModel>>
 
 	/**

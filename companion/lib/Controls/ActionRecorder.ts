@@ -42,7 +42,7 @@ export interface ActionRecorderEvents {
 export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	readonly #logger = LogController.createLogger('Control/ActionRecorder')
 
-	readonly #registry: Pick<Registry, 'io' | 'instance' | 'controls'>
+	readonly #registry: Pick<Registry, 'instance' | 'controls'>
 
 	/**
 	 * The connection ids which are currently informed to be recording

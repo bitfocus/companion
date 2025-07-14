@@ -51,7 +51,7 @@ export class ControlsController {
 
 	readonly #registry: Pick<
 		Registry,
-		'db' | 'page' | 'ui' | 'io' | 'graphics' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
+		'db' | 'page' | 'ui' | 'graphics' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
 	>
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 

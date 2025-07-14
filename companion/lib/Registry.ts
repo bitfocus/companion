@@ -16,7 +16,6 @@ import { PageController } from './Page/Controller.js'
 import { ServiceController } from './Service/Controller.js'
 import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
-import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
@@ -97,10 +96,6 @@ export class Registry {
 	 * The core instance controller
 	 */
 	instance!: InstanceController
-	/**
-	 * The core interface client
-	 */
-	readonly io: UIHandler
 	/**
 	 * The logger
 	 */
@@ -183,7 +178,6 @@ export class Registry {
 		this.#logger.debug('constructing core modules')
 
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
-		this.io = this.ui.io
 		LogController.init(this.#appInfo)
 
 		this.db = new DataDatabase(this.#appInfo.configDir)
@@ -271,7 +265,7 @@ export class Registry {
 				this.surfaces,
 				this.page,
 				this.instance,
-				this.io,
+				this.ui.io,
 				this.ui.express
 			)
 			this.cloud = new CloudController(
