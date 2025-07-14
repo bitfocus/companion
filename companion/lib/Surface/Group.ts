@@ -16,7 +16,9 @@ import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js
 import type { SurfaceController } from './Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
+import EventEmitter from 'node:events'
+import type { UpdateEvents } from './Types.js'
 
 export class SurfaceGroup {
 	/**
@@ -80,11 +82,14 @@ export class SurfaceGroup {
 	 */
 	#userconfig: DataUserConfig
 
+	#updateEvents: EventEmitter<UpdateEvents>
+
 	constructor(
 		surfaceController: SurfaceController,
 		dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>,
 		pageStore: IPageStore,
 		userconfig: DataUserConfig,
+		updateEvents: EventEmitter<UpdateEvents>,
 		groupId: string,
 		soleHandler: SurfaceHandler | null,
 		isLocked: boolean
@@ -95,6 +100,7 @@ export class SurfaceGroup {
 		this.#dbTable = dbTable
 		this.#pageStore = pageStore
 		this.#userconfig = userconfig
+		this.#updateEvents = updateEvents
 
 		this.groupId = groupId
 		this.#isLocked = isLocked
@@ -160,6 +166,7 @@ export class SurfaceGroup {
 	 */
 	forgetConfig(): void {
 		this.#dbTable.delete(this.groupId)
+		this.#updateEvents.emit(`groupConfig:${this.groupId}`, null)
 	}
 
 	/**
@@ -374,6 +381,7 @@ export class SurfaceGroup {
 			surface.saveGroupConfig(this.groupConfig)
 		} else {
 			this.#dbTable.set(this.groupId, this.groupConfig)
+			this.#updateEvents.emit(`groupConfig:${this.groupId}`, this.groupConfig)
 		}
 	}
 }

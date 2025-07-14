@@ -6,7 +6,6 @@ import { delay } from '../Resources/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import nodeMachineId from 'node-machine-id'
 import LogController from '../Log/Controller.js'
@@ -15,6 +14,10 @@ import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import EventEmitter from 'node:events'
+import z from 'zod'
+import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 
 const CLOUD_URL = 'https://api.bitfocus.io/v1'
 const CLOUD_TABLE: string = 'cloud'
@@ -57,6 +60,11 @@ interface CloudDbTable {
 	auth: CloudAuthData
 }
 
+export type CloudUIEvents = {
+	cloudState: [CloudControllerState]
+	[id: `regionState:${string}`]: [CloudRegionState | null]
+}
+
 export class CloudController {
 	readonly #logger = LogController.createLogger('Cloud/Controller')
 
@@ -65,7 +73,6 @@ export class CloudController {
 	readonly #cacheTable: DataStoreTableView<DataCacheDefaultTable>
 	readonly controls: ControlsController
 	readonly #graphics: GraphicsController
-	readonly io: UIHandler
 	readonly pageStore: IPageStore
 
 	/**
@@ -113,13 +120,14 @@ export class CloudController {
 		canActivate: false,
 	}
 
+	readonly #uiEvents = new EventEmitter<CloudUIEvents>()
+
 	constructor(
 		appInfo: AppInfo,
 		db: DataDatabase,
 		cache: DataCache,
 		controls: ControlsController,
 		graphics: GraphicsController,
-		io: UIHandler,
 		pageStore: IPageStore
 	) {
 		this.appInfo = appInfo
@@ -127,8 +135,9 @@ export class CloudController {
 		this.#cacheTable = cache.defaultTableView
 		this.controls = controls
 		this.#graphics = graphics
-		this.io = io
 		this.pageStore = pageStore
+
+		this.#uiEvents.setMaxListeners(0)
 
 		this.data = this.#dbTable.getOrDefault('auth', {
 			token: '',
@@ -176,17 +185,91 @@ export class CloudController {
 		this.pageStore.on('pageDataChanged', this.#handlePageNameUpdate.bind(this))
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.on('cloud_state_get', this.#handleCloudStateRequest.bind(this, client))
-		client.on('cloud_state_set', this.#handleCloudStateSet.bind(this, client))
-		client.on('cloud_region_state_get', this.#handleCloudRegionStateRequest.bind(this, client))
-		client.on('cloud_region_state_set', this.#handleCloudRegionStateSet.bind(this, client))
-		client.on('cloud_login', this.#handleCloudLogin.bind(this, client))
-		client.on('cloud_logout', this.#handleCloudLogout.bind(this, client))
-		client.on('cloud_regenerate_uuid', this.#handleCloudRegenerateUUID.bind(this, client))
+	createTrpcRouter() {
+		const self = this
+		return router({
+			watchState: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#uiEvents, 'cloudState', signal)
+
+				const modifyState = (state: CloudControllerState): CloudControllerState => ({
+					...state,
+					tryPassword: '', // Don't leak password in state
+				})
+
+				// TODO - set ping: true while active
+
+				yield modifyState(self.state)
+
+				for await (const [change] of changes) {
+					yield modifyState(change)
+				}
+			}),
+
+			setCloudActive: publicProcedure
+				.input(
+					z.object({
+						active: z.boolean(),
+					})
+				)
+				.mutation(({ input }) => {
+					this.#logger.silly('setCloudActive', input)
+					this.#setState({ cloudActive: input.active })
+				}),
+
+			regenerateUUID: publicProcedure.mutation(async () => {
+				this.#handleCloudRegenerateUUID()
+			}),
+
+			login: publicProcedure
+				.input(
+					z.object({
+						email: z.string(),
+						password: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					await this.#handleCloudLogin(input.email, input.password)
+				}),
+			logout: publicProcedure.mutation(async () => {
+				this.#handleCloudLogout()
+			}),
+
+			watchRegionState: publicProcedure
+				.input(
+					z.object({
+						regionId: z.string(),
+					})
+				)
+				.subscription(async function* ({ input, signal }) {
+					const changes = toIterable(self.#uiEvents, `regionState:${input.regionId}`, signal)
+
+					// Emit the current state
+					yield self.#regionInstances[input.regionId]?.state ?? null
+
+					for await (const [change] of changes) {
+						yield change
+					}
+				}),
+
+			setRegionEnabled: publicProcedure
+				.input(
+					z.object({
+						regionId: z.string(),
+						enabled: z.boolean(),
+					})
+				)
+				.mutation(({ input }) => {
+					this.#logger.silly(`setRegionEnabled: ${input.regionId}`, input.enabled)
+					if (this.#regionInstances[input.regionId] !== undefined) {
+						this.#regionInstances[input.regionId].setState({
+							enabled: input.enabled,
+							cloudActive: this.state.cloudActive,
+						})
+					}
+					const activeRegions = Object.values(this.#regionInstances).filter((r) => r.state.enabled).length
+					this.#setState({ canActivate: activeRegions >= 2 })
+				}),
+		})
 	}
 
 	/**
@@ -331,7 +414,12 @@ export class CloudController {
 							if (this.#regionInstances[id] !== undefined) {
 								this.#regionInstances[id].updateSetup(CloudController.availableRegions[id])
 							} else {
-								this.#regionInstances[id] = new CloudRegion(this, id, CloudController.availableRegions[id])
+								this.#regionInstances[id] = new CloudRegion(
+									this,
+									this.#uiEvents,
+									id,
+									CloudController.availableRegions[id]
+								)
 							}
 						}
 					}
@@ -349,9 +437,8 @@ export class CloudController {
 
 	/**
 	 * Change UUID of this companion instance
-	 * @param  _client - the client connection
 	 */
-	async #handleCloudRegenerateUUID(_client: ClientSocket): Promise<void> {
+	async #handleCloudRegenerateUUID(): Promise<void> {
 		const newUuid = v4()
 		this.#setState({ uuid: newUuid })
 		this.#dbTable.setPrimitive('uuid', newUuid)
@@ -376,11 +463,10 @@ export class CloudController {
 
 	/**
 	 * Process a login request from the UI
-	 * @param _client - the client connection
 	 * @param email - the login email
 	 * @param password - the login password
 	 */
-	async #handleCloudLogin(_client: ClientSocket, email: string, password: string): Promise<void> {
+	async #handleCloudLogin(email: string, password: string): Promise<void> {
 		let responseObject: any
 
 		this.#setState({ error: null, authenticating: true })
@@ -432,9 +518,8 @@ export class CloudController {
 
 	/**
 	 * Process a logout request for the UI
-	 * @param _client - the client connection
 	 */
-	#handleCloudLogout(_client: ClientSocket): void {
+	#handleCloudLogout(): void {
 		this.data.user = ''
 		this.data.token = ''
 		this.data.connections = {}
@@ -507,52 +592,6 @@ export class CloudController {
 	}
 
 	/**
-	 * Process and return a state request from the UI
-	 * @param client - the cloud connection
-	 */
-	#handleCloudStateRequest(client: ClientSocket): void {
-		this.#logger.silly('handleCloudStateRequest')
-		client.emit('cloud_state', this.state)
-	}
-
-	/**
-	 * Process an updated state from the UI
-	 * @param _client - the cloud connection
-	 * @param newState - the new state
-	 */
-	#handleCloudStateSet(_client: ClientSocket, newState: Partial<CloudControllerState>): void {
-		this.#logger.silly('handleCloudStateSet', newState)
-		this.#setState({ ...newState })
-	}
-
-	/**
-	 * Process and send a region state request from the UI
-	 * @param client - the client connection
-	 * @param region - the region to process
-	 */
-	#handleCloudRegionStateRequest(client: ClientSocket, region: string): void {
-		this.#logger.silly(`handleCloudregionStateRequest: ${region}`)
-		if (this.#regionInstances[region] !== undefined) {
-			client.emit('cloud_region_state', region, this.#regionInstances[region].state)
-		}
-	}
-
-	/**
-	 * Process an updated region state from the UI
-	 * @param _client - the client connection
-	 * @param region - the region to process
-	 * @param newState - the new state
-	 */
-	#handleCloudRegionStateSet(_client: ClientSocket, region: string, newState: object): void {
-		this.#logger.silly(`handleCloudRegionStateSet: ${region}`, newState)
-		if (this.#regionInstances[region] !== undefined) {
-			this.#regionInstances[region].setState({ ...newState, cloudActive: this.state.cloudActive })
-		}
-		const activeRegions = Object.values(this.#regionInstances).filter((r) => r.state.enabled).length
-		this.#setState({ canActivate: activeRegions >= 2 })
-	}
-
-	/**
 	 * If a token exists, refresh it
 	 */
 	async #handlePeriodicRefresh(): Promise<void> {
@@ -610,7 +649,7 @@ export class CloudController {
 		}
 
 		if (!isEqual(newState, this.state)) {
-			this.io.emitToAll('cloud_state', newState)
+			this.#uiEvents.emit('cloudState', newState)
 			this.state = newState
 		}
 
@@ -655,7 +694,7 @@ export class CloudController {
 
 				for (const id in CloudController.availableRegions) {
 					regions.push(id)
-					this.#regionInstances[id] = new CloudRegion(this, id, CloudController.availableRegions[id])
+					this.#regionInstances[id] = new CloudRegion(this, this.#uiEvents, id, CloudController.availableRegions[id])
 				}
 
 				this.#setState({
@@ -723,7 +762,7 @@ export class CloudController {
 	}
 }
 
-interface CloudControllerState {
+export interface CloudControllerState {
 	uuid: string
 	authenticating: boolean
 	authenticated: boolean

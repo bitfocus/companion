@@ -2,8 +2,6 @@ import crypto from 'crypto'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import LogController from '../Log/Controller.js'
-import type { ClientSocket } from '../UI/Handler.js'
-import type { UIHandler } from '../UI/Handler.js'
 import type {
 	ImageLibraryInfo,
 	ImageLibraryUpdate,
@@ -17,6 +15,11 @@ import type { DataDatabase } from '../Data/Database.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
+import EventEmitter from 'node:events'
+
+const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 10 // 10MB limit, just in case
 
 export interface ImageLibraryData {
 	originalImage: string // base64 data URL (empty string if not uploaded yet)
@@ -27,30 +30,34 @@ export interface ImageLibraryData {
 export class ImageLibrary {
 	readonly #logger = LogController.createLogger('Graphics/ImageLibrary')
 	readonly #dbTable: DataStoreTableView<Record<string, ImageLibraryData>>
-	readonly #multipartUploader: MultipartUploader
-	readonly #io: UIHandler
-	readonly #sessionToImageName = new Map<string, string>()
+	readonly #multipartUploader: MultipartUploader<string>
 	readonly #graphicsController: GraphicsController
 	readonly #variablesController: VariablesController
 	readonly #collections: ImageLibraryCollections
 
-	constructor(
-		db: DataDatabase,
-		io: UIHandler,
-		graphicsController: GraphicsController,
-		variablesController: VariablesController
-	) {
+	readonly #events = new EventEmitter<{ update: [ImageLibraryUpdate[]] }>()
+
+	constructor(db: DataDatabase, graphicsController: GraphicsController, variablesController: VariablesController) {
 		this.#dbTable = db.getTableView('image_library')
-		this.#io = io
 		this.#graphicsController = graphicsController
 		this.#variablesController = variablesController
-		this.#collections = new ImageLibraryCollections(io, db, (validCollectionIds) =>
+		this.#collections = new ImageLibraryCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownCollectionIds(validCollectionIds)
 		)
-		this.#multipartUploader = new MultipartUploader((sessionId) => {
-			this.#sessionToImageName.delete(sessionId)
-			this.#io.emitToAll('image-library:upload-cancelled', sessionId)
-		})
+		this.#multipartUploader = new MultipartUploader(
+			'Graphics/ImageLibrary',
+			MAX_IMPORT_FILE_SIZE,
+			async (imageName, data) => {
+				// Process the uploaded image data and update the existing image
+				const imageInfo = await this.#updateImageWithData(imageName, data)
+
+				this.#events.emit('update', [{ type: 'update', itemName: imageName, info: imageInfo.info }])
+
+				return imageName
+			}
+		)
+
+		this.#events.setMaxListeners(0)
 
 		this.#cleanUnknownCollectionIds(this.#collections.collectAllCollectionIds())
 
@@ -72,118 +79,91 @@ export class ImageLibrary {
 			changes.push({ type: 'update', itemName: name, info: data.info })
 		}
 
-		if (this.#io.countRoomMembers('image-library') > 0 && changes.length > 0) {
-			this.#io.emitToRoom('image-library', 'image-library:update', changes)
+		if (this.#events.listenerCount('update') > 0 && changes.length > 0) {
+			this.#events.emit('update', changes)
 		}
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		this.#collections.clientConnect(client)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			collections: this.#collections.createTrpcRouter(),
+			upload: this.#multipartUploader.createTrpcRouter(),
 
-		client.onPromise('image-library:subscribe', () => {
-			client.join('image-library')
-			return this.listImages()
-		})
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'update', signal)
 
-		client.onPromise('image-library:unsubscribe', () => {
-			client.leave('image-library')
-		})
+				yield [{ type: 'init', images: self.listImages() }] satisfies ImageLibraryUpdate[]
 
-		client.onPromise('image-library:list', () => {
-			return this.listImages()
-		})
-
-		client.onPromise('image-library:get-data', (imageName: string, type: 'original' | 'preview') => {
-			return this.getImageDataUrl(imageName, type)
-		})
-
-		client.onPromise('image-library:create', (name: string, description: string) => {
-			return this.createEmptyImage(name, description)
-		})
-
-		client.onPromise('image-library:set-description', (imageName: string, name: string) => {
-			return this.setImageDescription(imageName, name)
-		})
-
-		client.onPromise('image-library:set-name', (imageName: string, newName: string) => {
-			return this.setImageName(imageName, newName)
-		})
-
-		client.onPromise('image-library:delete', (imageName: string) => {
-			return this.deleteImage(imageName)
-		})
-
-		client.onPromise('image-library:reorder', (collectionId: string | null, imageName: string, dropIndex: number) => {
-			return this.setImageOrder(collectionId, imageName, dropIndex)
-		})
-
-		client.onPromise('image-library:upload-start', (filename: string, size: number) => {
-			this.#logger.debug(`Starting image upload: ${filename} (${size} bytes)`)
-
-			if (size > 10 * 1024 * 1024) {
-				// 10MB limit, just in case
-				throw new Error('File too large (max 10MB)')
-			}
-
-			const sessionId = this.#multipartUploader.initSession(filename, size)
-			if (!sessionId) {
-				throw new Error('Upload session already in progress')
-			}
-
-			this.#io.emitToAll('image-library:upload-progress', sessionId, 0)
-			return sessionId
-		})
-
-		client.onPromise('image-library:upload-chunk', (sessionId: string, offset: number, data: Uint8Array) => {
-			this.#logger.silly(`Upload chunk ${sessionId} (@${offset} = ${data.length} bytes)`)
-
-			const progress = this.#multipartUploader.addChunk(sessionId, offset, data)
-			if (progress === null) return false
-
-			this.#io.emitToAll('image-library:upload-progress', sessionId, progress)
-			return true
-		})
-
-		client.onPromise(
-			'image-library:upload-complete',
-			async (sessionId: string, imageName: string, checksum: string) => {
-				this.#logger.debug(`Completing image upload ${sessionId} for image ${imageName}`)
-
-				try {
-					const data = this.#multipartUploader.completeSession(sessionId, checksum)
-					if (!data) {
-						throw new Error('Invalid upload session')
-					}
-
-					// Process the uploaded image data and update the existing image
-					const imageInfo = await this.#updateImageWithData(imageName, data)
-
-					this.#io.emitToAll('image-library:upload-complete', sessionId, imageName)
-
-					this.#io.emitToRoom('image-library', 'image-library:update', [
-						{ type: 'update', itemName: imageName, info: imageInfo.info },
-					])
-
-					return imageName
-				} catch (error) {
-					this.#logger.error(`Image upload failed: ${error}`)
-					this.#io.emitToAll(
-						'image-library:upload-error',
-						sessionId,
-						error instanceof Error ? error.message : 'Unknown error'
-					)
-					throw error
+				for await (const [change] of changes) {
+					yield change
 				}
-			}
-		)
+			}),
 
-		client.onPromise('image-library:upload-cancel', (sessionId: string) => {
-			this.#logger.debug(`Cancelling image upload ${sessionId}`)
-			this.#sessionToImageName.delete(sessionId)
-			this.#multipartUploader.cancelSession(sessionId)
+			create: publicProcedure
+				.input(
+					z.object({
+						name: z.string(),
+						description: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.createEmptyImage(input.name, input.description)
+				}),
+			delete: publicProcedure
+				.input(
+					z.object({
+						imageName: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.deleteImage(input.imageName)
+				}),
+
+			reorder: publicProcedure
+				.input(
+					z.object({
+						collectionId: z.string().nullable(),
+						imageName: z.string(),
+						dropIndex: z.number(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setImageOrder(input.collectionId, input.imageName, input.dropIndex)
+				}),
+
+			getData: publicProcedure
+				.input(
+					z.object({
+						imageName: z.string(),
+						type: z.enum(['original', 'preview']),
+					})
+				)
+				.query(({ input }) => {
+					return this.getImageDataUrl(input.imageName, input.type)
+				}),
+
+			setDescription: publicProcedure
+				.input(
+					z.object({
+						imageName: z.string(),
+						description: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setImageDescription(input.imageName, input.description)
+				}),
+
+			setName: publicProcedure
+				.input(
+					z.object({
+						imageName: z.string(),
+						newName: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setImageName(input.imageName, input.newName)
+				}),
 		})
 	}
 
@@ -229,7 +209,7 @@ export class ImageLibrary {
 
 		this.#logger.info(`Deleted image ${imageName} (${data.info.name})`)
 
-		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'remove', itemName: imageName }])
+		this.#events.emit('update', [{ type: 'remove', itemName: imageName }])
 
 		// Remove variable for the deleted image
 		this.#removeImageVariable(imageName)
@@ -283,7 +263,7 @@ export class ImageLibrary {
 		this.#logger.info(`Created empty image ${sageName} (${description})`)
 
 		// Notify clients
-		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'update', itemName: sageName, info }])
+		this.#events.emit('update', [{ type: 'update', itemName: sageName, info }])
 
 		return sageName
 	}
@@ -328,7 +308,7 @@ export class ImageLibrary {
 		this.#logger.info(`Updated image ${name} description to "${description}"`)
 
 		// Notify clients
-		this.#io.emitToRoom('image-library', 'image-library:update', [{ type: 'update', itemName: name, info: data.info }])
+		this.#events.emit('update', [{ type: 'update', itemName: name, info: data.info }])
 
 		return true
 	}
@@ -374,7 +354,7 @@ export class ImageLibrary {
 		this.#logger.info(`Updated image name from "${currentName}" to "${safeNewName}"`)
 
 		// Notify clients of the removal of the old name and addition of the new one
-		this.#io.emitToRoom('image-library', 'image-library:update', [
+		this.#events.emit('update', [
 			{ type: 'remove', itemName: currentName },
 			{ type: 'update', itemName: safeNewName, info: data.info },
 		])
@@ -425,8 +405,8 @@ export class ImageLibrary {
 			changes.push({ type: 'update', itemName: name, info: data.info })
 		})
 
-		if (this.#io.countRoomMembers('image-library') > 0 && changes.length > 0) {
-			this.#io.emitToRoom('image-library', 'image-library:update', changes)
+		if (this.#events.listenerCount('update') > 0 && changes.length > 0) {
+			this.#events.emit('update', changes)
 		}
 	}
 
@@ -457,7 +437,6 @@ export class ImageLibrary {
 		// Parse the data URL from the uploaded buffer
 		const dataUrlString = data.toString('utf-8')
 
-		console.log('dataUrlString', dataUrlString.slice(0, 100))
 		const dataUrlMatch = dataUrlString.match(/^data:(image\/[\w+]+);base64,(.+)$/)
 		if (!dataUrlMatch) {
 			throw new Error('Invalid data URL format or unsupported image format')
@@ -587,13 +566,13 @@ export class ImageLibrary {
 		this.#updateAllImageVariables()
 
 		// Notify clients
-		if (this.#io.countRoomMembers('image-library') > 0 && images.length > 0) {
+		if (this.#events.listenerCount('update') > 0 && images.length > 0) {
 			const changes: ImageLibraryUpdate[] = images.map((imageData) => ({
 				type: 'update',
 				itemName: imageData.info.name,
 				info: imageData.info,
 			}))
-			this.#io.emitToRoom('image-library', 'image-library:update', changes)
+			this.#events.emit('update', changes)
 		}
 
 		this.#cleanUnknownCollectionIds(this.#collections.collectAllCollectionIds())
@@ -625,7 +604,7 @@ export class ImageLibrary {
 			this.#updateImageVariableDefinitions()
 
 			// Notify clients with batched changes
-			this.#io.emitToRoom('image-library', 'image-library:update', changes)
+			this.#events.emit('update', changes)
 		}
 
 		// Clear all collections

@@ -7,6 +7,7 @@ import tseslint from 'typescript-eslint'
 import reacteslint from 'eslint-plugin-react'
 import hookseslint from 'eslint-plugin-react-hooks'
 import reactRefreshEslint from 'eslint-plugin-react-refresh'
+import pluginQuery from '@tanstack/eslint-plugin-query'
 
 export default [
 	// setup the parser first
@@ -73,7 +74,6 @@ export default [
 			'@typescript-eslint/no-explicit-any': 'off',
 			'@typescript-eslint/interface-name-prefix': 'off',
 			'@typescript-eslint/no-floating-promises': 'error',
-			'@typescript-eslint/explicit-module-boundary-types': ['error'],
 			'@typescript-eslint/promise-function-async': 'error',
 			'@typescript-eslint/require-await': 'off', // conflicts with 'promise-function-async'
 
@@ -86,7 +86,17 @@ export default [
 			'@typescript-eslint/restrict-template-expressions': 0,
 			'@typescript-eslint/restrict-plus-operands': 0,
 			'@typescript-eslint/no-redundant-type-constituents': 0,
+			'@typescript-eslint/no-this-alias': 0, // Needed for some TRPC routers
 			/** End 'recommended-requiring-type-checking' overrides */
+
+			'@typescript-eslint/explicit-module-boundary-types': [
+				'error',
+				{
+					allowedNames: [
+						'createTrpcRouter', // The router wants to be inferred
+					],
+				},
+			],
 		},
 	},
 	{
@@ -175,4 +185,9 @@ export default [
 			'@typescript-eslint/no-duplicate-type-constituents': 'off',
 		},
 	},
+
+	...pluginQuery.configs['flat/recommended'].map((config) => ({
+		...config,
+		files: ['webui/**/*.tsx', 'webui/**/*.jsx', 'webui/**/*.ts', 'webui/**/*.js'],
+	})),
 ]

@@ -2,7 +2,7 @@ import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faDownload, faTrashAlt, faUpload, faEdit, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { SocketContext } from '~/util.js'
+import { base64EncodeUint8Array } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -12,6 +12,7 @@ import { ImageNameEditModal } from './ImageNameEditModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import CryptoJS from 'crypto-js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { trpc, trpcClient, useMutationExt } from '~/TRPC.js'
 
 interface ImageLibraryEditorProps {
 	selectedImageName: string | null
@@ -24,7 +25,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	onDeleteImage,
 	onImageNameChanged,
 }: ImageLibraryEditorProps) {
-	const socket = useContext(SocketContext)
 	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
 	const [showNameEditModal, setShowNameEditModal] = useState(false)
@@ -34,6 +34,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	// Get image info from the store
 	const imageInfo = selectedImageName ? imageLibrary.getImage(selectedImageName) : null
 
+	const deleteMutation = useMutationExt(trpc.imageLibrary.delete.mutationOptions())
+
 	const handleDelete = useCallback(() => {
 		if (!selectedImageName) return
 
@@ -42,8 +44,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			'Are you sure you want to delete this image? This action cannot be undone.',
 			'Delete',
 			() => {
-				socket
-					.emitPromise('image-library:delete', [selectedImageName])
+				deleteMutation
+					.mutateAsync({ imageName: selectedImageName })
 					.then(() => {
 						onDeleteImage(selectedImageName)
 					})
@@ -52,14 +54,17 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					})
 			}
 		)
-	}, [socket, selectedImageName, onDeleteImage])
+	}, [deleteMutation, selectedImageName, onDeleteImage])
 
 	const handleDownload = useCallback(() => {
 		if (!selectedImageName || !imageInfo) return
 
 		// Get image data and download
-		socket
-			.emitPromise('image-library:get-data', [selectedImageName, 'original'])
+		trpcClient.imageLibrary.getData
+			.query({
+				imageName: selectedImageName,
+				type: 'original',
+			})
 			.then((imageData) => {
 				if (imageData?.image) {
 					// Create download link
@@ -74,7 +79,11 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			.catch((err) => {
 				console.error('Failed to download image:', err)
 			})
-	}, [socket, selectedImageName, imageInfo])
+	}, [selectedImageName, imageInfo])
+
+	const startUploadMutation = useMutationExt(trpc.imageLibrary.upload.start.mutationOptions())
+	const uploadChunkMutation = useMutationExt(trpc.imageLibrary.upload.uploadChunk.mutationOptions())
+	const completeUploadMutation = useMutationExt(trpc.imageLibrary.upload.complete.mutationOptions())
 
 	const handleReplaceImage = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,7 +105,11 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					const checksum = hasher.finalize().toString(CryptoJS.enc.Hex)
 
 					// Start upload
-					const sessionId = await socket.emitPromise('image-library:upload-start', [file.name, data.length])
+					const sessionId = await startUploadMutation.mutateAsync({
+						name: selectedImageName, // The target of the upload for now
+						size: file.size,
+					})
+					if (!sessionId) throw new Error('Failed to start upload')
 
 					// Upload the file in 1MB chunks
 					const CHUNK_SIZE = 1024 * 1024 // 1MB
@@ -107,11 +120,18 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 						const end = Math.min(start + CHUNK_SIZE, data.length)
 						const chunk = data.slice(start, end)
 
-						await socket.emitPromise('image-library:upload-chunk', [sessionId, start, chunk])
+						await uploadChunkMutation.mutateAsync({
+							sessionId,
+							offset: start,
+							data: base64EncodeUint8Array(chunk),
+						})
 					}
 
 					// Complete upload
-					await socket.emitPromise('image-library:upload-complete', [sessionId, selectedImageName, checksum])
+					await completeUploadMutation.mutateAsync({
+						sessionId,
+						expectedChecksum: checksum,
+					})
 
 					// The store will be updated automatically via subscription
 				} catch (err) {
@@ -123,7 +143,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 			void uploadFile()
 		},
-		[socket, selectedImageName]
+		[startUploadMutation, uploadChunkMutation, completeUploadMutation, selectedImageName]
 	)
 
 	const handleImageNameChanged = useCallback(

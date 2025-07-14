@@ -56,10 +56,9 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
-			[`${normalizedBase}/socket.io`]: {
+			'/trpc': {
 				target: `ws://${upstreamUrl}`,
 				ws: true,
-				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 		},
 	},
@@ -85,7 +84,6 @@ export default defineConfig({
 	css: {
 		preprocessorOptions: {
 			scss: {
-				api: 'modern-compiler',
 				quietDeps: true,
 			},
 		},

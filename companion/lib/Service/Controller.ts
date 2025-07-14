@@ -12,7 +12,7 @@ import { ServiceSurfaceDiscovery } from './SurfaceDiscovery.js'
 import { ServiceTcp } from './Tcp.js'
 import { ServiceUdp } from './Udp.js'
 import { ServiceVideohubPanel } from './VideohubPanel.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
+import type { UIHandler } from '../UI/Handler.js'
 import { ServiceSatelliteWebsocket } from './SatelliteWebsocket.js'
 import type { EventEmitter } from 'events'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
@@ -81,8 +81,8 @@ export class ServiceController {
 		this.satelliteWebsocket = new ServiceSatelliteWebsocket(serviceApi.appInfo, surfaceController, userconfig)
 		this.elgatoPlugin = new ServiceElgatoPlugin(serviceApi, surfaceController, userconfig)
 		this.videohubPanel = new ServiceVideohubPanel(surfaceController, userconfig)
-		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, io, instanceController)
-		this.surfaceDiscovery = new ServiceSurfaceDiscovery(userconfig, io)
+		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
+		this.surfaceDiscovery = new ServiceSurfaceDiscovery(userconfig)
 
 		controlEvents.on('updateButtonState', (location, pushed, surfaceId) => {
 			this.emberplus.updateButtonState(location, pushed, surfaceId)
@@ -115,13 +115,5 @@ export class ServiceController {
 		this.udp.updateUserConfig(key, value)
 		this.videohubPanel.updateUserConfig(key, value)
 		this.surfaceDiscovery.updateUserConfig(key, value)
-	}
-
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		this.bonjourDiscovery.clientConnect(client)
-		this.surfaceDiscovery.clientConnect(client)
 	}
 }

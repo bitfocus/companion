@@ -1,3 +1,6 @@
+@use 'variables' as *;
+@use 'common'; // updates .form-control background-color (rearranging the @use lines in App.scss doesn't work)
+
 @import 'react-date-picker/dist/DatePicker.css';
 @import 'react-calendar/dist/Calendar.css';
 

@@ -1,8 +1,9 @@
-import type { ClientSocket } from '../UI/Handler.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import z from 'zod'
 
 export class PreviewPresets {
 	readonly #logger = LogController.createLogger('Preview/PreviewPreset')
@@ -21,38 +22,44 @@ export class PreviewPresets {
 		this.#instanceDefinitions = instanceDefinitions
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('preview:render-preset', async (connectionId, presetId) => {
-			const style = this.#instanceDefinitions.getPresetDrawStyle(connectionId, presetId)
-			if (!style) {
-				return null
-			}
-
-			if (style.text) {
-				const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
-				if (style.textExpression) {
-					const parseResult = parser.executeExpression(style.text, undefined)
-					if (parseResult.ok) {
-						style.text = parseResult.value + ''
-					} else {
-						this.#logger.error(`Expression parse error: ${parseResult.error}`)
-						style.text = 'ERR'
+	createTrpcRouter() {
+		return router({
+			render: publicProcedure
+				.input(
+					z.object({
+						connectionId: z.string(),
+						presetId: z.string(),
+					})
+				)
+				.query(async ({ input }) => {
+					const style = this.#instanceDefinitions.getPresetDrawStyle(input.connectionId, input.presetId)
+					if (!style) {
+						return null
 					}
-				} else {
-					const parseResult = parser.parseVariables(style.text)
-					style.text = parseResult.text
-				}
-			}
 
-			const render = await this.#graphicsController.drawPreview(style)
-			if (render) {
-				return render.asDataUrl
-			} else {
-				return null
-			}
+					if (style.text) {
+						const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
+						if (style.textExpression) {
+							const parseResult = parser.executeExpression(style.text, undefined)
+							if (parseResult.ok) {
+								style.text = parseResult.value + ''
+							} else {
+								this.#logger.error(`Expression parse error: ${parseResult.error}`)
+								style.text = 'ERR'
+							}
+						} else {
+							const parseResult = parser.parseVariables(style.text)
+							style.text = parseResult.text
+						}
+					}
+
+					const render = await this.#graphicsController.drawPreview(style)
+					if (render) {
+						return render.asDataUrl
+					} else {
+						return null
+					}
+				}),
 		})
 	}
 }

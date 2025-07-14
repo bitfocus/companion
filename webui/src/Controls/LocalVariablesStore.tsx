@@ -1,10 +1,11 @@
 import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import { action, makeObservable, observable } from 'mobx'
-import { useContext, useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import { computedFn } from 'mobx-utils'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { useQuery } from '@tanstack/react-query'
+import { trpc } from '~/TRPC.js'
 
 export class LocalVariablesStore {
 	readonly controlId: string
@@ -63,36 +64,28 @@ export function useLocalVariablesStore(
 	controlId: string,
 	localVariables: SomeEntityModel[] | null
 ): LocalVariablesStore {
-	const { socket } = useContext(RootAppStoreContext)
-
 	const store = useMemo(() => new LocalVariablesStore(controlId), [controlId])
 
 	useEffect(() => {
 		if (localVariables) store.setEntities(localVariables)
 	}, [store, localVariables])
 
+	const query = useQuery(
+		trpc.controls.entities.localVariableValues.queryOptions(
+			{
+				controlId,
+			},
+			{
+				refetchInterval: 1000,
+				refetchOnWindowFocus: true,
+				refetchOnMount: true,
+			}
+		)
+	)
+
 	useEffect(() => {
-		const doPoll = () => {
-			socket
-				.emitPromise('controls:local-variables-values', [controlId])
-				.then((values) => {
-					console.log('got', values)
-					store.setValues(values || {})
-				})
-				.catch((e) => {
-					store.setValues({})
-					console.log('Failed to fetch variable values: ', e)
-				})
-		}
-
-		doPoll()
-		const interval = setInterval(doPoll, 1000)
-
-		return () => {
-			store.setValues({})
-			clearInterval(interval)
-		}
-	}, [socket, store, controlId])
+		store.setValues(query.data || {})
+	}, [query.data, store])
 
 	return store
 }

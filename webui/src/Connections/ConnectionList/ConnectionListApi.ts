@@ -1,26 +1,23 @@
-import { useContext, useMemo } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useMemo } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export type ConnectionCollectionsApi = NestingCollectionsApi
 
 export function useConnectionCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 ): ConnectionCollectionsApi {
-	const { socket } = useContext(RootAppStoreContext)
+	const renameMutation = useMutationExt(trpc.connections.collections.setName.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.connections.collections.remove.mutationOptions())
+	const reorderMutation = useMutationExt(trpc.connections.collections.reorder.mutationOptions())
+	const reorderItemsMutation = useMutationExt(trpc.connections.reorder.mutationOptions())
 
 	return useMemo(
 		() =>
 			({
-				createCollection: (collectionName = 'New Collection') => {
-					socket.emitPromise('connection-collections:add', [collectionName]).catch((e) => {
-						console.error('Failed to add collection', e)
-					})
-				},
-
 				renameCollection: (collectionId: string, newName: string) => {
-					socket.emitPromise('connection-collections:set-name', [collectionId, newName]).catch((e) => {
+					renameMutation.mutateAsync({ collectionId, collectionName: newName }).catch((e) => {
 						console.error('Failed to rename collection', e)
 					})
 				},
@@ -31,7 +28,7 @@ export function useConnectionCollectionsApi(
 						'Are you sure you want to delete this collection? All connections in this collection will be moved to Ungrouped Connections.',
 						'Delete',
 						() => {
-							socket.emitPromise('connection-collections:remove', [collectionId]).catch((e) => {
+							deleteMutation.mutateAsync({ collectionId }).catch((e) => {
 								console.error('Failed to delete collection', e)
 							})
 						}
@@ -39,16 +36,16 @@ export function useConnectionCollectionsApi(
 				},
 
 				moveCollection: (collectionId: string, parentId: string | null, dropIndex: number) => {
-					socket.emitPromise('connection-collections:reorder', [collectionId, parentId, dropIndex]).catch((e) => {
+					reorderMutation.mutateAsync({ collectionId, parentId, dropIndex }).catch((e) => {
 						console.error('Failed to reorder collection', e)
 					})
 				},
-				moveItemToCollection: (itemId: string, collectionId: string | null, dropIndex: number) => {
-					socket.emitPromise('connections:reorder', [collectionId, itemId, dropIndex]).catch((e) => {
+				moveItemToCollection: (connectionId: string, collectionId: string | null, dropIndex: number) => {
+					reorderItemsMutation.mutateAsync({ connectionId, collectionId, dropIndex }).catch((e) => {
 						console.error('Reorder failed', e)
 					})
 				},
 			}) satisfies ConnectionCollectionsApi,
-		[socket, confirmModalRef]
+		[confirmModalRef, renameMutation, deleteMutation, reorderMutation, reorderItemsMutation]
 	)
 }

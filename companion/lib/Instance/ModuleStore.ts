@@ -1,5 +1,4 @@
 import LogController from '../Log/Controller.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type {
 	ModuleStoreListCacheEntry,
 	ModuleStoreListCacheStore,
@@ -12,16 +11,15 @@ import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVer
 import createClient, { Client } from 'openapi-fetch'
 import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import { Complete } from '@companion-module/base/dist/util.js'
-import EventEmitter from 'events'
+import EventEmitter from 'node:events'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import type { AppInfo } from '../Registry.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
 	: 'https://developer.bitfocus.io/api'
-
-const ModuleStoreListRoom = 'module-store:list'
-const ModuleStoreInfoRoom = (moduleId: string) => `module-store:info:${moduleId}`
 
 const CacheStoreListKey = 'module_store_list'
 const CacheStoreModuleTable = 'module_store'
@@ -29,8 +27,10 @@ const CacheStoreModuleTable = 'module_store'
 const SUBSCRIBE_REFRESH_INTERVAL = 1000 * 60 * 60 * 6 // Update when a user subscribes to the data, if older than 6 hours
 const LATEST_MODULE_INFO_CACHE_DURATION = 1000 * 60 * 60 * 6 // Cache the latest module info for 6 hours
 
-export interface ModuleStoreServiceEvents {
+export type ModuleStoreServiceEvents = {
 	storeListUpdated: [data: ModuleStoreListCacheStore]
+	refreshProgress: [moduleId: string | null, percent: number]
+	[id: `update:${string}`]: [data: ModuleStoreModuleInfoStore | null]
 }
 
 export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
@@ -42,20 +42,14 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 	readonly #openApiClient: Client<ModuleStoreOpenApiPaths>
 
 	/**
-	 * The core interface client
-	 */
-	readonly #io: UIHandler
-
-	/**
 	 */
 	#listStore: ModuleStoreListCacheStore
 
 	#infoStore = new Map<string, ModuleStoreModuleInfoStore>()
 
-	constructor(appInfo: AppInfo, io: UIHandler, cacheStore: DataCache) {
+	constructor(appInfo: AppInfo, cacheStore: DataCache) {
 		super()
 
-		this.#io = io
 		this.#cacheStore = cacheStore.defaultTableView
 		this.#cacheTable = cacheStore.getTableView(CacheStoreModuleTable)
 
@@ -91,52 +85,74 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		return this.#infoStore.get(moduleId) ?? null
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('modules-store:list:refresh', async () => {
-			this.refreshStoreListData()
-		})
+	createTrpcRouter() {
+		const self = this
+		const selfEmitter: EventEmitter<ModuleStoreServiceEvents> = this
 
-		client.onPromise('modules-store:list:subscribe', async () => {
-			client.join(ModuleStoreListRoom)
+		return router({
+			watchList: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(selfEmitter, 'storeListUpdated', signal)
 
-			// Check if the data is stale enough to refresh
-			if (this.#listStore.lastUpdated < Date.now() - SUBSCRIBE_REFRESH_INTERVAL) {
+				yield self.#listStore // initial value
+
+				// Check if the data is stale enough to refresh
+				if (self.#listStore.lastUpdated < Date.now() - SUBSCRIBE_REFRESH_INTERVAL) {
+					self.refreshStoreListData()
+				}
+
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
+
+			watchRefreshProgress: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(selfEmitter, 'refreshProgress', signal)
+
+				for await (const change of changes) {
+					yield { moduleId: change[0], percent: change[1] }
+				}
+			}),
+
+			watchModuleInfo: publicProcedure
+				.input(
+					z.object({
+						moduleId: z.string(),
+					})
+				)
+				.subscription(async function* ({ signal, input }) {
+					const changes = toIterable(selfEmitter, `update:${input.moduleId}`, signal)
+
+					const data = self.#getCacheEntryForModule(input.moduleId)
+
+					// Check if the data is stale enough to refresh
+					if (!data || data.lastUpdated < Date.now() - SUBSCRIBE_REFRESH_INTERVAL) {
+						self.#refreshStoreInfoData(input.moduleId).catch((e) => {
+							self.#logger.error(`Failed to refresh store info for module "${input.moduleId}": ${e}`)
+						})
+					}
+
+					yield data // initial value
+
+					for await (const [change] of changes) {
+						yield change
+					}
+				}),
+
+			refreshList: publicProcedure.mutation(() => {
 				this.refreshStoreListData()
-			}
+			}),
 
-			return this.#listStore
-		})
-
-		client.onPromise('modules-store:list:unsubscribe', async () => {
-			client.leave(ModuleStoreListRoom)
-		})
-
-		client.onPromise('modules-store:info:refresh', async (moduleId) => {
-			this.#refreshStoreInfoData(moduleId).catch((e) => {
-				this.#logger.error(`Failed to refresh store info for module "${moduleId}": ${e}`)
-			})
-		})
-
-		client.onPromise('modules-store:info:subscribe', async (moduleId) => {
-			client.join(ModuleStoreInfoRoom(moduleId))
-
-			const data = this.#getCacheEntryForModule(moduleId)
-
-			// Check if the data is stale enough to refresh
-			if (!data || data.lastUpdated < Date.now() - SUBSCRIBE_REFRESH_INTERVAL) {
-				this.#refreshStoreInfoData(moduleId).catch((e) => {
-					this.#logger.error(`Failed to refresh store info for module "${moduleId}": ${e}`)
-				})
-			}
-
-			return data
-		})
-
-		client.onPromise('modules-store:info:unsubscribe', async (moduleId) => {
-			client.leave(ModuleStoreInfoRoom(moduleId))
+			refreshModuleInfo: publicProcedure
+				.input(
+					z.object({
+						moduleId: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					this.#refreshStoreInfoData(input.moduleId).catch((e) => {
+						this.#logger.error(`Failed to refresh store info for module "${input.moduleId}": ${e}`)
+					})
+				}),
 		})
 	}
 
@@ -184,7 +200,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 		Promise.resolve()
 			.then(async () => {
-				this.#io.emitToAll('modules-store:list:progress', 0)
+				this.emit('refreshProgress', null, 0)
 
 				const { data, error } = await this.#openApiClient.GET('/v1/companion/modules/{moduleType}', {
 					params: {
@@ -193,7 +209,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 						},
 					},
 				})
-				this.#io.emitToAll('modules-store:list:progress', 0.5)
+				this.emit('refreshProgress', null, 0.5)
 
 				if (error) throw new Error(`Failed to fetch module list: ${JSON.stringify(error)}`)
 
@@ -235,13 +251,11 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 			.finally(() => {
 				this.#cacheStore.set(CacheStoreListKey, this.#listStore)
 
-				// Update clients
-				this.#io.emitToRoom(ModuleStoreListRoom, 'modules-store:list:data', this.#listStore)
-				this.#io.emitToAll('modules-store:list:progress', 1)
-
 				this.#isRefreshingStoreData = false
 
+				// Update clients
 				this.emit('storeListUpdated', this.#listStore)
+				this.emit('refreshProgress', null, 1)
 
 				this.#logger.debug(`Done refreshing store module list`)
 			})
@@ -263,7 +277,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 		let moduleData: ModuleStoreModuleInfoStore
 		try {
-			this.#io.emitToAll('modules-store:info:progress', moduleId, 0)
+			this.emit('refreshProgress', moduleId, 0)
 
 			const { data, error, response } = await this.#openApiClient.GET(
 				'/v1/companion/modules/{moduleType}/{moduleName}',
@@ -276,7 +290,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 					},
 				}
 			)
-			this.#io.emitToAll('modules-store:info:progress', moduleId, 0.5)
+			this.emit('refreshProgress', moduleId, 0.5)
 
 			if (response.status === 404) {
 				// If the store returns 404, then don't throw an error, this is normal
@@ -340,11 +354,11 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		this.#infoStore.set(moduleId, moduleData)
 		this.#cacheTable.set(moduleId, moduleData)
 
-		// Update clients
-		this.#io.emitToRoom(ModuleStoreInfoRoom(moduleId), 'modules-store:info:data', moduleId, moduleData)
-		this.#io.emitToAll('modules-store:info:progress', moduleId, 1)
-
 		this.#isRefreshingStoreInfo.delete(moduleId)
+
+		// Update clients
+		this.emit(`update:${moduleId}`, moduleData)
+		this.emit('refreshProgress', moduleId, 1)
 
 		this.#logger.debug(`Done refreshing store info for module "${moduleId}"`)
 

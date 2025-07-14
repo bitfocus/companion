@@ -38,8 +38,6 @@ import fs from 'fs'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type imageRs from '@julusian/image-rs'
 import type { DataDatabase } from '../Data/Database.js'
-import type { UIHandler } from '../UI/Handler.js'
-import type { ClientSocket } from '../UI/Handler.js'
 import { ImageLibrary } from './ImageLibrary.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
@@ -128,7 +126,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		userConfigController: DataUserConfig,
 		variablesController: VariablesController,
 		db: DataDatabase,
-		io: UIHandler,
 		internalApiRouter: Express.Router
 	) {
 		super()
@@ -270,7 +267,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#logger.info('Fonts loaded')
 
 		// Initialize the image library
-		this.imageLibrary = new ImageLibrary(db, io, this, variablesController)
+		this.imageLibrary = new ImageLibrary(db, this, variablesController)
 
 		// Serve font files to clients
 		internalApiRouter.get('/graphics/font/:font', compressionMiddleware(), (req, res) => {
@@ -620,13 +617,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				throw e
 			}
 		}
-	}
-
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		this.imageLibrary.clientConnect(client)
 	}
 }
 

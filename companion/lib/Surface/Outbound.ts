@@ -4,11 +4,11 @@ import { DEFAULT_TCP_PORT, StreamDeckTcpConnectionManager } from '@elgato-stream
 import { StreamDeckJpegOptions } from './USB/ElgatoStreamDeck.js'
 import type { SurfaceController } from './Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { UIHandler, ClientSocket } from '../UI/Handler.js'
-import type { OutboundSurfaceInfo, OutboundSurfacesUpdateRemoveOp } from '@companion-app/shared/Model/Surfaces.js'
+import type { OutboundSurfaceInfo, OutboundSurfacesUpdate } from '@companion-app/shared/Model/Surfaces.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
-
-const OutboundSurfacesRoom = 'surfaces:outbound'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
+import { EventEmitter } from 'node:events'
 
 export class SurfaceOutboundController {
 	/**
@@ -23,22 +23,20 @@ export class SurfaceOutboundController {
 	 */
 	readonly #dbTable: DataStoreTableView<Record<string, OutboundSurfaceInfo>>
 
-	/**
-	 * The core interface client
-	 */
-	readonly #io: UIHandler
-
 	#storage: Record<string, OutboundSurfaceInfo> = {}
+
+	readonly #updateEvents = new EventEmitter<{ info: [update: OutboundSurfacesUpdate] }>()
 
 	#streamdeckTcpConnectionManager = new StreamDeckTcpConnectionManager({
 		jpegOptions: StreamDeckJpegOptions,
 		autoConnectToSecondaries: true,
 	})
 
-	constructor(controller: SurfaceController, db: DataDatabase, io: UIHandler) {
+	constructor(controller: SurfaceController, db: DataDatabase) {
 		this.#controller = controller
 		this.#dbTable = db.getTableView('surfaces_remote')
-		this.#io = io
+
+		this.#updateEvents.setMaxListeners(0)
 
 		// @ts-expect-error why is this failing?
 		this.#streamdeckTcpConnectionManager.on('connected', (streamdeck) => {
@@ -94,123 +92,152 @@ export class SurfaceOutboundController {
 		}
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('surfaces:outbound:subscribe', async () => {
-			client.join(OutboundSurfacesRoom)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'info', signal)
 
-			return this.#storage
-		})
-		client.onPromise('surfaces:outbound:unsubscribe', async () => {
-			client.leave(OutboundSurfacesRoom)
-		})
-		client.onPromise('surfaces:outbound:add', async (type, address, port, name) => {
-			if (type !== 'elgato') throw new Error(`Surface type "${type}" is not supported`)
+				// Initial data
+				yield { type: 'init', items: self.#storage } satisfies OutboundSurfacesUpdate
 
-			// Ensure port number is defined
-			if (!port) port = DEFAULT_TCP_PORT
+				for await (const [data] of changes) {
+					yield data
+				}
+			}),
 
-			// check for duplicate
-			const existingAddressAndPort = Object.values(this.#storage).find(
-				(surfaceInfo) => surfaceInfo.address === address && surfaceInfo.port === port
-			)
-			if (existingAddressAndPort) throw new Error('Specified address and port is already defined')
+			add: publicProcedure
+				.input(
+					z.object({
+						type: z.enum(['elgato']),
+						address: z.string(),
+						port: z.number().optional(),
+						name: z.string().optional(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const { type, address, name } = input
 
-			this.#logger.info(`Adding new Remote Streamdeck at ${address}:${port} (${name})`)
+					if (type !== 'elgato') throw new Error(`Surface type "${type}" is not supported`)
 
-			const id = nanoid()
-			const newInfo: OutboundSurfaceInfo = {
-				id,
-				type: 'elgato',
-				address,
-				enabled: true,
-				port,
-				displayName: name ?? '',
-			}
-			this.#storage[id] = newInfo
-			this.#dbTable.set(id, newInfo)
+					// Ensure port number is defined
+					const port = input.port || DEFAULT_TCP_PORT
 
-			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
-				{
-					type: 'add',
-					itemId: id,
+					// check for duplicate
+					const existingAddressAndPort = Object.values(this.#storage).find(
+						(surfaceInfo) => surfaceInfo.address === address && surfaceInfo.port === port
+					)
+					if (existingAddressAndPort) throw new Error('Specified address and port is already defined')
 
-					info: newInfo,
-				},
-			])
+					this.#logger.info(`Adding new Remote Streamdeck at ${address}:${port} (${name})`)
 
-			this.#startStopConnection(newInfo)
+					const id = nanoid()
+					const newInfo: OutboundSurfaceInfo = {
+						id,
+						type: 'elgato',
+						address,
+						enabled: true,
+						port,
+						displayName: name ?? '',
+					}
+					this.#storage[id] = newInfo
+					this.#dbTable.set(id, newInfo)
 
-			return id
-		})
+					this.#updateEvents.emit('info', {
+						type: 'add',
+						itemId: id,
 
-		client.onPromise('surfaces:outbound:remove', async (id) => {
-			const surfaceInfo = this.#storage[id]
-			if (!surfaceInfo) return // Not found, pretend all was ok
+						info: newInfo,
+					})
 
-			delete this.#storage[id]
-			this.#dbTable.delete(id)
+					this.#startStopConnection(newInfo)
 
-			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
-				{
-					type: 'remove',
-					itemId: id,
-				},
-			])
+					return id
+				}),
 
-			this.#startStopConnection({ ...surfaceInfo, enabled: false }) // Stop the connection
-		})
+			remove: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const { id } = input
 
-		client.onPromise('surfaces:outbound:set-name', async (id, name) => {
-			const surfaceInfo = this.#storage[id]
-			if (!surfaceInfo) throw new Error('Surface not found')
+					const surfaceInfo = this.#storage[id]
+					if (!surfaceInfo) return // Not found, pretend all was ok
 
-			surfaceInfo.displayName = name ?? ''
-			this.#dbTable.set(id, surfaceInfo)
+					delete this.#storage[id]
+					this.#dbTable.delete(id)
 
-			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
-				{
-					type: 'add',
-					itemId: id,
+					this.#updateEvents.emit('info', {
+						type: 'remove',
+						itemId: id,
+					})
 
-					info: surfaceInfo,
-				},
-			])
-		})
+					this.#startStopConnection({ ...surfaceInfo, enabled: false }) // Stop the connection
+				}),
 
-		client.onPromise('surfaces:outbound:set-enabled', async (id, enabled) => {
-			const surfaceInfo = this.#storage[id]
-			if (!surfaceInfo) throw new Error('Surface not found')
+			setName: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+						name: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const { id, name } = input
 
-			surfaceInfo.enabled = !!enabled
-			this.#dbTable.set(id, surfaceInfo)
+					const surfaceInfo = this.#storage[id]
+					if (!surfaceInfo) throw new Error('Surface not found')
 
-			// Start/stop the connection
-			this.#startStopConnection(surfaceInfo)
+					surfaceInfo.displayName = name
+					this.#dbTable.set(id, surfaceInfo)
 
-			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', [
-				{
-					type: 'add',
-					itemId: id,
+					this.#updateEvents.emit('info', {
+						type: 'add',
+						itemId: id,
 
-					info: surfaceInfo,
-				},
-			])
+						info: surfaceInfo,
+					})
+				}),
+
+			setEnabled: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+						enabled: z.boolean(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const { id, enabled } = input
+
+					const surfaceInfo = this.#storage[id]
+					if (!surfaceInfo) throw new Error('Surface not found')
+
+					surfaceInfo.enabled = !!enabled
+					this.#dbTable.set(id, surfaceInfo)
+
+					// Start/stop the connection
+					this.#startStopConnection(surfaceInfo)
+
+					this.#updateEvents.emit('info', {
+						type: 'add',
+						itemId: id,
+
+						info: surfaceInfo,
+					})
+				}),
 		})
 	}
 
 	reset(): void {
 		this.#streamdeckTcpConnectionManager.disconnectFromAll()
 
-		const ops: OutboundSurfacesUpdateRemoveOp[] = Object.keys(this.#storage).map((id) => ({
-			type: 'remove',
-			itemId: id,
-		}))
-		if (ops.length > 0) {
-			this.#io.emitToRoom(OutboundSurfacesRoom, 'surfaces:outbound:update', ops)
-		}
+		this.#updateEvents.emit('info', {
+			type: 'init',
+			items: {},
+		})
 
 		this.#storage = {}
 		this.#dbTable.clear()

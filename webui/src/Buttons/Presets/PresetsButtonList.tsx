@@ -1,9 +1,7 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback } from 'react'
 import { CButton, CButtonGroup, CCallout } from '@coreui/react'
-import { SocketContext } from '~/util.js'
 import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview.js'
-import { nanoid } from 'nanoid'
 import type {
 	UIPresetDefinition,
 	UIPresetDefinitionButton,
@@ -12,9 +10,12 @@ import type {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { PresetDragItem } from './PresetDragItem.js'
+import { observer } from 'mobx-react-lite'
+import { useQuery } from '@tanstack/react-query'
+import { trpc } from '~/TRPC.js'
 
 export interface PresetsButtonListProps {
-	presets: Record<string, UIPresetDefinition>
+	presets: Map<string, UIPresetDefinition> | undefined
 	selectedConnectionId: string
 	selectedConnectionLabel: string
 	selectedCategory: string
@@ -27,10 +28,10 @@ interface PresetButtonGroup {
 }
 
 function groupPresetsForCategory(
-	presets: Record<string, UIPresetDefinition>,
+	presets: Map<string, UIPresetDefinition> | undefined,
 	category: string
 ): (PresetButtonGroup | UIPresetDefinitionText)[] {
-	const filteredPresets = Object.values(presets)
+	const filteredPresets = Array.from(presets?.values() || [])
 		.filter((p) => p.category === category)
 		.sort((a, b) => a.order - b.order)
 
@@ -59,7 +60,7 @@ function groupPresetsForCategory(
 	return result
 }
 
-export function PresetsButtonList({
+export const PresetsButtonList = observer(function PresetsButtonList({
 	presets,
 	selectedConnectionId,
 	selectedConnectionLabel,
@@ -110,7 +111,8 @@ export function PresetsButtonList({
 			</CCallout>
 		</div>
 	)
-}
+})
+
 interface PresetTextProps {
 	preset: UIPresetDefinitionText
 }
@@ -128,11 +130,6 @@ interface PresetIconPreviewProps {
 	title: string
 }
 function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIconPreviewProps>) {
-	const socket = useContext(SocketContext)
-	const [previewImage, setPreviewImage] = useState<string | null>(null)
-	const [previewError, setPreviewError] = useState(false)
-	const [retryToken, setRetryToken] = useState(nanoid())
-
 	const [, drag] = useDrag<PresetDragItem>({
 		type: 'preset',
 		item: {
@@ -141,29 +138,31 @@ function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIco
 		},
 	})
 
-	useEffect(() => {
-		setPreviewError(false)
+	const query = useQuery(
+		trpc.preview.presets.render.queryOptions({
+			connectionId,
+			presetId,
+		})
+	)
 
-		socket
-			.emitPromise('preview:render-preset', [connectionId, presetId])
-			.then((img) => {
-				setPreviewImage(img)
+	const queryRefetch = query.refetch
+	const onClick = useCallback(
+		(isDown: boolean) => {
+			if (!isDown) return
+			queryRefetch().catch((e) => {
+				console.error('Error fetching preset preview:', e)
 			})
-			.catch(() => {
-				console.error('Failed to preview control')
-				setPreviewError(true)
-			})
-	}, [presetId, socket, connectionId, retryToken])
-
-	const onClick = useCallback((isDown: boolean) => isDown && setRetryToken(nanoid()), [])
+		},
+		[queryRefetch]
+	)
 
 	return (
 		<ButtonPreviewBase
 			fixedSize
 			dragRef={drag}
 			title={title}
-			preview={previewError ? RedImage : previewImage}
-			onClick={previewError ? onClick : undefined}
+			preview={query.error ? RedImage : query.data}
+			onClick={query.error ? onClick : undefined}
 		/>
 	)
 }

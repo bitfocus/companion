@@ -633,7 +633,11 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				}
 			}
 		} else if (feedback.definitionId == 'bank_current_step') {
-			const { theControlId, theLocation } = this.#fetchLocationAndControlId(feedback.options, feedback, true)
+			const { theControlId, theLocation, referencedVariables } = this.#fetchLocationAndControlId(
+				feedback.options,
+				feedback,
+				true
+			)
 
 			if (theLocation) {
 				this.#buttonDrawnSubscriptions.set(feedback.id, formatLocation(theLocation))
@@ -646,12 +650,12 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const control = theControlId && this.#controlsController.getControl(theControlId)
 			if (control && control.supportsActionSets) {
 				return {
-					referencedVariables: [],
+					referencedVariables,
 					value: control.actionSets.getActiveStepIndex() + 1 === Number(theStep),
 				}
 			} else {
 				return {
-					referencedVariables: [],
+					referencedVariables,
 					value: false,
 				}
 			}

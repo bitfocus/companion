@@ -4,21 +4,24 @@ import React, { useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExpand } from '@fortawesome/free-solid-svg-icons'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt(): React.ReactNode {
-	const { socket, surfaces, userConfig } = useContext(RootAppStoreContext)
+	const { surfaces, userConfig } = useContext(RootAppStoreContext)
+
+	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 
 	const overflowing = userConfig.properties && surfaces.getSurfacesOverflowingBounds(userConfig.properties.gridSize)
 	if (!overflowing || overflowing.surfaces.length === 0) return null
 
 	const doAutoResize = () => {
 		if (!overflowing) return
-		socket.emit('set_userconfig_key', 'gridSize', overflowing.neededBounds)
+		setConfigKeyMutation.mutate({ key: 'gridSize', value: overflowing.neededBounds })
 	}
 
 	const doDismiss = () => {
 		if (!overflowing) return
-		socket.emit('set_userconfig_key', 'gridSizePromptGrow', false)
+		setConfigKeyMutation.mutate({ key: 'gridSizePromptGrow', value: false })
 	}
 
 	return (

@@ -11,9 +11,10 @@ import supportsColor from 'supports-color'
 import { LogColors } from './Colors.js'
 import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
-import type { UIHandler, ClientSocket } from '../UI/Handler.js'
-import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
+import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model/LogLine.js'
 import type { AppInfo } from '../Registry.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import EventEmitter from 'node:events'
 
 export type Logger = winston.Logger
 
@@ -41,8 +42,6 @@ class ToMemoryTransport extends Transport {
 	}
 }
 
-const LogRoom = 'logs'
-
 /**
  * Logger for messages to send to the user in the UI
  *
@@ -66,15 +65,17 @@ class LogController {
 
 	#history: ClientLogLine[] = []
 
-	#ioController: UIHandler | null = null
-
 	#winston: winston.Logger
 	#logger: winston.Logger
+
+	readonly #events = new EventEmitter<{ update: [ClientLogUpdate] }>()
 
 	/**
 	 * Create a new logger
 	 */
 	constructor() {
+		this.#events.setMaxListeners(0)
+
 		/**
 		 * Select a colour for a log namespace
 		 */
@@ -153,41 +154,48 @@ class LogController {
 		return this.#winston.child({ source })
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('logs:subscribe', () => {
-			client.join(LogRoom)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'update', signal)
 
-			return this.#history
-		})
-		client.onPromise('logs:unsubscribe', () => {
-			client.leave(LogRoom)
-		})
-		client.onPromise('logs:clear', () => {
-			this.#history = []
+				yield { type: 'lines', lines: self.#history } satisfies ClientLogUpdate
 
-			if (this.#ioController && this.#ioController.countRoomMembers(LogRoom) > 0) {
-				this.#ioController.emitToRoom(LogRoom, 'logs:clear')
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
 
-				this.#ioController.emitToRoom(LogRoom, 'logs:lines', [
-					{
-						time: Date.now(),
-						source: 'log',
-						level: 'info',
-						message: 'Log cleared',
-					},
-				])
-			}
+			clear: publicProcedure.mutation(() => {
+				this.#history = []
+
+				if (this.#events.listenerCount('update') > 0) {
+					this.#events.emit('update', { type: 'clear' })
+					this.#events.emit('update', {
+						type: 'lines',
+						lines: [
+							{
+								time: Date.now(),
+								source: 'log',
+								level: 'info',
+								message: 'Log cleared',
+							},
+						],
+					})
+				}
+			}),
 		})
 	}
 
 	#pendingLines: ClientLogLine[] = []
 	debounceSendLines = debounceFn(
 		() => {
-			if (this.#ioController && this.#ioController.countRoomMembers(LogRoom) > 0) {
-				this.#ioController.emitToRoom(LogRoom, 'logs:lines', this.#pendingLines)
+			if (this.#events.listenerCount('update') > 0) {
+				this.#events.emit('update', {
+					type: 'lines',
+					lines: this.#pendingLines,
+				})
 			}
 			this.#pendingLines = []
 		},
@@ -260,9 +268,7 @@ class LogController {
 	/**
 	 * Initialize Sentry and UI logging
 	 */
-	init(appInfo: AppInfo, ioController: UIHandler): void {
-		this.#ioController = ioController
-
+	init(appInfo: AppInfo): void {
 		// Allow the DSN to be provided as an env variable
 		let sentryDsn = process.env.SENTRY_DSN
 		if (!sentryDsn) {

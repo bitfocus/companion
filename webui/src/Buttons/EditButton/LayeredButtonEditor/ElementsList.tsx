@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite'
-import React, { useContext, useRef } from 'react'
+import React, { useRef } from 'react'
 import { AddElementDropdownButton, RemoveElementButton, ToggleVisibilityButton } from './Buttons.js'
 import { LayeredStyleStore } from './StyleStore.js'
 import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -7,8 +7,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { useDrop, useDrag } from 'react-dnd'
-import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export const ElementsList = observer(function ElementsList({
 	styleStore,
@@ -78,7 +78,7 @@ const ElementListItem = observer(function ElementListItem({
 	controlId: string
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 }) {
-	const { socket } = useContext(RootAppStoreContext)
+	const moveElement = useMutationExt(trpc.controls.styles.moveElement.mutationOptions())
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<ElementListDragItem>({
@@ -101,8 +101,13 @@ const ElementListItem = observer(function ElementListItem({
 			}
 
 			// Time to actually perform the change
-			socket
-				.emitPromise('controls:style:move-element', [controlId, item.elementId, hoverParentElementId, hoverIndex])
+			moveElement
+				.mutateAsync({
+					controlId,
+					elementId: item.elementId,
+					parentElementId: hoverParentElementId,
+					newIndex: hoverIndex,
+				})
 				.catch((e) => {
 					console.error('Failed to move element', e)
 				})
@@ -204,7 +209,7 @@ const ElementListItemPlaceholder = observer(function ElementListItemPlaceholder(
 	parentElementId: string | null
 	controlId: string
 }) {
-	const { socket } = useContext(RootAppStoreContext)
+	const moveElement = useMutationExt(trpc.controls.styles.moveElement.mutationOptions())
 
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<ElementListDragItem>({
@@ -225,8 +230,13 @@ const ElementListItemPlaceholder = observer(function ElementListItemPlaceholder(
 			// }
 
 			// Time to actually perform the change
-			socket
-				.emitPromise('controls:style:move-element', [controlId, item.elementId, hoverParentElementId, 0])
+			moveElement
+				.mutateAsync({
+					controlId,
+					elementId: item.elementId,
+					parentElementId: hoverParentElementId,
+					newIndex: 0, // Always move to the start of the group
+				})
 				.catch((e) => {
 					console.error('Failed to move element', e)
 				})

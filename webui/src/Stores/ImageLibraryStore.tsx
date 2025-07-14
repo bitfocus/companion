@@ -4,20 +4,11 @@ import type {
 	ImageLibraryCollection,
 	ImageLibraryUpdate,
 } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import { assertNever } from '~/util'
 
 export class ImageLibraryStore {
 	readonly store = observable.map<string, ImageLibraryInfo>()
 	readonly collections = observable.map<string, ImageLibraryCollection>()
-
-	public reset = action((newData: ImageLibraryInfo[] | null): void => {
-		this.store.clear()
-
-		if (newData) {
-			for (const image of newData) {
-				this.store.set(image.name, image)
-			}
-		}
-	})
 
 	public resetCollections = action((newData: ImageLibraryCollection[] | null): void => {
 		this.collections.clear()
@@ -29,12 +20,28 @@ export class ImageLibraryStore {
 		}
 	})
 
-	public processUpdates = action((changes: ImageLibraryUpdate[]): void => {
+	public updateStore = action((changes: ImageLibraryUpdate[] | null): void => {
+		if (!changes) {
+			this.store.clear()
+			return
+		}
+
 		for (const change of changes) {
-			if (change.type === 'update') {
-				this.store.set(change.itemName, change.info)
-			} else if (change.type === 'remove') {
-				this.store.delete(change.itemName)
+			switch (change.type) {
+				case 'init':
+					this.store.clear()
+					for (const image of change.images) {
+						this.store.set(image.name, image)
+					}
+					break
+				case 'update':
+					this.store.set(change.itemName, change.info)
+					break
+				case 'remove':
+					this.store.delete(change.itemName)
+					break
+				default:
+					assertNever(change)
 			}
 		}
 	})

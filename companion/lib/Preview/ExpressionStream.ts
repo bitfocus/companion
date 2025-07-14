@@ -1,13 +1,14 @@
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import LogController from '../Log/Controller.js'
 import type {
 	ExecuteExpressionResult,
 	ExpressionStreamResult,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
-import { nanoid } from 'nanoid'
 import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
+import EventEmitter from 'node:events'
 
 export class PreviewExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
@@ -19,12 +20,7 @@ export class PreviewExpressionStream {
 
 	readonly #sessions = new Map<string, ExpressionStreamSession>()
 
-	constructor(
-		_ioController: UIHandler,
-		pageStore: IPageStore,
-		variablesController: VariablesValues,
-		controlsController: ControlsController
-	) {
+	constructor(pageStore: IPageStore, variablesController: VariablesValues, controlsController: ControlsController) {
 		// this.#ioController = ioController
 		this.#pageStore = pageStore
 		this.#variablesController = variablesController
@@ -34,87 +30,64 @@ export class PreviewExpressionStream {
 		this.#variablesController.on('local_variables_changed', this.#onValuesChanged)
 	}
 
-	clientConnect(client: ClientSocket): void {
-		client.on('disconnect', () => {
-			// Remove from all subscriptions
-			for (const [expressionId, session] of this.#sessions) {
-				for (const [fullSubId, subClient] of session.clients) {
-					if (subClient === client) {
-						session.clients.delete(fullSubId)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			//
+			watchExpression: publicProcedure
+				.input(
+					z.object({
+						expression: z.string(),
+						controlId: z.string().nullable(),
+						requiredType: z.string().optional(),
+						isVariableString: z.boolean(),
+					})
+				)
+				.subscription(async function* ({ input, signal, ctx }) {
+					const expressionId = `${input.controlId}::${input.expression}::${input.requiredType}::${input.isVariableString ? 'variable' : 'expression'}`
+					let session = self.#sessions.get(expressionId)
 
-						this.#logger.debug(`Client "${client.id}" unsubscribed from session: ${expressionId}`)
+					try {
+						if (!session) {
+							self.#logger.debug(`Client "${ctx.clientId}" subscribed to new session: ${expressionId}`)
 
-						if (session.clients.size === 0) {
-							this.#sessions.delete(expressionId)
+							const initialValue = input.isVariableString
+								? self.#parseVariables(input.expression, input.controlId)
+								: self.#executeExpression(input.expression, input.controlId, input.requiredType)
 
-							this.#logger.debug(`Session "${expressionId}" has no more clients, terminated`)
+							session = {
+								expressionId,
+								controlId: input.controlId,
+								expression: input.expression,
+								requiredType: input.requiredType,
+								isVariableString: input.isVariableString,
+
+								latestResult: initialValue,
+								changes: new EventEmitter(),
+							}
+							self.#sessions.set(expressionId, session)
+						} else {
+							self.#logger.debug(`Client "${ctx.clientId}" subscribed to existing session: ${expressionId}`)
+						}
+
+						const changes = toIterable(session.changes, 'change', signal)
+
+						yield convertExpressionResult(session.latestResult)
+
+						for await (const [change] of changes) {
+							yield change
+						}
+					} finally {
+						self.#logger.debug(`Client "${ctx.clientId}" unsubscribed from session: ${expressionId}`)
+
+						// Stop the session if no clients are left
+						if (session && session.changes.listenerCount('change') === 0) {
+							self.#sessions.delete(expressionId)
+
+							self.#logger.debug(`Session "${expressionId}" has no more clients, terminated`)
 						}
 					}
-				}
-			}
-		})
-
-		client.onPromise('preview:stream-expression:subscribe', (expression, controlId, requiredType, isVariableString) => {
-			const subId = nanoid()
-			const fullSubId = `${client.id}::${subId}`
-
-			const expressionId = `${controlId}::${expression}::${requiredType}::${isVariableString ? 'variable' : 'expression'}`
-			const existingSession = this.#sessions.get(expressionId)
-			if (existingSession) {
-				// Add to the existing session
-				existingSession.clients.set(fullSubId, client)
-
-				this.#logger.debug(`Client "${client.id}" subscribed to existing session: ${expressionId}`)
-
-				// Retrun the latest value
-				return {
-					subId,
-					result: existingSession.latestResult,
-				}
-			}
-
-			this.#logger.debug(`Client "${client.id}" subscribed to new session: ${expressionId}`)
-
-			const initialValue = isVariableString
-				? this.#parseVariables(expression, controlId)
-				: this.#executeExpression(expression, controlId, requiredType)
-			const newSession: ExpressionStreamSession = {
-				expressionId,
-				controlId,
-				expression,
-				requiredType,
-				isVariableString,
-
-				latestResult: initialValue,
-				clients: new Map([[fullSubId, client]]),
-			}
-			this.#sessions.set(expressionId, newSession)
-
-			return { subId, result: convertExpressionResult(initialValue) }
-		})
-
-		client.onPromise('preview:stream-expression:unsubscribe', (subId) => {
-			if (!subId) throw new Error('Invalid')
-
-			const fullSubId = `${client.id}::${subId}`
-
-			// TODO - can this find the correct session better?
-
-			for (const [expressionId, session] of this.#sessions) {
-				if (session.clients.has(fullSubId)) {
-					session.clients.delete(fullSubId)
-
-					this.#logger.debug(`Client "${client.id}" unsubscribed from session: ${expressionId}`)
-
-					if (session.clients.size === 0) {
-						this.#sessions.delete(expressionId)
-
-						this.#logger.debug(`Session "${expressionId}" has no more clients, terminated`)
-					}
-
-					return
-				}
-			}
+				}),
 		})
 	}
 
@@ -127,27 +100,14 @@ export class PreviewExpressionStream {
 					// There is some overlap, re-evaluate the expression
 					// Future: this doesn't need to be done immediately, debounce it?
 
-					this.#logger.debug(`Re-evaluating expression: ${expressionId} for ${session.clients.size} clients`)
+					this.#logger.debug(
+						`Re-evaluating expression: ${expressionId} for ${session.changes.listenerCount('change')} clients`
+					)
 
 					const newValue = this.#executeExpression(session.expression, session.controlId, session.requiredType)
 					session.latestResult = newValue
 
-					const notifiedClients = new Set<string>()
-
-					const convertedValue = convertExpressionResult(newValue)
-					for (const client of session.clients.values()) {
-						// Ensure we only notify each client once
-						if (notifiedClients.has(client.id)) continue
-						notifiedClients.add(client.id)
-
-						// TODO - maybe this should use rooms instead?
-						client.emit(
-							'preview:stream-expression:update',
-							session.expression,
-							convertedValue,
-							session.isVariableString
-						)
-					}
+					session.changes.emit('change', convertExpressionResult(newValue))
 
 					break
 				}
@@ -190,7 +150,7 @@ interface ExpressionStreamSession {
 
 	latestResult: ExecuteExpressionResult
 
-	readonly clients: Map<string, ClientSocket>
+	readonly changes: EventEmitter<{ change: [ExpressionStreamResult] }>
 }
 
 function convertExpressionResult(result: ExecuteExpressionResult): ExpressionStreamResult {

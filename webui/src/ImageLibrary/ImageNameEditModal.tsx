@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useContext, useEffect } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton } from '@coreui/react'
-import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ImageNameInput } from './ImageNameInput'
+import { trpc, useMutationExt } from '~/TRPC'
 
 interface ImageNameEditModalProps {
 	visible: boolean
@@ -20,7 +20,6 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 	currentName,
 	onNameChanged,
 }: ImageNameEditModalProps) {
-	const socket = useContext(SocketContext)
 	const [localValue, setLocalValue] = useState(currentName)
 	const [isSaving, setIsSaving] = useState(false)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -32,6 +31,8 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 			setErrorMessage(null)
 		}
 	}, [visible, currentName])
+
+	const setNameMutation = useMutationExt(trpc.imageLibrary.setName.mutationOptions())
 
 	const handleSave = useCallback(() => {
 		if (!isLabelValid(localValue)) {
@@ -48,8 +49,8 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 		setIsSaving(true)
 		setErrorMessage(null)
 
-		socket
-			.emitPromise('image-library:set-name', [imageName, localValue])
+		setNameMutation
+			.mutateAsync({ imageName, newName: localValue })
 			.then((result) => {
 				// Server returns the sanitized name on success
 				if (typeof result === 'string') {
@@ -73,7 +74,7 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 			.finally(() => {
 				setIsSaving(false)
 			})
-	}, [socket, imageName, currentName, localValue, onNameChanged, onClose])
+	}, [setNameMutation, imageName, currentName, localValue, onNameChanged, onClose])
 
 	const handleCancel = useCallback(() => {
 		setLocalValue(currentName)

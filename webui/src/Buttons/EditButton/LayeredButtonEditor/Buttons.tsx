@@ -1,6 +1,5 @@
 import { CButton, CButtonGroup, CPopover } from '@coreui/react'
-import React, { useContext, useCallback } from 'react'
-import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
+import React, { useCallback } from 'react'
 import type { LayeredStyleStore } from './StyleStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -18,6 +17,7 @@ import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLaye
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
+import { useMutationExt, trpc } from '~/TRPC.js'
 
 export function RemoveElementButton({
 	controlId,
@@ -28,12 +28,12 @@ export function RemoveElementButton({
 	elementId: string
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 }): React.JSX.Element {
-	const { socket } = useContext(RootAppStoreContext)
+	const removeElementMutation = useMutationExt(trpc.controls.styles.removeElement.mutationOptions())
 
 	const removeElement = useCallback(() => {
 		confirmModalRef.current?.show('Remove Element', 'Are you sure you want to remove this element?', 'Remove', () => {
-			socket
-				.emitPromise('controls:style:remove-element', [controlId, elementId])
+			removeElementMutation
+				.mutateAsync({ controlId, elementId })
 				.then((res) => {
 					console.log('Remove element', res)
 				})
@@ -41,7 +41,7 @@ export function RemoveElementButton({
 					console.error('Failed to remove element', e)
 				})
 		})
-	}, [socket, confirmModalRef, controlId, elementId])
+	}, [removeElementMutation, confirmModalRef, controlId, elementId])
 
 	return (
 		<CButton color="white" size="sm" onClick={removeElement} title="Remove">
@@ -108,11 +108,11 @@ function AddElementDropdownPopoverButton({
 	label: string
 	icon: IconProp
 }) {
-	const { socket } = useContext(RootAppStoreContext)
+	const addElementMutation = useMutationExt(trpc.controls.styles.addElement.mutationOptions())
 
 	const addCallback = useCallback(() => {
-		socket
-			.emitPromise('controls:style:add-element', [controlId, elementType, null])
+		addElementMutation
+			.mutateAsync({ controlId, type: elementType, index: null })
 			.then((resId) => {
 				console.log('Added element', resId)
 				if (resId) styleStore.setSelectedElementId(resId)
@@ -120,7 +120,7 @@ function AddElementDropdownPopoverButton({
 			.catch((e) => {
 				console.error('Failed to add element', e)
 			})
-	}, [socket, controlId, elementType, styleStore])
+	}, [addElementMutation, controlId, elementType, styleStore])
 
 	return (
 		<CButton onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>

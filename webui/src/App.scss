@@ -1,31 +1,37 @@
-@import 'scss/variables';
+// IMPORTANT: 'scss/variables' MUST be the first @use rule: it loads and overrides the defaults in @coreui
+//  See Sass @use documentation: "A module will keep the same configuration ... even if it’s loaded multiple times"
+@use 'scss/variables' as *; // local definitions not related to @coreui definitions
+@use '@coreui/coreui/scss/coreui'; // note this is not strictly necessary, since it's forwarded by _variables, above.
 
-@import '@coreui/coreui/scss/coreui';
-@import 'scss/react-time-picker';
-@import 'scss/react-date-picker';
+// note: if a variable is defined in the following imports, they will need to be reference below by module name.
+@use 'scss/react-time-picker';
+@use 'scss/react-date-picker';
 
-@import 'scss/layout';
-@import 'scss/common';
-@import 'scss/tablet';
-@import 'scss/emulator';
-@import 'scss/modules-manage';
+@use 'scss/layout';
+@use 'scss/common';
+@use 'scss/tablet';
+@use 'scss/emulator';
+@use 'scss/modules-manage';
 
-@import 'scss/action-recorder';
-@import 'scss/button-control';
-@import 'scss/button-edit';
-@import 'scss/button-grid';
-@import 'scss/page-list';
-@import 'scss/cloud';
-@import 'scss/controls';
-@import 'scss/instances';
-@import 'scss/loading';
-@import 'scss/log';
-@import 'scss/presets';
-@import 'scss/settings';
-@import 'scss/wizard';
-@import 'scss/import-export';
-@import 'scss/collections-nesting-table';
-@import 'scss/image-library';
+@use 'scss/action-recorder';
+@use 'scss/button-control';
+@use 'scss/button-edit';
+@use 'scss/button-grid';
+@use 'scss/page-list';
+@use 'scss/cloud';
+@use 'scss/controls';
+@use 'scss/instances';
+@use 'scss/loading';
+@use 'scss/log';
+@use 'scss/presets';
+@use 'scss/settings';
+@use 'scss/surfaces';
+@use 'scss/wizard';
+@use 'scss/import-export';
+@use 'scss/collections-nesting-table';
+@use 'scss/image-library';
+
+//@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
 
 body {
 	overflow: hidden;

@@ -23,6 +23,7 @@ import { ConnectionSecretField } from './ConnectionSecretField.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { validateInputValue } from '~/Helpers/validateInputValue.js'
 import { useNavigate } from '@tanstack/react-router'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -73,7 +74,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	moduleInfo,
 	closeConfigurePanel,
 }: ConnectionEditPanelInnerProps) {
-	const { socket, modules, connections } = useContext(RootAppStoreContext)
+	const { modules, connections } = useContext(RootAppStoreContext)
 
 	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, connectionInfo.moduleVersionId)
 	const connectionShouldBeRunning =
@@ -99,6 +100,15 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		}
 	}
 
+	useEffect(() => {
+		// Reset the form when the query data updates
+		form.reset()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [query.dataUpdatedAt])
+
+	const setLabelAndVersionMutation = useMutationExt(trpc.connections.setLabelAndVersion.mutationOptions())
+	const setLabelAndConfigMutation = useMutationExt(trpc.connections.setLabelAndConfig.mutationOptions())
+
 	const form = useForm({
 		defaultValues: {
 			label: connectionInfo.label,
@@ -111,13 +121,13 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 			setSaveError(null)
 
 			if (!connectionShouldBeRunning) {
-				await socket
-					.emitPromise('connections:set-label-and-version', [
+				setLabelAndVersionMutation
+					.mutateAsync({
 						connectionId,
-						value.label,
-						value.versionId,
-						value.updatePolicy,
-					])
+						label: value.label,
+						versionId: value.versionId,
+						updatePolicy: value.updatePolicy,
+					})
 					.then((err) => {
 						if (err) {
 							if (err === 'invalid label') {
@@ -127,11 +137,12 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 									`The label "${value.label}" is already in use. Please use a unique label for this connection`
 								)
 							} else {
-								setSaveError(`Unable to save connection version: "${err}"`)
+								setSaveError(`Unable to save connection version: "${err as string}"`)
 							}
 						} else {
 							// Done
 							closeConfigurePanel()
+							form.reset()
 						}
 					})
 					.catch((e) => {
@@ -145,14 +156,14 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					}
 				}
 
-				await socket
-					.emitPromise('connections:set-label-and-config', [
+				await setLabelAndConfigMutation
+					.mutateAsync({
 						connectionId,
-						value.label,
-						value.config,
-						saveSecrets,
-						value.updatePolicy,
-					])
+						label: value.label,
+						config: value.config,
+						secrets: saveSecrets,
+						updatePolicy: value.updatePolicy,
+					})
 					.then((err) => {
 						if (err) {
 							if (err === 'invalid label') {
@@ -162,11 +173,12 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 									`The label "${value.label}" is already in use. Please use a unique label for this connection`
 								)
 							} else {
-								setSaveError(`Unable to save connection config: "${err}"`)
+								setSaveError(`Unable to save connection config: "${err as string}"`)
 							}
 						} else {
 							// Done
 							closeConfigurePanel()
+							form.reset()
 						}
 					})
 					.catch((e) => {
@@ -437,6 +449,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 									console.error('Error refetching', err)
 								})
 							}}
+							design="pulse"
 						/>
 					)}
 

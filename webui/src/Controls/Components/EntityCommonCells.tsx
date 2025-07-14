@@ -30,7 +30,7 @@ interface EntityCommonCellsProps {
 	definitionName: string
 }
 
-export function EntityCommonCells({
+export const EntityCommonCells = observer(function EntityCommonCells({
 	entity,
 	feedbackListType,
 	entityDefinition,
@@ -153,7 +153,7 @@ export function EntityCommonCells({
 			</div>
 		</>
 	)
-}
+})
 
 const EntityLocalVariableValueField = observer(function EntityLocalVariableValueField({
 	entity,

@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useContext, useEffect, forwardRef, useImperativeHandle } from 'react'
+import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton } from '@coreui/react'
-import { SocketContext } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ImageNameInput } from './ImageNameInput'
+import { trpc, useMutationExt } from '~/TRPC'
 
 interface ImageAddModalProps {
 	onImageCreated?: (imageName: string) => void
@@ -15,7 +15,6 @@ export interface ImageAddModalRef {
 
 export const ImageAddModal = observer(
 	forwardRef<ImageAddModalRef, ImageAddModalProps>(function ImageAddModal({ onImageCreated }, ref) {
-		const socket = useContext(SocketContext)
 		const [visible, setVisible] = useState(false)
 		const [localValue, setLocalValue] = useState('')
 		const [isCreating, setIsCreating] = useState(false)
@@ -39,6 +38,8 @@ export const ImageAddModal = observer(
 			}
 		}, [visible])
 
+		const createMutation = useMutationExt(trpc.imageLibrary.create.mutationOptions())
+
 		const handleCreate = useCallback(() => {
 			if (!isLabelValid(localValue)) {
 				// The label is already shown as invalid, no need to tell them again
@@ -54,8 +55,8 @@ export const ImageAddModal = observer(
 			setErrorMessage(null)
 
 			// Use the name as both the name and the description
-			socket
-				.emitPromise('image-library:create', [localValue.trim(), localValue.trim()])
+			createMutation
+				.mutateAsync({ name: localValue.trim(), description: localValue.trim() })
 				.then((result) => {
 					// Server returns the sanitized name on success
 					if (typeof result === 'string') {
@@ -79,7 +80,7 @@ export const ImageAddModal = observer(
 				.finally(() => {
 					setIsCreating(false)
 				})
-		}, [socket, localValue, onImageCreated])
+		}, [createMutation, localValue, onImageCreated])
 
 		const handleCancel = useCallback(() => {
 			setLocalValue('')

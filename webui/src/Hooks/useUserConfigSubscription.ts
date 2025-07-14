@@ -1,41 +1,38 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useState } from 'react'
 import type { UserConfigStore } from '~/Stores/UserConfigStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
+import { UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export function useUserConfigSubscription(
-	socket: CompanionSocketWrapped,
 	store: UserConfigStore,
-	setLoadError?: ((error: string | null) => void) | undefined,
-	retryToken?: string
-): boolean {
+	setLoadError?: ((error: string | null) => void) | undefined
+): {
+	ready: boolean
+	reset: () => void
+} {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		setLoadError?.(null)
-		store.reset(null)
-		setReady(false)
-
-		socket
-			.emitPromise('userconfig:get-all', [])
-			.then((config) => {
+	const sub = useSubscription(
+		trpc.userConfig.watchConfig.subscriptionOptions(undefined, {
+			onStarted: () => {
 				setLoadError?.(null)
-				store.reset(config)
+				store.updateStore(null)
+				setReady(false)
+			},
+			onData: (data) => {
+				setLoadError?.(null)
+				store.updateStore(data as UserConfigUpdate) // TODO - avoid this cast
 				setReady(true)
-			})
-			.catch((e) => {
-				console.error('Failed to load user config', e)
-				setLoadError?.(`Failed to load user config`)
-				store.reset(null)
-			})
-
-		const unsubUpdate = socket.on('set_userconfig_key', (key, value) => {
-			store.updateStoreValue(key, value)
+			},
+			onError: (error) => {
+				console.error('Failed to load user config', error)
+				setLoadError?.(`Failed to load user config: ${error.message}`)
+				store.updateStore(null)
+				setReady(false)
+			},
 		})
+	)
 
-		return () => {
-			unsubUpdate()
-		}
-	}, [retryToken, setLoadError, socket, store])
-
-	return ready
+	return { ready, reset: sub.reset }
 }

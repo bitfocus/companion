@@ -9,11 +9,13 @@ import { ImportWizard } from './Import/index.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { observer } from 'mobx-react-lite'
 import CryptoJS from 'crypto-js'
+import { trpc, useMutationExt } from '~/TRPC.js'
+import { base64EncodeUint8Array } from '~/util.js'
 
 const NOTIFICATION_ID_IMPORT = 'import_config_file'
 
 export const ImportExportPage = observer(function ImportExport() {
-	const { socket, notifier, connections } = useContext(RootAppStoreContext)
+	const { notifier, connections } = useContext(RootAppStoreContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -22,16 +24,23 @@ export const ImportExportPage = observer(function ImportExport() {
 	const doReset = useCallback(() => resetRef.current?.show(), [])
 	const doExport = useCallback(() => exportRef.current?.show(), [])
 
+	const abortImportMutation = useMutationExt(trpc.importExport.abort.mutationOptions())
+
 	const [importInfo, setImportInfo] = useState<[ClientImportObject, Record<string, string | undefined>] | null>(null)
 	const clearImport = useCallback(() => {
 		setImportInfo(null)
 
-		socket.emitPromise('loadsave:abort', []).catch((e) => {
+		abortImportMutation.mutateAsync().catch((e) => {
 			console.error('Failed to abort import', e)
 		})
-	}, [socket])
+	}, [abortImportMutation])
 
 	const fileApiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
+
+	const startPrepareImportMutation = useMutationExt(trpc.importExport.prepareImport.start.mutationOptions())
+	const cancelPrepareImportMutation = useMutationExt(trpc.importExport.prepareImport.cancel.mutationOptions())
+	const uploadPrepareImportChunkMutation = useMutationExt(trpc.importExport.prepareImport.uploadChunk.mutationOptions())
+	const completePrepareImportMutation = useMutationExt(trpc.importExport.prepareImport.complete.mutationOptions())
 
 	const loadSnapshot = useCallback(
 		(e: FormEvent<HTMLInputElement>) => {
@@ -51,7 +60,10 @@ export const ImportExportPage = observer(function ImportExport() {
 
 			Promise.resolve()
 				.then(async () => {
-					const sessionId = await socket.emitPromise('loadsave:prepare-import:start', [newFile.name, newFile.size])
+					const sessionId = await startPrepareImportMutation.mutateAsync({
+						name: newFile.name,
+						size: newFile.size,
+					})
 					if (!sessionId) throw new Error('Failed to start upload')
 
 					let offset = 0
@@ -64,11 +76,11 @@ export const ImportExportPage = observer(function ImportExport() {
 										const chunkOffset = offset
 										offset += chunk.length
 
-										const success = await socket.emitPromise('loadsave:prepare-import:chunk', [
+										const success = await uploadPrepareImportChunkMutation.mutateAsync({
 											sessionId,
-											chunkOffset,
-											chunk,
-										])
+											offset: chunkOffset,
+											data: base64EncodeUint8Array(chunk),
+										})
 										if (!success) throw new Error(`Failed to upload chunk ${chunkOffset}`)
 
 										hasher.update(CryptoJS.lib.WordArray.create(chunk))
@@ -77,10 +89,10 @@ export const ImportExportPage = observer(function ImportExport() {
 										console.log('uploading complete, starting load')
 										const hashText = hasher.finalize().toString(CryptoJS.enc.Hex)
 
-										const [err, config] = await socket.emitPromise('loadsave:prepare-import:complete', [
+										const [err, config] = await completePrepareImportMutation.mutateAsync({
 											sessionId,
-											hashText,
-										])
+											expectedChecksum: hashText,
+										})
 
 										if (err || !config) {
 											setLoadError(err || 'Failed to prepare')
@@ -124,7 +136,7 @@ export const ImportExportPage = observer(function ImportExport() {
 							)
 						)
 						.catch((e) => {
-							socket.emitPromise('loadsave:prepare-import:cancel', [sessionId]).catch((cancelErr) => {
+							cancelPrepareImportMutation.mutateAsync({ sessionId }).catch((cancelErr) => {
 								console.error('Failed to cancel import session', cancelErr)
 							})
 							throw e
@@ -136,7 +148,14 @@ export const ImportExportPage = observer(function ImportExport() {
 					notifier.current?.show('Importing config...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
 				})
 		},
-		[socket, notifier, connections]
+		[
+			startPrepareImportMutation,
+			uploadPrepareImportChunkMutation,
+			cancelPrepareImportMutation,
+			completePrepareImportMutation,
+			notifier,
+			connections,
+		]
 	)
 
 	if (importInfo) {

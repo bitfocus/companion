@@ -35,7 +35,7 @@ export type ImageResultNativeDrawFn = (
 
 export class ImageResult {
 	/**
-	 * Image data-url for socket.io clients
+	 * Image data-url for webui clients
 	 */
 	readonly #dataUrl: string
 

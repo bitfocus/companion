@@ -45,27 +45,34 @@ import type {
 	ClientSurfaceItem,
 	SurfaceConfig,
 	SurfaceGroupConfig,
+	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
 import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
-import type { LocalUSBDeviceOptions, SurfaceHandlerDependencies, SurfacePanel, SurfacePanelFactory } from './Types.js'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type {
+	LocalUSBDeviceOptions,
+	SurfaceHandlerDependencies,
+	SurfacePanel,
+	SurfacePanelFactory,
+	UpdateEvents,
+} from './Types.js'
 import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
-import { CompanionVariableValues } from '@companion-module/base'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { getMXCreativeConsoleDeviceInfo } from '@logitech-mx-creative-console/node'
 import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
+import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
 HID.devices()
-
-const SurfacesRoom = 'surfaces'
 
 export interface SurfaceControllerEvents {
 	surface_name: [surfaceId: string, name: string]
@@ -88,7 +95,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #dbTableSurfaces: DataStoreTableView<Record<string, SurfaceConfig>>
 	readonly #dbTableGroups: DataStoreTableView<Record<string, SurfaceGroupConfig>>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
-	readonly #io: UIHandler
+
+	readonly #updateEvents = new EventEmitter<UpdateEvents>()
 
 	/**
 	 * The last sent json object
@@ -135,15 +143,16 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	readonly #firmwareUpdates: SurfaceFirmwareUpdateCheck
 
-	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies, io: UIHandler) {
+	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies) {
 		super()
 
 		this.#dbTableSurfaces = db.getTableView('surfaces')
 		this.#dbTableGroups = db.getTableView('surface_groups')
 		this.#handlerDependencies = handlerDependencies
-		this.#io = io
 
-		this.#outboundController = new SurfaceOutboundController(this, db, io)
+		this.#updateEvents.setMaxListeners(0)
+
+		this.#outboundController = new SurfaceOutboundController(this, db)
 		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.updateDevicesList())
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
@@ -157,6 +166,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					this.#dbTableGroups,
 					this.#handlerDependencies.pageStore,
 					this.#handlerDependencies.userconfig,
+					this.#updateEvents,
 					groupId,
 					null,
 					this.isPinLockEnabled()
@@ -231,7 +241,35 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				// Ensure all are unlocked
 				this.setAllLocked(false, true)
 			}
+		} else if (key === 'installName') {
+			if (this.#updateEvents.listenerCount('emulatorPageConfig') > 0) {
+				this.#updateEvents.emit('emulatorPageConfig', this.#compileEmulatorPageConfig())
+			}
 		}
+	}
+
+	#compileEmulatorPageConfig(): EmulatorPageConfig {
+		return {
+			installName: this.#handlerDependencies.userconfig.getKey('installName'),
+		}
+	}
+
+	#compileEmulatorList(): EmulatorListItem[] {
+		const items: EmulatorListItem[] = []
+
+		for (const [id, surface] of this.#surfaceHandlers) {
+			if (surface && id.startsWith('emulator:')) {
+				//&& surface.panel instanceof SurfaceIPElgatoEmulator) {
+
+				const trimmedId = id.slice('emulator:'.length)
+				items.push({
+					id: trimmedId,
+					name: surface.getFullConfig().name ?? `Emulator (${trimmedId})`,
+				})
+			}
+		}
+
+		return items.sort((a, b) => a.name.localeCompare(b.name))
 	}
 
 	#startStopLockoutTimer() {
@@ -299,7 +337,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			throw new Error(`Emulator "${id}" already exists!`)
 		}
 
-		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#io, id))
+		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#updateEvents, id))
 		if (name !== undefined) handler.setPanelName(name)
 
 		if (!skipUpdate) this.updateDevicesList()
@@ -323,7 +361,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			this.#handlerDependencies.userconfig.getKey('gridSize')
 		)
 
-		const handler = new SurfaceHandler(this, this.#handlerDependencies, panel, surfaceConfig)
+		const handler = new SurfaceHandler(this, this.#handlerDependencies, this.#updateEvents, panel, surfaceConfig)
 		handler.on('interaction', () => {
 			const groupId = handler.getGroupId() || handler.surfaceId
 			this.#surfacesLastInteraction.set(groupId, Date.now())
@@ -354,241 +392,384 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return handler
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		this.#outboundController.clientConnect(client)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			outbound: this.#outboundController.createTrpcRouter(),
 
-		client.onPromise('emulator:startup', (id) => {
-			const fullId = EmulatorRoom(id)
+			watchSurfaces: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'surfaces', signal)
 
-			const surface = this.#surfaceHandlers.get(fullId)
-			if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
-				throw new Error(`Emulator "${id}" does not exist!`)
-			}
+				yield [{ type: 'init', info: self.#lastSentJson }] satisfies SurfacesUpdate[]
 
-			// Subscribe to the bitmaps
-			client.join(fullId)
+				for await (const [info] of changes) {
+					yield info
+				}
+			}),
 
-			return surface.panel.setupClient(client)
-		})
+			watchGroupConfig: publicProcedure
+				.input(
+					z.object({
+						groupId: z.string(),
+					})
+				)
+				.subscription(async function* ({ input, signal }) {
+					const changes = toIterable(self.#updateEvents, `groupConfig:${input.groupId}`, signal)
 
-		client.onPromise('emulator:press', (id, x, y) => {
-			const fullId = EmulatorRoom(id)
+					let initialData: SurfaceGroupConfig | null = null
+					const group = self.#surfaceGroups.get(input.groupId)
+					if (group) {
+						initialData = group.groupConfig
+					} else {
+						// Perhaps this is an auto-group for an offline surface?
+						const surfaceConfig = self.#dbTableSurfaces.get(input.groupId)
+						if (surfaceConfig) {
+							initialData = surfaceConfig.groupConfig
+						}
+					}
+					yield initialData
 
-			const surface = this.#surfaceHandlers.get(fullId)
-			if (!surface) {
-				throw new Error(`Emulator "${id}" does not exist!`)
-			}
+					for await (const [change] of changes) {
+						yield change
+					}
+				}),
 
-			surface.panel.emit('click', x, y, true)
-		})
+			watchSurfaceConfig: publicProcedure
+				.input(
+					z.object({
+						surfaceId: z.string(),
+					})
+				)
+				.subscription(async function* ({ input, signal }) {
+					const changes = toIterable(self.#updateEvents, `surfaceConfig:${input.surfaceId}`, signal)
 
-		client.onPromise('emulator:release', (id, x, y) => {
-			const fullId = EmulatorRoom(id)
+					let initialData: SurfacePanelConfig | null = null
+					for (const surface of self.#surfaceHandlers.values()) {
+						if (surface && surface.surfaceId == input.surfaceId) {
+							initialData = surface.getPanelConfig()
+						}
+					}
 
-			const surface = this.#surfaceHandlers.get(fullId)
-			if (!surface) {
-				throw new Error(`Emulator "${id}" does not exist!`)
-			}
+					// Maybe surface exists, but is offline?
+					if (!initialData) {
+						const surfaceConfig = self.#dbTableSurfaces.get(input.surfaceId)
+						if (surfaceConfig) {
+							initialData = surfaceConfig.config
+						}
+					}
+					yield initialData
 
-			surface.panel.emit('click', x, y, false)
-		})
+					for await (const [change] of changes) {
+						yield change
+					}
+				}),
 
-		// client.onPromise(
-		// 	'emulator:stop',
-		// 	(id) => {
-		// 		const fullId = EmulatorRoom(id)
+			rescanUsb: publicProcedure.mutation(async () => {
+				try {
+					return this.triggerRefreshDevices()
+				} catch (e: any) {
+					return e.message
+				}
+			}),
 
-		// 		client.leave(fullId)
-		// 	}
-		// )
+			emulatorPageConfig: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'emulatorPageConfig', signal)
 
-		client.onPromise('surfaces:subscribe', () => {
-			client.join(SurfacesRoom)
+				yield self.#compileEmulatorPageConfig()
 
-			return this.#lastSentJson
-		})
-		client.onPromise('surfaces:unsubscribe', () => {
-			client.leave(SurfacesRoom)
-		})
+				for await (const [info] of changes) {
+					yield info
+				}
+			}),
 
-		client.onPromise('surfaces:rescan', async () => {
-			try {
-				return this.triggerRefreshDevices()
-			} catch (e: any) {
-				return e.message
-			}
-		})
+			emulatorAdd: publicProcedure
+				.input(
+					z.object({
+						baseId: z.string().min(1),
+						name: z.string().optional(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const fullId = `emulator:${input.baseId}`
 
-		client.onPromise('surfaces:set-name', (id, name) => {
-			// Find a matching group
-			const group = this.#surfaceGroups.get(id)
-			if (group && !group.isAutoGroup) {
-				group.setName(name)
-				this.updateDevicesList()
-				return
-			}
+					if (this.#surfaceHandlers.has(fullId)) throw new Error(`Emulator "${input.baseId}" already exists!`)
 
-			// Find a connected surface
-			for (const surface of this.#surfaceHandlers.values()) {
-				if (surface && surface.surfaceId == id) {
-					surface.setPanelName(name)
+					this.addEmulator(input.baseId, input.name || '')
+
+					return fullId
+				}),
+
+			emulatorRemove: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					if (input.id.startsWith('emulator:') && this.#surfaceHandlers.has(input.id)) {
+						this.removeDevice(input.id, true)
+
+						return true
+					} else {
+						return false
+					}
+				}),
+
+			emulatorList: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'emulatorList', signal)
+
+				yield self.#compileEmulatorList()
+
+				for await (const [info] of changes) {
+					yield info
+				}
+			}),
+
+			emulatorConfig: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
+				signal,
+				input,
+			}) {
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					throw new Error(`Emulator "${input.id}" does not exist!`)
+				}
+
+				const changes = toIterable(self.#updateEvents, 'emulatorConfig', signal)
+
+				yield surface.panel.latestConfig()
+
+				for await (const [changeId, changeData] of changes) {
+					if (changeId === input.id) yield changeData
+				}
+			}),
+
+			emulatorImages: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
+				signal,
+				input,
+			}) {
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					throw new Error(`Emulator "${input.id}" does not exist!`)
+				}
+
+				const changes = toIterable(self.#updateEvents, 'emulatorImages', signal)
+
+				yield { images: surface.panel.latestImages(), clearCache: true }
+
+				for await (const [changeId, changeData, clearCache] of changes) {
+					if (changeId === input.id) yield { images: changeData, clearCache }
+				}
+			}),
+
+			emulatorPressed: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+						column: z.number(),
+						row: z.number(),
+						pressed: z.boolean(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const surface = this.#surfaceHandlers.get(EmulatorRoom(input.id))
+					if (!surface) {
+						throw new Error(`Emulator "${input.id}" does not exist!`)
+					}
+
+					surface.panel.emit('click', input.column, input.row, input.pressed)
+				}),
+
+			groupAdd: publicProcedure
+				.input(
+					z.object({
+						baseId: z.string().min(1),
+						name: z.string().min(1),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const groupId = `group:${input.baseId}`
+
+					const newGroup = new SurfaceGroup(
+						this,
+						this.#dbTableGroups,
+						this.#handlerDependencies.pageStore,
+						this.#handlerDependencies.userconfig,
+						this.#updateEvents,
+						groupId,
+						null,
+						this.isPinLockEnabled()
+					)
+					newGroup.setName(input.name)
+					this.#surfaceGroups.set(groupId, newGroup)
+
 					this.updateDevicesList()
-					return
-				}
-			}
 
-			// Find a disconnected surface
-			const surfaceConfig = this.#dbTableSurfaces.get(id)
-			if (surfaceConfig) {
-				surfaceConfig.name = name
-				this.#dbTableSurfaces.set(id, surfaceConfig)
-				this.updateDevicesList()
-				return
-			}
+					return groupId
+				}),
 
-			throw new Error('not found')
-		})
+			groupRemove: publicProcedure
+				.input(
+					z.object({
+						groupId: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const group = this.#surfaceGroups.get(input.groupId)
+					if (!group || group.isAutoGroup) throw new Error(`Group does not exist`)
 
-		client.onPromise('surfaces:config-get', (id) => {
-			for (const surface of this.#surfaceHandlers.values()) {
-				if (surface && surface.surfaceId == id) {
-					return surface.getPanelConfig()
-				}
-			}
-			return null
-		})
+					// Clear the group for all surfaces
+					for (const surfaceHandler of group.surfaceHandlers) {
+						surfaceHandler.setGroupId(null)
+						this.#attachSurfaceToGroup(surfaceHandler)
+					}
 
-		client.onPromise('surfaces:config-set', (id, config) => {
-			for (const surface of this.#surfaceHandlers.values()) {
-				if (surface && surface.surfaceId == id) {
-					surface.setPanelConfig(config)
+					group.dispose()
+					group.forgetConfig()
+					this.#surfaceGroups.delete(input.groupId)
 
-					setImmediate(() => this.updateDevicesList())
+					this.updateDevicesList()
+				}),
 
-					return surface.getPanelConfig()
-				}
-			}
-			return 'device not found'
-		})
+			groupSetConfigKey: publicProcedure
+				.input(
+					z.object({
+						groupId: z.string(),
+						key: z.string(),
+						value: z.any(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const group = this.#surfaceGroups.get(input.groupId)
+					if (!group) throw new Error(`Group does not exist: ${input.groupId}`)
 
-		client.onPromise('surfaces:emulator-add', (baseId, name) => {
-			if (!baseId || typeof baseId !== 'string') throw new Error('Invalid id')
-			const fullId = `emulator:${baseId}`
+					const err = group.setGroupConfigValue(input.key, input.value)
+					if (err) return err
 
-			if (this.#surfaceHandlers.has(fullId)) throw new Error(`Emulator "${baseId}" already exists!`)
+					return undefined
+				}),
 
-			this.addEmulator(baseId, name || '')
+			surfaceSetGroup: publicProcedure
+				.input(
+					z.object({
+						surfaceId: z.string(),
+						groupId: z.string().nullable(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const group = input.groupId ? this.#surfaceGroups.get(input.groupId) : null
+					if (input.groupId && !group) throw new Error(`Group does not exist: ${input.groupId}`)
+					if (group && group.isAutoGroup) throw new Error(`Cannot add to an auto group: ${input.groupId}`)
 
-			return fullId
-		})
+					// Check for an active surface
+					const surfaceHandler = Array.from(this.#surfaceHandlers.values()).find(
+						(surface) => surface && surface.surfaceId === input.surfaceId
+					)
+					if (surfaceHandler) {
+						this.#detachSurfaceFromGroup(surfaceHandler)
 
-		client.onPromise('surfaces:emulator-remove', (id) => {
-			if (id.startsWith('emulator:') && this.#surfaceHandlers.has(id)) {
-				this.removeDevice(id, true)
+						surfaceHandler.setGroupId(input.groupId)
 
-				return true
-			} else {
-				return false
-			}
-		})
+						this.#attachSurfaceToGroup(surfaceHandler)
 
-		client.onPromise('surfaces:forget', (id) => {
-			for (const surface of this.#surfaceHandlers.values()) {
-				if (!surface) continue
+						this.updateDevicesList()
+						return
+					}
 
-				if (surface.surfaceId == id) {
-					return 'device is active'
-				}
-			}
+					// Surface not found, perhaps it is an offline surface?
+					const surfaceConfig = this.#dbTableSurfaces.get(input.surfaceId)
+					if (surfaceConfig) {
+						surfaceConfig.groupId = input.groupId
+						this.#dbTableSurfaces.set(input.surfaceId, surfaceConfig)
 
-			if (this.setDeviceConfig(id, undefined)) {
-				this.updateDevicesList()
+						this.updateDevicesList()
+						return
+					}
 
-				return true
-			}
+					throw new Error(`Surface does not exist or is not connected: ${input.surfaceId}`)
+				}),
 
-			return 'device not found'
-		})
+			surfaceForget: publicProcedure
+				.input(
+					z.object({
+						surfaceId: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					for (const surface of this.#surfaceHandlers.values()) {
+						if (!surface) continue
 
-		client.onPromise('surfaces:group-add', (baseId, name) => {
-			if (!baseId || typeof baseId !== 'string') throw new Error('Invalid id')
-			if (!name || typeof name !== 'string') throw new Error('Invalid name')
+						if (surface.surfaceId == input.surfaceId) {
+							return 'device is active'
+						}
+					}
 
-			const groupId = `group:${baseId}`
+					if (this.setDeviceConfig(input.surfaceId, undefined)) {
+						this.updateDevicesList()
 
-			const newGroup = new SurfaceGroup(
-				this,
-				this.#dbTableGroups,
-				this.#handlerDependencies.pageStore,
-				this.#handlerDependencies.userconfig,
-				groupId,
-				null,
-				this.isPinLockEnabled()
-			)
-			newGroup.setName(name)
-			this.#surfaceGroups.set(groupId, newGroup)
+						return true
+					}
 
-			this.updateDevicesList()
+					return 'device not found'
+				}),
 
-			return groupId
-		})
+			surfaceOrGroupSetName: publicProcedure
+				.input(
+					z.object({
+						surfaceOrGroupId: z.string(),
+						name: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					// Find a matching group
+					const group = this.#surfaceGroups.get(input.surfaceOrGroupId)
+					if (group && !group.isAutoGroup) {
+						group.setName(input.name)
+						this.updateDevicesList()
+						return
+					}
 
-		client.onPromise('surfaces:group-remove', (groupId) => {
-			const group = this.#surfaceGroups.get(groupId)
-			if (!group || group.isAutoGroup) throw new Error(`Group does not exist`)
+					// Find a connected surface
+					for (const surface of this.#surfaceHandlers.values()) {
+						if (surface && surface.surfaceId == input.surfaceOrGroupId) {
+							surface.setPanelName(input.name)
+							this.updateDevicesList()
+							return
+						}
+					}
 
-			// Clear the group for all surfaces
-			for (const surfaceHandler of group.surfaceHandlers) {
-				surfaceHandler.setGroupId(null)
-				this.#attachSurfaceToGroup(surfaceHandler)
-			}
+					// Find a disconnected surface
+					const surfaceConfig = this.#dbTableSurfaces.get(input.surfaceOrGroupId)
+					if (surfaceConfig) {
+						surfaceConfig.name = input.name
+						this.#dbTableSurfaces.set(input.surfaceOrGroupId, surfaceConfig)
+						this.updateDevicesList()
+						return
+					}
 
-			group.dispose()
-			group.forgetConfig()
-			this.#surfaceGroups.delete(groupId)
+					throw new Error('not found')
+				}),
 
-			this.updateDevicesList()
+			surfaceSetConfigKey: publicProcedure
+				.input(
+					z.object({
+						surfaceId: z.string(),
+						key: z.string(),
+						value: z.any(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					for (const surface of this.#surfaceHandlers.values()) {
+						if (surface && surface.surfaceId == input.surfaceId) {
+							surface.setPanelConfig({
+								...surface.getPanelConfig(),
+								[input.key]: input.value,
+							})
 
-			return groupId
-		})
-
-		client.onPromise('surfaces:add-to-group', (groupId, surfaceId) => {
-			const group = groupId ? this.#surfaceGroups.get(groupId) : null
-			if (groupId && !group) throw new Error(`Group does not exist: ${groupId}`)
-
-			const surfaceHandler = Array.from(this.#surfaceHandlers.values()).find(
-				(surface) => surface && surface.surfaceId === surfaceId
-			)
-			if (!surfaceHandler) throw new Error(`Surface does not exist or is not connected: ${surfaceId}`)
-			// TODO - we can handle this if it is still in the config
-
-			this.#detachSurfaceFromGroup(surfaceHandler)
-
-			surfaceHandler.setGroupId(groupId)
-
-			this.#attachSurfaceToGroup(surfaceHandler)
-
-			this.updateDevicesList()
-		})
-
-		client.onPromise('surfaces:group-config-get', (groupId) => {
-			const group = this.#surfaceGroups.get(groupId)
-			if (!group) throw new Error(`Group does not exist: ${groupId}`)
-
-			return group.groupConfig
-		})
-
-		client.onPromise('surfaces:group-config-set', (groupId, key, value) => {
-			const group = this.#surfaceGroups.get(groupId)
-			if (!group) throw new Error(`Group does not exist: ${groupId}`)
-
-			const err = group.setGroupConfigValue(key, value)
-			if (err) return err
-
-			return group.groupConfig
+							setImmediate(() => this.updateDevicesList())
+						}
+					}
+					return 'device not found'
+				}),
 		})
 	}
 
@@ -624,6 +805,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				this.#dbTableGroups,
 				this.#handlerDependencies.pageStore,
 				this.#handlerDependencies.userconfig,
+				this.#updateEvents,
 				surfaceGroupId,
 				!rawSurfaceGroupId ? surfaceHandler : null,
 				isLocked
@@ -665,13 +847,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Set the config object for a surface
 	 * @returns Already had config
 	 */
-	setDeviceConfig(surfaceId: string, surfaceConfig: any | undefined): boolean {
+	setDeviceConfig(surfaceId: string, surfaceConfig: SurfaceConfig | undefined): boolean {
 		const exists = !!this.#dbTableSurfaces.get(surfaceId)
 
 		if (surfaceConfig) {
 			this.#dbTableSurfaces.set(surfaceId, surfaceConfig)
+			this.#updateEvents.emit(`surfaceConfig:${surfaceId}`, surfaceConfig.config)
 		} else {
 			this.#dbTableSurfaces.delete(surfaceId)
+			this.#updateEvents.emit(`surfaceConfig:${surfaceId}`, null)
 		}
 
 		return exists
@@ -774,7 +958,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			} else {
 				const groupResult: ClientDevicesListItem = {
 					id: groupId,
-					index: undefined,
+					index: null,
 					displayName: `${surface.name || surface.type} (${surfaceId}) - Offline`,
 					isAutoGroup: true,
 					surfaces: [translateSurfaceConfig(surfaceId, surface, null)],
@@ -803,7 +987,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	updateDevicesList(): void {
 		const newJsonArr = cloneDeep(this.getDevicesList())
 
-		const hasSubscribers = this.#io.countRoomMembers(SurfacesRoom) > 0
+		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
+			this.#updateEvents.emit('emulatorList', this.#compileEmulatorList())
+		}
+
+		const hasSubscribers = this.#updateEvents.listenerCount('surfaces') > 0
 
 		const newJson: Record<string, ClientDevicesListItem> = {}
 		for (const surface of newJsonArr) {
@@ -848,7 +1036,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				}
 			}
 
-			this.#io.emitToRoom(SurfacesRoom, `surfaces:update`, changes)
+			if (changes.length > 0) {
+				this.#updateEvents.emit('surfaces', changes)
+			}
 		}
 		this.#lastSentJson = newJson
 	}
@@ -1169,6 +1359,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					this.#dbTableGroups,
 					this.#handlerDependencies.pageStore,
 					this.#handlerDependencies.userconfig,
+					this.#updateEvents,
 					id,
 					null,
 					this.isPinLockEnabled()

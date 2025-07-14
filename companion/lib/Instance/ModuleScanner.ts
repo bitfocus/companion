@@ -4,6 +4,7 @@ import fs from 'fs-extra'
 import { ModuleManifest, validateManifest } from '@companion-module/base'
 import type { ModuleVersionInfo } from './Types.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import semver from 'semver'
 
 export class InstanceModuleScanner {
 	readonly #logger = LogController.createLogger('Instance/ModuleScanner')
@@ -88,6 +89,10 @@ export class InstanceModuleScanner {
 				isLegacy: isLegacy,
 				isBeta: !!manifestJson.isPrerelease,
 			}
+
+			// Make sure the versionId is valid semver
+			if (!semver.parse(moduleManifestExt.versionId, { loose: true }))
+				throw new Error(`Invalid version "${moduleManifestExt.versionId}" `)
 
 			this.#logger.silly(`found module ${moduleDisplay.id}@${manifestJson.version}`)
 

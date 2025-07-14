@@ -1,4 +1,5 @@
 @use 'sass:color';
+@use 'variables' as *;
 
 h4 {
 	font-weight: bold;
@@ -158,12 +159,7 @@ code {
 .c-app {
 	color: #222;
 }
-.form-control {
-	color: #333;
-}
-.form-control:focus {
-	color: #111;
-}
+
 .form-control[type='text']:read-only {
 	background-color: #eeeeee;
 }

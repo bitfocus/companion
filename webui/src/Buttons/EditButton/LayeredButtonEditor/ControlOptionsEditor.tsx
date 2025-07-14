@@ -1,6 +1,6 @@
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
-import React, { MutableRefObject, useCallback, useContext, useRef } from 'react'
-import { PreventDefaultHandler, SocketContext } from '../../../util.js'
+import React, { MutableRefObject, useCallback, useRef } from 'react'
+import { PreventDefaultHandler } from '../../../util.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
 import { InlineHelp } from '../../../Components/InlineHelp.js'
 import { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
@@ -8,6 +8,7 @@ import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
 import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
 import { TextInputField } from '~/Components/TextInputField.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string
@@ -16,19 +17,19 @@ interface ControlOptionsEditorProps {
 }
 
 export function ControlOptionsEditor({ controlId, options, configRef }: ControlOptionsEditorProps): JSX.Element | null {
-	const socket = useContext(SocketContext)
-
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
+
+	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	const setValueInner = useCallback(
 		(key: string, value: any) => {
 			if (configRef.current === undefined || value !== configRef.current.options[key]) {
-				socket.emitPromise('controls:set-options-field', [controlId, key, value]).catch((e) => {
+				setOptionsFieldMutation.mutateAsync({ controlId, key, value }).catch((e) => {
 					console.error(`Set field failed: ${e}`)
 				})
 			}
 		},
-		[socket, controlId, configRef]
+		[setOptionsFieldMutation, controlId, configRef]
 	)
 
 	const setStepProgressionValue = useCallback((val: any) => setValueInner('stepProgression', val), [setValueInner])

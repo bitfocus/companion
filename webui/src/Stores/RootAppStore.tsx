@@ -1,7 +1,6 @@
 import React from 'react'
 import type { ObservableMap, ObservableSet } from 'mobx'
 import type { NotificationsManagerRef } from '~/Components/Notifications.js'
-import type { CompanionSocketWrapped } from '~/util.js'
 import type { PagesStore } from './PagesStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
@@ -19,7 +18,6 @@ import type { ImageLibraryStore } from './ImageLibraryStore.js'
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
 export interface RootAppStore {
-	readonly socket: CompanionSocketWrapped
 	readonly notifier: React.RefObject<NotificationsManagerRef> // TODO - this is not good
 	readonly helpViewer: React.RefObject<HelpModalRef> // TODO - this is not good
 	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good

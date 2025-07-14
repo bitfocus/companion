@@ -1,6 +1,5 @@
-import React, { useCallback, useContext } from 'react'
+import React, { useCallback } from 'react'
 import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
-import { SocketContext } from '~/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
@@ -10,24 +9,33 @@ import { UserConfigProps } from '../Components/Common.js'
 import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
 import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps) {
-	const socket = useContext(SocketContext)
+	const createSslCertificateMutation = useMutationExt(trpc.userConfig.sslCertificateCreate.mutationOptions())
+	const deleteSslCertificateMutation = useMutationExt(trpc.userConfig.sslCertificateDelete.mutationOptions())
+	const renewSslCertificateMutation = useMutationExt(trpc.userConfig.sslCertificateRenew.mutationOptions())
 
 	const createSslCertificate = useCallback(() => {
 		console.log('create SSL certificate')
-		socket.emit('ssl_certificate_create')
-	}, [socket])
+		createSslCertificateMutation.mutateAsync().catch((err) => {
+			console.error('Failed to create SSL certificate:', err)
+		})
+	}, [createSslCertificateMutation])
 
 	const deleteSslCertificate = useCallback(() => {
 		console.log('delete SSL certificate')
-		socket.emit('ssl_certificate_delete')
-	}, [socket])
+		deleteSslCertificateMutation.mutateAsync().catch((err) => {
+			console.error('Failed to delete SSL certificate:', err)
+		})
+	}, [deleteSslCertificateMutation])
 
 	const renewSslCertificate = useCallback(() => {
 		console.log('renew SSL certificate')
-		socket.emit('ssl_certificate_renew')
-	}, [socket])
+		renewSslCertificateMutation.mutateAsync().catch((err) => {
+			console.error('Failed to renew SSL certificate:', err)
+		})
+	}, [renewSslCertificateMutation])
 
 	return (
 		<>

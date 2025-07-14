@@ -1,8 +1,8 @@
 import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
 import { faPlus, faImage, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useState, useEffect, useMemo, useRef } from 'react'
-import { SocketContext, useComputed } from '~/util.js'
+import React, { useCallback, useContext, useState, useMemo, useRef } from 'react'
+import { useComputed } from '~/util.js'
 import { observer } from 'mobx-react-lite'
 import { ImageThumbnail } from './ImageThumbnail'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -14,10 +14,11 @@ import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types.js'
-import type { ImageLibraryInfo, ImageLibraryUpdate } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 // Adapters for CollectionsNestingTable
 interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'children'> {
@@ -40,7 +41,6 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	selectedImageName,
 	onSelectImage,
 }: ImageLibraryGridProps) {
-	const socket = useContext(SocketContext)
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [searchQuery, setSearchQuery] = useState('')
 	const addModalRef = useRef<ImageAddModalRef>(null)
@@ -87,20 +87,20 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 		[selectedImageName, onSelectImage, searchQuery]
 	)
 
-	// Listen for image library events to clear cache when images are updated or deleted
-	useEffect(() => {
-		const handleImageUpdate = (changes: ImageLibraryUpdate[]) => {
-			for (const change of changes) {
-				imageCache.clearImageName(change.itemName)
-			}
-		}
+	// // Listen for image library events to clear cache when images are updated or deleted
+	// useEffect(() => {
+	// 	const handleImageUpdate = (changes: ImageLibraryUpdate[]) => {
+	// 		for (const change of changes) {
+	// 			imageCache.clearImageName(change.itemName)
+	// 		}
+	// 	}
 
-		const unsubUpdate = socket.on('image-library:update', handleImageUpdate)
+	// 	const unsubUpdate = socket.on('image-library:update', handleImageUpdate)
 
-		return () => {
-			unsubUpdate()
-		}
-	}, [socket, imageCache])
+	// 	return () => {
+	// 		unsubUpdate()
+	// 	}
+	// }, [socket, imageCache])
 
 	return (
 		<ImageCacheProvider cache={imageCache}>
@@ -121,9 +121,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 								<CButton color="primary" size="sm" onClick={handleCreateNew}>
 									<FontAwesomeIcon icon={faPlus} /> Add Image
 								</CButton>
-								<CButton color="info" size="sm" onClick={() => collectionsApi.createCollection()}>
-									<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-								</CButton>
+								<CreateCollectionButton />
 							</CButtonGroup>
 						</div>
 
@@ -158,4 +156,20 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 
 function NoContent() {
 	return <NonIdealState icon={faImage} text="No images in library" />
+}
+
+function CreateCollectionButton() {
+	const createMutation = useMutationExt(trpc.imageLibrary.collections.add.mutationOptions())
+
+	const doCreateCollection = useCallback(() => {
+		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
+			console.error('Failed to add collection', e)
+		})
+	}, [createMutation])
+
+	return (
+		<CButton color="info" size="sm" onClick={doCreateCollection}>
+			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+		</CButton>
+	)
 }

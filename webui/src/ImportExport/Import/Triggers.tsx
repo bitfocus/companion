@@ -3,6 +3,7 @@ import React, { ChangeEvent, useCallback, useEffect, useState, useContext } from
 import { ImportRemap } from './Page.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject
@@ -15,7 +16,7 @@ export function ImportTriggersTab({
 	connectionRemap,
 	setConnectionRemap,
 }: ImportTriggersTabProps): React.JSX.Element {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const [selectedTriggers, setSelectedTriggers] = useState<string[]>([])
 
@@ -51,14 +52,17 @@ export function ImportTriggersTab({
 		}
 	}, [])
 
+	const importTriggersMutation = useMutationExt(trpc.importExport.importTriggers.mutationOptions())
 	const doImport = useCallback(
 		(e: React.MouseEvent<HTMLElement>) => {
 			const doReplace = e.currentTarget.getAttribute('data-replace') === 'true'
 
-			console.log('import', selectedTriggers, doReplace, e.currentTarget.getAttribute('data-replace'))
-
-			socket
-				.emitPromise('loadsave:import-triggers', [selectedTriggers, connectionRemap, doReplace])
+			importTriggersMutation
+				.mutateAsync({
+					selectedTriggerIds: selectedTriggers,
+					connectionIdRemapping: connectionRemap,
+					replaceExisting: doReplace,
+				})
 				.then((res) => {
 					notifier.current?.show(`Import successful`, `Triggers were imported successfully`, 10000)
 					console.log('remap response', res)
@@ -71,7 +75,7 @@ export function ImportTriggersTab({
 					console.error('import failed', e)
 				})
 		},
-		[socket, notifier, selectedTriggers, connectionRemap, setConnectionRemap]
+		[importTriggersMutation, notifier, selectedTriggers, connectionRemap, setConnectionRemap]
 	)
 
 	return (

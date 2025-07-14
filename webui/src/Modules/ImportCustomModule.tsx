@@ -4,40 +4,53 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CAlert } from '@coreui/react'
 import CryptoJS from 'crypto-js'
+import { trpc, useMutationExt } from '~/TRPC'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { base64EncodeUint8Array } from '~/util'
 
 const NOTIFICATION_ID_IMPORT = 'import_module_bundle'
 
 export function ImportModules(): React.JSX.Element {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
-	// const [importBundleProgress, setImportBundleProgress] = useState<number | null>(null)
-	useEffect(() => {
-		// setImportBundleProgress(null)
-		notifier.current?.close(NOTIFICATION_ID_IMPORT)
+	const [importSessionId, setImportSessionId] = useState<string | null>(null)
 
-		const unsubProgress = socket.on('modules:bundle-import:progress', (_sessionId, progress) => {
-			// setImportBundleProgress(progress)
-			console.log('import progress', progress)
-
-			if (progress === null) {
-				notifier.current?.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
-			} else {
-				notifier.current?.show(
-					'Importing module bundle...',
-					`${Math.round(progress * 100)}% complete`,
-					null,
-					NOTIFICATION_ID_IMPORT
-				)
+	useSubscription(
+		trpc.connections.modulesManager.bundleUpload.watchProgress.subscriptionOptions(
+			{
+				sessionId: importSessionId ?? '',
+			},
+			{
+				enabled: !!importSessionId,
+				onData: (data) => {
+					if (data === null) {
+						notifier.current?.close(NOTIFICATION_ID_IMPORT)
+					} else {
+						const progress = data as number | null
+						if (progress === null) {
+							notifier.current?.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
+						} else {
+							notifier.current?.show(
+								'Importing module bundle...',
+								`${Math.round(progress * 100)}% complete`,
+								null,
+								NOTIFICATION_ID_IMPORT
+							)
+						}
+					}
+				},
 			}
-		})
-
-		return () => {
-			unsubProgress()
+		)
+	)
+	useEffect(() => {
+		if (!importSessionId) {
+			notifier.current?.close(NOTIFICATION_ID_IMPORT)
 		}
-	}, [socket, notifier])
+	}, [notifier, importSessionId])
 
 	const [importError, setImportError] = useState<string | null>(null)
 
+	const installTarMutation = useMutationExt(trpc.connections.modulesManager.installModuleTar.mutationOptions())
 	const loadModuleFile = useCallback(
 		(e: React.FormEvent<HTMLInputElement>) => {
 			const newFile = e.currentTarget.files?.[0]
@@ -53,35 +66,52 @@ export function ImportModules(): React.JSX.Element {
 					const buffer = await newFile.bytes()
 
 					setImportError(null)
-					await socket.emitPromise('modules:install-module-tar', [buffer], 20000).then((failureReason) => {
-						if (failureReason) {
-							console.error('Failed to install module', failureReason)
+					await installTarMutation // TODO: 20s timeout?
+						.mutateAsync({
+							tarBuffer: base64EncodeUint8Array(buffer),
+						})
+						.then((failureReason) => {
+							if (failureReason) {
+								console.error('Failed to install module', failureReason)
 
-							notifier.current?.show('Failed to install module', failureReason, 5000)
-						}
+								notifier.current?.show('Failed to install module', failureReason, 5000)
+							}
 
-						setImportError(null)
-						// if (err) {
-						// 	setImportError(err || 'Failed to prepare')
-						// } else {
-						// 	// const mode = config.type === 'page' ? 'import_page' : 'import_full'
-						// 	// modalRef.current.show(mode, config, initialRemap)
-						// 	// setImportInfo([config, initialRemap])
-						// }
-					})
+							setImportError(null)
+							// if (err) {
+							// 	setImportError(err || 'Failed to prepare')
+							// } else {
+							// 	// const mode = config.type === 'page' ? 'import_page' : 'import_full'
+							// 	// modalRef.current.show(mode, config, initialRemap)
+							// 	// setImportInfo([config, initialRemap])
+							// }
+						})
 				})
 				.catch((e) => {
 					setImportError('Failed to load module package to import')
 					console.error('Failed to load module package to import:', e)
 				})
 		},
-		[socket, notifier]
+		[installTarMutation, notifier]
+	)
+
+	const startBundleImportMutation = useMutationExt(trpc.connections.modulesManager.bundleUpload.start.mutationOptions())
+	const cancelBundleImportMutation = useMutationExt(
+		trpc.connections.modulesManager.bundleUpload.cancel.mutationOptions()
+	)
+	const uploadBundleChunkMutation = useMutationExt(
+		trpc.connections.modulesManager.bundleUpload.uploadChunk.mutationOptions()
+	)
+	const completeBundleImportMutation = useMutationExt(
+		trpc.connections.modulesManager.bundleUpload.complete.mutationOptions()
 	)
 
 	const loadModuleBundle = useCallback(
 		(e: React.FormEvent<HTMLInputElement>) => {
 			const newFile = e.currentTarget.files?.[0]
 			e.currentTarget.value = null as any
+
+			setImportSessionId(null)
 
 			if (newFile === undefined || newFile.type === undefined) {
 				setImportError('Unable to read module bundle')
@@ -96,8 +126,10 @@ export function ImportModules(): React.JSX.Element {
 
 			Promise.resolve()
 				.then(async () => {
-					const sessionId = await socket.emitPromise('modules:bundle-import:start', [newFile.name, newFile.size])
+					const sessionId = await startBundleImportMutation.mutateAsync({ name: newFile.name, size: newFile.size })
 					if (!sessionId) throw new Error('Failed to start upload')
+
+					setImportSessionId(sessionId)
 
 					let offset = 0
 					await newFile
@@ -109,11 +141,11 @@ export function ImportModules(): React.JSX.Element {
 										const chunkOffset = offset
 										offset += chunk.length
 
-										const success = await socket.emitPromise('modules:bundle-import:chunk', [
+										const success = await uploadBundleChunkMutation.mutateAsync({
 											sessionId,
-											chunkOffset,
-											chunk,
-										])
+											offset: chunkOffset,
+											data: base64EncodeUint8Array(chunk),
+										})
 										if (!success) throw new Error(`Failed to upload chunk ${chunkOffset}`)
 
 										hasher.update(CryptoJS.lib.WordArray.create(chunk))
@@ -122,8 +154,13 @@ export function ImportModules(): React.JSX.Element {
 										console.log('uploading complete, starting load')
 										const hashText = hasher.finalize().toString(CryptoJS.enc.Hex)
 
-										const success = await socket.emitPromise('modules:bundle-import:complete', [sessionId, hashText])
+										const success = await completeBundleImportMutation.mutateAsync({
+											sessionId,
+											expectedChecksum: hashText,
+										})
 										if (!success) throw new Error(`Failed to import`)
+
+										setImportSessionId(null)
 									},
 								},
 								{
@@ -132,7 +169,9 @@ export function ImportModules(): React.JSX.Element {
 							)
 						)
 						.catch((e) => {
-							socket.emitPromise('modules:bundle-import:cancel', [sessionId]).catch((cancelErr) => {
+							setImportSessionId(null)
+
+							cancelBundleImportMutation.mutateAsync({ sessionId }).catch((cancelErr) => {
 								console.error('Failed to cancel import session', cancelErr)
 							})
 							throw e
@@ -141,10 +180,17 @@ export function ImportModules(): React.JSX.Element {
 				.catch((e) => {
 					console.error('failed', e)
 
-					notifier.current?.show('Importing module bundle...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
+					notifier.current?.close(NOTIFICATION_ID_IMPORT)
+					notifier.current?.show('Importing module bundle...', 'Failed!', 5000)
 				})
 		},
-		[socket, notifier]
+		[
+			startBundleImportMutation,
+			cancelBundleImportMutation,
+			uploadBundleChunkMutation,
+			completeBundleImportMutation,
+			notifier,
+		]
 	)
 
 	return (

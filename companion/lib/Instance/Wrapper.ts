@@ -1,6 +1,5 @@
 import LogController, { Logger } from '../Log/Controller.js'
 import { IpcEventHandlers, IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
-import { ConnectionDebugLogRoom } from './Host.js'
 import semver from 'semver'
 import type express from 'express'
 import type {
@@ -42,7 +41,6 @@ import {
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceDefinitions, PresetDefinitionTmp } from './Definitions.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { UIHandler } from '../UI/Handler.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
@@ -62,7 +60,6 @@ import { InternalActionInputField, InternalFeedbackInputField } from '@companion
 
 export interface InstanceModuleWrapperDependencies {
 	readonly controls: ControlsController
-	readonly io: UIHandler
 	readonly variables: VariablesController
 	readonly pageStore: IPageStore
 	readonly oscSender: ServiceOscSender
@@ -77,6 +74,7 @@ export interface InstanceModuleWrapperDependencies {
 		secrets: unknown | null,
 		newUpgradeIndex: number | null
 	) => void
+	readonly debugLogLine: (connectionId: string, level: string, message: string) => void
 }
 
 export class SocketEventsHandler {
@@ -247,6 +245,7 @@ export class SocketEventsHandler {
 
 			const imageSize = control.getBitmapFeedbackSize()
 			for (const entity of controlEntities) {
+				if (entity.connectionId !== this.connectionId) continue
 				if (entity.type !== EntityModelType.Feedback) continue
 
 				const entityModel = entity.asEntityModel(false) as FeedbackEntityModel
@@ -540,7 +539,7 @@ export class SocketEventsHandler {
 			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
 		}
 
-		// Stop socket.io commands being received
+		// Stop ipc commands being received
 		this.#unsubListeners()
 
 		// Cleanup any db collections
@@ -626,10 +625,7 @@ export class SocketEventsHandler {
 	 * Send a message to the module 'debug' log page
 	 */
 	#sendToModuleLog(level: LogLevel | 'system', message: string): void {
-		const debugLogRoom = ConnectionDebugLogRoom(this.connectionId)
-		if (this.#deps.io.countRoomMembers(debugLogRoom) > 0) {
-			this.#deps.io.emitToRoom(debugLogRoom, debugLogRoom, level, message)
-		}
+		this.#deps.debugLogLine(this.connectionId, level, message)
 	}
 
 	/**

@@ -1,23 +1,15 @@
-import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { CustomVariableCollection } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import z from 'zod'
 
-const CustomVariableCollectionsRoom = 'custom-variable-collections'
-
-export class CustomVariableCollections extends CollectionsBaseController<undefined> {
-	readonly #io: UIHandler
-
+export class CustomVariableCollections extends CollectionsBaseController<null> {
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void
 
-	constructor(
-		io: UIHandler,
-		db: DataDatabase,
-		cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void
-	) {
+	constructor(db: DataDatabase, cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void) {
 		super(db.getTableView<Record<string, CustomVariableCollection>>('custom_variable_collections'))
 
-		this.#io = io
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds
 	}
 
@@ -28,33 +20,17 @@ export class CustomVariableCollections extends CollectionsBaseController<undefin
 		this.#cleanUnknownCollectionIds(this.collectAllCollectionIds())
 	}
 
-	override emitUpdate(rows: CustomVariableCollection[]): void {
-		this.#io.emitToRoom(CustomVariableCollectionsRoom, 'custom-variable-collections:update', rows)
+	override emitUpdateUser(_rows: CustomVariableCollection[]): void {
+		// No-op
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('custom-variable-collections:subscribe', () => {
-			client.join(CustomVariableCollectionsRoom)
+	createTrpcRouter() {
+		return router({
+			...super.createTrpcRouterBase(),
 
-			return this.data
+			add: publicProcedure.input(z.object({ collectionName: z.string() })).mutation(async ({ input }) => {
+				return this.collectionCreate(input.collectionName, null)
+			}),
 		})
-
-		client.onPromise('custom-variable-collections:unsubscribe', () => {
-			client.leave(CustomVariableCollectionsRoom)
-		})
-
-		client.onPromise('custom-variable-collections:add', (collectionName: string) => {
-			return this.collectionCreate(
-				collectionName,
-				undefined // No metadata for connection collections
-			)
-		})
-
-		client.onPromise('custom-variable-collections:remove', this.collectionRemove)
-		client.onPromise('custom-variable-collections:set-name', this.collectionSetName)
-		client.onPromise('custom-variable-collections:reorder', this.collectionMove)
 	}
 }

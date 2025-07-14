@@ -1,9 +1,9 @@
 import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CDropdown, CButtonGroup, CButton, CDropdownToggle, CDropdownMenu, CDropdownItem } from '@coreui/react'
-import React, { useContext, useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export function SelectButtonTypeDropdown({
 	location,
@@ -14,7 +14,7 @@ export function SelectButtonTypeDropdown({
 	resetModalRef: React.MutableRefObject<GenericConfirmModalRef | null>
 	configRef: React.MutableRefObject<SomeButtonModel | undefined> | undefined
 }): React.JSX.Element {
-	const { socket } = useContext(RootAppStoreContext)
+	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
 
 	const setButtonType = useCallback(
 		(newType: string) => {
@@ -33,7 +33,7 @@ export function SelectButtonTypeDropdown({
 			}
 
 			const doChange = () => {
-				socket.emitPromise('controls:reset', [location, newType]).catch((e) => {
+				resetControlMutation.mutateAsync({ location, newType }).catch((e) => {
 					console.error(`Set type failed: ${e}`)
 				})
 			}
@@ -51,7 +51,7 @@ export function SelectButtonTypeDropdown({
 				doChange()
 			}
 		},
-		[socket, location, configRef, resetModalRef]
+		[resetControlMutation, location, configRef, resetModalRef]
 	)
 
 	return (

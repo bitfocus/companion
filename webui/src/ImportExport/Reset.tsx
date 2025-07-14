@@ -5,13 +5,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import type { ClientResetSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface ResetWizardModalRef {
 	show(): void
 }
 
 export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardModal(_props, ref) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const [currentStep, setCurrentStep] = useState(1)
 	const maxSteps = 3
@@ -56,12 +57,13 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 		setCurrentStep(newStep)
 	}, [currentStep])
 
+	const resetConfigMutation = useMutationExt(trpc.importExport.resetConfiguration.mutationOptions())
 	const doSave = useCallback(
 		(e: FormEvent) => {
 			e.preventDefault()
 
-			socket
-				.emitPromise('loadsave:reset', [config], 30000)
+			resetConfigMutation // TODO: 30s timeout?
+				.mutateAsync(config)
 				.then((status) => {
 					if (status !== 'ok') {
 						notifier.current?.show(
@@ -80,7 +82,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 
 			doNextStep()
 		},
-		[socket, notifier, config, doNextStep, doClose]
+		[resetConfigMutation, notifier, config, doNextStep, doClose]
 	)
 
 	const setValue = (key: keyof ClientResetSelection, value: boolean) => {

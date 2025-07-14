@@ -40,9 +40,9 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 */
 	private backupCycle: NodeJS.Timeout | undefined
 	/**
-	 * The interval to fire a backup to disk when dirty
+	 * The interval to slowly write a backup to disk to minimise risk of corruption
 	 */
-	private readonly backupInterval: number = 60000
+	private readonly backupInterval: number = 10 * 60 * 1000
 	/**
 	 * The full backup file path
 	 */
@@ -153,15 +153,18 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * Save a backup of the db
 	 */
 	private saveBackup(): void {
+		const timeBefore = performance.now()
 		this.store
 			?.backup(`${this.cfgBakFile}`)
 			.then(() => {
 				// perform a flush of the WAL file. It may be a little aggressive for this to be a TRUNCATE vs FULL, but it ensures the WAL doesn't grow infinitely
 				this.store.pragma('wal_checkpoint(TRUNCATE)')
 
+				const saveDuration = performance.now() - timeBefore
+
 				this.lastsave = Date.now()
 				this.dirty = false
-				this.logger.debug('backup complete')
+				this.logger.info(`backup complete in ${saveDuration}ms`)
 			})
 			.catch((err) => {
 				this.logger.warn(`backup failed: ${err.message}`)

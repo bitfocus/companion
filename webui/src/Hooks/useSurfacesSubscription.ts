@@ -1,49 +1,27 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useState } from 'react'
 import type { SurfacesStore } from '~/Stores/SurfacesStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
 
-export function useSurfacesSubscription(
-	socket: CompanionSocketWrapped,
-	store: SurfacesStore,
-	setLoadError?: ((error: string | null) => void) | undefined,
-	retryToken?: string
-): boolean {
+export function useSurfacesSubscription(store: SurfacesStore): boolean {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		setLoadError?.(null)
-		store.resetSurfaces(null)
-		setReady(false)
-
-		socket
-			.emitPromise('surfaces:subscribe', [])
-			.then((surfaces) => {
-				setLoadError?.(null)
-				store.resetSurfaces(surfaces)
+	useSubscription(
+		trpc.surfaces.watchSurfaces.subscriptionOptions(undefined, {
+			onStarted: () => {
+				setReady(false)
+				store.updateSurfaces(null)
+			},
+			onData: (data) => {
 				setReady(true)
-			})
-			.catch((e) => {
-				setLoadError?.(`Failed to load surfaces list`)
-				console.error('Failed to load surfaces list:', e)
-				store.resetSurfaces(null)
-			})
-
-		const unsubUpdates = socket.on('surfaces:update', (changes) => {
-			for (const change of changes) {
-				store.applySurfacesChange(change)
-			}
+				store.updateSurfaces(data)
+			},
+			onError: (error) => {
+				console.error('Failed to subscribe to surfaces:', error)
+				store.updateSurfaces(null)
+			},
 		})
-
-		return () => {
-			store.resetSurfaces(null)
-
-			unsubUpdates()
-
-			socket.emitPromise('surfaces:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe to surfaces list', e)
-			})
-		}
-	}, [socket, store, setLoadError, retryToken])
+	)
 
 	return ready
 }

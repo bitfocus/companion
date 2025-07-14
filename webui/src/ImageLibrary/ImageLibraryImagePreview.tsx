@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { SocketContext } from '~/util.js'
+import React from 'react'
 import classNames from 'classnames'
 import { MoonLoader } from 'react-spinners'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faImage } from '@fortawesome/free-solid-svg-icons'
-import { useImageCache } from './ImageCache.js'
+import { useQuery } from '@tanstack/react-query'
+import { trpc } from '~/TRPC.js'
 
 interface ImageLibraryImagePreviewProps {
 	imageName: string
@@ -16,11 +16,11 @@ interface ImageLibraryImagePreviewProps {
 	onError?: (error: string) => void
 }
 
-interface LoadState {
-	loading: boolean
-	imageUrl: string | null
-	error: string | null
-}
+// interface LoadState {
+// 	loading: boolean
+// 	imageUrl: string | null
+// 	error: string | null
+// }
 
 export function ImageLibraryImagePreview({
 	imageName,
@@ -29,91 +29,104 @@ export function ImageLibraryImagePreview({
 	className,
 	alt,
 }: ImageLibraryImagePreviewProps): JSX.Element {
-	const socket = useContext(SocketContext)
-	const imageCache = useImageCache()
-	const [loadState, setLoadState] = useState<LoadState>({
-		loading: false,
-		imageUrl: null,
-		error: null,
-	})
+	// const imageCache = useImageCache()
+	// const [loadState, setLoadState] = useState<LoadState>({
+	// 	loading: false,
+	// 	imageUrl: null,
+	// 	error: null,
+	// })
 
-	useEffect(() => {
-		// Check if we have a cached image URL first
-		const cacheKey = imageCache?.generateKey(imageName, type, checksum)
-		const cachedUrl = cacheKey && imageCache?.get(cacheKey)
-
-		if (typeof cachedUrl === 'string') {
-			// Use cached URL immediately
-			setLoadState({
-				loading: false,
-				imageUrl: cachedUrl,
-				error: null,
-			})
-			return
-		}
-
-		// Track whether the load is aborted
-		let abort = false
-
-		setLoadState({
-			loading: true,
-			imageUrl: null,
-			error: null,
+	const {
+		data: queryData,
+		isLoading: queryLoading,
+		error: queryError,
+	} = useQuery(
+		trpc.imageLibrary.getData.queryOptions({
+			imageName,
+			type,
 		})
+	)
 
-		socket
-			.emitPromise('image-library:get-data', [imageName, type])
-			.then((response) => {
-				if (abort) return // Ignore if we were aborted
-				const imageData = response as { image: string; checksum: string } | null
+	// TODO - should this use the cache?
+	// useEffect(() => {
+	// 	// Check if we have a cached image URL first
+	// 	const cacheKey = imageCache?.generateKey(imageName, type, checksum)
+	// 	const cachedUrl = cacheKey && imageCache?.get(cacheKey)
 
-				if (imageData) {
-					// Verify the checksum matches what we expected
-					if (imageData.checksum === checksum) {
-						// Cache the image URL for future use
-						if (cacheKey) imageCache?.set(cacheKey, imageData.image)
+	// 	if (typeof cachedUrl === 'string') {
+	// 		// Use cached URL immediately
+	// 		setLoadState({
+	// 			loading: false,
+	// 			imageUrl: cachedUrl,
+	// 			error: null,
+	// 		})
+	// 		return
+	// 	}
 
-						setLoadState({
-							loading: false,
-							imageUrl: imageData.image,
-							error: null,
-						})
-					} else {
-						// Checksum mismatch - image was updated while we were loading
-						const errorMsg = 'Image was updated while loading'
-						setLoadState({
-							loading: false,
-							imageUrl: null,
-							error: errorMsg,
-						})
-					}
-				} else {
-					const errorMsg = 'Image not found'
-					setLoadState({
-						loading: false,
-						imageUrl: null,
-						error: errorMsg,
-					})
-				}
-			})
-			.catch((err) => {
-				if (abort) return // Ignore if we were aborted
+	// 	// Track whether the load is aborted
+	// 	let abort = false
 
-				const errorMsg = err instanceof Error ? err.message : 'Failed to load image'
-				setLoadState({
-					loading: false,
-					imageUrl: null,
-					error: errorMsg,
-				})
-			})
+	// 	setLoadState({
+	// 		loading: true,
+	// 		imageUrl: null,
+	// 		error: null,
+	// 	})
 
-		// Cleanup function
-		return () => {
-			abort = true
-		}
-	}, [socket, imageName, type, checksum, imageCache])
+	// 	socket
+	// 		.emitPromise('image-library:get-data', [imageName, type])
+	// 		.then((response) => {
+	// 			if (abort) return // Ignore if we were aborted
+	// 			const imageData = response as { image: string; checksum: string } | null
 
-	if (loadState.loading) {
+	// 			if (imageData) {
+	// 				// Verify the checksum matches what we expected
+	// 				if (imageData.checksum === checksum) {
+	// 					// Cache the image URL for future use
+	// 					if (cacheKey) imageCache?.set(cacheKey, imageData.image)
+
+	// 					setLoadState({
+	// 						loading: false,
+	// 						imageUrl: imageData.image,
+	// 						error: null,
+	// 					})
+	// 				} else {
+	// 					// Checksum mismatch - image was updated while we were loading
+	// 					const errorMsg = 'Image was updated while loading'
+	// 					setLoadState({
+	// 						loading: false,
+	// 						imageUrl: null,
+	// 						error: errorMsg,
+	// 					})
+	// 				}
+	// 			} else {
+	// 				const errorMsg = 'Image not found'
+	// 				setLoadState({
+	// 					loading: false,
+	// 					imageUrl: null,
+	// 					error: errorMsg,
+	// 				})
+	// 			}
+	// 		})
+	// 		.catch((err) => {
+	// 			if (abort) return // Ignore if we were aborted
+
+	// 			const errorMsg = err instanceof Error ? err.message : 'Failed to load image'
+	// 			setLoadState({
+	// 				loading: false,
+	// 				imageUrl: null,
+	// 				error: errorMsg,
+	// 			})
+	// 		})
+
+	// 	// Cleanup function
+	// 	return () => {
+	// 		abort = true
+	// 	}
+	// }, [imageName, type, checksum, imageCache])
+
+	const checksumMatches = !queryData || queryData.checksum === checksum
+
+	if (queryLoading || !checksumMatches) {
 		return (
 			<div className={classNames('image-library-preview-loading', className)}>
 				<MoonLoader />
@@ -121,15 +134,15 @@ export function ImageLibraryImagePreview({
 		)
 	}
 
-	if (loadState.error) {
+	if (queryError) {
 		return (
 			<div className={classNames('image-library-preview-error', className)}>
-				<span>{loadState.error}</span>
+				<span>{queryError.message}</span>
 			</div>
 		)
 	}
 
-	if (!loadState.imageUrl) {
+	if (!queryData?.image) {
 		return (
 			<div className={classNames('image-library-preview-empty', className)}>
 				<FontAwesomeIcon icon={faImage} title="No image data" />
@@ -139,7 +152,7 @@ export function ImageLibraryImagePreview({
 
 	return (
 		<img
-			src={loadState.imageUrl}
+			src={queryData.image}
 			alt={alt || 'Image preview'}
 			className={classNames('image-library-preview', className)}
 		/>

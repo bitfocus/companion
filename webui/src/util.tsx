@@ -1,129 +1,20 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { DependencyList, FormEvent, useEffect, useMemo, useState } from 'react'
-import pTimeout from 'p-timeout'
 import { CAlert, CButton, CCol } from '@coreui/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { PRIMARY_COLOR } from './Constants.js'
-import { BarLoader } from 'react-spinners'
-import { Operation as JsonPatchOperation, applyPatch } from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
+import { BarLoader, PuffLoader } from 'react-spinners'
 import { useEventListener } from 'usehooks-ts'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
-import { Socket } from 'socket.io-client'
-import type {
-	ClientToBackendEventsMap,
-	BackendToClientEventsMap,
-	AddCallbackParamToEvents,
-	StripNever,
-} from '@companion-app/shared/SocketIO.js'
 import { computed } from 'mobx'
 import { DropTargetMonitor, XYCoord } from 'react-dnd'
 import type { ReadonlyDeep } from 'type-fest'
+import { TRPCClientErrorLike } from '@trpc/client'
 import { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import { joinPaths } from '@tanstack/react-router'
 
-export type CompanionSocketType = Socket<BackendToClientEventsMap, AddCallbackParamToEvents<ClientToBackendEventsMap>>
-
-export interface CompanionSocketWrapped {
-	readonly connected: boolean
-
-	onConnect(listener: () => void): () => void
-	onDisconnect(listener: () => void): () => void
-
-	/**
-	 * Listen for a message
-	 * @param ev Event name
-	 * @param listener Listener function
-	 * @returns Unsubscribe function
-	 */
-	on<Ev extends keyof BackendToClientEventsMap>(ev: Ev, listener: BackendToClientEventsMap[Ev]): () => void
-
-	emitPromise<T extends keyof SocketEmitPromiseEvents>(
-		name: T,
-		args: Parameters<SocketEmitPromiseEvents[T]>,
-		timeout?: number,
-		timeoutMessage?: string
-	): Promise<ReturnType<SocketEmitPromiseEvents[T]>>
-
-	emit<T extends keyof SocketEmitEvents>(name: T, ...args: Parameters<SocketEmitEvents[T]>): void
-}
-
-export const SocketContext = React.createContext<CompanionSocketWrapped>(null as any) // TODO - fix this
-
-type IfReturnIsNever<T extends (...args: any[]) => void> = ReturnType<T> extends never ? never : T
-
-type SocketEmitPromiseEvents = StripNever<{
-	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
-		? IfReturnIsNever<ClientToBackendEventsMap[K]>
-		: never
-}>
-
 // type VoidIfReturnIsNever<T extends (...args: any[]) => void> =
 // 	ReturnType<T> extends never ? (...args: Parameters<T>) => void : never
-
-type SocketEmitEvents = StripNever<{
-	[K in keyof ClientToBackendEventsMap]: ClientToBackendEventsMap[K] extends (...args: any[]) => any
-		? IfReturnIsNever<ClientToBackendEventsMap[K]> extends never
-			? ClientToBackendEventsMap[K]
-			: never
-		: never
-}>
-
-export function wrapSocket(socket: CompanionSocketType): CompanionSocketWrapped {
-	return {
-		get connected() {
-			return socket.connected
-		},
-		onConnect: (listener) => {
-			socket.on('connect', listener)
-
-			return () => {
-				socket.off('connect', listener)
-			}
-		},
-		onDisconnect: (listener) => {
-			socket.on('disconnect', listener)
-
-			return () => {
-				socket.off('disconnect', listener)
-			}
-		},
-
-		on: (key, listener) => {
-			socket.on(key, listener as any)
-
-			return () => {
-				socket.off(key, listener as any)
-			}
-		},
-
-		emit: (key, ...args) => {
-			socket.emit(key, ...args)
-		},
-
-		emitPromise: async (name, args, timeout, timeoutMessage) => {
-			const p = new Promise<ReturnType<SocketEmitPromiseEvents[typeof name]>>((resolve, reject) => {
-				console.log('send', name, ...args)
-
-				socket.emit(
-					name,
-					// @ts-expect-error types are unhappy because of the complex setup
-					args,
-					(err, res) => {
-						if (err) reject(err)
-						else resolve(res)
-					}
-				)
-			})
-
-			timeout = timeout ?? 5000
-			return pTimeout(p, {
-				milliseconds: timeout,
-				message: timeoutMessage ?? `Timed out after ${timeout / 1000}s`,
-			})
-		},
-	}
-}
 
 const freezePrototypes = () => {
 	if (Object.isFrozen(console)) {
@@ -133,7 +24,7 @@ const freezePrototypes = () => {
 	// freeze global objects that can be used within the sandbox
 	Object.freeze(console)
 	Object.freeze(Array.prototype)
-	Object.freeze(Function.prototype)
+	// Object.freeze(Function.prototype) // TODO - this should be enabled, but breaks mobx...
 	// @ts-expect-error Suppress error
 	Object.freeze(Math.prototype)
 	Object.freeze(Number.prototype)
@@ -283,16 +174,18 @@ export function LoadingBar(props: LoadingBarProps): React.JSX.Element {
 }
 
 interface LoadingRetryOrErrorProps {
-	error?: string | null
+	error?: string | TRPCClientErrorLike<any> | null
 	dataReady: boolean
 	doRetry?: () => void
 	autoRetryAfter?: number | null
+	design: 'bar' | 'pulse' | 'pulse-xl'
 }
 export function LoadingRetryOrError({
 	error,
 	dataReady,
 	doRetry,
 	autoRetryAfter = null,
+	design,
 }: LoadingRetryOrErrorProps): React.JSX.Element {
 	const [countdown, setCountdown] = useState(autoRetryAfter)
 
@@ -325,7 +218,7 @@ export function LoadingRetryOrError({
 			{error && (
 				<CCol sm={12}>
 					<CAlert color="danger" role="alert">
-						<p>{error}</p>
+						<p>{typeof error === 'string' ? error : error.message}</p>
 						{!dataReady && (
 							<CButton color="primary" onClick={doRetry}>
 								Retry {countdown && '(' + countdown + ')'}
@@ -336,49 +229,21 @@ export function LoadingRetryOrError({
 			)}
 			{!dataReady && !error && (
 				<CCol sm={12}>
-					<LoadingBar />
+					{design === 'pulse' ? (
+						<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
+						</div>
+					) : design === 'pulse-xl' ? (
+						<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+							<PuffLoader loading={true} size={160} color={PRIMARY_COLOR} />
+						</div>
+					) : (
+						<LoadingBar />
+					)}
 				</CCol>
 			)}
 		</>
 	)
-}
-
-export function applyPatchOrReplaceSubObject<T extends object | undefined>(
-	oldDefinitions: Record<string, T>,
-	key: string,
-	patch: JsonPatchOperation[] | T | null,
-	defVal: T | null
-): Record<string, T> {
-	if (oldDefinitions) {
-		const oldEntry = oldDefinitions[key] ?? defVal
-		if (!oldEntry) return oldDefinitions
-
-		const newDefinitions = { ...oldDefinitions }
-		if (!patch) {
-			delete newDefinitions[key]
-		} else if (Array.isArray(patch)) {
-			// If its an array we assume it is a patch
-			newDefinitions[key] = applyPatch(cloneDeep(oldEntry), patch).newDocument
-		} else {
-			// If its any other type, then its not a patch and is likely a complete value
-			newDefinitions[key] = patch
-		}
-
-		return newDefinitions
-	} else {
-		return oldDefinitions
-	}
-}
-export function applyPatchOrReplaceObject<T extends object>(oldObj: T, patch: JsonPatchOperation[] | T): T {
-	const oldEntry = oldObj ?? {}
-
-	if (Array.isArray(patch)) {
-		// If its an array we assume it is a patch
-		return applyPatch(cloneDeep(oldEntry), patch).newDocument
-	} else {
-		// If its any other type, then its not a patch and is likely a complete value
-		return patch
-	}
 }
 
 /**
@@ -516,4 +381,14 @@ export function isCollectionEnabled<TMetaData extends { enabled?: boolean }>(
 
 export function makeAbsolutePath(path: string): string {
 	return joinPaths([import.meta.env.BASE_URL || '/', path])
+}
+
+export function base64EncodeUint8Array(buffer: Uint8Array): string {
+	// Convert ArrayBuffer to base64 in a cross-browser way
+	const uint8Array = new Uint8Array(buffer)
+	let binaryString = ''
+	for (let i = 0; i < uint8Array.length; i++) {
+		binaryString += String.fromCharCode(uint8Array[i])
+	}
+	return btoa(binaryString)
 }

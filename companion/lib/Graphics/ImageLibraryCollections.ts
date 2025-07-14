@@ -1,23 +1,15 @@
-import type { UIHandler, ClientSocket } from '../UI/Handler.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
 import type { ImageLibraryCollection } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import z from 'zod'
 
-const ImageLibraryCollectionsRoom = 'image-library-collections'
-
-export class ImageLibraryCollections extends CollectionsBaseController<undefined> {
-	readonly #io: UIHandler
-
+export class ImageLibraryCollections extends CollectionsBaseController<null> {
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void
 
-	constructor(
-		io: UIHandler,
-		db: DataDatabase,
-		cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void
-	) {
+	constructor(db: DataDatabase, cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void) {
 		super(db.getTableView<Record<string, ImageLibraryCollection>>('image_library_collections'))
 
-		this.#io = io
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds
 	}
 
@@ -28,33 +20,17 @@ export class ImageLibraryCollections extends CollectionsBaseController<undefined
 		this.#cleanUnknownCollectionIds(this.collectAllCollectionIds())
 	}
 
-	override emitUpdate(rows: ImageLibraryCollection[]): void {
-		this.#io.emitToRoom(ImageLibraryCollectionsRoom, 'image-library-collections:update', rows)
+	override emitUpdateUser(_rows: ImageLibraryCollection[]): void {
+		// No-op
 	}
 
-	/**
-	 * Setup a new socket client's events
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('image-library-collections:subscribe', () => {
-			client.join(ImageLibraryCollectionsRoom)
+	createTrpcRouter() {
+		return router({
+			...super.createTrpcRouterBase(),
 
-			return this.data
+			add: publicProcedure.input(z.object({ collectionName: z.string() })).mutation(async ({ input }) => {
+				return this.collectionCreate(input.collectionName, null)
+			}),
 		})
-
-		client.onPromise('image-library-collections:unsubscribe', () => {
-			client.leave(ImageLibraryCollectionsRoom)
-		})
-
-		client.onPromise('image-library-collections:add', (collectionName: string) => {
-			return this.collectionCreate(
-				collectionName,
-				undefined // No metadata for image library collections
-			)
-		})
-
-		client.onPromise('image-library-collections:remove', this.collectionRemove)
-		client.onPromise('image-library-collections:set-name', this.collectionSetName)
-		client.onPromise('image-library-collections:reorder', this.collectionMove)
 	}
 }

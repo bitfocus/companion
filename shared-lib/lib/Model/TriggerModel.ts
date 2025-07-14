@@ -21,11 +21,20 @@ export interface TriggerOptions {
 
 export interface ClientTriggerData extends TriggerOptions {
 	type: 'trigger'
-	lastExecuted: number | undefined
+	lastExecuted: number | null
 	description: string
 }
 
-export type TriggersUpdate = TriggersUpdateRemoveOp | TriggersUpdateAddOp | TriggersUpdateUpdateOp
+export type TriggersUpdate =
+	| TriggersUpdateInitOp
+	| TriggersUpdateRemoveOp
+	| TriggersUpdateAddOp
+	| TriggersUpdateUpdateOp
+
+export interface TriggersUpdateInitOp {
+	type: 'init'
+	triggers: Record<string, ClientTriggerData>
+}
 
 export interface TriggersUpdateRemoveOp {
 	type: 'remove'
@@ -41,7 +50,7 @@ export interface TriggersUpdateUpdateOp {
 	type: 'update'
 	controlId: string
 
-	patch: JsonPatchOperation[]
+	patch: JsonPatchOperation<ClientTriggerData>[]
 }
 
 export interface TriggerCollectionData {

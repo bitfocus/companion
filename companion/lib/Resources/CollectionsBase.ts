@@ -1,9 +1,13 @@
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { nanoid } from 'nanoid'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { publicProcedure, toIterable } from '../UI/TRPC.js'
+import EventEmitter from 'node:events'
+import z from 'zod'
 
 export abstract class CollectionsBaseController<TCollectionMetadata> {
 	readonly #dbTable: DataStoreTableView<Record<string, CollectionBase<TCollectionMetadata>>>
+	readonly #events = new EventEmitter<{ change: [rows: CollectionBase<TCollectionMetadata>[]] }>()
 
 	protected data: CollectionBase<TCollectionMetadata>[]
 
@@ -70,7 +74,12 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	/**
 	 * Some of the collections have been modified in some way, emit an update to interested parties (eg the UI)
 	 */
-	protected abstract emitUpdate(rows: CollectionBase<TCollectionMetadata>[]): void
+	protected emitUpdate(rows: CollectionBase<TCollectionMetadata>[]): void {
+		this.#events.emit('change', rows)
+		this.emitUpdateUser(rows)
+	}
+
+	protected abstract emitUpdateUser(rows: CollectionBase<TCollectionMetadata>[]): void
 
 	/**
 	 * Ensure that all collectionIds in the data are valid collections
@@ -319,5 +328,44 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		}
 
 		return null
+	}
+
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	protected createTrpcRouterBase() {
+		const self = this
+		return {
+			watchQuery: publicProcedure.subscription(async function* (opts) {
+				// Start the changes listener
+				const changes = toIterable(self.#events, 'change', opts.signal)
+
+				yield self.data // Initial data
+
+				// Stream any changes
+				for await (const [data] of changes) {
+					yield data
+				}
+			}),
+
+			// Note: add often requires some metadata, so is easier to define by the caller
+
+			remove: publicProcedure.input(z.object({ collectionId: z.string() })).mutation(async (opts) => {
+				const { collectionId } = opts.input
+				self.collectionRemove(collectionId)
+			}),
+
+			setName: publicProcedure
+				.input(z.object({ collectionId: z.string(), collectionName: z.string() }))
+				.mutation(async (opts) => {
+					const { collectionId, collectionName } = opts.input
+					self.collectionSetName(collectionId, collectionName)
+				}),
+
+			reorder: publicProcedure
+				.input(z.object({ collectionId: z.string(), parentId: z.string().nullable(), dropIndex: z.number() }))
+				.mutation(async (opts) => {
+					const { collectionId, parentId, dropIndex } = opts.input
+					self.collectionMove(collectionId, parentId, dropIndex)
+				}),
+		}
 	}
 }

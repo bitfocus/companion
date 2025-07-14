@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, RegisteredRouter, ToPathOption } from '@tanstack/react-router'
 import { CCard, CCol, CRow } from '@coreui/react'
-import { faCog, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faFloppyDisk, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
 
@@ -20,7 +20,8 @@ export function SettingsSelectPage(): React.JSX.Element {
 						<SettingsLinkCard label="Buttons" to="/settings/buttons" icon={faTh} />
 						<SettingsLinkCard label="Surfaces" to="/settings/surfaces" icon={faGamepad} />
 						<SettingsLinkCard label="Protocols" to="/settings/protocols" icon={faNetworkWired} />
-						<SettingsLinkCard label="Advanced" to="/settings/advanced" icon={faWarning} center />
+						<SettingsLinkCard label="Backups" to="/settings/backups" icon={faFloppyDisk} />
+						<SettingsLinkCard label="Advanced" to="/settings/advanced" icon={faWarning} />
 					</CRow>
 				</div>
 			</CCol>

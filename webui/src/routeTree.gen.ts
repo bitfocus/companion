@@ -19,6 +19,7 @@ import { Route as RedirectsHelpHtmlRouteImport } from './routes/-redirects/help-
 import { Route as RedirectsEmulatorsRouteImport } from './routes/-redirects/emulators.tsx'
 import { Route as RedirectsEmulator2RouteImport } from './routes/-redirects/emulator2.tsx'
 import { Route as RedirectsEmulatorHtmlRouteImport } from './routes/-redirects/emulator-html.tsx'
+import { Route as EmulatorRouteImport } from './routes/self-contained/emulator.tsx'
 import { Route as appRouteImport } from './routes/_app.tsx'
 import { Route as EmulatorIndexRouteImport } from './routes/self-contained/emulator/index.tsx'
 import { Route as IndexRouteImport } from './routes/app/index.tsx'
@@ -49,11 +50,16 @@ import { Route as SettingsSurfacesRouteImport } from './routes/app/settings/surf
 import { Route as SettingsProtocolsRouteImport } from './routes/app/settings/protocols.tsx'
 import { Route as SettingsGeneralRouteImport } from './routes/app/settings/general.tsx'
 import { Route as SettingsButtonsRouteImport } from './routes/app/settings/buttons.tsx'
+import { Route as SettingsBackupsRouteImport } from './routes/app/settings/backups.tsx'
 import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/advanced.tsx'
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
 import { Route as ImageLibraryImageNameRouteImport } from './routes/app/image-library/$imageName.tsx'
 import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
+import { Route as SurfacesConfiguredIndexRouteImport } from './routes/app/surfaces/configured/index.tsx'
+import { Route as SettingsBackupsIndexRouteImport } from './routes/app/settings/backups/index.tsx'
+import { Route as SurfacesConfiguredItemIdRouteImport } from './routes/app/surfaces/configured/$itemId.tsx'
+import { Route as SettingsBackupsRuleIdRouteImport } from './routes/app/settings/backups/$ruleId.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
 const GettingStartedDotlazyRouteImport = createFileRoute('/getting-started')()
@@ -117,14 +123,19 @@ const RedirectsEmulatorHtmlRoute = RedirectsEmulatorHtmlRouteImport.update({
   path: '/emulator.html',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmulatorRoute = EmulatorRouteImport.update({
+  id: '/emulator',
+  path: '/emulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const appRoute = appRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmulatorIndexRoute = EmulatorIndexRouteImport.update({
-  id: '/emulator/',
-  path: '/emulator/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => EmulatorRoute,
 } as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -133,9 +144,9 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const EmulatorEmulatorIdDotlazyRoute =
   EmulatorEmulatorIdDotlazyRouteImport.update({
-    id: '/emulator/$emulatorId',
-    path: '/emulator/$emulatorId',
-    getParentRoute: () => rootRouteImport,
+    id: '/$emulatorId',
+    path: '/$emulatorId',
+    getParentRoute: () => EmulatorRoute,
   } as any).lazy(() =>
     import('./routes/self-contained/emulator/$emulatorId.lazy.tsx').then(
       (d) => d.Route,
@@ -277,6 +288,11 @@ const SettingsButtonsRoute = SettingsButtonsRouteImport.update({
   path: '/settings/buttons',
   getParentRoute: () => appRoute,
 } as any)
+const SettingsBackupsRoute = SettingsBackupsRouteImport.update({
+  id: '/settings/backups',
+  path: '/settings/backups',
+  getParentRoute: () => appRoute,
+} as any)
 const SettingsAdvancedRoute = SettingsAdvancedRouteImport.update({
   id: '/settings/advanced',
   path: '/settings/advanced',
@@ -302,8 +318,30 @@ const ButtonsPageRoute = ButtonsPageRouteImport.update({
   path: '/$page',
   getParentRoute: () => ButtonsRoute,
 } as any)
+const SurfacesConfiguredIndexRoute = SurfacesConfiguredIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SurfacesConfiguredRoute,
+} as any)
+const SettingsBackupsIndexRoute = SettingsBackupsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsBackupsRoute,
+} as any)
+const SurfacesConfiguredItemIdRoute =
+  SurfacesConfiguredItemIdRouteImport.update({
+    id: '/$itemId',
+    path: '/$itemId',
+    getParentRoute: () => SurfacesConfiguredRoute,
+  } as any)
+const SettingsBackupsRuleIdRoute = SettingsBackupsRuleIdRouteImport.update({
+  id: '/$ruleId',
+  path: '/$ruleId',
+  getParentRoute: () => SettingsBackupsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/emulator': typeof EmulatorRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
@@ -326,18 +364,19 @@ export interface FileRoutesByFullPath {
   '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdDotlazyRoute
   '/': typeof IndexRoute
-  '/emulator': typeof EmulatorIndexRoute
+  '/emulator/': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
+  '/settings/backups': typeof SettingsBackupsRouteWithChildren
   '/settings/buttons': typeof SettingsButtonsRoute
   '/settings/general': typeof SettingsGeneralRoute
   '/settings/protocols': typeof SettingsProtocolsRoute
   '/settings/surfaces': typeof SettingsSurfacesRoute
   '/surfaces/$': typeof SurfacesSplatRoute
-  '/surfaces/configured': typeof SurfacesConfiguredRoute
+  '/surfaces/configured': typeof SurfacesConfiguredRouteWithChildren
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
@@ -349,6 +388,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsIndexRoute
   '/triggers/': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
+  '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
+  '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/settings/backups/': typeof SettingsBackupsIndexRoute
+  '/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
@@ -380,7 +423,6 @@ export interface FileRoutesByTo {
   '/settings/protocols': typeof SettingsProtocolsRoute
   '/settings/surfaces': typeof SettingsSurfacesRoute
   '/surfaces/$': typeof SurfacesSplatRoute
-  '/surfaces/configured': typeof SurfacesConfiguredRoute
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
@@ -392,10 +434,15 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsIndexRoute
   '/triggers': typeof TriggersIndexRoute
   '/variables': typeof VariablesIndexRoute
+  '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
+  '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/settings/backups': typeof SettingsBackupsIndexRoute
+  '/surfaces/configured': typeof SurfacesConfiguredIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof appRouteWithChildren
+  '/emulator': typeof EmulatorRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
@@ -424,12 +471,13 @@ export interface FileRoutesById {
   '/_app/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
   '/_app/settings/advanced': typeof SettingsAdvancedRoute
+  '/_app/settings/backups': typeof SettingsBackupsRouteWithChildren
   '/_app/settings/buttons': typeof SettingsButtonsRoute
   '/_app/settings/general': typeof SettingsGeneralRoute
   '/_app/settings/protocols': typeof SettingsProtocolsRoute
   '/_app/settings/surfaces': typeof SettingsSurfacesRoute
   '/_app/surfaces/$': typeof SurfacesSplatRoute
-  '/_app/surfaces/configured': typeof SurfacesConfiguredRoute
+  '/_app/surfaces/configured': typeof SurfacesConfiguredRouteWithChildren
   '/_app/surfaces/discover': typeof SurfacesDiscoverRoute
   '/_app/surfaces/outbound': typeof SurfacesOutboundRoute
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
@@ -441,10 +489,15 @@ export interface FileRoutesById {
   '/_app/settings/': typeof SettingsIndexRoute
   '/_app/triggers/': typeof TriggersIndexRoute
   '/_app/variables/': typeof VariablesIndexRoute
+  '/_app/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
+  '/_app/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/_app/settings/backups/': typeof SettingsBackupsIndexRoute
+  '/_app/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/emulator'
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
@@ -467,12 +520,13 @@ export interface FileRouteTypes {
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/'
-    | '/emulator'
+    | '/emulator/'
     | '/buttons/$page'
     | '/connections/$connectionId'
     | '/image-library/$imageName'
     | '/modules/$moduleId'
     | '/settings/advanced'
+    | '/settings/backups'
     | '/settings/buttons'
     | '/settings/general'
     | '/settings/protocols'
@@ -490,6 +544,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/triggers/'
     | '/variables'
+    | '/settings/backups/$ruleId'
+    | '/surfaces/configured/$itemId'
+    | '/settings/backups/'
+    | '/surfaces/configured/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -521,7 +579,6 @@ export interface FileRouteTypes {
     | '/settings/protocols'
     | '/settings/surfaces'
     | '/surfaces/$'
-    | '/surfaces/configured'
     | '/surfaces/discover'
     | '/surfaces/outbound'
     | '/triggers/$controlId'
@@ -533,9 +590,14 @@ export interface FileRouteTypes {
     | '/settings'
     | '/triggers'
     | '/variables'
+    | '/settings/backups/$ruleId'
+    | '/surfaces/configured/$itemId'
+    | '/settings/backups'
+    | '/surfaces/configured'
   id:
     | '__root__'
     | '/_app'
+    | '/emulator'
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
@@ -564,6 +626,7 @@ export interface FileRouteTypes {
     | '/_app/image-library/$imageName'
     | '/_app/modules/$moduleId'
     | '/_app/settings/advanced'
+    | '/_app/settings/backups'
     | '/_app/settings/buttons'
     | '/_app/settings/general'
     | '/_app/settings/protocols'
@@ -581,10 +644,15 @@ export interface FileRouteTypes {
     | '/_app/settings/'
     | '/_app/triggers/'
     | '/_app/variables/'
+    | '/_app/settings/backups/$ruleId'
+    | '/_app/surfaces/configured/$itemId'
+    | '/_app/settings/backups/'
+    | '/_app/surfaces/configured/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   appRoute: typeof appRouteWithChildren
+  EmulatorRoute: typeof EmulatorRouteWithChildren
   RedirectsEmulatorHtmlRoute: typeof RedirectsEmulatorHtmlRoute
   RedirectsEmulator2Route: typeof RedirectsEmulator2Route
   RedirectsEmulatorsRoute: typeof RedirectsEmulatorsRoute
@@ -596,8 +664,6 @@ export interface RootRouteChildren {
   GettingStartedDotlazyRoute: typeof GettingStartedDotlazyRoute
   TabletDotlazyRoute: typeof TabletDotlazyRoute
   ConnectionDebugDotconnectionIdRoute: typeof ConnectionDebugDotconnectionIdRoute
-  EmulatorEmulatorIdDotlazyRoute: typeof EmulatorEmulatorIdDotlazyRoute
-  EmulatorIndexRoute: typeof EmulatorIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -672,6 +738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedirectsEmulatorHtmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/emulator': {
+      id: '/emulator'
+      path: '/emulator'
+      fullPath: '/emulator'
+      preLoaderRoute: typeof EmulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -681,10 +754,10 @@ declare module '@tanstack/react-router' {
     }
     '/emulator/': {
       id: '/emulator/'
-      path: '/emulator'
-      fullPath: '/emulator'
+      path: '/'
+      fullPath: '/emulator/'
       preLoaderRoute: typeof EmulatorIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EmulatorRoute
     }
     '/_app/': {
       id: '/_app/'
@@ -695,10 +768,10 @@ declare module '@tanstack/react-router' {
     }
     '/emulator/$emulatorId': {
       id: '/emulator/$emulatorId'
-      path: '/emulator/$emulatorId'
+      path: '/$emulatorId'
       fullPath: '/emulator/$emulatorId'
       preLoaderRoute: typeof EmulatorEmulatorIdDotlazyRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EmulatorRoute
     }
     '/connection-debug/$connectionId': {
       id: '/connection-debug/$connectionId'
@@ -889,6 +962,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsButtonsRouteImport
       parentRoute: typeof appRoute
     }
+    '/_app/settings/backups': {
+      id: '/_app/settings/backups'
+      path: '/settings/backups'
+      fullPath: '/settings/backups'
+      preLoaderRoute: typeof SettingsBackupsRouteImport
+      parentRoute: typeof appRoute
+    }
     '/_app/settings/advanced': {
       id: '/_app/settings/advanced'
       path: '/settings/advanced'
@@ -923,6 +1003,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/buttons/$page'
       preLoaderRoute: typeof ButtonsPageRouteImport
       parentRoute: typeof ButtonsRoute
+    }
+    '/_app/surfaces/configured/': {
+      id: '/_app/surfaces/configured/'
+      path: '/'
+      fullPath: '/surfaces/configured/'
+      preLoaderRoute: typeof SurfacesConfiguredIndexRouteImport
+      parentRoute: typeof SurfacesConfiguredRoute
+    }
+    '/_app/settings/backups/': {
+      id: '/_app/settings/backups/'
+      path: '/'
+      fullPath: '/settings/backups/'
+      preLoaderRoute: typeof SettingsBackupsIndexRouteImport
+      parentRoute: typeof SettingsBackupsRoute
+    }
+    '/_app/surfaces/configured/$itemId': {
+      id: '/_app/surfaces/configured/$itemId'
+      path: '/$itemId'
+      fullPath: '/surfaces/configured/$itemId'
+      preLoaderRoute: typeof SurfacesConfiguredItemIdRouteImport
+      parentRoute: typeof SurfacesConfiguredRoute
+    }
+    '/_app/settings/backups/$ruleId': {
+      id: '/_app/settings/backups/$ruleId'
+      path: '/$ruleId'
+      fullPath: '/settings/backups/$ruleId'
+      preLoaderRoute: typeof SettingsBackupsRuleIdRouteImport
+      parentRoute: typeof SettingsBackupsRoute
     }
   }
 }
@@ -993,6 +1101,33 @@ const TriggersRouteWithChildren = TriggersRoute._addFileChildren(
   TriggersRouteChildren,
 )
 
+interface SettingsBackupsRouteChildren {
+  SettingsBackupsRuleIdRoute: typeof SettingsBackupsRuleIdRoute
+  SettingsBackupsIndexRoute: typeof SettingsBackupsIndexRoute
+}
+
+const SettingsBackupsRouteChildren: SettingsBackupsRouteChildren = {
+  SettingsBackupsRuleIdRoute: SettingsBackupsRuleIdRoute,
+  SettingsBackupsIndexRoute: SettingsBackupsIndexRoute,
+}
+
+const SettingsBackupsRouteWithChildren = SettingsBackupsRoute._addFileChildren(
+  SettingsBackupsRouteChildren,
+)
+
+interface SurfacesConfiguredRouteChildren {
+  SurfacesConfiguredItemIdRoute: typeof SurfacesConfiguredItemIdRoute
+  SurfacesConfiguredIndexRoute: typeof SurfacesConfiguredIndexRoute
+}
+
+const SurfacesConfiguredRouteChildren: SurfacesConfiguredRouteChildren = {
+  SurfacesConfiguredItemIdRoute: SurfacesConfiguredItemIdRoute,
+  SurfacesConfiguredIndexRoute: SurfacesConfiguredIndexRoute,
+}
+
+const SurfacesConfiguredRouteWithChildren =
+  SurfacesConfiguredRoute._addFileChildren(SurfacesConfiguredRouteChildren)
+
 interface appRouteChildren {
   SplatRoute: typeof SplatRoute
   ButtonsRoute: typeof ButtonsRouteWithChildren
@@ -1005,12 +1140,13 @@ interface appRouteChildren {
   TriggersRoute: typeof TriggersRouteWithChildren
   IndexRoute: typeof IndexRoute
   SettingsAdvancedRoute: typeof SettingsAdvancedRoute
+  SettingsBackupsRoute: typeof SettingsBackupsRouteWithChildren
   SettingsButtonsRoute: typeof SettingsButtonsRoute
   SettingsGeneralRoute: typeof SettingsGeneralRoute
   SettingsProtocolsRoute: typeof SettingsProtocolsRoute
   SettingsSurfacesRoute: typeof SettingsSurfacesRoute
   SurfacesSplatRoute: typeof SurfacesSplatRoute
-  SurfacesConfiguredRoute: typeof SurfacesConfiguredRoute
+  SurfacesConfiguredRoute: typeof SurfacesConfiguredRouteWithChildren
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
   VariablesLabelRoute: typeof VariablesLabelRoute
@@ -1031,12 +1167,13 @@ const appRouteChildren: appRouteChildren = {
   TriggersRoute: TriggersRouteWithChildren,
   IndexRoute: IndexRoute,
   SettingsAdvancedRoute: SettingsAdvancedRoute,
+  SettingsBackupsRoute: SettingsBackupsRouteWithChildren,
   SettingsButtonsRoute: SettingsButtonsRoute,
   SettingsGeneralRoute: SettingsGeneralRoute,
   SettingsProtocolsRoute: SettingsProtocolsRoute,
   SettingsSurfacesRoute: SettingsSurfacesRoute,
   SurfacesSplatRoute: SurfacesSplatRoute,
-  SurfacesConfiguredRoute: SurfacesConfiguredRoute,
+  SurfacesConfiguredRoute: SurfacesConfiguredRouteWithChildren,
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
   VariablesLabelRoute: VariablesLabelRoute,
@@ -1047,8 +1184,23 @@ const appRouteChildren: appRouteChildren = {
 
 const appRouteWithChildren = appRoute._addFileChildren(appRouteChildren)
 
+interface EmulatorRouteChildren {
+  EmulatorEmulatorIdDotlazyRoute: typeof EmulatorEmulatorIdDotlazyRoute
+  EmulatorIndexRoute: typeof EmulatorIndexRoute
+}
+
+const EmulatorRouteChildren: EmulatorRouteChildren = {
+  EmulatorEmulatorIdDotlazyRoute: EmulatorEmulatorIdDotlazyRoute,
+  EmulatorIndexRoute: EmulatorIndexRoute,
+}
+
+const EmulatorRouteWithChildren = EmulatorRoute._addFileChildren(
+  EmulatorRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   appRoute: appRouteWithChildren,
+  EmulatorRoute: EmulatorRouteWithChildren,
   RedirectsEmulatorHtmlRoute: RedirectsEmulatorHtmlRoute,
   RedirectsEmulator2Route: RedirectsEmulator2Route,
   RedirectsEmulatorsRoute: RedirectsEmulatorsRoute,
@@ -1060,8 +1212,6 @@ const rootRouteChildren: RootRouteChildren = {
   GettingStartedDotlazyRoute: GettingStartedDotlazyRoute,
   TabletDotlazyRoute: TabletDotlazyRoute,
   ConnectionDebugDotconnectionIdRoute: ConnectionDebugDotconnectionIdRoute,
-  EmulatorEmulatorIdDotlazyRoute: EmulatorEmulatorIdDotlazyRoute,
-  EmulatorIndexRoute: EmulatorIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

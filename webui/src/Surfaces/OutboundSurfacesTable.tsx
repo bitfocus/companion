@@ -9,9 +9,10 @@ import { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
-	const { surfaces, socket } = useContext(RootAppStoreContext)
+	const { surfaces } = useContext(RootAppStoreContext)
 
 	const surfacesList = Array.from(surfaces.outboundSurfaces.values()).sort((a, b) => {
 		return a.address.localeCompare(b.address)
@@ -22,33 +23,36 @@ export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 
 	const addSurface = useCallback(() => addModalRef?.current?.show(), [])
 
+	const removeMutation = useMutationExt(trpc.surfaces.outbound.remove.mutationOptions())
 	const removeSurface = useCallback(
 		(surfaceId: string) => {
 			confirmRef.current?.show('Remove Surface', 'Are you sure you want to remove this surface?', 'Remove', () => {
-				socket.emitPromise('surfaces:outbound:remove', [surfaceId]).catch((err) => {
-					console.error('fotget failed', err)
+				removeMutation.mutateAsync({ id: surfaceId }).catch((err) => {
+					console.error('Remove failed', err)
 				})
 			})
 		},
-		[socket]
+		[removeMutation]
 	)
 
+	const updateNameMutation = useMutationExt(trpc.surfaces.outbound.setName.mutationOptions())
 	const updateName = useCallback(
 		(surfaceId: string, name: string) => {
-			socket.emitPromise('surfaces:outbound:set-name', [surfaceId, name]).catch((err) => {
+			updateNameMutation.mutateAsync({ id: surfaceId, name }).catch((err) => {
 				console.error('Update name failed', err)
 			})
 		},
-		[socket]
+		[updateNameMutation]
 	)
 
+	const updateEnabledMutation = useMutationExt(trpc.surfaces.outbound.setEnabled.mutationOptions())
 	const updateEnabled = useCallback(
 		(surfaceId: string, enabled: boolean) => {
-			socket.emitPromise('surfaces:outbound:set-enabled', [surfaceId, enabled]).catch((err) => {
+			updateEnabledMutation.mutateAsync({ id: surfaceId, enabled }).catch((err) => {
 				console.error('Update enabled failed', err)
 			})
 		},
-		[socket]
+		[updateEnabledMutation]
 	)
 
 	return (

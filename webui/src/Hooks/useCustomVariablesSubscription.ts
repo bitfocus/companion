@@ -1,47 +1,33 @@
-import { useEffect, useState } from 'react'
-import { CompanionSocketWrapped } from '~/util.js'
+import { useState } from 'react'
 import type { VariablesStore } from '~/Stores/VariablesStore.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
 
 export function useCustomVariablesSubscription(
-	socket: CompanionSocketWrapped,
 	store: VariablesStore,
-	setLoadError?: ((error: string | null) => void) | undefined,
-	retryToken?: string
+	setLoadError?: ((error: string | null) => void) | undefined
 ): boolean {
 	const [ready, setReady] = useState(false)
 
-	useEffect(() => {
-		setLoadError?.(null)
-		store.resetCustomVariables(null)
-		setReady(false)
-
-		socket
-			.emitPromise('custom-variables:subscribe', [])
-			.then((customVariables) => {
+	useSubscription(
+		trpc.customVariables.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
 				setLoadError?.(null)
-				store.resetCustomVariables(customVariables)
+				store.updateCustomVariables(null)
+				setReady(false)
+			},
+			onData: (data) => {
+				setLoadError?.(null)
+				store.updateCustomVariables(data)
 				setReady(true)
-			})
-			.catch((e) => {
-				setLoadError?.(`Failed to load custom-variables list`)
-				console.error('Failed to load custom-variables list:', e)
-				store.resetCustomVariables(null)
-			})
-
-		const unsubUpdates = socket.on('custom-variables:update', (changes) => {
-			store.applyCustomVariablesChanges(changes)
+			},
+			onError: (error) => {
+				setLoadError?.(`Failed to load custom-variables list: ${error.message}`)
+				console.error('Failed to load custom-variables list:', error)
+				store.updateCustomVariables(null)
+			},
 		})
-
-		return () => {
-			store.resetCustomVariables(null)
-
-			unsubUpdates()
-
-			socket.emitPromise('custom-variables:unsubscribe', []).catch((e) => {
-				console.error('Failed to unsubscribe to custom-variables list', e)
-			})
-		}
-	}, [socket, store, setLoadError, retryToken])
+	)
 
 	return ready
 }

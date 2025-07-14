@@ -28,6 +28,7 @@ import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
 import { ActiveLearningStore } from './Resources/ActiveLearningStore.js'
+import { createTrpcRouter } from './UI/TRPC.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -81,7 +82,7 @@ export class Registry {
 	/**
 	 * The cloud controller
 	 */
-	#cloud!: CloudController
+	cloud!: CloudController
 	/**
 	 * The core controls controller
 	 */
@@ -113,11 +114,11 @@ export class Registry {
 	/**
 	 * The core page controller
 	 */
-	#preview!: PreviewController
+	preview!: PreviewController
 	/**
 	 * The core service controller
 	 */
-	#services!: ServiceController
+	services!: ServiceController
 	/**
 	 * The core device controller
 	 */
@@ -132,7 +133,7 @@ export class Registry {
 	 */
 	internalModule!: InternalController
 
-	#importExport!: ImportExportController
+	importExport!: ImportExportController
 
 	#metrics!: DataMetrics
 
@@ -185,13 +186,13 @@ export class Registry {
 
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		this.io = this.ui.io
-		LogController.init(this.#appInfo, this.ui.io)
+		LogController.init(this.#appInfo)
 
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 
-		this.variables = new VariablesController(this.db, this.io)
+		this.variables = new VariablesController(this.db)
 	}
 
 	/**
@@ -206,7 +207,7 @@ export class Registry {
 		try {
 			const controlEvents = new EventEmitter<ControlCommonEvents>()
 
-			const activeLearningStore = new ActiveLearningStore(this.io)
+			const activeLearningStore = new ActiveLearningStore()
 			const pageStore = new PageStore(this.db.getTableView('pages'))
 			this.controls = new ControlsController(this, controlEvents, activeLearningStore)
 
@@ -216,25 +217,19 @@ export class Registry {
 				this.userconfig,
 				this.variables,
 				this.db,
-				this.io,
 				this.#internalApiRouter
 			)
-			this.surfaces = new SurfaceController(
-				this.db,
-				{
-					controls: this.controls,
-					graphics: this.graphics,
-					pageStore: pageStore,
-					userconfig: this.userconfig,
-					variables: this.variables,
-				},
-				this.io
-			)
+			this.surfaces = new SurfaceController(this.db, {
+				controls: this.controls,
+				graphics: this.graphics,
+				pageStore: pageStore,
+				userconfig: this.userconfig,
+				variables: this.variables,
+			})
 
 			const oscSender = new ServiceOscSender(this.userconfig)
 			this.instance = new InstanceController(
 				this.#appInfo,
-				this.io,
 				this.db,
 				this.#data.cache,
 				this.#internalApiRouter,
@@ -256,10 +251,10 @@ export class Registry {
 			)
 
 			this.page = new PageController(this, pageStore)
-			this.#importExport = new ImportExportController(
+			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
-				this.io,
+				this.db,
 				this.controls,
 				this.graphics,
 				this.instance,
@@ -280,7 +275,7 @@ export class Registry {
 			)
 
 			this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
-			this.#services = new ServiceController(
+			this.services = new ServiceController(
 				serviceApi,
 				this.userconfig,
 				oscSender,
@@ -291,19 +286,17 @@ export class Registry {
 				this.io,
 				this.ui.express
 			)
-			this.#cloud = new CloudController(
+			this.cloud = new CloudController(
 				this.#appInfo,
 				this.db,
 				this.#data.cache,
 				this.controls,
 				this.graphics,
-				this.io,
 				pageStore
 			)
 
-			this.#preview = new PreviewController(
+			this.preview = new PreviewController(
 				this.graphics,
-				this.io,
 				pageStore,
 				this.controls,
 				this.variables.values,
@@ -317,11 +310,10 @@ export class Registry {
 			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
-				this.io.emitToAll('set_userconfig_key', key, value)
 				setImmediate(() => {
 					// give the change a chance to be pushed to the ui first
 					this.graphics.updateUserConfig(key, value)
-					this.#services.updateUserConfig(key, value)
+					this.services.updateUserConfig(key, value)
 					this.surfaces.updateUserConfig(key, value)
 				})
 
@@ -336,41 +328,25 @@ export class Registry {
 				}
 			})
 
-			this.ui.io.on('clientConnect', (client) => {
-				LogController.clientConnect(client)
-				this.ui.clientConnect(client)
-				this.#data.clientConnect(client)
-				this.page.clientConnect(client)
-				this.controls.clientConnect(client)
-				this.graphics.clientConnect(client)
-				this.#preview.clientConnect(client)
-				this.surfaces.clientConnect(client)
-				this.instance.clientConnect(client)
-				this.#cloud.clientConnect(client)
-				this.#services.clientConnect(client)
-				this.#importExport.clientConnect(client)
-				activeLearningStore.clientConnect(client)
-			})
-
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
 				this.internalModule.onVariablesChanged(all_changed_variables_set, null)
 				this.controls.onVariablesChanged(all_changed_variables_set, null)
 				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-				this.#preview.onVariablesChanged(all_changed_variables_set, null)
+				this.preview.onVariablesChanged(all_changed_variables_set, null)
 				this.surfaces.onVariablesChanged(all_changed_variables_set)
 			})
 			this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
 				this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
 				this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
-				this.#preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+				this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
 			})
 
 			this.page.on('controlIdsMoved', (controlIds) => {
-				this.#preview.onControlIdsLocationChanged(controlIds)
+				this.preview.onControlIdsLocationChanged(controlIds)
 			})
 
 			this.graphics.on('button_drawn', (location, render) => {
-				this.#services.onButtonDrawn(location, render)
+				this.services.onButtonDrawn(location, render)
 			})
 
 			// old 'modules_loaded' events
@@ -387,6 +363,10 @@ export class Registry {
 			await this.instance.initInstances(extraModulePath)
 
 			// Instances are loaded, start up http
+			const router = createTrpcRouter(this)
+			this.ui.io.bindTrpcRouter(router, () => {
+				this.controls.triggers.emit('client_connect')
+			})
 			this.rebindHttp(bindIp, bindPort)
 
 			// Startup has completed, run triggers
@@ -451,6 +431,8 @@ export class Registry {
 		void Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
+			this.ui.close()
+
 			// Save the db to disk
 			this.db.close()
 			this.#data.cache.close()
@@ -492,7 +474,7 @@ export class Registry {
 
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
-		this.#services.https.updateBindIp(bindIp)
+		this.services.https.updateBindIp(bindIp)
 		this.internalModule.updateBindIp(bindIp)
 	}
 }

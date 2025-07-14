@@ -1,3 +1,6 @@
+@use 'variables' as *;
+@use '@coreui/coreui/scss/coreui'; // not strictly necessary, but it allows us to clarify the origin of mixins
+
 body {
 	-webkit-text-size-adjust: 100%;
 	-moz-tab-size: 4;
@@ -29,7 +32,7 @@ body {
 	height: 100vh;
 	overflow-y: hidden;
 
-	@include ltr-rtl('padding-left', var(--cui-sidebar-occupy-start, 0));
+	@include coreui.ltr-rtl('padding-left', var(--cui-sidebar-occupy-start, 0));
 }
 
 .body {
@@ -188,7 +191,7 @@ form.row > * {
 			color: rgba(0, 0, 0, 0.3);
 		}
 
-		@include media-breakpoint-down('lg') {
+		@include coreui.media-breakpoint-down('lg') {
 			padding: 10px;
 			border-radius: 0px;
 			padding: 5px 10px;
@@ -240,8 +243,11 @@ form.row > * {
 	}
 
 	.nav-link {
-		background-color: #151515;
-		border-bottom: 1px solid #262626;
+		background-color: #191919;
+
+		margin-bottom: 0.15rem;
+		padding-top: 0.7rem;
+		padding-bottom: 0.7rem;
 
 		small {
 			color: #aaa;
@@ -291,6 +297,10 @@ form.row > * {
 			margin-left: 16px;
 			margin-right: 16px;
 		}
+
+		.nav-link {
+			margin-bottom: 0;
+		}
 	}
 	.nav-group-toggle-basic::after,
 	.nav-group-items .nav-link {
@@ -303,12 +313,74 @@ form.row > * {
 
 	.sidebar-header.sidebar-header-toggler {
 		justify-content: left;
-		padding-left: 1.5rem;
+		padding: 0.5rem 1rem;
+	}
+
+	.sidebar-header-toggler2 {
+		display: flex;
+		overflow: hidden;
+
+		background: none !important;
+		border: none !important;
+
+		&:hover {
+			background: none !important;
+			border: none !important;
+		}
+
+		.nav-icon-wrapper {
+			cursor: pointer;
+
+			display: flex;
+			align-items: center;
+
+			.sidebar-toggler {
+				display: block;
+				width: 100%;
+			}
+		}
+
+		.version,
+		.version-sub {
+			display: block;
+
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+
+		.version {
+			font-size: 0.95em;
+			color: #aaa;
+			display: block;
+		}
+		.version-sub {
+			font-size: 0.85em;
+			color: #888;
+		}
 	}
 
 	.sidebar-header.brand {
 		justify-content: left;
 		padding-left: 11px;
+	}
+
+	.nav-main-scroller {
+		padding-bottom: 20px;
+	}
+	.sidebar-bottom-shadow-container {
+		position: relative;
+
+		.sidebar-bottom-shadow {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 20px;
+			background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 1));
+			pointer-events: none;
+			z-index: 1;
+		}
 	}
 }
 
@@ -439,7 +511,7 @@ form.row > * {
 }
 
 // scroll if side-by-side
-@include media-breakpoint-up('xl') {
+@include coreui.media-breakpoint-up('xl') {
 	.split-panels {
 		height: 100%;
 

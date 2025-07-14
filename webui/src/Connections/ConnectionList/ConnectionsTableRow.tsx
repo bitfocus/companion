@@ -20,6 +20,7 @@ import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { useConnectionListContext } from './ConnectionListContext.js'
 import { isCollectionEnabled } from '~/util.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface ConnectionsTableRowProps {
 	connection: ClientConnectionConfigWithId
@@ -29,7 +30,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	connection,
 	isSelected,
 }: ConnectionsTableRowProps) {
-	const { socket, helpViewer, modules, connections, variablesStore } = useContext(RootAppStoreContext)
+	const { helpViewer, modules, connections, variablesStore } = useContext(RootAppStoreContext)
 	const { showVariables, deleteModalRef, configureConnection } = useConnectionListContext()
 
 	const id = connection.id
@@ -38,6 +39,9 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const isEnabled = connection.enabled === undefined || connection.enabled
 
 	const showAsEnabled = isEnabled && isCollectionEnabled(connections.rootCollections(), connection.collectionId)
+
+	const deleteMutation = useMutationExt(trpc.connections.delete.mutationOptions())
+	const setEnabledMutation = useMutationExt(trpc.connections.setEnabled.mutationOptions())
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current?.show(
@@ -48,19 +52,19 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			],
 			'Delete',
 			() => {
-				socket.emitPromise('connections:delete', [id]).catch((e) => {
+				deleteMutation.mutateAsync({ connectionId: id }).catch((e) => {
 					console.error('Delete failed', e)
 				})
 				configureConnection(null)
 			}
 		)
-	}, [socket, deleteModalRef, id, connection.label, configureConnection])
+	}, [deleteMutation, deleteModalRef, id, connection.label, configureConnection])
 
 	const doToggleEnabled = useCallback(() => {
-		socket.emitPromise('connections:set-enabled', [id, !isEnabled]).catch((e) => {
+		setEnabledMutation.mutateAsync({ connectionId: id, enabled: !isEnabled }).catch((e) => {
 			console.error('Set enabled failed', e)
 		})
-	}, [socket, id, isEnabled])
+	}, [setEnabledMutation, id, isEnabled])
 
 	const doShowVariables = useCallback(() => showVariables(connection.label), [showVariables, connection.label])
 

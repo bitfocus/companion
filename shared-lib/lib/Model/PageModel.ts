@@ -4,13 +4,18 @@ export interface PageModel {
 	controls: Record<number, Record<number, string>>
 }
 
-export interface ClientPagesInfo {
+export type PageModelChanges = PageModelChangesInit | PageModelChangesUpdate
+
+export interface PageModelChangesInit {
+	type: 'init'
+
 	order: string[]
 
 	pages: Record<string, PageModel | undefined>
 }
 
-export interface PageModelChanges {
+export interface PageModelChangesUpdate {
+	type: 'update'
 	updatedOrder: string[] | null
 
 	added: PageModel[]

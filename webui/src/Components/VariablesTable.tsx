@@ -1,27 +1,34 @@
-import React, { useCallback, useContext, useState, useMemo, useEffect } from 'react'
+import React, { useCallback, useContext, useState, useMemo } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { useComputed } from '~/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
+import { type CompanionVariableValue } from '@companion-module/base'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
 import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
+import { useVariablesValuesForLabel } from '~/Variables/useVariablesValuesForLabel.js'
+import { toJS } from 'mobx'
 
 interface VariablesTableProps {
 	label: string
 }
 
 export const VariablesTable = observer(function VariablesTable({ label }: VariablesTableProps) {
-	const { socket, notifier, variablesStore } = useContext(RootAppStoreContext)
+	const { notifier, variablesStore } = useContext(RootAppStoreContext)
 
-	const [variableValues, setVariableValues] = useState<CompanionVariableValues>({})
 	const [filter, setFilter] = useState('')
 
-	const panelCollapseHelper = usePanelCollapseHelperLite(`variables-table:${label}`, Object.keys(variableValues), true)
+	const variableValues = useVariablesValuesForLabel(label)
+
+	const panelCollapseHelper = usePanelCollapseHelperLite(
+		`variables-table:${label}`,
+		Array.from(variableValues.keys()),
+		true
+	)
 
 	const variableDefinitions = useComputed(() => {
 		const defs = variablesStore.variableDefinitionsForLabel(label)
@@ -34,30 +41,6 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 
 		return defs
 	}, [variablesStore, label])
-
-	useEffect(() => {
-		if (!label) return
-
-		const doPoll = () => {
-			socket
-				.emitPromise('variables:connection-values', [label])
-				.then((values) => {
-					setVariableValues(values || {})
-				})
-				.catch((e) => {
-					setVariableValues({})
-					console.log('Failed to fetch variable values: ', e)
-				})
-		}
-
-		doPoll()
-		const interval = setInterval(doPoll, 1000)
-
-		return () => {
-			setVariableValues({})
-			clearInterval(interval)
-		}
-	}, [socket, label])
 
 	const onCopied = useCallback(() => {
 		notifier.current?.show(`Copied`, 'Copied to clipboard', 3000)
@@ -133,7 +116,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 							<VariablesTableRow
 								key={variable.name}
 								variable={variable}
-								value={variableValues[variable.name]}
+								value={variableValues.get(variable.name)}
 								label={label}
 								onCopied={onCopied}
 								panelCollapseHelper={panelCollapseHelper}
@@ -176,7 +159,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 			<td>{variable.label}</td>
 			<td>
 				<VariableValueDisplay
-					value={value}
+					value={toJS(value)}
 					collapsePanelId={variable.name}
 					panelCollapseHelper={panelCollapseHelper}
 					onCopied={onCopied}

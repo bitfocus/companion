@@ -14,8 +14,8 @@ import { isEqual } from 'lodash-es'
 import { delay } from '../Resources/Util.js'
 import LogController, { Logger } from '../Log/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { CloudController } from './Controller.js'
-import type { UIHandler } from '../UI/Handler.js'
+import type { CloudController, CloudUIEvents } from './Controller.js'
+import type EventEmitter from 'node:events'
 
 /**
  * Functionality for a connection region for cloud control
@@ -55,7 +55,8 @@ export class CloudRegion {
 	}
 
 	readonly #cloud: CloudController
-	readonly #io: UIHandler
+
+	readonly #events: EventEmitter<CloudUIEvents>
 
 	#socket: SCClient.AGClientSocket | undefined
 
@@ -65,9 +66,14 @@ export class CloudRegion {
 	 * @param id - this unique ID
 	 * @param data - setup data for the region
 	 */
-	constructor(cloud: CloudController, id: string, data: { host: string; name: string }) {
+	constructor(
+		cloud: CloudController,
+		events: EventEmitter<CloudUIEvents>,
+		id: string,
+		data: { host: string; name: string }
+	) {
 		this.#cloud = cloud
-		this.#io = cloud.io
+		this.#events = events
 		this.#logger = LogController.createLogger(`Cloud/${id}`)
 
 		this.#id = id
@@ -348,7 +354,7 @@ export class CloudRegion {
 				// Disabled cloud
 				if (this.state.enabled && this.#cloud.state.authenticated) {
 					this.state = newState
-					this.#io.emitToAll('cloud_region_state', this.#id, newState)
+					this.#events.emit(`regionState:${this.#id}`, newState)
 					this.destroy()
 					abortState = true // already set state
 				}
@@ -362,7 +368,7 @@ export class CloudRegion {
 
 		if (!abortState) {
 			if (!isEqual(newState, this.state)) {
-				this.#io.emitToAll('cloud_region_state', this.#id, newState)
+				this.#events.emit(`regionState:${this.#id}`, newState)
 			}
 
 			this.state = newState

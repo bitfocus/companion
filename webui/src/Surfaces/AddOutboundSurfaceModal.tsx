@@ -1,15 +1,8 @@
-import React, {
-	ChangeEvent,
-	FormEvent,
-	forwardRef,
-	useCallback,
-	useContext,
-	useImperativeHandle,
-	useState,
-} from 'react'
+import React, { ChangeEvent, FormEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CAlert, CButton, CForm, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { SocketContext, PreventDefaultHandler } from '~/util.js'
+import { PreventDefaultHandler } from '~/util.js'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { trpc, useMutationExt } from '~/TRPC'
 
 export interface AddOutboundSurfaceModalRef {
 	show(): void
@@ -23,8 +16,6 @@ interface FormInfo {
 
 export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, object>(
 	function SurfaceEditModal(_props, ref) {
-		const socket = useContext(SocketContext)
-
 		const [show, setShow] = useState(false)
 		const [running, setRunning] = useState(false)
 		const [saveError, setSaveError] = useState<string | null>(null)
@@ -38,6 +29,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, ob
 			setSaveError(null)
 		}, [])
 
+		const addOutboundMutation = useMutationExt(trpc.surfaces.outbound.add.mutationOptions())
 		const doAction = useCallback(
 			(e: FormEvent) => {
 				if (e) e.preventDefault()
@@ -47,8 +39,13 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, ob
 				setRunning(true)
 				setSaveError(null)
 
-				socket
-					.emitPromise('surfaces:outbound:add', ['elgato', info.address, info.port, info.name])
+				addOutboundMutation
+					.mutateAsync({
+						type: 'elgato',
+						address: info.address,
+						port: info.port,
+						name: info.name,
+					})
 					.then(() => {
 						setRunning(false)
 						setShow(false)
@@ -61,7 +58,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, ob
 						setSaveError(err?.message ?? err)
 					})
 			},
-			[socket, info]
+			[addOutboundMutation, info]
 		)
 
 		useImperativeHandle(

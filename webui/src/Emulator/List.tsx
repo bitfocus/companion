@@ -1,69 +1,38 @@
-import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react'
-import { LoadingRetryOrError, SocketContext, useComputed } from '~/util.js'
+import React, { useCallback } from 'react'
+import { LoadingRetryOrError } from '~/util.js'
 import { CAlert, CButton, CCol, CContainer, CRow, CWidgetStatsA } from '@coreui/react'
-import { nanoid } from 'nanoid'
-import type { ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
-import { SurfacesStore } from '~/Stores/SurfacesStore.js'
-import { useSurfacesSubscription } from '~/Hooks/useSurfacesSubscription.js'
-import { UserConfigStore } from '~/Stores/UserConfigStore.js'
-import { useUserConfigSubscription } from '~/Hooks/useUserConfigSubscription.js'
 import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/TRPC'
+import { NonIdealState } from '~/Components/NonIdealState'
+import { faGamepad } from '@fortawesome/free-solid-svg-icons'
 
 export const EmulatorList = observer(function EmulatorList() {
-	const socket = useContext(SocketContext)
 	const navigate = useNavigate({ from: '/emulator' })
 
-	const [loadError, setLoadError] = useState<string | null>(null)
-	const [reloadToken, setReloadToken] = useState(nanoid())
-
-	const doRetryLoad = useCallback(() => setReloadToken(nanoid()), [])
-
-	const surfacesStore = useMemo(() => new SurfacesStore(), [])
-	const surfacesReady = useSurfacesSubscription(socket, surfacesStore, setLoadError, reloadToken)
-
-	const userConfigStore = useMemo(() => new UserConfigStore(), [])
-	const userConfigReady = useUserConfigSubscription(socket, userConfigStore)
-
-	useEffect(() => {
-		document.title =
-			userConfigStore.properties?.installName && userConfigStore.properties?.installName.length > 0
-				? `${userConfigStore.properties?.installName} - Emulators (Bitfocus Companion)`
-				: 'Bitfocus Companion - Emulators'
-	}, [userConfigStore.properties?.installName])
-
-	const emulators = useComputed(() => {
-		const emulators: ClientSurfaceItem[] = []
-
-		for (const group of surfacesStore.store.values()) {
-			if (!group) continue
-
-			for (const surface of group.surfaces) {
-				if (surface.integrationType === 'emulator' || surface.id.startsWith('emulator:')) {
-					emulators.push(surface)
-				}
-			}
-		}
-
-		return emulators
-	}, [surfacesStore])
+	const emulatorList = useSubscription(trpc.surfaces.emulatorList.subscriptionOptions())
+	const doRetryLoad = useCallback(() => emulatorList.reset(), [emulatorList])
 
 	return (
 		<div className="page-emulator-list">
 			<CContainer fluid className="d-flex flex-column">
-				<LoadingRetryOrError error={loadError} dataReady={!!surfacesReady || !!userConfigReady} doRetry={doRetryLoad} />
-				{surfacesReady && (
+				{emulatorList.data ? (
 					<CRow>
 						<CCol sm={12}>
 							<h1>Emulator Chooser</h1>
 						</CCol>
 
-						{emulators.map((surface) => (
-							<CCol sm={4}>
+						{emulatorList.data.map((surface) => (
+							<CCol sm={4} key={surface.id}>
 								<CButton
-									key={surface.id}
 									color="light"
-									onClick={() => void navigate({ to: `/emulator/${surface.id.substring(9)}` })}
+									onClick={() =>
+										void navigate({
+											to: '/emulator/$emulatorId',
+											params: { emulatorId: surface.id },
+										})
+									}
 									className="mb-4"
 								>
 									{surface.name || 'Emulator'}
@@ -71,13 +40,23 @@ export const EmulatorList = observer(function EmulatorList() {
 							</CCol>
 						))}
 
-						{emulators.length === 0 && (
+						{emulatorList.data.length === 0 && (
 							<CCol sm={4}>
-								<CWidgetStatsA title="No Emulators have been created">
-									You can create one in the Surfaces tab
-								</CWidgetStatsA>
+								<CWidgetStatsA
+									chart={
+										<NonIdealState icon={faGamepad}>
+											No Emulators have been created
+											<br />
+											You can create one in the Surfaces tab
+										</NonIdealState>
+									}
+								/>
 							</CCol>
 						)}
+					</CRow>
+				) : (
+					<CRow style={{ margin: '20% 0' }}>
+						<LoadingRetryOrError error={emulatorList.error} dataReady={false} doRetry={doRetryLoad} design="pulse-xl" />
 					</CRow>
 				)}
 

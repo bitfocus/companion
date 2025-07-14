@@ -1,6 +1,6 @@
 import { CFormLabel, CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext } from 'react'
+import React, { useCallback } from 'react'
 import {
 	ButtonGraphicsElementBase,
 	ButtonGraphicsElementUsage,
@@ -8,7 +8,6 @@ import {
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { TextInputField } from '../../../Components/TextInputField.js'
-import { RootAppStoreContext } from '../../../Stores/RootAppStore.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 import { CheckboxInputField } from '../../../Components/CheckboxInputField.js'
 import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
@@ -16,6 +15,7 @@ import { NumberInputField } from '../../../Components/NumberInputField.js'
 import { DropdownInputField } from '../../../Components/DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { InlineHelp } from '../../../Components/InlineHelp.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	controlId,
@@ -82,12 +82,12 @@ const FieldElementNameInput = observer(function FieldElementNameInput({
 	controlId: string
 	elementProps: ButtonGraphicsElementBase
 }) {
-	const { socket } = useContext(RootAppStoreContext)
+	const setElementNameMutation = useMutationExt(trpc.controls.styles.setElementName.mutationOptions())
 
 	const setName = useCallback(
 		(value: string) => {
-			socket
-				.emitPromise('controls:style:set-element-name', [controlId, elementProps.id, value])
+			setElementNameMutation
+				.mutateAsync({ controlId, elementId: elementProps.id, name: value })
 				.then((res) => {
 					console.log('Update element', res)
 				})
@@ -95,7 +95,7 @@ const FieldElementNameInput = observer(function FieldElementNameInput({
 					console.error('Failed to Update element', e)
 				})
 		},
-		[socket, controlId, elementProps.id]
+		[setElementNameMutation, controlId, elementProps.id]
 	)
 
 	return <TextInputField setValue={setName} value={elementProps.name ?? ''} />
@@ -108,16 +108,16 @@ const FieldElementUsageInput = observer(function FieldElementUsageInput({
 	controlId: string
 	elementProps: ButtonGraphicsElementBase
 }) {
-	const { socket } = useContext(RootAppStoreContext)
+	const setElementUsageMutation = useMutationExt(trpc.controls.styles.setElementUsage.mutationOptions())
 
 	const setUsage = useCallback(
 		(value: DropdownChoiceId) => {
-			socket
-				.emitPromise('controls:style:set-element-usage', [
+			setElementUsageMutation
+				.mutateAsync({
 					controlId,
-					elementProps.id,
-					value as ButtonGraphicsElementUsage,
-				])
+					elementId: elementProps.id,
+					usage: value as ButtonGraphicsElementUsage,
+				})
 				.then((res) => {
 					console.log('Update element', res)
 				})
@@ -125,7 +125,7 @@ const FieldElementUsageInput = observer(function FieldElementUsageInput({
 					console.error('Failed to Update element', e)
 				})
 		},
-		[socket, controlId, elementProps.id]
+		[setElementUsageMutation, controlId, elementProps.id]
 	)
 
 	// TODO: Should ths choices be dynamic based on the element type?

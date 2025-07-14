@@ -1,31 +1,17 @@
 import { faPlug, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useContext } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import React from 'react'
 
 interface ModuleVersionUsageIconProps {
-	moduleId: string
-	moduleVersionId: string
+	matchingConnections: number
 	isInstalled: boolean
 }
 
 export const ModuleVersionUsageIcon = observer(function ModuleVersionUsageIcon({
-	moduleId,
-	moduleVersionId,
+	matchingConnections,
 	isInstalled,
 }: ModuleVersionUsageIconProps) {
-	const { connections } = useContext(RootAppStoreContext)
-
-	let matchingConnections = 0
-	for (const connection of connections.connections.values()) {
-		if (connection.instance_type !== moduleId) continue
-
-		if (moduleVersionId && connection.moduleVersionId === moduleVersionId) {
-			matchingConnections++
-		}
-	}
-
 	if (matchingConnections === 0) return null // TODO - needs a placeholder for positioning
 
 	return (

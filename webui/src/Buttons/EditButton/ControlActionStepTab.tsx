@@ -40,7 +40,7 @@ export function ControlActionStepTab({
 }: ControlActionStepTabProps): React.JSX.Element {
 	return (
 		<>
-			<CButtonGroup hidden={stepKeys.length === 1}>
+			<CButtonGroup hidden={stepKeys.length === 1} className="mt-2">
 				<CButton
 					color="danger"
 					title="Move step before"

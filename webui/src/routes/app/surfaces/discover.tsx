@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { DiscoverSurfacesTab } from '~/Surfaces/index.js'
+import { DiscoverSurfacesPage } from '~/Surfaces/DiscoverSurfacesPage'
 
 export const Route = createFileRoute('/_app/surfaces/discover')({
-	component: DiscoverSurfacesTab,
+	component: DiscoverSurfacesPage,
 })

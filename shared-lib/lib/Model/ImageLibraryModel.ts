@@ -19,9 +19,14 @@ export interface ImageLibraryExportData {
 	previewImage: string // base64 data URL
 }
 
-export type ImageLibraryCollection = CollectionBase<undefined>
+export type ImageLibraryCollection = CollectionBase<null>
 
-export type ImageLibraryUpdate = ImageLibraryUpdateRemoveOp | ImageLibraryUpdateUpdateOp
+export type ImageLibraryUpdate = ImageLibraryUpdateInitOp | ImageLibraryUpdateRemoveOp | ImageLibraryUpdateUpdateOp
+
+export interface ImageLibraryUpdateInitOp {
+	type: 'init'
+	images: ImageLibraryInfo[]
+}
 
 export interface ImageLibraryUpdateRemoveOp {
 	type: 'remove'

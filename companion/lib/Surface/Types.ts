@@ -2,6 +2,9 @@ import type {
 	CompanionSurfaceConfigField,
 	GridSize,
 	SurfaceFirmwareUpdateInfo,
+	SurfaceGroupConfig,
+	SurfacePanelConfig,
+	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
@@ -12,6 +15,8 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import { EmulatorPageConfig, EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
+import { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
 
 export type SurfacePanelFactory = {
 	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
@@ -98,4 +103,14 @@ export interface SurfaceHandlerDependencies {
 	 * The core variable controller
 	 */
 	readonly variables: VariablesController
+}
+
+export type UpdateEvents = EmulatorUpdateEvents & {
+	emulatorPageConfig: [info: EmulatorPageConfig]
+	emulatorList: [list: EmulatorListItem[]]
+
+	surfaces: [changes: SurfacesUpdate[]]
+
+	[id: `groupConfig:${string}`]: [config: SurfaceGroupConfig | null]
+	[id: `surfaceConfig:${string}`]: [config: SurfacePanelConfig | null]
 }

@@ -1,6 +1,6 @@
-import type { ClientSocket, UIHandler } from '../UI/Handler.js'
-
-const ActiveLearnRoom = 'learn:active'
+import { EventEmitter } from 'node:events'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { ActiveLearnUpdate } from '@companion-app/shared/Model/ActiveLearn.js'
 
 /**
  * Store for managing active learning requests
@@ -11,23 +11,27 @@ export class ActiveLearningStore {
 	 */
 	readonly #activeLearnRequests = new Set<string>()
 
-	readonly #io: UIHandler
+	readonly #learnEvents = new EventEmitter<{ change: [change: ActiveLearnUpdate] }>()
 
-	constructor(io: UIHandler) {
-		this.#io = io
+	constructor() {
+		this.#learnEvents.setMaxListeners(0)
 	}
 
-	/**
-	 * Setup a new socket client's events for active learning
-	 */
-	clientConnect(client: ClientSocket): void {
-		client.onPromise('controls:subscribe:learn', async () => {
-			client.join(ActiveLearnRoom)
+	createTrpcRouter() {
+		const self = this
+		return router({
+			watch: publicProcedure.subscription(async function* (opts) {
+				const changes = toIterable(self.#learnEvents, 'change', opts.signal)
 
-			return Array.from(this.#activeLearnRequests)
-		})
-		client.onPromise('controls:unsubscribe:learn', async () => {
-			client.leave(ActiveLearnRoom)
+				yield {
+					type: 'init',
+					ids: Array.from(self.#activeLearnRequests),
+				} satisfies ActiveLearnUpdate
+
+				for await (const [data] of changes) {
+					yield data
+				}
+			}),
 		})
 	}
 
@@ -56,10 +60,16 @@ export class ActiveLearningStore {
 	#setIsLearning(id: string, isActive: boolean): void {
 		if (isActive) {
 			this.#activeLearnRequests.add(id)
-			this.#io.emitToRoom(ActiveLearnRoom, 'learn:add', id)
+			this.#learnEvents.emit('change', {
+				type: 'add',
+				id,
+			})
 		} else {
 			this.#activeLearnRequests.delete(id)
-			this.#io.emitToRoom(ActiveLearnRoom, 'learn:remove', id)
+			this.#learnEvents.emit('change', {
+				type: 'remove',
+				id,
+			})
 		}
 	}
 }

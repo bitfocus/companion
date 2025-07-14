@@ -5,8 +5,9 @@ import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
-import { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
+import { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject
@@ -19,12 +20,17 @@ export function ImportFullWizard({
 	connectionRemap,
 	setConnectionRemap,
 }: ImportFullWizardProps): React.JSX.Element {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
+	const importSinglePageMutation = useMutationExt(trpc.importExport.importSinglePage.mutationOptions())
 	const doSinglePageImport = useCallback(
-		(fromPage: number, toPage: number, connectionRemap: Record<string, string | undefined>) => {
-			socket
-				.emitPromise('loadsave:import-page', [toPage, fromPage, connectionRemap])
+		(fromPage: number, toPage: number, connectionIdRemapping: Record<string, string | undefined>) => {
+			importSinglePageMutation
+				.mutateAsync({
+					sourcePage: fromPage,
+					targetPage: toPage,
+					connectionIdRemapping,
+				})
 				.then((res) => {
 					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
 					console.log('remap response', res)
@@ -37,7 +43,7 @@ export function ImportFullWizard({
 					console.error('import failed', e)
 				})
 		},
-		[socket, notifier, setConnectionRemap]
+		[importSinglePageMutation, notifier, setConnectionRemap]
 	)
 
 	const [activeTab, setActiveTab] = useState<'full' | 'buttons' | 'triggers'>('full')
@@ -112,7 +118,7 @@ interface FullImportTabProps {
 }
 
 function FullImportTab({ snapshot }: FullImportTabProps) {
-	const { socket, notifier } = useContext(RootAppStoreContext)
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const snapshotKeys = useMemo(() => {
 		const keys: string[] = []
@@ -133,7 +139,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		return keys
 	}, [snapshot])
 
-	const [config, setConfig] = useState(() => ({
+	const [config, setConfig] = useState<ClientImportSelection>(() => ({
 		// connections: true,
 		buttons: true,
 		surfaces: true,
@@ -153,9 +159,10 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		}))
 	}, [])
 
+	const importFullMutation = useMutationExt(trpc.importExport.importFull.mutationOptions())
 	const doImport = useCallback(() => {
-		socket
-			.emitPromise('loadsave:import-full', [config], 60000)
+		importFullMutation // TODO: 60s timeout?
+			.mutateAsync(config)
 			.then(() => {
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()
@@ -165,7 +172,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
 			})
 		console.log('do import!')
-	}, [socket, notifier, config])
+	}, [importFullMutation, notifier, config])
 
 	return (
 		<>

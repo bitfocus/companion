@@ -1,56 +1,48 @@
-import type { CompanionSocketWrapped } from '../../../../util.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
-import {
+import type {
 	ExecuteExpressionResult,
 	ExpressionStreamResult,
-	ExpressionStreamResultWithSubId,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
-import { useContext, useEffect, useState } from 'react'
-import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
+import { useEffect, useState } from 'react'
 import { useObserver } from 'mobx-react-lite'
 import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
 import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import { RouterInput, trpcClient } from '~/TRPC.js'
 
 const DRAW_DEBOUNCE = 50
 const DRAW_DEBOUNCE_MAX = 100
 const emptySet = new Set<string>()
 
+interface CachedValue {
+	unsub: () => void
+	value: ExpressionStreamResult | Promise<ExpressionStreamResult>
+}
+
 class LayeredButtonDrawStyleParser {
 	// readonly #parsedId = nanoid()
-	readonly #socket: CompanionSocketWrapped
 	readonly #controlId: string | null
 	readonly #changed: (style: DrawStyleLayeredButtonModel) => void
-	readonly #unsubSocket: () => void
 
-	readonly #latestValues = new Map<string, ExpressionStreamResultWithSubId | Promise<ExpressionStreamResultWithSubId>>()
+	readonly #latestValues = new Map<string, CachedValue>()
 	#rawElements: SomeButtonGraphicsElement[] = []
 
 	#disposed = false
 
-	constructor(
-		socket: CompanionSocketWrapped,
-		controlId: string | null,
-		changed: (style: DrawStyleLayeredButtonModel) => void
-	) {
-		this.#socket = socket
+	constructor(controlId: string | null, changed: (style: DrawStyleLayeredButtonModel) => void) {
 		this.#controlId = controlId
 		this.#changed = changed
-
-		this.#unsubSocket = this.#socket.on('preview:stream-expression:update', this.#streamUpdate)
 	}
 
 	dispose() {
 		this.#disposed = true
 
-		this.#unsubSocket()
-
 		// Unsubscribe from all streams
 		for (const sub of this.#latestValues.values()) {
-			this.#unsubscribeExpression(sub)
+			sub.unsub()
 		}
 	}
 
@@ -69,64 +61,81 @@ class LayeredButtonDrawStyleParser {
 	#recalculateStyle = new PromiseDebounce(
 		async () => {
 			const referencedExpressions = new Set<string>()
-			const parseExpression = async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> => {
-				const streamId = `expression::${str}`
+			const runStream = async (
+				streamId: string,
+				args: RouterInput['preview']['expressionStream']['watchExpression']
+			): Promise<ExecuteExpressionResult> => {
+				if (this.#disposed)
+					return {
+						ok: false,
+						error: 'Disposed',
+						variableIds: emptySet,
+					}
 
 				// Mark it as active, so we don't unsubscribe
 				referencedExpressions.add(streamId)
 
 				// Reuse existing value
 				const existing = this.#latestValues.get(streamId)
-				if (existing) return convertExpressionResult(await existing)
+				if (existing) return convertExpressionResult(await existing.value)
 
 				// Start a new stream
-				const newValuePromise = this.#socket
-					.emitPromise('preview:stream-expression:subscribe', [str, this.#controlId, requiredType, false])
-					.catch((e) => {
-						console.error('Failed to subscribe to expression', e)
-						return {
-							subId: '',
-							result: {
-								ok: false,
-								error: 'Failed to subscribe to expression',
-							},
-						} satisfies ExpressionStreamResultWithSubId
-					})
+				const firstRunPromise = Promise.withResolvers<ExpressionStreamResult>()
+				let hasReceivedFirstValue = false
+				const updateValue = (value: ExpressionStreamResult) => {
+					if (this.#disposed) return
+
+					if (!hasReceivedFirstValue) {
+						hasReceivedFirstValue = true
+						firstRunPromise.resolve(value)
+						return
+					}
+
+					// Notify the reactive observers
+					const existing = this.#latestValues.get(streamId)
+					if (!existing) return
+
+					// Update to a concrete value
+					existing.value = value
+
+					// Queue update
+					this.#recalculateStyle.trigger()
+				}
+
+				const sub = trpcClient.preview.expressionStream.watchExpression.subscribe(args, {
+					onData: (result) => updateValue(result as ExpressionStreamResult), // TODO - fix this type
+					onError: (error) => {
+						console.error('Subscription to expression errored:', error)
+						updateValue({
+							ok: false,
+							error: 'Subscription failed',
+						})
+					},
+				})
 
 				// Track the new value, to avoid duplicateion
-				this.#latestValues.set(streamId, newValuePromise)
+				this.#latestValues.set(streamId, {
+					unsub: () => sub.unsubscribe(),
+					value: firstRunPromise.promise,
+				})
 
-				return convertExpressionResult(await newValuePromise)
+				return convertExpressionResult(await firstRunPromise.promise)
 			}
-			const parseVariablesInString = async (str: string): Promise<ExecuteExpressionResult> => {
-				const streamId = `variable::${str}`
+			const parseExpression = async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> =>
+				runStream(`expression::${str}`, {
+					expression: str,
+					controlId: this.#controlId,
+					requiredType,
+					isVariableString: false,
+				})
 
-				// Mark it as active, so we don't unsubscribe
-				referencedExpressions.add(streamId)
-
-				// Reuse existing value
-				const existing = this.#latestValues.get(streamId)
-				if (existing) return convertExpressionResult(await existing)
-
-				// Start a new stream
-				const newValuePromise = this.#socket
-					.emitPromise('preview:stream-expression:subscribe', [str, this.#controlId, undefined, true])
-					.catch((e) => {
-						console.error('Failed to subscribe to expression', e)
-						return {
-							subId: '',
-							result: {
-								ok: false,
-								error: 'Failed to subscribe to string',
-							},
-						} satisfies ExpressionStreamResultWithSubId
-					})
-
-				// Track the new value, to avoid duplicateion
-				this.#latestValues.set(streamId, newValuePromise)
-
-				return convertExpressionResult(await newValuePromise)
-			}
+			const parseVariablesInString = async (str: string): Promise<ExecuteExpressionResult> =>
+				runStream(`variable::${str}`, {
+					expression: str,
+					controlId: this.#controlId,
+					requiredType: undefined,
+					isVariableString: true,
+				})
 
 			const [{ elements }, thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] =
 				await Promise.all([
@@ -141,7 +150,7 @@ class LayeredButtonDrawStyleParser {
 			// Unsubscribe from any streams that are no longer used
 			for (const [expression, sub] of this.#latestValues) {
 				if (!referencedExpressions.has(expression)) {
-					this.#unsubscribeExpression(sub)
+					sub.unsub()
 					this.#latestValues.delete(expression)
 				}
 			}
@@ -168,51 +177,19 @@ class LayeredButtonDrawStyleParser {
 		DRAW_DEBOUNCE,
 		DRAW_DEBOUNCE_MAX
 	)
-
-	#unsubscribeExpression(stream: ExpressionStreamResultWithSubId | Promise<ExpressionStreamResultWithSubId>): void {
-		Promise.resolve(stream)
-			.then(async (stream) => {
-				return this.#socket.emitPromise('preview:stream-expression:unsubscribe', [stream.subId])
-			})
-			.catch((e) => {
-				console.error('Failed to unsubscribe from stream', e)
-			})
-	}
-
-	#streamUpdate = (expression: string, result: ExpressionStreamResult, isVariableString: boolean) => {
-		if (this.#disposed) return
-
-		const streamId = `${isVariableString ? 'variable' : 'expression'}::${expression}`
-		const existing = this.#latestValues.get(streamId)
-		if (!existing) return
-
-		if (existing instanceof Promise) {
-			// Chain the promise, as we need to preserve the subId
-			this.#latestValues.set(
-				streamId,
-				existing.then((old) => ({ ...old, result }))
-			)
-		} else {
-			// Update to a concrete value
-			this.#latestValues.set(streamId, { ...existing, result })
-		}
-
-		// Queue update
-		this.#recalculateStyle.trigger()
-	}
 }
 
-function convertExpressionResult(fromValue: ExpressionStreamResultWithSubId): ExecuteExpressionResult {
-	if (fromValue.result.ok) {
+function convertExpressionResult(fromValue: ExpressionStreamResult): ExecuteExpressionResult {
+	if (fromValue.ok) {
 		return {
 			ok: true,
-			value: fromValue.result.value,
+			value: fromValue.value,
 			variableIds: emptySet,
 		}
 	} else {
 		return {
 			ok: false,
-			error: fromValue.result.error,
+			error: fromValue.error,
 			variableIds: emptySet,
 		}
 	}
@@ -229,8 +206,6 @@ export function useLayeredButtonDrawStyleParser(
 	controlId: string | null,
 	styleStore: LayeredStyleStore
 ): DrawStyleLayeredButtonModel | null {
-	const { socket } = useContext(RootAppStoreContext)
-
 	const [drawStyle, setDrawStyle] = useState<DrawStyleLayeredButtonModel | null>(null)
 	const [parser, setParser] = useState<LayeredButtonDrawStyleParser | null>(null)
 
@@ -239,7 +214,7 @@ export function useLayeredButtonDrawStyleParser(
 
 	// This is weird, but we need the cleanup function, so can't use useMemo
 	useEffect(() => {
-		const parser = new LayeredButtonDrawStyleParser(socket, controlId, setDrawStyle)
+		const parser = new LayeredButtonDrawStyleParser(controlId, setDrawStyle)
 		parser.updateStyle(toJS(styleStore.elements))
 
 		setParser(parser)
@@ -248,7 +223,7 @@ export function useLayeredButtonDrawStyleParser(
 			setParser(null)
 			parser.dispose()
 		}
-	}, [socket, controlId, styleStore, setDrawStyle])
+	}, [controlId, styleStore, setDrawStyle])
 
 	// Trigger the update whenever the style changes
 	useObserver(() => parser?.updateStyle(toJS(styleStore.elements)))

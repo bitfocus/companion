@@ -1,6 +1,6 @@
 import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
-import React, { MutableRefObject, useCallback, useContext, useMemo, useState } from 'react'
-import { SocketContext, PreventDefaultHandler } from '~/util.js'
+import React, { MutableRefObject, useCallback, useMemo, useState } from 'react'
+import { PreventDefaultHandler } from '~/util.js'
 import {
 	AlignmentInputField,
 	ColorInputField,
@@ -17,6 +17,7 @@ import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.j
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
+import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -33,25 +34,25 @@ export function ButtonStyleConfig({
 	localVariablesStore,
 	mainDialog = false,
 }: ButtonStyleConfigProps): React.JSX.Element {
-	const socket = useContext(SocketContext)
+	const setStyleFieldMutation = useMutationExt(trpc.controls.setStyleFields.mutationOptions())
 
 	const [pngError, setPngError] = useState<string | null>(null)
 	const setPng = useCallback(
 		(data: string | null) => {
 			setPngError(null)
-			socket
-				.emitPromise('controls:set-style-fields', [
+			setStyleFieldMutation
+				.mutateAsync({
 					controlId,
-					{
+					styleFields: {
 						png64: data,
 					},
-				])
+				})
 				.catch((e) => {
 					console.error('Failed to upload png', e)
 					setPngError('Failed to set png')
 				})
 		},
-		[socket, controlId]
+		[setStyleFieldMutation, controlId]
 	)
 
 	const setValueInner = useCallback(
@@ -61,19 +62,19 @@ export function ButtonStyleConfig({
 				!currentConfig ||
 				(currentConfig.type === 'button' && value !== currentConfig.style[key as keyof ButtonStyleProperties])
 			) {
-				socket
-					.emitPromise('controls:set-style-fields', [
+				setStyleFieldMutation
+					.mutateAsync({
 						controlId,
-						{
+						styleFields: {
 							[key]: value,
 						},
-					])
+					})
 					.catch((e) => {
 						console.error(`Set field failed: ${e}`)
 					})
 			}
 		},
-		[socket, controlId, configRef]
+		[setStyleFieldMutation, controlId, configRef]
 	)
 	const clearPng = useCallback(() => setValueInner('png64', null), [setValueInner])
 
