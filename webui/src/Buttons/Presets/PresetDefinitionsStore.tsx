@@ -46,7 +46,11 @@ export class PresetDefinitionsStore {
 		}
 	})
 }
-export function usePresetsDefinitions(store: PresetDefinitionsStore) {
+export function usePresetsDefinitions(store: PresetDefinitionsStore): {
+	isReady: boolean
+	loadError: string | null
+	restartSub: () => void
+} {
 	const [isReady, setIsReady] = useState(false)
 	const [loadError, setLoadError] = useState<string | null>(null)
 
