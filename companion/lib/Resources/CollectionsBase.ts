@@ -240,27 +240,27 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 			return
 		}
 
-		const matchedCollcetion = this.findCollectionAndParent(collectionId)
-		if (!matchedCollcetion) throw new Error(`Collection ${collectionId} not found`)
+		const matchedCollection = this.findCollectionAndParent(collectionId)
+		if (!matchedCollection) throw new Error(`Collection ${collectionId} not found`)
 
 		const newParentCollection = parentId ? this.findCollectionAndParent(parentId) : null
 		if (parentId && !newParentCollection) {
 			throw new Error(`Parent collection ${parentId} not found`)
 		}
 
-		if (parentId && this.#doesCollectionContainOtherCollection(matchedCollcetion.collection, parentId)) {
+		if (parentId && this.#doesCollectionContainOtherCollection(matchedCollection.collection, parentId)) {
 			// Can't move collection into its own child
 			return
 		}
 
-		const currentParentArray = matchedCollcetion.parentCollection
-			? matchedCollcetion.parentCollection.children
+		const currentParentArray = matchedCollection.parentCollection
+			? matchedCollection.parentCollection.children
 			: this.data
 
 		const currentIndex = currentParentArray.findIndex((child) => child.id === collectionId)
 		if (currentIndex === -1)
 			throw new Error(
-				`Collection ${collectionId} not found in parent ${matchedCollcetion.parentCollection?.id || 'root'}`
+				`Collection ${collectionId} not found in parent ${matchedCollection.parentCollection?.id || 'root'}`
 			)
 
 		// Remove from the old position
@@ -270,7 +270,7 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		})
 
 		const newParentArray = newParentCollection ? newParentCollection.collection.children : this.data
-		newParentArray.splice(dropIndex, 0, matchedCollcetion.collection) // Insert at the new position
+		newParentArray.splice(dropIndex, 0, matchedCollection.collection) // Insert at the new position
 		newParentArray.forEach((child, i) => {
 			child.sortOrder = i // Reset sortOrder for children
 		})
@@ -279,6 +279,11 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		// Note: this is being lazy, by writing every row, it could be optimized
 		for (const row of this.data) {
 			this.#dbTable.set(row.id, row)
+		}
+
+		// If the collection is being moved out of the root level, delete it from the db
+		if (!matchedCollection.parentCollection && newParentCollection) {
+			this.#dbTable.delete(collectionId)
 		}
 
 		// Inform the ui of the shuffle
