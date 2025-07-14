@@ -30,6 +30,8 @@ import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
 import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import { CompanionVariableValues } from '@companion-module/base'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 /**
  * The class that manages the controls
@@ -578,6 +580,22 @@ export class ControlsController {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)
 		}
+	}
+
+	createVariablesAndExpressionParser(
+		controlLocation: ControlLocation | null | undefined,
+		overrideVariableValues: CompanionVariableValues | null
+	): VariablesAndExpressionParser {
+		// const controlId = controlLocation && this.#registry.page.getControlIdAt(controlLocation)
+		// const control = controlId && this.getControl(controlId)
+
+		// const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
+
+		return this.#registry.variables.values.createVariablesAndExpressionParser(
+			controlLocation,
+			[], //variableEntities,
+			overrideVariableValues
+		)
 	}
 }
 

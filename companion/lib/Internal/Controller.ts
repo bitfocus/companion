@@ -80,7 +80,7 @@ export class InternalController {
 		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
 
-		const internalUtils = new InternalModuleUtils(variablesController)
+		const internalUtils = new InternalModuleUtils(controlsController)
 
 		this.#buildingBlocksFragment = new InternalBuildingBlocks(internalUtils)
 		this.#fragments = [
@@ -94,7 +94,7 @@ export class InternalController {
 			new InternalSurface(internalUtils, surfaceController, controlsController, pageController),
 			new InternalSystem(internalUtils, variablesController, requestExit),
 			new InternalTriggers(internalUtils, controlsController),
-			new InternalVariables(internalUtils, variablesController.values),
+			new InternalVariables(internalUtils, controlsController),
 		]
 
 		this.#init()

@@ -10,7 +10,6 @@
  */
 
 import LogController from '../Log/Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -24,6 +23,7 @@ import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import type { FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
+import type { ControlsController } from '../Controls/Controller.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -53,18 +53,18 @@ function compareValues(op: any, value: any, value2: any): boolean {
 
 export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #internalUtils: InternalModuleUtils
-	readonly #variableController: VariablesValues
+	readonly #controlsController: ControlsController
 
 	/**
 	 * The dependencies of variables that should retrigger each feedback
 	 */
 	#variableSubscriptions = new Map<string, string[]>()
 
-	constructor(internalUtils: InternalModuleUtils, variableController: VariablesValues) {
+	constructor(internalUtils: InternalModuleUtils, controlsController: ControlsController) {
 		super()
 
 		this.#internalUtils = internalUtils
-		this.#variableController = variableController
+		this.#controlsController = controlsController
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -168,7 +168,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				feedback
 			)
 
-			this.#variableSubscriptions.set(feedback.id, result.variableIds)
+			this.#variableSubscriptions.set(feedback.id, Array.from(result.variableIds))
 
 			return compareValues(feedback.options.op, result.text, feedback.options.value)
 		} else if (feedback.definitionId == 'variable_variable') {
@@ -185,7 +185,8 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.definitionId == 'check_expression') {
-			const res = this.#variableController.executeExpression(feedback.options.expression, feedback.location, 'boolean')
+			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.location, null)
+			const res = parser.executeExpression(feedback.options.expression, 'boolean')
 
 			this.#variableSubscriptions.set(feedback.id, Array.from(res.variableIds))
 

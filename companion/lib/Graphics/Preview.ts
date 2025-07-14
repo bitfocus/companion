@@ -2,13 +2,13 @@ import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
 import type { GraphicsController } from './Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
 import type { PageController } from '../Page/Controller.js'
-import { ImageResult } from './ImageResult.js'
+import type { ImageResult } from './ImageResult.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
+import type { ControlsController } from '../Controls/Controller.js'
 
 export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),
@@ -45,7 +45,7 @@ export class GraphicsPreview {
 
 	readonly #graphicsController: GraphicsController
 	readonly #pageController: PageController
-	readonly #variablesController: VariablesValues
+	readonly #controlsController: ControlsController
 
 	readonly #buttonReferencePreviews = new Map<string, PreviewSession>()
 
@@ -54,11 +54,11 @@ export class GraphicsPreview {
 	constructor(
 		graphicsController: GraphicsController,
 		pageController: PageController,
-		variablesController: VariablesValues
+		controlsController: ControlsController
 	) {
 		this.#graphicsController = graphicsController
 		this.#pageController = pageController
-		this.#variablesController = variablesController
+		this.#controlsController = controlsController
 
 		this.#graphicsController.on('button_drawn', this.#updateButton.bind(this))
 		this.#renderEvents.setMaxListeners(0)
@@ -125,14 +125,10 @@ export class GraphicsPreview {
 						// Start wathing for changes to the reference
 						const changes = toIterable(self.#renderEvents, `reference:${id}`, signal)
 
+						const parser = self.#controlsController.createVariablesAndExpressionParser(location, null)
+
 						// Do a resolve of the reference for the starting image
-						const result = ParseInternalControlReference(
-							self.#logger,
-							self.#variablesController,
-							location,
-							options,
-							true
-						)
+						const result = ParseInternalControlReference(self.#logger, parser, location, options, true)
 
 						// Track the subscription, to allow it to be invalidated
 						self.#buttonReferencePreviews.set(id, {
@@ -195,10 +191,12 @@ export class GraphicsPreview {
 			)
 			if (!matchingChangedVariable) continue
 
+			const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.location, null)
+
 			// Resolve the new location
 			const result = ParseInternalControlReference(
 				this.#logger,
-				this.#variablesController,
+				parser,
 				previewSession.location,
 				previewSession.options,
 				true

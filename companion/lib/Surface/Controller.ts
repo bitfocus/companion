@@ -1313,17 +1313,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		surfaceId: string,
 		injectedVariableValues: CompanionVariableValues | undefined
 	) {
-		const injectedVariableValuesComplete = {
-			...this.#getInjectedVariablesForSurfaceId(surfaceId),
+		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
 			...injectedVariableValues,
-		}
+			...this.#getInjectedVariablesForSurfaceId(surfaceId),
+		})
 
-		return this.#handlerDependencies.variables.values.executeExpression(
-			str,
-			undefined,
-			undefined,
-			injectedVariableValuesComplete
-		)
+		return parser.executeExpression(str, undefined)
 	}
 
 	/**

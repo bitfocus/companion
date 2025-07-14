@@ -14,6 +14,8 @@ import { cloneDeep } from 'lodash-es'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import type { CompanionVariableValues } from '@companion-module/base'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 
 interface CurrentStepFromExpression {
 	type: 'expression'
@@ -21,7 +23,7 @@ interface CurrentStepFromExpression {
 	expression: string
 
 	lastStepId: string
-	lastVariables: Set<string>
+	lastVariables: ReadonlySet<string>
 }
 interface CurrentStepFromId {
 	type: 'id'
@@ -41,7 +43,11 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	readonly #steps = new Map<string, ControlEntityListActionStep>()
 
-	readonly #executeExpressionInControl: ControlEntityListPoolProps['executeExpressionInControl']
+	readonly #executeExpressionInControl: (
+		expression: string,
+		requiredType?: string,
+		injectedVariableValues?: CompanionVariableValues
+	) => ExecuteExpressionResult
 	readonly #sendRuntimePropsChange: () => void
 
 	/**
@@ -63,10 +69,18 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		}
 	}
 
-	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void) {
+	constructor(
+		props: ControlEntityListPoolProps,
+		sendRuntimePropsChange: () => void,
+		executeExpressionInControl: (
+			expression: string,
+			requiredType?: string,
+			injectedVariableValues?: CompanionVariableValues
+		) => ExecuteExpressionResult
+	) {
 		super(props)
 
-		this.#executeExpressionInControl = props.executeExpressionInControl
+		this.#executeExpressionInControl = executeExpressionInControl
 		this.#sendRuntimePropsChange = sendRuntimePropsChange
 
 		this.#feedbacks = new ControlEntityList(

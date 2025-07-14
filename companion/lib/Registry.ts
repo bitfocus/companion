@@ -145,7 +145,7 @@ export class Registry {
 	 */
 	readonly #internalApiRouter = express.Router()
 
-	variables!: VariablesController
+	readonly variables: VariablesController
 
 	readonly #appInfo: AppInfo
 
@@ -183,6 +183,8 @@ export class Registry {
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
+
+		this.variables = new VariablesController(this.db)
 	}
 
 	/**
@@ -199,9 +201,8 @@ export class Registry {
 
 			this.page = new PageController(this)
 			this.controls = new ControlsController(this, controlEvents)
-			this.variables = new VariablesController(this.db)
 			this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
-			this.preview = new GraphicsPreview(this.graphics, this.page, this.variables.values)
+			this.preview = new GraphicsPreview(this.graphics, this.page, this.controls)
 			this.surfaces = new SurfaceController(this.db, {
 				controls: this.controls,
 				graphics: this.graphics,
