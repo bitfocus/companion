@@ -11,7 +11,7 @@
 
 import LogController from '../Log/Controller.js'
 import type { ActionRecorder } from '../Controls/ActionRecorder.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -36,14 +36,14 @@ export class InternalActionRecorder
 
 	readonly #internalUtils: InternalModuleUtils
 	readonly #actionRecorder: ActionRecorder
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 
-	constructor(internalUtils: InternalModuleUtils, actionRecorder: ActionRecorder, pageController: PageController) {
+	constructor(internalUtils: InternalModuleUtils, actionRecorder: ActionRecorder, pageStore: IPageStore) {
 		super()
 
 		this.#internalUtils = internalUtils
 		this.#actionRecorder = actionRecorder
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 
 		setImmediate(() => {
 			this.emit('setVariables', {
@@ -231,12 +231,12 @@ export class InternalActionRecorder
 
 				if (page === 0) page = extras.location?.pageNumber ?? 0
 				if (bank === 0 && extras.location) {
-					controlId = this.#pageController.getControlIdAt({
+					controlId = this.#pageStore.getControlIdAt({
 						...extras.location,
 						pageNumber: page,
 					})
 				} else if (bank > 0) {
-					controlId = this.#pageController.getControlIdAtOldBankIndex(page, bank)
+					controlId = this.#pageStore.getControlIdAtOldBankIndex(page, bank)
 				}
 
 				if (!controlId) return true

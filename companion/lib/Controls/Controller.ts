@@ -141,7 +141,7 @@ export class ControlsController {
 			dbTable: this.#dbTable,
 			graphics: this.#registry.graphics,
 			surfaces: this.#registry.surfaces,
-			page: this.#registry.page,
+			pageStore: this.#registry.page.store,
 			internalModule: this.#registry.internalModule,
 			instance: this.#registry.instance,
 			variables: this.#registry.variables,
@@ -206,7 +206,7 @@ export class ControlsController {
 			...createControlsTrpcRouter(
 				this.#logger,
 				this.#controls,
-				this.#registry.page,
+				this.#registry.page.store,
 				this.#registry.instance.definitions,
 				this.#registry.graphics,
 				this
@@ -346,7 +346,7 @@ export class ControlsController {
 		}
 
 		// Delete old control at the coordinate
-		const oldControlId = this.#registry.page.getControlIdAt(location)
+		const oldControlId = this.#registry.page.store.getControlIdAt(location)
 		if (oldControlId) {
 			this.deleteControl(oldControlId)
 		}
@@ -485,7 +485,7 @@ export class ControlsController {
 			this.#dbTable.delete(controlId)
 		}
 
-		const location = this.#registry.page.getLocationOfControlId(controlId)
+		const location = this.#registry.page.store.getLocationOfControlId(controlId)
 		if (location) {
 			this.#registry.page.setControlIdAt(location, null)
 
@@ -518,7 +518,7 @@ export class ControlsController {
 	 * @access public
 	 */
 	createButtonControl(location: ControlLocation, newType: string): string | null {
-		if (!this.#registry.page.isPageValid(location.pageNumber)) return null
+		if (!this.#registry.page.store.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
 		const newControl = this.createClassForControl(controlId, 'button', newType, false)

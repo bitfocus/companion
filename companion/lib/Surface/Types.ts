@@ -12,7 +12,7 @@ import type { CompanionVariableValue, CompanionVariableValues } from '@companion
 import type { ControlsController } from '../Controls/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { EmulatorPageConfig, EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
@@ -93,7 +93,7 @@ export interface SurfaceHandlerDependencies {
 	/**
 	 * The core page controller
 	 */
-	readonly page: PageController
+	readonly pageStore: IPageStore
 	/**
 	 * The core user config manager
 	 */

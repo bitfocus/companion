@@ -81,7 +81,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 			(expression, requiredType, injectedVariableValues) =>
 				deps.variables.values
 					.createVariablesAndExpressionParser(
-						deps.page.getLocationOfControlId(this.controlId),
+						deps.pageStore.getLocationOfControlId(this.controlId),
 						null, // This doesn't support local variables
 						injectedVariableValues ?? null
 					)
@@ -301,7 +301,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 			if (step) {
 				let actionSetId: ActionSetId = pressed ? 'down' : 'up'
 
-				const location = this.deps.page.getLocationOfControlId(this.controlId)
+				const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 
 				if (!pressed && pressedDuration) {
 					// find the correct set to execute on up
@@ -362,7 +362,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	rotateControl(direction: boolean, surfaceId: string | undefined): void {
 		const actions = this.entities.getActionsToExecuteForSet(direction ? 'rotate_right' : 'rotate_left')
 
-		const location = this.deps.page.getLocationOfControlId(this.controlId)
+		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 
 		this.logger.silly(`found ${actions.length} actions`)
 		this.actionRunner
@@ -390,7 +390,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		if (this.pushed !== wasPushed) {
 			// TODO - invalidate feedbacks?
 
-			const location = this.deps.page.getLocationOfControlId(this.controlId)
+			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 			if (location) {
 				this.deps.events.emit('updateButtonState', location, this.pushed, surfaceId)
 				// this.deps.services.emberplus.updateButtonState(location, this.pushed, surfaceId)

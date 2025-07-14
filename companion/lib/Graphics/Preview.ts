@@ -2,7 +2,7 @@ import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
 import type { GraphicsController } from './Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { ImageResult } from './ImageResult.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
@@ -44,20 +44,16 @@ export class GraphicsPreview {
 	readonly #logger = LogController.createLogger('Graphics/Preview')
 
 	readonly #graphicsController: GraphicsController
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 	readonly #controlsController: ControlsController
 
 	readonly #buttonReferencePreviews = new Map<string, PreviewSession>()
 
 	readonly #renderEvents = new EventEmitter<PreviewRenderEvents>()
 
-	constructor(
-		graphicsController: GraphicsController,
-		pageController: PageController,
-		controlsController: ControlsController
-	) {
+	constructor(graphicsController: GraphicsController, pageStore: IPageStore, controlsController: ControlsController) {
 		this.#graphicsController = graphicsController
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 		this.#controlsController = controlsController
 
 		this.#graphicsController.on('button_drawn', this.#updateButton.bind(this))
@@ -99,7 +95,7 @@ export class GraphicsPreview {
 					const changes = toIterable(self.#renderEvents, `controlId:${controlId}`, signal)
 
 					// Send the preview image shortly after
-					const location = self.#pageController.getLocationOfControlId(controlId)
+					const location = self.#pageStore.getLocationOfControlId(controlId)
 					const originalImg = location ? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location) : null
 					yield originalImg?.asDataUrl ?? null
 
@@ -160,7 +156,7 @@ export class GraphicsPreview {
 	 */
 	#updateButton(location: ControlLocation, render: ImageResult): void {
 		// Push the updated render to any clients viewing a preview of a control
-		const controlId = this.#pageController.getControlIdAt(location)
+		const controlId = this.#pageStore.getControlIdAt(location)
 		if (controlId) {
 			this.#renderEvents.emit(`controlId:${controlId}`, render.asDataUrl)
 		}
