@@ -26,7 +26,7 @@ export function useTriggerCollectionsApi(
 				deleteCollection: (collectionId: string) => {
 					confirmModalRef.current?.show(
 						'Delete Collection',
-						'Are you sure you want to delete this collection? All connections in this collection will be moved to Ungrouped Connections.',
+						'Are you sure you want to delete this collection? All triggers in this collection will be moved to Ungrouped Triggers.',
 						'Delete',
 						() => {
 							deleteMutation.mutateAsync({ collectionId }).catch((e) => {
