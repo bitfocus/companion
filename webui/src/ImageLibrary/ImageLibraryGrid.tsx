@@ -7,7 +7,6 @@ import { observer } from 'mobx-react-lite'
 import { ImageThumbnail } from './ImageThumbnail'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { ImageCacheProvider, ImageUrlCache } from './ImageCache'
 import { ImageAddModal, type ImageAddModalRef } from './ImageAddModal'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import type {
@@ -45,8 +44,6 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	const [searchQuery, setSearchQuery] = useState('')
 	const addModalRef = useRef<ImageAddModalRef>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
-
-	const imageCache = useMemo(() => new ImageUrlCache(), [])
 
 	const handleCreateNew = useCallback(() => addModalRef.current?.show(), [])
 
@@ -103,54 +100,52 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	// }, [socket, imageCache])
 
 	return (
-		<ImageCacheProvider cache={imageCache}>
-			<div className="image-library-grid">
-				<GenericConfirmModal ref={confirmModalRef} />
-				<ImageAddModal ref={addModalRef} onImageCreated={onSelectImage} />
+		<div className="image-library-grid">
+			<GenericConfirmModal ref={confirmModalRef} />
+			<ImageAddModal ref={addModalRef} onImageCreated={onSelectImage} />
 
-				<div className="image-library-header">
-					<h4>Image Library</h4>
-					<p>
-						Here you can store images to be reused in your buttons. They get exposed as variables, and can be used
-						anywhere variables usually can.
-					</p>
+			<div className="image-library-header">
+				<h4>Image Library</h4>
+				<p>
+					Here you can store images to be reused in your buttons. They get exposed as variables, and can be used
+					anywhere variables usually can.
+				</p>
 
-					<div className="image-library-controls">
-						<div className="d-flex gap-2 mb-3">
-							<CButtonGroup>
-								<CButton color="primary" size="sm" onClick={handleCreateNew}>
-									<FontAwesomeIcon icon={faPlus} /> Add Image
-								</CButton>
-								<CreateCollectionButton />
-							</CButtonGroup>
-						</div>
-
-						<CFormInput
-							type="text"
-							placeholder="Search images..."
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-						/>
+				<div className="image-library-controls">
+					<div className="d-flex gap-2 mb-3">
+						<CButtonGroup>
+							<CButton color="primary" size="sm" onClick={handleCreateNew}>
+								<FontAwesomeIcon icon={faPlus} /> Add Image
+							</CButton>
+							<CreateCollectionButton />
+						</CButtonGroup>
 					</div>
-				</div>
 
-				<div className="image-library-grid-content">
-					<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={allCollectionIds}>
-						<CollectionsNestingTable
-							ItemRow={ItemRow}
-							itemName="image"
-							dragId="image-library"
-							collectionsApi={collectionsApi}
-							selectedItemId={selectedImageName}
-							gridLayout={true}
-							collections={collections}
-							items={imageItems}
-							NoContent={NoContent}
-						/>
-					</PanelCollapseHelperProvider>
+					<CFormInput
+						type="text"
+						placeholder="Search images..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
 				</div>
 			</div>
-		</ImageCacheProvider>
+
+			<div className="image-library-grid-content">
+				<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={allCollectionIds}>
+					<CollectionsNestingTable
+						ItemRow={ItemRow}
+						itemName="image"
+						dragId="image-library"
+						collectionsApi={collectionsApi}
+						selectedItemId={selectedImageName}
+						gridLayout={true}
+						collections={collections}
+						items={imageItems}
+						NoContent={NoContent}
+					/>
+				</PanelCollapseHelperProvider>
+			</div>
+		</div>
 	)
 })
 

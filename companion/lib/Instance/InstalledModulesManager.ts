@@ -55,7 +55,7 @@ export class InstanceInstalledModulesManager {
 	readonly #multipartUploader = new MultipartUploader(
 		'Instance/UserModulesManager',
 		MAX_MODULE_BUNDLE_TAR_SIZE,
-		async (_name, data, updateProgress) => {
+		async (_name, data, _userData, updateProgress) => {
 			const decompressedData = await gunzipP(data)
 			if (!decompressedData) {
 				this.#logger.error(`Failed to decompress module data`)

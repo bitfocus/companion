@@ -106,8 +106,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 					// Start upload
 					const sessionId = await startUploadMutation.mutateAsync({
-						name: selectedImageName, // The target of the upload for now
-						size: file.size,
+						name: file.name,
+						size: data.byteLength,
 					})
 					if (!sessionId) throw new Error('Failed to start upload')
 
@@ -131,6 +131,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					await completeUploadMutation.mutateAsync({
 						sessionId,
 						expectedChecksum: checksum,
+						userData: { imageName: selectedImageName }, // Pass the image name as user data
 					})
 
 					// The store will be updated automatically via subscription

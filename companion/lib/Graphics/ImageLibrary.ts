@@ -30,7 +30,7 @@ export interface ImageLibraryData {
 export class ImageLibrary {
 	readonly #logger = LogController.createLogger('Graphics/ImageLibrary')
 	readonly #dbTable: DataStoreTableView<Record<string, ImageLibraryData>>
-	readonly #multipartUploader: MultipartUploader<string>
+	readonly #multipartUploader: MultipartUploader<string, { imageName: string }>
 	readonly #graphicsController: GraphicsController
 	readonly #variablesController: VariablesController
 	readonly #collections: ImageLibraryCollections
@@ -47,13 +47,13 @@ export class ImageLibrary {
 		this.#multipartUploader = new MultipartUploader(
 			'Graphics/ImageLibrary',
 			MAX_IMPORT_FILE_SIZE,
-			async (imageName, data) => {
+			async (_name, data, userData) => {
 				// Process the uploaded image data and update the existing image
-				const imageInfo = await this.#updateImageWithData(imageName, data)
+				const imageInfo = await this.#updateImageWithData(userData.imageName, data)
 
-				this.#events.emit('update', [{ type: 'update', itemName: imageName, info: imageInfo.info }])
+				this.#events.emit('update', [{ type: 'update', itemName: userData.imageName, info: imageInfo.info }])
 
-				return imageName
+				return userData.imageName
 			}
 		)
 

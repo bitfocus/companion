@@ -5,7 +5,7 @@ import { makeAbsolutePath } from './util.js'
 import { DefaultError, QueryClient, useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
-export { AppRouter, RouterInput, RouterOutput } from '../../companion/lib/UI/TRPC.js'
+export type { AppRouter, RouterInput, RouterOutput } from '../../companion/lib/UI/TRPC.js'
 
 export const queryClient = new QueryClient()
 

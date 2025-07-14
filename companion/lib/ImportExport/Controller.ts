@@ -112,10 +112,10 @@ export class ImportExportController {
 
 	readonly #exportController: ExportController
 
-	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null]>(
+	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null], null>(
 		'ImportExport/Controller',
 		MAX_IMPORT_FILE_SIZE,
-		async (_name, data, _updateProgress, sessionCtx) => {
+		async (_name, data, _userData, _updateProgress, sessionCtx) => {
 			let dataStr: string
 			try {
 				dataStr = await new Promise((resolve, reject) => {
