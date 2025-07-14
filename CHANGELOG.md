@@ -1,5 +1,19 @@
 # Bitfocus Companion
 
+## Companion v4.0.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Button step feedbacks not reactive to variables #3531
+- Validate module version number before installing or loading
+- Checkboes jumping in safari (#3548)
+- Variables page not scrolling #3544
+- Stream Deck Network Dock not allowing backlight brightness control
+- Add slider to surface brightness field
+- Some module static-text values being interpreted as code blocks #3540
+- Fix connections being called with feedbacks of other connections
+- Unable to run with companion config on windows network shares #3510
+
 ## Companion v4.0.2 - Release Notes
 
 ### 🐞 BUG FIXES
