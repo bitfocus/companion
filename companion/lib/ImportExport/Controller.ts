@@ -14,7 +14,7 @@ import { cloneDeep } from 'lodash-es'
 import { CreateTriggerControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
 import yaml from 'yaml'
 import zlib from 'node:zlib'
-import { ReferencesVisitors } from '../Resources/Visitors/ReferencesVisitors.js'
+import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
 import type express from 'express'
@@ -594,12 +594,28 @@ export class ImportExportController {
 		// Import the new page
 		this.#pagesController.setPageName(topage, pageInfo.name)
 
+		const connectionLabelRemap: Record<string, string> = {}
+		const connectionIdRemap: Record<string, string> = {}
+		for (const [oldId, info] of Object.entries(instanceIdMap)) {
+			if (info.oldLabel && info.label !== info.oldLabel) {
+				connectionLabelRemap[info.oldLabel] = info.label
+			}
+			if (info.id && info.id !== oldId) {
+				connectionIdRemap[oldId] = info.id
+			}
+		}
+		const referencesUpdater = new VisitorReferencesUpdater(
+			this.#internalModule,
+			connectionLabelRemap,
+			connectionIdRemap
+		)
+
 		// Import the controls
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 			for (const [column, control] of Object.entries(rowObj)) {
 				if (control) {
 					// Import the control
-					const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
+					const fixedControlObj = this.#fixupControl(cloneDeep(control), referencesUpdater, instanceIdMap)
 
 					const location: ControlLocation = {
 						pageNumber: Number(topage),
@@ -769,39 +785,23 @@ export class ImportExportController {
 			result.actions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.actions))
 		}
 
-		ReferencesVisitors.fixupControlReferences(
-			this.#internalModule,
-			{
-				connectionLabels: connectionLabelRemap,
-				connectionIds: connectionIdRemap,
-			},
-			undefined,
-			result.condition.concat(result.actions),
-			[],
-			result.events || [],
-			false
-		)
+		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
+			.visitEntities([], result.condition.concat(result.actions))
+			.visitEvents(result.events || [])
 
 		return result
 	}
 
-	#fixupControl(control: ExportControlv6, instanceIdMap: InstanceAppliedRemappings): SomeButtonModel {
+	#fixupControl(
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	): SomeButtonModel {
 		// Future: this does not feel durable
 
 		if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
 			return {
 				type: control.type,
-			}
-		}
-
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
 			}
 		}
 
@@ -846,18 +846,7 @@ export class ImportExportController {
 			}
 		}
 
-		ReferencesVisitors.fixupControlReferences(
-			this.#internalModule,
-			{
-				connectionLabels: connectionLabelRemap,
-				connectionIds: connectionIdRemap,
-			},
-			result.style,
-			allEntities,
-			[],
-			[],
-			false
-		)
+		referencesUpdater.visitEntities([], allEntities).visitButtonDrawStlye(result.style)
 
 		return result
 	}

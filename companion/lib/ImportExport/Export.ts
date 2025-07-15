@@ -123,8 +123,14 @@ export class ExportController {
 
 			const referencedConnectionIds = new Set<string>()
 			const referencedConnectionLabels = new Set<string>()
+			const referencedVariables = new Set<string>()
 
-			const pageExport = this.#generatePageExportInfo(pageInfo, referencedConnectionIds, referencedConnectionLabels)
+			const pageExport = this.#generatePageExportInfo(
+				pageInfo,
+				referencedConnectionIds,
+				referencedConnectionLabels,
+				referencedVariables
+			)
 
 			// Collect referenced connections and  collections
 			const instancesExport = this.#generateReferencedConnectionConfigs(
@@ -284,6 +290,7 @@ export class ExportController {
 		const triggersExport: ExportTriggerContentv6 = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
+		const referencedVariables = new Set<string>()
 		const referencedCollectionIds = new Set<string>()
 
 		for (const control of triggerControls) {
@@ -291,7 +298,11 @@ export class ExportController {
 			if (parsedId?.type === 'trigger') {
 				triggersExport[parsedId.trigger] = control.toJSON(false)
 
-				control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+				control.collectReferencedConnectionsAndVariables(
+					referencedConnectionIds,
+					referencedConnectionLabels,
+					referencedVariables
+				)
 
 				// Collect referenced collection IDs
 				if (control.options.collectionId) {
@@ -393,7 +404,8 @@ export class ExportController {
 	#generatePageExportInfo(
 		pageInfo: PageModel,
 		referencedConnectionIds: Set<string>,
-		referencedConnectionLabels: Set<string>
+		referencedConnectionLabels: Set<string>,
+		referencedVariables: Set<string>
 	): ExportPageContentv6 {
 		const pageExport: ExportPageContentv6 = {
 			id: pageInfo.id,
@@ -409,7 +421,11 @@ export class ExportController {
 					if (!pageExport.controls[Number(row)]) pageExport.controls[Number(row)] = {}
 					pageExport.controls[Number(row)][Number(column)] = control.toJSON(false)
 
-					control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
 				}
 			}
 		}
@@ -429,6 +445,7 @@ export class ExportController {
 
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
+		const referencedVariables = new Set<string>()
 
 		if (!config || !isFalsey(config.buttons)) {
 			exp.pages = {}
@@ -438,7 +455,8 @@ export class ExportController {
 				exp.pages[Number(pageNumber)] = this.#generatePageExportInfo(
 					rawPageInfo,
 					referencedConnectionIds,
-					referencedConnectionLabels
+					referencedConnectionLabels,
+					referencedVariables
 				)
 			}
 		}
@@ -451,7 +469,11 @@ export class ExportController {
 					if (parsedId?.type === 'trigger') {
 						triggersExport[parsedId.trigger] = control.toJSON(false)
 
-						control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+						control.collectReferencedConnectionsAndVariables(
+							referencedConnectionIds,
+							referencedConnectionLabels,
+							referencedVariables
+						)
 					}
 				}
 			}

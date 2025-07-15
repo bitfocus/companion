@@ -1,5 +1,6 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep, omit } from 'lodash-es'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	ControlWithActionSets,
@@ -7,7 +8,6 @@ import type {
 	ControlWithStyle,
 	ControlWithoutEvents,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type {
 	NormalButtonModel,
 	NormalButtonOptions,
@@ -176,21 +176,19 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Collect the instance ids and labels referenced by this control
+	 * Collect the instance ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
+	 * @param foundVariables - variables being referenced
 	 */
-	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
-		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
-
-		ReferencesVisitors.visitControlReferences(
-			this.deps.internalModule,
-			visitor,
-			this.#baseStyle,
-			[],
-			this.entities.getAllEntities(),
-			[]
-		)
+	collectReferencedConnectionsAndVariables(
+		foundConnectionIds: Set<string>,
+		foundConnectionLabels: Set<string>,
+		foundVariables: Set<string>
+	): void {
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
+			.visitButtonDrawStlye(this.#baseStyle)
+			.visitEntities(this.entities.getAllEntities(), [])
 	}
 
 	/**
@@ -202,15 +200,11 @@ export class ControlButtonNormal
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			this.#baseStyle,
-			[],
-			allEntities,
-			[],
-			true
-		)
+		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+			.visitButtonDrawStlye(this.#baseStyle)
+			.visitEntities(allEntities, [])
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
 		// redraw if needed and save changes
 		this.commitChange(changed)
