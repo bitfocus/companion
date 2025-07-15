@@ -477,7 +477,7 @@ export class ImportExportController {
 					if (data.type !== 'full') throw new Error('Invalid import object')
 
 					// Destroy old stuff
-					await this.#reset(undefined, !input || input.buttons)
+					await this.#reset({ ...input, connections: true, userconfig: false }, !input || input.buttons)
 
 					// import custom variables
 					if (!input || input.customVariables) {

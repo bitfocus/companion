@@ -187,7 +187,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 			<p>&nbsp;</p>
 
-			<p>Perform a full reset, and import the selected components:</p>
+			<p>Reset and import the selected components:</p>
 
 			{/* <InputCheckbox
 				config={config}
