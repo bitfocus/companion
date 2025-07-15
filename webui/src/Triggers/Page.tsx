@@ -96,9 +96,10 @@ export const TriggersPage = observer(function Triggers() {
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
 			<CCol xs={12} xl={6} className="primary-panel">
-				<h4>Triggers and schedules</h4>
+				<h4>Triggers</h4>
 				<p style={{ marginBottom: '0.5rem' }}>
-					This allows you to run actions based on Companion, feedback or time events.
+					Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
+					variable updates.
 				</p>
 
 				<div className="mb-2">
