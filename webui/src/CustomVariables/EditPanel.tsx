@@ -1,7 +1,7 @@
 import { CAlert, CCol, CForm, CFormLabel } from '@coreui/react'
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { LoadingRetryOrError, MyErrorBoundary, PreventDefaultHandler } from '~/util.js'
+import { LoadingBar, LoadingRetryOrError, MyErrorBoundary, PreventDefaultHandler } from '~/util.js'
 import { TextInputField } from '~/Components/index.js'
 import { EntityModelType, FeedbackEntitySubType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { CustomVariableOptions } from '@companion-app/shared/Model/CustomVariableModel.js'
@@ -19,6 +19,8 @@ import { EntityManageChildGroups } from '~/Controls/Components/EntityChildGroup'
 import { EntityCommonCells } from '~/Controls/Components/EntityCommonCells'
 import { useControlConfig } from '~/Hooks/useControlConfig'
 import { trpc, useMutationExt } from '~/TRPC'
+import { VariableValueDisplay } from '~/Components/VariableValueDisplay'
+import { useSubscription } from '@trpc/tanstack-react-query'
 
 interface EditCustomVariablePanelProps {
 	controlId: string
@@ -70,6 +72,10 @@ interface CustomVariableConfigProps {
 }
 
 function CustomVariableConfig({ controlId, options }: CustomVariableConfigProps) {
+	const { customVariablesList } = useContext(RootAppStoreContext)
+
+	const customVariableDefinition = customVariablesList.customVariables.get(controlId)
+
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	const setValueInner = useCallback(
@@ -108,6 +114,15 @@ function CustomVariableConfig({ controlId, options }: CustomVariableConfigProps)
 				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Description</CFormLabel>
 				<CCol xs={8}>
 					<TextInputField setValue={setDescription} value={options.description} />
+				</CCol>
+
+				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</CFormLabel>
+				<CCol xs={8}>
+					{customVariableDefinition?.isActive ? (
+						<CustomVariableCurrentValue name={options.variableName} />
+					) : (
+						<small>Variable is not active (the name is either empty or in use elsewhere)</small>
+					)}
 				</CCol>
 			</CForm>
 		</CCol>
@@ -216,3 +231,30 @@ const CustomVariableSoleEntityEditor = observer(function CustomVariableSoleEntit
 		</>
 	)
 })
+
+function CustomVariableCurrentValue({ name }: { name: string }) {
+	const { notifier } = useContext(RootAppStoreContext)
+
+	const onCopied = useCallback(() => notifier.current?.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
+
+	const sub = useSubscription(
+		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
+			{
+				controlId: null,
+				expression: `$(custom:${name})`,
+				isVariableString: false,
+			},
+			{}
+		)
+	)
+
+	if (!sub.data) {
+		return <LoadingBar />
+	}
+
+	if (!sub.data.ok) {
+		return <CAlert color="danger">Error: {sub.data.error}</CAlert>
+	}
+
+	return <VariableValueDisplay value={sub.data.value} onCopied={onCopied} />
+}
