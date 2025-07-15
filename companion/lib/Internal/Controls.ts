@@ -26,7 +26,7 @@ import type {
 } from './Types.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -129,7 +129,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 	readonly #internalUtils: InternalModuleUtils
 	readonly #graphicsController: GraphicsController
 	readonly #controlsController: ControlsController
-	readonly #pagesController: PageController
+	readonly #pageStore: IPageStore
 
 	/**
 	 * The dependencies of locations that should retrigger each feedback
@@ -140,14 +140,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		internalUtils: InternalModuleUtils,
 		graphicsController: GraphicsController,
 		controlsController: ControlsController,
-		pagesController: PageController
+		pageStore: IPageStore
 	) {
 		super()
 
 		this.#internalUtils = internalUtils
 		this.#graphicsController = graphicsController
 		this.#controlsController = controlsController
-		this.#pagesController = pagesController
+		this.#pageStore = pageStore
 
 		const pendingLocationInvalidations = new Set<string>()
 		const debounceCheckFeedbacks = debounceFn(
@@ -217,7 +217,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			useVariableFields
 		)
 
-		const theControlId = result.location ? this.#pagesController.getControlIdAt(result.location) : null
+		const theControlId = result.location ? this.#pageStore.getControlIdAt(result.location) : null
 
 		return {
 			theControlId,
@@ -952,7 +952,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const { thePage } = this.#fetchPage(action.rawOptions, extras)
 			if (thePage === null) return true
 
-			const controlIdsOnPage = this.#pagesController.getAllControlIdsOnPage(thePage)
+			const controlIdsOnPage = this.#pageStore.getAllControlIdsOnPage(thePage)
 			for (const controlId of controlIdsOnPage) {
 				if (action.rawOptions.ignoreSelf && controlId === extras.controlId) continue
 

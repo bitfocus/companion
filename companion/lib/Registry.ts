@@ -6,7 +6,6 @@ import LogController, { Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
 import { GraphicsController } from './Graphics/Controller.js'
-import { GraphicsPreview } from './Graphics/Preview.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
 import { DataUserConfig } from './Data/UserConfig.js'
@@ -16,7 +15,6 @@ import { PageController } from './Page/Controller.js'
 import { ServiceController } from './Service/Controller.js'
 import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
-import { UIHandler } from './UI/Handler.js'
 import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
@@ -27,6 +25,8 @@ import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
 import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { createTrpcRouter } from './UI/TRPC.js'
+import { PageStore } from './Page/Store.js'
+import { PreviewController } from './Preview/Controller.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -98,10 +98,6 @@ export class Registry {
 	 */
 	instance!: InstanceController
 	/**
-	 * The core interface client
-	 */
-	readonly io: UIHandler
-	/**
 	 * The logger
 	 */
 	#logger: Logger
@@ -112,7 +108,7 @@ export class Registry {
 	/**
 	 * The core page controller
 	 */
-	preview!: GraphicsPreview
+	preview!: PreviewController
 	/**
 	 * The core service controller
 	 */
@@ -150,7 +146,7 @@ export class Registry {
 	 */
 	readonly #internalApiRouter = express.Router()
 
-	variables!: VariablesController
+	readonly variables: VariablesController
 
 	readonly #appInfo: AppInfo
 
@@ -183,12 +179,13 @@ export class Registry {
 		this.#logger.debug('constructing core modules')
 
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
-		this.io = this.ui.io
 		LogController.init(this.#appInfo)
 
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
+
+		this.variables = new VariablesController(this.db)
 	}
 
 	/**
@@ -203,15 +200,15 @@ export class Registry {
 		try {
 			const controlEvents = new EventEmitter<ControlCommonEvents>()
 
-			this.page = new PageController(this)
+			const pageStore = new PageStore(this.db.getTableView('pages'))
+
 			this.controls = new ControlsController(this, controlEvents)
-			this.variables = new VariablesController(this.db)
-			this.graphics = new GraphicsController(this.controls, this.page, this.userconfig, this.variables.values)
-			this.preview = new GraphicsPreview(this.graphics, this.page, this.variables.values)
+			this.graphics = new GraphicsController(this.controls, pageStore, this.userconfig, this.variables.values)
+
 			this.surfaces = new SurfaceController(this.db, {
 				controls: this.controls,
 				graphics: this.graphics,
-				page: this.page,
+				pageStore: pageStore,
 				userconfig: this.userconfig,
 				variables: this.variables,
 			})
@@ -224,7 +221,7 @@ export class Registry {
 				this.#internalApiRouter,
 				this.controls,
 				this.graphics,
-				this.page,
+				pageStore,
 				this.variables,
 				oscSender
 			)
@@ -232,13 +229,15 @@ export class Registry {
 
 			this.internalModule = new InternalController(
 				this.controls,
-				this.page,
+				pageStore,
 				this.instance,
 				this.variables,
 				this.surfaces,
 				this.graphics,
 				this.exit.bind(this)
 			)
+
+			this.page = new PageController(this.graphics, this.controls, this.userconfig, pageStore)
 			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
@@ -255,7 +254,7 @@ export class Registry {
 
 			const serviceApi = new ServiceApi(
 				this.#appInfo,
-				this.page,
+				pageStore,
 				this.controls,
 				this.surfaces,
 				this.variables,
@@ -269,9 +268,9 @@ export class Registry {
 				oscSender,
 				controlEvents,
 				this.surfaces,
-				this.page,
+				pageStore,
 				this.instance,
-				this.io,
+				this.ui.io,
 				this.ui.express
 			)
 			this.cloud = new CloudController(
@@ -280,8 +279,22 @@ export class Registry {
 				this.#data.cache,
 				this.controls,
 				this.graphics,
-				this.page
+				pageStore
 			)
+
+			this.preview = new PreviewController(
+				this.graphics,
+				pageStore,
+				this.controls,
+				this.variables.values,
+				this.instance.definitions
+			)
+
+			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
+			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
+			controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
+
+			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
 				setImmediate(() => {
@@ -306,8 +319,12 @@ export class Registry {
 				this.internalModule.variablesChanged(all_changed_variables_set)
 				this.controls.onVariablesChanged(all_changed_variables_set)
 				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
-				this.preview.onVariablesChanged(all_changed_variables_set)
+				this.preview.onVariablesChanged(all_changed_variables_set, null)
 				this.surfaces.onVariablesChanged(all_changed_variables_set)
+			})
+
+			this.page.on('controlIdsMoved', (controlIds) => {
+				this.preview.onControlIdsLocationChanged(controlIds)
 			})
 
 			this.graphics.on('button_drawn', (location, render) => {
@@ -378,6 +395,7 @@ export class Registry {
 
 			this.#logger.error(`Failed to start companion: ${e}`)
 			this.#logger.debug(e)
+			this.#logger.debug((e as Error)?.stack)
 			this.exit(true, false)
 		} finally {
 			this.#isReady = true

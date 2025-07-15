@@ -52,7 +52,7 @@ import { ExportController } from './Export.js'
 import { FILE_VERSION } from './Constants.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { zodLocation } from '../Graphics/Preview.js'
+import { zodLocation } from '../Preview/Graphics.js'
 import z from 'zod'
 import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
@@ -261,7 +261,7 @@ export class ImportExportController {
 			apiRouter,
 			controls,
 			instance,
-			page,
+			page.store,
 			surfaces,
 			userconfig,
 			variablesController
@@ -371,11 +371,11 @@ export class ImportExportController {
 
 						if (topage === -1) {
 							// Add a new page at the end
-							const currentPageCount = this.#pagesController.getPageCount()
+							const currentPageCount = this.#pagesController.store.getPageCount()
 							topage = currentPageCount + 1
 							this.#pagesController.insertPages(topage, ['Importing Page'])
 						} else {
-							const oldPageInfo = this.#pagesController.getPageInfo(topage, false)
+							const oldPageInfo = this.#pagesController.store.getPageInfo(topage, false)
 							if (!oldPageInfo) throw new Error('Invalid target page')
 						}
 
@@ -508,10 +508,10 @@ export class ImportExportController {
 							}
 
 							// Ensure the page exists
-							const insertPageCount = pageNumber - this.#pagesController.getPageCount()
+							const insertPageCount = pageNumber - this.#pagesController.store.getPageCount()
 							if (insertPageCount > 0) {
 								this.#pagesController.insertPages(
-									this.#pagesController.getPageCount() + 1,
+									this.#pagesController.store.getPageCount() + 1,
 									new Array(insertPageCount).fill('Page')
 								)
 							}
@@ -524,7 +524,7 @@ export class ImportExportController {
 						const surfaces = data.surfaces as Record<number, SurfaceConfig>
 						const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
 						const getPageId = (val: number) =>
-							this.#pagesController.getPageId(val) ?? this.#pagesController.getPageId(1)
+							this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
 						const fixPageId = (groupConfig: SurfaceGroupConfig) => {
 							if ('last_page' in groupConfig) {
 								groupConfig.last_page_id = getPageId(groupConfig.last_page!)
@@ -630,7 +630,7 @@ export class ImportExportController {
 			this.#graphicsController.clearAllForPage(1)
 
 			// Delete other pages
-			const pageCount = this.#pagesController.getPageCount()
+			const pageCount = this.#pagesController.store.getPageCount()
 			for (let pageNumber = pageCount; pageNumber >= 2; pageNumber--) {
 				this.#pagesController.deletePage(pageNumber) // Note: controls were already deleted above
 			}

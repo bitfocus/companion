@@ -37,7 +37,7 @@ import type { InstanceController } from '../Instance/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { RequestHandler } from 'express'
@@ -53,7 +53,7 @@ export class ExportController {
 	readonly #appInfo: AppInfo
 	readonly #controlsController: ControlsController
 	readonly #instancesController: InstanceController
-	readonly #pagesController: PageController
+	readonly #pagesStore: IPageStore
 	readonly #surfacesController: SurfaceController
 	readonly #userConfigController: DataUserConfig
 	readonly #variablesController: VariablesController
@@ -63,7 +63,7 @@ export class ExportController {
 		apiRouter: express.Router,
 		controls: ControlsController,
 		instance: InstanceController,
-		page: PageController,
+		pageStore: IPageStore,
 		surfaces: SurfaceController,
 		userconfig: DataUserConfig,
 		variablesController: VariablesController
@@ -71,7 +71,7 @@ export class ExportController {
 		this.#appInfo = appInfo
 		this.#controlsController = controls
 		this.#instancesController = instance
-		this.#pagesController = page
+		this.#pagesStore = pageStore
 		this.#surfacesController = surfaces
 		this.#userConfigController = userconfig
 		this.#variablesController = variablesController
@@ -118,7 +118,7 @@ export class ExportController {
 		if (isNaN(page)) {
 			next()
 		} else {
-			const pageInfo = this.#pagesController.getPageInfo(page, true)
+			const pageInfo = this.#pagesStore.getPageInfo(page, true)
 			if (!pageInfo) throw new Error(`Page "${page}" not found!`)
 
 			const referencedConnectionIds = new Set<string>()
@@ -272,7 +272,8 @@ export class ExportController {
 	#generateFilename(filename: string, exportType: string, fileExt: string): string {
 		//If the user isn't using their default file name, don't append any extra info in file name since it was a manual choice
 		const useDefault = filename == this.#userConfigController.getKey('default_export_filename')
-		const parsedName = this.#variablesController.values.parseVariables(filename, null).text
+		const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
+		const parsedName = parser.parseVariables(filename).text
 
 		return parsedName && parsedName !== 'undefined'
 			? `${parsedName}${exportType && useDefault ? '_' + exportType : ''}.${fileExt}`
@@ -432,7 +433,7 @@ export class ExportController {
 		if (!config || !isFalsey(config.buttons)) {
 			exp.pages = {}
 
-			const pageInfos = this.#pagesController.getAll()
+			const pageInfos = this.#pagesStore.getAll()
 			for (const [pageNumber, rawPageInfo] of Object.entries(pageInfos)) {
 				exp.pages[Number(pageNumber)] = this.#generatePageExportInfo(
 					rawPageInfo,
@@ -485,7 +486,7 @@ export class ExportController {
 		if (!config || !isFalsey(config.surfaces)) {
 			const surfaces = this.#surfacesController.exportAll()
 			const surfaceGroups = this.#surfacesController.exportAllGroups()
-			const findPage = (id: string) => this.#pagesController.getPageNumber(id)
+			const findPage = (id: string) => this.#pagesStore.getPageNumber(id)
 			// Convert internal page refs to page numbers.
 			// Note that `page`, which is a holdover from previous times, is already recorded as a number...
 			const setExportPageId = (groupConfig: SurfaceGroupConfig) => {

@@ -33,7 +33,7 @@ import { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import express from 'express'
 import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
@@ -91,7 +91,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		apiRouter: express.Router,
 		controls: ControlsController,
 		graphics: GraphicsController,
-		page: PageController,
+		pageStore: IPageStore,
 		variables: VariablesController,
 		oscSender: ServiceOscSender
 	) {
@@ -122,14 +122,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
-		this.definitions = new InstanceDefinitions(graphics, variables.values)
-		this.status = new InstanceStatus(controls)
+		this.definitions = new InstanceDefinitions()
+		this.status = new InstanceStatus()
 		this.modules = new InstanceModules(this, apiRouter, appInfo.modulesDir)
 		this.moduleHost = new ModuleHost(
 			{
 				controls: controls,
 				variables: variables,
-				page: page,
+				pageStore: pageStore,
 				oscSender: oscSender,
 
 				instanceDefinitions: this.definitions,

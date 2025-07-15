@@ -164,7 +164,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				const newGroup = new SurfaceGroup(
 					this,
 					this.#dbTableGroups,
-					this.#handlerDependencies.page,
+					this.#handlerDependencies.pageStore,
 					this.#handlerDependencies.userconfig,
 					this.#updateEvents,
 					groupId,
@@ -592,7 +592,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					const newGroup = new SurfaceGroup(
 						this,
 						this.#dbTableGroups,
-						this.#handlerDependencies.page,
+						this.#handlerDependencies.pageStore,
 						this.#handlerDependencies.userconfig,
 						this.#updateEvents,
 						groupId,
@@ -803,7 +803,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			const newGroup = new SurfaceGroup(
 				this,
 				this.#dbTableGroups,
-				this.#handlerDependencies.page,
+				this.#handlerDependencies.pageStore,
 				this.#handlerDependencies.userconfig,
 				this.#updateEvents,
 				surfaceGroupId,
@@ -1249,7 +1249,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		const device = new SurfaceIPElgatoPlugin(
 			this.#handlerDependencies.controls,
-			this.#handlerDependencies.page,
+			this.#handlerDependencies.pageStore,
 			devicePath,
 			socket
 		)
@@ -1313,17 +1313,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		surfaceId: string,
 		injectedVariableValues: CompanionVariableValues | undefined
 	) {
-		const injectedVariableValuesComplete = {
-			...this.#getInjectedVariablesForSurfaceId(surfaceId),
+		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
 			...injectedVariableValues,
-		}
+			...this.#getInjectedVariablesForSurfaceId(surfaceId),
+		})
 
-		return this.#handlerDependencies.variables.values.executeExpression(
-			str,
-			undefined,
-			undefined,
-			injectedVariableValuesComplete
-		)
+		return parser.executeExpression(str, undefined)
 	}
 
 	/**
@@ -1360,7 +1355,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				group = new SurfaceGroup(
 					this,
 					this.#dbTableGroups,
-					this.#handlerDependencies.page,
+					this.#handlerDependencies.pageStore,
 					this.#handlerDependencies.userconfig,
 					this.#updateEvents,
 					id,

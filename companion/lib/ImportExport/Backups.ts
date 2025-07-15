@@ -385,7 +385,8 @@ export class BackupController {
 			await fs.mkdir(backupDir, { recursive: true })
 
 			// Generate backup filename
-			const backupName = this.#variableValuesController.parseVariables(rule.backupNamePattern, null)
+			const parser = this.#variableValuesController.createVariablesAndExpressionParser(null, null, null)
+			const backupName = parser.parseVariables(rule.backupNamePattern).text
 			if (!backupName) {
 				logger.info('No backup name generated, skipping backup')
 				return null
@@ -394,7 +395,7 @@ export class BackupController {
 			// Create the backup based on type
 			switch (rule.backupType) {
 				case 'db': {
-					const filePath = path.join(backupDir, `${backupName.text}.companiondb`)
+					const filePath = path.join(backupDir, `${backupName}.companiondb`)
 
 					// Check if file already exists
 					await this.#ensureFileDoesNotExist(filePath)
@@ -411,11 +412,11 @@ export class BackupController {
 				}
 
 				case 'export-gz':
-					return this.#generateExportBackup(logger, backupDir, backupName.text, 'json-gz')
+					return this.#generateExportBackup(logger, backupDir, backupName, 'json-gz')
 				case 'export-json':
-					return this.#generateExportBackup(logger, backupDir, backupName.text, 'json')
+					return this.#generateExportBackup(logger, backupDir, backupName, 'json')
 				case 'export-yaml':
-					return this.#generateExportBackup(logger, backupDir, backupName.text, 'yaml')
+					return this.#generateExportBackup(logger, backupDir, backupName, 'yaml')
 
 				default:
 					throw new Error(`Unsupported backup type: ${rule.backupType}`)

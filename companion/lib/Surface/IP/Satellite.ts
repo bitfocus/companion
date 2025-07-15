@@ -55,7 +55,7 @@ interface SatelliteInputVariableInfo {
 }
 interface SatelliteOutputVariableInfo {
 	id: string
-	lastReferencedVariables: Set<string> | null
+	lastReferencedVariables: ReadonlySet<string> | null
 	lastValue: any
 	triggerUpdate?: () => void
 }

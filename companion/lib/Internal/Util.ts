@@ -1,26 +1,26 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import LogController, { type Logger } from '../Log/Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
-import type { ExecuteExpressionResult, ParseVariablesResult, VariablesCache } from '../Variables/Util.js'
-import type { VariablesController } from '../Variables/Controller.js'
+import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { FeedbackEntityModelExt } from './Types.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 
 /**
  *
  */
 export function ParseInternalControlReference(
 	logger: Logger,
-	variablesController: VariablesValues,
+	parser: VariablesAndExpressionParser,
 	pressLocation: ControlLocation | undefined,
 	options: Record<string, any>,
-	useVariableFields: boolean,
-	injectedVariableValues?: VariablesCache
+	useVariableFields: boolean
 ): {
 	location: ControlLocation | null
-	referencedVariables: string[]
+	referencedVariables: ReadonlySet<string>
 } {
 	const sanitisePageNumber = (pageNumber: number): number | null => {
 		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
@@ -83,7 +83,7 @@ export function ParseInternalControlReference(
 	}
 
 	let location: ControlLocation | null = null
-	let referencedVariables: string[] = []
+	let referencedVariables: ReadonlySet<string> = new Set<string>()
 
 	let locationTarget = options.location_target
 	if (locationTarget?.startsWith('this:')) locationTarget = 'this'
@@ -100,7 +100,7 @@ export function ParseInternalControlReference(
 			break
 		case 'text':
 			if (useVariableFields) {
-				const result = variablesController.parseVariables(options.location_text, pressLocation, injectedVariableValues)
+				const result = parser.parseVariables(options.location_text)
 
 				location = parseLocationString(result.text)
 				referencedVariables = result.variableIds
@@ -110,18 +110,13 @@ export function ParseInternalControlReference(
 			break
 		case 'expression':
 			if (useVariableFields) {
-				const result = variablesController.executeExpression(
-					options.location_expression,
-					pressLocation,
-					'string',
-					injectedVariableValues
-				)
+				const result = parser.executeExpression(options.location_expression, 'string')
 				if (result.ok) {
 					location = parseLocationString(String(result.value))
 				} else {
 					logger.warn(`${result.error}, in expression: "${options.location_expression}"`)
 				}
-				referencedVariables = Array.from(result.variableIds)
+				referencedVariables = result.variableIds
 			}
 			break
 	}
@@ -132,10 +127,10 @@ export function ParseInternalControlReference(
 export class InternalModuleUtils {
 	readonly #logger = LogController.createLogger('Internal/InternalModuleUtils')
 
-	readonly #variablesController: VariablesController
+	readonly #controlsController: ControlsController
 
-	constructor(variablesController: VariablesController) {
-		this.#variablesController = variablesController
+	constructor(controlsController: ControlsController) {
+		this.#controlsController = controlsController
 	}
 
 	/**
@@ -149,19 +144,20 @@ export class InternalModuleUtils {
 	executeExpressionForInternalActionOrFeedback(
 		str: string,
 		extras: RunActionExtras | FeedbackEntityModelExt,
-		requiredType?: string,
-		injectedVariableValues?: CompanionVariableValues
+		requiredType?: string
+		// injectedVariableValues?: CompanionVariableValues
 	): ExecuteExpressionResult {
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			...injectedVariableValues,
+			// ...injectedVariableValues,
 		}
-		return this.#variablesController.values.executeExpression(
-			String(str),
+
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
 			extras.location,
-			requiredType,
 			injectedVariableValuesComplete
 		)
+
+		return parser.executeExpression(String(str), requiredType)
 	}
 
 	/**
@@ -173,14 +169,20 @@ export class InternalModuleUtils {
 	 */
 	parseVariablesForInternalActionOrFeedback(
 		str: string,
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		injectedVariableValues?: VariablesCache
+		extras: RunActionExtras | FeedbackEntityModelExt
+		// injectedVariableValues?: VariablesCache
 	): ParseVariablesResult {
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			...injectedVariableValues,
+			// ...injectedVariableValues,
 		}
-		return this.#variablesController.values.parseVariables(str, extras?.location, injectedVariableValuesComplete)
+
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
+			extras.location,
+			injectedVariableValuesComplete
+		)
+
+		return parser.parseVariables(str)
 	}
 
 	/**
@@ -192,18 +194,19 @@ export class InternalModuleUtils {
 		useVariableFields: boolean
 	): {
 		location: ControlLocation | null
-		referencedVariables: string[]
+		referencedVariables: ReadonlySet<string>
 	} {
-		const injectedVariableValues = 'id' in extras ? undefined : this.#getInjectedVariablesForLocation(extras)
+		const injectedVariableValuesComplete = {
+			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
+			// ...injectedVariableValues,
+		}
 
-		return ParseInternalControlReference(
-			this.#logger,
-			this.#variablesController.values,
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
 			extras.location,
-			options,
-			useVariableFields,
-			injectedVariableValues
+			injectedVariableValuesComplete
 		)
+
+		return ParseInternalControlReference(this.#logger, parser, extras.location, options, useVariableFields)
 	}
 
 	/**

@@ -155,8 +155,6 @@ export class ControlTrigger
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			moduleHost: deps.instance.moduleHost,
-			executeExpressionInControl: (expression, requiredType, injectedVariableValues) =>
-				deps.variables.values.executeExpression(expression, null, requiredType, injectedVariableValues),
 		})
 
 		this.#eventBus = eventBus

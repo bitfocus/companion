@@ -30,6 +30,8 @@ import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
 import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import { CompanionVariableValues } from '@companion-module/base'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 /**
  * The class that manages the controls
@@ -51,7 +53,7 @@ export class ControlsController {
 
 	readonly #registry: Pick<
 		Registry,
-		'db' | 'page' | 'ui' | 'io' | 'graphics' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
+		'db' | 'page' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
 	>
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
@@ -137,9 +139,8 @@ export class ControlsController {
 		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
 		return {
 			dbTable: this.#dbTable,
-			graphics: this.#registry.graphics,
 			surfaces: this.#registry.surfaces,
-			page: this.#registry.page,
+			pageStore: this.#registry.page.store,
 			internalModule: this.#registry.internalModule,
 			instance: this.#registry.instance,
 			variables: this.#registry.variables,
@@ -206,7 +207,7 @@ export class ControlsController {
 				this.#controls,
 				this.#registry.page,
 				this.#registry.instance.definitions,
-				this.#registry.graphics,
+				this.#controlEvents,
 				this
 			),
 
@@ -344,7 +345,7 @@ export class ControlsController {
 		}
 
 		// Delete old control at the coordinate
-		const oldControlId = this.#registry.page.getControlIdAt(location)
+		const oldControlId = this.#registry.page.store.getControlIdAt(location)
 		if (oldControlId) {
 			this.deleteControl(oldControlId)
 		}
@@ -483,7 +484,7 @@ export class ControlsController {
 			this.#dbTable.delete(controlId)
 		}
 
-		const location = this.#registry.page.getLocationOfControlId(controlId)
+		const location = this.#registry.page.store.getLocationOfControlId(controlId)
 		if (location) {
 			this.#registry.page.setControlIdAt(location, null)
 
@@ -491,7 +492,7 @@ export class ControlsController {
 			this.#controlEvents.emit('updateButtonState', location, false, undefined)
 
 			// Force a redraw
-			this.#registry.graphics.invalidateButton(location)
+			this.#controlEvents.emit('invalidateLocationRender', location)
 		}
 	}
 
@@ -516,7 +517,7 @@ export class ControlsController {
 	 * @access public
 	 */
 	createButtonControl(location: ControlLocation, newType: string): string | null {
-		if (!this.#registry.page.isPageValid(location.pageNumber)) return null
+		if (!this.#registry.page.store.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
 		const newControl = this.createClassForControl(controlId, 'button', newType, false)
@@ -529,7 +530,7 @@ export class ControlsController {
 		this.#controlEvents.emit('updateButtonState', location, false, undefined)
 
 		// Force a redraw
-		this.#registry.graphics.invalidateButton(location)
+		this.#controlEvents.emit('invalidateLocationRender', location)
 
 		return controlId
 	}
@@ -578,6 +579,22 @@ export class ControlsController {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)
 		}
+	}
+
+	createVariablesAndExpressionParser(
+		controlLocation: ControlLocation | null | undefined,
+		overrideVariableValues: CompanionVariableValues | null
+	): VariablesAndExpressionParser {
+		// const controlId = controlLocation && this.#registry.page.getControlIdAt(controlLocation)
+		// const control = controlId && this.getControl(controlId)
+
+		// const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
+
+		return this.#registry.variables.values.createVariablesAndExpressionParser(
+			controlLocation,
+			[], //variableEntities,
+			overrideVariableValues
+		)
 	}
 }
 

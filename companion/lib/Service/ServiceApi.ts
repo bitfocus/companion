@@ -1,5 +1,5 @@
 import type { AppInfo } from '../Registry.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -37,7 +37,7 @@ type ServiceApiEvents =
 
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 	readonly #controlController: ControlsController
 	readonly #surfaceController: SurfaceController
 	readonly #variablesController: VariablesController
@@ -49,7 +49,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 
 	constructor(
 		appInfo: AppInfo,
-		pageController: PageController,
+		pageStore: IPageStore,
 		controlController: ControlsController,
 		surfaceController: SurfaceController,
 		variablesController: VariablesController,
@@ -57,7 +57,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	) {
 		super()
 		this.#appInfo = appInfo
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 		this.#controlController = controlController
 		this.#surfaceController = surfaceController
 		this.#variablesController = variablesController
@@ -150,14 +150,14 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * Get the if of the control at the given page and bank index
 	 */
 	getControlIdAtOldBankIndex(page: number, bank: number): string | null {
-		return this.#pageController.getControlIdAtOldBankIndex(page, bank)
+		return this.#pageStore.getControlIdAtOldBankIndex(page, bank)
 	}
 
 	/**
 	 * Get the id of the control at the given location
 	 */
 	getControlIdAt(location: ControlLocation): string | null {
-		return this.#pageController.getControlIdAt(location)
+		return this.#pageStore.getControlIdAt(location)
 	}
 
 	pressControl(controlId: string, pressed: boolean, surfaceId: string): boolean {
@@ -186,15 +186,15 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * Get the page id for a given page number
 	 */
 	getPageIdForNumber(pageNumber: number): string | null {
-		return this.#pageController.getPageInfo(pageNumber)?.id ?? null
+		return this.#pageStore.getPageInfo(pageNumber)?.id ?? null
 	}
 
 	getPageNumberForId(pageId: string): number | null {
-		return this.#pageController.getPageNumber(pageId)
+		return this.#pageStore.getPageNumber(pageId)
 	}
 
 	getFirstPageId(): string {
-		return this.#pageController.getFirstPageId()
+		return this.#pageStore.getFirstPageId()
 	}
 
 	surfaceSetPage(surfaceId: string, pageId: string): void {
