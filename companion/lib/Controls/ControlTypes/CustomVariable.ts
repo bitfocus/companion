@@ -193,6 +193,7 @@ export class ControlCustomVariable
 			type: this.type,
 			...this.options,
 			isActive: this.#customVariableNameMap.isCustomVariableActive(this.controlId),
+			isUserValue: !!this.#getUserValueEntity(),
 		}
 	}
 

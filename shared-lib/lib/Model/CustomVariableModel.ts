@@ -21,6 +21,7 @@ export interface CustomVariableOptions {
 export interface ClientCustomVariableData extends CustomVariableOptions {
 	type: 'custom-variable'
 	isActive: boolean
+	isUserValue: boolean
 }
 
 export type CustomVariableUpdate =

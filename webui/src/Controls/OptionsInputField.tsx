@@ -176,7 +176,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 		case 'custom-variable': {
 			if (entityType === EntityModelType.Action) {
 				control = (
-					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue2} includeNone={true} />
+					<InternalCustomVariableDropdown
+						disabled={!!readonly}
+						value={value}
+						setValue={setValue2}
+						includeNone
+						onlyUserSettable
+					/>
 				)
 			}
 			break

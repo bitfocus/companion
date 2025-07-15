@@ -48,6 +48,7 @@ export function InternalModuleField(
 					value={value}
 					setValue={setValue}
 					includeNone={option.includeNone}
+					onlyUserSettable={option.onlyUserSettable}
 				/>
 			)
 		case 'internal:variable':
@@ -214,6 +215,7 @@ interface InternalCustomVariableDropdownProps {
 	value: any
 	setValue: (value: any) => void
 	includeNone: boolean | undefined
+	onlyUserSettable: boolean | undefined
 	disabled?: boolean
 }
 
@@ -222,6 +224,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 	value,
 	setValue,
 	includeNone,
+	onlyUserSettable,
 	disabled,
 }: Readonly<InternalCustomVariableDropdownProps>) {
 	const { customVariablesList } = useContext(RootAppStoreContext)
@@ -236,14 +239,15 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			})
 		}
 
-		const customVariablesSorted = Array.from(customVariablesList.customVariables.entries()).sort(
-			(a, b) => a[1].sortOrder - b[1].sortOrder
+		const customVariablesSorted = Array.from(customVariablesList.customVariables.values()).sort(
+			(a, b) => a.sortOrder - b.sortOrder
 		)
 
-		for (const [id, info] of customVariablesSorted) {
+		for (const info of customVariablesSorted) {
+			if (!info.isActive || (onlyUserSettable && !info.isUserValue)) continue
 			choices.push({
-				id,
-				label: `${info.description} (custom:${id})`,
+				id: info.variableName,
+				label: `${info.description || 'A custom variable'} (custom:${info.variableName})`,
 			})
 		}
 

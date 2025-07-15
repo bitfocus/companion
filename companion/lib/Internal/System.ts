@@ -218,6 +218,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						label: 'Target Variable (stdout)',
 						id: 'targetVariable',
 						includeNone: true,
+						onlyUserSettable: true,
 					},
 				],
 			},

@@ -52,6 +52,7 @@ export class InternalCustomVariables
 						type: 'internal:custom_variable',
 						label: 'Custom variable',
 						id: 'name',
+						onlyUserSettable: true,
 					},
 					{
 						type: 'textinput',
@@ -86,6 +87,7 @@ export class InternalCustomVariables
 						type: 'internal:custom_variable',
 						label: 'Custom variable',
 						id: 'name',
+						onlyUserSettable: true,
 					},
 					{
 						type: 'textinput',
@@ -107,6 +109,7 @@ export class InternalCustomVariables
 						type: 'internal:custom_variable',
 						label: 'Custom variable',
 						id: 'name',
+						onlyUserSettable: true,
 					},
 					{
 						type: 'internal:variable',
@@ -125,6 +128,7 @@ export class InternalCustomVariables
 						type: 'internal:custom_variable',
 						label: 'Custom variable',
 						id: 'name',
+						onlyUserSettable: true,
 					},
 				],
 			},
@@ -136,6 +140,7 @@ export class InternalCustomVariables
 						type: 'internal:custom_variable',
 						label: 'Custom variable',
 						id: 'name',
+						onlyUserSettable: true,
 					},
 				],
 			},
