@@ -339,10 +339,6 @@ export class Registry {
 				this.preview.onControlIdsLocationChanged(controlIds)
 			})
 
-			this.page.on('controlIdsMoved', (controlIds) => {
-				this.preview.onControlIdsLocationChanged(controlIds)
-			})
-
 			this.graphics.on('button_drawn', (location, render) => {
 				this.services.onButtonDrawn(location, render)
 			})
