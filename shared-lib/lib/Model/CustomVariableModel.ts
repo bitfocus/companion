@@ -14,30 +14,6 @@ export interface CustomVariableDefinition {
 
 export type CustomVariableCollection = CollectionBase<null>
 
-/** @deprecated */
-export type CustomVariablesModel = Record<string, CustomVariableDefinition>
-
-/** @deprecated */
-export type CustomVariableUpdate =
-	| CustomVariableUpdateInitOp
-	| CustomVariableUpdateRemoveOp
-	| CustomVariableUpdateUpdateOp
-
-export interface CustomVariableUpdateInitOp {
-	type: 'init'
-	info: CustomVariablesModel
-}
-export interface CustomVariableUpdateRemoveOp {
-	type: 'remove'
-	itemId: string
-}
-export interface CustomVariableUpdateUpdateOp {
-	type: 'update'
-	itemId: string
-
-	info: CustomVariableDefinition
-}
-
 export interface CustomVariableModel2 {
 	readonly type: 'custom-variable'
 	options: CustomVariableOptions
@@ -57,31 +33,29 @@ export interface ClientCustomVariableData extends CustomVariableOptions {
 	isActive: boolean
 	// id: string
 	// TODO - define me
-	// lastExecuted: number | undefined
-	// description: string
 }
 
-export type CustomVariableUpdate2 =
-	| CustomVariableUpdateInitOp2
-	| CustomVariableUpdateAddOp2
-	| CustomVariableUpdateRemoveOp2
-	| CustomVariableUpdateUpdateOp2
+export type CustomVariableUpdate =
+	| CustomVariableUpdateInitOp
+	| CustomVariableUpdateAddOp
+	| CustomVariableUpdateRemoveOp
+	| CustomVariableUpdateUpdateOp
 
-export interface CustomVariableUpdateInitOp2 {
+export interface CustomVariableUpdateInitOp {
 	type: 'init'
 	variables: Record<string, ClientCustomVariableData>
 }
-export interface CustomVariableUpdateRemoveOp2 {
+export interface CustomVariableUpdateRemoveOp {
 	type: 'remove'
 	controlId: string
 }
-export interface CustomVariableUpdateUpdateOp2 {
+export interface CustomVariableUpdateUpdateOp {
 	type: 'update'
 	controlId: string
 
 	patch: JsonPatchOperation<ClientCustomVariableData>[]
 }
-export interface CustomVariableUpdateAddOp2 {
+export interface CustomVariableUpdateAddOp {
 	type: 'add'
 	controlId: string
 

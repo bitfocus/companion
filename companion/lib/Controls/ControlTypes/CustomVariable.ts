@@ -9,6 +9,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 	ControlWithoutStyle,
+	ControlWithEntities,
 } from '../IControlFragments.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
@@ -43,6 +44,7 @@ export class ControlCustomVariable
 	implements
 		ControlWithoutActions,
 		ControlWithoutEvents,
+		ControlWithEntities,
 		ControlWithoutStyle,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
@@ -79,7 +81,7 @@ export class ControlCustomVariable
 	 */
 	options: CustomVariableOptions
 
-	readonly entities: EntityListPoolCustomVariable // TODO - should this be private?
+	readonly entities: EntityListPoolCustomVariable
 
 	/**
 	 * @param registry - the application core
@@ -120,11 +122,6 @@ export class ControlCustomVariable
 			if (isImport) this.postProcessImport()
 			else this.commitChange()
 		}
-
-		// // Ensure trigger is stored before setup
-		// setImmediate(() => {
-		// 	this.#setupEvents()
-		// })
 	}
 
 	checkCollectionIdIsValid(validCollectionIds: ReadonlySet<string>): boolean {

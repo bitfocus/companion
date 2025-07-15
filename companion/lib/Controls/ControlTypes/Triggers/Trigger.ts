@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
+	ControlWithEntities,
 	ControlWithEvents,
 	ControlWithOptions,
 	ControlWithoutActionSets,
@@ -48,6 +49,7 @@ export class ControlTrigger
 	implements
 		ControlWithActions,
 		ControlWithEvents,
+		ControlWithEntities,
 		ControlWithoutStyle,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,

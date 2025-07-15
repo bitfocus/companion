@@ -10,10 +10,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
-import type {
-	ClientCustomVariableData,
-	CustomVariableUpdate2,
-} from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { ClientCustomVariableData, CustomVariableUpdate } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { CustomVariableNameMap } from './CustomVariableNameMap.js'
 
 export interface ControlDependencies {
@@ -44,5 +41,5 @@ export interface ControlCommonEvents {
 
 export type ControlChangeEvents = {
 	triggerChange: [controlId: string, diff: TriggersUpdate]
-	customVariableChange: [controlId: string, diff: CustomVariableUpdate2]
+	customVariableChange: [controlId: string, diff: CustomVariableUpdate]
 }

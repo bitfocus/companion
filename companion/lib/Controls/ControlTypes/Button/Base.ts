@@ -1,5 +1,5 @@
 import { ControlBase } from '../../ControlBase.js'
-import type { ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
+import type { ControlWithEntities, ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
@@ -26,7 +26,7 @@ import debounceFn from 'debounce-fn'
  */
 export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBase>
 	extends ControlBase<TJson>
-	implements ControlWithOptions, ControlWithPushed
+	implements ControlWithEntities, ControlWithOptions, ControlWithPushed
 {
 	readonly supportsEntities = true
 	readonly supportsOptions = true

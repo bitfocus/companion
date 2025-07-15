@@ -12,8 +12,8 @@ import { ControlCustomVariable } from './ControlTypes/CustomVariable.js'
 import { validateCustomVariableControlId } from './Util.js'
 import {
 	ClientCustomVariableData,
-	CustomVariableUpdate2,
-	CustomVariableUpdateInitOp2,
+	CustomVariableUpdate,
+	CustomVariableUpdateInitOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { CustomVariableNameMap } from './CustomVariableNameMap.js'
 
@@ -29,7 +29,7 @@ export function createCustomVariablesTrpcRouter(
 	return router({
 		collections: customVariableCollections.createTrpcRouter(),
 
-		watch: publicProcedure.subscription<AsyncIterable<CustomVariableUpdate2>>(async function* (opts) {
+		watch: publicProcedure.subscription<AsyncIterable<CustomVariableUpdate>>(async function* (opts) {
 			const changes = toIterable(changeEvents, 'customVariableChange', opts.signal)
 
 			const variables: Record<string, ClientCustomVariableData> = {}
@@ -40,10 +40,10 @@ export function createCustomVariablesTrpcRouter(
 				}
 			}
 
-			yield { type: 'init', variables } satisfies CustomVariableUpdateInitOp2
+			yield { type: 'init', variables } satisfies CustomVariableUpdateInitOp
 
 			for await (const [_controlId, data] of changes) {
-				yield data satisfies CustomVariableUpdate2
+				yield data satisfies CustomVariableUpdate
 			}
 		}),
 

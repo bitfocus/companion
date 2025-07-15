@@ -5,14 +5,14 @@ import { cloneDeep } from 'lodash-es'
 import type {
 	ClientCustomVariableData,
 	CustomVariableCollection,
-	CustomVariableUpdate2,
+	CustomVariableUpdate,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 
 export class CustomVariablesListStore {
 	readonly customVariables = observable.map<string, ClientCustomVariableData>()
 	readonly collections = observable.map<string, CustomVariableCollection>()
 
-	public updateDefinitions = action((change: CustomVariableUpdate2 | null) => {
+	public updateDefinitions = action((change: CustomVariableUpdate | null) => {
 		if (!change) {
 			this.customVariables.clear()
 			return
