@@ -9,11 +9,13 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { GenericConfirmModalRef, GenericConfirmModal } from '~/Components/GenericConfirmModal.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
+import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/TRPC.js'
 
 export interface ButtonEditorExtraTabs {
 	id: string
 	name: string
+	position: 'start' | 'end'
 }
 
 interface ButtonEditorTabsProps {
@@ -23,6 +25,7 @@ interface ButtonEditorTabsProps {
 	disabledSetStep: boolean
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
+	localVariablesStore: LocalVariablesStore
 	extraTabs?: ButtonEditorExtraTabs[]
 	children?: (currentTab: string) => React.ReactNode
 }
@@ -33,6 +36,7 @@ export function ButtonEditorTabs({
 	disabledSetStep,
 	runtimeProps,
 	rotaryActions,
+	localVariablesStore,
 	extraTabs,
 	children,
 }: ButtonEditorTabsProps): React.JSX.Element {
@@ -44,7 +48,13 @@ export function ButtonEditorTabs({
 		const tabKeys: string[] = [...stepKeys.map((s) => `step:${s}`)]
 
 		if (extraTabs) {
-			tabKeys.push(...extraTabs.map((t) => t.id))
+			for (const tab of extraTabs) {
+				if (tab.position === 'start') {
+					tabKeys.unshift(tab.id)
+				} else {
+					tabKeys.push(tab.id)
+				}
+			}
 		}
 
 		return tabKeys
@@ -64,11 +74,22 @@ export function ButtonEditorTabs({
 	const selectedStepProps = selectedKey ? steps[selectedKey] : undefined
 
 	return (
-		<div key="button">
+		<>
 			<GenericConfirmModal ref={confirmRef} />
 
 			<div className={'row-heading'}>
 				<CNav variant="tabs">
+					{extraTabs?.map(
+						(tab) =>
+							tab.position === 'start' && (
+								<CNavItem key={tab.id} className="nav-steps-special">
+									<CNavLink active={selectedStep === tab.id} onClick={() => setSelectedStep(tab.id)}>
+										{tab.name}
+									</CNavLink>
+								</CNavItem>
+							)
+					)}
+
 					{stepKeys.map((stepId, i) => (
 						<ActionSetTab
 							key={stepId}
@@ -86,16 +107,19 @@ export function ButtonEditorTabs({
 						/>
 					))}
 
-					{extraTabs?.map((tab) => (
-						<CNavItem key={tab.id} className="nav-steps-special">
-							<CNavLink active={selectedStep === tab.id} onClick={() => setSelectedStep(tab.id)}>
-								{tab.name}
-							</CNavLink>
-						</CNavItem>
-					))}
+					{extraTabs?.map(
+						(tab) =>
+							tab.position === 'end' && (
+								<CNavItem key={tab.id} className="nav-steps-special">
+									<CNavLink active={selectedStep === tab.id} onClick={() => setSelectedStep(tab.id)}>
+										{tab.name}
+									</CNavLink>
+								</CNavItem>
+							)
+					)}
 
 					{stepKeys.length === 1 && (
-						<div className="nav-last">
+						<div className="nav-last align-self-center">
 							<CButton title="Add step" size="sm" onClick={service.appendStep}>
 								<FontAwesomeIcon icon={faPlus} />
 							</CButton>
@@ -121,11 +145,12 @@ export function ButtonEditorTabs({
 						selectedIndex={selectedIndex}
 						selectedKey={selectedKey}
 						selectedStepProps={selectedStepProps}
+						localVariablesStore={localVariablesStore}
 						disabledSetStep={disabledSetStep}
 					/>
 				)}
 			</div>
-		</div>
+		</>
 	)
 }
 

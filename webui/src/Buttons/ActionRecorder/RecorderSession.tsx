@@ -6,6 +6,7 @@ import { useActionRecorderActionService } from '~/Services/Controls/ControlActio
 import { LoadingRetryOrError } from '~/util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { MinimalEntityList } from '~/Controls/Components/EntityList.js'
+import { EntityEditorContextProvider } from '~/Controls/Components/EntityEditorContext'
 
 interface RecorderSessionProps {
 	sessionId: string
@@ -18,17 +19,22 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 
 	return (
 		<CCol xs={12} className="flex-form">
-			<MinimalEntityList
-				location={undefined}
+			<EntityEditorContextProvider
 				controlId={`action_recorder_${sessionInfo.id}`}
-				ownerId={null}
-				entities={sessionInfo.actions}
-				readonly={!!sessionInfo.isRunning}
+				location={undefined}
 				serviceFactory={actionsService}
-				entityType={EntityModelType.Action}
-				entityTypeLabel="action"
-				onlyFeedbackType={null}
-			/>
+				readonly={!!sessionInfo.isRunning}
+				localVariablesStore={null}
+				localVariablePrefix={null}
+			>
+				<MinimalEntityList
+					ownerId={null}
+					entities={sessionInfo.actions}
+					entityType={EntityModelType.Action}
+					entityTypeLabel="action"
+					feedbackListType={null}
+				/>
+			</EntityEditorContextProvider>
 			{sessionInfo.actions.length === 0 ? <CCallout color="info">No actions have been recorded</CCallout> : ''}
 		</CCol>
 	)

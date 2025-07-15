@@ -49,6 +49,7 @@ import {
 	ActionEntityModel,
 	EntityModelType,
 	FeedbackEntityModel,
+	isValidFeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -676,6 +677,8 @@ export class SocketEventsHandler {
 		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
 
 		for (const rawFeedback of msg.feedbacks || []) {
+			if (!isValidFeedbackEntitySubType(rawFeedback.type)) continue
+
 			feedbacks[rawFeedback.id] = {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,

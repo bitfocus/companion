@@ -13,6 +13,8 @@ import { findAllEntityIdsDeep } from './Util.js'
 import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEntitiesService.js'
 import { EditableEntityList } from './Components/EntityList.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { LocalVariablesStore } from './LocalVariablesStore.js'
+import { EntityEditorContextProvider } from './Components/EntityEditorContext.js'
 
 interface ControlEntitiesEditorProps {
 	controlId: string
@@ -20,10 +22,12 @@ interface ControlEntitiesEditorProps {
 	listId: SomeSocketEntityLocation
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
+	feedbackListType: ClientEntityDefinition['feedbackType']
 	entities: SomeEntityModel[] | undefined
-	heading: JSX.Element | string
+	heading: JSX.Element | string | null
 	headingActions?: JSX.Element[]
+	localVariablesStore: LocalVariablesStore | null
+	localVariablePrefix: string | null
 }
 
 export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
@@ -32,39 +36,46 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	listId,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
+	feedbackListType,
 	entities,
 	heading,
 	headingActions,
+	localVariablesStore,
+	localVariablePrefix,
 }: ControlEntitiesEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
-	const serviceFactory = useControlEntitiesEditorService(controlId, listId, entityTypeLabel, entityType, confirmModal)
+	const serviceFactory = useControlEntitiesEditorService(controlId, listId, confirmModal)
 
 	const entityIds = useMemo(() => findAllEntityIdsDeep(entities ?? []), [entities])
 
 	return (
 		<div className="entity-category">
-			<PanelCollapseHelperProvider
-				storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}
-				knownPanelIds={entityIds}
+			<EntityEditorContextProvider
+				controlId={controlId}
+				location={location}
+				serviceFactory={serviceFactory}
+				readonly={false}
+				localVariablesStore={localVariablesStore}
+				localVariablePrefix={localVariablePrefix}
 			>
-				<GenericConfirmModal ref={confirmModal} />
+				<PanelCollapseHelperProvider
+					storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}
+					knownPanelIds={entityIds}
+				>
+					<GenericConfirmModal ref={confirmModal} />
 
-				<EditableEntityList
-					controlId={controlId}
-					heading={heading}
-					headingActions={headingActions}
-					entities={entities}
-					location={location}
-					serviceFactory={serviceFactory}
-					ownerId={null}
-					entityType={entityType}
-					entityTypeLabel={entityTypeLabel}
-					onlyFeedbackType={onlyFeedbackType}
-					readonly={false}
-				/>
-			</PanelCollapseHelperProvider>
+					<EditableEntityList
+						heading={heading}
+						headingActions={headingActions}
+						entities={entities}
+						ownerId={null}
+						entityType={entityType}
+						entityTypeLabel={entityTypeLabel}
+						feedbackListType={feedbackListType}
+					/>
+				</PanelCollapseHelperProvider>
+			</EntityEditorContextProvider>
 		</div>
 	)
 })

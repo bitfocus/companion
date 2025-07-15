@@ -25,6 +25,7 @@ import {
 	ActionEntityModel,
 	EntityModelBase,
 	EntityModelType,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -164,7 +165,7 @@ export class InstanceDefinitions {
 					isInverted: false,
 				}
 
-				if (/*!booleanOnly &&*/ definition.feedbackType === 'boolean' && definition.feedbackStyle) {
+				if (/*!booleanOnly &&*/ definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
 					feedback.style = cloneDeep(definition.feedbackStyle)
 				}
 
@@ -287,6 +288,7 @@ export class InstanceDefinitions {
 			},
 			feedbacks: [],
 			steps: {},
+			localVariables: [],
 		}
 		if (definition.steps) {
 			for (let i = 0; i < definition.steps.length; i++) {

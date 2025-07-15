@@ -7,7 +7,8 @@ import { TextInputField } from '~/Components/index.js'
 import { TriggerEventEditor } from './EventEditor.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { useLocalVariablesStore } from '../Controls/LocalVariablesStore.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { trpc, useMutationExt } from '~/TRPC.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 
@@ -24,6 +25,8 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 	if (configError) errors.push(configError)
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const dataReady = !loadError && !!controlConfig
+
+	const localVariablesStore = useLocalVariablesStore(controlId, null)
 
 	return (
 		<div className="edit-button-panel flex-form">
@@ -70,8 +73,10 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 									listId="feedbacks"
 									entityType={EntityModelType.Feedback}
 									entityTypeLabel="condition"
-									onlyFeedbackType="boolean"
+									feedbackListType={FeedbackEntitySubType.Boolean}
 									location={undefined}
+									localVariablesStore={localVariablesStore}
+									localVariablePrefix={null}
 								/>
 							</MyErrorBoundary>
 
@@ -89,7 +94,9 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 									entities={controlConfig.config.actions}
 									entityType={EntityModelType.Action}
 									entityTypeLabel="action"
-									onlyFeedbackType={null}
+									feedbackListType={null}
+									localVariablesStore={localVariablesStore}
+									localVariablePrefix={null}
 								/>
 							</MyErrorBoundary>
 						</>

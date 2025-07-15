@@ -143,7 +143,7 @@ export class ControlButtonNormal
 			// Setup the parser
 			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
 				location,
-				[], // this.entities.getLocalVariableEntities(),
+				this.entities.getLocalVariableEntities(),
 				overrideVariableValues
 			)
 
@@ -289,6 +289,7 @@ export class ControlButtonNormal
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
+			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
 		return clone ? cloneDeep(obj) : obj

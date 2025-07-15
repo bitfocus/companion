@@ -11,6 +11,7 @@ import {
 	EditDurationGroupPropertiesModalRef,
 	EditDurationGroupPropertiesModal,
 } from './EditDurationGroupPropertiesModal.js'
+import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/TRPC.js'
 
 interface EditActionsReleaseProps {
@@ -20,6 +21,7 @@ interface EditActionsReleaseProps {
 	stepOptions: ActionStepOptions
 	stepId: string
 	removeSet: (stepId: string, setId: number) => void
+	localVariablesStore: LocalVariablesStore
 }
 
 export function EditActionsRelease({
@@ -29,6 +31,7 @@ export function EditActionsRelease({
 	stepOptions,
 	stepId,
 	removeSet,
+	localVariablesStore,
 }: EditActionsReleaseProps): React.JSX.Element {
 	const editRef = useRef<EditDurationGroupPropertiesModalRef>(null)
 
@@ -90,7 +93,9 @@ export function EditActionsRelease({
 					entities={actions}
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
-					onlyFeedbackType={null}
+					feedbackListType={null}
+					localVariablesStore={localVariablesStore}
+					localVariablePrefix={null}
 				/>
 			</MyErrorBoundary>
 		)
@@ -109,7 +114,9 @@ export function EditActionsRelease({
 					entities={action_sets['up']}
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
-					onlyFeedbackType={null}
+					feedbackListType={null}
+					localVariablesStore={localVariablesStore}
+					localVariablePrefix={null}
 				/>
 			</MyErrorBoundary>
 

@@ -1,6 +1,7 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -123,6 +124,49 @@ export function ParseInternalControlReference(
 
 	return { location, referencedVariables }
 }
+
+export const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
+	{
+		type: 'dropdown',
+		label: 'Target',
+		id: 'location_target',
+		default: 'this',
+		choices: [
+			{ id: 'this', label: 'This button' },
+			{ id: 'text', label: 'From text' },
+			{ id: 'expression', label: 'From expression' },
+		],
+	},
+	{
+		type: 'textinput',
+		label: 'Location (text with variables)',
+		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
+		id: 'location_text',
+		default: '$(this:page)/$(this:row)/$(this:column)',
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) == "text"',
+		},
+		useVariables: {
+			local: true,
+		},
+	},
+	{
+		type: 'textinput',
+		label: 'Location (expression)',
+		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
+		id: 'location_expression',
+		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) == "expression"',
+		},
+		useVariables: {
+			local: true,
+		},
+		isExpression: true,
+	},
+]
 
 export class InternalModuleUtils {
 	readonly #logger = LogController.createLogger('Internal/InternalModuleUtils')

@@ -23,7 +23,7 @@ import type {
 } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
@@ -144,7 +144,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			trigger_enabled: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Trigger: When enabled or disabled',
 				description: undefined,
 				feedbackStyle: {
@@ -171,7 +171,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			trigger_collection_enabled: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Trigger: When collection enabled or disabled',
 				description: undefined,
 				feedbackStyle: {

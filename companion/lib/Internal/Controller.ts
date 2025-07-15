@@ -94,7 +94,7 @@ export class InternalController {
 			new InternalSurface(internalUtils, surfaceController, controlsController, pageStore),
 			new InternalSystem(internalUtils, variablesController, requestExit),
 			new InternalTriggers(internalUtils, controlsController),
-			new InternalVariables(internalUtils, controlsController),
+			new InternalVariables(internalUtils, controlsController, pageStore),
 		]
 
 		this.#init()
@@ -528,13 +528,13 @@ export class InternalController {
 		this.#variablesController.definitions.setVariableDefinitions('internal', variables)
 	}
 
-	variablesChanged(all_changed_variables_set: Set<string>): void {
+	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		// Inform all fragments
 		for (const fragment of this.#fragments) {
-			if ('variablesChanged' in fragment && typeof fragment.variablesChanged === 'function') {
-				fragment.variablesChanged(all_changed_variables_set)
+			if (typeof fragment.onVariablesChanged === 'function') {
+				fragment.onVariablesChanged(changedVariablesSet, fromControlId)
 			}
 		}
 
@@ -544,8 +544,11 @@ export class InternalController {
 		for (const [id, feedback] of this.#feedbacks.entries()) {
 			if (!feedback.referencedVariables || !feedback.referencedVariables.length) continue
 
+			// If a specific control is specified, only update feedbacks for that control
+			if (fromControlId && feedback.controlId !== fromControlId) continue
+
 			// Check a referenced variable was changed
-			if (!feedback.referencedVariables.some((variable) => all_changed_variables_set.has(variable))) continue
+			if (!feedback.referencedVariables.some((variable) => changedVariablesSet.has(variable))) continue
 
 			newValues.push({
 				id: id,

@@ -25,6 +25,7 @@ import type {
 } from './Types.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
 
@@ -178,7 +179,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			instance_status: {
-				feedbackType: 'advanced',
+				feedbackType: FeedbackEntitySubType.Advanced,
 				label: 'Connection: Check Status',
 				description:
 					'Change button color on Connection Status\nDisabled color is not used when "All" connections is selected',
@@ -243,7 +244,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			instance_custom_state: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Connection: When matches specified status',
 				description: 'Change style when a connection matches the specified status',
 				feedbackStyle: {
@@ -274,7 +275,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			connection_collection_enabled: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Connection: When collection enabled or disabled',
 				description: undefined,
 				feedbackStyle: {

@@ -13,9 +13,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
-import { DropdownChoiceInt, ControlLocalVariables, InternalActionLocalVariables } from '~/LocalVariableDefinitions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
+import { LocalVariablesStore } from './LocalVariablesStore.js'
+import { observer } from 'mobx-react-lite'
 import { validateInputValue } from '~/Helpers/validateInputValue.js'
 
 interface OptionsInputFieldProps {
@@ -27,6 +28,7 @@ interface OptionsInputFieldProps {
 	setValue: (key: string, value: any) => void
 	visibility: boolean
 	readonly?: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
 function OptionLabel({
@@ -45,7 +47,7 @@ function OptionLabel({
 	)
 }
 
-export function OptionsInputField({
+export const OptionsInputField = observer(function OptionsInputField({
 	connectionId,
 	isLocatedInGrid,
 	entityType,
@@ -54,6 +56,7 @@ export function OptionsInputField({
 	setValue,
 	visibility,
 	readonly,
+	localVariablesStore,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
 	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
@@ -73,15 +76,9 @@ export function OptionsInputField({
 				local: typeof option.useVariables === 'object' && !!option.useVariables?.local,
 			}
 
-			let localVariables: DropdownChoiceInt[] | undefined
-			if (features.local) {
-				if (isLocatedInGrid) {
-					localVariables = ControlLocalVariables
-					if (isInternal && entityType === EntityModelType.Action) {
-						localVariables = InternalActionLocalVariables
-					}
-				}
-			}
+			const localVariables = features.local
+				? localVariablesStore?.getOptions(entityType, isInternal, isLocatedInGrid)
+				: undefined
 
 			control = (
 				<TextInputField
@@ -210,7 +207,7 @@ export function OptionsInputField({
 			</CCol>
 		</>
 	)
-}
+})
 
 export interface InputFeatureIconsProps {
 	variables?: boolean

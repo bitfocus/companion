@@ -86,11 +86,13 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 	getVariableDefinitions?: () => VariableDefinitionTmp[]
 	updateVariables?: () => void
+
+	onVariablesChanged?: (changedVariablesSet: Set<string>, fromControlId: string | null) => void
 }
 
 export interface ExecuteFeedbackResultWithReferences {
 	referencedVariables: string[]
-	value: any
+	value: CompanionFeedbackButtonStyleResult | CompanionVariableValue | undefined
 }
 
 export type InternalActionDefinition = SetOptional<
