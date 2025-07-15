@@ -181,15 +181,16 @@ export class ControlButtonNormal
 	 * @param foundConnectionLabels - instance labels being referenced
 	 */
 	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
-		const allEntities = this.entities.getAllEntities()
-
-		for (const entity of allEntities) {
-			foundConnectionIds.add(entity.connectionId)
-		}
-
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
-		ReferencesVisitors.visitControlReferences(this.deps.internalModule, visitor, this.#baseStyle, [], allEntities, [])
+		ReferencesVisitors.visitControlReferences(
+			this.deps.internalModule,
+			visitor,
+			this.#baseStyle,
+			[],
+			this.entities.getAllEntities(),
+			[]
+		)
 	}
 
 	/**

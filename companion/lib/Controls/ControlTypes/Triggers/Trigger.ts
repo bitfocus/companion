@@ -261,12 +261,6 @@ export class ControlTrigger
 	 * @param foundConnectionLabels - instance labels being referenced
 	 */
 	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
-		const allEntities = this.entities.getAllEntities()
-
-		for (const entities of allEntities) {
-			foundConnectionIds.add(entities.connectionId)
-		}
-
 		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
 
 		ReferencesVisitors.visitControlReferences(
@@ -274,7 +268,7 @@ export class ControlTrigger
 			visitor,
 			undefined,
 			[],
-			allEntities,
+			this.entities.getAllEntities(),
 			this.events
 		)
 	}

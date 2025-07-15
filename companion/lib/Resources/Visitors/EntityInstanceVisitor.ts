@@ -5,6 +5,8 @@ import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/En
  * Visits an entity instance.
  */
 export function visitEntityModel(visitor: InternalVisitor, entity: SomeEntityModel): void {
+	visitor.visitConnectionId(entity, 'connectionId')
+
 	if (entity.type === EntityModelType.Feedback) {
 		// Fixup any boolean feedbacks
 		if (entity.style?.text) {
