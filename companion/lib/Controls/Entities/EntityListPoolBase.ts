@@ -140,6 +140,7 @@ export abstract class ControlEntityListPoolBase {
 
 		return values
 	}
+
 	/**
 	 * Recursively get all the entities
 	 */
@@ -434,6 +435,8 @@ export abstract class ControlEntityListPoolBase {
 		if (!entity) return false
 
 		entity.setConnectionId(connectionId)
+
+		this.tryTriggerLocalVariablesChanged(entity)
 
 		this.commitChange()
 

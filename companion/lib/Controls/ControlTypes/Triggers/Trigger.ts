@@ -7,6 +7,8 @@ import { TriggersEventMisc } from './Events/Misc.js'
 import { clamp } from '../../../Resources/Util.js'
 import { TriggersEventVariables } from './Events/Variable.js'
 import { nanoid } from 'nanoid'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
@@ -18,8 +20,6 @@ import type {
 	ControlWithoutPushed,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
-import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -377,11 +377,9 @@ export class ControlTrigger
 	 * @access public
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
-		const allEntities = this.entities.getAllEntities()
-
 		// Fix up references
 		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
-			.visitEntities(allEntities, [])
+			.visitEntities(this.entities.getAllEntities(), [])
 			.visitEvents(this.events)
 			.recheckChangedFeedbacks()
 			.hasChanges()

@@ -1,5 +1,7 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep, omit } from 'lodash-es'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
@@ -7,8 +9,6 @@ import type {
 	ControlWithoutEvents,
 	ControlWithoutLayeredStyle,
 } from '../../IControlFragments.js'
-import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	NormalButtonModel,
 	NormalButtonOptions,

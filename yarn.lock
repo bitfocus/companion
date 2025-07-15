@@ -1353,7 +1353,7 @@ __metadata:
     marked-base-url: "npm:^1.1.7"
     mobx: "npm:^6.13.7"
     mobx-react-lite: "npm:^4.1.0"
-    mobx-utils: "npm:^6.1.0"
+    mobx-utils: "npm:^6.1.1"
     nanoid: "npm:^5.1.5"
     parse-numeric-range: "npm:^1.3.0"
     query-string: "npm:^9.2.2"
@@ -12330,12 +12330,12 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"mobx-utils@npm:^6.1.0":
-  version: 6.1.0
-  resolution: "mobx-utils@npm:6.1.0"
+"mobx-utils@npm:^6.1.1":
+  version: 6.1.1
+  resolution: "mobx-utils@npm:6.1.1"
   peerDependencies:
     mobx: ^6.0.0
-  checksum: 10c0/a4afd8a208ff809529cf24a01b29730207c93bb30510969ec21f11c842ea5b24d489b085cd2663b48fc278577e68f83b42a98113d81e6b5b0e3f37b232975336
+  checksum: 10c0/85de1f4b4b7854db6a27d28211a507bf937e9c25f0052eb913fed344c69f6b293153bb658971c0b8495d9a23571770215232e1df22ed54cae6b79e08bfab12a2
   languageName: node
   linkType: hard
 

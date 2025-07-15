@@ -170,6 +170,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 					},
 				],
 			},
+
 			expression_value: {
 				feedbackType: FeedbackEntitySubType.Value,
 				label: 'Evaluate Expression',

@@ -892,7 +892,7 @@ export class ImportExportController {
 			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
 		}
 
-		const allEntities: SomeEntityModel[] = [...result.feedbacks]
+		const allEntities: SomeEntityModel[] = [...result.feedbacks, ...result.localVariables]
 		if (control.steps) {
 			for (const [stepId, step] of Object.entries<any>(control.steps)) {
 				const newStepSets: ActionSetsModel = {
