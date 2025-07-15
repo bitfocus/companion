@@ -19,7 +19,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import {
 	ClientCustomVariableData,
-	CustomVariableModel2,
+	CustomVariableModel,
 	CustomVariableOptions,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import jsonPatch from 'fast-json-patch'
@@ -41,7 +41,7 @@ import { CustomVariableNameMap } from '../CustomVariableNameMap.js'
  * this program.
  */
 export class ControlCustomVariable
-	extends ControlBase<CustomVariableModel2>
+	extends ControlBase<CustomVariableModel>
 	implements
 		ControlWithoutActions,
 		ControlWithoutEvents,
@@ -97,7 +97,7 @@ export class ControlCustomVariable
 		deps: ControlDependencies,
 		customVariableNameMap: CustomVariableNameMap,
 		controlId: string,
-		storage: CustomVariableModel2 | null,
+		storage: CustomVariableModel | null,
 		isImport: boolean
 	) {
 		super(deps, controlId, `Controls/ControlTypes/CustomVariable/${controlId}`)
@@ -179,8 +179,8 @@ export class ControlCustomVariable
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
-	toJSON(clone = true): CustomVariableModel2 {
-		const obj: CustomVariableModel2 = {
+	toJSON(clone = true): CustomVariableModel {
+		const obj: CustomVariableModel = {
 			type: this.type,
 			options: this.options,
 			entity: this.entities.getRootEntity()?.asEntityModel(true) || null,

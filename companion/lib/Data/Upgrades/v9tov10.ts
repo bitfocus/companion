@@ -8,7 +8,7 @@ import type {
 	ExportTriggersListv10,
 	SomeExportv10,
 } from '@companion-app/shared/Model/ExportModel.js'
-import { CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { CustomVariableModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { CustomVariableOptionDefaultKey } from '../../Controls/CustomVariableConstants.js'
@@ -31,8 +31,8 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 	// }
 }
 
-function convertCustomVariables(oldVariables: CustomVariablesModelv6): Record<string, CustomVariableModel2> {
-	const newVariables: Record<string, CustomVariableModel2> = {}
+function convertCustomVariables(oldVariables: CustomVariablesModelv6): Record<string, CustomVariableModel> {
+	const newVariables: Record<string, CustomVariableModel> = {}
 
 	for (const [name, definition] of Object.entries(oldVariables)) {
 		newVariables[nanoid()] = {
@@ -71,7 +71,7 @@ function convertImportToV10(obj: SomeExportv6): SomeExportv10 {
 							pageId,
 							{
 								...cloneDeep(page),
-								id: nanoid(),
+								id: page.id || nanoid(),
 							},
 						])
 					)
@@ -86,7 +86,7 @@ function convertImportToV10(obj: SomeExportv6): SomeExportv10 {
 	} else if (obj.type == 'page') {
 		const newObj: ExportPageModelv10 = {
 			...cloneDeep(omit(obj, 'instances', 'page')),
-			page: cloneDeep({ ...obj.page, id: nanoid() }),
+			page: cloneDeep({ ...obj.page, id: obj.page.id || nanoid() }),
 			companionBuild: obj.companionBuild || 'Unknown',
 			connections: cloneDeep(obj.instances),
 			connectionCollections: cloneDeep(obj.connectionCollections) || [],

@@ -1,6 +1,6 @@
 import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { ConnectionCollection, ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
-import type { CustomVariableCollection, CustomVariableModel2 } from './CustomVariableModel.js'
+import type { CustomVariableCollection, CustomVariableModel } from './CustomVariableModel.js'
 import type { TriggerCollection } from './TriggerModel.js'
 import type { ImageLibraryExportData, ImageLibraryCollection } from './ImageLibraryModel.js'
 
@@ -46,7 +46,7 @@ export interface ExportTriggersListv10 extends ExportBase<'trigger_list'> {
 
 export type ExportTriggerContentv10 = Record<string, any> // TODO
 
-export type ExportCustomVariablesContentv10 = Record<string, CustomVariableModel2> // TODO
+export type ExportCustomVariablesContentv10 = Record<string, CustomVariableModel> // TODO
 
 export interface ExportPageContentv10 {
 	id: string

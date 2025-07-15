@@ -432,19 +432,4 @@ export class ControlEntityList {
 			entity.getAllEnabledConnectionIds(connectionIds)
 		}
 	}
-
-	// // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	// setVariableValue(name: string, value: any): boolean {
-	// 	if (!name) return false
-
-	// 	for (const entity of this.getAllEntities()) {
-	// 		if (entity.rawLocalVariableName === name) {
-	// 			entity.setUserValue(value)
-
-	// 			return true
-	// 		}
-	// 	}
-
-	// 	return false
-	// }
 }

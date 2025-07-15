@@ -6,7 +6,7 @@ import {
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
-import { CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { CustomVariableModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 
 export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 	#entities: ControlEntityList
@@ -21,16 +21,9 @@ export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 		})
 	}
 
-	loadStorage(storage: CustomVariableModel2, skipSubscribe: boolean, isImport: boolean): void {
+	loadStorage(storage: CustomVariableModel, skipSubscribe: boolean, isImport: boolean): void {
 		this.#entities.loadStorage(storage.entity ? [storage.entity] : [], skipSubscribe, isImport)
 	}
-
-	// /**
-	//  * Get the value from all feedbacks as a single boolean
-	//  */
-	// checkConditionValue(): boolean {
-	// 	return this.#feedbacks.getBooleanFeedbackValue()
-	// }
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
 		return []

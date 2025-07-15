@@ -325,6 +325,8 @@ export class ExportController {
 				if (control.options.collectionId) {
 					referencedCollectionIds.add(control.options.collectionId)
 				}
+			} else {
+				this.#logger.warn(`Control ${control.controlId} is not a valid trigger control!`)
 			}
 		}
 
@@ -503,6 +505,8 @@ export class ExportController {
 						referencedConnectionLabels,
 						referencedVariables
 					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid trigger control!`)
 				}
 			}
 			exp.triggers = triggersExport
@@ -525,6 +529,8 @@ export class ExportController {
 						referencedConnectionLabels,
 						referencedVariables
 					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid custom variable control!`)
 				}
 			}
 		}

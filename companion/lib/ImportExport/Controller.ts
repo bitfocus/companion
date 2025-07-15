@@ -66,7 +66,7 @@ import z from 'zod'
 import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { CustomVariableModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
@@ -154,9 +154,9 @@ export class ImportExportController {
 
 			// fix any db instances missing the upgradeIndex property
 			if (object.connections) {
-				for (const inst of Object.values(object.connections)) {
-					if (inst) {
-						inst.lastUpgradeIndex = inst.lastUpgradeIndex ?? -1
+				for (const connectionConfig of Object.values(object.connections)) {
+					if (connectionConfig) {
+						connectionConfig.lastUpgradeIndex = connectionConfig.lastUpgradeIndex ?? -1
 					}
 				}
 			}
@@ -190,14 +190,14 @@ export class ImportExportController {
 				imageLibrary: 'imageLibrary' in object,
 			}
 
-			for (const [instanceId, instance] of Object.entries(object.connections || {})) {
-				if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
+			for (const [connectionId, connectionConfig] of Object.entries(object.connections || {})) {
+				if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
 
-				clientObject.instances[instanceId] = {
-					instance_type: instance.instance_type,
-					moduleVersionId: instance.moduleVersionId ?? null,
-					label: instance.label,
-					sortOrder: instance.sortOrder,
+				clientObject.instances[connectionId] = {
+					instance_type: connectionConfig.instance_type,
+					moduleVersionId: connectionConfig.moduleVersionId ?? null,
+					label: connectionConfig.label,
+					sortOrder: connectionConfig.sortOrder,
 				}
 			}
 
@@ -824,9 +824,9 @@ export class ImportExportController {
 	}
 
 	#fixupCustomVariableControl(
-		control: CustomVariableModel2,
+		control: CustomVariableModel,
 		instanceIdMap: InstanceAppliedRemappings
-	): CustomVariableModel2 {
+	): CustomVariableModel {
 		// Future: this does not feel durable
 
 		const connectionLabelRemap: Record<string, string> = {}
@@ -840,7 +840,7 @@ export class ImportExportController {
 			}
 		}
 
-		const result: CustomVariableModel2 = {
+		const result: CustomVariableModel = {
 			type: 'custom-variable',
 			options: cloneDeep(control.options),
 			entity: null,

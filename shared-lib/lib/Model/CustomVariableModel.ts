@@ -1,20 +1,10 @@
-import type { CompanionVariableValue } from '@companion-module/base'
 import type { CollectionBase } from './Collections.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
-/** @deprecated */
-export interface CustomVariableDefinition {
-	description: string
-	defaultValue: CompanionVariableValue
-	persistCurrentValue: boolean
-	sortOrder: number
-	collectionId?: string
-}
-
 export type CustomVariableCollection = CollectionBase<null>
 
-export interface CustomVariableModel2 {
+export interface CustomVariableModel {
 	readonly type: 'custom-variable'
 	options: CustomVariableOptions
 

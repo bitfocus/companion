@@ -35,7 +35,7 @@ import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { ControlCustomVariable } from './ControlTypes/CustomVariable.js'
-import type { CustomVariableCollection, CustomVariableModel2 } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { CustomVariableCollection, CustomVariableModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { CustomVariableCollections } from '../Variables/CustomVariableCollections.js'
 import { createCustomVariablesTrpcRouter } from './CustomVariablesTrpcRouter.js'
 import { CustomVariableNameMap } from './CustomVariableNameMap.js'
@@ -473,7 +473,7 @@ export class ControlsController {
 	/**
 	 * Import a custom variable
 	 */
-	importCustomVariable(controlId: string, definition: CustomVariableModel2): ControlCustomVariable | undefined {
+	importCustomVariable(controlId: string, definition: CustomVariableModel): ControlCustomVariable | undefined {
 		if (!validateCustomVariableControlId(controlId)) {
 			// Control id is not valid!
 			return undefined
