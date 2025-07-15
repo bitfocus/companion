@@ -1,6 +1,16 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { makeAbsolutePath, MyErrorBoundary } from '~/util.js'
-import { CAlert, CButton, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import {
+	CAlert,
+	CButton,
+	CButtonGroup,
+	CFormCheck,
+	CNav,
+	CNavItem,
+	CNavLink,
+	CTabContent,
+	CTabPane,
+} from '@coreui/react'
 import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
@@ -159,19 +169,24 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	}, [])
 
 	const importFullMutation = useMutationExt(trpc.importExport.importFull.mutationOptions())
-	const doImport = useCallback(() => {
-		importFullMutation // TODO: 60s timeout?
-			.mutateAsync(config)
-			.then(() => {
-				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
-				window.location.reload()
-			})
-			.catch((e) => {
-				console.log('import failed', e)
-				notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
-			})
-		console.log('do import!')
-	}, [importFullMutation, notifier, config])
+	const doImport = useCallback(
+		(e: React.MouseEvent<HTMLElement>) => {
+			const fullReset = e.currentTarget.getAttribute('full-reset') === 'true'
+
+			importFullMutation // TODO: 60s timeout?
+				.mutateAsync({ choices: config, fullReset: fullReset })
+				.then(() => {
+					// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
+					window.location.reload()
+				})
+				.catch((e) => {
+					console.log('import failed', e)
+					notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
+				})
+			console.log('do import!')
+		},
+		[importFullMutation, notifier, config]
+	)
 
 	return (
 		<>
@@ -231,9 +246,15 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				All the connections will be imported, as they are required to be able to import any actions and feedbacks.
 			</CAlert>
 
-			<CButton color="warning" onClick={doImport} disabled={validConfigKeys.length === 0}>
-				<FontAwesomeIcon icon={faFileImport} /> Reset and Import
-			</CButton>
+			<CButtonGroup>
+				<CButton color="success" full-reset="false" onClick={doImport} disabled={validConfigKeys.length === 0}>
+					<FontAwesomeIcon icon={faFileImport} /> Import, Preserving unselected components
+				</CButton>
+
+				<CButton color="primary" full-reset="true" onClick={doImport} disabled={validConfigKeys.length === 0}>
+					<FontAwesomeIcon icon={faFileImport} /> Full Reset then Import
+				</CButton>
+			</CButtonGroup>
 		</>
 	)
 }
