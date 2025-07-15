@@ -1415,6 +1415,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				if (surfaceId.startsWith('emulator:')) {
 					this.addEmulator(surfaceId.substring(9), undefined, true)
+					// need the following to put the emulator on the "current" page, to match its export state
+					const group = this.#surfaceGroups.get(surfaceId)
+					group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
 				}
 			}
 		}

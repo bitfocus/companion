@@ -62,8 +62,8 @@ export interface SurfaceConfig {
 
 export interface SurfaceGroupConfig {
 	name: string
-	last_page_id: string
-	startup_page_id: string
+	last_page_id?: string // allow surfaces to be exported without these
+	startup_page_id?: string // allow surfaces to be exported without these
 	use_last_page: boolean
 
 	/** @deprecated. replaced by last_page_id */
