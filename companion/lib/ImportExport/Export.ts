@@ -44,6 +44,7 @@ import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { formatAttachmentFilename, StringifiedExportData, stringifyExport } from './Util.js'
 
 export class ExportController {
@@ -483,8 +484,25 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.surfaces)) {
-			exp.surfaces = this.#surfacesController.exportAll()
-			exp.surfaceGroups = this.#surfacesController.exportAllGroups()
+			const surfaces = this.#surfacesController.exportAll()
+			const surfaceGroups = this.#surfacesController.exportAllGroups()
+			const findPage = (id: string) => this.#pagesStore.getPageNumber(id)
+			// Convert internal page refs to page numbers.
+			// Note that `page`, which is a holdover from previous times, is already recorded as a number...
+			const setExportPageId = (groupConfig: SurfaceGroupConfig) => {
+				groupConfig.last_page = findPage(groupConfig.last_page_id) ?? 1
+				groupConfig.startup_page = findPage(groupConfig.startup_page_id) ?? 1
+			}
+
+			for (const surface of Object.values(surfaces)) {
+				setExportPageId(surface.groupConfig)
+			}
+			for (const groupConfig of Object.values(surfaceGroups)) {
+				setExportPageId(groupConfig)
+			}
+
+			exp.surfaces = surfaces
+			exp.surfaceGroups = surfaceGroups
 		}
 
 		return exp

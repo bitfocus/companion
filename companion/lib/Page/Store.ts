@@ -40,6 +40,12 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 	getFirstPageId(): string
 
 	/**
+	 * Get the internal id for a page, return undefined if page doesn't exist
+	 * Note that pageNumber is 1-based, as in the return value of `getPageNumber` or arg to `getPageInfo`
+	 */
+	getPageId(pageNumber: number): string | undefined
+
+	/**
 	 * Get the index of the given page id
 	 */
 	getPageNumber(pageId: string): number | null
@@ -215,6 +221,15 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	}
 
 	/**
+	 * Get the internal id for a page, return undefined if page doesn't exist
+	 * Note that pageNumber is 1-based, as in the return value of `getPageNumber` or arg to `getPageInfo`
+	 */
+	getPageId(pageNumber: number): string | undefined {
+		const id = this.#pageIds[pageNumber - 1]
+		return id
+	}
+
+	/**
 	 * Get the index of the given page id
 	 */
 	getPageNumber(pageId: string): number | null {
@@ -280,7 +295,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 
 	/**
 	 * Get a specific page object
-	 * @param pageNumber - the page id
+	 * @param pageNumber - the page number (1-based)
 	 * @param [clone = false] - <code>true</code> if a copy should be returned
 	 */
 	getPageInfo(pageNumber: number, clone = false): PageModel | undefined {

@@ -19,8 +19,8 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	customVariablesCollections?: CustomVariableCollection[] // Added in v4.1
 	instances?: ExportInstancesv6
 	connectionCollections?: ConnectionCollection[] // Added in v4.1
-	surfaces?: unknown
-	surfaceGroups?: unknown
+	surfaces?: unknown // Record<number, SurfaceConfig>
+	surfaceGroups?: unknown // Record<number, SurfaceGroupConfig>
 }
 
 export interface ExportPageModelv6 extends ExportBase<'page'> {
