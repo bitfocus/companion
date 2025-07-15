@@ -1,0 +1,13 @@
+diff --git a/dist/lib/utils/filter-service.js b/dist/lib/utils/filter-service.js
+index 80351a0085e396368139ee508781960a5945313e..b8d6735672c43c7952da85878448f20d03ab58cf 100644
+--- a/dist/lib/utils/filter-service.js
++++ b/dist/lib/utils/filter-service.js
+@@ -6,6 +6,8 @@ exports.default = (service, txtQuery) => {
+     let serviceTxt = service.txt;
+     let query = Object.entries(txtQuery)
+         .map(([key, value]) => {
++        if (serviceTxt === undefined)
++            return false;
+         let queryValue = serviceTxt[key];
+         if (queryValue === undefined)
+             return false;
