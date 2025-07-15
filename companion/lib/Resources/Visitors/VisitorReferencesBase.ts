@@ -6,7 +6,6 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import type { ExpressionOrValue, SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export class VisitorReferencesBase<T extends InternalVisitor> {
 	protected readonly internalModule: InternalController
@@ -46,25 +45,6 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 
 		for (const entity of entities) {
 			entity.visitReferences(this.visitor)
-		}
-
-		return this
-	}
-
-	visitDrawElements(elements: SomeButtonGraphicsElement[]): this {
-		for (const element of elements) {
-			for (const key in element) {
-				// Ignore some special/fixed properties
-				if (key === 'id' || key === 'type' || key === 'name') continue
-
-				// Check for an expressions in the property
-				const prop = element[key as keyof typeof element] as any as ExpressionOrValue<any>
-				if (typeof prop === 'object' && (prop.isExpression || typeof prop.value === 'string')) {
-					this.visitor.visitString(prop, 'value')
-				}
-			}
-
-			if (element.type === 'group') this.visitDrawElements(element.children)
 		}
 
 		return this
