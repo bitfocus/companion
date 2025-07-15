@@ -192,11 +192,9 @@ export class ControlButtonNormal
 		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		const allEntities = this.entities.getAllEntities()
-
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
 			.visitButtonDrawStlye(this.#baseStyle)
-			.visitEntities(allEntities, [])
+			.visitEntities(this.entities.getAllEntities(), [])
 	}
 
 	/**

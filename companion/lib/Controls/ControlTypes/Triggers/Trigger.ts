@@ -128,7 +128,7 @@ export class ControlTrigger
 
 	readonly #actionRunner: ControlActionRunner
 
-	readonly entities: ControlEntityListPoolTrigger // TODO - should this be private?
+	readonly entities: ControlEntityListPoolTrigger
 
 	/**
 	 * Whether this trigger and its parent collection is enabled or not
@@ -220,13 +220,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void {
-		this.entities.clearConnectionState(connectionId)
-	}
-
-	/**
 	 * Execute the actions of this trigger
 	 * @param nowTime
 	 * @param source The source of this execution
@@ -273,10 +266,8 @@ export class ControlTrigger
 		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		const allEntities = this.entities.getAllEntities()
-
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
-			.visitEntities(allEntities, [])
+			.visitEntities(this.entities.getAllEntities(), [])
 			.visitEvents(this.events)
 	}
 
@@ -359,17 +350,6 @@ export class ControlTrigger
 			...this.options,
 			lastExecuted: this.#lastExecuted,
 			description: eventStrings.join('<br />'),
-		}
-	}
-
-	/**
-	 * Remove any actions and feedbacks referencing a specified connectionId
-	 */
-	forgetConnection(connectionId: string): void {
-		const changed = this.entities.forgetConnection(connectionId)
-
-		if (changed) {
-			this.commitChange(true)
 		}
 	}
 

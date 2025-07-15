@@ -1,6 +1,5 @@
 import { describe, test, expect } from 'vitest'
 import { executeExpression, VariableValueCache } from '../../lib/Variables/Util.js'
-import { CompanionVariableValues } from '@companion-module/base'
 
 describe('executeExpression', () => {
 	test('basic math', () => {

@@ -11,65 +11,77 @@ export enum TRPCConnectionStatus {
 
 export interface TRPCConnectionState {
 	status: TRPCConnectionStatus
+	wasConnected: boolean
 	error?: string
 }
 
 export function useTRPCConnectionStatus(): TRPCConnectionState {
-	const [status, setStatus] = useState<TRPCConnectionState>({ status: TRPCConnectionStatus.Connecting })
+	const [status, setStatus] = useState<TRPCConnectionState>({
+		status: TRPCConnectionStatus.Connecting,
+		wasConnected: false,
+	})
 
 	useEffect(() => {
+		const setTrpcStatus = (newStatus: TRPCConnectionStatus, error?: string) => {
+			setStatus((oldStatus) => ({
+				status: newStatus,
+				wasConnected: oldStatus.wasConnected || oldStatus.status === TRPCConnectionStatus.Connected,
+				error: error,
+			}))
+		}
+
 		const handle = trpcWsClient.connectionState.subscribe({
 			next: (state) => {
 				switch (state.state) {
 					case 'connecting':
-						setStatus({ status: TRPCConnectionStatus.Connecting })
+						setTrpcStatus(TRPCConnectionStatus.Connecting)
 						break
 					case 'pending':
-						setStatus({ status: TRPCConnectionStatus.Connected })
+						setTrpcStatus(TRPCConnectionStatus.Connected)
 						break
 					case 'idle':
-						setStatus({ status: TRPCConnectionStatus.Unknown })
+						setTrpcStatus(TRPCConnectionStatus.Unknown)
 						break
 					default:
 						assertNever(state)
-						setStatus({ status: TRPCConnectionStatus.Unknown })
+						setTrpcStatus(TRPCConnectionStatus.Unknown)
 						break
 				}
 				console.log('TRPC connection state changed:', state)
 			},
 			error: (error) => {
 				// console.error('TRPC connection error:', error)
-				setStatus({ status: TRPCConnectionStatus.Unknown, error })
+				setTrpcStatus(TRPCConnectionStatus.Unknown, error)
 			},
 			complete: () => {
 				// console.log('TRPC connection completed')
-				setStatus({ status: TRPCConnectionStatus.Unknown })
+				setTrpcStatus(TRPCConnectionStatus.Unknown)
 			},
 		})
 
 		switch (trpcWsClient.connection?.state) {
 			case 'connecting':
-				setStatus({ status: TRPCConnectionStatus.Connecting })
+				setTrpcStatus(TRPCConnectionStatus.Connecting)
 				break
 			case 'closed':
-				setStatus({ status: TRPCConnectionStatus.Unknown })
+				setTrpcStatus(TRPCConnectionStatus.Unknown)
 				break
 			case 'open':
-				setStatus({ status: TRPCConnectionStatus.Connected })
+				setTrpcStatus(TRPCConnectionStatus.Connected)
 				break
 			case undefined:
-				setStatus({ status: TRPCConnectionStatus.Unknown })
+				setTrpcStatus(TRPCConnectionStatus.Unknown)
 				break
 			default:
 				assertNever(trpcWsClient.connection)
-				setStatus({ status: TRPCConnectionStatus.Unknown })
+				setTrpcStatus(TRPCConnectionStatus.Unknown)
 				break
 		}
 
 		return () => {
 			handle.unsubscribe()
 		}
-	}, [])
+	}, [setStatus])
 
 	return status
 }

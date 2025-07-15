@@ -20,8 +20,8 @@ export interface ExportFullv10 extends ExportBase<'full'> {
 	customVariablesCollections?: CustomVariableCollection[]
 	connections?: ExportConnectionsv10
 	connectionCollections?: ConnectionCollection[]
-	surfaces?: unknown
-	surfaceGroups?: unknown
+	surfaces?: unknown // Record<number, SurfaceConfig>
+	surfaceGroups?: unknown // Record<number, SurfaceGroupConfig>
 	imageLibrary?: ImageLibraryExportData[]
 	imageLibraryCollections?: ImageLibraryCollection[]
 }

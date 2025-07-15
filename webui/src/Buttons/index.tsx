@@ -347,7 +347,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 						</CTabPane>
 						<CTabPane visible={activeTab === 'action-recorder'}>
 							<MyErrorBoundary>
-								<ActionRecorder key={tabResetToken} />
+								<ActionRecorder />
 							</MyErrorBoundary>
 						</CTabPane>
 					</CTabContent>

@@ -1338,11 +1338,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	exportAll(): any {
+	exportAll(): Record<number, SurfaceConfig> {
 		return this.#dbTableSurfaces.all()
 	}
 
-	exportAllGroups(): any {
+	exportAllGroups(): Record<number, SurfaceGroupConfig> {
 		return this.#dbTableGroups.all()
 	}
 
@@ -1390,12 +1390,31 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					surface.setGroupId(newGroupId)
 					this.#attachSurfaceToGroup(surface)
 				}
+
+				// it appears that #surfaceHandlers and #surfaceGroups have independent copies of `groupConfig`...
+				//  and the one in #surfaceGroups is the one that controls the surface's ..page.. values.
+				// Note that #surfaceGroups includes both user-defined groups and surfaces that are not in groups (aka Auto Groups)
+				const group = this.#surfaceGroups.get(surfaceId)
+				// now copy the surfaceGroup into #surfaceGroups
+				// it appears that `surfaceHandlers` is empty if a surface is in a user-specified group
+				//  (note: I tried moving `&& group.surfaceHandlers.length > 0` to `group.#isAutoGroup` in Group.ts,
+				//  but it resulted in bogus groups being created when a device was attached -- and these groups only show up on next restart or on export.)
+				if (group && group.surfaceHandlers.length > 0) {
+					group.setName(surfaceConfig.groupConfig.name ?? '')
+					for (const [key, value] of Object.entries(surfaceConfig.groupConfig)) {
+						if (key === 'name') continue
+						group.setGroupConfigValue(key, value)
+					}
+				}
 			} else {
 				// Device is not loaded
 				this.setDeviceConfig(surfaceId, surfaceConfig)
 
 				if (surfaceId.startsWith('emulator:')) {
 					this.addEmulator(surfaceId.substring(9), undefined, true)
+					// need the following to put the emulator on the "current" page, to match its export state
+					const group = this.#surfaceGroups.get(surfaceId)
+					group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
 				}
 			}
 		}

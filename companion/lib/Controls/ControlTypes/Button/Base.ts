@@ -176,13 +176,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	}
 
 	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void {
-		this.entities.clearConnectionState(connectionId)
-	}
-
-	/**
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
@@ -191,17 +184,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		this.entities.destroy()
 
 		super.destroy()
-	}
-
-	/**
-	 * Remove any actions and feedbacks referencing a specified connectionId
-	 */
-	forgetConnection(connectionId: string): void {
-		const changed = this.entities.forgetConnection(connectionId)
-
-		if (changed) {
-			this.commitChange(true)
-		}
 	}
 
 	protected getDrawStyleButtonStateProps(): DrawStyleButtonStateProps {
