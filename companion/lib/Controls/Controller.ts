@@ -365,7 +365,7 @@ export class ControlsController {
 		if (newControl) {
 			this.#controls.set(newControlId, newControl)
 
-			this.#registry.page.store.setControlIdAt(location, newControlId)
+			this.#registry.page.setControlIdAt(location, newControlId)
 
 			newControl.triggerRedraw()
 
@@ -499,7 +499,7 @@ export class ControlsController {
 
 		const location = this.#registry.page.store.getLocationOfControlId(controlId)
 		if (location) {
-			this.#registry.page.store.setControlIdAt(location, null)
+			this.#registry.page.setControlIdAt(location, null)
 
 			// Notify interested parties
 			this.#controlEvents.emit('updateButtonState', location, false, undefined)
@@ -537,7 +537,7 @@ export class ControlsController {
 		if (!newControl) return null
 
 		this.#controls.set(controlId, newControl)
-		this.#registry.page.store.setControlIdAt(location, controlId)
+		this.#registry.page.setControlIdAt(location, controlId)
 
 		// Notify interested parties
 		this.#controlEvents.emit('updateButtonState', location, false, undefined)

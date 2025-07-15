@@ -1,5 +1,5 @@
 import { default_nav_buttons_definitions } from './Defaults.js'
-import { PageStore } from './Store.js'
+import { IPageStore, PageStore } from './Store.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	PageModel,
@@ -44,7 +44,11 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	readonly #controlsController: ControlsController
 	readonly #userconfigController: DataUserConfig
 
-	readonly store: PageStore
+	readonly #store: PageStore
+
+	get store(): IPageStore {
+		return this.#store
+	}
 
 	constructor(
 		graphicsController: GraphicsController,
@@ -58,15 +62,15 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.#graphicsController = graphicsController
 		this.#controlsController = controlsController
 		this.#userconfigController = userconfigController
-		this.store = store
+		this.#store = store
 
 		// Listen to store events to emit controller events
-		this.store.on('controlLocationChanged', (controlId) => {
+		this.#store.on('controlLocationChanged', (controlId) => {
 			this.emit('controlIdsMoved', [controlId])
 		})
 
 		// Check if we need to create a default page
-		const createdDefault = this.store._ensureDefaultPageExists()
+		const createdDefault = this.#store._ensureDefaultPageExists()
 		if (createdDefault) {
 			setImmediate(() => {
 				this.createPageDefaultNavButtons(1)
@@ -84,8 +88,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 				yield {
 					type: 'init',
-					order: [...self.store.getPageIds()],
-					pages: { ...self.store.getPagesById() },
+					order: [...self.#store.getPageIds()],
+					pages: { ...self.#store.getPagesById() },
 				} satisfies PageModelChangesInit
 
 				for await (const [change] of changes) {
@@ -115,10 +119,10 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				.mutation(({ input }) => {
 					this.#logger.silly(`trpc: pages:remove ${input.pageNumber}`)
 
-					if (this.store.getPageCount() === 1) return 'fail'
+					if (this.#store.getPageCount() === 1) return 'fail'
 
 					// Delete the controls, and allow them to redraw
-					const controlIds = this.store.getAllControlIdsOnPage(input.pageNumber)
+					const controlIds = this.#store.getAllControlIdsOnPage(input.pageNumber)
 					for (const controlId of controlIds) {
 						this.#controlsController.deleteControl(controlId)
 					}
@@ -160,7 +164,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 					this.#logger.silly(`trpc: pages:clearPage ${input.pageNumber}`)
 
 					// Delete the controls, and allow them to redraw
-					const controlIds = this.store.getAllControlIdsOnPage(input.pageNumber)
+					const controlIds = this.#store.getAllControlIdsOnPage(input.pageNumber)
 					for (const controlId of controlIds) {
 						this.#controlsController.deleteControl(controlId)
 					}
@@ -185,16 +189,16 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 					this.#logger.silly(`trpc: pages:move ${input.pageId} to ${input.pageNumber}`)
 
 					// Bounds checks
-					if (this.store.getPageCount() === 1) return 'fail'
-					if (input.pageNumber < 1 || input.pageNumber > this.store.getPageCount()) return 'fail'
+					if (this.#store.getPageCount() === 1) return 'fail'
+					if (input.pageNumber < 1 || input.pageNumber > this.#store.getPageCount()) return 'fail'
 
 					// Find current index of the page
-					const pageIds = [...this.store.getPageIds()]
+					const pageIds = [...this.#store.getPageIds()]
 					const currentPageIndex = pageIds.indexOf(input.pageId)
 					if (currentPageIndex === -1) return 'fail'
 
 					// move the page
-					this.store._movePageInOrder(currentPageIndex, input.pageNumber - 1)
+					this.#store._movePageInOrder(currentPageIndex, input.pageNumber - 1)
 
 					// Update cache for controls on later pages
 					const { changedPageIds } = this.#updateAndRedrawAllPagesAfter(
@@ -205,13 +209,13 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 					// save and report changes
 					this.emit('clientUpdate', {
 						type: 'update',
-						updatedOrder: [...this.store.getPageIds()],
+						updatedOrder: [...this.#store.getPageIds()],
 						added: [],
 						changes: [],
 					})
 
 					// inform other interested controllers
-					this.store.emit('pageindexchange', changedPageIds)
+					this.#store.emit('pageindexchange', changedPageIds)
 
 					return 'ok'
 				}),
@@ -242,36 +246,36 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	deletePage(pageNumber: number): string[] {
 		this.#logger.silly('Delete page ' + pageNumber)
 
-		if (pageNumber === 1 && this.store.getPageCount() == 1) throw new Error(`Can't delete last page`)
+		if (pageNumber === 1 && this.#store.getPageCount() == 1) throw new Error(`Can't delete last page`)
 
 		// Fetch the page and ensure it exists
-		const pageInfo = this.store.getPageInfo(pageNumber)
+		const pageInfo = this.#store.getPageInfo(pageNumber)
 		if (!pageInfo) return []
 
-		const removedControls = this.store.getAllControlIdsOnPage(pageNumber)
+		const removedControls = this.#store.getAllControlIdsOnPage(pageNumber)
 
 		// Delete the info for the page
-		this.store._removePage(pageInfo.id)
+		this.#store._removePage(pageInfo.id)
 
 		// Update cache for controls on later pages
 		const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesAfter(pageNumber, null)
 
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
-		const missingPageNumber = this.store.getPageIds().length + 1
+		const missingPageNumber = this.#store.getPageIds().length + 1
 		changedPageNumbers.push(missingPageNumber)
 		this.#graphicsController.clearAllForPage(missingPageNumber)
 		changedPageIds.add(pageInfo.id)
 
 		this.emit('clientUpdate', {
 			type: 'update',
-			updatedOrder: [...this.store.getPageIds()],
+			updatedOrder: [...this.#store.getPageIds()],
 			added: [],
 			changes: [],
 		})
 
 		// inform other interested controllers
-		this.store.emit('pagecount', this.store.getPageCount())
-		this.store.emit('pageindexchange', changedPageIds)
+		this.#store.emit('pagecount', this.#store.getPageCount())
+		this.#store.emit('pageindexchange', changedPageIds)
 		this.emit('controlIdsMoved', removedControls)
 
 		return removedControls
@@ -281,10 +285,10 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * Insert a new page, with the given page number
 	 */
 	insertPages(asPageNumber: number, pageNames: string[]): string[] {
-		if (asPageNumber > this.store.getPageCount() + 1 || asPageNumber <= 0)
+		if (asPageNumber > this.#store.getPageCount() + 1 || asPageNumber <= 0)
 			throw new Error('New page number is out of range')
 
-		const insertedPages = this.store._addPages(pageNames, asPageNumber)
+		const insertedPages = this.#store._addPages(pageNames, asPageNumber)
 
 		// Early exit if not inserting anything
 		if (insertedPages.length === 0) {
@@ -297,14 +301,14 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		// inform clients
 		this.emit('clientUpdate', {
 			type: 'update',
-			updatedOrder: [...this.store.getPageIds()],
+			updatedOrder: [...this.#store.getPageIds()],
 			added: insertedPages,
 			changes: [],
 		})
 
 		// inform other interested controllers
-		this.store.emit('pagecount', this.store.getPageCount())
-		this.store.emit('pageindexchange', changedPageIds)
+		this.#store.emit('pagecount', this.#store.getPageCount())
+		this.#store.emit('pageindexchange', changedPageIds)
 
 		return insertedPages.map((p) => p.id)
 	}
@@ -319,12 +323,12 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		lastPageNumber: number | null
 	): { changedPageNumbers: number[]; changedPageIds: Set<string> } {
 		// Rebuild location cache
-		this.store._rebuildLocationCache()
+		this.#store._rebuildLocationCache()
 
 		const changedPageNumbers: number[] = []
 		const changedPageIds = new Set<string>()
 
-		const pageCount = this.store.getPageCount()
+		const pageCount = this.#store.getPageCount()
 		if (lastPageNumber) {
 			lastPageNumber = Math.min(lastPageNumber, pageCount)
 		} else {
@@ -332,7 +336,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		}
 
 		for (let pageNumber = firstPageNumber; pageNumber <= lastPageNumber; pageNumber++) {
-			const pageInfo = this.store.getPageInfo(pageNumber)
+			const pageInfo = this.#store.getPageInfo(pageNumber)
 			if (!pageInfo) continue
 
 			this.#invalidateAllControlsOnPageNumber(pageNumber, pageInfo)
@@ -348,11 +352,11 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * Set the controlId at a specific location
 	 */
 	setControlIdAt(location: ControlLocation, controlId: string | null): boolean {
-		const page = this.store.getPageInfo(location.pageNumber)
+		const page = this.#store.getPageInfo(location.pageNumber)
 		if (!page) return false
 
-		const oldControlId = this.store.getControlIdAt(location)
-		const success = this.store.setControlIdAt(location, controlId)
+		const oldControlId = this.#store.getControlIdAt(location)
+		const success = this.#store.setControlIdAt(location, controlId)
 
 		if (success) {
 			this.emit('clientUpdate', {
@@ -391,10 +395,10 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.#logger.silly('Reset page ' + pageNumber)
 
 		// Fetch the page and ensure it exists
-		const pageInfo = this.store.getPageInfo(pageNumber)
+		const pageInfo = this.#store.getPageInfo(pageNumber)
 		if (!pageInfo) return []
 
-		const removedControls = this.store.getAllControlIdsOnPage(pageNumber)
+		const removedControls = this.#store.getAllControlIdsOnPage(pageNumber)
 
 		const controlChanges: PageModelChangesItem['controls'] = []
 
@@ -411,10 +415,10 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		}
 
 		// Reset the page controls using the store
-		this.store._resetPageControls(pageNumber)
+		this.#store._resetPageControls(pageNumber)
 
 		// Reset page name using the store
-		const newPageInfo = this.store._setPageName(pageNumber, 'PAGE')
+		const newPageInfo = this.#store._setPageName(pageNumber, 'PAGE')
 
 		if (redraw && newPageInfo) this.#invalidatePageNumberControls(pageNumber, newPageInfo)
 		this.emit('clientUpdate', {
@@ -444,7 +448,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				...location,
 				pageNumber,
 			}
-			const oldControlId = this.store.getControlIdAt(fullLocation)
+			const oldControlId = this.#store.getControlIdAt(fullLocation)
 			if (oldControlId) this.#controlsController.deleteControl(oldControlId)
 
 			this.#controlsController.createButtonControl(fullLocation, type)
@@ -458,7 +462,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		const foundControlIds: string[] = []
 
 		const { minColumn, maxColumn, minRow, maxRow } = this.#userconfigController.getKey('gridSize')
-		const pagesById = this.store.getPagesById()
+		const pagesById = this.#store.getPagesById()
 
 		for (const page of Object.values(pagesById)) {
 			for (const row of Object.keys(page.controls)) {
@@ -489,12 +493,12 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * @param redraw - <code>true</code> if the graphics should invalidate
 	 */
 	setPageName(pageNumber: number, name: string, redraw = true): void {
-		const pageInfo = this.store.getPageInfo(pageNumber)
+		const pageInfo = this.#store.getPageInfo(pageNumber)
 		if (!pageInfo) {
 			throw new Error('Page must be created before it can be imported to')
 		}
 
-		const newPageInfo = this.store._setPageName(pageNumber, name)
+		const newPageInfo = this.#store._setPageName(pageNumber, name)
 
 		this.#logger.silly('Set page ' + pageNumber + ' to ', name)
 
