@@ -179,7 +179,6 @@ export class ControlsController {
 			actionRunner: this.actionRunner,
 			events: this.#controlEvents,
 			changeEvents: this.#controlChangeEvents,
-			customVariableNamesMap: this.#customVariableNamesMap,
 		}
 	}
 
@@ -326,11 +325,14 @@ export class ControlsController {
 
 		if (category === 'all' || category === 'custom-variable') {
 			if (controlObj2?.type === 'custom-variable' || (controlType === 'custom-variable' && !controlObj2)) {
-				const variable = new ControlCustomVariable(this.#createControlDependencies(), controlId, controlObj2, isImport)
-				// setImmediate(() => {
-				// 	// Ensure the trigger is enabled, on a slight debounce
-				// 	trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
-				// })
+				const variable = new ControlCustomVariable(
+					this.#createControlDependencies(),
+					this.#customVariableNamesMap,
+					controlId,
+					controlObj2,
+					isImport
+				)
+
 				return variable
 			}
 		}
@@ -589,11 +591,6 @@ export class ControlsController {
 	deleteControl(controlId: string): void {
 		const control = this.getControl(controlId)
 		if (control) {
-			// Handle custom variable removal from names map
-			if (control instanceof ControlCustomVariable) {
-				this.#customVariableNamesMap.removeCustomVariable(controlId, control.options.variableName)
-			}
-
 			control.destroy()
 			this.#controls.delete(controlId)
 

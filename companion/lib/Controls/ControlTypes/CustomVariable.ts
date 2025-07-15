@@ -26,6 +26,7 @@ import jsonPatch from 'fast-json-patch'
 import { CompanionVariableValue } from '@companion-module/base'
 import { isInternalUserValueFeedback } from '../Entities/EntityInstance.js'
 import { CustomVariableOptionDefaultKey } from '../CustomVariableConstants.js'
+import { CustomVariableNameMap } from '../CustomVariableNameMap.js'
 
 /**
  * Class for a custom variable.
@@ -62,6 +63,8 @@ export class ControlCustomVariable
 	readonly supportsOptions = true
 	readonly supportsPushed = false
 
+	readonly #customVariableNameMap: CustomVariableNameMap
+
 	/**
 	 * The defaults options for a trigger
 	 */
@@ -90,8 +93,16 @@ export class ControlCustomVariable
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(deps: ControlDependencies, controlId: string, storage: CustomVariableModel2 | null, isImport: boolean) {
+	constructor(
+		deps: ControlDependencies,
+		customVariableNameMap: CustomVariableNameMap,
+		controlId: string,
+		storage: CustomVariableModel2 | null,
+		isImport: boolean
+	) {
 		super(deps, controlId, `Controls/ControlTypes/CustomVariable/${controlId}`)
+
+		this.#customVariableNameMap = customVariableNameMap
 
 		this.entities = new EntityListPoolCustomVariable({
 			controlId,
@@ -119,7 +130,7 @@ export class ControlCustomVariable
 			this.options = storage.options || this.options
 			this.entities.loadStorage(storage, true, isImport)
 
-			if (isImport) this.postProcessImport()
+			if (isImport) this.#postProcessImport()
 			else this.commitChange()
 		}
 	}
@@ -138,13 +149,6 @@ export class ControlCustomVariable
 	}
 
 	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void {
-		this.entities.clearConnectionState(connectionId)
-	}
-
-	/**
 	 * Collect the instance ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
@@ -155,14 +159,12 @@ export class ControlCustomVariable
 		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		const allEntities = this.entities.getAllEntities()
-
 		new VisitorReferencesCollector(
 			this.deps.internalModule,
 			foundConnectionIds,
 			foundConnectionLabels,
 			foundVariables
-		).visitEntities(allEntities, [])
+		).visitEntities(this.entities.getAllEntities(), [])
 	}
 
 	/**
@@ -190,20 +192,7 @@ export class ControlCustomVariable
 		return {
 			type: this.type,
 			...this.options,
-			isActive: this.deps.customVariableNamesMap.isCustomVariableActive(this.controlId),
-			// lastExecuted: this.#lastExecuted,
-			// description: eventStrings.join('<br />'),
-		}
-	}
-
-	/**
-	 * Remove any actions and feedbacks referencing a specified connectionId
-	 */
-	forgetConnection(connectionId: string): void {
-		const changed = this.entities.forgetConnection(connectionId)
-
-		if (changed) {
-			this.commitChange(true)
+			isActive: this.#customVariableNameMap.isCustomVariableActive(this.controlId),
 		}
 	}
 
@@ -240,7 +229,7 @@ export class ControlCustomVariable
 			this.options[key] = value
 
 			// Update the names map through the dependency
-			this.deps.customVariableNamesMap.updateCustomVariableName(this.controlId, oldVariableName, value)
+			this.#customVariableNameMap.updateCustomVariableName(this.controlId, oldVariableName, value)
 		} else {
 			// @ts-expect-error mistmatch in types
 			this.options[key] = value
@@ -254,7 +243,7 @@ export class ControlCustomVariable
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	postProcessImport(): void {
+	#postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()
@@ -262,11 +251,9 @@ export class ControlCustomVariable
 	}
 
 	/**
-	 * Emit a change to the runtime properties of this control.
-	 * This is for any properties that the ui may want about this control which are not persisted in toJSON()
-	 * This is done via this.toRuntimeJSON()
+	 * Emit a change to the client json of this control.
 	 */
-	#sendTriggerJsonChange(): void {
+	#sendClientJsonChange(): void {
 		const newJson = cloneDeep(this.toClientJSON())
 
 		if (this.deps.changeEvents.listenerCount('customVariableChange') > 0) {
@@ -294,13 +281,15 @@ export class ControlCustomVariable
 	commitChange(redraw = true): void {
 		super.commitChange(redraw)
 
-		this.#sendTriggerJsonChange()
+		this.#sendClientJsonChange()
 
 		this.deps.events.emit('customVariableDefinitionChanged', this.controlId, this.toClientJSON())
 	}
 
 	destroy(): void {
 		this.entities.destroy()
+
+		this.#customVariableNameMap.removeCustomVariable(this.controlId, this.options.variableName)
 
 		super.destroy()
 
@@ -324,7 +313,7 @@ export class ControlCustomVariable
 			if (!name) return
 
 			// Only emit variable value if this control is the active one for this variable name
-			if (this.deps.customVariableNamesMap.isCustomVariableActive(this.controlId)) {
+			if (this.#customVariableNameMap.isCustomVariableActive(this.controlId)) {
 				this.deps.variables.values.setVariableValues('custom', [
 					{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
 				])

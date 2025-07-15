@@ -49,7 +49,7 @@ export function createCustomVariablesTrpcRouter(
 
 		create: publicProcedure.mutation(() => {
 			const controlId = CreateCustomVariableControlId(nanoid())
-			const newControl = new ControlCustomVariable(deps, controlId, null, false)
+			const newControl = new ControlCustomVariable(deps, customVariableNamesMap, controlId, null, false)
 			controlsMap.set(controlId, newControl)
 
 			// Add variable to the end of the list
@@ -82,8 +82,6 @@ export function createCustomVariablesTrpcRouter(
 			if (control) {
 				control.destroy()
 
-				customVariableNamesMap.removeCustomVariable(controlId, control.options.variableName)
-
 				controlsMap.delete(controlId)
 
 				dbTable.delete(controlId)
@@ -107,7 +105,7 @@ export function createCustomVariablesTrpcRouter(
 			if (fromControl && fromControl instanceof ControlCustomVariable) {
 				const controlJson = fromControl.toJSON(true)
 
-				const newControl = new ControlCustomVariable(deps, newControlId, controlJson, true)
+				const newControl = new ControlCustomVariable(deps, customVariableNamesMap, newControlId, controlJson, true)
 				controlsMap.set(newControlId, newControl)
 
 				customVariableNamesMap.addCustomVariable(newControlId, newControl.options.variableName)

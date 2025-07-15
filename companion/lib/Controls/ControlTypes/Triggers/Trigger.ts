@@ -186,7 +186,7 @@ export class ControlTrigger
 			this.entities.loadStorage(storage, true, isImport)
 			this.events = storage.events || this.events
 
-			if (isImport) this.postProcessImport()
+			if (isImport) this.#postProcessImport()
 		}
 
 		// Ensure trigger is stored before setup
@@ -510,7 +510,7 @@ export class ControlTrigger
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	postProcessImport(): void {
+	#postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()

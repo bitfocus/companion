@@ -11,7 +11,6 @@ import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { ClientCustomVariableData, CustomVariableUpdate } from '@companion-app/shared/Model/CustomVariableModel.js'
-import type { CustomVariableNameMap } from './CustomVariableNameMap.js'
 
 export interface ControlDependencies {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
@@ -28,8 +27,6 @@ export interface ControlDependencies {
 
 	readonly events: EventEmitter<ControlCommonEvents>
 	readonly changeEvents: EventEmitter<ControlChangeEvents>
-
-	readonly customVariableNamesMap: CustomVariableNameMap
 }
 
 export interface ControlCommonEvents {
