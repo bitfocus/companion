@@ -2,7 +2,6 @@ import LogController, { Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
 	EntityOwner,
-	FeedbackEntitySubType,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
@@ -129,12 +128,8 @@ export abstract class ControlEntityListPoolBase {
 		for (const entity of entities) {
 			const variableName = entity.localVariableName
 			if (variableName) {
-				const definition = entity.getEntityDefinition()
 				// Strip off the prefix, as the ui doesn't expect that
-				values[variableName.slice('local:'.length)] =
-					definition?.feedbackType === FeedbackEntitySubType.Boolean
-						? entity.getBooleanFeedbackValue()
-						: entity.feedbackValue
+				values[variableName.slice('local:'.length)] = entity.getResolvedFeedbackValue()
 			}
 		}
 
@@ -344,6 +339,7 @@ export abstract class ControlEntityListPoolBase {
 
 			// Check if the new parent can hold the feedback being moved
 			if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldInfo.item)) return false
+			if (!newParent && newEntityList.canAcceptEntity(oldInfo.item)) return false
 
 			const poppedFeedback = oldInfo.parent.popEntity(oldInfo.index)
 			if (!poppedFeedback) return false
@@ -504,13 +500,11 @@ export abstract class ControlEntityListPoolBase {
 
 		if (!isInternalUserValueFeedback(entity)) return false
 
-		entity.setUserValue(value)
+		const needsPersistence = entity.setUserValue(value)
 
 		// Persist value if needed
-		if (entity.rawOptions.persist_value) {
-			entity.rawOptions.startup_value = value
-
-			this.commitChange()
+		if (needsPersistence) {
+			this.commitChange(false)
 		}
 
 		this.tryTriggerLocalVariablesChanged(entity)

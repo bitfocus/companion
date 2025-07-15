@@ -37,6 +37,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 import type { ControlsController } from '../Controls/Controller.js'
+import { CustomVariableOptionDefaultKey } from '../Controls/CustomVariableConstants.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 	type: 'dropdown',
@@ -200,7 +201,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 					{
 						type: 'textinput',
 						label: 'Startup Value',
-						id: 'startup_value',
+						id: CustomVariableOptionDefaultKey,
 						default: '1',
 						isVisibleUi: {
 							type: 'expression',
@@ -442,13 +443,22 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			return true
 		} else if (action.definitionId === 'local_variable_reset_to_default') {
 			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				entityPool.entitySetVariableValue(listId, variableEntity.id, variableEntity.rawOptions.startup_value)
+				entityPool.entitySetVariableValue(
+					listId,
+					variableEntity.id,
+					variableEntity.rawOptions[CustomVariableOptionDefaultKey]
+				)
 			})
 
 			return true
 		} else if (action.definitionId === 'local_variable_sync_to_default') {
 			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				entityPool.entrySetOptions(listId, variableEntity.id, 'startup_value', variableEntity.feedbackValue)
+				entityPool.entrySetOptions(
+					listId,
+					variableEntity.id,
+					CustomVariableOptionDefaultKey,
+					variableEntity.feedbackValue
+				)
 			})
 
 			return true

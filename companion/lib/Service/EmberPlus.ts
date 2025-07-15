@@ -134,6 +134,10 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 
 	private startEventListeners(): void {
+		this.#serviceApi.on('updateButtonState', (location, pushed, surfaceId) => {
+			this.#updateButtonState(location, pushed, surfaceId)
+		})
+
 		this.#serviceApi.on('variables_changed', (variables, connection_labels) => {
 			if ((!connection_labels.has('internal') && !connection_labels.has('custom')) || this.#server == undefined) return // We don't care about any other variables
 			variables.forEach((changedVariable) => {
@@ -151,7 +155,7 @@ export class ServiceEmberPlus extends ServiceBase {
 						this.logger.debug(`New custom variable: ${name} restarting server`)
 						this.debounceRestart()
 					} else {
-						const value = this.#serviceApi.getCustomVariableValue(name)?.toString()
+						const value = this.#serviceApi.getConnectionVariableValue('custom', name)?.toString()
 						if (value === undefined) return
 						this.#updateNodePath(path, value)
 					}
@@ -169,7 +173,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				}
 			})
 		})
-		this.#serviceApi.on('custom_variable_definition_changed', (id, _info) => {
+		this.#serviceApi.on('customVariableDefinitionChanged', (id, _info) => {
 			if (this.#server) {
 				if (!this.#customVars.includes(id)) {
 					this.debounceRestart()
@@ -177,7 +181,7 @@ export class ServiceEmberPlus extends ServiceBase {
 				} else {
 					const path = buildPathForVariable(id, 'custom', this.#customVars)
 					if (path === undefined) return
-					const description = this.#serviceApi.getCustomVariableDescription(id)
+					const description = this.#serviceApi.getCustomVariableDescription(id) || 'Unknown name'
 					this.#updateNodeDescription(path, description)
 					this.#updateNodeDescription(path.substring(0, path.length - 2), description)
 				}
@@ -427,7 +431,7 @@ export class ServiceEmberPlus extends ServiceBase {
 			)
 		}
 		for (let i = 0; i < this.#customVars.length; i++) {
-			const value = this.#serviceApi.getCustomVariableValue(this.#customVars[i])
+			const value = this.#serviceApi.getConnectionVariableValue('custom', this.#customVars[i])
 			customVarNodes[i] = new EmberModel.NumberedTreeNodeImpl(
 				i,
 				new EmberModel.EmberNodeImpl(
@@ -440,7 +444,7 @@ export class ServiceEmberPlus extends ServiceBase {
 						new EmberModel.ParameterImpl(
 							EmberModel.ParameterType.String,
 							'string',
-							this.#serviceApi.getCustomVariableDescription(this.#customVars[i]),
+							this.#serviceApi.getCustomVariableDescription(this.#customVars[i]) || 'Unknown name',
 							value?.toString() ?? '',
 							undefined,
 							undefined,
@@ -747,7 +751,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	 * @param pushed - the state
 	 * @param checks the <code>surfaceId</code> to ensure that Ember+ doesn't loop its own state change back
 	 */
-	updateButtonState(location: ControlLocation, pushed: boolean, surfaceId: string | undefined): void {
+	#updateButtonState(location: ControlLocation, pushed: boolean, surfaceId: string | undefined): void {
 		if (!this.#server) return
 		if (surfaceId === 'emberplus') return
 

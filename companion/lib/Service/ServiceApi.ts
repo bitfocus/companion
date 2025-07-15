@@ -3,16 +3,17 @@ import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import { VariablesValuesEvents } from '../Variables/Values.js'
-import { VariablesCustomVariableEvents } from '../Variables/CustomVariable.js'
+import type { VariablesValuesEvents } from '../Variables/Values.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
-import { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
+import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
+import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import EventEmitter from 'events'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import LogController from '../Log/Controller.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -33,9 +34,11 @@ import EventEmitter from 'events'
 type ServiceApiEvents =
 	| Pick<VariablesValuesEvents, 'variables_changed'>
 	| Pick<ActionRecorderEvents, 'action_recorder_is_running'>
-	| Pick<VariablesCustomVariableEvents, 'custom_variable_definition_changed'>
+	| Pick<ControlCommonEvents, 'updateButtonState' | 'customVariableDefinitionChanged'>
 
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
+	readonly #logger = LogController.createLogger('Service/ServiceApi')
+
 	readonly #appInfo: AppInfo
 	readonly #pageStore: IPageStore
 	readonly #controlController: ControlsController
@@ -53,7 +56,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		controlController: ControlsController,
 		surfaceController: SurfaceController,
 		variablesController: VariablesController,
-		graphicsController: GraphicsController
+		graphicsController: GraphicsController,
+		controlEvents: EventEmitter<ControlCommonEvents>
 	) {
 		super()
 		this.#appInfo = appInfo
@@ -70,8 +74,12 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		this.#variablesController.values.on('variables_changed', (...args) => {
 			this.emit('variables_changed', ...args)
 		})
-		this.#variablesController.custom.on('custom_variable_definition_changed', (...args) => {
-			this.emit('custom_variable_definition_changed', ...args)
+
+		controlEvents.on('updateButtonState', (...args) => {
+			this.emit('updateButtonState', ...args)
+		})
+		controlEvents.on('customVariableDefinitionChanged', (...args) => {
+			this.emit('customVariableDefinitionChanged', ...args)
 		})
 	}
 
@@ -82,16 +90,14 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @returns Failure reason, if any
 	 */
 	setCustomVariableValue(name: string, value: CompanionVariableValue): string | null {
-		return this.#variablesController.custom.setValue(name, value)
-	}
-
-	/**
-	 * Get the value of a custom variable
-	 * @param name
-	 * @returns The value of the variable
-	 */
-	getCustomVariableValue(name: string): CompanionVariableValue | undefined {
-		return this.#variablesController.custom.getValue(name)
+		const variableControl = this.#controlController.getCustomVariableByName(name)
+		if (variableControl) {
+			variableControl.setUserValue(value)
+			return null
+		} else {
+			this.#logger.warn(`Unable to set the value of variable $(custom:${name}): variable not found`)
+			return 'not found'
+		}
 	}
 
 	/**
@@ -100,8 +106,11 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @returns The description of the variable
 	 */
 
-	getCustomVariableDescription(name: string): string {
-		return this.#variablesController.custom.getVariableDescription(name)
+	getCustomVariableDescription(name: string): string | undefined {
+		const variableControl = this.#controlController.getCustomVariableByName(name)
+		if (!variableControl) return undefined
+
+		return variableControl.options.description
 	}
 
 	/**

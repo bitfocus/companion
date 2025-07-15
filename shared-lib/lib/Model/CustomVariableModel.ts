@@ -1,34 +1,52 @@
-import type { CompanionVariableValue } from '@companion-module/base'
 import type { CollectionBase } from './Collections.js'
+import type { SomeEntityModel } from './EntityModel.js'
+import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
-export interface CustomVariableDefinition {
+export type CustomVariableCollection = CollectionBase<null>
+
+export interface CustomVariableModel {
+	readonly type: 'custom-variable'
+	options: CustomVariableOptions
+
+	entity: SomeEntityModel | null
+}
+
+export interface CustomVariableOptions {
+	variableName: string
 	description: string
-	defaultValue: CompanionVariableValue
-	persistCurrentValue: boolean
 	sortOrder: number
 	collectionId?: string
 }
 
-export type CustomVariableCollection = CollectionBase<null>
-
-export type CustomVariablesModel = Record<string, CustomVariableDefinition>
+export interface ClientCustomVariableData extends CustomVariableOptions {
+	type: 'custom-variable'
+	isActive: boolean
+	isUserValue: boolean
+}
 
 export type CustomVariableUpdate =
 	| CustomVariableUpdateInitOp
+	| CustomVariableUpdateAddOp
 	| CustomVariableUpdateRemoveOp
 	| CustomVariableUpdateUpdateOp
 
 export interface CustomVariableUpdateInitOp {
 	type: 'init'
-	info: CustomVariablesModel
+	variables: Record<string, ClientCustomVariableData>
 }
 export interface CustomVariableUpdateRemoveOp {
 	type: 'remove'
-	itemId: string
+	controlId: string
 }
 export interface CustomVariableUpdateUpdateOp {
 	type: 'update'
-	itemId: string
+	controlId: string
 
-	info: CustomVariableDefinition
+	patch: JsonPatchOperation<ClientCustomVariableData>[]
+}
+export interface CustomVariableUpdateAddOp {
+	type: 'add'
+	controlId: string
+
+	info: ClientCustomVariableData
 }

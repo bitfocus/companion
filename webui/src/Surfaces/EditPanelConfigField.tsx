@@ -91,7 +91,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 			)
 			break
 		case 'custom-variable':
-			control = <InternalCustomVariableDropdown value={value} setValue={setValue2} includeNone={true} />
+			control = <InternalCustomVariableDropdown value={value} setValue={setValue2} includeNone onlyUserSettable />
 			break
 		default:
 			control = <p>Unknown field "{fieldType}"</p>

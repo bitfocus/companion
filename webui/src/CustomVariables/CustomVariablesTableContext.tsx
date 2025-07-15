@@ -1,12 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useMemo } from 'react'
-import type { CustomVariablesApi } from './CustomVariablesApi'
-import { ObservableMap } from 'mobx'
-import type { CompanionVariableValue } from '@companion-module/base'
+import React, { createContext, RefObject, useContext, useMemo } from 'react'
+import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 
 export interface CustomVariablesTableContextType {
-	customVariablesApi: CustomVariablesApi
-	customVariableValues: ObservableMap<string, CompanionVariableValue | undefined>
+	deleteModalRef: RefObject<GenericConfirmModalRef>
+	selectCustomVariable: (customvariableId: string | null) => void
 }
 
 const CustomVariablesTableContext = createContext<CustomVariablesTableContextType | null>(null)
@@ -20,16 +18,16 @@ export function useCustomVariablesTableContext(): CustomVariablesTableContextTyp
 type CustomVariablesTableContextProviderProps = CustomVariablesTableContextType
 
 export function CustomVariablesTableContextProvider({
-	customVariablesApi,
-	customVariableValues,
+	deleteModalRef,
+	selectCustomVariable,
 	children,
 }: React.PropsWithChildren<CustomVariablesTableContextProviderProps>): React.JSX.Element {
 	const value = useMemo<CustomVariablesTableContextType>(() => {
 		return {
-			customVariablesApi,
-			customVariableValues,
+			deleteModalRef,
+			selectCustomVariable,
 		}
-	}, [customVariablesApi, customVariableValues])
+	}, [deleteModalRef, selectCustomVariable])
 
 	return <CustomVariablesTableContext.Provider value={value}>{children}</CustomVariablesTableContext.Provider>
 }
