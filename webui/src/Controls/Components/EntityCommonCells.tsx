@@ -3,7 +3,6 @@ import React from 'react'
 import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { LearnButton } from '~/Components/LearnButton.js'
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler, MyErrorBoundary } from '~/util.js'
 import { OptionsInputField } from '../OptionsInputField.js'
@@ -20,8 +19,6 @@ interface EntityCommonCellsProps {
 	onlyFeedbackType: 'boolean' | 'advanced' | null
 	entityDefinition: ClientEntityDefinition | undefined
 	service: IEntityEditorActionService
-	headlineExpanded: boolean
-	definitionName: string
 	location: ControlLocation | undefined
 	controlId: string
 	readonly: boolean
@@ -33,8 +30,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	onlyFeedbackType,
 	entityDefinition,
 	service,
-	headlineExpanded,
-	definitionName,
 	location,
 	controlId,
 	readonly,
@@ -45,18 +40,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 	return (
 		<>
-			<div className="cell-description">
-				<div className="grow">
-					{headlineExpanded && <div className="name">{definitionName}</div>}
-					{entityDefinition?.description && <div className="description">{entityDefinition.description || ''}</div>}
-				</div>
-				{entityDefinition?.hasLearn && !!service.performLearn && (
-					<div>
-						<LearnButton id={entity.id} doLearn={service.performLearn} disabled={readonly} />
-					</div>
-				)}
-			</div>
-
 			<div className="entity-cells-wrapper">
 				{showButtonPreview && (
 					<div className="cell-button-preview">
