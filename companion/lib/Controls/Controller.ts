@@ -205,7 +205,7 @@ export class ControlsController {
 			...createControlsTrpcRouter(
 				this.#logger,
 				this.#controls,
-				this.#registry.page.store,
+				this.#registry.page,
 				this.#registry.instance.definitions,
 				this.#controlEvents,
 				this

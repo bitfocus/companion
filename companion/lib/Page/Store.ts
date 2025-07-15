@@ -101,10 +101,10 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 	 */
 	getPagesById(): Readonly<Record<string, PageModel>>
 
-	/**
-	 * Set the controlId at a specific location
-	 */
-	setControlIdAt(location: ControlLocation, controlId: string | null): boolean
+	// /**
+	//  * Set the controlId at a specific location
+	//  */
+	// setControlIdAt(location: ControlLocation, controlId: string | null): boolean
 }
 
 /**
