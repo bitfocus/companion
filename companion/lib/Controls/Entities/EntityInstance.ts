@@ -6,6 +6,7 @@ import {
 	FeedbackEntitySubType,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
+	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
@@ -850,9 +851,5 @@ export function isInternalLogicFeedback(entity: ControlEntityInstance): boolean 
 }
 
 export function isInternalUserValueFeedback(entity: ControlEntityInstance): boolean {
-	return (
-		entity.type === EntityModelType.Feedback &&
-		entity.connectionId === 'internal' &&
-		entity.definitionId === 'user_value'
-	)
+	return libIsInternalUserValueFeedback(entity.asEntityModel(false))
 }

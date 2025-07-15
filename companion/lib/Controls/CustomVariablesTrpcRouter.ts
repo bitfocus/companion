@@ -164,5 +164,26 @@ export function createCustomVariablesTrpcRouter(
 
 				return true
 			}),
+
+		setUserValue: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					value: z.any(),
+				})
+			)
+			.mutation(({ input }) => {
+				const { controlId } = input
+				if (!validateCustomVariableControlId(controlId)) {
+					// Control id is not valid!
+					return false
+				}
+
+				const control = controlsMap.get(controlId)
+				if (!control || !(control instanceof ControlCustomVariable)) return false
+
+				control.setUserValue(input.value)
+				return true
+			}),
 	})
 }
