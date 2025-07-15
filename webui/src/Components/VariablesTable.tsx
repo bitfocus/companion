@@ -92,18 +92,17 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 				</CButton>
 			</CInputGroup>
 			<div className="variables-table-scroller ">
-				<table className="table table-responsive-sm variables-table variables-table-max-33">
+				<table className="table table-responsive-sm variables-table">
 					<thead>
 						<tr>
 							<th>Variable</th>
-							<th>Description</th>
 							<th>Value</th>
 						</tr>
 					</thead>
 					<tbody>
 						{errorMsg && (
 							<tr>
-								<td colSpan={4}>
+								<td colSpan={2}>
 									<CAlert color="warning" role="alert">
 										Failed to build list of variables:
 										<br />
@@ -144,19 +143,25 @@ const VariablesTableRow = observer(function VariablesTableRow({
 	onCopied,
 	panelCollapseHelper,
 }: VariablesTableRowProps) {
+	const variableId = `$(${label}:${variable.name})`
+
 	return (
 		<tr>
 			<td>
-				<span className="variable-style">
-					$({label}:{variable.name})
-				</span>
-				<CopyToClipboard text={`$(${label}:${variable.name})`} onCopy={onCopied}>
-					<CButton size="sm" title="Copy variable name">
-						<FontAwesomeIcon icon={faCopy} color="#d50215" />
-					</CButton>
-				</CopyToClipboard>
+				<div className="grid grid-col">
+					<div className="flex flex-row ">
+						<span className="variable-style autowrap" title={variableId}>
+							{variableId}
+						</span>
+						<CopyToClipboard text={variableId} onCopy={onCopied}>
+							<CButton size="sm" title="Copy variable name">
+								<FontAwesomeIcon icon={faCopy} color="#d50215" />
+							</CButton>
+						</CopyToClipboard>
+					</div>
+					<div>{variable.label}</div>
+				</div>
 			</td>
-			<td>{variable.label}</td>
 			<td>
 				<VariableValueDisplay
 					value={toJS(value)}
