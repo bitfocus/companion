@@ -62,6 +62,7 @@ import z from 'zod'
 import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
+import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -527,6 +528,28 @@ export class ImportExportController {
 					}
 
 					if (!input || input.surfaces) {
+						const surfaces = data.surfaces as Record<number, SurfaceConfig>
+						const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
+						const getPageId = (val: number) =>
+							this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
+						const fixPageId = (groupConfig: SurfaceGroupConfig) => {
+							if ('last_page' in groupConfig) {
+								groupConfig.last_page_id = getPageId(groupConfig.last_page!)
+								delete groupConfig.last_page
+							}
+							if ('startup_page' in groupConfig) {
+								groupConfig.startup_page_id = getPageId(groupConfig.startup_page!)
+								delete groupConfig.startup_page
+							}
+						}
+
+						// Convert external page refs, i.e. page numbers, to internal ids.
+						for (const surface of Object.values(surfaces)) {
+							fixPageId(surface.groupConfig)
+						}
+						for (const groupConfig of Object.values(surfaceGroups)) {
+							fixPageId(groupConfig)
+						}
 						this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
 					}
 

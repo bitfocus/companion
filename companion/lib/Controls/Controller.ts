@@ -183,7 +183,7 @@ export class ControlsController {
 	clearConnectionState(connectionId: string): void {
 		for (const control of this.#controls.values()) {
 			if (control.supportsEntities) {
-				control.clearConnectionState(connectionId)
+				control.entities.clearConnectionState(connectionId)
 			}
 		}
 	}
@@ -213,7 +213,7 @@ export class ControlsController {
 			...createControlsTrpcRouter(
 				this.#logger,
 				this.#controls,
-				this.#registry.page.store,
+				this.#registry.page,
 				this.#registry.instance.definitions,
 				this.#controlEvents,
 				this
@@ -302,7 +302,7 @@ export class ControlsController {
 	forgetConnection(connectionId: string): void {
 		for (const control of this.#controls.values()) {
 			if (control.supportsEntities) {
-				control.forgetConnection(connectionId)
+				control.entities.forgetConnection(connectionId)
 			}
 		}
 	}

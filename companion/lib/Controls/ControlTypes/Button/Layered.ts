@@ -264,14 +264,8 @@ export class ControlButtonLayered
 		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		const allEntities = this.entities.getAllEntities()
-
-		for (const entity of allEntities) {
-			foundConnectionIds.add(entity.connectionId)
-		}
-
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
-			.visitEntities(allEntities, [])
+			.visitEntities(this.entities.getAllEntities(), [])
 			.visitDrawElements(this.#drawElements)
 	}
 

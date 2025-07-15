@@ -20,24 +20,17 @@ import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCCo
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
 export default function App(): React.JSX.Element {
-	const [connected, setConnected] = useState(false)
-	const [wasConnected, setWasConnected] = useState(false)
-
 	const trpcStatus = useTRPCConnectionStatus()
+
+	const connected = trpcStatus.status === TRPCConnectionStatus.Connected
+	const wasConnected = trpcStatus.wasConnected
+
 	useEffect(() => {
-		if (trpcStatus.status === TRPCConnectionStatus.Connected) {
-			setWasConnected((wasConnected0) => {
-				if (wasConnected0) {
-					window.location.reload()
-				} else {
-					setConnected(true)
-				}
-				return wasConnected0
-			})
-		} else {
-			setConnected(false)
+		if (connected && wasConnected) {
+			// Reload the page to ensure that the UI is up-to-date and we don't have any stale data
+			window.location.reload()
 		}
-	}, [trpcStatus.status])
+	}, [connected, wasConnected])
 
 	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
 	useSubscription(
