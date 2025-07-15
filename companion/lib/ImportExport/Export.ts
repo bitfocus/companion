@@ -489,10 +489,8 @@ export class ExportController {
 			// Convert internal page refs to page numbers.
 			// Note that `page`, which is a holdover from previous times, is already recorded as a number...
 			const setExportPageId = (groupConfig: SurfaceGroupConfig) => {
-				groupConfig.last_page = findPage(groupConfig.last_page_id!) ?? 1
-				groupConfig.startup_page = findPage(groupConfig.startup_page_id!) ?? 1
-				delete groupConfig.last_page_id
-				delete groupConfig.startup_page_id
+				groupConfig.last_page = findPage(groupConfig.last_page_id) ?? 1
+				groupConfig.startup_page = findPage(groupConfig.startup_page_id) ?? 1
 			}
 
 			for (const surface of Object.values(surfaces)) {
