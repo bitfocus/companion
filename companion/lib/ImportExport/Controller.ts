@@ -14,8 +14,8 @@ import { cloneDeep } from 'lodash-es'
 import { CreateTriggerControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
 import yaml from 'yaml'
 import zlib from 'node:zlib'
-import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import LogController from '../Log/Controller.js'
+import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import { nanoid } from 'nanoid'
 import type express from 'express'
 import type {
@@ -616,6 +616,7 @@ export class ImportExportController {
 				if (control) {
 					// Import the control
 					const fixedControlObj = this.#fixupControl(cloneDeep(control), referencesUpdater, instanceIdMap)
+					if (!fixedControlObj) continue
 
 					const location: ControlLocation = {
 						pageNumber: Number(topage),
@@ -796,7 +797,7 @@ export class ImportExportController {
 		control: ExportControlv6,
 		referencesUpdater: VisitorReferencesUpdater,
 		instanceIdMap: InstanceAppliedRemappings
-	): SomeButtonModel {
+	): SomeButtonModel | null {
 		// Future: this does not feel durable
 
 		if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
@@ -811,13 +812,18 @@ export class ImportExportController {
 			style: cloneDeep(control.style),
 			feedbacks: [],
 			steps: {},
+			localVariables: [],
 		}
 
 		if (control.feedbacks) {
 			result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
 		}
 
-		const allEntities: SomeEntityModel[] = [...result.feedbacks]
+		if (control.localVariables) {
+			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
+		}
+
+		const allEntities: SomeEntityModel[] = [...result.feedbacks, ...result.localVariables]
 		if (control.steps) {
 			for (const [stepId, step] of Object.entries<any>(control.steps)) {
 				const newStepSets: ActionSetsModel = {

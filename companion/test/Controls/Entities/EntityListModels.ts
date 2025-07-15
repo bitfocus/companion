@@ -1,5 +1,5 @@
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { SomeEntityModel, EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 
 export function getAllModelsInTree(tree: SomeEntityModel[]): SomeEntityModel[] {
 	const result: SomeEntityModel[] = []
@@ -204,7 +204,7 @@ export function FeedbackTreeEntityDefinitions(
 	if (connectionId === 'internal' && definitionId === 'feedback-with-children') {
 		return {
 			entityType: EntityModelType.Feedback,
-			feedbackType: 'advanced',
+			feedbackType: FeedbackEntitySubType.Advanced,
 			supportsChildGroups: [
 				{
 					type: EntityModelType.Feedback,
@@ -224,7 +224,7 @@ export function FeedbackTreeEntityDefinitions(
 	if (connectionId === 'internal' && definitionId === 'def01') {
 		return {
 			entityType: EntityModelType.Feedback,
-			feedbackType: 'boolean',
+			feedbackType: FeedbackEntitySubType.Boolean,
 			supportsChildGroups: [
 				{
 					type: EntityModelType.Feedback,
@@ -239,6 +239,6 @@ export function FeedbackTreeEntityDefinitions(
 	// Fallback to a valid feedback
 	return {
 		entityType: EntityModelType.Feedback,
-		feedbackType: 'boolean',
+		feedbackType: FeedbackEntitySubType.Boolean,
 	} as Partial<ClientEntityDefinition> as any
 }

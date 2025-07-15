@@ -20,6 +20,7 @@ export function isLabelValid(label: string): boolean {
 		label.toLowerCase() === 'this' ||
 		label.toLowerCase() === 'local' ||
 		label.toLowerCase() === 'companion' ||
+		label.toLowerCase() === 'image' ||
 		label.toLowerCase() === 'custom'
 	)
 		return false

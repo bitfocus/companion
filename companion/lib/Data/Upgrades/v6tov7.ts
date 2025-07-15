@@ -132,6 +132,7 @@ function fixupFeedback(feedback: OldFeedbackInstance): Complete<FeedbackEntityMo
 				: undefined,
 
 		isInverted: feedback.isInverted,
+		variableName: undefined,
 		style: feedback.style,
 	}
 }

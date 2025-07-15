@@ -25,6 +25,8 @@ export interface NormalButtonModel {
 	feedbacks: SomeEntityModel[]
 
 	steps: NormalButtonSteps
+
+	localVariables: SomeEntityModel[]
 }
 
 export type NormalButtonSteps = Record<

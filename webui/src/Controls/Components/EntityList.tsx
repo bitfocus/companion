@@ -1,7 +1,5 @@
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityOwner, SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import React, { useCallback } from 'react'
-import { IEntityEditorService } from '~/Services/Controls/ControlEntitiesService.js'
+import React from 'react'
 import { MyErrorBoundary } from '~/util.js'
 import { EntityTableRow } from './EntityEditorRow.js'
 import { EntityDropPlaceholderZone } from './EntityListDropZone.js'
@@ -9,53 +7,26 @@ import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefini
 import { EntityEditorHeading } from './EntityEditorHeadingProps.js'
 import { AddEntityPanel } from './AddEntityPanel.js'
 import { observer } from 'mobx-react-lite'
-import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
+import { useEntityEditorContext } from './EntityEditorContext.js'
 
 interface EditableEntityListProps {
-	controlId: string
 	heading: JSX.Element | string | null
 	headingActions?: JSX.Element[]
 	entities: SomeEntityModel[] | undefined
-	location: ControlLocation | undefined
-	serviceFactory: IEntityEditorService
 	ownerId: EntityOwner | null
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
-	readonly: boolean
+	feedbackListType: ClientEntityDefinition['feedbackType']
 }
 export const EditableEntityList = observer(function EditableEntityList({
-	controlId,
 	heading,
 	headingActions,
 	entities,
-	location,
-	serviceFactory,
 	ownerId,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
-	readonly,
+	feedbackListType,
 }: EditableEntityListProps) {
-	const panelCollapseHelper = usePanelCollapseHelperContext()
-
-	const addEntity = useCallback(
-		(connectionId: string, definitionId: string) => {
-			serviceFactory
-				.addEntity(connectionId, definitionId, ownerId)
-				.then((newId) => {
-					if (newId) {
-						// Make sure the panel is open and wont be forgotten on first render
-						setTimeout(() => panelCollapseHelper.setPanelCollapsed(newId, false), 10)
-					}
-				})
-				.catch((e) => {
-					console.error('Failed to add entity', e)
-				})
-		},
-		[serviceFactory, ownerId, panelCollapseHelper]
-	)
-
 	return (
 		<>
 			<EntityEditorHeading
@@ -66,50 +37,38 @@ export const EditableEntityList = observer(function EditableEntityList({
 			/>
 
 			<MinimalEntityList
-				location={location}
-				controlId={controlId}
 				ownerId={ownerId}
-				readonly={readonly}
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
-				onlyFeedbackType={onlyFeedbackType}
+				feedbackListType={feedbackListType}
 				entities={entities}
-				serviceFactory={serviceFactory}
 			/>
 			<AddEntityPanel
-				addEntity={addEntity}
+				ownerId={ownerId}
 				entityType={entityType}
-				onlyFeedbackType={onlyFeedbackType}
+				feedbackListType={feedbackListType}
 				entityTypeLabel={entityTypeLabel}
-				readonly={readonly}
 			/>
 		</>
 	)
 })
 
 interface MinimalEntityListProps {
-	location: ControlLocation | undefined
-	controlId: string
 	ownerId: EntityOwner | null
 	entities: SomeEntityModel[] | undefined
-	serviceFactory: IEntityEditorService
 	entityType: EntityModelType
 	entityTypeLabel: string
-	onlyFeedbackType: ClientEntityDefinition['feedbackType']
-	readonly: boolean
+	feedbackListType: ClientEntityDefinition['feedbackType']
 }
 
 export const MinimalEntityList = observer(function MinimalEntityList({
-	location,
-	controlId,
 	ownerId,
 	entities,
-	serviceFactory,
 	entityType,
 	entityTypeLabel,
-	onlyFeedbackType,
-	readonly,
+	feedbackListType,
 }: MinimalEntityListProps) {
+	const { controlId } = useEntityEditorContext()
 	const dragId = `${controlId}_${entityType}`
 
 	return (
@@ -120,17 +79,13 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 						<MyErrorBoundary key={a?.id ?? i}>
 							<EntityTableRow
 								key={a?.id ?? i}
-								controlId={controlId}
 								ownerId={ownerId}
-								location={location}
 								entity={a}
 								index={i}
 								dragId={dragId}
-								serviceFactory={serviceFactory}
 								entityType={entityType}
 								entityTypeLabel={entityTypeLabel}
-								onlyFeedbackType={onlyFeedbackType}
-								readonly={readonly}
+								feedbackListType={feedbackListType}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -138,10 +93,8 @@ export const MinimalEntityList = observer(function MinimalEntityList({
 				<EntityDropPlaceholderZone
 					dragId={dragId}
 					ownerId={ownerId}
-					listId={serviceFactory.listId}
 					entityCount={entities ? entities.length : 0}
 					entityTypeLabel={entityTypeLabel}
-					moveCard={serviceFactory.moveCard}
 				/>
 			</tbody>
 		</table>

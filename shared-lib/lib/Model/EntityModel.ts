@@ -12,6 +12,16 @@ export enum EntityModelType {
 	Feedback = 'feedback',
 }
 
+export enum FeedbackEntitySubType {
+	Boolean = 'boolean',
+	Advanced = 'advanced',
+	Value = 'value',
+}
+
+export function isValidFeedbackEntitySubType(value: FeedbackEntitySubType | string): value is FeedbackEntitySubType {
+	return Object.values(FeedbackEntitySubType).includes(value as any)
+}
+
 export interface ActionEntityModel extends EntityModelBase {
 	readonly type: EntityModelType.Action
 }
@@ -19,7 +29,11 @@ export interface ActionEntityModel extends EntityModelBase {
 export interface FeedbackEntityModel extends EntityModelBase {
 	readonly type: EntityModelType.Feedback
 
+	/** Boolean feedbacks can be inverted */
 	isInverted?: boolean
+	/** If in a list that produces local-variables, this entity value will be exposed under this name */
+	variableName?: string
+	/** When in a list that supports advanced feedbacks, this style can be set */
 	style?: Partial<ButtonStyleProperties>
 }
 
@@ -54,7 +68,7 @@ export interface EntitySupportedChildGroupDefinition {
 	hint?: string
 
 	/** Only valid for feedback entities */
-	booleanFeedbacksOnly?: boolean
+	feedbackListType?: FeedbackEntitySubType.Boolean | FeedbackEntitySubType.Value
 }
 
 const zodActionSetId: z.ZodSchema<ActionSetId> = z.union([
@@ -68,6 +82,7 @@ const zodActionSetId: z.ZodSchema<ActionSetId> = z.union([
 export const zodEntityLocation = z.union([
 	z.literal('feedbacks'),
 	z.literal('trigger_actions'),
+	z.literal('local-variables'),
 	z.object({
 		stepId: z.string(),
 		setId: zodActionSetId,

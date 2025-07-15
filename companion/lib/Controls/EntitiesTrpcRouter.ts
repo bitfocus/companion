@@ -5,6 +5,7 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import { EntityModelType, EntityOwner, zodEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import LogController from '../Log/Controller.js'
+import type { CompanionVariableValues } from '@companion-module/base'
 
 const zodEntityOwner: z.ZodSchema<EntityOwner> = z.object({
 	parentId: z.string(),
@@ -275,6 +276,61 @@ export function createEntitiesTrpcRouter(
 					throw new Error(`Control "${controlId}" does not support entities or styles`)
 
 				return control.entities.entitySetStyleValue(entityLocation, entityId, key, value)
+			}),
+
+		setVariableName: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					entityLocation: zodEntityLocation,
+					entityId: z.string(),
+					name: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const { controlId, entityLocation, entityId, name } = input
+
+				const control = controlsMap.get(controlId)
+				if (!control) return false
+
+				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+				return control.entities.entitySetVariableName(entityLocation, entityId, name)
+			}),
+
+		setVariableValue: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					entityLocation: zodEntityLocation,
+					entityId: z.string(),
+					value: z.any(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const { controlId, entityLocation, entityId, value } = input
+
+				const control = controlsMap.get(controlId)
+				if (!control) return false
+
+				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+				return control.entities.entitySetVariableValue(entityLocation, entityId, value)
+			}),
+
+		localVariableValues: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+				})
+			)
+			.query(({ input }): CompanionVariableValues => {
+				const control = controlsMap.get(input.controlId)
+				if (!control) return {}
+
+				if (!control.supportsEntities) throw new Error(`Control "${input.controlId}" does not support entities`)
+
+				return control.entities.getLocalVariableValues()
 			}),
 	})
 }

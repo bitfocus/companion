@@ -1351,6 +1351,7 @@ __metadata:
     marked-base-url: "npm:^1.1.7"
     mobx: "npm:^6.13.7"
     mobx-react-lite: "npm:^4.1.0"
+    mobx-utils: "npm:^6.1.1"
     nanoid: "npm:^5.1.5"
     parse-numeric-range: "npm:^1.3.0"
     query-string: "npm:^9.2.2"
@@ -12314,6 +12315,15 @@ asn1@evs-broadcast/node-asn1:
     react-native:
       optional: true
   checksum: 10c0/72300665cc64d73a58d650bdf5131878376a865ae708cabc2940ee22cf6b762aeed239a83ea104ea3742a0b1563a81a19acc02f162e19f524a9b5b0f0a86668e
+  languageName: node
+  linkType: hard
+
+"mobx-utils@npm:^6.1.1":
+  version: 6.1.1
+  resolution: "mobx-utils@npm:6.1.1"
+  peerDependencies:
+    mobx: ^6.0.0
+  checksum: 10c0/85de1f4b4b7854db6a27d28211a507bf937e9c25f0052eb913fed344c69f6b293153bb658971c0b8495d9a23571770215232e1df22ed54cae6b79e08bfab12a2
   languageName: node
   linkType: hard
 

@@ -7,6 +7,7 @@ import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
+import debounceFn from 'debounce-fn'
 
 /**
  * Abstract class for a editable button control.
@@ -72,7 +73,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 			{
 				controlId,
 				commitChange: this.commitChange.bind(this),
-				triggerRedraw: this.triggerRedraw.bind(this),
+				invalidateControl: this.triggerRedraw.bind(this),
+				localVariablesChanged: this.#onLocalVariablesChanged.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				moduleHost: deps.instance.moduleHost,
@@ -199,6 +201,36 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 		return result
 	}
+
+	#pendingChangedVariables = new Set<string>()
+	#debouncedLocalVariablesChanged = debounceFn(
+		() => {
+			const allChangedVariables = this.#pendingChangedVariables
+			this.#pendingChangedVariables = new Set()
+
+			this.deps.variables.values.emit('local_variables_changed', allChangedVariables, this.controlId)
+		},
+		{
+			wait: 5,
+			maxWait: 10,
+		}
+	)
+	#onLocalVariablesChanged(allChangedVariables: Set<string>): void {
+		for (const variable of allChangedVariables) {
+			this.#pendingChangedVariables.add(variable)
+		}
+
+		if (this.#pendingChangedVariables.size === 0) return
+
+		/*
+		 * This is debounced to ensure that a loop of references between variables doesn't cause an infinite loop of updates
+		 * Future: This could be improved by using a 'rate limit' style approach, where we allow a bunch of updates to happen immediately,
+		 * but then throttle the updates after that. Perhaps allow 10 within the first 2ms, then limit to 1 every Xms.
+		 */
+		this.#debouncedLocalVariablesChanged()
+	}
+
+	abstract onVariablesChanged(allChangedVariables: Set<string>): void
 
 	/**
 	 * Update an option field of this control

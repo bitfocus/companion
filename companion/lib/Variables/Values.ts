@@ -21,6 +21,7 @@ import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 
 export interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>, connection_labels: Set<string>]
+	local_variables_changed: [changed: Set<string>, fromControlId: string]
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {

@@ -118,7 +118,7 @@ export class InternalCustomVariables
 			},
 
 			custom_variable_reset_to_default: {
-				label: 'Reset custom variable to startup value',
+				label: 'Custom Variable: Reset to startup value',
 				description: undefined,
 				options: [
 					{
@@ -129,7 +129,7 @@ export class InternalCustomVariables
 				],
 			},
 			custom_variable_sync_to_default: {
-				label: 'Write custom variable current value to startup value',
+				label: 'Custom Variable: Write current value to startup value',
 				description: undefined,
 				options: [
 					{

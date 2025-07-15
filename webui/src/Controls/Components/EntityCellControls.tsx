@@ -3,7 +3,7 @@ import { CButtonGroup, CButton, CFormSwitch } from '@coreui/react'
 import { faPencil, faExpandArrowsAlt, faCompressArrowsAlt, faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
-import { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, EntityOwner, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 
@@ -11,6 +11,7 @@ interface EntityCellControlProps {
 	service: IEntityEditorActionService
 	entityTypeLabel: string
 	entity: SomeEntityModel
+	ownerId: EntityOwner | null
 	isPanelCollapsed: boolean
 	setPanelCollapsed: (collapsed: boolean) => void
 	definitionName: string
@@ -18,12 +19,14 @@ interface EntityCellControlProps {
 	headlineExpanded: boolean
 	setHeadlineExpanded: () => void
 	readonly: boolean
+	localVariablePrefix: string | null
 }
 
 export const EntityRowHeader = observer(function EntityRowHeader({
 	service,
 	entityTypeLabel,
 	entity,
+	ownerId,
 	isPanelCollapsed,
 	setPanelCollapsed,
 	definitionName,
@@ -31,6 +34,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	headlineExpanded,
 	setHeadlineExpanded,
 	readonly,
+	localVariablePrefix,
 }: EntityCellControlProps) {
 	const innerSetEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled?.(e.target.checked),
@@ -40,11 +44,20 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	const doCollapse = useCallback(() => setPanelCollapsed(true), [setPanelCollapsed])
 	const doExpand = useCallback(() => setPanelCollapsed(false), [setPanelCollapsed])
 
+	let headline = entity.headline || definitionName
+	if (isPanelCollapsed && localVariablePrefix && entity.type === EntityModelType.Feedback && !ownerId) {
+		if (entity.variableName) {
+			headline = `$(local:${entity.variableName}) ${entity.headline || ''}`
+		} else {
+			headline = `Unnamed: ${entity.headline || ''}`
+		}
+	}
+
 	return (
 		<div className="editor-grid-header">
 			<div className="cell-name">
 				{!service.setHeadline || !headlineExpanded || isPanelCollapsed ? (
-					entity.headline || definitionName
+					headline
 				) : (
 					<TextInputField
 						value={entity.headline ?? ''}

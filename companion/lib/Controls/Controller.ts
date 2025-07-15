@@ -412,12 +412,15 @@ export class ControlsController {
 	/**
 	 * Propagate variable changes to the controls
 	 */
-	onVariablesChanged(allChangedVariablesSet: Set<string>): void {
+	onVariablesChanged(allChangedVariablesSet: Set<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
-		this.triggers.emit('variables_changed', allChangedVariablesSet)
+		this.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
 		if (allChangedVariablesSet.size > 0) {
 			for (const control of this.#controls.values()) {
+				// If the changes are local variables and from another control, ignore them
+				if (fromControlId && fromControlId !== control.controlId) continue
+
 				if (control.supportsStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}
@@ -585,14 +588,14 @@ export class ControlsController {
 		controlLocation: ControlLocation | null | undefined,
 		overrideVariableValues: CompanionVariableValues | null
 	): VariablesAndExpressionParser {
-		// const controlId = controlLocation && this.#registry.page.getControlIdAt(controlLocation)
-		// const control = controlId && this.getControl(controlId)
+		const controlId = controlLocation && this.#registry.page.store.getControlIdAt(controlLocation)
+		const control = controlId && this.getControl(controlId)
 
-		// const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
+		const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
 
 		return this.#registry.variables.values.createVariablesAndExpressionParser(
 			controlLocation,
-			[], //variableEntities,
+			variableEntities,
 			overrideVariableValues
 		)
 	}
