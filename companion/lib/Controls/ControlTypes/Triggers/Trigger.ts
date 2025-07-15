@@ -11,6 +11,7 @@ import { VisitorReferencesCollector } from '../../../Resources/Visitors/Referenc
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
+	ControlWithEntities,
 	ControlWithEvents,
 	ControlWithOptions,
 	ControlWithoutActionSets,
@@ -46,6 +47,7 @@ export class ControlTrigger
 	implements
 		ControlWithActions,
 		ControlWithEvents,
+		ControlWithEntities,
 		ControlWithoutStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
@@ -122,7 +124,7 @@ export class ControlTrigger
 
 	readonly #actionRunner: ControlActionRunner
 
-	readonly entities: ControlEntityListPoolTrigger // TODO - should this be private?
+	readonly entities: ControlEntityListPoolTrigger
 
 	/**
 	 * Whether this trigger and its parent collection is enabled or not
@@ -210,13 +212,6 @@ export class ControlTrigger
 		}
 
 		return false
-	}
-
-	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void {
-		this.entities.clearConnectionState(connectionId)
 	}
 
 	/**
@@ -352,17 +347,6 @@ export class ControlTrigger
 			...this.options,
 			lastExecuted: this.#lastExecuted,
 			description: eventStrings.join('<br />'),
-		}
-	}
-
-	/**
-	 * Remove any actions and feedbacks referencing a specified connectionId
-	 */
-	forgetConnection(connectionId: string): void {
-		const changed = this.entities.forgetConnection(connectionId)
-
-		if (changed) {
-			this.commitChange(true)
 		}
 	}
 

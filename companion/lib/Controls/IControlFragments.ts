@@ -43,16 +43,6 @@ export interface ControlWithEntities extends ControlBase<any> {
 	readonly supportsEntities: true
 
 	readonly entities: ControlEntityListPoolBase
-
-	/**
-	 * Remove any tracked state for an connection
-	 */
-	clearConnectionState(connectionId: string): void
-
-	/**
-	 * Update all controls to forget an connection
-	 */
-	forgetConnection(connectionId: string): void
 }
 
 export interface ControlWithoutEntities extends ControlBase<any> {

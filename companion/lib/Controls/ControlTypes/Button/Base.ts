@@ -1,5 +1,5 @@
 import { ControlBase } from '../../ControlBase.js'
-import type { ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
+import type { ControlWithEntities, ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
@@ -25,7 +25,7 @@ import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleMode
  */
 export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBase>
 	extends ControlBase<TJson>
-	implements ControlWithOptions, ControlWithPushed
+	implements ControlWithEntities, ControlWithOptions, ControlWithPushed
 {
 	readonly supportsEntities = true
 	readonly supportsOptions = true
@@ -174,13 +174,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	}
 
 	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void {
-		this.entities.clearConnectionState(connectionId)
-	}
-
-	/**
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
@@ -189,17 +182,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		this.entities.destroy()
 
 		super.destroy()
-	}
-
-	/**
-	 * Remove any actions and feedbacks referencing a specified connectionId
-	 */
-	forgetConnection(connectionId: string): void {
-		const changed = this.entities.forgetConnection(connectionId)
-
-		if (changed) {
-			this.commitChange(true)
-		}
 	}
 
 	protected getDrawStyleButtonStateProps(): DrawStyleButtonStateProps {

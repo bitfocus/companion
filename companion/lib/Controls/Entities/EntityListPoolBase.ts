@@ -452,12 +452,13 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Remove any entities referencing a specified connectionId
 	 */
-	forgetConnection(connectionId: string): boolean {
+	forgetConnection(connectionId: string): void {
 		let changed = false
 		for (const list of this.getAllEntityLists()) {
 			if (list.forgetForConnection(connectionId)) changed = true
 		}
-		return changed
+
+		if (changed) this.commitChange(true)
 	}
 
 	/**
