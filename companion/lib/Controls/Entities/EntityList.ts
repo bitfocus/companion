@@ -248,7 +248,6 @@ export class ControlEntityList {
 		if (this.#listDefinition.type !== entity.type) return false
 
 		// Make sure this won't exceed the maximum number of children
-		// TODO - this is causing an issue because of the throws associated with the callers of this
 		if (
 			this.#listDefinition.maximumChildren !== undefined &&
 			this.#entities.length >= this.#listDefinition.maximumChildren

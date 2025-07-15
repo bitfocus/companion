@@ -338,6 +338,7 @@ export abstract class ControlEntityListPoolBase {
 
 			// Check if the new parent can hold the feedback being moved
 			if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldInfo.item)) return false
+			if (!newParent && newEntityList.canAcceptEntity(oldInfo.item)) return false
 
 			const poppedFeedback = oldInfo.parent.popEntity(oldInfo.index)
 			if (!poppedFeedback) return false
