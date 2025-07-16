@@ -221,6 +221,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
+			/*
 			local_variable_set_value: {
 				label: 'Local Variable: Set raw value',
 				description: undefined,
@@ -290,6 +291,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 					},
 				],
 			},
+			*/
 		}
 	}
 
