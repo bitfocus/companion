@@ -39,7 +39,7 @@ import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
-import { translateOptionsIsVisible } from './Wrapper.js'
+import { translateOptionsIsVisibleAndUseVariables } from './Wrapper.js'
 import { InstanceCollections } from './Collections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
@@ -696,7 +696,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						}
 
 						const result: ClientEditConnectionConfig = {
-							fields: translateOptionsIsVisible(fields) as any[],
+							fields: translateOptionsIsVisibleAndUseVariables(fields || [], true) as any[],
 							config: instanceConf.config,
 							hasSecrets,
 						}

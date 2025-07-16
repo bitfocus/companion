@@ -32,6 +32,8 @@ import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
 	assertNever,
+	CompanionFieldVariablesSupport,
+	CompanionInputFieldTextInput,
 	SomeCompanionActionInputField,
 	type CompanionHTTPRequest,
 	type CompanionInputFieldBase,
@@ -709,7 +711,7 @@ export class SocketEventsHandler {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				options: translateOptionsIsVisible(rawAction.options || []),
+				options: translateOptionsIsVisibleAndUseVariables(rawAction.options || [], !!this.#entityManager),
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
 
@@ -740,7 +742,7 @@ export class SocketEventsHandler {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				description: rawFeedback.description,
-				options: translateOptionsIsVisible(rawFeedback.options || []),
+				options: translateOptionsIsVisibleAndUseVariables(rawFeedback.options || [], !!this.#entityManager),
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLearn: !!rawFeedback.hasLearn,
@@ -1023,11 +1025,12 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 	return true
 }
 
-export function translateOptionsIsVisible(
-	options?: EncodeIsVisible<SomeCompanionActionInputField>[]
+export function translateOptionsIsVisibleAndUseVariables(
+	options: EncodeIsVisible<SomeCompanionActionInputField>[],
+	usesInternalVariableParsing: boolean
 ): (InternalActionInputField | InternalFeedbackInputField)[] {
 	// @companion-module-base exposes these through a mapping that loses the differentiation between types
-	return (options || []).map((o) => {
+	return options.map((o) => {
 		let isVisibleUi: InternalFeedbackInputField['isVisibleUi'] | undefined = undefined
 		if (o.isVisibleFn && o.isVisibleFnType === 'expression') {
 			isVisibleUi = {
@@ -1044,8 +1047,15 @@ export function translateOptionsIsVisible(
 			}
 		}
 
+		let useVariables: boolean | CompanionFieldVariablesSupport | undefined
+		if (o.type === 'textinput') {
+			const rawUseVariables = (o as CompanionInputFieldTextInput).useVariables
+			useVariables = rawUseVariables && usesInternalVariableParsing ? { local: true } : rawUseVariables
+		}
+
 		return {
 			...(o as any),
+			useVariables,
 			isVisibleFn: undefined,
 			isVisibleData: undefined,
 			isVisibleUi,
