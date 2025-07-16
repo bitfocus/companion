@@ -27,18 +27,19 @@ describe('InstanceEntityManager', () => {
 		getBitmapSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
 	}
 
-	const mockControlsController = {
-		getControl: vi.fn().mockReturnValue(mockControl),
-	}
-
-	const mockVariablesValues = {
+	const mockVariablesParser = {
 		parseVariables: vi.fn().mockReturnValue({
 			text: 'parsed-value',
 			variableIds: ['var1', 'var2'],
 		}),
 	}
 
-	const mockPagesController = {
+	const mockControlsController = {
+		getControl: vi.fn().mockReturnValue(mockControl),
+		createVariablesAndExpressionParser: vi.fn().mockReturnValue(mockVariablesParser),
+	}
+
+	const mockPageStore = {
 		getLocationOfControlId: vi.fn(),
 	}
 
@@ -51,8 +52,7 @@ describe('InstanceEntityManager', () => {
 		entityManager = new InstanceEntityManager(
 			mockIpcWrapper as any,
 			mockControlsController as any,
-			mockVariablesValues as any,
-			mockPagesController as any,
+			mockPageStore as any,
 			'test-connection-id'
 		)
 
@@ -374,7 +374,8 @@ describe('InstanceEntityManager', () => {
 
 			const result = entityManager.parseOptionsObject(entityDefinition as any, options, location)
 
-			expect(mockVariablesValues.parseVariables).toHaveBeenCalledWith('$(var:text)', location)
+			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith(location, null)
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(var:text)')
 			expect(result.parsedOptions).toEqual({
 				field1: 'parsed-value',
 				field2: 'option1',
@@ -392,7 +393,8 @@ describe('InstanceEntityManager', () => {
 			const result = entityManager.parseOptionsObject(entityDefinition as any, options, undefined)
 
 			expect(result.parsedOptions).toEqual({ field1: 42 })
-			expect(mockVariablesValues.parseVariables).not.toHaveBeenCalled()
+			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith(undefined, null)
+			expect(mockVariablesParser.parseVariables).not.toHaveBeenCalled()
 		})
 
 		it('should handle missing option values', () => {
@@ -406,7 +408,7 @@ describe('InstanceEntityManager', () => {
 
 			// For missing fields, parseVariables will be called with "undefined"
 			// So we need to update our mock for this specific test case
-			mockVariablesValues.parseVariables.mockReturnValueOnce({
+			mockVariablesParser.parseVariables.mockReturnValueOnce({
 				text: undefined,
 				variableIds: [],
 			})
@@ -420,7 +422,8 @@ describe('InstanceEntityManager', () => {
 			})
 
 			// parseVariables should be called with "undefined" for the missing field
-			expect(mockVariablesValues.parseVariables).toHaveBeenCalledWith('undefined', undefined)
+			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith(undefined, null)
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('undefined')
 		})
 	})
 
@@ -445,7 +448,7 @@ describe('InstanceEntityManager', () => {
 			}
 
 			// Set location for parsing
-			mockPagesController.getLocationOfControlId.mockReturnValue({ pageNumber: 1, column: 2, row: 3 })
+			mockPageStore.getLocationOfControlId.mockReturnValue({ pageNumber: 1, column: 2, row: 3 })
 
 			// Add entity to manager
 			entityManager.start(5)
@@ -494,10 +497,10 @@ describe('InstanceEntityManager', () => {
 			}
 
 			// Set location for parsing
-			mockPagesController.getLocationOfControlId.mockReturnValue({ pageNumber: 1, column: 2, row: 3 })
+			mockPageStore.getLocationOfControlId.mockReturnValue({ pageNumber: 1, column: 2, row: 3 })
 
 			// Customize parse variables to return specific variables
-			mockVariablesValues.parseVariables.mockReturnValue({
+			mockVariablesParser.parseVariables.mockReturnValue({
 				text: 'parsed-value',
 				variableIds: ['specific-var'],
 			})
@@ -887,17 +890,18 @@ describe('InstanceEntityManager', () => {
 
 			// Set a specific page location
 			const expectedLocation = { pageNumber: 3, column: 4, row: 5 }
-			mockPagesController.getLocationOfControlId.mockReturnValue(expectedLocation)
+			mockPageStore.getLocationOfControlId.mockReturnValue(expectedLocation)
 
 			entityManager.start(5)
 			entityManager.trackEntity(mockEntity as any, 'control-1')
 			vi.runAllTimers()
 
 			// Should have looked up the control location
-			expect(mockPagesController.getLocationOfControlId).toHaveBeenCalledWith('control-1')
+			expect(mockPageStore.getLocationOfControlId).toHaveBeenCalledWith('control-1')
 
 			// Should have passed the location to parse variables
-			expect(mockVariablesValues.parseVariables).toHaveBeenCalledWith('$(var:page_specific)', expectedLocation)
+			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith(expectedLocation, null)
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(var:page_specific)')
 		})
 	})
 
@@ -979,7 +983,7 @@ describe('InstanceEntityManager', () => {
 				field1: { nestedObject: true },
 			}
 
-			mockVariablesValues.parseVariables.mockReturnValueOnce({
+			mockVariablesParser.parseVariables.mockReturnValueOnce({
 				text: 'parsed-object',
 				variableIds: [],
 			})
@@ -987,7 +991,8 @@ describe('InstanceEntityManager', () => {
 			const result = entityManager.parseOptionsObject(entityDefinition as any, options as any, undefined)
 
 			// Should convert to string for parsing
-			expect(mockVariablesValues.parseVariables).toHaveBeenCalledWith('[object Object]', undefined)
+			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith(undefined, null)
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('[object Object]')
 			expect(result.parsedOptions).toEqual({
 				field1: 'parsed-object',
 			})
