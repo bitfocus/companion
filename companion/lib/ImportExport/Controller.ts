@@ -14,8 +14,8 @@ import { cloneDeep } from 'lodash-es'
 import { CreateTriggerControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
 import yaml from 'yaml'
 import zlib from 'node:zlib'
-import { ReferencesVisitors } from '../Resources/Visitors/ReferencesVisitors.js'
 import LogController from '../Log/Controller.js'
+import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import { nanoid } from 'nanoid'
 import type express from 'express'
 import type {
@@ -52,11 +52,12 @@ import { ExportController } from './Export.js'
 import { FILE_VERSION } from './Constants.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { zodLocation } from '../Graphics/Preview.js'
+import { zodLocation } from '../Preview/Graphics.js'
 import z from 'zod'
 import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
+import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -261,7 +262,7 @@ export class ImportExportController {
 			apiRouter,
 			controls,
 			instance,
-			page,
+			page.store,
 			surfaces,
 			userconfig,
 			variablesController
@@ -371,11 +372,11 @@ export class ImportExportController {
 
 						if (topage === -1) {
 							// Add a new page at the end
-							const currentPageCount = this.#pagesController.getPageCount()
+							const currentPageCount = this.#pagesController.store.getPageCount()
 							topage = currentPageCount + 1
 							this.#pagesController.insertPages(topage, ['Importing Page'])
 						} else {
-							const oldPageInfo = this.#pagesController.getPageInfo(topage, false)
+							const oldPageInfo = this.#pagesController.store.getPageInfo(topage, false)
 							if (!oldPageInfo) throw new Error('Invalid target page')
 						}
 
@@ -513,10 +514,10 @@ export class ImportExportController {
 							}
 
 							// Ensure the page exists
-							const insertPageCount = pageNumber - this.#pagesController.getPageCount()
+							const insertPageCount = pageNumber - this.#pagesController.store.getPageCount()
 							if (insertPageCount > 0) {
 								this.#pagesController.insertPages(
-									this.#pagesController.getPageCount() + 1,
+									this.#pagesController.store.getPageCount() + 1,
 									new Array(insertPageCount).fill('Page')
 								)
 							}
@@ -526,6 +527,28 @@ export class ImportExportController {
 					}
 
 					if (!input || input.surfaces) {
+						const surfaces = data.surfaces as Record<number, SurfaceConfig>
+						const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
+						const getPageId = (val: number) =>
+							this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
+						const fixPageId = (groupConfig: SurfaceGroupConfig) => {
+							if ('last_page' in groupConfig) {
+								groupConfig.last_page_id = getPageId(groupConfig.last_page!)
+								delete groupConfig.last_page
+							}
+							if ('startup_page' in groupConfig) {
+								groupConfig.startup_page_id = getPageId(groupConfig.startup_page!)
+								delete groupConfig.startup_page
+							}
+						}
+
+						// Convert external page refs, i.e. page numbers, to internal ids.
+						for (const surface of Object.values(surfaces)) {
+							fixPageId(surface.groupConfig)
+						}
+						for (const groupConfig of Object.values(surfaceGroups)) {
+							fixPageId(groupConfig)
+						}
 						this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
 					}
 
@@ -577,12 +600,29 @@ export class ImportExportController {
 		// Import the new page
 		this.#pagesController.setPageName(topage, pageInfo.name)
 
+		const connectionLabelRemap: Record<string, string> = {}
+		const connectionIdRemap: Record<string, string> = {}
+		for (const [oldId, info] of Object.entries(instanceIdMap)) {
+			if (info.oldLabel && info.label !== info.oldLabel) {
+				connectionLabelRemap[info.oldLabel] = info.label
+			}
+			if (info.id && info.id !== oldId) {
+				connectionIdRemap[oldId] = info.id
+			}
+		}
+		const referencesUpdater = new VisitorReferencesUpdater(
+			this.#internalModule,
+			connectionLabelRemap,
+			connectionIdRemap
+		)
+
 		// Import the controls
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 			for (const [column, control] of Object.entries(rowObj)) {
 				if (control) {
 					// Import the control
-					const fixedControlObj = this.#fixupControl(cloneDeep(control), instanceIdMap)
+					const fixedControlObj = this.#fixupControl(cloneDeep(control), referencesUpdater, instanceIdMap)
+					if (!fixedControlObj) continue
 
 					const location: ControlLocation = {
 						pageNumber: Number(topage),
@@ -613,7 +653,7 @@ export class ImportExportController {
 			this.#graphicsController.clearAllForPage(1)
 
 			// Delete other pages
-			const pageCount = this.#pagesController.getPageCount()
+			const pageCount = this.#pagesController.store.getPageCount()
 			for (let pageNumber = pageCount; pageNumber >= 2; pageNumber--) {
 				this.#pagesController.deletePage(pageNumber) // Note: controls were already deleted above
 			}
@@ -752,39 +792,23 @@ export class ImportExportController {
 			result.actions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.actions))
 		}
 
-		ReferencesVisitors.fixupControlReferences(
-			this.#internalModule,
-			{
-				connectionLabels: connectionLabelRemap,
-				connectionIds: connectionIdRemap,
-			},
-			undefined,
-			result.condition.concat(result.actions),
-			[],
-			result.events || [],
-			false
-		)
+		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
+			.visitEntities([], result.condition.concat(result.actions))
+			.visitEvents(result.events || [])
 
 		return result
 	}
 
-	#fixupControl(control: ExportControlv6, instanceIdMap: InstanceAppliedRemappings): SomeButtonModel {
+	#fixupControl(
+		control: ExportControlv6,
+		referencesUpdater: VisitorReferencesUpdater,
+		instanceIdMap: InstanceAppliedRemappings
+	): SomeButtonModel | null {
 		// Future: this does not feel durable
 
 		if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
 			return {
 				type: control.type,
-			}
-		}
-
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
 			}
 		}
 
@@ -794,13 +818,18 @@ export class ImportExportController {
 			style: cloneDeep(control.style),
 			feedbacks: [],
 			steps: {},
+			localVariables: [],
 		}
 
 		if (control.feedbacks) {
 			result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
 		}
 
-		const allEntities: SomeEntityModel[] = [...result.feedbacks]
+		if (control.localVariables) {
+			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
+		}
+
+		const allEntities: SomeEntityModel[] = [...result.feedbacks, ...result.localVariables]
 		if (control.steps) {
 			for (const [stepId, step] of Object.entries<any>(control.steps)) {
 				const newStepSets: ActionSetsModel = {
@@ -829,18 +858,7 @@ export class ImportExportController {
 			}
 		}
 
-		ReferencesVisitors.fixupControlReferences(
-			this.#internalModule,
-			{
-				connectionLabels: connectionLabelRemap,
-				connectionIds: connectionIdRemap,
-			},
-			result.style,
-			allEntities,
-			[],
-			[],
-			false
-		)
+		referencesUpdater.visitEntities([], allEntities).visitButtonDrawStlye(result.style)
 
 		return result
 	}

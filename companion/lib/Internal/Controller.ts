@@ -24,7 +24,7 @@ import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import LogController from '../Log/Controller.js'
 import {
 	ActionEntityModel,
@@ -55,7 +55,7 @@ export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
 
 	readonly #controlsController: ControlsController
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #variablesController: VariablesController
 
@@ -68,7 +68,7 @@ export class InternalController {
 
 	constructor(
 		controlsController: ControlsController,
-		pageController: PageController,
+		pageStore: IPageStore,
 		instanceController: InstanceController,
 		variablesController: VariablesController,
 		surfaceController: SurfaceController,
@@ -76,25 +76,25 @@ export class InternalController {
 		requestExit: (fromInternal: boolean, restart: boolean) => void
 	) {
 		this.#controlsController = controlsController
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
 
-		const internalUtils = new InternalModuleUtils(variablesController)
+		const internalUtils = new InternalModuleUtils(controlsController)
 
 		this.#buildingBlocksFragment = new InternalBuildingBlocks(internalUtils)
 		this.#fragments = [
 			this.#buildingBlocksFragment,
-			new InternalActionRecorder(internalUtils, controlsController.actionRecorder, pageController),
+			new InternalActionRecorder(internalUtils, controlsController.actionRecorder, pageStore),
 			new InternalInstance(internalUtils, instanceController),
 			new InternalTime(internalUtils),
-			new InternalControls(internalUtils, graphicsController, controlsController, pageController),
+			new InternalControls(internalUtils, graphicsController, controlsController, pageStore),
 			new InternalCustomVariables(internalUtils, variablesController),
-			new InternalPage(internalUtils, pageController),
-			new InternalSurface(internalUtils, surfaceController, controlsController, pageController),
+			new InternalPage(internalUtils, pageStore),
+			new InternalSurface(internalUtils, surfaceController, controlsController, pageStore),
 			new InternalSystem(internalUtils, variablesController, requestExit),
 			new InternalTriggers(internalUtils, controlsController),
-			new InternalVariables(internalUtils, variablesController.values),
+			new InternalVariables(internalUtils, controlsController, pageStore),
 		]
 
 		this.#init()
@@ -235,7 +235,7 @@ export class InternalController {
 		if (feedback.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
 		if (feedback.disabled) return
 
-		const location = this.#pageController.getLocationOfControlId(controlId)
+		const location = this.#pageStore.getLocationOfControlId(controlId)
 
 		const cloned: FeedbackEntityModelExt = {
 			...cloneDeep(feedback),
@@ -528,13 +528,13 @@ export class InternalController {
 		this.#variablesController.definitions.setVariableDefinitions('internal', variables)
 	}
 
-	variablesChanged(all_changed_variables_set: Set<string>): void {
+	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		// Inform all fragments
 		for (const fragment of this.#fragments) {
-			if ('variablesChanged' in fragment && typeof fragment.variablesChanged === 'function') {
-				fragment.variablesChanged(all_changed_variables_set)
+			if (typeof fragment.onVariablesChanged === 'function') {
+				fragment.onVariablesChanged(changedVariablesSet, fromControlId)
 			}
 		}
 
@@ -544,8 +544,11 @@ export class InternalController {
 		for (const [id, feedback] of this.#feedbacks.entries()) {
 			if (!feedback.referencedVariables || !feedback.referencedVariables.length) continue
 
+			// If a specific control is specified, only update feedbacks for that control
+			if (fromControlId && feedback.controlId !== fromControlId) continue
+
 			// Check a referenced variable was changed
-			if (!feedback.referencedVariables.some((variable) => all_changed_variables_set.has(variable))) continue
+			if (!feedback.referencedVariables.some((variable) => changedVariablesSet.has(variable))) continue
 
 			newValues.push({
 				id: id,

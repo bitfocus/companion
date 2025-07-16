@@ -3,6 +3,7 @@ import { isEqual } from 'lodash-es'
 import React, { useDeferredValue } from 'react'
 import { useDrop } from 'react-dnd'
 import { DragState } from '~/util.js'
+import { useEntityEditorContext } from './EntityEditorContext'
 
 export interface EntityListDragItem {
 	entityId: string
@@ -14,26 +15,19 @@ export interface EntityListDragItem {
 
 interface EntityDropPlaceholderZoneProps {
 	dragId: string
-	listId: SomeSocketEntityLocation
 	ownerId: EntityOwner | null
 	entityCount: number
 	entityTypeLabel: string
-	moveCard: (
-		dragListId: SomeSocketEntityLocation,
-		dragEntityId: string,
-		hoverOwnerId: EntityOwner | null,
-		hoverIndex: number
-	) => void
 }
 
 export function EntityDropPlaceholderZone({
 	dragId,
-	listId,
 	ownerId,
 	entityCount,
 	entityTypeLabel,
-	moveCard,
 }: EntityDropPlaceholderZoneProps): React.JSX.Element | null {
+	const { serviceFactory } = useEntityEditorContext()
+
 	const [isDragging, drop] = useDrop<EntityListDragItem, unknown, boolean>({
 		accept: dragId,
 		collect: (monitor) => {
@@ -43,10 +37,10 @@ export function EntityDropPlaceholderZone({
 			// Can't move into itself
 			if (ownerId && isEqual(item.entityId, ownerId.parentId)) return
 
-			moveCard(item.listId, item.entityId, ownerId, 0)
+			serviceFactory.moveCard(item.listId, item.entityId, ownerId, 0)
 
 			item.ownerId = ownerId
-			item.listId = listId
+			item.listId = serviceFactory.listId
 			item.index = 0
 		},
 	})

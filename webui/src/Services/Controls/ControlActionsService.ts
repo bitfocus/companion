@@ -1,6 +1,11 @@
 import { useMemo } from 'react'
 import type { IEntityEditorService } from './ControlEntitiesService.js'
-import type { EntityOwner, SomeEntityModel, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import type {
+	EntityModelType,
+	EntityOwner,
+	SomeEntityModel,
+	SomeSocketEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { trpc, useMutationExt } from '~/TRPC.js'
 
 export function useActionRecorderActionService(sessionId: string): IEntityEditorService {
@@ -14,7 +19,12 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			listId: 'trigger_actions',
 			confirmModal: { current: null }, // TODO this is a hack
 
-			addEntity: async (_connectionId: string, _definitionId: string, _ownerId: EntityOwner | null) => {
+			addEntity: async (
+				_connectionId: string,
+				_entityModelType: EntityModelType,
+				_definitionId: string,
+				_ownerId: EntityOwner | null
+			) => {
 				// Not supported
 				return null
 			},
@@ -56,6 +66,12 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			setHeadline: undefined,
 
 			setInverted: (_entityId: string, _inverted: boolean) => {
+				// Not supported
+			},
+			setVariableName: (_entityId: string, _variableName: string) => {
+				// Not supported
+			},
+			setVariableValue: (_entityId: string, _variableValue: string) => {
 				// Not supported
 			},
 

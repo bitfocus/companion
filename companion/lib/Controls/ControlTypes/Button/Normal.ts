@@ -1,5 +1,6 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep, omit } from 'lodash-es'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
 	ControlWithActionSets,
@@ -7,7 +8,6 @@ import type {
 	ControlWithStyle,
 	ControlWithoutEvents,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type {
 	NormalButtonModel,
 	NormalButtonOptions,
@@ -65,7 +65,7 @@ export class ControlButtonNormal
 	/**
 	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
-	#last_draw_variables: Set<string> | null = null
+	#last_draw_variables: ReadonlySet<string> | null = null
 
 	/**
 	 * The base style without feedbacks applied
@@ -132,21 +132,23 @@ export class ControlButtonNormal
 
 		if (style.text) {
 			// Block out the button text
-			const injectedVariableValues: CompanionVariableValues = {}
-			const location = this.deps.page.getLocationOfControlId(this.controlId)
+			const overrideVariableValues: CompanionVariableValues = {}
+
+			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 			if (location) {
 				// Ensure we don't enter into an infinite loop
-				// TODO - legacy location variables?
-				injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
+				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
 			}
 
+			// Setup the parser
+			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
+				location,
+				this.entities.getLocalVariableEntities(),
+				overrideVariableValues
+			)
+
 			if (style.textExpression) {
-				const parseResult = this.deps.variables.values.executeExpression(
-					style.text,
-					location,
-					undefined,
-					injectedVariableValues
-				)
+				const parseResult = parser.executeExpression(style.text, undefined)
 				if (parseResult.ok) {
 					style.text = parseResult.value + ''
 				} else {
@@ -155,9 +157,9 @@ export class ControlButtonNormal
 				}
 				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			} else {
-				const parseResult = this.deps.variables.values.parseVariables(style.text, location, injectedVariableValues)
+				const parseResult = parser.parseVariables(style.text)
 				style.text = parseResult.text
-				this.#last_draw_variables = parseResult.variableIds.length > 0 ? new Set(parseResult.variableIds) : null
+				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
 			}
 		}
 
@@ -174,20 +176,19 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Collect the instance ids and labels referenced by this control
+	 * Collect the instance ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
+	 * @param foundVariables - variables being referenced
 	 */
-	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
-		const allEntities = this.entities.getAllEntities()
-
-		for (const entity of allEntities) {
-			foundConnectionIds.add(entity.connectionId)
-		}
-
-		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
-
-		ReferencesVisitors.visitControlReferences(this.deps.internalModule, visitor, this.#baseStyle, [], allEntities, [])
+	collectReferencedConnectionsAndVariables(
+		foundConnectionIds: Set<string>,
+		foundConnectionLabels: Set<string>,
+		foundVariables: Set<string>
+	): void {
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
+			.visitButtonDrawStlye(this.#baseStyle)
+			.visitEntities(this.entities.getAllEntities(), [])
 	}
 
 	/**
@@ -199,15 +200,11 @@ export class ControlButtonNormal
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			this.#baseStyle,
-			[],
-			allEntities,
-			[],
-			true
-		)
+		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+			.visitButtonDrawStlye(this.#baseStyle)
+			.visitEntities(allEntities, [])
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
 		// redraw if needed and save changes
 		this.commitChange(changed)
@@ -292,6 +289,7 @@ export class ControlButtonNormal
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
+			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
 		return clone ? cloneDeep(obj) : obj

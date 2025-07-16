@@ -21,7 +21,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { SurfaceController } from '../Surface/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { UIExpress } from '../UI/Express.js'
 
@@ -63,7 +63,7 @@ export class ServiceController {
 		oscSender: ServiceOscSender,
 		controlEvents: EventEmitter<ControlCommonEvents>,
 		surfaceController: SurfaceController,
-		pageController: PageController,
+		pageStore: IPageStore,
 		instanceController: InstanceController,
 		io: UIHandler,
 		express: UIExpress
@@ -74,7 +74,7 @@ export class ServiceController {
 		this.oscListener = new ServiceOscListener(serviceApi, userconfig)
 		this.tcp = new ServiceTcp(serviceApi, userconfig)
 		this.udp = new ServiceUdp(serviceApi, userconfig)
-		this.emberplus = new ServiceEmberPlus(serviceApi, userconfig, pageController)
+		this.emberplus = new ServiceEmberPlus(serviceApi, userconfig, pageStore)
 		this.artnet = new ServiceArtnet(serviceApi, userconfig)
 		this.rosstalk = new ServiceRosstalk(serviceApi, userconfig)
 		this.satelliteTcp = new ServiceSatelliteTcp(serviceApi.appInfo, surfaceController, userconfig)

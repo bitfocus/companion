@@ -37,13 +37,14 @@ import type { InstanceController } from '../Instance/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { formatAttachmentFilename, StringifiedExportData, stringifyExport } from './Util.js'
 
 export class ExportController {
@@ -52,7 +53,7 @@ export class ExportController {
 	readonly #appInfo: AppInfo
 	readonly #controlsController: ControlsController
 	readonly #instancesController: InstanceController
-	readonly #pagesController: PageController
+	readonly #pagesStore: IPageStore
 	readonly #surfacesController: SurfaceController
 	readonly #userConfigController: DataUserConfig
 	readonly #variablesController: VariablesController
@@ -62,7 +63,7 @@ export class ExportController {
 		apiRouter: express.Router,
 		controls: ControlsController,
 		instance: InstanceController,
-		page: PageController,
+		pageStore: IPageStore,
 		surfaces: SurfaceController,
 		userconfig: DataUserConfig,
 		variablesController: VariablesController
@@ -70,7 +71,7 @@ export class ExportController {
 		this.#appInfo = appInfo
 		this.#controlsController = controls
 		this.#instancesController = instance
-		this.#pagesController = page
+		this.#pagesStore = pageStore
 		this.#surfacesController = surfaces
 		this.#userConfigController = userconfig
 		this.#variablesController = variablesController
@@ -117,13 +118,19 @@ export class ExportController {
 		if (isNaN(page)) {
 			next()
 		} else {
-			const pageInfo = this.#pagesController.getPageInfo(page, true)
+			const pageInfo = this.#pagesStore.getPageInfo(page, true)
 			if (!pageInfo) throw new Error(`Page "${page}" not found!`)
 
 			const referencedConnectionIds = new Set<string>()
 			const referencedConnectionLabels = new Set<string>()
+			const referencedVariables = new Set<string>()
 
-			const pageExport = this.#generatePageExportInfo(pageInfo, referencedConnectionIds, referencedConnectionLabels)
+			const pageExport = this.#generatePageExportInfo(
+				pageInfo,
+				referencedConnectionIds,
+				referencedConnectionLabels,
+				referencedVariables
+			)
 
 			// Collect referenced connections and  collections
 			const instancesExport = this.#generateReferencedConnectionConfigs(
@@ -271,7 +278,8 @@ export class ExportController {
 	#generateFilename(filename: string, exportType: string, fileExt: string): string {
 		//If the user isn't using their default file name, don't append any extra info in file name since it was a manual choice
 		const useDefault = filename == this.#userConfigController.getKey('default_export_filename')
-		const parsedName = this.#variablesController.values.parseVariables(filename, null).text
+		const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
+		const parsedName = parser.parseVariables(filename).text
 
 		return parsedName && parsedName !== 'undefined'
 			? `${parsedName}${exportType && useDefault ? '_' + exportType : ''}.${fileExt}`
@@ -282,6 +290,7 @@ export class ExportController {
 		const triggersExport: ExportTriggerContentv6 = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
+		const referencedVariables = new Set<string>()
 		const referencedCollectionIds = new Set<string>()
 
 		for (const control of triggerControls) {
@@ -289,7 +298,11 @@ export class ExportController {
 			if (parsedId?.type === 'trigger') {
 				triggersExport[parsedId.trigger] = control.toJSON(false)
 
-				control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+				control.collectReferencedConnectionsAndVariables(
+					referencedConnectionIds,
+					referencedConnectionLabels,
+					referencedVariables
+				)
 
 				// Collect referenced collection IDs
 				if (control.options.collectionId) {
@@ -391,7 +404,8 @@ export class ExportController {
 	#generatePageExportInfo(
 		pageInfo: PageModel,
 		referencedConnectionIds: Set<string>,
-		referencedConnectionLabels: Set<string>
+		referencedConnectionLabels: Set<string>,
+		referencedVariables: Set<string>
 	): ExportPageContentv6 {
 		const pageExport: ExportPageContentv6 = {
 			id: pageInfo.id,
@@ -407,7 +421,11 @@ export class ExportController {
 					if (!pageExport.controls[Number(row)]) pageExport.controls[Number(row)] = {}
 					pageExport.controls[Number(row)][Number(column)] = control.toJSON(false)
 
-					control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
 				}
 			}
 		}
@@ -427,16 +445,18 @@ export class ExportController {
 
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
+		const referencedVariables = new Set<string>()
 
 		if (!config || !isFalsey(config.buttons)) {
 			exp.pages = {}
 
-			const pageInfos = this.#pagesController.getAll()
+			const pageInfos = this.#pagesStore.getAll()
 			for (const [pageNumber, rawPageInfo] of Object.entries(pageInfos)) {
 				exp.pages[Number(pageNumber)] = this.#generatePageExportInfo(
 					rawPageInfo,
 					referencedConnectionIds,
-					referencedConnectionLabels
+					referencedConnectionLabels,
+					referencedVariables
 				)
 			}
 		}
@@ -449,7 +469,11 @@ export class ExportController {
 					if (parsedId?.type === 'trigger') {
 						triggersExport[parsedId.trigger] = control.toJSON(false)
 
-						control.collectReferencedConnections(referencedConnectionIds, referencedConnectionLabels)
+						control.collectReferencedConnectionsAndVariables(
+							referencedConnectionIds,
+							referencedConnectionLabels,
+							referencedVariables
+						)
 					}
 				}
 			}
@@ -482,8 +506,25 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.surfaces)) {
-			exp.surfaces = this.#surfacesController.exportAll()
-			exp.surfaceGroups = this.#surfacesController.exportAllGroups()
+			const surfaces = this.#surfacesController.exportAll()
+			const surfaceGroups = this.#surfacesController.exportAllGroups()
+			const findPage = (id: string) => this.#pagesStore.getPageNumber(id)
+			// Convert internal page refs to page numbers.
+			// Note that `page`, which is a holdover from previous times, is already recorded as a number...
+			const setExportPageId = (groupConfig: SurfaceGroupConfig) => {
+				groupConfig.last_page = findPage(groupConfig.last_page_id) ?? 1
+				groupConfig.startup_page = findPage(groupConfig.startup_page_id) ?? 1
+			}
+
+			for (const surface of Object.values(surfaces)) {
+				setExportPageId(surface.groupConfig)
+			}
+			for (const groupConfig of Object.values(surfaceGroups)) {
+				setExportPageId(groupConfig)
+			}
+
+			exp.surfaces = surfaces
+			exp.surfaceGroups = surfaceGroups
 		}
 
 		if (!config || !isFalsey(config.userconfig)) {

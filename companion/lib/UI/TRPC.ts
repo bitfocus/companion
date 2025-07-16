@@ -7,6 +7,7 @@ import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Mode
 import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
 import { isPackaged } from '../Resources/Util.js'
+import { trpcMiddleware as sentryTrpcMiddleware } from '@sentry/node'
 
 export interface TrpcContext {
 	clientId: string
@@ -54,13 +55,19 @@ const loggerMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
 	return result
 })
 
+const sentryMiddleware = t.middleware(
+	sentryTrpcMiddleware({
+		attachRpcInput: true,
+	})
+)
+
 /**
  * Export reusable router and procedure helpers
  * that can be used throughout the router
  */
 export const router = t.router
 
-export const publicProcedure = t.procedure.use(loggerMiddleware)
+export const publicProcedure = t.procedure.use(loggerMiddleware).use(sentryMiddleware)
 // export const protectedProcedure = t.procedure
 
 /**
@@ -90,9 +97,7 @@ export function createTrpcRouter(registry: Registry) {
 		connections: registry.instance.createTrpcRouter(),
 		cloud: registry.cloud.createTrpcRouter(),
 
-		preview: router({
-			graphics: registry.preview.createTrpcRouter(),
-		}),
+		preview: registry.preview.createTrpcRouter(),
 	})
 }
 

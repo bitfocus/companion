@@ -14,15 +14,18 @@ import type {
 } from '@companion-app/shared/Model/Presets.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
-import type { CompanionPresetAction, CompanionPresetDefinition } from '@companion-module/base'
+import type {
+	CompanionButtonStyleProps,
+	CompanionPresetAction,
+	CompanionPresetDefinition,
+} from '@companion-module/base'
 import LogController from '../Log/Controller.js'
-import type { VariablesValues } from '../Variables/Values.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import {
 	ActionEntityModel,
 	EntityModelBase,
 	EntityModelType,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -33,7 +36,6 @@ import type {
 import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
-import z from 'zod'
 
 type DefinitionsEvents = {
 	presets: [update: UIPresetDefinitionUpdate]
@@ -60,9 +62,6 @@ type DefinitionsEvents = {
 export class InstanceDefinitions {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
-	readonly #graphicsController: GraphicsController
-	readonly #variablesValuesController: VariablesValues
-
 	/**
 	 * The action definitions
 	 */
@@ -78,10 +77,7 @@ export class InstanceDefinitions {
 
 	#events = new EventEmitter<DefinitionsEvents>()
 
-	constructor(graphics: GraphicsController, variablesValues: VariablesValues) {
-		this.#graphicsController = graphics
-		this.#variablesValuesController = variablesValues
-
+	constructor() {
 		this.#events.setMaxListeners(0)
 	}
 
@@ -128,47 +124,6 @@ export class InstanceDefinitions {
 					yield update
 				}
 			}),
-
-			previewRender: publicProcedure
-				.input(
-					z.object({
-						connectionId: z.string(),
-						presetId: z.string(),
-					})
-				)
-				.query(async ({ input }) => {
-					const definition = this.#presetDefinitions[input.connectionId]?.[input.presetId]
-					if (definition && definition.type === 'button') {
-						const style = {
-							...(definition.previewStyle ? definition.previewStyle : definition.style),
-							style: definition.type,
-						}
-
-						if (style.text) {
-							if (style.textExpression) {
-								const parseResult = this.#variablesValuesController.executeExpression(style.text, null)
-								if (parseResult.ok) {
-									style.text = parseResult.value + ''
-								} else {
-									this.#logger.error(`Expression parse error: ${parseResult.error}`)
-									style.text = 'ERR'
-								}
-							} else {
-								const parseResult = this.#variablesValuesController.parseVariables(style.text, null)
-								style.text = parseResult.text
-							}
-						}
-
-						const render = await this.#graphicsController.drawPreview(style)
-						if (render) {
-							return render.asDataUrl
-						} else {
-							return null
-						}
-					} else {
-						return null
-					}
-				}),
 		})
 	}
 
@@ -210,7 +165,7 @@ export class InstanceDefinitions {
 					isInverted: false,
 				}
 
-				if (/*!booleanOnly &&*/ definition.feedbackType === 'boolean' && definition.feedbackStyle) {
+				if (/*!booleanOnly &&*/ definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
 					feedback.style = cloneDeep(definition.feedbackStyle)
 				}
 
@@ -293,6 +248,23 @@ export class InstanceDefinitions {
 	}
 
 	/**
+	 * Get the draw style for a preset
+	 * @param connectionId - the id of the instance
+	 * @param presetId - the id of the preset
+	 */
+	getPresetDrawStyle(connectionId: string, presetId: string): (CompanionButtonStyleProps & { style: 'button' }) | null {
+		const definition = this.#presetDefinitions[connectionId]?.[presetId]
+		if (definition && definition.type === 'button') {
+			return {
+				...(definition.previewStyle ? definition.previewStyle : definition.style),
+				style: definition.type,
+			}
+		} else {
+			return null
+		}
+	}
+
+	/**
 	 * Import a preset to a location
 	 */
 	convertPresetToControlModel(connectionId: string, presetId: string): NormalButtonModel | null {
@@ -316,6 +288,7 @@ export class InstanceDefinitions {
 			},
 			feedbacks: [],
 			steps: {},
+			localVariables: [],
 		}
 		if (definition.steps) {
 			for (let i = 0; i < definition.steps.length; i++) {

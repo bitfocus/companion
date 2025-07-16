@@ -13,10 +13,15 @@ export interface IEntityEditorService {
 	readonly listId: SomeSocketEntityLocation
 	readonly confirmModal: React.RefObject<GenericConfirmModalRef>
 
-	addEntity: (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => Promise<string | null>
+	addEntity: (
+		connectionId: string,
+		entityModelType: EntityModelType,
+		definitionId: string,
+		ownerId: EntityOwner | null
+	) => Promise<string | null>
 
 	setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: any) => void
-	performDelete: (entityId: string) => void
+	performDelete: (entityId: string, entityTypeLabel: string) => void
 	performDuplicate: (entityId: string) => void
 	setConnection: (entityId: string, connectionId: string) => void
 	moveCard: (
@@ -30,6 +35,8 @@ export interface IEntityEditorService {
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
 
 	setInverted: (entityId: string, inverted: boolean) => void
+	setVariableName: (entityId: string, name: string) => void
+	setVariableValue: (entityId: string, value: any) => void
 	setSelectedStyleProps: (entityId: string, keys: string[]) => void
 	setStylePropsValue: (entityId: string, key: string, value: any) => void
 }
@@ -44,6 +51,8 @@ export interface IEntityEditorActionService {
 	setHeadline: ((headline: string) => void) | undefined
 
 	setInverted: (inverted: boolean) => void
+	setVariableName: (name: string) => void
+	setVariableValue: (value: any) => void
 	setSelectedStyleProps: (keys: string[]) => void
 	setStylePropsValue: (key: string, value: any) => void
 }
@@ -51,8 +60,6 @@ export interface IEntityEditorActionService {
 export function useControlEntitiesEditorService(
 	controlId: string,
 	listId: SomeSocketEntityLocation,
-	entityTypeLabel: string,
-	entityModelType: EntityModelType,
 	confirmModal: React.RefObject<GenericConfirmModalRef>
 ): IEntityEditorService {
 	const addMutation = useMutationExt(trpc.controls.entities.add.mutationOptions())
@@ -67,13 +74,20 @@ export function useControlEntitiesEditorService(
 	const setInvertedMutation = useMutationExt(trpc.controls.entities.setInverted.mutationOptions())
 	const setStyleSelectionMutation = useMutationExt(trpc.controls.entities.setStyleSelection.mutationOptions())
 	const setStyleValueMutation = useMutationExt(trpc.controls.entities.setStyleValue.mutationOptions())
+	const setVariableNameMutation = useMutationExt(trpc.controls.entities.setVariableName.mutationOptions())
+	const setVariableValueMutation = useMutationExt(trpc.controls.entities.setVariableValue.mutationOptions())
 
 	return useMemo(
 		() => ({
 			listId,
 			confirmModal,
 
-			addEntity: async (connectionId: string, definitionId: string, ownerId: EntityOwner | null) => {
+			addEntity: async (
+				connectionId: string,
+				entityModelType: EntityModelType,
+				definitionId: string,
+				ownerId: EntityOwner | null
+			) => {
 				return addMutation.mutateAsync({
 					controlId,
 					entityLocation: listId,
@@ -133,7 +147,7 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
-			performDelete: (entityId: string) => {
+			performDelete: (entityId: string, entityTypeLabel: string) => {
 				confirmModal.current?.show(`Delete ${entityTypeLabel}`, `Delete ${entityTypeLabel}?`, 'Delete', () => {
 					removeMutation
 						.mutateAsync({
@@ -183,7 +197,6 @@ export function useControlEntitiesEditorService(
 						console.error('Failed to enable/disable entity', e)
 					})
 			},
-
 			setHeadline: (entityId: string, headline: string) => {
 				setHeadlineMutation
 					.mutateAsync({
@@ -207,6 +220,31 @@ export function useControlEntitiesEditorService(
 					})
 					.catch((e) => {
 						console.error('Failed to set entity inverted', e)
+					})
+			},
+
+			setVariableName: (entityId: string, name: string) => {
+				setVariableNameMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						name,
+					})
+					.catch((e) => {
+						console.error('Failed to set entity variable name', e)
+					})
+			},
+			setVariableValue: (entityId: string, value: any) => {
+				setVariableValueMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						value,
+					})
+					.catch((e) => {
+						console.error('Failed to set entity variable value', e)
 					})
 			},
 
@@ -251,20 +289,21 @@ export function useControlEntitiesEditorService(
 			setInvertedMutation,
 			setStyleSelectionMutation,
 			setStyleValueMutation,
+			setVariableNameMutation,
+			setVariableValueMutation,
 
 			confirmModal,
 			controlId,
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 			stringifySocketEntityLocation(listId),
-			entityTypeLabel,
-			entityModelType,
 		]
 	)
 }
 
 export function useControlEntityService(
 	serviceFactory: IEntityEditorService,
-	entity: SomeEntityModel
+	entity: SomeEntityModel,
+	entityTypeLabel: string
 ): IEntityEditorActionService {
 	const entityRef = useRef<SomeEntityModel>()
 	entityRef.current = entity
@@ -274,7 +313,7 @@ export function useControlEntityService(
 	return useMemo(
 		() => ({
 			setValue: (key: string, val: any) => serviceFactory.setValue(entityId, entityRef.current, key, val),
-			performDelete: () => serviceFactory.performDelete(entityId),
+			performDelete: () => serviceFactory.performDelete(entityId, entityTypeLabel),
 			performDuplicate: () => serviceFactory.performDuplicate(entityId),
 			setConnection: (connectionId: string) => serviceFactory.setConnection(entityId, connectionId),
 			performLearn: serviceFactory.performLearn ? () => serviceFactory.performLearn?.(entityId) : undefined,
@@ -285,9 +324,11 @@ export function useControlEntityService(
 				? (headline: string) => serviceFactory.setHeadline?.(entityId, headline)
 				: undefined,
 			setInverted: (inverted: boolean) => serviceFactory.setInverted(entityId, inverted),
+			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),
+			setVariableValue: (value: any) => serviceFactory.setVariableValue(entityId, value),
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
 			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 		}),
-		[serviceFactory, entityId]
+		[serviceFactory, entityId, entityTypeLabel]
 	)
 }

@@ -1,33 +1,36 @@
 import { describe, test, expect } from 'vitest'
-import { executeExpression } from '../../lib/Variables/Util.js'
-import { CompanionVariableValues } from '@companion-module/base'
+import { executeExpression, VariableValueCache } from '../../lib/Variables/Util.js'
 
 describe('executeExpression', () => {
 	test('basic math', () => {
-		const res = executeExpression('1 + 2', {})
+		const res = executeExpression('1 + 2', {}, undefined, new Map())
 		expect(res).toMatchObject({ value: 3, variableIds: new Set() })
 	})
 
 	test('missing variables', () => {
-		const res = executeExpression("concat($(test:something), '=', $(another:value))", {})
+		const res = executeExpression("concat($(test:something), '=', $(another:value))", {}, undefined, new Map())
 		expect(res).toMatchObject({ value: '$NA=$NA', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
 	test('normal variables', () => {
-		const res = executeExpression("concat($(test:page), '/', $(test:row))", {
-			test: {
-				page: 'abc',
-				row: 'def',
+		const res = executeExpression(
+			"concat($(test:page), '/', $(test:row))",
+			{
+				test: {
+					page: 'abc',
+					row: 'def',
+				},
 			},
-		})
+			undefined,
+			new Map()
+		)
 		expect(res).toMatchObject({ value: 'abc/def', variableIds: new Set(['test:page', 'test:row']) })
 	})
 
 	test('injected variables', () => {
-		const injectedVariableValues = {
-			'$(test:something)': 'val1',
-			'$(another:value)': 'bbb',
-		}
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', 'val1')
+		injectedVariableValues.set('$(another:value)', 'bbb')
 
 		const res = executeExpression(
 			"concat($(test:something), '=', $(another:value))",
@@ -39,71 +42,70 @@ describe('executeExpression', () => {
 	})
 
 	test('nested variable names', () => {
-		const injectedVariableValues = {
-			'$(test:something)': 'val1',
-			'$(another:value)': 'something',
-		}
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', 'val1')
+		injectedVariableValues.set('$(another:value)', 'something')
 
 		const res = executeExpression('parseVariables("$(test:$(another:value))")', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 'val1', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
 	test('array variable', () => {
-		const injectedVariableValues: CompanionVariableValues = {
-			'$(test:something)': [1, 2, 3] as any,
-		}
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', [1, 2, 3] as any)
 
 		const res = executeExpression('$(test:something)[1]', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 2, variableIds: new Set(['test:something']) })
 	})
 
 	test('object variable', () => {
-		const injectedVariableValues: CompanionVariableValues = {
-			'$(test:something)': { a: 1, b: '123' } as any,
-		}
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', { a: 1, b: '123' } as any)
 
 		const res = executeExpression('$(test:something)["b"]', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: '123', variableIds: new Set(['test:something']) })
 	})
 
 	test('chained variables', () => {
-		const injectedVariableValues = {
-			'$(test:something)': '$(another:value)',
-			'$(another:value)': 'something',
-		}
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', '$(another:value)')
+		injectedVariableValues.set('$(another:value)', 'something')
 
 		const res = executeExpression('parseVariables("$(test:something)")', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
 	test('chained variables 2', () => {
-		const injectedVariableValues = {
-			'$(test:something)': '$(another:value)',
-			'$(another:value)': 'something',
-		}
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', '$(another:value)')
+		injectedVariableValues.set('$(another:value)', 'something')
 
 		const res = executeExpression('$(test:something)', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
 	test('chained array variable', () => {
-		const injectedVariableValues: CompanionVariableValues = {
-			'$(test:something)': '$(another:value)',
-			'$(another:value)': [1, 2, 3] as any,
-		}
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', '$(another:value)')
+		injectedVariableValues.set('$(another:value)', [1, 2, 3] as any)
 
 		const res = executeExpression('join($(test:something), "/")', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: '1/2/3', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
 	test('falsey variables', () => {
-		const res = executeExpression("concat($(test:page), '/', $(test:row), '/', $(test:col))", {
-			test: {
-				page: 0,
-				row: '',
-				col: undefined,
+		const res = executeExpression(
+			"concat($(test:page), '/', $(test:row), '/', $(test:col))",
+			{
+				test: {
+					page: 0,
+					row: '',
+					col: undefined,
+				},
 			},
-		})
+			undefined,
+			new Map()
+		)
 		expect(res).toMatchObject({ value: '0//$NA', variableIds: new Set(['test:page', 'test:row', 'test:col']) })
 	})
 })

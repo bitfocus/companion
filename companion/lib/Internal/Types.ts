@@ -1,6 +1,6 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { VisitorReferencesCollector } from '../Resources/Visitors/ReferencesCollector.js'
-import type { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
+import type { VisitorReferencesCollectorVisitor } from '../Resources/Visitors/ReferencesCollector.js'
+import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/ReferencesUpdater.js'
 import type {
 	CompanionFeedbackButtonStyleResult,
 	CompanionOptionValues,
@@ -20,7 +20,7 @@ export interface FeedbackEntityModelExt extends FeedbackEntityModel {
 	referencedVariables: string[] | null
 }
 
-export type InternalVisitor = VisitorReferencesCollector | VisitorReferencesUpdater
+export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor
 
 /**
  * A minimal representation of a feedback, for visiting internal feedbacks.
@@ -86,11 +86,13 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 	getVariableDefinitions?: () => VariableDefinitionTmp[]
 	updateVariables?: () => void
+
+	onVariablesChanged?: (changedVariablesSet: Set<string>, fromControlId: string | null) => void
 }
 
 export interface ExecuteFeedbackResultWithReferences {
 	referencedVariables: string[]
-	value: any
+	value: CompanionFeedbackButtonStyleResult | CompanionVariableValue | undefined
 }
 
 export type InternalActionDefinition = SetOptional<

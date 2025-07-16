@@ -16,7 +16,7 @@ import { convertPanelIndexToXY } from '../Util.js'
 import { LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ControlsController } from '../../Controls/Controller.js'
-import type { PageController } from '../../Page/Controller.js'
+import type { IPageStore } from '../../Page/Store.js'
 import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
@@ -36,20 +36,20 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 	}
 
 	readonly #controlsController: ControlsController
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 
 	readonly socket: ServiceElgatoPluginSocket
 
 	constructor(
 		controlsController: ControlsController,
-		pageController: PageController,
+		pageStore: IPageStore,
 		devicePath: string,
 		socket: ServiceElgatoPluginSocket
 	) {
 		super()
 
 		this.#controlsController = controlsController
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 
 		this.socket = socket
 
@@ -75,7 +75,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 				if (data.page == null) {
 					this.emit('click', Number(data.column), Number(data.row), pressed)
 				} else {
-					const controlId = this.#pageController.getControlIdAt({
+					const controlId = this.#pageStore.getControlIdAt({
 						pageNumber: Number(data.page),
 						column: Number(data.column),
 						row: Number(data.row),
@@ -91,7 +91,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 			} else {
 				const xy = oldBankIndexToXY(data.bank + 1)
 				if (xy) {
-					const controlId = this.#pageController.getControlIdAt({
+					const controlId = this.#pageStore.getControlIdAt({
 						pageNumber: Number(data.page),
 						column: xy[0],
 						row: xy[1],
@@ -115,7 +115,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 				if (data.page == null) {
 					this.emit('rotate', Number(data.column), Number(data.row), right)
 				} else {
-					const controlId = this.#pageController.getControlIdAt({
+					const controlId = this.#pageStore.getControlIdAt({
 						pageNumber: Number(data.page),
 						column: Number(data.column),
 						row: Number(data.row),
@@ -134,7 +134,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 			} else {
 				const xy = oldBankIndexToXY(data.bank + 1)
 				if (xy) {
-					const controlId = this.#pageController.getControlIdAt({
+					const controlId = this.#pageStore.getControlIdAt({
 						pageNumber: Number(data.page),
 						column: xy[0],
 						row: xy[1],

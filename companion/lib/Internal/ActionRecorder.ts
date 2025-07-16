@@ -11,7 +11,7 @@
 
 import LogController from '../Log/Controller.js'
 import type { ActionRecorder } from '../Controls/ActionRecorder.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -25,6 +25,7 @@ import type {
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 
@@ -36,14 +37,14 @@ export class InternalActionRecorder
 
 	readonly #internalUtils: InternalModuleUtils
 	readonly #actionRecorder: ActionRecorder
-	readonly #pageController: PageController
+	readonly #pageStore: IPageStore
 
-	constructor(internalUtils: InternalModuleUtils, actionRecorder: ActionRecorder, pageController: PageController) {
+	constructor(internalUtils: InternalModuleUtils, actionRecorder: ActionRecorder, pageStore: IPageStore) {
 		super()
 
 		this.#internalUtils = internalUtils
 		this.#actionRecorder = actionRecorder
-		this.#pageController = pageController
+		this.#pageStore = pageStore
 
 		setImmediate(() => {
 			this.emit('setVariables', {
@@ -231,12 +232,12 @@ export class InternalActionRecorder
 
 				if (page === 0) page = extras.location?.pageNumber ?? 0
 				if (bank === 0 && extras.location) {
-					controlId = this.#pageController.getControlIdAt({
+					controlId = this.#pageStore.getControlIdAt({
 						...extras.location,
 						pageNumber: page,
 					})
 				} else if (bank > 0) {
-					controlId = this.#pageController.getControlIdAtOldBankIndex(page, bank)
+					controlId = this.#pageStore.getControlIdAtOldBankIndex(page, bank)
 				}
 
 				if (!controlId) return true
@@ -268,7 +269,7 @@ export class InternalActionRecorder
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			action_recorder_check_connections: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Action Recorder: Check if specified connections are selected',
 				description: undefined,
 				feedbackStyle: {

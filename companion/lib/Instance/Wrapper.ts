@@ -42,13 +42,14 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceDefinitions, PresetDefinitionTmp } from './Definitions.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import {
 	ActionEntityModel,
 	EntityModelType,
 	FeedbackEntityModel,
+	isValidFeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -60,7 +61,7 @@ import { InternalActionInputField, InternalFeedbackInputField } from '@companion
 export interface InstanceModuleWrapperDependencies {
 	readonly controls: ControlsController
 	readonly variables: VariablesController
-	readonly page: PageController
+	readonly pageStore: IPageStore
 	readonly oscSender: ServiceOscSender
 
 	readonly instanceDefinitions: InstanceDefinitions
@@ -676,6 +677,8 @@ export class SocketEventsHandler {
 		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
 
 		for (const rawFeedback of msg.feedbacks || []) {
+			if (!isValidFeedbackEntitySubType(rawFeedback.type)) continue
+
 			feedbacks[rawFeedback.id] = {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
@@ -793,12 +796,14 @@ export class SocketEventsHandler {
 		msg: ParseVariablesInStringMessage
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
-			const location = msg.controlId ? this.#deps.page.getLocationOfControlId(msg.controlId) : null
-			const result = this.#deps.variables.values.parseVariables(msg.text, location)
+			const location = msg.controlId ? this.#deps.pageStore.getLocationOfControlId(msg.controlId) : null
+
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(location, null)
+			const result = parser.parseVariables(msg.text)
 
 			return {
 				text: result.text,
-				variableIds: result.variableIds,
+				variableIds: Array.from(result.variableIds),
 			}
 		} catch (e: any) {
 			this.logger.error(`Parse variables failed: ${e}`)

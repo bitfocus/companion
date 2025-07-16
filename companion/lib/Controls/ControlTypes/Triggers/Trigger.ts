@@ -7,17 +7,18 @@ import { TriggersEventMisc } from './Events/Misc.js'
 import { clamp } from '../../../Resources/Util.js'
 import { TriggersEventVariables } from './Events/Variable.js'
 import { nanoid } from 'nanoid'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import type {
 	ControlWithActions,
+	ControlWithEntities,
 	ControlWithEvents,
 	ControlWithOptions,
 	ControlWithoutActionSets,
 	ControlWithoutPushed,
 	ControlWithoutStyle,
 } from '../../IControlFragments.js'
-import { ReferencesVisitors } from '../../../Resources/Visitors/ReferencesVisitors.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -46,6 +47,7 @@ export class ControlTrigger
 	implements
 		ControlWithActions,
 		ControlWithEvents,
+		ControlWithEntities,
 		ControlWithoutStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
@@ -122,7 +124,7 @@ export class ControlTrigger
 
 	readonly #actionRunner: ControlActionRunner
 
-	readonly entities: ControlEntityListPoolTrigger // TODO - should this be private?
+	readonly entities: ControlEntityListPoolTrigger
 
 	/**
 	 * Whether this trigger and its parent collection is enabled or not
@@ -151,12 +153,11 @@ export class ControlTrigger
 		this.entities = new ControlEntityListPoolTrigger({
 			controlId,
 			commitChange: this.commitChange.bind(this),
-			triggerRedraw: this.triggerRedraw.bind(this),
+			invalidateControl: this.triggerRedraw.bind(this),
+			localVariablesChanged: null,
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			moduleHost: deps.instance.moduleHost,
-			executeExpressionInControl: (expression, requiredType, injectedVariableValues) =>
-				deps.variables.values.executeExpression(expression, null, requiredType, injectedVariableValues),
 		})
 
 		this.#eventBus = eventBus
@@ -215,13 +216,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void {
-		this.entities.clearConnectionState(connectionId)
-	}
-
-	/**
 	 * Execute the actions of this trigger
 	 * @param nowTime
 	 * @param source The source of this execution
@@ -258,27 +252,19 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Collect the instance ids and labels referenced by this control
+	 * Collect the instance ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
+	 * @param foundVariables - variables being referenced
 	 */
-	collectReferencedConnections(foundConnectionIds: Set<string>, foundConnectionLabels: Set<string>): void {
-		const allEntities = this.entities.getAllEntities()
-
-		for (const entities of allEntities) {
-			foundConnectionIds.add(entities.connectionId)
-		}
-
-		const visitor = new VisitorReferencesCollector(foundConnectionIds, foundConnectionLabels)
-
-		ReferencesVisitors.visitControlReferences(
-			this.deps.internalModule,
-			visitor,
-			undefined,
-			[],
-			allEntities,
-			this.events
-		)
+	collectReferencedConnectionsAndVariables(
+		foundConnectionIds: Set<string>,
+		foundConnectionLabels: Set<string>,
+		foundVariables: Set<string>
+	): void {
+		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
+			.visitEntities(this.entities.getAllEntities(), [])
+			.visitEvents(this.events)
 	}
 
 	/**
@@ -364,17 +350,6 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Remove any actions and feedbacks referencing a specified connectionId
-	 */
-	forgetConnection(connectionId: string): void {
-		const changed = this.entities.forgetConnection(connectionId)
-
-		if (changed) {
-			this.commitChange(true)
-		}
-	}
-
-	/**
 	 * Start or stop the trigger from running
 	 */
 	#setupEvents(restartEvents = true): void {
@@ -398,18 +373,12 @@ export class ControlTrigger
 	 * @access public
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
-		const allEntities = this.entities.getAllEntities()
-
 		// Fix up references
-		const changed = ReferencesVisitors.fixupControlReferences(
-			this.deps.internalModule,
-			{ connectionLabels: { [labelFrom]: labelTo } },
-			undefined,
-			[],
-			allEntities,
-			this.events,
-			true
-		)
+		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+			.visitEntities(this.entities.getAllEntities(), [])
+			.visitEvents(this.events)
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
 		// 'redraw' if needed and save changes
 		this.commitChange(changed)

@@ -81,11 +81,16 @@ export class ControlButtonPageNumber
 	}
 
 	/**
-	 * Collect the connection ids and labels referenced by this control
+	 * Collect the connection ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - connection ids being referenced
 	 * @param foundConnectionLabels - connection labels being referenced
+	 * @param foundVariables - variables being referenced
 	 */
-	collectReferencedConnections(_foundConnectionIds: Set<string>, _foundConnectionLabels: Set<string>): void {
+	collectReferencedConnectionsAndVariables(
+		_foundConnectionIds: Set<string>,
+		_foundConnectionLabels: Set<string>,
+		_foundVariables: Set<string>
+	): void {
 		// Nothing being referenced
 	}
 
@@ -103,7 +108,7 @@ export class ControlButtonPageNumber
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {
-			this.deps.surfaces.devicePageSet(surfaceId, this.deps.page.getFirstPageId())
+			this.deps.surfaces.devicePageSet(surfaceId, this.deps.pageStore.getFirstPageId())
 		}
 	}
 

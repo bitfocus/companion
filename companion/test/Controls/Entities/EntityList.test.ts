@@ -5,6 +5,7 @@ import {
 	EntityModelType,
 	EntityOwner,
 	FeedbackEntityModel,
+	FeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { cloneDeep } from 'lodash-es'
@@ -479,7 +480,12 @@ describe('addEntity', () => {
 	})
 
 	test('add feedback to feedback list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+		const { list, getEntityDefinition } = createList('test01', null, { type: EntityModelType.Feedback })
+
+		getEntityDefinition.mockReturnValueOnce({
+			entityType: EntityModelType.Feedback,
+			feedbackType: FeedbackEntitySubType.Boolean,
+		} as Partial<ClientEntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -497,7 +503,10 @@ describe('addEntity', () => {
 	})
 
 	test('add unknown feedback to boolean feedback list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback, booleanFeedbacksOnly: true })
+		const { list } = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Boolean,
+		})
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -516,12 +525,12 @@ describe('addEntity', () => {
 	test('add advanced feedback to boolean feedback list', () => {
 		const { list, getEntityDefinition } = createList('test01', null, {
 			type: EntityModelType.Feedback,
-			booleanFeedbacksOnly: true,
+			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
 
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
-			feedbackType: 'advanced',
+			feedbackType: FeedbackEntitySubType.Advanced,
 		} as Partial<ClientEntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
@@ -544,7 +553,7 @@ describe('addEntity', () => {
 	test('add boolean feedback to boolean feedback list', () => {
 		const { list, getEntityDefinition } = createList('test01', null, {
 			type: EntityModelType.Feedback,
-			booleanFeedbacksOnly: true,
+			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
 
 		const newFeedback: FeedbackEntityModel = {
@@ -559,7 +568,7 @@ describe('addEntity', () => {
 
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
-			feedbackType: 'boolean',
+			feedbackType: FeedbackEntitySubType.Boolean,
 		} as Partial<ClientEntityDefinition> as any)
 
 		const newInstance = list.addEntity(cloneDeep(newFeedback))
@@ -571,9 +580,14 @@ describe('addEntity', () => {
 	})
 
 	test('non-internal with children', () => {
-		const { list } = createList('test01', null, {
+		const { list, getEntityDefinition } = createList('test01', null, {
 			type: EntityModelType.Feedback,
 		})
+
+		getEntityDefinition.mockReturnValue({
+			entityType: EntityModelType.Feedback,
+			feedbackType: FeedbackEntitySubType.Boolean,
+		} as Partial<ClientEntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -613,7 +627,7 @@ describe('addEntity', () => {
 			type: EntityModelType.Feedback,
 		})
 
-		getEntityDefinition.mockReturnValueOnce({
+		getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			supportsChildGroups: [
 				{
@@ -677,7 +691,11 @@ describe('addEntity', () => {
 	})
 
 	test('add cloned', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+		const { list, getEntityDefinition } = createList('test01', null, { type: EntityModelType.Feedback })
+
+		getEntityDefinition.mockReturnValue({
+			entityType: EntityModelType.Feedback,
+		} satisfies Partial<ClientEntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -703,7 +721,7 @@ describe('addEntity', () => {
 			type: EntityModelType.Feedback,
 		})
 
-		getEntityDefinition.mockReturnValueOnce({
+		getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			supportsChildGroups: [
 				{
@@ -1203,7 +1221,7 @@ describe('verifyConnectionIds', () => {
 describe('getChildBooleanFeedbackValues', () => {
 	const { list, getEntityDefinition } = createList('test01', null, {
 		type: EntityModelType.Feedback,
-		booleanFeedbacksOnly: true,
+		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
@@ -1264,7 +1282,7 @@ describe('getChildBooleanFeedbackValues', () => {
 describe('getBooleanFeedbackValue', () => {
 	const { list, getEntityDefinition } = createList('test01', null, {
 		type: EntityModelType.Feedback,
-		booleanFeedbacksOnly: true,
+		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
@@ -1322,7 +1340,7 @@ describe('getBooleanFeedbackValue', () => {
 describe('getChildBooleanFeedbackValues', () => {
 	const { list, getEntityDefinition } = createList('test01', null, {
 		type: EntityModelType.Feedback,
-		booleanFeedbacksOnly: true,
+		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
@@ -1382,7 +1400,10 @@ describe('buildFeedbackStyle', () => {
 	})
 
 	test('invalid for boolean feedbacks list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback, booleanFeedbacksOnly: true })
+		const { list } = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Boolean,
+		})
 
 		const styleBuilder = mock<FeedbackStyleBuilder>()
 
@@ -1437,7 +1458,7 @@ describe('updateFeedbackValues', () => {
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		expect(list.updateFeedbackValues('internal', {})).toBe(false)
+		expect(list.updateFeedbackValues('internal', {})).toHaveLength(0)
 	})
 
 	test('try set value for action', () => {
@@ -1454,7 +1475,7 @@ describe('updateFeedbackValues', () => {
 			list.updateFeedbackValues('internal', {
 				int0: 'abc',
 			})
-		).toBe(false)
+		).toHaveLength(0)
 
 		// Ensure value is still undefined
 		const entity = list.findById('int0')
@@ -1472,14 +1493,15 @@ describe('updateFeedbackValues', () => {
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
+		const entity = list.findById('int2')
+
 		expect(
 			list.updateFeedbackValues('conn04', {
 				int2: 'abc',
 			})
-		).toBe(true)
+		).toEqual([entity])
 
 		// Ensure value is reflected
-		const entity = list.findById('int2')
 		expect(entity).toBeTruthy()
 		expect(entity!.feedbackValue).toEqual('abc')
 	})
@@ -1504,7 +1526,7 @@ describe('updateFeedbackValues', () => {
 			list.updateFeedbackValues('conn04', {
 				int2: 'abc',
 			})
-		).toBe(false)
+		).toHaveLength(0)
 
 		// Ensure value is reflected
 		const entity = list.findById('int2')

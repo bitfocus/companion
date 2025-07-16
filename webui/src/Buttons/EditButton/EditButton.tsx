@@ -15,6 +15,8 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { LocalVariablesEditor } from './LocalVariablesEditor.js'
+import { useLocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 
@@ -138,7 +140,10 @@ const EditButtonContent = observer(function EditButton({
 	)
 })
 
-const NormalButtonExtraTabs: ButtonEditorExtraTabs[] = [{ id: 'feedbacks', name: 'Feedbacks' }]
+const NormalButtonExtraTabs: ButtonEditorExtraTabs[] = [
+	{ id: 'feedbacks', name: 'Feedbacks', position: 'end' },
+	// { id: 'variables', name: 'Local Variables', position: 'end' },
+]
 
 function NormalButtonEditor({
 	config,
@@ -154,10 +159,18 @@ function NormalButtonEditor({
 	const configRef = useRef<SomeButtonModel>()
 	configRef.current = config || undefined // update the ref every render
 
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+
 	return (
 		<>
 			<MyErrorBoundary>
-				<ButtonStyleConfig style={config.style} configRef={configRef} controlId={controlId} mainDialog />
+				<ButtonStyleConfig
+					style={config.style}
+					configRef={configRef}
+					controlId={controlId}
+					localVariablesStore={localVariablesStore}
+					mainDialog
+				/>
 			</MyErrorBoundary>
 			<MyErrorBoundary>
 				<div style={{ marginLeft: '5px' }}>
@@ -174,6 +187,7 @@ function NormalButtonEditor({
 						runtimeProps={runtimeProps}
 						rotaryActions={config?.options?.rotaryActions}
 						extraTabs={NormalButtonExtraTabs}
+						localVariablesStore={localVariablesStore}
 					>
 						{(currentTab) => {
 							if (currentTab === 'feedbacks') {
@@ -189,7 +203,22 @@ function NormalButtonEditor({
 												listId="feedbacks"
 												entityType={EntityModelType.Feedback}
 												entityTypeLabel="feedback"
-												onlyFeedbackType={null}
+												feedbackListType={null}
+												localVariablesStore={localVariablesStore}
+												localVariablePrefix={null}
+											/>
+										</MyErrorBoundary>
+									</div>
+								)
+							} else if (currentTab === 'variables') {
+								return (
+									<div className="mt-10">
+										<MyErrorBoundary>
+											<LocalVariablesEditor
+												controlId={controlId}
+												location={location}
+												variables={config.localVariables}
+												localVariablesStore={localVariablesStore}
 											/>
 										</MyErrorBoundary>
 									</div>

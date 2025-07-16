@@ -26,62 +26,20 @@ import type {
 } from './Types.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
+import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
+	FeedbackEntitySubType,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { nanoid } from 'nanoid'
-import type { InternalModuleUtils } from './Util.js'
+import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
-
-const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
-	{
-		type: 'dropdown',
-		label: 'Target',
-		id: 'location_target',
-		default: 'this',
-		choices: [
-			{ id: 'this', label: 'This button' },
-			{ id: 'text', label: 'From text' },
-			{ id: 'expression', label: 'From expression' },
-		],
-	},
-	{
-		type: 'textinput',
-		label: 'Location (text with variables)',
-		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
-		id: 'location_text',
-		default: '$(this:page)/$(this:row)/$(this:column)',
-		isVisibleUi: {
-			type: 'expression',
-			fn: '$(options:location_target) === "text"',
-		},
-		useVariables: {
-			local: true,
-		},
-	},
-	{
-		type: 'textinput',
-		label: 'Location (expression)',
-		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
-		id: 'location_expression',
-		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
-		isVisibleUi: {
-			type: 'expression',
-			fn: '$(options:location_target) === "expression"',
-		},
-		useVariables: {
-			local: true,
-		},
-		isExpression: true,
-	},
-]
 
 const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
@@ -129,7 +87,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 	readonly #internalUtils: InternalModuleUtils
 	readonly #graphicsController: GraphicsController
 	readonly #controlsController: ControlsController
-	readonly #pagesController: PageController
+	readonly #pageStore: IPageStore
 
 	/**
 	 * The dependencies of locations that should retrigger each feedback
@@ -140,14 +98,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		internalUtils: InternalModuleUtils,
 		graphicsController: GraphicsController,
 		controlsController: ControlsController,
-		pagesController: PageController
+		pageStore: IPageStore
 	) {
 		super()
 
 		this.#internalUtils = internalUtils
 		this.#graphicsController = graphicsController
 		this.#controlsController = controlsController
-		this.#pagesController = pagesController
+		this.#pageStore = pageStore
 
 		const pendingLocationInvalidations = new Set<string>()
 		const debounceCheckFeedbacks = debounceFn(
@@ -217,7 +175,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			useVariableFields
 		)
 
-		const theControlId = result.location ? this.#pagesController.getControlIdAt(result.location) : null
+		const theControlId = result.location ? this.#pageStore.getControlIdAt(result.location) : null
 
 		return {
 			theControlId,
@@ -483,7 +441,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
 		return {
 			bank_style: {
-				feedbackType: 'advanced',
+				feedbackType: FeedbackEntitySubType.Advanced,
 				label: 'Button: Use another buttons style',
 				description: 'Imitate the style of another button',
 				showButtonPreview: true,
@@ -502,7 +460,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			bank_pushed: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Button: When pushed',
 				description: 'Change style when a button is being pressed',
 				showButtonPreview: true,
@@ -522,7 +480,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				],
 			},
 			bank_current_step: {
-				feedbackType: 'boolean',
+				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Button: Check step',
 				description: 'Change style based on the current step of a button',
 				showButtonPreview: true,
@@ -606,7 +564,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				if (!feedback.options.properties) {
 					// TODO populate these properties instead
 					return {
-						value: cloneDeep(render.style),
+						value: cloneDeep(render.style as any),
 						referencedVariables,
 					}
 				} else {
@@ -952,7 +910,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const { thePage } = this.#fetchPage(action.rawOptions, extras)
 			if (thePage === null) return true
 
-			const controlIdsOnPage = this.#pagesController.getAllControlIdsOnPage(thePage)
+			const controlIdsOnPage = this.#pageStore.getAllControlIdsOnPage(thePage)
 			for (const controlId of controlIdsOnPage) {
 				if (action.rawOptions.ignoreSelf && controlId === extras.controlId) continue
 

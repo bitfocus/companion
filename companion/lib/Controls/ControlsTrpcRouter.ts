@@ -1,14 +1,15 @@
 import { publicProcedure } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
 import z from 'zod'
-import { zodLocation } from '../Graphics/Preview.js'
+import { zodLocation } from '../Preview/Graphics.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { ControlsController } from './Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import { CreateBankControlId, formatLocation } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
-import type { GraphicsController } from '../Graphics/Controller.js'
 import type { Logger } from '../Log/Controller.js'
+import type { ControlCommonEvents } from './ControlDependencies.js'
+import type EventEmitter from 'node:events'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createControlsTrpcRouter(
@@ -16,7 +17,7 @@ export function createControlsTrpcRouter(
 	controlsMap: Map<string, SomeControl<any>>,
 	pageController: PageController,
 	instanceDefinitions: InstanceDefinitions,
-	graphicsController: GraphicsController,
+	controlEvents: EventEmitter<ControlCommonEvents>,
 	controlsController: ControlsController
 ) {
 	return {
@@ -45,7 +46,7 @@ export function createControlsTrpcRouter(
 			.mutation(async ({ input }) => {
 				const { location, newType } = input
 
-				const controlId = pageController.getControlIdAt(location)
+				const controlId = pageController.store.getControlIdAt(location)
 
 				if (controlId) {
 					controlsController.deleteControl(controlId)
@@ -75,14 +76,14 @@ export function createControlsTrpcRouter(
 					return false
 
 				// Make sure target page number is valid
-				if (!pageController.isPageValid(toLocation.pageNumber)) return false
+				if (!pageController.store.isPageValid(toLocation.pageNumber)) return false
 
 				// Make sure there is something to move
-				const fromControlId = pageController.getControlIdAt(fromLocation)
+				const fromControlId = pageController.store.getControlIdAt(fromLocation)
 				if (!fromControlId) return false
 
 				// Delete the control at the destination
-				const toControlId = pageController.getControlIdAt(toLocation)
+				const toControlId = pageController.store.getControlIdAt(toLocation)
 				if (toControlId) {
 					controlsController.deleteControl(toControlId)
 				}
@@ -96,8 +97,8 @@ export function createControlsTrpcRouter(
 				if (control) control.triggerLocationHasChanged()
 
 				// Force a redraw
-				graphicsController.invalidateButton(fromLocation)
-				graphicsController.invalidateButton(toLocation)
+				controlEvents.emit('invalidateLocationRender', fromLocation)
+				controlEvents.emit('invalidateLocationRender', toLocation)
 
 				return false
 			}),
@@ -121,10 +122,10 @@ export function createControlsTrpcRouter(
 					return false
 
 				// Make sure target page number is valid
-				if (!pageController.isPageValid(toLocation.pageNumber)) return false
+				if (!pageController.store.isPageValid(toLocation.pageNumber)) return false
 
 				// Make sure there is something to copy
-				const fromControlId = pageController.getControlIdAt(fromLocation)
+				const fromControlId = pageController.store.getControlIdAt(fromLocation)
 				if (!fromControlId) return false
 
 				const fromControl = controlsMap.get(fromControlId)
@@ -132,7 +133,7 @@ export function createControlsTrpcRouter(
 				const controlJson = fromControl.toJSON(true)
 
 				// Delete the control at the destination
-				const toControlId = pageController.getControlIdAt(toLocation)
+				const toControlId = pageController.store.getControlIdAt(toLocation)
 				if (toControlId) {
 					controlsController.deleteControl(toControlId)
 				}
@@ -171,12 +172,15 @@ export function createControlsTrpcRouter(
 					return false
 
 				// Make sure both page numbers are valid
-				if (!pageController.isPageValid(toLocation.pageNumber) || !pageController.isPageValid(fromLocation.pageNumber))
+				if (
+					!pageController.store.isPageValid(toLocation.pageNumber) ||
+					!pageController.store.isPageValid(fromLocation.pageNumber)
+				)
 					return false
 
 				// Find the ids to move
-				const fromControlId = pageController.getControlIdAt(fromLocation)
-				const toControlId = pageController.getControlIdAt(toLocation)
+				const fromControlId = pageController.store.getControlIdAt(fromLocation)
+				const toControlId = pageController.store.getControlIdAt(toLocation)
 
 				// Perform the swap
 				pageController.setControlIdAt(toLocation, null)
@@ -190,8 +194,8 @@ export function createControlsTrpcRouter(
 				if (controlB) controlB.triggerLocationHasChanged()
 
 				// Force a redraw
-				graphicsController.invalidateButton(fromLocation)
-				graphicsController.invalidateButton(toLocation)
+				controlEvents.emit('invalidateLocationRender', fromLocation)
+				controlEvents.emit('invalidateLocationRender', toLocation)
 
 				return true
 			}),
@@ -210,7 +214,7 @@ export function createControlsTrpcRouter(
 				)
 				if (!input.surfaceId) throw new Error('Missing surfaceId')
 
-				const controlId = pageController.getControlIdAt(input.location)
+				const controlId = pageController.store.getControlIdAt(input.location)
 				if (!controlId) return
 
 				controlsController.pressControl(controlId, input.direction, `hot:${input.surfaceId}`)
@@ -229,7 +233,7 @@ export function createControlsTrpcRouter(
 					`being told from gui to hot rotate ${formatLocation(input.location)} ${input.direction} ${input.surfaceId}`
 				)
 
-				const controlId = pageController.getControlIdAt(input.location)
+				const controlId = pageController.store.getControlIdAt(input.location)
 				if (!controlId) return
 
 				controlsController.rotateControl(

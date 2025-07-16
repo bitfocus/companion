@@ -139,7 +139,7 @@ function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIco
 	})
 
 	const query = useQuery(
-		trpc.connections.definitions.previewRender.queryOptions({
+		trpc.preview.presets.render.queryOptions({
 			connectionId,
 			presetId,
 		})
