@@ -471,10 +471,7 @@ export class ImportExportController {
 
 			importFull: publicProcedure
 				.input(z.object({ config: zodClientImportSelection.nullable(), fullReset: z.boolean() }))
-				.mutation(async ({ input, ctx }) => {
-					// the following minimizes the changes below, by preserving the meaning of `input`
-					const { config, fullReset } = input
-
+				.mutation(async ({ input: { config, fullReset }, ctx }) => {
 					return this.#checkOrRunImportTask('import', async () => {
 						const data = ctx.pendingImport?.object
 						if (!data) throw new Error('No in-progress import object')
