@@ -15,7 +15,6 @@ import { nanoid } from 'nanoid'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { OptionsObject } from '@companion-module/base/dist/util.js'
-import type { VariablesValues } from '../Variables/Values.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import LogController, { Logger } from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -40,7 +39,7 @@ interface EntityWrapper {
 
 /**
  * This class is responsible for managing the entities that are tracked by the module
- * By this, it will ensure that the entities are run through the upgrade scripts as needed, and also
+ * With this, it will ensure that the entities are run through the upgrade scripts as needed, and also
  * have the options parsed (by as much as companion supports) before being sent to the module for subscription callbacks
  */
 export class InstanceEntityManager {
@@ -48,7 +47,6 @@ export class InstanceEntityManager {
 
 	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
 	readonly #controlsController: ControlsController
-	readonly #variableValuesController: VariablesValues
 	readonly #pageStore: IPageStore
 
 	readonly #entities = new Map<string, EntityWrapper>()
@@ -60,14 +58,12 @@ export class InstanceEntityManager {
 	constructor(
 		ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>,
 		controlsController: ControlsController,
-		variableValuesController: VariablesValues,
 		pageStore: IPageStore,
 		connectionId: string
 	) {
 		this.#logger = LogController.createLogger(`Instance/EntityManager/${connectionId}`)
 		this.#ipcWrapper = ipcWrapper
 		this.#controlsController = controlsController
-		this.#variableValuesController = variableValuesController
 		this.#pageStore = pageStore
 	}
 
@@ -256,7 +252,7 @@ export class InstanceEntityManager {
 									// It has been invalidated, it needs to be re-run
 									wrapper.state = EntityState.UNLOADED
 									break
-								case EntityState.UPGRADING:
+								case EntityState.UPGRADING: {
 									// It has been upgraded, so we can update the entity
 
 									// We need to do this via the EntityPool method, so that it gets persisted correctly
@@ -301,6 +297,7 @@ export class InstanceEntityManager {
 									}
 
 									break
+								}
 								case EntityState.READY:
 								case EntityState.UNLOADED:
 									// Shouldn't happen, lets pretend it didnt
@@ -353,7 +350,7 @@ export class InstanceEntityManager {
 		this.#debounceProcessPending()
 	}
 
-	destroy() {
+	destroy(): void {
 		this.#debounceProcessPending.cancel()
 		this.#entities.clear()
 		this.#ready = false
@@ -423,6 +420,8 @@ export class InstanceEntityManager {
 		const parsedOptions: OptionsObject = {}
 		const referencedVariableIds = new Set<string>()
 
+		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+
 		for (const field of entityDefinition.options) {
 			if (field.type !== 'textinput' || !field.useVariables) {
 				// Field doesn't support variables, pass unchanged
@@ -432,7 +431,7 @@ export class InstanceEntityManager {
 
 			// Field needs parsing
 			// Note - we don't need to care about the granularity given in `useVariables`,
-			const parseResult = this.#variableValuesController.parseVariables(String(options[field.id]), location)
+			const parseResult = parser.parseVariables(String(options[field.id]))
 			parsedOptions[field.id] = parseResult.text
 			for (const variable of parseResult.variableIds) {
 				referencedVariableIds.add(variable)
