@@ -470,12 +470,10 @@ export class ImportExportController {
 				}),
 
 			importFull: publicProcedure
-				.input(z.object({ choices: zodClientImportSelection.nullable(), fullReset: z.boolean() }))
-				.mutation(async (opts) => {
+				.input(z.object({ config: zodClientImportSelection.nullable(), fullReset: z.boolean() }))
+				.mutation(async ({ input, ctx }) => {
 					// the following minimizes the changes below, by preserving the meaning of `input`
-					const ctx = opts.ctx
-					const input = opts.input.choices
-					const fullReset = opts.input.fullReset
+					const { config, fullReset } = input
 
 					return this.#checkOrRunImportTask('import', async () => {
 						const data = ctx.pendingImport?.object
@@ -483,13 +481,13 @@ export class ImportExportController {
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						const resetArg = fullReset || !input ? null : { ...input, connections: true, userconfig: false }
+						const resetArg = fullReset || !config ? null : { ...config, connections: true, userconfig: false }
 
 						// Destroy old stuff
-						await this.#reset(resetArg, !input || input.buttons)
+						await this.#reset(resetArg, !config || config.buttons)
 
 						// import custom variables
-						if (!input || input.customVariables) {
+						if (!config || config.customVariables) {
 							if (data.customVariablesCollections) {
 								this.#variablesController.custom.replaceCollections(data.customVariablesCollections)
 							}
@@ -505,7 +503,7 @@ export class ImportExportController {
 						// Always Import instances
 						const instanceIdMap = this.#importInstances(data.instances, {})
 
-						if (data.pages && (!input || input.buttons)) {
+						if (data.pages && (!config || config.buttons)) {
 							// Import pages
 							for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
 								if (!pageInfo) continue
@@ -529,7 +527,7 @@ export class ImportExportController {
 							}
 						}
 
-						if (!input || input.surfaces) {
+						if (!config || config.surfaces) {
 							const surfaces = data.surfaces as Record<number, SurfaceConfig>
 							const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
 							const getPageId = (val: number) =>
@@ -555,7 +553,7 @@ export class ImportExportController {
 							this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
 						}
 
-						if (!input || input.triggers) {
+						if (!config || config.triggers) {
 							// Import trigger collections if provided
 							if (data.triggerCollections) {
 								this.#controlsController.replaceTriggerCollections(data.triggerCollections)

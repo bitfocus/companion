@@ -171,10 +171,10 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	const importFullMutation = useMutationExt(trpc.importExport.importFull.mutationOptions())
 	const doImport = useCallback(
 		(e: React.MouseEvent<HTMLElement>) => {
-			const fullReset = e.currentTarget.getAttribute('full-reset') === 'true'
+			const fullReset = e.currentTarget.getAttribute('data-fullreset') === 'true'
 
 			importFullMutation // TODO: 60s timeout?
-				.mutateAsync({ choices: config, fullReset: fullReset })
+				.mutateAsync({ config: config, fullReset: fullReset })
 				.then(() => {
 					// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 					window.location.reload()
@@ -247,11 +247,11 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			</CAlert>
 
 			<CButtonGroup>
-				<CButton color="success" full-reset="false" onClick={doImport} disabled={validConfigKeys.length === 0}>
+				<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>
 					<FontAwesomeIcon icon={faFileImport} /> Import, Preserving unselected components
 				</CButton>
 
-				<CButton color="primary" full-reset="true" onClick={doImport} disabled={validConfigKeys.length === 0}>
+				<CButton color="primary" data-fullreset={true} onClick={doImport} disabled={validConfigKeys.length === 0}>
 					<FontAwesomeIcon icon={faFileImport} /> Full Reset then Import
 				</CButton>
 			</CButtonGroup>
