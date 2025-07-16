@@ -30,7 +30,7 @@ enum EntityState {
 interface EntityWrapper {
 	/** A unqiue id for this wrapper, so that we know if the entity was replaced/deleted */
 	readonly wrapperId: string
-	readonly entity: ControlEntityInstance // TODO - should this be a weak ref?
+	readonly entity: WeakRef<ControlEntityInstance>
 	readonly controlId: string
 
 	state: EntityState
@@ -84,13 +84,13 @@ export class InstanceEntityManager {
 				feedbacks: {},
 			}
 
-			const pushEntityToUpgrade = (wrapper: EntityWrapper) => {
+			const pushEntityToUpgrade = (wrapper: EntityWrapper, entity: ControlEntityInstance) => {
 				this.#logger.silly(
-					`Pushing entity ${wrapper.entity.id} in control ${wrapper.controlId} for upgrade from ${wrapper.entity.upgradeIndex} to ${this.#currentUpgradeIndex}`
+					`Pushing entity ${entity.id} in control ${wrapper.controlId} for upgrade from ${entity.upgradeIndex} to ${this.#currentUpgradeIndex}`
 				)
 
-				entityIdsInThisBatch.set(wrapper.entity.id, wrapper.wrapperId)
-				const entityModel = wrapper.entity.asEntityModel(false)
+				entityIdsInThisBatch.set(entity.id, wrapper.wrapperId)
+				const entityModel = entity.asEntityModel(false)
 				switch (entityModel.type) {
 					case EntityModelType.Action:
 						upgradePayload.actions.push({
@@ -118,7 +118,7 @@ export class InstanceEntityManager {
 						break
 					default:
 						assertNever(entityModel)
-						this.#logger.warn('Unknown entity type', wrapper.entity.type)
+						this.#logger.warn('Unknown entity type', entity.type)
 				}
 			}
 
@@ -127,20 +127,24 @@ export class InstanceEntityManager {
 			// First, look over all the entiites and figure out what needs to be done to each
 			for (const [entityId, wrapper] of this.#entities) {
 				switch (wrapper.state) {
-					case EntityState.UNLOADED:
+					case EntityState.UNLOADED: {
+						const entity = wrapper.entity.deref()
+						if (!entity) {
+							this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, skipping upgrade`)
+							this.#entities.delete(entityId)
+							continue
+						}
+
 						// The entity is unloaded, it either needs to be upgraded or loaded
-						if (
-							wrapper.entity.upgradeIndex === undefined ||
-							wrapper.entity.upgradeIndex === this.#currentUpgradeIndex
-						) {
+						if (entity.upgradeIndex === undefined || entity.upgradeIndex === this.#currentUpgradeIndex) {
 							wrapper.state = EntityState.READY
 
-							const entityModel = wrapper.entity.asEntityModel(false)
+							const entityModel = entity.asEntityModel(false)
 
 							// Parse the options and track the variables referenced
 							const controlLocation = this.#pageStore.getLocationOfControlId(wrapper.controlId)
 							const { parsedOptions, referencedVariableIds } = this.parseOptionsObject(
-								wrapper.entity.getEntityDefinition(),
+								entity.getEntityDefinition(),
 								entityModel.options,
 								controlLocation
 							)
@@ -185,13 +189,14 @@ export class InstanceEntityManager {
 								}
 								default:
 									assertNever(entityModel)
-									this.#logger.warn('Unknown entity type', wrapper.entity.type)
+									this.#logger.warn('Unknown entity type', entity.type)
 							}
 						} else {
 							wrapper.state = EntityState.UPGRADING
-							pushEntityToUpgrade(wrapper)
+							pushEntityToUpgrade(wrapper, entity)
 						}
 						break
+					}
 					case EntityState.UPGRADING:
 					case EntityState.UPGRADING_INVALIDATED:
 						// In progress, ignore
@@ -199,22 +204,27 @@ export class InstanceEntityManager {
 					case EntityState.READY:
 						// Already processed, ignore
 						break
-					case EntityState.PENDING_DELETE:
+					case EntityState.PENDING_DELETE: {
 						// Plan for deletion
 						this.#entities.delete(entityId)
 
-						switch (wrapper.entity.type) {
-							case EntityModelType.Action:
-								updateActionsPayload.actions[entityId] = null
-								break
-							case EntityModelType.Feedback:
-								updateFeedbacksPayload.feedbacks[entityId] = null
-								break
-							default:
-								assertNever(wrapper.entity.type)
-								this.#logger.warn('Unknown entity type', wrapper.entity.type)
+						const entity = wrapper.entity.deref()
+
+						if (entity) {
+							switch (entity.type) {
+								case EntityModelType.Action:
+									updateActionsPayload.actions[entityId] = null
+									break
+								case EntityModelType.Feedback:
+									updateFeedbacksPayload.feedbacks[entityId] = null
+									break
+								default:
+									assertNever(entity.type)
+									this.#logger.warn('Unknown entity type', entity.type)
+							}
 						}
 						break
+					}
 
 					default:
 						assertNever(wrapper.state)
@@ -251,6 +261,13 @@ export class InstanceEntityManager {
 							// Entity may have been deleted or recreated, if so we can ignore it
 							if (!wrapper || wrapper.wrapperId !== wrapperId) continue
 
+							const entity = wrapper.entity.deref()
+							if (!entity) {
+								this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, terminating upgrade`)
+								this.#entities.delete(entityId)
+								continue
+							}
+
 							this.#logger.silly(
 								`Processing entity ${entityId} in control ${wrapper.controlId} with state ${wrapper.state}`
 							)
@@ -271,9 +288,9 @@ export class InstanceEntityManager {
 									}
 
 									try {
-										switch (wrapper.entity.type) {
+										switch (entity.type) {
 											case EntityModelType.Action: {
-												const action = upgradedActions.get(wrapper.entity.id)
+												const action = upgradedActions.get(entity.id)
 												if (action) {
 													control.entities.entityReplace({
 														id: action.id,
@@ -286,7 +303,7 @@ export class InstanceEntityManager {
 												break
 											}
 											case EntityModelType.Feedback: {
-												const feedback = upgradedFeedbacks.get(wrapper.entity.id)
+												const feedback = upgradedFeedbacks.get(entity.id)
 												if (feedback) {
 													control.entities.entityReplace({
 														id: feedback.id,
@@ -301,11 +318,11 @@ export class InstanceEntityManager {
 												break
 											}
 											default:
-												assertNever(wrapper.entity.type)
+												assertNever(entity.type)
 												break
 										}
 									} catch (e) {
-										this.#logger.error(`Error replacing entity ${wrapper.entity.id} in control ${wrapper.controlId}`, e)
+										this.#logger.error(`Error replacing entity ${entity.id} in control ${wrapper.controlId}`, e)
 										// If we fail to replace the entity, we can just ignore it
 										continue
 									}
@@ -387,7 +404,7 @@ export class InstanceEntityManager {
 		// This may replace an existing entity, if so it needs to restart the process
 		this.#entities.set(entity.id, {
 			wrapperId: nanoid(),
-			entity,
+			entity: new WeakRef(entity),
 			controlId: controlId,
 			state: EntityState.UNLOADED,
 		})
@@ -420,7 +437,7 @@ export class InstanceEntityManager {
 	 */
 	resendFeedbacks(): void {
 		for (const entity of this.#entities.values()) {
-			if (entity.entity.type !== EntityModelType.Feedback) continue
+			if (entity.entity.deref()?.type !== EntityModelType.Feedback) continue
 
 			switch (entity.state) {
 				case EntityState.UNLOADED:
