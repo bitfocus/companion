@@ -429,6 +429,7 @@ export class InstanceEntityManager {
 
 	/**
 	 * Parse any variables in the options object for an entity.
+	 * Note: this will drop any options that are not defined in the entity definition.
 	 */
 	parseOptionsObject(
 		entityDefinition: ClientEntityDefinition | undefined,

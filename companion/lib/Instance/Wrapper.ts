@@ -180,9 +180,6 @@ export class SocketEventsHandler {
 		this.logger = LogController.createLogger(`Instance/Wrapper/${config.label}`)
 		this.#label = config.label
 
-		const allFeedbacks = this.#entityManager ? {} : this.#getAllFeedbackInstances()
-		const allActions = this.#entityManager ? {} : this.#getAllActionInstances()
-
 		// Ensure each entity knows its upgradeIndex
 		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
@@ -209,9 +206,9 @@ export class SocketEventsHandler {
 
 				lastUpgradeIndex: config.lastUpgradeIndex,
 
-				// Pass all actions and feedbacks for upgrading and initial subscribe calls
-				actions: allActions,
-				feedbacks: allFeedbacks,
+				// If using the old flow, pass all actions and feedbacks for upgrading and initial subscribe calls
+				actions: this.#entityManager ? {} : this.#getAllActionInstances(),
+				feedbacks: this.#entityManager ? {} : this.#getAllFeedbackInstances(),
 			},
 			undefined,
 			10000 // Allow more time before timeout, as init is likely to have a lot to do or high cpu contention
