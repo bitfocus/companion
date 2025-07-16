@@ -470,7 +470,7 @@ export class ImportExportController {
 				}),
 
 			importFull: publicProcedure
-				.input(z.object({ choices: zodClientImportSelection, fullReset: z.boolean() }))
+				.input(z.object({ choices: zodClientImportSelection.nullable(), fullReset: z.boolean() }))
 				.mutation(async (opts) => {
 					// the following minimizes the changes below, by preserving the meaning of `input`
 					const ctx = opts.ctx
@@ -483,7 +483,7 @@ export class ImportExportController {
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						const resetArg = fullReset ? undefined : { ...input, connections: true, userconfig: false }
+						const resetArg = fullReset || !input ? null : { ...input, connections: true, userconfig: false }
 
 						// Destroy old stuff
 						await this.#reset(resetArg, !input || input.buttons)
@@ -621,7 +621,7 @@ export class ImportExportController {
 		}
 	}
 
-	async #reset(config: ClientResetSelection | undefined, skipNavButtons = false): Promise<'ok'> {
+	async #reset(config: ClientResetSelection | null, skipNavButtons = false): Promise<'ok'> {
 		const controls = this.#controlsController.getAllControls()
 
 		if (!config || config.buttons) {
