@@ -62,9 +62,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 			</CCol>
 
 			<CCol xs={12} xl={6} className="secondary-panel">
-				<div className="secondary-panel-inner">
-					<Outlet />
-				</div>
+				<Outlet />
 			</CCol>
 		</CRow>
 	)
