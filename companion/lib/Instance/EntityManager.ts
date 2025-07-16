@@ -85,6 +85,10 @@ export class InstanceEntityManager {
 			}
 
 			const pushEntityToUpgrade = (wrapper: EntityWrapper) => {
+				this.#logger.silly(
+					`Pushing entity ${wrapper.entity.id} in control ${wrapper.controlId} for upgrade from ${wrapper.entity.upgradeIndex} to ${this.#currentUpgradeIndex}`
+				)
+
 				entityIdsInThisBatch.set(wrapper.entity.id, wrapper.wrapperId)
 				const entityModel = wrapper.entity.asEntityModel(false)
 				switch (entityModel.type) {
@@ -247,6 +251,10 @@ export class InstanceEntityManager {
 							// Entity may have been deleted or recreated, if so we can ignore it
 							if (!wrapper || wrapper.wrapperId !== wrapperId) continue
 
+							this.#logger.silly(
+								`Processing entity ${entityId} in control ${wrapper.controlId} with state ${wrapper.state}`
+							)
+
 							switch (wrapper.state) {
 								case EntityState.UPGRADING_INVALIDATED:
 									// It has been invalidated, it needs to be re-run
@@ -262,38 +270,44 @@ export class InstanceEntityManager {
 										continue
 									}
 
-									switch (wrapper.entity.type) {
-										case EntityModelType.Action: {
-											const action = upgradedActions.get(wrapper.entity.id)
-											if (action) {
-												control.entities.entityReplace({
-													id: action.id,
-													type: EntityModelType.Action,
-													definitionId: action.actionId,
-													options: action.options,
-													upgradeIndex: action.upgradeIndex ?? this.#currentUpgradeIndex,
-												})
+									try {
+										switch (wrapper.entity.type) {
+											case EntityModelType.Action: {
+												const action = upgradedActions.get(wrapper.entity.id)
+												if (action) {
+													control.entities.entityReplace({
+														id: action.id,
+														type: EntityModelType.Action,
+														definitionId: action.actionId,
+														options: action.options,
+														upgradeIndex: this.#currentUpgradeIndex,
+													})
+												}
+												break
 											}
-											break
-										}
-										case EntityModelType.Feedback: {
-											const feedback = upgradedFeedbacks.get(wrapper.entity.id)
-											if (feedback) {
-												control.entities.entityReplace({
-													id: feedback.id,
-													type: EntityModelType.Feedback,
-													definitionId: feedback.feedbackId,
-													options: feedback.options,
-													style: feedback.style,
-													isInverted: feedback.isInverted,
-													upgradeIndex: feedback.upgradeIndex ?? this.#currentUpgradeIndex,
-												})
+											case EntityModelType.Feedback: {
+												const feedback = upgradedFeedbacks.get(wrapper.entity.id)
+												if (feedback) {
+													control.entities.entityReplace({
+														id: feedback.id,
+														type: EntityModelType.Feedback,
+														definitionId: feedback.feedbackId,
+														options: feedback.options,
+														style: feedback.style,
+														isInverted: feedback.isInverted,
+														upgradeIndex: this.#currentUpgradeIndex,
+													})
+												}
+												break
 											}
-											break
+											default:
+												assertNever(wrapper.entity.type)
+												break
 										}
-										default:
-											assertNever(wrapper.entity.type)
-											break
+									} catch (e) {
+										this.#logger.error(`Error replacing entity ${wrapper.entity.id} in control ${wrapper.controlId}`, e)
+										// If we fail to replace the entity, we can just ignore it
+										continue
 									}
 
 									break
@@ -378,6 +392,8 @@ export class InstanceEntityManager {
 			state: EntityState.UNLOADED,
 		})
 
+		this.#logger.silly(`Queued entity ${entity.id} in control ${controlId} as unloaded`)
+
 		this.#debounceProcessPending()
 	}
 
@@ -391,6 +407,8 @@ export class InstanceEntityManager {
 
 		// mark as pending deletion
 		wrapper.state = EntityState.PENDING_DELETE
+
+		this.#logger.silly(`Queued entity ${entityId} in control ${wrapper.controlId} to be unloaded`)
 
 		this.#debounceProcessPending()
 	}
