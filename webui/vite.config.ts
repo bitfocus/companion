@@ -56,9 +56,10 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
-			'/trpc': {
+			[`${normalizedBase}/trpc`]: {
 				target: `ws://${upstreamUrl}`,
 				ws: true,
+				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 		},
 	},
