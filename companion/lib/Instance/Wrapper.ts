@@ -323,9 +323,7 @@ export class SocketEventsHandler {
 			return
 		}
 
-		// Future: only inform module of variables it parsed and should react to.
-		// This will help avoid excess work when variables are not interesting to a module.
-
+		// Old flow means informing the module about any variable changes so that it can check for anything to invalidate
 		this.#ipcWrapper.sendWithNoCb('variablesChanged', {
 			variablesIds: changedVariableIds,
 		})
@@ -340,7 +338,6 @@ export class SocketEventsHandler {
 		const allControls = this.#deps.controls.getAllControls()
 		for (const [controlId, control] of allControls.entries()) {
 			if (!control.supportsEntities) continue
-			// const actions = .map(e => e.asEntityModel())
 
 			for (const entity of control.entities.getAllEntities()) {
 				if (entity.connectionId !== this.connectionId) continue
@@ -362,18 +359,6 @@ export class SocketEventsHandler {
 
 		return allActions
 	}
-
-	// /**
-	//  * Send all action instances to the child process
-	//  * @access private
-	//  */
-	// async #sendAllActionInstances() {
-	// 	const msg = {
-	// 		actions: this.#getAllActionInstances(),
-	// 	}
-
-	// 	await this.ipcWrapper.sendWithCb('updateActions', msg)
-	// }
 
 	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
 		if (this.#entityManager) {
@@ -499,12 +484,12 @@ export class SocketEventsHandler {
 	 * Inform the child instance class about an entity that has been deleted
 	 */
 	async entityDelete(oldEntity: SomeEntityModel): Promise<void> {
-		if (oldEntity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
-
 		if (this.#entityManager) {
 			this.#entityManager.forgetEntity(oldEntity.id)
 			return
 		}
+
+		if (oldEntity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
 		switch (oldEntity.type) {
 			case EntityModelType.Action:
@@ -568,8 +553,12 @@ export class SocketEventsHandler {
 				)
 				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
-				// Note: for actions, this case doesn't need to be reactive
-				actionOptions = this.#entityManager.parseOptionsObject(actionDefinition, actionOptions, extras.location)
+				// Note: for actions, this doesn't need to be reactive
+				actionOptions = this.#entityManager.parseOptionsObject(
+					actionDefinition,
+					actionOptions,
+					extras.location
+				).parsedOptions
 			}
 
 			await this.#ipcWrapper.sendWithCb('executeAction', {

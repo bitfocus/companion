@@ -317,7 +317,7 @@ export class InstanceEntityManager {
 					.catch((e) => {
 						this.#logger.error('Error sending upgradeActionsAndFeedbacks', e)
 
-						// There isn't much we can do to retry the upgrad, the best we can do is pretend it was fine and progress the entities through the process
+						// There isn't much we can do to retry the upgrade, the best we can do is pretend it was fine and progress the entities through the process
 						for (const [entityId, wrapperId] of entityIdsInThisBatch) {
 							const wrapper = this.#entities.get(entityId)
 							if (!wrapper || wrapper.wrapperId !== wrapperId) continue
@@ -343,6 +343,10 @@ export class InstanceEntityManager {
 		}
 	)
 
+	/**
+	 * Start the processing of entities in the manager.
+	 * This should be called when the module is ready to start processing entities, and will trigger any queued entities.
+	 */
 	start(currentUpgradeIndex: number): void {
 		this.#ready = true
 		this.#currentUpgradeIndex = currentUpgradeIndex
@@ -350,14 +354,23 @@ export class InstanceEntityManager {
 		this.#debounceProcessPending()
 	}
 
+	/**
+	 * Destroy the entity manager, clearing all entities and aborting any pending processing.
+	 * Cleanup is not performed, it is assumed that the module is no longer running.
+	 */
 	destroy(): void {
 		this.#debounceProcessPending.cancel()
 		this.#entities.clear()
 		this.#ready = false
 	}
 
+	/**
+	 * Track an entity in the manager.
+	 * This will ensure that the entity is processed and sent to the module for subscription callbacks.
+	 * If the entity already exists, it will be replaced and the new entity will be processed as needed.
+	 */
 	trackEntity(entity: ControlEntityInstance, controlId: string): void {
-		// This may replace an existing entity, if so it needs to follow the usual process
+		// This may replace an existing entity, if so it needs to restart the process
 		this.#entities.set(entity.id, {
 			wrapperId: nanoid(),
 			entity,
@@ -368,6 +381,10 @@ export class InstanceEntityManager {
 		this.#debounceProcessPending()
 	}
 
+	/**
+	 * Forget an entity in the manager.
+	 * This will remove the entity from the manager and abort any pending processing.
+	 */
 	forgetEntity(entityId: string): void {
 		const wrapper = this.#entities.get(entityId)
 		if (!wrapper) return
@@ -378,6 +395,11 @@ export class InstanceEntityManager {
 		this.#debounceProcessPending()
 	}
 
+	/**
+	 * Resend all tracked feedback entities to the module.
+	 * This will mark all feedbacks as unloaded, so that they are re-sent to the module.
+	 * This is intended to be used when the top-bar setting changes, as the dimensions reported to the module will change.
+	 */
 	resendFeedbacks(): void {
 		for (const entity of this.#entities.values()) {
 			if (entity.entity.type !== EntityModelType.Feedback) continue
@@ -405,6 +427,9 @@ export class InstanceEntityManager {
 		this.#debounceProcessPending()
 	}
 
+	/**
+	 * Parse any variables in the options object for an entity.
+	 */
 	parseOptionsObject(
 		entityDefinition: ClientEntityDefinition | undefined,
 		options: OptionsObject,
@@ -441,6 +466,10 @@ export class InstanceEntityManager {
 		return { parsedOptions, referencedVariableIds }
 	}
 
+	/**
+	 * Inform the entity manager that some variables have changed.
+	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
+	 */
 	onVariablesChanged(variableIds: Set<string>): void {
 		let anyInvalidated = false
 
