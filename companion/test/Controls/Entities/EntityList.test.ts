@@ -66,6 +66,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		connectionId: 'internal',
 		definitionId: 'def01',
 		options: {},
+		upgradeIndex: undefined,
 	}
 	const newAction = new ControlEntityInstance(
 		instanceDefinitions,
@@ -438,6 +439,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 		}
 
 		const newInstance = list.addEntity(cloneDeep(newAction))
@@ -456,6 +458,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 		}
 
 		expect(() => list.addEntity(cloneDeep(newAction))).toThrowError('EntityList cannot accept this type of entity')
@@ -473,6 +476,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 		}
 
 		expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
@@ -495,6 +499,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 		}
 
 		const newInstance = list.addEntity(cloneDeep(newFeedback))
@@ -516,6 +521,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 		}
 
 		expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
@@ -541,6 +547,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 		}
 
 		expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
@@ -564,6 +571,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 		}
 
 		getEntityDefinition.mockReturnValueOnce({
@@ -597,6 +605,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 			children: {
 				group1: [
 					{
@@ -607,6 +616,7 @@ describe('addEntity', () => {
 						options: {
 							test: 123,
 						},
+						upgradeIndex: undefined,
 					},
 				],
 			},
@@ -647,6 +657,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 			children: {
 				group1: [
 					{
@@ -657,6 +668,7 @@ describe('addEntity', () => {
 						options: {
 							test: 99,
 						},
+						upgradeIndex: undefined,
 					},
 				],
 				group2: [
@@ -668,6 +680,7 @@ describe('addEntity', () => {
 						options: {
 							test: 45,
 						},
+						upgradeIndex: undefined,
 					},
 				],
 			},
@@ -705,6 +718,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 		}
 
 		const newInstance = list.addEntity(cloneDeep(newFeedback), true)
@@ -741,6 +755,7 @@ describe('addEntity', () => {
 			options: {
 				test: 123,
 			},
+			upgradeIndex: undefined,
 			children: {
 				group1: [
 					{
@@ -751,6 +766,7 @@ describe('addEntity', () => {
 						options: {
 							test: 99,
 						},
+						upgradeIndex: undefined,
 					},
 				],
 			},
@@ -1075,7 +1091,7 @@ describe('duplicateEntity', () => {
 		expect(afterIds[2]).toBe(newEntity!.id)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01')
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntity, 'test01')
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
 	})
 
@@ -1103,7 +1119,7 @@ describe('duplicateEntity', () => {
 		expect(afterIds[6]).toBe(newEntityChild!.id)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild!.asEntityModel(), 'test01')
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild, 'test01')
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01')
 	})

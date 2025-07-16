@@ -142,6 +142,20 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
+	 * Find an entity by its id
+	 * This will search all entity lists and through all child
+	 * @param id the id of the entity to find
+	 * @returns The entity instance if found, or undefined
+	 */
+	findEntityById(id: string): ControlEntityInstance | undefined {
+		for (const list of this.getAllEntityLists()) {
+			const entity = list.findById(id)
+			if (entity) return entity
+		}
+		return undefined
+	}
+
+	/**
 	 * Recursively get all the entities
 	 */
 	getAllEntities(): ControlEntityInstance[] {
