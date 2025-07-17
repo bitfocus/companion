@@ -479,7 +479,7 @@ export class ImportExportController {
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						const resetArg = fullReset || !config ? null : { ...config, connections: true, userconfig: false }
+						const resetArg = fullReset || !config ? null : { ...config, connections: true }
 
 						// Destroy old stuff
 						await this.#reset(resetArg, !config || config.buttons)
