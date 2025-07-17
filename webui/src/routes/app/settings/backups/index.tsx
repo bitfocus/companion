@@ -9,10 +9,8 @@ export const Route = createFileRoute('/_app/settings/backups/')({
 
 function RouteComponent() {
 	return (
-		<div className="secondary-panel-simple">
-			<div className="secondary-panel-simple-body no-scroll">
-				<NonIdealState text="Select a backup rule to edit" icon={faCalendarAlt} />
-			</div>
+		<div className="secondary-panel-simple-body no-scroll">
+			<NonIdealState text="Select a backup rule to edit" icon={faCalendarAlt} />
 		</div>
 	)
 }

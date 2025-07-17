@@ -40,9 +40,16 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 			})
 	}, [createRuleMutation, doEditRule])
 
+	const matchRoute = useMatchRoute()
+	const routeMatch = matchRoute({ to: '/settings/backups/$ruleId' })
+	const selectedRuleId = routeMatch ? routeMatch.ruleId : null
+
+	const showPrimaryPanel = !selectedRuleId
+	const showSecondaryPanel = !!selectedRuleId
+
 	return (
 		<CRow className="split-panels">
-			<CCol xl={6} className="primary-panel">
+			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="d-flex justify-content-between">
 					<div>
 						<h4>Settings - Backups</h4>
@@ -61,8 +68,10 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 				<BackupsTable editRule={doEditRule} />
 			</CCol>
 
-			<CCol xs={12} xl={6} className="secondary-panel">
-				<Outlet />
+			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+				<div className="secondary-panel-simple">
+					<Outlet />
+				</div>
 			</CCol>
 		</CRow>
 	)
