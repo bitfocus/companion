@@ -1,5 +1,4 @@
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -9,17 +8,16 @@ import { getModuleVersionInfoForConnection } from '../Util.js'
 
 interface ConnectionEditPanelHeadingProps {
 	connectionInfo: ClientConnectionConfig
-	moduleInfo: ClientModuleInfo | undefined
 	closeConfigurePanel: () => void
 }
 
 export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelHeading({
 	connectionInfo,
-	moduleInfo,
 	closeConfigurePanel,
 }: ConnectionEditPanelHeadingProps) {
-	const { helpViewer } = useContext(RootAppStoreContext)
+	const { helpViewer, modules } = useContext(RootAppStoreContext)
 
+	const moduleInfo = modules.modules.get(connectionInfo.instance_type)
 	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo.moduleVersionId)
 
 	const doShowHelp = useCallback(

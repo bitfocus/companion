@@ -1,9 +1,8 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { isCollectionEnabled, LoadingRetryOrError } from '~/util.js'
-import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormInput } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormLabel } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { isLabelValid } from '@companion-app/shared/Label.js'
+import { faCheck, faCircleExclamation, faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
 import { useOptionsAndIsVisibleFns } from '~/Hooks/useOptionsAndIsVisible.js'
 import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
@@ -15,22 +14,21 @@ import { ModuleVersionsRefresh } from '../ModuleVersionsRefresh.js'
 import { ConnectionForceVersionButton } from './ConnectionForceVersionButton.js'
 import { doesConnectionVersionExist } from './VersionUtil.js'
 import { useConnectionVersionSelectOptions } from './useConnectionVersionSelectOptions.js'
-import { useConnectionCurrentConfig } from './useConnectionCurrentConfig.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
-import { useForm } from '@tanstack/react-form'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ConnectionSecretField } from './ConnectionSecretField.js'
-import type { CompanionOptionValues } from '@companion-module/base'
-import { validateInputValue } from '~/Helpers/validateInputValue.js'
 import { useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/TRPC.js'
+import { ConnectionEditPanelStore, isConfigFieldSecret } from './ConnectionEditPanelStore.js'
+import { observable } from 'mobx'
+import { TextInputField } from '~/Components/TextInputField.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
 }
 
 export const ConnectionEditPanel = observer(function ConnectionEditPanel({ connectionId }: ConnectionEditPanelProps) {
-	const { connections, modules } = useContext(RootAppStoreContext)
+	const { connections } = useContext(RootAppStoreContext)
 
 	const navigate = useNavigate({ from: `/connections/$connectionId` })
 	const closeConfigurePanel = useCallback(() => {
@@ -38,8 +36,6 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 	}, [navigate])
 
 	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)
-
-	const moduleInfo = connectionInfo && modules.modules.get(connectionInfo.instance_type)
 
 	if (!connectionInfo) {
 		return (
@@ -55,7 +51,6 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 		<ConnectionEditPanelInner
 			connectionId={connectionId}
 			connectionInfo={connectionInfo}
-			moduleInfo={moduleInfo}
 			closeConfigurePanel={closeConfigurePanel}
 		/>
 	)
@@ -64,165 +59,111 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 interface ConnectionEditPanelInnerProps {
 	connectionId: string
 	connectionInfo: ClientConnectionConfig
-	moduleInfo: ClientModuleInfo | undefined
 	closeConfigurePanel: () => void
 }
 
 const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	connectionId,
 	connectionInfo,
-	moduleInfo,
 	closeConfigurePanel,
 }: ConnectionEditPanelInnerProps) {
-	const { modules, connections } = useContext(RootAppStoreContext)
+	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, connectionInfo.moduleVersionId)
+	const panelStore = useMemo(
+		() => new ConnectionEditPanelStore(connectionId, connectionInfo),
+		[connectionId, connectionInfo]
+	)
+
+	const moduleInfo = modules.modules.get(panelStore.connectionInfo.instance_type)
+
+	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, panelStore.connectionInfo.moduleVersionId)
 	const connectionShouldBeRunning =
-		connectionInfo.enabled &&
+		panelStore.connectionInfo.enabled &&
 		connectionVersionExists &&
-		isCollectionEnabled(connections.rootCollections(), connectionInfo.collectionId)
-
-	const isModuleOnStore = !!modules.storeList.get(connectionInfo.instance_type)
-	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true)
-
-	const [saveError, setSaveError] = useState<string | null>(null)
-
-	// Update the form with the connection config
-	const query = useConnectionCurrentConfig(connectionId)
-
-	const secretValues: Record<string, { value: any; hasSavedValue: boolean } | undefined> = {}
-	for (const fieldInfo of query.data?.fields ?? []) {
-		if (fieldInfo.type.startsWith('secret')) {
-			secretValues[fieldInfo.id] = {
-				value: undefined, // clear secrets, so that everything reloads
-				hasSavedValue: !!query.data?.hasSecrets?.[fieldInfo.id],
-			}
-		}
-	}
-
-	useEffect(() => {
-		// Reset the form when the query data updates
-		form.reset()
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [query.dataUpdatedAt])
+		isCollectionEnabled(connections.rootCollections(), panelStore.connectionInfo.collectionId)
 
 	const setLabelAndVersionMutation = useMutationExt(trpc.connections.setLabelAndVersion.mutationOptions())
 	const setLabelAndConfigMutation = useMutationExt(trpc.connections.setLabelAndConfig.mutationOptions())
 
-	const form = useForm({
-		defaultValues: {
-			label: connectionInfo.label,
-			versionId: connectionInfo.moduleVersionId,
-			updatePolicy: connectionInfo.updatePolicy,
-			config: (query.data?.config ?? {}) as CompanionOptionValues,
-			secrets: secretValues,
-		},
-		onSubmit: async ({ value }) => {
-			setSaveError(null)
+	const isSaving = observable.box(false)
+	const [saveError, setSaveError] = useState<string | null>(null)
+	const performSave = useCallback(() => {
+		if (isSaving.get()) return
+		setSaveError(null)
 
-			if (!connectionShouldBeRunning) {
-				setLabelAndVersionMutation
-					.mutateAsync({
-						connectionId,
-						label: value.label,
-						versionId: value.versionId,
-						updatePolicy: value.updatePolicy,
+		// Bail early if the form is not dirty
+		if (!panelStore.isDirty()) return
+
+		isSaving.set(true)
+
+		Promise.resolve()
+			.then(async () => {
+				if (connectionShouldBeRunning) {
+					if (panelStore.isLoading) throw new Error('Connection is still loading, cannot save changes')
+
+					const configAndSecrets = panelStore.configAndSecrets
+					if (!configAndSecrets) throw new Error('No config and secrets loaded, cannot save changes')
+
+					const saveLabel = panelStore.labelValue
+					const err = await setLabelAndConfigMutation.mutateAsync({
+						connectionId: panelStore.connectionId,
+						label: saveLabel,
+						updatePolicy: panelStore.updatePolicy,
+						config: configAndSecrets.config,
+						secrets: configAndSecrets.updatedSecrets,
 					})
-					.then((err) => {
-						if (err) {
-							if (err === 'invalid label') {
-								setSaveError(`The label "${value.label}" in not valid`)
-							} else if (err === 'duplicate label') {
-								setSaveError(
-									`The label "${value.label}" is already in use. Please use a unique label for this connection`
-								)
-							} else {
-								setSaveError(`Unable to save connection version: "${err as string}"`)
-							}
-						} else {
-							// Done
-							closeConfigurePanel()
-							form.reset()
-						}
+					if (err === 'invalid label') {
+						setSaveError(`The label "${saveLabel}" in not valid`)
+					} else if (err === 'duplicate label') {
+						setSaveError(`The label "${saveLabel}" is already in use. Please use a unique label for this connection`)
+					} else if (err) {
+						setSaveError(`Unable to save connection config: "${err as string}"`)
+					} else {
+						setSaveError(null)
+
+						// Perform a reload of the connection config and secrets
+						panelStore.triggerReload()
+					}
+				} else {
+					const saveLabel = panelStore.labelValue
+					const err = await setLabelAndVersionMutation.mutateAsync({
+						connectionId: panelStore.connectionId,
+						label: saveLabel,
+						versionId: panelStore.moduleVersionId,
+						updatePolicy: panelStore.updatePolicy,
 					})
-					.catch((e) => {
-						setSaveError(`Failed to save connection config: ${e}`)
-					})
-			} else if (query.isSuccess) {
-				const saveSecrets: Record<string, any> = {}
-				for (const [id, obj] of Object.entries(value.secrets)) {
-					if (obj?.value !== undefined) {
-						saveSecrets[id] = obj.value
+					if (err === 'invalid label') {
+						setSaveError(`The label "${saveLabel}" in not valid`)
+					} else if (err === 'duplicate label') {
+						setSaveError(`The label "${saveLabel}" is already in use. Please use a unique label for this connection`)
+					} else if (err) {
+						setSaveError(`Unable to save connection config: "${err as string}"`)
+					} else {
+						setSaveError(null)
 					}
 				}
 
-				await setLabelAndConfigMutation
-					.mutateAsync({
-						connectionId,
-						label: value.label,
-						config: value.config,
-						secrets: saveSecrets,
-						updatePolicy: value.updatePolicy,
-					})
-					.then((err) => {
-						if (err) {
-							if (err === 'invalid label') {
-								setSaveError(`The label "${value.label}" in not valid`)
-							} else if (err === 'duplicate label') {
-								setSaveError(
-									`The label "${value.label}" is already in use. Please use a unique label for this connection`
-								)
-							} else {
-								setSaveError(`Unable to save connection config: "${err as string}"`)
-							}
-						} else {
-							// Done
-							closeConfigurePanel()
-							form.reset()
-						}
-					})
-					.catch((e) => {
-						setSaveError(`Failed to save connection config: ${e}`)
-					})
-			}
-		},
-	})
+				isSaving.set(false)
+			})
+			.catch((error) => {
+				isSaving.set(false)
+				setSaveError(`Failed to save connection: ${error.message || error}`)
+				console.error('Failed to save connection:', error)
+			})
+	}, [setLabelAndVersionMutation, setLabelAndConfigMutation, panelStore, isSaving, connectionShouldBeRunning])
 
-	// Update the form with the connection config
-	// useEffect(() => {
-	// 	form.setFieldValue('config', query.data?.config ?? {})
-
-	// 	const secretValues: typeof form.state.values.secrets = {}
-	// 	for (const fieldInfo of query.data?.fields ?? []) {
-	// 		if (fieldInfo.type.startsWith('secret')) {
-	// 			secretValues[fieldInfo.id] = {
-	// 				value: undefined, // clear secrets, so that everything reloads
-	// 				hasSavedValue: !!query.data?.hasSecrets?.[fieldInfo.id],
-	// 			}
-	// 		}
-	// 	}
-	// 	form.setFieldValue('secrets', secretValues)
-	// }, [form, query.data, query.isLoading])
-
-	// Update some form values when changed elsewhere
-	useEffect(() => form.setFieldValue('label', connectionInfo.label), [form, connectionInfo.label])
-	useEffect(
-		() => form.setFieldValue('versionId', connectionInfo.moduleVersionId),
-		[form, connectionInfo.moduleVersionId]
-	)
-	useEffect(() => form.setFieldValue('updatePolicy', connectionInfo.updatePolicy), [form, connectionInfo.updatePolicy])
-
-	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ConnectionInputField & { width: number }>(
-		query.data?.fields
-	)
+	// Trigger a reload/unload of the connection config when the connection transitions to be running
+	useEffect(() => {
+		if (connectionShouldBeRunning) {
+			panelStore.triggerReload()
+		} else {
+			panelStore.unloadConfigAndSecrets()
+		}
+	}, [panelStore, connectionShouldBeRunning])
 
 	return (
 		<>
-			<ConnectionEditPanelHeading
-				connectionInfo={connectionInfo}
-				moduleInfo={moduleInfo}
-				closeConfigurePanel={closeConfigurePanel}
-			/>
+			<ConnectionEditPanelHeading connectionInfo={connectionInfo} closeConfigurePanel={closeConfigurePanel} />
 
 			<div className="secondary-panel-simple-body">
 				<CForm
@@ -230,109 +171,24 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					onSubmit={(e) => {
 						e.preventDefault()
 						e.stopPropagation()
-						form.handleSubmit().catch((err) => {
-							console.error('Error submitting form', err)
-						})
+						performSave()
 					}}
 				>
 					{saveError && (
-						<CCol className={`fieldtype-textinput`} sm={12}>
+						<CCol className="fieldtype-textinput" sm={12}>
 							<CAlert color="danger">{saveError}</CAlert>
 						</CCol>
 					)}
 
-					<form.Field
-						name="label"
-						validators={{
-							onChange: ({ value }) => (!isLabelValid(value) ? 'Invalid label' : undefined),
-						}}
-						children={(field) => (
-							<CCol className={`fieldtype-textinput`} sm={12}>
-								<label>Label</label>
-								<CFormInput
-									type="text"
-									style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
-									value={field.state.value}
-									onChange={(e) => field.handleChange(e.target.value)}
-									onBlur={field.handleBlur}
-								/>
-							</CCol>
-						)}
+					<ConnectionLabelInputField panelStore={panelStore} />
+					<ConnectionModuleVersionInputField
+						panelStore={panelStore}
+						connectionVersionExists={connectionVersionExists}
+						connectionShouldBeRunning={connectionShouldBeRunning}
+						moduleInfo={moduleInfo}
 					/>
 
-					<CCol className={`fieldtype-textinput`} sm={12}>
-						<label>
-							Module Version&nbsp;
-							{isModuleOnStore && !connectionShouldBeRunning && (
-								<ModuleVersionsRefresh moduleId={connectionInfo.instance_type} />
-							)}
-						</label>
-						<CInputGroup>
-							<form.Field
-								name="versionId"
-								children={(field) => (
-									<CFormSelect
-										name="colFormVersion"
-										value={field.state.value as string}
-										onChange={(e) => field.handleChange(e.target.value)}
-										onBlur={field.handleBlur}
-										disabled={connectionShouldBeRunning}
-										title={
-											connectionShouldBeRunning
-												? 'Connection must be disabled to change version'
-												: 'Select the version of the module to use for this connection'
-										}
-									>
-										{!connectionVersionExists &&
-											!moduleVersionChoices.find((v) => v.value === connectionInfo.moduleVersionId) && (
-												<option value={connectionInfo.moduleVersionId as string}>
-													{connectionInfo.moduleVersionId} (Missing)
-												</option>
-											)}
-										{moduleVersionChoices.map((v) => (
-											<option key={v.value} value={v.value}>
-												{v.label}
-											</option>
-										))}
-									</CFormSelect>
-								)}
-							/>
-
-							<ConnectionForceVersionButton
-								connectionId={connectionId}
-								disabled={connectionShouldBeRunning}
-								currentModuleId={connectionInfo.instance_type}
-								currentVersionId={connectionInfo.moduleVersionId}
-							/>
-						</CInputGroup>
-					</CCol>
-
-					<CCol className={`fieldtype-textinput`} sm={12}>
-						<label>
-							Update Policy
-							<FontAwesomeIcon
-								style={{ marginLeft: '5px' }}
-								icon={faQuestionCircle}
-								title="How to check whether there are updates available for this connection"
-							/>
-						</label>
-						<form.Field
-							name="updatePolicy"
-							children={(field) => (
-								<CFormSelect
-									name="colFormUpdatePolicy"
-									value={field.state.value}
-									onChange={(e) => field.handleChange(e.currentTarget.value as ConnectionUpdatePolicy)}
-									onBlur={field.handleBlur}
-								>
-									<option value="manual">Manual</option>
-									<option value="stable">Stable</option>
-									<option value="beta">Stable and Beta</option>
-								</CFormSelect>
-							)}
-						/>
-					</CCol>
-
+					<ConnectionUpdatePolicyInputField panelStore={panelStore} />
 					<CCol className={`fieldtype-textinput`} sm={12}>
 						<CAlert color="warning">
 							Be careful when downgrading the module version. Some features may not be available in older versions.
@@ -342,130 +198,27 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					{!connectionShouldBeRunning && (
 						<CCol xs={12}>
 							<NonIdealState icon={faGear}>
-								<p>You cannot edit the config of a connection while it is disabled</p>
+								<p>Connection configuration cannot be edited while it is disabled. The fields above can be edited.</p>
 							</NonIdealState>
 						</CCol>
 					)}
 
-					{connectionShouldBeRunning && query.isSuccess && (
-						<>
-							{configOptions.map((fieldInfo) => {
-								const isSecret = fieldInfo.type.startsWith('secret')
-
-								return (
-									<form.Subscribe
-										selector={(state) => {
-											const fn = isVisibleFns[fieldInfo.id]
-											const isVisible = !fn || !!fn(state.values.config)
-
-											return { isVisible }
-										}}
-									>
-										{({ isVisible }) => {
-											if (isSecret) {
-												return (
-													<form.Field
-														key={fieldInfo.id}
-														name={`secrets.${fieldInfo.id}`}
-														validators={{
-															onChange: ({ value, fieldApi }) => {
-																if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
-																	// An existing secret value is always valid
-																	return undefined
-																}
-																return validateInputValue(fieldInfo, value?.value)
-															},
-															onMount: ({ value, fieldApi }) => {
-																if (value?.hasSavedValue && !fieldApi.state.meta.isDirty) {
-																	// An existing secret value is always valid
-																	return undefined
-																}
-																return validateInputValue(fieldInfo, value?.value)
-															},
-														}}
-													>
-														{(field) => (
-															<CCol
-																className={`fieldtype-${fieldInfo.type}`}
-																sm={fieldInfo.width}
-																style={{ display: !isVisible ? 'none' : undefined }}
-															>
-																<ConnectionSecretField
-																	label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
-																	definition={fieldInfo}
-																	hasSavedValue={!!field.state.value?.hasSavedValue}
-																	editValue={field.state.value?.value}
-																	isDirty={field.state.meta.isDirty}
-																	setValue={(value) =>
-																		field.handleChange((v) => ({ hasSavedValue: false, ...v, value }))
-																	}
-																	clearValue={() => form.resetField(`secrets.${fieldInfo.id}`)}
-																/>
-															</CCol>
-														)}
-													</form.Field>
-												)
-											} else {
-												return (
-													<form.Field
-														key={fieldInfo.id}
-														name={`config.${fieldInfo.id}`}
-														validators={{
-															onChange: ({ value }) => validateInputValue(fieldInfo, value),
-															onMount: ({ value }) => validateInputValue(fieldInfo, value),
-														}}
-													>
-														{(field) => (
-															<CCol
-																className={`fieldtype-${fieldInfo.type}`}
-																sm={fieldInfo.width}
-																style={{ display: !isVisible ? 'none' : undefined }}
-															>
-																<ConnectionEditField
-																	label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
-																	definition={fieldInfo}
-																	value={field.state.value}
-																	setValue={field.handleChange}
-																	connectionId={connectionId}
-																/>
-															</CCol>
-														)}
-													</form.Field>
-												)
-											}
-										}}
-									</form.Subscribe>
-								)
-							})}
-						</>
-					)}
-
-					{connectionShouldBeRunning && !query.isSuccess && (
+					{connectionShouldBeRunning && (panelStore.isLoading || panelStore.loadError) && (
 						<LoadingRetryOrError
-							error={!query.isRefetching ? query.error?.message : undefined}
-							dataReady={false}
-							doRetry={() => {
-								query.refetch().catch((err) => {
-									console.error('Error refetching', err)
-								})
-							}}
+							error={panelStore.loadError}
+							dataReady={!panelStore.isLoading}
+							doRetry={panelStore.triggerReload}
 							design="pulse"
 						/>
 					)}
 
-					<form.Subscribe
-						selector={(state) => [state.canSubmit, state.isSubmitting]}
-						children={([canSubmit, isSubmitting]) => (
-							<CCol sm={12}>
-								<CButton color="success" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
-									Save {isSubmitting ? '...' : ''}
-								</CButton>
+					{connectionShouldBeRunning && !panelStore.isLoading && <ConnectionConfigFields panelStore={panelStore} />}
 
-								<CButton color="secondary" onClick={closeConfigurePanel} disabled={isSubmitting}>
-									Cancel
-								</CButton>
-							</CCol>
-						)}
+					<ConnectionFormButtons
+						panelStore={panelStore}
+						connectionShouldBeRunning={connectionShouldBeRunning}
+						isSaving={isSaving.get()}
+						closeConfigurePanel={closeConfigurePanel}
 					/>
 				</CForm>
 			</div>
@@ -483,3 +236,219 @@ function ConnectionFieldLabel({ fieldInfo }: { fieldInfo: ConnectionInputField }
 		</>
 	)
 }
+
+const ConnectionLabelInputField = observer(function ConnectionLabelInputField({
+	panelStore,
+}: {
+	panelStore: ConnectionEditPanelStore
+}): React.JSX.Element {
+	return (
+		<>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Label</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
+				<TextInputField
+					setValue={panelStore.setLabelValue}
+					checkValid={panelStore.checkLabelIsValid}
+					value={panelStore.labelValue}
+				/>
+			</CCol>
+		</>
+	)
+})
+
+const ConnectionModuleVersionInputField = observer(function ConnectionModuleVersionInputField({
+	panelStore,
+	connectionVersionExists,
+	connectionShouldBeRunning,
+	moduleInfo,
+}: {
+	panelStore: ConnectionEditPanelStore
+	connectionVersionExists: boolean
+	connectionShouldBeRunning: boolean
+	moduleInfo: ClientModuleInfo | undefined
+}): React.JSX.Element {
+	const { modules } = useContext(RootAppStoreContext)
+
+	const isModuleOnStore = !!modules.storeList.get(panelStore.connectionInfo.instance_type)
+	const moduleVersionChoices = useConnectionVersionSelectOptions(
+		panelStore.connectionInfo.instance_type,
+		moduleInfo,
+		true
+	)
+
+	return (
+		<>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+				Module Version&nbsp;
+				{isModuleOnStore && !connectionShouldBeRunning && (
+					<ModuleVersionsRefresh moduleId={panelStore.connectionInfo.instance_type} />
+				)}
+			</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
+				<CInputGroup>
+					<CFormSelect
+						name="colFormVersion"
+						value={panelStore.moduleVersionId as string}
+						onChange={(e) => panelStore.setModuleVersionId(e.target.value)}
+						disabled={connectionShouldBeRunning}
+						title={
+							connectionShouldBeRunning
+								? 'Connection must be disabled to change version'
+								: 'Select the version of the module to use for this connection'
+						}
+					>
+						{!connectionVersionExists &&
+							!moduleVersionChoices.find((v) => v.value === panelStore.connectionInfo.moduleVersionId) && (
+								<option value={panelStore.connectionInfo.moduleVersionId as string}>
+									{panelStore.connectionInfo.moduleVersionId} (Missing)
+								</option>
+							)}
+						{moduleVersionChoices.map((v) => (
+							<option key={v.value} value={v.value}>
+								{v.label}
+							</option>
+						))}
+					</CFormSelect>
+
+					<ConnectionForceVersionButton
+						connectionId={panelStore.connectionId}
+						disabled={connectionShouldBeRunning}
+						currentModuleId={panelStore.connectionInfo.instance_type}
+						currentVersionId={panelStore.connectionInfo.moduleVersionId}
+					/>
+				</CInputGroup>
+			</CCol>
+		</>
+	)
+})
+
+const ConnectionUpdatePolicyInputField = observer(function ConnectionUpdatePolicyInputField({
+	panelStore,
+}: {
+	panelStore: ConnectionEditPanelStore
+}): React.JSX.Element {
+	return (
+		<>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+				Update Policy
+				<FontAwesomeIcon
+					style={{ marginLeft: '5px' }}
+					icon={faQuestionCircle}
+					title="How to check whether there are updates available for this connection"
+				/>
+			</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
+				<CFormSelect
+					name="colFormUpdatePolicy"
+					value={panelStore.updatePolicy}
+					onChange={(e) => panelStore.setUpdatePolicy(e.currentTarget.value as ConnectionUpdatePolicy)}
+				>
+					<option value="manual">Manual</option>
+					<option value="stable">Stable</option>
+					<option value="beta">Stable and Beta</option>
+				</CFormSelect>
+			</CCol>
+		</>
+	)
+})
+
+const ConnectionConfigFields = observer(function ConnectionConfigFields({
+	panelStore,
+}: {
+	panelStore: ConnectionEditPanelStore
+}): React.JSX.Element {
+	const configData = panelStore.configAndSecrets
+
+	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ConnectionInputField & { width: number }>(
+		configData?.fields
+	)
+
+	if (!configData) {
+		return <NonIdealState icon={faCircleExclamation}>No config data loaded</NonIdealState>
+	}
+
+	if (configData.fields.length === 0) {
+		return <NonIdealState icon={faCheck}>Connection has no configuration</NonIdealState>
+	}
+
+	return (
+		<>
+			{configOptions.map((fieldInfo) => {
+				const fn = isVisibleFns[fieldInfo.id]
+				const isVisible = !fn || !!fn(configData.config)
+				if (!isVisible) return null
+
+				const isSecret = isConfigFieldSecret(fieldInfo)
+				if (isSecret) {
+					return (
+						<CCol
+							className={`fieldtype-${fieldInfo.type}`}
+							sm={fieldInfo.width}
+							style={{ display: !isVisible ? 'none' : undefined }}
+						>
+							<ConnectionSecretField
+								label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
+								definition={fieldInfo}
+								hasSavedValue={!!configData.updatedSecrets[fieldInfo.id]}
+								editValue={configData.updatedSecrets[fieldInfo.id]}
+								isDirty={fieldInfo.id in configData.updatedSecrets}
+								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
+								clearValue={() => panelStore.clearSecretValue(`secrets.${fieldInfo.id}`)}
+							/>
+						</CCol>
+					)
+				} else {
+					return (
+						<CCol
+							className={`fieldtype-${fieldInfo.type}`}
+							sm={fieldInfo.width}
+							style={{ display: !isVisible ? 'none' : undefined }}
+						>
+							<ConnectionEditField
+								label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
+								definition={fieldInfo}
+								value={configData.config[fieldInfo.id]}
+								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
+								connectionId={panelStore.connectionId}
+							/>
+						</CCol>
+					)
+				}
+			})}
+		</>
+	)
+})
+
+const ConnectionFormButtons = observer(function ConnectionFormButtons({
+	panelStore,
+	isSaving,
+	connectionShouldBeRunning,
+	closeConfigurePanel,
+}: {
+	panelStore: ConnectionEditPanelStore
+	isSaving: boolean
+	connectionShouldBeRunning: boolean
+	closeConfigurePanel: () => void
+}): React.JSX.Element {
+	const isValid = panelStore.isValid()
+
+	const isLoading = connectionShouldBeRunning && panelStore.isLoading
+
+	return (
+		<CCol sm={12}>
+			<CButton
+				color="success"
+				className="me-md-1"
+				disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
+				type="submit"
+				title={!isValid ? 'Please fix the errors before saving' : undefined}
+			>
+				Save {isSaving ? '...' : ''}
+			</CButton>
+
+			<CButton color="secondary" onClick={closeConfigurePanel} disabled={isSaving || isLoading}>
+				Cancel
+			</CButton>
+		</CCol>
+	)
+})
