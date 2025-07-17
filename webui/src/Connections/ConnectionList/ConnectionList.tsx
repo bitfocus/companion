@@ -16,10 +16,10 @@ import { useConnectionStatuses } from './useConnectionStatuses.js'
 import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { useNavigate } from '@tanstack/react-router'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean

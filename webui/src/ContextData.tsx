@@ -29,7 +29,7 @@ import { ViewControlStore } from '~/Stores/ViewControlStore.js'
 import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
 import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
-import { trpc } from './TRPC.js'
+import { trpc } from './Resources/TRPC.js'
 import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
 
 interface ContextDataProps {

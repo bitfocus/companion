@@ -4,7 +4,7 @@ import type {
 	CustomVariableUpdate,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ObservableMap, action, computed, observable } from 'mobx'
-import { assertNever } from '~/util.js'
+import { assertNever } from '~/Resources/util.js'
 import type { VariableDefinition, VariableDefinitionUpdate } from '@companion-app/shared/Model/Variables.js'
 import { ApplyDiffToStore, updateObjectInPlace } from './ApplyDiffToMap'
 

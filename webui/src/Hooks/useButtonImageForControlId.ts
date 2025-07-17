@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 
 /**
  * Load and retrieve a button image for a specific control id.

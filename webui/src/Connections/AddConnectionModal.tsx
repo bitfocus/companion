@@ -11,7 +11,7 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import { PreventDefaultHandler } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '~/Components/CModalExt.js'
@@ -22,7 +22,7 @@ import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export interface AddConnectionModalRef {
 	show(info: FuzzyProduct): void

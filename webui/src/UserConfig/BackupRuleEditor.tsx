@@ -8,7 +8,7 @@ import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/share
 import { TextInputField } from '../Components/TextInputField.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { backupTypes } from './BackupConstants.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface PreviousBackupRowProps {
 	backup: PreviousBackupInfo

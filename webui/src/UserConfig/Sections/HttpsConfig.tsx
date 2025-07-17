@@ -9,7 +9,7 @@ import { UserConfigProps } from '../Components/Common.js'
 import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
 import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps) {
 	const createSslCertificateMutation = useMutationExt(trpc.userConfig.sslCertificateCreate.mutationOptions())

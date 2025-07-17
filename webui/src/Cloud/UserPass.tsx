@@ -2,7 +2,7 @@ import React, { memo, useState } from 'react'
 import { CAlert, CButton, CCol, CForm, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface CloudUserPassProps {
 	username: string | undefined

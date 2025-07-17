@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { makeAbsolutePath, MyErrorBoundary } from '~/util.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import {
 	CAlert,
 	CButton,
@@ -17,7 +18,7 @@ import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
 import { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject

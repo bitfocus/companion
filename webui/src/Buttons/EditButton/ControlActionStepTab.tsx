@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { EditActionsRelease } from './EditActionsRelease.js'
 import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 

@@ -7,7 +7,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { useMemo, useRef } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface IEntityEditorService {
 	readonly listId: SomeSocketEntityLocation

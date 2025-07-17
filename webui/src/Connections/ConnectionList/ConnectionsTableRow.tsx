@@ -20,8 +20,8 @@ import { getModuleVersionInfoForConnection } from '../Util.js'
 import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { useConnectionListContext } from './ConnectionListContext.js'
-import { isCollectionEnabled } from '~/util.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { isCollectionEnabled } from '~/Resources/util.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ConnectionsTableRowProps {
 	connection: ClientConnectionConfigWithId

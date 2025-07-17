@@ -6,7 +6,7 @@ import { action, observable, runInAction } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import { nanoid } from 'nanoid'
 import { validateInputValue } from '~/Helpers/validateInputValue'
-import { trpcClient } from '~/TRPC'
+import { trpcClient } from '~/Resources/TRPC'
 
 export interface ConnectionBasicInfoChanges {
 	label?: string

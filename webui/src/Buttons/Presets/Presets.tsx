@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { CRow } from '@coreui/react'
-import { LoadingRetryOrError } from '~/util.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { PresetsButtonList } from './PresetsButtonList.js'

@@ -1,6 +1,6 @@
 import { CAlert, CButton, CCol, CRow } from '@coreui/react'
 import React, { useCallback, useContext, useRef } from 'react'
-import { KeyReceiver, makeAbsolutePath } from '~/util.js'
+import { KeyReceiver, makeAbsolutePath } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { ConfirmExportModal, ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
@@ -15,7 +15,7 @@ import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { GridZoomController } from './GridZoom.js'
 import { EditPagePropertiesModal, EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number

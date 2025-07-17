@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useState, useMemo } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'

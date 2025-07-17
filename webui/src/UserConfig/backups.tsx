@@ -12,8 +12,8 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { backupTypes } from './BackupConstants.js'
-import { checkDragState, DragState } from '~/util.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { checkDragState, DragState } from '~/Resources/DragAndDrop.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const SettingsBackupsPage = observer(function UserConfig() {
 	const navigate = useNavigate({ from: '/settings/backups' })

@@ -1,6 +1,6 @@
 import { CButton, CCard, CCardBody, CCollapse, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { capitalize } from 'lodash-es'

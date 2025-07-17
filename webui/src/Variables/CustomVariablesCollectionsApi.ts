@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export type CustomVariablesCollectionsApi = NestingCollectionsApi
 

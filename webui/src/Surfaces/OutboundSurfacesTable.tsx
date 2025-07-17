@@ -8,7 +8,7 @@ import { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 	const { surfaces } = useContext(RootAppStoreContext)

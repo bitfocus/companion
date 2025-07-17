@@ -4,9 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CAlert } from '@coreui/react'
 import CryptoJS from 'crypto-js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { base64EncodeUint8Array } from '~/util'
+import { base64EncodeUint8Array } from '~/Resources/util'
 
 const NOTIFICATION_ID_IMPORT = 'import_module_bundle'
 

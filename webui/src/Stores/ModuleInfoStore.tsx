@@ -4,14 +4,14 @@ import type {
 	ClientModuleInfo,
 	ModuleUpgradeToOtherVersion,
 } from '@companion-app/shared/Model/ModuleInfo.js'
-import { assertNever } from '~/util.js'
+import { assertNever } from '~/Resources/util.js'
 import {
 	ModuleStoreListCacheEntry,
 	ModuleStoreListCacheStore,
 	ModuleStoreModuleInfoStore,
 } from '@companion-app/shared/Model/ModulesStore.js'
 import { nanoid } from 'nanoid'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 import { applyJsonPatchInPlace } from './ApplyDiffToMap'
 
 export class ModuleInfoStore {

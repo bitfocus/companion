@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useContext } from 'react'
 import { ColorResult, SketchPicker } from '@hello-pangea/color-picker'
 import { createPortal } from 'react-dom'
-import { useOnClickOutsideExt } from '~/util.js'
+import { useOnClickOutsideExt } from '~/Resources/util.js'
 import { usePopper } from 'react-popper'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { colord } from 'colord'

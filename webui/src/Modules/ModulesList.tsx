@@ -12,7 +12,7 @@ import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
-import { makeAbsolutePath } from '~/util.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 interface VisibleModulesState {
 	installed: boolean

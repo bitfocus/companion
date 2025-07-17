@@ -7,7 +7,7 @@ import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { ControlLocalVariables } from './LocalVariablesStore.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string

@@ -10,7 +10,7 @@ import { observer } from 'mobx-react-lite'
 import { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface PagesListProps {
 	setPageNumber: (page: number) => void

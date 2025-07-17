@@ -3,7 +3,8 @@ import type {
 	ExtendedInputField,
 	InternalInputField,
 } from '@companion-app/shared/Model/Options.js'
-import { assertNever, deepFreeze, sandbox, useComputed } from '~/util.js'
+import { assertNever, deepFreeze, useComputed } from '~/Resources/util.js'
+import { sandbox } from '~/Resources/sandbox.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { cloneDeep } from 'lodash-es'
 import { toJS } from 'mobx'

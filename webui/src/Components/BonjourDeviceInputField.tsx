@@ -3,7 +3,7 @@ import { DropdownInputField } from './DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc } from '~/Resources/TRPC.js'
 
 interface BonjourDeviceInputFieldProps {
 	label: React.ReactNode

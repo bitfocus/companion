@@ -6,7 +6,7 @@ import type {
 	SomeEntityModel,
 	SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export function useActionRecorderActionService(sessionId: string): IEntityEditorService {
 	const deleteActionMutation = useMutationExt(trpc.actionRecorder.session.action.delete.mutationOptions())

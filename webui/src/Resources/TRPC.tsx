@@ -1,5 +1,5 @@
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query'
-import type { AppRouter } from '../../companion/lib/UI/TRPC.js' // Type only import the router
+import type { AppRouter } from '../../../companion/lib/UI/TRPC.js' // Type only import the router
 import { createTRPCClient, createWSClient, loggerLink, wsLink } from '@trpc/client'
 import { makeAbsolutePath } from './util.js'
 import { DefaultError, QueryClient, useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query'

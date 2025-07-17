@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo } from 'react'
 import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.js'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'

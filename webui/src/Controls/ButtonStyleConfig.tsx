@@ -1,6 +1,6 @@
 import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useMemo, useState } from 'react'
-import { PreventDefaultHandler } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import {
 	AlignmentInputField,
 	ColorInputField,
@@ -8,7 +8,7 @@ import {
 	PNGInputField,
 	TextInputField,
 } from '~/Components/index.js'
-import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '~/Constants.js'
+import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '~/Resources/Constants.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -17,7 +17,7 @@ import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.j
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string

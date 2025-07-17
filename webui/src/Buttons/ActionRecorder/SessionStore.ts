@@ -5,7 +5,7 @@ import type {
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { observable, runInAction, action } from 'mobx'
 import { applyJsonPatchInPlace } from '~/Stores/ApplyDiffToMap'
-import { assertNever } from '~/util'
+import { assertNever } from '~/Resources/util'
 
 export class ActionRecorderSessionStore {
 	#sessions = observable.map<string, RecordSessionListInfo>()

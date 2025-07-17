@@ -20,7 +20,7 @@ import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { filterProducts, FuzzyProduct, useAllConnectionProducts } from '~/Hooks/useFilteredProducts.js'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { makeAbsolutePath } from '~/util.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 	const { modules } = useContext(RootAppStoreContext)

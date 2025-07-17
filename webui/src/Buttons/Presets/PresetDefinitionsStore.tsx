@@ -2,8 +2,8 @@ import type { UIPresetDefinition, UIPresetDefinitionUpdate } from '@companion-ap
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observable, action, ObservableMap } from 'mobx'
 import { useState } from 'react'
-import { trpc } from '~/TRPC'
-import { assertNever } from '~/util'
+import { trpc } from '~/Resources/TRPC'
+import { assertNever } from '~/Resources/util'
 import { ApplyDiffToStore } from '~/Stores/ApplyDiffToMap'
 
 export class PresetDefinitionsStore {

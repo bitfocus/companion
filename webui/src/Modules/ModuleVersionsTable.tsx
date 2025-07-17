@@ -21,7 +21,7 @@ import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 dayjs.extend(relativeTime)
 

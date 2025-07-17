@@ -1,6 +1,6 @@
 import { ClientEditConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import { useQuery, UseQueryResult } from '@tanstack/react-query'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 
 export function useConnectionCurrentConfig(connectionId: string): UseQueryResult<ClientEditConnectionConfig> {
 	const query = useQuery(

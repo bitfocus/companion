@@ -5,10 +5,10 @@ import React, { useRef, useState, useCallback } from 'react'
 import { AddEmulatorModalRef, AddEmulatorModal } from './AddEmulatorModal'
 import { AddSurfaceGroupModalRef, AddSurfaceGroupModal } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {

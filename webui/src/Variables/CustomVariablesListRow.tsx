@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { CButton, CButtonGroup, CCol, CForm, CFormLabel, CRow } from '@coreui/react'
-import { PreventDefaultHandler } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'

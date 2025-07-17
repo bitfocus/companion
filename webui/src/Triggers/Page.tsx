@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
-import { makeAbsolutePath, useComputed } from '~/util.js'
+import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -26,7 +26,7 @@ import { useTriggerCollectionsApi } from './TriggerCollectionsApi'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export const TriggersPage = observer(function Triggers() {
 	const { triggersList } = useContext(RootAppStoreContext)

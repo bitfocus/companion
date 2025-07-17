@@ -1,6 +1,6 @@
 import { CCol, CRow } from '@coreui/react'
 import React from 'react'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ConnectionsList } from './ConnectionList/ConnectionList.js'
 import { observer } from 'mobx-react-lite'
 import { Outlet, useMatchRoute } from '@tanstack/react-router'

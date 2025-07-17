@@ -9,8 +9,8 @@ import { ImportWizard } from './Import/index.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { observer } from 'mobx-react-lite'
 import CryptoJS from 'crypto-js'
-import { trpc, useMutationExt } from '~/TRPC.js'
-import { base64EncodeUint8Array } from '~/util.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { base64EncodeUint8Array } from '~/Resources/util.js'
 
 const NOTIFICATION_ID_IMPORT = 'import_config_file'
 

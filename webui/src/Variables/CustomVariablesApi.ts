@@ -1,7 +1,7 @@
 import { useContext, useMemo } from 'react'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface CustomVariablesApi {
 	onCopied: () => void

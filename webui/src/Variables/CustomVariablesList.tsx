@@ -1,6 +1,6 @@
 import React, { FormEvent, useCallback, useContext, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowLeft,
@@ -28,7 +28,7 @@ import { useCustomVariablesApi } from './CustomVariablesApi'
 import { CustomVariablesTableContextProvider } from './CustomVariablesTableContext'
 import { useVariablesValuesForLabel } from './useVariablesValuesForLabel'
 import { CustomVariableRow } from './CustomVariablesListRow'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collectionId'> & CollectionsNestingTableItem
 type CustomVariableCollectionExt = CollectionsNestingTableCollection

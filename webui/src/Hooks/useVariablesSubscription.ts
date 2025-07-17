@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { VariablesStore } from '~/Stores/VariablesStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 
 export function useVariablesSubscription(
 	store: VariablesStore,

@@ -1,5 +1,5 @@
 import { action, observable } from 'mobx'
-import { assertNever } from '~/util.js'
+import { assertNever } from '~/Resources/util.js'
 import type {
 	ClientTriggerData,
 	TriggerCollection,

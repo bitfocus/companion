@@ -10,8 +10,8 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import CopyToClipboard from 'react-copy-to-clipboard'
-import { makeAbsolutePath } from '~/util'
-import { trpc, useMutationExt } from '~/TRPC'
+import { makeAbsolutePath } from '~/Resources/util'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface KnownSurfacesTableProps {
 	selectedItemId: string | null

@@ -1,6 +1,6 @@
 import { EntityOwner, SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import React from 'react'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { EntityTableRow } from './EntityEditorRow.js'
 import { EntityDropPlaceholderZone } from './EntityListDropZone.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'

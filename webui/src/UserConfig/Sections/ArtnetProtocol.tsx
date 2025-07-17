@@ -2,7 +2,7 @@ import React from 'react'
 import { CButton } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
-import { makeAbsolutePath } from '~/util'
+import { makeAbsolutePath } from '~/Resources/util'
 
 export function ArtnetProtocol(): React.JSX.Element {
 	return (

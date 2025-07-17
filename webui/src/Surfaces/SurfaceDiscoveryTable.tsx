@@ -4,7 +4,7 @@ import {
 	ClientDiscoveredSurfaceInfoStreamDeck,
 } from '@companion-app/shared/Model/Surfaces.js'
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { assertNever } from '~/util.js'
+import { assertNever } from '~/Resources/util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { faBan, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -13,7 +13,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { observer } from 'mobx-react-lite'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 	const discoveredSurfaces = useSurfaceDiscoverySubscription()

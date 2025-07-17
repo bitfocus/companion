@@ -10,7 +10,7 @@ import { GenericConfirmModalRef, GenericConfirmModal } from '~/Components/Generi
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
 import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export interface ButtonEditorExtraTabs {
 	id: string

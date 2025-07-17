@@ -19,7 +19,7 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { isSurfaceGroupIdValid } from '@companion-app/shared/Label.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface AddSurfaceGroupModalRef {
 	show(): void

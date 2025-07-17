@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 
 export function useModuleInfoSubscription(store: ModuleInfoStore): boolean {
 	const [ready, setReady] = useState(false)
