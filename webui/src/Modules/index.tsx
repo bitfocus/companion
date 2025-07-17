@@ -21,10 +21,6 @@ export const ModulesPage = memo(function ConnectionsPage() {
 		[navigate]
 	)
 
-	const doCloseModule = useCallback(() => {
-		void navigate({ to: '/modules' })
-	}, [navigate])
-
 	const showPrimaryPanel = !selectedModuleId
 	const showSecondaryPanel = !!selectedModuleId
 

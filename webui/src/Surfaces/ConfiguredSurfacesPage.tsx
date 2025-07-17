@@ -61,10 +61,6 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		[navigate]
 	)
 
-	const doCloseItem = useCallback(() => {
-		void navigate({ to: '/surfaces/configured' })
-	}, [navigate])
-
 	const showPrimaryPanel = !selectedItemId
 	const showSecondaryPanel = !!selectedItemId
 

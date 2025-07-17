@@ -10,22 +10,19 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 	const routeMatch = matchRoute({ to: '/connections/$connectionId' })
 	const addConnectionsMatch = matchRoute({ to: '/connections/add' })
 	const selectedConnectionId = routeMatch ? routeMatch.connectionId : null
-	
+
 	// On narrow screens, show only one panel at a time
 	const showPrimaryPanel = !routeMatch && !addConnectionsMatch
 	const showSecondaryPanel = !!routeMatch || !!addConnectionsMatch
 
 	return (
 		<CRow className="connections-page split-panels">
-			<CCol 
-				xl={6} 
-				className={`connections-panel primary-panel ${showPrimaryPanel ? 'd-block' : 'd-xl-block d-none'}`}
-			>
+			<CCol xl={6} className={`connections-panel primary-panel ${showPrimaryPanel ? 'd-block' : 'd-xl-block d-none'}`}>
 				<ConnectionsList selectedConnectionId={selectedConnectionId} />
 			</CCol>
 
-			<CCol 
-				xl={6} 
+			<CCol
+				xl={6}
 				className={`connections-panel secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-xl-block d-none'}`}
 			>
 				<div className="secondary-panel-simple">

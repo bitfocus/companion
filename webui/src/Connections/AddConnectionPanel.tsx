@@ -1,7 +1,13 @@
 import React, { useContext, useState, useCallback, useRef } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationTriangle, faExternalLink, faPlug, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
+import {
+	faExclamationTriangle,
+	faExternalLink,
+	faPlug,
+	faQuestionCircle,
+	faTimes,
+} from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '~/Components/SearchBox.js'

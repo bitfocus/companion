@@ -99,9 +99,9 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 
 			<div className="connection-group-actions mb-2">
 				<CButtonGroup>
-					<CButton 
-						color="primary" 
-						size="sm" 
+					<CButton
+						color="primary"
+						size="sm"
 						className="d-xl-none"
 						onClick={() => void navigate({ to: '/connections/add' })}
 					>
