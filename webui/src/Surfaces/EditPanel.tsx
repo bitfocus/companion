@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CForm, CFormSelect, CCol, CFormLabel, CFormSwitch } from '@coreui/react'
 import { LoadingRetryOrError, PreventDefaultHandler } from '~/util.js'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import {
@@ -17,6 +17,7 @@ import { EditPanelConfigField } from './EditPanelConfigField'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { trpc, useMutationExt } from '~/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useNavigate } from '@tanstack/react-router'
 
 type SurfaceInfo = ClientSurfaceItem & { groupId: string | null }
 
@@ -30,6 +31,11 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 	groupId: rawGroupId,
 }) {
 	const { surfaces } = useContext(RootAppStoreContext)
+	const navigate = useNavigate()
+
+	const doCloseSurface = useCallback(() => {
+		void navigate({ to: '/surfaces/configured' })
+	}, [navigate])
 
 	let surfaceInfo: SurfaceInfo | null = null
 	if (surfaceId) {
@@ -65,6 +71,11 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 				<h4 className="panel-title">
 					Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}
 				</h4>
+				<div className="header-buttons">
+					<div className="float_right d-xl-none" onClick={doCloseSurface} title="Close">
+						<FontAwesomeIcon icon={faTimes} size="lg" />
+					</div>
+				</div>
 			</div>
 
 			<div className="secondary-panel-simple-body">

@@ -98,7 +98,18 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 			<ConnectionVariablesModal ref={variablesModalRef} />
 
 			<div className="connection-group-actions mb-2">
-				<CreateCollectionButton />
+				<CButtonGroup>
+					<CButton 
+						color="primary" 
+						size="sm" 
+						className="d-xl-none"
+						onClick={() => void navigate({ to: '/connections/add' })}
+					>
+						<FontAwesomeIcon icon={faPlug} className="me-1" />
+						Add Connection
+					</CButton>
+					<CreateCollectionButton />
+				</CButtonGroup>
 			</div>
 			<PanelCollapseHelperProvider
 				storageId="connection-collections"

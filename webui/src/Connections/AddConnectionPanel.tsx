@@ -1,7 +1,7 @@
 import React, { useContext, useState, useCallback, useRef } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationTriangle, faExternalLink, faPlug, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faExclamationTriangle, faExternalLink, faPlug, faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -85,10 +85,19 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 		[navigate]
 	)
 
+	const doCloseAddConnections = useCallback(() => {
+		void navigate({ to: '/connections' })
+	}, [navigate])
+
 	return (
 		<>
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">Add New Connection</h4>
+				<div className="header-buttons">
+					<div className="float_right d-xl-none" onClick={doCloseAddConnections} title="Close">
+						<FontAwesomeIcon icon={faTimes} size="lg" />
+					</div>
+				</div>
 			</div>
 
 			<div className="secondary-panel-simple-body">

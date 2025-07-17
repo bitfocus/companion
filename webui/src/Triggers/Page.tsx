@@ -11,6 +11,7 @@ import {
 	faFileExport,
 	faLayerGroup,
 	faList,
+	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -90,12 +91,19 @@ export const TriggersPage = observer(function Triggers() {
 		[navigate]
 	)
 
+	const doCloseTrigger = useCallback(() => {
+		void navigate({ to: '/triggers' })
+	}, [navigate])
+
+	const showPrimaryPanel = !selectedTriggerId
+	const showSecondaryPanel = !!selectedTriggerId
+
 	return (
 		<CRow className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
-			<CCol xs={12} xl={6} className="primary-panel">
+			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<h4>Triggers</h4>
 				<p style={{ marginBottom: '0.5rem' }}>
 					Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
@@ -137,8 +145,11 @@ export const TriggersPage = observer(function Triggers() {
 				</PanelCollapseHelperProvider>
 			</CCol>
 
-			<CCol xs={12} xl={6} className="secondary-panel">
-				<Outlet />
+			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+				<div className="secondary-panel-simple">
+					{!!selectedTriggerId && <TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} />}
+					<Outlet />
+				</div>
 			</CCol>
 		</CRow>
 	)
@@ -298,5 +309,22 @@ function CreateCollectionButton() {
 		<CButton color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
 		</CButton>
+	)
+}
+
+interface TriggerEditPanelHeadingProps {
+	doCloseTrigger: () => void
+}
+
+function TriggerEditPanelHeading({ doCloseTrigger }: TriggerEditPanelHeadingProps) {
+	return (
+		<div className="secondary-panel-simple-header">
+			<h4 className="panel-title">Edit Trigger</h4>
+			<div className="header-buttons">
+				<div className="float_right ms-1" onClick={doCloseTrigger} title="Close">
+					<FontAwesomeIcon icon={faTimes} size="lg" />
+				</div>
+			</div>
+		</div>
 	)
 }

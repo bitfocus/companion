@@ -6,6 +6,7 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 export const ModulesPage = memo(function ConnectionsPage() {
 	const matchRoute = useMatchRoute()
 	const routeMatch = matchRoute({ to: '/modules/$moduleId' })
+	const selectedModuleId = routeMatch ? routeMatch.moduleId : null
 
 	const navigate = useNavigate({ from: '/modules' })
 
@@ -20,13 +21,24 @@ export const ModulesPage = memo(function ConnectionsPage() {
 		[navigate]
 	)
 
+	const doCloseModule = useCallback(() => {
+		void navigate({ to: '/modules' })
+	}, [navigate])
+
+	const showPrimaryPanel = !selectedModuleId
+	const showSecondaryPanel = !!selectedModuleId
+
 	return (
 		<CRow className="connections-page split-panels">
-			<CCol xl={6} className="connections-panel primary-panel">
-				<ModulesList doManageModule={doManageModule} selectedModuleId={routeMatch ? routeMatch.moduleId : null} />
+			<CCol xs={12} xl={6} className={`connections-panel primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+				<ModulesList doManageModule={doManageModule} selectedModuleId={selectedModuleId} />
 			</CCol>
 
-			<CCol xl={6} className="connections-panel secondary-panel add-connections-panel">
+			<CCol
+				xs={12}
+				xl={6}
+				className={`connections-panel secondary-panel add-connections-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}
+			>
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>

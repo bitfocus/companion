@@ -47,11 +47,9 @@ const RouteComponent = observer(function RouteComponent() {
 	}
 
 	return (
-		<div className="secondary-panel-simple">
-			<MyErrorBoundary>
-				<SurfaceEditPanel key={itemId} surfaceId={itemInfo.surfaceId} groupId={itemInfo.groupId} />
-			</MyErrorBoundary>
-		</div>
+		<MyErrorBoundary>
+			<SurfaceEditPanel key={itemId} surfaceId={itemInfo.surfaceId} groupId={itemInfo.groupId} />
+		</MyErrorBoundary>
 	)
 })
 

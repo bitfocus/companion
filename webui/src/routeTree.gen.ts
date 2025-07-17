@@ -51,6 +51,7 @@ import { Route as SettingsButtonsRouteImport } from './routes/app/settings/butto
 import { Route as SettingsBackupsRouteImport } from './routes/app/settings/backups.tsx'
 import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/advanced.tsx'
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
+import { Route as ConnectionsAddRouteImport } from './routes/app/connections/add.tsx'
 import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
 import { Route as SurfacesConfiguredIndexRouteImport } from './routes/app/surfaces/configured/index.tsx'
@@ -290,6 +291,11 @@ const ModulesModuleIdRoute = ModulesModuleIdRouteImport.update({
   path: '/$moduleId',
   getParentRoute: () => ModulesRoute,
 } as any)
+const ConnectionsAddRoute = ConnectionsAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => ConnectionsRoute,
+} as any)
 const ConnectionsConnectionIdRoute = ConnectionsConnectionIdRouteImport.update({
   id: '/$connectionId',
   path: '/$connectionId',
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/emulator/': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
+  '/connections/add': typeof ConnectionsAddRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
   '/settings/backups': typeof SettingsBackupsRouteWithChildren
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
+  '/connections/add': typeof ConnectionsAddRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
   '/settings/buttons': typeof SettingsButtonsRoute
@@ -444,6 +452,7 @@ export interface FileRoutesById {
   '/emulator/': typeof EmulatorIndexRoute
   '/_app/buttons/$page': typeof ButtonsPageRoute
   '/_app/connections/$connectionId': typeof ConnectionsConnectionIdRoute
+  '/_app/connections/add': typeof ConnectionsAddRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
   '/_app/settings/advanced': typeof SettingsAdvancedRoute
   '/_app/settings/backups': typeof SettingsBackupsRouteWithChildren
@@ -496,6 +505,7 @@ export interface FileRouteTypes {
     | '/emulator/'
     | '/buttons/$page'
     | '/connections/$connectionId'
+    | '/connections/add'
     | '/modules/$moduleId'
     | '/settings/advanced'
     | '/settings/backups'
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/emulator'
     | '/buttons/$page'
     | '/connections/$connectionId'
+    | '/connections/add'
     | '/modules/$moduleId'
     | '/settings/advanced'
     | '/settings/buttons'
@@ -591,6 +602,7 @@ export interface FileRouteTypes {
     | '/emulator/'
     | '/_app/buttons/$page'
     | '/_app/connections/$connectionId'
+    | '/_app/connections/add'
     | '/_app/modules/$moduleId'
     | '/_app/settings/advanced'
     | '/_app/settings/backups'
@@ -935,6 +947,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModulesModuleIdRouteImport
       parentRoute: typeof ModulesRoute
     }
+    '/_app/connections/add': {
+      id: '/_app/connections/add'
+      path: '/add'
+      fullPath: '/connections/add'
+      preLoaderRoute: typeof ConnectionsAddRouteImport
+      parentRoute: typeof ConnectionsRoute
+    }
     '/_app/connections/$connectionId': {
       id: '/_app/connections/$connectionId'
       path: '/$connectionId'
@@ -993,11 +1012,13 @@ const ButtonsRouteWithChildren =
 
 interface ConnectionsRouteChildren {
   ConnectionsConnectionIdRoute: typeof ConnectionsConnectionIdRoute
+  ConnectionsAddRoute: typeof ConnectionsAddRoute
   ConnectionsIndexRoute: typeof ConnectionsIndexRoute
 }
 
 const ConnectionsRouteChildren: ConnectionsRouteChildren = {
   ConnectionsConnectionIdRoute: ConnectionsConnectionIdRoute,
+  ConnectionsAddRoute: ConnectionsAddRoute,
   ConnectionsIndexRoute: ConnectionsIndexRoute,
 }
 

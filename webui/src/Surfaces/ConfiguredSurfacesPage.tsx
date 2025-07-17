@@ -61,9 +61,16 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		[navigate]
 	)
 
+	const doCloseItem = useCallback(() => {
+		void navigate({ to: '/surfaces/configured' })
+	}, [navigate])
+
+	const showPrimaryPanel = !selectedItemId
+	const showSecondaryPanel = !!selectedItemId
+
 	return (
 		<CRow className="surfaces-page split-panels">
-			<CCol xs={12} xl={6} className="primary-panel">
+			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<h4>Configured Surfaces</h4>
 
 				<p style={{ marginBottom: '0.5rem' }}>
@@ -102,7 +109,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				</CCallout>
 			</CCol>
 
-			<CCol xs={12} xl={6} className="secondary-panel">
+			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />

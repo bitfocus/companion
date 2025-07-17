@@ -10,10 +10,8 @@ export const Route = createFileRoute('/_app/modules/')({
 
 function RouteComponent() {
 	return (
-		<div className="secondary-panel-simple-body no-scroll">
-			<MyErrorBoundary>
-				<NonIdealState text="Select a module to manage" icon={faPuzzlePiece} />
-			</MyErrorBoundary>
-		</div>
+		<MyErrorBoundary>
+			<NonIdealState text="Select a module to manage" icon={faPuzzlePiece} />
+		</MyErrorBoundary>
 	)
 }
