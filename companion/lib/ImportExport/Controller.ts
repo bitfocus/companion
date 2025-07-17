@@ -481,13 +481,13 @@ export class ImportExportController {
 
 						const resetArg = fullReset || !config ? null : { ...config, connections: true, userconfig: false }
 
-					// Destroy old stuff
+						// Destroy old stuff
 						await this.#reset(resetArg, !config || config.buttons)
-          
-          // import userconfig
-          if (!config || config.userconfig) {
-            this.#userConfigController.setKeys(data.userconfig || {})
-          }
+
+						// import userconfig
+						if (!config || config.userconfig) {
+							this.#userConfigController.setKeys(data.userconfig || {})
+						}
 
 						// import custom variables
 						if (!config || config.customVariables) {

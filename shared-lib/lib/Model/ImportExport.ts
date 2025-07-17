@@ -29,7 +29,7 @@ export const zodClientImportSelection = z.object({
 	surfaces: z.boolean(),
 	triggers: z.boolean(),
 	customVariables: z.boolean(),
-  userconfig: z.boolean(),
+	userconfig: z.boolean(),
 })
 
 export type ClientImportSelection = z.infer<typeof zodClientImportSelection>
