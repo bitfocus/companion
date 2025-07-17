@@ -247,7 +247,7 @@ export function createControlsTrpcRouter(
 			.input(
 				z.object({
 					controlId: z.string(),
-					styleFields: z.record(z.any()),
+					styleFields: z.record(z.string(), z.any()),
 				})
 			)
 			.mutation(async ({ input }) => {

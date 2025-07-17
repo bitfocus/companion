@@ -712,9 +712,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					z.object({
 						connectionId: z.string(),
 						label: z.string(),
-						config: z.record(z.any()),
-						secrets: z.record(z.any()),
-						updatePolicy: z.nativeEnum(ConnectionUpdatePolicy),
+						config: z.record(z.string(), z.any()),
+						secrets: z.record(z.string(), z.any()),
+						updatePolicy: z.enum(ConnectionUpdatePolicy),
 					})
 				)
 				.mutation(({ input }) => {
@@ -750,7 +750,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						connectionId: z.string(),
 						label: z.string(),
 						versionId: z.string().nullable(),
-						updatePolicy: z.nativeEnum(ConnectionUpdatePolicy).nullable(),
+						updatePolicy: z.enum(ConnectionUpdatePolicy).nullable(),
 					})
 				)
 				.mutation(({ input }) => {

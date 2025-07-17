@@ -85,7 +85,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 	)
 
 	const setValue = (key: keyof ClientResetSelection, value: boolean) => {
-		setConfig((oldState) => ({
+		setConfig((oldState: ClientResetSelection) => ({
 			...oldState,
 			[key]: value,
 		}))

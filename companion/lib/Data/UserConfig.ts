@@ -210,7 +210,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			setConfigKeys: publicProcedure
 				.input(
 					z.object({
-						values: z.record(z.any()),
+						values: z.record(z.string(), z.any()),
 					})
 				)
 				.mutation(({ input }) => {

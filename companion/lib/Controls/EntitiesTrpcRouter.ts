@@ -28,7 +28,7 @@ export function createEntitiesTrpcRouter(
 					entityLocation: zodEntityLocation,
 					ownerId: zodEntityOwner.nullable(),
 					connectionId: z.string(),
-					entityType: z.nativeEnum(EntityModelType),
+					entityType: z.enum(EntityModelType),
 					entityDefinition: z.string(),
 				})
 			)

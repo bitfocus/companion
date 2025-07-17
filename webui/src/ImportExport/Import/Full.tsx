@@ -161,8 +161,8 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
 	// console.log('validkeys', validConfigKeys)
 
-	const setValue = useCallback((key: string, value: any) => {
-		setConfig((oldConfig) => ({
+	const setValue = useCallback((key: keyof ClientImportSelection, value: boolean) => {
+		setConfig((oldConfig: ClientImportSelection) => ({
 			...oldConfig,
 			[key]: value,
 		}))
@@ -260,15 +260,15 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 }
 
 interface InputCheckboxProps {
-	config: Record<string, boolean>
+	config: ClientImportSelection
 	allowKeys: string[]
-	keyName: string
-	setValue: (key: string, value: any) => void
+	keyName: keyof ClientImportSelection
+	setValue: (key: keyof ClientImportSelection, value: boolean) => void
 	label: string
 }
 
 function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputCheckboxProps) {
-	const disabled = allowKeys && !allowKeys.includes(keyName)
+	const disabled = allowKeys && !allowKeys.includes(String(keyName))
 
 	const setValue2 = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => setValue(keyName, !!e.currentTarget.checked),
@@ -278,7 +278,7 @@ function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputChe
 	return (
 		<div className="indent3">
 			<CFormCheck
-				id={`check-${keyName}`}
+				id={`check-${String(keyName)}`}
 				label={label}
 				checked={!disabled && !!config[keyName]}
 				onChange={setValue2}
