@@ -36,6 +36,7 @@ import type {
 import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
+import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 
 type DefinitionsEvents = {
 	presets: [update: UIPresetDefinitionUpdate]
@@ -62,6 +63,8 @@ type DefinitionsEvents = {
 export class InstanceDefinitions {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
+	readonly #configStore: ConnectionConfigStore
+
 	/**
 	 * The action definitions
 	 */
@@ -77,8 +80,10 @@ export class InstanceDefinitions {
 
 	#events = new EventEmitter<DefinitionsEvents>()
 
-	constructor() {
+	constructor(configStore: ConnectionConfigStore) {
 		this.#events.setMaxListeners(0)
+
+		this.#configStore = configStore
 	}
 
 	createTrpcRouter() {
@@ -137,11 +142,14 @@ export class InstanceDefinitions {
 		const definition = this.getEntityDefinition(entityType, connectionId, definitionId)
 		if (!definition) return null
 
+		const connectionConfig = this.#configStore.getConfigForId(connectionId)
+
 		const entity: Omit<EntityModelBase, 'type'> = {
 			id: nanoid(),
 			definitionId: definitionId,
 			connectionId: connectionId,
 			options: {},
+			upgradeIndex: connectionConfig?.lastUpgradeIndex,
 		}
 
 		if (definition.options !== undefined && definition.options.length > 0) {
@@ -271,6 +279,8 @@ export class InstanceDefinitions {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
 		if (!definition || definition.type !== 'button') return null
 
+		const connectionUpgradeIndex = this.#configStore.getConfigForId(connectionId)?.lastUpgradeIndex
+
 		const result: NormalButtonModel = {
 			type: 'button',
 			options: {
@@ -313,7 +323,8 @@ export class InstanceDefinitions {
 					newStep.action_sets[setIdSafe] = convertActionsDelay(
 						actions_set,
 						connectionId,
-						definition.options?.relativeDelay
+						definition.options?.relativeDelay,
+						connectionUpgradeIndex
 					)
 				}
 			}
@@ -329,6 +340,7 @@ export class InstanceDefinitions {
 				isInverted: feedback.isInverted,
 				style: cloneDeep(feedback.style),
 				headline: feedback.headline,
+				upgradeIndex: connectionUpgradeIndex,
 			}))
 		}
 
@@ -567,7 +579,11 @@ export type PresetDefinitionTmp = CompanionPresetDefinition & {
 	id: string
 }
 
-function toActionInstance(action: PresetActionInstance, connectionId: string): ActionEntityModel {
+function toActionInstance(
+	action: PresetActionInstance,
+	connectionId: string,
+	connectionUpgradeIndex: number | undefined
+): ActionEntityModel {
 	return {
 		type: EntityModelType.Action,
 		id: nanoid(),
@@ -575,13 +591,15 @@ function toActionInstance(action: PresetActionInstance, connectionId: string): A
 		definitionId: action.action,
 		options: cloneDeep(action.options ?? {}),
 		headline: action.headline,
+		upgradeIndex: connectionUpgradeIndex,
 	}
 }
 
 function convertActionsDelay(
 	actions: PresetActionInstance[],
 	connectionId: string,
-	relativeDelays: boolean | undefined
+	relativeDelays: boolean | undefined,
+	connectionUpgradeIndex: number | undefined
 ): ActionEntityModel[] {
 	if (relativeDelays) {
 		const newActions: ActionEntityModel[] = []
@@ -594,7 +612,7 @@ function convertActionsDelay(
 				newActions.push(createWaitAction(delay))
 			}
 
-			newActions.push(toActionInstance(action, connectionId))
+			newActions.push(toActionInstance(action, connectionId, connectionUpgradeIndex))
 		}
 
 		return newActions
@@ -622,7 +640,7 @@ function convertActionsDelay(
 				currentDelay = delay
 			}
 
-			currentDelayGroupChildren.push(toActionInstance(action, connectionId))
+			currentDelayGroupChildren.push(toActionInstance(action, connectionId, connectionUpgradeIndex))
 		}
 
 		if (delayGroups.length > 1) {
@@ -647,6 +665,7 @@ function wrapActionsInGroup(actions: ActionEntityModel[]): ActionEntityModel {
 		children: {
 			default: actions,
 		},
+		upgradeIndex: undefined,
 	}
 }
 function createWaitAction(delay: number): ActionEntityModel {
@@ -658,5 +677,6 @@ function createWaitAction(delay: number): ActionEntityModel {
 		options: {
 			time: delay,
 		},
+		upgradeIndex: undefined,
 	}
 }

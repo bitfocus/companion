@@ -1,5 +1,5 @@
 import React, { useCallback, useContext } from 'react'
-import { CAlert, CButton, CForm, CFormSelect, CInputGroup } from '@coreui/react'
+import { CAlert, CButton, CCol, CForm, CFormLabel, CFormSelect, CInputGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
@@ -113,19 +113,19 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
 
 	return (
-		<CForm className="p-3">
-			<div className="mb-3">
-				<label className="form-label">Rule Name</label>
+		<CForm className="p-3 row g-3">
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Rule Name</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CInputGroup>
 					<TextInputField value={rule.name} setValue={(value) => updateField('name', value)} />
 					<CButton color="warning" onClick={runNow}>
 						Run Now
 					</CButton>
 				</CInputGroup>
-			</div>
+			</CCol>
 
-			<div className="mb-3">
-				<label className="form-label">Cron Schedule</label>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Cron Schedule</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField value={rule.cron} setValue={(value) => updateField('cron', value)} />
 				<small className="form-text text-muted">
 					Use cron syntax (e.g., "0 0 * * *" for daily at midnight). You can use{' '}
@@ -134,10 +134,10 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 					</a>{' '}
 					to help you generate the correct syntax.
 				</small>
-			</div>
+			</CCol>
 
-			<div className="mb-3">
-				<label className="form-label">Backup Type</label>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Type</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CFormSelect
 					value={rule.backupType}
 					onChange={(e) => updateField('backupType', e.target.value as BackupRulesConfig['backupType'])}
@@ -148,38 +148,40 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 						</option>
 					))}
 				</CFormSelect>
-				{rule.backupType === 'db' && (
+			</CCol>
+			{rule.backupType === 'db' && (
+				<CCol sm={12}>
 					<CAlert color="warning" className="mt-2">
 						Raw backups are a direct copy of the database file. They cannot be restored through the web interface, but
 						contain more data than the default exports.
 					</CAlert>
-				)}
-			</div>
+				</CCol>
+			)}
 
-			<div className="mb-3">
-				<label className="form-label">Backup Path</label>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Path</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField value={rule.backupPath} setValue={(value) => updateField('backupPath', value)} />
 				<small className="form-text text-muted">
 					Directory path where backups will be saved. Leave empty for default location.
 				</small>
-			</div>
+			</CCol>
 
-			<div className="mb-3">
-				<label className="form-label">Backup Name Pattern</label>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Name Pattern</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField
 					value={rule.backupNamePattern}
 					setValue={(value) => updateField('backupNamePattern', value)}
 					useVariables
 				/>
-			</div>
+			</CCol>
 
-			<div className="mb-3">
-				<label className="form-label">Number of Backups to Keep</label>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Number of Backups to Keep</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
 				<NumberInputField value={rule.keep} min={1} setValue={(value) => updateField('keep', value)} />
 				<small className="form-text text-muted">How many backup files to retain before deleting the oldest ones</small>
-			</div>
+			</CCol>
 
-			<div className="mb-3">
+			<CCol sm={12}>
 				<label className="form-label">Previous Backups</label>
 				{rule.previousBackups && rule.previousBackups.length > 0 && (
 					<div className="table-responsive">
@@ -198,7 +200,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 						<small>No backup files found. Backups may have been manually deleted or moved.</small>
 					</div>
 				)}
-			</div>
+			</CCol>
 		</CForm>
 	)
 })

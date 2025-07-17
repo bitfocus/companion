@@ -1,9 +1,8 @@
-import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useContext } from 'react'
 import { BackupRuleEditor } from '../../../../UserConfig/BackupRuleEditor.js'
 import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
-import { useComputed } from '../../../../util.js'
+import { MyErrorBoundary, useComputed } from '../../../../util.js'
 import { observer } from 'mobx-react-lite'
 
 const RouteComponent = observer(function RouteComponent() {
@@ -22,18 +21,13 @@ const RouteComponent = observer(function RouteComponent() {
 	}, [navigate, ruleId, backupRule])
 
 	return (
-		<>
-			<CNav variant="tabs" role="tablist">
-				<CNavItem>
-					<CNavLink active>{backupRule?.name || 'Edit Backup Rule'}</CNavLink>
-				</CNavItem>
-			</CNav>
-			<CTabContent>
-				<CTabPane data-tab="editor" visible>
+		<div className="secondary-panel-simple">
+			<div className="secondary-panel-simple-body">
+				<MyErrorBoundary>
 					<BackupRuleEditor ruleId={ruleId} />
-				</CTabPane>
-			</CTabContent>
-		</>
+				</MyErrorBoundary>
+			</div>
+		</div>
 	)
 })
 

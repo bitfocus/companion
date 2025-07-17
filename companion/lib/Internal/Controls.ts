@@ -753,6 +753,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				options: {
 					...action.options,
 				},
+				upgradeIndex: undefined,
 			}
 			delete newChildAction.options.expression
 
@@ -764,6 +765,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				options: {
 					expression: action.options.expression,
 				},
+				upgradeIndex: undefined,
 			}
 
 			return {
@@ -777,6 +779,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					actions: [newChildAction],
 					else_actions: [],
 				},
+				upgradeIndex: undefined,
 			} satisfies ActionEntityModel
 		} else if (
 			action.definitionId === 'button_pressrelease_condition' ||
@@ -792,6 +795,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				options: {
 					...action.options,
 				},
+				upgradeIndex: undefined,
 			}
 			delete newChildAction.options.variable
 			delete newChildAction.options.op
@@ -807,6 +811,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					op: action.options.op,
 					value: action.options.value,
 				},
+				upgradeIndex: undefined,
 			}
 
 			return {
@@ -820,6 +825,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					actions: [newChildAction],
 					else_actions: [],
 				},
+				upgradeIndex: undefined,
 			} satisfies ActionEntityModel
 		}
 
