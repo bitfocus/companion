@@ -278,7 +278,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 
 	return (
 		<>
-			<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
+			<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 				{surfaceInfo && (
 					<>
 						<CFormLabel htmlFor="colFormSurfaceName" className="col-sm-4 col-form-label col-form-label-sm">

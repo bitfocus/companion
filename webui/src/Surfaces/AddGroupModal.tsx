@@ -85,7 +85,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 				}}
 			>
 				<CModalBody>
-					<CRow className="g-3">
+					<CRow className="g-sm-2">
 						{saveError && (
 							<CCol className={`fieldtype-textinput`} sm={12}>
 								<CAlert color="danger">{saveError}</CAlert>

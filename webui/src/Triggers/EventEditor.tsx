@@ -279,7 +279,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 						{eventSpec?.description || ''}
 					</CCol>
 
-					<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
+					<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 						{eventOptions.map((opt, i) => (
 							<MyErrorBoundary key={i}>
 								<OptionsInputField

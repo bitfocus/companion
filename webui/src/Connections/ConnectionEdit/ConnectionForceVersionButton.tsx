@@ -97,7 +97,7 @@ export function ConnectionForceVersionButton({
 					</CModalHeader>
 					<CModalBody>
 						<CForm
-							className="row g-3"
+							className="row g-sm-2"
 							onSubmit={(e) => {
 								e.preventDefault()
 								e.stopPropagation()

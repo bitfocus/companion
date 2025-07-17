@@ -65,7 +65,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					</div>
 				)}
 
-				<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
+				<CForm className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
 					{!!entity && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>

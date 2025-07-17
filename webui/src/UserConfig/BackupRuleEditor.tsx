@@ -113,7 +113,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
 
 	return (
-		<CForm className="p-3 row g-3">
+		<CForm className="p-3 row g-sm-2">
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Rule Name</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CInputGroup>
@@ -127,6 +127,8 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Cron Schedule</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField value={rule.cron} setValue={(value) => updateField('cron', value)} />
+			</CCol>
+			<CCol className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
 				<small className="form-text text-muted">
 					Use cron syntax (e.g., "0 0 * * *" for daily at midnight). You can use{' '}
 					<a href="https://crontab.guru" target="_blank" rel="noopener noreferrer">
@@ -161,6 +163,8 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Path</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField value={rule.backupPath} setValue={(value) => updateField('backupPath', value)} />
+			</CCol>
+			<CCol className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
 				<small className="form-text text-muted">
 					Directory path where backups will be saved. Leave empty for default location.
 				</small>
@@ -178,6 +182,8 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Number of Backups to Keep</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<NumberInputField value={rule.keep} min={1} setValue={(value) => updateField('keep', value)} />
+			</CCol>
+			<CCol className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
 				<small className="form-text text-muted">How many backup files to retain before deleting the oldest ones</small>
 			</CCol>
 

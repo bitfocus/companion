@@ -141,7 +141,7 @@ export const AddConnectionModal = observer(
 								have installed different versions of a module, you can choose which one to use for a new connection
 								here.
 							</p>
-							<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
+							<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 								<CFormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
 									Label&nbsp;
 								</CFormLabel>
