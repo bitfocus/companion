@@ -257,10 +257,10 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 	return (
 		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
-			<div className="flex flex-column grow">
+			<div className="flex flex-column grow" style={{ minWidth: 0 }}>
 				<b>{item.name}</b>
 				<br />
-				<span dangerouslySetInnerHTML={descriptionHtml} />
+				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
 				<br />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>

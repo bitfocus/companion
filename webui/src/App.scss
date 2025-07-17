@@ -197,3 +197,9 @@ body {
 .no-break {
 	white-space: nowrap;
 }
+
+.auto-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

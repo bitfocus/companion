@@ -149,7 +149,10 @@ function CollectionsNestingTableRowBase({
 			})}
 			ref={ref}
 		>
-			<CollectionsNestingTableNestingRow nestingLevel={nestingLevel}>
+			<CollectionsNestingTableNestingRow
+				className="collections-nesting-table-row-item-grid"
+				nestingLevel={nestingLevel}
+			>
 				<div ref={drag} className="row-reorder-handle">
 					<FontAwesomeIcon icon={faSort} />
 				</div>
