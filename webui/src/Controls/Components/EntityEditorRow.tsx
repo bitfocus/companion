@@ -16,7 +16,7 @@ import { EntityCommonCells } from './EntityCommonCells.js'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useDrop, useDrag } from 'react-dnd'
-import { checkDragState } from '~/Resources/DragAndDrop.js'
+import { checkDragStateWithThresholds, DragPlacement } from '~/Resources/DragAndDrop.js'
 import { EntityListDragItem } from './EntityListDropZone.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
@@ -65,26 +65,34 @@ export const EntityTableRow = observer(function EntityTableRow({
 			const hoverIndex = index
 			const hoverId = entity.id
 
-			if (!checkDragState(item, monitor, hoverId)) return
+			// Use midpoint detection with direction-aware placement
+			const result = checkDragStateWithThresholds(item, monitor, hoverId, {
+				dropRectangle: ref.current?.getBoundingClientRect(), // Enables midpoint detection for better handling of variable height rows
+			})
+			if (!result) return
+
+			// Determine final hover index based on placement
+			// When dragging down, we place after. When dragging up, we place before.
+			const finalHoverIndex = result === DragPlacement.Before ? hoverIndex : hoverIndex + 1
 
 			// Don't replace items with themselves
 			if (
 				item.entityId === hoverId ||
-				(dragIndex === hoverIndex &&
+				(dragIndex === finalHoverIndex &&
 					stringifyEntityOwnerId(dragParentId) === stringifyEntityOwnerId(hoverOwnerId) &&
 					stringifySocketEntityLocation(item.listId) === stringifySocketEntityLocation(serviceFactory.listId))
 			) {
 				return
 			}
 
-			// Time to actually perform the entity
-			serviceFactory.moveCard(item.listId, item.entityId, hoverOwnerId, index)
+			// Time to actually perform the entity move
+			serviceFactory.moveCard(item.listId, item.entityId, hoverOwnerId, finalHoverIndex)
 
 			// Note: we're mutating the monitor item here!
 			// Generally it's better to avoid mutations,
 			// but it's good here for the sake of performance
 			// to avoid expensive index searches.
-			item.index = hoverIndex
+			item.index = finalHoverIndex
 			item.listId = serviceFactory.listId
 			item.ownerId = hoverOwnerId
 		},

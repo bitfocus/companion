@@ -51,6 +51,9 @@ export function useCollectionListCollectionDrop(
 
 			if (item.collectionId !== null) {
 				collectionApi.moveCollection(item.collectionId, parentId, index)
+
+				item.index = index
+				item.parentId = parentId
 				return { parentChanged: true }
 			}
 			return {} // Always return an object
