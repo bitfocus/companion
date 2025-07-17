@@ -10,7 +10,6 @@
  */
 
 import LogController from '../Log/Controller.js'
-import jsonPatch from 'fast-json-patch'
 import type {
 	AllVariableDefinitions,
 	ModuleVariableDefinitions,
@@ -21,6 +20,7 @@ import type {
 import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
+import { diffObjects } from '@companion-app/shared/Diff.js'
 
 /**
  * Variable definitions as defined by the instances/connections
@@ -97,10 +97,10 @@ export class VariablesInstanceDefinitions {
 			if (!variablesBefore) {
 				this.#events.emit('update', { type: 'set', label: connectionLabel, variables: variablesObj })
 			} else {
-				const patch = jsonPatch.compare(variablesBefore, variablesObj || {})
+				const diff = diffObjects(variablesBefore, variablesObj)
 
-				if (patch.length > 0) {
-					this.#events.emit('update', { type: 'patch', label: connectionLabel, patch })
+				if (diff) {
+					this.#events.emit('update', { type: 'patch', label: connectionLabel, ...diff })
 				}
 			}
 		}

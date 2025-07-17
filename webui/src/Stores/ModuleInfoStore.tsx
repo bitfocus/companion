@@ -5,8 +5,6 @@ import type {
 	ModuleUpgradeToOtherVersion,
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { assertNever } from '~/util.js'
-import { applyPatch } from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
 import {
 	ModuleStoreListCacheEntry,
 	ModuleStoreListCacheStore,
@@ -14,6 +12,7 @@ import {
 } from '@companion-app/shared/Model/ModulesStore.js'
 import { nanoid } from 'nanoid'
 import { trpc } from '~/TRPC'
+import { applyJsonPatchInPlace } from './ApplyDiffToMap'
 
 export class ModuleInfoStore {
 	// TODO - should this be more granular/observable?
@@ -53,8 +52,7 @@ export class ModuleInfoStore {
 				const oldObj = this.modules.get(change.id)
 				if (!oldObj) throw new Error(`Got update for unknown module: ${change.id}`)
 
-				const newObj = applyPatch(cloneDeep(oldObj), change.patch)
-				this.modules.set(change.id, newObj.newDocument)
+				applyJsonPatchInPlace(oldObj, change.patch)
 				break
 			}
 			default:

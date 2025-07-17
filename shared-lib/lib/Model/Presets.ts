@@ -4,7 +4,7 @@ import type {
 	CompanionOptionValues,
 } from '@companion-module/base'
 import type { ActionStepOptions } from './ActionModel.js'
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { ObjectsDiff } from './Common.js'
 
 export interface PresetFeedbackInstance {
 	type: string
@@ -91,8 +91,7 @@ export interface UIPresetDefinitionUpdateRemove {
 	type: 'remove'
 	connectionId: string
 }
-export interface UIPresetDefinitionUpdatePatch {
+export interface UIPresetDefinitionUpdatePatch extends ObjectsDiff<UIPresetDefinition> {
 	type: 'patch'
 	connectionId: string
-	patch: JsonPatchOperation<Record<string, UIPresetDefinition>>[]
 }

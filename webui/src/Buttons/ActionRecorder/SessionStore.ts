@@ -3,8 +3,8 @@ import type {
 	RecordSessionInfo,
 	RecordSessionUpdate,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import { applyPatch } from 'fast-json-patch'
-import { observable, runInAction, action, toJS } from 'mobx'
+import { observable, runInAction, action } from 'mobx'
+import { applyJsonPatchInPlace } from '~/Stores/ApplyDiffToMap'
 import { assertNever } from '~/util'
 
 export class ActionRecorderSessionStore {
@@ -41,7 +41,7 @@ export class ActionRecorderSessionStore {
 					console.warn('Received patch for session, but no session is selected')
 					return
 				}
-				this.#selectedSessionInfo.set(applyPatch(toJS(existingSession), update.patch).newDocument)
+				applyJsonPatchInPlace(existingSession, update.patch)
 				break
 			}
 			case 'remove':

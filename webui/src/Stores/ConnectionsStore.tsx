@@ -7,19 +7,7 @@ import type {
 	ConnectionCollectionData,
 } from '@companion-app/shared/Model/Connections.js'
 import type { GenericCollectionsStore } from './GenericCollectionsStore'
-
-function updateObjectInPlace<T extends object>(target: T, source: Partial<T>): void {
-	// Note: this will only operate correctly on shallow objects, and will not in place update deep objects
-
-	// Remove keys not present in source
-	for (const key of Object.keys(target)) {
-		if (!(key in source)) {
-			delete (target as any)[key]
-		}
-	}
-	// Assign new/updated keys
-	Object.assign(target, source)
-}
+import { updateObjectInPlace } from './ApplyDiffToMap'
 
 export class ConnectionsStore implements GenericCollectionsStore<ConnectionCollectionData> {
 	readonly connections = observable.map<string, ClientConnectionConfig>()
@@ -66,8 +54,6 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 			return
 		}
 
-		console.log('ConnectionsStore updateConnections', changes)
-
 		for (const change of changes) {
 			const changeType = change.type
 			switch (change.type) {
@@ -101,7 +87,12 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 			for (const collection of newData) {
 				if (!collection) continue
 
-				this.collections.set(collection.id, collection)
+				const existing = this.collections.get(collection.id)
+				if (existing) {
+					updateObjectInPlace(existing, collection)
+				} else {
+					this.collections.set(collection.id, collection)
+				}
 			}
 		}
 	})

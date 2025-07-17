@@ -2,7 +2,6 @@ import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import { ControlEntityListPoolButton } from '../Controls/Entities/EntityListPoolButton.js'
-import jsonPatch from 'fast-json-patch'
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import { replaceAllVariables } from '../Variables/Util.js'
 import type {
@@ -562,13 +561,9 @@ export class InstanceDefinitions {
 				})
 			} else {
 				const lastSimplifiedPresets = this.#simplifyPresetsForUi(lastPresetDefinitions)
-				const patch = jsonPatch.compare(lastSimplifiedPresets, newSimplifiedPresets)
-				if (patch.length > 0) {
-					this.#events.emit('presets', {
-						type: 'patch',
-						connectionId,
-						patch: patch,
-					})
+				const diff = diffObjects(lastSimplifiedPresets, newSimplifiedPresets)
+				if (diff) {
+					this.#events.emit('presets', { type: 'patch', connectionId, ...diff })
 				}
 			}
 		}

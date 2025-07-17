@@ -1,13 +1,13 @@
 import type { UIPresetDefinition, UIPresetDefinitionUpdate } from '@companion-app/shared/Model/Presets.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { observable, action } from 'mobx'
+import { observable, action, ObservableMap } from 'mobx'
 import { useState } from 'react'
 import { trpc } from '~/TRPC'
 import { assertNever } from '~/util'
-import { applyPatch } from 'fast-json-patch'
+import { ApplyDiffToStore } from '~/Stores/ApplyDiffToMap'
 
 export class PresetDefinitionsStore {
-	readonly presets = observable.map<string, Map<string, UIPresetDefinition>>()
+	readonly presets = observable.map<string, ObservableMap<string, UIPresetDefinition>>()
 
 	updatePresets = action((update: UIPresetDefinitionUpdate | null) => {
 		if (!update) {
@@ -37,8 +37,7 @@ export class PresetDefinitionsStore {
 					return
 				}
 
-				const newPresets = observable.map(applyPatch(Object.fromEntries(currentPresets), update.patch).newDocument)
-				this.presets.set(update.connectionId, newPresets)
+				ApplyDiffToStore(currentPresets, update)
 				break
 			}
 			default:

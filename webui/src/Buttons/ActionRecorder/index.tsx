@@ -15,8 +15,6 @@ import { ActionRecorderSessionStore } from './SessionStore.js'
 export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
-	console.log('render')
-
 	const sessionsStore = useMemo(() => new ActionRecorderSessionStore(), [])
 
 	// Subscribe to the list of sessions using tRPC

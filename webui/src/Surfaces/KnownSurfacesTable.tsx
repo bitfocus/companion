@@ -133,7 +133,7 @@ interface ManualGroupRowProps {
 	selectedItemId: string | null
 	selectItem: (itemId: string | null) => void
 }
-function ManualGroupRow({
+const ManualGroupRow = observer(function ManualGroupRow({
 	group,
 	deleteGroup,
 	deleteEmulator,
@@ -200,7 +200,7 @@ function ManualGroupRow({
 			))}
 		</>
 	)
-}
+})
 
 interface SurfaceRowProps {
 	surface: ClientSurfaceItem
