@@ -50,22 +50,28 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 	return (
 		<CRow className="split-panels">
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
-				<div className="d-flex justify-content-between">
-					<div>
-						<h4>Settings - Backups</h4>
-						<p>Scheduled backups of your Companion configuration. Settings apply instantaneously!</p>
+				<div className="flex-column-layout">
+					<div className="fixed-header">
+						<div className="d-flex justify-content-between">
+							<div>
+								<h4>Settings - Backups</h4>
+								<p>Scheduled backups of your Companion configuration. Settings apply instantaneously!</p>
+							</div>
+						</div>
+
+						<div className="mb-2">
+							<CButtonGroup>
+								<CButton color="primary" onClick={doAddNew} size="sm">
+									<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
+								</CButton>
+							</CButtonGroup>
+						</div>
+					</div>
+
+					<div className="scrollable-content">
+						<BackupsTable editRule={doEditRule} />
 					</div>
 				</div>
-
-				<div className="mb-2">
-					<CButtonGroup>
-						<CButton color="primary" onClick={doAddNew} size="sm">
-							<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
-						</CButton>
-					</CButtonGroup>
-				</div>
-
-				<BackupsTable editRule={doEditRule} />
 			</CCol>
 
 			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>

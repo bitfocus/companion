@@ -49,7 +49,7 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 		<>
 			<SetupSatelliteModal ref={setupSatelliteRef} />
 
-			<table className="table table-responsive-sm table-margin-top">
+			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
 						<th>Name</th>

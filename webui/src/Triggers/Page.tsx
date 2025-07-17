@@ -104,45 +104,51 @@ export const TriggersPage = observer(function Triggers() {
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
-				<h4>Triggers</h4>
-				<p style={{ marginBottom: '0.5rem' }}>
-					Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
-					variable updates.
-				</p>
+				<div className="flex-column-layout">
+					<div className="fixed-header">
+						<h4>Triggers</h4>
+						<p style={{ marginBottom: '0.5rem' }}>
+							Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
+							variable updates.
+						</p>
 
-				<div className="mb-2">
-					<CButtonGroup>
-						<CButton color="primary" onClick={doAddNew} size="sm">
-							<FontAwesomeIcon icon={faAdd} /> Add Trigger
-						</CButton>
-						<CreateCollectionButton />
-					</CButtonGroup>
+						<div className="mb-2">
+							<CButtonGroup>
+								<CButton color="primary" onClick={doAddNew} size="sm">
+									<FontAwesomeIcon icon={faAdd} /> Add Trigger
+								</CButton>
+								<CreateCollectionButton />
+							</CButtonGroup>
 
-					<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
-						<FontAwesomeIcon icon={faFileExport} /> Export all
-					</CButton>
+							<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
+								<FontAwesomeIcon icon={faFileExport} /> Export all
+							</CButton>
+						</div>
+					</div>
+
+					<div className="scrollable-content">
+						<PanelCollapseHelperProvider
+							storageId="trigger-groups"
+							knownPanelIds={triggersList.allCollectionIds}
+							defaultCollapsed
+						>
+							<TriggersTableContextProvider deleteModalRef={confirmModalRef} selectTrigger={selectTrigger}>
+								<CollectionsNestingTable<TriggerCollection, TriggerDataWithId>
+									// Heading={TriggerListTableHeading}
+									NoContent={TriggerListNoContent}
+									ItemRow={TriggerItemRow}
+									GroupHeaderContent={TriggerGroupHeaderContent}
+									itemName="trigger"
+									dragId="trigger"
+									collectionsApi={triggerGroupsApi}
+									collections={triggersList.rootCollections()}
+									items={allTriggers}
+									selectedItemId={selectedTriggerId}
+								/>
+							</TriggersTableContextProvider>
+						</PanelCollapseHelperProvider>
+					</div>
 				</div>
-
-				<PanelCollapseHelperProvider
-					storageId="trigger-groups"
-					knownPanelIds={triggersList.allCollectionIds}
-					defaultCollapsed
-				>
-					<TriggersTableContextProvider deleteModalRef={confirmModalRef} selectTrigger={selectTrigger}>
-						<CollectionsNestingTable<TriggerCollection, TriggerDataWithId>
-							// Heading={TriggerListTableHeading}
-							NoContent={TriggerListNoContent}
-							ItemRow={TriggerItemRow}
-							GroupHeaderContent={TriggerGroupHeaderContent}
-							itemName="trigger"
-							dragId="trigger"
-							collectionsApi={triggerGroupsApi}
-							collections={triggersList.rootCollections()}
-							items={allTriggers}
-							selectedItemId={selectedTriggerId}
-						/>
-					</TriggersTableContextProvider>
-				</PanelCollapseHelperProvider>
 			</CCol>
 
 			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>

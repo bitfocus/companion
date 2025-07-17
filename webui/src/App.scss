@@ -29,6 +29,7 @@
 @use 'scss/wizard';
 @use 'scss/import-export';
 @use 'scss/collections-nesting-table';
+@use 'scss/sticky-tables';
 
 //@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
 

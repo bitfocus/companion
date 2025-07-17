@@ -15,28 +15,33 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 
 	return (
 		<CRow>
-			<CCol xs={12}>
-				<h4>Variables</h4>
-				<p>
-					We use variables as placeholders in text, allowing dynamic updates based on the provided content. This enables
-					live updating of messages, making customization quick and easy.
-				</p>
-				<div className="variables-category-grid">
-					<CButton color="primary" as={Link} to="/variables/custom">
-						Custom Variables
-					</CButton>
-					<CButton color="primary" as={Link} to="/variables/internal">
-						Internal
-					</CButton>
-					{sortedConnections.map((connectionInfo) => {
-						const compactName = modules.getModuleFriendlyName(connectionInfo.instance_type)
+			<CCol xs={12} className="flex-column-layout">
+				<div className="fixed-header">
+					<h4>Variables</h4>
+					<p>
+						We use variables as placeholders in text, allowing dynamic updates based on the provided content. This
+						enables live updating of messages, making customization quick and easy.
+					</p>
+				</div>
 
-						return (
-							<CButton key={connectionInfo.id} color="primary" as={Link} to={`/variables/${connectionInfo.label}`}>
-								<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
-							</CButton>
-						)
-					})}
+				<div className="scrollable-content">
+					<div className="variables-category-grid">
+						<CButton color="primary" as={Link} to="/variables/custom">
+							Custom Variables
+						</CButton>
+						<CButton color="primary" as={Link} to="/variables/internal">
+							Internal
+						</CButton>
+						{sortedConnections.map((connectionInfo) => {
+							const compactName = modules.getModuleFriendlyName(connectionInfo.instance_type)
+
+							return (
+								<CButton key={connectionInfo.id} color="primary" as={Link} to={`/variables/${connectionInfo.label}`}>
+									<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
+								</CButton>
+							)
+						})}
+					</div>
 				</div>
 			</CCol>
 		</CRow>

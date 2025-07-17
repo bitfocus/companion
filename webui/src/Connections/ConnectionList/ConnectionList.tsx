@@ -84,58 +84,63 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 	)
 
 	return (
-		<div>
-			<h4>Connections</h4>
+		<div className="connections-list-container flex-column-layout">
+			<div className="connections-list-header fixed-header">
+				<h4>Connections</h4>
 
-			<p>
-				When you want to control devices or software with Companion, you need to add a connection to let Companion know
-				how to communicate with whatever you want to control.
-			</p>
+				<p>
+					When you want to control devices or software with Companion, you need to add a connection to let Companion
+					know how to communicate with whatever you want to control.
+				</p>
 
-			<MissingVersionsWarning />
+				<MissingVersionsWarning />
 
-			<GenericConfirmModal ref={confirmModalRef} />
-			<ConnectionVariablesModal ref={variablesModalRef} />
+				<GenericConfirmModal ref={confirmModalRef} />
+				<ConnectionVariablesModal ref={variablesModalRef} />
 
-			<div className="connection-group-actions mb-2">
-				<CButtonGroup>
-					<CButton
-						color="primary"
-						size="sm"
-						className="d-xl-none"
-						onClick={() => void navigate({ to: '/connections/add' })}
-					>
-						<FontAwesomeIcon icon={faPlug} className="me-1" />
-						Add Connection
-					</CButton>
-					<CreateCollectionButton />
-				</CButtonGroup>
+				<div className="connection-group-actions mb-2">
+					<CButtonGroup>
+						<CButton
+							color="primary"
+							size="sm"
+							className="d-xl-none"
+							onClick={() => void navigate({ to: '/connections/add' })}
+						>
+							<FontAwesomeIcon icon={faPlug} className="me-1" />
+							Add Connection
+						</CButton>
+						<CreateCollectionButton />
+					</CButtonGroup>
+				</div>
 			</div>
-			<PanelCollapseHelperProvider
-				storageId="connection-collections"
-				knownPanelIds={connections.allCollectionIds}
-				defaultCollapsed
-			>
-				<ConnectionListContextProvider
-					visibleConnections={visibleConnections}
-					showVariables={showConnectionVariables}
-					deleteModalRef={confirmModalRef}
-					configureConnection={doConfigureConnection}
+
+			<div className="connections-list-table-container scrollable-content">
+				<PanelCollapseHelperProvider
+					storageId="connection-collections"
+					knownPanelIds={connections.allCollectionIds}
+					defaultCollapsed
 				>
-					<CollectionsNestingTable<ConnectionCollection, ClientConnectionConfigWithId>
-						Heading={ConnectionListTableHeading}
-						NoContent={ConnectionListNoConnections}
-						ItemRow={ConnectionsItemRow}
-						GroupHeaderContent={ConnectionGroupHeaderContent}
-						itemName="connection"
-						dragId="connection"
-						collectionsApi={connectionListApi}
-						collections={connections.rootCollections()}
-						items={allConnections}
-						selectedItemId={selectedConnectionId}
-					/>
-				</ConnectionListContextProvider>
-			</PanelCollapseHelperProvider>
+					<ConnectionListContextProvider
+						visibleConnections={visibleConnections}
+						showVariables={showConnectionVariables}
+						deleteModalRef={confirmModalRef}
+						configureConnection={doConfigureConnection}
+					>
+						<CollectionsNestingTable<ConnectionCollection, ClientConnectionConfigWithId>
+							Heading={ConnectionListTableHeading}
+							NoContent={ConnectionListNoConnections}
+							ItemRow={ConnectionsItemRow}
+							GroupHeaderContent={ConnectionGroupHeaderContent}
+							itemName="connection"
+							dragId="connection"
+							collectionsApi={connectionListApi}
+							collections={connections.rootCollections()}
+							items={allConnections}
+							selectedItemId={selectedConnectionId}
+						/>
+					</ConnectionListContextProvider>
+				</PanelCollapseHelperProvider>
+			</div>
 		</div>
 	)
 })
