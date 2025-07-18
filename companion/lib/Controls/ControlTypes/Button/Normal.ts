@@ -1,5 +1,5 @@
 import { ButtonControlBase } from './Base.js'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, omit } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
@@ -18,7 +18,7 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
-import { composeDrawStyle } from './Util.js'
+import { parseVariablesInButtonStyle } from './Util.js'
 
 /**
  * Class for the stepped button control.
@@ -128,18 +128,26 @@ export class ControlButtonNormal
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleButtonModel {
-		const result = composeDrawStyle(
+		const style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
+
+		this.#last_draw_variables = parseVariablesInButtonStyle(
 			this.logger,
 			this.controlId,
 			this.deps,
 			this.entities,
-			this.#baseStyle,
-			this.getDrawStyleButtonStateProps()
+			style
 		)
 
-		this.#last_draw_variables = result.variables
+		return {
+			cloud: false,
+			cloud_error: false,
 
-		return result.style
+			...cloneDeep(style),
+
+			...omit(this.getDrawStyleButtonStateProps(), ['cloud', 'cloud_error']),
+
+			style: 'button',
+		}
 	}
 
 	/**

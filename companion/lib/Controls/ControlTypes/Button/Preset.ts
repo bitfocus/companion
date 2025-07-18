@@ -25,7 +25,7 @@ import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
 import { ControlBase } from '../../ControlBase.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
-import { composeDrawStyle } from './Util.js'
+import { parseVariablesInButtonStyle } from './Util.js'
 
 /**
  * Class for the preset button control.
@@ -204,9 +204,21 @@ export class ControlButtonPreset
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleButtonModel {
-		const result = composeDrawStyle(this.logger, this.controlId, this.deps, this.entities, this.#baseStyle, {
+		const style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
+
+		this.#last_draw_variables = parseVariablesInButtonStyle(
+			this.logger,
+			this.controlId,
+			this.deps,
+			this.entities,
+			style
+		)
+
+		return {
 			cloud: false,
 			cloud_error: false,
+
+			...cloneDeep(style),
 
 			stepCurrent: this.entities.getActiveStepIndex() + 1,
 			stepCount: this.entities.getStepIds().length,
@@ -214,11 +226,9 @@ export class ControlButtonPreset
 			pushed: false,
 			action_running: false,
 			button_status: this.button_status,
-		})
 
-		this.#last_draw_variables = result.variables
-
-		return result.style
+			style: 'button',
+		}
 	}
 
 	/**

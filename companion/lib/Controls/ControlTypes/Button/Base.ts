@@ -63,8 +63,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 	protected readonly actionRunner: ControlActionRunner
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, noPersistence = false) {
-		super(deps, controlId, debugNamespace, noPersistence)
+	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+		super(deps, controlId, debugNamespace)
 
 		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
 
