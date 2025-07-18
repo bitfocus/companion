@@ -546,7 +546,12 @@ export class ControlsController {
 		return this.#triggerCollections.isCollectionEnabled(collectionId, onlyDirect)
 	}
 
+	/**
+	 * Find or create a preset temporary control
+	 * These are non-persistent controls that are used to perform the reactive drawing of a preset.
+	 */
 	getOrCreatePresetControl(connectionId: string, presetId: string): ControlButtonPreset | null {
+		// Check for an existing control that should be reused
 		const controlId = CreatePresetControlId(connectionId, presetId)
 		const control = this.#controls.get(controlId)
 		if (control) return control as ControlButtonPreset

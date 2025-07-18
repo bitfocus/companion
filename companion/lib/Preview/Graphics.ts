@@ -125,7 +125,7 @@ export class PreviewGraphics {
 
 					// track this session on the control
 					const sessionId = nanoid()
-					control.addOwner(sessionId)
+					control.addRenderSubscriber(sessionId)
 
 					try {
 						const changes = toIterable(self.#controlEvents, 'presetDrawn', signal)
@@ -139,7 +139,7 @@ export class PreviewGraphics {
 							yield render?.asDataUrl ?? null
 						}
 					} finally {
-						if (control.removeOwner(sessionId)) {
+						if (control.removeRenderSubscriber(sessionId)) {
 							// No uses left, cleanup the control
 							self.#controlsController.deleteControl(control.controlId)
 						}

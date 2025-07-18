@@ -30,9 +30,6 @@ import { parseVariablesInButtonStyle } from './Util.js'
 /**
  * Class for the preset button control.
  *
- * @author Håkon Nessjøen <haakon@bitfocus.io>
- * @author Keith Rocheck <keith.rocheck@gmail.com>
- * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
  * @copyright 2022 Bitfocus AS
@@ -90,8 +87,6 @@ export class ControlButtonPreset
 	readonly #presetId: string
 
 	#lastRender: ImageResult | null = null
-
-	readonly #owners = new Set<string>()
 
 	get lastRender(): ImageResult | null {
 		return this.#lastRender
@@ -321,13 +316,14 @@ export class ControlButtonPreset
 		}
 	}
 
-	addOwner(ownerId: string): void {
-		this.#owners.add(ownerId)
+	readonly #renderSubscribers = new Set<string>()
+	addRenderSubscriber(subscriptionId: string): void {
+		this.#renderSubscribers.add(subscriptionId)
 	}
-	removeOwner(ownerId: string): boolean {
-		this.#owners.delete(ownerId)
+	removeRenderSubscriber(subscriptionId: string): boolean {
+		this.#renderSubscribers.delete(subscriptionId)
 
-		return this.#owners.size === 0
+		return this.#renderSubscribers.size === 0
 	}
 
 	triggerLocationHasChanged(): void {

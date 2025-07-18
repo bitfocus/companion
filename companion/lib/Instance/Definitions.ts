@@ -283,10 +283,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			steps: {},
 		}
 
+		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
 		for (const [stepId, step] of Object.entries(definition.model.steps)) {
 			result.steps[stepId] = {
 				options: step.options,
-				// Omit actions, as they can't be executed in the preview
 				action_sets: {
 					down: [],
 					up: [],
