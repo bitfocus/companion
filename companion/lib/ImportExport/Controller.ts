@@ -178,6 +178,7 @@ export class ImportExportController {
 				customVariables: 'custom_variables' in object,
 				surfaces: 'surfaces' in object,
 				triggers: 'triggers' in object,
+				userconfig: 'userconfig' in object,
 			}
 
 			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
@@ -478,10 +479,15 @@ export class ImportExportController {
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						const resetArg = fullReset || !config ? null : { ...config, connections: true, userconfig: false }
+						const resetArg = fullReset || !config ? null : { ...config, connections: true }
 
 						// Destroy old stuff
 						await this.#reset(resetArg, !config || config.buttons)
+
+						// import userconfig
+						if (!config || config.userconfig) {
+							this.#userConfigController.setKeys(data.userconfig || {})
+						}
 
 						// import custom variables
 						if (!config || config.customVariables) {
