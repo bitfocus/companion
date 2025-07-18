@@ -24,7 +24,7 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
-    "@sentry/webpack-plugin": "^3.6.0",
+    "@sentry/webpack-plugin": "^3.6.1",
     "@types/archiver": "^6.0.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/compression": "^1.8.1",
@@ -65,7 +65,7 @@
     "bufferutil": "^4.0.9",
     "colord": "^2.9.3",
     "commander": "^13.1.0",
-    "compression": "^1.8.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "csv-stringify": "^6.6.0",
     "dayjs": "^1.11.13",
