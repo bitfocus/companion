@@ -283,14 +283,7 @@ export class Registry {
 				pageStore
 			)
 
-			this.preview = new PreviewController(
-				this.graphics,
-				pageStore,
-				this.controls,
-				this.variables.values,
-				this.instance.definitions,
-				controlEvents
-			)
+			this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
 
 			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
 			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))

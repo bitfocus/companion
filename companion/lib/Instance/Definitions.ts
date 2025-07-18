@@ -264,7 +264,10 @@ export class InstanceDefinitions {
 	 * @param presetId - the id of the preset
 	 * @deprecated
 	 */
-	getPresetDrawStyle(connectionId: string, presetId: string): (CompanionButtonStyleProps & { style: 'button' }) | null {
+	#getPresetDrawStyle(
+		connectionId: string,
+		presetId: string
+	): (CompanionButtonStyleProps & { style: 'button' }) | null {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
 		if (definition && definition.type === 'button') {
 			return {
