@@ -76,6 +76,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				moduleHost: deps.instance.moduleHost,
+				variableValues: deps.variables.values,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType, injectedVariableValues) =>
