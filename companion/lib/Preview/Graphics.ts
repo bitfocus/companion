@@ -139,7 +139,7 @@ export class PreviewGraphics {
 							yield render?.asDataUrl ?? null
 						}
 					} finally {
-						if (control.removeRenderSubscriber(sessionId)) {
+						if (control.removeRenderSubscriberAndCheckEmpty(sessionId)) {
 							// No uses left, cleanup the control
 							self.#controlsController.deleteControl(control.controlId)
 						}

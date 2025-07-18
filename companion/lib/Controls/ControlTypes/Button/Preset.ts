@@ -320,7 +320,7 @@ export class ControlButtonPreset
 	addRenderSubscriber(subscriptionId: string): void {
 		this.#renderSubscribers.add(subscriptionId)
 	}
-	removeRenderSubscriber(subscriptionId: string): boolean {
+	removeRenderSubscriberAndCheckEmpty(subscriptionId: string): boolean {
 		this.#renderSubscribers.delete(subscriptionId)
 
 		return this.#renderSubscribers.size === 0
