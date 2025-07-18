@@ -1,36 +1,6 @@
-import type {
-	CompanionButtonPresetOptions,
-	CompanionButtonStyleProps,
-	CompanionOptionValues,
-} from '@companion-module/base'
-import type { ActionStepOptions } from './ActionModel.js'
+import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { ObjectsDiff } from './Common.js'
-
-export interface PresetFeedbackInstance {
-	type: string
-	options: CompanionOptionValues
-	style: Partial<CompanionButtonStyleProps> | undefined
-	isInverted?: boolean
-	headline?: string
-}
-
-export interface PresetActionInstance {
-	action: string
-	options: CompanionOptionValues
-	delay: number
-	headline?: string
-}
-
-export interface PresetActionSets {
-	down: PresetActionInstance[]
-	up: PresetActionInstance[]
-	[delay: number]: PresetActionInstance[]
-}
-
-export interface PresetActionSteps {
-	options?: ActionStepOptions
-	action_sets: PresetActionSets
-}
+import { NormalButtonModel } from './ButtonModel.js'
 
 export type PresetDefinition = PresetDefinitionButton | PresetDefinitionText
 
@@ -39,11 +9,8 @@ export interface PresetDefinitionButton {
 	name: string
 	category: string
 	type: 'button'
-	style: CompanionButtonStyleProps
+	model: NormalButtonModel
 	previewStyle: CompanionButtonStyleProps | undefined
-	options: CompanionButtonPresetOptions | undefined
-	feedbacks: PresetFeedbackInstance[]
-	steps: PresetActionSteps[]
 }
 
 export interface PresetDefinitionText {
