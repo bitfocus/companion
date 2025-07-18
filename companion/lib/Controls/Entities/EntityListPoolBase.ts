@@ -21,8 +21,8 @@ import type { VariablesValues } from '../../Variables/Values.js'
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
 	internalModule: InternalController
-	variableValues: VariablesValues
 	moduleHost: ModuleHost
+	variableValues: VariablesValues
 	controlId: string
 	commitChange: (redraw?: boolean) => void
 	invalidateControl: () => void
