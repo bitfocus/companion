@@ -3,23 +3,28 @@ import { cloneDeep } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
-	ControlWithActionSets,
-	ControlWithActions,
+	ControlWithoutActionSets,
+	ControlWithoutActions,
 	ControlWithStyle,
 	ControlWithoutEvents,
+	ControlWithEntities,
+	ControlWithoutOptions,
+	ControlWithoutPushed,
 } from '../../IControlFragments.js'
 import type {
 	PresetButtonModel,
 	NormalButtonOptions,
 	NormalButtonRuntimeProps,
+	ButtonStatus,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
-import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { ControlButtonNormal } from './Normal.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
+import { ControlBase } from '../../ControlBase.js'
+import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
 
 /**
  * Class for the preset button control.
@@ -37,16 +42,38 @@ import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
  * this program.
  */
 export class ControlButtonPreset
-	extends ButtonControlBase<PresetButtonModel, NormalButtonOptions>
-	implements ControlWithStyle, ControlWithActions, ControlWithoutEvents, ControlWithActionSets
+	extends ControlBase<PresetButtonModel>
+	implements
+		ControlWithStyle,
+		ControlWithoutActions,
+		ControlWithoutEvents,
+		ControlWithoutActionSets,
+		ControlWithEntities,
+		ControlWithoutOptions,
+		ControlWithoutPushed
 {
 	readonly type = 'preset:button'
 
-	readonly supportsActions = true
+	readonly supportsActions = false
 	readonly supportsEvents = false
-	readonly supportsActionSets = true
+	readonly supportsActionSets = false
 	readonly supportsStyle = true
 	readonly supportsLayeredStyle = false
+	readonly supportsEntities = true
+	readonly supportsOptions = false
+	readonly supportsPushed = false
+
+	readonly entities: ControlEntityListPoolButton
+
+	/**
+	 * The current status of this button
+	 */
+	readonly button_status: ButtonStatus = 'good'
+
+	/**
+	 * The config of this button
+	 */
+	options!: NormalButtonOptions
 
 	/**
 	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
@@ -73,20 +100,32 @@ export class ControlButtonPreset
 		return this.#baseStyle
 	}
 
-	get actionSets(): ControlActionSetAndStepsManager {
-		return this.entities
-	}
-
 	constructor(deps: ControlDependencies, connectionId: string, presetId: string, storage: PresetButtonModel) {
-		super(
-			deps,
-			CreatePresetControlId(connectionId, presetId),
-			`Controls/Button/Preset/${connectionId}/${presetId}`,
-			true
-		)
+		const controlId = CreatePresetControlId(connectionId, presetId)
+		super(deps, controlId, `Controls/Button/Preset/${connectionId}/${presetId}`, true)
 
 		this.#connectionId = connectionId
 		this.#presetId = presetId
+
+		this.entities = new ControlEntityListPoolButton(
+			{
+				controlId,
+				commitChange: this.commitChange.bind(this),
+				invalidateControl: this.triggerRedraw.bind(this),
+				instanceDefinitions: deps.instance.definitions,
+				internalModule: deps.internalModule,
+				moduleHost: deps.instance.moduleHost,
+			},
+			this.sendRuntimePropsChange.bind(this),
+			(expression, requiredType, injectedVariableValues) =>
+				deps.variables.values
+					.createVariablesAndExpressionParser(
+						deps.pageStore.getLocationOfControlId(this.controlId),
+						null, // This doesn't support local variables
+						injectedVariableValues ?? null
+					)
+					.executeExpression(expression, requiredType)
+		)
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
@@ -107,6 +146,8 @@ export class ControlButtonPreset
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.entities.destroy()
+
 		super.destroy()
 
 		this.deps.events.off('presetDrawn', this.#updateLastRender)
@@ -137,6 +178,16 @@ export class ControlButtonPreset
 
 		// Ensure control is stored before setup
 		setImmediate(() => this.postProcessImport())
+	}
+
+	/**
+	 * If this control was imported to a running system, do some data cleanup/validation
+	 */
+	protected postProcessImport(): void {
+		this.entities.resubscribeEntities()
+
+		this.commitChange()
+		this.sendRuntimePropsChange()
 	}
 
 	/**
@@ -255,5 +306,13 @@ export class ControlButtonPreset
 		this.#owners.delete(ownerId)
 
 		return this.#owners.size === 0
+	}
+
+	triggerLocationHasChanged(): void {
+		// No-op, this control does not have a location
+	}
+
+	pressControl(): void {
+		// No-op, this control does not support pressing
 	}
 }

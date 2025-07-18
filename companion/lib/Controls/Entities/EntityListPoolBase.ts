@@ -23,7 +23,6 @@ export interface ControlEntityListPoolProps {
 	controlId: string
 	commitChange: (redraw?: boolean) => void
 	invalidateControl: () => void
-	localVariablesChanged: ((changedVariables: Set<string>) => void) | null
 }
 
 export abstract class ControlEntityListPoolBase {
@@ -53,13 +52,16 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	readonly localVariablesChanged: ((changedVariables: Set<string>) => void) | null
 
-	protected constructor(props: ControlEntityListPoolProps) {
+	protected constructor(
+		props: ControlEntityListPoolProps,
+		localVariablesChanged: ((changedVariables: Set<string>) => void) | null
+	) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.controlId = props.controlId
 		this.commitChange = props.commitChange
 		this.invalidateControl = props.invalidateControl
-		this.localVariablesChanged = props.localVariablesChanged
+		this.localVariablesChanged = localVariablesChanged
 
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule

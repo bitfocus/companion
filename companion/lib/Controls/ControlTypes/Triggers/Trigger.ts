@@ -154,7 +154,6 @@ export class ControlTrigger
 			controlId,
 			commitChange: this.commitChange.bind(this),
 			invalidateControl: this.triggerRedraw.bind(this),
-			localVariablesChanged: null,
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			moduleHost: deps.instance.moduleHost,

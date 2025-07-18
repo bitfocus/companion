@@ -21,6 +21,7 @@ import type { ControlEntityInstance } from './EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import debounceFn from 'debounce-fn'
 
 interface CurrentStepFromExpression {
 	type: 'expression'
@@ -84,7 +85,20 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			injectedVariableValues?: CompanionVariableValues
 		) => ExecuteExpressionResult
 	) {
-		super(props)
+		super(props, (allChangedVariables: Set<string>): void => {
+			for (const variable of allChangedVariables) {
+				this.#pendingChangedVariables.add(variable)
+			}
+
+			if (this.#pendingChangedVariables.size === 0) return
+
+			/*
+			 * This is debounced to ensure that a loop of references between variables doesn't cause an infinite loop of updates
+			 * Future: This could be improved by using a 'rate limit' style approach, where we allow a bunch of updates to happen immediately,
+			 * but then throttle the updates after that. Perhaps allow 10 within the first 2ms, then limit to 1 every Xms.
+			 */
+			this.#debouncedLocalVariablesChanged()
+		})
 
 		this.#executeExpressionInControl = executeExpressionInControl
 		this.#sendRuntimePropsChange = sendRuntimePropsChange
@@ -761,6 +775,20 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			this.localVariablesChanged?.(changedVariables)
 		}
 	}
+
+	#pendingChangedVariables = new Set<string>()
+	#debouncedLocalVariablesChanged = debounceFn(
+		() => {
+			const allChangedVariables = this.#pendingChangedVariables
+			this.#pendingChangedVariables = new Set()
+
+			this.deps.variables.values.emit('local_variables_changed', allChangedVariables, this.controlId)
+		},
+		{
+			wait: 5,
+			maxWait: 10,
+		}
+	)
 }
 
 interface ControlEntityListActionStep {
