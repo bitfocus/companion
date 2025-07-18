@@ -18,6 +18,7 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
+import { composeDrawStyle } from './Util.js'
 
 /**
  * Class for the stepped button control.
@@ -127,7 +128,14 @@ export class ControlButtonNormal
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleButtonModel {
-		const result = this.composeDrawStyle(this.#baseStyle)
+		const result = composeDrawStyle(
+			this.logger,
+			this.controlId,
+			this.deps,
+			this.entities,
+			this.#baseStyle,
+			this.getDrawStyleButtonStateProps()
+		)
 
 		this.#last_draw_variables = result.variables
 
