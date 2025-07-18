@@ -4,7 +4,7 @@ import {
 	faTrash,
 	faCompressArrowsAlt,
 	faExpandArrowsAlt,
-	faCopy,
+	faClone,
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -254,7 +254,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 							</CButton>
 						)}
 						<CButton size="sm" onClick={service.performDuplicate} title="Duplicate event">
-							<FontAwesomeIcon icon={faCopy} />
+							<FontAwesomeIcon icon={faClone} />
 						</CButton>
 						<CButton size="sm" onClick={service.performDelete} title="Remove event">
 							<FontAwesomeIcon icon={faTrash} />

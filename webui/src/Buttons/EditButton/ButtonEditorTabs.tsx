@@ -3,7 +3,7 @@ import { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CNav, CNavItem, CNavLink, CButton } from '@coreui/react'
-import { faPlus, faCopy } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faClone } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { GenericConfirmModalRef, GenericConfirmModal } from '~/Components/GenericConfirmModal.js'
@@ -124,7 +124,7 @@ export function ButtonEditorTabs({
 								<FontAwesomeIcon icon={faPlus} />
 							</CButton>
 							<CButton title="Duplicate step" size="sm" onClick={() => service.duplicateStep(stepKeys[0])}>
-								<FontAwesomeIcon icon={faCopy} />
+								<FontAwesomeIcon icon={faClone} />
 							</CButton>
 						</div>
 					)}
