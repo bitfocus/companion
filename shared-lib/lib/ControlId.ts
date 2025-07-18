@@ -92,7 +92,7 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			}
 		}
 
-		const matchPreset = controlId.match(/^preset:(.*):(.*)$/)
+		const matchPreset = controlId.match(/^preset:(.*?):(.*)$/)
 		if (matchPreset) {
 			return {
 				type: 'preset',
