@@ -15,15 +15,17 @@ import { isEqual } from 'lodash-es'
 import type { InstanceDefinitionsForEntity } from './Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionVariableValues } from '@companion-module/base'
+import debounceFn from 'debounce-fn'
+import type { VariablesValues } from '../../Variables/Values.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
 	internalModule: InternalController
 	moduleHost: ModuleHost
+	variableValues: VariablesValues
 	controlId: string
 	commitChange: (redraw?: boolean) => void
 	invalidateControl: () => void
-	localVariablesChanged: ((changedVariables: Set<string>) => void) | null
 }
 
 export abstract class ControlEntityListPoolBase {
@@ -35,6 +37,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalController
 	readonly #moduleHost: ModuleHost
+	readonly #variableValues: VariablesValues
 
 	protected readonly controlId: string
 
@@ -48,22 +51,17 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	protected readonly invalidateControl: () => void
 
-	/**
-	 * Triggered when local variables have changed
-	 */
-	readonly localVariablesChanged: ((changedVariables: Set<string>) => void) | null
-
 	protected constructor(props: ControlEntityListPoolProps) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.controlId = props.controlId
 		this.commitChange = props.commitChange
 		this.invalidateControl = props.invalidateControl
-		this.localVariablesChanged = props.localVariablesChanged
 
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule
 		this.#moduleHost = props.moduleHost
+		this.#variableValues = props.variableValues
 	}
 
 	protected createEntityList(listDefinition: ControlEntityListDefinition): ControlEntityList {
@@ -78,22 +76,38 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	protected tryTriggerLocalVariablesChanged(...entitiesOrNames: (ControlEntityInstance | string | null)[]): void {
-		if (!this.localVariablesChanged) return
-
 		if (entitiesOrNames.length === 0) return
 
-		const changedVariables = new Set<string>()
 		for (const entityOrName of entitiesOrNames) {
 			if (!entityOrName) continue
 
 			const variableName = typeof entityOrName === 'string' ? entityOrName : entityOrName.localVariableName
-			if (variableName) changedVariables.add(variableName)
+			if (variableName) this.#pendingChangedVariables.add(variableName)
 		}
 
-		if (changedVariables.size > 0) {
-			this.localVariablesChanged(changedVariables)
-		}
+		if (this.#pendingChangedVariables.size === 0) return
+
+		/*
+		 * This is debounced to ensure that a loop of references between variables doesn't cause an infinite loop of updates
+		 * Future: This could be improved by using a 'rate limit' style approach, where we allow a bunch of updates to happen immediately,
+		 * but then throttle the updates after that. Perhaps allow 10 within the first 2ms, then limit to 1 every Xms.
+		 */
+		this.#debouncedLocalVariablesChanged()
 	}
+
+	#pendingChangedVariables = new Set<string>()
+	#debouncedLocalVariablesChanged = debounceFn(
+		() => {
+			const allChangedVariables = this.#pendingChangedVariables
+			this.#pendingChangedVariables = new Set()
+
+			this.#variableValues.emit('local_variables_changed', allChangedVariables, this.controlId)
+		},
+		{
+			wait: 5,
+			maxWait: 10,
+		}
+	)
 
 	/**
 	 * Remove any tracked state for a connection
