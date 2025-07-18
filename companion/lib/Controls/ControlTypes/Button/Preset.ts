@@ -20,6 +20,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { ControlButtonNormal } from './Normal.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
+import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
 
 /**
  * Class for the preset button control.
@@ -58,7 +59,12 @@ export class ControlButtonPreset
 	 */
 	#baseStyle: ButtonStyleProperties = cloneDeep(ControlButtonNormal.DefaultStyle)
 
+	readonly #connectionId: string
+	readonly #presetId: string
+
 	#lastRender: ImageResult | null = null
+
+	readonly #owners = new Set<string>()
 
 	get lastRender(): ImageResult | null {
 		return this.#lastRender
@@ -72,8 +78,16 @@ export class ControlButtonPreset
 		return this.entities
 	}
 
-	constructor(deps: ControlDependencies, controlId: string, storage: PresetButtonModel) {
-		super(deps, controlId, `Controls/Button/Preset/${controlId}`, true)
+	constructor(deps: ControlDependencies, connectionId: string, presetId: string, storage: PresetButtonModel) {
+		super(
+			deps,
+			CreatePresetControlId(connectionId, presetId),
+			`Controls/Button/Preset/${connectionId}/${presetId}`,
+			true
+		)
+
+		this.#connectionId = connectionId
+		this.#presetId = presetId
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
@@ -84,15 +98,10 @@ export class ControlButtonPreset
 		if (storage.type !== 'preset:button')
 			throw new Error(`Invalid type given to ControlButtonPreset: "${storage.type}"`)
 
-		this.#baseStyle = Object.assign(this.#baseStyle, storage.style || {})
-		this.options = Object.assign(this.options, storage.options || {})
-		this.entities.loadStorage(storage, true, true)
-		this.entities.stepExpressionUpdate(this.options)
-
-		// Ensure control is stored before setup
-		setImmediate(() => this.postProcessImport())
+		this.#applyPresetModel(storage)
 
 		this.deps.events.on('presetDrawn', this.#updateLastRender)
+		this.deps.instance.definitions.on('updatePresets', this.#updatePresetDefinition)
 	}
 
 	/**
@@ -102,11 +111,33 @@ export class ControlButtonPreset
 		super.destroy()
 
 		this.deps.events.off('presetDrawn', this.#updateLastRender)
+		this.deps.instance.definitions.off('updatePresets', this.#updatePresetDefinition)
 	}
 
 	#updateLastRender = (controlId: string, render: ImageResult): void => {
 		if (controlId !== this.controlId) return
 		this.#lastRender = render
+	}
+
+	#updatePresetDefinition = (connectionId: string): void => {
+		if (connectionId !== this.#connectionId) return
+		const updatedPreset = this.deps.instance.definitions.convertPresetToPreviewControlModel(
+			this.#connectionId,
+			this.#presetId
+		)
+		if (!updatedPreset) return // TODO - clear current preset?
+
+		this.#applyPresetModel(updatedPreset)
+	}
+
+	#applyPresetModel(storage: PresetButtonModel): void {
+		this.#baseStyle = Object.assign(this.#baseStyle, storage.style || {})
+		this.options = Object.assign(this.options, storage.options || {})
+		this.entities.loadStorage(storage, true, true)
+		this.entities.stepExpressionUpdate(this.options)
+
+		// Ensure control is stored before setup
+		setImmediate(() => this.postProcessImport())
 	}
 
 	/**
@@ -258,27 +289,12 @@ export class ControlButtonPreset
 		}
 	}
 
-	// /**
-	//  * Trigger a redraw of this control, if it can be drawn
-	//  */
-	// triggerRedraw = debounceFn(
-	// 	() => {
-	// 		// This is a hacky way of ensuring we don't schedule two invalidations in short succession when doing lots of work
-	// 		// Long term this should be replaced with a proper work queue inside GraphicsController
-	// 		if (this.#pendingDraw) return
+	addOwner(ownerId: string): void {
+		this.#owners.add(ownerId)
+	}
+	removeOwner(ownerId: string): boolean {
+		this.#owners.delete(ownerId)
 
-	// 		this.#pendingDraw = true
-	// 		setImmediate(() => {
-	// 			this.deps.events.emit('invalidateControlRender', this.controlId)
-	// 			this.#pendingDraw = false
-	// 		})
-	// 	},
-	// 	{
-	// 		before: false,
-	// 		after: true,
-	// 		wait: 10,
-	// 		maxWait: 20,
-	// 	}
-	// )
-	// #pendingDraw = false
+		return this.#owners.size === 0
+	}
 }

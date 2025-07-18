@@ -554,7 +554,7 @@ export class ControlsController {
 		const presetModel = this.#registry.instance.definitions.convertPresetToPreviewControlModel(connectionId, presetId)
 		if (!presetModel) return null
 
-		const newControl = new ControlButtonPreset(this.#createControlDependencies(), controlId, presetModel)
+		const newControl = new ControlButtonPreset(this.#createControlDependencies(), connectionId, presetId, presetModel)
 		if (!newControl) return null
 
 		this.#controls.set(controlId, newControl)

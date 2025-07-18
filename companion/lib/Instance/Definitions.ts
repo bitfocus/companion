@@ -41,6 +41,10 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 
+type InstanceDefinitionsEvents = {
+	readonly updatePresets: [connectionId: string, presets: Record<string, PresetDefinition | undefined>]
+}
+
 type DefinitionsEvents = {
 	presets: [update: UIPresetDefinitionUpdate]
 	actions: [update: EntityDefinitionUpdate]
@@ -63,7 +67,7 @@ type DefinitionsEvents = {
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class InstanceDefinitions {
+export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents> {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
 	readonly #configStore: ConnectionConfigStore
@@ -84,6 +88,9 @@ export class InstanceDefinitions {
 	#events = new EventEmitter<DefinitionsEvents>()
 
 	constructor(configStore: ConnectionConfigStore) {
+		super()
+
+		this.setMaxListeners(0)
 		this.#events.setMaxListeners(0)
 
 		this.#configStore = configStore
@@ -618,6 +625,8 @@ export class InstanceDefinitions {
 
 		const lastPresetDefinitions = this.#presetDefinitions[connectionId]
 		this.#presetDefinitions[connectionId] = cloneDeep(presets)
+
+		this.emit('updatePresets', connectionId, this.#presetDefinitions[connectionId])
 
 		if (this.#events.listenerCount('presets') > 0) {
 			const newSimplifiedPresets = this.#simplifyPresetsForUi(presets)

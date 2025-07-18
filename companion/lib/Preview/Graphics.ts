@@ -123,15 +123,26 @@ export class PreviewGraphics {
 					const control = self.#controlsController.getOrCreatePresetControl(input.connectionId, input.presetId)
 					if (!control) throw new Error(`Preset "${input.presetId}" not found for connection "${input.connectionId}"`)
 
-					const changes = toIterable(self.#controlEvents, 'presetDrawn', signal)
+					// track this session on the control
+					const sessionId = nanoid()
+					control.addOwner(sessionId)
 
-					// Send the preview image shortly after
-					const initialRender = control.lastRender
-					yield initialRender?.asDataUrl ?? null
+					try {
+						const changes = toIterable(self.#controlEvents, 'presetDrawn', signal)
 
-					for await (const [controlId, render] of changes) {
-						if (controlId !== control.controlId) continue
-						yield render?.asDataUrl ?? null
+						// Send the preview image shortly after
+						const initialRender = control.lastRender
+						yield initialRender?.asDataUrl ?? null
+
+						for await (const [controlId, render] of changes) {
+							if (controlId !== control.controlId) continue
+							yield render?.asDataUrl ?? null
+						}
+					} finally {
+						if (control.removeOwner(sessionId)) {
+							// No uses left, cleanup the control
+							self.#controlsController.deleteControl(control.controlId)
+						}
 					}
 				}),
 
