@@ -71,7 +71,7 @@ export interface SurfacePanelEvents {
 	remove: []
 	error: [error: Error]
 
-	click: [x: number, y: number, pressed: boolean, pageOffset?: number]
+	click: [x: number, y: number, pressed: boolean, pageOffset?: number, force?: boolean]
 	rotate: [x: number, y: number, direction: boolean, pageOffset?: number]
 	pincodeKey: [key: number]
 
