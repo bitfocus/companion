@@ -19,6 +19,7 @@ import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActi
 import type { CompanionVariableValues } from '@companion-module/base'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { ControlButtonNormal } from './Normal.js'
+import type { ImageResult } from '../../../Graphics/ImageResult.js'
 
 /**
  * Class for the preset button control.
@@ -57,6 +58,12 @@ export class ControlButtonPreset
 	 */
 	#baseStyle: ButtonStyleProperties = cloneDeep(ControlButtonNormal.DefaultStyle)
 
+	#lastRender: ImageResult | null = null
+
+	get lastRender(): ImageResult | null {
+		return this.#lastRender
+	}
+
 	get baseStyle(): ButtonStyleProperties {
 		return this.#baseStyle
 	}
@@ -84,6 +91,8 @@ export class ControlButtonPreset
 
 		// Ensure control is stored before setup
 		setImmediate(() => this.postProcessImport())
+
+		this.deps.events.on('presetDrawn', this.#updateLastRender)
 	}
 
 	/**
@@ -91,6 +100,13 @@ export class ControlButtonPreset
 	 */
 	destroy(): void {
 		super.destroy()
+
+		this.deps.events.off('presetDrawn', this.#updateLastRender)
+	}
+
+	#updateLastRender = (controlId: string, render: ImageResult): void => {
+		if (controlId !== this.controlId) return
+		this.#lastRender = render
 	}
 
 	/**
@@ -241,4 +257,28 @@ export class ControlButtonPreset
 			current_step_id: this.entities.currentStepId,
 		}
 	}
+
+	// /**
+	//  * Trigger a redraw of this control, if it can be drawn
+	//  */
+	// triggerRedraw = debounceFn(
+	// 	() => {
+	// 		// This is a hacky way of ensuring we don't schedule two invalidations in short succession when doing lots of work
+	// 		// Long term this should be replaced with a proper work queue inside GraphicsController
+	// 		if (this.#pendingDraw) return
+
+	// 		this.#pendingDraw = true
+	// 		setImmediate(() => {
+	// 			this.deps.events.emit('invalidateControlRender', this.controlId)
+	// 			this.#pendingDraw = false
+	// 		})
+	// 	},
+	// 	{
+	// 		before: false,
+	// 		after: true,
+	// 		wait: 10,
+	// 		maxWait: 20,
+	// 	}
+	// )
+	// #pendingDraw = false
 }

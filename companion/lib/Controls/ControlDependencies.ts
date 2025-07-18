@@ -10,6 +10,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 
 export interface ControlDependencies {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
@@ -33,6 +34,8 @@ export interface ControlCommonEvents {
 	updateButtonState: [location: ControlLocation, pushed: boolean, surfaceId: string | undefined]
 	invalidateControlRender: [controlId: string]
 	invalidateLocationRender: [location: ControlLocation]
+
+	presetDrawn: [controlId: string, render: ImageResult]
 }
 
 export type ControlChangeEvents = {

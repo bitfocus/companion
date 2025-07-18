@@ -1,14 +1,15 @@
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import { ParseInternalControlReference } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
-import { ImageResult } from '../Graphics/ImageResult.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
-import { GraphicsController } from '../Graphics/Controller.js'
-import { IPageStore } from '../Page/Store.js'
-import { ControlsController } from '../Controls/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
 export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),
@@ -46,15 +47,22 @@ export class PreviewGraphics {
 	readonly #graphicsController: GraphicsController
 	readonly #pageStore: IPageStore
 	readonly #controlsController: ControlsController
+	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
 	readonly #buttonReferencePreviews = new Map<string, PreviewSession>()
 
 	readonly #renderEvents = new EventEmitter<PreviewRenderEvents>()
 
-	constructor(graphicsController: GraphicsController, pageStore: IPageStore, controlsController: ControlsController) {
+	constructor(
+		graphicsController: GraphicsController,
+		pageStore: IPageStore,
+		controlsController: ControlsController,
+		controlEvents: EventEmitter<ControlCommonEvents>
+	) {
 		this.#graphicsController = graphicsController
 		this.#pageStore = pageStore
 		this.#controlsController = controlsController
+		this.#controlEvents = controlEvents
 
 		this.#graphicsController.on('button_drawn', this.#updateButton.bind(this))
 		this.#renderEvents.setMaxListeners(0)
@@ -115,15 +123,15 @@ export class PreviewGraphics {
 					const control = self.#controlsController.getOrCreatePresetControl(input.connectionId, input.presetId)
 					if (!control) throw new Error(`Preset "${input.presetId}" not found for connection "${input.connectionId}"`)
 
-					const changes = toIterable(self.#renderEvents, `controlId:${control.controlId}`, signal)
+					const changes = toIterable(self.#controlEvents, 'presetDrawn', signal)
 
 					// Send the preview image shortly after
-					const location = self.#pageStore.getLocationOfControlId(control.controlId)
-					const originalImg = location ? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location) : null
-					yield originalImg?.asDataUrl ?? null
+					const initialRender = control.lastRender
+					yield initialRender?.asDataUrl ?? null
 
-					for await (const [image] of changes) {
-						yield image
+					for await (const [controlId, render] of changes) {
+						if (controlId !== control.controlId) continue
+						yield render?.asDataUrl ?? null
 					}
 				}),
 

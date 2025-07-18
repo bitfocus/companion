@@ -53,6 +53,7 @@ function generateFontUrl(fontFilename: string): string {
 
 interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
+	presetDrawn: [controlId: string, render: ImageResult]
 	resubscribeFeedbacks: []
 }
 
@@ -163,8 +164,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			async (_id: string, args: RenderArguments, skipInvalidation: boolean) => {
 				try {
 					if (args.type === 'preset') {
-						//
-
 						const control = this.#controlsController.getControl(args.controlId)
 						const buttonStyle = control?.getDrawStyle() ?? undefined
 
@@ -188,14 +187,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							render = GraphicsRenderer.drawBlank(this.#drawOptions, null)
 						}
 
-						// Only cache the render, if it is within the valid bounds
-						// if (locationIsInBounds && location) {
-						// 	this.#updateCacheWithRender(location, render)
-						// }
-
-						// if (!skipInvalidation) {
-						// 	this.emit('button_drawn', location, render)
-						// }
+						this.emit('presetDrawn', args.controlId, render)
 						return
 					}
 

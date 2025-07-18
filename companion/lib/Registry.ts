@@ -199,6 +199,7 @@ export class Registry {
 
 		try {
 			const controlEvents = new EventEmitter<ControlCommonEvents>()
+			controlEvents.setMaxListeners(0)
 
 			const pageStore = new PageStore(this.db.getTableView('pages'))
 
@@ -287,7 +288,8 @@ export class Registry {
 				pageStore,
 				this.controls,
 				this.variables.values,
-				this.instance.definitions
+				this.instance.definitions,
+				controlEvents
 			)
 
 			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
@@ -295,6 +297,7 @@ export class Registry {
 			controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
 
 			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
+			this.graphics.on('presetDrawn', (controlId, render) => controlEvents.emit('presetDrawn', controlId, render))
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
 				setImmediate(() => {

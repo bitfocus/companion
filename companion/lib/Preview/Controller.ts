@@ -7,6 +7,8 @@ import { PreviewExpressionStream } from './ExpressionStream.js'
 import { PreviewGraphics } from './Graphics.js'
 import { PreviewPresets } from './Presets.js'
 import { router } from '../UI/TRPC.js'
+import type EventEmitter from 'node:events'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
 export class PreviewController {
 	readonly #graphics: PreviewGraphics
@@ -18,9 +20,10 @@ export class PreviewController {
 		pageStore: IPageStore,
 		controlsController: ControlsController,
 		variablesValuesController: VariablesValues,
-		instanceDefinitions: InstanceDefinitions
+		instanceDefinitions: InstanceDefinitions,
+		controlEvents: EventEmitter<ControlCommonEvents>
 	) {
-		this.#graphics = new PreviewGraphics(graphicsController, pageStore, controlsController)
+		this.#graphics = new PreviewGraphics(graphicsController, pageStore, controlsController, controlEvents)
 		this.#expressionStream = new PreviewExpressionStream(pageStore, controlsController)
 		this.#presets = new PreviewPresets(graphicsController, variablesValuesController, instanceDefinitions)
 	}
