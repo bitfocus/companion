@@ -41,7 +41,7 @@ import {
 	type LogLevel,
 } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { InstanceDefinitions, PresetDefinitionTmp } from './Definitions.js'
+import type { InstanceDefinitions } from './Definitions.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -816,13 +816,7 @@ export class SocketEventsHandler {
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			// Convert back to an object
-			const presets: Record<string, PresetDefinitionTmp> = {}
-			for (const preset of msg.presets) {
-				presets[preset.id] = preset
-			}
-
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, this.#label, presets)
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, this.#label, msg.presets)
 		} catch (e: any) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
