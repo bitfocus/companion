@@ -23,7 +23,46 @@ export class PreviewPresets {
 	}
 
 	createTrpcRouter() {
+		// const self = this
 		return router({
+			// renderLive: publicProcedure
+			// 	.input(
+			// 		z.object({
+			// 			connectionId: z.string(),
+			// 			presetId: z.string(),
+			// 		})
+			// 	)
+			// 	.subscription(async function* ({ input, signal }) {
+			// 		const control = self.#controlsController.getOrCreatePresetControl(input.connectionId, input.presetId)
+			// 		if (!control) throw new Error(`Preset "${input.presetId}" not found for connection "${input.connectionId}"`)
+
+			// 		// const style = this.#instanceDefinitions.getPresetDrawStyle(input.connectionId, input.presetId)
+			// 		// if (!style) {
+			// 		// 	return null
+			// 		// }
+			// 		// if (style.text) {
+			// 		// 	const parser = this.#variablesValuesController.createVariablesAndExpressionParser(null, null, null)
+			// 		// 	if (style.textExpression) {
+			// 		// 		const parseResult = parser.executeExpression(style.text, undefined)
+			// 		// 		if (parseResult.ok) {
+			// 		// 			style.text = parseResult.value + ''
+			// 		// 		} else {
+			// 		// 			this.#logger.error(`Expression parse error: ${parseResult.error}`)
+			// 		// 			style.text = 'ERR'
+			// 		// 		}
+			// 		// 	} else {
+			// 		// 		const parseResult = parser.parseVariables(style.text)
+			// 		// 		style.text = parseResult.text
+			// 		// 	}
+			// 		// }
+			// 		// const render = await this.#graphicsController.drawPreview(style)
+			// 		// if (render) {
+			// 		// 	return render.asDataUrl
+			// 		// } else {
+			// 		// 	return null
+			// 		// }
+			// 	}),
+
 			render: publicProcedure
 				.input(
 					z.object({

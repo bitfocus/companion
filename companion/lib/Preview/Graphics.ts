@@ -104,6 +104,29 @@ export class PreviewGraphics {
 					}
 				}),
 
+			preset: publicProcedure
+				.input(
+					z.object({
+						connectionId: z.string(),
+						presetId: z.string(),
+					})
+				)
+				.subscription(async function* ({ signal, input }) {
+					const control = self.#controlsController.getOrCreatePresetControl(input.connectionId, input.presetId)
+					if (!control) throw new Error(`Preset "${input.presetId}" not found for connection "${input.connectionId}"`)
+
+					const changes = toIterable(self.#renderEvents, `controlId:${control.controlId}`, signal)
+
+					// Send the preview image shortly after
+					const location = self.#pageStore.getLocationOfControlId(control.controlId)
+					const originalImg = location ? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location) : null
+					yield originalImg?.asDataUrl ?? null
+
+					for await (const [image] of changes) {
+						yield image
+					}
+				}),
+
 			reference: publicProcedure
 				.input(
 					z.object({

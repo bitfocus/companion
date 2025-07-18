@@ -2,7 +2,7 @@ import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
-import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, CreatePresetControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { ActionRunner } from './ActionRunner.js'
 import { ActionRecorder } from './ActionRecorder.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
@@ -32,6 +32,7 @@ import z from 'zod'
 import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 
 /**
  * The class that manages the controls
@@ -543,6 +544,25 @@ export class ControlsController {
 	}
 	isTriggerCollectionEnabled(collectionId: string, onlyDirect: boolean): boolean {
 		return this.#triggerCollections.isCollectionEnabled(collectionId, onlyDirect)
+	}
+
+	getOrCreatePresetControl(connectionId: string, presetId: string): ControlButtonPreset | null {
+		const controlId = CreatePresetControlId(connectionId, presetId)
+		const control = this.#controls.get(controlId)
+		if (control) return control as ControlButtonPreset
+
+		const presetModel = this.#registry.instance.definitions.convertPresetToPreviewControlModel(connectionId, presetId)
+		if (!presetModel) return null
+
+		const newControl = new ControlButtonPreset(this.#createControlDependencies(), controlId, presetModel)
+		if (!newControl) return null
+
+		this.#controls.set(controlId, newControl)
+
+		// Force a redraw
+		this.#controlEvents.emit('invalidateControlRender', controlId)
+
+		return newControl
 	}
 
 	/**

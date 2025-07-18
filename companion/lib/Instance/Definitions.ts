@@ -12,7 +12,11 @@ import type {
 	UIPresetDefinitionUpdate,
 } from '@companion-app/shared/Model/Presets.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	NormalButtonModel,
+	NormalButtonSteps,
+	PresetButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type {
 	CompanionButtonStyleProps,
 	CompanionPresetAction,
@@ -258,6 +262,7 @@ export class InstanceDefinitions {
 	 * Get the draw style for a preset
 	 * @param connectionId - the id of the instance
 	 * @param presetId - the id of the preset
+	 * @deprecated
 	 */
 	getPresetDrawStyle(connectionId: string, presetId: string): (CompanionButtonStyleProps & { style: 'button' }) | null {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
@@ -269,6 +274,66 @@ export class InstanceDefinitions {
 		} else {
 			return null
 		}
+	}
+
+	convertPresetToPreviewControlModel(connectionId: string, presetId: string): PresetButtonModel | null {
+		const definition = this.#presetDefinitions[connectionId]?.[presetId]
+		if (!definition || definition.type !== 'button') return null
+
+		const connectionUpgradeIndex = this.#configStore.getConfigForId(connectionId)?.lastUpgradeIndex
+
+		const result: PresetButtonModel = {
+			type: 'preset:button',
+			options: {
+				rotaryActions: definition.options?.rotaryActions ?? false,
+				stepProgression: (definition.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+			},
+			style: {
+				// TODO - use previewStyle
+				textExpression: false,
+				...cloneDeep(definition.style),
+				// TODO - avoid defaults..
+				alignment: definition.style.alignment ?? 'center:center',
+				pngalignment: definition.style.pngalignment ?? 'center:center',
+				png64: definition.style.png64 ?? null,
+				show_topbar: definition.style.show_topbar ?? 'default',
+			},
+			feedbacks: [],
+			steps: {},
+			localVariables: [],
+		}
+		if (definition.steps) {
+			for (let i = 0; i < definition.steps.length; i++) {
+				const newStep: NormalButtonSteps[0] = {
+					action_sets: {
+						down: [],
+						up: [],
+						rotate_left: undefined,
+						rotate_right: undefined,
+					},
+					options: cloneDeep(definition.steps[i].options) ?? cloneDeep(ControlEntityListPoolButton.DefaultStepOptions),
+				}
+				result.steps[i] = newStep
+
+				// Omit actions, as they can't be executed in the preview
+			}
+		}
+
+		if (definition.feedbacks) {
+			result.feedbacks = definition.feedbacks.map((feedback) => ({
+				type: EntityModelType.Feedback,
+				id: nanoid(),
+				connectionId: connectionId,
+				definitionId: feedback.type,
+				options: cloneDeep(feedback.options ?? {}),
+				isInverted: feedback.isInverted,
+				style: cloneDeep(feedback.style),
+				headline: feedback.headline,
+				upgradeIndex: connectionUpgradeIndex,
+			}))
+		}
+
+		return result
 	}
 
 	/**
