@@ -1,5 +1,5 @@
 import { ButtonControlBase } from './Base.js'
-import { cloneDeep, omit } from 'lodash-es'
+import { cloneDeep } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
@@ -17,7 +17,6 @@ import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 
 /**
@@ -128,51 +127,11 @@ export class ControlButtonNormal
 	 * @returns the processed style of the button
 	 */
 	getDrawStyle(): DrawStyleButtonModel {
-		const style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
+		const result = this.composeDrawStyle(this.#baseStyle)
 
-		if (style.text) {
-			// Block out the button text
-			const overrideVariableValues: CompanionVariableValues = {}
+		this.#last_draw_variables = result.variables
 
-			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
-			if (location) {
-				// Ensure we don't enter into an infinite loop
-				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
-			}
-
-			// Setup the parser
-			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
-				location,
-				this.entities.getLocalVariableEntities(),
-				overrideVariableValues
-			)
-
-			if (style.textExpression) {
-				const parseResult = parser.executeExpression(style.text, undefined)
-				if (parseResult.ok) {
-					style.text = parseResult.value + ''
-				} else {
-					this.logger.error(`Expression parse error: ${parseResult.error}`)
-					style.text = 'ERR'
-				}
-				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-			} else {
-				const parseResult = parser.parseVariables(style.text)
-				style.text = parseResult.text
-				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-			}
-		}
-
-		return {
-			cloud: false,
-			cloud_error: false,
-
-			...cloneDeep(style),
-
-			...omit(this.getDrawStyleButtonStateProps(), ['cloud', 'cloud_error']),
-
-			style: 'button',
-		}
+		return result.style
 	}
 
 	/**

@@ -5,9 +5,15 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type {
+	ButtonStyleProperties,
+	DrawStyleButtonModel,
+	DrawStyleButtonStateProps,
+} from '@companion-app/shared/Model/StyleModel.js'
 import debounceFn from 'debounce-fn'
+import type { CompanionVariableValues } from '@companion-module/base'
+import { cloneDeep, omit } from 'lodash-es'
 
 /**
  * Abstract class for a editable button control.
@@ -200,6 +206,64 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		}
 
 		return result
+	}
+
+	protected composeDrawStyle(baseStyle: ButtonStyleProperties): {
+		style: DrawStyleButtonModel
+		variables: ReadonlySet<string> | null
+	} {
+		const style = this.entities.getUnparsedFeedbackStyle(baseStyle)
+
+		let referencedVariables: ReadonlySet<string> | null = null
+
+		if (style.text) {
+			// Block out the button text
+			const overrideVariableValues: CompanionVariableValues = {}
+
+			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
+			if (location) {
+				// Ensure we don't enter into an infinite loop
+				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
+			}
+
+			// Setup the parser
+			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
+				location,
+				this.entities.getLocalVariableEntities(),
+				overrideVariableValues
+			)
+
+			if (style.textExpression) {
+				const parseResult = parser.executeExpression(style.text, undefined)
+				if (parseResult.ok) {
+					style.text = parseResult.value + ''
+				} else {
+					this.logger.error(`Expression parse error: ${parseResult.error}`)
+					style.text = 'ERR'
+				}
+				referencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
+			} else {
+				const parseResult = parser.parseVariables(style.text)
+				style.text = parseResult.text
+				referencedVariables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
+			}
+		}
+
+		const drawStyle: DrawStyleButtonModel = {
+			cloud: false,
+			cloud_error: false,
+
+			...cloneDeep(style),
+
+			...omit(this.getDrawStyleButtonStateProps(), ['cloud', 'cloud_error']),
+
+			style: 'button',
+		}
+
+		return {
+			style: drawStyle,
+			variables: referencedVariables,
+		}
 	}
 
 	#pendingChangedVariables = new Set<string>()
