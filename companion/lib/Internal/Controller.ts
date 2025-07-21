@@ -50,6 +50,7 @@ import { InternalPage } from './Page.js'
 import { InternalSurface } from './Surface.js'
 import { InternalTriggers } from './Triggers.js'
 import { InternalVariables } from './Variables.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -73,6 +74,7 @@ export class InternalController {
 		variablesController: VariablesController,
 		surfaceController: SurfaceController,
 		graphicsController: GraphicsController,
+		userConfigController: DataUserConfig,
 		requestExit: (fromInternal: boolean, restart: boolean) => void
 	) {
 		this.#controlsController = controlsController
@@ -92,7 +94,7 @@ export class InternalController {
 			new InternalCustomVariables(internalUtils, variablesController),
 			new InternalPage(internalUtils, pageStore),
 			new InternalSurface(internalUtils, surfaceController, controlsController, pageStore),
-			new InternalSystem(internalUtils, variablesController, requestExit),
+			new InternalSystem(internalUtils, userConfigController, variablesController, requestExit),
 			new InternalTriggers(internalUtils, controlsController),
 			new InternalVariables(internalUtils, controlsController, pageStore),
 		]
