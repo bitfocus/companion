@@ -47,62 +47,56 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 		return canvas.toDataURL()
 	}
 
-	const onClick = useCallback(
-		(e: React.MouseEvent) => {
-			onError(null)
-			if (inputRef.current) {
-				const form = e.currentTarget.getElementsByClassName('form-control')[0] as HTMLInputElement
-				form.value = '' //files = null didn't work
-				inputRef.current.click()
+	const onClick = useCallback(() => {
+		const fileForm = inputRef.current // "file" type of input form
+		onError(null)
+		if (fileForm) {
+			fileForm.value = ''
+			fileForm.files = new DataTransfer().files // you can't create a FileList object directly (even though compiler doesn't complain)
+			fileForm.click()
+		}
+	}, [onError])
+	const onChange = useCallback(() => {
+		const newFiles = inputRef.current?.files
+		console.log('change', newFiles)
+
+		//check whether browser fully supports all File API
+		if (apiIsSupported) {
+			if (!newFiles || !newFiles.length || newFiles[0].type !== 'image/png') {
+				onError('Sorry. Only proper PNG files are supported.')
+				return
 			}
-		},
-		[onError]
-	)
-	const onChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const newFiles = e.currentTarget.files
-			e.currentTarget.files = null // note: this doesn't do anything (files is unaffected)
-			console.log('change', newFiles)
 
-			//check whether browser fully supports all File API
-			if (apiIsSupported) {
-				if (!newFiles || !newFiles.length || newFiles[0].type !== 'image/png') {
-					onError('Sorry. Only proper PNG files are supported.')
-					return
-				}
+			Promise.resolve()
+				.then(async () => {
+					const imageSourceStr = await blobToDataURL(newFiles[0])
 
-				Promise.resolve()
-					.then(async () => {
-						const imageSourceStr = await blobToDataURL(newFiles[0])
+					// file is loaded
+					const img = new Image()
 
-						// file is loaded
-						const img = new Image()
-
-						img.onload = () => {
-							// image is loaded; sizes are available
-							if (max && (img.height > max.height || img.width > max.width)) {
-								onError(null)
-								onSelect(imageResize(img, max.width, max.height), newFiles[0].name)
-							} else if (min && (img.width < min.width || img.height < min.height)) {
-								onError(`Image dimensions must be at least ${min.width}x${min.height}`)
-							} else {
-								onError(null)
-								onSelect(imageSourceStr, newFiles[0].name)
-							}
+					img.onload = () => {
+						// image is loaded; sizes are available
+						if (max && (img.height > max.height || img.width > max.width)) {
+							onError(null)
+							onSelect(imageResize(img, max.width, max.height), newFiles[0].name)
+						} else if (min && (img.width < min.width || img.height < min.height)) {
+							onError(`Image dimensions must be at least ${min.width}x${min.height}`)
+						} else {
+							onError(null)
+							onSelect(imageSourceStr, newFiles[0].name)
 						}
+					}
 
-						img.src = imageSourceStr
-					})
-					.catch((err) => {
-						onError(`Error reading file: ${err}`)
-						console.error('Error reading file:', err)
-					})
-			} else {
-				onError('Companion requires a newer browser')
-			}
-		},
-		[min, max, apiIsSupported, onSelect, onError]
-	)
+					img.src = imageSourceStr
+				})
+				.catch((err) => {
+					onError(`Error reading file: ${err}`)
+					console.error('Error reading file:', err)
+				})
+		} else {
+			onError('Companion requires a newer browser')
+		}
+	}, [min, max, apiIsSupported, onSelect, onError])
 
 	return (
 		<CButton
