@@ -6,8 +6,6 @@ import { usePopper } from 'react-popper'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { colord } from 'colord'
 import { CompanionColorPresetValue } from '@companion-module/base'
-import { CFormLabel } from '@coreui/react'
-import { InlineHelp } from './InlineHelp.js'
 
 function splitColor(color: number | string) {
 	if (typeof color === 'number' || !isNaN(Number(color))) {
@@ -64,25 +62,21 @@ const toReturnType = <T extends 'string' | 'number'>(
 type AsType<T extends 'string' | 'number'> = T extends 'string' ? string : number
 
 interface ColorInputFieldProps<T extends 'string' | 'number'> {
-	label?: React.ReactNode
 	value: AsType<T>
 	setValue: (value: AsType<T>) => void
 	disabled?: boolean
 	enableAlpha?: boolean
 	returnType: 'string' | 'number'
 	presetColors?: CompanionColorPresetValue[]
-	helpText?: string
 }
 
 export function ColorInputField<T extends 'string' | 'number'>({
-	label,
 	value,
 	setValue,
 	// disabled,
 	enableAlpha,
 	returnType,
 	presetColors,
-	helpText,
 }: ColorInputFieldProps<T>): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -145,11 +139,6 @@ export function ColorInputField<T extends 'string' | 'number'>({
 
 	return (
 		<>
-			{helpText ? (
-				<InlineHelp help={helpText}>{label ? <CFormLabel>{label}</CFormLabel> : ''}</InlineHelp>
-			) : (
-				<>{label ? <CFormLabel>{label}</CFormLabel> : ''}</>
-			)}
 			<div style={{ lineHeight: 0 }}>
 				<div style={styles.swatch} onClick={handleClick} ref={setReferenceElement}>
 					<div style={styles.color} />

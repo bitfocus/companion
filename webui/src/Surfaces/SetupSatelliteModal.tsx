@@ -1,7 +1,7 @@
 import { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { LoadingBar } from '~/Resources/Loading.js'
-import { CButton, CForm, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
@@ -95,8 +95,8 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 							<LoadingBar />
 						) : (
 							<>
+								<CFormLabel>Companion Address</CFormLabel>
 								<DropdownInputField
-									label="Companion Address"
 									choices={externalAddressesQuery.data?.addresses}
 									value={selectedAddress ?? ''}
 									setValue={(selected) => setSelectedAddress(selected?.toString() ?? '')}

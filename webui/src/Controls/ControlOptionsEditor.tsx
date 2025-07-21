@@ -94,8 +94,8 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 			{options.stepProgression === 'expression' && (
 				<div className="flex w-full gap-2rem flex-form">
 					<div style={{ width: '100%' }}>
+						<CFormLabel>Step Progression Expression</CFormLabel>
 						<TextInputField
-							label={'Step Progression Expression'}
 							tooltip={'Current step of button'}
 							setValue={setStepExpressionValue}
 							value={options.stepExpression ?? ''}

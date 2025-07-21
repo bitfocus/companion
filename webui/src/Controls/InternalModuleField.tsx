@@ -210,7 +210,6 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 })
 
 interface InternalCustomVariableDropdownProps {
-	label?: React.ReactNode
 	value: any
 	setValue: (value: any) => void
 	includeNone: boolean | undefined
@@ -218,7 +217,6 @@ interface InternalCustomVariableDropdownProps {
 }
 
 export const InternalCustomVariableDropdown = observer(function InternalCustomVariableDropdown({
-	label,
 	value,
 	setValue,
 	includeNone,
@@ -250,9 +248,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		return choices
 	}, [customVariables, includeNone])
 
-	return (
-		<DropdownInputField label={label} disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
-	)
+	return <DropdownInputField disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
 })
 
 interface InternalVariableDropdownProps {

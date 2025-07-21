@@ -1,26 +1,19 @@
 import React, { useCallback } from 'react'
-import { CFormCheck, CFormLabel } from '@coreui/react'
-import { InlineHelp } from './InlineHelp.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleQuestion } from '@fortawesome/free-solid-svg-icons'
+import { CFormCheck } from '@coreui/react'
 
 interface CheckboxInputFieldProps {
 	tooltip?: string
-	label?: React.ReactNode
 	value: boolean
 	setValue: (value: boolean) => void
 	disabled?: boolean
-	helpText?: string
 	inline?: boolean
 }
 
 export function CheckboxInputField({
 	tooltip,
-	label,
 	value,
 	setValue,
 	disabled,
-	helpText,
 	inline,
 }: CheckboxInputFieldProps): React.JSX.Element {
 	const onChange = useCallback(
@@ -32,23 +25,6 @@ export function CheckboxInputField({
 
 	return (
 		<>
-			<>
-				{helpText ? (
-					<InlineHelp help={helpText}>
-						{label ? (
-							<CFormLabel>
-								{label} <FontAwesomeIcon size="sm" icon={faCircleQuestion} />
-							</CFormLabel>
-						) : (
-							''
-						)}
-					</InlineHelp>
-				) : label ? (
-					<>{label ? <CFormLabel>{label}</CFormLabel> : ''}</>
-				) : (
-					''
-				)}
-			</>
 			<div
 				className="form-check"
 				style={

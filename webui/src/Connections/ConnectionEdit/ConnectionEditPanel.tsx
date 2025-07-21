@@ -387,8 +387,10 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 							sm={fieldInfo.width}
 							style={{ display: !isVisible ? 'none' : undefined }}
 						>
+							<CFormLabel>
+								<ConnectionFieldLabel fieldInfo={fieldInfo} />
+							</CFormLabel>
 							<ConnectionSecretField
-								label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
 								definition={fieldInfo}
 								hasSavedValue={!!configData.updatedSecrets[fieldInfo.id]}
 								editValue={configData.updatedSecrets[fieldInfo.id]}
@@ -405,8 +407,10 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 							sm={fieldInfo.width}
 							style={{ display: !isVisible ? 'none' : undefined }}
 						>
+							<CFormLabel>
+								<ConnectionFieldLabel fieldInfo={fieldInfo} />
+							</CFormLabel>
 							<ConnectionEditField
-								label={<ConnectionFieldLabel fieldInfo={fieldInfo} />}
 								definition={fieldInfo}
 								value={configData.config[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}

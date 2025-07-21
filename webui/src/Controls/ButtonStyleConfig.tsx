@@ -1,4 +1,4 @@
-import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup } from '@coreui/react'
+import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CFormLabel } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useMemo, useState } from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import {
@@ -195,8 +195,8 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 					{showField2('size') && (
 						<div>
 							<div>
+								<CFormLabel>Font size</CFormLabel>
 								<DropdownInputField
-									label={'Font size'}
 									choices={FONT_SIZES}
 									setValue={setSizeValue}
 									value={values.size ?? 'auto'}
@@ -211,36 +211,31 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 						<div className="flex gap-1rem">
 							{showField2('color') && (
 								<div>
-									<ColorInputField
-										label={'Text'}
-										setValue={setColorValue}
-										value={values.color ?? 0}
-										returnType="number"
-										helpText="Font color"
-									/>
+									<InlineHelp help="Font color">
+										<CFormLabel>Text</CFormLabel>
+									</InlineHelp>
+									<ColorInputField setValue={setColorValue} value={values.color ?? 0} returnType="number" />
 								</div>
 							)}
 							{showField2('bgcolor') && (
 								<div>
-									<ColorInputField
-										label={'BG'}
-										setValue={setBackgroundColorValue}
-										value={values.bgcolor ?? 0}
-										returnType="number"
-										helpText="Background color"
-									/>
+									<InlineHelp help="Background color">
+										<CFormLabel>BG</CFormLabel>
+									</InlineHelp>
+									<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor ?? 0} returnType="number" />
 								</div>
 							)}
 						</div>
 					</div>
 					{showField2('show_topbar') && (
 						<div>
+							<InlineHelp help="By default, you have a top bar with the button name and the page number. With this option, you can manually override the default behavior.">
+								<CFormLabel>Topbar</CFormLabel>
+							</InlineHelp>
 							<DropdownInputField
-								label={'Topbar'}
 								choices={SHOW_HIDE_TOP_BAR}
 								setValue={setShowTopBar}
 								value={(values.show_topbar as string) ?? false}
-								helpText="By default, you have a top bar with the button name and the page number. With this option, you can manually override the default behavior."
 							/>
 						</div>
 					)}

@@ -1,17 +1,14 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
-import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
 import React, { useContext, useMemo, useCallback, memo } from 'react'
 import Select, { createFilter } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
-import { InlineHelp } from './InlineHelp.js'
 import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
 	className?: string
-	label?: React.ReactNode
 	choices: DropdownChoice[] | Record<string, DropdownChoice>
 	allowCustom?: boolean
 	minSelection?: number
@@ -23,7 +20,6 @@ interface MultiDropdownInputFieldProps {
 	setValue: (value: DropdownChoiceId[]) => void
 	checkValid?: (value: DropdownChoiceId[]) => boolean
 	disabled?: boolean
-	helpText?: string
 	onBlur?: () => void
 }
 
@@ -35,7 +31,6 @@ interface DropdownChoiceInt {
 export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 	htmlName,
 	className,
-	label,
 	choices,
 	allowCustom,
 	minSelection,
@@ -47,7 +42,6 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 	setValue,
 	checkValid,
 	disabled,
-	helpText,
 	onBlur,
 }: MultiDropdownInputFieldProps) {
 	const menuPortal = useContext(MenuPortalContext)
@@ -172,13 +166,6 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 			)}
 			title={tooltip}
 		>
-			{helpText ? (
-				<InlineHelp help={helpText}>
-					<>{label ? <CFormLabel>{label}</CFormLabel> : null}</>
-				</InlineHelp>
-			) : (
-				<>{label ? <CFormLabel>{label}</CFormLabel> : null}</>
-			)}
 			{allowCustom ? (
 				<CreatableSelect
 					{...selectProps}
