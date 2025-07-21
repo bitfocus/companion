@@ -47,19 +47,21 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 		return canvas.toDataURL()
 	}
 
-	const onClick = useCallback((e: React.MouseEvent) => {
-		onError(null)
-		if (inputRef.current) {
-			//const newFiles = e.currentTarget.files
-			const form = e.currentTarget.getElementsByClassName("form-control")[0] as HTMLInputElement
-			form.value = '' //files = null didn't work
-			inputRef.current.click()
-		}
-	}, [onError])
+	const onClick = useCallback(
+		(e: React.MouseEvent) => {
+			onError(null)
+			if (inputRef.current) {
+				const form = e.currentTarget.getElementsByClassName('form-control')[0] as HTMLInputElement
+				form.value = '' //files = null didn't work
+				inputRef.current.click()
+			}
+		},
+		[onError]
+	)
 	const onChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const newFiles = e.currentTarget.files
-			e.currentTarget.files = null  // note: this doesn't do anything (files is unaffected)
+			e.currentTarget.files = null // note: this doesn't do anything (files is unaffected)
 			console.log('change', newFiles)
 
 			//check whether browser fully supports all File API
