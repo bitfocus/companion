@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react'
-import { CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
+import { CFormInput, CFormTextarea } from '@coreui/react'
 import Select, {
 	ControlProps,
 	OptionProps,
@@ -14,7 +14,6 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
 interface TextInputFieldProps {
-	label?: React.ReactNode
 	tooltip?: string
 	placeholder?: string
 	value: string
@@ -30,7 +29,6 @@ interface TextInputFieldProps {
 }
 
 export const TextInputField = observer(function TextInputField({
-	label,
 	tooltip,
 	placeholder,
 	value,
@@ -78,7 +76,6 @@ export const TextInputField = observer(function TextInputField({
 		<>
 			{useVariables || isExpression ? (
 				<>
-					{label ? <CFormLabel>{label}</CFormLabel> : ''}
 					<VariablesSelect
 						showValue={showValue}
 						style={extraStyle}
@@ -95,7 +92,6 @@ export const TextInputField = observer(function TextInputField({
 				</>
 			) : (
 				<CFormInput
-					label={label}
 					type="text"
 					disabled={disabled}
 					value={showValue}

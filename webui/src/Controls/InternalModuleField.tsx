@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo } from 'react'
 import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.js'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
 import { InternalInputField } from '@companion-app/shared/Model/Options.js'
@@ -211,7 +211,6 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 })
 
 interface InternalCustomVariableDropdownProps {
-	label?: React.ReactNode
 	value: any
 	setValue: (value: any) => void
 	includeNone: boolean | undefined
@@ -220,7 +219,6 @@ interface InternalCustomVariableDropdownProps {
 }
 
 export const InternalCustomVariableDropdown = observer(function InternalCustomVariableDropdown({
-	label,
 	value,
 	setValue,
 	includeNone,
@@ -254,9 +252,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		return choices
 	}, [customVariablesList, includeNone])
 
-	return (
-		<DropdownInputField label={label} disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
-	)
+	return <DropdownInputField disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
 })
 
 interface InternalVariableDropdownProps {

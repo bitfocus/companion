@@ -10,8 +10,8 @@ import { FinishStep } from './FinishStep.js'
 import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { WIZARD_CURRENT_VERSION } from './Constants.js'
-import { makeAbsolutePath } from '~/util.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { toJS } from 'mobx'
 
 export function WizardModal(): React.JSX.Element {

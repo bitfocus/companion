@@ -59,7 +59,7 @@ export class TriggersEventVariables {
 		controlId: string,
 		executeActions: (nowTime: number, source: TriggerExecutionSource) => void
 	) {
-		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Timer/${controlId}`)
+		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Variables/${controlId}`)
 
 		this.#eventBus = eventBus
 		this.#controlId = controlId

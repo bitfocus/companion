@@ -9,14 +9,18 @@ export const SettingsButtonsPage = memo(function UserConfig() {
 	return (
 		<CRow className="split-panels">
 			<CCol xl={6} className="primary-panel">
-				<div className="d-flex justify-content-between">
-					<div>
-						<h4>Settings - Buttons</h4>
-						<p>Settings apply instantaneously, don't worry about it!</p>
+				<div className="flex-column-layout">
+					<div className="fixed-header">
+						<div className="d-flex justify-content-between">
+							<div>
+								<h4>Settings - Buttons</h4>
+								<p>Settings apply instantaneously, don't worry about it!</p>
+							</div>
+						</div>
 					</div>
-				</div>
-				<div>
-					<UserConfigTable />
+					<div className="scrollable-content">
+						<UserConfigTable />
+					</div>
 				</div>
 			</CCol>
 			{/* <CCol xs={12} xl={6} className="secondary-panel">

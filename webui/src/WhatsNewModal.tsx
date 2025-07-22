@@ -12,7 +12,7 @@ import {
 } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from './Resources/Error.js'
 import { DocsContent } from './GettingStarted/DocsContent.js'
 import { useLocalStorage } from 'usehooks-ts'
 import semver from 'semver'

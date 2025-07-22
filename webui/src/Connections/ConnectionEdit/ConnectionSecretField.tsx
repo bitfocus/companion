@@ -4,7 +4,6 @@ import { SecretTextInputField } from '~/Components/SecretTextInputField'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 
 interface ConnectionSecretFieldProps {
-	label: React.ReactNode
 	setValue: (value: any) => void
 	clearValue: () => void
 	definition: ConnectionInputField
@@ -14,7 +13,6 @@ interface ConnectionSecretFieldProps {
 }
 
 export function ConnectionSecretField({
-	label,
 	setValue,
 	clearValue,
 	definition,
@@ -29,7 +27,6 @@ export function ConnectionSecretField({
 		case 'secret-text':
 			return (
 				<SecretTextInputField
-					label={label}
 					hasSavedValue={hasSavedValue}
 					editValue={editValue}
 					setValue={setValue}

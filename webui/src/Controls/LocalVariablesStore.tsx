@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react'
 import type { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
 import { computedFn } from 'mobx-utils'
 import { useQuery } from '@tanstack/react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc } from '~/Resources/TRPC.js'
 
 export class LocalVariablesStore {
 	readonly controlId: string

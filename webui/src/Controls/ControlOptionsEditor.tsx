@@ -6,8 +6,8 @@ import { NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { ControlLocalVariables } from './LocalVariablesStore'
-import { trpc, useMutationExt } from '~/TRPC'
+import { ControlLocalVariables } from './LocalVariablesStore.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string
@@ -94,8 +94,8 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 			{options.stepProgression === 'expression' && (
 				<div className="flex w-full gap-2rem flex-form">
 					<div style={{ width: '100%' }}>
+						<CFormLabel>Step Progression Expression</CFormLabel>
 						<TextInputField
-							label={'Step Progression Expression'}
 							tooltip={'Current step of button'}
 							setValue={setStepExpressionValue}
 							value={options.stepExpression ?? ''}

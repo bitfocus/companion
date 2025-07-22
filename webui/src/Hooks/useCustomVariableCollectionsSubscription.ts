@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc } from '~/Resources/TRPC.js'
 import { CustomVariablesListStore } from '~/Stores/CustomVariablesListStore'
 
 export function useCustomVariableCollectionsSubscription(store: CustomVariablesListStore): boolean {

@@ -4,7 +4,7 @@ import React, { useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExpand } from '@fortawesome/free-solid-svg-icons'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt(): React.ReactNode {
 	const { surfaces, userConfig } = useContext(RootAppStoreContext)

@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import React, { useContext } from 'react'
 import { SurfaceEditPanel } from '~/Surfaces/EditPanel.js'
-import { MyErrorBoundary, useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -47,11 +48,9 @@ const RouteComponent = observer(function RouteComponent() {
 	}
 
 	return (
-		<div className="secondary-panel-simple">
-			<MyErrorBoundary>
-				<SurfaceEditPanel key={itemId} surfaceId={itemInfo.surfaceId} groupId={itemInfo.groupId} />
-			</MyErrorBoundary>
-		</div>
+		<MyErrorBoundary>
+			<SurfaceEditPanel key={itemId} surfaceId={itemInfo.surfaceId} groupId={itemInfo.groupId} />
+		</MyErrorBoundary>
 	)
 })
 

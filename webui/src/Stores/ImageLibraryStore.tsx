@@ -4,7 +4,7 @@ import type {
 	ImageLibraryCollection,
 	ImageLibraryUpdate,
 } from '@companion-app/shared/Model/ImageLibraryModel.js'
-import { assertNever } from '~/util'
+import { assertNever } from '~/Resources/util'
 
 export class ImageLibraryStore {
 	readonly store = observable.map<string, ImageLibraryInfo>()

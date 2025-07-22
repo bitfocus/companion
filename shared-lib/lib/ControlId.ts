@@ -56,6 +56,13 @@ export function CreateCustomVariableControlId(variableId: string): string {
 	return `custom-variable:${variableId}`
 }
 
+/**
+ * Create preset control id
+ */
+export function CreatePresetControlId(connectionId: string, presetId: string): string {
+	return `preset:${connectionId}:${presetId}`
+}
+
 export interface ParsedControlIdBank {
 	type: 'bank'
 	control: string
@@ -68,7 +75,16 @@ export interface ParsedControlIdCustomVariable {
 	type: 'custom-variable'
 	variableId: string
 }
-export type ParsedControlIdType = ParsedControlIdBank | ParsedControlIdTrigger | ParsedControlIdCustomVariable
+export interface ParsedControlIdPreset {
+	type: 'preset'
+	connectionId: string
+	presetId: string
+}
+export type ParsedControlIdType =
+	| ParsedControlIdBank
+	| ParsedControlIdTrigger
+	| ParsedControlIdCustomVariable
+	| ParsedControlIdPreset
 
 /**
  * Parse a controlId
@@ -96,6 +112,15 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			return {
 				type: 'custom-variable',
 				variableId: matchCv[1],
+			}
+		}
+
+		const matchPreset = controlId.match(/^preset:(.*?):(.*)$/)
+		if (matchPreset) {
+			return {
+				type: 'preset',
+				connectionId: matchPreset[1],
+				presetId: matchPreset[2],
 			}
 		}
 	}

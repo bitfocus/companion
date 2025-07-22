@@ -22,7 +22,6 @@
 
 		.row-reorder-handle {
 			cursor: ns-resize;
-			padding-right: 0.5rem;
 		}
 
 		&.row-dragging {
@@ -39,6 +38,18 @@
 
 		&.row-notdragging:hover {
 			background-color: rgba(200, 200, 200, 0.1);
+		}
+	}
+
+	.collections-nesting-table-row-item-grid {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+
+		> .grow {
+			min-width: 0;
 		}
 	}
 
@@ -76,7 +87,7 @@
 			position: relative;
 			cursor: ns-resize;
 
-			margin-right: 0.75rem;
+			margin-right: 0.25rem;
 		}
 
 		// &.row-dragging {

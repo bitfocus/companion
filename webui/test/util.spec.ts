@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { deepFreeze } from '../src/util'
+import { deepFreeze } from '../src/Resources/util'
 
 describe('deepFreeze', () => {
 	describe('values should appear unchanged', () => {

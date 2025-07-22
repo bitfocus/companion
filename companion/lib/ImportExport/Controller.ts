@@ -479,111 +479,120 @@ export class ImportExportController {
 					})
 				}),
 
-			importFull: publicProcedure.input(zodClientImportSelection).mutation(async ({ input, ctx }) => {
-				return this.#checkOrRunImportTask('import', async () => {
-					const data = ctx.pendingImport?.object
-					if (!data) throw new Error('No in-progress import object')
+			importFull: publicProcedure
+				.input(z.object({ config: zodClientImportSelection.nullable(), fullReset: z.boolean() }))
+				.mutation(async ({ input: { config, fullReset }, ctx }) => {
+					return this.#checkOrRunImportTask('import', async () => {
+						const data = ctx.pendingImport?.object
+						if (!data) throw new Error('No in-progress import object')
 
-					if (data.type !== 'full') throw new Error('Invalid import object')
+						if (data.type !== 'full') throw new Error('Invalid import object')
 
-					// Destroy old stuff
-					await this.#reset(undefined, !input || input.buttons)
+						const resetArg = fullReset || !config ? null : { ...config, connections: true, userconfig: false }
 
-					// Import connection collections if provided
-					this.#instancesController.collections.replaceCollections(data.connectionCollections || [])
+						// Destroy old stuff
+						await this.#reset(resetArg, !config || config.buttons)
 
-					// Always Import instances
-					const instanceIdMap = this.#importInstances(data.connections, {})
+						// Import connection collections if provided
+						this.#instancesController.collections.replaceCollections(data.connectionCollections || [])
 
-					// import custom variables
-					if (!input || input.customVariables) {
-						this.#controlsController.replaceCustomVariableCollections(data.customVariablesCollections || [])
+						// Always Import instances
+						const instanceIdMap = this.#importInstances(data.connections, {})
 
-						for (const [id, variableDefinition] of Object.entries(data.customVariables || {})) {
-							const controlId = CreateCustomVariableControlId(id)
-							const fixedControlObj = this.#fixupCustomVariableControl(variableDefinition, instanceIdMap)
+						// import custom variables
+						if (!config || config.customVariables) {
+							this.#controlsController.replaceCustomVariableCollections(data.customVariablesCollections || [])
 
-							this.#controlsController.importCustomVariable(controlId, fixedControlObj)
-						}
-					}
+							for (const [id, variableDefinition] of Object.entries(data.customVariables || {})) {
+								const controlId = CreateCustomVariableControlId(id)
+								const fixedControlObj = this.#fixupCustomVariableControl(variableDefinition, instanceIdMap)
 
-					if (data.pages && (!input || input.buttons)) {
-						// Import pages
-						for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
-							if (!pageInfo) continue
-
-							const pageNumber = Number(pageNumber0)
-							if (isNaN(pageNumber)) {
-								this.#logger.warn(`Invalid page number: ${pageNumber0}`)
-								continue
-							}
-
-							// Ensure the page exists
-							const insertPageCount = pageNumber - this.#pagesController.store.getPageCount()
-							if (insertPageCount > 0) {
-								this.#pagesController.insertPages(
-									this.#pagesController.store.getPageCount() + 1,
-									new Array(insertPageCount).fill('Page')
-								)
-							}
-
-							this.#performPageImport(pageInfo, pageNumber, instanceIdMap)
-						}
-					}
-
-					if (!input || input.surfaces) {
-						const surfaces = data.surfaces as Record<number, SurfaceConfig>
-						const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
-						const getPageId = (val: number) =>
-							this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
-						const fixPageId = (groupConfig: SurfaceGroupConfig) => {
-							if ('last_page' in groupConfig) {
-								groupConfig.last_page_id = getPageId(groupConfig.last_page!)
-								delete groupConfig.last_page
-							}
-							if ('startup_page' in groupConfig) {
-								groupConfig.startup_page_id = getPageId(groupConfig.startup_page!)
-								delete groupConfig.startup_page
+								this.#controlsController.importCustomVariable(controlId, fixedControlObj)
 							}
 						}
 
-						// Convert external page refs, i.e. page numbers, to internal ids.
-						for (const surface of Object.values(surfaces)) {
-							fixPageId(surface.groupConfig)
-						}
-						for (const groupConfig of Object.values(surfaceGroups)) {
-							fixPageId(groupConfig)
-						}
-						this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
-					}
-
-					if (!input || input.triggers) {
-						// Import trigger collections if provided
-						if (data.triggerCollections) {
-							this.#controlsController.replaceTriggerCollections(data.triggerCollections)
+						// Import connection collections if provided
+						if (data.connectionCollections) {
+							this.#instancesController.collections.replaceCollections(data.connectionCollections)
 						}
 
-						for (const [id, trigger] of Object.entries(data.triggers || {})) {
-							const controlId = CreateTriggerControlId(id)
-							const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-							this.#controlsController.importTrigger(controlId, fixedControlObj)
-						}
-					}
+						if (data.pages && (!config || config.buttons)) {
+							// Import pages
+							for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
+								if (!pageInfo) continue
 
-					// trigger startup triggers to run
-					setImmediate(() => {
-						this.#controlsController.triggers.emit('startup')
+								const pageNumber = Number(pageNumber0)
+								if (isNaN(pageNumber)) {
+									this.#logger.warn(`Invalid page number: ${pageNumber0}`)
+									continue
+								}
+
+								// Ensure the page exists
+								const insertPageCount = pageNumber - this.#pagesController.store.getPageCount()
+								if (insertPageCount > 0) {
+									this.#pagesController.insertPages(
+										this.#pagesController.store.getPageCount() + 1,
+										new Array(insertPageCount).fill('Page')
+									)
+								}
+
+								this.#performPageImport(pageInfo, pageNumber, instanceIdMap)
+							}
+						}
+
+						if (!config || config.surfaces) {
+							const surfaces = data.surfaces as Record<number, SurfaceConfig>
+							const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
+							const getPageId = (val: number) =>
+								this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
+							const fixPageId = (groupConfig: SurfaceGroupConfig) => {
+								if ('last_page' in groupConfig) {
+									groupConfig.last_page_id = getPageId(groupConfig.last_page!)
+									delete groupConfig.last_page
+								}
+								if ('startup_page' in groupConfig) {
+									groupConfig.startup_page_id = getPageId(groupConfig.startup_page!)
+									delete groupConfig.startup_page
+								}
+							}
+
+							// Convert external page refs, i.e. page numbers, to internal ids.
+							for (const surface of Object.values(surfaces)) {
+								fixPageId(surface.groupConfig)
+							}
+							for (const groupConfig of Object.values(surfaceGroups)) {
+								fixPageId(groupConfig)
+							}
+							this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
+						}
+
+						if (!config || config.triggers) {
+							// Import trigger collections if provided
+							if (data.triggerCollections) {
+								this.#controlsController.replaceTriggerCollections(data.triggerCollections)
+							}
+
+							for (const [id, trigger] of Object.entries(data.triggers || {})) {
+								const controlId = CreateTriggerControlId(id)
+								const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
+								this.#controlsController.importTrigger(controlId, fixedControlObj)
+							}
+						}
+
+						// trigger startup triggers to run
+						setImmediate(() => {
+							this.#controlsController.triggers.emit('startup')
+						})
+
+						// Import image library data if present
+						if (!config || config.imageLibrary) {
+							this.#graphicsController.imageLibrary.importImageLibrary(
+								data.imageLibraryCollections || [],
+								data.imageLibrary || []
+							)
+						}
 					})
-
-					// Import image library data if present
-					if (!input || input.imageLibrary) {
-						this.#graphicsController.imageLibrary.importImageLibrary(
-							data.imageLibraryCollections || [],
-							data.imageLibrary || []
-						)
-					}
-				})
-			}),
+				}),
 		})
 	}
 
@@ -648,7 +657,7 @@ export class ImportExportController {
 		}
 	}
 
-	async #reset(config: ClientResetSelection | undefined, skipNavButtons = false): Promise<'ok'> {
+	async #reset(config: ClientResetSelection | null, skipNavButtons = false): Promise<'ok'> {
 		const controls = this.#controlsController.getAllControls()
 
 		if (!config || config.buttons) {
@@ -937,7 +946,7 @@ export class ImportExportController {
 			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
 		}
 
-		const allEntities: SomeEntityModel[] = [...result.feedbacks]
+		const allEntities: SomeEntityModel[] = [...result.feedbacks, ...result.localVariables]
 		if (control.steps) {
 			for (const [stepId, step] of Object.entries<any>(control.steps)) {
 				const newStepSets: ActionSetsModel = {

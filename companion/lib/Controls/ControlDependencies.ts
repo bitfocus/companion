@@ -11,6 +11,7 @@ import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { ClientCustomVariableData, CustomVariableUpdate } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 
 export interface ControlDependencies {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
@@ -34,6 +35,8 @@ export interface ControlCommonEvents {
 	invalidateControlRender: [controlId: string]
 	invalidateLocationRender: [location: ControlLocation]
 	customVariableDefinitionChanged: [id: string, info: ClientCustomVariableData | null]
+
+	presetDrawn: [controlId: string, render: ImageResult]
 }
 
 export type ControlChangeEvents = {

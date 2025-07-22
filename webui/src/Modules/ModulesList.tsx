@@ -12,7 +12,7 @@ import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
-import { makeAbsolutePath } from '~/util.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -110,85 +110,94 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	const hiddenCount = new Set(allProducts.map((p) => p.id)).size - new Set(typeProducts.map((p) => p.id)).size
 
 	return (
-		<div>
-			<h4>Manage Modules</h4>
+		<div className="flex-column-layout">
+			<div className="fixed-header">
+				<h4>Manage Modules</h4>
 
-			<p>
-				View and manage your installed modules, or search for new ones to support additional devices. Can't find your
-				device?{' '}
-				<a target="_blank" href={makeAbsolutePath('/getting-started#6_modules.md')} className="text-decoration-none">
-					Check our guidance for getting device support
-				</a>
-				.<br />
-				For offline systems, download module bundles from the{' '}
-				<a href="https://user.bitfocus.io/download" target="_blank" className="text-decoration-none">
-					Bitfocus website
-				</a>
-				.
-			</p>
+				<p>
+					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
+					device?{' '}
+					<a target="_blank" href={makeAbsolutePath('/getting-started#6_modules.md')} className="text-decoration-none">
+						Check our guidance for getting device support
+					</a>
+					.<br />
+					For offline systems, download module bundles from the{' '}
+					<a href="https://user.bitfocus.io/download" target="_blank" className="text-decoration-none">
+						Bitfocus website
+					</a>
+					.
+				</p>
 
-			<ImportModules />
+				<ImportModules />
 
-			<div className="refresh-and-last-updated">
-				<RefreshModulesList />
-				<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+				<div className="refresh-and-last-updated">
+					<RefreshModulesList />
+					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+				</div>
+
+				<SearchBox filter={filter} setFilter={setFilter} />
 			</div>
 
-			<SearchBox filter={filter} setFilter={setFilter} />
-
-			<table className="table-tight table-responsive-sm">
-				<thead>
-					<tr>
-						<th colSpan={2}>
-							Module
-							<CButtonGroup className="table-header-buttons">
-								<VisibilityButton {...visibleModules} keyId="installed" color="success" label="Installed" />
-								<VisibilityButton {...visibleModules} keyId="available" color="warning" label="Available" />
-								<VisibilityButton {...visibleModules} keyId="availableDeprecated" color="primary" label="Deprecated" />
-							</CButtonGroup>
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{components}
-					{hiddenCount > 0 && (
+			<div className="scrollable-content">
+				<table className="table-tight table-responsive-sm">
+					<thead>
 						<tr>
-							<td colSpan={4} style={{ padding: '10px 5px' }}>
-								<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-								<strong>{hiddenCount} Modules are ignored</strong>
-							</td>
+							<th colSpan={2}>
+								Module
+								<CButtonGroup className="table-header-buttons">
+									<VisibilityButton {...visibleModules} keyId="installed" color="success" label="Installed" />
+									<VisibilityButton {...visibleModules} keyId="available" color="warning" label="Available" />
+									<VisibilityButton
+										{...visibleModules}
+										keyId="availableDeprecated"
+										color="primary"
+										label="Deprecated"
+									/>
+								</CButtonGroup>
+							</th>
 						</tr>
-					)}
+					</thead>
+					<tbody>
+						{components}
+						{hiddenCount > 0 && (
+							<tr>
+								<td colSpan={4} style={{ padding: '10px 5px' }}>
+									<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
+									<strong>{hiddenCount} Modules are ignored</strong>
+								</td>
+							</tr>
+						)}
 
-					{modules.modules.size === 0 && !visibleModules.visibility.available && (
-						<tr>
-							<td colSpan={4}>
-								<NonIdealState icon={faPlug}>
-									You don't have any modules installed yet. <br />
-									Try adding something from the list <span className="d-xl-none">below</span>
-									<span className="d-none d-xl-inline">to the right</span>.
-								</NonIdealState>
-							</td>
-						</tr>
-					)}
+						{modules.modules.size === 0 && !visibleModules.visibility.available && (
+							<tr>
+								<td colSpan={4}>
+									<NonIdealState icon={faPlug}>
+										You don't have any modules installed yet. <br />
+										Try adding something from the list <span className="d-xl-none">below</span>
+										<span className="d-none d-xl-inline">to the right</span>.
+									</NonIdealState>
+								</td>
+							</tr>
+						)}
 
-					{components.length === 0 && allProducts.length > 0 && !!filter && !visibleModules.visibility.available && (
-						<tr>
-							<td colSpan={4}>
-								<NonIdealState icon={faPlug}>
-									No modules match your search.
-									<br />
-									{!visibleModules.visibility.available && (
-										<a href="#" onClick={includeStoreModules}>
-											Click here to include modules from the store
-										</a>
-									)}
-								</NonIdealState>
-							</td>
-						</tr>
-					)}
-				</tbody>
-			</table>
+						{components.length === 0 && allProducts.length > 0 && !!filter && !visibleModules.visibility.available && (
+							<tr>
+								<td colSpan={4}>
+									<NonIdealState icon={faPlug}>
+										No modules match your search.
+										<br />
+										{!visibleModules.visibility.available && (
+											<a href="#" onClick={includeStoreModules}>
+												Click here to include modules from the store
+											</a>
+										)}
+									</NonIdealState>
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	)
 })

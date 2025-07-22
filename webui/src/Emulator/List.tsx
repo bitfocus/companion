@@ -1,10 +1,10 @@
 import React, { useCallback } from 'react'
-import { LoadingRetryOrError } from '~/util.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CAlert, CButton, CCol, CContainer, CRow, CWidgetStatsA } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { faGamepad } from '@fortawesome/free-solid-svg-icons'
 

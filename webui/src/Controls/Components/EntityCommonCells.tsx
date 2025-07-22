@@ -8,7 +8,8 @@ import React from 'react'
 import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
-import { PreventDefaultHandler, MyErrorBoundary } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { OptionsInputField } from '../OptionsInputField.js'
 import { useOptionsAndIsVisible } from '~/Hooks/useOptionsAndIsVisible.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
@@ -48,7 +49,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					</div>
 				)}
 
-				<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
+				<CForm className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
 					{!!entity && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>

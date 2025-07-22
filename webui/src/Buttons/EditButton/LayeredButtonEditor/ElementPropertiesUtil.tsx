@@ -4,10 +4,10 @@ import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useCallback } from 'react'
-import { TextInputField } from '../../../Components/TextInputField.js'
-import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 type ExtractValue<T> = T extends ExpressionOrValue<infer U> ? U : never
 type SetValueFn<TObj, TKey extends keyof TObj> = (value: ExtractValue<TObj[TKey]>) => void

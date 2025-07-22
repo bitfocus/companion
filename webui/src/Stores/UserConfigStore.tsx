@@ -1,7 +1,7 @@
 import { action, makeObservable, observable } from 'mobx'
 import { cloneDeep } from 'lodash-es'
 import { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
-import { assertNever } from '~/util'
+import { assertNever } from '~/Resources/util'
 
 export class UserConfigStore {
 	private hasProperties_ = false // properties_ can't be null, so we need a separate flag to check if it's initialized

@@ -1,7 +1,5 @@
 import { action, observable } from 'mobx'
-import { assertNever } from '~/util.js'
-import { applyPatch } from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
+import { assertNever } from '~/Resources/util.js'
 import type {
 	ClientTriggerData,
 	TriggerCollection,
@@ -9,6 +7,7 @@ import type {
 	TriggersUpdate,
 } from '@companion-app/shared/Model/TriggerModel.js'
 import type { GenericCollectionsStore } from './GenericCollectionsStore'
+import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
 
 export class TriggersListStore implements GenericCollectionsStore<TriggerCollectionData> {
 	readonly triggers = observable.map<string, ClientTriggerData>()
@@ -40,8 +39,7 @@ export class TriggersListStore implements GenericCollectionsStore<TriggerCollect
 			case 'update': {
 				const oldObj = this.triggers.get(change.controlId)
 				if (!oldObj) throw new Error(`Got update for unknown trigger: ${change.controlId}`)
-				const newObj = applyPatch(cloneDeep(oldObj), change.patch)
-				this.triggers.set(change.controlId, newObj.newDocument)
+				applyJsonPatchInPlace(oldObj, change.patch)
 				break
 			}
 			default:
@@ -77,7 +75,12 @@ export class TriggersListStore implements GenericCollectionsStore<TriggerCollect
 			for (const collection of newData) {
 				if (!collection) continue
 
-				this.collections.set(collection.id, collection)
+				const existing = this.collections.get(collection.id)
+				if (existing) {
+					updateObjectInPlace(existing, collection)
+				} else {
+					this.collections.set(collection.id, collection)
+				}
 			}
 		}
 	})

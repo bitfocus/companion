@@ -5,9 +5,8 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
-import debounceFn from 'debounce-fn'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Abstract class for a editable button control.
@@ -74,10 +73,10 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				controlId,
 				commitChange: this.commitChange.bind(this),
 				invalidateControl: this.triggerRedraw.bind(this),
-				localVariablesChanged: this.#onLocalVariablesChanged.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				moduleHost: deps.instance.moduleHost,
+				variableValues: deps.variables.values,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType, injectedVariableValues) =>
@@ -200,34 +199,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		}
 
 		return result
-	}
-
-	#pendingChangedVariables = new Set<string>()
-	#debouncedLocalVariablesChanged = debounceFn(
-		() => {
-			const allChangedVariables = this.#pendingChangedVariables
-			this.#pendingChangedVariables = new Set()
-
-			this.deps.variables.values.emit('local_variables_changed', allChangedVariables, this.controlId)
-		},
-		{
-			wait: 5,
-			maxWait: 10,
-		}
-	)
-	#onLocalVariablesChanged(allChangedVariables: Set<string>): void {
-		for (const variable of allChangedVariables) {
-			this.#pendingChangedVariables.add(variable)
-		}
-
-		if (this.#pendingChangedVariables.size === 0) return
-
-		/*
-		 * This is debounced to ensure that a loop of references between variables doesn't cause an infinite loop of updates
-		 * Future: This could be improved by using a 'rate limit' style approach, where we allow a bunch of updates to happen immediately,
-		 * but then throttle the updates after that. Perhaps allow 10 within the first 2ms, then limit to 1 every Xms.
-		 */
-		this.#debouncedLocalVariablesChanged()
 	}
 
 	abstract onVariablesChanged(allChangedVariables: Set<string>): void
@@ -402,12 +373,9 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		this.pushed = !!direction
 
 		if (this.pushed !== wasPushed) {
-			// TODO - invalidate feedbacks?
-
 			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 			if (location) {
 				this.deps.events.emit('updateButtonState', location, this.pushed, surfaceId)
-				// this.deps.services.emberplus.updateButtonState(location, this.pushed, surfaceId)
 			}
 
 			this.triggerRedraw()

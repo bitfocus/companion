@@ -6,7 +6,7 @@ import AutoSizer from 'react-virtualized-auto-sizer'
 import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { useParams } from '@tanstack/react-router'
-import { trpc, useMutationExt } from './TRPC'
+import { trpc, useMutationExt } from './Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus'
 

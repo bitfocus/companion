@@ -1,5 +1,5 @@
 import { observable, action } from 'mobx'
-import { assertNever } from '~/util.js'
+import { assertNever } from '~/Resources/util.js'
 import type {
 	ClientConnectionsUpdate,
 	ClientConnectionConfig,
@@ -7,6 +7,7 @@ import type {
 	ConnectionCollectionData,
 } from '@companion-app/shared/Model/Connections.js'
 import type { GenericCollectionsStore } from './GenericCollectionsStore'
+import { updateObjectInPlace } from './ApplyDiffToMap'
 
 export class ConnectionsStore implements GenericCollectionsStore<ConnectionCollectionData> {
 	readonly connections = observable.map<string, ClientConnectionConfig>()
@@ -63,7 +64,12 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 					this.connections.delete(change.id)
 					break
 				case 'update': {
-					this.connections.set(change.id, change.info)
+					const existing = this.connections.get(change.id)
+					if (existing) {
+						updateObjectInPlace(existing, change.info)
+					} else {
+						this.connections.set(change.id, change.info)
+					}
 					break
 				}
 				default:
@@ -81,27 +87,13 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 			for (const collection of newData) {
 				if (!collection) continue
 
-				this.collections.set(collection.id, collection)
+				const existing = this.collections.get(collection.id)
+				if (existing) {
+					updateObjectInPlace(existing, collection)
+				} else {
+					this.collections.set(collection.id, collection)
+				}
 			}
 		}
 	})
-
-	// public applyGroupsChange = action((changes: ConnectionGroupsUpdate[]) => {
-	// 	for (const change of changes) {
-	// 		const changeType = change.type
-	// 		switch (change.type) {
-	// 			case 'remove':
-	// 				this.groups.delete(change.id)
-	// 				break
-	// 			case 'update': {
-	// 				this.groups.set(change.id, change.info)
-	// 				break
-	// 			}
-	// 			default:
-	// 				console.error(`Unknown connection groups change: ${changeType}`)
-	// 				assertNever(change)
-	// 				break
-	// 		}
-	// 	}
-	// })
 }

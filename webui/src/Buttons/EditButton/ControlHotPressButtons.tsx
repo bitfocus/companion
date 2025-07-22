@@ -3,8 +3,8 @@ import { CButtonGroup, CButton } from '@coreui/react'
 import { faPlay, faUndo, faRedo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback } from 'react'
-import { trpc, useMutationExt } from '~/TRPC'
-import { MyErrorBoundary } from '~/util.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { MyErrorBoundary } from '~/Resources/Error'
 
 export function ControlHotPressButtons({
 	location,

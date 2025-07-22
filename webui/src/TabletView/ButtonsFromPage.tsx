@@ -5,7 +5,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface TabletGridSize extends UserConfigGridSize {
 	columnCount: number

@@ -88,7 +88,7 @@ export class GraphicsRenderer {
 	static drawBlank(
 		resolution: { width: number; height: number },
 		options: GraphicsOptions,
-		location: ControlLocation
+		location: ControlLocation | null
 	): ImageResult {
 		// let now = performance.now()
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
@@ -110,14 +110,20 @@ export class GraphicsRenderer {
 		})
 	}
 
-	static #drawBlankImage(img: Image, options: GraphicsOptions, location: ControlLocation) {
+	static #drawBlankImage(img: Image, options: GraphicsOptions, location: ControlLocation | null) {
 		// Calculate some constants for drawing without reinventing the numbers
 		const { drawScale, transformX } = GraphicsRenderer.calculateTransforms(img)
 
 		img.fillColor('black')
 
 		if (!options.remove_topbar) {
-			img.drawTextLine(transformX(2), 3 * drawScale, formatLocation(location), 'rgb(50, 50, 50)', 8 * drawScale)
+			img.drawTextLine(
+				transformX(2),
+				3 * drawScale,
+				location ? formatLocation(location) : 'x/x',
+				'rgb(50, 50, 50)',
+				8 * drawScale
+			)
 			img.horizontalLine(13.5 * drawScale, { color: 'rgb(30, 30, 30)', width: 1 })
 		}
 	}

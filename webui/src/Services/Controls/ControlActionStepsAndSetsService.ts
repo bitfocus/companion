@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface IControlActionStepsAndSetsService {
 	// readonly listId: SomeSocketEntityLocation

@@ -9,10 +9,8 @@ export const Route = createFileRoute('/_app/surfaces/configured/')({
 
 function RouteComponent() {
 	return (
-		<div className="secondary-panel-simple">
-			<div className="secondary-panel-simple-body no-scroll">
-				<NonIdealState text="Select a surface or group to configure" icon={faCog} />
-			</div>
+		<div className="secondary-panel-simple-body no-scroll">
+			<NonIdealState text="Select a surface or group to configure" icon={faCog} />
 		</div>
 	)
 }

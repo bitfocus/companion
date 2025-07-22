@@ -81,7 +81,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 					<h5>Change delay group properties</h5>
 				</CModalHeader>
 				<CModalBody>
-					<CForm className="row g-3" onSubmit={doAction}>
+					<CForm className="row g-sm-2" onSubmit={doAction}>
 						<CFormLabel htmlFor="colFormPressDuration" className="col-sm-4 col-form-label col-form-label-sm">
 							Press duration
 						</CFormLabel>

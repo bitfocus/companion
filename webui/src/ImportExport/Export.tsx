@@ -1,6 +1,6 @@
 import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState, useContext } from 'react'
-import { CButton, CForm, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { makeAbsolutePath, PreventDefaultHandler } from '~/util.js'
+import { CButton, CForm, CFormCheck, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { makeAbsolutePath, PreventDefaultHandler } from '~/Resources/util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
@@ -189,10 +189,12 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 				/>
 			</div> */}
 			<div style={{ paddingTop: '1em' }}>
-				<SelectExportFormat value={config.format} setValue={(val) => setValue('format', val)} label="File format" />
+				<CFormLabel>File format</CFormLabel>
+				<SelectExportFormat value={config.format} setValue={(val) => setValue('format', val)} />
 			</div>
 			<div style={{ paddingTop: '1em' }}>
-				<TextInputField value={String(config.filename)} setValue={updateProp} label="File name" useVariables={true} />
+				<CFormLabel>File name</CFormLabel>
+				<TextInputField value={String(config.filename)} setValue={updateProp} useVariables={true} />
 			</div>
 		</div>
 	)

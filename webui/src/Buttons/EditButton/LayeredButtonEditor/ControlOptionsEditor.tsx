@@ -1,14 +1,14 @@
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import React, { MutableRefObject, useCallback, useRef } from 'react'
-import { PreventDefaultHandler } from '../../../util.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
-import { InlineHelp } from '../../../Components/InlineHelp.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
 import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string

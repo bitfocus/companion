@@ -37,6 +37,14 @@ export interface NormalButtonModel extends ButtonModelBase {
 	style: ButtonStyleProperties
 }
 
+export interface PresetButtonModel extends ButtonModelBase {
+	readonly type: 'preset:button'
+
+	options: NormalButtonOptions
+
+	style: ButtonStyleProperties
+}
+
 export interface LayeredButtonModel extends ButtonModelBase {
 	readonly type: 'button-layered'
 

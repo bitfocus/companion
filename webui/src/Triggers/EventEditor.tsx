@@ -4,12 +4,14 @@ import {
 	faTrash,
 	faCompressArrowsAlt,
 	faExpandArrowsAlt,
-	faCopy,
+	faClone,
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { FormEvent, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { DragState, MyErrorBoundary, PreventDefaultHandler, checkDragState } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import { DragState, checkDragState } from '~/Resources/DragAndDrop.js'
 import { OptionsInputField } from '~/Controls/OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -252,7 +254,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 							</CButton>
 						)}
 						<CButton size="sm" onClick={service.performDuplicate} title="Duplicate event">
-							<FontAwesomeIcon icon={faCopy} />
+							<FontAwesomeIcon icon={faClone} />
 						</CButton>
 						<CButton size="sm" onClick={service.performDelete} title="Remove event">
 							<FontAwesomeIcon icon={faTrash} />
@@ -279,7 +281,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 						{eventSpec?.description || ''}
 					</CCol>
 
-					<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
+					<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 						{eventOptions.map((opt, i) => (
 							<MyErrorBoundary key={i}>
 								<OptionsInputField

@@ -12,7 +12,7 @@
 		"moduleResolution": "Node16",
 		"composite": true,
 
-		"target": "es2022",
+		"target": "es2024",
 		"noImplicitAny": true,
 		"sourceMap": true,
 		"declaration": true,
@@ -20,7 +20,7 @@
 		"listFiles": false,
 		"traceResolution": false,
 		"pretty": true,
-		"lib": ["es2024"],
+		"lib": ["es2024", "ESNext.Collection"],
 		"types": ["node"],
 		"strict": true,
 		"alwaysStrict": false,

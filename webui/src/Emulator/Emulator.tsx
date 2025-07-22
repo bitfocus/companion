@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, MyErrorBoundary, useMountEffect, PreventDefaultHandler } from '~/util.js'
+import { useMountEffect, PreventDefaultHandler } from '~/Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CButton, CCol, CForm, CRow } from '@coreui/react'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
@@ -9,7 +11,7 @@ import { ControlLocation, EmulatorConfig } from '@companion-app/shared/Model/Com
 import { observer } from 'mobx-react-lite'
 import { useParams } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { observable, ObservableMap, runInAction } from 'mobx'
 
 function getCacheKey(x: number, y: number): string {

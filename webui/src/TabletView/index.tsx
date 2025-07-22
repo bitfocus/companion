@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { LoadingRetryOrError, MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CCol, CContainer, CRow } from '@coreui/react'
 import queryString from 'query-string'
 import rangeParser from 'parse-numeric-range'
@@ -13,7 +14,7 @@ import { observer } from 'mobx-react-lite'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { useNavigate } from '@tanstack/react-router'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const TabletView = observer(function TabletView() {
 	const navigate = useNavigate({ from: '/tablet' })

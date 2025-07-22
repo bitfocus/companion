@@ -1,6 +1,6 @@
 import { useDeferredValue } from 'react'
 import { ConnectDropTarget, useDrop } from 'react-dnd'
-import { checkDragState, checkGridDragState, type DragState } from '../../util.js'
+import { checkDragState, checkGridDragState, type DragState } from '~/Resources/DragAndDrop.js'
 import type { NestingCollectionsApi } from './Types.js'
 
 export interface CollectionsNestingTableItemDragItem {

@@ -52,5 +52,9 @@ jobs:
           branch: 'chore/update-nodejs'
           committer: 'Companion Bot <companion-module-bot@users.noreply.github.com>'
           author: 'Companion Bot <companion-module-bot@users.noreply.github.com>'
-          add-paths: 'nodejs-versions.json'
+          add-paths: |
+            package.json
+            */package.json
+            nodejs-versions.json
+            .node-version
           token: ${{ secrets.SYNC_MODULES_PAT }}

@@ -10,7 +10,7 @@ import { CButton, CFormInput } from '@coreui/react'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { PresetDragItem } from './Presets/PresetDragItem.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void

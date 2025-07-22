@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 
 /**
  * Load and retrieve a button image for a specific control id.
@@ -9,30 +8,16 @@ import { trpc } from '~/TRPC'
  * @returns
  */
 export function useButtonImageForControlId(controlId: string, disable = false): string | null {
-	const [imageState, setImageState] = useState<string | null>(null)
-
-	useSubscription(
+	const sub = useSubscription(
 		trpc.preview.graphics.controlId.subscriptionOptions(
 			{
 				controlId,
 			},
 			{
 				enabled: !disable,
-				onStarted: () => {
-					setImageState(null)
-				},
-				onData: (data) => {
-					setImageState(data)
-				},
 			}
 		)
 	)
 
-	useEffect(() => {
-		if (disable) {
-			setImageState(null)
-		}
-	}, [disable])
-
-	return imageState
+	return sub.data ?? null
 }

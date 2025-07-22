@@ -1,9 +1,9 @@
 import { ButtonGraphicsBoxElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
-import { ColorInputField } from '../../../Components/ColorInputField.js'
+import { ColorInputField } from '~/Components/ColorInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { ElementBoundsProperties } from './ElementBoundsProperties.js'
 import { BorderPropertiesEditor } from './BorderPropertiesEditor.js'
 
@@ -52,7 +52,6 @@ const FieldFillColorInput = observer(function FieldFillColorInput({
 			setValue={setValue as (color: number | string) => void}
 			value={elementProp.value}
 			returnType="number"
-			helpText="Fill color"
 			enableAlpha
 		/>
 	)

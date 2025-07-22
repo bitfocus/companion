@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { assertNever, makeAbsolutePath } from '~/util.js'
+import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { nanoid } from 'nanoid'
 import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -9,7 +9,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/Generi
 import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
-import { trpc, useMutationExt } from './TRPC'
+import { trpc, useMutationExt } from './Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
 
 interface LogConfig {

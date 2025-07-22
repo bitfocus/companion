@@ -1,11 +1,10 @@
 import React, { useMemo, useState, useCallback, useRef } from 'react'
-import { CButton, CFormInput, CFormLabel, CInputGroup } from '@coreui/react'
+import { CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 
 interface SecretTextInputFieldProps {
-	label?: React.ReactNode
 	tooltip?: string
 	hasSavedValue: boolean
 	editValue: string
@@ -17,7 +16,6 @@ interface SecretTextInputFieldProps {
 }
 
 export const SecretTextInputField = observer(function SecretTextInputField({
-	label,
 	tooltip,
 	hasSavedValue,
 	editValue,
@@ -58,7 +56,6 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 	// Render the input
 	return (
 		<>
-			<CFormLabel>{label}</CFormLabel>
 			<CInputGroup>
 				<CFormInput
 					type="text"

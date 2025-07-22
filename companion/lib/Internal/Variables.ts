@@ -27,7 +27,6 @@ import {
 	SomeSocketEntityLocation,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { CHOICES_DYNAMIC_LOCATION } from './Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -171,6 +170,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 					},
 				],
 			},
+
 			expression_value: {
 				feedbackType: FeedbackEntitySubType.Value,
 				label: 'Evaluate Expression',
@@ -221,6 +221,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
+			/*
 			local_variable_set_value: {
 				label: 'Local Variable: Set raw value',
 				description: undefined,
@@ -290,6 +291,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 					},
 				],
 			},
+			*/
 		}
 	}
 

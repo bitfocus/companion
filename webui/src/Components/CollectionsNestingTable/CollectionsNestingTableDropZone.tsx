@@ -13,7 +13,7 @@ export function CollectionsNestingTableDropZone({
 }): React.JSX.Element {
 	return (
 		<div ref={drop} className="collections-nesting-table-dropzone">
-			<CollectionsNestingTableNestingRow nestingLevel={nestingLevel}>
+			<CollectionsNestingTableNestingRow className="flex flex-row align-items-center" nestingLevel={nestingLevel}>
 				<p>Drop {itemName} here</p>
 			</CollectionsNestingTableNestingRow>
 		</div>

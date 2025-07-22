@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
-import { PreventDefaultHandler } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHome } from '@fortawesome/free-solid-svg-icons'

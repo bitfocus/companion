@@ -48,6 +48,14 @@ export default defineConfig({
 	},
 	server: {
 		proxy: {
+			[`${normalizedBase}/instance`]: {
+				target: `http://${upstreamUrl}`,
+				rewrite: (path) => path.slice(normalizedBase.length),
+			},
+			[`${normalizedBase}/connections/instance`]: {
+				target: `http://${upstreamUrl}`,
+				rewrite: (path) => path.slice(normalizedBase.length),
+			},
 			[`${normalizedBase}/int`]: {
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
@@ -56,9 +64,10 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
-			'/trpc': {
+			[`${normalizedBase}/trpc`]: {
 				target: `ws://${upstreamUrl}`,
 				ws: true,
+				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 		},
 	},

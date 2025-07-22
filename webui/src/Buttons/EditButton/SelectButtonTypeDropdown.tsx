@@ -3,7 +3,7 @@ import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CDropdown, CButtonGroup, CButton, CDropdownToggle, CDropdownMenu, CDropdownItem } from '@coreui/react'
 import React, { useCallback } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export function SelectButtonTypeDropdown({
 	location,

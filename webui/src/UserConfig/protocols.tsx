@@ -10,7 +10,7 @@ import { ArtnetConfig } from './Sections/ArtnetConfig.js'
 import { VideohubServerConfig } from './Sections/VideohubServerConfig.js'
 import { HttpConfig } from './Sections/HttpConfig.js'
 import { observer } from 'mobx-react-lite'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ArtnetProtocol } from './Sections/ArtnetProtocol.js'
 import { HttpProtocol } from './Sections/HttpProtocol.js'
 import { OscProtocol } from './Sections/OscProtocol.js'
@@ -23,14 +23,18 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 	return (
 		<CRow className="split-panels">
 			<CCol xl={6} className="primary-panel">
-				<div className="d-flex justify-content-between">
-					<div>
-						<h4>Settings - Protocols</h4>
-						<p>Settings apply instantaneously, don't worry about it!</p>
+				<div className="flex-column-layout">
+					<div className="fixed-header">
+						<div className="d-flex justify-content-between">
+							<div>
+								<h4>Settings - Protocols</h4>
+								<p>Settings apply instantaneously, don't worry about it!</p>
+							</div>
+						</div>
 					</div>
-				</div>
-				<div>
-					<UserConfigTable />
+					<div className="scrollable-content">
+						<UserConfigTable />
+					</div>
 				</div>
 			</CCol>
 			<CCol xs={12} xl={6} className="secondary-panel">

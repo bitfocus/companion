@@ -7,15 +7,13 @@ import { RecorderSessionHeading } from './RecorderSessionHeading.js'
 import { RecorderSession } from './RecorderSession.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/TRPC.js'
-import { useComputed } from '~/util.js'
+import { trpc } from '~/Resources/TRPC.js'
+import { useComputed } from '~/Resources/util.js'
 import { observer } from 'mobx-react-lite'
 import { ActionRecorderSessionStore } from './SessionStore.js'
 
 export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
-
-	console.log('render')
 
 	const sessionsStore = useMemo(() => new ActionRecorderSessionStore(), [])
 

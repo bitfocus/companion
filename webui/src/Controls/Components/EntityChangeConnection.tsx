@@ -2,7 +2,7 @@ import { DropdownChoiceId } from '@companion-module/base'
 import React, { useContext } from 'react'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { observer } from 'mobx-react-lite'
 import { CCol, CFormLabel } from '@coreui/react'
 

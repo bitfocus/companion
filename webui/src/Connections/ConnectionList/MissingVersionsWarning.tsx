@@ -4,8 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { trpc, useMutationExt } from '~/TRPC'
-import { useComputed } from '~/util.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { useComputed } from '~/Resources/util.js'
 
 export const MissingVersionsWarning = observer(function MissingVersionsWarning() {
 	const { connections, modules } = useContext(RootAppStoreContext)

@@ -12,12 +12,12 @@ import {
 	faTrash,
 	faMinus,
 } from '@fortawesome/free-solid-svg-icons'
-import { Tuck } from '../../../Components/Tuck.js'
+import { Tuck } from '~/Components/Tuck.js'
 import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
-import { GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
+import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
-import { useMutationExt, trpc } from '~/TRPC.js'
+import { useMutationExt, trpc } from '~/Resources/TRPC.js'
 
 export function RemoveElementButton({
 	controlId,

@@ -11,7 +11,7 @@ import { useObserver } from 'mobx-react-lite'
 import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
 import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
-import { RouterInput, trpcClient } from '~/TRPC.js'
+import { RouterInput, trpcClient } from '~/Resources/TRPC.js'
 
 const DRAW_DEBOUNCE = 50
 const DRAW_DEBOUNCE_MAX = 100

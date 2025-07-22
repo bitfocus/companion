@@ -1,4 +1,4 @@
-import { assertNever } from '../../../../util.js'
+import { assertNever } from '~/Resources/util'
 import { DEFAULT_FONTS } from '@companion-app/shared/Graphics/Fonts.js'
 
 type ListenerFn = () => void

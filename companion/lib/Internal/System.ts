@@ -28,6 +28,8 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { promisify } from 'util'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import debounceFn from 'debounce-fn'
 
 const execAsync = promisify(exec)
 
@@ -90,15 +92,21 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	readonly #customMessageLogger = LogController.createLogger('Custom')
 
 	readonly #internalUtils: InternalModuleUtils
+	readonly #userConfigController: DataUserConfig
 	readonly #requestExit: (fromInternal: boolean, restart: boolean) => void
 
 	#interfacesDefinitions: VariableDefinitionTmp[] = []
 	#interfacesValues: CompanionVariableValues = {}
 
-	constructor(internalUtils: InternalModuleUtils, requestExit: (fromInternal: boolean, restart: boolean) => void) {
+	constructor(
+		internalUtils: InternalModuleUtils,
+		userConfigController: DataUserConfig,
+		requestExit: (fromInternal: boolean, restart: boolean) => void
+	) {
 		super()
 
 		this.#internalUtils = internalUtils
+		this.#userConfigController = userConfigController
 		this.#requestExit = requestExit
 
 		// Update interfaces on an interval, but also soon after launch
@@ -110,6 +118,24 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 				this.#logger.error(`Failed to update hostname variables: ${e}`)
 			})
 		}, 5000)
+
+		const debounceUpdateUserConfigVariables = debounceFn(
+			() => {
+				const values: CompanionVariableValues = {
+					installation_name: this.#userConfigController.getKey('installName'),
+				}
+
+				this.emit('setVariables', values)
+			},
+			{
+				maxWait: 100,
+				wait: 20,
+				after: true,
+			}
+		)
+
+		debounceUpdateUserConfigVariables()
+		this.#userConfigController.on('keyChanged', debounceUpdateUserConfigVariables)
 	}
 
 	async #updateHostnameVariablesAtStartup() {
@@ -171,6 +197,10 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {
 		return [
+			{
+				label: 'System: Installation Name',
+				name: 'installation_name',
+			},
 			{
 				label: 'System: Hostname',
 				name: 'hostname',

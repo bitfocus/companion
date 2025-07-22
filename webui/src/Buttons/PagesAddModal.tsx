@@ -3,7 +3,7 @@ import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface AddPagesModalRef {
 	show(beforePageNumber: number): void

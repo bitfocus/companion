@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error'
 import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '~/Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import {
@@ -20,7 +20,7 @@ import { observer } from 'mobx-react-lite'
 import { ButtonGridZoomControl } from '~/Buttons/ButtonGridZoomControl.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
 import { useQuery } from '@tanstack/react-query'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject

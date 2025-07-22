@@ -2,7 +2,7 @@ import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faDownload, faTrashAlt, faUpload, faEdit, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { base64EncodeUint8Array } from '~/util.js'
+import { base64EncodeUint8Array } from '~/Resources/util.js'
 import { observer } from 'mobx-react-lite'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -12,7 +12,7 @@ import { ImageNameEditModal } from './ImageNameEditModal.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import CryptoJS from 'crypto-js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
-import { trpc, trpcClient, useMutationExt } from '~/TRPC.js'
+import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ImageLibraryEditorProps {
 	selectedImageName: string | null

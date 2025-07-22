@@ -19,10 +19,10 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useAllConnectionProducts } from '~/Hooks/useFilteredProducts.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { useConnectionVersionSelectOptions } from './useConnectionVersionSelectOptions.js'
 import { ModuleVersionsRefresh } from '../ModuleVersionsRefresh.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ConnectionForceVersionButtonProps {
 	connectionId: string
@@ -97,7 +97,7 @@ export function ConnectionForceVersionButton({
 					</CModalHeader>
 					<CModalBody>
 						<CForm
-							className="row g-3"
+							className="row g-sm-2"
 							onSubmit={(e) => {
 								e.preventDefault()
 								e.stopPropagation()

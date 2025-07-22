@@ -86,6 +86,12 @@ export class UIExpress {
 		// Use the router #connectionApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use('/instance', async (r, s, n) => this.#connectionApiRouter(r, s, n))
 
+		// Redirect /connections/instance to /instance.
+		// This is to maintain compatibility with modules which used relative links from the edit panel, as the path of those changed in 4.1
+		this.app.use('/connections/instance', async (req, res) => {
+			res.redirect(301, `/instance${req.url}`)
+		})
+
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use('/api', async (r, s, n) => this.#apiRouter(r, s, n))
 

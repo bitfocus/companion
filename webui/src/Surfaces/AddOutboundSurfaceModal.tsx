@@ -1,8 +1,8 @@
 import React, { ChangeEvent, FormEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CAlert, CButton, CForm, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { PreventDefaultHandler } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface AddOutboundSurfaceModalRef {
 	show(): void

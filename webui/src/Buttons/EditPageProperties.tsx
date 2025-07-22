@@ -12,7 +12,7 @@ import {
 import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface EditPagePropertiesModalRef {
 	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void

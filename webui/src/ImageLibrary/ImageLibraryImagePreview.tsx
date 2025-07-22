@@ -4,7 +4,7 @@ import { MoonLoader } from 'react-spinners'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faImage } from '@fortawesome/free-solid-svg-icons'
 import { useQuery } from '@tanstack/react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc } from '~/Resources/TRPC'
 
 interface ImageLibraryImagePreviewProps {
 	imageName: string

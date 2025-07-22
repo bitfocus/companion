@@ -4,7 +4,7 @@ import type {
 	ExtendedInputField,
 	InternalInputField,
 } from '@companion-app/shared/Model/Options.js'
-import { assertNever } from '~/util.js'
+import { assertNever } from '~/Resources/util.js'
 
 export function validateInputValue(
 	definition: ExtendedInputField | InternalInputField | ExtendedConfigField,

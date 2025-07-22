@@ -4,10 +4,10 @@ import {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
-import { DropdownInputField } from '../../../Components/DropdownInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 export const CanvasElementPropertiesEditor = observer(function CanvasElementPropertiesEditor({
 	controlId,

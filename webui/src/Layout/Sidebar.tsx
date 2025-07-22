@@ -44,8 +44,8 @@ import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
-import { makeAbsolutePath } from '~/util.js'
-import { trpc } from '~/TRPC'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import { trpc } from '~/Resources/TRPC'
 import { useQuery } from '@tanstack/react-query'
 
 export interface SidebarStateProps {

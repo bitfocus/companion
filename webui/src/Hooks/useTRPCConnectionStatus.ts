@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { trpcWsClient } from '~/TRPC'
-import { assertNever } from '~/util'
+import { trpcWsClient } from '~/Resources/TRPC'
+import { assertNever } from '~/Resources/util'
 
 export enum TRPCConnectionStatus {
 	Unknown = 'unknown',

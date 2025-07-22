@@ -1,8 +1,8 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { runInAction, type ObservableSet } from 'mobx'
+import { type ObservableSet, runInAction } from 'mobx'
 import { useState } from 'react'
-import { trpc } from '~/TRPC'
-import { assertNever } from '~/util.js'
+import { trpc } from '~/Resources/TRPC'
+import { assertNever } from '~/Resources/util'
 
 export function useActiveLearnRequests(activeIds: ObservableSet<string>): boolean {
 	const [isReady, setIsReady] = useState<boolean>(false)

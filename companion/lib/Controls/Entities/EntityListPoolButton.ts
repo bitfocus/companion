@@ -121,16 +121,13 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
 	}
 
+	/**
+	 * Get direct the local variable instances
+	 */
 	getLocalVariableEntities(): ControlEntityInstance[] {
 		return this.#localVariables.getAllEntities()
 	}
 
-	// /**
-	//  * Get direct the action instances
-	//  */
-	// getActionEntities(): SomeEntityModel[] {
-	// 	return this.#actions.getDirectEntities().map((ent) => ent.asEntityModel(true))
-	// }
 	asNormalButtonSteps(): NormalButtonSteps {
 		const stepsJson: NormalButtonSteps = {}
 		for (const [id, step] of this.#steps) {
@@ -755,15 +752,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			this.invalidateControl()
 		}
 
-		const changedVariables = new Set<string>()
-		for (const entity of changedVariableEntities) {
-			const localName = entity.localVariableName
-			if (localName) changedVariables.add(localName)
-		}
-
-		if (changedVariables.size > 0) {
-			this.localVariablesChanged?.(changedVariables)
-		}
+		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 }
 

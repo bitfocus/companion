@@ -56,6 +56,7 @@ import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/adva
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
 import { Route as ImageLibraryImageNameRouteImport } from './routes/app/image-library/$imageName.tsx'
 import { Route as CustomVariablesControlIdRouteImport } from './routes/app/custom-variables/$controlId.tsx'
+import { Route as ConnectionsAddRouteImport } from './routes/app/connections/add.tsx'
 import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
 import { Route as SurfacesConfiguredIndexRouteImport } from './routes/app/surfaces/configured/index.tsx'
@@ -321,6 +322,11 @@ const CustomVariablesControlIdRoute =
     path: '/$controlId',
     getParentRoute: () => CustomVariablesRoute,
   } as any)
+const ConnectionsAddRoute = ConnectionsAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => ConnectionsRoute,
+} as any)
 const ConnectionsConnectionIdRoute = ConnectionsConnectionIdRouteImport.update({
   id: '/$connectionId',
   path: '/$connectionId',
@@ -381,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/emulator/': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
+  '/connections/add': typeof ConnectionsAddRoute
   '/custom-variables/$controlId': typeof CustomVariablesControlIdRoute
   '/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
@@ -430,6 +437,7 @@ export interface FileRoutesByTo {
   '/emulator': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
+  '/connections/add': typeof ConnectionsAddRoute
   '/custom-variables/$controlId': typeof CustomVariablesControlIdRoute
   '/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
@@ -485,6 +493,7 @@ export interface FileRoutesById {
   '/emulator/': typeof EmulatorIndexRoute
   '/_app/buttons/$page': typeof ButtonsPageRoute
   '/_app/connections/$connectionId': typeof ConnectionsConnectionIdRoute
+  '/_app/connections/add': typeof ConnectionsAddRoute
   '/_app/custom-variables/$controlId': typeof CustomVariablesControlIdRoute
   '/_app/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
@@ -542,6 +551,7 @@ export interface FileRouteTypes {
     | '/emulator/'
     | '/buttons/$page'
     | '/connections/$connectionId'
+    | '/connections/add'
     | '/custom-variables/$controlId'
     | '/image-library/$imageName'
     | '/modules/$moduleId'
@@ -591,6 +601,7 @@ export interface FileRouteTypes {
     | '/emulator'
     | '/buttons/$page'
     | '/connections/$connectionId'
+    | '/connections/add'
     | '/custom-variables/$controlId'
     | '/image-library/$imageName'
     | '/modules/$moduleId'
@@ -645,6 +656,7 @@ export interface FileRouteTypes {
     | '/emulator/'
     | '/_app/buttons/$page'
     | '/_app/connections/$connectionId'
+    | '/_app/connections/add'
     | '/_app/custom-variables/$controlId'
     | '/_app/image-library/$imageName'
     | '/_app/modules/$moduleId'
@@ -1027,6 +1039,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomVariablesControlIdRouteImport
       parentRoute: typeof CustomVariablesRoute
     }
+    '/_app/connections/add': {
+      id: '/_app/connections/add'
+      path: '/add'
+      fullPath: '/connections/add'
+      preLoaderRoute: typeof ConnectionsAddRouteImport
+      parentRoute: typeof ConnectionsRoute
+    }
     '/_app/connections/$connectionId': {
       id: '/_app/connections/$connectionId'
       path: '/$connectionId'
@@ -1085,11 +1104,13 @@ const ButtonsRouteWithChildren =
 
 interface ConnectionsRouteChildren {
   ConnectionsConnectionIdRoute: typeof ConnectionsConnectionIdRoute
+  ConnectionsAddRoute: typeof ConnectionsAddRoute
   ConnectionsIndexRoute: typeof ConnectionsIndexRoute
 }
 
 const ConnectionsRouteChildren: ConnectionsRouteChildren = {
   ConnectionsConnectionIdRoute: ConnectionsConnectionIdRoute,
+  ConnectionsAddRoute: ConnectionsAddRoute,
   ConnectionsIndexRoute: ConnectionsIndexRoute,
 }
 

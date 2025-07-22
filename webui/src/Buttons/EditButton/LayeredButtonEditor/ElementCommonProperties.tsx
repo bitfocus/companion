@@ -7,15 +7,15 @@ import {
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { TextInputField } from '../../../Components/TextInputField.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { CheckboxInputField } from '../../../Components/CheckboxInputField.js'
-import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
-import { NumberInputField } from '../../../Components/NumberInputField.js'
-import { DropdownInputField } from '../../../Components/DropdownInputField.js'
+import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
-import { InlineHelp } from '../../../Components/InlineHelp.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	controlId,

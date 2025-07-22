@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { CFormSwitch, CFormLabel } from '@coreui/react'
+import { CFormSwitch } from '@coreui/react'
 import {
 	ColorInputField,
 	DropdownInputField,
@@ -13,7 +13,6 @@ import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 
 interface ConnectionEditFieldProps {
-	label: React.ReactNode
 	setValue: (value: any) => void
 	definition: ConnectionInputField
 	value: any
@@ -21,7 +20,6 @@ interface ConnectionEditFieldProps {
 }
 
 export function ConnectionEditField({
-	label,
 	setValue,
 	definition,
 	value,
@@ -32,25 +30,13 @@ export function ConnectionEditField({
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'static-text': {
-			const control = <StaticTextFieldText {...definition} allowImages />
-
-			if (label) {
-				return (
-					<>
-						<CFormLabel>{label}</CFormLabel>
-						{control}
-					</>
-				)
-			}
-
-			return control
+			return <StaticTextFieldText {...definition} allowImages />
 		}
 		case 'textinput':
-			return <TextInputField label={label} value={value} setValue={setValue} checkValid={checkValid} />
+			return <TextInputField value={value} setValue={setValue} checkValid={checkValid} />
 		case 'number':
 			return (
 				<NumberInputField
-					label={label}
 					min={definition.min}
 					max={definition.max}
 					step={definition.step}
@@ -63,7 +49,6 @@ export function ConnectionEditField({
 		case 'checkbox':
 			return (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					{label ? <CFormLabel>{label}</CFormLabel> : ''}
 					<CFormSwitch
 						color="success"
 						checked={value}
@@ -77,7 +62,6 @@ export function ConnectionEditField({
 		case 'dropdown':
 			return (
 				<DropdownInputField
-					label={label}
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					minChoicesForSearch={definition.minChoicesForSearch}
@@ -90,7 +74,6 @@ export function ConnectionEditField({
 		case 'multidropdown':
 			return (
 				<MultiDropdownInputField
-					label={label}
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					minSelection={definition.minSelection}
@@ -105,7 +88,6 @@ export function ConnectionEditField({
 		case 'colorpicker': {
 			return (
 				<ColorInputField
-					label={label}
 					value={value}
 					setValue={setValue}
 					enableAlpha={definition.enableAlpha ?? false}
@@ -118,7 +100,6 @@ export function ConnectionEditField({
 		case 'bonjour-device':
 			return (
 				<BonjourDeviceInputField
-					label={label}
 					value={value}
 					setValue={setValue}
 					connectionId={connectionId}

@@ -7,7 +7,7 @@ import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/Generi
 import { useResizeObserver } from 'usehooks-ts'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface ButtonGridActionsRef {
 	buttonClick: (location: ControlLocation, isDown: boolean) => void
