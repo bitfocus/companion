@@ -32,7 +32,6 @@ import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { IPageStore } from '../Page/Store.js'
 import express from 'express'
 import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
@@ -89,7 +88,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		cache: DataCache,
 		apiRouter: express.Router,
 		controls: ControlsController,
-		pageStore: IPageStore,
 		variables: VariablesController,
 		oscSender: ServiceOscSender
 	) {
@@ -127,7 +125,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			{
 				controls: controls,
 				variables: variables,
-				pageStore: pageStore,
 				oscSender: oscSender,
 
 				instanceDefinitions: this.definitions,
