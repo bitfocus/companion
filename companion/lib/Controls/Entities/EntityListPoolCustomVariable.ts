@@ -49,7 +49,7 @@ export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 	}
 
 	protected getAllEntityLists(): ControlEntityList[] {
-		return [this.#entities]
+		return [this.#entities, this.#localVariables]
 	}
 
 	/**
