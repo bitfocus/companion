@@ -27,6 +27,7 @@ import { CompanionVariableValue } from '@companion-module/base'
 import { isInternalUserValueFeedback } from '../Entities/EntityInstance.js'
 import { CustomVariableOptionDefaultKey } from '../CustomVariableConstants.js'
 import { CustomVariableNameMap } from '../CustomVariableNameMap.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 
 /**
  * Class for a custom variable.
@@ -227,6 +228,11 @@ export class ControlCustomVariable
 
 		// Handle custom variable name changes
 		if (key === 'variableName') {
+			// Make sure the new name is valid
+			if (!isLabelValid(value)) {
+				throw new Error(`Invalid variable name "${value}"`)
+			}
+
 			const oldVariableName = this.options.variableName
 			this.options[key] = value
 

@@ -16,6 +16,7 @@ import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleMod
 import type { CompanionVariableValues } from '@companion-module/base'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -500,6 +501,11 @@ export abstract class ControlEntityListPoolBase {
 
 		const entity = entityList.findById(id)
 		if (!entity) return false
+
+		// Make sure the new name is valid
+		if (!isLabelValid(name)) {
+			throw new Error(`Invalid local variable name "${name}"`)
+		}
 
 		const oldLocalVariableName = entity.localVariableName
 

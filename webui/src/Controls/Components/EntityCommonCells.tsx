@@ -20,6 +20,7 @@ import { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { TextInputField } from '../../Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 import { useEntityEditorContext } from './EntityEditorContext.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -60,10 +61,9 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								</CFormLabel>
 								<CCol sm={8}>
 									<TextInputField
-										// regex?: string TODO - validate value syntax
 										value={(entity as FeedbackEntityModel).variableName ?? ''}
 										setValue={service.setVariableName}
-										// setValid?: (valid: boolean) => void
+										checkValid={isLabelValid}
 										disabled={readonly}
 									/>
 								</CCol>

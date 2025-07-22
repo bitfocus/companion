@@ -31,6 +31,8 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import VariableInputGroup from '~/Components/VariableInputGroup'
 import { EditableEntityList } from '~/Controls/Components/EntityList'
 import { InlineHelp } from '~/Components/InlineHelp'
+import { LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 
 interface EditCustomVariablePanelProps {
 	controlId: string
@@ -46,6 +48,11 @@ export function EditCustomVariablePanel({ controlId }: EditCustomVariablePanelPr
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const dataReady = !loadError && !!controlConfig
 
+	const localVariablesStore = useLocalVariablesStore(
+		controlId,
+		controlConfig?.config?.type === 'custom-variable' ? controlConfig.config.localVariables : null
+	)
+
 	return (
 		<div className="edit-button-panel flex-form">
 			<GenericConfirmModal ref={resetModalRef} />
@@ -60,15 +67,22 @@ export function EditCustomVariablePanel({ controlId }: EditCustomVariablePanelPr
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
-								<CustomVariableEntityEditor controlId={controlId} entity={controlConfig.config.entity} />
+								<CustomVariableEntityEditor
+									controlId={controlId}
+									entity={controlConfig.config.entity}
+									localVariablesStore={localVariablesStore}
+								/>
 							</MyErrorBoundary>
 
 							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
 								<MyErrorBoundary>
-									<CustomVariableLocalVariablesEditor
-										controlId={controlId}
-										localVariables={controlConfig.config.localVariables}
-									/>
+									<div className="mt-3 pt-3 border-top">
+										<CustomVariableLocalVariablesEditor
+											controlId={controlId}
+											localVariables={controlConfig.config.localVariables}
+											localVariablesStore={localVariablesStore}
+										/>
+									</div>
 								</MyErrorBoundary>
 							)}
 						</>
@@ -123,7 +137,7 @@ function CustomVariableConfig({ controlId, options }: CustomVariableConfigProps)
 					/>
 				</CFormLabel>
 				<CCol xs={8}>
-					<TextInputField setValue={setName} value={options.variableName} />
+					<TextInputField setValue={setName} value={options.variableName} checkValid={isLabelValid} />
 				</CCol>
 
 				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Description</CFormLabel>
@@ -138,11 +152,13 @@ function CustomVariableConfig({ controlId, options }: CustomVariableConfigProps)
 interface CustomVariableEntityEditorProps {
 	controlId: string
 	entity: SomeEntityModel | null
+	localVariablesStore: LocalVariablesStore
 }
 
 const CustomVariableEntityEditor = observer(function CustomVariableEntityEditor({
 	controlId,
 	entity,
+	localVariablesStore,
 }: CustomVariableEntityEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
@@ -157,7 +173,7 @@ const CustomVariableEntityEditor = observer(function CustomVariableEntityEditor(
 				location={undefined}
 				serviceFactory={serviceFactory}
 				readonly={false}
-				localVariablesStore={null}
+				localVariablesStore={localVariablesStore}
 				localVariablePrefix={null}
 			>
 				<PanelCollapseHelperProvider storageId={`feedbacks_${controlId}_entities`} knownPanelIds={entityIds}>
@@ -262,11 +278,13 @@ const CustomVariableSoleEntityEditor = observer(function CustomVariableSoleEntit
 interface CustomVariableLocalVariablesEditorProps {
 	controlId: string
 	localVariables: SomeEntityModel[]
+	localVariablesStore: LocalVariablesStore
 }
 
 const CustomVariableLocalVariablesEditor = observer(function CustomVariableLocalVariablesEditor({
 	controlId,
 	localVariables,
+	localVariablesStore,
 }: CustomVariableLocalVariablesEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
@@ -281,7 +299,7 @@ const CustomVariableLocalVariablesEditor = observer(function CustomVariableLocal
 				location={undefined}
 				serviceFactory={serviceFactory}
 				readonly={false}
-				localVariablesStore={null}
+				localVariablesStore={localVariablesStore}
 				localVariablePrefix="local"
 			>
 				<PanelCollapseHelperProvider storageId={`localVariables_${controlId}_entities`} knownPanelIds={entityIds}>
