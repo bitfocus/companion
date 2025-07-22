@@ -166,63 +166,67 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		<>
 			<ConnectionEditPanelHeading connectionInfo={connectionInfo} closeConfigurePanel={closeConfigurePanel} />
 
-			<div className="secondary-panel-simple-body">
-				<CForm
-					className="row edit-connection"
-					onSubmit={(e) => {
-						e.preventDefault()
-						e.stopPropagation()
-						performSave()
-					}}
-				>
-					{saveError && (
-						<CCol className="fieldtype-textinput" sm={12}>
-							<CAlert color="danger">{saveError}</CAlert>
-						</CCol>
-					)}
+			<CForm
+				className="secondary-panel-simple-body d-flex flex-column pb-0"
+				onSubmit={(e) => {
+					e.preventDefault()
+					e.stopPropagation()
+					performSave()
+				}}
+			>
+				<div className="flex-fill">
+					<div className="row edit-connection">
+						{saveError && (
+							<CCol className="fieldtype-textinput" sm={12}>
+								<CAlert color="danger">{saveError}</CAlert>
+							</CCol>
+						)}
 
-					<ConnectionLabelInputField panelStore={panelStore} />
-					<ConnectionModuleVersionInputField
-						panelStore={panelStore}
-						connectionVersionExists={connectionVersionExists}
-						connectionShouldBeRunning={connectionShouldBeRunning}
-						moduleInfo={moduleInfo}
-					/>
-
-					<ConnectionUpdatePolicyInputField panelStore={panelStore} />
-					<CCol className={`fieldtype-textinput`} sm={12}>
-						<CAlert color="warning">
-							Be careful when downgrading the module version. Some features may not be available in older versions.
-						</CAlert>
-					</CCol>
-
-					{!connectionShouldBeRunning && (
-						<CCol xs={12}>
-							<NonIdealState icon={faGear}>
-								<p>Connection configuration cannot be edited while it is disabled. The fields above can be edited.</p>
-							</NonIdealState>
-						</CCol>
-					)}
-
-					{connectionShouldBeRunning && (panelStore.isLoading || panelStore.loadError) && (
-						<LoadingRetryOrError
-							error={panelStore.loadError}
-							dataReady={!panelStore.isLoading}
-							doRetry={panelStore.triggerReload}
-							design="pulse"
+						<ConnectionLabelInputField panelStore={panelStore} />
+						<ConnectionModuleVersionInputField
+							panelStore={panelStore}
+							connectionVersionExists={connectionVersionExists}
+							connectionShouldBeRunning={connectionShouldBeRunning}
+							moduleInfo={moduleInfo}
 						/>
-					)}
 
-					{connectionShouldBeRunning && !panelStore.isLoading && <ConnectionConfigFields panelStore={panelStore} />}
+						<ConnectionUpdatePolicyInputField panelStore={panelStore} />
+						<CCol className={`fieldtype-textinput`} sm={12}>
+							<CAlert color="warning">
+								Be careful when downgrading the module version. Some features may not be available in older versions.
+							</CAlert>
+						</CCol>
 
-					<ConnectionFormButtons
-						panelStore={panelStore}
-						connectionShouldBeRunning={connectionShouldBeRunning}
-						isSaving={isSaving.get()}
-						closeConfigurePanel={closeConfigurePanel}
-					/>
-				</CForm>
-			</div>
+						{!connectionShouldBeRunning && (
+							<CCol xs={12}>
+								<NonIdealState icon={faGear}>
+									<p>Connection configuration cannot be edited while it is disabled. The fields above can be edited.</p>
+								</NonIdealState>
+							</CCol>
+						)}
+
+						{connectionShouldBeRunning && (panelStore.isLoading || panelStore.loadError) && (
+							<CCol xs={12}>
+								<LoadingRetryOrError
+									error={panelStore.loadError}
+									dataReady={!panelStore.isLoading}
+									doRetry={panelStore.triggerReload}
+									design="pulse"
+								/>
+							</CCol>
+						)}
+
+						{connectionShouldBeRunning && !panelStore.isLoading && <ConnectionConfigFields panelStore={panelStore} />}
+					</div>
+				</div>
+
+				<ConnectionFormButtons
+					panelStore={panelStore}
+					connectionShouldBeRunning={connectionShouldBeRunning}
+					isSaving={isSaving.get()}
+					closeConfigurePanel={closeConfigurePanel}
+				/>
+			</CForm>
 		</>
 	)
 })
@@ -440,20 +444,22 @@ const ConnectionFormButtons = observer(function ConnectionFormButtons({
 	const isLoading = connectionShouldBeRunning && panelStore.isLoading
 
 	return (
-		<CCol sm={12}>
-			<CButton
-				color="success"
-				className="me-md-1"
-				disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
-				type="submit"
-				title={!isValid ? 'Please fix the errors before saving' : undefined}
-			>
-				Save {isSaving ? '...' : ''}
-			</CButton>
+		<div className="row connection-form-buttons border-top">
+			<CCol sm={12}>
+				<CButton
+					color="success"
+					className="me-md-1"
+					disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
+					type="submit"
+					title={!isValid ? 'Please fix the errors before saving' : undefined}
+				>
+					Save {isSaving ? '...' : ''}
+				</CButton>
 
-			<CButton color="secondary" onClick={closeConfigurePanel} disabled={isSaving || isLoading}>
-				Cancel
-			</CButton>
-		</CCol>
+				<CButton color="secondary" onClick={closeConfigurePanel} disabled={isSaving || isLoading}>
+					Cancel
+				</CButton>
+			</CCol>
+		</div>
 	)
 })
