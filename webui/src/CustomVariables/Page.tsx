@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faClone, faCopy, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -15,7 +15,7 @@ import { ClientCustomVariableData, CustomVariableCollection } from '@companion-a
 import { CustomVariablesTableContextProvider, useCustomVariablesTableContext } from './CustomVariablesTableContext'
 import { useCustomVariablesCollectionsApi } from './CustomVariablesCollectionsApi'
 import CopyToClipboard from 'react-copy-to-clipboard'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export const CustomVariablesPage = observer(function CustomVariablesPage() {
 	const { customVariablesList } = useContext(RootAppStoreContext)

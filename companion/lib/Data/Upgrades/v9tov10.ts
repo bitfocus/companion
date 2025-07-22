@@ -47,6 +47,7 @@ function convertCustomVariables(oldVariables: CustomVariablesModelv6): Record<st
 					[CustomVariableOptionDefaultKey]: definition.defaultValue,
 					persist_value: !!definition.persistCurrentValue,
 				},
+				upgradeIndex: undefined,
 			},
 
 			options: {
