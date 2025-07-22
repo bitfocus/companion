@@ -49,6 +49,7 @@ function convertCustomVariables(oldVariables: CustomVariablesModelv6): Record<st
 				},
 				upgradeIndex: undefined,
 			},
+			localVariables: [],
 
 			options: {
 				variableName: name,

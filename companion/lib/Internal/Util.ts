@@ -291,6 +291,7 @@ export class InternalModuleUtils {
 
 				children: {},
 			} satisfies Complete<FeedbackEntityModel>,
+			localVariables: [],
 		})
 	}
 

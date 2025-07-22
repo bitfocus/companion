@@ -9,6 +9,8 @@ export interface CustomVariableModel {
 	options: CustomVariableOptions
 
 	entity: SomeEntityModel | null
+
+	localVariables: SomeEntityModel[]
 }
 
 export interface CustomVariableOptions {

@@ -184,6 +184,7 @@ export class ControlCustomVariable
 			type: this.type,
 			options: this.options,
 			entity: this.entities.getRootEntity()?.asEntityModel(true) || null,
+			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
 		return clone ? cloneDeep(obj) : obj
 	}

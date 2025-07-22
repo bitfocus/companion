@@ -29,6 +29,8 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import VariableInputGroup from '~/Components/VariableInputGroup'
+import { EditableEntityList } from '~/Controls/Components/EntityList'
+import { InlineHelp } from '~/Components/InlineHelp'
 
 interface EditCustomVariablePanelProps {
 	controlId: string
@@ -60,6 +62,15 @@ export function EditCustomVariablePanel({ controlId }: EditCustomVariablePanelPr
 							<MyErrorBoundary>
 								<CustomVariableEntityEditor controlId={controlId} entity={controlConfig.config.entity} />
 							</MyErrorBoundary>
+
+							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
+								<MyErrorBoundary>
+									<CustomVariableLocalVariablesEditor
+										controlId={controlId}
+										localVariables={controlConfig.config.localVariables}
+									/>
+								</MyErrorBoundary>
+							)}
 						</>
 					) : (
 						<CAlert color="danger">
@@ -244,6 +255,59 @@ const CustomVariableSoleEntityEditor = observer(function CustomVariableSoleEntit
 
 				<EntityManageChildGroups entity={entity} entityDefinition={entityDefinition} />
 			</div>
+		</>
+	)
+})
+
+interface CustomVariableLocalVariablesEditorProps {
+	controlId: string
+	localVariables: SomeEntityModel[]
+}
+
+const CustomVariableLocalVariablesEditor = observer(function CustomVariableLocalVariablesEditor({
+	controlId,
+	localVariables,
+}: CustomVariableLocalVariablesEditorProps) {
+	const confirmModal = useRef<GenericConfirmModalRef>(null)
+
+	const serviceFactory = useControlEntitiesEditorService(controlId, 'local-variables', confirmModal)
+
+	const entityIds = useMemo(() => findAllEntityIdsDeep(localVariables), [localVariables])
+
+	return (
+		<>
+			<EntityEditorContextProvider
+				controlId={controlId}
+				location={undefined}
+				serviceFactory={serviceFactory}
+				readonly={false}
+				localVariablesStore={null}
+				localVariablePrefix="local"
+			>
+				<PanelCollapseHelperProvider storageId={`localVariables_${controlId}_entities`} knownPanelIds={entityIds}>
+					<GenericConfirmModal ref={confirmModal} />
+
+					<EditableEntityList
+						heading={
+							<InlineHelp help="You can use local variables inside of this custom variable to create some dynamic values based on feedbacks">
+								Local Variables
+							</InlineHelp>
+						}
+						// headingActions={headingActions}
+						entities={localVariables}
+						ownerId={null}
+						entityType={EntityModelType.Feedback}
+						entityTypeLabel={'variable'}
+						feedbackListType={FeedbackEntitySubType.Value}
+					/>
+
+					{/* {!entity ? (
+						<CustomVariableAddRootEntity />
+					) : (
+						<CustomVariableSoleEntityEditor controlId={controlId} entity={entity} />
+					)} */}
+				</PanelCollapseHelperProvider>
+			</EntityEditorContextProvider>
 		</>
 	)
 })

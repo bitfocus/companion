@@ -853,16 +853,23 @@ export class ImportExportController {
 			type: 'custom-variable',
 			options: cloneDeep(control.options),
 			entity: null,
+			localVariables: [],
 		}
 
 		if (control.entity) {
 			result.entity = fixupEntitiesRecursive(instanceIdMap, [cloneDeep(control.entity)])[0]
 		}
 
-		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap).visitEntities(
-			[],
-			result.entity ? [result.entity] : []
-		)
+		if (control.localVariables) {
+			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
+		}
+
+		const visitor = new VisitorReferencesUpdater(
+			this.#internalModule,
+			connectionLabelRemap,
+			connectionIdRemap
+		).visitEntities([], result.localVariables)
+		if (result.entity) visitor.visitEntities([], [result.entity])
 
 		return result
 	}

@@ -10,6 +10,7 @@ import type { CustomVariableModel } from '@companion-app/shared/Model/CustomVari
 
 export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 	#entities: ControlEntityList
+	#localVariables: ControlEntityList
 
 	constructor(props: ControlEntityListPoolProps) {
 		super(props)
@@ -19,14 +20,19 @@ export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 			feedbackListType: FeedbackEntitySubType.Value,
 			maximumChildren: 1,
 		})
+		this.#localVariables = this.createEntityList({
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Value,
+		})
 	}
 
 	loadStorage(storage: CustomVariableModel, skipSubscribe: boolean, isImport: boolean): void {
 		this.#entities.loadStorage(storage.entity ? [storage.entity] : [], skipSubscribe, isImport)
+		this.#localVariables.loadStorage(storage.localVariables, skipSubscribe, isImport)
 	}
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
-		return []
+		return this.#localVariables.getDirectEntities()
 	}
 
 	/**
@@ -38,6 +44,7 @@ export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		if (listId === 'feedbacks') return this.#entities
+		if (listId === 'local-variables') return this.#localVariables
 		return undefined
 	}
 
@@ -51,6 +58,12 @@ export class EntityListPoolCustomVariable extends ControlEntityListPoolBase {
 	 * @param newValues The new feedback values
 	 */
 	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
-		if (this.#entities.updateFeedbackValues(connectionId, newValues)) this.invalidateControl()
+		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
+
+		if (this.#entities.updateFeedbackValues(connectionId, newValues).length > 0) {
+			this.invalidateControl()
+		}
+
+		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 }
