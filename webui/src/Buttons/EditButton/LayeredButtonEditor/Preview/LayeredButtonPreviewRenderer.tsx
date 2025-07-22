@@ -8,10 +8,11 @@ import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleMo
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import FontLoader from './FontLoader.js'
-import { DropdownInputField } from '../../../../Components/DropdownInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
 import { isEqual } from 'lodash-es'
 import { useLocalStorage } from 'usehooks-ts'
+import { CFormLabel } from '@coreui/react'
 
 const PAD_X = 10
 const PAD_Y = 10
@@ -63,8 +64,8 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 				/>
 			</div>
 			<div>
+				<CFormLabel>Preview Aspect Ratio</CFormLabel>
 				<DropdownInputField
-					label="Preview Aspect Ratio"
 					allowCustom
 					choices={ASPECT_RATIO_OPTIONS}
 					value={aspectRatio}

@@ -1,7 +1,7 @@
 import { CFormInput } from '@coreui/react'
 import React, { useCallback } from 'react'
 import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface ImageDescriptionEditorProps {
 	imageName: string

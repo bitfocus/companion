@@ -168,7 +168,7 @@ export class InstanceEntityManager {
 										imageSize = controlImageSizeCache.get(wrapper.controlId)
 									} else {
 										const control = this.#controlsController.getControl(wrapper.controlId)
-										imageSize = control?.getBitmapSize() ?? undefined
+										imageSize = control?.getBitmapFeedbackSize() ?? undefined
 										controlImageSizeCache.set(wrapper.controlId, imageSize)
 									}
 

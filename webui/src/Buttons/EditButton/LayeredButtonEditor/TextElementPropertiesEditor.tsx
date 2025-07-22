@@ -1,14 +1,14 @@
 import { ButtonGraphicsTextElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
-import { InlineHelp } from '../../../Components/InlineHelp.js'
-import { TextInputField } from '../../../Components/TextInputField.js'
-import { InputFeatureIcons, InputFeatureIconsProps } from '../../../Controls/OptionsInputField.js'
-import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
-import { DropdownInputField } from '../../../Components/DropdownInputField.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { InputFeatureIcons, InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
-import { ColorInputField } from '../../../Components/ColorInputField.js'
-import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '../../../Components/AlignmentInputField.js'
+import { ColorInputField } from '~/Components/ColorInputField.js'
+import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '~/Components/AlignmentInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 import { ElementBoundsProperties } from './ElementBoundsProperties.js'
 
@@ -172,7 +172,6 @@ const FieldTextColorInput = observer(function FieldTextColorInput({
 			setValue={setValue as (color: number | string) => void}
 			value={elementProp.value}
 			returnType="number"
-			helpText="Font color"
 		/>
 	)
 })
@@ -186,7 +185,6 @@ const FieldTextOutlineColorInput = observer(function FieldTextOutlineColorInput(
 			setValue={setValue as (color: number | string) => void}
 			value={elementProp.value}
 			returnType="number"
-			helpText="Outline color"
 			enableAlpha
 		/>
 	)

@@ -92,6 +92,7 @@ export const ImportExportPage = observer(function ImportExport() {
 										const [err, config] = await completePrepareImportMutation.mutateAsync({
 											sessionId,
 											expectedChecksum: hashText,
+											userData: null,
 										})
 
 										if (err || !config) {

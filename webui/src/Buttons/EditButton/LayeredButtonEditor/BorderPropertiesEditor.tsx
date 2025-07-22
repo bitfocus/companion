@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite'
 import React from 'react'
-import { ColorInputField } from '../../../Components/ColorInputField.js'
+import { ColorInputField } from '~/Components/ColorInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
@@ -81,7 +81,6 @@ const FieldBorderColorInput = observer(function FieldBorderColorInput({
 			setValue={setValue as (color: number | string) => void}
 			value={elementProp.value}
 			returnType="number"
-			helpText="Border color"
 			enableAlpha
 		/>
 	)

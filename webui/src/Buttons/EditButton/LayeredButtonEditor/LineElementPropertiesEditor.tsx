@@ -2,8 +2,8 @@ import { ButtonGraphicsLineElement } from '@companion-app/shared/Model/StyleLaye
 import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
-import { NumberInputField } from '../../../Components/NumberInputField.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
 import { BorderPropertiesEditor } from './BorderPropertiesEditor.js'
 
 export const LineElementPropertiesEditor = observer(function LineElementPropertiesEditor({

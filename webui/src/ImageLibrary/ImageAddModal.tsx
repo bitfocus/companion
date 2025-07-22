@@ -3,7 +3,7 @@ import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton } 
 import { observer } from 'mobx-react-lite'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ImageNameInput } from './ImageNameInput'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface ImageAddModalProps {
 	onImageCreated?: (imageName: string) => void

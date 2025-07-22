@@ -4,9 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useContext } from 'react'
 import { ImageLibraryEditor } from '~/ImageLibrary/ImageLibraryEditor.js'
-import { MyErrorBoundary, useComputed } from '~/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { useComputed } from '~/Resources/util'
+import { MyErrorBoundary } from '~/Resources/Error'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { imageName } = Route.useParams()

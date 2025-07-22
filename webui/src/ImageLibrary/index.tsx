@@ -2,7 +2,7 @@ import { CCol, CRow } from '@coreui/react'
 import React, { useCallback } from 'react'
 import { ImageLibraryGrid } from './ImageLibraryGrid'
 import { observer } from 'mobx-react-lite'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 
 export const ImageLibraryPage = observer(function ImageLibraryPage() {

@@ -6,8 +6,8 @@ import {
 	MakeExpressionable,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { NumberInputField } from '../../../Components/NumberInputField.js'
-import { LocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 type ButtonGraphicsDrawBoundsExt = MakeExpressionable<ButtonGraphicsDrawBounds & { type: string }> &
 	ButtonGraphicsElementBase

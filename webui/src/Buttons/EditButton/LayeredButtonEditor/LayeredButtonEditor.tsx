@@ -2,17 +2,17 @@ import { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import React, { useEffect, useRef, useState } from 'react'
 import { ControlOptionsEditor } from './ControlOptionsEditor.js'
-import { MyErrorBoundary } from '../../../util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from '../ButtonEditorTabs.js'
 import { ElementPropertiesEditor } from './ElementPropertiesEditor.js'
 import { LayeredStyleStore } from './StyleStore.js'
 import { observer } from 'mobx-react-lite'
 import { ElementsList } from './ElementsList.js'
-import { NonIdealState } from '../../../Components/NonIdealState.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
 import { LocalVariablesEditor } from '../LocalVariablesEditor.js'
-import { LocalVariablesStore, useLocalVariablesStore } from '../../../Controls/LocalVariablesStore.js'
+import { LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },

@@ -2,7 +2,7 @@ import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
 import { faPlus, faImage, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useState, useMemo, useRef } from 'react'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util'
 import { observer } from 'mobx-react-lite'
 import { ImageThumbnail } from './ImageThumbnail'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -17,7 +17,7 @@ import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryM
 import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 // Adapters for CollectionsNestingTable
 interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'children'> {

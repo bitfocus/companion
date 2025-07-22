@@ -7,8 +7,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { useDrop, useDrag } from 'react-dnd'
-import { GenericConfirmModal, GenericConfirmModalRef } from '../../../Components/GenericConfirmModal.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const ElementsList = observer(function ElementsList({
 	styleStore,
