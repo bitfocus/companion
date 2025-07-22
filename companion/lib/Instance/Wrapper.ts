@@ -709,6 +709,7 @@ export class SocketEventsHandler {
 				label: rawAction.name,
 				description: rawAction.description,
 				options: translateOptionsIsVisibleAndUseVariables(rawAction.options || [], !!this.#entityManager),
+				hasLifecycleFunctions: !this.#entityManager || !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
 
@@ -722,6 +723,10 @@ export class SocketEventsHandler {
 		}
 
 		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, actions)
+
+		if (this.#entityManager) {
+			this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Action)
+		}
 	}
 
 	/**
@@ -742,6 +747,7 @@ export class SocketEventsHandler {
 				options: translateOptionsIsVisibleAndUseVariables(rawFeedback.options || [], !!this.#entityManager),
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
+				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
@@ -752,6 +758,10 @@ export class SocketEventsHandler {
 		}
 
 		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, feedbacks)
+
+		if (this.#entityManager) {
+			this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Feedback)
+		}
 	}
 
 	/**

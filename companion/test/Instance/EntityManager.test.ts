@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { InstanceEntityManager } from '../../lib/Instance/EntityManager.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { nanoid } from 'nanoid'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { UpdateActionInstancesMessage } from '@companion-module/base/dist/host-api/api.js'
 
@@ -72,7 +71,10 @@ describe('InstanceEntityManager', () => {
 					connectionId: 'connection-1',
 					options: {},
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			entityManager.start(5)
@@ -105,9 +107,12 @@ describe('InstanceEntityManager', () => {
 					type: EntityModelType.Action,
 					definitionId: 'action-1',
 					connectionId: 'connection-1',
-					options: { original: true },
+					options: { replaced: false },
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [{ id: 'replaced', type: 'checkbox' }],
+				}),
 			}
 
 			const mockEntity2 = {
@@ -121,7 +126,10 @@ describe('InstanceEntityManager', () => {
 					connectionId: 'connection-1',
 					options: { replaced: true },
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [{ id: 'replaced', type: 'checkbox' }],
+				}),
 			}
 
 			entityManager.start(5)
@@ -165,7 +173,10 @@ describe('InstanceEntityManager', () => {
 					connectionId: 'connection-1',
 					options: {},
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			entityManager.start(5)
@@ -207,7 +218,10 @@ describe('InstanceEntityManager', () => {
 					connectionId: 'connection-1',
 					options: {},
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			entityManager.start(5)
@@ -247,7 +261,10 @@ describe('InstanceEntityManager', () => {
 					connectionId: 'connection-1',
 					options: {},
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			entityManager.start(5)
@@ -290,7 +307,10 @@ describe('InstanceEntityManager', () => {
 					connectionId: 'connection-1',
 					options: {},
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			})
 
 			const mockFeedbacks = [
@@ -443,6 +463,7 @@ describe('InstanceEntityManager', () => {
 					options: { field1: '$(var:test)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 				}),
 			}
@@ -492,6 +513,7 @@ describe('InstanceEntityManager', () => {
 					options: { field1: '$(var:test)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 				}),
 			}
@@ -538,7 +560,10 @@ describe('InstanceEntityManager', () => {
 					options: {},
 					upgradeIndex: 3,
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			entityManager.start(5)
@@ -576,7 +601,10 @@ describe('InstanceEntityManager', () => {
 					options: { old: true },
 					upgradeIndex: 3,
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			// Mock the control
@@ -632,7 +660,10 @@ describe('InstanceEntityManager', () => {
 				type: EntityModelType.Action,
 				definitionId: 'action-1',
 				asEntityModel: vi.fn(),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			entityManager.start(5)
@@ -665,7 +696,10 @@ describe('InstanceEntityManager', () => {
 					options: { old: true },
 					upgradeIndex: 3,
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			// Setup the ipc to reject with an error
@@ -694,7 +728,10 @@ describe('InstanceEntityManager', () => {
 					options: {},
 					upgradeIndex: 5,
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			mockIpcWrapper.sendWithCb.mockClear()
@@ -756,7 +793,10 @@ describe('InstanceEntityManager', () => {
 						options: { index: i },
 						upgradeIndex: 5,
 					}),
-					getEntityDefinition: vi.fn(),
+					getEntityDefinition: vi.fn().mockReturnValue({
+						hasLifecycleFunctions: true,
+						options: [{ id: 'index', type: 'number' }],
+					}),
 				}
 				mockEntities.push(mockEntity)
 			}
@@ -836,7 +876,10 @@ describe('InstanceEntityManager', () => {
 					options: {},
 					upgradeIndex: 3,
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			entityManager.start(5)
@@ -884,6 +927,7 @@ describe('InstanceEntityManager', () => {
 					options: { field1: '$(var:page_specific)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 				}),
 			}
@@ -925,17 +969,179 @@ describe('InstanceEntityManager', () => {
 			entityManager.start(5)
 			entityManager.trackEntity(mockEntity as any, 'control-1')
 
-			// Should still process the entity even without a definition
+			// Should skip the entity since there's no entity definition
 			vi.runAllTimers()
 
-			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith(
-				'updateActions',
-				expect.objectContaining({
-					actions: expect.objectContaining({
-						'entity-1': expect.anything(),
-					}),
-				})
-			)
+			expect(mockIpcWrapper.sendWithCb).not.toHaveBeenCalled()
+		})
+
+		it('should skip entities without lifecycle functions', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: { field1: 'value1' },
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: false,
+					options: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+
+			// Should skip the entity since it doesn't have lifecycle functions
+			vi.runAllTimers()
+
+			expect(mockIpcWrapper.sendWithCb).not.toHaveBeenCalled()
+		})
+
+		it('should skip feedback entities without lifecycle functions', () => {
+			const mockFeedback = {
+				id: 'feedback-1',
+				type: EntityModelType.Feedback,
+				definitionId: 'feedback-def-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'feedback-1',
+					type: EntityModelType.Feedback,
+					definitionId: 'feedback-def-1',
+					connectionId: 'connection-1',
+					options: {},
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: false,
+					options: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockFeedback as any, 'control-1')
+
+			// Should skip the feedback entity since it doesn't have lifecycle functions
+			vi.runAllTimers()
+
+			expect(mockIpcWrapper.sendWithCb).not.toHaveBeenCalled()
+		})
+
+		it('should handle mixed entities - some with lifecycle functions, some without', () => {
+			const mockEntityWithLifecycle = {
+				id: 'entity-with-lifecycle',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-with-lifecycle',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
+			}
+
+			const mockEntityWithoutLifecycle = {
+				id: 'entity-without-lifecycle',
+				type: EntityModelType.Action,
+				definitionId: 'action-2',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-without-lifecycle',
+					type: EntityModelType.Action,
+					definitionId: 'action-2',
+					connectionId: 'connection-1',
+					options: {},
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: false,
+					options: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntityWithLifecycle as any, 'control-1')
+			entityManager.trackEntity(mockEntityWithoutLifecycle as any, 'control-2')
+
+			vi.runAllTimers()
+
+			// Only the entity with lifecycle functions should be sent to the module
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith('updateActions', {
+				actions: {
+					'entity-with-lifecycle': {
+						id: 'entity-with-lifecycle',
+						actionId: 'action-1',
+						options: {},
+						disabled: false,
+						upgradeIndex: null,
+						controlId: 'control-1',
+					},
+				},
+			})
+
+			// Should only be called once (for the entity with lifecycle functions)
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledTimes(1)
+		})
+
+		it('should skip upgrading entities without lifecycle functions even with old upgradeIndex', async () => {
+			const mockEntityWithoutLifecycle = {
+				id: 'entity-without-lifecycle',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 3, // Older than current index (5), but should still be skipped
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-without-lifecycle',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 3,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: false,
+					options: [],
+				}),
+			}
+
+			// Setup upgrade response
+			mockIpcWrapper.sendWithCb.mockResolvedValueOnce({
+				updatedActions: [],
+				updatedFeedbacks: [],
+			})
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntityWithoutLifecycle as any, 'control-1')
+
+			vi.runAllTimers()
+			await vi.runAllTimersAsync()
+
+			// Should call upgradeActionsAndFeedbacks first, but then ignore the result
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith('upgradeActionsAndFeedbacks', {
+				actions: [
+					{
+						id: 'entity-without-lifecycle',
+						actionId: 'action-1',
+						controlId: 'control-1',
+						disabled: false,
+						options: {},
+						upgradeIndex: 3,
+					},
+				],
+				feedbacks: [],
+				defaultUpgradeIndex: 0,
+			})
+
+			// Should only be called once (for upgrade), not for regular processing
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledTimes(1)
 		})
 
 		it('should handle disabled entities without sending them to the module', () => {
@@ -952,7 +1158,10 @@ describe('InstanceEntityManager', () => {
 					options: {},
 					disabled: true,
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			entityManager.start(5)
@@ -1018,7 +1227,10 @@ describe('InstanceEntityManager', () => {
 						connectionId: 'connection-1',
 						options: { index: i },
 					}),
-					getEntityDefinition: vi.fn(),
+					getEntityDefinition: vi.fn().mockReturnValue({
+						hasLifecycleFunctions: true,
+						options: [],
+					}),
 				})
 			}
 
@@ -1061,7 +1273,10 @@ describe('InstanceEntityManager', () => {
 					options: {},
 					upgradeIndex: 3,
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 
 			// Setup IPC wrapper to return after delay
@@ -1098,7 +1313,10 @@ describe('InstanceEntityManager', () => {
 					options: {},
 					upgradeIndex: 5,
 				}),
-				getEntityDefinition: vi.fn(),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+				}),
 			}
 			entityManager.trackEntity(mockFeedback as any, 'control-2')
 			vi.runAllTimers()
@@ -1146,7 +1364,10 @@ describe('InstanceEntityManager', () => {
 						options: {},
 						upgradeIndex: 3,
 					}),
-					getEntityDefinition: vi.fn(),
+					getEntityDefinition: vi.fn().mockReturnValue({
+						hasLifecycleFunctions: true,
+						options: [],
+					}),
 				},
 				{
 					id: 'entity-2',
@@ -1161,7 +1382,10 @@ describe('InstanceEntityManager', () => {
 						options: {},
 						upgradeIndex: 5,
 					}),
-					getEntityDefinition: vi.fn(),
+					getEntityDefinition: vi.fn().mockReturnValue({
+						hasLifecycleFunctions: true,
+						options: [],
+					}),
 				},
 				{
 					id: 'entity-3',
@@ -1176,7 +1400,10 @@ describe('InstanceEntityManager', () => {
 						options: {},
 						upgradeIndex: 3,
 					}),
-					getEntityDefinition: vi.fn(),
+					getEntityDefinition: vi.fn().mockReturnValue({
+						hasLifecycleFunctions: true,
+						options: [],
+					}),
 				},
 				{
 					id: 'entity-4',
@@ -1191,7 +1418,10 @@ describe('InstanceEntityManager', () => {
 						options: {},
 						upgradeIndex: 5,
 					}),
-					getEntityDefinition: vi.fn(),
+					getEntityDefinition: vi.fn().mockReturnValue({
+						hasLifecycleFunctions: true,
+						options: [],
+					}),
 				},
 			]
 

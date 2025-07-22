@@ -139,12 +139,18 @@ export class InstanceEntityManager {
 						if (entity.upgradeIndex === undefined || entity.upgradeIndex === this.#currentUpgradeIndex) {
 							wrapper.state = EntityState.READY
 
+							const entityDefinition = entity.getEntityDefinition()
+							if (!entityDefinition || !entityDefinition.hasLifecycleFunctions) {
+								// The entity does not have lifecycle functions, so we can skip informing the module about it
+								continue
+							}
+
 							const entityModel = entity.asEntityModel(false)
 
 							// Parse the options and track the variables referenced
 							const controlLocation = this.#pageStore.getLocationOfControlId(wrapper.controlId)
 							const { parsedOptions, referencedVariableIds } = this.parseOptionsObject(
-								entity.getEntityDefinition(),
+								entityDefinition,
 								entityModel.options,
 								controlLocation
 							)
@@ -533,6 +539,44 @@ export class InstanceEntityManager {
 			// The entity is ready, so we need to re-parse the options
 			wrapper.state = EntityState.UNLOADED
 			anyInvalidated = true
+		}
+
+		if (anyInvalidated) this.#debounceProcessPending()
+	}
+
+	/**
+	 * Inform the entity manager that the entity definitions have changed.
+	 * This will cause all entities of the given type to be invalidated, so that they can be re-parsed with the new definitions.
+	 * Future: it would be better for this to do some diffing or be more granular, but for now this is sufficient.
+	 */
+	onEntityDefinitionsChanged(entityType: EntityModelType): void {
+		let anyInvalidated = false
+
+		// If the definitions change, we need to invalidate all entities of that type
+		for (const wrapper of this.#entities.values()) {
+			const entity = wrapper.entity.deref()
+			if (!entity || entity.type !== entityType) continue
+
+			switch (wrapper.state) {
+				case EntityState.UNLOADED:
+				case EntityState.UPGRADING_INVALIDATED:
+					// Nothing to do, already pending
+					break
+				case EntityState.READY:
+					wrapper.state = EntityState.UNLOADED
+					anyInvalidated = true
+					break
+				case EntityState.UPGRADING:
+					wrapper.state = EntityState.UPGRADING_INVALIDATED
+					anyInvalidated = true
+					break
+				case EntityState.PENDING_DELETE:
+					// This is about to be deleted, so we can ignore it
+					break
+				default:
+					assertNever(wrapper.state)
+					break
+			}
 		}
 
 		if (anyInvalidated) this.#debounceProcessPending()

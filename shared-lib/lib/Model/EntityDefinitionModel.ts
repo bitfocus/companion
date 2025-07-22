@@ -10,6 +10,7 @@ export interface ClientEntityDefinition {
 	options: (InternalActionInputField | InternalFeedbackInputField)[]
 	feedbackType: FeedbackEntitySubType | null
 	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
+	hasLifecycleFunctions: boolean
 	hasLearn: boolean
 	learnTimeout: number | undefined
 	showInvert: boolean
