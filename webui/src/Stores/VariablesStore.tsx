@@ -4,10 +4,9 @@ import type {
 	CustomVariableUpdate,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { ObservableMap, action, computed, observable } from 'mobx'
-import { assertNever } from '~/util.js'
+import { assertNever } from '~/Resources/util.js'
 import type { VariableDefinition, VariableDefinitionUpdate } from '@companion-app/shared/Model/Variables.js'
-import { applyPatch } from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
+import { ApplyDiffToStore, updateObjectInPlace } from './ApplyDiffToMap'
 
 export class VariablesStore {
 	readonly customVariables = observable.map<string, CustomVariableDefinition>()
@@ -26,9 +25,15 @@ export class VariablesStore {
 				case 'init':
 					this.customVariables.replace(change.info)
 					break
-				case 'update':
-					this.customVariables.set(change.itemId, change.info)
+				case 'update': {
+					const existing = this.customVariables.get(change.itemId)
+					if (existing) {
+						updateObjectInPlace(existing, change.info)
+					} else {
+						this.customVariables.set(change.itemId, change.info)
+					}
 					break
+				}
 				case 'remove':
 					this.customVariables.delete(change.itemId)
 					break
@@ -62,20 +67,29 @@ export class VariablesStore {
 				break
 			}
 			case 'set': {
-				const variablesMap = this.variables.get(change.label) || observable.map<string, VariableDefinition>()
-
-				for (const [name, info] of Object.entries(change.variables)) {
-					if (info) variablesMap.set(name, info)
+				let variablesMap = this.variables.get(change.label)
+				if (!variablesMap) {
+					variablesMap = observable.map<string, VariableDefinition>()
+					this.variables.set(change.label, variablesMap)
 				}
 
-				this.variables.set(change.label, variablesMap)
+				for (const [name, info] of Object.entries(change.variables)) {
+					if (info) {
+						const existing = variablesMap.get(name)
+						if (existing) {
+							updateObjectInPlace(existing, info)
+						} else {
+							variablesMap.set(name, info)
+						}
+					}
+				}
+
 				break
 			}
 			case 'patch': {
 				const oldObj = this.variables.get(change.label)
 				if (!oldObj) throw new Error(`Got variables update for unknown instance: ${change.label}`)
-				const newObj = applyPatch(cloneDeep(Object.fromEntries(oldObj.toJSON())), change.patch)
-				oldObj.replace(newObj.newDocument)
+				ApplyDiffToStore(oldObj, change)
 				break
 			}
 			case 'remove': {

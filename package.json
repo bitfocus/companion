@@ -16,7 +16,7 @@
     "dev:debug": "yarn workspace companion dev:debug",
     "dev:webui": "yarn workspace @companion-app/webui dev",
     "build:ts": "yarn workspaces foreach --all run build:ts",
-    "dist:webui": "yarn workspace @companion-app/webui build",
+    "dist:webui": "run build:ts && yarn workspace @companion-app/webui build",
     "dist": "tsx ./tools/build/complete.mts",
     "macdist": "run dist mac-x64",
     "macarmdist": "run dist mac-arm64",
@@ -37,12 +37,12 @@
   "engines": {
     "npm": "please-use-yarn",
     "yarn": "^4.5",
-    "node": ">=22.16.0 <23"
+    "node": ">=22.17.1 <23"
   },
   "devDependencies": {
     "@eslint/js": "^9.31.0",
     "@tanstack/eslint-plugin-query": "^5.81.2",
-    "@types/node": "^22.16.3",
+    "@types/node": "^22.16.4",
     "@types/ps-tree": "^1.1.6",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
@@ -60,12 +60,12 @@
     "prettier": "^3.6.2",
     "tsx": "^4.20.3",
     "typescript": "~5.8.3",
-    "typescript-eslint": "^8.36.0",
+    "typescript-eslint": "^8.37.0",
     "udev-generator": "^1.0.1",
     "vitest": "^3.2.4",
     "vitest-mock-extended": "^3.1.0",
     "yaml": "^2.8.0",
-    "zx": "^8.7.0"
+    "zx": "^8.7.1"
   },
   "resolutions": {
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",

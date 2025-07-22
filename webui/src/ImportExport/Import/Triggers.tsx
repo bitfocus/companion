@@ -3,7 +3,7 @@ import React, { ChangeEvent, useCallback, useEffect, useState, useContext } from
 import { ImportRemap } from './Page.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject

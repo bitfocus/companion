@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
-import { makeAbsolutePath, useComputed } from '~/util.js'
+import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -11,6 +11,7 @@ import {
 	faFileExport,
 	faLayerGroup,
 	faList,
+	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -25,7 +26,7 @@ import { useTriggerCollectionsApi } from './TriggerCollectionsApi'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export const TriggersPage = observer(function Triggers() {
 	const { triggersList } = useContext(RootAppStoreContext)
@@ -90,55 +91,71 @@ export const TriggersPage = observer(function Triggers() {
 		[navigate]
 	)
 
+	const doCloseTrigger = useCallback(() => {
+		void navigate({ to: '/triggers' })
+	}, [navigate])
+
+	const showPrimaryPanel = !selectedTriggerId
+	const showSecondaryPanel = !!selectedTriggerId
+
 	return (
 		<CRow className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
-			<CCol xs={12} xl={6} className="primary-panel">
-				<h4>Triggers</h4>
-				<p style={{ marginBottom: '0.5rem' }}>
-					Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
-					variable updates.
-				</p>
+			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+				<div className="flex-column-layout">
+					<div className="fixed-header">
+						<h4>Triggers</h4>
+						<p style={{ marginBottom: '0.5rem' }}>
+							Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
+							variable updates.
+						</p>
 
-				<div className="mb-2">
-					<CButtonGroup>
-						<CButton color="primary" onClick={doAddNew} size="sm">
-							<FontAwesomeIcon icon={faAdd} /> Add Trigger
-						</CButton>
-						<CreateCollectionButton />
-					</CButtonGroup>
+						<div className="mb-2">
+							<CButtonGroup>
+								<CButton color="primary" onClick={doAddNew} size="sm">
+									<FontAwesomeIcon icon={faAdd} /> Add Trigger
+								</CButton>
+								<CreateCollectionButton />
+							</CButtonGroup>
 
-					<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
-						<FontAwesomeIcon icon={faFileExport} /> Export all
-					</CButton>
+							<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
+								<FontAwesomeIcon icon={faFileExport} /> Export all
+							</CButton>
+						</div>
+					</div>
+
+					<div className="scrollable-content">
+						<PanelCollapseHelperProvider
+							storageId="trigger-groups"
+							knownPanelIds={triggersList.allCollectionIds}
+							defaultCollapsed
+						>
+							<TriggersTableContextProvider deleteModalRef={confirmModalRef} selectTrigger={selectTrigger}>
+								<CollectionsNestingTable<TriggerCollection, TriggerDataWithId>
+									// Heading={TriggerListTableHeading}
+									NoContent={TriggerListNoContent}
+									ItemRow={TriggerItemRow}
+									GroupHeaderContent={TriggerGroupHeaderContent}
+									itemName="trigger"
+									dragId="trigger"
+									collectionsApi={triggerGroupsApi}
+									collections={triggersList.rootCollections()}
+									items={allTriggers}
+									selectedItemId={selectedTriggerId}
+								/>
+							</TriggersTableContextProvider>
+						</PanelCollapseHelperProvider>
+					</div>
 				</div>
-
-				<PanelCollapseHelperProvider
-					storageId="trigger-groups"
-					knownPanelIds={triggersList.allCollectionIds}
-					defaultCollapsed
-				>
-					<TriggersTableContextProvider deleteModalRef={confirmModalRef} selectTrigger={selectTrigger}>
-						<CollectionsNestingTable<TriggerCollection, TriggerDataWithId>
-							// Heading={TriggerListTableHeading}
-							NoContent={TriggerListNoContent}
-							ItemRow={TriggerItemRow}
-							GroupHeaderContent={TriggerGroupHeaderContent}
-							itemName="trigger"
-							dragId="trigger"
-							collectionsApi={triggerGroupsApi}
-							collections={triggersList.rootCollections()}
-							items={allTriggers}
-							selectedItemId={selectedTriggerId}
-						/>
-					</TriggersTableContextProvider>
-				</PanelCollapseHelperProvider>
 			</CCol>
 
-			<CCol xs={12} xl={6} className="secondary-panel">
-				<Outlet />
+			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+				<div className="secondary-panel-simple">
+					{!!selectedTriggerId && <TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} />}
+					<Outlet />
+				</div>
 			</CCol>
 		</CRow>
 	)
@@ -246,10 +263,10 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 	return (
 		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
-			<div className="flex flex-column grow">
+			<div className="flex flex-column grow" style={{ minWidth: 0 }}>
 				<b>{item.name}</b>
 				<br />
-				<span dangerouslySetInnerHTML={descriptionHtml} />
+				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
 				<br />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
@@ -298,5 +315,22 @@ function CreateCollectionButton() {
 		<CButton color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
 		</CButton>
+	)
+}
+
+interface TriggerEditPanelHeadingProps {
+	doCloseTrigger: () => void
+}
+
+function TriggerEditPanelHeading({ doCloseTrigger }: TriggerEditPanelHeadingProps) {
+	return (
+		<div className="secondary-panel-simple-header">
+			<h4 className="panel-title">Edit Trigger</h4>
+			<div className="header-buttons">
+				<div className="float_right ms-1" onClick={doCloseTrigger} title="Close">
+					<FontAwesomeIcon icon={faTimes} size="lg" />
+				</div>
+			</div>
+		</div>
 	)
 }

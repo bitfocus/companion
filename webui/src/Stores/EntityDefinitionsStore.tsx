@@ -4,7 +4,7 @@ import type {
 } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { ObservableMap, action, observable } from 'mobx'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'
-import { assertNever } from '~/util.js'
+import { assertNever } from '~/Resources/util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { RecentlyUsedIdsStore } from './RecentlyUsedIdsStore.js'
 

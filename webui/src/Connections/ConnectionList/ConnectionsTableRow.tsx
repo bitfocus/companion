@@ -20,8 +20,8 @@ import { getModuleVersionInfoForConnection } from '../Util.js'
 import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { useConnectionListContext } from './ConnectionListContext.js'
-import { isCollectionEnabled } from '~/util.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { isCollectionEnabled } from '~/Resources/util.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ConnectionsTableRowProps {
 	connection: ClientConnectionConfigWithId
@@ -88,17 +88,17 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		[helpViewer, connection.instance_type, moduleVersion]
 	)
 
+	const moduleDisplayName = moduleInfo
+		? `${moduleInfo.display.manufacturer ?? ''}: ${moduleInfo.display.products?.join('; ') ?? ''}`
+		: connection.instance_type
+
 	return (
 		<div className="flex flex-row align-items-center gap-2 hand">
-			<div onClick={doEdit} className="flex flex-column grow">
+			<div onClick={doEdit} className="flex flex-column grow" style={{ minWidth: 0 }}>
 				<b>{connection.label}</b>
-				{moduleInfo ? (
-					<span>
-						{moduleInfo.display.manufacturer ?? ''}: {moduleInfo.display.products?.join('; ') ?? ''}
-					</span>
-				) : (
-					<span>{connection.instance_type}</span>
-				)}
+				<span className="auto-ellipsis" title={moduleDisplayName}>
+					{moduleDisplayName}
+				</span>
 			</div>
 
 			<div onClick={doEdit} className="no-break">

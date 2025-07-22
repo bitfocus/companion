@@ -2,7 +2,7 @@ import React, { useMemo, useRef } from 'react'
 import { NotificationsManager, NotificationsManagerRef } from '~/Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
-import { useActiveLearnRequests } from './_Model/ActiveLearn.js'
+import { useActiveLearnRequests } from './Hooks/useActiveLearnRequests.js'
 import { RootAppStore, RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observable } from 'mobx'
 import { PagesStore } from '~/Stores/PagesStore.js'
@@ -31,7 +31,7 @@ import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscri
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
 import { useImageLibrarySubscription } from './Hooks/useImageLibrarySubscription.js'
-import { trpc } from './TRPC.js'
+import { trpc } from './Resources/TRPC.js'
 import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
 
 interface ContextDataProps {

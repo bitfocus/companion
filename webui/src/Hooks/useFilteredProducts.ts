@@ -1,4 +1,4 @@
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'

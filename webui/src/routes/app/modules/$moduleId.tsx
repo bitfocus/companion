@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import React, { useContext } from 'react'
 import { ModuleManagePanel } from '~/Modules/ModuleManagePanel.js'
-import { MyErrorBoundary, useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 

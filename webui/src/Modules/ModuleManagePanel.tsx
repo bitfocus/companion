@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -9,9 +9,10 @@ import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
+import { faExternalLink, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
+import { useNavigate } from '@tanstack/react-router'
 
 interface ModuleManagePanelProps {
 	moduleId: string
@@ -48,8 +49,13 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	moduleStoreBaseInfo,
 }: ModuleManagePanelInnerProps) {
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
+	const navigate = useNavigate()
 
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
+
+	const doCloseModule = useCallback(() => {
+		void navigate({ to: '/modules' })
+	}, [navigate])
 
 	return (
 		<>
@@ -66,6 +72,9 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 							<FontAwesomeIcon icon={faExternalLink} size="xl" />
 						</WindowLinkOpen>
 					)}
+					<div className="float_right ms-1 d-xl-none" onClick={doCloseModule} title="Close">
+						<FontAwesomeIcon icon={faTimes} size="lg" />
+					</div>
 				</div>
 			</div>
 			<div className="secondary-panel-simple-body">

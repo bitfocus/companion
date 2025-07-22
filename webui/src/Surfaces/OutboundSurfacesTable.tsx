@@ -1,15 +1,14 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { faAdd, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { CButton, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { AddOutboundSurfaceModal, AddOutboundSurfaceModalRef } from './AddOutboundSurfaceModal.js'
 import { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 	const { surfaces } = useContext(RootAppStoreContext)
@@ -18,10 +17,7 @@ export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 		return a.address.localeCompare(b.address)
 	})
 
-	const addModalRef = useRef<AddOutboundSurfaceModalRef>(null)
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
-
-	const addSurface = useCallback(() => addModalRef?.current?.show(), [])
 
 	const removeMutation = useMutationExt(trpc.surfaces.outbound.remove.mutationOptions())
 	const removeSurface = useCallback(
@@ -57,16 +53,9 @@ export const OutboundSurfacesTable = observer(function OutboundSurfacesTable() {
 
 	return (
 		<>
-			<AddOutboundSurfaceModal ref={addModalRef} />
 			<GenericConfirmModal ref={confirmRef} />
 
-			<CButtonGroup size="sm">
-				<CButton color="primary" onClick={addSurface}>
-					<FontAwesomeIcon icon={faAdd} /> Add Remote Surface
-				</CButton>
-			</CButtonGroup>
-
-			<table className="table table-responsive-sm table-margin-top">
+			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
 						<th>Name</th>

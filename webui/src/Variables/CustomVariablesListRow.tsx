@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { CButton, CButtonGroup, CCol, CForm, CFormLabel, CRow } from '@coreui/react'
-import { PreventDefaultHandler } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
@@ -13,6 +13,7 @@ import VariableInputGroup from '~/Components/VariableInputGroup.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
 import { useCustomVariablesTableContext } from './CustomVariablesTableContext'
 import type { CustomVariableDefinitionExt } from './CustomVariablesList'
+import { InlineHelp } from '~/Components/InlineHelp'
 
 interface CustomVariableRowProps {
 	info: CustomVariableDefinitionExt
@@ -78,11 +79,12 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 				<>
 					<CForm onSubmit={PreventDefaultHandler} className="cell-fields">
 						<div>
+							<InlineHelp help="If enabled, variable value will be saved and restored when Companion restarts.">
+								<CFormLabel>Persist value</CFormLabel>
+							</InlineHelp>
 							<CheckboxInputField
-								label="Persist value"
 								value={info.persistCurrentValue}
 								setValue={(val) => customVariablesApi.setPersistenceValue(info.id, val)}
-								helpText="If enabled, variable value will be saved and restored when Companion restarts."
 								inline={true}
 							/>
 						</div>

@@ -1,13 +1,24 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { makeAbsolutePath, MyErrorBoundary } from '~/util.js'
-import { CAlert, CButton, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import {
+	CAlert,
+	CButton,
+	CButtonGroup,
+	CFormCheck,
+	CNav,
+	CNavItem,
+	CNavLink,
+	CTabContent,
+	CTabPane,
+} from '@coreui/react'
 import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
 import { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject
@@ -152,27 +163,32 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
 	// console.log('validkeys', validConfigKeys)
 
-	const setValue = useCallback((key: string, value: any) => {
-		setConfig((oldConfig) => ({
+	const setValue = useCallback((key: keyof ClientImportSelection, value: boolean) => {
+		setConfig((oldConfig: ClientImportSelection) => ({
 			...oldConfig,
 			[key]: value,
 		}))
 	}, [])
 
 	const importFullMutation = useMutationExt(trpc.importExport.importFull.mutationOptions())
-	const doImport = useCallback(() => {
-		importFullMutation // TODO: 60s timeout?
-			.mutateAsync(config)
-			.then(() => {
-				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
-				window.location.reload()
-			})
-			.catch((e) => {
-				console.log('import failed', e)
-				notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
-			})
-		console.log('do import!')
-	}, [importFullMutation, notifier, config])
+	const doImport = useCallback(
+		(e: React.MouseEvent<HTMLElement>) => {
+			const fullReset = e.currentTarget.getAttribute('data-fullreset') === 'true'
+
+			importFullMutation // TODO: 60s timeout?
+				.mutateAsync({ config: config, fullReset: fullReset })
+				.then(() => {
+					// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
+					window.location.reload()
+				})
+				.catch((e) => {
+					console.log('import failed', e)
+					notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
+				})
+			console.log('do import!')
+		},
+		[importFullMutation, notifier, config]
+	)
 
 	return (
 		<>
@@ -188,7 +204,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 			<p>&nbsp;</p>
 
-			<p>Perform a full reset, and import the selected components:</p>
+			<p>Reset and import the selected components:</p>
 
 			{/* <InputCheckbox
 				config={config}
@@ -240,23 +256,29 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				All the connections will be imported, as they are required to be able to import any actions and feedbacks.
 			</CAlert>
 
-			<CButton color="warning" onClick={doImport} disabled={validConfigKeys.length === 0}>
-				<FontAwesomeIcon icon={faFileImport} /> Reset and Import
-			</CButton>
+			<CButtonGroup>
+				<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>
+					<FontAwesomeIcon icon={faFileImport} /> Import, Preserving unselected components
+				</CButton>
+
+				<CButton color="primary" data-fullreset={true} onClick={doImport} disabled={validConfigKeys.length === 0}>
+					<FontAwesomeIcon icon={faFileImport} /> Full Reset then Import
+				</CButton>
+			</CButtonGroup>
 		</>
 	)
 }
 
 interface InputCheckboxProps {
-	config: Record<string, boolean>
+	config: ClientImportSelection
 	allowKeys: string[]
-	keyName: string
-	setValue: (key: string, value: any) => void
+	keyName: keyof ClientImportSelection
+	setValue: (key: keyof ClientImportSelection, value: boolean) => void
 	label: string
 }
 
 function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputCheckboxProps) {
-	const disabled = allowKeys && !allowKeys.includes(keyName)
+	const disabled = allowKeys && !allowKeys.includes(String(keyName))
 
 	const setValue2 = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => setValue(keyName, !!e.currentTarget.checked),
@@ -266,7 +288,7 @@ function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputChe
 	return (
 		<div className="indent3">
 			<CFormCheck
-				id={`check-${keyName}`}
+				id={`check-${String(keyName)}`}
 				label={label}
 				checked={!disabled && !!config[keyName]}
 				onChange={setValue2}

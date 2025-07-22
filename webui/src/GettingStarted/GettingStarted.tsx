@@ -7,7 +7,7 @@ import { getFilenameForSection, GettingStartedMenu } from './SideMenu.js'
 import { DocsContent } from './DocsContent.js'
 
 import docsStructure0 from '@docs/structure.json'
-import { makeAbsolutePath } from '~/util.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 const docsStructure: DocsSection[] = docsStructure0
 
 export interface DocsSection {

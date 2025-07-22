@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { CButtonGroup, CButton, CFormSwitch } from '@coreui/react'
-import { faPencil, faExpandArrowsAlt, faCompressArrowsAlt, faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faPencil, faExpandArrowsAlt, faCompressArrowsAlt, faClone, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { EntityModelType, EntityOwner, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
@@ -88,7 +88,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 						onClick={service.performDuplicate}
 						title={`Duplicate ${entityTypeLabel}`}
 					>
-						<FontAwesomeIcon icon={faCopy} />
+						<FontAwesomeIcon icon={faClone} />
 					</CButton>
 					<CButton size="sm" disabled={readonly} onClick={service.performDelete} title={`Remove ${entityTypeLabel}`}>
 						<FontAwesomeIcon icon={faTrash} />

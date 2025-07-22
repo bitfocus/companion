@@ -5,10 +5,10 @@ import React, { useRef, useState, useCallback } from 'react'
 import { AddEmulatorModalRef, AddEmulatorModal } from './AddEmulatorModal'
 import { AddSurfaceGroupModalRef, AddSurfaceGroupModal } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { trpc } from '~/TRPC'
+import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
@@ -61,48 +61,59 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		[navigate]
 	)
 
+	const showPrimaryPanel = !selectedItemId
+	const showSecondaryPanel = !!selectedItemId
+
 	return (
 		<CRow className="surfaces-page split-panels">
-			<CCol xs={12} xl={6} className="primary-panel">
-				<h4>Configured Surfaces</h4>
+			<CCol
+				xs={12}
+				xl={6}
+				className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'} flex-column-layout`}
+			>
+				<div className="fixed-header">
+					<h4>Configured Surfaces</h4>
 
-				<p style={{ marginBottom: '0.5rem' }}>
-					Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the Elgato
-					Streamdeck application and click the Rescan button below.
-				</p>
+					<p style={{ marginBottom: '0.5rem' }}>
+						Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the
+						Elgato Streamdeck application and click the Rescan button below.
+					</p>
 
-				<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
-					{scanError}
-				</CAlert>
+					<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
+						{scanError}
+					</CAlert>
 
-				<CButtonGroup size="sm">
-					<CButton color="warning" onClick={refreshUSB}>
-						<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} />
-						{rescanUsbMutation.isPending ? ' Checking for new surfaces...' : ' Rescan USB'}
-					</CButton>
-					<CButton color="primary" onClick={addEmulator}>
-						<FontAwesomeIcon icon={faAdd} /> Add Emulator
-					</CButton>
-					<CButton color="secondary" onClick={addGroup}>
-						<FontAwesomeIcon icon={faAdd} /> Add Group
-					</CButton>
-				</CButtonGroup>
+					<CButtonGroup size="sm">
+						<CButton color="warning" onClick={refreshUSB}>
+							<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} />
+							{rescanUsbMutation.isPending ? ' Checking for new surfaces...' : ' Rescan USB'}
+						</CButton>
+						<CButton color="primary" onClick={addEmulator}>
+							<FontAwesomeIcon icon={faAdd} /> Add Emulator
+						</CButton>
+						<CButton color="secondary" onClick={addGroup}>
+							<FontAwesomeIcon icon={faAdd} /> Add Group
+						</CButton>
+					</CButtonGroup>
 
-				<AddSurfaceGroupModal ref={addGroupModalRef} />
-				<AddEmulatorModal ref={addEmulatorModalRef} />
+					<AddSurfaceGroupModal ref={addGroupModalRef} />
+					<AddEmulatorModal ref={addEmulatorModalRef} />
+				</div>
 
-				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
+				<div className="scrollable-content">
+					<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
 
-				<CCallout color="info">
-					Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-					<a target="_blank" rel="noreferrer" href="https://bfoc.us/70n2m47akw">
-						Companion Satellite
-					</a>
-					?
-				</CCallout>
+					<CCallout color="info">
+						Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
+						<a target="_blank" rel="noreferrer" href="https://bfoc.us/70n2m47akw">
+							Companion Satellite
+						</a>
+						?
+					</CCallout>
+				</div>
 			</CCol>
 
-			<CCol xs={12} xl={6} className="secondary-panel">
+			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />

@@ -106,7 +106,7 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 
 			{hiddenCount > 0 && (
 				<div className="collections-nesting-table-row-item">
-					<CollectionsNestingTableNestingRow nestingLevel={nestingLevel}>
+					<CollectionsNestingTableNestingRow className="flex flex-row align-items-center" nestingLevel={nestingLevel}>
 						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 						<strong>
 							{hiddenCount} {itemName}s are hidden
@@ -117,7 +117,7 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 
 			{showNoItemsMessage && items.length === 0 && !isDragging && (
 				<div className="collections-nesting-table-row-item">
-					<CollectionsNestingTableNestingRow nestingLevel={nestingLevel}>
+					<CollectionsNestingTableNestingRow className="flex flex-row align-items-center" nestingLevel={nestingLevel}>
 						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 						<strong>This collection is empty</strong>
 					</CollectionsNestingTableNestingRow>

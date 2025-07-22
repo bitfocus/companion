@@ -2,12 +2,12 @@ import { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { CButtonGroup, CButton } from '@coreui/react'
-import { faChevronLeft, faChevronRight, faPlus, faCopy, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faChevronRight, faPlus, faClone, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { EditActionsRelease } from './EditActionsRelease.js'
 import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
@@ -83,7 +83,7 @@ export function ControlActionStepTab({
 					title="Duplicate step"
 					onClick={() => service.duplicateStep(selectedKey)}
 				>
-					<FontAwesomeIcon icon={faCopy} />
+					<FontAwesomeIcon icon={faClone} />
 				</CButton>
 				<CButton
 					style={{ backgroundColor: '#f0f0f0' }}

@@ -1,7 +1,8 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CForm, CFormSelect, CCol, CFormLabel, CFormSwitch } from '@coreui/react'
-import { LoadingRetryOrError, PreventDefaultHandler } from '~/util.js'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { PreventDefaultHandler } from '~/Resources/util.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import {
@@ -15,8 +16,9 @@ import { observer } from 'mobx-react-lite'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { EditPanelConfigField } from './EditPanelConfigField'
 import { NonIdealState } from '~/Components/NonIdealState'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useNavigate } from '@tanstack/react-router'
 
 type SurfaceInfo = ClientSurfaceItem & { groupId: string | null }
 
@@ -30,6 +32,11 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 	groupId: rawGroupId,
 }) {
 	const { surfaces } = useContext(RootAppStoreContext)
+	const navigate = useNavigate()
+
+	const doCloseSurface = useCallback(() => {
+		void navigate({ to: '/surfaces/configured' })
+	}, [navigate])
 
 	let surfaceInfo: SurfaceInfo | null = null
 	if (surfaceId) {
@@ -65,6 +72,11 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 				<h4 className="panel-title">
 					Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}
 				</h4>
+				<div className="header-buttons">
+					<div className="float_right d-xl-none" onClick={doCloseSurface} title="Close">
+						<FontAwesomeIcon icon={faTimes} size="lg" />
+					</div>
+				</div>
 			</div>
 
 			<div className="secondary-panel-simple-body">
@@ -267,7 +279,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 
 	return (
 		<>
-			<CForm className="row g-3" onSubmit={PreventDefaultHandler}>
+			<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 				{surfaceInfo && (
 					<>
 						<CFormLabel htmlFor="colFormSurfaceName" className="col-sm-4 col-form-label col-form-label-sm">

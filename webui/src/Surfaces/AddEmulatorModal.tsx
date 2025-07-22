@@ -19,7 +19,7 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
-import { trpc, useMutationExt } from '~/TRPC'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface AddEmulatorModalRef {
 	show(): void
@@ -86,7 +86,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 				}}
 			>
 				<CModalBody>
-					<CRow className="g-3">
+					<CRow className="g-sm-2">
 						{saveError && (
 							<CCol className={`fieldtype-textinput`} sm={12}>
 								<CAlert color="danger">{saveError}</CAlert>

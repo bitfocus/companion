@@ -1,4 +1,4 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { ObjectsDiff } from './Common.js'
 
 export interface VariableDefinition {
 	label: string
@@ -23,10 +23,9 @@ export interface VariableDefinitionUpdateSetOp {
 	label: string
 	variables: ModuleVariableDefinitions
 }
-export interface VariableDefinitionUpdatePatchOp {
+export interface VariableDefinitionUpdatePatchOp extends ObjectsDiff<VariableDefinition> {
 	type: 'patch'
 	label: string
-	patch: JsonPatchOperation<ModuleVariableDefinitions>[]
 }
 export interface VariableDefinitionUpdateRemoveOp {
 	type: 'remove'

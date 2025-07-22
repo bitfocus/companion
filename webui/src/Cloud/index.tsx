@@ -14,10 +14,10 @@ import {
 } from '@coreui/react'
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
-import { LoadingRetryOrError } from '~/util.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export function CloudPage(): React.JSX.Element {
 	const cloudState = useCloudState()

@@ -157,7 +157,7 @@ export class InternalBuildingBlocks
 			},
 			logic_if: {
 				label: 'Logic: If statement',
-				description: 'Execute some actions if a condition is true',
+				description: 'Execute some actions if all of the configured conditions are true',
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,

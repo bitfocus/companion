@@ -57,6 +57,8 @@
 }
 
 .edit-connection {
+	margin-bottom: 1em;
+
 	& > div {
 		// column
 		margin-bottom: 10px;
@@ -68,6 +70,16 @@
 		font-size: 1em;
 		margin-bottom: 0.15rem;
 	}
+}
+
+.connection-form-buttons {
+	position: sticky;
+	bottom: 0;
+	flex-shrink: 0;
+	padding-top: 1rem;
+	margin-top: auto;
+	background-color: white;
+	padding-bottom: 1.5rem;
 }
 
 .variables-panel {
@@ -92,18 +104,12 @@
 
 .variables-table {
 	word-break: break-all;
+	table-layout: fixed;
 	// flex-grow: 1;
 
 	th {
 		position: sticky;
 		top: 0;
-	}
-
-	&.variables-table-max-33 {
-		th {
-			max-width: 50%;
-			min-width: 20%;
-		}
 	}
 
 	.variable-dragging {

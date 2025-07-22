@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useContext } from 'react'
 import { EditTriggerPanel } from '~/Triggers/EditPanel.js'
-import { MyErrorBoundary, useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { observer } from 'mobx-react-lite'
@@ -22,12 +23,10 @@ const RouteComponent = observer(function RouteComponent() {
 	}, [navigate, triggersList, fullControlId])
 
 	return (
-		<div className="secondary-panel-simple">
-			<div className="secondary-panel-simple-body">
-				<MyErrorBoundary>
-					<EditTriggerPanel key={controlId} controlId={fullControlId} />
-				</MyErrorBoundary>
-			</div>
+		<div className="secondary-panel-simple-body">
+			<MyErrorBoundary>
+				<EditTriggerPanel key={controlId} controlId={fullControlId} />
+			</MyErrorBoundary>
 		</div>
 	)
 })

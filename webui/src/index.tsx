@@ -1,9 +1,9 @@
-import './Sentry.js'
+import './Resources/Sentry.js'
 
 import '@fontsource/roboto'
 import '@fontsource/fira-code'
 import './App.scss'
-import './Constants.js'
+import './Resources/Constants.js'
 import alignmentImg from '~/scss/img/alignment.png'
 import checkImg from '~/scss/img/check.png'
 
@@ -21,7 +21,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 
-import { makeAbsolutePath } from '~/util.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 // import i18n from 'i18next'
 // import Backend from 'i18next-http-backend'

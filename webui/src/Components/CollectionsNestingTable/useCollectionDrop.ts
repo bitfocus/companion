@@ -1,5 +1,5 @@
 import { ConnectDropTarget, useDrop } from 'react-dnd'
-import { checkDragState, DragState } from '../../util.js'
+import { checkDragState, DragState } from '~/Resources/DragAndDrop.js'
 import { NestingCollectionsApi } from './Types.js'
 
 export interface CollectionsNestingTableCollectionDragItem {
@@ -51,6 +51,9 @@ export function useCollectionListCollectionDrop(
 
 			if (item.collectionId !== null) {
 				collectionApi.moveCollection(item.collectionId, parentId, index)
+
+				item.index = index
+				item.parentId = parentId
 				return { parentChanged: true }
 			}
 			return {} // Always return an object

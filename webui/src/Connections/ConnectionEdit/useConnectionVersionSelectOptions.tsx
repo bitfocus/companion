@@ -3,7 +3,7 @@ import semver from 'semver'
 import { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
-import { useComputed } from '~/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { getLatestVersion } from './VersionUtil.js'
 
 export function useConnectionVersionSelectOptions(

@@ -10,8 +10,8 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import CopyToClipboard from 'react-copy-to-clipboard'
-import { makeAbsolutePath } from '~/util'
-import { trpc, useMutationExt } from '~/TRPC'
+import { makeAbsolutePath } from '~/Resources/util'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface KnownSurfacesTableProps {
 	selectedItemId: string | null
@@ -133,7 +133,7 @@ interface ManualGroupRowProps {
 	selectedItemId: string | null
 	selectItem: (itemId: string | null) => void
 }
-function ManualGroupRow({
+const ManualGroupRow = observer(function ManualGroupRow({
 	group,
 	deleteGroup,
 	deleteEmulator,
@@ -200,7 +200,7 @@ function ManualGroupRow({
 			))}
 		</>
 	)
-}
+})
 
 interface SurfaceRowProps {
 	surface: ClientSurfaceItem

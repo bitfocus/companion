@@ -204,6 +204,8 @@ export class ControlEntityList {
 	moveEntity(oldIndex: number, newIndex: number): void {
 		oldIndex = clamp(oldIndex, 0, this.#entities.length)
 		newIndex = clamp(newIndex, 0, this.#entities.length)
+		if (oldIndex < newIndex) newIndex -= 1
+
 		this.#entities.splice(newIndex, 0, ...this.#entities.splice(oldIndex, 1))
 	}
 

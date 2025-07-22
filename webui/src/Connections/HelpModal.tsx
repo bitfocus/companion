@@ -7,7 +7,7 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import semver from 'semver'
-import { makeAbsolutePath } from '~/util.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 export interface HelpModalRef {
 	showFromUrl(moduleId: string, versionDisplayName: string, url: string): void

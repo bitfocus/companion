@@ -29,6 +29,7 @@
 @use 'scss/wizard';
 @use 'scss/import-export';
 @use 'scss/collections-nesting-table';
+@use 'scss/sticky-tables';
 @use 'scss/image-library';
 
 //@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
@@ -148,6 +149,13 @@ body {
 	letter-spacing: -0.15;
 	border-radius: 6;
 	display: inline-block;
+
+	&.autowrap {
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 }
 
 .toast {
@@ -189,5 +197,11 @@ body {
 }
 
 .no-break {
+	white-space: nowrap;
+}
+
+.auto-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
 	white-space: nowrap;
 }

@@ -1,10 +1,12 @@
-import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import React, { useContext } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { BackupRuleEditor } from '../../../../UserConfig/BackupRuleEditor.js'
 import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
-import { useComputed } from '../../../../util.js'
+import { useComputed } from '../../../../Resources/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { observer } from 'mobx-react-lite'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTimes } from '@fortawesome/free-solid-svg-icons'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { userConfig } = useContext(RootAppStoreContext)
@@ -21,18 +23,19 @@ const RouteComponent = observer(function RouteComponent() {
 		}
 	}, [navigate, ruleId, backupRule])
 
+	const doCloseRule = useCallback(() => {
+		void navigate({ to: '/settings/backups' })
+	}, [navigate])
+
 	return (
 		<>
-			<CNav variant="tabs" role="tablist">
-				<CNavItem>
-					<CNavLink active>{backupRule?.name || 'Edit Backup Rule'}</CNavLink>
-				</CNavItem>
-			</CNav>
-			<CTabContent>
-				<CTabPane data-tab="editor" visible>
+			<BackupRuleEditPanelHeading doCloseRule={doCloseRule} />
+
+			<div className="secondary-panel-simple-body">
+				<MyErrorBoundary>
 					<BackupRuleEditor ruleId={ruleId} />
-				</CTabPane>
-			</CTabContent>
+				</MyErrorBoundary>
+			</div>
 		</>
 	)
 })
@@ -40,3 +43,20 @@ const RouteComponent = observer(function RouteComponent() {
 export const Route = createFileRoute('/_app/settings/backups/$ruleId')({
 	component: RouteComponent,
 })
+
+interface BackupRuleEditPanelHeadingProps {
+	doCloseRule: () => void
+}
+
+function BackupRuleEditPanelHeading({ doCloseRule }: BackupRuleEditPanelHeadingProps) {
+	return (
+		<div className="secondary-panel-simple-header">
+			<h4 className="panel-title">Edit Backup Rule</h4>
+			<div className="header-buttons">
+				<div className="float_right ms-1" onClick={doCloseRule} title="Close">
+					<FontAwesomeIcon icon={faTimes} size="lg" />
+				</div>
+			</div>
+		</div>
+	)
+}

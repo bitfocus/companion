@@ -1,3 +1,5 @@
+@use '@coreui/coreui/scss/coreui'; // not strictly necessary, but it allows us to clarify the origin of mixins
+
 .preset-category-grid,
 .variables-category-grid {
 	display: grid;
@@ -10,9 +12,13 @@
 
 	align-content: stretch;
 
-	// @include media-breakpoint-down('xs') {
-	// 	grid-template-columns: repeat(2, 1fr);
-	// }
+	@include coreui.media-breakpoint-down('xs') {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@include coreui.media-breakpoint-down('sm') {
+		grid-template-columns: 1fr;
+	}
 
 	.btn {
 		align-content: center;

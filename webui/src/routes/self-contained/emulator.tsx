@@ -4,8 +4,8 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import React from 'react'
 import { useDocumentTitle } from 'usehooks-ts'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
-import { trpc } from '~/TRPC'
-import { LoadingRetryOrError } from '~/util'
+import { trpc } from '~/Resources/TRPC'
+import { LoadingRetryOrError } from '~/Resources/Loading'
 
 export const Route = createFileRoute('/emulator')({
 	component: RouteComponent,

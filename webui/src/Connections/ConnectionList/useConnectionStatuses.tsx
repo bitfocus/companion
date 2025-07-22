@@ -2,8 +2,8 @@ import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { ObservableMap, observable, runInAction } from 'mobx'
 import { useMemo } from 'react'
-import { trpc } from '~/TRPC'
-import { assertNever } from '~/util.js'
+import { trpc } from '~/Resources/TRPC'
+import { assertNever } from '~/Resources/util.js'
 
 export function useConnectionStatuses(): ObservableMap<string, ConnectionStatusEntry> {
 	const connectionStatuses = useMemo(() => observable.map<string, ConnectionStatusEntry>(), [])

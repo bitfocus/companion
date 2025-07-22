@@ -12,7 +12,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { PresetDragItem } from './PresetDragItem.js'
 import { observer } from 'mobx-react-lite'
 import { useQuery } from '@tanstack/react-query'
-import { trpc } from '~/TRPC.js'
+import { trpc } from '~/Resources/TRPC.js'
 
 export interface PresetsButtonListProps {
 	presets: Map<string, UIPresetDefinition> | undefined

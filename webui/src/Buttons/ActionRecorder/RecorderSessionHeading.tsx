@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, ChangeEvent, RefObject } from 'react'
-import { PreventDefaultHandler, useComputed } from '~/util.js'
+import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { CButton, CButtonGroup, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { MultiDropdownInputField } from '~/Components/index.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
@@ -7,7 +7,7 @@ import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecord
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>

@@ -12,8 +12,8 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { backupTypes } from './BackupConstants.js'
-import { checkDragState, DragState } from '~/util.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { checkDragState, DragState } from '~/Resources/DragAndDrop.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const SettingsBackupsPage = observer(function UserConfig() {
 	const navigate = useNavigate({ from: '/settings/backups' })
@@ -40,29 +40,42 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 			})
 	}, [createRuleMutation, doEditRule])
 
+	const matchRoute = useMatchRoute()
+	const routeMatch = matchRoute({ to: '/settings/backups/$ruleId' })
+	const selectedRuleId = routeMatch ? routeMatch.ruleId : null
+
+	const showPrimaryPanel = !selectedRuleId
+	const showSecondaryPanel = !!selectedRuleId
+
 	return (
 		<CRow className="split-panels">
-			<CCol xl={6} className="primary-panel">
-				<div className="d-flex justify-content-between">
-					<div>
-						<h4>Settings - Backups</h4>
-						<p>Scheduled backups of your Companion configuration. Settings apply instantaneously!</p>
+			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+				<div className="flex-column-layout">
+					<div className="fixed-header">
+						<div className="d-flex justify-content-between">
+							<div>
+								<h4>Settings - Backups</h4>
+								<p>Scheduled backups of your Companion configuration. Settings apply instantaneously!</p>
+							</div>
+						</div>
+
+						<div className="mb-2">
+							<CButtonGroup>
+								<CButton color="primary" onClick={doAddNew} size="sm">
+									<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
+								</CButton>
+							</CButtonGroup>
+						</div>
+					</div>
+
+					<div className="scrollable-content">
+						<BackupsTable editRule={doEditRule} />
 					</div>
 				</div>
-
-				<div className="mb-2">
-					<CButtonGroup>
-						<CButton color="primary" onClick={doAddNew} size="sm">
-							<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
-						</CButton>
-					</CButtonGroup>
-				</div>
-
-				<BackupsTable editRule={doEditRule} />
 			</CCol>
 
-			<CCol xs={12} xl={6} className="secondary-panel">
-				<div className="secondary-panel-inner">
+			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>
 			</CCol>

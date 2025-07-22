@@ -6,10 +6,9 @@ import type {
 	ClientSurfaceItem,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { action, observable } from 'mobx'
-import { assertNever } from '~/util.js'
-import { applyPatch } from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
+import { assertNever } from '~/Resources/util.js'
 import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
 
 export class SurfacesStore {
 	readonly store = observable.map<string, ClientDevicesListItem>()
@@ -21,8 +20,6 @@ export class SurfacesStore {
 			this.store.clear()
 			return
 		}
-
-		console.log('updateSurfaces', changes)
 
 		for (const change of changes) {
 			const changeType = change.type
@@ -39,8 +36,7 @@ export class SurfacesStore {
 				case 'update': {
 					const oldObj = this.store.get(change.itemId)
 					if (!oldObj) throw new Error(`Got update for unknown surface item: ${change.itemId}`)
-					const newObj = applyPatch(cloneDeep(oldObj), change.patch)
-					this.store.set(change.itemId, newObj.newDocument)
+					applyJsonPatchInPlace(oldObj, change.patch)
 					break
 				}
 				default:
@@ -65,9 +61,15 @@ export class SurfacesStore {
 					this.outboundSurfaces.set(id, item)
 				}
 				break
-			case 'add':
-				this.outboundSurfaces.set(change.itemId, change.info)
+			case 'add': {
+				const existing = this.outboundSurfaces.get(change.itemId)
+				if (existing) {
+					updateObjectInPlace(existing, change.info)
+				} else {
+					this.outboundSurfaces.set(change.itemId, change.info)
+				}
 				break
+			}
 			case 'remove':
 				this.outboundSurfaces.delete(change.itemId)
 				break

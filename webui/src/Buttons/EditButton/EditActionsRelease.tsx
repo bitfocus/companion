@@ -6,13 +6,13 @@ import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useRef, useCallback } from 'react'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
-import { MyErrorBoundary } from '~/util.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import {
 	EditDurationGroupPropertiesModalRef,
 	EditDurationGroupPropertiesModal,
 } from './EditDurationGroupPropertiesModal.js'
 import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface EditActionsReleaseProps {
 	controlId: string

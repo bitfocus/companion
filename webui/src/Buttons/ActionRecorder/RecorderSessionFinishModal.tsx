@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { PreventDefaultHandler } from '~/util.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import {
 	CButton,
 	CCol,
@@ -21,7 +21,7 @@ import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { ButtonPicker } from './ButtonPicker.js'
 import { TriggerPicker } from './TriggerPicker.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { trpc, useMutationExt } from '~/TRPC.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface RecorderSessionFinishModalProps {
 	doClose: () => void
