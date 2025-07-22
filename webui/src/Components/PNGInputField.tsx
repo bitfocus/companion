@@ -48,15 +48,18 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 	}
 
 	const onClick = useCallback(() => {
+		const fileForm = inputRef.current // "file" type of input form
 		onError(null)
-		if (inputRef.current) {
-			inputRef.current.click()
+		if (fileForm) {
+			// ensure that the file is reloaded even if it has the same name as the current one:
+			fileForm.value = ''
+			fileForm.files = new DataTransfer().files // you can't create a FileList object directly (even though compiler doesn't complain)
+			fileForm.click()
 		}
 	}, [onError])
 	const onChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const newFiles = e.currentTarget.files
-			e.currentTarget.files = null
 			console.log('change', newFiles)
 
 			//check whether browser fully supports all File API
