@@ -273,6 +273,12 @@ code {
 	background-color: #fff;
 }
 
+.form-statictext {
+	& > :last-child {
+		margin-bottom: 0;
+	}
+}
+
 .float-right {
 	float: right;
 }

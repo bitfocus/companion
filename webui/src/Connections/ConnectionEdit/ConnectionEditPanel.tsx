@@ -23,6 +23,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { ConnectionEditPanelStore, isConfigFieldSecret } from './ConnectionEditPanelStore.js'
 import { observable } from 'mobx'
 import { TextInputField } from '~/Components/TextInputField.js'
+import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -364,9 +365,7 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 }): React.JSX.Element {
 	const configData = panelStore.configAndSecrets
 
-	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ConnectionInputField & { width: number }>(
-		configData?.fields
-	)
+	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ConnectionInputField>(configData?.fields)
 
 	if (!configData) {
 		return <NonIdealState icon={faCircleExclamation}>No config data loaded</NonIdealState>
@@ -383,44 +382,58 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 				const isVisible = !fn || !!fn(configData.config)
 				if (!isVisible) return null
 
+				// This was removed from the types, but can still exist
+				const fieldWidth = 'width' in fieldInfo ? Number(fieldInfo.width) : 12
+
 				const isSecret = isConfigFieldSecret(fieldInfo)
 				if (isSecret) {
 					return (
-						<CCol
-							className={`fieldtype-${fieldInfo.type}`}
-							sm={fieldInfo.width}
-							style={{ display: !isVisible ? 'none' : undefined }}
-						>
-							<CFormLabel>
+						<React.Fragment key={fieldInfo.id}>
+							<CFormLabel
+								className="col-sm-4 col-form-label col-form-label-sm"
+								style={{ display: !isVisible ? 'none' : undefined }}
+							>
 								<ConnectionFieldLabel fieldInfo={fieldInfo} />
 							</CFormLabel>
-							<ConnectionSecretField
-								definition={fieldInfo}
-								hasSavedValue={!!configData.updatedSecrets[fieldInfo.id]}
-								editValue={configData.updatedSecrets[fieldInfo.id]}
-								isDirty={fieldInfo.id in configData.updatedSecrets}
-								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
-								clearValue={() => panelStore.clearSecretValue(`secrets.${fieldInfo.id}`)}
-							/>
+							<CCol sm={8} style={{ display: !isVisible ? 'none' : undefined }}>
+								<ConnectionSecretField
+									definition={fieldInfo}
+									hasSavedValue={!!configData.updatedSecrets[fieldInfo.id]}
+									editValue={configData.updatedSecrets[fieldInfo.id]}
+									isDirty={fieldInfo.id in configData.updatedSecrets}
+									setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
+									clearValue={() => panelStore.clearSecretValue(`secrets.${fieldInfo.id}`)}
+								/>
+							</CCol>
+						</React.Fragment>
+					)
+				} else if (fieldInfo.type === 'static-text' && (!fieldWidth || fieldWidth > 6)) {
+					if (!fieldInfo.label && !fieldInfo.value) return null // Skip rendering the fields used to force alignment
+
+					return (
+						<CCol sm={12}>
+							{fieldInfo.label ? <CFormLabel>{fieldInfo.label}</CFormLabel> : ''}
+							{<StaticTextFieldText {...fieldInfo} allowImages />}
 						</CCol>
 					)
 				} else {
 					return (
-						<CCol
-							className={`fieldtype-${fieldInfo.type}`}
-							sm={fieldInfo.width}
-							style={{ display: !isVisible ? 'none' : undefined }}
-						>
-							<CFormLabel>
+						<React.Fragment key={fieldInfo.id}>
+							<CFormLabel
+								className="col-sm-4 col-form-label col-form-label-sm"
+								style={{ display: !isVisible ? 'none' : undefined }}
+							>
 								<ConnectionFieldLabel fieldInfo={fieldInfo} />
 							</CFormLabel>
-							<ConnectionEditField
-								definition={fieldInfo}
-								value={configData.config[fieldInfo.id]}
-								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
-								connectionId={panelStore.connectionId}
-							/>
-						</CCol>
+							<CCol sm={8} style={{ display: !isVisible ? 'none' : undefined }}>
+								<ConnectionEditField
+									definition={fieldInfo}
+									value={configData.config[fieldInfo.id]}
+									setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
+									connectionId={panelStore.connectionId}
+								/>
+							</CCol>
+						</React.Fragment>
 					)
 				}
 			})}

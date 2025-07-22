@@ -96,7 +96,7 @@ export interface WrappedImage {
 }
 
 export interface ClientEditConnectionConfig {
-	fields: Array<ConnectionInputField & { width: number }>
+	fields: Array<ConnectionInputField>
 	config: unknown
 	hasSecrets: Record<string, boolean>
 }

@@ -21,7 +21,7 @@ export function StaticTextFieldText({
 			}),
 		}
 
-		return <p title={tooltip} dangerouslySetInnerHTML={descriptionHtml}></p>
+		return <div title={tooltip} dangerouslySetInnerHTML={descriptionHtml} className="form-statictext"></div>
 	}
 
 	return null

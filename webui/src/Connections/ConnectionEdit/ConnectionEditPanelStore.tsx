@@ -14,7 +14,7 @@ export interface ConnectionBasicInfoChanges {
 	updatePolicy?: ConnectionUpdatePolicy
 }
 export interface ConnectionConfigAndSecrets {
-	fields: Array<ConnectionInputField & { width: number }>
+	fields: Array<ConnectionInputField>
 
 	config: CompanionOptionValues
 	configDirty: boolean

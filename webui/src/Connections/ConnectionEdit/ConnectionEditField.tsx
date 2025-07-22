@@ -95,7 +95,6 @@ export function ConnectionEditField({
 					presetColors={definition.presetColors}
 				/>
 			)
-			break
 		}
 		case 'bonjour-device':
 			return (
