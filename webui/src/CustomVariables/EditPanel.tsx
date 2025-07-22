@@ -213,39 +213,19 @@ const CustomVariableSoleEntityEditor = observer(function CustomVariableSoleEntit
 	controlId,
 	entity,
 }: CustomVariableSoleEntityEditorProps) {
-	const { connections, entityDefinitions, customVariablesList } = useContext(RootAppStoreContext)
+	const { entityDefinitions, customVariablesList } = useContext(RootAppStoreContext)
 
 	const customVariableDefinition = customVariablesList.customVariables.get(controlId)
 
 	const { serviceFactory } = useEntityEditorContext()
 	const entityService = useControlEntityService(serviceFactory, entity, 'variable')
 
-	const connectionInfo = connections.getInfo(entity.connectionId)
-	const connectionLabel = connectionInfo?.label ?? entity.connectionId
-
 	const entityDefinition = entityDefinitions.getEntityDefinition(entity.type, entity.connectionId, entity.definitionId)
-
-	const definitionName = entityDefinition
-		? `${connectionLabel}: ${entityDefinition.label}`
-		: `${connectionLabel}: ${entity.definitionId} (undefined)`
 
 	return (
 		<>
 			<CCol sm={12} className="p-0">
 				<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
-					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
-						Variable Type
-						<FontAwesomeIcon
-							icon={faQuestionCircle}
-							title="The name for the variable. It will get wrapped with $(custom:X) for you"
-						/>
-					</CFormLabel>
-					<CCol xs={8}>
-						<b>{definitionName}</b>
-						<br />
-						<small>{entityDefinition?.description ?? ''}</small>
-					</CCol>
-
 					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</CFormLabel>
 					<CCol xs={8}>
 						{customVariableDefinition?.isActive ? (

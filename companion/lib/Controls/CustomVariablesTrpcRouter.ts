@@ -16,11 +16,7 @@ import {
 	CustomVariableUpdateInitOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { CustomVariableNameMap } from './CustomVariableNameMap.js'
-import {
-	EntityModelType,
-	FeedbackEntityModel,
-	isInternalUserValueFeedback,
-} from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createCustomVariablesTrpcRouter(
@@ -59,8 +55,21 @@ export function createCustomVariablesTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
+				// Create the initial entity for the custom variable
+				const rootEntity = deps.instance.definitions.createEntityItem(
+					'internal',
+					EntityModelType.Feedback,
+					input.simple ? 'user_value' : 'expression_value'
+				)
+				if (!rootEntity) throw new Error('Failed to get initial entity for custom variable')
+
 				const controlId = CreateCustomVariableControlId(nanoid())
 				const newControl = new ControlCustomVariable(deps, customVariableNamesMap, controlId, null, false)
+
+				if (!newControl.entities.entityAdd('feedbacks', null, rootEntity)) {
+					throw new Error('Failed to add feedback entity to custom variable')
+				}
+
 				controlsMap.set(controlId, newControl)
 
 				// Add variable to the end of the list
@@ -75,25 +84,6 @@ export function createCustomVariablesTrpcRouter(
 
 				// Add to names map (initially empty variableName, will be added when name is set)
 				customVariableNamesMap.addCustomVariable(controlId, newControl.options.variableName)
-
-				// If this is a simple variable, setup the entity
-				if (input.simple) {
-					const feedbackEntity: FeedbackEntityModel = {
-						type: EntityModelType.Feedback,
-						id: nanoid(),
-						definitionId: 'user_value',
-						connectionId: 'internal',
-						options: {},
-						upgradeIndex: undefined,
-					}
-					if (!newControl.entities.entityAdd('feedbacks', null, feedbackEntity)) {
-						throw new Error('Failed to add feedback entity to custom variable')
-					}
-
-					if (!isInternalUserValueFeedback(feedbackEntity)) {
-						throw new Error('Expected internal user value feedback entity')
-					}
-				}
 
 				// Ensure it is stored to the db
 				newControl.commitChange()

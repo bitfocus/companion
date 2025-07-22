@@ -155,7 +155,8 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 		!entity ||
 		entity.type !== EntityModelType.Feedback ||
 		entity.connectionId !== 'internal' ||
-		entity.definitionId !== 'user_value'
+		entity.definitionId !== 'user_value' ||
+		!entity.variableName
 	)
 		return null
 
