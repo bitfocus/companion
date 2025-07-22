@@ -24,7 +24,7 @@ describe('InstanceEntityManager', () => {
 			entityReplace: vi.fn(),
 		},
 		supportsEntities: true,
-		getBitmapSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
+		getBitmapFeedbackSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
 	}
 
 	const mockVariablesParser = {
@@ -175,7 +175,7 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 
 			expect(mockControlsController.getControl).toHaveBeenCalledWith('control-1')
-			expect(mockControl.getBitmapSize).toHaveBeenCalled()
+			expect(mockControl.getBitmapFeedbackSize).toHaveBeenCalled()
 
 			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith('updateFeedbacks', {
 				feedbacks: {
@@ -725,18 +725,18 @@ describe('InstanceEntityManager', () => {
 			const entityCount = 50
 			const mockEntities: any[] = []
 
-			// Create multiple mock controls with proper getBitmapSize implementation
+			// Create multiple mock controls with proper getBitmapFeedbackSize implementation
 			for (let i = 0; i < entityCount; i++) {
 				const controlId = `control-${i}`
 				const isAction = i % 2 === 0
 
-				// For feedback entities, ensure there's a proper control with getBitmapSize
+				// For feedback entities, ensure there's a proper control with getBitmapFeedbackSize
 				if (!isAction) {
 					mockControlsController.getControl.mockImplementation((id) => {
 						if (id === controlId) {
 							return {
 								...mockControl,
-								getBitmapSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
+								getBitmapFeedbackSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
 							}
 						}
 						return mockControl
@@ -1198,7 +1198,7 @@ describe('InstanceEntityManager', () => {
 			// Setup control mocks for each entity
 			mockControlsController.getControl.mockImplementation(() => ({
 				...mockControl,
-				getBitmapSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
+				getBitmapFeedbackSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
 			}))
 
 			// Setup IPC wrapper to return upgrade results
