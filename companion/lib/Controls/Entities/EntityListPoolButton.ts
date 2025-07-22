@@ -1,5 +1,5 @@
 import type {
-	NormalButtonModel,
+	ButtonModelBase,
 	NormalButtonOptions,
 	NormalButtonSteps,
 } from '@companion-app/shared/Model/ButtonModel.js'
@@ -100,7 +100,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#steps.set('0', this.#getNewStepValue(null, null))
 	}
 
-	loadStorage(storage: NormalButtonModel, skipSubscribe: boolean, isImport: boolean): void {
+	loadStorage(storage: ButtonModelBase, skipSubscribe: boolean, isImport: boolean): void {
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
 		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
 

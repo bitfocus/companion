@@ -17,8 +17,8 @@ import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
+import { parseVariablesInButtonStyle } from './Util.js'
 
 /**
  * Class for the stepped button control.
@@ -130,38 +130,13 @@ export class ControlButtonNormal
 	getDrawStyle(): DrawStyleButtonModel {
 		const style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
 
-		if (style.text) {
-			// Block out the button text
-			const overrideVariableValues: CompanionVariableValues = {}
-
-			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
-			if (location) {
-				// Ensure we don't enter into an infinite loop
-				overrideVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
-			}
-
-			// Setup the parser
-			const parser = this.deps.variables.values.createVariablesAndExpressionParser(
-				location,
-				this.entities.getLocalVariableEntities(),
-				overrideVariableValues
-			)
-
-			if (style.textExpression) {
-				const parseResult = parser.executeExpression(style.text, undefined)
-				if (parseResult.ok) {
-					style.text = parseResult.value + ''
-				} else {
-					this.logger.error(`Expression parse error: ${parseResult.error}`)
-					style.text = 'ERR'
-				}
-				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-			} else {
-				const parseResult = parser.parseVariables(style.text)
-				style.text = parseResult.text
-				this.#last_draw_variables = parseResult.variableIds.size > 0 ? parseResult.variableIds : null
-			}
-		}
+		this.#last_draw_variables = parseVariablesInButtonStyle(
+			this.logger,
+			this.controlId,
+			this.deps,
+			this.entities,
+			style
+		)
 
 		return {
 			cloud: false,

@@ -11,8 +11,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { PresetDragItem } from './PresetDragItem.js'
 import { observer } from 'mobx-react-lite'
-import { useQuery } from '@tanstack/react-query'
 import { trpc } from '~/Resources/TRPC.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
 
 export interface PresetsButtonListProps {
 	presets: Map<string, UIPresetDefinition> | undefined
@@ -138,20 +138,21 @@ function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIco
 		},
 	})
 
-	const query = useQuery(
-		trpc.preview.presets.render.queryOptions({
-			connectionId,
-			presetId,
-		})
+	const sub = useSubscription(
+		trpc.preview.graphics.preset.subscriptionOptions(
+			{
+				connectionId,
+				presetId,
+			},
+			{}
+		)
 	)
 
-	const queryRefetch = query.refetch
+	const queryRefetch = sub.reset
 	const onClick = useCallback(
 		(isDown: boolean) => {
 			if (!isDown) return
-			queryRefetch().catch((e) => {
-				console.error('Error fetching preset preview:', e)
-			})
+			queryRefetch()
 		},
 		[queryRefetch]
 	)
@@ -161,8 +162,8 @@ function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIco
 			fixedSize
 			dragRef={drag}
 			title={title}
-			preview={query.error ? RedImage : query.data}
-			onClick={query.error ? onClick : undefined}
+			preview={sub.error ? RedImage : sub.data}
+			onClick={sub.error ? onClick : undefined}
 		/>
 	)
 }

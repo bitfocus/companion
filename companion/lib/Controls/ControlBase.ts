@@ -51,11 +51,15 @@ export abstract class ControlBase<TJson> {
 
 	readonly updateEvents = new EventEmitter<ControlUpdateEvents>()
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+	/** If true, the control will not be persisted */
+	#noPersistence: boolean
+
+	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, noPersistence = false) {
 		this.logger = LogController.createLogger(debugNamespace)
 		this.deps = deps
 		this.controlId = controlId
 		this.updateEvents.setMaxListeners(0)
+		this.#noPersistence = noPersistence
 	}
 
 	/**
@@ -73,7 +77,7 @@ export abstract class ControlBase<TJson> {
 		const newJson = this.toJSON(true)
 
 		// Save to db
-		this.deps.dbTable.set(this.controlId, newJson as any)
+		if (!this.#noPersistence) this.deps.dbTable.set(this.controlId, newJson as any)
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {

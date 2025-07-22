@@ -49,7 +49,7 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for an empty button
 	 */
-	static drawBlank(options: GraphicsOptions, location: ControlLocation): ImageResult {
+	static drawBlank(options: GraphicsOptions, location: ControlLocation | null): ImageResult {
 		// let now = performance.now()
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
@@ -59,7 +59,7 @@ export class GraphicsRenderer {
 		img.fillColor('black')
 
 		if (!options.remove_topbar) {
-			img.drawTextLine(2, 3, formatLocation(location), 'rgb(50, 50, 50)', 8)
+			img.drawTextLine(2, 3, location ? formatLocation(location) : 'x/x', 'rgb(50, 50, 50)', 8)
 			img.horizontalLine(13.5, 'rgb(30, 30, 30)')
 		}
 		// console.timeEnd('drawBlankImage')

@@ -15,18 +15,28 @@ export interface PageDownButtonModel {
 	readonly type: 'pagedown'
 }
 
-export interface NormalButtonModel {
-	readonly type: 'button'
-
-	options: NormalButtonOptions
-
-	style: ButtonStyleProperties
-
+export interface ButtonModelBase {
 	feedbacks: SomeEntityModel[]
 
 	steps: NormalButtonSteps
 
 	localVariables: SomeEntityModel[]
+}
+
+export interface NormalButtonModel extends ButtonModelBase {
+	readonly type: 'button'
+
+	options: NormalButtonOptions
+
+	style: ButtonStyleProperties
+}
+
+export interface PresetButtonModel extends ButtonModelBase {
+	readonly type: 'preset:button'
+
+	options: NormalButtonOptions
+
+	style: ButtonStyleProperties
 }
 
 export type NormalButtonSteps = Record<
