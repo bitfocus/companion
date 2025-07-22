@@ -49,6 +49,13 @@ export function CreateTriggerControlId(triggerId: string): string {
 	return `trigger:${triggerId}`
 }
 
+/**
+ * Create preset control id
+ */
+export function CreatePresetControlId(connectionId: string, presetId: string): string {
+	return `preset:${connectionId}:${presetId}`
+}
+
 export interface ParsedControlIdBank {
 	type: 'bank'
 	control: string
@@ -57,26 +64,40 @@ export interface ParsedControlIdTrigger {
 	type: 'trigger'
 	trigger: string
 }
-export type ParsedControlIdType = ParsedControlIdBank | ParsedControlIdTrigger
+export interface ParsedControlIdPreset {
+	type: 'preset'
+	connectionId: string
+	presetId: string
+}
+export type ParsedControlIdType = ParsedControlIdBank | ParsedControlIdTrigger | ParsedControlIdPreset
 
 /**
  * Parse a controlId
  */
 export function ParseControlId(controlId: string): ParsedControlIdType | undefined {
 	if (typeof controlId === 'string') {
-		const match = controlId.match(/^bank:(.*)$/)
-		if (match) {
+		const matchBank = controlId.match(/^bank:(.*)$/)
+		if (matchBank) {
 			return {
 				type: 'bank',
-				control: match[1],
+				control: matchBank[1],
 			}
 		}
 
-		const match2 = controlId.match(/^trigger:(.*)$/)
-		if (match2) {
+		const matchTrigger = controlId.match(/^trigger:(.*)$/)
+		if (matchTrigger) {
 			return {
 				type: 'trigger',
-				trigger: match2[1],
+				trigger: matchTrigger[1],
+			}
+		}
+
+		const matchPreset = controlId.match(/^preset:(.*?):(.*)$/)
+		if (matchPreset) {
+			return {
+				type: 'preset',
+				connectionId: matchPreset[1],
+				presetId: matchPreset[2],
 			}
 		}
 	}

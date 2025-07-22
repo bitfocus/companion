@@ -5,18 +5,23 @@ import { ControlEntityListPoolButton } from '../Controls/Entities/EntityListPool
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import { replaceAllVariables } from '../Variables/Util.js'
 import type {
-	PresetActionInstance,
-	PresetActionSets,
 	PresetDefinition,
+	PresetDefinitionButton,
 	UIPresetDefinition,
 	UIPresetDefinitionUpdate,
 } from '@companion-app/shared/Model/Presets.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { NormalButtonModel, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type {
+	NormalButtonModel,
+	NormalButtonSteps,
+	PresetButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	CompanionButtonPresetDefinition,
 	CompanionButtonStyleProps,
 	CompanionPresetAction,
-	CompanionPresetDefinition,
+	CompanionPresetFeedback,
+	CompanionTextPresetDefinition,
 } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
@@ -36,11 +41,20 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+
+type InstanceDefinitionsEvents = {
+	readonly updatePresets: [connectionId: string]
+}
 
 type DefinitionsEvents = {
 	presets: [update: UIPresetDefinitionUpdate]
 	actions: [update: EntityDefinitionUpdate]
 	feedbacks: [update: EntityDefinitionUpdate]
+}
+
+type RawPresetDefinition = (CompanionButtonPresetDefinition | CompanionTextPresetDefinition) & {
+	id: string
 }
 
 /**
@@ -50,7 +64,6 @@ type DefinitionsEvents = {
  * @author Keith Rocheck <keith.rocheck@gmail.com>
  * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
- * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
  * @copyright 2022 Bitfocus AS
  * @license
@@ -59,7 +72,7 @@ type DefinitionsEvents = {
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class InstanceDefinitions {
+export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents> {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
 	readonly #configStore: ConnectionConfigStore
@@ -80,6 +93,9 @@ export class InstanceDefinitions {
 	#events = new EventEmitter<DefinitionsEvents>()
 
 	constructor(configStore: ConnectionConfigStore) {
+		super()
+
+		this.setMaxListeners(0)
 		this.#events.setMaxListeners(0)
 
 		this.#configStore = configStore
@@ -218,6 +234,8 @@ export class InstanceDefinitions {
 			})
 		}
 
+		this.emit('updatePresets', connectionId)
+
 		delete this.#actionDefinitions[connectionId]
 		if (this.#events.listenerCount('actions') > 0) {
 			this.#events.emit('actions', {
@@ -254,21 +272,31 @@ export class InstanceDefinitions {
 		}
 	}
 
-	/**
-	 * Get the draw style for a preset
-	 * @param connectionId - the id of the instance
-	 * @param presetId - the id of the preset
-	 */
-	getPresetDrawStyle(connectionId: string, presetId: string): (CompanionButtonStyleProps & { style: 'button' }) | null {
+	convertPresetToPreviewControlModel(connectionId: string, presetId: string): PresetButtonModel | null {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
-		if (definition && definition.type === 'button') {
-			return {
-				...(definition.previewStyle ? definition.previewStyle : definition.style),
-				style: definition.type,
-			}
-		} else {
-			return null
+		if (!definition || definition.type !== 'button') return null
+
+		const result: PresetButtonModel = {
+			...definition.model,
+			type: 'preset:button',
+			style: definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
+			steps: {},
 		}
+
+		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
+		for (const [stepId, step] of Object.entries(definition.model.steps)) {
+			result.steps[stepId] = {
+				options: step.options,
+				action_sets: {
+					down: [],
+					up: [],
+					rotate_left: undefined,
+					rotate_right: undefined,
+				},
+			}
+		}
+
+		return result
 	}
 
 	/**
@@ -278,72 +306,7 @@ export class InstanceDefinitions {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
 		if (!definition || definition.type !== 'button') return null
 
-		const connectionUpgradeIndex = this.#configStore.getConfigForId(connectionId)?.lastUpgradeIndex
-
-		const result: NormalButtonModel = {
-			type: 'button',
-			options: {
-				rotaryActions: definition.options?.rotaryActions ?? false,
-				stepProgression: (definition.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
-			},
-			style: {
-				textExpression: false,
-				...cloneDeep(definition.style),
-				// TODO - avoid defaults..
-				alignment: definition.style.alignment ?? 'center:center',
-				pngalignment: definition.style.pngalignment ?? 'center:center',
-				png64: definition.style.png64 ?? null,
-				show_topbar: definition.style.show_topbar ?? 'default',
-			},
-			feedbacks: [],
-			steps: {},
-			localVariables: [],
-		}
-		if (definition.steps) {
-			for (let i = 0; i < definition.steps.length; i++) {
-				const newStep: NormalButtonSteps[0] = {
-					action_sets: {
-						down: [],
-						up: [],
-						rotate_left: undefined,
-						rotate_right: undefined,
-					},
-					options: cloneDeep(definition.steps[i].options) ?? cloneDeep(ControlEntityListPoolButton.DefaultStepOptions),
-				}
-				result.steps[i] = newStep
-
-				for (const [set, actions_set] of Object.entries(definition.steps[i].action_sets)) {
-					const setIdSafe = validateActionSetId(set as any)
-					if (setIdSafe === undefined) {
-						this.#logger.warn(`Invalid set id: ${set}`)
-						continue
-					}
-
-					newStep.action_sets[setIdSafe] = convertActionsDelay(
-						actions_set,
-						connectionId,
-						definition.options?.relativeDelay,
-						connectionUpgradeIndex
-					)
-				}
-			}
-		}
-
-		if (definition.feedbacks) {
-			result.feedbacks = definition.feedbacks.map((feedback) => ({
-				type: EntityModelType.Feedback,
-				id: nanoid(),
-				connectionId: connectionId,
-				definitionId: feedback.type,
-				options: cloneDeep(feedback.options ?? {}),
-				isInverted: feedback.isInverted,
-				style: cloneDeep(feedback.style),
-				headline: feedback.headline,
-				upgradeIndex: connectionUpgradeIndex,
-			}))
-		}
-
-		return result
+		return definition.model
 	}
 
 	/**
@@ -407,62 +370,87 @@ export class InstanceDefinitions {
 	/**
 	 * Set the preset definitions for a connection
 	 */
-	setPresetDefinitions(connectionId: string, label: string, rawPresets: Record<string, PresetDefinitionTmp>): void {
+	setPresetDefinitions(connectionId: string, label: string, rawPresets: RawPresetDefinition[]): void {
 		const newPresets: Record<string, PresetDefinition> = {}
 
-		for (const [id, rawPreset] of Object.entries(rawPresets)) {
+		const connectionUpgradeIndex = this.#configStore.getConfigForId(connectionId)?.lastUpgradeIndex
+
+		for (const rawPreset of rawPresets) {
 			try {
 				if (rawPreset.type === 'button') {
-					newPresets[id] = {
-						id: id,
+					const presetDefinition: PresetDefinitionButton = {
+						id: rawPreset.id,
 						category: rawPreset.category,
 						name: rawPreset.name,
 						type: rawPreset.type,
-						style: rawPreset.style,
 						previewStyle: rawPreset.previewStyle,
-						options: rawPreset.options,
-						feedbacks: (rawPreset.feedbacks ?? []).map((fb) => ({
-							type: fb.feedbackId,
-							options: fb.options,
-							style: fb.style,
-							isInverted: !!fb.isInverted,
-							headline: fb.headline,
-						})),
-						steps:
-							rawPreset.steps.length === 0
-								? [{ action_sets: { down: [], up: [] } }]
-								: rawPreset.steps.map((step) => {
-										const options = cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
-										const action_sets: PresetActionSets = {
-											down: [],
-											up: [],
-										}
-
-										for (const [setId, set] of Object.entries(step)) {
-											if (setId === 'name') continue
-
-											const setActions: CompanionPresetAction[] = Array.isArray(set) ? set : set.actions
-											if (!isNaN(Number(setId)) && set.options?.runWhileHeld) options.runWhileHeld.push(Number(setId))
-
-											action_sets[setId as any] = setActions.map((act) => ({
-												action: act.actionId,
-												options: act.options,
-												delay: act.delay ?? 0,
-												headline: act.headline,
-											}))
-										}
-
-										if (step.name) options.name = step.name
-
-										return {
-											options,
-											action_sets,
-										}
-									}),
+						model: {
+							type: 'button',
+							options: {
+								rotaryActions: rawPreset.options?.rotaryActions ?? false,
+								stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+							},
+							style: convertPresetStyleToDrawStyle(rawPreset.style),
+							feedbacks: convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+							steps: {},
+							localVariables: [],
+						},
 					}
+
+					if (rawPreset.steps) {
+						for (let i = 0; i < rawPreset.steps.length; i++) {
+							const newStep: NormalButtonSteps[0] = {
+								action_sets: {
+									down: [],
+									up: [],
+									rotate_left: undefined,
+									rotate_right: undefined,
+								},
+								options: cloneDeep(ControlEntityListPoolButton.DefaultStepOptions),
+							}
+							presetDefinition.model.steps[i] = newStep
+
+							const rawStep = rawPreset.steps[i]
+							if (!rawStep) continue
+
+							if (rawStep.name) newStep.options.name = rawStep.name
+
+							for (const [setId, set] of Object.entries(rawStep)) {
+								if (setId === 'name') continue
+
+								const setIdSafe = validateActionSetId(setId as any)
+								if (setIdSafe === undefined) {
+									this.#logger.warn(`Invalid set id: ${setId}`)
+									continue
+								}
+
+								const setActions: CompanionPresetAction[] = Array.isArray(set) ? set : set.actions
+								if (!isNaN(Number(setId)) && set.options?.runWhileHeld) newStep.options.runWhileHeld.push(Number(setId))
+
+								if (setActions) {
+									newStep.action_sets[setIdSafe] = convertActionsDelay(
+										setActions,
+										connectionId,
+										rawPreset.options?.relativeDelay,
+										connectionUpgradeIndex
+									)
+								}
+							}
+						}
+					}
+
+					// Ensure that there is at least one step
+					if (Object.keys(presetDefinition.model.steps).length === 0) {
+						presetDefinition.model.steps[0] = {
+							action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
+							options: cloneDeep(ControlEntityListPoolButton.DefaultStepOptions),
+						}
+					}
+
+					newPresets[rawPreset.id] = presetDefinition
 				} else if (rawPreset.type === 'text') {
-					newPresets[id] = {
-						id: id,
+					newPresets[rawPreset.id] = {
+						id: rawPreset.id,
 						category: rawPreset.category,
 						name: rawPreset.name,
 						type: rawPreset.type,
@@ -470,7 +458,7 @@ export class InstanceDefinitions {
 					}
 				}
 			} catch (e) {
-				this.#logger.warn(`${label} gave invalid preset "${id}": ${e}`)
+				this.#logger.warn(`${label} gave invalid preset "${rawPreset?.id}": ${e}`)
 			}
 		}
 
@@ -534,13 +522,13 @@ export class InstanceDefinitions {
 		 */
 		for (const preset of Object.values(presets)) {
 			if (preset.type !== 'text') {
-				if (preset.style) {
-					preset.style.text = replaceAllVariables(preset.style.text, label)
+				if (preset.model.style) {
+					preset.model.style.text = replaceAllVariables(preset.model.style.text, label)
 				}
 
-				if (preset.feedbacks) {
-					for (const feedback of preset.feedbacks) {
-						if (feedback.style && feedback.style.text) {
+				if (preset.model.feedbacks) {
+					for (const feedback of preset.model.feedbacks) {
+						if (feedback.type === EntityModelType.Feedback && feedback.style && feedback.style.text) {
 							feedback.style.text = replaceAllVariables(feedback.style.text, label)
 						}
 					}
@@ -550,6 +538,8 @@ export class InstanceDefinitions {
 
 		const lastPresetDefinitions = this.#presetDefinitions[connectionId]
 		this.#presetDefinitions[connectionId] = cloneDeep(presets)
+
+		this.emit('updatePresets', connectionId)
 
 		if (this.#events.listenerCount('presets') > 0) {
 			const newSimplifiedPresets = this.#simplifyPresetsForUi(presets)
@@ -570,12 +560,8 @@ export class InstanceDefinitions {
 	}
 }
 
-export type PresetDefinitionTmp = CompanionPresetDefinition & {
-	id: string
-}
-
 function toActionInstance(
-	action: PresetActionInstance,
+	action: CompanionPresetAction,
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined
 ): ActionEntityModel {
@@ -583,7 +569,7 @@ function toActionInstance(
 		type: EntityModelType.Action,
 		id: nanoid(),
 		connectionId: connectionId,
-		definitionId: action.action,
+		definitionId: action.actionId,
 		options: cloneDeep(action.options ?? {}),
 		headline: action.headline,
 		upgradeIndex: connectionUpgradeIndex,
@@ -591,7 +577,7 @@ function toActionInstance(
 }
 
 function convertActionsDelay(
-	actions: PresetActionInstance[],
+	actions: CompanionPresetAction[],
 	connectionId: string,
 	relativeDelays: boolean | undefined,
 	connectionUpgradeIndex: number | undefined
@@ -673,5 +659,37 @@ function createWaitAction(delay: number): ActionEntityModel {
 			time: delay,
 		},
 		upgradeIndex: undefined,
+	}
+}
+
+function convertPresetFeedbacksToEntities(
+	rawFeedbacks: CompanionPresetFeedback[] | undefined,
+	connectionId: string,
+	connectionUpgradeIndex: number | undefined
+): FeedbackEntityModel[] {
+	if (!rawFeedbacks) return []
+
+	return rawFeedbacks.map((feedback) => ({
+		type: EntityModelType.Feedback,
+		id: nanoid(),
+		connectionId: connectionId,
+		definitionId: feedback.feedbackId,
+		options: cloneDeep(feedback.options ?? {}),
+		isInverted: !!feedback.isInverted,
+		style: cloneDeep(feedback.style),
+		headline: feedback.headline,
+		upgradeIndex: connectionUpgradeIndex,
+	}))
+}
+
+function convertPresetStyleToDrawStyle(rawStyle: CompanionButtonStyleProps): ButtonStyleProperties {
+	return {
+		textExpression: false,
+		...cloneDeep(rawStyle),
+		// TODO - avoid defaults..
+		alignment: rawStyle.alignment ?? 'center:center',
+		pngalignment: rawStyle.pngalignment ?? 'center:center',
+		png64: rawStyle.png64 ?? null,
+		show_topbar: rawStyle.show_topbar ?? 'default',
 	}
 }

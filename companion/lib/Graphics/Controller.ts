@@ -12,8 +12,8 @@
 import { LRUCache } from 'lru-cache'
 import { GlobalFonts } from '@napi-rs/canvas'
 import { GraphicsRenderer } from './Renderer.js'
-import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import { ImageResult, ImageResultProcessedStyle } from './ImageResult.js'
+import { ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
@@ -46,8 +46,19 @@ const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADIN
 
 interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
+	presetDrawn: [controlId: string, render: ImageResult]
 	resubscribeFeedbacks: []
 }
+
+interface RenderArgumentsButton {
+	type: 'button'
+	location: ControlLocation
+}
+interface RenderArgumentsPreset {
+	type: 'preset'
+	controlId: string
+}
+type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 
 export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #logger = LogController.createLogger('Graphics/Controller')
@@ -72,7 +83,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	readonly #renderLRUCache = new LRUCache<string, ImageResult>({ max: 100 })
 
-	readonly #renderQueue: ImageWriteQueue<string, [ControlLocation, boolean]>
+	readonly #renderQueue: ImageWriteQueue<string, [RenderArguments, boolean]>
 
 	/**
 	 * Image library for storing and managing images
@@ -145,8 +156,48 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		this.#renderQueue = new ImageWriteQueue(
 			this.#logger,
-			async (_id: string, location: ControlLocation, skipInvalidation: boolean) => {
+			async (_id: string, args: RenderArguments, skipInvalidation: boolean) => {
 				try {
+					if (args.type === 'preset') {
+						const control = this.#controlsController.getControl(args.controlId)
+						const buttonStyle = (await control?.getDrawStyle()) ?? undefined
+
+						let render: ImageResult | undefined
+						if (buttonStyle && buttonStyle.style) {
+							// Check if the image is already present in the render cache and if so, return it
+
+							const key = JSON.stringify({ options: this.#drawOptions, buttonStyle })
+							render = this.#renderLRUCache.get(key)
+
+							if (!render) {
+								const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
+									buttonStyle,
+									undefined,
+									undefined,
+									CRASHED_WORKER_RETRY_COUNT
+								)
+								render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
+									this.#executePoolDrawButtonBareImage(
+										buttonStyle,
+										undefined,
+										undefined,
+										{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+										rotation,
+										format,
+										CRASHED_WORKER_RETRY_COUNT
+									)
+								)
+							}
+						} else {
+							render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, null)
+						}
+
+						this.emit('presetDrawn', args.controlId, render)
+						return
+					}
+
+					const { location } = args
+
 					const gridSize = this.#userConfigController.getKey('gridSize')
 					const locationIsInBounds =
 						location &&
@@ -419,6 +470,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 		if (location) {
 			this.invalidateButton(location)
+			return
+		}
+
+		// Special case for presets as they don't have a location, but do have bitmaps
+		const parsedControlId = ParseControlId(controlId)
+		if (parsedControlId?.type === 'preset') {
+			this.#drawAndCachePreset(controlId)
 		}
 	}
 
@@ -448,7 +506,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	#drawAndCacheButton(location: ControlLocation, skipInvalidation = false): void {
 		const id = `${location.pageNumber}_${location.row}_${location.column}`
-		this.#renderQueue.queue(id, location, skipInvalidation)
+		this.#renderQueue.queue(id, { type: 'button', location }, skipInvalidation)
+	}
+
+	/**
+	 * Generate and cache
+	 */
+	#drawAndCachePreset(controlId: string, skipInvalidation = false): void {
+		this.#renderQueue.queue(controlId, { type: 'preset', controlId }, skipInvalidation)
 	}
 
 	/**

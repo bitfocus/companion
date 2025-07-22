@@ -2,7 +2,7 @@ import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
-import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, CreatePresetControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { ActionRunner } from './ActionRunner.js'
 import { ActionRecorder } from './ActionRecorder.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
@@ -34,6 +34,7 @@ import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/C
 import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 
 /**
  * The class that manages the controls
@@ -553,6 +554,30 @@ export class ControlsController {
 	}
 	isTriggerCollectionEnabled(collectionId: string, onlyDirect: boolean): boolean {
 		return this.#triggerCollections.isCollectionEnabled(collectionId, onlyDirect)
+	}
+
+	/**
+	 * Find or create a preset temporary control
+	 * These are non-persistent controls that are used to perform the reactive drawing of a preset.
+	 */
+	getOrCreatePresetControl(connectionId: string, presetId: string): ControlButtonPreset | null {
+		// Check for an existing control that should be reused
+		const controlId = CreatePresetControlId(connectionId, presetId)
+		const control = this.#controls.get(controlId)
+		if (control) return control as ControlButtonPreset
+
+		const presetModel = this.#registry.instance.definitions.convertPresetToPreviewControlModel(connectionId, presetId)
+		if (!presetModel) return null
+
+		const newControl = new ControlButtonPreset(this.#createControlDependencies(), connectionId, presetId, presetModel)
+		if (!newControl) return null
+
+		this.#controls.set(controlId, newControl)
+
+		// Force a redraw
+		this.#controlEvents.emit('invalidateControlRender', controlId)
+
+		return newControl
 	}
 
 	/**

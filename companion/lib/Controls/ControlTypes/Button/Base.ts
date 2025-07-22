@@ -5,8 +5,8 @@ import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 
 /**
  * Abstract class for a editable button control.
@@ -373,12 +373,9 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		this.pushed = !!direction
 
 		if (this.pushed !== wasPushed) {
-			// TODO - invalidate feedbacks?
-
 			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 			if (location) {
 				this.deps.events.emit('updateButtonState', location, this.pushed, surfaceId)
-				// this.deps.services.emberplus.updateButtonState(location, this.pushed, surfaceId)
 			}
 
 			this.triggerRedraw()

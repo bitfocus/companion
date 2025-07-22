@@ -1,32 +1,35 @@
 import { ButtonControlBase } from './Base.js'
-import { cloneDeep, omit } from 'lodash-es'
+import { cloneDeep } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
-	ControlWithActionSets,
-	ControlWithActions,
+	ControlWithoutActionSets,
+	ControlWithoutActions,
 	ControlWithStyle,
 	ControlWithoutEvents,
-	ControlWithoutLayeredStyle,
+	ControlWithEntities,
+	ControlWithoutOptions,
+	ControlWithoutPushed,
 } from '../../IControlFragments.js'
 import type {
-	NormalButtonModel,
+	PresetButtonModel,
 	NormalButtonOptions,
 	NormalButtonRuntimeProps,
+	ButtonStatus,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
+import { ControlButtonNormal } from './Normal.js'
+import type { ImageResult } from '../../../Graphics/ImageResult.js'
+import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
+import { ControlBase } from '../../ControlBase.js'
+import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
 import { parseVariablesInButtonStyle } from './Util.js'
 
 /**
- * Class for the stepped button control.
+ * Class for the preset button control.
  *
- * @author Håkon Nessjøen <haakon@bitfocus.io>
- * @author Keith Rocheck <keith.rocheck@gmail.com>
- * @author William Viker <william@bitfocus.io>
  * @author Julian Waller <me@julusian.co.uk>
  * @since 3.0.0
  * @copyright 2022 Bitfocus AS
@@ -36,37 +39,39 @@ import { parseVariablesInButtonStyle } from './Util.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ControlButtonNormal
-	extends ButtonControlBase<NormalButtonModel, NormalButtonOptions>
+export class ControlButtonPreset
+	extends ControlBase<PresetButtonModel>
 	implements
 		ControlWithStyle,
-		ControlWithoutLayeredStyle,
-		ControlWithActions,
+		ControlWithoutActions,
 		ControlWithoutEvents,
-		ControlWithActionSets
+		ControlWithoutActionSets,
+		ControlWithEntities,
+		ControlWithoutOptions,
+		ControlWithoutPushed
 {
-	readonly type = 'button'
+	readonly type = 'preset:button'
 
-	/**
-	 * The defaults style for a button
-	 */
-	static DefaultStyle: ButtonStyleProperties = {
-		text: '',
-		textExpression: false,
-		size: 'auto',
-		png64: null,
-		alignment: 'center:center',
-		pngalignment: 'center:center',
-		color: 0xffffff,
-		bgcolor: 0x000000,
-		show_topbar: 'default',
-	}
-
-	readonly supportsActions = true
+	readonly supportsActions = false
 	readonly supportsEvents = false
-	readonly supportsActionSets = true
+	readonly supportsActionSets = false
 	readonly supportsStyle = true
 	readonly supportsLayeredStyle = false
+	readonly supportsEntities = true
+	readonly supportsOptions = false
+	readonly supportsPushed = false
+
+	readonly entities: ControlEntityListPoolButton
+
+	/**
+	 * The current status of this button
+	 */
+	readonly button_status: ButtonStatus = 'good'
+
+	/**
+	 * The config of this button
+	 */
+	options!: NormalButtonOptions
 
 	/**
 	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
@@ -78,16 +83,46 @@ export class ControlButtonNormal
 	 */
 	#baseStyle: ButtonStyleProperties = cloneDeep(ControlButtonNormal.DefaultStyle)
 
+	readonly #connectionId: string
+	readonly #presetId: string
+
+	#lastRender: ImageResult | null = null
+
+	get lastRender(): ImageResult | null {
+		return this.#lastRender
+	}
+
 	get baseStyle(): ButtonStyleProperties {
 		return this.#baseStyle
 	}
 
-	get actionSets(): ControlActionSetAndStepsManager {
-		return this.entities
-	}
+	constructor(deps: ControlDependencies, connectionId: string, presetId: string, storage: PresetButtonModel) {
+		const controlId = CreatePresetControlId(connectionId, presetId)
+		super(deps, controlId, `Controls/Button/Preset/${connectionId}/${presetId}`, true)
 
-	constructor(deps: ControlDependencies, controlId: string, storage: NormalButtonModel | null, isImport: boolean) {
-		super(deps, controlId, `Controls/Button/Normal/${controlId}`)
+		this.#connectionId = connectionId
+		this.#presetId = presetId
+
+		this.entities = new ControlEntityListPoolButton(
+			{
+				controlId,
+				commitChange: this.commitChange.bind(this),
+				invalidateControl: this.triggerRedraw.bind(this),
+				instanceDefinitions: deps.instance.definitions,
+				internalModule: deps.internalModule,
+				moduleHost: deps.instance.moduleHost,
+				variableValues: deps.variables.values,
+			},
+			this.sendRuntimePropsChange.bind(this),
+			(expression, requiredType, injectedVariableValues) =>
+				deps.variables.values
+					.createVariablesAndExpressionParser(
+						deps.pageStore.getLocationOfControlId(this.controlId),
+						null, // This doesn't support local variables
+						injectedVariableValues ?? null
+					)
+					.executeExpression(expression, requiredType)
+		)
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
@@ -95,31 +130,61 @@ export class ControlButtonNormal
 			stepProgression: 'auto',
 		}
 
-		if (!storage) {
-			// New control
+		if (storage.type !== 'preset:button')
+			throw new Error(`Invalid type given to ControlButtonPreset: "${storage.type}"`)
 
-			// Save the change
-			this.commitChange()
-			this.sendRuntimePropsChange()
-		} else {
-			if (storage.type !== 'button') throw new Error(`Invalid type given to ControlButtonStep: "${storage.type}"`)
+		this.#applyPresetModel(storage)
 
-			this.#baseStyle = Object.assign(this.#baseStyle, storage.style || {})
-			this.options = Object.assign(this.options, storage.options || {})
-			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
-			this.entities.loadStorage(storage, true, isImport)
-			this.entities.stepExpressionUpdate(this.options)
-
-			// Ensure control is stored before setup
-			if (isImport) setImmediate(() => this.postProcessImport())
-		}
+		this.deps.events.on('presetDrawn', this.#updateLastRender)
+		this.deps.instance.definitions.on('updatePresets', this.#updatePresetDefinition)
 	}
 
 	/**
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.entities.destroy()
+
 		super.destroy()
+
+		this.deps.events.off('presetDrawn', this.#updateLastRender)
+		this.deps.instance.definitions.off('updatePresets', this.#updatePresetDefinition)
+	}
+
+	#updateLastRender = (controlId: string, render: ImageResult): void => {
+		if (controlId !== this.controlId) return
+		this.#lastRender = render
+	}
+
+	#updatePresetDefinition = (connectionId: string): void => {
+		if (connectionId !== this.#connectionId) return
+		const updatedPreset = this.deps.instance.definitions.convertPresetToPreviewControlModel(
+			this.#connectionId,
+			this.#presetId
+		)
+		if (!updatedPreset) return // TODO - clear current preset?
+
+		this.#applyPresetModel(updatedPreset)
+	}
+
+	#applyPresetModel(storage: PresetButtonModel): void {
+		this.#baseStyle = Object.assign(this.#baseStyle, storage.style || {})
+		this.options = Object.assign(this.options, storage.options || {})
+		this.entities.loadStorage(storage, true, true)
+		this.entities.stepExpressionUpdate(this.options)
+
+		// Ensure control is stored before setup
+		setImmediate(() => this.postProcessImport())
+	}
+
+	/**
+	 * If this control was imported to a running system, do some data cleanup/validation
+	 */
+	protected postProcessImport(): void {
+		this.entities.resubscribeEntities()
+
+		this.commitChange()
+		this.sendRuntimePropsChange()
 	}
 
 	/**
@@ -150,7 +215,12 @@ export class ControlButtonNormal
 
 			...cloneDeep(style),
 
-			...omit(this.getDrawStyleButtonStateProps(), ['cloud', 'cloud_error']),
+			stepCurrent: this.entities.getActiveStepIndex() + 1,
+			stepCount: this.entities.getStepIds().length,
+
+			pushed: false,
+			action_running: false,
+			button_status: this.button_status,
 
 			style: 'button',
 		}
@@ -211,51 +281,12 @@ export class ControlButtonNormal
 	}
 
 	/**
-	 * Update an option field of this control
-	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	optionsSetField(key: string, value: any): boolean {
-		const changed = super.optionsSetField(key, value)
-
-		if (key === 'stepProgression' || key === 'stepExpression') {
-			this.entities.stepExpressionUpdate(this.options)
-		}
-
-		return changed
-	}
-
-	/**
 	 * Update the style fields of this control
 	 * @param diff - config diff to apply
 	 * @returns true if any changes were made
 	 */
-	styleSetFields(diff: Record<string, any>): boolean {
-		if (diff.png64) {
-			// Strip the prefix off the base64 png
-			if (typeof diff.png64 === 'string' && diff.png64.match(/data:.*?image\/png/)) {
-				diff.png64 = diff.png64.replace(/^.*base64,/, '')
-			} else {
-				// this.logger.info('png64 is not a png url')
-				// Delete it
-				delete diff.png64
-			}
-		}
-
-		if (Object.keys(diff).length > 0) {
-			// Apply the diff
-			Object.assign(this.#baseStyle, diff)
-
-			if ('show_topbar' in diff) {
-				// Some feedbacks will need to redraw
-				this.entities.resubscribeEntities(EntityModelType.Feedback)
-			}
-
-			this.commitChange()
-
-			return true
-		} else {
-			return false
-		}
+	styleSetFields(_diff: Record<string, any>): boolean {
+		throw new Error('ControlButtonPreset does not support mutations')
 	}
 
 	/**
@@ -263,8 +294,8 @@ export class ControlButtonNormal
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
-	override toJSON(clone = true): NormalButtonModel {
-		const obj: NormalButtonModel = {
+	override toJSON(clone = true): PresetButtonModel {
+		const obj: PresetButtonModel = {
 			type: this.type,
 			style: this.#baseStyle,
 			options: this.options,
@@ -283,5 +314,23 @@ export class ControlButtonNormal
 		return {
 			current_step_id: this.entities.currentStepId,
 		}
+	}
+
+	readonly #renderSubscribers = new Set<string>()
+	addRenderSubscriber(subscriptionId: string): void {
+		this.#renderSubscribers.add(subscriptionId)
+	}
+	removeRenderSubscriberAndCheckEmpty(subscriptionId: string): boolean {
+		this.#renderSubscribers.delete(subscriptionId)
+
+		return this.#renderSubscribers.size === 0
+	}
+
+	triggerLocationHasChanged(): void {
+		// No-op, this control does not have a location
+	}
+
+	pressControl(): void {
+		// No-op, this control does not support pressing
 	}
 }
