@@ -16,6 +16,11 @@ import {
 	CustomVariableUpdateInitOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { CustomVariableNameMap } from './CustomVariableNameMap.js'
+import {
+	EntityModelType,
+	FeedbackEntityModel,
+	isInternalUserValueFeedback,
+} from '@companion-app/shared/Model/EntityModel.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createCustomVariablesTrpcRouter(
@@ -47,29 +52,54 @@ export function createCustomVariablesTrpcRouter(
 			}
 		}),
 
-		create: publicProcedure.mutation(() => {
-			const controlId = CreateCustomVariableControlId(nanoid())
-			const newControl = new ControlCustomVariable(deps, customVariableNamesMap, controlId, null, false)
-			controlsMap.set(controlId, newControl)
+		create: publicProcedure
+			.input(
+				z.object({
+					simple: z.boolean(),
+				})
+			)
+			.mutation(({ input }) => {
+				const controlId = CreateCustomVariableControlId(nanoid())
+				const newControl = new ControlCustomVariable(deps, customVariableNamesMap, controlId, null, false)
+				controlsMap.set(controlId, newControl)
 
-			// Add variable to the end of the list
-			const allCustomVariables: ControlCustomVariable[] = []
-			for (const control of controlsMap.values()) {
-				if (control instanceof ControlCustomVariable) {
-					allCustomVariables.push(control)
+				// Add variable to the end of the list
+				const allCustomVariables: ControlCustomVariable[] = []
+				for (const control of controlsMap.values()) {
+					if (control instanceof ControlCustomVariable) {
+						allCustomVariables.push(control)
+					}
 				}
-			}
-			const maxRank = Math.max(0, ...allCustomVariables.map((control) => control.options.sortOrder))
-			newControl.optionsSetField('sortOrder', maxRank, true)
+				const maxRank = Math.max(0, ...allCustomVariables.map((control) => control.options.sortOrder))
+				newControl.optionsSetField('sortOrder', maxRank, true)
 
-			// Add to names map (initially empty variableName, will be added when name is set)
-			customVariableNamesMap.addCustomVariable(controlId, newControl.options.variableName)
+				// Add to names map (initially empty variableName, will be added when name is set)
+				customVariableNamesMap.addCustomVariable(controlId, newControl.options.variableName)
 
-			// Ensure it is stored to the db
-			newControl.commitChange()
+				// If this is a simple variable, setup the entity
+				if (input.simple) {
+					const feedbackEntity: FeedbackEntityModel = {
+						type: EntityModelType.Feedback,
+						id: nanoid(),
+						definitionId: 'user_value',
+						connectionId: 'internal',
+						options: {},
+						upgradeIndex: undefined,
+					}
+					if (!newControl.entities.entityAdd('feedbacks', null, feedbackEntity)) {
+						throw new Error('Failed to add feedback entity to custom variable')
+					}
 
-			return controlId
-		}),
+					if (!isInternalUserValueFeedback(feedbackEntity)) {
+						throw new Error('Expected internal user value feedback entity')
+					}
+				}
+
+				// Ensure it is stored to the db
+				newControl.commitChange()
+
+				return controlId
+			}),
 
 		delete: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
 			const { controlId } = input

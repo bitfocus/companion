@@ -24,21 +24,27 @@ export const CustomVariablesPage = observer(function CustomVariablesPage() {
 
 	const createMutation = useMutationExt(trpc.controls.customVariables.create.mutationOptions())
 
-	const doAddNew = useCallback(() => {
-		createMutation
-			.mutateAsync()
-			.then(async (controlId) => {
-				console.log('created custom variable', controlId)
+	const doAddNew = useCallback(
+		(e: React.MouseEvent<HTMLButtonElement>) => {
+			const addSimple = e.currentTarget.getAttribute('data-simple') === 'true'
+			createMutation
+				.mutateAsync({
+					simple: addSimple,
+				})
+				.then(async (controlId) => {
+					console.log('created custom variable', controlId)
 
-				const parsedId = ParseControlId(controlId)
-				if (parsedId?.type !== 'custom-variable') return
+					const parsedId = ParseControlId(controlId)
+					if (parsedId?.type !== 'custom-variable') return
 
-				await navigate({ to: `/custom-variables/${parsedId.variableId}` })
-			})
-			.catch((e) => {
-				console.error('failed to create custom-variable', e)
-			})
-	}, [createMutation, navigate])
+					await navigate({ to: `/custom-variables/${parsedId.variableId}` })
+				})
+				.catch((e) => {
+					console.error('failed to create custom-variable', e)
+				})
+		},
+		[createMutation, navigate]
+	)
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const customVariablesGroupsApi = useCustomVariablesCollectionsApi(confirmModalRef)
@@ -87,8 +93,11 @@ export const CustomVariablesPage = observer(function CustomVariablesPage() {
 
 				<div className="mb-2">
 					<CButtonGroup>
-						<CButton color="primary" onClick={doAddNew} size="sm">
-							<FontAwesomeIcon icon={faAdd} /> Add Custom Variable
+						<CButton color="primary" onClick={doAddNew} size="sm" data-simple={true}>
+							<FontAwesomeIcon icon={faAdd} /> Add Simple Variable
+						</CButton>
+						<CButton color="warning" onClick={doAddNew} size="sm" data-simple={false}>
+							<FontAwesomeIcon icon={faAdd} /> Add Computed Variable
 						</CButton>
 						<CreateCollectionButton />
 					</CButtonGroup>
