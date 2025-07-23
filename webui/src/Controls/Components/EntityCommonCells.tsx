@@ -12,7 +12,7 @@ import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { OptionsInputField } from '../OptionsInputField.js'
-import { useOptionsAndIsVisible } from '~/Hooks/useOptionsAndIsVisible.js'
+import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -55,7 +55,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
-	const [optionFields, optionVisibility] = useOptionsAndIsVisible(entityDefinition?.options, entity?.options)
+	const optionVisibility = useOptionsVisibility(entityDefinition?.options, entity?.options)
 
 	return (
 		<>
@@ -135,7 +135,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						/>
 					)}
 
-					{optionFields.map((opt, i) => (
+					{entityDefinition?.options.map((opt, i) => (
 						<MyErrorBoundary key={i}>
 							<OptionsInputField
 								key={i}

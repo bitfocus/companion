@@ -17,7 +17,7 @@ import { useDrag, useDrop } from 'react-dnd'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import { useOptionsAndIsVisible } from '~/Hooks/useOptionsAndIsVisible.js'
+import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { AddEventDropdown } from './AddEventDropdown.js'
 import {
@@ -198,7 +198,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 
 	const eventSpec = eventDefinitions.definitions.get(event.type)
 
-	const [eventOptions, optionVisibility] = useOptionsAndIsVisible(eventSpec?.options, event?.options)
+	const optionVisibility = useOptionsVisibility(eventSpec?.options, event?.options)
 
 	const innerSetEnabled = useCallback(
 		(e: FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
@@ -282,7 +282,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 					</CCol>
 
 					<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
-						{eventOptions.map((opt, i) => (
+						{eventSpec?.options.map((opt, i) => (
 							<MyErrorBoundary key={i}>
 								<OptionsInputField
 									key={i}

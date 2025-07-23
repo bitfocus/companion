@@ -5,7 +5,6 @@ import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormLabe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCircleExclamation, faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
-import { useOptionsAndIsVisibleFns } from '~/Hooks/useOptionsAndIsVisible.js'
 import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -364,10 +363,6 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 }): React.JSX.Element {
 	const configData = panelStore.configAndSecrets
 
-	const [configOptions, isVisibleFns] = useOptionsAndIsVisibleFns<ConnectionInputField & { width: number }>(
-		configData?.fields
-	)
-
 	if (!configData) {
 		return <NonIdealState icon={faCircleExclamation}>No config data loaded</NonIdealState>
 	}
@@ -378,9 +373,8 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 
 	return (
 		<>
-			{configOptions.map((fieldInfo) => {
-				const fn = isVisibleFns[fieldInfo.id]
-				const isVisible = !fn || !!fn(configData.config)
+			{configData.fields.map((fieldInfo) => {
+				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
 
 				const isSecret = isConfigFieldSecret(fieldInfo)
