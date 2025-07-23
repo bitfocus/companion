@@ -200,6 +200,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				<div className="editor-grid">
 					<EntityCommonCells
 						entity={entity}
+						entityTypeLabel={entityTypeLabel}
 						feedbackListType={feedbackListType}
 						entityDefinition={entityDefinition}
 						service={entityService}
