@@ -525,11 +525,13 @@ export class ImportExportController {
 						}
 
 						if (!config || config.surfaces) {
-							const surfaces = data.surfaces as Record<number, SurfaceConfig>
-							const surfaceGroups = data.surfaceGroups as Record<number, SurfaceGroupConfig>
+							const surfaces = data.surfaces || ({} as Record<number, SurfaceConfig>)
+							const surfaceGroups = data.surfaceGroups || ({} as Record<number, SurfaceGroupConfig>)
 							const getPageId = (val: number) =>
 								this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
 							const fixPageId = (groupConfig: SurfaceGroupConfig) => {
+								if (!groupConfig) return
+
 								if ('last_page' in groupConfig) {
 									groupConfig.last_page_id = getPageId(groupConfig.last_page!)
 									delete groupConfig.last_page
@@ -547,7 +549,7 @@ export class ImportExportController {
 							for (const groupConfig of Object.values(surfaceGroups)) {
 								fixPageId(groupConfig)
 							}
-							this.#surfacesController.importSurfaces(data.surfaceGroups || {}, data.surfaces || {})
+							this.#surfacesController.importSurfaces(surfaceGroups, surfaces)
 						}
 
 						if (!config || config.triggers) {
