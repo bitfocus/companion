@@ -14,7 +14,7 @@ import {
 import type { CustomVariableOptions } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { faDollarSign, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { AddEntityPanel } from '~/Controls/Components/AddEntityPanel.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { EntityEditorContextProvider, useEntityEditorContext } from '~/Controls/Components/EntityEditorContext.js'
@@ -290,6 +290,12 @@ const CustomVariableLocalVariablesEditor = observer(function CustomVariableLocal
 							<InlineHelp help="You can use local variables inside of this custom variable to create some dynamic values based on feedbacks">
 								Local Variables
 							</InlineHelp>
+						}
+						subheading={
+							<CAlert color="info" className="mb-2">
+								Local variables are not yet supported by all modules or fields. Fields which support local variables can
+								be identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
+							</CAlert>
 						}
 						// headingActions={headingActions}
 						entities={localVariables}
