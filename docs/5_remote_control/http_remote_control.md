@@ -55,6 +55,17 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 - Get custom variable value  
   Method: GET  
   Path: `/api/custom-variable/<name>/value`
+
+**Custom Variable Management**
+- Create a new custom variable  
+  Method: POST  
+  Path: `/api/custom-variable/<name>/create`  
+  Body: `{ "default": "<default_value>" }` (Content-Type: application/json)
+  - Returns 201 on success, 400 if the variable already exists or the default value is missing/invalid.
+- Delete a custom variable  
+  Method: DELETE  
+  Path: `/api/custom-variable/<name>`
+  - Returns 204 on success, 404 if the variable does not exist.
 - Get Module variable value  
   Method: GET  
   Path: `/api/variable/<Connection Label>/<name>/value`
@@ -91,6 +102,16 @@ POST `/api/custom-variable/data/value`
 Content-Type `application/json`  
 Body: `{"name":"Douglas", "answer":42}` - Body needs to be a valid JSON.  
 The object will be stored in the variable value and will not be converted to a string. You can also use the data types boolean, number, array or null. JSON does not support sending undefined as a value, but we interpret an empty body as undefined, properties of an object can of course be undefined.
+
+**Examples**
+
+Create a new custom variable "myvar" with default value "hello":
+POST `/api/custom-variable/myvar/create`
+Content-Type: application/json
+Body: `{ "default": "hello" }`
+
+Delete a custom variable "myvar":
+DELETE `/api/custom-variable/myvar`
 
 **Deprecated Commands**
 
