@@ -55,8 +55,6 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 - Get custom variable value  
   Method: GET  
   Path: `/api/custom-variable/<name>/value`
-
-**Custom Variable Management**
 - Create a new custom variable  
   Method: POST  
   Path: `/api/custom-variable/<name>/create`  
@@ -66,6 +64,7 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Method: DELETE  
   Path: `/api/custom-variable/<name>`
   - Returns 204 on success, 404 if the variable does not exist.
+
 - Get Module variable value  
   Method: GET  
   Path: `/api/variable/<Connection Label>/<name>/value`
