@@ -194,6 +194,80 @@ describe('HttpApi', () => {
 			})
 		})
 
+		describe('create', () => {
+			test('success', async () => {
+				const { app, serviceApi } = createService()
+				const mockFn = serviceApi.createCustomVariable
+				mockFn.mockReturnValue(null)
+
+				const res = await supertest(app)
+					.post('/api/custom-variable/my-new-var/create')
+					.send({ default: 'init' })
+				expect(res.status).toBe(201)
+				expect(res.text).toBe('ok')
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-new-var', 'init')
+			})
+
+			test('missing default', async () => {
+				const { app, serviceApi } = createService()
+				const mockFn = serviceApi.createCustomVariable
+				mockFn.mockReturnValue(null)
+
+				const res = await supertest(app)
+					.post('/api/custom-variable/my-new-var/create')
+					.send({})
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Missing or invalid default value')
+				// Should not call createCustomVariable
+				expect(mockFn).toHaveBeenCalledTimes(0)
+			})
+
+			test('already exists', async () => {
+				const { app, serviceApi } = createService()
+				const mockFn = serviceApi.createCustomVariable
+				mockFn.mockReturnValue('Variable "my-new-var" already exists')
+
+				const res = await supertest(app)
+					.post('/api/custom-variable/my-new-var/create')
+					.send({ default: 'init' })
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Variable "my-new-var" already exists')
+				expect(mockFn).toHaveBeenCalledTimes(1)
+				expect(mockFn).toHaveBeenCalledWith('my-new-var', 'init')
+			})
+		})
+
+		describe('delete', () => {
+			test('success', async () => {
+				const { app, serviceApi } = createService()
+				serviceApi.getCustomVariableValue.mockReturnValue('some value')
+				serviceApi.deleteCustomVariable.mockImplementation(() => {})
+
+				const res = await supertest(app)
+					.delete('/api/custom-variable/my-var')
+					.send()
+				expect(res.status).toBe(204)
+				expect(res.text).toBe('')
+				expect(serviceApi.getCustomVariableValue).toHaveBeenCalledWith('my-var')
+				expect(serviceApi.deleteCustomVariable).toHaveBeenCalledWith('my-var')
+			})
+
+			test('not found', async () => {
+				const { app, serviceApi } = createService()
+				serviceApi.getCustomVariableValue.mockReturnValue(undefined)
+				serviceApi.deleteCustomVariable.mockImplementation(() => {})
+
+				const res = await supertest(app)
+					.delete('/api/custom-variable/my-var')
+					.send()
+				expect(res.status).toBe(404)
+				expect(res.text).toBe('Not found')
+				expect(serviceApi.getCustomVariableValue).toHaveBeenCalledWith('my-var')
+				expect(serviceApi.deleteCustomVariable).toHaveBeenCalledTimes(0)
+			})
+		})
+
 		describe('get value', () => {
 			test('no value', async () => {
 				const { app, serviceApi } = createService()
