@@ -57,7 +57,7 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Path: `/api/custom-variable/<name>/value`
 - Create a new custom variable  
   Method: POST  
-  Path: `/api/custom-variable/<name>/create`  
+  Path: `/api/custom-variable/<name>`  
   Body: `{ "default": "<default_value>" }` (Content-Type: application/json)
   - Returns 201 on success, 400 if the variable already exists or the default value is missing/invalid.
 - Delete a custom variable  
@@ -105,7 +105,7 @@ The object will be stored in the variable value and will not be converted to a s
 **Examples**
 
 Create a new custom variable "myvar" with default value "hello":
-POST `/api/custom-variable/myvar/create`
+POST `/api/custom-variable/myvar`
 Content-Type: application/json
 Body: `{ "default": "hello" }`
 

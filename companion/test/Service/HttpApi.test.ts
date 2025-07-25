@@ -201,7 +201,7 @@ describe('HttpApi', () => {
 				mockFn.mockReturnValue(null)
 
 				const res = await supertest(app)
-					.post('/api/custom-variable/my-new-var/create')
+					.post('/api/custom-variable/my-new-var')
 					.send({ default: 'init' })
 				expect(res.status).toBe(201)
 				expect(res.text).toBe('ok')
@@ -215,7 +215,7 @@ describe('HttpApi', () => {
 				mockFn.mockReturnValue(null)
 
 				const res = await supertest(app)
-					.post('/api/custom-variable/my-new-var/create')
+					.post('/api/custom-variable/my-new-var')
 					.send({})
 				expect(res.status).toBe(400)
 				expect(res.text).toBe('Missing or invalid default value')
@@ -229,7 +229,7 @@ describe('HttpApi', () => {
 				mockFn.mockReturnValue('Variable "my-new-var" already exists')
 
 				const res = await supertest(app)
-					.post('/api/custom-variable/my-new-var/create')
+					.post('/api/custom-variable/my-new-var')
 					.send({ default: 'init' })
 				expect(res.status).toBe(400)
 				expect(res.text).toBe('Variable "my-new-var" already exists')

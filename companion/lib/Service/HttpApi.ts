@@ -316,7 +316,7 @@ export class ServiceHttpApi {
 			.get(this.#customVariableGetValue)
 
 		// Add create endpoint for custom variables
-		this.#apiRouter.post('/custom-variable/:name/create', this.#customVariableCreate)
+		this.#apiRouter.post('/custom-variable/:name', this.#customVariableCreate)
 
 		// Add delete endpoint for custom variables
 		this.#apiRouter.delete('/custom-variable/:name', this.#customVariableDelete)
