@@ -105,6 +105,16 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	/**
+	 * Create a new custom variable
+	 * @param name
+	 * @param defaultVal
+	 * @returns Failure reason, if any
+	 */
+	createCustomVariable(name: string, defaultVal: string): string | null {
+		return this.#variablesController.custom.createVariable(name, defaultVal)
+	}
+
+	/**
 	 * Get the value of a connection variable
 	 * @param connectionLabel
 	 * @param variableName

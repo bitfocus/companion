@@ -315,6 +315,9 @@ export class ServiceHttpApi {
 			.post(this.#customVariableSetValue)
 			.get(this.#customVariableGetValue)
 
+		// Add create endpoint for custom variables
+		this.#apiRouter.post('/custom-variable/:name/create', this.#customVariableCreate)
+
 		// Module variables
 		this.#apiRouter.route('/variable/:label/:name/value').get(this.#moduleVariableGetValue)
 
@@ -622,6 +625,27 @@ export class ServiceHttpApi {
 			}
 		}
 	}
+
+	/**
+	 * Create a new custom variable
+	 */
+	#customVariableCreate = (req: express.Request, res: express.Response): void => {
+		const variableName = req.params.name
+		const defaultValue = req.body?.default
+
+		if (typeof defaultValue !== 'string') {
+			res.status(400).send('Missing or invalid default value')
+			return
+		}
+
+		const result = this.#serviceApi.createCustomVariable(variableName, defaultValue)
+		if (result) {
+			res.status(400).send(result)
+		} else {
+			res.status(201).send('ok')
+		}
+	}
+
 	/**
 	 * Retrieve any module variable value
 	 */
