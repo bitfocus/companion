@@ -96,11 +96,17 @@ interface SurfaceHandlerEvents {
 	configUpdated: [SurfaceConfig | undefined]
 }
 
+type MetaLocation = {
+	thisPage: number
+	xOffset: number
+	yOffset: number
+}
+
 export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Currently pressed buttons, and what they are keeping pressed
 	 */
-	readonly #currentButtonPresses: Record<string, number> = {}
+	readonly #currentButtonPresses: Record<string, MetaLocation> = {}
 
 	/**
 	 * Current page of the surface
@@ -535,19 +541,20 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 				const [x2, y2] = unrotateXYForPanel(x, y, this.panelGridSize, this.#surfaceConfig.config.rotation)
 
-				// Translate key for offset
-				const { xOffset, yOffset } = this.#getCurrentOffset()
+				// Page/offset state
+				let thisPage, xOffset, yOffset: number
 
-				const coordinate = `${y2 + yOffset}/${x2 + xOffset}`
-
-				let thisPage = pageNumber
+				// coordinate for saving button-press has to be translational-invariant, so don't use offset here
+				const coordinate = `${y2}/${x2}`
+				const thisPageMeta = { thisPage: pageNumber, ...this.#getCurrentOffset() }
 
 				if (pressed) {
-					// Track what page was pressed for this key
-					this.#currentButtonPresses[coordinate] = thisPage
+					// Track what page/offset was pressed for this key
+					;({ thisPage, xOffset, yOffset } = thisPageMeta)
+					this.#currentButtonPresses[coordinate] = thisPageMeta
 				} else {
-					// Release the same page that was previously pressed
-					thisPage = this.#currentButtonPresses[coordinate] ?? thisPage
+					// Release the same page/offset that was previously pressed
+					;({ thisPage, xOffset, yOffset } = this.#currentButtonPresses[coordinate] ?? thisPageMeta)
 					delete this.#currentButtonPresses[coordinate]
 				}
 
@@ -566,7 +573,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				if (controlId) {
 					this.#controls.pressControl(controlId, pressed, this.surfaceId)
 				}
-				this.#logger.debug(`Button ${thisPage}/${coordinate} ${pressed ? 'pressed' : 'released'}`)
+				const absCoordinate = `${y2 + yOffset}/${x2 + xOffset}`
+				this.#logger.debug(`Button ${thisPage}/${absCoordinate} ${pressed ? 'pressed' : 'released'}`)
 			} else if (!this.panel.setLocked) {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
