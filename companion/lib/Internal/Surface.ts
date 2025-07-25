@@ -165,6 +165,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				't-bar': 0,
 				jog: 0,
 				shuttle: 0,
+				'shuttle-sign': 0,
 			})
 		})
 
@@ -269,6 +270,10 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			{
 				label: 'XKeys/Contour Shuttle: Shuttle position',
 				name: 'shuttle',
+			},
+			{
+				label: 'Contour Shuttle: Shuttle sign (-1/0/1)',
+				name: 'shuttle-sign',
 			},
 			{
 				label: 'XKeys/Contour Shuttle: Jog position',

@@ -220,23 +220,34 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			}
 
 			this.emit('setVariable', 'shuttle', shuttle)
+			this.emit('setVariable', 'shuttle-sign', Math.sign(shuttle))
 
 			// 1.send rotation events
 			this.emit('rotate', ...xy, lastShuttle < shuttle)
 			lastShuttle = shuttle
 
 			// 2. send press/release events
-			// OPTIONAL TODO: Condition click events on the absence of rotational actions.
-			if (currentInterval != undefined) {
+			// OPTIONAL?: Condition click events on the absence of rotational actions.
+			const firstAction = currentInterval == undefined
+			if (!firstAction) {
+				// clear pending actions
 				clearInterval(currentInterval)
 				currentInterval = undefined
 			}
 			if (shuttle === 0) {
+				// released the spring-loaded ring
 				this.emit('click', ...xy, false)
 			} else {
-				currentInterval = setInterval(() => {
-					this.emit('click', ...xy, true, 0, true) // "force" click even though already pressed
-				}, 200)
+				if (firstAction) {
+					this.emit('click', ...xy, true) // emit the first click right away
+				}
+				// repeat rate increases as shuttle ring is rotated in further either direction. (shuttle varies from 1-7)
+				currentInterval = setInterval(
+					() => {
+						this.emit('click', ...xy, true, 0, true) // "force" click even though already pressed
+					},
+					1000 / Math.max(1, 3 * (Math.abs(shuttle) - 1)) // (max(1...) to fix divide-by-zero when shuttle==1)
+				) // vary from 1 to 18 reps/second (roughly 1000 - 50 ms intervals)
 			}
 		})
 
