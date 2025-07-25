@@ -318,6 +318,9 @@ export class ServiceHttpApi {
 		// Add create endpoint for custom variables
 		this.#apiRouter.post('/custom-variable/:name/create', this.#customVariableCreate)
 
+		// Add delete endpoint for custom variables
+		this.#apiRouter.delete('/custom-variable/:name', this.#customVariableDelete)
+
 		// Module variables
 		this.#apiRouter.route('/variable/:label/:name/value').get(this.#moduleVariableGetValue)
 
@@ -644,6 +647,20 @@ export class ServiceHttpApi {
 		} else {
 			res.status(201).send('ok')
 		}
+	}
+
+	/**
+	 * Delete a custom variable
+	 */
+	#customVariableDelete = (req: express.Request, res: express.Response): void => {
+		const variableName = req.params.name
+		// Check if variable exists
+		if (!this.#serviceApi.getCustomVariableValue(variableName)) {
+			res.status(404).send('Not found')
+			return
+		}
+		this.#serviceApi.deleteCustomVariable(variableName)
+		res.status(204).send()
 	}
 
 	/**

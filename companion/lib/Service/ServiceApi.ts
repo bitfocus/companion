@@ -115,6 +115,14 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	/**
+	 * Delete a custom variable
+	 * @param name
+	 */
+	deleteCustomVariable(name: string): void {
+		this.#variablesController.custom.deleteVariable(name)
+	}
+
+	/**
 	 * Get the value of a connection variable
 	 * @param connectionLabel
 	 * @param variableName
