@@ -324,7 +324,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 			return compareValues(feedback.options.op, result1.text, result2.text)
 		} else if (feedback.definitionId == 'check_expression') {
-			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.location, null)
+			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.controlId, null)
 			const res = parser.executeExpression(feedback.options.expression, 'boolean')
 
 			this.#variableSubscriptions.set(feedback.id, { controlId: feedback.controlId, variables: res.variableIds })
@@ -338,7 +338,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				return false
 			}
 		} else if (feedback.definitionId == 'expression_value') {
-			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.location, null)
+			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.controlId, null)
 			const res = parser.executeExpression(feedback.options.expression, undefined)
 
 			if (res.ok) {

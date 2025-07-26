@@ -222,7 +222,6 @@ export class Registry {
 				this.#internalApiRouter,
 				this.controls,
 				this.graphics,
-				pageStore,
 				this.variables,
 				oscSender
 			)

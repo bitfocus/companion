@@ -197,7 +197,7 @@ export class InternalModuleUtils {
 		}
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.location,
+			extras.controlId,
 			injectedVariableValuesComplete
 		)
 
@@ -222,7 +222,7 @@ export class InternalModuleUtils {
 		}
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.location,
+			extras.controlId,
 			injectedVariableValuesComplete
 		)
 
@@ -246,7 +246,7 @@ export class InternalModuleUtils {
 		}
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.location,
+			extras.controlId,
 			injectedVariableValuesComplete
 		)
 

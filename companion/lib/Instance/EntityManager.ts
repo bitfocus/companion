@@ -15,9 +15,7 @@ import { nanoid } from 'nanoid'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { OptionsObject } from '@companion-module/base/dist/util.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import LogController, { Logger } from '../Log/Controller.js'
-import type { IPageStore } from '../Page/Store.js'
 
 enum EntityState {
 	UNLOADED = 'UNLOADED',
@@ -47,7 +45,6 @@ export class InstanceEntityManager {
 
 	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
 	readonly #controlsController: ControlsController
-	readonly #pageStore: IPageStore
 
 	readonly #entities = new Map<string, EntityWrapper>()
 
@@ -58,13 +55,11 @@ export class InstanceEntityManager {
 	constructor(
 		ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>,
 		controlsController: ControlsController,
-		pageStore: IPageStore,
 		connectionId: string
 	) {
 		this.#logger = LogController.createLogger(`Instance/EntityManager/${connectionId}`)
 		this.#ipcWrapper = ipcWrapper
 		this.#controlsController = controlsController
-		this.#pageStore = pageStore
 	}
 
 	readonly #debounceProcessPending = debounceFn(
@@ -148,11 +143,10 @@ export class InstanceEntityManager {
 							const entityModel = entity.asEntityModel(false)
 
 							// Parse the options and track the variables referenced
-							const controlLocation = this.#pageStore.getLocationOfControlId(wrapper.controlId)
 							const { parsedOptions, referencedVariableIds } = this.parseOptionsObject(
 								entityDefinition,
 								entityModel.options,
-								controlLocation
+								wrapper.controlId
 							)
 							wrapper.lastReferencedVariableIds = referencedVariableIds
 
@@ -475,7 +469,7 @@ export class InstanceEntityManager {
 	parseOptionsObject(
 		entityDefinition: ClientEntityDefinition | undefined,
 		options: OptionsObject,
-		location: ControlLocation | undefined
+		controlId: string
 	): {
 		parsedOptions: OptionsObject
 		referencedVariableIds: Set<string>
@@ -487,7 +481,7 @@ export class InstanceEntityManager {
 		const parsedOptions: OptionsObject = {}
 		const referencedVariableIds = new Set<string>()
 
-		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
 
 		for (const field of entityDefinition.options) {
 			if (field.type !== 'textinput' || !field.useVariables) {

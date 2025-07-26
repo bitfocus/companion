@@ -610,12 +610,12 @@ export class ControlsController {
 	}
 
 	createVariablesAndExpressionParser(
-		controlLocation: ControlLocation | null | undefined,
+		controlId: string | null | undefined,
 		overrideVariableValues: CompanionVariableValues | null
 	): VariablesAndExpressionParser {
-		const controlId = controlLocation && this.#registry.page.store.getControlIdAt(controlLocation)
 		const control = controlId && this.getControl(controlId)
 
+		const controlLocation = control ? this.#registry.page.store.getLocationOfControlId(control.controlId) : null
 		const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
 
 		return this.#registry.variables.values.createVariablesAndExpressionParser(
