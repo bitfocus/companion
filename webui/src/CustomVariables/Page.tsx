@@ -209,8 +209,7 @@ const CustomVariableTableRow = observer(function CustomVariableTableRow2({ item 
 					<b>Unnamed</b>
 				)}
 
-				<br />
-				{item.description ?? ''}
+				<span>{item.description ?? ''}</span>
 			</div>
 
 			<div className="action-buttons w-auto">
