@@ -107,7 +107,7 @@ export class ControlsController {
 		this.actionRecorder = new ActionRecorder(registry)
 	}
 
-	#cleanUnknownTriggerCollectionIds(validCollectionIds: Set<string>): void {
+	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
 		for (const control of this.#controls.values()) {
 			if (control instanceof ControlTrigger) {
 				control.checkCollectionIdIsValid(validCollectionIds)

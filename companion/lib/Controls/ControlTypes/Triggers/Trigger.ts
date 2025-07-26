@@ -182,7 +182,7 @@ export class ControlTrigger
 			this.entities.loadStorage(storage, true, isImport)
 			this.events = storage.events || this.events
 
-			if (isImport) this.postProcessImport()
+			if (isImport) this.#postProcessImport()
 		}
 
 		// Ensure trigger is stored before setup
@@ -199,7 +199,7 @@ export class ControlTrigger
 		this.#actionRunner.abortSingle(exceptSignal)
 	}
 
-	checkCollectionIdIsValid(validCollectionIds: Set<string>): boolean {
+	checkCollectionIdIsValid(validCollectionIds: ReadonlySet<string>): boolean {
 		if (this.options.collectionId && !validCollectionIds.has(this.options.collectionId)) {
 			// collectionId is not valid, remove it
 			this.options.collectionId = undefined
@@ -504,7 +504,7 @@ export class ControlTrigger
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	postProcessImport(): void {
+	#postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()
