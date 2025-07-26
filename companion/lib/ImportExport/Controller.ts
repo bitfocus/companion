@@ -184,7 +184,7 @@ export class ImportExportController {
 				type: object.type,
 				instances: {},
 				controls: 'pages' in object,
-				customVariables: 'custom_variables' in object,
+				customVariables: 'customVariables' in object,
 				surfaces: 'surfaces' in object,
 				triggers: 'triggers' in object,
 				imageLibrary: 'imageLibrary' in object,
