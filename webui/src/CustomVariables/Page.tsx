@@ -97,7 +97,7 @@ export const CustomVariablesPage = observer(function CustomVariablesPage() {
 							<FontAwesomeIcon icon={faAdd} /> Add Simple Variable
 						</CButton>
 						<CButton color="warning" onClick={doAddNew} size="sm" data-simple={false}>
-							<FontAwesomeIcon icon={faAdd} /> Add Computed Variable
+							<FontAwesomeIcon icon={faAdd} /> Add Expression Variable
 						</CButton>
 						<CreateCollectionButton />
 					</CButtonGroup>
