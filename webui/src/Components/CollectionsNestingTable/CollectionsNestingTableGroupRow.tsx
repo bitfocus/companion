@@ -85,11 +85,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 						/>
 					) : (
 						<>
-							<FontAwesomeIcon
-								icon={isCollapsed ? faCaretRight : faCaretDown}
-								style={{ marginRight: '0.5em' }}
-								className="caret-icon"
-							/>
+							<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon me-1" />
 							<span className="collection-name">{collection.label}</span>
 						</>
 					)}
