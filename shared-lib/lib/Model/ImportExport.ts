@@ -19,6 +19,7 @@ export interface ClientExportSelection {
 	customVariables: boolean
 	connections: boolean
 	surfaces: boolean
+	userconfig: boolean
 	format: ExportFormat
 	filename?: string
 }
@@ -28,6 +29,7 @@ export const zodClientImportSelection = z.object({
 	surfaces: z.boolean(),
 	triggers: z.boolean(),
 	customVariables: z.boolean(),
+	userconfig: z.boolean(),
 })
 
 export type ClientImportSelection = z.infer<typeof zodClientImportSelection>
@@ -49,6 +51,7 @@ export interface ClientImportObject {
 	customVariables: boolean
 	surfaces: boolean
 	triggers: boolean | Record<string, { name: string }>
+	userconfig: boolean
 	oldPageNumber?: number
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>
