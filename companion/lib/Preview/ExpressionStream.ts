@@ -3,7 +3,6 @@ import type {
 	ExecuteExpressionResult,
 	ExpressionStreamResult,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
@@ -12,13 +11,11 @@ import EventEmitter from 'node:events'
 export class PreviewExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
 
-	readonly #pageStore: IPageStore
 	readonly #controlsController: ControlsController
 
 	readonly #sessions = new Map<string, ExpressionStreamSession>()
 
-	constructor(pageStore: IPageStore, controlsController: ControlsController) {
-		this.#pageStore = pageStore
+	constructor(controlsController: ControlsController) {
 		this.#controlsController = controlsController
 	}
 
@@ -111,16 +108,14 @@ export class PreviewExpressionStream {
 		controlId: string | null,
 		requiredType: string | undefined
 	): ExecuteExpressionResult => {
-		const location = controlId ? this.#pageStore.getLocationOfControlId(controlId) : undefined
-		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
 
 		// TODO - make reactive to control moving?
 		return parser.executeExpression(expression, requiredType)
 	}
 
 	#parseVariables = (str: string, controlId: string | null): ExecuteExpressionResult => {
-		const location = controlId ? this.#pageStore.getLocationOfControlId(controlId) : undefined
-		const parser = this.#controlsController.createVariablesAndExpressionParser(location, null)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
 
 		// TODO - make reactive to control moving?
 		const res = parser.parseVariables(str)
