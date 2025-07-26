@@ -545,17 +545,17 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				let thisPage, xOffset, yOffset: number
 
 				// coordinate for saving button-press has to be translational-invariant, so don't use offset here
-				const coordinate = `${y2}/${x2}`
+				const panelCoordinate = `${y2}/${x2}`
 				const thisPageMeta = { thisPage: pageNumber, ...this.#getCurrentOffset() }
 
 				if (pressed) {
 					// Track what page/offset was pressed for this key
 					;({ thisPage, xOffset, yOffset } = thisPageMeta)
-					this.#currentButtonPresses[coordinate] = thisPageMeta
+					this.#currentButtonPresses[panelCoordinate] = thisPageMeta
 				} else {
 					// Release the same page/offset that was previously pressed
-					;({ thisPage, xOffset, yOffset } = this.#currentButtonPresses[coordinate] ?? thisPageMeta)
-					delete this.#currentButtonPresses[coordinate]
+					;({ thisPage, xOffset, yOffset } = this.#currentButtonPresses[panelCoordinate] ?? thisPageMeta)
+					delete this.#currentButtonPresses[panelCoordinate]
 				}
 
 				// allow the xkeys (legacy mode) to span pages
@@ -573,8 +573,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				if (controlId) {
 					this.#controls.pressControl(controlId, pressed, this.surfaceId)
 				}
-				const absCoordinate = `${y2 + yOffset}/${x2 + xOffset}`
-				this.#logger.debug(`Button ${thisPage}/${absCoordinate} ${pressed ? 'pressed' : 'released'}`)
+				const pageCoordinate = `${y2 + yOffset}/${x2 + xOffset}`
+				this.#logger.debug(`Button ${thisPage}/${pageCoordinate} ${pressed ? 'pressed' : 'released'}`)
 			} else if (!this.panel.setLocked) {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
