@@ -27,7 +27,7 @@ interface OldCustomVariableDefinition {
 }
 
 /**
- * do the database upgrades to convert from the v8 to the v9 format
+ * Perform the database upgrades to convert from the v9 to the v10 format
  */
 function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
