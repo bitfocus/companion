@@ -44,7 +44,7 @@ export interface InternalInputFieldVariable extends CompanionInputFieldBaseExten
 export interface InternalInputFieldCustomVariable extends CompanionInputFieldBaseExtended {
 	type: 'internal:custom_variable'
 	includeNone?: boolean
-	onlyUserSettable?: boolean
+	onlyUserSettable: boolean
 }
 export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtended {
 	type: 'internal:trigger'

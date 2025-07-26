@@ -51,8 +51,10 @@ export class CustomVariableNameMap {
 
 		const existing = this.#customVariableNamesMap.get(variableName)
 		if (existing) {
-			// Variable name already exists, add to conflicts
-			existing.otherControlIds.push(controlId)
+			// Variable name already exists, add to conflicts if not already present
+			if (!existing.otherControlIds.includes(controlId) && existing.activeControlId !== controlId) {
+				existing.otherControlIds.push(controlId)
+			}
 		} else {
 			// First control with this name becomes active
 			this.#customVariableNamesMap.set(variableName, {

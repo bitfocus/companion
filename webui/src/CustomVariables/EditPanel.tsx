@@ -298,19 +298,12 @@ const CustomVariableLocalVariablesEditor = observer(function CustomVariableLocal
 								be identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
 							</CAlert>
 						}
-						// headingActions={headingActions}
 						entities={localVariables}
 						ownerId={null}
 						entityType={EntityModelType.Feedback}
 						entityTypeLabel={'variable'}
 						feedbackListType={FeedbackEntitySubType.Value}
 					/>
-
-					{/* {!entity ? (
-						<CustomVariableAddRootEntity />
-					) : (
-						<CustomVariableSoleEntityEditor controlId={controlId} entity={entity} />
-					)} */}
 				</PanelCollapseHelperProvider>
 			</EntityEditorContextProvider>
 		</>
