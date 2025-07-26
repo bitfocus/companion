@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { useComputed } from '~/Resources/util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faClone, faCopy, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faClone, faCopy, faLayerGroup, faList, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { CreateCustomVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { observer } from 'mobx-react-lite'
@@ -81,11 +81,18 @@ export const CustomVariablesPage = observer(function CustomVariablesPage() {
 		[navigate]
 	)
 
+	const doCloseVariable = useCallback(() => {
+		void navigate({ to: '/custom-variables' })
+	}, [navigate])
+
+	const showPrimaryPanel = !selectedVariableId
+	const showSecondaryPanel = !!selectedVariableId
+
 	return (
 		<CRow className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<CCol xs={12} xl={6} className="primary-panel">
+			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<h4>Custom Variables</h4>
 				<p style={{ marginBottom: '0.5rem' }}>
 					Here you can create some variables as shortcuts for either static or dynamic values
@@ -127,8 +134,11 @@ export const CustomVariablesPage = observer(function CustomVariablesPage() {
 				</PanelCollapseHelperProvider>
 			</CCol>
 
-			<CCol xs={12} xl={6} className="secondary-panel">
-				<Outlet />
+			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+				<div className="secondary-panel-simple">
+					{!!selectedVariableId && <CustomVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
+					<Outlet />
+				</div>
 			</CCol>
 		</CRow>
 	)
@@ -239,5 +249,22 @@ function CreateCollectionButton() {
 		<CButton color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
 		</CButton>
+	)
+}
+
+interface CustomVariableEditPanelHeadingProps {
+	doCloseVariable: () => void
+}
+
+function CustomVariableEditPanelHeading({ doCloseVariable }: CustomVariableEditPanelHeadingProps) {
+	return (
+		<div className="secondary-panel-simple-header">
+			<h4 className="panel-title">Edit Custom Variable</h4>
+			<div className="header-buttons">
+				<div className="float_right ms-1" onClick={doCloseVariable} title="Close">
+					<FontAwesomeIcon icon={faTimes} size="lg" />
+				</div>
+			</div>
+		</div>
 	)
 }

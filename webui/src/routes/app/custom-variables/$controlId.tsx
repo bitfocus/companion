@@ -23,12 +23,10 @@ const RouteComponent = observer(function RouteComponent() {
 	}, [navigate, customVariablesList, fullControlId])
 
 	return (
-		<div className="secondary-panel-simple">
-			<div className="secondary-panel-simple-body">
-				<MyErrorBoundary>
-					<EditCustomVariablePanel key={controlId} controlId={fullControlId} />
-				</MyErrorBoundary>
-			</div>
+		<div className="secondary-panel-simple-body">
+			<MyErrorBoundary>
+				<EditCustomVariablePanel key={controlId} controlId={fullControlId} />
+			</MyErrorBoundary>
 		</div>
 	)
 })
