@@ -567,7 +567,9 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				if (controlId) {
 					this.#controls.pressControl(controlId, pressed, this.surfaceId)
 				}
-				this.#logger.debug(`Button ${thisPage}/${y2 + yOffset}/${x2 + xOffset} ${pressed ? 'pressed' : 'released'}`)
+				this.#logger.debug(
+					`Button ${location.pageNumber}/${location.row}/${location.column} ${pressed ? 'pressed' : 'released'}`
+				)
 			} else if (!this.panel.setLocked) {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
