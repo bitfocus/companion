@@ -24,7 +24,6 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { toJS } from 'mobx'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -43,8 +42,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 }: EntityCommonCellsProps): React.JSX.Element {
 	const { location, localVariablePrefix, controlId, readonly, localVariablesStore } = useEntityEditorContext()
 	const { connections } = useContext(RootAppStoreContext)
-
-	console.log('conn', toJS(connections.connections.get(entity.connectionId)))
 
 	const isConnectionEnabled =
 		entity.connectionId === 'internal' || !!connections.connections.get(entity.connectionId)?.enabled
