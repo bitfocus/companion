@@ -8,15 +8,17 @@ export const NonIdealState = ({
 	icon = faTrash,
 	children = <></>,
 	style = {},
+	className = '',
 }: {
 	text?: string
 	icon: IconProp
 	children?: React.ReactNode
 	style?: React.CSSProperties
+	className?: string
 }): React.JSX.Element => {
 	return (
 		<>
-			<div style={{ padding: '5vh', color: '#000', textAlign: 'center', ...style }}>
+			<div className={className} style={{ padding: '5vh', color: '#000', textAlign: 'center', ...style }}>
 				<div style={{ opacity: 0.6 }}>
 					<FontAwesomeIcon icon={icon} size="3x" />
 				</div>

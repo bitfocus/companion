@@ -4,7 +4,7 @@ import {
 	FeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import React from 'react'
+import React, { useContext } from 'react'
 import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { LearnButton } from '~/Components/LearnButton.js'
@@ -12,7 +12,7 @@ import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { OptionsInputField } from '../OptionsInputField.js'
-import { useOptionsAndIsVisible } from '~/Hooks/useOptionsAndIsVisible.js'
+import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -21,9 +21,14 @@ import { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { TextInputField } from '../../Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 import { useEntityEditorContext } from './EntityEditorContext.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { toJS } from 'mobx'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
+	entityTypeLabel: string
 	feedbackListType: FeedbackEntitySubType | null
 	entityDefinition: ClientEntityDefinition | undefined
 	service: IEntityEditorActionService
@@ -33,6 +38,7 @@ interface EntityCommonCellsProps {
 
 export const EntityCommonCells = observer(function EntityCommonCells({
 	entity,
+	entityTypeLabel,
 	feedbackListType,
 	entityDefinition,
 	service,
@@ -40,10 +46,16 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	definitionName,
 }: EntityCommonCellsProps): React.JSX.Element {
 	const { location, localVariablePrefix, controlId, readonly, localVariablesStore } = useEntityEditorContext()
+	const { connections } = useContext(RootAppStoreContext)
+
+	console.log('conn', toJS(connections.connections.get(entity.connectionId)))
+
+	const isConnectionEnabled =
+		entity.connectionId === 'internal' || !!connections.connections.get(entity.connectionId)?.enabled
 
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
-	const [optionFields, optionVisibility] = useOptionsAndIsVisible(entityDefinition?.options, entity?.options)
+	const optionVisibility = useOptionsVisibility(entityDefinition?.options, entity?.options)
 
 	return (
 		<>
@@ -111,7 +123,19 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 							</MyErrorBoundary>
 						)}
 
-					{optionFields.map((opt, i) => (
+					{!entityDefinition && (
+						<NonIdealState
+							className="pt-2 pb-0"
+							icon={faQuestionCircle}
+							text={
+								!isConnectionEnabled
+									? `This ${entityTypeLabel} is not editable while the connection is disabled`
+									: `This is not a known ${entityTypeLabel}`
+							}
+						/>
+					)}
+
+					{entityDefinition?.options.map((opt, i) => (
 						<MyErrorBoundary key={i}>
 							<OptionsInputField
 								key={i}

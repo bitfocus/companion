@@ -12,15 +12,15 @@ import { ParseExpression } from '@companion-app/shared/Expression/ExpressionPars
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 
-export function useOptionsAndIsVisible<
+export function useOptionsVisibility<
 	T extends ExtendedInputField | InternalInputField = ExtendedInputField | InternalInputField,
 >(
 	itemOptions: Array<T> | undefined | null,
 	optionValues: CompanionOptionValues | undefined | null
-): [options: Array<T>, optionVisibility: Record<string, boolean | undefined>] {
-	const [options, isVisibleFns] = useOptionsAndIsVisibleFns(itemOptions)
+): Record<string, boolean | undefined> {
+	const isVisibleFns = useOptionsAndIsVisibleFns(itemOptions)
 
-	const optionVisibility = useComputed<Record<string, boolean | undefined>>(() => {
+	return useComputed<Record<string, boolean | undefined>>(() => {
 		const visibility: Record<string, boolean> = {}
 
 		if (optionValues) {
@@ -37,70 +37,68 @@ export function useOptionsAndIsVisible<
 
 		return visibility
 	}, [isVisibleFns, optionValues])
-
-	return [options, optionVisibility]
 }
 
-export function useOptionsAndIsVisibleFns<
+function useOptionsAndIsVisibleFns<
 	T extends ExtendedInputField | InternalInputField | ExtendedConfigField = ExtendedInputField | InternalInputField,
->(
-	itemOptions: Array<T> | undefined | null
-): [options: Array<T>, isVisibleFns: Record<string, ((options: CompanionOptionValues) => boolean) | undefined>] {
-	const [options, isVisibleFns] = useComputed(() => {
-		const options = itemOptions ?? []
+>(itemOptions: Array<T> | undefined | null): Record<string, ((options: CompanionOptionValues) => boolean) | undefined> {
+	return useComputed(() => {
 		const isVisibleFns: Record<string, (options: CompanionOptionValues) => boolean> = {}
 
-		for (const option of options) {
-			try {
-				if (!option.isVisibleUi) continue
-
-				switch (option.isVisibleUi.type) {
-					case 'function': {
-						const fn = sandbox(option.isVisibleUi.fn)
-						const userData = deepFreeze(toJS(option.isVisibleUi.data))
-						isVisibleFns[option.id] = (options) => fn(options, userData)
-
-						break
-					}
-					case 'expression': {
-						const expression = ParseExpression(option.isVisibleUi.fn)
-						const userData = deepFreeze(toJS(option.isVisibleUi.data))
-						isVisibleFns[option.id] = (options) => {
-							try {
-								const val = ResolveExpression(
-									expression,
-									(name) => {
-										if (name.startsWith('this:')) {
-											return options[name.slice(5)] as any
-										} else if (name.startsWith('options:')) {
-											return options[name.slice(8)] as any
-										} else if (name.startsWith('data:')) {
-											return userData[name.slice(5)]
-										} else {
-											return undefined
-										}
-									},
-									ExpressionFunctions
-								)
-								return !!val && val !== 'false' && val !== '0'
-							} catch (e) {
-								console.error('Failed to resolve expression', e)
-								return true
-							}
-						}
-						break
-					}
-					default:
-						assertNever(option.isVisibleUi.type)
-						break
-				}
-			} catch (e) {
-				console.error('Failed to process isVisibleFn', e)
-			}
+		for (const option of itemOptions ?? []) {
+			const isVisibleFn = parseIsVisibleFn(option)
+			if (isVisibleFn) isVisibleFns[option.id] = isVisibleFn
 		}
 
-		return [options, isVisibleFns]
+		return isVisibleFns
 	}, [itemOptions])
+}
 
-	return [options, isVisibleFns]
+export function parseIsVisibleFn<
+	T extends ExtendedInputField | InternalInputField | ExtendedConfigField = ExtendedInputField | InternalInputField,
+>(option: T): ((options: CompanionOptionValues) => boolean) | null {
+	try {
+		if (!option.isVisibleUi) return null
+
+		switch (option.isVisibleUi.type) {
+			case 'function': {
+				const fn = sandbox(option.isVisibleUi.fn)
+				const userData = deepFreeze(toJS(option.isVisibleUi.data))
+				return (options: CompanionOptionValues) => fn(options, userData)
+			}
+			case 'expression': {
+				const expression = ParseExpression(option.isVisibleUi.fn)
+				const userData = deepFreeze(toJS(option.isVisibleUi.data))
+				return (options: CompanionOptionValues) => {
+					try {
+						const val = ResolveExpression(
+							expression,
+							(name) => {
+								if (name.startsWith('this:')) {
+									return options[name.slice(5)] as any
+								} else if (name.startsWith('options:')) {
+									return options[name.slice(8)] as any
+								} else if (name.startsWith('data:')) {
+									return userData[name.slice(5)]
+								} else {
+									return undefined
+								}
+							},
+							ExpressionFunctions
+						)
+						return !!val && val !== 'false' && val !== '0'
+					} catch (e) {
+						console.error('Failed to resolve expression', e)
+						return true
+					}
+				}
+			}
+			default:
+				assertNever(option.isVisibleUi.type)
+				return null
+		}
+	} catch (e) {
+		console.error('Failed to process isVisibleFn', e)
+		return null
+	}
 }
