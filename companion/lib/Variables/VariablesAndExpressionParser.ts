@@ -8,7 +8,7 @@ import {
 	parseVariablesInString,
 	VariableValueCache,
 } from './Util.js'
-import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 
 /**
@@ -56,10 +56,7 @@ export class VariablesAndExpressionParser {
 			if (!variableName) continue
 
 			// Push the cached values to the store
-			this.#localValues.set(
-				`$(${variableName})`,
-				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
-			)
+			this.#localValues.set(`$(${variableName})`, entity.getResolvedFeedbackValue())
 		}
 	}
 

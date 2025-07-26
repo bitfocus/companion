@@ -1,30 +1,30 @@
 import { useState } from 'react'
-import type { VariablesStore } from '~/Stores/VariablesStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC'
+import type { CustomVariablesListStore } from '~/Stores/CustomVariablesListStore'
 
-export function useCustomVariablesSubscription(
-	store: VariablesStore,
+export function useCustomVariablesListSubscription(
+	store: CustomVariablesListStore,
 	setLoadError?: ((error: string | null) => void) | undefined
 ): boolean {
 	const [ready, setReady] = useState(false)
 
 	useSubscription(
-		trpc.customVariables.watch.subscriptionOptions(undefined, {
+		trpc.controls.customVariables.watch.subscriptionOptions(undefined, {
 			onStarted: () => {
 				setLoadError?.(null)
-				store.updateCustomVariables(null)
+				store.updateDefinitions(null)
 				setReady(false)
 			},
 			onData: (data) => {
 				setLoadError?.(null)
-				store.updateCustomVariables(data)
+				store.updateDefinitions(data)
 				setReady(true)
 			},
 			onError: (error) => {
 				setLoadError?.(`Failed to load custom-variables list: ${error.message}`)
 				console.error('Failed to load custom-variables list:', error)
-				store.updateCustomVariables(null)
+				store.updateDefinitions(null)
 			},
 		})
 	)

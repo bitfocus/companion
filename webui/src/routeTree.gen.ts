@@ -29,6 +29,7 @@ import { Route as ModulesRouteImport } from './routes/app/modules.tsx'
 import { Route as LogRouteImport } from './routes/app/log.tsx'
 import { Route as ImportExportRouteImport } from './routes/app/import-export.tsx'
 import { Route as ImageLibraryRouteImport } from './routes/app/image-library.tsx'
+import { Route as CustomVariablesRouteImport } from './routes/app/custom-variables.tsx'
 import { Route as ConnectionsRouteImport } from './routes/app/connections.tsx'
 import { Route as CloudRouteImport } from './routes/app/cloud.tsx'
 import { Route as ButtonsRouteImport } from './routes/app/buttons.tsx'
@@ -38,8 +39,8 @@ import { Route as TriggersIndexRouteImport } from './routes/app/triggers/index.t
 import { Route as SettingsIndexRouteImport } from './routes/app/settings/index.tsx'
 import { Route as ModulesIndexRouteImport } from './routes/app/modules/index.tsx'
 import { Route as ImageLibraryIndexRouteImport } from './routes/app/image-library/index.tsx'
+import { Route as CustomVariablesIndexRouteImport } from './routes/app/custom-variables/index.tsx'
 import { Route as ConnectionsIndexRouteImport } from './routes/app/connections/index.tsx'
-import { Route as VariablesCustomRouteImport } from './routes/app/variables/custom.tsx'
 import { Route as VariablesLabelRouteImport } from './routes/app/variables/$label.tsx'
 import { Route as TriggersControlIdRouteImport } from './routes/app/triggers/$controlId.tsx'
 import { Route as SurfacesOutboundRouteImport } from './routes/app/surfaces/outbound.tsx'
@@ -54,6 +55,7 @@ import { Route as SettingsBackupsRouteImport } from './routes/app/settings/backu
 import { Route as SettingsAdvancedRouteImport } from './routes/app/settings/advanced.tsx'
 import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$moduleId.tsx'
 import { Route as ImageLibraryImageNameRouteImport } from './routes/app/image-library/$imageName.tsx'
+import { Route as CustomVariablesControlIdRouteImport } from './routes/app/custom-variables/$controlId.tsx'
 import { Route as ConnectionsAddRouteImport } from './routes/app/connections/add.tsx'
 import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
@@ -184,6 +186,11 @@ const ImageLibraryRoute = ImageLibraryRouteImport.update({
   path: '/image-library',
   getParentRoute: () => appRoute,
 } as any)
+const CustomVariablesRoute = CustomVariablesRouteImport.update({
+  id: '/custom-variables',
+  path: '/custom-variables',
+  getParentRoute: () => appRoute,
+} as any)
 const ConnectionsRoute = ConnectionsRouteImport.update({
   id: '/connections',
   path: '/connections',
@@ -229,15 +236,15 @@ const ImageLibraryIndexRoute = ImageLibraryIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ImageLibraryRoute,
 } as any)
+const CustomVariablesIndexRoute = CustomVariablesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CustomVariablesRoute,
+} as any)
 const ConnectionsIndexRoute = ConnectionsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ConnectionsRoute,
-} as any)
-const VariablesCustomRoute = VariablesCustomRouteImport.update({
-  id: '/variables/custom',
-  path: '/variables/custom',
-  getParentRoute: () => appRoute,
 } as any)
 const VariablesLabelRoute = VariablesLabelRouteImport.update({
   id: '/variables/$label',
@@ -309,6 +316,12 @@ const ImageLibraryImageNameRoute = ImageLibraryImageNameRouteImport.update({
   path: '/$imageName',
   getParentRoute: () => ImageLibraryRoute,
 } as any)
+const CustomVariablesControlIdRoute =
+  CustomVariablesControlIdRouteImport.update({
+    id: '/$controlId',
+    path: '/$controlId',
+    getParentRoute: () => CustomVariablesRoute,
+  } as any)
 const ConnectionsAddRoute = ConnectionsAddRouteImport.update({
   id: '/add',
   path: '/add',
@@ -362,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/buttons': typeof ButtonsRouteWithChildren
   '/cloud': typeof CloudRoute
   '/connections': typeof ConnectionsRouteWithChildren
+  '/custom-variables': typeof CustomVariablesRouteWithChildren
   '/image-library': typeof ImageLibraryRouteWithChildren
   '/import-export': typeof ImportExportRoute
   '/log': typeof LogRoute
@@ -374,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/buttons/$page': typeof ButtonsPageRoute
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/connections/add': typeof ConnectionsAddRoute
+  '/custom-variables/$controlId': typeof CustomVariablesControlIdRoute
   '/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
@@ -388,8 +403,8 @@ export interface FileRoutesByFullPath {
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
-  '/variables/custom': typeof VariablesCustomRoute
   '/connections/': typeof ConnectionsIndexRoute
+  '/custom-variables/': typeof CustomVariablesIndexRoute
   '/image-library/': typeof ImageLibraryIndexRoute
   '/modules/': typeof ModulesIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -423,6 +438,7 @@ export interface FileRoutesByTo {
   '/buttons/$page': typeof ButtonsPageRoute
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/connections/add': typeof ConnectionsAddRoute
+  '/custom-variables/$controlId': typeof CustomVariablesControlIdRoute
   '/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/modules/$moduleId': typeof ModulesModuleIdRoute
   '/settings/advanced': typeof SettingsAdvancedRoute
@@ -435,8 +451,8 @@ export interface FileRoutesByTo {
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
-  '/variables/custom': typeof VariablesCustomRoute
   '/connections': typeof ConnectionsIndexRoute
+  '/custom-variables': typeof CustomVariablesIndexRoute
   '/image-library': typeof ImageLibraryIndexRoute
   '/modules': typeof ModulesIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -465,6 +481,7 @@ export interface FileRoutesById {
   '/_app/buttons': typeof ButtonsRouteWithChildren
   '/_app/cloud': typeof CloudRoute
   '/_app/connections': typeof ConnectionsRouteWithChildren
+  '/_app/custom-variables': typeof CustomVariablesRouteWithChildren
   '/_app/image-library': typeof ImageLibraryRouteWithChildren
   '/_app/import-export': typeof ImportExportRoute
   '/_app/log': typeof LogRoute
@@ -477,6 +494,7 @@ export interface FileRoutesById {
   '/_app/buttons/$page': typeof ButtonsPageRoute
   '/_app/connections/$connectionId': typeof ConnectionsConnectionIdRoute
   '/_app/connections/add': typeof ConnectionsAddRoute
+  '/_app/custom-variables/$controlId': typeof CustomVariablesControlIdRoute
   '/_app/image-library/$imageName': typeof ImageLibraryImageNameRoute
   '/_app/modules/$moduleId': typeof ModulesModuleIdRoute
   '/_app/settings/advanced': typeof SettingsAdvancedRoute
@@ -491,8 +509,8 @@ export interface FileRoutesById {
   '/_app/surfaces/outbound': typeof SurfacesOutboundRoute
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
   '/_app/variables/$label': typeof VariablesLabelRoute
-  '/_app/variables/custom': typeof VariablesCustomRoute
   '/_app/connections/': typeof ConnectionsIndexRoute
+  '/_app/custom-variables/': typeof CustomVariablesIndexRoute
   '/_app/image-library/': typeof ImageLibraryIndexRoute
   '/_app/modules/': typeof ModulesIndexRoute
   '/_app/settings/': typeof SettingsIndexRoute
@@ -521,6 +539,7 @@ export interface FileRouteTypes {
     | '/buttons'
     | '/cloud'
     | '/connections'
+    | '/custom-variables'
     | '/image-library'
     | '/import-export'
     | '/log'
@@ -533,6 +552,7 @@ export interface FileRouteTypes {
     | '/buttons/$page'
     | '/connections/$connectionId'
     | '/connections/add'
+    | '/custom-variables/$controlId'
     | '/image-library/$imageName'
     | '/modules/$moduleId'
     | '/settings/advanced'
@@ -547,8 +567,8 @@ export interface FileRouteTypes {
     | '/surfaces/outbound'
     | '/triggers/$controlId'
     | '/variables/$label'
-    | '/variables/custom'
     | '/connections/'
+    | '/custom-variables/'
     | '/image-library/'
     | '/modules/'
     | '/settings'
@@ -582,6 +602,7 @@ export interface FileRouteTypes {
     | '/buttons/$page'
     | '/connections/$connectionId'
     | '/connections/add'
+    | '/custom-variables/$controlId'
     | '/image-library/$imageName'
     | '/modules/$moduleId'
     | '/settings/advanced'
@@ -594,8 +615,8 @@ export interface FileRouteTypes {
     | '/surfaces/outbound'
     | '/triggers/$controlId'
     | '/variables/$label'
-    | '/variables/custom'
     | '/connections'
+    | '/custom-variables'
     | '/image-library'
     | '/modules'
     | '/settings'
@@ -623,6 +644,7 @@ export interface FileRouteTypes {
     | '/_app/buttons'
     | '/_app/cloud'
     | '/_app/connections'
+    | '/_app/custom-variables'
     | '/_app/image-library'
     | '/_app/import-export'
     | '/_app/log'
@@ -635,6 +657,7 @@ export interface FileRouteTypes {
     | '/_app/buttons/$page'
     | '/_app/connections/$connectionId'
     | '/_app/connections/add'
+    | '/_app/custom-variables/$controlId'
     | '/_app/image-library/$imageName'
     | '/_app/modules/$moduleId'
     | '/_app/settings/advanced'
@@ -649,8 +672,8 @@ export interface FileRouteTypes {
     | '/_app/surfaces/outbound'
     | '/_app/triggers/$controlId'
     | '/_app/variables/$label'
-    | '/_app/variables/custom'
     | '/_app/connections/'
+    | '/_app/custom-variables/'
     | '/_app/image-library/'
     | '/_app/modules/'
     | '/_app/settings/'
@@ -827,6 +850,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImageLibraryRouteImport
       parentRoute: typeof appRoute
     }
+    '/_app/custom-variables': {
+      id: '/_app/custom-variables'
+      path: '/custom-variables'
+      fullPath: '/custom-variables'
+      preLoaderRoute: typeof CustomVariablesRouteImport
+      parentRoute: typeof appRoute
+    }
     '/_app/connections': {
       id: '/_app/connections'
       path: '/connections'
@@ -890,19 +920,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImageLibraryIndexRouteImport
       parentRoute: typeof ImageLibraryRoute
     }
+    '/_app/custom-variables/': {
+      id: '/_app/custom-variables/'
+      path: '/'
+      fullPath: '/custom-variables/'
+      preLoaderRoute: typeof CustomVariablesIndexRouteImport
+      parentRoute: typeof CustomVariablesRoute
+    }
     '/_app/connections/': {
       id: '/_app/connections/'
       path: '/'
       fullPath: '/connections/'
       preLoaderRoute: typeof ConnectionsIndexRouteImport
       parentRoute: typeof ConnectionsRoute
-    }
-    '/_app/variables/custom': {
-      id: '/_app/variables/custom'
-      path: '/variables/custom'
-      fullPath: '/variables/custom'
-      preLoaderRoute: typeof VariablesCustomRouteImport
-      parentRoute: typeof appRoute
     }
     '/_app/variables/$label': {
       id: '/_app/variables/$label'
@@ -1002,6 +1032,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImageLibraryImageNameRouteImport
       parentRoute: typeof ImageLibraryRoute
     }
+    '/_app/custom-variables/$controlId': {
+      id: '/_app/custom-variables/$controlId'
+      path: '/$controlId'
+      fullPath: '/custom-variables/$controlId'
+      preLoaderRoute: typeof CustomVariablesControlIdRouteImport
+      parentRoute: typeof CustomVariablesRoute
+    }
     '/_app/connections/add': {
       id: '/_app/connections/add'
       path: '/add'
@@ -1081,6 +1118,20 @@ const ConnectionsRouteWithChildren = ConnectionsRoute._addFileChildren(
   ConnectionsRouteChildren,
 )
 
+interface CustomVariablesRouteChildren {
+  CustomVariablesControlIdRoute: typeof CustomVariablesControlIdRoute
+  CustomVariablesIndexRoute: typeof CustomVariablesIndexRoute
+}
+
+const CustomVariablesRouteChildren: CustomVariablesRouteChildren = {
+  CustomVariablesControlIdRoute: CustomVariablesControlIdRoute,
+  CustomVariablesIndexRoute: CustomVariablesIndexRoute,
+}
+
+const CustomVariablesRouteWithChildren = CustomVariablesRoute._addFileChildren(
+  CustomVariablesRouteChildren,
+)
+
 interface ImageLibraryRouteChildren {
   ImageLibraryImageNameRoute: typeof ImageLibraryImageNameRoute
   ImageLibraryIndexRoute: typeof ImageLibraryIndexRoute
@@ -1154,6 +1205,7 @@ interface appRouteChildren {
   ButtonsRoute: typeof ButtonsRouteWithChildren
   CloudRoute: typeof CloudRoute
   ConnectionsRoute: typeof ConnectionsRouteWithChildren
+  CustomVariablesRoute: typeof CustomVariablesRouteWithChildren
   ImageLibraryRoute: typeof ImageLibraryRouteWithChildren
   ImportExportRoute: typeof ImportExportRoute
   LogRoute: typeof LogRoute
@@ -1171,7 +1223,6 @@ interface appRouteChildren {
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
   VariablesLabelRoute: typeof VariablesLabelRoute
-  VariablesCustomRoute: typeof VariablesCustomRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   VariablesIndexRoute: typeof VariablesIndexRoute
 }
@@ -1181,6 +1232,7 @@ const appRouteChildren: appRouteChildren = {
   ButtonsRoute: ButtonsRouteWithChildren,
   CloudRoute: CloudRoute,
   ConnectionsRoute: ConnectionsRouteWithChildren,
+  CustomVariablesRoute: CustomVariablesRouteWithChildren,
   ImageLibraryRoute: ImageLibraryRouteWithChildren,
   ImportExportRoute: ImportExportRoute,
   LogRoute: LogRoute,
@@ -1198,7 +1250,6 @@ const appRouteChildren: appRouteChildren = {
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
   VariablesLabelRoute: VariablesLabelRoute,
-  VariablesCustomRoute: VariablesCustomRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   VariablesIndexRoute: VariablesIndexRoute,
 }

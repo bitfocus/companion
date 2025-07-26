@@ -11,7 +11,10 @@ import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
-export type ControlEntityListDefinition = Pick<EntitySupportedChildGroupDefinition, 'type' | 'feedbackListType'>
+export type ControlEntityListDefinition = Pick<
+	EntitySupportedChildGroupDefinition,
+	'type' | 'feedbackListType' | 'maximumChildren'
+>
 
 export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
@@ -80,8 +83,14 @@ export class ControlEntityList {
 		}
 		// TODO - validate that the entities are of the correct type
 
+		// Ensure that this won't exceed the maximum number of children
+		const entitiesToLoad =
+			this.#listDefinition.maximumChildren !== undefined
+				? entities?.slice(0, this.#listDefinition.maximumChildren ?? undefined)
+				: entities
+
 		this.#entities =
-			entities?.map?.(
+			entitiesToLoad?.map?.(
 				(entity) =>
 					new ControlEntityInstance(
 						this.#instanceDefinitions,
@@ -240,6 +249,13 @@ export class ControlEntityList {
 	canAcceptEntity(entity: ControlEntityInstance): boolean {
 		if (this.#listDefinition.type !== entity.type) return false
 
+		// Make sure this won't exceed the maximum number of children
+		if (
+			this.#listDefinition.maximumChildren !== undefined &&
+			this.#entities.length >= this.#listDefinition.maximumChildren
+		)
+			return false
+
 		// If a feedback list, check that the feedback is of the correct type
 		if (this.#listDefinition.type === EntityModelType.Feedback) {
 			const feedbackDefinition = entity.getEntityDefinition()
@@ -257,6 +273,13 @@ export class ControlEntityList {
 	 * Duplicate an entity
 	 */
 	duplicateEntity(id: string): ControlEntityInstance | undefined {
+		// Make sure this won't exceed the maximum number of children
+		if (
+			this.#listDefinition.maximumChildren !== undefined &&
+			this.#entities.length >= this.#listDefinition.maximumChildren
+		)
+			return undefined
+
 		const entityIndex = this.#entities.findIndex((entity) => entity.id === id)
 		if (entityIndex !== -1) {
 			const entityModel = this.#entities[entityIndex].asEntityModel(true)
@@ -410,20 +433,5 @@ export class ControlEntityList {
 		for (const entity of this.#entities) {
 			entity.getAllEnabledConnectionIds(connectionIds)
 		}
-	}
-
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setVariableValue(name: string, value: any): boolean {
-		if (!name) return false
-
-		for (const entity of this.getAllEntities()) {
-			if (entity.rawLocalVariableName === name) {
-				entity.setUserValue(value)
-
-				return true
-			}
-		}
-
-		return false
 	}
 }

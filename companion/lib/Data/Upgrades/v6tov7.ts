@@ -9,7 +9,7 @@ import type {
 	ExportPageModelv6,
 	ExportTriggersListv6,
 	SomeExportv6,
-} from '@companion-app/shared/Model/ExportModel.js'
+} from '@companion-app/shared/Model/ExportModelv6.js'
 import { ActionEntityModel, EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { Complete } from '@companion-module/base/dist/util.js'

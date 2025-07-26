@@ -198,7 +198,7 @@ describe('HttpApi', () => {
 			test('no value', async () => {
 				const { app, serviceApi } = createService()
 
-				const mockFn = serviceApi.getCustomVariableValue
+				const mockFn = serviceApi.getConnectionVariableValue
 				mockFn.mockReturnValue(undefined)
 
 				// Perform the request
@@ -207,13 +207,13 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('Not found')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name')
+				expect(mockFn).toHaveBeenCalledWith('custom', 'my-var-name')
 			})
 
 			test('value empty string', async () => {
 				const { app, serviceApi } = createService()
 
-				const mockFn = serviceApi.getCustomVariableValue
+				const mockFn = serviceApi.getConnectionVariableValue
 				mockFn.mockReturnValue('')
 
 				// Perform the request
@@ -222,13 +222,13 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name')
+				expect(mockFn).toHaveBeenCalledWith('custom', 'my-var-name')
 			})
 
 			test('value proper string', async () => {
 				const { app, serviceApi } = createService()
 
-				const mockFn = serviceApi.getCustomVariableValue
+				const mockFn = serviceApi.getConnectionVariableValue
 				mockFn.mockReturnValue('something 123')
 
 				// Perform the request
@@ -237,13 +237,13 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('something 123')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name')
+				expect(mockFn).toHaveBeenCalledWith('custom', 'my-var-name')
 			})
 
 			test('value zero number', async () => {
 				const { app, serviceApi } = createService()
 
-				const mockFn = serviceApi.getCustomVariableValue
+				const mockFn = serviceApi.getConnectionVariableValue
 				mockFn.mockReturnValue(0)
 
 				// Perform the request
@@ -252,13 +252,13 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('0')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name')
+				expect(mockFn).toHaveBeenCalledWith('custom', 'my-var-name')
 			})
 
 			test('value real number', async () => {
 				const { app, serviceApi } = createService()
 
-				const mockFn = serviceApi.getCustomVariableValue
+				const mockFn = serviceApi.getConnectionVariableValue
 				mockFn.mockReturnValue(455.8)
 
 				// Perform the request
@@ -267,13 +267,13 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('455.8')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name')
+				expect(mockFn).toHaveBeenCalledWith('custom', 'my-var-name')
 			})
 
 			test('value false', async () => {
 				const { app, serviceApi } = createService()
 
-				const mockFn = serviceApi.getCustomVariableValue
+				const mockFn = serviceApi.getConnectionVariableValue
 				mockFn.mockReturnValue(false)
 
 				// Perform the request
@@ -282,13 +282,13 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('false')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name')
+				expect(mockFn).toHaveBeenCalledWith('custom', 'my-var-name')
 			})
 
 			test('value true', async () => {
 				const { app, serviceApi } = createService()
 
-				const mockFn = serviceApi.getCustomVariableValue
+				const mockFn = serviceApi.getConnectionVariableValue
 				mockFn.mockReturnValue(true)
 
 				// Perform the request
@@ -297,13 +297,13 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('true')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name')
+				expect(mockFn).toHaveBeenCalledWith('custom', 'my-var-name')
 			})
 
 			test('value object', async () => {
 				const { app, serviceApi } = createService()
 
-				const mockFn = serviceApi.getCustomVariableValue
+				const mockFn = serviceApi.getConnectionVariableValue
 				mockFn.mockReturnValue({
 					a: 1,
 					b: 'str',
@@ -315,7 +315,7 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('{"a":1,"b":"str"}')
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
-				expect(mockFn).toHaveBeenCalledWith('my-var-name')
+				expect(mockFn).toHaveBeenCalledWith('custom', 'my-var-name')
 			})
 		})
 	})
@@ -850,7 +850,6 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3/step')
-				console.log(res)
 				expect(res.status).toBe(400)
 				expect(res.text).toBe('Bad step')
 

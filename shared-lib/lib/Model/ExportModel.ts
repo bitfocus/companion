@@ -1,66 +1,68 @@
 import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { ConnectionCollection, ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
-import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
+import type { CustomVariableCollection, CustomVariableModel } from './CustomVariableModel.js'
 import type { TriggerCollection } from './TriggerModel.js'
 import type { ImageLibraryExportData, ImageLibraryCollection } from './ImageLibraryModel.js'
 
-export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
+export type SomeExportv10 = ExportFullv10 | ExportPageModelv10 | ExportTriggersListv10
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8 | 9
+	readonly version: 10
 	readonly type: Type
-	readonly companionBuild: string | undefined // The build of the companion that exported this
+	readonly companionBuild: string // The build of the companion that exported this
 }
 
-export interface ExportFullv6 extends ExportBase<'full'> {
-	pages?: Record<number, ExportPageContentv6>
-	triggers?: Record<string, ExportTriggerContentv6>
-	triggerCollections?: TriggerCollection[] // Added in v4.1
-	custom_variables?: CustomVariablesModel
-	customVariablesCollections?: CustomVariableCollection[] // Added in v4.1
-	instances?: ExportInstancesv6
-	connectionCollections?: ConnectionCollection[] // Added in v4.1
+export interface ExportFullv10 extends ExportBase<'full'> {
+	pages?: Record<number, ExportPageContentv10>
+	triggers?: Record<string, ExportTriggerContentv10>
+	triggerCollections?: TriggerCollection[]
+	customVariables?: ExportCustomVariablesContentv10
+	customVariablesCollections?: CustomVariableCollection[]
+	connections?: ExportConnectionsv10
+	connectionCollections?: ConnectionCollection[]
 	surfaces?: unknown // Record<number, SurfaceConfig>
 	surfaceGroups?: unknown // Record<number, SurfaceGroupConfig>
 	imageLibrary?: ImageLibraryExportData[]
 	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
-export interface ExportPageModelv6 extends ExportBase<'page'> {
-	page: ExportPageContentv6
-	instances: ExportInstancesv6
-	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
+export interface ExportPageModelv10 extends ExportBase<'page'> {
+	page: ExportPageContentv10
+	connections: ExportConnectionsv10
+	connectionCollections: ConnectionCollection[]
 	oldPageNumber: number
 	imageLibrary?: ImageLibraryExportData[]
 	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
-export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
-	triggers: Record<string, ExportTriggerContentv6>
-	triggerCollections: TriggerCollection[] | undefined // Added in v4.1
-	instances: ExportInstancesv6
-	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
+export interface ExportTriggersListv10 extends ExportBase<'trigger_list'> {
+	triggers: Record<string, ExportTriggerContentv10>
+	triggerCollections: TriggerCollection[]
+	connections: ExportConnectionsv10
+	connectionCollections: ConnectionCollection[]
 	imageLibrary?: ImageLibraryExportData[]
 	imageLibraryCollections?: ImageLibraryCollection[]
 }
 
-export type ExportTriggerContentv6 = Record<string, any> // TODO
+export type ExportTriggerContentv10 = Record<string, any> // TODO
 
-export interface ExportPageContentv6 {
-	id?: string // Added in v4.0.4
+export type ExportCustomVariablesContentv10 = Record<string, CustomVariableModel> // TODO
+
+export interface ExportPageContentv10 {
+	id: string
 	name: string
-	controls: Record<number, Record<number, ExportControlv6>>
+	controls: Record<number, Record<number, ExportControlv10>>
 
 	gridSize: UserConfigGridSize
 }
 
-export type ExportControlv6 = Record<string, any> // TODO
+export type ExportControlv10 = Record<string, any> // TODO
 
-export type ExportInstancesv6 =
-	| Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6>
+export type ExportConnectionsv10 =
+	| Record<string, ExportConnectionFullv10 | ExportConnectionMinimalv10>
 	| Record<string, ConnectionConfig | undefined> // TODO - tidy
 
-export type ExportInstanceFullv6 = {
+export type ExportConnectionFullv10 = {
 	label: string
 	config: unknown
 	isFirstInit: boolean
@@ -72,7 +74,7 @@ export type ExportInstanceFullv6 = {
 	sortOrder?: number
 }
 
-export type ExportInstanceMinimalv6 = {
+export type ExportConnectionMinimalv10 = {
 	label: string
 	instance_type: string
 	lastUpgradeIndex: number

@@ -893,7 +893,12 @@ export class SocketEventsHandler {
 	 */
 	async #handleSetCustomVariable(msg: SetCustomVariableMessage): Promise<void> {
 		try {
-			this.#deps.variables.custom.setValue(msg.customVariableId, msg.value)
+			const variableControl = this.#deps.controls.getCustomVariableByName(msg.customVariableId)
+			if (variableControl) {
+				variableControl.setUserValue(msg.value)
+			} else {
+				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): variable not found`)
+			}
 		} catch (e: any) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}

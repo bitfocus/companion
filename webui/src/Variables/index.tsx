@@ -26,9 +26,6 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 
 				<div className="scrollable-content">
 					<div className="variables-category-grid">
-						<CButton color="primary" as={Link} to="/variables/custom">
-							Custom Variables
-						</CButton>
 						<CButton color="primary" as={Link} to="/variables/internal">
 							Internal
 						</CButton>

@@ -9,20 +9,16 @@
  * this program.
  */
 
-import { VariablesCustomVariable } from './CustomVariable.js'
 import { VariablesInstanceDefinitions } from './InstanceDefinitions.js'
 import { VariablesValues } from './Values.js'
-import type { DataDatabase } from '../Data/Database.js'
 import { router } from '../UI/TRPC.js'
 
 export class VariablesController {
-	readonly custom: VariablesCustomVariable
 	readonly values: VariablesValues
 	readonly definitions: VariablesInstanceDefinitions
 
-	constructor(db: DataDatabase) {
+	constructor() {
 		this.values = new VariablesValues()
-		this.custom = new VariablesCustomVariable(db, this.values)
 		this.definitions = new VariablesInstanceDefinitions()
 	}
 
