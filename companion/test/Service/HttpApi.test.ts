@@ -850,7 +850,6 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3/step')
-				console.log(res)
 				expect(res.status).toBe(400)
 				expect(res.text).toBe('Bad step')
 

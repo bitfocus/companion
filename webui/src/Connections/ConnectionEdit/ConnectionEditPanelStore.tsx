@@ -2,7 +2,7 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
 import type { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
 import type { CompanionOptionValues } from '@companion-module/base'
-import { action, observable, runInAction, toJS } from 'mobx'
+import { action, observable, runInAction } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import { nanoid } from 'nanoid'
 import { validateInputValue } from '~/Helpers/validateInputValue'
@@ -54,8 +54,6 @@ export class ConnectionEditPanelStore {
 	constructor(connectionId: string, connectionInfo: ClientConnectionConfig) {
 		this.connectionId = connectionId
 		this.connectionInfo = connectionInfo
-
-		console.log('store factory', connectionId, connectionInfo)
 
 		this.triggerReload()
 	}
@@ -149,7 +147,6 @@ export class ConnectionEditPanelStore {
 		if (configAndSecrets) {
 			for (const field of configAndSecrets.fields) {
 				if (!this.#isFieldValueValid(configAndSecrets, field)) {
-					console.log('is valid', toJS(field), toJS(configAndSecrets))
 					return false
 				}
 			}
