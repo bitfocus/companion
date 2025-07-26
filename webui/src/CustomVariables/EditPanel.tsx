@@ -244,6 +244,7 @@ const CustomVariableSoleEntityEditor = observer(function CustomVariableSoleEntit
 			<div className="editor-grid">
 				<EntityCommonCells
 					entity={entity}
+					entityTypeLabel="variable"
 					feedbackListType={FeedbackEntitySubType.Value}
 					entityDefinition={entityDefinition}
 					service={entityService}
