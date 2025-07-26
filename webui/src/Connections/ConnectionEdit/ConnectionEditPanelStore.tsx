@@ -2,10 +2,11 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
 import type { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
 import type { CompanionOptionValues } from '@companion-module/base'
-import { action, observable, runInAction } from 'mobx'
+import { action, observable, runInAction, toJS } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import { nanoid } from 'nanoid'
 import { validateInputValue } from '~/Helpers/validateInputValue'
+import { parseIsVisibleFn } from '~/Hooks/useOptionsAndIsVisible'
 import { trpcClient } from '~/Resources/TRPC'
 
 export interface ConnectionBasicInfoChanges {
@@ -148,6 +149,7 @@ export class ConnectionEditPanelStore {
 		if (configAndSecrets) {
 			for (const field of configAndSecrets.fields) {
 				if (!this.#isFieldValueValid(configAndSecrets, field)) {
+					console.log('is valid', toJS(field), toJS(configAndSecrets))
 					return false
 				}
 			}
@@ -156,7 +158,25 @@ export class ConnectionEditPanelStore {
 		return true
 	})
 
+	isVisibleFn = computedFn(parseIsVisibleFn)
+
+	isVisible = computedFn((field: ConnectionInputField): boolean => {
+		const isVisibleFn = this.isVisibleFn(field)
+		if (isVisibleFn) {
+			const configAndSecrets = this.#configAndSecrets.get()
+			if (configAndSecrets) {
+				return isVisibleFn(configAndSecrets.config)
+			}
+		}
+
+		return true // If no isVisibleFn, assume visible
+	})
+
 	#isFieldValueValid(configAndSecrets: ConnectionConfigAndSecrets, field: ConnectionInputField): boolean {
+		if (!this.isVisible(field)) {
+			return true // If the field is not visible, it is considered valid
+		}
+
 		if (!isConfigFieldSecret(field)) {
 			return !validateInputValue(field, configAndSecrets.config[field.id])
 		} else {

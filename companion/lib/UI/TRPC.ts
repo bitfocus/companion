@@ -67,7 +67,7 @@ const sentryMiddleware = t.middleware(
  */
 export const router = t.router
 
-export const publicProcedure = t.procedure.use(loggerMiddleware).use(sentryMiddleware)
+export const publicProcedure = t.procedure.use(sentryMiddleware).use(loggerMiddleware)
 // export const protectedProcedure = t.procedure
 
 /**

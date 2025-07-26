@@ -15,6 +15,7 @@ import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { useNavigate } from '@tanstack/react-router'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
 
 export const TabletView = observer(function TabletView() {
 	const navigate = useNavigate({ from: '/tablet' })
@@ -162,6 +163,8 @@ export const TabletView = observer(function TabletView() {
 
 	const [elementSizeRef, pageSize] = useElementclientSize<HTMLDivElement>()
 	const buttonSize = pageSize.width / displayColumns
+
+	useWakeLock()
 
 	return (
 		<div className="page-tablet">

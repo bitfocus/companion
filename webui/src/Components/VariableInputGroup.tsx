@@ -17,6 +17,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 	// Local editing state
 	const [isEditing, setIsEditing] = useState(false)
 	const [localValue, setLocalValue] = useState<string>(isStringInitial ? (value ?? '') : JSON.stringify(value))
+	const [isValueValid, setIsValid] = useState<boolean>(true)
 	const [isString, setIsString] = useState<boolean>(isStringInitial)
 
 	// Ref for the input group to manage focus
@@ -28,6 +29,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 			const newIsString = typeof value === 'string'
 			setIsString(newIsString)
 			setLocalValue(newIsString ? (value ?? '') : JSON.stringify(value))
+			setIsValid(true)
 		}
 	}, [value, isEditing])
 
@@ -63,6 +65,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 				setCurrentValue(name, stringified) // Update variable
 			}
 		}
+		setIsValid(true)
 	}
 
 	// Handle text input change
@@ -70,12 +73,15 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 		setLocalValue(val)
 		if (isString) {
 			setCurrentValue(name, val)
+			setIsValid(true)
 		} else {
 			try {
 				const parsed = JSON5.parse(val)
 				setCurrentValue(name, parsed)
+				setIsValid(true)
 			} catch {
 				// Do not update if invalid JSON
+				setIsValid(false)
 			}
 		}
 	}
@@ -127,7 +133,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 				<CFormInput
 					value={localValue}
 					onChange={(e) => handleInputChange(e.target.value)}
-					style={{ outline: 'none', boxShadow: 'none' }}
+					style={{ outline: 'none', boxShadow: 'none', color: !isValueValid ? 'red' : undefined }}
 					onFocus={handleFocus}
 					onBlur={() => {}} // Prevent input blur from ending editing (handled by group)
 					disabled={disabled}

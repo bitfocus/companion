@@ -75,6 +75,12 @@ if (platformInfo.runtimePlatform === 'win') {
 	}
 }
 
+// Cleanup some other 'junk'
+await fs.remove('dist/node_modules/.bin')
+await fs.remove('dist/node_modules/usb/libusb')
+await fs.remove('dist/node_modules/usb/node_modules/node-addon-api')
+await fs.remove('dist/node_modules/node-addon-api')
+
 if (!process.env.SKIP_LAUNCH_CHECK) {
 	const nodeExePath =
 		platformInfo.runtimePlatform === 'win'

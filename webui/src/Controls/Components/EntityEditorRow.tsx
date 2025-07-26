@@ -213,6 +213,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 
 					<EntityCommonCells
 						entity={entity}
+						entityTypeLabel={entityTypeLabel}
 						feedbackListType={feedbackListType}
 						entityDefinition={entityDefinition}
 						service={entityService}

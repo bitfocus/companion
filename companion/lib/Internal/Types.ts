@@ -96,11 +96,14 @@ export interface ExecuteFeedbackResultWithReferences {
 }
 
 export type InternalActionDefinition = SetOptional<
-	Omit<ClientEntityDefinition, 'entityType' | 'showInvert' | 'feedbackType' | 'feedbackStyle'>,
+	Omit<
+		ClientEntityDefinition,
+		'entityType' | 'showInvert' | 'feedbackType' | 'feedbackStyle' | 'hasLifecycleFunctions'
+	>,
 	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups'
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	Omit<ClientEntityDefinition, 'entityType'>,
+	Omit<ClientEntityDefinition, 'entityType' | 'hasLifecycleFunctions'>,
 	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups'
 >

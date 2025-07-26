@@ -1,10 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { DependencyList, FormEvent, useEffect, useMemo } from 'react'
+import React, { DependencyList, FormEvent, useCallback, useEffect } from 'react'
 import { useEventListener } from 'usehooks-ts'
-import { computed } from 'mobx'
 import type { ReadonlyDeep } from 'type-fest'
 import { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import { joinPaths } from '@tanstack/react-router'
+import { computedFn } from 'mobx-utils'
 
 // type VoidIfReturnIsNever<T extends (...args: any[]) => void> =
 // 	ReturnType<T> extends never ? (...args: Parameters<T>) => void : never
@@ -77,7 +77,8 @@ export const PreventDefaultHandler = (e: FormEvent): void => {
 
 export function useComputed<TRes>(cb: () => TRes, deps: DependencyList): TRes {
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	return useMemo(() => computed(cb), [cb, ...deps]).get()
+	const wrappedCb = useCallback(computedFn(cb), deps)
+	return wrappedCb()
 }
 
 /** Type assert that a value is never */

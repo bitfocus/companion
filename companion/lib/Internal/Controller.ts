@@ -475,6 +475,7 @@ export class InternalController {
 				for (const [id, action] of Object.entries(fragment.getActionDefinitions())) {
 					actions[id] = {
 						...action,
+						hasLifecycleFunctions: false,
 						hasLearn: action.hasLearn ?? false,
 						learnTimeout: action.learnTimeout,
 
@@ -502,6 +503,7 @@ export class InternalController {
 				for (const [id, feedback] of Object.entries(fragment.getFeedbackDefinitions())) {
 					feedbacks[id] = {
 						...feedback,
+						hasLifecycleFunctions: false,
 						showInvert: feedback.showInvert ?? false,
 						hasLearn: feedback.hasLearn ?? false,
 						learnTimeout: feedback.learnTimeout,

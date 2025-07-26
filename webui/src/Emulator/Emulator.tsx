@@ -13,6 +13,7 @@ import { useParams } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { observable, ObservableMap, runInAction } from 'mobx'
+import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
 
 function getCacheKey(x: number, y: number): string {
 	return `${x}/${y}`
@@ -124,6 +125,8 @@ export const Emulator = observer(function Emulator() {
 		},
 		[pressedMutation, emulatorId]
 	)
+
+	useWakeLock()
 
 	return (
 		<div className="page-tablet page-emulator">
