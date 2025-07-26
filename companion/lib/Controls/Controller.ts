@@ -610,20 +610,12 @@ export class ControlsController {
 		}
 	}
 
-	discardTriggerCollections(): void {
-		this.#triggerCollections.discardAllCollections()
-	}
-
 	exportTriggerCollections(): TriggerCollection[] {
 		return this.#triggerCollections.collectionData
 	}
 
 	replaceTriggerCollections(collections: TriggerCollection[]): void {
 		this.#triggerCollections.replaceCollections(collections)
-	}
-
-	discardCustomVariableCollections(): void {
-		this.#customVariableCollections.discardAllCollections()
 	}
 
 	exportCustomVariableCollections(): CustomVariableCollection[] {

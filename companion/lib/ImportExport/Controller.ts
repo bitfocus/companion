@@ -700,7 +700,7 @@ export class ImportExportController {
 					this.#controlsController.deleteControl(controlId)
 				}
 			}
-			this.#controlsController.discardTriggerCollections()
+			this.#controlsController.replaceTriggerCollections([])
 		}
 
 		if (!config || config.customVariables) {
