@@ -81,7 +81,7 @@ export function parseIsVisibleFn<
 								} else if (name.startsWith('data:')) {
 									return userData[name.slice(5)]
 								} else {
-									return undefined
+									throw new Error(`Unknown variable "${name}"`)
 								}
 							},
 							ExpressionFunctions

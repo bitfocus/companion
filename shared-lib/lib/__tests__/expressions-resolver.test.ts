@@ -151,9 +151,17 @@ describe('resolver', function () {
 
 	describe('expressions with errors', function () {
 		it('should detect missing symbol values', function () {
+			const getVariable = () => {
+				throw new Error('My error')
+			}
+			const fn = () => resolve(parse('$(internal:a) + 1'), getVariable)
+			expect(fn).toThrow(/My error/)
+		})
+
+		it('should silently handle missing symbol values', function () {
 			const getVariable = () => undefined
 			const fn = () => resolve(parse('$(internal:a) + 1'), getVariable)
-			expect(fn).toThrow(/Missing variable value/)
+			expect(fn()).toEqual(NaN)
 		})
 
 		it('should detect missing operands', function () {

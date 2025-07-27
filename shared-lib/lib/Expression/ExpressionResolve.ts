@@ -114,7 +114,6 @@ export function ResolveExpression(
 					case 'CompanionVariable': {
 						if (node.name === undefined) throw new Error('Missing variable identifier')
 						const value = getVariableValue(node.name)
-						if (value === undefined) throw new Error(`Missing variable value for "${node.name}"`)
 						return structuredClone(value)
 					}
 					case 'TemplateLiteral': {
