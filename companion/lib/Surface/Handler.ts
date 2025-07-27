@@ -100,7 +100,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Currently pressed buttons, and what they are keeping pressed
 	 */
-	readonly #currentButtonPresses: Record<string, number> = {}
+	readonly #currentButtonPresses = new Map<string, ControlLocation>()
 
 	/**
 	 * Current page of the surface
@@ -523,7 +523,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#drawPage()
 	}
 
-	#onDeviceClick(x: number, y: number, pressed: boolean, pageOffset?: number): void {
+	#onDeviceClick(x: number, y: number, pressed: boolean, pageOffset: number = 0): void {
 		if (!this.panel) return
 
 		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
@@ -532,41 +532,44 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		try {
 			if (!this.#isSurfaceLocked) {
 				this.emit('interaction')
+				let location: ControlLocation
+
+				// the key for saving button-press location, which has to refer to the physical button since that doesn't move between press and release
+				const panelCoordinate = `${y}/${x}/${pageOffset}`
 
 				const [x2, y2] = unrotateXYForPanel(x, y, this.panelGridSize, this.#surfaceConfig.config.rotation)
-
-				// Translate key for offset
 				const { xOffset, yOffset } = this.#getCurrentOffset()
-
-				const coordinate = `${y2 + yOffset}/${x2 + xOffset}`
-
 				let thisPage = pageNumber
 
-				if (pressed) {
-					// Track what page was pressed for this key
-					this.#currentButtonPresses[coordinate] = thisPage
-				} else {
-					// Release the same page that was previously pressed
-					thisPage = this.#currentButtonPresses[coordinate] ?? thisPage
-					delete this.#currentButtonPresses[coordinate]
-				}
-
 				// allow the xkeys (legacy mode) to span pages
-				thisPage += pageOffset ?? 0
+				thisPage += pageOffset
 
 				// loop after last page
 				const pageCount = this.#pageStore.getPageCount()
 				if (thisPage > pageCount) thisPage = 1
 
-				const controlId = this.#pageStore.getControlIdAt({
+				location = {
 					pageNumber: thisPage,
 					column: x2 + xOffset,
 					row: y2 + yOffset,
-				})
+				}
+
+				if (pressed) {
+					// Map the physical key to the internal location, so button-release acts on the correct internal representation
+					this.#currentButtonPresses.set(panelCoordinate, location)
+				} else {
+					// If released, use the same page/offset that was previously pressed, if availablee
+					location = this.#currentButtonPresses.get(panelCoordinate) ?? location
+					this.#currentButtonPresses.delete(panelCoordinate)
+				}
+
+				const controlId = this.#pageStore.getControlIdAt(location)
 				if (controlId) {
 					this.#controls.pressControl(controlId, pressed, this.surfaceId)
 				}
-				this.#logger.debug(`Button ${thisPage}/${coordinate} ${pressed ? 'pressed' : 'released'}`)
+				this.#logger.debug(
+					`Button ${location.pageNumber}/${location.row}/${location.column} ${pressed ? 'pressed' : 'released'}`
+				)
 			} else if (!this.panel.setLocked) {
 				if (pressed) {
 					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
