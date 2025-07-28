@@ -4,7 +4,7 @@ import { VariablesTable } from '~/Components/VariablesTable.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faDollarSign } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { Link, RegisteredRouter, ToPathOption, useParams } from '@tanstack/react-router'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
 import { NonIdealState } from '~/Components/NonIdealState'
@@ -21,9 +21,8 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				<div className="fixed-header">
 					<h4>Variables</h4>
 					<p>
-						Variables can be used as placeholders in text, or in options for many actions and feedbacks. This allows
-						dynamic updates based on the provided content. This enables live updating of messages, making customization
-						quick and easy.
+						Variables are dynamic placeholders that can be used in text, actions, and feedbacks. They automatically
+						update with live content, making it easy to create customized and responsive displays.
 					</p>
 				</div>
 
