@@ -285,8 +285,9 @@ export class ControlTrigger
 			type: this.type,
 			options: this.options,
 			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
-			condition: this.entities.getFeedbackEntities(),
+			condition: this.entities.getFeedbackEntities().map((e) => e.asEntityModel(true)),
 			events: this.events,
+			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
 		return clone ? cloneDeep(obj) : obj
 	}

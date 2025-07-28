@@ -782,6 +782,7 @@ export class ImportExportController {
 			actions: [],
 			condition: [],
 			events: control.events,
+			localVariables: [],
 		}
 
 		if (control.condition) {
@@ -790,6 +791,10 @@ export class ImportExportController {
 
 		if (control.actions) {
 			result.actions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.actions))
+		}
+
+		if (control.localVariables) {
+			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
 		}
 
 		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)

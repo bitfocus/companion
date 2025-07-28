@@ -40,6 +40,7 @@ export interface InternalInputFieldDate extends CompanionInputFieldBaseExtended 
 export interface InternalInputFieldVariable extends CompanionInputFieldBaseExtended {
 	type: 'internal:variable'
 	// default: string
+	supportsLocal: boolean
 }
 export interface InternalInputFieldCustomVariable extends CompanionInputFieldBaseExtended {
 	type: 'internal:custom_variable'

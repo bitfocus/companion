@@ -13,6 +13,7 @@ import { useLocalVariablesStore } from '../Controls/LocalVariablesStore.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
+import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -28,8 +29,6 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const dataReady = !loadError && !!controlConfig
 
-	const localVariablesStore = useLocalVariablesStore(controlId, null)
-
 	return (
 		<div className="edit-button-panel flex-form">
 			<GenericConfirmModal ref={resetModalRef} />
@@ -38,70 +37,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 			{controlConfig ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
 					{controlConfig.config.type === 'trigger' ? (
-						<>
-							<MyErrorBoundary>
-								<TriggerConfig options={controlConfig.config.options} controlId={controlId} />
-							</MyErrorBoundary>
-
-							<MyErrorBoundary>
-								<TriggerEventEditor
-									heading={
-										<>
-											Events &nbsp;
-											<FontAwesomeIcon
-												icon={faQuestionCircle}
-												title="The trigger will be executed when any of the events happens"
-											/>
-										</>
-									}
-									controlId={controlId}
-									events={controlConfig.config.events}
-								/>
-							</MyErrorBoundary>
-
-							<MyErrorBoundary>
-								<ControlEntitiesEditor
-									heading={
-										<>
-											Conditions &nbsp;
-											<FontAwesomeIcon
-												icon={faQuestionCircle}
-												title="Only execute when all of these conditions are true"
-											/>
-										</>
-									}
-									controlId={controlId}
-									entities={controlConfig.config.condition}
-									listId="feedbacks"
-									entityType={EntityModelType.Feedback}
-									entityTypeLabel="condition"
-									feedbackListType={FeedbackEntitySubType.Boolean}
-									location={undefined}
-									localVariablesStore={localVariablesStore}
-									localVariablePrefix={null}
-								/>
-							</MyErrorBoundary>
-
-							<MyErrorBoundary>
-								<ControlEntitiesEditor
-									heading={
-										<>
-											Actions &nbsp;
-											<FontAwesomeIcon icon={faQuestionCircle} title="What should happen when executed" />
-										</>
-									}
-									controlId={controlId}
-									location={undefined}
-									listId="trigger_actions"
-									entities={controlConfig.config.actions}
-									entityType={EntityModelType.Action}
-									entityTypeLabel="action"
-									feedbackListType={null}
-									localVariablesStore={localVariablesStore}
-									localVariablePrefix={null}
-								/>
-							</MyErrorBoundary>
-						</>
+						<TriggerPanelContent config={controlConfig.config} controlId={controlId} />
 					) : (
 						<CAlert color="danger">Invalid control type: {controlConfig.config.type}. Expected 'trigger'.</CAlert>
 					)}
@@ -110,6 +46,89 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 				''
 			)}
 		</div>
+	)
+}
+
+interface TriggerPanelContentProps {
+	config: TriggerModel
+	controlId: string
+}
+
+function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): React.ReactNode {
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+
+	return (
+		<>
+			<MyErrorBoundary>
+				<TriggerConfig options={config.options} controlId={controlId} />
+			</MyErrorBoundary>
+
+			<MyErrorBoundary>
+				<TriggerEventEditor
+					heading={
+						<>
+							Events &nbsp;
+							<FontAwesomeIcon
+								icon={faQuestionCircle}
+								title="The trigger will be executed when any of the events happens"
+							/>
+						</>
+					}
+					controlId={controlId}
+					events={config.events}
+					localVariablesStore={localVariablesStore}
+				/>
+			</MyErrorBoundary>
+
+			<MyErrorBoundary>
+				<ControlEntitiesEditor
+					heading={
+						<>
+							Conditions &nbsp;
+							<FontAwesomeIcon icon={faQuestionCircle} title="Only execute when all of these conditions are true" />
+						</>
+					}
+					controlId={controlId}
+					entities={config.condition}
+					listId="feedbacks"
+					entityType={EntityModelType.Feedback}
+					entityTypeLabel="condition"
+					feedbackListType={FeedbackEntitySubType.Boolean}
+					location={undefined}
+					localVariablesStore={localVariablesStore}
+					localVariablePrefix={null}
+				/>
+			</MyErrorBoundary>
+
+			<MyErrorBoundary>
+				<ControlEntitiesEditor
+					heading={
+						<>
+							Actions &nbsp;
+							<FontAwesomeIcon icon={faQuestionCircle} title="What should happen when executed" />
+						</>
+					}
+					controlId={controlId}
+					location={undefined}
+					listId="trigger_actions"
+					entities={config.actions}
+					entityType={EntityModelType.Action}
+					entityTypeLabel="action"
+					feedbackListType={null}
+					localVariablesStore={localVariablesStore}
+					localVariablePrefix={null}
+				/>
+			</MyErrorBoundary>
+
+			{/* <MyErrorBoundary>
+				<LocalVariablesEditor
+					controlId={controlId}
+					location={undefined}
+					variables={config.localVariables}
+					localVariablesStore={localVariablesStore}
+				/>
+			</MyErrorBoundary> */}
+		</>
 	)
 }
 

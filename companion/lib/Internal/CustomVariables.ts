@@ -113,6 +113,7 @@ export class InternalCustomVariables
 						id: 'variable',
 						label: 'Variable to store value from',
 						tooltip: 'What variable to store in the custom variable?',
+						supportsLocal: false,
 					},
 				],
 			},

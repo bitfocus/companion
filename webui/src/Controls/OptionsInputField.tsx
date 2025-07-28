@@ -184,7 +184,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 		default:
 			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (isInternal) {
-				control = InternalModuleField(option, isLocatedInGrid, !!readonly, value, setValue2) ?? undefined
+				control =
+					InternalModuleField(option, isLocatedInGrid, localVariablesStore, !!readonly, value, setValue2) ?? undefined
 			}
 			// Use default below
 			break

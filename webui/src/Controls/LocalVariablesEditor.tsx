@@ -1,9 +1,11 @@
 import React from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
+import { ControlEntitiesEditor } from './EntitiesEditor.js'
 import { EntityModelType, FeedbackEntitySubType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CAlert } from '@coreui/react'
-import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
+import { LocalVariablesStore } from './LocalVariablesStore.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 
 interface LocalVariablesEditorProps {
 	controlId: string
@@ -19,11 +21,14 @@ export function LocalVariablesEditor({
 }: LocalVariablesEditorProps): React.JSX.Element {
 	return (
 		<>
-			<CAlert color="info" className="mb-2">
-				This is a work in progress. Local variables are not supported in actions or feedbacks yet.
-			</CAlert>
 			<ControlEntitiesEditor
 				heading="Local Variables"
+				subheading={
+					<CAlert color="info" className="mb-2 py-2">
+						Local variables are not yet supported by all modules or fields. Fields which support local variables can be
+						identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
+					</CAlert>
+				}
 				controlId={controlId}
 				entities={variables}
 				location={location}

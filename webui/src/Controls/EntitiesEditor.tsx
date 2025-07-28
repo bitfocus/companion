@@ -26,6 +26,7 @@ interface ControlEntitiesEditorProps {
 	entities: SomeEntityModel[] | undefined
 	heading: JSX.Element | string | null
 	headingActions?: JSX.Element[]
+	subheading?: JSX.Element | string | null
 	localVariablesStore: LocalVariablesStore | null
 	localVariablePrefix: string | null
 }
@@ -40,6 +41,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	entities,
 	heading,
 	headingActions,
+	subheading,
 	localVariablesStore,
 	localVariablePrefix,
 }: ControlEntitiesEditorProps) {
@@ -68,6 +70,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 					<EditableEntityList
 						heading={heading}
 						headingActions={headingActions}
+						subheading={subheading}
 						entities={entities}
 						ownerId={null}
 						entityType={entityType}

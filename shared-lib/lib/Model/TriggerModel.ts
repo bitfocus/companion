@@ -10,6 +10,8 @@ export interface TriggerModel {
 	actions: SomeEntityModel[]
 	condition: SomeEntityModel[]
 	events: EventInstance[]
+
+	localVariables: SomeEntityModel[]
 }
 
 export interface TriggerOptions {
