@@ -63,12 +63,12 @@ export function ImportModules(): React.JSX.Element {
 
 			Promise.resolve()
 				.then(async () => {
-					const buffer = await newFile.bytes()
+					const buffer = await newFile.arrayBuffer()
 
 					setImportError(null)
 					await installTarMutation // TODO: 20s timeout?
 						.mutateAsync({
-							tarBuffer: base64EncodeUint8Array(buffer),
+							tarBuffer: base64EncodeUint8Array(new Uint8Array(buffer)),
 						})
 						.then((failureReason) => {
 							if (failureReason) {
