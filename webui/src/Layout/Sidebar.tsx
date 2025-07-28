@@ -32,6 +32,7 @@ import {
 	faInfo,
 	faStar,
 	faHatWizard,
+	faSquareRootVariable,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
@@ -186,8 +187,8 @@ export const MySidebar = memo(function MySidebar() {
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
 				<SidebarMenuItemGroup name="Variables" icon={faDollarSign} path="/variables">
-					<SidebarMenuItem name="Custom Variables" icon={null} path="/variables/custom" />
-					<SidebarMenuItem name="Expression Variables" icon={null} path="/variables/expression" />
+					<SidebarMenuItem name="Custom Variables" icon={faDollarSign} path="/variables/custom" />
+					<SidebarMenuItem name="Expression Variables" icon={faSquareRootVariable} path="/variables/expression" />
 					<SidebarMenuItem name="Internal" icon={null} path="/variables/connection/internal" />
 					<SidebarVariablesGroups />
 				</SidebarMenuItemGroup>

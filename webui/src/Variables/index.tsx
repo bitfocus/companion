@@ -1,12 +1,14 @@
 import React, { useContext } from 'react'
-import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CButton, CButtonGroup, CCard, CCol, CRow } from '@coreui/react'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
-import { Link, useParams } from '@tanstack/react-router'
+import { faArrowLeft, faDollarSign } from '@fortawesome/free-solid-svg-icons'
+import { Link, RegisteredRouter, ToPathOption, useParams } from '@tanstack/react-router'
 import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
+import { NonIdealState } from '~/Components/NonIdealState'
+import { IconProp } from '@fortawesome/fontawesome-svg-core'
 
 export const ConnectionVariablesPage = observer(function VariablesConnectionList() {
 	const { modules } = useContext(RootAppStoreContext)
@@ -19,16 +21,28 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				<div className="fixed-header">
 					<h4>Variables</h4>
 					<p>
-						We use variables as placeholders in text, allowing dynamic updates based on the provided content. This
-						enables live updating of messages, making customization quick and easy.
+						Variables can be used as placeholders in text, or in options for many actions and feedbacks. This allows
+						dynamic updates based on the provided content. This enables live updating of messages, making customization
+						quick and easy.
 					</p>
 				</div>
 
 				<div className="scrollable-content">
-					<div className="variables-category-grid">
-						<CButton color="primary" as={Link} to="/variables/custom">
-							Custom Variables
+					{/* <CRow>
+						<SpecialVariablesLinkCard label="Custom Variables" to="/variables/custom" icon={faDollarSign} />
+						<SpecialVariablesLinkCard label="Computed Variables" to="/variables/computed" icon={faArrowLeft} />
+					</CRow> */}
+
+					<div className="variables-category-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+						<CButton color="info" as={Link} to="/variables/custom" className="mb-3">
+							<h6 className="mb-0 py-1">Custom Variables</h6>
 						</CButton>
+						<CButton color="info" as={Link} to="/variables/computed" className="mb-3">
+							<h6 className="mb-0 py-1">Computed Variables</h6>
+						</CButton>
+					</div>
+
+					<div className="variables-category-grid">
 						<CButton color="primary" as={Link} to="/variables/connection/internal">
 							Internal
 						</CButton>
@@ -77,5 +91,29 @@ export function VariablesListPage(): React.JSX.Element {
 			<VariablesTable label={label} />
 			<br style={{ clear: 'both' }} />
 		</div>
+	)
+}
+
+interface SpecialVariablesLinkCardProps<TFrom extends string = string, TTo extends string | undefined = undefined> {
+	label: string
+	to: ToPathOption<RegisteredRouter, TFrom, TTo>
+	icon: IconProp
+	center?: boolean
+}
+
+function SpecialVariablesLinkCard<
+	const TFrom extends string = string,
+	const TTo extends string | undefined = undefined,
+>({ label, to, icon, center }: SpecialVariablesLinkCardProps<TFrom, TTo>) {
+	return (
+		<CCol sm={center ? { span: 6, offset: 3 } : 6} className="mb-4">
+			<Link to={to} className="text-decoration-none">
+				<CCard>
+					<NonIdealState icon={icon} style={{ padding: '2vh 1rem' }}>
+						<h3>{label}</h3>
+					</NonIdealState>
+				</CCard>
+			</Link>
+		</CCol>
 	)
 }
