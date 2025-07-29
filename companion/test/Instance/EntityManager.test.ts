@@ -69,6 +69,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -107,6 +108,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [{ id: 'replaced', type: 'checkbox' }],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -124,6 +126,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [{ id: 'replaced', type: 'checkbox' }],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -171,6 +174,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -216,6 +220,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -259,6 +264,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -305,6 +311,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			})
 
@@ -379,6 +386,7 @@ describe('InstanceEntityManager', () => {
 					{ id: 'field1', type: 'textinput', useVariables: true },
 					{ id: 'field2', type: 'dropdown' },
 				],
+				optionsToIgnoreForSubscribe: [],
 			}
 			const options = { field1: '$(var:text)', field2: 'option1' }
 
@@ -397,6 +405,7 @@ describe('InstanceEntityManager', () => {
 		it('should pass through non-variable fields unchanged', () => {
 			const entityDefinition = {
 				options: [{ id: 'field1', type: 'number' }],
+				optionsToIgnoreForSubscribe: [],
 			}
 			const options = { field1: 42 }
 
@@ -413,6 +422,7 @@ describe('InstanceEntityManager', () => {
 					{ id: 'field1', type: 'textinput', useVariables: true },
 					{ id: 'field2', type: 'dropdown' },
 				],
+				optionsToIgnoreForSubscribe: [],
 			}
 			const options = { field2: 'option1' } // field1 missing
 
@@ -435,6 +445,53 @@ describe('InstanceEntityManager', () => {
 			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
 			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('undefined')
 		})
+
+		it('should parse variables but not include them in referencedVariableIds for options in optionsToIgnoreForSubscribe', () => {
+			const entityDefinition = {
+				options: [
+					{ id: 'field1', type: 'textinput', useVariables: true },
+					{ id: 'field2', type: 'textinput', useVariables: true },
+					{ id: 'field3', type: 'dropdown' },
+				],
+				optionsToIgnoreForSubscribe: ['field1'],
+			}
+			const options = {
+				field1: '$(var:ignored)',
+				field2: '$(var:parsed)',
+				field3: 'option1',
+			}
+
+			// Mock different return values for each parseVariables call
+			mockVariablesParser.parseVariables
+				.mockReturnValueOnce({
+					text: 'parsed-ignored-value',
+					variableIds: ['ignored-var'],
+				})
+				.mockReturnValueOnce({
+					text: 'parsed-value',
+					variableIds: ['var1'],
+				})
+
+			const result = entityManager.parseOptionsObject(entityDefinition as any, options, 'control-1')
+
+			// Both field1 and field2 should be parsed for display
+			expect(result.parsedOptions).toEqual({
+				field1: 'parsed-ignored-value',
+				field2: 'parsed-value',
+				field3: 'option1',
+			})
+
+			// parseVariables should be called for both variable fields
+			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledTimes(2)
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(var:ignored)')
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(var:parsed)')
+
+			// Should only reference variables from non-ignored fields
+			expect(result.referencedVariableIds.has('var1')).toBe(true)
+			expect(result.referencedVariableIds.has('ignored-var')).toBe(false)
+			expect(result.referencedVariableIds.size).toBe(1)
+		})
 	})
 
 	describe('onVariablesChanged', () => {
@@ -455,6 +512,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -502,6 +560,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -547,6 +606,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -588,6 +648,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -647,6 +708,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -683,6 +745,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -715,6 +778,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -780,6 +844,7 @@ describe('InstanceEntityManager', () => {
 					getEntityDefinition: vi.fn().mockReturnValue({
 						hasLifecycleFunctions: true,
 						options: [{ id: 'index', type: 'number' }],
+						optionsToIgnoreForSubscribe: [],
 					}),
 				}
 				mockEntities.push(mockEntity)
@@ -863,6 +928,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -913,6 +979,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -968,6 +1035,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: false,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -996,6 +1064,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: false,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -1024,6 +1093,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -1042,6 +1112,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: false,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -1086,6 +1157,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: false,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -1138,6 +1210,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -1162,6 +1235,7 @@ describe('InstanceEntityManager', () => {
 		it('should handle entity with invalid option types', () => {
 			const entityDefinition = {
 				options: [{ id: 'field1', type: 'textinput', useVariables: true }],
+				optionsToIgnoreForSubscribe: [],
 			}
 
 			// Test with option value that's not a string
@@ -1207,6 +1281,7 @@ describe('InstanceEntityManager', () => {
 					getEntityDefinition: vi.fn().mockReturnValue({
 						hasLifecycleFunctions: true,
 						options: [],
+						optionsToIgnoreForSubscribe: [],
 					}),
 				})
 			}
@@ -1253,6 +1328,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 
@@ -1293,6 +1369,7 @@ describe('InstanceEntityManager', () => {
 				getEntityDefinition: vi.fn().mockReturnValue({
 					hasLifecycleFunctions: true,
 					options: [],
+					optionsToIgnoreForSubscribe: [],
 				}),
 			}
 			entityManager.trackEntity(mockFeedback as any, 'control-2')
@@ -1344,6 +1421,7 @@ describe('InstanceEntityManager', () => {
 					getEntityDefinition: vi.fn().mockReturnValue({
 						hasLifecycleFunctions: true,
 						options: [],
+						optionsToIgnoreForSubscribe: [],
 					}),
 				},
 				{
@@ -1362,6 +1440,7 @@ describe('InstanceEntityManager', () => {
 					getEntityDefinition: vi.fn().mockReturnValue({
 						hasLifecycleFunctions: true,
 						options: [],
+						optionsToIgnoreForSubscribe: [],
 					}),
 				},
 				{
@@ -1380,6 +1459,7 @@ describe('InstanceEntityManager', () => {
 					getEntityDefinition: vi.fn().mockReturnValue({
 						hasLifecycleFunctions: true,
 						options: [],
+						optionsToIgnoreForSubscribe: [],
 					}),
 				},
 				{
@@ -1398,6 +1478,7 @@ describe('InstanceEntityManager', () => {
 					getEntityDefinition: vi.fn().mockReturnValue({
 						hasLifecycleFunctions: true,
 						options: [],
+						optionsToIgnoreForSubscribe: [],
 					}),
 				},
 			]
