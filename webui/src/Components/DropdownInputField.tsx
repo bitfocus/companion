@@ -5,6 +5,8 @@ import Select, { createFilter, InputActionMeta, components } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
+import { useComputed } from '~/Resources/util.js'
+import { observer } from 'mobx-react-lite'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -28,7 +30,7 @@ interface DropdownChoiceInt {
 	label: DropdownChoiceId
 }
 
-export const DropdownInputField = memo(function DropdownInputField({
+export const DropdownInputField = observer(function DropdownInputField({
 	htmlName,
 	className,
 	choices,
@@ -46,7 +48,7 @@ export const DropdownInputField = memo(function DropdownInputField({
 }: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
-	const options = useMemo(() => {
+	const options = useComputed(() => {
 		let options: DropdownChoice[] = []
 		if (options) {
 			if (Array.isArray(choices)) {
