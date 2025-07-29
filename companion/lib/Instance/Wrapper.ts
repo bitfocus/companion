@@ -707,6 +707,7 @@ export class SocketEventsHandler {
 				label: rawAction.name,
 				description: rawAction.description,
 				options: translateOptionsIsVisibleAndUseVariables(rawAction.options || [], !!this.#entityManager),
+				optionsToIgnoreForSubscribe: rawAction.optionsToIgnoreForSubscribe || [],
 				hasLifecycleFunctions: !this.#entityManager || !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
@@ -743,6 +744,7 @@ export class SocketEventsHandler {
 				label: rawFeedback.name,
 				description: rawFeedback.description,
 				options: translateOptionsIsVisibleAndUseVariables(rawFeedback.options || [], !!this.#entityManager),
+				optionsToIgnoreForSubscribe: [],
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions

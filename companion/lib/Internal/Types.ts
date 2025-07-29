@@ -100,10 +100,10 @@ export type InternalActionDefinition = SetOptional<
 		ClientEntityDefinition,
 		'entityType' | 'showInvert' | 'feedbackType' | 'feedbackStyle' | 'hasLifecycleFunctions'
 	>,
-	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups'
+	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'optionsToIgnoreForSubscribe'
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	Omit<ClientEntityDefinition, 'entityType' | 'hasLifecycleFunctions'>,
+	Omit<ClientEntityDefinition, 'entityType' | 'hasLifecycleFunctions' | 'optionsToIgnoreForSubscribe'>,
 	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups'
 >

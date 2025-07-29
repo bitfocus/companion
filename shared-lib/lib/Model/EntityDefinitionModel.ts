@@ -8,6 +8,7 @@ export interface ClientEntityDefinition {
 	label: string
 	description: string | undefined
 	options: (InternalActionInputField | InternalFeedbackInputField)[]
+	optionsToIgnoreForSubscribe: string[]
 	feedbackType: FeedbackEntitySubType | null
 	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
 	hasLifecycleFunctions: boolean
