@@ -1,6 +1,6 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import classNames from 'classnames'
-import React, { useContext, useMemo, useCallback, memo, useState } from 'react'
+import React, { useContext, useMemo, useCallback, useState } from 'react'
 import Select, { createFilter, InputActionMeta, components } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { WindowedMenuList } from 'react-windowed-select'

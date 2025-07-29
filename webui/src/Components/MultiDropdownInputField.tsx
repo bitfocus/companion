@@ -1,10 +1,12 @@
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import classNames from 'classnames'
-import React, { useContext, useMemo, useCallback, memo } from 'react'
+import React, { useContext, useMemo, useCallback } from 'react'
 import Select, { createFilter } from 'react-select'
 import CreatableSelect, { CreatableProps } from 'react-select/creatable'
 import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
+import { observer } from 'mobx-react-lite'
+import { useComputed } from '~/Resources/util.js'
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -28,7 +30,7 @@ interface DropdownChoiceInt {
 	label: DropdownChoiceId
 }
 
-export const MultiDropdownInputField = memo(function MultiDropdownInputField({
+export const MultiDropdownInputField = observer(function MultiDropdownInputField({
 	htmlName,
 	className,
 	choices,
@@ -46,7 +48,7 @@ export const MultiDropdownInputField = memo(function MultiDropdownInputField({
 }: MultiDropdownInputFieldProps) {
 	const menuPortal = useContext(MenuPortalContext)
 
-	const options = useMemo(() => {
+	const options = useComputed(() => {
 		let options: DropdownChoice[] = []
 		if (options) {
 			if (Array.isArray(choices)) {
