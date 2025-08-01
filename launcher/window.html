@@ -12,7 +12,7 @@
 			<div id="topwrap">
 				<img id="logo" src="./assets/icon.png" alt="Companion Logo" />
 				<div id="model">model_text (version_etc)</div>
-				<button id="developer_settings" title="Developer settings">&#9881;</button>
+				<button id="developer_settings" title="Companion settings">&#9881;</button>
 			</div>
 			<div id="http_status">
 				<h1 id="status">Status</h1>
@@ -49,6 +49,44 @@
 							class="input_button input_button_middle"
 							value="Select"
 						/><input type="button" id="dev_modules_path_clear" class="input_button" value="Clear" />
+					</p>
+					<span id="guitext">Syslog Settings</span>
+					<p class="two-columns">
+						<span>
+							<input type="checkbox" id="enable_syslog" />
+							<label for="enable_syslog" class="checkbox_text">Enable Syslog</label>
+						</span>
+						<span>
+							<input type="checkbox" id="syslog_tcp" />
+							<label for="syslog_tcp" class="checkbox_text">Use TCP</label>
+						</span>
+					</p>
+					<p>
+						<span id="guitext">Syslog Server</span>
+						<input type="text" maxlength="30" id="syslog_host" value="127.0.0.1" /><input
+							type="button"
+							id="syslog_host_button"
+							class="input_button"
+							value="Change"
+						/>
+					</p>
+					<p>
+						<span id="guitext">Syslog Port</span>
+						<input type="text" maxlength="5" id="syslog_port" value="514" /><input
+							type="button"
+							id="syslog_port_button"
+							class="input_button"
+							value="Change"
+						/>
+					</p>
+					<p>
+						<span id="guitext">Companion Hostname</span>
+						<input type="text" maxlength="30" id="syslog_localhost" value="Companion" /><input
+							type="button"
+							id="syslog_localhost_button"
+							class="input_button"
+							value="Change"
+						/>
 					</p>
 				</div>
 
