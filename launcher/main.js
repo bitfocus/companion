@@ -407,14 +407,25 @@ if (!lock) {
 		})
 
 		ipcMain.on('launcher-close', () => {
-			if (child) {
-				if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+			const choice = dialog.showMessageBoxSync(thisWindow, {
+				type: 'question',
+				buttons: ['Yes', 'No'],
+				defaultId: 1,
+				message: 'Are you sure you want to quit Companion?',
+				detail: 'This will stop all running connections and close the application.',
+			})
 
-				child.shouldRestart = false
-				if (child.child) {
-					child.child.send({
-						messageType: 'exit',
-					})
+			if (choice === 0) {
+				// User clicked "Yes"
+				if (child) {
+					if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
+					child.shouldRestart = false
+					if (child.child) {
+						child.child.send({
+							messageType: 'exit',
+						})
+					}
 				}
 			}
 		})
@@ -604,9 +615,12 @@ if (!lock) {
 	function trayQuit() {
 		electron.dialog
 			.showMessageBox({
+				type: 'question',
 				title: 'Companion',
 				message: 'Are you sure you want to quit Companion?',
-				buttons: ['Quit', 'Cancel'],
+				detail: 'This will stop all running connections and close the application.',
+				buttons: ['Yes', 'No'],
+				defaultId: 1,
 			})
 			.then((v) => {
 				if (v.response === 0) {
