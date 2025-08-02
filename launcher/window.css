@@ -33,10 +33,8 @@ body {
 
 #wrap {
 	width: 100%;
-	text-align: center;
 	display: grid;
-	grid-auto-flow: row;
-	grid-template-rows: auto auto auto 1fr;
+	grid-template-rows: auto auto 1fr;
 	text-align: center;
 }
 
@@ -157,7 +155,7 @@ input[type='text'] {
 	padding-top: 3px;
 	padding-bottom: 3px;
 	border: 1px solid white;
-	border-right-width: 1px;
+	border-right-width: 0px;
 }
 input[type='text']::placeholder {
 	color: #ddd;
@@ -262,12 +260,40 @@ input[type='checkbox'] {
 
 #developer_settings_panel {
 	display: none;
+	margin: 15px 0;
+}
+
+.dev-path-section {
+	text-align: center;
+}
+
+.dev-path-input-group {
+	display: inline-block;
+	font-size: 0; /* Remove whitespace between inline elements */
+}
+
+.dev-path-input-group input {
+	font-size: 14px; /* Reset font size for the inputs */
+}
+
+#dev_modules_path {
+	width: 200px;
+	border-radius: 3px 0 0 3px;
+	border-right-width: 1px;
 }
 
 .two-columns {
 	display: grid;
 	grid-auto-flow: column;
 	grid-auto-columns: 1fr;
-
 	padding: 0 20px;
+}
+
+#bottombuttons {
+	text-align: center;
+	margin-top: 10px;
+}
+
+#bottombuttons .dobutton {
+	margin: 0 5px;
 }
