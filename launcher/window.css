@@ -34,8 +34,42 @@ body {
 #wrap {
 	width: 100%;
 	display: grid;
-	grid-template-rows: auto auto 1fr;
+	grid-template-rows: auto auto auto 1fr;
 	text-align: center;
+}
+
+#window-controls {
+	position: absolute;
+	top: 0;
+	right: 0;
+	display: flex;
+	z-index: 1000;
+	-webkit-app-region: no-drag;
+}
+
+.window-control-btn {
+	width: 50px;
+	height: 35px;
+	border: none;
+	background: transparent;
+	color: white;
+	font-size: 18px;
+	font-weight: bold;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-app-region: no-drag;
+	transition: background-color 0.2s ease;
+	margin-left: -1px;
+}
+
+.window-control-btn:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+#close-btn:hover {
+	background-color: #e81123;
 }
 
 #topwrap {
@@ -72,19 +106,6 @@ body {
 #launch {
 	background-color: rgba(255, 255, 255, 1);
 	margin-right: 5px;
-	border: 1px solid white;
-}
-
-#hide {
-	background-color: rgba(255, 255, 255, 0.1);
-	color: white;
-	margin-right: 5px;
-	border: 1px solid white;
-}
-
-#close {
-	background-color: rgba(255, 255, 255, 0.1);
-	color: white;
 	border: 1px solid white;
 }
 
@@ -244,18 +265,17 @@ input[type='checkbox'] {
 }
 
 #developer_settings {
-	float: right;
-	position: absolute;
-	font-size: 25px;
-	right: 5px;
-	top: 5px;
-
+	font-size: 16px;
 	border: none;
 	cursor: pointer;
-	/* text-decoration: none; */
 	color: white;
-	background: none;
+	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid white;
+	border-radius: 4px;
+	padding: 10px;
+	margin: 0 5px;
 	outline: none !important;
+	-webkit-app-region: no-drag !important;
 }
 
 #developer_settings_panel {
