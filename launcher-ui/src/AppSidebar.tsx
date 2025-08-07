@@ -11,8 +11,11 @@ import {
 	SidebarMenuItem,
 } from '~/components/ui/sidebar.js'
 import { SectionDefinitions } from './Sections'
+import { useSectionVisibility } from './contexts/SectionVisibilityContext'
 
 export function AppSidebar(): JSX.Element {
+	const { activeSectionId } = useSectionVisibility()
+
 	return (
 		<Sidebar>
 			<SidebarHeader>
@@ -28,7 +31,7 @@ export function AppSidebar(): JSX.Element {
 						<SidebarMenu>
 							{SectionDefinitions.map((item) => (
 								<SidebarMenuItem key={item.id}>
-									<SidebarMenuButton asChild /*isActive={item.isActive}*/>
+									<SidebarMenuButton asChild isActive={activeSectionId === item.id}>
 										<a href={`#${item.id}`}>{item.title}</a>
 									</SidebarMenuButton>
 								</SidebarMenuItem>

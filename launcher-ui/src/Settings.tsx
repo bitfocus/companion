@@ -1,9 +1,35 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar.js'
 import { AppSidebar } from './AppSidebar'
 import { SectionDefinitions } from './Sections'
+import { SectionVisibilityProvider, useSectionVisibility } from './contexts/SectionVisibilityContext'
+import { useSectionVisibilityObserver } from './hooks/useSectionVisibilityObserver'
 
-export function Settings(): JSX.Element {
+function SectionWithObserver({
+	section,
+}: {
+	section: { id: string; title: string; component: React.ComponentType }
+}): JSX.Element {
+	const SectionComponent = section.component
+	const sectionRef = useSectionVisibilityObserver({ sectionId: section.id })
+
+	return (
+		<div id={section.id} ref={sectionRef}>
+			<h2 className="text-xl font-semibold">{section.title}</h2>
+			<SectionComponent />
+		</div>
+	)
+}
+
+function SettingsContent(): JSX.Element {
+	const { setSectionOrder } = useSectionVisibility()
+
+	useEffect(() => {
+		// Set the section order when component mounts
+		const order = SectionDefinitions.map((section) => section.id)
+		setSectionOrder(order)
+	}, [setSectionOrder])
+
 	return (
 		<SidebarProvider>
 			<AppSidebar />
@@ -20,20 +46,22 @@ export function Settings(): JSX.Element {
 						<div className="bg-muted/50 aspect-video rounded-xl" />
 					</div>
 					<div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" /> */}
-					{SectionDefinitions.map((section, i, arr) => {
-						const SectionComponent = section.component
-						return (
-							<>
-								<div key={section.id} id={section.id}>
-									<h2 className="text-xl font-semibold">{section.title}</h2>
-									<SectionComponent />
-								</div>
-								{arr.length > i + 1 && <hr />}
-							</>
-						)
-					})}
+					{SectionDefinitions.map((section, i, arr) => (
+						<React.Fragment key={section.id}>
+							<SectionWithObserver section={section} />
+							{arr.length > i + 1 && <hr />}
+						</React.Fragment>
+					))}
 				</div>
 			</SidebarInset>
 		</SidebarProvider>
+	)
+}
+
+export function Settings(): JSX.Element {
+	return (
+		<SectionVisibilityProvider>
+			<SettingsContent />
+		</SectionVisibilityProvider>
 	)
 }
