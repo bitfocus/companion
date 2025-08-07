@@ -13,7 +13,7 @@ import debounceFn from 'debounce-fn'
 import fileStreamRotator from 'file-stream-rotator'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import { os } from 'zx'
+import os from 'os'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
