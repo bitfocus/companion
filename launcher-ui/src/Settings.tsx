@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react'
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar.js'
+import { LoadingSpinner } from '~/components/ui/loading-spinner'
 import { AppSidebar } from './AppSidebar'
 import { SectionDefinitions } from './Sections'
 import { SectionVisibilityProvider, useSectionVisibility } from './contexts/SectionVisibilityContext'
+import { ConfigProvider } from './contexts/ConfigContext'
+import { useConfig } from './hooks/useConfig'
 import { useSectionVisibilityObserver } from './hooks/useSectionVisibilityObserver'
 
 function SectionWithObserver({
@@ -23,12 +26,45 @@ function SectionWithObserver({
 
 function SettingsContent(): JSX.Element {
 	const { setSectionOrder } = useSectionVisibility()
+	const { state } = useConfig()
 
 	useEffect(() => {
 		// Set the section order when component mounts
 		const order = SectionDefinitions.map((section) => section.id)
 		setSectionOrder(order)
 	}, [setSectionOrder])
+
+	if (state.isLoading) {
+		return (
+			<SidebarProvider>
+				<AppSidebar />
+				<SidebarInset>
+					<div className="flex flex-1 items-center justify-center">
+						<div className="text-center">
+							<LoadingSpinner size="lg" className="mb-4" />
+							<p className="text-muted-foreground">Loading configuration...</p>
+						</div>
+					</div>
+				</SidebarInset>
+			</SidebarProvider>
+		)
+	}
+
+	if (state.error) {
+		return (
+			<SidebarProvider>
+				<AppSidebar />
+				<SidebarInset>
+					<div className="flex flex-1 items-center justify-center">
+						<div className="text-center">
+							<p className="text-red-600 mb-2">Error loading configuration</p>
+							<p className="text-muted-foreground text-sm">{state.error}</p>
+						</div>
+					</div>
+				</SidebarInset>
+			</SidebarProvider>
+		)
+	}
 
 	return (
 		<SidebarProvider>
@@ -60,8 +96,10 @@ function SettingsContent(): JSX.Element {
 
 export function Settings(): JSX.Element {
 	return (
-		<SectionVisibilityProvider>
-			<SettingsContent />
-		</SectionVisibilityProvider>
+		<ConfigProvider>
+			<SectionVisibilityProvider>
+				<SettingsContent />
+			</SectionVisibilityProvider>
+		</ConfigProvider>
 	)
 }

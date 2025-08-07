@@ -1,7 +1,12 @@
-import electron, { ipcMain, app, BrowserWindow, dialog } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
+import { fileURLToPath } from 'url'
 
 /** @type {BrowserWindow | null} */
 let settingsWindow = null
+
+export function getSettingsWindow() {
+	return settingsWindow
+}
 
 export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 	console.log('show settings')
@@ -24,10 +29,11 @@ export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 		autoHideMenuBar: true,
 		minimizable: false,
 
-		// webPreferences: {
-		// 	nodeIntegration: true,
-		// 	contextIsolation: false,
-		// },
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: true,
+			preload: fileURLToPath(new URL('./settings-preload.mjs', import.meta.url)),
+		},
 	})
 
 	if (app.isPackaged) {
