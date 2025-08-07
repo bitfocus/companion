@@ -13,7 +13,7 @@ import debounceFn from 'debounce-fn'
 import fileStreamRotator from 'file-stream-rotator'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import { showSettings } from './settings.js'
+import { showSettings, getSettingsWindow } from './settings.js'
 import os from 'os'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
@@ -202,17 +202,21 @@ if (!lock) {
 	}
 
 	function sendAppInfo() {
+		const loginSettings = app.getLoginItemSettings()
+		const configData = {
+			...uiConfig.store,
+			run_at_login: loginSettings.openAtLogin,
+		}
+
+		// Send to main launcher window
 		if (window) {
-			const loginSettings = app.getLoginItemSettings()
-			window.webContents.send(
-				'info',
-				{
-					...uiConfig.store,
-					run_at_login: loginSettings.openAtLogin,
-				},
-				appInfo,
-				process.platform
-			)
+			window.webContents.send('info', configData, appInfo, process.platform)
+		}
+
+		// Send to settings window
+		const settingsWindow = getSettingsWindow()
+		if (settingsWindow) {
+			settingsWindow.webContents.send('info', configData, appInfo, process.platform)
 		}
 	}
 
@@ -521,6 +525,7 @@ if (!lock) {
 					}
 				}
 
+				// Send to main launcher window only
 				if (window) {
 					window.webContents.send('network-interfaces:get', interfaces)
 				}
