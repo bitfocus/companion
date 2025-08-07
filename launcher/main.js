@@ -331,6 +331,8 @@ if (!lock) {
 			// maxHeight: 380,
 			frame: false,
 			titleBarStyle: 'hidden',
+			minimizable: false,
+
 			...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
 			resizable: false,
 			icon: fileURLToPath(new URL('./assets/icon.png', import.meta.url)),
@@ -526,15 +528,18 @@ if (!lock) {
 			}
 		})
 
-		window.on('minimize', () => {
+		window.on('minimize', (e) => {
+			e.preventDefault()
 			// Minimise to tray
 			window?.hide()
 		})
 
-		window.on('close', (e) => {
-			e.preventDefault()
-			promptToQuit()
-		})
+		if (process.platform !== 'darwin') {
+			window.on('close', (e) => {
+				e.preventDefault()
+				window?.hide()
+			})
+		}
 	}
 
 	function createTray() {
@@ -953,9 +958,11 @@ if (!lock) {
 			app.quit()
 		})
 
-	app.on('window-all-closed', () => {
-		app.quit()
-	})
+	if (process.platform === 'darwin') {
+		app.on('window-all-closed', (e) => {
+			e.preventDefault()
+		})
+	}
 
 	app.on('activate', () => {
 		if (window === null) {
