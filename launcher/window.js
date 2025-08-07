@@ -1,11 +1,4 @@
 document.getElementById('launch').addEventListener('click', () => api.send('launcher-open-gui'))
-document.getElementById('developer_settings').addEventListener('click', () => api.send('toggle-developer-settings'))
-document
-	.getElementById('dev_modules_path_pick')
-	.addEventListener('click', () => api.send('pick-developer-modules-path'))
-document
-	.getElementById('dev_modules_path_clear')
-	.addEventListener('click', () => api.send('clear-developer-modules-path'))
 
 api.receive('info', (config, info, platform) => {
 	if (platform !== 'win32' && platform !== 'darwin') {
@@ -19,9 +12,6 @@ api.receive('info', (config, info, platform) => {
 	document.getElementById('start_minimized').checked = config.start_minimised
 	if (document.getElementById('run_at_login')) document.getElementById('run_at_login').checked = config.run_at_login
 	document.getElementById('http_port').value = config.http_port
-
-	document.getElementById('developer_settings_panel').style.display = config.enable_developer ? 'block' : 'none'
-	document.getElementById('dev_modules_path').value = config.dev_modules_path || ''
 })
 api.send('info')
 

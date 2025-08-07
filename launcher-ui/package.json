@@ -1,0 +1,35 @@
+{
+  "name": "@companion-app/launcher-ui",
+  "version": "4.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@companion-app/shared": "*",
+    "@coreui/coreui": "^5.4.1",
+    "@coreui/react": "patch:@coreui/react@patch%3A@coreui/react@npm%253A5.4.0%23~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch%3A%3Aversion=5.4.0&hash=56767e#~/.yarn/patches/@coreui-react-patch-c088eb466e.patch",
+    "@fontsource/roboto": "^5.2.6",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "classnames": "^2.5.1",
+    "lodash-es": "^4.17.21",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-error-boundary": "^6.0.0",
+    "sass-embedded": "^1.89.2",
+    "terser": "^5.43.1",
+    "typescript": "~5.8.3",
+    "usehooks-ts": "^3.1.1",
+    "vite": "^7.0.5",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "scripts": {
+    "start": "vite --port 5177",
+    "dev": "run start",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build",
+    "serve": "vite preview"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

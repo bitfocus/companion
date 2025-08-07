@@ -1259,6 +1259,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@companion-app/launcher-ui@workspace:launcher-ui":
+  version: 0.0.0-use.local
+  resolution: "@companion-app/launcher-ui@workspace:launcher-ui"
+  dependencies:
+    "@companion-app/shared": "npm:*"
+    "@coreui/coreui": "npm:^5.4.1"
+    "@coreui/react": "patch:@coreui/react@patch%3A@coreui/react@npm%253A5.4.0%23~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch%3A%3Aversion=5.4.0&hash=56767e#~/.yarn/patches/@coreui-react-patch-c088eb466e.patch"
+    "@fontsource/roboto": "npm:^5.2.6"
+    "@types/react": "npm:^18.3.23"
+    "@types/react-dom": "npm:^18.3.7"
+    "@vitejs/plugin-react": "npm:^4.7.0"
+    classnames: "npm:^2.5.1"
+    jsdom: "npm:^26.1.0"
+    lodash-es: "npm:^4.17.21"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    react-error-boundary: "npm:^6.0.0"
+    sass-embedded: "npm:^1.89.2"
+    terser: "npm:^5.43.1"
+    typescript: "npm:~5.8.3"
+    usehooks-ts: "npm:^3.1.1"
+    vite: "npm:^7.0.5"
+    vite-tsconfig-paths: "npm:^5.1.4"
+  languageName: unknown
+  linkType: soft
+
 "@companion-app/launcher@workspace:launcher":
   version: 0.0.0-use.local
   resolution: "@companion-app/launcher@workspace:launcher"

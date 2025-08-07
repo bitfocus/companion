@@ -13,6 +13,7 @@ import debounceFn from 'debounce-fn'
 import fileStreamRotator from 'file-stream-rotator'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { showSettings } from './settings.js'
 import os from 'os'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
@@ -462,42 +463,42 @@ if (!lock) {
 			})
 		})
 
-		ipcMain.on('toggle-developer-settings', (_e, _msg) => {
-			console.log('toggle developer settings')
-			uiConfig.set('enable_developer', !uiConfig.get('enable_developer'))
+		// ipcMain.on('toggle-developer-settings', (_e, _msg) => {
+		// 	console.log('toggle developer settings')
+		// 	uiConfig.set('enable_developer', !uiConfig.get('enable_developer'))
 
-			// This isn't a usual restart, so pretend it didn't happen
-			restartCounter = 0
+		// 	// This isn't a usual restart, so pretend it didn't happen
+		// 	restartCounter = 0
 
-			sendAppInfo()
-			triggerRestart()
-			restartWatcher()
-		})
+		// 	sendAppInfo()
+		// 	triggerRestart()
+		// 	restartWatcher()
+		// })
 
-		ipcMain.on('pick-developer-modules-path', () => {
-			console.log('pick dev modules path')
-			electron.dialog
-				.showOpenDialog(thisWindow, {
-					properties: ['openDirectory'],
-				})
-				.then((r) => {
-					if (!r.canceled && r.filePaths.length > 0) {
-						uiConfig.set('dev_modules_path', r.filePaths[0])
+		// ipcMain.on('pick-developer-modules-path', () => {
+		// 	console.log('pick dev modules path')
+		// 	electron.dialog
+		// 		.showOpenDialog(thisWindow, {
+		// 			properties: ['openDirectory'],
+		// 		})
+		// 		.then((r) => {
+		// 			if (!r.canceled && r.filePaths.length > 0) {
+		// 				uiConfig.set('dev_modules_path', r.filePaths[0])
 
-						sendAppInfo()
-						triggerRestart()
-						restartWatcher()
-					}
-				})
-		})
-		ipcMain.on('clear-developer-modules-path', () => {
-			console.log('clear dev modules path')
-			uiConfig.set('dev_modules_path', '')
+		// 				sendAppInfo()
+		// 				triggerRestart()
+		// 				restartWatcher()
+		// 			}
+		// 		})
+		// })
+		// ipcMain.on('clear-developer-modules-path', () => {
+		// 	console.log('clear dev modules path')
+		// 	uiConfig.set('dev_modules_path', '')
 
-			sendAppInfo()
-			triggerRestart()
-			restartWatcher()
-		})
+		// 	sendAppInfo()
+		// 	triggerRestart()
+		// 	restartWatcher()
+		// })
 
 		ipcMain.on('network-interfaces:get', () => {
 			systeminformation.networkInterfaces().then((list) => {
@@ -584,6 +585,12 @@ if (!lock) {
 			new electron.MenuItem({
 				label: 'Show config folder',
 				click: showConfigFolder,
+			})
+		)
+		menu.append(
+			new electron.MenuItem({
+				label: 'Advanced Settings',
+				click: () => showSettings(window),
 			})
 		)
 		menu.append(

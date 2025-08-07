@@ -1,0 +1,45 @@
+{
+	"include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+	"exclude": ["node_modules/**"],
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"baseUrl": "./",
+		"paths": {
+			"*": ["./node_modules/*"],
+			"~/*": ["./src/*"],
+			"@docs/*": ["../docs/*"]
+		},
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"jsx": "react",
+		// "allowJs": true,
+		// "checkJs": true,
+		"strictPropertyInitialization": true,
+		"noEmit": true,
+		// "composite": true,
+
+		"target": "ESNext",
+		"noImplicitAny": true,
+		"sourceMap": true,
+		"declaration": false,
+		"importHelpers": false,
+		"listFiles": false,
+		"traceResolution": false,
+		"pretty": true,
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"types": ["node", "react"],
+		"strict": true,
+		"alwaysStrict": false,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"resolveJsonModule": true
+	},
+	"references": [{ "path": "../companion" }, { "path": "../shared-lib" }]
+}

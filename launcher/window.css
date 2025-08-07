@@ -230,43 +230,6 @@ input[type='checkbox'] {
 	font-size: 14px; /* Reset font size for the inputs */
 }
 
-#developer_settings {
-	font-size: 16px;
-	border: none;
-	cursor: pointer;
-	color: white;
-	background: rgba(255, 255, 255, 0.1);
-	border: 1px solid white;
-	border-radius: 4px;
-	padding: 10px;
-	margin: 0 5px;
-	outline: none !important;
-	-webkit-app-region: no-drag !important;
-}
-
-#developer_settings_panel {
-	display: none;
-	margin: 15px 0;
-}
-
-.dev-path-section {
-	text-align: center;
-}
-
-.dev-path-input-group {
-	display: inline-block;
-	font-size: 0; /* Remove whitespace between inline elements */
-}
-
-.dev-path-input-group input {
-	font-size: 14px; /* Reset font size for the inputs */
-}
-
-#dev_modules_path {
-	width: 200px;
-	border-radius: 3px 0 0 3px;
-	border-right-width: 1px;
-}
 
 .two-columns {
 	display: grid;
