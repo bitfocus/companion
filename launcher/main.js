@@ -332,8 +332,16 @@ if (!lock) {
 			frame: false,
 			titleBarStyle: 'hidden',
 			minimizable: false,
+			maximizable: false,
 
-			...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
+			...(process.platform !== 'darwin'
+				? {
+						titleBarOverlay: {
+							color: '#232323',
+							symbolColor: '#cccccc',
+						},
+					}
+				: {}),
 			resizable: false,
 			icon: fileURLToPath(new URL('./assets/icon.png', import.meta.url)),
 			webPreferences: {
