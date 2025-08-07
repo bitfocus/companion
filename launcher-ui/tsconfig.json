@@ -8,7 +8,6 @@
 		"paths": {
 			"*": ["./node_modules/*"],
 			"~/*": ["./src/*"],
-			"@docs/*": ["../docs/*"]
 		},
 		"module": "esnext",
 		"moduleResolution": "bundler",

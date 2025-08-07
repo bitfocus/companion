@@ -5,18 +5,26 @@
   "type": "module",
   "dependencies": {
     "@companion-app/shared": "*",
-    "@coreui/coreui": "^5.4.1",
-    "@coreui/react": "patch:@coreui/react@patch%3A@coreui/react@npm%253A5.4.0%23~/.yarn/patches/@coreui-react-npm-5.4.0-6fcb3b510a.patch%3A%3Aversion=5.4.0&hash=56767e#~/.yarn/patches/@coreui-react-patch-c088eb466e.patch",
     "@fontsource/roboto": "^5.2.6",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-dropdown-menu": "^2.1.15",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "@tailwindcss/vite": "^4.1.11",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
-    "classnames": "^2.5.1",
-    "lodash-es": "^4.17.21",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.537.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-error-boundary": "^6.0.0",
     "sass-embedded": "^1.89.2",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.11",
     "terser": "^5.43.1",
     "typescript": "~5.8.3",
     "usehooks-ts": "^3.1.1",
@@ -30,6 +38,7 @@
     "serve": "vite preview"
   },
   "devDependencies": {
-    "jsdom": "^26.1.0"
+    "jsdom": "^26.1.0",
+    "tw-animate-css": "^1.3.6"
   }
 }

@@ -22,7 +22,7 @@ export default [
 
 	{
 		...neslint.configs['flat/recommended-script'],
-		ignores: [...(neslint.configs['flat/recommended-script'].ignores ?? []), 'webui/**/*'],
+		ignores: [...(neslint.configs['flat/recommended-script'].ignores ?? []), 'webui/**/*', 'launcher-ui/**/*'],
 	},
 	{
 		// extends: commonExtends,
@@ -155,7 +155,16 @@ export default [
 
 	// The above is mostly copied from https://github.com/bitfocus/companion-module-tools/blob/main/eslint/config.mjs with very little modifications. The below is extra rules that have been added
 	{
-		files: ['webui/**/*.tsx', 'webui/**/*.jsx', 'webui/**/*.ts', 'webui/**/*.js'],
+		files: [
+			'webui/**/*.tsx',
+			'webui/**/*.jsx',
+			'webui/**/*.ts',
+			'webui/**/*.js',
+			'launcher-ui/**/*.tsx',
+			'launcher-ui/**/*.jsx',
+			'launcher-ui/**/*.ts',
+			'launcher-ui/**/*.js',
+		],
 		plugins: {
 			'react-hooks': hookseslint,
 			'react-refresh': reactRefreshEslint,

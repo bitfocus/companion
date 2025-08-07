@@ -1,7 +1,7 @@
 // import './Resources/Sentry.js'
 
 import '@fontsource/roboto'
-import './Settings.scss'
+import './Settings.css'
 
 if (process.env.NODE_ENV === 'development') {
 	const defineProperties = Object.defineProperties
