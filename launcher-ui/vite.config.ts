@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import reactPlugin from '@vitejs/plugin-react'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
 
 export default defineConfig({
 	publicDir: 'public',
@@ -13,6 +15,7 @@ export default defineConfig({
 	plugins: [
 		tsconfigPaths(),
 		reactPlugin(),
+		tailwindcss(),
 		// process.env.VITE_SENTRY_DSN
 		// 	? sentryVitePlugin({
 		// 			org: 'bitfocus',
@@ -22,11 +25,9 @@ export default defineConfig({
 		// 		})
 		// 	: undefined,
 	],
-	css: {
-		preprocessorOptions: {
-			scss: {
-				quietDeps: true,
-			},
+	resolve: {
+		alias: {
+			'~': path.resolve(__dirname, './src'),
 		},
 	},
 })
