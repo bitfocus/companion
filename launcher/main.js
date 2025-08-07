@@ -328,6 +328,8 @@ if (!lock) {
 			minWidth: 440,
 			// maxHeight: 380,
 			frame: false,
+			titleBarStyle: 'hidden',
+			...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
 			resizable: false,
 			icon: fileURLToPath(new URL('./assets/icon.png', import.meta.url)),
 			webPreferences: {
@@ -376,34 +378,6 @@ if (!lock) {
 
 		ipcMain.on('info', () => {
 			sendAppInfo()
-		})
-
-		ipcMain.on('launcher-close', () => {
-			const choice = dialog.showMessageBoxSync(thisWindow, {
-				type: 'question',
-				buttons: ['Yes', 'No'],
-				defaultId: 1,
-				message: 'Are you sure you want to quit Companion?',
-				detail: 'This will stop all running connections and close the application.',
-			})
-
-			if (choice === 0) {
-				// User clicked "Yes"
-				if (child) {
-					if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
-
-					child.shouldRestart = false
-					if (child.child) {
-						child.child.send({
-							messageType: 'exit',
-						})
-					}
-				}
-			}
-		})
-
-		ipcMain.on('launcher-minimize', () => {
-			thisWindow.hide()
 		})
 
 		ipcMain.on('launcher-open-gui', () => {
@@ -522,10 +496,14 @@ if (!lock) {
 			}
 		})
 
+		window.on('minimize', () => {
+			// Minimise to tray
+			window?.hide()
+		})
+
 		window.on('close', (e) => {
 			e.preventDefault()
-
-			performQuit()
+			promptToQuit()
 		})
 	}
 
@@ -568,7 +546,7 @@ if (!lock) {
 		menu.append(
 			new electron.MenuItem({
 				label: 'Quit',
-				click: trayQuit,
+				click: promptToQuit,
 			})
 		)
 		tray.setContextMenu(menu)
@@ -582,7 +560,7 @@ if (!lock) {
 		}
 	}
 
-	function trayQuit() {
+	function promptToQuit() {
 		electron.dialog
 			.showMessageBox({
 				type: 'question',
