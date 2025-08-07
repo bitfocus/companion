@@ -38,40 +38,6 @@ body {
 	text-align: center;
 }
 
-#window-controls {
-	position: absolute;
-	top: 0;
-	right: 0;
-	display: flex;
-	z-index: 1000;
-	-webkit-app-region: no-drag;
-}
-
-.window-control-btn {
-	width: 50px;
-	height: 35px;
-	border: none;
-	background: transparent;
-	color: white;
-	font-size: 18px;
-	font-weight: bold;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	-webkit-app-region: no-drag;
-	transition: background-color 0.2s ease;
-	margin-left: -1px;
-}
-
-.window-control-btn:hover {
-	background-color: rgba(255, 255, 255, 0.1);
-}
-
-#close-btn:hover {
-	background-color: #e81123;
-}
-
 #topwrap {
 	background-color: rgba(35, 35, 35, 1);
 	padding: 30px 20px;

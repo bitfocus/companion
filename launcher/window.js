@@ -1,6 +1,4 @@
 document.getElementById('launch').addEventListener('click', () => api.send('launcher-open-gui'))
-document.getElementById('minimize-btn').addEventListener('click', () => api.send('launcher-minimize'))
-document.getElementById('close-btn').addEventListener('click', () => api.send('launcher-close'))
 document.getElementById('developer_settings').addEventListener('click', () => api.send('toggle-developer-settings'))
 document
 	.getElementById('dev_modules_path_pick')
