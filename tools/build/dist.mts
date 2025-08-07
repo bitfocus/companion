@@ -53,6 +53,7 @@ await $`yarn workspace companion build`
 
 // Build webui
 await $`yarn workspace @companion-app/webui build`
+await $`yarn workspace @companion-app/launcher-ui build`
 
 // generate the 'static' zip files to serve
 await zipDirectory('./webui/build', 'dist/webui.zip')
