@@ -13,6 +13,7 @@ import debounceFn from 'debounce-fn'
 import fileStreamRotator from 'file-stream-rotator'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { os } from 'zx'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
@@ -319,6 +320,7 @@ if (!lock) {
 	}
 	restartWatcher()
 
+	let hasShownArchWarning = false
 	function createWindow() {
 		const thisWindow = (window = new BrowserWindow({
 			show: false,
@@ -336,7 +338,35 @@ if (!lock) {
 				preload: fileURLToPath(new URL('./window-preload.mjs', import.meta.url)),
 			},
 		}))
-		console.log('preload', fileURLToPath(new URL('./window-preload.js', import.meta.url)))
+
+		// Show a warning to users running x64 on Apple Silicon
+		if (
+			!hasShownArchWarning &&
+			process.arch === 'x64' &&
+			process.platform === 'darwin' &&
+			os.cpus().find((cpu) => cpu.model.startsWith('Apple M'))
+		) {
+			hasShownArchWarning = true
+			const thisHasShownArchWarning = path.join(configDir, thisDbFolderName, 'hasShownArchWarning')
+			if (!fs.existsSync(thisHasShownArchWarning)) {
+				electron.dialog
+					.showMessageBox({
+						type: 'warning',
+						title: 'Apple Silicon Warning',
+						message:
+							'You are running the Intel build of Companion on an Apple Silicon Mac.\n' +
+							'This is not recommended, please download the Apple Silicon version from the Companion website',
+						buttons: ['OK'],
+					})
+					.catch(() => null)
+
+				try {
+					fs.writeFileSync(thisHasShownArchWarning, '1')
+				} catch (e) {
+					console.warn(`Error writing arch warning file: ${e}`)
+				}
+			}
+		}
 
 		// window.webContents.openDevTools({
 		// 	mode:'detach'
