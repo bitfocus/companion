@@ -13,4 +13,19 @@ export const SectionDefinitions: SectionDefinition[] = [
 		id: 'developer',
 		component: DeveloperSection,
 	},
+	{
+		title: 'Developer',
+		id: 'developer2',
+		component: DeveloperSection,
+	},
+	{
+		title: 'Developer',
+		id: 'developer3',
+		component: DeveloperSection,
+	},
+	{
+		title: 'Developer',
+		id: 'developer4',
+		component: DeveloperSection,
+	},
 ]
