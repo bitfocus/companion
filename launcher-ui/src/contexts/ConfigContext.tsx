@@ -1,4 +1,4 @@
-import React, { createContext, useReducer, useEffect, ReactNode } from 'react'
+import React, { createContext, useReducer, useEffect, useState, ReactNode } from 'react'
 import { ConfigData } from '~/types/config'
 
 interface ConfigState {
@@ -61,6 +61,7 @@ export interface ConfigContextType {
 	state: ConfigState
 	updateConfig: (config: Partial<ConfigData['config']>) => void
 	refetchConfig: () => void
+	hasUnsavedChanges: boolean
 }
 
 export const ConfigContext = createContext<ConfigContextType | undefined>(undefined)
@@ -81,10 +82,20 @@ interface ConfigProviderProps {
 
 export function ConfigProvider({ children }: ConfigProviderProps): JSX.Element {
 	const [state, dispatch] = useReducer(configReducer, initialState)
+	const [originalConfig, setOriginalConfig] = useState<ConfigData['config'] | null>(null)
 
 	const updateConfig = (config: Partial<ConfigData['config']>) => {
 		dispatch({ type: 'UPDATE_CONFIG', payload: config })
+
+		// Save partial config immediately after updating
+		if (window.api) {
+			window.api.send('save-config', config)
+		}
 	}
+
+	// Check if there are unsaved changes
+	const hasUnsavedChanges =
+		originalConfig && state.data ? JSON.stringify(originalConfig) !== JSON.stringify(state.data.config) : false
 
 	const fetchConfig = () => {
 		dispatch({ type: 'LOADING' })
@@ -103,48 +114,35 @@ export function ConfigProvider({ children }: ConfigProviderProps): JSX.Element {
 	}
 
 	useEffect(() => {
-		const setupListeners = () => {
-			// Set up IPC listeners
-			const handleConfigResponse = (config: ConfigData['config'], appInfo: ConfigData['appInfo'], platform: string) => {
-				const configData: ConfigData = {
-					config,
-					appInfo,
-					platform,
-				}
-				dispatch({ type: 'SUCCESS', payload: configData })
+		// Set up IPC listeners
+		const handleConfigResponse = (config: ConfigData['config'], appInfo: ConfigData['appInfo'], platform: string) => {
+			const configData: ConfigData = {
+				config,
+				appInfo,
+				platform,
 			}
-
-			const handleError = (error: string) => {
-				dispatch({ type: 'ERROR', payload: error })
-			}
-
-			// Listen for responses from the main process
-			window.api.receive('info', handleConfigResponse)
-			window.api.receive('config-error', handleError)
-
-			// Initial fetch
-			fetchConfig()
+			dispatch({ type: 'SUCCESS', payload: configData })
+			// Update original config when data is loaded
+			setOriginalConfig(config)
 		}
 
-		if (!window.api) {
-			// Wait a bit for the preload to load, then try again
-			setTimeout(() => {
-				if (!window.api) {
-					dispatch({ type: 'ERROR', payload: 'IPC API not available' })
-				} else {
-					setupListeners()
-				}
-			}, 100)
-			return
+		const handleError = (error: string) => {
+			dispatch({ type: 'ERROR', payload: error })
 		}
 
-		setupListeners()
-	}, [])
+		// Listen for responses from the main process
+		window.api.receive('info', handleConfigResponse)
+		window.api.receive('config-error', handleError)
+
+		// Initial fetch
+		fetchConfig()
+	}, [dispatch])
 
 	const contextValue: ConfigContextType = {
 		state,
 		updateConfig,
 		refetchConfig,
+		hasUnsavedChanges,
 	}
 
 	return <ConfigContext.Provider value={contextValue}>{children}</ConfigContext.Provider>

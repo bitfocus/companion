@@ -10,7 +10,6 @@ export function getSettingsWindow() {
 
 export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 	console.log('show settings')
-	// TODO
 
 	if (settingsWindow) {
 		settingsWindow.show()

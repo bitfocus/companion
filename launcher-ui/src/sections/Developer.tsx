@@ -1,34 +1,37 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useConfig } from '~/hooks/useConfig'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
-import { LoadingSpinner } from '~/components/ui/loading-spinner'
 
 export function DeveloperSection(): JSX.Element {
-	const { state } = useConfig()
+	const { state, updateConfig } = useConfig()
 
-	if (state.isLoading) {
-		return (
-			<div className="flex items-center justify-center py-8">
-				<LoadingSpinner size="md" />
-			</div>
-		)
+	// Assume data is available since loading/error states are handled elsewhere
+	const { config } = state.data!
+
+	// Local state for form inputs
+	const [enableDeveloper, setEnableDeveloper] = useState(config.enable_developer)
+	const [devModulesPath, setDevModulesPath] = useState(config.dev_modules_path || '')
+
+	// Update local state when config changes
+	useEffect(() => {
+		setEnableDeveloper(config.enable_developer)
+		setDevModulesPath(config.dev_modules_path || '')
+	}, [config.enable_developer, config.dev_modules_path])
+
+	// Handle changes and update config
+	const handleEnableDeveloperChange = (checked: boolean) => {
+		setEnableDeveloper(checked)
+		updateConfig({ enable_developer: checked })
 	}
 
-	if (state.error) {
-		return (
-			<div className="text-center py-8">
-				<p className="text-red-600 mb-2">Error loading configuration</p>
-				<p className="text-muted-foreground text-sm">{state.error}</p>
-			</div>
-		)
+	const handleDevModulesPathChange = (value: string) => {
+		setDevModulesPath(value)
 	}
 
-	if (!state.data) {
-		return <div>No configuration data available</div>
+	const handleDevModulesPathBlur = () => {
+		updateConfig({ dev_modules_path: devModulesPath })
 	}
-
-	const { config } = state.data
 
 	return (
 		<div className="space-y-6">
@@ -38,31 +41,31 @@ export function DeveloperSection(): JSX.Element {
 				</p>
 
 				<div className="space-y-4">
-					<div className="flex items-center space-x-2">
-						<input
-							type="checkbox"
-							id="enable-developer"
-							checked={config.enable_developer}
-							readOnly
-							className="rounded"
-						/>
+					<div className="grid grid-cols-4 gap-4 items-center">
 						<Label htmlFor="enable-developer">Enable Developer Mode</Label>
-					</div>
+						<div className="flex items-center col-span-3 ">
+							<input
+								type="checkbox"
+								id="enable-developer"
+								checked={enableDeveloper}
+								onChange={(e) => handleEnableDeveloperChange(e.target.checked)}
+								className="rounded"
+							/>
+						</div>
 
-					{config.enable_developer && (
-						<div>
-							<Label htmlFor="dev-modules-path">Developer Modules Path</Label>
+						<Label htmlFor="dev-modules-path">Developer Modules Path</Label>
+						<div className="col-span-3">
 							<Input
 								id="dev-modules-path"
 								type="text"
-								value={config.dev_modules_path || ''}
-								readOnly
-								className="bg-muted"
-								placeholder="No path set"
+								value={devModulesPath}
+								onChange={(e) => handleDevModulesPathChange(e.target.value)}
+								onBlur={handleDevModulesPathBlur}
+								placeholder="Path to local modules directory"
 							/>
 							<p className="text-sm text-muted-foreground mt-1">Path to local modules for development and testing</p>
 						</div>
-					)}
+					</div>
 				</div>
 			</div>
 		</div>
