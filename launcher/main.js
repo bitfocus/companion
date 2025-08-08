@@ -467,34 +467,22 @@ if (!lock) {
 			})
 		})
 
-		// ipcMain.on('toggle-developer-settings', (_e, _msg) => {
-		// 	console.log('toggle developer settings')
-		// 	uiConfig.set('enable_developer', !uiConfig.get('enable_developer'))
+		ipcMain.on('pick-developer-modules-path', () => {
+			console.log('pick dev modules path')
+			electron.dialog
+				.showOpenDialog(getSettingsWindow() || thisWindow, {
+					properties: ['openDirectory'],
+				})
+				.then((r) => {
+					if (!r.canceled && r.filePaths.length > 0) {
+						uiConfig.set('dev_modules_path', r.filePaths[0])
 
-		// 	// This isn't a usual restart, so pretend it didn't happen
-		// 	restartCounter = 0
-
-		// 	sendAppInfo()
-		// 	triggerRestart()
-		// 	restartWatcher()
-		// })
-
-		// ipcMain.on('pick-developer-modules-path', () => {
-		// 	console.log('pick dev modules path')
-		// 	electron.dialog
-		// 		.showOpenDialog(thisWindow, {
-		// 			properties: ['openDirectory'],
-		// 		})
-		// 		.then((r) => {
-		// 			if (!r.canceled && r.filePaths.length > 0) {
-		// 				uiConfig.set('dev_modules_path', r.filePaths[0])
-
-		// 				sendAppInfo()
-		// 				triggerRestart()
-		// 				restartWatcher()
-		// 			}
-		// 		})
-		// })
+						sendAppInfo()
+						triggerRestart()
+						restartWatcher()
+					}
+				})
+		})
 		// ipcMain.on('clear-developer-modules-path', () => {
 		// 	console.log('clear dev modules path')
 		// 	uiConfig.set('dev_modules_path', '')
@@ -503,6 +491,15 @@ if (!lock) {
 		// 	triggerRestart()
 		// 	restartWatcher()
 		// })
+
+		ipcMain.on('open-external-url', (e, url) => {
+			console.log('open external url:', url)
+			if (url && typeof url === 'string') {
+				electron.shell.openExternal(url).catch((err) => {
+					console.error('Failed to open external URL:', err)
+				})
+			}
+		})
 
 		ipcMain.on('network-interfaces:get', () => {
 			systeminformation.networkInterfaces().then((list) => {
