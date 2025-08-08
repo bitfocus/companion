@@ -532,6 +532,44 @@ if (!lock) {
 			})
 		})
 
+		ipcMain.on('save-config', (e, configData) => {
+			console.log('Saving config:', configData)
+
+			let doRestartApp = false
+			let doRestartWatcher = false
+
+			try {
+				// Update the configuration
+				if (configData.enable_developer !== undefined) {
+					uiConfig.set('enable_developer', configData.enable_developer)
+
+					doRestartWatcher = true
+					doRestartApp = true
+				}
+				if (configData.dev_modules_path !== undefined) {
+					uiConfig.set('dev_modules_path', configData.dev_modules_path)
+
+					doRestartWatcher = true
+					if (uiConfig.get('enable_developer')) doRestartApp = true
+				}
+
+				// Refresh config info to all windows
+				sendAppInfo()
+
+				if (doRestartApp) {
+					// This isn't a usual restart, so pretend it didn't happen
+					restartCounter = 0
+
+					triggerRestart()
+				}
+
+				if (doRestartWatcher) restartWatcher()
+			} catch (error) {
+				console.error('Error saving config:', error)
+				sendAppInfo()
+			}
+		})
+
 		window.on('closed', () => {
 			window = null
 		})
