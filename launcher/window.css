@@ -62,7 +62,7 @@ body {
 
 .dobutton {
 	font-size: 1em;
-	padding: 10px 20px;
+	padding: 15px 40px;
 	border: 0px;
 	user-select: none;
 	cursor: pointer;
@@ -73,6 +73,10 @@ body {
 	background-color: rgba(255, 255, 255, 1);
 	margin-right: 5px;
 	border: 1px solid white;
+}
+
+#launch:hover {
+	background-color: #ddd;
 }
 
 input {
