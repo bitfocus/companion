@@ -19,7 +19,7 @@ export function AppSidebar(): JSX.Element {
 	return (
 		<Sidebar>
 			<SidebarHeader>
-				<span className="flex flex-row gap-2">
+				<span className="flex flex-row gap-2 px-3 pt-2 pb-1">
 					<CogIcon className="h-6 w-6" />
 					Advanced Settings
 				</span>
