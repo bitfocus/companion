@@ -1,4 +1,5 @@
-import { app, BrowserWindow, dialog, shell } from 'electron'
+// @ts-check
+import { app, BrowserWindow, dialog, shell, nativeTheme } from 'electron'
 import { fileURLToPath } from 'url'
 
 /** @type {BrowserWindow | null} */
@@ -17,8 +18,10 @@ export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 		return
 	}
 
+	// const dark = nativeTheme.shouldUseDarkColors
+
 	settingsWindow = new BrowserWindow({
-		parent: parentWindow,
+		parent: parentWindow ?? undefined,
 		modal: true,
 		width: 1280,
 		height: 720,
@@ -27,7 +30,8 @@ export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 		show: true,
 		autoHideMenuBar: true,
 		minimizable: false,
-
+		backgroundColor: '#000000',
+		// backgroundColor: dark ? '#000000' : '#ffffff', // Color while loading
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: true,
