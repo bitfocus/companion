@@ -5,7 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('api', {
 	send: (channel, data) => {
 		// whitelist channels
-		const validChannels = ['info', 'save-config', 'pick-developer-modules-path', 'open-external-url']
+		const validChannels = ['info', 'save-config', 'pick-developer-modules-path']
 		if (validChannels.includes(channel)) {
 			ipcRenderer.send(channel, data)
 		}

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from 'electron'
+import { app, BrowserWindow, dialog, shell } from 'electron'
 import { fileURLToPath } from 'url'
 
 /** @type {BrowserWindow | null} */
@@ -46,6 +46,16 @@ export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 			dialog.showErrorBox('Error', 'Failed to load settings window.')
 		})
 	}
+
+	settingsWindow.webContents.setWindowOpenHandler(({ url }) => {
+		// config.fileProtocol is my custom file protocol
+		if (url.startsWith('file://') || url.startsWith('http://localhost')) {
+			return { action: 'allow' }
+		}
+		// open url in a browser and prevent default
+		shell.openExternal(url)
+		return { action: 'deny' }
+	})
 
 	settingsWindow.on('closed', () => {
 		settingsWindow = null

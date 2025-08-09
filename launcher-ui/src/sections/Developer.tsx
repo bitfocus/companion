@@ -42,12 +42,6 @@ export function DeveloperSection(): JSX.Element {
 		}
 	}
 
-	const handleOpenWiki = () => {
-		if (window.api) {
-			window.api.send('open-external-url', 'https://github.com/bitfocus/companion-module-base/wiki')
-		}
-	}
-
 	return (
 		<div className="space-y-6">
 			<div>
@@ -57,12 +51,13 @@ export function DeveloperSection(): JSX.Element {
 					<AlertDescription className="leading-relaxed">
 						<p>
 							New to module development? Check out the{' '}
-							<button
-								onClick={handleOpenWiki}
+							<a
+								href="https://github.com/bitfocus/companion-module-base/wiki"
+								target="_blank"
 								className="text-blue-600 hover:text-blue-800 underline bg-transparent border-none p-0 cursor-pointer"
 							>
 								Module Development Wiki
-							</button>{' '}
+							</a>{' '}
 							for guides and documentation.
 						</p>
 					</AlertDescription>
