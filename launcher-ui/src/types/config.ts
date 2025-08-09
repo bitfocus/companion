@@ -5,6 +5,7 @@ export interface LauncherConfig {
 	run_at_login: boolean
 	enable_developer: boolean
 	dev_modules_path: string
+	log_level: string
 }
 
 export interface AppInfo {

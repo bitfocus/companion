@@ -115,6 +115,7 @@ if (!lock) {
 
 		enable_developer: false,
 		dev_modules_path: '',
+		log_level: 'info',
 	}
 
 	try {
@@ -540,6 +541,10 @@ if (!lock) {
 					doRestartWatcher = true
 					if (uiConfig.get('enable_developer')) doRestartApp = true
 				}
+				if (configData.log_level !== undefined) {
+					uiConfig.set('log_level', configData.log_level)
+					doRestartApp = true
+				}
 
 				// Refresh config info to all windows
 				sendAppInfo()
@@ -886,6 +891,7 @@ if (!lock) {
 						`--config-dir=${configDir}`,
 						`--admin-port=${uiConfig.get('http_port')}`,
 						`--admin-address=${uiConfig.get('bind_ip')}`,
+						`--log-level=${uiConfig.get('log_level')}`,
 						uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
 						disableAdminPassword || process.env.DISABLE_ADMIN_PASSWORD ? `--disable-admin-password` : undefined,
 					].filter((v) => !!v),
