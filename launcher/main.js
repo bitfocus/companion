@@ -492,15 +492,6 @@ if (!lock) {
 		// 	restartWatcher()
 		// })
 
-		ipcMain.on('open-external-url', (e, url) => {
-			console.log('open external url:', url)
-			if (url && typeof url === 'string') {
-				electron.shell.openExternal(url).catch((err) => {
-					console.error('Failed to open external URL:', err)
-				})
-			}
-		})
-
 		ipcMain.on('network-interfaces:get', () => {
 			systeminformation.networkInterfaces().then((list) => {
 				const interfaces = [
