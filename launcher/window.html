@@ -19,16 +19,19 @@
 				<div id="url">URL</div>
 			</div>
 			<div id="actions">
-				<div id="guitext">GUI Interface</div>
-				<select id="ifs"></select>
-				<p>
-					<input type="text" maxlength="5" id="http_port" value="8000" /><input
-						type="button"
-						id="http_port_button"
-						class="input_button"
-						value="Change"
-					/>
-				</p>
+				<div class="interface-port-section">
+					<div class="interface-group">
+						<label for="ifs" class="section-label">GUI Interface</label>
+						<select id="ifs"></select>
+					</div>
+					<div class="port-group">
+						<label for="http_port" class="section-label">Port</label>
+						<div class="port-input-group">
+							<input type="text" maxlength="5" id="http_port" value="8000" />
+							<input type="button" id="http_port_button" class="input_button" value="Change" />
+						</div>
+					</div>
+				</div>
 				<p class="two-columns">
 					<span>
 						<input type="checkbox" id="start_minimized" />
@@ -42,7 +45,7 @@
 
 				<div id="developer_settings_panel">
 					<p>
-						<span id="guitext">Developer modules path</span>
+						<span class="section-label">Developer modules path</span>
 						<input type="text" id="dev_modules_path" readonly placeholder="Select directory" /><input
 							type="button"
 							id="dev_modules_path_pick"

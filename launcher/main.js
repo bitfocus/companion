@@ -374,9 +374,7 @@ if (!lock) {
 
 		app.on('second-instance', (_event, _commandLine, _workingDirectory, _additionalData) => {
 			// Someone tried to run a second instance, we should focus our window.
-			if (window) {
-				showWindow()
-			}
+			showWindow()
 		})
 
 		thisWindow
@@ -430,6 +428,8 @@ if (!lock) {
 		})
 
 		ipcMain.on('launcher-set-bind-ip', (e, msg) => {
+			if (!msg) return
+
 			console.log('changed bind ip:', msg)
 			uiConfig.set('bind_ip', msg)
 
