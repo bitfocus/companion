@@ -1138,6 +1138,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										(deviceInfo.productId === 0x1001 ||
 											deviceInfo.productId === 0x1007 ||
 											deviceInfo.productId === 0x1005 ||
+											deviceInfo.productId === 0x1014 || // Stream Dock HSV 293S
 											deviceInfo.productId === 0x1006) && // Stream Dock N4 or 293V3
 										deviceInfo.interface === 0
 									) {
