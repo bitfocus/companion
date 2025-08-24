@@ -202,6 +202,11 @@ if (process.env.ELECTRON !== '0') {
 					to: '.',
 					filter: ['**/*', '!.yarn'],
 				},
+				{
+					from: '../launcher-ui/build',
+					to: './settings-ui',
+					filter: ['**/*', '!*.map'],
+				},
 			],
 		}
 

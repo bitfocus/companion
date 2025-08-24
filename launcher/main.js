@@ -13,6 +13,7 @@ import debounceFn from 'debounce-fn'
 import fileStreamRotator from 'file-stream-rotator'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { showSettings, getSettingsWindow } from './settings.js'
 import os from 'os'
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
@@ -114,6 +115,7 @@ if (!lock) {
 
 		enable_developer: false,
 		dev_modules_path: '',
+		log_level: 'info',
 	}
 
 	try {
@@ -201,17 +203,21 @@ if (!lock) {
 	}
 
 	function sendAppInfo() {
+		const loginSettings = app.getLoginItemSettings()
+		const configData = {
+			...uiConfig.store,
+			run_at_login: loginSettings.openAtLogin,
+		}
+
+		// Send to main launcher window
 		if (window) {
-			const loginSettings = app.getLoginItemSettings()
-			window.webContents.send(
-				'info',
-				{
-					...uiConfig.store,
-					run_at_login: loginSettings.openAtLogin,
-				},
-				appInfo,
-				process.platform
-			)
+			window.webContents.send('info', configData, appInfo, process.platform)
+		}
+
+		// Send to settings window
+		const settingsWindow = getSettingsWindow()
+		if (settingsWindow) {
+			settingsWindow.webContents.send('info', configData, appInfo, process.platform)
 		}
 	}
 
@@ -330,6 +336,9 @@ if (!lock) {
 			minWidth: 440,
 			// maxHeight: 380,
 			frame: false,
+			minimizable: false,
+			maximizable: false,
+
 			resizable: false,
 			icon: fileURLToPath(new URL('./assets/icon.png', import.meta.url)),
 			webPreferences: {
@@ -467,22 +476,16 @@ if (!lock) {
 			})
 		})
 
-		ipcMain.on('toggle-developer-settings', (_e, _msg) => {
-			console.log('toggle developer settings')
-			uiConfig.set('enable_developer', !uiConfig.get('enable_developer'))
+		ipcMain.on('launcher-advanced-settings', (_e, _msg) => {
+			console.log('open advanced settings')
 
-			// This isn't a usual restart, so pretend it didn't happen
-			restartCounter = 0
-
-			sendAppInfo()
-			triggerRestart()
-			restartWatcher()
+			showSettings(window)
 		})
 
 		ipcMain.on('pick-developer-modules-path', () => {
 			console.log('pick dev modules path')
 			electron.dialog
-				.showOpenDialog(thisWindow, {
+				.showOpenDialog(getSettingsWindow() || thisWindow, {
 					properties: ['openDirectory'],
 				})
 				.then((r) => {
@@ -494,14 +497,6 @@ if (!lock) {
 						restartWatcher()
 					}
 				})
-		})
-		ipcMain.on('clear-developer-modules-path', () => {
-			console.log('clear dev modules path')
-			uiConfig.set('dev_modules_path', '')
-
-			sendAppInfo()
-			triggerRestart()
-			restartWatcher()
 		})
 
 		ipcMain.on('network-interfaces:get', () => {
@@ -525,10 +520,53 @@ if (!lock) {
 					}
 				}
 
+				// Send to main launcher window only
 				if (window) {
 					window.webContents.send('network-interfaces:get', interfaces)
 				}
 			})
+		})
+
+		ipcMain.on('save-config', (e, configData) => {
+			console.log('Saving config:', configData)
+
+			let doRestartApp = false
+			let doRestartWatcher = false
+
+			try {
+				// Update the configuration
+				if (configData.enable_developer !== undefined) {
+					uiConfig.set('enable_developer', configData.enable_developer)
+
+					doRestartWatcher = true
+					doRestartApp = true
+				}
+				if (configData.dev_modules_path !== undefined) {
+					uiConfig.set('dev_modules_path', configData.dev_modules_path)
+
+					doRestartWatcher = true
+					if (uiConfig.get('enable_developer')) doRestartApp = true
+				}
+				if (configData.log_level !== undefined) {
+					uiConfig.set('log_level', configData.log_level)
+					doRestartApp = true
+				}
+
+				// Refresh config info to all windows
+				sendAppInfo()
+
+				if (doRestartApp) {
+					// This isn't a usual restart, so pretend it didn't happen
+					restartCounter = 0
+
+					triggerRestart()
+				}
+
+				if (doRestartWatcher) restartWatcher()
+			} catch (error) {
+				console.error('Error saving config:', error)
+				sendAppInfo()
+			}
 		})
 
 		window.on('closed', () => {
@@ -586,8 +624,14 @@ if (!lock) {
 		)
 		menu.append(
 			new electron.MenuItem({
+				label: 'Advanced Settings',
+				click: () => showSettings(window),
+			})
+		)
+		menu.append(
+			new electron.MenuItem({
 				label: 'Quit',
-				click: trayQuit,
+				click: promptToQuit,
 			})
 		)
 		tray.setContextMenu(menu)
@@ -601,12 +645,15 @@ if (!lock) {
 		}
 	}
 
-	function trayQuit() {
+	function promptToQuit() {
 		electron.dialog
 			.showMessageBox({
+				type: 'question',
 				title: 'Companion',
 				message: 'Are you sure you want to quit Companion?',
-				buttons: ['Quit', 'Cancel'],
+				detail: 'This will stop all running connections and close the application.',
+				buttons: ['Yes', 'No'],
+				defaultId: 1,
 			})
 			.then((v) => {
 				if (v.response === 0) {
@@ -843,6 +890,7 @@ if (!lock) {
 						`--config-dir=${configDir}`,
 						`--admin-port=${uiConfig.get('http_port')}`,
 						`--admin-address=${uiConfig.get('bind_ip')}`,
+						`--log-level=${uiConfig.get('log_level')}`,
 						uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
 						disableAdminPassword || process.env.DISABLE_ADMIN_PASSWORD ? `--disable-admin-password` : undefined,
 					].filter((v) => !!v),
