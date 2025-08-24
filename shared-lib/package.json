@@ -24,8 +24,8 @@
     "jsonpath-plus": "^10.3.0",
     "ps-tree": "^1.2.0",
     "semver": "^7.7.2",
-    "unicode-segmenter": "^0.13.1",
-    "zod": "^4.0.5"
+    "unicode-segmenter": "^0.14.0",
+    "zod": "^4.1.1"
   },
   "scripts": {
     "build": "run build:ts",
