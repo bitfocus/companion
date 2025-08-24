@@ -1488,7 +1488,12 @@ class StreamDock extends EventEmitter {
 
 	private info: Device
 	private device: HIDAsync
-	private model: StreamDockModelDefinition = { productName: 'Unknown Stream Dock', iconRotation: 180, inputs: [], outputs: [] }
+	private model: StreamDockModelDefinition = {
+		productName: 'Unknown Stream Dock',
+		iconRotation: 180,
+		inputs: [],
+		outputs: [],
+	}
 
 	constructor(deviceInfo: Device, device: HIDAsync) {
 		super()
@@ -1507,8 +1512,8 @@ class StreamDock extends EventEmitter {
 		} else if (this.info.productId === 0x1001 || this.info.productId === 0x1007) {
 			// modelType = 'N4'
 			this.model = StreamDock.models['N4-1234']
-		} else if (this.info.productId === 0x1014 ) {
-			this.model = StreamDock.models["HSV 293S"]
+		} else if (this.info.productId === 0x1014) {
+			this.model = StreamDock.models['HSV 293S']
 		} else {
 			// this.modelType = 'Unknown'
 			this.emit('remove')
