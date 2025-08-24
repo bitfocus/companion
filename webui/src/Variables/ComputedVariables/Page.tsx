@@ -31,12 +31,9 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 	const createMutation = useMutationExt(trpc.controls.computedVariables.create.mutationOptions())
 
 	const doAddNew = useCallback(
-		(e: React.MouseEvent<HTMLButtonElement>) => {
-			const addSimple = e.currentTarget.getAttribute('data-simple') === 'true'
+		(_e: React.MouseEvent<HTMLButtonElement>) => {
 			createMutation
-				.mutateAsync({
-					simple: addSimple,
-				})
+				.mutateAsync()
 				.then(async (controlId) => {
 					console.log('created computed variable', controlId)
 
@@ -106,10 +103,7 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 
 				<div className="mb-2">
 					<CButtonGroup>
-						<CButton color="primary" onClick={doAddNew} size="sm" data-simple={true}>
-							<FontAwesomeIcon icon={faAdd} /> Add Simple Variable
-						</CButton>
-						<CButton color="warning" onClick={doAddNew} size="sm" data-simple={false}>
+						<CButton color="warning" onClick={doAddNew} size="sm">
 							<FontAwesomeIcon icon={faAdd} /> Add Expression Variable
 						</CButton>
 						<CreateCollectionButton />

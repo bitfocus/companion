@@ -28,7 +28,6 @@ import { useControlConfig } from '~/Hooks/useControlConfig'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import VariableInputGroup from '~/Components/VariableInputGroup'
 import { EditableEntityList } from '~/Controls/Components/EntityList'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore'
@@ -229,11 +228,7 @@ const ComputedVariableSoleEntityEditor = observer(function ComputedVariableSoleE
 					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</CFormLabel>
 					<CCol xs={8}>
 						{computedVariableDefinition?.isActive ? (
-							<ComputedVariableCurrentValue
-								controlId={controlId}
-								name={computedVariableDefinition.variableName}
-								isUserValue={isInternalUserValueFeedback(entity)}
-							/>
+							<ComputedVariableCurrentValue controlId={controlId} name={computedVariableDefinition.variableName} />
 						) : (
 							<small>Variable is not active (the name is either empty or in use elsewhere)</small>
 						)}
@@ -310,33 +305,10 @@ const ComputedVariableLocalVariablesEditor = observer(function ComputedVariableL
 	)
 })
 
-function ComputedVariableCurrentValue({
-	controlId,
-	name,
-	isUserValue,
-}: {
-	controlId: string
-	name: string
-	isUserValue: boolean
-}) {
+function ComputedVariableCurrentValue({ name }: { controlId: string; name: string }) {
 	const { notifier } = useContext(RootAppStoreContext)
 
 	const onCopied = useCallback(() => notifier.current?.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
-
-	const setUserValueMutation = useMutationExt(trpc.controls.computedVariables.setUserValue.mutationOptions())
-	const setCurrentValue = useCallback(
-		(_name: string, value: any) => {
-			setUserValueMutation
-				.mutateAsync({
-					controlId,
-					value,
-				})
-				.catch((e) => {
-					console.error(`Set user value failed: ${e}`)
-				})
-		},
-		[setUserValueMutation, controlId]
-	)
 
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
@@ -355,10 +327,6 @@ function ComputedVariableCurrentValue({
 
 	if (!sub.data.ok) {
 		return <CAlert color="danger">Error: {sub.data.error}</CAlert>
-	}
-
-	if (isUserValue) {
-		return <VariableInputGroup value={sub.data.value} name={name} setCurrentValue={setCurrentValue} />
 	}
 
 	return <VariableValueDisplay value={sub.data.value} onCopied={onCopied} />
