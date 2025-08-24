@@ -2,13 +2,22 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { useComputed } from '~/Resources/util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAdd, faClone, faCopy, faLayerGroup, faList, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	faAdd,
+	faArrowLeft,
+	faClone,
+	faCopy,
+	faLayerGroup,
+	faList,
+	faTimes,
+	faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { CreateExpressionVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
+import { Link, Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import {
@@ -106,6 +115,10 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 
 				<div className="mb-2">
 					<CButtonGroup>
+						<CButton color="primary" as={Link} to="/variables" size="sm">
+							<FontAwesomeIcon icon={faArrowLeft} />
+							&nbsp; Go back
+						</CButton>
 						<CButton color="warning" onClick={doAddNew} size="sm">
 							<FontAwesomeIcon icon={faAdd} /> Add Expression Variable
 						</CButton>

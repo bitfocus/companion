@@ -36,8 +36,8 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						<CButton color="info" as={Link} to="/variables/custom" className="mb-3">
 							<h6 className="mb-0 py-1">Custom Variables</h6>
 						</CButton>
-						<CButton color="info" as={Link} to="/variables/computed" className="mb-3">
-							<h6 className="mb-0 py-1">Computed Variables</h6>
+						<CButton color="info" as={Link} to="/variables/expression" className="mb-3">
+							<h6 className="mb-0 py-1">Expression Variables</h6>
 						</CButton>
 					</div>
 
