@@ -7,7 +7,7 @@
 		"baseUrl": "./",
 		"paths": {
 			"*": ["./node_modules/*"],
-			"~/*": ["./src/*"],
+			"~/*": ["./src/*"]
 		},
 		"module": "esnext",
 		"moduleResolution": "bundler",
