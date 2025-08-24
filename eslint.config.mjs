@@ -131,7 +131,7 @@ export default [
 			'**/generated/*',
 			'**/node_modules/*',
 			'**/electron-output/*',
-			'webui/vite.config.ts',
+			'*/vite.config.ts',
 			'webui/vitest.config.ts',
 			'vitest.config.ts',
 			'vitest.workspace.ts',

@@ -1,5 +1,5 @@
 // @ts-check
-import { app, BrowserWindow, dialog, shell, nativeTheme } from 'electron'
+import { app, BrowserWindow, dialog, shell } from 'electron'
 import { fileURLToPath } from 'url'
 
 /** @type {BrowserWindow | null} */

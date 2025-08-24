@@ -64,6 +64,7 @@ export interface ConfigContextType {
 	hasUnsavedChanges: boolean
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ConfigContext = createContext<ConfigContextType | undefined>(undefined)
 
 // Extend the global Window interface to include our API
