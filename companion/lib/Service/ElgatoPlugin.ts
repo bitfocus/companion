@@ -4,7 +4,6 @@ import { WebSocketServer, WebSocket } from 'ws'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import imageRs from '@julusian/image-rs'
 import { transformButtonImage } from '../Resources/Util.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { IncomingMessage } from 'http'
@@ -381,7 +380,7 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 		this.#write_queue = new ImageWriteQueue(this.#logger, async (_id, partial, render) => {
 			const targetSize = 72 // Compatibility
 			try {
-				const newbuffer = await transformButtonImage(render, null, targetSize, targetSize, imageRs.PixelFormat.Rgb)
+				const newbuffer = await transformButtonImage(render, null, targetSize, targetSize, 'rgb')
 
 				this.apicommand('fillImage', { ...partial, data: newbuffer })
 			} catch (e: any) {

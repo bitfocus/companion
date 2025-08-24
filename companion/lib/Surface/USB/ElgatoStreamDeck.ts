@@ -12,7 +12,6 @@
 import { EventEmitter } from 'events'
 import { DeviceModelId, JPEGEncodeOptions, openStreamDeck, StreamDeck } from '@elgato-stream-deck/node'
 import util from 'util'
-import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
@@ -163,7 +162,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 								this.config.rotation,
 								control.pixelSize.width,
 								control.pixelSize.height,
-								imageRs.PixelFormat.Rgb
+								'rgb'
 							)
 						} catch (e: any) {
 							this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
@@ -206,13 +205,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 				let newbuffer
 				try {
-					newbuffer = await transformButtonImage(
-						render,
-						this.config.rotation,
-						targetSize,
-						targetSize,
-						imageRs.PixelFormat.Rgb
-					)
+					newbuffer = await transformButtonImage(render, this.config.rotation, targetSize, targetSize, 'rgb')
 				} catch (e) {
 					this.#logger.debug(`scale image failed: ${e}`)
 					this.emit('remove')

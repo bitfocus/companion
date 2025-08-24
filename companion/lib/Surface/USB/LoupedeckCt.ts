@@ -21,7 +21,6 @@ import {
 import { convertPanelIndexToXY } from '../Util.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
 import {
 	OffsetConfigFields,
@@ -238,7 +237,7 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 
 			let newbuffer: Buffer
 			try {
-				newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
+				newbuffer = await transformButtonImage(render, this.config.rotation, width, height, 'rgb')
 			} catch (e) {
 				this.#logger.debug(`scale image failed: ${e}`)
 				this.emit('remove')

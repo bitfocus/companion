@@ -19,7 +19,6 @@ import {
 	openLoupedeck,
 } from '@loupedeck/node'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { convertPanelIndexToXY } from '../Util.js'
 import { transformButtonImage } from '../../Resources/Util.js'
@@ -258,7 +257,7 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 
 			let newbuffer
 			try {
-				newbuffer = await transformButtonImage(render, this.config.rotation, width, height, imageRs.PixelFormat.Rgb)
+				newbuffer = await transformButtonImage(render, this.config.rotation, width, height, 'rgb')
 			} catch (e) {
 				this.#logger.debug(`scale image failed: ${e}`)
 				this.emit('remove')

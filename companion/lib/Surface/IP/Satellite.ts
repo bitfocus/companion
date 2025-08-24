@@ -11,7 +11,6 @@
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import imageRs from '@julusian/image-rs'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
@@ -183,13 +182,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			if (!targetSize) return
 
 			try {
-				const newbuffer = await transformButtonImage(
-					render,
-					this.#config.rotation,
-					targetSize,
-					targetSize,
-					imageRs.PixelFormat.Rgb
-				)
+				const newbuffer = await transformButtonImage(render, this.#config.rotation, targetSize, targetSize, 'rgb')
 
 				this.#sendDraw(key, newbuffer, render.style)
 			} catch (e: any) {

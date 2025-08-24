@@ -9,7 +9,7 @@
  * this program.
  */
 
-import imageRs from '@julusian/image-rs'
+import * as imageRs from '@julusian/image-rs'
 import Infinitton from 'infinitton-idisplay'
 import { translateRotation } from '../../Resources/Util.js'
 import { EventEmitter } from 'events'
@@ -171,12 +171,12 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 					render.buffer,
 					render.bufferWidth,
 					render.bufferHeight,
-					imageRs.PixelFormat.Rgba
+					'rgba'
 				).scale(targetSize, targetSize)
 
 				if (rotation !== null) image = image.rotate(rotation)
 
-				const newbuffer = image.toBufferSync(imageRs.PixelFormat.Rgb).buffer
+				const newbuffer = image.toBufferSync('rgb').buffer
 				this.#infinitton.fillImage(key, newbuffer)
 			} catch (e: any) {
 				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)

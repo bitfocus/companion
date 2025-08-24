@@ -2410,10 +2410,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@julusian/image-rs@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@julusian/image-rs@npm:1.1.1"
-  checksum: 10c0/c8f4d6080145a7826c5d7c50f86e29acbd1ce853a5b8a366b65e4470465811fb4b1c58c01a2661735d1acaf4ee92ec4a2728649381b126021c54ae9530cb0a28
+"@julusian/image-rs@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@julusian/image-rs@npm:2.0.1"
+  checksum: 10c0/82fc75364f999c0772a08b5b03983462181d0ca3c5939e68b44b53b71c2be0ce80fc3da4e062a7a6c649315a03816eb720f01091c3e6629621f771494d3100d9
   languageName: node
   linkType: hard
 
@@ -7637,7 +7637,7 @@ asn1@evs-broadcast/node-asn1:
     "@elgato-stream-deck/node": "npm:^7.3.2"
     "@elgato-stream-deck/tcp": "npm:^7.3.2"
     "@julusian/bonjour-service": "npm:^1.4.2"
-    "@julusian/image-rs": "npm:^1.1.1"
+    "@julusian/image-rs": "npm:^2.0.1"
     "@julusian/jpeg-turbo": "npm:^2.2.0"
     "@julusian/segfault-raub": "npm:^2.3.1"
     "@logitech-mx-creative-console/node": "npm:^0.2.3"

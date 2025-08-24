@@ -12,7 +12,6 @@
 import { EventEmitter } from 'events'
 import { Device, HIDAsync } from 'node-hid'
 import util from 'util'
-import imageRs from '@julusian/image-rs'
 import jpg from '@julusian/jpeg-turbo'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
@@ -113,7 +112,7 @@ export class SurfaceUSBMiraboxStreamDock extends EventEmitter<SurfacePanelEvents
 							offsetRotation(this.config.rotation, 180),
 							output.resolutionx,
 							output.resolutiony,
-							imageRs.PixelFormat.Rgb
+							'rgb'
 						)
 					} catch (e: any) {
 						this.logger.debug(`scale image failed: ${e}\n${e.stack}`)
