@@ -132,7 +132,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 					Name
 					<FontAwesomeIcon
 						icon={faQuestionCircle}
-						title="The name for the variable. It will get wrapped with $(computed:X) for you"
+						title="The name for the variable. It will get wrapped with $(expression:X) for you"
 					/>
 				</CFormLabel>
 				<CCol xs={8}>
@@ -314,7 +314,7 @@ function ExpressionVariableCurrentValue({ name }: { controlId: string; name: str
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
 			{
 				controlId: null,
-				expression: `$(computed:${name})`,
+				expression: `$(expression:${name})`,
 				isVariableString: false,
 			},
 			{}

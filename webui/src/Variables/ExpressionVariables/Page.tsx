@@ -215,7 +215,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 			})
 	}, [cloneMutation, item.id])
 
-	const fullname = item.variableName ? `$(computed:${item.variableName})` : null
+	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
 	const onCopied = useCallback(() => {
 		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
