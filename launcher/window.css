@@ -168,6 +168,19 @@ input[type='text']::placeholder {
 	text-align: center;
 }
 
+#syslog_host {
+	text-align: center;
+}
+
+#syslog_port {
+	width: 50px;
+	text-align: center;
+}
+
+#syslog_localhost {
+	text-align: center;
+}
+
 .input_button {
 	cursor: pointer;
 	background-color: #b00013;

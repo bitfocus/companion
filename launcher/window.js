@@ -9,6 +9,31 @@ document
 	.getElementById('dev_modules_path_clear')
 	.addEventListener('click', () => api.send('clear-developer-modules-path'))
 
+document.getElementById('enable_syslog').addEventListener('click', () => {
+	const elm = document.getElementById('enable_syslog')
+	api.send('launcher-enable-syslog', elm.checked)
+})
+
+document.getElementById('syslog_tcp').addEventListener('click', () => {
+	const elm = document.getElementById('syslog_tcp')
+	api.send('launcher-enable-syslog-tcp', elm.checked)
+})
+
+document.getElementById('syslog_host_button').addEventListener('click', () => {
+	const elm = document.getElementById('syslog_host')
+	api.send('launcher-set-syslog-host', elm.value)
+})
+
+document.getElementById('syslog_port_button').addEventListener('click', () => {
+	const elm = document.getElementById('syslog_port')
+	api.send('launcher-set-syslog-port', elm.value)
+})
+
+document.getElementById('syslog_localhost_button').addEventListener('click', () => {
+	const elm = document.getElementById('syslog_localhost')
+	api.send('launcher-set-syslog-localhost', elm.value)
+})
+
 api.receive('info', (config, info, platform) => {
 	if (platform !== 'win32' && platform !== 'darwin') {
 		document.getElementById('run_at_login_group')?.remove()
@@ -24,6 +49,11 @@ api.receive('info', (config, info, platform) => {
 
 	document.getElementById('developer_settings_panel').style.display = config.enable_developer ? 'block' : 'none'
 	document.getElementById('dev_modules_path').value = config.dev_modules_path || ''
+	document.getElementById('enable_syslog').checked = config.enable_syslog || false
+	document.getElementById('syslog_tcp').checked = config.syslog_tcp || false
+	document.getElementById('syslog_host').value = config.syslog_host || '127.0.0.1'
+	document.getElementById('syslog_port').value = config.syslog_port || '514'
+	document.getElementById('syslog_localhost').value = config.syslog_localhost || `Companion`
 })
 api.send('info')
 
