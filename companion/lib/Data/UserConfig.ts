@@ -1,7 +1,6 @@
 import selfsigned from 'selfsigned'
 import { cloneDeep } from 'lodash-es'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { pki } from 'node-forge'
 import { EventEmitter } from 'events'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
 import LogController from '../Log/Controller.js'
@@ -307,7 +306,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	private createSslCertificate(): void {
 		try {
-			const attrs: pki.CertificateField[] = [{ name: 'commonName', value: String(this.#data.https_self_cn) }]
+			const attrs: selfsigned.CertificateField[] = [{ name: 'commonName', value: String(this.#data.https_self_cn) }]
 			const pems = selfsigned.generate(attrs, {
 				days: Number(this.#data.https_self_expiry) || undefined,
 				algorithm: 'sha256',
@@ -368,7 +367,9 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	private renewSslCertificate(): void {
 		try {
-			const attrs: pki.CertificateField[] = [{ name: 'commonName', value: String(this.#data.https_self_cert_cn) }]
+			const attrs: selfsigned.CertificateField[] = [
+				{ name: 'commonName', value: String(this.#data.https_self_cert_cn) },
+			]
 			const pems = selfsigned.generate(attrs, {
 				days: Number(this.#data.https_self_expiry) || undefined,
 				algorithm: 'sha256',

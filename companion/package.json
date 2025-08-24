@@ -41,7 +41,7 @@
     "@types/winston-syslog": "^2.4.3",
     "@types/ws": "^8.18.1",
     "supertest": "^7.1.4",
-    "typescript": "~5.8.3",
+    "typescript": "~5.9.2",
     "webpack": "^5.101.3",
     "webpack-cli": "^6.0.1"
   },
@@ -59,7 +59,7 @@
     "@loupedeck/node": "^1.2.0",
     "@napi-rs/canvas": "0.1.77",
     "@sentry/node": "^10.5.0",
-    "@trpc/server": "~11.3.1",
+    "@trpc/server": "^11.5.0",
     "archiver": "^7.0.1",
     "better-sqlite3": "^12.2.0",
     "bufferutil": "^4.0.9",
