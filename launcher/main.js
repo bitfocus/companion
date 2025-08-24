@@ -1009,6 +1009,10 @@ if (!lock) {
 			app.quit()
 		})
 
+	app.on('window-all-closed', () => {
+		app.quit()
+	})
+
 	app.on('activate', () => {
 		if (window === null) {
 			createWindow()
