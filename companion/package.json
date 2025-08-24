@@ -24,7 +24,7 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
-    "@sentry/webpack-plugin": "^3.6.1",
+    "@sentry/webpack-plugin": "^4.1.1",
     "@types/archiver": "^6.0.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/compression": "^1.8.1",
@@ -58,7 +58,7 @@
     "@logitech-mx-creative-console/node": "^0.2.3",
     "@loupedeck/node": "^1.2.0",
     "@napi-rs/canvas": "0.1.68",
-    "@sentry/node": "^9.46.0",
+    "@sentry/node": "^10.5.0",
     "@trpc/server": "~11.3.1",
     "archiver": "^7.0.1",
     "better-sqlite3": "^12.2.0",
