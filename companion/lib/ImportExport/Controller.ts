@@ -145,9 +145,9 @@ export class ImportExportController {
 
 			// fix any db instances missing the upgradeIndex property
 			if (object.instances) {
-				for (const inst of Object.values(object.instances)) {
-					if (inst) {
-						inst.lastUpgradeIndex = inst.lastUpgradeIndex ?? -1
+				for (const connectionConfig of Object.values(object.instances)) {
+					if (connectionConfig) {
+						connectionConfig.lastUpgradeIndex = connectionConfig.lastUpgradeIndex ?? -1
 					}
 				}
 			}
@@ -176,18 +176,19 @@ export class ImportExportController {
 				instances: {},
 				controls: 'pages' in object,
 				customVariables: 'custom_variables' in object,
+				computedVariables: 'computedVariables' in object,
 				surfaces: 'surfaces' in object,
 				triggers: 'triggers' in object,
 			}
 
-			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
-				if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
+			for (const [connectionId, connectionConfig] of Object.entries(object.instances || {})) {
+				if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
 
-				clientObject.instances[instanceId] = {
-					instance_type: instance.instance_type,
-					moduleVersionId: instance.moduleVersionId ?? null,
-					label: instance.label,
-					sortOrder: instance.sortOrder,
+				clientObject.instances[connectionId] = {
+					instance_type: connectionConfig.instance_type,
+					moduleVersionId: connectionConfig.moduleVersionId ?? null,
+					label: connectionConfig.label,
+					sortOrder: connectionConfig.sortOrder,
 				}
 			}
 
@@ -483,22 +484,29 @@ export class ImportExportController {
 						// Destroy old stuff
 						await this.#reset(resetArg, !config || config.buttons)
 
-						// import custom variables
-						if (!config || config.customVariables) {
-							if (data.customVariablesCollections) {
-								this.#variablesController.custom.replaceCollections(data.customVariablesCollections)
-							}
-
-							this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
-						}
-
 						// Import connection collections if provided
-						if (data.connectionCollections) {
-							this.#instancesController.collections.replaceCollections(data.connectionCollections)
-						}
+						this.#instancesController.collections.replaceCollections(data.connectionCollections || [])
 
 						// Always Import instances
 						const instanceIdMap = this.#importInstances(data.instances, {})
+
+						// import custom variables
+						if (!config || config.customVariables) {
+							this.#variablesController.custom.replaceCollections(data.customVariablesCollections || [])
+							this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
+						}
+
+						// Import computed variables
+						if (!config || config.computedVariables) {
+							this.#controlsController.replaceComputedVariableCollections(data.computedVariablesCollections || [])
+
+							for (const [id, variableDefinition] of Object.entries(data.computedVariables || {})) {
+								const controlId = CreateComputedVariableControlId(id)
+								const fixedControlObj = this.#fixupComputedVariableControl(variableDefinition, instanceIdMap)
+
+								this.#controlsController.importComputedVariable(controlId, fixedControlObj)
+							}
+						}
 
 						if (data.pages && (!config || config.buttons)) {
 							// Import pages
@@ -676,11 +684,21 @@ export class ImportExportController {
 					this.#controlsController.deleteControl(controlId)
 				}
 			}
-			this.#controlsController.discardTriggerCollections()
+			this.#controlsController.replaceTriggerCollections([])
 		}
 
 		if (!config || config.customVariables) {
 			this.#variablesController.custom.reset()
+		}
+
+		if (!config || config.computedVariables) {
+			this.#controlsController.replaceComputedVariableCollections([])
+
+			// Delete existing computed variables
+			const existingComputedVariables = this.#controlsController.getAllComputedVariables()
+			for (const control of existingComputedVariables) {
+				this.#controlsController.deleteControl(control.controlId)
+			}
 		}
 
 		if (!config || config.userconfig) {
@@ -800,6 +818,48 @@ export class ImportExportController {
 		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
 			.visitEntities([], result.condition.concat(result.actions))
 			.visitEvents(result.events || [])
+
+		return result
+	}
+
+	#fixupComputedVariableControl(
+		control: ComputedVariableModel,
+		instanceIdMap: InstanceAppliedRemappings
+	): ComputedVariableModel {
+		// Future: this does not feel durable
+
+		const connectionLabelRemap: Record<string, string> = {}
+		const connectionIdRemap: Record<string, string> = {}
+		for (const [oldId, info] of Object.entries(instanceIdMap)) {
+			if (info.oldLabel && info.label !== info.oldLabel) {
+				connectionLabelRemap[info.oldLabel] = info.label
+			}
+			if (info.id && info.id !== oldId) {
+				connectionIdRemap[oldId] = info.id
+			}
+		}
+
+		const result: ComputedVariableModel = {
+			type: 'computed-variable',
+			options: cloneDeep(control.options),
+			entity: null,
+			localVariables: [],
+		}
+
+		if (control.entity) {
+			result.entity = fixupEntitiesRecursive(instanceIdMap, [cloneDeep(control.entity)])[0]
+		}
+
+		if (control.localVariables) {
+			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
+		}
+
+		const visitor = new VisitorReferencesUpdater(
+			this.#internalModule,
+			connectionLabelRemap,
+			connectionIdRemap
+		).visitEntities([], result.localVariables)
+		if (result.entity) visitor.visitEntities([], [result.entity])
 
 		return result
 	}

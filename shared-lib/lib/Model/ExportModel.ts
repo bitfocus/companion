@@ -2,6 +2,7 @@ import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { ConnectionCollection, ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
 import type { TriggerCollection } from './TriggerModel.js'
+import type { ComputedVariableCollection, ComputedVariableModel } from './ComputedVariableModel.js'
 
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
@@ -17,6 +18,8 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	triggerCollections?: TriggerCollection[] // Added in v4.1
 	custom_variables?: CustomVariablesModel
 	customVariablesCollections?: CustomVariableCollection[] // Added in v4.1
+	computedVariables?: Record<string, ComputedVariableModel> // Added in v4.1
+	computedVariablesCollections?: ComputedVariableCollection[] // Added in v4.1
 	instances?: ExportInstancesv6
 	connectionCollections?: ConnectionCollection[] // Added in v4.1
 	surfaces?: unknown // Record<number, SurfaceConfig>

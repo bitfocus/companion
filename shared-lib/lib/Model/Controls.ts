@@ -1,8 +1,9 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { SomeButtonModel } from './ButtonModel.js'
 import type { TriggerModel } from './TriggerModel.js'
+import type { ComputedVariableModel } from './ComputedVariableModel.js'
 
-export type SomeControlModel = SomeButtonModel | TriggerModel
+export type SomeControlModel = SomeButtonModel | TriggerModel | ComputedVariableModel
 
 export type UIControlUpdate =
 	| UIControlUpdateInit

@@ -134,6 +134,10 @@ export class ServiceEmberPlus extends ServiceBase {
 	 */
 
 	private startEventListeners(): void {
+		this.#serviceApi.on('updateButtonState', (location, pushed, surfaceId) => {
+			this.#updateButtonState(location, pushed, surfaceId)
+		})
+
 		this.#serviceApi.on('variables_changed', (variables, connection_labels) => {
 			if ((!connection_labels.has('internal') && !connection_labels.has('custom')) || this.#server == undefined) return // We don't care about any other variables
 			variables.forEach((changedVariable) => {
@@ -753,7 +757,7 @@ export class ServiceEmberPlus extends ServiceBase {
 	 * @param pushed - the state
 	 * @param checks the <code>surfaceId</code> to ensure that Ember+ doesn't loop its own state change back
 	 */
-	updateButtonState(location: ControlLocation, pushed: boolean, surfaceId: string | undefined): void {
+	#updateButtonState(location: ControlLocation, pushed: boolean, surfaceId: string | undefined): void {
 		if (!this.#server) return
 		if (surfaceId === 'emberplus') return
 

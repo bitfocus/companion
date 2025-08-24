@@ -21,7 +21,7 @@ import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
-import { validateBankControlId, validateTriggerControlId } from './Util.js'
+import { validateBankControlId, validateComputedVariableControlId, validateTriggerControlId } from './Util.js'
 import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
@@ -32,6 +32,14 @@ import z from 'zod'
 import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { ControlComputedVariable } from './ControlTypes/ComputedVariable.js'
+import type {
+	ComputedVariableCollection,
+	ComputedVariableModel,
+} from '@companion-app/shared/Model/ComputedVariableModel.js'
+import { ComputedVariableCollections } from '../Variables/ComputedVariableCollections.js'
+import { createComputedVariablesTrpcRouter } from './ComputedVariablesTrpcRouter.js'
+import { ComputedVariableNameMap } from './ComputedVariableNameMap.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 
 /**
@@ -87,6 +95,13 @@ export class ControlsController {
 
 	readonly #triggerCollections: TriggerCollections
 
+	/**
+	 * The computed variable collections
+	 */
+	readonly #computedVariableCollections: ComputedVariableCollections
+
+	readonly #computedVariableNamesMap: ComputedVariableNameMap
+
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
@@ -102,6 +117,11 @@ export class ControlsController {
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
 			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
+
+		this.#computedVariableCollections = new ComputedVariableCollections(registry.db, (validCollectionIds) =>
+			this.#cleanUnknownComputedVariableCollectionIds(validCollectionIds)
+		)
+		this.#computedVariableNamesMap = new ComputedVariableNameMap(this.#registry.variables.values, this.#controls)
 
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
@@ -121,6 +141,14 @@ export class ControlsController {
 				control.setCollectionEnabled(
 					!control.options.collectionId || enabledCollectionIds.has(control.options.collectionId)
 				)
+			}
+		}
+	}
+
+	#cleanUnknownComputedVariableCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlComputedVariable) {
+				control.checkCollectionIdIsValid(validCollectionIds)
 			}
 		}
 	}
@@ -194,6 +222,14 @@ export class ControlsController {
 				this.triggers,
 				this.#createControlDependencies()
 			),
+			computedVariables: createComputedVariablesTrpcRouter(
+				this.#controlChangeEvents,
+				this.#computedVariableCollections,
+				this.#dbTable,
+				this.#controls,
+				this.#computedVariableNamesMap,
+				this.#createControlDependencies()
+			),
 			events: createEventsTrpcRouter(this.#controls, this.#registry.instance.definitions),
 			entities: createEntitiesTrpcRouter(
 				this.#controls,
@@ -241,13 +277,13 @@ export class ControlsController {
 	 * Create a new control class instance
 	 * TODO: This should be private
 	 * @param controlId Id of the control
-	 * @param category 'button' | 'trigger' | 'all'
+	 * @param category 'button' | 'trigger' | 'computed-variable' | 'all'
 	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param isImport Whether this is an import, and needs additional processing
 	 */
 	createClassForControl(
 		controlId: string,
-		category: 'button' | 'trigger' | 'all',
+		category: 'button' | 'trigger' | 'computed-variable' | 'all',
 		controlObj: SomeControlModel | string,
 		isImport: boolean
 	): SomeControl<any> | null {
@@ -279,6 +315,20 @@ export class ControlsController {
 					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
 				})
 				return trigger
+			}
+		}
+
+		if (category === 'all' || category === 'computed-variable') {
+			if (controlObj2?.type === 'computed-variable' || (controlType === 'computed-variable' && !controlObj2)) {
+				const variable = new ControlComputedVariable(
+					this.#createControlDependencies(),
+					this.#computedVariableNamesMap,
+					controlId,
+					controlObj2,
+					isImport
+				)
+
+				return variable
 			}
 		}
 
@@ -316,6 +366,28 @@ export class ControlsController {
 			}
 		}
 		return triggers
+	}
+
+	/**
+	 * Get all of the computed variable controls
+	 */
+	getAllComputedVariables(): ControlComputedVariable[] {
+		const variables: ControlComputedVariable[] = []
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlComputedVariable) {
+				variables.push(control)
+			}
+		}
+		return variables
+	}
+
+	getComputedVariableByName(name: string): ControlComputedVariable | undefined {
+		if (!name) return undefined
+
+		const controlId = this.#computedVariableNamesMap.getControlIdByName(name)
+		if (!controlId) return undefined
+
+		return this.getControl(controlId) as ControlComputedVariable | undefined
 	}
 
 	/**
@@ -394,6 +466,34 @@ export class ControlsController {
 	}
 
 	/**
+	 * Import a computed variable
+	 */
+	importComputedVariable(controlId: string, definition: ComputedVariableModel): ControlComputedVariable | undefined {
+		if (!validateComputedVariableControlId(controlId)) {
+			// Control id is not valid!
+			return undefined
+		}
+
+		if (this.#controls.has(controlId)) throw new Error(`ComputedVariable ${controlId} already exists`)
+
+		const newControl = this.createClassForControl(controlId, 'computed-variable', definition, true)
+		if (newControl) {
+			this.#controls.set(controlId, newControl)
+
+			// Add to names map
+			const computedVariableControl = newControl as ControlComputedVariable
+			this.#computedVariableNamesMap.addComputedVariable(controlId, computedVariableControl.options.variableName)
+
+			// Ensure it is stored to the db
+			newControl.commitChange()
+
+			return newControl as ControlComputedVariable
+		}
+
+		return undefined
+	}
+
+	/**
 	 * Initialise the controls
 	 */
 	init(): void {
@@ -406,8 +506,13 @@ export class ControlsController {
 			}
 		}
 
-		// Ensure all trigger collections are valid
+		// Ensure all collections are valid
 		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
+
+		this.#cleanUnknownComputedVariableCollectionIds(this.#computedVariableCollections.collectAllCollectionIds())
+
+		// Initialize computed variable names map
+		this.#computedVariableNamesMap.rebuildMap()
 	}
 
 	/**
@@ -500,16 +605,20 @@ export class ControlsController {
 		}
 	}
 
-	discardTriggerCollections(): void {
-		this.#triggerCollections.discardAllCollections()
-	}
-
 	exportTriggerCollections(): TriggerCollection[] {
 		return this.#triggerCollections.collectionData
 	}
 
 	replaceTriggerCollections(collections: TriggerCollection[]): void {
 		this.#triggerCollections.replaceCollections(collections)
+	}
+
+	exportComputedVariableCollections(): ComputedVariableCollection[] {
+		return this.#computedVariableCollections.collectionData
+	}
+
+	replaceComputedVariableCollections(collections: ComputedVariableCollection[]): void {
+		this.#computedVariableCollections.replaceCollections(collections)
 	}
 
 	/**

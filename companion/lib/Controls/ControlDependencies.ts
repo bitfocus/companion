@@ -10,6 +10,10 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import type {
+	ClientComputedVariableData,
+	ComputedVariableUpdate,
+} from '@companion-app/shared/Model/ComputedVariableModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 
 export interface ControlDependencies {
@@ -34,10 +38,12 @@ export interface ControlCommonEvents {
 	updateButtonState: [location: ControlLocation, pushed: boolean, surfaceId: string | undefined]
 	invalidateControlRender: [controlId: string]
 	invalidateLocationRender: [location: ControlLocation]
+	computedVariableDefinitionChanged: [id: string, info: ClientComputedVariableData | null]
 
 	presetDrawn: [controlId: string, render: ImageResult]
 }
 
 export type ControlChangeEvents = {
 	triggerChange: [controlId: string, diff: TriggersUpdate]
+	computedVariableChange: [controlId: string, diff: ComputedVariableUpdate]
 }

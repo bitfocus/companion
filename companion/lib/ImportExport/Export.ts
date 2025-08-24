@@ -133,11 +133,11 @@ export class ExportController {
 			)
 
 			// Collect referenced connections and  collections
-			const instancesExport = this.#generateReferencedConnectionConfigs(
+			const connectionsExport = this.#generateReferencedConnectionConfigs(
 				referencedConnectionIds,
 				referencedConnectionLabels
 			)
-			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(instancesExport))
+			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 			const filteredConnectionCollections = this.#filterReferencedCollections(
 				this.#instancesController.collections.collectionData,
 				referencedConnectionCollectionIds
@@ -149,7 +149,7 @@ export class ExportController {
 				type: 'page',
 				companionBuild: this.#appInfo.appBuild,
 				page: pageExport,
-				instances: instancesExport,
+				instances: connectionsExport,
 				connectionCollections: filteredConnectionCollections,
 				oldPageNumber: page,
 			}
@@ -308,6 +308,8 @@ export class ExportController {
 				if (control.options.collectionId) {
 					referencedCollectionIds.add(control.options.collectionId)
 				}
+			} else {
+				this.#logger.warn(`Control ${control.controlId} is not a valid trigger control!`)
 			}
 		}
 
@@ -318,11 +320,11 @@ export class ExportController {
 			: []
 
 		// Collect referenced connection and collections
-		const instancesExport = this.#generateReferencedConnectionConfigs(
+		const connectionsExport = this.#generateReferencedConnectionConfigs(
 			referencedConnectionIds,
 			referencedConnectionLabels
 		)
-		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(instancesExport))
+		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 		const filteredConnectionCollections = this.#filterReferencedCollections(
 			this.#instancesController.collections.collectionData,
 			referencedConnectionCollectionIds
@@ -334,7 +336,7 @@ export class ExportController {
 			companionBuild: this.#appInfo.appBuild,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
-			instances: instancesExport,
+			instances: connectionsExport,
 			connectionCollections: filteredConnectionCollections,
 		}
 	}
@@ -441,8 +443,6 @@ export class ExportController {
 			companionBuild: this.#appInfo.appBuild,
 		}
 
-		const rawControls = this.#controlsController.getAllControls()
-
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
@@ -463,18 +463,19 @@ export class ExportController {
 
 		if (!config || !isFalsey(config.triggers)) {
 			const triggersExport: ExportTriggerContentv6 = {}
-			for (const control of rawControls.values()) {
-				if (control.type === 'trigger') {
-					const parsedId = ParseControlId(control.controlId)
-					if (parsedId?.type === 'trigger') {
-						triggersExport[parsedId.trigger] = control.toJSON(false)
+			const triggerControls = this.#controlsController.getAllTriggers()
+			for (const control of triggerControls) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'trigger') {
+					triggersExport[parsedId.trigger] = control.toJSON(false)
 
-						control.collectReferencedConnectionsAndVariables(
-							referencedConnectionIds,
-							referencedConnectionLabels,
-							referencedVariables
-						)
-					}
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid trigger control!`)
 				}
 			}
 			exp.triggers = triggersExport
@@ -485,6 +486,27 @@ export class ExportController {
 		if (!config || !isFalsey(config.customVariables)) {
 			exp.custom_variables = this.#variablesController.custom.getDefinitions()
 			exp.customVariablesCollections = this.#variablesController.custom.exportCollections()
+		}
+
+		if (!config || !isFalsey(config.computedVariables)) {
+			exp.computedVariables = {}
+			exp.computedVariablesCollections = this.#controlsController.exportComputedVariableCollections()
+
+			const computedVariableControls = this.#controlsController.getAllComputedVariables()
+			for (const control of computedVariableControls) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'computed-variable') {
+					exp.computedVariables[parsedId.variableId] = control.toJSON(false)
+
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid computed variable control!`)
+				}
+			}
 		}
 
 		if (!config || !isFalsey(config.connections)) {
