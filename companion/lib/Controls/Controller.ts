@@ -37,8 +37,8 @@ import type {
 	ComputedVariableCollection,
 	ComputedVariableModel,
 } from '@companion-app/shared/Model/ComputedVariableModel.js'
-import { ComputedVariableCollections } from '../Variables/ComputedVariableCollections.js'
-import { createComputedVariablesTrpcRouter } from './ComputedVariablesTrpcRouter.js'
+import { ComputedVariableCollections } from './ComputedVariableCollections.js'
+import { createComputedVariableTrpcRouter } from './ComputedVariableTrpcRouter.js'
 import { ComputedVariableNameMap } from './ComputedVariableNameMap.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 
@@ -222,7 +222,7 @@ export class ControlsController {
 				this.triggers,
 				this.#createControlDependencies()
 			),
-			computedVariables: createComputedVariablesTrpcRouter(
+			computedVariables: createComputedVariableTrpcRouter(
 				this.#controlChangeEvents,
 				this.#computedVariableCollections,
 				this.#dbTable,

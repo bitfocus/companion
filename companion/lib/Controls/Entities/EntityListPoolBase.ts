@@ -2,7 +2,6 @@ import LogController, { Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
 	EntityOwner,
-	FeedbackEntitySubType,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,

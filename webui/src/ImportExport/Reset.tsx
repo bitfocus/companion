@@ -25,6 +25,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 		surfaces: true,
 		triggers: true,
 		customVariables: true,
+		computedVariables: true,
 		userconfig: true,
 	})
 
@@ -102,6 +103,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 						surfaces: true,
 						triggers: true,
 						customVariables: true,
+						computedVariables: true,
 						userconfig: true,
 					})
 
@@ -251,6 +253,13 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 			</div>
 			<div className="indent3">
 				<CFormCheck
+					checked={config.computedVariables}
+					onChange={(e) => setValue('computedVariables', e.currentTarget.checked)}
+					label="Computed Variables"
+				/>
+			</div>
+			<div className="indent3">
+				<CFormCheck
 					checked={config.surfaces}
 					onChange={(e) => setValue('surfaces', e.currentTarget.checked)}
 					label="Surfaces"
@@ -298,6 +307,10 @@ function ResetApplyStep({ config }: ResetApplyStepProps) {
 
 	if (config.customVariables) {
 		changes.push(<li key="custom-variables">All custom variables.</li>)
+	}
+
+	if (config.computedVariables) {
+		changes.push(<li key="computed-variables">All computed variables.</li>)
 	}
 
 	if (config.userconfig) {

@@ -11,7 +11,11 @@
 
 import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
-import { CreateTriggerControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateComputedVariableControlId,
+	CreateTriggerControlId,
+	validateActionSetId,
+} from '@companion-app/shared/ControlId.js'
 import yaml from 'yaml'
 import zlib from 'node:zlib'
 import LogController from '../Log/Controller.js'
@@ -58,6 +62,7 @@ import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import { ComputedVariableModel } from '@companion-app/shared/Model/ComputedVariableModel.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 

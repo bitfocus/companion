@@ -156,6 +156,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		surfaces: true,
 		triggers: true,
 		customVariables: true,
+		computedVariables: true,
 		// userconfig: true,
 	}))
 
@@ -231,6 +232,14 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				keyName="customVariables"
 				setValue={setValue}
 				label="Custom Variables"
+			/>
+
+			<InputCheckbox
+				config={config}
+				allowKeys={snapshotKeys}
+				keyName="computedVariables"
+				setValue={setValue}
+				label="Computed Variables"
 			/>
 
 			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="surfaces" setValue={setValue} label="Surfaces" />

@@ -7,7 +7,7 @@ import z from 'zod'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type EventEmitter from 'events'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
-import type { ComputedVariableCollections } from '../Variables/ComputedVariableCollections.js'
+import type { ComputedVariableCollections } from './ComputedVariableCollections.js'
 import { ControlComputedVariable } from './ControlTypes/ComputedVariable.js'
 import { validateComputedVariableControlId } from './Util.js'
 import {
@@ -19,7 +19,7 @@ import type { ComputedVariableNameMap } from './ComputedVariableNameMap.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createComputedVariablesTrpcRouter(
+export function createComputedVariableTrpcRouter(
 	changeEvents: EventEmitter<ControlChangeEvents>,
 	computedVariableCollections: ComputedVariableCollections,
 	dbTable: DataStoreTableView<Record<string, SomeControlModel>>,

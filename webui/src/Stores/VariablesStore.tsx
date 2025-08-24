@@ -7,11 +7,18 @@ import { ObservableMap, action, computed, observable } from 'mobx'
 import { assertNever } from '~/Resources/util.js'
 import type { VariableDefinition, VariableDefinitionUpdate } from '@companion-app/shared/Model/Variables.js'
 import { ApplyDiffToStore, updateObjectInPlace } from './ApplyDiffToMap'
+import { ComputedVariablesListStore } from './ComputedVariablesListStore'
 
 export class VariablesStore {
+	readonly #computedVariables: ComputedVariablesListStore
+
 	readonly customVariables = observable.map<string, CustomVariableDefinition>()
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
 	readonly customVariableCollections = observable.map<string, CustomVariableCollection>()
+
+	constructor(computedVariables: ComputedVariablesListStore) {
+		this.#computedVariables = computedVariables
+	}
 
 	public updateCustomVariables = action((changes: CustomVariableUpdate[] | null) => {
 		if (!changes) {
@@ -112,6 +119,17 @@ export class VariablesStore {
 		}
 
 		definitions.push(...this.customVariableDefinitions.get())
+
+		// Computed variables
+		for (const info of this.#computedVariables.computedVariables.values()) {
+			if (!info.variableName) continue
+
+			definitions.push({
+				label: info.description || 'A computed variable',
+				connectionLabel: 'computed',
+				name: info.variableName,
+			})
+		}
 
 		return definitions
 	})

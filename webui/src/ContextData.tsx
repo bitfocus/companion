@@ -31,6 +31,8 @@ import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscri
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { trpc } from './Resources/TRPC.js'
 import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
+import { useComputedVariablesListSubscription } from './Hooks/useComputedVariablesListSubscription.js'
+import { ComputedVariablesListStore } from './Stores/ComputedVariablesListStore.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -43,6 +45,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 	const rootStore = useMemo(() => {
 		const showWizardEvent = new EventTarget()
+
+		const computedVariablesList = new ComputedVariablesListStore()
 
 		return {
 			notifier: notifierRef,
@@ -59,7 +63,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
-			variablesStore: new VariablesStore(),
+			variablesStore: new VariablesStore(computedVariablesList),
+			computedVariablesList,
 
 			triggersList: new TriggersListStore(),
 
@@ -103,6 +108,12 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const variablesReady = useVariablesSubscription(rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(rootStore.variablesStore)
 	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(rootStore.variablesStore)
+	const computedVariablesReady = useComputedVariablesListSubscription(rootStore.computedVariablesList)
+	const computedVariableCollectionsReady = useGenericCollectionsSubscription(
+		rootStore.computedVariablesList,
+		trpc.controls.computedVariables.collections.watchQuery,
+		undefined
+	)
 	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.moduleStoreRefreshProgress)
 	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
@@ -117,6 +128,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		feedbackDefinitionsReady,
 		customVariablesReady,
 		customVariableCollectionsReady,
+		computedVariablesReady,
+		computedVariableCollectionsReady,
 		userConfigReady,
 		surfacesReady,
 		outboundSurfacesReady,
