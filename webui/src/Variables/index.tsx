@@ -29,14 +29,19 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						<CButton color="primary" as={Link} to="/variables/custom">
 							Custom Variables
 						</CButton>
-						<CButton color="primary" as={Link} to="/variables/internal">
+						<CButton color="primary" as={Link} to="/variables/connection/internal">
 							Internal
 						</CButton>
 						{sortedConnections.map((connectionInfo) => {
 							const compactName = modules.getModuleFriendlyName(connectionInfo.instance_type)
 
 							return (
-								<CButton key={connectionInfo.id} color="primary" as={Link} to={`/variables/${connectionInfo.label}`}>
+								<CButton
+									key={connectionInfo.id}
+									color="primary"
+									as={Link}
+									to={`/variables/connection/${connectionInfo.label}`}
+								>
 									<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
 								</CButton>
 							)
@@ -49,7 +54,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 })
 
 export function VariablesListPage(): React.JSX.Element {
-	const { label } = useParams({ from: '/_app/variables/$label' })
+	const { label } = useParams({ from: '/_app/variables/connection/$label' })
 
 	// Future: if label is not found, redirect to /variables
 	// 	throw redirect({ to: '/variables' })
