@@ -125,7 +125,7 @@ export class VariablesStore {
 			if (!info.variableName) continue
 
 			definitions.push({
-				label: info.description || 'A expression variable',
+				label: info.description || 'An expression variable',
 				connectionLabel: 'expression',
 				name: info.variableName,
 			})

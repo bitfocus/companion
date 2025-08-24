@@ -66,7 +66,7 @@ export class ControlExpressionVariable
 	 */
 	static DefaultOptions: ExpressionVariableOptions = {
 		variableName: '',
-		description: 'A expression variable',
+		description: 'An expression variable',
 		sortOrder: 0,
 	}
 

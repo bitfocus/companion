@@ -44,7 +44,7 @@ export class ExpressionVariableNameMap {
 	}
 
 	/**
-	 * Add a expression variable to the names map
+	 * Add an expression variable to the names map
 	 */
 	addExpressionVariable(controlId: string, variableName: string): void {
 		if (!variableName || variableName.length === 0) return
@@ -65,7 +65,7 @@ export class ExpressionVariableNameMap {
 	}
 
 	/**
-	 * Remove a expression variable from the names map
+	 * Remove an expression variable from the names map
 	 */
 	removeExpressionVariable(controlId: string, variableName: string): void {
 		if (!variableName || variableName.length === 0) return
@@ -113,7 +113,7 @@ export class ExpressionVariableNameMap {
 	}
 
 	/**
-	 * Check if a expression variable control is the active one for its variableName
+	 * Check if an expression variable control is the active one for its variableName
 	 */
 	isExpressionVariableActive(controlId: string): boolean {
 		const control = this.#controls.get(controlId) as ControlExpressionVariable | undefined

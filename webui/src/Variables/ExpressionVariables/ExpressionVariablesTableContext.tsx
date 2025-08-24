@@ -11,7 +11,8 @@ const ExpressionVariablesTableContext = createContext<ExpressionVariablesTableCo
 
 export function useExpressionVariablesTableContext(): ExpressionVariablesTableContextType {
 	const ctx = useContext(ExpressionVariablesTableContext)
-	if (!ctx) throw new Error('useExpressionVariablesTableContext must be used within a ExpressionVariablesTableProvider')
+	if (!ctx)
+		throw new Error('useExpressionVariablesTableContext must be used within an ExpressionVariablesTableProvider')
 	return ctx
 }
 

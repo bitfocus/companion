@@ -11,7 +11,7 @@ function RouteComponent() {
 	return (
 		<div className="secondary-panel-simple">
 			<div className="secondary-panel-simple-body no-scroll">
-				<NonIdealState text="Select a expression variable to edit" icon={faDollarSign} />
+				<NonIdealState text="Select an expression variable to edit" icon={faDollarSign} />
 			</div>
 		</div>
 	)

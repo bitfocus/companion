@@ -466,7 +466,7 @@ export class ControlsController {
 	}
 
 	/**
-	 * Import a expression variable
+	 * Import an expression variable
 	 */
 	importExpressionVariable(
 		controlId: string,
