@@ -87,6 +87,10 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 			<PanelCollapseHelperProvider storageId="custom_variables" knownPanelIds={allVariableNames}>
 				<div>
 					<h4 style={{ marginBottom: '0.8rem' }}>Custom Variables</h4>
+					<p className="mb-2">
+						Here you can create some variables which you can define the values of, and update with actions
+					</p>
+
 					<CButtonGroup size="sm">
 						<CButton color="primary" as={Link} to="/variables">
 							<FontAwesomeIcon icon={faArrowLeft} />

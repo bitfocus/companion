@@ -111,7 +111,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<h4>Expression variables</h4>
-				<p style={{ marginBottom: '0.5rem' }}>Here you can create some variables from live computed expressions</p>
+				<p className="mb-2">Here you can create some variables from live computed expressions</p>
 
 				<div className="mb-2">
 					<CButtonGroup>
