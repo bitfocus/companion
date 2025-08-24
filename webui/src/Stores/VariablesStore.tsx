@@ -126,7 +126,7 @@ export class VariablesStore {
 
 			definitions.push({
 				label: info.description || 'A expression variable',
-				connectionLabel: 'computed',
+				connectionLabel: 'expression',
 				name: info.variableName,
 			})
 		}
