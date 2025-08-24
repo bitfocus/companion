@@ -7,7 +7,7 @@ import {
 	faCompressArrowsAlt,
 	faExpandArrowsAlt,
 	faLayerGroup,
-	faSquareRootVariable,
+	faList,
 	faTimes,
 } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -152,7 +152,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 })
 
 function CustomVariableListNoContent() {
-	return <NonIdealState icon={faSquareRootVariable} text="No custom variables are defined" />
+	return <NonIdealState icon={faList} text="No custom variables are defined" />
 }
 
 const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {

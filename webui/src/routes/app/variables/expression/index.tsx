@@ -1,4 +1,4 @@
-import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
+import { faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
 import React from 'react'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -11,7 +11,7 @@ function RouteComponent() {
 	return (
 		<div className="secondary-panel-simple">
 			<div className="secondary-panel-simple-body no-scroll">
-				<NonIdealState text="Select an expression variable to edit" icon={faDollarSign} />
+				<NonIdealState text="Select an expression variable to edit" icon={faSquareRootVariable} />
 			</div>
 		</div>
 	)
