@@ -31,8 +31,8 @@ import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscri
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { trpc } from './Resources/TRPC.js'
 import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
-import { useComputedVariablesListSubscription } from './Hooks/useComputedVariablesListSubscription.js'
-import { ComputedVariablesListStore } from './Stores/ComputedVariablesListStore.js'
+import { useExpressionVariablesListSubscription } from './Hooks/useExpressionVariablesListSubscription.js'
+import { ExpressionVariablesListStore } from './Stores/ExpressionVariablesListStore.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -46,7 +46,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const rootStore = useMemo(() => {
 		const showWizardEvent = new EventTarget()
 
-		const computedVariablesList = new ComputedVariablesListStore()
+		const expressionVariablesList = new ExpressionVariablesListStore()
 
 		return {
 			notifier: notifierRef,
@@ -63,8 +63,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
-			variablesStore: new VariablesStore(computedVariablesList),
-			computedVariablesList,
+			variablesStore: new VariablesStore(expressionVariablesList),
+			expressionVariablesList,
 
 			triggersList: new TriggersListStore(),
 
@@ -108,10 +108,10 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const variablesReady = useVariablesSubscription(rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(rootStore.variablesStore)
 	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(rootStore.variablesStore)
-	const computedVariablesReady = useComputedVariablesListSubscription(rootStore.computedVariablesList)
-	const computedVariableCollectionsReady = useGenericCollectionsSubscription(
-		rootStore.computedVariablesList,
-		trpc.controls.computedVariables.collections.watchQuery,
+	const expressionVariablesReady = useExpressionVariablesListSubscription(rootStore.expressionVariablesList)
+	const expressionVariableCollectionsReady = useGenericCollectionsSubscription(
+		rootStore.expressionVariablesList,
+		trpc.controls.expressionVariables.collections.watchQuery,
 		undefined
 	)
 	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.moduleStoreRefreshProgress)
@@ -128,8 +128,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		feedbackDefinitionsReady,
 		customVariablesReady,
 		customVariableCollectionsReady,
-		computedVariablesReady,
-		computedVariableCollectionsReady,
+		expressionVariablesReady,
+		expressionVariableCollectionsReady,
 		userConfigReady,
 		surfacesReady,
 		outboundSurfacesReady,

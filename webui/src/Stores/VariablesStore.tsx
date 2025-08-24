@@ -7,17 +7,17 @@ import { ObservableMap, action, computed, observable } from 'mobx'
 import { assertNever } from '~/Resources/util.js'
 import type { VariableDefinition, VariableDefinitionUpdate } from '@companion-app/shared/Model/Variables.js'
 import { ApplyDiffToStore, updateObjectInPlace } from './ApplyDiffToMap'
-import { ComputedVariablesListStore } from './ComputedVariablesListStore'
+import { ExpressionVariablesListStore } from './ExpressionVariablesListStore'
 
 export class VariablesStore {
-	readonly #computedVariables: ComputedVariablesListStore
+	readonly #expressionVariables: ExpressionVariablesListStore
 
 	readonly customVariables = observable.map<string, CustomVariableDefinition>()
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
 	readonly customVariableCollections = observable.map<string, CustomVariableCollection>()
 
-	constructor(computedVariables: ComputedVariablesListStore) {
-		this.#computedVariables = computedVariables
+	constructor(expressionVariables: ExpressionVariablesListStore) {
+		this.#expressionVariables = expressionVariables
 	}
 
 	public updateCustomVariables = action((changes: CustomVariableUpdate[] | null) => {
@@ -120,12 +120,12 @@ export class VariablesStore {
 
 		definitions.push(...this.customVariableDefinitions.get())
 
-		// Computed variables
-		for (const info of this.#computedVariables.computedVariables.values()) {
+		// Expression variables
+		for (const info of this.#expressionVariables.expressionVariables.values()) {
 			if (!info.variableName) continue
 
 			definitions.push({
-				label: info.description || 'A computed variable',
+				label: info.description || 'A expression variable',
 				connectionLabel: 'computed',
 				name: info.variableName,
 			})

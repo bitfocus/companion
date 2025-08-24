@@ -488,15 +488,15 @@ export class ExportController {
 			exp.customVariablesCollections = this.#variablesController.custom.exportCollections()
 		}
 
-		if (!config || !isFalsey(config.computedVariables)) {
-			exp.computedVariables = {}
-			exp.computedVariablesCollections = this.#controlsController.exportComputedVariableCollections()
+		if (!config || !isFalsey(config.expressionVariables)) {
+			exp.expressionVariables = {}
+			exp.expressionVariablesCollections = this.#controlsController.exportExpressionVariableCollections()
 
-			const computedVariableControls = this.#controlsController.getAllComputedVariables()
-			for (const control of computedVariableControls) {
+			const expressionVariableControls = this.#controlsController.getAllExpressionVariables()
+			for (const control of expressionVariableControls) {
 				const parsedId = ParseControlId(control.controlId)
-				if (parsedId?.type === 'computed-variable') {
-					exp.computedVariables[parsedId.variableId] = control.toJSON(false)
+				if (parsedId?.type === 'expression-variable') {
+					exp.expressionVariables[parsedId.variableId] = control.toJSON(false)
 
 					control.collectReferencedConnectionsAndVariables(
 						referencedConnectionIds,
@@ -504,7 +504,7 @@ export class ExportController {
 						referencedVariables
 					)
 				} else {
-					this.#logger.warn(`Control ${control.controlId} is not a valid computed variable control!`)
+					this.#logger.warn(`Control ${control.controlId} is not a valid expression variable control!`)
 				}
 			}
 		}

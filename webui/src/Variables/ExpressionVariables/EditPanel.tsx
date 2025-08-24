@@ -11,7 +11,7 @@ import {
 	isInternalUserValueFeedback,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ComputedVariableOptions } from '@companion-app/shared/Model/ComputedVariableModel.js'
+import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
@@ -33,11 +33,11 @@ import { InlineHelp } from '~/Components/InlineHelp'
 import { LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 
-interface EditComputedVariablePanelProps {
+interface EditExpressionVariablePanelProps {
 	controlId: string
 }
 
-export function EditComputedVariablePanel({ controlId }: EditComputedVariablePanelProps): React.JSX.Element {
+export function EditExpressionVariablePanel({ controlId }: EditExpressionVariablePanelProps): React.JSX.Element {
 	const resetModalRef = useRef<GenericConfirmModalRef>(null)
 
 	const { controlConfig, error: configError, reloadConfig } = useControlConfig(controlId)
@@ -49,7 +49,7 @@ export function EditComputedVariablePanel({ controlId }: EditComputedVariablePan
 
 	const localVariablesStore = useLocalVariablesStore(
 		controlId,
-		controlConfig?.config?.type === 'computed-variable' ? controlConfig.config.localVariables : null
+		controlConfig?.config?.type === 'expression-variable' ? controlConfig.config.localVariables : null
 	)
 
 	return (
@@ -59,14 +59,14 @@ export function EditComputedVariablePanel({ controlId }: EditComputedVariablePan
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 			{controlConfig ? (
 				<div style={{ display: dataReady ? '' : 'none' }}>
-					{controlConfig.config.type === 'computed-variable' ? (
+					{controlConfig.config.type === 'expression-variable' ? (
 						<>
 							<MyErrorBoundary>
-								<ComputedVariableConfig options={controlConfig.config.options} controlId={controlId} />
+								<ExpressionVariableConfig options={controlConfig.config.options} controlId={controlId} />
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
-								<ComputedVariableEntityEditor
+								<ExpressionVariableEntityEditor
 									controlId={controlId}
 									entity={controlConfig.config.entity}
 									localVariablesStore={localVariablesStore}
@@ -76,7 +76,7 @@ export function EditComputedVariablePanel({ controlId }: EditComputedVariablePan
 							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
 								<MyErrorBoundary>
 									<div className="mt-3 pt-3 border-top">
-										<ComputedVariableLocalVariablesEditor
+										<ExpressionVariableLocalVariablesEditor
 											controlId={controlId}
 											localVariables={controlConfig.config.localVariables}
 											localVariablesStore={localVariablesStore}
@@ -87,7 +87,7 @@ export function EditComputedVariablePanel({ controlId }: EditComputedVariablePan
 						</>
 					) : (
 						<CAlert color="danger">
-							Invalid control type: {controlConfig.config.type}. Expected 'computed-variable'.
+							Invalid control type: {controlConfig.config.type}. Expected 'expression-variable'.
 						</CAlert>
 					)}
 				</div>
@@ -98,16 +98,16 @@ export function EditComputedVariablePanel({ controlId }: EditComputedVariablePan
 	)
 }
 
-interface ComputedVariableConfigProps {
+interface ExpressionVariableConfigProps {
 	controlId: string
-	options: ComputedVariableOptions
+	options: ExpressionVariableOptions
 }
 
-function ComputedVariableConfig({ controlId, options }: ComputedVariableConfigProps) {
+function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConfigProps) {
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	const setValueInner = useCallback(
-		(key: keyof ComputedVariableOptions, value: any) => {
+		(key: keyof ExpressionVariableOptions, value: any) => {
 			console.log('set', controlId, key, value)
 			setOptionsFieldMutation
 				.mutateAsync({
@@ -148,17 +148,17 @@ function ComputedVariableConfig({ controlId, options }: ComputedVariableConfigPr
 	)
 }
 
-interface ComputedVariableEntityEditorProps {
+interface ExpressionVariableEntityEditorProps {
 	controlId: string
 	entity: SomeEntityModel | null
 	localVariablesStore: LocalVariablesStore
 }
 
-const ComputedVariableEntityEditor = observer(function ComputedVariableEntityEditor({
+const ExpressionVariableEntityEditor = observer(function ExpressionVariableEntityEditor({
 	controlId,
 	entity,
 	localVariablesStore,
-}: ComputedVariableEntityEditorProps) {
+}: ExpressionVariableEntityEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
 	const serviceFactory = useControlEntitiesEditorService(controlId, 'feedbacks', confirmModal)
@@ -179,9 +179,9 @@ const ComputedVariableEntityEditor = observer(function ComputedVariableEntityEdi
 					<GenericConfirmModal ref={confirmModal} />
 
 					{!entity ? (
-						<ComputedVariableAddRootEntity />
+						<ExpressionVariableAddRootEntity />
 					) : (
-						<ComputedVariableSoleEntityEditor controlId={controlId} entity={entity} />
+						<ExpressionVariableSoleEntityEditor controlId={controlId} entity={entity} />
 					)}
 				</PanelCollapseHelperProvider>
 			</EntityEditorContextProvider>
@@ -189,10 +189,10 @@ const ComputedVariableEntityEditor = observer(function ComputedVariableEntityEdi
 	)
 })
 
-const ComputedVariableAddRootEntity = observer(function ComputedVariableAddRootEntity() {
+const ExpressionVariableAddRootEntity = observer(function ExpressionVariableAddRootEntity() {
 	return (
 		<>
-			<NonIdealState text="Choose the root type of the computed variable below to begin" icon={faDollarSign} />
+			<NonIdealState text="Choose the root type of the expression variable below to begin" icon={faDollarSign} />
 			<AddEntityPanel
 				ownerId={null}
 				entityType={EntityModelType.Feedback}
@@ -203,18 +203,18 @@ const ComputedVariableAddRootEntity = observer(function ComputedVariableAddRootE
 	)
 })
 
-interface ComputedVariableSoleEntityEditorProps {
+interface ExpressionVariableSoleEntityEditorProps {
 	controlId: string
 	entity: SomeEntityModel
 }
 
-const ComputedVariableSoleEntityEditor = observer(function ComputedVariableSoleEntityEditor({
+const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableSoleEntityEditor({
 	controlId,
 	entity,
-}: ComputedVariableSoleEntityEditorProps) {
-	const { entityDefinitions, computedVariablesList } = useContext(RootAppStoreContext)
+}: ExpressionVariableSoleEntityEditorProps) {
+	const { entityDefinitions, expressionVariablesList } = useContext(RootAppStoreContext)
 
-	const computedVariableDefinition = computedVariablesList.computedVariables.get(controlId)
+	const expressionVariableDefinition = expressionVariablesList.expressionVariables.get(controlId)
 
 	const { serviceFactory } = useEntityEditorContext()
 	const entityService = useControlEntityService(serviceFactory, entity, 'variable')
@@ -227,8 +227,8 @@ const ComputedVariableSoleEntityEditor = observer(function ComputedVariableSoleE
 				<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
 					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</CFormLabel>
 					<CCol xs={8}>
-						{computedVariableDefinition?.isActive ? (
-							<ComputedVariableCurrentValue controlId={controlId} name={computedVariableDefinition.variableName} />
+						{expressionVariableDefinition?.isActive ? (
+							<ExpressionVariableCurrentValue controlId={controlId} name={expressionVariableDefinition.variableName} />
 						) : (
 							<small>Variable is not active (the name is either empty or in use elsewhere)</small>
 						)}
@@ -251,17 +251,17 @@ const ComputedVariableSoleEntityEditor = observer(function ComputedVariableSoleE
 	)
 })
 
-interface ComputedVariableLocalVariablesEditorProps {
+interface ExpressionVariableLocalVariablesEditorProps {
 	controlId: string
 	localVariables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
 }
 
-const ComputedVariableLocalVariablesEditor = observer(function ComputedVariableLocalVariablesEditor({
+const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVariableLocalVariablesEditor({
 	controlId,
 	localVariables,
 	localVariablesStore,
-}: ComputedVariableLocalVariablesEditorProps) {
+}: ExpressionVariableLocalVariablesEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
 	const serviceFactory = useControlEntitiesEditorService(controlId, 'local-variables', confirmModal)
@@ -283,7 +283,7 @@ const ComputedVariableLocalVariablesEditor = observer(function ComputedVariableL
 
 					<EditableEntityList
 						heading={
-							<InlineHelp help="You can use local variables inside of this computed variable to create some dynamic values based on feedbacks">
+							<InlineHelp help="You can use local variables inside of this expression variable to create some dynamic values based on feedbacks">
 								Local Variables
 							</InlineHelp>
 						}
@@ -305,7 +305,7 @@ const ComputedVariableLocalVariablesEditor = observer(function ComputedVariableL
 	)
 })
 
-function ComputedVariableCurrentValue({ name }: { controlId: string; name: string }) {
+function ExpressionVariableCurrentValue({ name }: { controlId: string; name: string }) {
 	const { notifier } = useContext(RootAppStoreContext)
 
 	const onCopied = useCallback(() => notifier.current?.show(`Copied`, 'Copied to clipboard', 3000), [notifier])

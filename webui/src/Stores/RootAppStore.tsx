@@ -13,7 +13,7 @@ import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { HelpModalRef } from '~/Connections/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
 import type { WhatsNewModalRef } from '~/WhatsNewModal.js'
-import type { ComputedVariablesListStore } from './ComputedVariablesListStore.js'
+import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -34,7 +34,7 @@ export interface RootAppStore {
 	readonly pages: PagesStore
 	readonly surfaces: SurfacesStore
 	readonly variablesStore: VariablesStore
-	readonly computedVariablesList: ComputedVariablesListStore
+	readonly expressionVariablesList: ExpressionVariablesListStore
 
 	readonly triggersList: TriggersListStore
 

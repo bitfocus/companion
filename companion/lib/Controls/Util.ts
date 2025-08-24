@@ -13,9 +13,9 @@ export function validateBankControlId(controlId: string): boolean {
 /**
  * Verify a controlId is valid for the current id scheme and grid size
  */
-export function validateComputedVariableControlId(controlId: string): boolean {
+export function validateExpressionVariableControlId(controlId: string): boolean {
 	const parsed = ParseControlId(controlId)
-	if (parsed?.type !== 'computed-variable') return false
+	if (parsed?.type !== 'expression-variable') return false
 
 	return true
 }

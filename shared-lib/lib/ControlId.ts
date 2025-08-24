@@ -50,10 +50,10 @@ export function CreateTriggerControlId(triggerId: string): string {
 }
 
 /**
- * Create full computed variable control id
+ * Create full expression variable control id
  */
-export function CreateComputedVariableControlId(variableId: string): string {
-	return `computed-variable:${variableId}`
+export function CreateExpressionVariableControlId(variableId: string): string {
+	return `expression-variable:${variableId}`
 }
 
 /**
@@ -71,8 +71,8 @@ export interface ParsedControlIdTrigger {
 	type: 'trigger'
 	trigger: string
 }
-export interface ParsedControlIdComputedVariable {
-	type: 'computed-variable'
+export interface ParsedControlIdExpressionVariable {
+	type: 'expression-variable'
 	variableId: string
 }
 export interface ParsedControlIdPreset {
@@ -83,7 +83,7 @@ export interface ParsedControlIdPreset {
 export type ParsedControlIdType =
 	| ParsedControlIdBank
 	| ParsedControlIdTrigger
-	| ParsedControlIdComputedVariable
+	| ParsedControlIdExpressionVariable
 	| ParsedControlIdPreset
 
 /**
@@ -107,10 +107,10 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			}
 		}
 
-		const matchCv = controlId.match(/^computed-variable:(.*)$/)
+		const matchCv = controlId.match(/^expression-variable:(.*)$/)
 		if (matchCv) {
 			return {
-				type: 'computed-variable',
+				type: 'expression-variable',
 				variableId: matchCv[1],
 			}
 		}

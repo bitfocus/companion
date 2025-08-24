@@ -2,17 +2,17 @@ import { useMemo } from 'react'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { CreateComputedVariableControlId } from '@companion-app/shared/ControlId.js'
+import { CreateExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 
-export type ComputedVariablesCollectionsApi = NestingCollectionsApi
+export type ExpressionVariablesCollectionsApi = NestingCollectionsApi
 
-export function useComputedVariablesCollectionsApi(
+export function useExpressionVariablesCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
-): ComputedVariablesCollectionsApi {
-	const renameMutation = useMutationExt(trpc.controls.computedVariables.collections.setName.mutationOptions())
-	const deleteMutation = useMutationExt(trpc.controls.computedVariables.collections.remove.mutationOptions())
-	const reorderMutation = useMutationExt(trpc.controls.computedVariables.collections.reorder.mutationOptions())
-	const reorderItemMutation = useMutationExt(trpc.controls.computedVariables.reorder.mutationOptions())
+): ExpressionVariablesCollectionsApi {
+	const renameMutation = useMutationExt(trpc.controls.expressionVariables.collections.setName.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.controls.expressionVariables.collections.remove.mutationOptions())
+	const reorderMutation = useMutationExt(trpc.controls.expressionVariables.collections.reorder.mutationOptions())
+	const reorderItemMutation = useMutationExt(trpc.controls.expressionVariables.reorder.mutationOptions())
 
 	return useMemo(
 		() =>
@@ -26,7 +26,7 @@ export function useComputedVariablesCollectionsApi(
 				deleteCollection: (collectionId: string) => {
 					confirmModalRef.current?.show(
 						'Delete Collection',
-						'Are you sure you want to delete this collection? All computed variables in this collection will be moved to Ungrouped Computed Variables.',
+						'Are you sure you want to delete this collection? All expression variables in this collection will be moved to Ungrouped Expression variables.',
 						'Delete',
 						() => {
 							deleteMutation.mutateAsync({ collectionId }).catch((e) => {
@@ -43,12 +43,12 @@ export function useComputedVariablesCollectionsApi(
 				},
 				moveItemToCollection: (itemId: string, collectionId: string | null, dropIndex: number) => {
 					reorderItemMutation
-						.mutateAsync({ controlId: CreateComputedVariableControlId(itemId), collectionId, dropIndex })
+						.mutateAsync({ controlId: CreateExpressionVariableControlId(itemId), collectionId, dropIndex })
 						.catch((e) => {
 							console.error('Reorder failed', e)
 						})
 				},
-			}) satisfies ComputedVariablesCollectionsApi,
+			}) satisfies ExpressionVariablesCollectionsApi,
 		[confirmModalRef, renameMutation, deleteMutation, reorderMutation, reorderItemMutation]
 	)
 }

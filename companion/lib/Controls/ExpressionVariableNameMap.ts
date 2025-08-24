@@ -1,13 +1,13 @@
 import type { VariablesValues } from '../Variables/Values.js'
-import { ControlComputedVariable } from './ControlTypes/ComputedVariable.js'
+import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type { SomeControl } from './IControlFragments.js'
 
-export class ComputedVariableNameMap {
+export class ExpressionVariableNameMap {
 	/**
-	 * Map to track computed variable naming conflicts
+	 * Map to track expression variable naming conflicts
 	 * Key: variableName, Value: { activeControlId, otherControlIds[] }
 	 */
-	readonly #computedVariableNamesMap = new Map<string, { activeControlId: string; otherControlIds: string[] }>()
+	readonly #expressionVariableNamesMap = new Map<string, { activeControlId: string; otherControlIds: string[] }>()
 
 	readonly #variableValuesController: VariablesValues
 	readonly #controls: Map<string, SomeControl<any>>
@@ -18,38 +18,38 @@ export class ComputedVariableNameMap {
 	}
 
 	getControlIdByName(name: string): string | undefined {
-		const nameEntry = this.#computedVariableNamesMap.get(name)
+		const nameEntry = this.#expressionVariableNamesMap.get(name)
 		return nameEntry?.activeControlId
 	}
 
 	/**
-	 * Rebuild the computed variable names map from all current computed variables
+	 * Rebuild the expression variable names map from all current expression variables
 	 */
 	rebuildMap(): void {
-		this.#computedVariableNamesMap.clear()
+		this.#expressionVariableNamesMap.clear()
 
-		const allComputedVariables: ControlComputedVariable[] = []
+		const allExpressionVariables: ControlExpressionVariable[] = []
 		for (const control of this.#controls.values()) {
-			if (control instanceof ControlComputedVariable) {
-				allComputedVariables.push(control)
+			if (control instanceof ControlExpressionVariable) {
+				allExpressionVariables.push(control)
 			}
 		}
 
 		// Sort by controlId to ensure consistent order in conflicts
-		allComputedVariables.sort((a, b) => a.controlId.localeCompare(b.controlId))
+		allExpressionVariables.sort((a, b) => a.controlId.localeCompare(b.controlId))
 
-		for (const control of allComputedVariables) {
-			this.addComputedVariable(control.controlId, control.options.variableName)
+		for (const control of allExpressionVariables) {
+			this.addExpressionVariable(control.controlId, control.options.variableName)
 		}
 	}
 
 	/**
-	 * Add a computed variable to the names map
+	 * Add a expression variable to the names map
 	 */
-	addComputedVariable(controlId: string, variableName: string): void {
+	addExpressionVariable(controlId: string, variableName: string): void {
 		if (!variableName || variableName.length === 0) return
 
-		const existing = this.#computedVariableNamesMap.get(variableName)
+		const existing = this.#expressionVariableNamesMap.get(variableName)
 		if (existing) {
 			// Variable name already exists, add to conflicts if not already present
 			if (!existing.otherControlIds.includes(controlId) && existing.activeControlId !== controlId) {
@@ -57,7 +57,7 @@ export class ComputedVariableNameMap {
 			}
 		} else {
 			// First control with this name becomes active
-			this.#computedVariableNamesMap.set(variableName, {
+			this.#expressionVariableNamesMap.set(variableName, {
 				activeControlId: controlId,
 				otherControlIds: [],
 			})
@@ -65,12 +65,12 @@ export class ComputedVariableNameMap {
 	}
 
 	/**
-	 * Remove a computed variable from the names map
+	 * Remove a expression variable from the names map
 	 */
-	removeComputedVariable(controlId: string, variableName: string): void {
+	removeExpressionVariable(controlId: string, variableName: string): void {
 		if (!variableName || variableName.length === 0) return
 
-		const existing = this.#computedVariableNamesMap.get(variableName)
+		const existing = this.#expressionVariableNamesMap.get(variableName)
 		if (!existing) return
 
 		if (existing.activeControlId === controlId) {
@@ -81,16 +81,16 @@ export class ComputedVariableNameMap {
 				existing.activeControlId = newActiveControlId
 
 				// Invalidate the newly promoted control so it updates its variable value
-				const newActiveControl = this.#controls.get(newActiveControlId) as ControlComputedVariable | undefined
+				const newActiveControl = this.#controls.get(newActiveControlId) as ControlExpressionVariable | undefined
 				if (newActiveControl) {
 					newActiveControl.triggerRedraw()
 				}
 			} else {
 				// No other controls, remove the entry entirely
-				this.#computedVariableNamesMap.delete(variableName)
+				this.#expressionVariableNamesMap.delete(variableName)
 
 				// Clear cached values
-				this.#variableValuesController.setVariableValues('computed', [{ id: variableName, value: undefined }])
+				this.#variableValuesController.setVariableValues('expression', [{ id: variableName, value: undefined }])
 			}
 		} else {
 			// Non-active control is being removed, just remove from others list
@@ -102,24 +102,24 @@ export class ComputedVariableNameMap {
 	}
 
 	/**
-	 * Update computed variable name in the map when a control's variableName changes
+	 * Update expression variable name in the map when a control's variableName changes
 	 */
-	updateComputedVariableName(controlId: string, oldVariableName: string, newVariableName: string): void {
+	updateExpressionVariableName(controlId: string, oldVariableName: string, newVariableName: string): void {
 		// Remove from old name
-		this.removeComputedVariable(controlId, oldVariableName)
+		this.removeExpressionVariable(controlId, oldVariableName)
 
 		// Add to new name
-		this.addComputedVariable(controlId, newVariableName)
+		this.addExpressionVariable(controlId, newVariableName)
 	}
 
 	/**
-	 * Check if a computed variable control is the active one for its variableName
+	 * Check if a expression variable control is the active one for its variableName
 	 */
-	isComputedVariableActive(controlId: string): boolean {
-		const control = this.#controls.get(controlId) as ControlComputedVariable | undefined
+	isExpressionVariableActive(controlId: string): boolean {
+		const control = this.#controls.get(controlId) as ControlExpressionVariable | undefined
 		if (!control || !control.options.variableName) return false
 
-		const nameEntry = this.#computedVariableNamesMap.get(control.options.variableName)
+		const nameEntry = this.#expressionVariableNamesMap.get(control.options.variableName)
 		return nameEntry?.activeControlId === controlId
 	}
 }

@@ -23,7 +23,7 @@ export const ExportWizardModal = observer(
 			surfaces: true,
 			triggers: true,
 			customVariables: true,
-			computedVariables: true,
+			expressionVariables: true,
 			// userconfig: true,
 			format: ExportFormatDefault,
 			filename: userConfig.properties?.default_export_filename,
@@ -77,7 +77,7 @@ export const ExportWizardModal = observer(
 						surfaces: true,
 						triggers: true,
 						customVariables: true,
-						computedVariables: true,
+						expressionVariables: true,
 						// userconfig: true,
 						format: ExportFormatDefault,
 						filename: defaultExportFilename,
@@ -169,9 +169,9 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 			</div>
 			<div className="indent3">
 				<CFormCheck
-					checked={config.computedVariables}
-					onChange={(e) => setValue('computedVariables', e.currentTarget.checked)}
-					label="Computed Variables"
+					checked={config.expressionVariables}
+					onChange={(e) => setValue('expressionVariables', e.currentTarget.checked)}
+					label="Expression variables"
 				/>
 			</div>
 			<div className="indent3">

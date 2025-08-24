@@ -6,9 +6,9 @@ import {
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
-import type { ComputedVariableModel } from '@companion-app/shared/Model/ComputedVariableModel.js'
+import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 
-export class EntityListPoolComputedVariable extends ControlEntityListPoolBase {
+export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase {
 	#entities: ControlEntityList
 	#localVariables: ControlEntityList
 
@@ -26,7 +26,7 @@ export class EntityListPoolComputedVariable extends ControlEntityListPoolBase {
 		})
 	}
 
-	loadStorage(storage: ComputedVariableModel, skipSubscribe: boolean, isImport: boolean): void {
+	loadStorage(storage: ExpressionVariableModel, skipSubscribe: boolean, isImport: boolean): void {
 		this.#entities.loadStorage(storage.entity ? [storage.entity] : [], skipSubscribe, isImport)
 		this.#localVariables.loadStorage(storage.localVariables, skipSubscribe, isImport)
 	}

@@ -13,20 +13,20 @@ import type {
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
-import { EntityListPoolComputedVariable } from '../Entities/EntityListPoolComputedVariable.js'
+import { EntityListPoolExpressionVariable } from '../Entities/EntityListPoolExpressionVariable.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import {
-	ClientComputedVariableData,
-	ComputedVariableModel,
-	ComputedVariableOptions,
-} from '@companion-app/shared/Model/ComputedVariableModel.js'
+	ClientExpressionVariableData,
+	ExpressionVariableModel,
+	ExpressionVariableOptions,
+} from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import jsonPatch from 'fast-json-patch'
-import { ComputedVariableNameMap } from '../ComputedVariableNameMap.js'
+import { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 
 /**
- * Class for a computed (aka expression) variable.
+ * Class for an expression variable.
  *
  * @author Julian Waller <me@julusian.co.uk>
  * @since 4.1.0
@@ -37,8 +37,8 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ControlComputedVariable
-	extends ControlBase<ComputedVariableModel>
+export class ControlExpressionVariable
+	extends ControlBase<ExpressionVariableModel>
 	implements
 		ControlWithoutActions,
 		ControlWithoutEvents,
@@ -48,7 +48,7 @@ export class ControlComputedVariable
 		ControlWithOptions,
 		ControlWithoutPushed
 {
-	readonly type = 'computed-variable'
+	readonly type = 'expression-variable'
 
 	readonly supportsActions = false
 	readonly supportsEvents = false
@@ -59,28 +59,28 @@ export class ControlComputedVariable
 	readonly supportsOptions = true
 	readonly supportsPushed = false
 
-	readonly #computedVariableNameMap: ComputedVariableNameMap
+	readonly #expressionVariableNameMap: ExpressionVariableNameMap
 
 	/**
 	 * The defaults options for a trigger
 	 */
-	static DefaultOptions: ComputedVariableOptions = {
+	static DefaultOptions: ExpressionVariableOptions = {
 		variableName: '',
-		description: 'A computed variable',
+		description: 'A expression variable',
 		sortOrder: 0,
 	}
 
 	/**
-	 * The last sent computed-variable json object
+	 * The last sent expression-variable json object
 	 */
-	#lastSentDefinitionJson: ClientComputedVariableData | null = null
+	#lastSentDefinitionJson: ClientExpressionVariableData | null = null
 
 	/**
 	 * Basic trigger configuration
 	 */
-	options: ComputedVariableOptions
+	options: ExpressionVariableOptions
 
-	readonly entities: EntityListPoolComputedVariable
+	readonly entities: EntityListPoolExpressionVariable
 
 	/**
 	 * @param registry - the application core
@@ -91,16 +91,16 @@ export class ControlComputedVariable
 	 */
 	constructor(
 		deps: ControlDependencies,
-		computedVariableNameMap: ComputedVariableNameMap,
+		expressionVariableNameMap: ExpressionVariableNameMap,
 		controlId: string,
-		storage: ComputedVariableModel | null,
+		storage: ExpressionVariableModel | null,
 		isImport: boolean
 	) {
-		super(deps, controlId, `Controls/ControlTypes/ComputedVariable/${controlId}`)
+		super(deps, controlId, `Controls/ControlTypes/ExpressionVariable/${controlId}`)
 
-		this.#computedVariableNameMap = computedVariableNameMap
+		this.#expressionVariableNameMap = expressionVariableNameMap
 
-		this.entities = new EntityListPoolComputedVariable({
+		this.entities = new EntityListPoolExpressionVariable({
 			controlId,
 			commitChange: this.commitChange.bind(this),
 			invalidateControl: this.triggerRedraw.bind(this),
@@ -110,7 +110,7 @@ export class ControlComputedVariable
 			variableValues: deps.variables.values,
 		})
 
-		this.options = cloneDeep(ControlComputedVariable.DefaultOptions)
+		this.options = cloneDeep(ControlExpressionVariable.DefaultOptions)
 
 		if (!storage) {
 			// New control
@@ -120,8 +120,8 @@ export class ControlComputedVariable
 
 			// Notify interested
 		} else {
-			if (storage.type !== 'computed-variable')
-				throw new Error(`Invalid type given to ControlComputedVariable: "${storage.type}"`)
+			if (storage.type !== 'expression-variable')
+				throw new Error(`Invalid type given to ControlExpressionVariable: "${storage.type}"`)
 
 			this.options = storage.options || this.options
 			this.entities.loadStorage(storage, true, isImport)
@@ -175,8 +175,8 @@ export class ControlComputedVariable
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
-	toJSON(clone = true): ComputedVariableModel {
-		const obj: ComputedVariableModel = {
+	toJSON(clone = true): ExpressionVariableModel {
+		const obj: ExpressionVariableModel = {
 			type: this.type,
 			options: this.options,
 			entity: this.entities.getRootEntity()?.asEntityModel(true) || null,
@@ -185,11 +185,11 @@ export class ControlComputedVariable
 		return clone ? cloneDeep(obj) : obj
 	}
 
-	toClientJSON(): ClientComputedVariableData {
+	toClientJSON(): ClientExpressionVariableData {
 		return {
 			type: this.type,
 			...this.options,
-			isActive: this.#computedVariableNameMap.isComputedVariableActive(this.controlId),
+			isActive: this.#expressionVariableNameMap.isExpressionVariableActive(this.controlId),
 		}
 	}
 
@@ -220,7 +220,7 @@ export class ControlComputedVariable
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
-		// Handle computed variable name changes
+		// Handle expression variable name changes
 		if (key === 'variableName') {
 			// Make sure the new name is valid
 			if (!isLabelValid(value)) {
@@ -231,7 +231,7 @@ export class ControlComputedVariable
 			this.options[key] = value
 
 			// Update the names map through the dependency
-			this.#computedVariableNameMap.updateComputedVariableName(this.controlId, oldVariableName, value)
+			this.#expressionVariableNameMap.updateExpressionVariableName(this.controlId, oldVariableName, value)
 		} else {
 			// @ts-expect-error mistmatch in types
 			this.options[key] = value
@@ -258,18 +258,18 @@ export class ControlComputedVariable
 	#sendClientJsonChange(): void {
 		const newJson = cloneDeep(this.toClientJSON())
 
-		if (this.deps.changeEvents.listenerCount('computedVariableChange') > 0) {
+		if (this.deps.changeEvents.listenerCount('expressionVariableChange') > 0) {
 			if (this.#lastSentDefinitionJson) {
 				const patch = jsonPatch.compare(this.#lastSentDefinitionJson || {}, newJson || {})
 				if (patch.length > 0) {
-					this.deps.changeEvents.emit('computedVariableChange', this.controlId, {
+					this.deps.changeEvents.emit('expressionVariableChange', this.controlId, {
 						type: 'update',
 						controlId: this.controlId,
 						patch,
 					})
 				}
 			} else {
-				this.deps.changeEvents.emit('computedVariableChange', this.controlId, {
+				this.deps.changeEvents.emit('expressionVariableChange', this.controlId, {
 					type: 'add',
 					controlId: this.controlId,
 					info: newJson,
@@ -285,20 +285,20 @@ export class ControlComputedVariable
 
 		this.#sendClientJsonChange()
 
-		this.deps.events.emit('computedVariableDefinitionChanged', this.controlId, this.toClientJSON())
+		this.deps.events.emit('expressionVariableDefinitionChanged', this.controlId, this.toClientJSON())
 	}
 
 	destroy(): void {
 		this.entities.destroy()
 
-		this.#computedVariableNameMap.removeComputedVariable(this.controlId, this.options.variableName)
+		this.#expressionVariableNameMap.removeExpressionVariable(this.controlId, this.options.variableName)
 
 		super.destroy()
 
-		this.deps.events.emit('computedVariableDefinitionChanged', this.controlId, null)
+		this.deps.events.emit('expressionVariableDefinitionChanged', this.controlId, null)
 
-		if (this.deps.changeEvents.listenerCount('computedVariableChange') > 0) {
-			this.deps.changeEvents.emit('computedVariableChange', this.controlId, {
+		if (this.deps.changeEvents.listenerCount('expressionVariableChange') > 0) {
+			this.deps.changeEvents.emit('expressionVariableChange', this.controlId, {
 				type: 'remove',
 				controlId: this.controlId,
 			})
@@ -315,8 +315,8 @@ export class ControlComputedVariable
 			if (!name) return
 
 			// Only emit variable value if this control is the active one for this variable name
-			if (this.#computedVariableNameMap.isComputedVariableActive(this.controlId)) {
-				this.deps.variables.values.setVariableValues('computed', [
+			if (this.#expressionVariableNameMap.isExpressionVariableActive(this.controlId)) {
+				this.deps.variables.values.setVariableValues('expression', [
 					{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
 				])
 			}

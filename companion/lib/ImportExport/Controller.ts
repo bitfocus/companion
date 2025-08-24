@@ -12,7 +12,7 @@
 import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
 import {
-	CreateComputedVariableControlId,
+	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 	validateActionSetId,
 } from '@companion-app/shared/ControlId.js'
@@ -62,7 +62,7 @@ import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
-import { ComputedVariableModel } from '@companion-app/shared/Model/ComputedVariableModel.js'
+import { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -181,7 +181,7 @@ export class ImportExportController {
 				instances: {},
 				controls: 'pages' in object,
 				customVariables: 'custom_variables' in object,
-				computedVariables: 'computedVariables' in object,
+				expressionVariables: 'expressionVariables' in object,
 				surfaces: 'surfaces' in object,
 				triggers: 'triggers' in object,
 			}
@@ -501,15 +501,15 @@ export class ImportExportController {
 							this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
 						}
 
-						// Import computed variables
-						if (!config || config.computedVariables) {
-							this.#controlsController.replaceComputedVariableCollections(data.computedVariablesCollections || [])
+						// Import expression variables
+						if (!config || config.expressionVariables) {
+							this.#controlsController.replaceExpressionVariableCollections(data.expressionVariablesCollections || [])
 
-							for (const [id, variableDefinition] of Object.entries(data.computedVariables || {})) {
-								const controlId = CreateComputedVariableControlId(id)
-								const fixedControlObj = this.#fixupComputedVariableControl(variableDefinition, instanceIdMap)
+							for (const [id, variableDefinition] of Object.entries(data.expressionVariables || {})) {
+								const controlId = CreateExpressionVariableControlId(id)
+								const fixedControlObj = this.#fixupExpressionVariableControl(variableDefinition, instanceIdMap)
 
-								this.#controlsController.importComputedVariable(controlId, fixedControlObj)
+								this.#controlsController.importExpressionVariable(controlId, fixedControlObj)
 							}
 						}
 
@@ -696,12 +696,12 @@ export class ImportExportController {
 			this.#variablesController.custom.reset()
 		}
 
-		if (!config || config.computedVariables) {
-			this.#controlsController.replaceComputedVariableCollections([])
+		if (!config || config.expressionVariables) {
+			this.#controlsController.replaceExpressionVariableCollections([])
 
-			// Delete existing computed variables
-			const existingComputedVariables = this.#controlsController.getAllComputedVariables()
-			for (const control of existingComputedVariables) {
+			// Delete existing expression variables
+			const existingExpressionVariables = this.#controlsController.getAllExpressionVariables()
+			for (const control of existingExpressionVariables) {
 				this.#controlsController.deleteControl(control.controlId)
 			}
 		}
@@ -827,10 +827,10 @@ export class ImportExportController {
 		return result
 	}
 
-	#fixupComputedVariableControl(
-		control: ComputedVariableModel,
+	#fixupExpressionVariableControl(
+		control: ExpressionVariableModel,
 		instanceIdMap: InstanceAppliedRemappings
-	): ComputedVariableModel {
+	): ExpressionVariableModel {
 		// Future: this does not feel durable
 
 		const connectionLabelRemap: Record<string, string> = {}
@@ -844,8 +844,8 @@ export class ImportExportController {
 			}
 		}
 
-		const result: ComputedVariableModel = {
-			type: 'computed-variable',
+		const result: ExpressionVariableModel = {
+			type: 'expression-variable',
 			options: cloneDeep(control.options),
 			entity: null,
 			localVariables: [],

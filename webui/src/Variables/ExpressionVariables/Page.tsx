@@ -4,7 +4,7 @@ import { useComputed } from '~/Resources/util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAdd, faClone, faCopy, faLayerGroup, faList, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { CreateComputedVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreateExpressionVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -12,74 +12,74 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import {
-	ClientComputedVariableData,
-	ComputedVariableCollection,
-} from '@companion-app/shared/Model/ComputedVariableModel.js'
+	ClientExpressionVariableData,
+	ExpressionVariableCollection,
+} from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import {
-	ComputedVariablesTableContextProvider,
-	useComputedVariablesTableContext,
-} from './ComputedVariablesTableContext'
-import { useComputedVariablesCollectionsApi } from './ComputedVariablesCollectionsApi'
+	ExpressionVariablesTableContextProvider,
+	useExpressionVariablesTableContext,
+} from './ExpressionVariablesTableContext'
+import { useExpressionVariablesCollectionsApi } from './ExpressionVariablesCollectionsApi'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
-export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
-	const { computedVariablesList } = useContext(RootAppStoreContext)
+export const ExpressionVariablesPage = observer(function ExpressionVariablesPage() {
+	const { expressionVariablesList } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: '/variables/computed' })
+	const navigate = useNavigate({ from: '/variables/expression' })
 
-	const createMutation = useMutationExt(trpc.controls.computedVariables.create.mutationOptions())
+	const createMutation = useMutationExt(trpc.controls.expressionVariables.create.mutationOptions())
 
 	const doAddNew = useCallback(
 		(_e: React.MouseEvent<HTMLButtonElement>) => {
 			createMutation
 				.mutateAsync()
 				.then(async (controlId) => {
-					console.log('created computed variable', controlId)
+					console.log('created expression variable', controlId)
 
 					const parsedId = ParseControlId(controlId)
-					if (parsedId?.type !== 'computed-variable') return
+					if (parsedId?.type !== 'expression-variable') return
 
 					await navigate({
-						to: `/variables/computed/$controlId`,
+						to: `/variables/expression/$controlId`,
 						params: {
 							controlId: parsedId.variableId,
 						},
 					})
 				})
 				.catch((e) => {
-					console.error('failed to create computed-variable', e)
+					console.error('failed to create expression-variable', e)
 				})
 		},
 		[createMutation, navigate]
 	)
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
-	const computedVariablesGroupsApi = useComputedVariablesCollectionsApi(confirmModalRef)
+	const expressionVariablesGroupsApi = useExpressionVariablesCollectionsApi(confirmModalRef)
 
-	const allComputedVariables = useComputed(() => {
-		const allComputedVariables: ComputedVariableDataWithId[] = []
+	const allExpressionVariables = useComputed(() => {
+		const allExpressionVariables: ExpressionVariableDataWithId[] = []
 
-		for (const [variableId, variable] of computedVariablesList.computedVariables) {
+		for (const [variableId, variable] of expressionVariablesList.expressionVariables) {
 			const parsedId = ParseControlId(variableId)
-			if (!parsedId || parsedId.type !== 'computed-variable') continue
-			allComputedVariables.push({ ...variable, id: parsedId.variableId, collectionId: variable.collectionId || null })
+			if (!parsedId || parsedId.type !== 'expression-variable') continue
+			allExpressionVariables.push({ ...variable, id: parsedId.variableId, collectionId: variable.collectionId || null })
 		}
 
-		return allComputedVariables
-	}, [computedVariablesList.computedVariables])
+		return allExpressionVariables
+	}, [expressionVariablesList.expressionVariables])
 
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/variables/computed/$controlId' })
+	const routeMatch = matchRoute({ to: '/variables/expression/$controlId' })
 	const selectedVariableId = routeMatch ? routeMatch.controlId : null
 
-	const selectComputedVariable = useCallback(
+	const selectExpressionVariable = useCallback(
 		(variableId: string | null) => {
 			if (variableId === null) {
-				void navigate({ to: '/variables/computed' })
+				void navigate({ to: '/variables/expression' })
 			} else {
 				void navigate({
-					to: `/variables/computed/$controlId`,
+					to: `/variables/expression/$controlId`,
 					params: {
 						controlId: variableId,
 					},
@@ -90,7 +90,7 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 	)
 
 	const doCloseVariable = useCallback(() => {
-		void navigate({ to: '/variables/computed' })
+		void navigate({ to: '/variables/expression' })
 	}, [navigate])
 
 	const showPrimaryPanel = !selectedVariableId
@@ -101,10 +101,8 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
-				<h4>Computed Variables</h4>
-				<p style={{ marginBottom: '0.5rem' }}>
-					Here you can create some variables as shortcuts for either static or dynamic values
-				</p>
+				<h4>Expression variables</h4>
+				<p style={{ marginBottom: '0.5rem' }}>Here you can create some variables from live computed expressions</p>
 
 				<div className="mb-2">
 					<CButtonGroup>
@@ -116,32 +114,32 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 				</div>
 
 				<PanelCollapseHelperProvider
-					storageId="computed-variable-groups"
-					knownPanelIds={computedVariablesList.allCollectionIds}
+					storageId="expression-variable-groups"
+					knownPanelIds={expressionVariablesList.allCollectionIds}
 					defaultCollapsed
 				>
-					<ComputedVariablesTableContextProvider
+					<ExpressionVariablesTableContextProvider
 						deleteModalRef={confirmModalRef}
-						selectComputedVariable={selectComputedVariable}
+						selectExpressionVariable={selectExpressionVariable}
 					>
-						<CollectionsNestingTable<ComputedVariableCollection, ComputedVariableDataWithId>
-							// Heading={ComputedVariablesListTableHeading}
-							NoContent={ComputedVariablesListNoContent}
-							ItemRow={ComputedVariableItemRow}
-							itemName="computed variable"
-							dragId="computed-variable"
-							collectionsApi={computedVariablesGroupsApi}
-							collections={computedVariablesList.rootCollections()}
-							items={allComputedVariables}
+						<CollectionsNestingTable<ExpressionVariableCollection, ExpressionVariableDataWithId>
+							// Heading={ExpressionVariablesListTableHeading}
+							NoContent={ExpressionVariablesListNoContent}
+							ItemRow={ExpressionVariableItemRow}
+							itemName="expression variable"
+							dragId="expression-variable"
+							collectionsApi={expressionVariablesGroupsApi}
+							collections={expressionVariablesList.rootCollections()}
+							items={allExpressionVariables}
 							selectedItemId={selectedVariableId}
 						/>
-					</ComputedVariablesTableContextProvider>
+					</ExpressionVariablesTableContextProvider>
 				</PanelCollapseHelperProvider>
 			</CCol>
 
 			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="secondary-panel-simple">
-					{!!selectedVariableId && <ComputedVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
+					{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
 					<Outlet />
 				</div>
 			</CCol>
@@ -149,38 +147,40 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 	)
 })
 
-export interface ComputedVariableDataWithId extends Omit<ClientComputedVariableData, 'collectionId'> {
+export interface ExpressionVariableDataWithId extends Omit<ClientExpressionVariableData, 'collectionId'> {
 	id: string
 	collectionId: string | null
 }
 
-function ComputedVariablesListNoContent() {
-	return <NonIdealState icon={faList} text="There are currently no computed variables." />
+function ExpressionVariablesListNoContent() {
+	return <NonIdealState icon={faList} text="There are currently no expression variables." />
 }
 
-function ComputedVariableItemRow(item: ComputedVariableDataWithId) {
-	return <ComputedVariableTableRow item={item} />
+function ExpressionVariableItemRow(item: ExpressionVariableDataWithId) {
+	return <ExpressionVariableTableRow item={item} />
 }
 
-interface ComputedVariableTableRowProps {
-	item: ComputedVariableDataWithId
+interface ExpressionVariableTableRowProps {
+	item: ExpressionVariableDataWithId
 }
 
-const ComputedVariableTableRow = observer(function ComputedVariableTableRow2({ item }: ComputedVariableTableRowProps) {
+const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2({
+	item,
+}: ExpressionVariableTableRowProps) {
 	const { notifier } = useContext(RootAppStoreContext)
 
-	const tableContext = useComputedVariablesTableContext()
+	const tableContext = useExpressionVariablesTableContext()
 
-	const deleteMutation = useMutationExt(trpc.controls.computedVariables.delete.mutationOptions())
-	const cloneMutation = useMutationExt(trpc.controls.computedVariables.clone.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.controls.expressionVariables.delete.mutationOptions())
+	const cloneMutation = useMutationExt(trpc.controls.expressionVariables.clone.mutationOptions())
 
 	const doDelete = useCallback(() => {
 		tableContext.deleteModalRef.current?.show(
-			'Delete computed variable',
-			'Are you sure you wish to delete this computed variable?',
+			'Delete expression variable',
+			'Are you sure you wish to delete this expression variable?',
 			'Delete',
 			() => {
-				deleteMutation.mutateAsync({ controlId: CreateComputedVariableControlId(item.id) }).catch((e) => {
+				deleteMutation.mutateAsync({ controlId: CreateExpressionVariableControlId(item.id) }).catch((e) => {
 					console.error('Failed to delete', e)
 				})
 			}
@@ -188,12 +188,12 @@ const ComputedVariableTableRow = observer(function ComputedVariableTableRow2({ i
 	}, [deleteMutation, tableContext.deleteModalRef, item.id])
 
 	const doEdit = useCallback(() => {
-		tableContext.selectComputedVariable(item.id)
+		tableContext.selectExpressionVariable(item.id)
 	}, [tableContext, item.id])
 
 	const doClone = useCallback(() => {
 		cloneMutation
-			.mutateAsync({ controlId: CreateComputedVariableControlId(item.id) })
+			.mutateAsync({ controlId: CreateExpressionVariableControlId(item.id) })
 			.then((newControlId) => {
 				console.log('cloned to control', newControlId)
 			})
@@ -242,7 +242,7 @@ const ComputedVariableTableRow = observer(function ComputedVariableTableRow2({ i
 })
 
 function CreateCollectionButton() {
-	const createMutation = useMutationExt(trpc.controls.computedVariables.collections.add.mutationOptions())
+	const createMutation = useMutationExt(trpc.controls.expressionVariables.collections.add.mutationOptions())
 
 	const doCreateCollection = useCallback(() => {
 		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
@@ -257,14 +257,14 @@ function CreateCollectionButton() {
 	)
 }
 
-interface ComputedVariableEditPanelHeadingProps {
+interface ExpressionVariableEditPanelHeadingProps {
 	doCloseVariable: () => void
 }
 
-function ComputedVariableEditPanelHeading({ doCloseVariable }: ComputedVariableEditPanelHeadingProps) {
+function ExpressionVariableEditPanelHeading({ doCloseVariable }: ExpressionVariableEditPanelHeadingProps) {
 	return (
 		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Computed Variable</h4>
+			<h4 className="panel-title">Edit Expression variable</h4>
 			<div className="header-buttons">
 				<div className="float_right ms-1" onClick={doCloseVariable} title="Close">
 					<FontAwesomeIcon icon={faTimes} size="lg" />

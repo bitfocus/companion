@@ -25,7 +25,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 		surfaces: true,
 		triggers: true,
 		customVariables: true,
-		computedVariables: true,
+		expressionVariables: true,
 		userconfig: true,
 	})
 
@@ -103,7 +103,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 						surfaces: true,
 						triggers: true,
 						customVariables: true,
-						computedVariables: true,
+						expressionVariables: true,
 						userconfig: true,
 					})
 
@@ -253,9 +253,9 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 			</div>
 			<div className="indent3">
 				<CFormCheck
-					checked={config.computedVariables}
-					onChange={(e) => setValue('computedVariables', e.currentTarget.checked)}
-					label="Computed Variables"
+					checked={config.expressionVariables}
+					onChange={(e) => setValue('expressionVariables', e.currentTarget.checked)}
+					label="Expression variables"
 				/>
 			</div>
 			<div className="indent3">
@@ -309,8 +309,8 @@ function ResetApplyStep({ config }: ResetApplyStepProps) {
 		changes.push(<li key="custom-variables">All custom variables.</li>)
 	}
 
-	if (config.computedVariables) {
-		changes.push(<li key="computed-variables">All computed variables.</li>)
+	if (config.expressionVariables) {
+		changes.push(<li key="expression-variables">All expression variables.</li>)
 	}
 
 	if (config.userconfig) {
