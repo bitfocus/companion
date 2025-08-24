@@ -62,7 +62,7 @@ body {
 
 .dobutton {
 	font-size: 1em;
-	padding: 15px 40px;
+	padding: 10px 20px;
 	border: 0px;
 	user-select: none;
 	cursor: pointer;
@@ -75,8 +75,17 @@ body {
 	border: 1px solid white;
 }
 
-#launch:hover {
-	background-color: #ddd;
+#hide {
+	background-color: rgba(255, 255, 255, 0.1);
+	color: white;
+	margin-right: 5px;
+	border: 1px solid white;
+}
+
+#close {
+	background-color: rgba(255, 255, 255, 0.1);
+	color: white;
+	border: 1px solid white;
 }
 
 input {
@@ -234,6 +243,20 @@ input[type='checkbox'] {
 	font-size: 14px; /* Reset font size for the inputs */
 }
 
+#advanced_settings_btn {
+	float: right;
+	position: absolute;
+	font-size: 32px;
+	right: 5px;
+	top: 5px;
+
+	border: none;
+	cursor: pointer;
+	/* text-decoration: none; */
+	color: white;
+	background: none;
+	outline: none !important;
+}
 
 .two-columns {
 	display: grid;
@@ -250,3 +273,7 @@ input[type='checkbox'] {
 #bottombuttons .dobutton {
 	margin: 0 5px;
 }
+
+
+
+

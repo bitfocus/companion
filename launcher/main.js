@@ -336,18 +336,9 @@ if (!lock) {
 			minWidth: 440,
 			// maxHeight: 380,
 			frame: false,
-			titleBarStyle: 'hidden',
 			minimizable: false,
 			maximizable: false,
 
-			...(process.platform !== 'darwin'
-				? {
-						titleBarOverlay: {
-							color: '#232323',
-							symbolColor: '#cccccc',
-						},
-					}
-				: {}),
 			resizable: false,
 			icon: fileURLToPath(new URL('./assets/icon.png', import.meta.url)),
 			webPreferences: {
@@ -424,6 +415,23 @@ if (!lock) {
 			sendAppInfo()
 		})
 
+		ipcMain.on('launcher-close', () => {
+			if (child) {
+				if (watcher) watcher.close().catch(() => console.error('Failed to stop'))
+
+				child.shouldRestart = false
+				if (child.child) {
+					child.child.send({
+						messageType: 'exit',
+					})
+				}
+			}
+		})
+
+		ipcMain.on('launcher-minimize', () => {
+			thisWindow.hide()
+		})
+
 		ipcMain.on('launcher-open-gui', () => {
 			launchUI()
 		})
@@ -468,6 +476,12 @@ if (!lock) {
 			})
 		})
 
+		ipcMain.on('launcher-advanced-settings', (_e, _msg) => {
+			console.log('open advanced settings')
+
+			showSettings(window)
+		})
+
 		ipcMain.on('pick-developer-modules-path', () => {
 			console.log('pick dev modules path')
 			electron.dialog
@@ -484,14 +498,6 @@ if (!lock) {
 					}
 				})
 		})
-		// ipcMain.on('clear-developer-modules-path', () => {
-		// 	console.log('clear dev modules path')
-		// 	uiConfig.set('dev_modules_path', '')
-
-		// 	sendAppInfo()
-		// 	triggerRestart()
-		// 	restartWatcher()
-		// })
 
 		ipcMain.on('network-interfaces:get', () => {
 			systeminformation.networkInterfaces().then((list) => {
@@ -573,18 +579,11 @@ if (!lock) {
 			}
 		})
 
-		window.on('minimize', (e) => {
+		window.on('close', (e) => {
 			e.preventDefault()
-			// Minimise to tray
-			window?.hide()
-		})
 
-		if (process.platform !== 'darwin') {
-			window.on('close', (e) => {
-				e.preventDefault()
-				window?.hide()
-			})
-		}
+			performQuit()
+		})
 	}
 
 	function createTray() {
@@ -1009,12 +1008,6 @@ if (!lock) {
 			)
 			app.quit()
 		})
-
-	if (process.platform === 'darwin') {
-		app.on('window-all-closed', (e) => {
-			e.preventDefault()
-		})
-	}
 
 	app.on('activate', () => {
 		if (window === null) {

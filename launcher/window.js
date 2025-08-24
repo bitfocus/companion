@@ -1,4 +1,7 @@
 document.getElementById('launch').addEventListener('click', () => api.send('launcher-open-gui'))
+document.getElementById('hide').addEventListener('click', () => api.send('launcher-minimize'))
+document.getElementById('close').addEventListener('click', () => api.send('launcher-close'))
+document.getElementById('advanced_settings_btn').addEventListener('click', () => api.send('launcher-advanced-settings'))
 
 api.receive('info', (config, info, platform) => {
 	if (platform !== 'win32' && platform !== 'darwin') {
