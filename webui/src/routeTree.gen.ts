@@ -38,6 +38,7 @@ import { Route as SettingsIndexRouteImport } from './routes/app/settings/index.t
 import { Route as ModulesIndexRouteImport } from './routes/app/modules/index.tsx'
 import { Route as ConnectionsIndexRouteImport } from './routes/app/connections/index.tsx'
 import { Route as VariablesCustomRouteImport } from './routes/app/variables/custom.tsx'
+import { Route as VariablesComputedRouteImport } from './routes/app/variables/computed.tsx'
 import { Route as VariablesLabelRouteImport } from './routes/app/variables/$label.tsx'
 import { Route as TriggersControlIdRouteImport } from './routes/app/triggers/$controlId.tsx'
 import { Route as SurfacesOutboundRouteImport } from './routes/app/surfaces/outbound.tsx'
@@ -54,8 +55,10 @@ import { Route as ModulesModuleIdRouteImport } from './routes/app/modules/$modul
 import { Route as ConnectionsAddRouteImport } from './routes/app/connections/add.tsx'
 import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
+import { Route as VariablesComputedIndexRouteImport } from './routes/app/variables/computed/index.tsx'
 import { Route as SurfacesConfiguredIndexRouteImport } from './routes/app/surfaces/configured/index.tsx'
 import { Route as SettingsBackupsIndexRouteImport } from './routes/app/settings/backups/index.tsx'
+import { Route as VariablesComputedControlIdRouteImport } from './routes/app/variables/computed/$controlId.tsx'
 import { Route as SurfacesConfiguredItemIdRouteImport } from './routes/app/surfaces/configured/$itemId.tsx'
 import { Route as SettingsBackupsRuleIdRouteImport } from './routes/app/settings/backups/$ruleId.tsx'
 
@@ -226,6 +229,11 @@ const VariablesCustomRoute = VariablesCustomRouteImport.update({
   path: '/variables/custom',
   getParentRoute: () => appRoute,
 } as any)
+const VariablesComputedRoute = VariablesComputedRouteImport.update({
+  id: '/variables/computed',
+  path: '/variables/computed',
+  getParentRoute: () => appRoute,
+} as any)
 const VariablesLabelRoute = VariablesLabelRouteImport.update({
   id: '/variables/$label',
   path: '/variables/$label',
@@ -306,6 +314,11 @@ const ButtonsPageRoute = ButtonsPageRouteImport.update({
   path: '/$page',
   getParentRoute: () => ButtonsRoute,
 } as any)
+const VariablesComputedIndexRoute = VariablesComputedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => VariablesComputedRoute,
+} as any)
 const SurfacesConfiguredIndexRoute = SurfacesConfiguredIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -316,6 +329,12 @@ const SettingsBackupsIndexRoute = SettingsBackupsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SettingsBackupsRoute,
 } as any)
+const VariablesComputedControlIdRoute =
+  VariablesComputedControlIdRouteImport.update({
+    id: '/$controlId',
+    path: '/$controlId',
+    getParentRoute: () => VariablesComputedRoute,
+  } as any)
 const SurfacesConfiguredItemIdRoute =
   SurfacesConfiguredItemIdRouteImport.update({
     id: '/$itemId',
@@ -368,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/surfaces/outbound': typeof SurfacesOutboundRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$label': typeof VariablesLabelRoute
+  '/variables/computed': typeof VariablesComputedRouteWithChildren
   '/variables/custom': typeof VariablesCustomRoute
   '/connections/': typeof ConnectionsIndexRoute
   '/modules/': typeof ModulesIndexRoute
@@ -376,8 +396,10 @@ export interface FileRoutesByFullPath {
   '/variables': typeof VariablesIndexRoute
   '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/variables/computed/$controlId': typeof VariablesComputedControlIdRoute
   '/settings/backups/': typeof SettingsBackupsIndexRoute
   '/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
+  '/variables/computed/': typeof VariablesComputedIndexRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
@@ -421,8 +443,10 @@ export interface FileRoutesByTo {
   '/variables': typeof VariablesIndexRoute
   '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/variables/computed/$controlId': typeof VariablesComputedControlIdRoute
   '/settings/backups': typeof SettingsBackupsIndexRoute
   '/surfaces/configured': typeof SurfacesConfiguredIndexRoute
+  '/variables/computed': typeof VariablesComputedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -466,6 +490,7 @@ export interface FileRoutesById {
   '/_app/surfaces/outbound': typeof SurfacesOutboundRoute
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
   '/_app/variables/$label': typeof VariablesLabelRoute
+  '/_app/variables/computed': typeof VariablesComputedRouteWithChildren
   '/_app/variables/custom': typeof VariablesCustomRoute
   '/_app/connections/': typeof ConnectionsIndexRoute
   '/_app/modules/': typeof ModulesIndexRoute
@@ -474,8 +499,10 @@ export interface FileRoutesById {
   '/_app/variables/': typeof VariablesIndexRoute
   '/_app/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/_app/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/_app/variables/computed/$controlId': typeof VariablesComputedControlIdRoute
   '/_app/settings/backups/': typeof SettingsBackupsIndexRoute
   '/_app/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
+  '/_app/variables/computed/': typeof VariablesComputedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -519,6 +546,7 @@ export interface FileRouteTypes {
     | '/surfaces/outbound'
     | '/triggers/$controlId'
     | '/variables/$label'
+    | '/variables/computed'
     | '/variables/custom'
     | '/connections/'
     | '/modules/'
@@ -527,8 +555,10 @@ export interface FileRouteTypes {
     | '/variables'
     | '/settings/backups/$ruleId'
     | '/surfaces/configured/$itemId'
+    | '/variables/computed/$controlId'
     | '/settings/backups/'
     | '/surfaces/configured/'
+    | '/variables/computed/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -572,8 +602,10 @@ export interface FileRouteTypes {
     | '/variables'
     | '/settings/backups/$ruleId'
     | '/surfaces/configured/$itemId'
+    | '/variables/computed/$controlId'
     | '/settings/backups'
     | '/surfaces/configured'
+    | '/variables/computed'
   id:
     | '__root__'
     | '/_app'
@@ -616,6 +648,7 @@ export interface FileRouteTypes {
     | '/_app/surfaces/outbound'
     | '/_app/triggers/$controlId'
     | '/_app/variables/$label'
+    | '/_app/variables/computed'
     | '/_app/variables/custom'
     | '/_app/connections/'
     | '/_app/modules/'
@@ -624,8 +657,10 @@ export interface FileRouteTypes {
     | '/_app/variables/'
     | '/_app/settings/backups/$ruleId'
     | '/_app/surfaces/configured/$itemId'
+    | '/_app/variables/computed/$controlId'
     | '/_app/settings/backups/'
     | '/_app/surfaces/configured/'
+    | '/_app/variables/computed/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -856,6 +891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VariablesCustomRouteImport
       parentRoute: typeof appRoute
     }
+    '/_app/variables/computed': {
+      id: '/_app/variables/computed'
+      path: '/variables/computed'
+      fullPath: '/variables/computed'
+      preLoaderRoute: typeof VariablesComputedRouteImport
+      parentRoute: typeof appRoute
+    }
     '/_app/variables/$label': {
       id: '/_app/variables/$label'
       path: '/variables/$label'
@@ -968,6 +1010,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ButtonsPageRouteImport
       parentRoute: typeof ButtonsRoute
     }
+    '/_app/variables/computed/': {
+      id: '/_app/variables/computed/'
+      path: '/'
+      fullPath: '/variables/computed/'
+      preLoaderRoute: typeof VariablesComputedIndexRouteImport
+      parentRoute: typeof VariablesComputedRoute
+    }
     '/_app/surfaces/configured/': {
       id: '/_app/surfaces/configured/'
       path: '/'
@@ -981,6 +1030,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/backups/'
       preLoaderRoute: typeof SettingsBackupsIndexRouteImport
       parentRoute: typeof SettingsBackupsRoute
+    }
+    '/_app/variables/computed/$controlId': {
+      id: '/_app/variables/computed/$controlId'
+      path: '/$controlId'
+      fullPath: '/variables/computed/$controlId'
+      preLoaderRoute: typeof VariablesComputedControlIdRouteImport
+      parentRoute: typeof VariablesComputedRoute
     }
     '/_app/surfaces/configured/$itemId': {
       id: '/_app/surfaces/configured/$itemId'
@@ -1080,6 +1136,19 @@ const SurfacesConfiguredRouteChildren: SurfacesConfiguredRouteChildren = {
 const SurfacesConfiguredRouteWithChildren =
   SurfacesConfiguredRoute._addFileChildren(SurfacesConfiguredRouteChildren)
 
+interface VariablesComputedRouteChildren {
+  VariablesComputedControlIdRoute: typeof VariablesComputedControlIdRoute
+  VariablesComputedIndexRoute: typeof VariablesComputedIndexRoute
+}
+
+const VariablesComputedRouteChildren: VariablesComputedRouteChildren = {
+  VariablesComputedControlIdRoute: VariablesComputedControlIdRoute,
+  VariablesComputedIndexRoute: VariablesComputedIndexRoute,
+}
+
+const VariablesComputedRouteWithChildren =
+  VariablesComputedRoute._addFileChildren(VariablesComputedRouteChildren)
+
 interface appRouteChildren {
   SplatRoute: typeof SplatRoute
   ButtonsRoute: typeof ButtonsRouteWithChildren
@@ -1101,6 +1170,7 @@ interface appRouteChildren {
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
   VariablesLabelRoute: typeof VariablesLabelRoute
+  VariablesComputedRoute: typeof VariablesComputedRouteWithChildren
   VariablesCustomRoute: typeof VariablesCustomRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   VariablesIndexRoute: typeof VariablesIndexRoute
@@ -1127,6 +1197,7 @@ const appRouteChildren: appRouteChildren = {
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
   VariablesLabelRoute: VariablesLabelRoute,
+  VariablesComputedRoute: VariablesComputedRouteWithChildren,
   VariablesCustomRoute: VariablesCustomRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   VariablesIndexRoute: VariablesIndexRoute,

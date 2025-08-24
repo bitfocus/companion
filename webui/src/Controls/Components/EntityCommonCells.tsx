@@ -7,7 +7,6 @@ import {
 import React, { useContext } from 'react'
 import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
-import { LearnButton } from '~/Components/LearnButton.js'
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -31,8 +30,6 @@ interface EntityCommonCellsProps {
 	feedbackListType: FeedbackEntitySubType | null
 	entityDefinition: ClientEntityDefinition | undefined
 	service: IEntityEditorActionService
-	headlineExpanded: boolean
-	definitionName: string
 }
 
 export const EntityCommonCells = observer(function EntityCommonCells({
@@ -41,8 +38,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	feedbackListType,
 	entityDefinition,
 	service,
-	headlineExpanded,
-	definitionName,
 }: EntityCommonCellsProps): React.JSX.Element {
 	const { location, localVariablePrefix, controlId, readonly, localVariablesStore } = useEntityEditorContext()
 	const { connections } = useContext(RootAppStoreContext)
@@ -56,18 +51,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 	return (
 		<>
-			<div className="cell-description">
-				<div className="grow">
-					{headlineExpanded && <div className="name">{definitionName}</div>}
-					{entityDefinition?.description && <div className="description">{entityDefinition.description || ''}</div>}
-				</div>
-				{entityDefinition?.hasLearn && !!service.performLearn && (
-					<div>
-						<LearnButton id={entity.id} doLearn={service.performLearn} disabled={readonly} />
-					</div>
-				)}
-			</div>
-
 			<div className="entity-cells-wrapper">
 				{showButtonPreview && (
 					<div className="cell-button-preview">

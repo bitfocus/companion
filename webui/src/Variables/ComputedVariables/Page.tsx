@@ -26,7 +26,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 	const { computedVariablesList } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: '/computed-variables' })
+	const navigate = useNavigate({ from: '/variables/computed' })
 
 	const createMutation = useMutationExt(trpc.controls.computedVariables.create.mutationOptions())
 
@@ -40,7 +40,12 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 					const parsedId = ParseControlId(controlId)
 					if (parsedId?.type !== 'computed-variable') return
 
-					await navigate({ to: `/computed-variables/${parsedId.variableId}` })
+					await navigate({
+						to: `/variables/computed/$controlId`,
+						params: {
+							controlId: parsedId.variableId,
+						},
+					})
 				})
 				.catch((e) => {
 					console.error('failed to create computed-variable', e)
@@ -65,16 +70,16 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 	}, [computedVariablesList.computedVariables])
 
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/computed-variables/$controlId' })
+	const routeMatch = matchRoute({ to: '/variables/computed/$controlId' })
 	const selectedVariableId = routeMatch ? routeMatch.controlId : null
 
 	const selectComputedVariable = useCallback(
 		(variableId: string | null) => {
 			if (variableId === null) {
-				void navigate({ to: '/computed-variables' })
+				void navigate({ to: '/variables/computed' })
 			} else {
 				void navigate({
-					to: `/computed-variables/$controlId`,
+					to: `/variables/computed/$controlId`,
 					params: {
 						controlId: variableId,
 					},
@@ -85,7 +90,7 @@ export const ComputedVariablesPage = observer(function ComputedVariablesPage() {
 	)
 
 	const doCloseVariable = useCallback(() => {
-		void navigate({ to: '/computed-variables' })
+		void navigate({ to: '/variables/computed' })
 	}, [navigate])
 
 	const showPrimaryPanel = !selectedVariableId
