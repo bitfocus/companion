@@ -52,7 +52,7 @@
     "@elgato-stream-deck/node": "^7.3.2",
     "@elgato-stream-deck/tcp": "^7.3.2",
     "@julusian/bonjour-service": "^1.4.2",
-    "@julusian/image-rs": "^2.0.1",
+    "@julusian/image-rs": "^2.0.2",
     "@julusian/jpeg-turbo": "^2.2.0",
     "@julusian/segfault-raub": "^2.3.1",
     "@logitech-mx-creative-console/node": "^0.2.3",
