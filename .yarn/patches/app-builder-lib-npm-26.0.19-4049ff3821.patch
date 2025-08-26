@@ -33,3 +33,16 @@ index 369783eff5c64c342831dd3544c3f51e490b0e93..1ddda66f70726723b6d58df0f4c67e93
          }
          else if (relative.endsWith("/node_modules")) {
              relative += "/";
+diff --git a/out/node-module-collector/nodeModulesCollector.js b/out/node-module-collector/nodeModulesCollector.js
+index 6a160296f27bd0848d252f5fa2c049fbabd20236..7f57d7a37e2b0ec53c957a92e4cf0c2a94a1783f 100644
+--- a/out/node-module-collector/nodeModulesCollector.js
++++ b/out/node-module-collector/nodeModulesCollector.js
+@@ -21,7 +21,7 @@ class NodeModulesCollector {
+     async getNodeModules() {
+         const tree = await this.getDependenciesTree();
+         const realTree = this.getTreeFromWorkspaces(tree);
+-        this.collectAllDependencies(realTree);
++        this.collectAllDependencies(tree);
+         this.extractProductionDependencyGraph(realTree, "." /*root project name*/);
+         const hoisterResult = (0, hoist_1.hoist)(this.transToHoisterTree(this.productionGraph), { check: true });
+         this._getNodeModules(hoisterResult.dependencies, this.nodeModules);
