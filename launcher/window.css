@@ -273,3 +273,11 @@ input[type='checkbox'] {
 #bottombuttons .dobutton {
 	margin: 0 5px;
 }
+
+.warning_message {
+	display: none;
+	background: rgb(190, 124, 0);
+	color: #fff;
+	padding: 10px;
+	margin: 10px;
+}

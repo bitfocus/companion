@@ -16,6 +16,9 @@ import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { showSettings, getSettingsWindow } from './settings.js'
 import os from 'os'
 
+// Show a warning in the launcher window
+let version_warning = null
+
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
 	try {
@@ -37,6 +40,13 @@ if (process.platform === 'darwin') {
 				`Companion is not supported on macOS ${productVersion}, you must be running at least ${minimumVersion}`
 			)
 			app.quit()
+		}
+
+		const futureMinimumVersion = '13.5'
+		const futureSupportedVersions = new semver.Range(`>=${futureMinimumVersion}`)
+
+		if (productVersion && !futureSupportedVersions.test(productVersion)) {
+			version_warning = 'macos'
 		}
 	} catch (_e) {
 		// We can't figure out if its compatible, so assume it is
@@ -211,7 +221,7 @@ if (!lock) {
 
 		// Send to main launcher window
 		if (window) {
-			window.webContents.send('info', configData, appInfo, process.platform)
+			window.webContents.send('info', configData, appInfo, process.platform, version_warning)
 		}
 
 		// Send to settings window
