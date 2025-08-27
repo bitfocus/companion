@@ -67,7 +67,7 @@ export function SelectButtonTypeDropdown({
 					style={{ opacity: 0.7, paddingLeft: 14, paddingRight: 16 }}
 					className="dropdown-toggle dropdown-toggle-split"
 				>
-					<span className="sr-only">Toggle Dropdown</span>
+					{/* <span className="sr-only">Toggle Dropdown</span> */}
 				</CDropdownToggle>
 			</CButtonGroup>
 			<CDropdownMenu>
