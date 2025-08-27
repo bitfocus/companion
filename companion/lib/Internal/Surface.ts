@@ -35,7 +35,7 @@ import { EventEmitter } from 'events'
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use expression for surface',
+		label: 'Use variables for surface',
 		id: 'controller_from_variable',
 		default: false,
 	},
