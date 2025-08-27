@@ -145,6 +145,14 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		if (!Array.isArray(arr)) return false
 		return arr.includes(val)
 	},
+	arrayIndexOf: (arr, val, offset) => {
+		if (!Array.isArray(arr)) return false
+		return arr.indexOf(val, offset)
+	},
+	arrayLastIndexOf: (arr, val, offset) => {
+		if (!Array.isArray(arr)) return false
+		return arr.lastIndexOf(val, offset)
+	},
 
 	// Time operations
 	unixNow: () => Date.now(),

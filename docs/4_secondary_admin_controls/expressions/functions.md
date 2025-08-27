@@ -208,6 +208,22 @@ Check if an array includes a value
 
 If this encounters invalid input, it will return false
 
+**arrayIndexOf(arr, val)**
+
+Find the index of the first occurrence of a value within the provided array.
+
+Optionally provide an offset to begin the search from, otherwise it starts from position 0 (the beginning).
+
+If the value isn't found, it will return -1, otherwise the index of the first occurence.
+
+**arrayLastIndexOf(val, find, offset)**
+
+Find the index of the last occurrence of a value within the provided array, searching from the end.
+
+Optionally provide an offset to begin the search from, searching from the end.
+
+If the value isn't found, it will return -1, otherwise the index of the last occurence. The beginning is position 0.
+
 ##### Time operations
 
 **unixNow()**
