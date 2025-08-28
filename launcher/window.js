@@ -3,10 +3,12 @@ document.getElementById('hide').addEventListener('click', () => api.send('launch
 document.getElementById('close').addEventListener('click', () => api.send('launcher-close'))
 document.getElementById('advanced_settings_btn').addEventListener('click', () => api.send('launcher-advanced-settings'))
 
-api.receive('info', (config, info, platform) => {
+api.receive('info', (config, info, platform, show_warning) => {
 	if (platform !== 'win32' && platform !== 'darwin') {
 		document.getElementById('run_at_login_group')?.remove()
 	}
+
+	document.getElementById('macos_warning').style.display = show_warning === 'macos' ? 'block' : 'none'
 
 	document.getElementById('status').innerHTML = info.appStatus
 	document.getElementById('url').innerHTML = info.appURL
