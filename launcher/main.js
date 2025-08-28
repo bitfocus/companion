@@ -116,6 +116,12 @@ if (!lock) {
 		enable_developer: false,
 		dev_modules_path: '',
 		log_level: 'info',
+
+		enable_syslog: false,
+		syslog_host: '127.0.0.1',
+		syslog_port: 514,
+		syslog_use_tcp: false,
+		syslog_local_hostname: '',
 	}
 
 	try {
@@ -552,6 +558,31 @@ if (!lock) {
 					doRestartApp = true
 				}
 
+				if (configData.enable_syslog !== undefined) {
+					uiConfig.set('enable_syslog', configData.enable_syslog)
+					doRestartApp = true
+				}
+
+				if (configData.syslog_host !== undefined) {
+					uiConfig.set('syslog_host', configData.syslog_host)
+					if (uiConfig.get('enable_syslog')) doRestartApp = true
+				}
+
+				if (configData.syslog_port !== undefined) {
+					uiConfig.set('syslog_port', configData.syslog_port)
+					if (uiConfig.get('enable_syslog')) doRestartApp = true
+				}
+
+				if (configData.syslog_use_tcp !== undefined) {
+					uiConfig.set('syslog_use_tcp', configData.syslog_use_tcp)
+					if (uiConfig.get('enable_syslog')) doRestartApp = true
+				}
+
+				if (configData.syslog_local_hostname !== undefined) {
+					uiConfig.set('syslog_local_hostname', configData.syslog_local_hostname)
+					if (uiConfig.get('enable_syslog')) doRestartApp = true
+				}
+
 				// Refresh config info to all windows
 				sendAppInfo()
 
@@ -893,6 +924,13 @@ if (!lock) {
 						`--log-level=${uiConfig.get('log_level')}`,
 						uiConfig.get('enable_developer') ? `--extra-module-path=${uiConfig.get('dev_modules_path')}` : undefined,
 						disableAdminPassword || process.env.DISABLE_ADMIN_PASSWORD ? `--disable-admin-password` : undefined,
+						uiConfig.get('enable_syslog') ? '--syslog-enable' : undefined,
+						uiConfig.get('enable_syslog') ? `--syslog-host=${uiConfig.get('syslog_host')}` : undefined,
+						uiConfig.get('enable_syslog') ? `--syslog-port=${uiConfig.get('syslog_port')}` : undefined,
+						uiConfig.get('enable_syslog') && uiConfig.get('syslog_use_tcp') ? `--syslog-tcp` : undefined,
+						uiConfig.get('enable_syslog') && uiConfig.get('syslog_local_hostname')
+							? `--syslog-localhost=${uiConfig.get('syslog_local_hostname')}`
+							: undefined,
 					].filter((v) => !!v),
 				{
 					name: `Companion process`,

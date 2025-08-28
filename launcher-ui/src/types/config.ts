@@ -6,6 +6,11 @@ export interface LauncherConfig {
 	enable_developer: boolean
 	dev_modules_path: string
 	log_level: string
+	enable_syslog: boolean
+	syslog_host: string
+	syslog_port: number
+	syslog_use_tcp: boolean
+	syslog_local_hostname: string
 }
 
 export interface AppInfo {
