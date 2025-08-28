@@ -8,13 +8,13 @@ import {
 	TextInputField,
 } from '~/Components/index.js'
 import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
-import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
+import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 
 interface ConnectionEditFieldProps {
 	setValue: (value: any) => void
-	definition: ConnectionInputField
+	definition: SomeCompanionInputField
 	value: any
 	connectionId: string
 }

@@ -1,6 +1,6 @@
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
-import type { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { action, observable, runInAction } from 'mobx'
 import { computedFn } from 'mobx-utils'
@@ -15,7 +15,7 @@ export interface ConnectionBasicInfoChanges {
 	updatePolicy?: ConnectionUpdatePolicy
 }
 export interface ConnectionConfigAndSecrets {
-	fields: Array<ConnectionInputField & { width: number }>
+	fields: Array<SomeCompanionInputField>
 
 	config: CompanionOptionValues
 	configDirty: boolean
@@ -157,7 +157,7 @@ export class ConnectionEditPanelStore {
 
 	isVisibleFn = computedFn(parseIsVisibleFn)
 
-	isVisible = computedFn((field: ConnectionInputField): boolean => {
+	isVisible = computedFn((field: SomeCompanionInputField): boolean => {
 		const isVisibleFn = this.isVisibleFn(field)
 		if (isVisibleFn) {
 			const configAndSecrets = this.#configAndSecrets.get()
@@ -169,7 +169,7 @@ export class ConnectionEditPanelStore {
 		return true // If no isVisibleFn, assume visible
 	})
 
-	#isFieldValueValid(configAndSecrets: ConnectionConfigAndSecrets, field: ConnectionInputField): boolean {
+	#isFieldValueValid(configAndSecrets: ConnectionConfigAndSecrets, field: SomeCompanionInputField): boolean {
 		if (!this.isVisible(field)) {
 			return true // If the field is not visible, it is considered valid
 		}
@@ -243,6 +243,6 @@ export class ConnectionEditPanelStore {
 	})
 }
 
-export function isConfigFieldSecret(field: ConnectionInputField): boolean {
+export function isConfigFieldSecret(field: SomeCompanionInputField): boolean {
 	return field.type.startsWith('secret')
 }

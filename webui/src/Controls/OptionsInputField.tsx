@@ -11,7 +11,7 @@ import {
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
+import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
@@ -23,7 +23,7 @@ interface OptionsInputFieldProps {
 	connectionId: string
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
-	option: InternalActionInputField | InternalFeedbackInputField
+	option: SomeCompanionInputField
 	value: any
 	setValue: (key: string, value: any) => void
 	visibility: boolean
@@ -31,13 +31,7 @@ interface OptionsInputFieldProps {
 	localVariablesStore: LocalVariablesStore | null
 }
 
-function OptionLabel({
-	option,
-	features,
-}: {
-	option: InternalActionInputField | InternalFeedbackInputField
-	features?: InputFeatureIconsProps
-}) {
+function OptionLabel({ option, features }: { option: SomeCompanionInputField; features?: InputFeatureIconsProps }) {
 	return (
 		<>
 			{option.label}
@@ -181,6 +175,10 @@ export const OptionsInputField = observer(function OptionsInputField({
 			}
 			break
 		}
+		case 'bonjour-device':
+		case 'secret-text':
+			// Not supported here
+			break
 		default:
 			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (isInternal) {

@@ -38,10 +38,10 @@ import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
-import { translateOptionsIsVisibleAndUseVariables } from './Wrapper.js'
 import { InstanceCollections } from './Collections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
+import { translateConnectionConfigFields } from './ConfigFields.js'
 
 type CreateConnectionData = {
 	type: string
@@ -680,8 +680,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					if (!instance) return null
 
 					try {
-						// TODO: making types match is messy
-						const fields: any = await instance.requestConfigFields()
+						const fields = await instance.requestConfigFields()
 
 						const instanceSecrets: any = instanceConf.secrets || {}
 
@@ -693,7 +692,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						}
 
 						const result: ClientEditConnectionConfig = {
-							fields: translateOptionsIsVisibleAndUseVariables(fields || [], true) as any[],
+							fields: translateConnectionConfigFields(fields),
 							config: instanceConf.config,
 							hasSecrets,
 						}

@@ -28,7 +28,7 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
-import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
@@ -41,7 +41,7 @@ import { nanoid } from 'nanoid'
 import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 
-const CHOICES_STEP_WITH_VARIABLES: InternalActionInputField[] = [
+const CHOICES_STEP_WITH_VARIABLES: SomeCompanionInputField[] = [
 	{
 		type: 'checkbox',
 		label: 'Use expression for step',

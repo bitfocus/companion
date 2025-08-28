@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react'
-import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
+import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { SecretTextInputField } from '~/Components/SecretTextInputField'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 
 interface ConnectionSecretFieldProps {
 	setValue: (value: any) => void
 	clearValue: () => void
-	definition: ConnectionInputField
+	definition: SomeCompanionInputField
 	hasSavedValue: boolean
 	editValue: any
 	isDirty: boolean

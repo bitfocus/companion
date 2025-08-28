@@ -1,12 +1,12 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type {
-	DropdownChoice,
-	CompanionInputFieldCheckbox,
-	CompanionInputFieldDropdown,
-	CompanionInputFieldNumber,
-	CompanionInputFieldCustomVariable,
-} from '@companion-module/base'
-import { CompanionInputFieldTextInputExtended, EncodeIsVisible2 } from './Options.js'
+import type { DropdownChoice } from '@companion-module/base'
+import {
+	CompanionInputFieldCheckboxExtended,
+	CompanionInputFieldCustomVariableExtended,
+	CompanionInputFieldDropdownExtended,
+	CompanionInputFieldNumberExtended,
+	CompanionInputFieldTextInputExtended,
+} from './Options.js'
 
 export type GridSize = { columns: number; rows: number }
 export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0' | 0 | -90 | 90 | 180
@@ -197,8 +197,8 @@ export interface CompanionExternalAddresses {
 export type CompanionSurfaceInputFieldTextInput = Omit<CompanionInputFieldTextInputExtended, 'useVariables'>
 
 export type CompanionSurfaceConfigField =
-	| EncodeIsVisible2<CompanionSurfaceInputFieldTextInput>
-	| EncodeIsVisible2<CompanionInputFieldDropdown>
-	| EncodeIsVisible2<CompanionInputFieldNumber>
-	| EncodeIsVisible2<CompanionInputFieldCheckbox>
-	| EncodeIsVisible2<CompanionInputFieldCustomVariable>
+	| CompanionSurfaceInputFieldTextInput
+	| CompanionInputFieldDropdownExtended
+	| CompanionInputFieldNumberExtended
+	| CompanionInputFieldCheckboxExtended
+	| CompanionInputFieldCustomVariableExtended
