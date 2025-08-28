@@ -33,7 +33,8 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 		() => panelCollapseHelper.setPanelCollapsed(info.id, false),
 		[panelCollapseHelper, info.id]
 	)
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(info.collectionId, info.id)
+	// Don't consider the collection as the parent, as the contents doesn't want to follow the collapse state of the collection
+	const isCollapsed = panelCollapseHelper.isPanelCollapsed(null, info.id)
 
 	const value = customVariableValues.get(info.id)
 

@@ -58,7 +58,7 @@
     "@logitech-mx-creative-console/node": "^0.2.3",
     "@loupedeck/node": "^1.2.0",
     "@napi-rs/canvas": "0.1.77",
-    "@sentry/node": "^10.5.0",
+    "@sentry/node": "^10.7.0",
     "@trpc/server": "^11.5.0",
     "archiver": "^7.0.1",
     "better-sqlite3": "^12.2.0",
@@ -68,7 +68,7 @@
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "csv-stringify": "^6.6.0",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.14",
     "debounce-fn": "^6.0.0",
     "ejson": "^2.2.3",
     "emberplus-connection": "^0.3.0",
@@ -95,7 +95,7 @@
     "shuttle-node": "^0.1.2",
     "socketcluster-client": "^19.2.7",
     "supports-color": "^10.2.0",
-    "systeminformation": "^5.27.7",
+    "systeminformation": "^5.27.8",
     "tar-fs": "^3.1.0",
     "tar-stream": "^3.1.7",
     "type-fest": "^4.41.0",
@@ -110,6 +110,6 @@
     "ws": "^8.18.3",
     "xkeys": "^3.3.0",
     "yaml": "^2.8.1",
-    "zod": "^4.1.1"
+    "zod": "^4.1.3"
   }
 }
