@@ -21,6 +21,25 @@ import logger from './Log/Controller.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
 
+const isValidIPv4 = (ip: string): boolean => {
+	const parts = ip.split('.')
+	if (parts.length !== 4) {
+		return false
+	}
+	for (const part of parts) {
+		const num = Number(part)
+		// Check if it's a valid number and within range [0, 255]
+		if (Number.isNaN(num) || num < 0 || num > 255) {
+			return false
+		}
+		// Disallow leading zeros for numbers other than '0' itself
+		if (part.length > 1 && part[0] === '0' && num !== 0) {
+			return false
+		}
+	}
+	return true
+}
+
 const program = new Command()
 
 program.command('check-launches', { hidden: true }).action(() => {
@@ -73,13 +92,13 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 
 	if (options.syslogEnable) {
 		const opt: SyslogTransportOptions = {}
-		if (options.syslogHost) opt.host = options.syslogHost
+		if (isValidIPv4(options.syslogHost)) opt.host = options.syslogHost
 		if (options.syslogPort) {
 			const port = Number.parseInt(options.syslogPort)
 			if (!Number.isNaN(port) && port > 100 && port <= 65535) opt.port = port
 		}
 		if (options.syslogTcp) opt.protocol = 'tcp4'
-		if (options.syslogLocalhost) opt.localhost = options.syslogLocalhost
+		opt.localhost = options.syslogLocalhost ? options.syslogLocalhost : os.hostname()
 		logger.addSyslogHost(opt)
 	}
 

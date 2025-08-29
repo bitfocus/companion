@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useConfig } from '~/hooks/useConfig'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
-/* import { Button } from '~/components/ui/button'
-import { Alert, AlertDescription } from '~/components/ui/alert'
-import { Info } from 'lucide-react' */
 
 export function SyslogSection(): JSX.Element {
 	const { state, updateConfig } = useConfig()
@@ -47,7 +44,7 @@ export function SyslogSection(): JSX.Element {
 	const handleSyslogPortChange = (value: string) => {
 		let port = Number.parseInt(value)
 		port = Number.isNaN(port) ? 514 : port
-		port = port < 20 ? 20 : port
+		port = port < 100 ? 100 : port
 		port = port > 65535 ? 65535 : port
 		setSyslogPort(port)
 		updateConfig({ syslog_port: port })
@@ -93,7 +90,7 @@ export function SyslogSection(): JSX.Element {
 									className="flex-1 rounded-r-none"
 								/>
 							</div>
-							<p className="text-sm text-muted-foreground mt-1">Hostname or IP of Syslog Server</p>
+							<p className="text-sm text-muted-foreground mt-1">IP of Syslog Server</p>
 						</div>
 					</div>
 					<div className="grid grid-cols-4 gap-4 items-center">
@@ -105,7 +102,6 @@ export function SyslogSection(): JSX.Element {
 									type="number"
 									value={syslogPort}
 									onChange={(e) => handleSyslogPortChange(e.target.value)}
-									placeholder=""
 									className="flex-1 rounded-r-none"
 								/>
 							</div>
@@ -132,7 +128,6 @@ export function SyslogSection(): JSX.Element {
 									type="text"
 									value={syslogLocalHost}
 									onChange={(e) => handleSyslogLocalHostChange(e.target.value)}
-									placeholder=""
 									className="flex-1 rounded-r-none"
 								/>
 							</div>
