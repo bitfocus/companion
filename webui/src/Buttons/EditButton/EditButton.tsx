@@ -50,7 +50,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 					<GenericConfirmModal ref={resetModalRef} />
 					<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 					{dataReady &&
-						(controlConfig.config.type === 'trigger' ? (
+						(controlConfig.config.type === 'trigger' || controlConfig.config.type === 'expression-variable' ? (
 							<CAlert color="warning">
 								An incompatible control was selected! This is likely a bug, please report it.
 							</CAlert>

@@ -6,6 +6,7 @@ import {
 	FeedbackEntitySubType,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
+	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
@@ -696,6 +697,18 @@ export class ControlEntityInstance {
 		return changed
 	}
 
+	getResolvedFeedbackValue(): any {
+		if (this.#data.type !== EntityModelType.Feedback) return null
+
+		const definition = this.getEntityDefinition()
+
+		if (definition?.feedbackType === FeedbackEntitySubType.Boolean) {
+			return this.getBooleanFeedbackValue()
+		} else {
+			return this.feedbackValue
+		}
+	}
+
 	/**
 	 * Get the value of this feedback as a boolean
 	 */
@@ -812,12 +825,22 @@ export class ControlEntityInstance {
 
 	/**
 	 * If this is the user value feedback, set the value
+	 * @returns Whether the entity options were changed and need to be persisted
 	 */
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setUserValue(value: any): void {
-		if (!isInternalUserValueFeedback(this)) return
+	setUserValue(value: any): boolean {
+		if (!isInternalUserValueFeedback(this)) return false
 
 		this.#cachedFeedbackValue = value
+
+		// Persist value if needed
+		if (this.#data.options.persist_value) {
+			this.#data.options.startup_value = value
+
+			return true
+		}
+
+		return false
 	}
 
 	getUserValue(): any {
@@ -847,9 +870,5 @@ export function isInternalLogicFeedback(entity: ControlEntityInstance): boolean 
 }
 
 export function isInternalUserValueFeedback(entity: ControlEntityInstance): boolean {
-	return (
-		entity.type === EntityModelType.Feedback &&
-		entity.connectionId === 'internal' &&
-		entity.definitionId === 'user_value'
-	)
+	return libIsInternalUserValueFeedback(entity.asEntityModel(false))
 }
