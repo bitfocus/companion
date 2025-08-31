@@ -21,7 +21,7 @@ import { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
-import { validateBankControlId, validateTriggerControlId } from './Util.js'
+import { validateBankControlId, validateExpressionVariableControlId, validateTriggerControlId } from './Util.js'
 import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
@@ -32,6 +32,14 @@ import z from 'zod'
 import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
+import type {
+	ExpressionVariableCollection,
+	ExpressionVariableModel,
+} from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { ExpressionVariableCollections } from './ExpressionVariableCollections.js'
+import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRouter.js'
+import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 
 /**
@@ -87,6 +95,13 @@ export class ControlsController {
 
 	readonly #triggerCollections: TriggerCollections
 
+	/**
+	 * The expression variable collections
+	 */
+	readonly #expressionVariableCollections: ExpressionVariableCollections
+
+	readonly #expressionVariableNamesMap: ExpressionVariableNameMap
+
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
 	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
@@ -102,6 +117,11 @@ export class ControlsController {
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
 			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
+
+		this.#expressionVariableCollections = new ExpressionVariableCollections(registry.db, (validCollectionIds) =>
+			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
+		)
+		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#registry.variables.values, this.#controls)
 
 		this.actionRunner = new ActionRunner(registry)
 		this.actionRecorder = new ActionRecorder(registry)
@@ -121,6 +141,14 @@ export class ControlsController {
 				control.setCollectionEnabled(
 					!control.options.collectionId || enabledCollectionIds.has(control.options.collectionId)
 				)
+			}
+		}
+	}
+
+	#cleanUnknownExpressionVariableCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlExpressionVariable) {
+				control.checkCollectionIdIsValid(validCollectionIds)
 			}
 		}
 	}
@@ -194,6 +222,14 @@ export class ControlsController {
 				this.triggers,
 				this.#createControlDependencies()
 			),
+			expressionVariables: createExpressionVariableTrpcRouter(
+				this.#controlChangeEvents,
+				this.#expressionVariableCollections,
+				this.#dbTable,
+				this.#controls,
+				this.#expressionVariableNamesMap,
+				this.#createControlDependencies()
+			),
 			events: createEventsTrpcRouter(this.#controls, this.#registry.instance.definitions),
 			entities: createEntitiesTrpcRouter(
 				this.#controls,
@@ -241,13 +277,13 @@ export class ControlsController {
 	 * Create a new control class instance
 	 * TODO: This should be private
 	 * @param controlId Id of the control
-	 * @param category 'button' | 'trigger' | 'all'
+	 * @param category 'button' | 'trigger' | 'expression-variable' | 'all'
 	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param isImport Whether this is an import, and needs additional processing
 	 */
 	createClassForControl(
 		controlId: string,
-		category: 'button' | 'trigger' | 'all',
+		category: 'button' | 'trigger' | 'expression-variable' | 'all',
 		controlObj: SomeControlModel | string,
 		isImport: boolean
 	): SomeControl<any> | null {
@@ -279,6 +315,20 @@ export class ControlsController {
 					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
 				})
 				return trigger
+			}
+		}
+
+		if (category === 'all' || category === 'expression-variable') {
+			if (controlObj2?.type === 'expression-variable' || (controlType === 'expression-variable' && !controlObj2)) {
+				const variable = new ControlExpressionVariable(
+					this.#createControlDependencies(),
+					this.#expressionVariableNamesMap,
+					controlId,
+					controlObj2,
+					isImport
+				)
+
+				return variable
 			}
 		}
 
@@ -316,6 +366,28 @@ export class ControlsController {
 			}
 		}
 		return triggers
+	}
+
+	/**
+	 * Get all of the expression variable controls
+	 */
+	getAllExpressionVariables(): ControlExpressionVariable[] {
+		const variables: ControlExpressionVariable[] = []
+		for (const control of this.#controls.values()) {
+			if (control instanceof ControlExpressionVariable) {
+				variables.push(control)
+			}
+		}
+		return variables
+	}
+
+	getExpressionVariableByName(name: string): ControlExpressionVariable | undefined {
+		if (!name) return undefined
+
+		const controlId = this.#expressionVariableNamesMap.getControlIdByName(name)
+		if (!controlId) return undefined
+
+		return this.getControl(controlId) as ControlExpressionVariable | undefined
 	}
 
 	/**
@@ -394,6 +466,37 @@ export class ControlsController {
 	}
 
 	/**
+	 * Import an expression variable
+	 */
+	importExpressionVariable(
+		controlId: string,
+		definition: ExpressionVariableModel
+	): ControlExpressionVariable | undefined {
+		if (!validateExpressionVariableControlId(controlId)) {
+			// Control id is not valid!
+			return undefined
+		}
+
+		if (this.#controls.has(controlId)) throw new Error(`ExpressionVariable ${controlId} already exists`)
+
+		const newControl = this.createClassForControl(controlId, 'expression-variable', definition, true)
+		if (newControl) {
+			this.#controls.set(controlId, newControl)
+
+			// Add to names map
+			const expressionVariableControl = newControl as ControlExpressionVariable
+			this.#expressionVariableNamesMap.addExpressionVariable(controlId, expressionVariableControl.options.variableName)
+
+			// Ensure it is stored to the db
+			newControl.commitChange()
+
+			return newControl as ControlExpressionVariable
+		}
+
+		return undefined
+	}
+
+	/**
 	 * Initialise the controls
 	 */
 	init(): void {
@@ -406,8 +509,13 @@ export class ControlsController {
 			}
 		}
 
-		// Ensure all trigger collections are valid
+		// Ensure all collections are valid
 		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
+
+		this.#cleanUnknownExpressionVariableCollectionIds(this.#expressionVariableCollections.collectAllCollectionIds())
+
+		// Initialize expression variable names map
+		this.#expressionVariableNamesMap.rebuildMap()
 	}
 
 	/**
@@ -500,16 +608,20 @@ export class ControlsController {
 		}
 	}
 
-	discardTriggerCollections(): void {
-		this.#triggerCollections.discardAllCollections()
-	}
-
 	exportTriggerCollections(): TriggerCollection[] {
 		return this.#triggerCollections.collectionData
 	}
 
 	replaceTriggerCollections(collections: TriggerCollection[]): void {
 		this.#triggerCollections.replaceCollections(collections)
+	}
+
+	exportExpressionVariableCollections(): ExpressionVariableCollection[] {
+		return this.#expressionVariableCollections.collectionData
+	}
+
+	replaceExpressionVariableCollections(collections: ExpressionVariableCollection[]): void {
+		this.#expressionVariableCollections.replaceCollections(collections)
 	}
 
 	/**

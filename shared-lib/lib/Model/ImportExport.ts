@@ -8,6 +8,7 @@ export const zodClientResetSelection = z.object({
 	surfaces: z.boolean(),
 	triggers: z.boolean(),
 	customVariables: z.boolean(),
+	expressionVariables: z.boolean(),
 	userconfig: z.boolean(),
 })
 
@@ -17,6 +18,7 @@ export interface ClientExportSelection {
 	buttons: boolean
 	triggers: boolean
 	customVariables: boolean
+	expressionVariables: boolean
 	connections: boolean
 	surfaces: boolean
 	format: ExportFormat
@@ -28,6 +30,7 @@ export const zodClientImportSelection = z.object({
 	surfaces: z.boolean(),
 	triggers: z.boolean(),
 	customVariables: z.boolean(),
+	expressionVariables: z.boolean(),
 })
 
 export type ClientImportSelection = z.infer<typeof zodClientImportSelection>
@@ -47,6 +50,7 @@ export interface ClientImportObject {
 	instances: Record<string, ClientImportObjectInstance>
 	controls: boolean
 	customVariables: boolean
+	expressionVariables: boolean
 	surfaces: boolean
 	triggers: boolean | Record<string, { name: string }>
 	oldPageNumber?: number

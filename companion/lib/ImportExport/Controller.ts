@@ -11,7 +11,11 @@
 
 import { upgradeImport } from '../Data/Upgrade.js'
 import { cloneDeep } from 'lodash-es'
-import { CreateTriggerControlId, validateActionSetId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateExpressionVariableControlId,
+	CreateTriggerControlId,
+	validateActionSetId,
+} from '@companion-app/shared/ControlId.js'
 import yaml from 'yaml'
 import zlib from 'node:zlib'
 import LogController from '../Log/Controller.js'
@@ -58,6 +62,7 @@ import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -145,9 +150,9 @@ export class ImportExportController {
 
 			// fix any db instances missing the upgradeIndex property
 			if (object.instances) {
-				for (const inst of Object.values(object.instances)) {
-					if (inst) {
-						inst.lastUpgradeIndex = inst.lastUpgradeIndex ?? -1
+				for (const connectionConfig of Object.values(object.instances)) {
+					if (connectionConfig) {
+						connectionConfig.lastUpgradeIndex = connectionConfig.lastUpgradeIndex ?? -1
 					}
 				}
 			}
@@ -176,18 +181,19 @@ export class ImportExportController {
 				instances: {},
 				controls: 'pages' in object,
 				customVariables: 'custom_variables' in object,
+				expressionVariables: 'expressionVariables' in object,
 				surfaces: 'surfaces' in object,
 				triggers: 'triggers' in object,
 			}
 
-			for (const [instanceId, instance] of Object.entries(object.instances || {})) {
-				if (!instance || instanceId === 'internal' || instanceId === 'bitfocus-companion') continue
+			for (const [connectionId, connectionConfig] of Object.entries(object.instances || {})) {
+				if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
 
-				clientObject.instances[instanceId] = {
-					instance_type: instance.instance_type,
-					moduleVersionId: instance.moduleVersionId ?? null,
-					label: instance.label,
-					sortOrder: instance.sortOrder,
+				clientObject.instances[connectionId] = {
+					instance_type: connectionConfig.instance_type,
+					moduleVersionId: connectionConfig.moduleVersionId ?? null,
+					label: connectionConfig.label,
+					sortOrder: connectionConfig.sortOrder,
 				}
 			}
 
@@ -483,22 +489,29 @@ export class ImportExportController {
 						// Destroy old stuff
 						await this.#reset(resetArg, !config || config.buttons)
 
-						// import custom variables
-						if (!config || config.customVariables) {
-							if (data.customVariablesCollections) {
-								this.#variablesController.custom.replaceCollections(data.customVariablesCollections)
-							}
-
-							this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
-						}
-
 						// Import connection collections if provided
-						if (data.connectionCollections) {
-							this.#instancesController.collections.replaceCollections(data.connectionCollections)
-						}
+						this.#instancesController.collections.replaceCollections(data.connectionCollections || [])
 
 						// Always Import instances
 						const instanceIdMap = this.#importInstances(data.instances, {})
+
+						// import custom variables
+						if (!config || config.customVariables) {
+							this.#variablesController.custom.replaceCollections(data.customVariablesCollections || [])
+							this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
+						}
+
+						// Import expression variables
+						if (!config || config.expressionVariables) {
+							this.#controlsController.replaceExpressionVariableCollections(data.expressionVariablesCollections || [])
+
+							for (const [id, variableDefinition] of Object.entries(data.expressionVariables || {})) {
+								const controlId = CreateExpressionVariableControlId(id)
+								const fixedControlObj = this.#fixupExpressionVariableControl(variableDefinition, instanceIdMap)
+
+								this.#controlsController.importExpressionVariable(controlId, fixedControlObj)
+							}
+						}
 
 						if (data.pages && (!config || config.buttons)) {
 							// Import pages
@@ -676,11 +689,21 @@ export class ImportExportController {
 					this.#controlsController.deleteControl(controlId)
 				}
 			}
-			this.#controlsController.discardTriggerCollections()
+			this.#controlsController.replaceTriggerCollections([])
 		}
 
 		if (!config || config.customVariables) {
 			this.#variablesController.custom.reset()
+		}
+
+		if (!config || config.expressionVariables) {
+			this.#controlsController.replaceExpressionVariableCollections([])
+
+			// Delete existing expression variables
+			const existingExpressionVariables = this.#controlsController.getAllExpressionVariables()
+			for (const control of existingExpressionVariables) {
+				this.#controlsController.deleteControl(control.controlId)
+			}
 		}
 
 		if (!config || config.userconfig) {
@@ -800,6 +823,48 @@ export class ImportExportController {
 		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
 			.visitEntities([], result.condition.concat(result.actions))
 			.visitEvents(result.events || [])
+
+		return result
+	}
+
+	#fixupExpressionVariableControl(
+		control: ExpressionVariableModel,
+		instanceIdMap: InstanceAppliedRemappings
+	): ExpressionVariableModel {
+		// Future: this does not feel durable
+
+		const connectionLabelRemap: Record<string, string> = {}
+		const connectionIdRemap: Record<string, string> = {}
+		for (const [oldId, info] of Object.entries(instanceIdMap)) {
+			if (info.oldLabel && info.label !== info.oldLabel) {
+				connectionLabelRemap[info.oldLabel] = info.label
+			}
+			if (info.id && info.id !== oldId) {
+				connectionIdRemap[oldId] = info.id
+			}
+		}
+
+		const result: ExpressionVariableModel = {
+			type: 'expression-variable',
+			options: cloneDeep(control.options),
+			entity: null,
+			localVariables: [],
+		}
+
+		if (control.entity) {
+			result.entity = fixupEntitiesRecursive(instanceIdMap, [cloneDeep(control.entity)])[0]
+		}
+
+		if (control.localVariables) {
+			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
+		}
+
+		const visitor = new VisitorReferencesUpdater(
+			this.#internalModule,
+			connectionLabelRemap,
+			connectionIdRemap
+		).visitEntities([], result.localVariables)
+		if (result.entity) visitor.visitEntities([], [result.entity])
 
 		return result
 	}
