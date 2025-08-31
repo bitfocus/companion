@@ -14,4 +14,3 @@ module-local-dev
 bundled-modules
 
 companion/test/Upgrade/*/*.*.json
-companion/lib/Service/Satellite/SatelliteSurfaceSchemaValidator.js

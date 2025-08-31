@@ -4,12 +4,16 @@ import {
 	ParsedParams,
 	parseLineParameters,
 	parseStringParamWithBooleanFallback,
-} from '../Resources/Util.js'
-import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
-import { Logger } from '../Log/Controller.js'
-import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../Surface/IP/Satellite.js'
-import type { AppInfo } from '../Registry.js'
-import type { SurfaceController } from '../Surface/Controller.js'
+} from '../../Resources/Util.js'
+import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
+import { Logger } from '../../Log/Controller.js'
+import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surface/IP/Satellite.js'
+import type { AppInfo } from '../../Registry.js'
+import type { SurfaceController } from '../../Surface/Controller.js'
+import { SatelliteSurfaceLayout } from './SatelliteSurfaceSchema.js'
+// eslint-disable-next-line n/no-missing-import
+import { validate as validateSurfaceSchema } from './SatelliteSurfaceSchemaValidator.js'
+import { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -133,30 +137,77 @@ export class ServiceSatelliteApi {
 			}
 		}
 
-		const keysTotal = params.KEYS_TOTAL ? Number(params.KEYS_TOTAL) : LEGACY_MAX_BUTTONS
-		if (isNaN(keysTotal) || keysTotal <= 0) {
-			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_TOTAL')
-		}
+		let surfaceSchema: SatelliteSurfaceLayout
+		let surfaceSchemaFromClient: boolean
+		let gridSize: GridSize
 
-		const keysPerRow = params.KEYS_PER_ROW ? Number(params.KEYS_PER_ROW) : LEGACY_BUTTONS_PER_ROW
-		if (isNaN(keysPerRow) || keysPerRow <= 0) {
-			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_PER_ROW')
+		if (params.SCHEMA) {
+			surfaceSchemaFromClient = true
+			try {
+				surfaceSchema = JSON.parse(Buffer.from(String(params.SCHEMA), 'base64').toString())
+
+				if (!validateSurfaceSchema(surfaceSchema)) {
+					const errors = validateSurfaceSchema.errors
+					if (!errors) throw new Error(`Failed with unknown reason`)
+
+					throw new Error(`Failed with errors: ${JSON.stringify(errors)}`)
+				}
+			} catch (e: any) {
+				socketLogger.error(`Schema validation failed: ${e?.message ?? e}`)
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid SCHEMA')
+			}
+
+			// Find the max bounds of this surface
+			gridSize = Object.values(surfaceSchema.controls).reduce(
+				(gridSize, control): GridSize => ({
+					columns: Math.max(gridSize.columns, control.column),
+					rows: Math.max(gridSize.rows, control.row),
+				}),
+				{ columns: 0, rows: 0 }
+			)
+		} else {
+			surfaceSchemaFromClient = false
+			surfaceSchema = {
+				controls: {},
+				stylePresets: {
+					default: {},
+				},
+			}
+
+			const keysTotal = params.KEYS_TOTAL ? Number(params.KEYS_TOTAL) : LEGACY_MAX_BUTTONS
+			if (isNaN(keysTotal) || keysTotal <= 0) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_TOTAL')
+			}
+
+			const keysPerRow = params.KEYS_PER_ROW ? Number(params.KEYS_PER_ROW) : LEGACY_BUTTONS_PER_ROW
+			if (isNaN(keysPerRow) || keysPerRow <= 0) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_PER_ROW')
+			}
+
+			gridSize = {
+				columns: keysPerRow,
+				rows: keysTotal / keysPerRow,
+			}
+
+			if (params.BITMAPS !== undefined && !isFalsey(params.BITMAPS)) {
+				let streamBitmapSize = Number(params.BITMAPS)
+				if (isNaN(streamBitmapSize) || streamBitmapSize < 5) {
+					// If it looks like a boolean value, use the old hardcoded size
+					streamBitmapSize = 72
+				}
+
+				surfaceSchema.stylePresets.default.bitmap = { w: streamBitmapSize, h: streamBitmapSize }
+			}
+
+			const streamColors = parseStringParamWithBooleanFallback(['hex', 'rgb'], 'hex', params.COLORS) || undefined
+			surfaceSchema.stylePresets.default.colors = streamColors
+
+			surfaceSchema.stylePresets.default.text = params.TEXT !== undefined && isTruthy(params.TEXT)
+			surfaceSchema.stylePresets.default.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		}
 
 		socketLogger.debug(`add surface "${id}"`)
 
-		let streamBitmapSize = null
-		if (params.BITMAPS !== undefined && !isFalsey(params.BITMAPS)) {
-			streamBitmapSize = Number(params.BITMAPS)
-			if (isNaN(streamBitmapSize) || streamBitmapSize < 5) {
-				// If it looks like a boolean value, use the old hardcoded size
-				streamBitmapSize = 72
-			}
-		}
-
-		const streamColors = parseStringParamWithBooleanFallback(['hex', 'rgb'], 'hex', params.COLORS) || false
-		const streamText = params.TEXT !== undefined && isTruthy(params.TEXT)
-		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 		const supportsLockedState =
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
@@ -170,20 +221,15 @@ export class ServiceSatelliteApi {
 
 		const device = this.#surfaceController.addSatelliteDevice({
 			path: id,
-			gridSize: {
-				columns: keysPerRow,
-				rows: keysTotal / keysPerRow,
-			},
+			gridSize,
 			socket,
 			deviceId: id,
 			productName: `${params.PRODUCT_NAME}`,
 			supportsBrightness,
-			streamBitmapSize,
-			streamColors,
-			streamText,
-			streamTextStyle,
 			transferVariables,
 			supportsLockedState,
+			surfaceSchemaFromClient,
+			surfaceSchema,
 		})
 
 		this.#devices.set(id, {

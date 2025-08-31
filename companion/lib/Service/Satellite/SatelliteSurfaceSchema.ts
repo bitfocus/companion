@@ -12,7 +12,7 @@ export interface SatelliteSurfaceLayout {
 	/**
 	 * Named collection of style presets. The preset named `default` is required and is used as the fallback style for controls when no `stylePreset` is specified.
 	 */
-	stylePresets?: {
+	stylePresets: {
 		default: SatelliteControlStylePreset
 		[k: string]: SatelliteControlStylePreset
 	}
@@ -48,20 +48,20 @@ export interface SatelliteSurfaceLayout {
 export interface SatelliteControlStylePreset {
 	bitmap?: SatelliteConfigSize
 	/**
-	 * If true, the control should display text in addition to any bitmap.
+	 * If true, the control requests text to be reported.
 	 */
 	text?: boolean
 	/**
-	 * If true, apply the control's text styling (font-size, weight, etc.). If false or absent, text is displayed with no additional styling.
+	 * If true, the control requests text style properties to be reported
 	 */
 	textStyle?: boolean
 	/**
-	 * If true, the control supports color selection or multiple color states.
+	 * If set, the control requests colours to be reported.
 	 */
-	colors?: boolean
+	colors?: 'hex' | 'rgb'
 }
 /**
- * Optional bitmap size used when rendering an image for the control.
+ * If set, bitmaps of the specified size will be reported.
  */
 export interface SatelliteConfigSize {
 	/**

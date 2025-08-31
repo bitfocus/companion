@@ -1,3 +1,4 @@
+import { $ } from 'zx'
 import fs from 'fs'
 import Ajv2020 from 'ajv/dist/2020'
 import standaloneCode from 'ajv/dist/standalone/index.js'
@@ -19,10 +20,13 @@ const validate = ajv.compile(schema)
 let moduleCode = standaloneCode(ajv, validate)
 
 // Now you can write the module code to file
-fs.writeFileSync(
-	new URL('../companion/lib/Service/Satellite/SatelliteSurfaceSchemaValidator.js', import.meta.url),
-	'/* eslint-disable */\n' + moduleCode
+const validatorPath = fileURLToPath(
+	new URL('../companion/lib/Service/Satellite/SatelliteSurfaceSchemaValidator.js', import.meta.url)
 )
+fs.writeFileSync(validatorPath, '/* eslint-disable */\n' + moduleCode)
+
+// Format with prettier so that it doesnt bloat git
+$`prettier -w ${validatorPath}`
 
 const PrettierConf = JSON.parse(fs.readFileSync(new URL('../.prettierrc', import.meta.url), 'utf8'))
 
