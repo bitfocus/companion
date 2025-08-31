@@ -32,8 +32,12 @@ import type {
 	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from '../Types.js'
-import type { ImageResultProcessedStyle } from '../../Graphics/ImageResult.js'
-import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/SatelliteApi.js'
+import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
+import type {
+	SatelliteControlStylePreset,
+	SatelliteSurfaceLayout,
+} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
+import { ReadonlyDeep } from 'type-fest'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
@@ -42,12 +46,11 @@ export interface SatelliteDeviceInfo {
 	socket: SatelliteSocketWrapper
 	gridSize: GridSize
 	supportsBrightness: boolean
-	streamBitmapSize: number | null
-	streamColors: string | boolean
-	streamText: boolean
-	streamTextStyle: boolean
 	transferVariables: SatelliteTransferableValue[]
 	supportsLockedState: boolean
+
+	surfaceManifestFromClient: boolean
+	surfaceManifest: SatelliteSurfaceLayout
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -114,31 +117,61 @@ function generateConfigFields(
 	return fields
 }
 
+function formatSurfaceXy(x: number, y: number): string {
+	return `${y}/${x}`
+}
+
+interface ResolvedControlDefinition {
+	// The id as reported by the client
+	id: string
+	// The row as reported by the client
+	row: number
+	// The column as reported by the client
+	column: number
+	// The styles requested by the client
+	style: SatelliteControlStylePreset
+}
+
+function resolveControlDefinitions(
+	surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
+): ReadonlyMap<string, ResolvedControlDefinition[]> {
+	const controlStyles = new Map<string, ResolvedControlDefinition[]>()
+
+	for (const [id, spec] of Object.entries(surfaceManifest.controls)) {
+		const xy = formatSurfaceXy(spec.column, spec.row)
+		let arr = controlStyles.get(xy)
+		if (!arr) {
+			arr = []
+			controlStyles.set(xy, arr)
+		}
+
+		let style = surfaceManifest.stylePresets.default
+		if (spec.stylePreset) {
+			style = surfaceManifest.stylePresets[spec.stylePreset] || style
+		}
+
+		arr.push({
+			id,
+			row: spec.row,
+			column: spec.column,
+			style,
+		})
+	}
+
+	return controlStyles
+}
+
 export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger = LogController.createLogger('Surface/IP/Satellite')
 
 	readonly #executeExpression: SurfaceExecuteExpressionFn
-	readonly #writeQueue: ImageWriteQueue<number, [DrawButtonItem]>
+	readonly #writeQueue: ImageWriteQueue<string, [ResolvedControlDefinition, DrawButtonItem]>
 
 	#config: Record<string, any>
 
-	/**
-	 * Dimension of bitmaps to send to the satellite device.
-	 */
-	readonly #streamBitmapSize: number | null
-	/**
-	 * Whether to stream button colors to the satellite device and which format
-	 * can be false, true or 'hex' for hex format, 'rgb' for css rgb format.
-	 */
-	readonly #streamColors: string | boolean = false
-	/**
-	 * Whether to stream button text to the satellite device
-	 */
-	readonly #streamText: boolean = false
-	/**
-	 * Whether to stream button text style to the satellite device
-	 */
-	readonly #streamTextStyle: boolean = false
+	readonly surfaceManifestFromClient: boolean
+	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
+	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
 
 	readonly #inputVariables: Record<string, SatelliteInputVariableInfo> = {}
 	readonly #outputVariables: Record<string, SatelliteOutputVariableInfo> = {}
@@ -159,20 +192,18 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.socket = deviceInfo.socket
 
-		this.#streamBitmapSize = deviceInfo.streamBitmapSize
-		this.#streamColors = deviceInfo.streamColors
-		this.#streamText = deviceInfo.streamText
-		this.#streamTextStyle = deviceInfo.streamTextStyle
+		this.surfaceManifestFromClient = deviceInfo.surfaceManifestFromClient
+		this.#surfaceManifest = deviceInfo.surfaceManifest
+		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
+
+		const anyControlHasBitmap = !!Array.from(this.#controlDefinitions.values()).find(
+			(controls) => !!controls.find((control) => !!control.style.bitmap)
+		)
 
 		this.info = {
 			type: deviceInfo.productName,
 			devicePath: deviceInfo.path,
-			configFields: generateConfigFields(
-				deviceInfo,
-				!!this.#streamBitmapSize,
-				this.#inputVariables,
-				this.#outputVariables
-			),
+			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
 			deviceId: deviceInfo.path,
 			location: deviceInfo.socket.remoteAddress,
 		}
@@ -184,14 +215,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			brightness: 100,
 		}
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, drawItem) => {
-			const targetSize = this.#streamBitmapSize
-			if (!targetSize) return
-
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, controlDefinition, drawItem) => {
 			try {
-				const newbuffer = await drawItem.defaultRender.drawNative(targetSize, targetSize, this.#config.rotation, 'rgb')
-
-				this.#sendDraw(key, newbuffer, drawItem.defaultRender.style)
+				await this.#sendDraw(controlDefinition, drawItem)
 			} catch (e: any) {
 				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
 				this.emit('remove')
@@ -225,51 +251,76 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Draw a button
 	 */
-	#sendDraw(key: number, buffer: Uint8Array | undefined, style: ImageResultProcessedStyle): void {
-		if (this.socket !== undefined) {
-			const params: SatelliteMessageArgs = {}
-			if (this.#streamColors) {
-				let bgcolor = style.color ? parseColor(style.color.color).replaceAll(' ', '') : 'rgb(0,0,0)'
-				let fgcolor = style.text ? parseColor(style.text.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+	async #sendDraw(controlDefinition: ResolvedControlDefinition, drawItem: DrawButtonItem): Promise<void> {
+		if (!this.socket) return
 
-				if (this.#streamColors !== 'rgb') {
-					bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
-					fgcolor = '#' + parseColorToNumber(fgcolor).toString(16).padStart(6, '0')
-				}
+		const params: SatelliteMessageArgs = {}
 
-				params['COLOR'] = bgcolor
-				params['TEXTCOLOR'] = fgcolor
-			}
-			if (this.#streamBitmapSize) {
-				if (buffer === undefined || buffer.length == 0) {
-					this.#logger.warn('buffer has invalid size')
-				} else {
-					params['BITMAP'] = Buffer.from(buffer).toString('base64')
-				}
-			}
-			if (this.#streamText) {
-				const text = style.text?.text || ''
-				params['TEXT'] = Buffer.from(text).toString('base64')
-			}
-			if (this.#streamTextStyle) {
-				params['FONT_SIZE'] = style.text?.size ?? 'auto'
-			}
+		// Include the global identifier depending on the mode
+		if (!this.surfaceManifestFromClient) {
+			const keyIndex = convertXYToIndexForPanel(controlDefinition.row, controlDefinition.column, this.gridSize)
+			if (keyIndex === null) return
 
-			let type = 'BUTTON'
-			if (style.type === 'pageup') {
-				type = 'PAGEUP'
-			} else if (style.type === 'pagedown') {
-				type = 'PAGEDOWN'
-			} else if (style.type === 'pagenum') {
-				type = 'PAGENUM'
-			}
-
-			params['PRESSED'] = typeof style !== 'string' && !!style.state?.pushed
-			params['KEY'] = key
-			params['TYPE'] = type
-
-			this.socket.sendMessage('KEY-STATE', null, this.deviceId, params)
+			params['KEY'] = keyIndex
+		} else {
+			params['CONTROLID'] = controlDefinition.id
 		}
+
+		const style = drawItem.defaultRender.style
+
+		if (controlDefinition.style.bitmap) {
+			const buffer = await drawItem.defaultRender.drawNative(
+				controlDefinition.style.bitmap.w,
+				controlDefinition.style.bitmap.h,
+				this.#config.rotation,
+				'rgb'
+			)
+
+			if (buffer === undefined || buffer.length == 0) {
+				this.#logger.warn('buffer has invalid size')
+			} else {
+				params['BITMAP'] = Buffer.from(buffer).toString('base64')
+			}
+		}
+
+		if (!this.socket) return
+
+		if (controlDefinition.style.colors) {
+			let bgcolor = style.color ? parseColor(style.color.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+			let fgcolor = style.text ? parseColor(style.text.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+
+			if (controlDefinition.style.colors !== 'rgb') {
+				bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
+				fgcolor = '#' + parseColorToNumber(fgcolor).toString(16).padStart(6, '0')
+			}
+
+			params['COLOR'] = bgcolor
+			params['TEXTCOLOR'] = fgcolor
+		}
+
+		if (controlDefinition.style.text) {
+			const text = style.text?.text || ''
+			params['TEXT'] = Buffer.from(text).toString('base64')
+		}
+		if (controlDefinition.style.textStyle) {
+			params['FONT_SIZE'] = style.text?.size ?? 'auto'
+		}
+
+		let type = 'BUTTON'
+		if (style.type === 'pageup') {
+			type = 'PAGEUP'
+		} else if (style.type === 'pagedown') {
+			type = 'PAGEDOWN'
+		} else if (style.type === 'pagenum') {
+			type = 'PAGENUM'
+		}
+
+		params['PRESSED'] = typeof style !== 'string' && !!style.state?.pushed
+		params['TYPE'] = type
+
+		if (!this.socket) return
+
+		this.socket.sendMessage('KEY-STATE', null, this.deviceId, params)
 	}
 
 	/**
@@ -298,14 +349,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 * Draw a button
 	 */
 	draw(item: DrawButtonItem): void {
-		const key = convertXYToIndexForPanel(item.x, item.y, this.gridSize)
-		if (key === null) return
+		const definitions = this.#controlDefinitions.get(formatSurfaceXy(item.x, item.y))
+		if (!definitions) return
 
-		if (this.#streamBitmapSize) {
-			// Images need scaling
-			this.#writeQueue.queue(key, item)
-		} else {
-			this.#sendDraw(key, undefined, item.defaultRender.style)
+		for (const definition of definitions) {
+			this.#writeQueue.queue(definition.id, definition, item)
 		}
 	}
 
@@ -314,6 +362,13 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 */
 	doButton(column: number, row: number, state: boolean): void {
 		this.emit('click', column, row, state)
+	}
+	doButtonFromId(controlId: string, state: boolean): boolean {
+		const controlManifest = this.#surfaceManifest.controls[controlId]
+		if (!controlManifest) return false
+
+		this.emit('click', controlManifest.column, controlManifest.row, state)
+		return true
 	}
 
 	doPincodeKey(pincodeKey: number): void {
@@ -325,6 +380,13 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 */
 	doRotate(column: number, row: number, direction: boolean): void {
 		this.emit('rotate', column, row, direction)
+	}
+	doRotateFromId(controlId: string, direction: boolean): boolean {
+		const controlManifest = this.#surfaceManifest.controls[controlId]
+		if (!controlManifest) return false
+
+		this.emit('rotate', controlManifest.column, controlManifest.row, direction)
+		return true
 	}
 
 	/**
