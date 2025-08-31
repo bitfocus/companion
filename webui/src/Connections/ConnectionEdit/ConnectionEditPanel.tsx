@@ -22,6 +22,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { ConnectionEditPanelStore, isConfigFieldSecret } from './ConnectionEditPanelStore.js'
 import { observable } from 'mobx'
 import { TextInputField } from '~/Components/TextInputField.js'
+import classNames from 'classnames'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -399,9 +400,12 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 						</CCol>
 					)
 				} else {
+					// Hide certain fields when in 'xs' column size, to avoid unexpected padding
+					const hideInXs = fieldInfo.type === 'static-text' && !fieldInfo.label && !fieldInfo.value
+
 					return (
 						<CCol
-							className={`fieldtype-${fieldInfo.type}`}
+							className={classNames(`fieldtype-${fieldInfo.type}`, { 'd-none': hideInXs, 'd-sm-block': hideInXs })}
 							sm={fieldInfo.width}
 							style={{ display: !isVisible ? 'none' : undefined }}
 						>

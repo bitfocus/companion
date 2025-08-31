@@ -61,7 +61,7 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 			case 'static-text':
 				return translateStaticTextField(o, o.width)
 			case 'textinput':
-				return translateTextInputField(o, 0, false)
+				return translateTextInputField(o, o.width, false)
 			case 'checkbox':
 				return translateCheckboxField(o, o.width)
 			case 'colorpicker':
