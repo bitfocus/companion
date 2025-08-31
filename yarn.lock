@@ -1445,6 +1445,7 @@ __metadata:
     "@types/ps-tree": "npm:^1.1.6"
     "@vitest/coverage-v8": "npm:^3.2.4"
     "@vitest/ui": "npm:^3.2.4"
+    ajv: "npm:^8.17.1"
     chokidar: "npm:^3.6.0"
     concurrently: "npm:^9.2.1"
     eslint: "npm:^9.34.0"
