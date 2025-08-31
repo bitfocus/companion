@@ -144,7 +144,7 @@ const EditButtonContent = observer(function EditButton({
 
 const NormalButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'feedbacks', name: 'Feedbacks', position: 'end' },
-	// { id: 'variables', name: 'Local Variables', position: 'end' },
+	{ id: 'variables', name: 'Local Variables', position: 'end' },
 ]
 
 function NormalButtonEditor({

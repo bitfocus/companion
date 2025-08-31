@@ -14,6 +14,7 @@ import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Mo
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -120,14 +121,14 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				/>
 			</MyErrorBoundary>
 
-			{/* <MyErrorBoundary>
+			<MyErrorBoundary>
 				<LocalVariablesEditor
 					controlId={controlId}
 					location={undefined}
 					variables={config.localVariables}
 					localVariablesStore={localVariablesStore}
 				/>
-			</MyErrorBoundary> */}
+			</MyErrorBoundary>
 		</>
 	)
 }
