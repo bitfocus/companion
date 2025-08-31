@@ -29,8 +29,9 @@ import type { SurfaceController } from '../Surface/Controller.js'
  *       - allow surface to opt out of brightness slider and messages
  * 1.7.1 - Respond with variable name in SET-VARIABLE-VALUE success message
  * 1.8.0 - Add support for remote surface to handle display of locked state
+ * 1.9.0 - Add support for complex surface schemas
  */
-const API_VERSION = '1.8.0'
+const API_VERSION = '1.99.0' // nocommit - this is a temporary change until precise api version is determined
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
