@@ -49,6 +49,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 	constructor(appInfo: AppInfo, cacheStore: DataCache) {
 		super()
+		this.setMaxListeners(0)
 
 		this.#cacheStore = cacheStore.defaultTableView
 		this.#cacheTable = cacheStore.getTableView(CacheStoreModuleTable)
