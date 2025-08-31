@@ -10,9 +10,9 @@ import { Logger } from '../../Log/Controller.js'
 import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surface/IP/Satellite.js'
 import type { AppInfo } from '../../Registry.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
-import { SatelliteSurfaceLayout } from './SatelliteSurfaceSchema.js'
+import { SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
 // eslint-disable-next-line n/no-missing-import
-import { validate as validateSurfaceSchema } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
+import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
 import { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
@@ -137,28 +137,28 @@ export class ServiceSatelliteApi {
 			}
 		}
 
-		let surfaceSchema: SatelliteSurfaceLayout
-		let surfaceSchemaFromClient: boolean
+		let surfaceManifest: SatelliteSurfaceLayout
+		let surfaceManifestFromClient: boolean
 		let gridSize: GridSize
 
-		if (params.SCHEMA) {
-			surfaceSchemaFromClient = true
+		if (params.LAYOUT_MANIFEST) {
+			surfaceManifestFromClient = true
 			try {
-				surfaceSchema = JSON.parse(Buffer.from(String(params.SCHEMA), 'base64').toString())
+				surfaceManifest = JSON.parse(Buffer.from(String(params.LAYOUT_MANIFEST), 'base64').toString())
 
-				if (!validateSurfaceSchema(surfaceSchema)) {
-					const errors = validateSurfaceSchema.errors
+				if (!validateSurfaceManifest(surfaceManifest)) {
+					const errors = validateSurfaceManifest.errors
 					if (!errors) throw new Error(`Failed with unknown reason`)
 
 					throw new Error(`Failed with errors: ${JSON.stringify(errors)}`)
 				}
 			} catch (e: any) {
-				socketLogger.error(`Schema validation failed: ${e?.message ?? e}`)
-				return this.#formatAndSendError(socket, messageName, id, 'Invalid SCHEMA')
+				socketLogger.error(`Manifest validation failed: ${e?.message ?? e}`)
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid LAYOUT_MANIFEST')
 			}
 
 			// Find the max bounds of this surface
-			gridSize = Object.values(surfaceSchema.controls).reduce(
+			gridSize = Object.values(surfaceManifest.controls).reduce(
 				(gridSize, control): GridSize => ({
 					columns: Math.max(gridSize.columns, control.column + 1),
 					rows: Math.max(gridSize.rows, control.row + 1),
@@ -166,8 +166,8 @@ export class ServiceSatelliteApi {
 				{ columns: 0, rows: 0 }
 			)
 		} else {
-			surfaceSchemaFromClient = false
-			surfaceSchema = {
+			surfaceManifestFromClient = false
+			surfaceManifest = {
 				controls: {},
 				stylePresets: {
 					default: {},
@@ -188,7 +188,7 @@ export class ServiceSatelliteApi {
 				const row = Math.floor(i / keysPerRow)
 				const column = i % keysPerRow
 
-				surfaceSchema.controls[`${row}/${column}`] = {
+				surfaceManifest.controls[`${row}/${column}`] = {
 					row,
 					column,
 				}
@@ -206,14 +206,14 @@ export class ServiceSatelliteApi {
 					streamBitmapSize = 72
 				}
 
-				surfaceSchema.stylePresets.default.bitmap = { w: streamBitmapSize, h: streamBitmapSize }
+				surfaceManifest.stylePresets.default.bitmap = { w: streamBitmapSize, h: streamBitmapSize }
 			}
 
 			const streamColors = parseStringParamWithBooleanFallback(['hex', 'rgb'], 'hex', params.COLORS) || undefined
-			surfaceSchema.stylePresets.default.colors = streamColors
+			surfaceManifest.stylePresets.default.colors = streamColors
 
-			surfaceSchema.stylePresets.default.text = params.TEXT !== undefined && isTruthy(params.TEXT)
-			surfaceSchema.stylePresets.default.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
+			surfaceManifest.stylePresets.default.text = params.TEXT !== undefined && isTruthy(params.TEXT)
+			surfaceManifest.stylePresets.default.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		}
 
 		socketLogger.debug(`add surface "${id}"`)
@@ -238,8 +238,8 @@ export class ServiceSatelliteApi {
 			supportsBrightness,
 			transferVariables,
 			supportsLockedState,
-			surfaceSchemaFromClient,
-			surfaceSchema,
+			surfaceManifestFromClient,
+			surfaceManifest,
 		})
 
 		this.#devices.set(id, {
@@ -404,7 +404,7 @@ export class ServiceSatelliteApi {
 		if (!device) return
 		const id = device.id
 
-		if (device.device.surfaceSchemaFromClient) {
+		if (device.device.surfaceManifestFromClient) {
 			if (!params.CONTROLID) {
 				return this.#formatAndSendError(socket, messageName, id, 'Missing CONTROLID')
 			}
@@ -470,7 +470,7 @@ export class ServiceSatelliteApi {
 		if (!device) return
 		const id = device.id
 
-		if (device.device.surfaceSchemaFromClient) {
+		if (device.device.surfaceManifestFromClient) {
 			if (!params.CONTROLID) {
 				return this.#formatAndSendError(socket, messageName, id, 'Missing CONTROLID')
 			}

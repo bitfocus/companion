@@ -36,7 +36,7 @@ import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service
 import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
-} from '../../Service/Satellite/SatelliteSurfaceSchema.js'
+} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import { ReadonlyDeep } from 'type-fest'
 
 export interface SatelliteDeviceInfo {
@@ -49,8 +49,8 @@ export interface SatelliteDeviceInfo {
 	transferVariables: SatelliteTransferableValue[]
 	supportsLockedState: boolean
 
-	surfaceSchemaFromClient: boolean
-	surfaceSchema: SatelliteSurfaceLayout
+	surfaceManifestFromClient: boolean
+	surfaceManifest: SatelliteSurfaceLayout
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -133,11 +133,11 @@ interface ResolvedControlDefinition {
 }
 
 function resolveControlDefinitions(
-	surfaceSchema: ReadonlyDeep<SatelliteSurfaceLayout>
+	surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
 ): ReadonlyMap<string, ResolvedControlDefinition[]> {
 	const controlStyles = new Map<string, ResolvedControlDefinition[]>()
 
-	for (const [id, spec] of Object.entries(surfaceSchema.controls)) {
+	for (const [id, spec] of Object.entries(surfaceManifest.controls)) {
 		const xy = formatSurfaceXy(spec.column, spec.row)
 		let arr = controlStyles.get(xy)
 		if (!arr) {
@@ -145,9 +145,9 @@ function resolveControlDefinitions(
 			controlStyles.set(xy, arr)
 		}
 
-		let style = surfaceSchema.stylePresets.default
+		let style = surfaceManifest.stylePresets.default
 		if (spec.stylePreset) {
-			style = surfaceSchema.stylePresets[spec.stylePreset] || style
+			style = surfaceManifest.stylePresets[spec.stylePreset] || style
 		}
 
 		arr.push({
@@ -169,8 +169,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 	#config: Record<string, any>
 
-	readonly surfaceSchemaFromClient: boolean
-	readonly #surfaceSchema: ReadonlyDeep<SatelliteSurfaceLayout>
+	readonly surfaceManifestFromClient: boolean
+	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
 	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
 
 	readonly #inputVariables: Record<string, SatelliteInputVariableInfo> = {}
@@ -192,9 +192,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.socket = deviceInfo.socket
 
-		this.surfaceSchemaFromClient = deviceInfo.surfaceSchemaFromClient
-		this.#surfaceSchema = deviceInfo.surfaceSchema
-		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceSchema)
+		this.surfaceManifestFromClient = deviceInfo.surfaceManifestFromClient
+		this.#surfaceManifest = deviceInfo.surfaceManifest
+		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 
 		const anyControlHasBitmap = !!Array.from(this.#controlDefinitions.values()).find(
 			(controls) => !!controls.find((control) => !!control.style.bitmap)
@@ -257,7 +257,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		const params: SatelliteMessageArgs = {}
 
 		// Include the global identifier depending on the mode
-		if (!this.surfaceSchemaFromClient) {
+		if (!this.surfaceManifestFromClient) {
 			const keyIndex = convertXYToIndexForPanel(controlDefinition.row, controlDefinition.column, this.gridSize)
 			if (keyIndex === null) return
 
@@ -364,10 +364,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.emit('click', column, row, state)
 	}
 	doButtonFromId(controlId: string, state: boolean): boolean {
-		const controlSchema = this.#surfaceSchema.controls[controlId]
-		if (!controlSchema) return false
+		const controlManifest = this.#surfaceManifest.controls[controlId]
+		if (!controlManifest) return false
 
-		this.emit('click', controlSchema.column, controlSchema.row, state)
+		this.emit('click', controlManifest.column, controlManifest.row, state)
 		return true
 	}
 
@@ -382,10 +382,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.emit('rotate', column, row, direction)
 	}
 	doRotateFromId(controlId: string, direction: boolean): boolean {
-		const controlSchema = this.#surfaceSchema.controls[controlId]
-		if (!controlSchema) return false
+		const controlManifest = this.#surfaceManifest.controls[controlId]
+		if (!controlManifest) return false
 
-		this.emit('rotate', controlSchema.column, controlSchema.row, direction)
+		this.emit('rotate', controlManifest.column, controlManifest.row, direction)
 		return true
 	}
 

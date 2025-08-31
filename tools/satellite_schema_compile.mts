@@ -38,7 +38,7 @@ const compiledTypescript = await compileFromFile(schemaPath, {
 })
 
 fs.writeFileSync(
-	new URL('../companion/lib/Service/Satellite/SatelliteSurfaceSchema.ts', import.meta.url),
+	new URL('../companion/lib/Service/Satellite/SatelliteSurfaceManifestSchema.ts', import.meta.url),
 	compiledTypescript,
 	'utf8'
 )
