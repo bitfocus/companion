@@ -11,7 +11,7 @@ import { ElementsList } from './ElementsList.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
-import { LocalVariablesEditor } from '../LocalVariablesEditor.js'
+import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
 import { LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
