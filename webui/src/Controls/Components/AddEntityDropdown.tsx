@@ -5,7 +5,7 @@ import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
@@ -75,6 +75,35 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 		}
 
 		if (!showAll) {
+			if (feedbackListType === FeedbackEntitySubType.Value) {
+				// Show the builtin value type options as special, to increase visibility
+				const internalDefs = definitions.connections.get('internal')
+				if (internalDefs) {
+					const commonOptions: AddEntityOption[] = []
+
+					for (const [definitionId, definition] of internalDefs.entries()) {
+						if (
+							!canAddEntityToFeedbackList(feedbackListType, definition) ||
+							definition.feedbackType !== FeedbackEntitySubType.Value
+						)
+							continue
+
+						const optionLabel = `internal: ${definition.label}`
+						commonOptions.push({
+							isRecent: true, // Not really, but should behave the same
+							value: `internal:${definitionId}`,
+							label: optionLabel,
+							fuzzy: fuzzyPrepare(optionLabel),
+						})
+					}
+
+					options.push({
+						label: 'Common',
+						options: commonOptions,
+					})
+				}
+			}
+
 			const recents: AddEntityOption[] = []
 			for (const definitionPair of recentlyUsedStore.recentIds) {
 				if (!definitionPair) continue
