@@ -394,19 +394,36 @@ export class ServiceSatelliteApi {
 		if (!device) return
 		const id = device.id
 
-		if (!params.KEY) {
-			return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
-		}
-		const xy = device.device.parseKeyParam(params.KEY.toString())
-		if (!xy) {
-			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
-		}
-		if (!params.PRESSED) {
-			return this.#formatAndSendError(socket, messageName, id, 'Missing PRESSED')
-		}
-		const pressed = !isFalsey(params.PRESSED)
+		if (device.device.surfaceSchemaFromClient) {
+			if (!params.CONTROLID) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing CONTROLID')
+			}
+			const controlId = `${params.CONTROLID}`
 
-		device.device.doButton(...xy, pressed)
+			if (!params.PRESSED) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing PRESSED')
+			}
+			const pressed = !isFalsey(params.PRESSED)
+
+			if (!device.device.doButtonFromId(controlId, pressed)) {
+				return this.#formatAndSendError(socket, messageName, id, 'Unknown CONTROLID')
+			}
+		} else {
+			if (!params.KEY) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
+			}
+			const xy = device.device.parseKeyParam(params.KEY.toString())
+			if (!xy) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
+			}
+			if (!params.PRESSED) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing PRESSED')
+			}
+			const pressed = !isFalsey(params.PRESSED)
+
+			device.device.doButton(...xy, pressed)
+		}
+
 		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
@@ -443,20 +460,37 @@ export class ServiceSatelliteApi {
 		if (!device) return
 		const id = device.id
 
-		if (!params.KEY) {
-			return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
-		}
-		const xy = device.device.parseKeyParam(params.KEY.toString())
-		if (!xy) {
-			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
-		}
-		if (!params.DIRECTION) {
-			return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
+		if (device.device.surfaceSchemaFromClient) {
+			if (!params.CONTROLID) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing CONTROLID')
+			}
+			const controlId = `${params.CONTROLID}`
+
+			if (!params.DIRECTION) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
+			}
+			const direction = params.DIRECTION >= '1'
+
+			if (!device.device.doRotateFromId(controlId, direction)) {
+				return this.#formatAndSendError(socket, messageName, id, 'Unknown CONTROLID')
+			}
+		} else {
+			if (!params.KEY) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
+			}
+			const xy = device.device.parseKeyParam(params.KEY.toString())
+			if (!xy) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
+			}
+			if (!params.DIRECTION) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
+			}
+
+			const direction = params.DIRECTION >= '1'
+
+			device.device.doRotate(...xy, direction)
 		}
 
-		const direction = params.DIRECTION >= '1'
-
-		device.device.doRotate(...xy, direction)
 		socket.sendMessage(messageName, 'OK', id, {})
 	}
 

@@ -46,10 +46,6 @@ export interface SatelliteDeviceInfo {
 	socket: SatelliteSocketWrapper
 	gridSize: GridSize
 	supportsBrightness: boolean
-	// streamBitmapSize: number | null
-	// streamColors: string | boolean
-	// streamText: boolean
-	// streamTextStyle: boolean
 	transferVariables: SatelliteTransferableValue[]
 	supportsLockedState: boolean
 
@@ -173,9 +169,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 	#config: Record<string, any>
 
-	// readonly #streamTextStyle: boolean = false
-	readonly #surfaceSchemaFromClient: boolean
-	// readonly #surfaceSchema: ReadonlyDeep<SatelliteSurfaceLayout>
+	readonly surfaceSchemaFromClient: boolean
+	readonly #surfaceSchema: ReadonlyDeep<SatelliteSurfaceLayout>
 	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
 
 	readonly #inputVariables: Record<string, SatelliteInputVariableInfo> = {}
@@ -197,8 +192,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.socket = deviceInfo.socket
 
-		this.#surfaceSchemaFromClient = deviceInfo.surfaceSchemaFromClient
-		// this.#surfaceSchema = deviceInfo.surfaceSchema
+		this.surfaceSchemaFromClient = deviceInfo.surfaceSchemaFromClient
+		this.#surfaceSchema = deviceInfo.surfaceSchema
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceSchema)
 
 		const anyControlHasBitmap = !!Array.from(this.#controlDefinitions.values()).find(
@@ -262,7 +257,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		const params: SatelliteMessageArgs = {}
 
 		// Include the global identifier depending on the mode
-		if (!this.#surfaceSchemaFromClient) {
+		if (!this.surfaceSchemaFromClient) {
 			const keyIndex = convertXYToIndexForPanel(controlDefinition.row, controlDefinition.column, this.gridSize)
 			if (keyIndex === null) return
 
@@ -368,6 +363,13 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	doButton(column: number, row: number, state: boolean): void {
 		this.emit('click', column, row, state)
 	}
+	doButtonFromId(controlId: string, state: boolean): boolean {
+		const controlSchema = this.#surfaceSchema.controls[controlId]
+		if (!controlSchema) return false
+
+		this.emit('click', controlSchema.column, controlSchema.row, state)
+		return true
+	}
 
 	doPincodeKey(pincodeKey: number): void {
 		this.emit('pincodeKey', pincodeKey)
@@ -378,6 +380,13 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 */
 	doRotate(column: number, row: number, direction: boolean): void {
 		this.emit('rotate', column, row, direction)
+	}
+	doRotateFromId(controlId: string, direction: boolean): boolean {
+		const controlSchema = this.#surfaceSchema.controls[controlId]
+		if (!controlSchema) return false
+
+		this.emit('rotate', controlSchema.column, controlSchema.row, direction)
+		return true
 	}
 
 	/**
