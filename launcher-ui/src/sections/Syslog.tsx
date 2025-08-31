@@ -132,7 +132,7 @@ export function SyslogSection(): JSX.Element {
 								/>
 							</div>
 							<p className="text-sm text-muted-foreground mt-1">
-								Change the hostname this companion instance will report
+								Change the hostname this companion instance will report. If not set the system hostname will be used
 							</p>
 						</div>
 					</div>
