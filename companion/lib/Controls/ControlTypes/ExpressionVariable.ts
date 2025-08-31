@@ -9,6 +9,7 @@ import type {
 	ControlWithoutPushed,
 	ControlWithoutStyle,
 	ControlWithEntities,
+	ControlWithoutLayeredStyle,
 } from '../IControlFragments.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
@@ -44,6 +45,7 @@ export class ControlExpressionVariable
 		ControlWithoutEvents,
 		ControlWithEntities,
 		ControlWithoutStyle,
+		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
 		ControlWithoutPushed
@@ -339,7 +341,7 @@ export class ControlExpressionVariable
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
 	}
-	getBitmapSize(): { width: number; height: number } | null {
+	getBitmapFeedbackSize(): { width: number; height: number } | null {
 		return null
 	}
 }

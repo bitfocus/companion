@@ -35,6 +35,7 @@ class ImagePool extends ImagePoolBase<Image> {
 		const canvas = new Canvas(realwidth, realheight)
 		const context2d = canvas.getContext('2d')
 		context2d.scale(this.#oversampling, this.#oversampling)
+		// @ts-expect-error Unknown property but we may need it?
 		context2d.textWrap = false
 
 		return new Image(this, canvas, context2d, this.#width, this.#height, realwidth, realheight)

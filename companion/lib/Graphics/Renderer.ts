@@ -23,7 +23,7 @@ import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleG
 import { GraphicsLockingGenerator } from './Locking.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
-import type imageRs from '@julusian/image-rs'
+import type * as imageRs from '@julusian/image-rs'
 import { Canvas, loadImage } from '@napi-rs/canvas'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'

@@ -36,7 +36,7 @@ import type Express from 'express'
 import compressionMiddleware from 'compression'
 import fs from 'fs'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
-import type imageRs from '@julusian/image-rs'
+import type * as imageRs from '@julusian/image-rs'
 import type { DataDatabase } from '../Data/Database.js'
 import { ImageLibrary } from './ImageLibrary.js'
 
