@@ -103,6 +103,8 @@ export function SyslogSection(): JSX.Element {
 									value={syslogPort}
 									onChange={(e) => handleSyslogPortChange(e.target.value)}
 									className="flex-1 rounded-r-none"
+									min={101}
+									max={65535}
 								/>
 							</div>
 						</div>
