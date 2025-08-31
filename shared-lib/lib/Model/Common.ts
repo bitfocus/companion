@@ -1,4 +1,4 @@
-import type { ConnectionInputField, InternalActionInputField } from './Options.js'
+import type { SomeCompanionInputField } from './Options.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 export interface ObjectsDiff<T> {
@@ -84,7 +84,7 @@ export type ClientBonjourEvent =
 export interface EventDefinition {
 	name: string
 	description?: string
-	options: InternalActionInputField[]
+	options: SomeCompanionInputField[]
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -96,7 +96,7 @@ export interface WrappedImage {
 }
 
 export interface ClientEditConnectionConfig {
-	fields: Array<ConnectionInputField & { width: number }>
+	fields: Array<SomeCompanionInputField>
 	config: unknown
 	hasSecrets: Record<string, boolean>
 }

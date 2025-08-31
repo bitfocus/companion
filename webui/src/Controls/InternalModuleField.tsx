@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.js'
 import { useComputed } from '~/Resources/util.js'
 import TimePicker from 'react-time-picker'
@@ -9,10 +9,12 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import { LocalVariablesStore } from './LocalVariablesStore'
 
 export function InternalModuleField(
 	option: InternalInputField,
 	isLocatedInGrid: boolean,
+	localVariablesStore: LocalVariablesStore | null,
 	readonly: boolean,
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	value: any,
@@ -51,7 +53,15 @@ export function InternalModuleField(
 				/>
 			)
 		case 'internal:variable':
-			return <InternalVariableDropdown disabled={readonly} value={value} setValue={setValue} />
+			return (
+				<InternalVariableDropdown
+					disabled={readonly}
+					value={value}
+					setValue={setValue}
+					supportsLocal={option.supportsLocal}
+					localVariablesStore={localVariablesStore}
+				/>
+			)
 		case 'internal:surface_serial':
 			return (
 				<InternalSurfaceBySerialDropdown
@@ -255,18 +265,33 @@ interface InternalVariableDropdownProps {
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
+	supportsLocal: boolean
+	localVariablesStore: LocalVariablesStore | null
 }
 
 const InternalVariableDropdown = observer(function InternalVariableDropdown({
 	value,
 	setValue,
 	disabled,
+	supportsLocal,
+	localVariablesStore,
 }: Readonly<InternalVariableDropdownProps>) {
 	const { variablesStore } = useContext(RootAppStoreContext)
 
 	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
-	const choices = useMemo(() => {
-		const choices = []
+	const localVariableDefinitions = supportsLocal ? localVariablesStore?.getOptions(null, true, false) : undefined
+	const choices = useComputed(() => {
+		const choices: Array<DropdownChoice> = []
+
+		console.log('Local variable definitions', localVariableDefinitions)
+		if (localVariableDefinitions) {
+			for (const definition of localVariableDefinitions) {
+				choices.push({
+					id: definition.value,
+					label: `${definition.label} (${definition.value})`,
+				})
+			}
+		}
 
 		for (const variable of baseVariableDefinitions) {
 			const id = `${variable.connectionLabel}:${variable.name}`
@@ -276,10 +301,10 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			})
 		}
 
-		choices.sort((a, b) => a.id.localeCompare(b.id))
+		choices.sort((a, b) => String(a.id).localeCompare(String(b.id)))
 
 		return choices
-	}, [baseVariableDefinitions])
+	}, [baseVariableDefinitions, localVariableDefinitions])
 
 	const hasMatch = choices.find((c) => c.id === value)
 

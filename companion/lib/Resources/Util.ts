@@ -1,4 +1,4 @@
-import imageRs from '@julusian/image-rs'
+import * as imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
@@ -229,9 +229,9 @@ export function clamp(val: number, min: number, max: number): number {
  * Translate rotation to @julusian/image-rs equivalent
  */
 export function translateRotation(rotation: SurfaceRotation | null): imageRs.RotationMode | null {
-	if (rotation === 90 || rotation === 'surface90') return imageRs.RotationMode.CW270
-	if (rotation === -90 || rotation === 'surface-90') return imageRs.RotationMode.CW90
-	if (rotation === 180 || rotation === 'surface180') return imageRs.RotationMode.CW180
+	if (rotation === 90 || rotation === 'surface90') return 'CW270'
+	if (rotation === -90 || rotation === 'surface-90') return 'CW90'
+	if (rotation === 180 || rotation === 'surface180') return 'CW180'
 	return null
 }
 
@@ -294,12 +294,12 @@ export async function transformButtonImage(
 	targetHeight: number,
 	targetFormat: imageRs.PixelFormat
 ): Promise<Buffer> {
-	let image = imageRs.ImageTransformer.fromBuffer(buffer, bufferWidth, bufferHeight, imageRs.PixelFormat.Rgba)
+	let image = imageRs.ImageTransformer.fromBuffer(buffer, bufferWidth, bufferHeight, 'rgba')
 
 	const imageRsRotation = translateRotation(rotation)
 	if (imageRsRotation !== null) image = image.rotate(imageRsRotation)
 
-	image = image.scale(targetWidth, targetHeight, imageRs.ResizeMode.Fit)
+	image = image.scale(targetWidth, targetHeight, 'Fit')
 
 	// pad, in case a button is non-square
 	const dimensions = image.getCurrentDimensions()

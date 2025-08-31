@@ -14,8 +14,6 @@ import { ServiceUdp } from './Udp.js'
 import { ServiceVideohubPanel } from './VideohubPanel.js'
 import type { UIHandler } from '../UI/Handler.js'
 import { ServiceSatelliteWebsocket } from './SatelliteWebsocket.js'
-import type { EventEmitter } from 'events'
-import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -61,7 +59,6 @@ export class ServiceController {
 		serviceApi: ServiceApi,
 		userconfig: DataUserConfig,
 		oscSender: ServiceOscSender,
-		controlEvents: EventEmitter<ControlCommonEvents>,
 		surfaceController: SurfaceController,
 		pageStore: IPageStore,
 		instanceController: InstanceController,
@@ -83,10 +80,6 @@ export class ServiceController {
 		this.videohubPanel = new ServiceVideohubPanel(surfaceController, userconfig)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
 		this.surfaceDiscovery = new ServiceSurfaceDiscovery(userconfig)
-
-		controlEvents.on('updateButtonState', (location, pushed, surfaceId) => {
-			this.emberplus.updateButtonState(location, pushed, surfaceId)
-		})
 	}
 
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {

@@ -161,6 +161,7 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 				type: 'internal:variable',
 				id: 'variableId',
 				label: 'Variable to watch',
+				supportsLocal: true,
 			},
 		],
 	},

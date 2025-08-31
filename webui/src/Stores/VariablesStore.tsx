@@ -7,11 +7,18 @@ import { ObservableMap, action, computed, observable } from 'mobx'
 import { assertNever } from '~/Resources/util.js'
 import type { VariableDefinition, VariableDefinitionUpdate } from '@companion-app/shared/Model/Variables.js'
 import { ApplyDiffToStore, updateObjectInPlace } from './ApplyDiffToMap'
+import { ExpressionVariablesListStore } from './ExpressionVariablesListStore'
 
 export class VariablesStore {
+	readonly #expressionVariables: ExpressionVariablesListStore
+
 	readonly customVariables = observable.map<string, CustomVariableDefinition>()
 	readonly variables = observable.map<string, ObservableMap<string, VariableDefinition>>()
 	readonly customVariableCollections = observable.map<string, CustomVariableCollection>()
+
+	constructor(expressionVariables: ExpressionVariablesListStore) {
+		this.#expressionVariables = expressionVariables
+	}
 
 	public updateCustomVariables = action((changes: CustomVariableUpdate[] | null) => {
 		if (!changes) {
@@ -112,6 +119,17 @@ export class VariablesStore {
 		}
 
 		definitions.push(...this.customVariableDefinitions.get())
+
+		// Expression variables
+		for (const info of this.#expressionVariables.expressionVariables.values()) {
+			if (!info.variableName) continue
+
+			definitions.push({
+				label: info.description || 'An expression variable',
+				connectionLabel: 'expression',
+				name: info.variableName,
+			})
+		}
 
 		return definitions
 	})

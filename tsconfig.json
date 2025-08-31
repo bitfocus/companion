@@ -4,6 +4,7 @@
 		//
 		{ "path": "./companion" },
 		{ "path": "./shared-lib" },
-		{ "path": "./webui" }
+		{ "path": "./webui" },
+		{ "path": "./launcher-ui" }
 	]
 }

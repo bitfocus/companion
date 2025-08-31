@@ -21,7 +21,8 @@ export function isLabelValid(label: string): boolean {
 		label.toLowerCase() === 'local' ||
 		label.toLowerCase() === 'companion' ||
 		label.toLowerCase() === 'image' ||
-		label.toLowerCase() === 'custom'
+		label.toLowerCase() === 'custom' ||
+		label.toLowerCase() === 'expression'
 	)
 		return false
 

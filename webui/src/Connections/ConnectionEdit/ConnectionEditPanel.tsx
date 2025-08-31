@@ -5,7 +5,7 @@ import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormLabe
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCircleExclamation, faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
-import { ConnectionInputField } from '@companion-app/shared/Model/Options.js'
+import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
@@ -230,7 +230,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	)
 })
 
-function ConnectionFieldLabel({ fieldInfo }: { fieldInfo: ConnectionInputField }) {
+function ConnectionFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputField }) {
 	return (
 		<>
 			{fieldInfo.label}

@@ -26,16 +26,16 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
-import type { InternalActionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 
-const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
+const CHOICES_SURFACE_GROUP_WITH_VARIABLES: SomeCompanionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use expression for surface',
+		label: 'Use variables for surface',
 		id: 'controller_from_variable',
 		default: false,
 	},
@@ -65,7 +65,7 @@ const CHOICES_SURFACE_GROUP_WITH_VARIABLES: InternalActionInputField[] = [
 	},
 ]
 
-const CHOICES_SURFACE_ID_WITH_VARIABLES: InternalActionInputField[] = [
+const CHOICES_SURFACE_ID_WITH_VARIABLES: SomeCompanionInputField[] = [
 	{
 		type: 'checkbox',
 		label: 'Use expression for surface',
@@ -99,7 +99,7 @@ const CHOICES_SURFACE_ID_WITH_VARIABLES: InternalActionInputField[] = [
 	},
 ]
 
-const CHOICES_PAGE_WITH_VARIABLES: InternalActionInputField[] = [
+const CHOICES_PAGE_WITH_VARIABLES: SomeCompanionInputField[] = [
 	{
 		type: 'checkbox',
 		label: 'Use expression for page',

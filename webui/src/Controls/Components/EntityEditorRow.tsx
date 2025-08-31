@@ -20,6 +20,7 @@ import { checkDragStateWithThresholds, DragPlacement } from '~/Resources/DragAnd
 import { EntityListDragItem } from './EntityListDropZone.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
+import { LearnButton } from '~/Components/LearnButton.js'
 
 interface EntityTableRowDragStatus {
 	isDragging: boolean
@@ -198,14 +199,24 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 
 			{!isCollapsed && (
 				<div className="editor-grid">
+					<div className="cell-description">
+						<div className="grow">
+							{headlineExpanded && <div className="name">{definitionName}</div>}
+							{entityDefinition?.description && <div className="description">{entityDefinition.description || ''}</div>}
+						</div>
+						{entityDefinition?.hasLearn && !!entityService.performLearn && (
+							<div>
+								<LearnButton id={entity.id} doLearn={entityService.performLearn} disabled={readonly} />
+							</div>
+						)}
+					</div>
+
 					<EntityCommonCells
 						entity={entity}
 						entityTypeLabel={entityTypeLabel}
 						feedbackListType={feedbackListType}
 						entityDefinition={entityDefinition}
 						service={entityService}
-						headlineExpanded={headlineExpanded}
-						definitionName={definitionName}
 					/>
 
 					<EntityManageChildGroups entity={entity} entityDefinition={entityDefinition} />

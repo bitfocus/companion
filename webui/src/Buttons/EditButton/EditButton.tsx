@@ -18,7 +18,7 @@ import { ButtonEditorExtraTabs, ButtonEditorTabs } from './ButtonEditorTabs.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
-import { LocalVariablesEditor } from './LocalVariablesEditor.js'
+import { LocalVariablesEditor } from '../../Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -51,7 +51,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 					<GenericConfirmModal ref={resetModalRef} />
 					<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 					{dataReady &&
-						(controlConfig.config.type === 'trigger' ? (
+						(controlConfig.config.type === 'trigger' || controlConfig.config.type === 'expression-variable' ? (
 							<CAlert color="warning">
 								An incompatible control was selected! This is likely a bug, please report it.
 							</CAlert>

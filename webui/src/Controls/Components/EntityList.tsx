@@ -12,6 +12,7 @@ import { useEntityEditorContext } from './EntityEditorContext.js'
 interface EditableEntityListProps {
 	heading: JSX.Element | string | null
 	headingActions?: JSX.Element[]
+	subheading?: JSX.Element | string | null
 	entities: SomeEntityModel[] | undefined
 	ownerId: EntityOwner | null
 	entityType: EntityModelType
@@ -21,6 +22,7 @@ interface EditableEntityListProps {
 export const EditableEntityList = observer(function EditableEntityList({
 	heading,
 	headingActions,
+	subheading,
 	entities,
 	ownerId,
 	entityType,
@@ -35,6 +37,8 @@ export const EditableEntityList = observer(function EditableEntityList({
 				childEntityIds={entities?.map((f) => f.id) ?? []}
 				headingActions={headingActions}
 			/>
+
+			{subheading}
 
 			<MinimalEntityList
 				ownerId={ownerId}

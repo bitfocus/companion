@@ -12,23 +12,34 @@
 			<div id="topwrap">
 				<img id="logo" src="./assets/icon.png" alt="Companion Logo" />
 				<div id="model">model_text (version_etc)</div>
-				<button id="developer_settings" title="Developer settings">&#9881;</button>
+				<button id="advanced_settings_btn" title="Advanced settings">&#9881;</button>
 			</div>
 			<div id="http_status">
 				<h1 id="status">Status</h1>
 				<div id="url">URL</div>
 			</div>
+			<div id="macos_warning" class="warning_message">
+				<strong>Important:</strong>
+				<span>
+					This is the last release of Companion that is compatible with the version of macOS you are running.
+					<br />
+					Please upgrade macOS to 12 or later to be able to run Companion 4.2.
+				</span>
+			</div>
 			<div id="actions">
-				<div id="guitext">GUI Interface</div>
-				<select id="ifs"></select>
-				<p>
-					<input type="text" maxlength="5" id="http_port" value="8000" /><input
-						type="button"
-						id="http_port_button"
-						class="input_button"
-						value="Change"
-					/>
-				</p>
+				<div class="interface-port-section">
+					<div class="interface-group">
+						<label for="ifs" class="section-label">GUI Interface</label>
+						<select id="ifs"></select>
+					</div>
+					<div class="port-group">
+						<label for="http_port" class="section-label">Port</label>
+						<div class="port-input-group">
+							<input type="text" maxlength="5" id="http_port" value="8000" />
+							<input type="button" id="http_port_button" class="input_button" value="Change" />
+						</div>
+					</div>
+				</div>
 				<p class="two-columns">
 					<span>
 						<input type="checkbox" id="start_minimized" />
@@ -39,18 +50,6 @@
 						<label for="run_at_login" class="checkbox_text">Run at login</label>
 					</span>
 				</p>
-
-				<div id="developer_settings_panel">
-					<p>
-						<span id="guitext">Developer modules path</span>
-						<input type="text" id="dev_modules_path" readonly placeholder="Select directory" /><input
-							type="button"
-							id="dev_modules_path_pick"
-							class="input_button input_button_middle"
-							value="Select"
-						/><input type="button" id="dev_modules_path_clear" class="input_button" value="Clear" />
-					</p>
-				</div>
 
 				<div id="bottombuttons">
 					<input type="button" class="dobutton" value="Launch GUI" id="launch" />

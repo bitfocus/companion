@@ -33,10 +33,9 @@ body {
 
 #wrap {
 	width: 100%;
-	text-align: center;
 	display: grid;
-	grid-auto-flow: row;
-	grid-template-rows: auto auto auto;
+	grid-template-rows: auto auto auto 1fr;
+	text-align: center;
 }
 
 #topwrap {
@@ -91,6 +90,7 @@ body {
 
 input {
 	-webkit-appearance: textfield;
+	appearance: textfield;
 	background-color: white;
 	-webkit-rtl-ordering: logical;
 	cursor: text;
@@ -155,7 +155,7 @@ input[type='text'] {
 	padding-top: 3px;
 	padding-bottom: 3px;
 	border: 1px solid white;
-	border-right-width: 1px;
+	border-right-width: 0px;
 }
 input[type='text']::placeholder {
 	color: #ddd;
@@ -188,6 +188,7 @@ input[type='text']::placeholder {
 
 input[type='checkbox'] {
 	-webkit-appearance: checkbox;
+	appearance: checkbox;
 	cursor: pointer;
 	font: inherit;
 	width: 1.15em;
@@ -204,22 +205,48 @@ input[type='checkbox'] {
 	background-color: #d40215;
 	color: #fff;
 	border: 1px solid white;
-	font-size: 12px !important;
-	margin-bottom: -4px;
+	border-radius: 3px;
+	font-size: 14px;
+	padding: 3px 0px;
+	height: 24px;
+	box-sizing: border-box;
+	width: 200px;
+	max-width: 200px;
 }
 
-#guitext {
+.section-label {
 	font-size: 12px;
 	color: white;
-	padding-top: 0px;
-	padding-bottom: 2px;
 	display: block;
+	margin-bottom: 4px;
+	font-weight: 500;
 }
 
-#developer_settings {
+.interface-port-section {
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+.interface-group,
+.port-group {
+	display: inline-block;
+	margin: 0 10px;
+	vertical-align: top;
+}
+
+.port-input-group {
+	display: inline-block;
+	font-size: 0; /* Remove whitespace between inline elements */
+}
+
+.port-input-group input {
+	font-size: 14px; /* Reset font size for the inputs */
+}
+
+#advanced_settings_btn {
 	float: right;
 	position: absolute;
-	font-size: 25px;
+	font-size: 32px;
 	right: 5px;
 	top: 5px;
 
@@ -231,14 +258,26 @@ input[type='checkbox'] {
 	outline: none !important;
 }
 
-#developer_settings_panel {
-	display: none;
-}
-
 .two-columns {
 	display: grid;
 	grid-auto-flow: column;
 	grid-auto-columns: 1fr;
-
 	padding: 0 20px;
+}
+
+#bottombuttons {
+	text-align: center;
+	margin-top: 10px;
+}
+
+#bottombuttons .dobutton {
+	margin: 0 5px;
+}
+
+.warning_message {
+	display: none;
+	background: rgb(190, 124, 0);
+	color: #fff;
+	padding: 10px;
+	margin: 10px;
 }

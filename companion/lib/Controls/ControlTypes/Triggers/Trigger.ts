@@ -186,7 +186,8 @@ export class ControlTrigger
 			this.entities.loadStorage(storage, true, isImport)
 			this.events = storage.events || this.events
 
-			if (isImport) this.#postProcessImport()
+			// Ensure control is stored before setup
+			if (isImport) setImmediate(() => this.#postProcessImport())
 		}
 
 		// Ensure trigger is stored before setup
@@ -288,8 +289,9 @@ export class ControlTrigger
 			type: this.type,
 			options: this.options,
 			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
-			condition: this.entities.getFeedbackEntities(),
+			condition: this.entities.getFeedbackEntities().map((e) => e.asEntityModel(true)),
 			events: this.events,
+			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
 		return clone ? cloneDeep(obj) : obj
 	}

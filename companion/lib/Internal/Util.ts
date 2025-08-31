@@ -1,7 +1,7 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
-import { InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
+import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -125,7 +125,7 @@ export function ParseInternalControlReference(
 	return { location, referencedVariables }
 }
 
-export const CHOICES_DYNAMIC_LOCATION: InternalFeedbackInputField[] = [
+export const CHOICES_DYNAMIC_LOCATION: SomeCompanionInputField[] = [
 	{
 		type: 'dropdown',
 		label: 'Target',

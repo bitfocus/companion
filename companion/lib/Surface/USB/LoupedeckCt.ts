@@ -20,7 +20,6 @@ import {
 } from '@loupedeck/node'
 import { convertPanelIndexToXY } from '../Util.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
 import {
 	OffsetConfigFields,
@@ -236,12 +235,7 @@ export class SurfaceUSBLoupedeckCt extends EventEmitter<SurfacePanelEvents> impl
 
 			let newbuffer: Uint8Array
 			try {
-				newbuffer = await drawItem.defaultRender.drawNative(
-					width,
-					height,
-					this.config.rotation,
-					imageRs.PixelFormat.Rgb
-				)
+				newbuffer = await drawItem.defaultRender.drawNative(width, height, this.config.rotation, 'rgb')
 			} catch (e) {
 				this.#logger.debug(`scale image failed: ${e}`)
 				this.emit('remove')

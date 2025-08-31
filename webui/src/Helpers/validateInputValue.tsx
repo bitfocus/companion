@@ -1,13 +1,9 @@
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import type {
-	ExtendedConfigField,
-	ExtendedInputField,
-	InternalInputField,
-} from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '~/Resources/util.js'
 
 export function validateInputValue(
-	definition: ExtendedInputField | InternalInputField | ExtendedConfigField,
+	definition: SomeCompanionInputField,
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	value: any
 ): string | undefined {

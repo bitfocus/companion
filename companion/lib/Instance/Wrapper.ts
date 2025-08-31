@@ -26,15 +26,11 @@ import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
-	EncodeIsVisible,
 } from '@companion-module/base/dist/host-api/api.js'
 import type { InstanceStatus } from './Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
 	assertNever,
-	CompanionFieldVariablesSupport,
-	CompanionInputFieldTextInput,
-	SomeCompanionActionInputField,
 	type CompanionHTTPRequest,
 	type CompanionInputFieldBase,
 	type CompanionOptionValues,
@@ -57,9 +53,9 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from './ApiVersions.js'
-import { InternalActionInputField, InternalFeedbackInputField } from '@companion-app/shared/Model/Options.js'
 import { InstanceEntityManager } from './EntityManager.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { translateEntityInputFields } from './ConfigFields.js'
 
 export interface InstanceModuleWrapperDependencies {
 	readonly controls: ControlsController
@@ -706,7 +702,8 @@ export class SocketEventsHandler {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				options: translateOptionsIsVisibleAndUseVariables(rawAction.options || [], !!this.#entityManager),
+				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager),
+				optionsToIgnoreForSubscribe: rawAction.optionsToIgnoreForSubscribe || [],
 				hasLifecycleFunctions: !this.#entityManager || !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
@@ -742,7 +739,8 @@ export class SocketEventsHandler {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				description: rawFeedback.description,
-				options: translateOptionsIsVisibleAndUseVariables(rawFeedback.options || [], !!this.#entityManager),
+				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback, !!this.#entityManager),
+				optionsToIgnoreForSubscribe: [],
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
@@ -893,7 +891,10 @@ export class SocketEventsHandler {
 	 */
 	async #handleSetCustomVariable(msg: SetCustomVariableMessage): Promise<void> {
 		try {
-			this.#deps.variables.custom.setValue(msg.customVariableId, msg.value)
+			const failure = this.#deps.variables.custom.setValue(msg.customVariableId, msg.value)
+			if (failure) {
+				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): ${failure}`)
+			}
 		} catch (e: any) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}
@@ -1020,44 +1021,6 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 
 	// Nothing looked to be a user defined invert field
 	return true
-}
-
-export function translateOptionsIsVisibleAndUseVariables(
-	options: EncodeIsVisible<SomeCompanionActionInputField>[],
-	usesInternalVariableParsing: boolean
-): (InternalActionInputField | InternalFeedbackInputField)[] {
-	// @companion-module-base exposes these through a mapping that loses the differentiation between types
-	return options.map((o) => {
-		let isVisibleUi: InternalFeedbackInputField['isVisibleUi'] | undefined = undefined
-		if (o.isVisibleFn && o.isVisibleFnType === 'expression') {
-			isVisibleUi = {
-				type: 'expression',
-				fn: o.isVisibleFn,
-				data: undefined,
-			}
-		} else if (o.isVisibleFn) {
-			// Either type: 'function' or undefined (backwards compat)
-			isVisibleUi = {
-				type: 'function',
-				fn: o.isVisibleFn,
-				data: o.isVisibleData,
-			}
-		}
-
-		let useVariables: boolean | CompanionFieldVariablesSupport | undefined
-		if (o.type === 'textinput') {
-			const rawUseVariables = (o as CompanionInputFieldTextInput).useVariables
-			useVariables = rawUseVariables && usesInternalVariableParsing ? { local: true } : rawUseVariables
-		}
-
-		return {
-			...(o as any),
-			useVariables,
-			isVisibleFn: undefined,
-			isVisibleData: undefined,
-			isVisibleUi,
-		}
-	})
 }
 
 export interface RunActionExtras {

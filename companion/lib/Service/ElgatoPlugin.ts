@@ -4,7 +4,6 @@ import { WebSocketServer, WebSocket } from 'ws'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import imageRs from '@julusian/image-rs'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { IncomingMessage } from 'http'
 import type { SurfaceController } from '../Surface/Controller.js'
@@ -380,7 +379,7 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 		this.#write_queue = new ImageWriteQueue(this.#logger, async (_id, partial, drawItem) => {
 			const targetSize = 72 // Compatibility
 			try {
-				const newbuffer = await drawItem.drawNative(targetSize, targetSize, null, imageRs.PixelFormat.Rgb)
+				const newbuffer = await drawItem.drawNative(targetSize, targetSize, null, 'rgb')
 
 				this.apicommand('fillImage', { ...partial, data: newbuffer })
 			} catch (e: any) {

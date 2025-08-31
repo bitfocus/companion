@@ -19,24 +19,35 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				<div className="fixed-header">
 					<h4>Variables</h4>
 					<p>
-						We use variables as placeholders in text, allowing dynamic updates based on the provided content. This
-						enables live updating of messages, making customization quick and easy.
+						Variables are dynamic placeholders that can be used in text, actions, and feedbacks. They automatically
+						update with live content, making it easy to create customized and responsive displays.
 					</p>
 				</div>
 
 				<div className="scrollable-content">
-					<div className="variables-category-grid">
-						<CButton color="primary" as={Link} to="/variables/custom">
-							Custom Variables
+					<div className="variables-category-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+						<CButton color="info" as={Link} to="/variables/custom" className="mb-3">
+							<h6 className="mb-0 py-1">Custom Variables</h6>
 						</CButton>
-						<CButton color="primary" as={Link} to="/variables/internal">
+						<CButton color="info" as={Link} to="/variables/expression" className="mb-3">
+							<h6 className="mb-0 py-1">Expression Variables</h6>
+						</CButton>
+					</div>
+
+					<div className="variables-category-grid">
+						<CButton color="primary" as={Link} to="/variables/connection/internal">
 							Internal
 						</CButton>
 						{sortedConnections.map((connectionInfo) => {
 							const compactName = modules.getModuleFriendlyName(connectionInfo.instance_type)
 
 							return (
-								<CButton key={connectionInfo.id} color="primary" as={Link} to={`/variables/${connectionInfo.label}`}>
+								<CButton
+									key={connectionInfo.id}
+									color="primary"
+									as={Link}
+									to={`/variables/connection/${connectionInfo.label}`}
+								>
 									<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
 								</CButton>
 							)
@@ -49,7 +60,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 })
 
 export function VariablesListPage(): React.JSX.Element {
-	const { label } = useParams({ from: '/_app/variables/$label' })
+	const { label } = useParams({ from: '/_app/variables/connection/$label' })
 
 	// Future: if label is not found, redirect to /variables
 	// 	throw redirect({ to: '/variables' })

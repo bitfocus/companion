@@ -1,8 +1,4 @@
-import type {
-	ExtendedConfigField,
-	ExtendedInputField,
-	InternalInputField,
-} from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { assertNever, deepFreeze, useComputed } from '~/Resources/util.js'
 import { sandbox } from '~/Resources/sandbox.js'
 import type { CompanionOptionValues } from '@companion-module/base'
@@ -12,10 +8,8 @@ import { ParseExpression } from '@companion-app/shared/Expression/ExpressionPars
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 
-export function useOptionsVisibility<
-	T extends ExtendedInputField | InternalInputField = ExtendedInputField | InternalInputField,
->(
-	itemOptions: Array<T> | undefined | null,
+export function useOptionsVisibility(
+	itemOptions: Array<SomeCompanionInputField> | undefined | null,
 	optionValues: CompanionOptionValues | undefined | null
 ): Record<string, boolean | undefined> {
 	const isVisibleFns = useOptionsAndIsVisibleFns(itemOptions)
@@ -39,9 +33,9 @@ export function useOptionsVisibility<
 	}, [isVisibleFns, optionValues])
 }
 
-function useOptionsAndIsVisibleFns<
-	T extends ExtendedInputField | InternalInputField | ExtendedConfigField = ExtendedInputField | InternalInputField,
->(itemOptions: Array<T> | undefined | null): Record<string, ((options: CompanionOptionValues) => boolean) | undefined> {
+function useOptionsAndIsVisibleFns(
+	itemOptions: Array<SomeCompanionInputField> | undefined | null
+): Record<string, ((options: CompanionOptionValues) => boolean) | undefined> {
 	return useComputed(() => {
 		const isVisibleFns: Record<string, (options: CompanionOptionValues) => boolean> = {}
 
@@ -54,9 +48,9 @@ function useOptionsAndIsVisibleFns<
 	}, [itemOptions])
 }
 
-export function parseIsVisibleFn<
-	T extends ExtendedInputField | InternalInputField | ExtendedConfigField = ExtendedInputField | InternalInputField,
->(option: T): ((options: CompanionOptionValues) => boolean) | null {
+export function parseIsVisibleFn(
+	option: SomeCompanionInputField
+): ((options: CompanionOptionValues) => boolean) | null {
 	try {
 		if (!option.isVisibleUi) return null
 
@@ -81,7 +75,7 @@ export function parseIsVisibleFn<
 								} else if (name.startsWith('data:')) {
 									return userData[name.slice(5)]
 								} else {
-									return undefined
+									throw new Error(`Unknown variable "${name}"`)
 								}
 							},
 							ExpressionFunctions

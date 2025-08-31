@@ -486,6 +486,8 @@ export class InternalController {
 						showInvert: false,
 						feedbackType: null,
 						feedbackStyle: undefined,
+
+						optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe || [],
 					} satisfies Complete<ClientEntityDefinition>
 				}
 			}
@@ -511,6 +513,8 @@ export class InternalController {
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,
 						supportsChildGroups: feedback.supportsChildGroups ?? [],
+
+						optionsToIgnoreForSubscribe: [],
 					} satisfies Complete<ClientEntityDefinition>
 				}
 			}

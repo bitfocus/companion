@@ -494,8 +494,12 @@ export class InstanceEntityManager {
 			// Note - we don't need to care about the granularity given in `useVariables`,
 			const parseResult = parser.parseVariables(String(options[field.id]))
 			parsedOptions[field.id] = parseResult.text
-			for (const variable of parseResult.variableIds) {
-				referencedVariableIds.add(variable)
+
+			// Track the variables referenced in this field
+			if (!entityDefinition.optionsToIgnoreForSubscribe.includes(field.id)) {
+				for (const variable of parseResult.variableIds) {
+					referencedVariableIds.add(variable)
+				}
 			}
 		}
 

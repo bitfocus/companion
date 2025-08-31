@@ -28,17 +28,20 @@ import {
 } from '~/Services/Controls/ControlEventsService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 interface TriggerEventEditorProps {
 	controlId: string
 	events: EventInstance[]
 	heading: JSX.Element | string
+	localVariablesStore: LocalVariablesStore
 }
 
 export const TriggerEventEditor = observer(function TriggerEventEditor({
 	controlId,
 	events,
 	heading,
+	localVariablesStore,
 }: TriggerEventEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
@@ -85,6 +88,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 								dragId={`events_${controlId}`}
 								serviceFactory={eventsService}
 								panelCollapseHelper={panelCollapseHelper}
+								localVariablesStore={localVariablesStore}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -112,6 +116,7 @@ interface EventsTableRowProps {
 	dragId: string
 	serviceFactory: IEventEditorService
 	panelCollapseHelper: PanelCollapseHelperLite
+	localVariablesStore: LocalVariablesStore
 }
 
 function EventsTableRow({
@@ -120,6 +125,7 @@ function EventsTableRow({
 	dragId,
 	serviceFactory,
 	panelCollapseHelper,
+	localVariablesStore,
 }: EventsTableRowProps): JSX.Element | null {
 	const service = useControlEventService(serviceFactory, event)
 
@@ -181,7 +187,12 @@ function EventsTableRow({
 				<FontAwesomeIcon icon={faSort} />
 			</td>
 			<td>
-				<EventEditor event={event} service={service} panelCollapseHelper={panelCollapseHelper} />
+				<EventEditor
+					event={event}
+					service={service}
+					panelCollapseHelper={panelCollapseHelper}
+					localVariablesStore={localVariablesStore}
+				/>
 			</td>
 		</tr>
 	)
@@ -191,9 +202,15 @@ interface EventEditorProps {
 	event: EventInstance
 	service: IEventEditorEventService
 	panelCollapseHelper: PanelCollapseHelperLite
+	localVariablesStore: LocalVariablesStore
 }
 
-const EventEditor = observer(function EventEditor({ event, service, panelCollapseHelper }: EventEditorProps) {
+const EventEditor = observer(function EventEditor({
+	event,
+	service,
+	panelCollapseHelper,
+	localVariablesStore,
+}: EventEditorProps) {
 	const { eventDefinitions } = useContext(RootAppStoreContext)
 
 	const eventSpec = eventDefinitions.definitions.get(event.type)
@@ -293,7 +310,7 @@ const EventEditor = observer(function EventEditor({ event, service, panelCollaps
 									value={(event.options || {})[opt.id]}
 									setValue={service.setValue}
 									visibility={optionVisibility[opt.id] ?? true}
-									localVariablesStore={null}
+									localVariablesStore={localVariablesStore}
 								/>
 							</MyErrorBoundary>
 						))}

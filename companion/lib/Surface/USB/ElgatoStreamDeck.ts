@@ -12,7 +12,6 @@
 import { EventEmitter } from 'events'
 import { DeviceModelId, JPEGEncodeOptions, openStreamDeck, StreamDeck } from '@elgato-stream-deck/node'
 import util from 'util'
-import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { colorToRgb } from './Util.js'
@@ -165,7 +164,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 							control.pixelSize.width,
 							control.pixelSize.height,
 							this.config.rotation,
-							imageRs.PixelFormat.Rgb
+							'rgb'
 						)
 					} catch (e: any) {
 						this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
@@ -205,7 +204,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 						columnWidth,
 						control.pixelSize.height,
 						this.config.rotation,
-						imageRs.PixelFormat.Rgb
+						'rgb'
 					)
 				} catch (e) {
 					this.#logger.debug(`scale image failed: ${e}`)

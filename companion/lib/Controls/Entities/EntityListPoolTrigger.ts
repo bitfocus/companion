@@ -1,7 +1,6 @@
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
-	SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
@@ -14,6 +13,8 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 	#actions: ControlEntityList
 
+	#localVariables: ControlEntityList
+
 	constructor(props: ControlEntityListPoolProps) {
 		super(props)
 
@@ -22,11 +23,16 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
 		this.#actions = this.createEntityList({ type: EntityModelType.Action })
+		this.#localVariables = this.createEntityList({
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Value,
+		})
 	}
 
 	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean): void {
 		this.#feedbacks.loadStorage(storage.condition || [], skipSubscribe, isImport)
 		this.#actions.loadStorage(storage.actions || [], skipSubscribe, isImport)
+		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
 	}
 
 	/**
@@ -39,12 +45,12 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	/**
 	 * Get direct the feedback instances
 	 */
-	getFeedbackEntities(): SomeEntityModel[] {
-		return this.#feedbacks.getDirectEntities().map((ent) => ent.asEntityModel(true))
+	getFeedbackEntities(): ControlEntityInstance[] {
+		return this.#feedbacks.getDirectEntities()
 	}
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
-		return []
+		return this.#localVariables.getDirectEntities()
 	}
 
 	/**
@@ -57,11 +63,12 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		if (listId === 'feedbacks') return this.#feedbacks
 		if (listId === 'trigger_actions') return this.#actions
+		if (listId === 'local-variables') return this.#localVariables
 		return undefined
 	}
 
 	protected getAllEntityLists(): ControlEntityList[] {
-		return [this.#feedbacks, this.#actions]
+		return [this.#feedbacks, this.#actions, this.#localVariables]
 	}
 
 	/**
@@ -72,6 +79,12 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
 		this.#actions.updateFeedbackValues(connectionId, newValues)
 
-		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues)) this.invalidateControl()
+		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
+
+		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues).length > 0) {
+			this.invalidateControl()
+		}
+
+		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 }

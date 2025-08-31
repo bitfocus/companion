@@ -9,7 +9,6 @@
  * this program.
  */
 
-import imageRs from '@julusian/image-rs'
 import Infinitton from 'infinitton-idisplay'
 import { EventEmitter } from 'events'
 import LogController, { Logger } from '../../Log/Controller.js'
@@ -110,12 +109,7 @@ export class SurfaceUSBInfinitton extends EventEmitter<SurfacePanelEvents> imple
 				const targetSize = 72
 
 				try {
-					const newbuffer = await drawItem.defaultRender.drawNative(
-						targetSize,
-						targetSize,
-						this.config.rotation,
-						imageRs.PixelFormat.Rgb
-					)
+					const newbuffer = await drawItem.defaultRender.drawNative(targetSize, targetSize, this.config.rotation, 'rgb')
 
 					this.#infinitton.fillImage(key, Buffer.from(newbuffer))
 				} catch (e: any) {

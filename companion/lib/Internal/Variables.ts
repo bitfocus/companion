@@ -98,6 +98,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Variable',
 						tooltip: 'What variable to act on?',
 						id: 'variable',
+						supportsLocal: true,
 					},
 					COMPARISON_OPERATION,
 					{
@@ -136,6 +137,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Compare Variable',
 						tooltip: 'What variable to act on?',
 						id: 'variable',
+						supportsLocal: true,
 					},
 					COMPARISON_OPERATION,
 					{
@@ -143,6 +145,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Against Variable',
 						tooltip: 'What variable to compare with?',
 						id: 'variable2',
+						supportsLocal: true,
 					},
 				],
 			},

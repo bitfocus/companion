@@ -11,7 +11,6 @@
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import imageRs from '@julusian/image-rs'
 import { parseColorToNumber } from '../../Resources/Util.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
@@ -190,12 +189,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			if (!targetSize) return
 
 			try {
-				const newbuffer = await drawItem.defaultRender.drawNative(
-					targetSize,
-					targetSize,
-					this.#config.rotation,
-					imageRs.PixelFormat.Rgb
-				)
+				const newbuffer = await drawItem.defaultRender.drawNative(targetSize, targetSize, this.#config.rotation, 'rgb')
 
 				this.#sendDraw(key, newbuffer, drawItem.defaultRender.style)
 			} catch (e: any) {

@@ -12,7 +12,6 @@
 import { EventEmitter } from 'events'
 import { openMxCreativeConsole, MXCreativeConsole } from '@logitech-mx-creative-console/node'
 import util from 'util'
-import imageRs from '@julusian/image-rs'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import {
@@ -107,7 +106,7 @@ export class SurfaceUSBLogiMXConsole extends EventEmitter<SurfacePanelEvents> im
 							control.pixelSize.width,
 							control.pixelSize.height,
 							this.config.rotation,
-							imageRs.PixelFormat.Rgb
+							'rgb'
 						)
 					} catch (e: any) {
 						this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
