@@ -12,7 +12,7 @@ import type { AppInfo } from '../../Registry.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
 import { SatelliteSurfaceLayout } from './SatelliteSurfaceSchema.js'
 // eslint-disable-next-line n/no-missing-import
-import { validate as validateSurfaceSchema } from './SatelliteSurfaceSchemaValidator.js'
+import { validate as validateSurfaceSchema } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
 import { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
@@ -182,6 +182,16 @@ export class ServiceSatelliteApi {
 			const keysPerRow = params.KEYS_PER_ROW ? Number(params.KEYS_PER_ROW) : LEGACY_BUTTONS_PER_ROW
 			if (isNaN(keysPerRow) || keysPerRow <= 0) {
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_PER_ROW')
+			}
+
+			for (let i = 0; i < keysTotal; i++) {
+				const row = Math.floor(i / keysPerRow)
+				const column = i % keysPerRow
+
+				surfaceSchema.controls[`${row}/${column}`] = {
+					row,
+					column,
+				}
 			}
 
 			gridSize = {

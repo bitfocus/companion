@@ -21,7 +21,7 @@ let moduleCode = standaloneCode(ajv, validate)
 
 // Now you can write the module code to file
 const validatorPath = fileURLToPath(
-	new URL('../companion/lib/Service/Satellite/SatelliteSurfaceSchemaValidator.js', import.meta.url)
+	new URL('../companion/generated/SatelliteSurfaceSchemaValidator.js', import.meta.url)
 )
 fs.writeFileSync(validatorPath, '/* eslint-disable */\n' + moduleCode)
 
