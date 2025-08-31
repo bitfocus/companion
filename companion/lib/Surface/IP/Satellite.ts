@@ -138,7 +138,7 @@ function resolveControlDefinitions(
 	const controlStyles = new Map<string, ResolvedControlDefinition[]>()
 
 	for (const [id, spec] of Object.entries(surfaceSchema.controls)) {
-		const xy = formatSurfaceXy(spec.row, spec.column)
+		const xy = formatSurfaceXy(spec.column, spec.row)
 		let arr = controlStyles.get(xy)
 		if (!arr) {
 			arr = []

@@ -160,8 +160,8 @@ export class ServiceSatelliteApi {
 			// Find the max bounds of this surface
 			gridSize = Object.values(surfaceSchema.controls).reduce(
 				(gridSize, control): GridSize => ({
-					columns: Math.max(gridSize.columns, control.column),
-					rows: Math.max(gridSize.rows, control.row),
+					columns: Math.max(gridSize.columns, control.column + 1),
+					rows: Math.max(gridSize.rows, control.row + 1),
 				}),
 				{ columns: 0, rows: 0 }
 			)
