@@ -20,25 +20,7 @@ import { nanoid } from 'nanoid'
 import logger from './Log/Controller.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
-
-const isValidIPv4 = (ip: string): boolean => {
-	const parts = ip.split('.')
-	if (parts.length !== 4) {
-		return false
-	}
-	for (const part of parts) {
-		const num = Number(part)
-		// Check if it's a valid number and within range [0, 255]
-		if (Number.isNaN(num) || num < 0 || num > 255) {
-			return false
-		}
-		// Disallow leading zeros for numbers other than '0' itself
-		if (part.length > 1 && part[0] === '0' && num !== 0) {
-			return false
-		}
-	}
-	return true
-}
+import net from 'net'
 
 const program = new Command()
 
@@ -92,7 +74,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 
 	if (options.syslogEnable) {
 		const opt: SyslogTransportOptions = {}
-		if (isValidIPv4(options.syslogHost)) opt.host = options.syslogHost
+		if (net.isIPv4(options.syslogHost)) opt.host = options.syslogHost
 		if (options.syslogPort) {
 			const port = Number.parseInt(options.syslogPort)
 			if (!Number.isNaN(port) && port > 100 && port <= 65535) opt.port = port
