@@ -1,6 +1,6 @@
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CButtonGroup, CButton } from '@coreui/react'
-import { faPlay, faUndo, faRedo } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faUndo, faRedo, faStop } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback } from 'react'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -15,6 +15,7 @@ export function ControlHotPressButtons({
 }): React.JSX.Element {
 	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 	const hotRotateMutation = useMutationExt(trpc.controls.hotRotateControl.mutationOptions())
+	const hotAbortMutation = useMutationExt(trpc.controls.hotAbortControl.mutationOptions())
 
 	const hotPressDown = useCallback(() => {
 		hotPressMutation
@@ -36,6 +37,9 @@ export function ControlHotPressButtons({
 			.mutateAsync({ location, direction: true, surfaceId: 'edit' })
 			.catch((e) => console.error(`Hot rotate failed: ${e}`))
 	}, [hotRotateMutation, location])
+	const hotAbortActions = useCallback(() => {
+		hotAbortMutation.mutateAsync({ location }).catch((e) => console.error(`Hot abort failed: ${e}`))
+	}, [hotAbortMutation, location])
 
 	return (
 		<>
@@ -50,6 +54,10 @@ export function ControlHotPressButtons({
 				>
 					<FontAwesomeIcon icon={faPlay} />
 					&nbsp;Test
+				</CButton>
+				<CButton color="secondary" onMouseDown={hotAbortActions} title="Abort running actions">
+					<FontAwesomeIcon icon={faStop} />
+					&nbsp;Stop
 				</CButton>
 			</CButtonGroup>
 			{showRotaries && (
