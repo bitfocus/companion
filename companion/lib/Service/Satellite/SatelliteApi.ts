@@ -196,7 +196,7 @@ export class ServiceSatelliteApi {
 
 			gridSize = {
 				columns: keysPerRow,
-				rows: keysTotal / keysPerRow,
+				rows: Math.ceil(keysTotal / keysPerRow),
 			}
 
 			if (params.BITMAPS !== undefined && !isFalsey(params.BITMAPS)) {
