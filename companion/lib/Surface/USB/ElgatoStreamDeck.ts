@@ -197,19 +197,13 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 				const drawColumn = drawItem.x - control.column
 
 				const columnWidth = control.pixelSize.width / control.columnSpan
-				let drawX = drawColumn * columnWidth
-				if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
-					// Position aligned with the buttons/encoders
-					drawX = drawColumn * 216.666 + 25
-				}
-
-				const targetSize = control.pixelSize.height
+				const drawX = drawColumn * columnWidth
 
 				let newbuffer: Uint8Array
 				try {
 					newbuffer = await drawItem.defaultRender.drawNative(
-						targetSize,
-						targetSize,
+						columnWidth,
+						control.pixelSize.height,
 						this.config.rotation,
 						imageRs.PixelFormat.Rgb
 					)
@@ -224,8 +218,8 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 					try {
 						await this.#streamDeck.fillLcdRegion(control.id, drawX, 0, newbuffer, {
 							format: 'rgb',
-							width: targetSize,
-							height: targetSize,
+							width: columnWidth,
+							height: control.pixelSize.height,
 						})
 						return
 					} catch (e) {
