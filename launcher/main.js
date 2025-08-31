@@ -42,7 +42,7 @@ if (process.platform === 'darwin') {
 			app.quit()
 		}
 
-		const futureMinimumVersion = '13.5'
+		const futureMinimumVersion = '12.0'
 		const futureSupportedVersions = new semver.Range(`>=${futureMinimumVersion}`)
 
 		if (productVersion && !futureSupportedVersions.test(productVersion)) {
