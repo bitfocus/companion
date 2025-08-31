@@ -80,7 +80,11 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 			if (!Number.isNaN(port) && port > 100 && port <= 65535) opt.port = port
 		}
 		if (options.syslogTcp) opt.protocol = 'tcp4'
-		opt.localhost = options.syslogLocalhost?.trim() || os.hostname()
+		const localhost: string = options.syslogLocalhost
+			?.replaceAll(/[^a-zA-Z0-9-_. ]/gm, '')
+			.substring(0, 254)
+			.trim()
+		opt.localhost = localhost || os.hostname()
 		logger.addSyslogHost(opt)
 	}
 
