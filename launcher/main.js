@@ -929,7 +929,7 @@ if (!lock) {
 						uiConfig.get('enable_syslog') ? `--syslog-port=${uiConfig.get('syslog_port')}` : undefined,
 						uiConfig.get('enable_syslog') && uiConfig.get('syslog_use_tcp') ? `--syslog-tcp` : undefined,
 						uiConfig.get('enable_syslog') && uiConfig.get('syslog_local_hostname')
-							? `--syslog-localhost=${uiConfig.get('syslog_local_hostname')}`
+							? `--syslog-localhost="${uiConfig.get('syslog_local_hostname')}"`
 							: undefined,
 					].filter((v) => !!v),
 				{
