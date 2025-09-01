@@ -8,6 +8,7 @@ import { DataDatabase } from '../Data/Database.js'
 import { nanoid } from 'nanoid'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
+import { cloneDeep } from 'lodash-es'
 
 export interface AddConnectionProps {
 	versionId: string | null
@@ -119,7 +120,7 @@ export class ConnectionConfigStore {
 		const obj = Object.fromEntries(this.#store.entries())
 		if (includeSecrets) return obj
 
-		const newObj = { ...obj }
+		const newObj = cloneDeep(obj)
 		for (const config of Object.values(newObj)) {
 			delete config.secrets
 		}

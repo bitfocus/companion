@@ -42,6 +42,7 @@ import { InstanceCollections } from './Collections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import { translateConnectionConfigFields } from './ConfigFields.js'
+import { Complete } from '@companion-module/base/dist/util.js'
 
 type CreateConnectionData = {
 	type: string
@@ -486,7 +487,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	exportInstance(
 		instanceId: string,
 		minimal = false,
-		clone = true
+		clone = true,
+		includeSecrets = true
 	): ExportInstanceFullv6 | ExportInstanceMinimalv6 | undefined {
 		const rawObj = this.#configStore.getConfigForId(instanceId)
 		if (!rawObj) return undefined
@@ -496,10 +498,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					instance_type: rawObj.instance_type,
 					label: rawObj.label,
 					lastUpgradeIndex: rawObj.lastUpgradeIndex,
-				} satisfies ExportInstanceMinimalv6)
+					moduleVersionId: rawObj.moduleVersionId ?? undefined,
+					updatePolicy: rawObj.updatePolicy,
+					sortOrder: rawObj.sortOrder,
+					collectionId: rawObj.collectionId,
+				} satisfies Complete<ExportInstanceMinimalv6>)
 			: ({
 					...rawObj,
 					moduleVersionId: rawObj.moduleVersionId ?? undefined,
+					secrets: includeSecrets ? rawObj.secrets : undefined,
 				} satisfies ExportInstanceFullv6)
 
 		return clone ? cloneDeep(obj) : obj
