@@ -682,19 +682,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					try {
 						const fields = await instance.requestConfigFields()
 
-						const instanceSecrets: any = instanceConf.secrets || {}
-
-						const hasSecrets: Record<string, boolean> = {}
-						for (const field of fields) {
-							if (field.type.startsWith('secret')) {
-								hasSecrets[field.id] = !!instanceSecrets[field.id]
-							}
-						}
-
 						const result: ClientEditConnectionConfig = {
 							fields: translateConnectionConfigFields(fields),
 							config: instanceConf.config,
-							hasSecrets,
+							secrets: instanceConf.secrets || {},
 						}
 						return result
 					} catch (e: any) {
@@ -723,19 +714,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						return 'invalid label'
 					}
 
-					this.setInstanceLabelAndConfig(
-						input.connectionId,
-						{
-							label: input.label,
-							config: input.config,
-							secrets: input.secrets,
-							updatePolicy: input.updatePolicy,
-							upgradeIndex: null,
-						},
-						{
-							patchSecrets: true,
-						}
-					)
+					this.setInstanceLabelAndConfig(input.connectionId, {
+						label: input.label,
+						config: input.config,
+						secrets: input.secrets,
+						updatePolicy: input.updatePolicy,
+						upgradeIndex: null,
+					})
 
 					return null
 				}),

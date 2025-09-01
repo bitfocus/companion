@@ -2,30 +2,25 @@ import React, { useMemo, useState, useCallback, useRef } from 'react'
 import { CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSync } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 interface SecretTextInputFieldProps {
 	tooltip?: string
-	hasSavedValue: boolean
-	editValue: string
+	value: string
 	style?: React.CSSProperties
 	setValue: (value: string) => void
-	clearValue: () => void
-	isDirty: boolean
 	checkValid?: (value: string) => boolean
 }
 
 export const SecretTextInputField = observer(function SecretTextInputField({
 	tooltip,
-	hasSavedValue,
-	editValue,
+	value,
 	style,
 	setValue,
-	clearValue,
-	isDirty,
 	checkValid,
 }: SecretTextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
+	const [showSecretValue, setShowSecretValue] = useState<boolean>(false)
 
 	const storeValue = useCallback(
 		(value: string) => {
@@ -40,13 +35,15 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 	)
 
 	const currentValueRef = useRef<string>()
-	currentValueRef.current = editValue ?? ''
+	currentValueRef.current = value ?? ''
 	const focusStoreValue = useCallback(() => setTmpValue(currentValueRef.current ?? ''), [])
 	const blurClearValue = useCallback(() => {
 		setTmpValue(null)
 	}, [])
 
-	const showValue = (tmpValue ?? editValue ?? '').toString()
+	const toggleShowSecretValue = useCallback(() => setShowSecretValue((prev) => !prev), [])
+
+	const showValue = (tmpValue ?? value ?? '').toString()
 
 	const extraStyle = useMemo(
 		() => ({ color: !!checkValid && !checkValid(showValue) ? 'red' : undefined, ...style }),
@@ -58,17 +55,20 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 		<>
 			<CInputGroup>
 				<CFormInput
-					type="text"
+					type={showSecretValue ? 'text' : 'password'}
 					value={showValue}
 					style={extraStyle}
 					title={tooltip}
 					onChange={doOnChange}
 					onFocus={focusStoreValue}
 					onBlur={blurClearValue}
-					placeholder={hasSavedValue && !isDirty ? '●●●●●' : undefined}
 				/>
-				<CButton color="secondary" title="Discard changes" onClick={clearValue} disabled={!isDirty}>
-					<FontAwesomeIcon icon={faSync} />
+				<CButton
+					color="secondary"
+					title={showSecretValue ? 'Hide secret' : 'Show secret'}
+					onClick={toggleShowSecretValue}
+				>
+					<FontAwesomeIcon icon={showSecretValue ? faEyeSlash : faEye} />
 				</CButton>
 			</CInputGroup>
 		</>
