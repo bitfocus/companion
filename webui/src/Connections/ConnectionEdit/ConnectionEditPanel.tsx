@@ -112,7 +112,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						label: saveLabel,
 						updatePolicy: panelStore.updatePolicy,
 						config: configAndSecrets.config,
-						secrets: configAndSecrets.updatedSecrets,
+						secrets: configAndSecrets.secrets,
 					})
 					if (err === 'invalid label') {
 						setSaveError(`The label "${saveLabel}" in not valid`)
@@ -392,11 +392,8 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 							</CFormLabel>
 							<ConnectionSecretField
 								definition={fieldInfo}
-								hasSavedValue={!!configData.updatedSecrets[fieldInfo.id]}
-								editValue={configData.updatedSecrets[fieldInfo.id]}
-								isDirty={fieldInfo.id in configData.updatedSecrets}
+								value={configData.secrets[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
-								clearValue={() => panelStore.clearSecretValue(`secrets.${fieldInfo.id}`)}
 							/>
 						</CCol>
 					)
