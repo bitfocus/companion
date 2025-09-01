@@ -21,6 +21,7 @@ export interface ClientExportSelection {
 	expressionVariables: boolean
 	connections: boolean
 	surfaces: boolean
+	includeSecrets: boolean
 	format: ExportFormat
 	filename?: string
 }
