@@ -4,6 +4,10 @@ import { createTRPCClient, createWSClient, loggerLink, wsLink } from '@trpc/clie
 import { makeAbsolutePath } from './util.js'
 import { DefaultError, QueryClient, useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
+
+export type RouterInputs = inferRouterInputs<AppRouter>
+export type RouterOutputs = inferRouterOutputs<AppRouter>
 
 export const queryClient = new QueryClient()
 

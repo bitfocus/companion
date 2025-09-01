@@ -19,7 +19,9 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { trpc, useMutationExt, RouterInputs } from '~/Resources/TRPC'
+
+type EmulatorAddInput = RouterInputs['surfaces']['emulatorAdd']
 
 export interface AddEmulatorModalRef {
 	show(): void
@@ -37,7 +39,9 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 		defaultValues: {
 			id: nanoid(),
 			name: '',
-		},
+			rows: 4,
+			columns: 8,
+		} satisfies EmulatorAddInput,
 		onSubmit: async ({ value }) => {
 			setSaveError(null)
 
@@ -45,6 +49,8 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 				await addEmulatorMutation.mutateAsync({
 					baseId: value.id,
 					name: value.name,
+					rows: value.rows,
+					columns: value.columns,
 				})
 				setShow(false)
 			} catch (err: any) {
@@ -142,6 +148,72 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 											style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}
 											onChange={(e) => field.handleChange(e.target.value)}
+											onBlur={field.handleBlur}
+										/>
+										{field.state.meta.errors.length > 0 && (
+											<CAlert color="warning" className="mt-2">
+												{field.state.meta.errors}
+											</CAlert>
+										)}
+									</CCol>
+								</>
+							)}
+						/>
+
+						<form.Field
+							name="rows"
+							validators={{
+								onChange: ({ value }) => {
+									const n = Number(value)
+									if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) {
+										return 'Rows must be a positive integer'
+									}
+									return undefined
+								},
+							}}
+							children={(field) => (
+								<>
+									<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Rows</CFormLabel>
+									<CCol className={`fieldtype-textinput`} sm={8}>
+										<CFormInput
+											type="number"
+											min={1}
+											style={{ width: '100%', color: field.state.meta.errors.length ? 'red' : undefined }}
+											value={field.state.value}
+											onChange={(e) => field.handleChange((e.target as HTMLInputElement).valueAsNumber)}
+											onBlur={field.handleBlur}
+										/>
+										{field.state.meta.errors.length > 0 && (
+											<CAlert color="warning" className="mt-2">
+												{field.state.meta.errors}
+											</CAlert>
+										)}
+									</CCol>
+								</>
+							)}
+						/>
+
+						<form.Field
+							name="columns"
+							validators={{
+								onChange: ({ value }) => {
+									const n = Number(value)
+									if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) {
+										return 'Columns must be a positive integer'
+									}
+									return undefined
+								},
+							}}
+							children={(field) => (
+								<>
+									<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Columns</CFormLabel>
+									<CCol className={`fieldtype-textinput`} sm={8}>
+										<CFormInput
+											type="number"
+											min={1}
+											style={{ width: '100%', color: field.state.meta.errors.length ? 'red' : undefined }}
+											value={field.state.value}
+											onChange={(e) => field.handleChange((e.target as HTMLInputElement).valueAsNumber)}
 											onBlur={field.handleBlur}
 										/>
 										{field.state.meta.errors.length > 0 && (
