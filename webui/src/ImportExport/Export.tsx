@@ -1,5 +1,7 @@
 import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useState, useContext } from 'react'
 import { CButton, CForm, CFormCheck, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { makeAbsolutePath, PreventDefaultHandler } from '~/Resources/util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
@@ -7,6 +9,7 @@ import { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 export interface ExportWizardModalRef {
 	show(): void
@@ -147,6 +150,23 @@ function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
 						options removed.
 					</CAlert>
 				)} */}
+			</div>
+			<div className="indent3">
+				<CFormCheck
+					id="wizard_include_secrets"
+					className="ms-4"
+					checked={config.includeSecrets}
+					disabled={!config.connections}
+					onChange={(e) => setValue('includeSecrets', e.currentTarget.checked)}
+					label={
+						<>
+							Include secrets
+							<InlineHelp help="Some connections have secret values that can be omitted from the export. Not all modules are compatible with this">
+								<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+							</InlineHelp>
+						</>
+					}
+				/>
 			</div>
 			<div className="indent3">
 				<CFormCheck

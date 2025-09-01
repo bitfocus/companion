@@ -545,7 +545,7 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.connections)) {
-			exp.instances = this.#instancesController.exportAll(config?.includeSecrets ?? true)
+			exp.instances = this.#instancesController.exportAll(!config || !isFalsey(config.includeSecrets))
 			exp.connectionCollections = this.#instancesController.collections.collectionData
 		} else {
 			exp.instances = this.#generateReferencedConnectionConfigs(referencedConnectionIds, referencedConnectionLabels, {
