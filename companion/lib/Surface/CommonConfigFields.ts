@@ -63,7 +63,7 @@ export const LockConfigFields: CompanionSurfaceConfigField[] = [
 	{
 		id: 'never_lock',
 		type: 'checkbox',
-		label: 'Never Pin code lock',
+		label: 'Never pin code lock',
 		default: false,
 	},
 ]
