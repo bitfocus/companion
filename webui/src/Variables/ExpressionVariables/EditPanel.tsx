@@ -130,10 +130,9 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
 				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 					Name
-					<FontAwesomeIcon
-						icon={faQuestionCircle}
-						title="The name for the variable. It will get wrapped with $(expression:X) for you"
-					/>
+					<InlineHelp help="The name for the variable. It will get wrapped with $(expression:X) for you">
+						<FontAwesomeIcon icon={faQuestionCircle} />
+					</InlineHelp>
 				</CFormLabel>
 				<CCol xs={8}>
 					<TextInputField setValue={setName} value={options.variableName} checkValid={isLabelValid} />

@@ -15,6 +15,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -69,10 +70,9 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					heading={
 						<>
 							Events &nbsp;
-							<FontAwesomeIcon
-								icon={faQuestionCircle}
-								title="The trigger will be executed when any of the events happens"
-							/>
+							<InlineHelp help="The trigger will be executed when any of the events happens">
+								<FontAwesomeIcon icon={faQuestionCircle} />
+							</InlineHelp>
 						</>
 					}
 					controlId={controlId}
@@ -86,7 +86,9 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					heading={
 						<>
 							Conditions &nbsp;
-							<FontAwesomeIcon icon={faQuestionCircle} title="Only execute when all of these conditions are true" />
+							<InlineHelp help="Only execute when all of these conditions are true">
+								<FontAwesomeIcon icon={faQuestionCircle} />
+							</InlineHelp>
 						</>
 					}
 					controlId={controlId}
@@ -106,7 +108,9 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					heading={
 						<>
 							Actions &nbsp;
-							<FontAwesomeIcon icon={faQuestionCircle} title="What should happen when executed" />
+							<InlineHelp help="What should happen when executed">
+								<FontAwesomeIcon icon={faQuestionCircle} />
+							</InlineHelp>
 						</>
 					}
 					controlId={controlId}

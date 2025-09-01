@@ -23,6 +23,7 @@ import { ConnectionEditPanelStore, isConfigFieldSecret } from './ConnectionEditP
 import { observable } from 'mobx'
 import { TextInputField } from '~/Components/TextInputField.js'
 import classNames from 'classnames'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -236,7 +237,9 @@ function ConnectionFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputFiel
 		<>
 			{fieldInfo.label}
 			{fieldInfo.tooltip && (
-				<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={fieldInfo.tooltip} />
+				<InlineHelp help={fieldInfo.tooltip}>
+					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+				</InlineHelp>
 			)}
 		</>
 	)
@@ -336,11 +339,9 @@ const ConnectionUpdatePolicyInputField = observer(function ConnectionUpdatePolic
 		<>
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				Update Policy
-				<FontAwesomeIcon
-					style={{ marginLeft: '5px' }}
-					icon={faQuestionCircle}
-					title="How to check whether there are updates available for this connection"
-				/>
+				<InlineHelp help="How to check whether there are updates available for this connection">
+					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+				</InlineHelp>
 			</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CFormSelect

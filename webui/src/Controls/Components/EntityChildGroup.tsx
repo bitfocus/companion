@@ -12,6 +12,7 @@ import { PreventDefaultHandler } from '~/Resources/util.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
 import { EditableEntityList } from './EntityList.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface EntityManageChildGroupsProps {
 	entity: SomeEntityModel
@@ -61,7 +62,11 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 					groupInfo.label ? (
 						<>
 							{groupInfo.label}&nbsp;
-							{groupInfo.hint ? <FontAwesomeIcon icon={faQuestionCircle} title={groupInfo.hint} /> : null}
+							{groupInfo.hint ? (
+								<InlineHelp help={groupInfo.hint}>
+									<FontAwesomeIcon icon={faQuestionCircle} />
+								</InlineHelp>
+							) : null}
 						</>
 					) : null
 				}

@@ -18,6 +18,7 @@ import { StaticTextFieldText } from './StaticTextField.js'
 import { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { validateInputValue } from '~/Helpers/validateInputValue.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -36,7 +37,11 @@ function OptionLabel({ option, features }: { option: SomeCompanionInputField; fe
 		<>
 			{option.label}
 			<InputFeatureIcons {...features} />
-			{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
+			{option.tooltip && (
+				<InlineHelp help={option.tooltip}>
+					<FontAwesomeIcon icon={faQuestionCircle} />
+				</InlineHelp>
+			)}
 		</>
 	)
 }
