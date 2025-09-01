@@ -37,7 +37,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 
 	const form = useForm({
 		defaultValues: {
-			id: nanoid(),
+			baseId: nanoid(),
 			name: '',
 			rows: 4,
 			columns: 8,
@@ -47,7 +47,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 
 			try {
 				await addEmulatorMutation.mutateAsync({
-					baseId: value.id,
+					baseId: value.baseId,
 					name: value.name,
 					rows: value.rows,
 					columns: value.columns,
@@ -123,7 +123,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 						/>
 
 						<form.Field
-							name="id"
+							name="baseId"
 							validators={{
 								onChange: ({ value }) => {
 									if (!isEmulatorIdValid(value)) return 'Id must be alphanumeric and can contain underscores and dashes'
