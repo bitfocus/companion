@@ -45,6 +45,7 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 					tooltip: o.tooltip,
 					isVisibleUi: translateIsVisibleFn(o),
 					width: o.width,
+					description: o.description,
 				} satisfies Complete<CompanionInputFieldBonjourDeviceExtended>
 			case 'secret-text':
 				return {
@@ -56,6 +57,7 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 					width: o.width,
 					default: o.default,
 					required: o.required,
+					description: o.description,
 				} satisfies Complete<CompanionInputFieldSecretExtended>
 
 			case 'static-text':
@@ -129,6 +131,7 @@ function generateUnsupportedField<T extends EncodeIsVisible<CompanionInputFieldB
 		width: width,
 		value: `Unsupported field type ${field.type}`,
 		tooltip: undefined,
+		description: undefined,
 	}
 }
 
@@ -144,6 +147,7 @@ function translateStaticTextField(
 		isVisibleUi: translateIsVisibleFn(field),
 		value: field.value,
 		width: width,
+		description: field.description,
 	}
 }
 function translateTextInputField(
@@ -163,6 +167,7 @@ function translateTextInputField(
 		type: 'textinput',
 		label: field.label,
 		tooltip: field.tooltip,
+		description: field.description,
 		isVisibleUi: translateIsVisibleFn(field),
 		default: field.default,
 		regex: field.regex,
@@ -182,6 +187,7 @@ function translateCheckboxField(
 		type: 'checkbox',
 		label: field.label,
 		tooltip: field.tooltip,
+		description: field.description,
 		isVisibleUi: translateIsVisibleFn(field),
 		default: field.default,
 		width: width,
@@ -196,6 +202,7 @@ function translateColorPickerField(
 		type: 'colorpicker',
 		label: field.label,
 		tooltip: field.tooltip,
+		description: field.description,
 		isVisibleUi: translateIsVisibleFn(field),
 		default: field.default,
 		enableAlpha: field.enableAlpha,
@@ -213,6 +220,7 @@ function translateNumberField(
 		type: 'number',
 		label: field.label,
 		tooltip: field.tooltip,
+		description: field.description,
 		isVisibleUi: translateIsVisibleFn(field),
 		default: field.default,
 		min: field.min,
@@ -232,6 +240,7 @@ function translateDropdownField(
 		type: 'dropdown',
 		label: field.label,
 		tooltip: field.tooltip,
+		description: field.description,
 		isVisibleUi: translateIsVisibleFn(field),
 		width: width,
 		default: field.default,
@@ -250,6 +259,7 @@ function translateMultiDropdownField(
 		type: 'multidropdown',
 		label: field.label,
 		tooltip: field.tooltip,
+		description: field.description,
 		isVisibleUi: translateIsVisibleFn(field),
 		width: width,
 		default: field.default,
@@ -270,6 +280,7 @@ function translateCustomVariableField(
 		type: 'custom-variable',
 		label: field.label,
 		tooltip: field.tooltip,
+		description: field.description,
 		isVisibleUi: translateIsVisibleFn(field),
 		width: width,
 	}

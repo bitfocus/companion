@@ -1,6 +1,6 @@
 import semver from 'semver'
 
-const MODULE_BASE_VERSION = '1.13.0-2'
+const MODULE_BASE_VERSION = '1.13.0-3'
 
 const moduleVersion = semver.parse(MODULE_BASE_VERSION)
 if (!moduleVersion) throw new Error(`Failed to parse version as semver: ${MODULE_BASE_VERSION}`)

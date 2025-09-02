@@ -159,17 +159,6 @@ export const OptionsInputField = observer(function OptionsInputField({
 		}
 		case 'static-text': {
 			control = <StaticTextFieldText {...option} />
-
-			if (option.label) {
-				control = (
-					<>
-						<CFormLabel>
-							<OptionLabel option={option} />
-						</CFormLabel>
-						{control}
-					</>
-				)
-			}
 			break
 		}
 		case 'custom-variable': {
@@ -208,6 +197,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 			</CFormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
 				{control}
+				{option.description && <div className="form-text">{option.description}</div>}
 			</CCol>
 		</>
 	)

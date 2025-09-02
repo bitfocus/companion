@@ -34,6 +34,8 @@ export interface CompanionInputFieldBaseExtended {
 	label: string
 	/** A hover tooltip for this field */
 	tooltip?: string
+	/** A description for this field */
+	description?: string
 
 	isVisibleUi?: IsVisibleUiFn
 

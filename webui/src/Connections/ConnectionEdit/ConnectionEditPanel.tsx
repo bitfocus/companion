@@ -395,6 +395,7 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 								value={configData.secrets[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
 							/>
+							{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
 						</CCol>
 					)
 				} else {
@@ -416,6 +417,7 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
 								connectionId={panelStore.connectionId}
 							/>
+							{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
 						</CCol>
 					)
 				}
