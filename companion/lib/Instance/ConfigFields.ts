@@ -1,5 +1,6 @@
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
+	CompanionInputFieldBaseExtended,
 	CompanionInputFieldBonjourDeviceExtended,
 	CompanionInputFieldCheckboxExtended,
 	CompanionInputFieldColorExtended,
@@ -39,25 +40,17 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 		switch (o.type) {
 			case 'bonjour-device':
 				return {
-					id: o.id,
+					...translateCommonFields(o),
 					type: 'bonjour-device',
-					label: o.label,
-					tooltip: o.tooltip,
-					isVisibleUi: translateIsVisibleFn(o),
 					width: o.width,
-					description: o.description,
 				} satisfies Complete<CompanionInputFieldBonjourDeviceExtended>
 			case 'secret-text':
 				return {
-					id: o.id,
+					...translateCommonFields(o),
 					type: 'secret-text',
-					label: o.label,
-					tooltip: o.tooltip,
-					isVisibleUi: translateIsVisibleFn(o),
 					width: o.width,
 					default: o.default,
 					required: o.required,
-					description: o.description,
 				} satisfies Complete<CompanionInputFieldSecretExtended>
 
 			case 'static-text':
@@ -124,14 +117,10 @@ function generateUnsupportedField<T extends EncodeIsVisible<CompanionInputFieldB
 	width: number
 ): Complete<CompanionInputFieldStaticTextExtended> {
 	return {
+		...translateCommonFields(field),
 		type: 'static-text',
-		id: field.id,
-		label: field.label,
-		isVisibleUi: translateIsVisibleFn(field),
 		width: width,
 		value: `Unsupported field type ${field.type}`,
-		tooltip: undefined,
-		description: undefined,
 	}
 }
 
@@ -140,11 +129,8 @@ function translateStaticTextField(
 	width: number
 ): Complete<CompanionInputFieldStaticTextExtended> {
 	return {
-		id: field.id,
+		...translateCommonFields(field),
 		type: 'static-text',
-		label: field.label,
-		tooltip: field.tooltip,
-		isVisibleUi: translateIsVisibleFn(field),
 		value: field.value,
 		width: width,
 		description: field.description,
@@ -163,12 +149,8 @@ function translateTextInputField(
 	}
 
 	return {
-		id: field.id,
+		...translateCommonFields(field),
 		type: 'textinput',
-		label: field.label,
-		tooltip: field.tooltip,
-		description: field.description,
-		isVisibleUi: translateIsVisibleFn(field),
 		default: field.default,
 		regex: field.regex,
 		required: field.required,
@@ -183,12 +165,8 @@ function translateCheckboxField(
 	width: number
 ): Complete<CompanionInputFieldCheckboxExtended> {
 	return {
-		id: field.id,
+		...translateCommonFields(field),
 		type: 'checkbox',
-		label: field.label,
-		tooltip: field.tooltip,
-		description: field.description,
-		isVisibleUi: translateIsVisibleFn(field),
 		default: field.default,
 		width: width,
 	}
@@ -198,12 +176,8 @@ function translateColorPickerField(
 	width: number
 ): Complete<CompanionInputFieldColorExtended> {
 	return {
-		id: field.id,
+		...translateCommonFields(field),
 		type: 'colorpicker',
-		label: field.label,
-		tooltip: field.tooltip,
-		description: field.description,
-		isVisibleUi: translateIsVisibleFn(field),
 		default: field.default,
 		enableAlpha: field.enableAlpha,
 		returnType: 'string',
@@ -216,12 +190,8 @@ function translateNumberField(
 	width: number
 ): Complete<CompanionInputFieldNumberExtended> {
 	return {
-		id: field.id,
+		...translateCommonFields(field),
 		type: 'number',
-		label: field.label,
-		tooltip: field.tooltip,
-		description: field.description,
-		isVisibleUi: translateIsVisibleFn(field),
 		default: field.default,
 		min: field.min,
 		max: field.max,
@@ -236,12 +206,8 @@ function translateDropdownField(
 	width: number
 ): Complete<CompanionInputFieldDropdownExtended> {
 	return {
-		id: field.id,
+		...translateCommonFields(field),
 		type: 'dropdown',
-		label: field.label,
-		tooltip: field.tooltip,
-		description: field.description,
-		isVisibleUi: translateIsVisibleFn(field),
 		width: width,
 		default: field.default,
 		choices: field.choices,
@@ -255,12 +221,8 @@ function translateMultiDropdownField(
 	width: number
 ): Complete<CompanionInputFieldMultiDropdownExtended> {
 	return {
-		id: field.id,
+		...translateCommonFields(field),
 		type: 'multidropdown',
-		label: field.label,
-		tooltip: field.tooltip,
-		description: field.description,
-		isVisibleUi: translateIsVisibleFn(field),
 		width: width,
 		default: field.default,
 		choices: field.choices,
@@ -276,13 +238,21 @@ function translateCustomVariableField(
 	width: number
 ): Complete<CompanionInputFieldCustomVariableExtended> {
 	return {
-		id: field.id,
+		...translateCommonFields(field),
 		type: 'custom-variable',
+		width: width,
+	}
+}
+
+function translateCommonFields(
+	field: EncodeIsVisible<CompanionInputFieldBase>
+): Pick<Complete<CompanionInputFieldBaseExtended>, 'id' | 'label' | 'tooltip' | 'description' | 'isVisibleUi'> {
+	return {
+		id: field.id,
 		label: field.label,
 		tooltip: field.tooltip,
 		description: field.description,
 		isVisibleUi: translateIsVisibleFn(field),
-		width: width,
 	}
 }
 
