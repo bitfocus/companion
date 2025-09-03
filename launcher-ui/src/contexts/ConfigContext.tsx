@@ -116,11 +116,17 @@ export function ConfigProvider({ children }: ConfigProviderProps): JSX.Element {
 
 	useEffect(() => {
 		// Set up IPC listeners
-		const handleConfigResponse = (config: ConfigData['config'], appInfo: ConfigData['appInfo'], platform: string) => {
+		const handleConfigResponse = (
+			config: ConfigData['config'],
+			appInfo: ConfigData['appInfo'],
+			platform: string,
+			hostname: string
+		) => {
 			const configData: ConfigData = {
 				config,
 				appInfo,
 				platform,
+				hostname,
 			}
 			dispatch({ type: 'SUCCESS', payload: configData })
 			// Update original config when data is loaded
