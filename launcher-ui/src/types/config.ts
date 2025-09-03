@@ -24,4 +24,5 @@ export interface ConfigData {
 	config: LauncherConfig
 	appInfo: AppInfo
 	platform: string
+	hostname: string
 }

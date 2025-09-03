@@ -131,6 +131,7 @@ export function SyslogSection(): JSX.Element {
 									value={syslogLocalHost}
 									onChange={(e) => handleSyslogLocalHostChange(e.target.value)}
 									className="flex-1 rounded-r-none"
+									placeholder={state.data?.hostname}
 								/>
 							</div>
 							<p className="text-sm text-muted-foreground mt-1">

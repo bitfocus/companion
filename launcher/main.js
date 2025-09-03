@@ -223,7 +223,7 @@ if (!lock) {
 		// Send to settings window
 		const settingsWindow = getSettingsWindow()
 		if (settingsWindow) {
-			settingsWindow.webContents.send('info', configData, appInfo, process.platform)
+			settingsWindow.webContents.send('info', configData, appInfo, process.platform, os.hostname())
 		}
 	}
 
