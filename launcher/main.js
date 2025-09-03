@@ -121,7 +121,7 @@ if (!lock) {
 		syslog_host: '127.0.0.1',
 		syslog_port: 514,
 		syslog_use_tcp: false,
-		syslog_local_hostname: os.hostname(),
+		syslog_local_hostname: '',
 	}
 
 	try {
