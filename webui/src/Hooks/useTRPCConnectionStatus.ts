@@ -23,6 +23,7 @@ export function useTRPCConnectionStatus(): TRPCConnectionState {
 
 	useEffect(() => {
 		const setTrpcStatus = (newStatus: TRPCConnectionStatus, error?: string) => {
+			console.log('Updating TRPC status', newStatus)
 			setStatus((oldStatus) => ({
 				status: newStatus,
 				wasConnected: oldStatus.wasConnected || oldStatus.status === TRPCConnectionStatus.Connected,
@@ -77,6 +78,7 @@ export function useTRPCConnectionStatus(): TRPCConnectionState {
 				setTrpcStatus(TRPCConnectionStatus.Unknown)
 				break
 		}
+		console.log('TRPC initial state:', trpcWsClient.connection?.state)
 
 		return () => {
 			handle.unsubscribe()
