@@ -51,6 +51,7 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 					width: o.width,
 					default: o.default,
 					required: o.required,
+					regex: o.regex,
 				} satisfies Complete<CompanionInputFieldSecretExtended>
 
 			case 'static-text':

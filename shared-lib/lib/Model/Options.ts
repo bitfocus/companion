@@ -211,6 +211,8 @@ export interface CompanionInputFieldSecretExtended extends CompanionInputFieldBa
 	 * Note: values may not conform to this, it is a visual hint only
 	 */
 	required?: boolean
+
+	regex?: string
 }
 export type SomeCompanionConfigInputField = CompanionInputFieldBonjourDeviceExtended | CompanionInputFieldSecretExtended
 

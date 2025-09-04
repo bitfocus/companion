@@ -42,6 +42,15 @@ export function validateInputValue(
 				return 'A value must be provided'
 			}
 
+			const compiledRegex = compileRegex(definition.regex)
+			if (compiledRegex) {
+				if (value === undefined || value === null) value = ''
+				else value = String(value)
+				if (!compiledRegex.exec(value)) {
+					return `Value does not match regex: ${definition.regex}`
+				}
+			}
+
 			return undefined
 		}
 
