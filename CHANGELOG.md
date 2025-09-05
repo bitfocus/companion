@@ -1,5 +1,55 @@
 # Bitfocus Companion
 
+## Companion v4.1.0 - Release Notes
+
+### IMPORTANT CHANGES
+
+- This is the last version of Companion to support macOS 12. Starting with Companion 4.2 you will need to be running macOS 12 or later.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Various UX improvments
+  - Connections, triggers and custom variables can be added to 'collections' for grouping
+  - Connections and triggers can be enabled/disabled by their collections
+  - Connections, triggers and surfaces tables have had their contents rearranged to flow more naturally
+  - Surfaces has been reworked to utilise a right panel for the selected surface.
+  - Any right hand panels of pages have been refined
+  - Version number has moved into the sidebar instead of header
+  - Improve clarity of beta module versions
+  - Layout improvements of some pages on mobile
+  - Indicate whether custom-variable value is valid while typing
+  - Improved layout of the launcher window, including a new settings window
+- Added Expression Variables. Similar to Custom Variables, but their value is the result of an expression that executes when needed.
+- Ability to define 'local variables' on buttons and triggers.
+  - Not all actions or feedbacks support these, this will improve over time
+- Additional expression functions
+  - arrayIndexOf & arrayLastIndexOf
+- Button step can be driven from an expression
+- Multiple connections from the Elgato Stream Deck software are now supported.
+- Support for Logitech MX Creative Console (buttons, not wheel)
+- Support for MiraBox HSV293S
+- Importing configs can be performed more granularly, without needing to reset everything
+- Variables for installation name
+- Expansion of the Ember+ api
+  - Expose variables
+  - Allow setting custom-variable values
+  - Expose action recorder
+- Support for 'secret' field types in connection config
+- Attempt to keep screen awake in emulator/tablet views
+- Support for defining custom backup rules
+- Syslog support for logging
+- Improve docker image command syntax
+- UI can be hosted under a subpath when behind a reverse proxy
+- Replace the library used for communication with the UI
+  - This improves the type safety and code quality of this api and makes it easier for us to work with.
+  - There should be no notable impact to users
+
+### 🐞 BUG FIXES
+
+- Surface page settings not being persisted correctly in exports
+- Load PNG button not always accepting files
+- 
+
 ## Companion v4.0.3 - Release Notes
 
 ### 🐞 BUG FIXES
