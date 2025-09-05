@@ -48,6 +48,11 @@
 
 - Surface page settings not being persisted correctly in exports
 - Load PNG button not always accepting files
+- Help tooltips not always showing
+- Some internal actions incorrectly claiming to support expressions
+- Some dropdown fields not updating their options when expected
+- Duplicating triggers first execution incorrect
+- Improve drag and drop behaviour in action/feedback lists
 - 
 
 ## Companion v4.0.3 - Release Notes
