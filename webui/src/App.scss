@@ -204,3 +204,15 @@ body {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+
+.number-input-inf-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	padding-left: 0.75rem;
+	pointer-events: none;
+}
