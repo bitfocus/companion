@@ -12,7 +12,7 @@ import {
 	CTabContent,
 	CTabPane,
 } from '@coreui/react'
-import { faCalendar, faClock, faDownload, faFileImport, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { faClock, faDownload, faFileImport, faGlobe, faTh } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
@@ -73,7 +73,7 @@ export function ImportFullWizard({
 						onClick={() => setActiveTab('buttons')}
 						disabled={!snapshot.controls}
 					>
-						<FontAwesomeIcon icon={faCalendar} /> Buttons
+						<FontAwesomeIcon icon={faTh} /> Buttons
 					</CNavLink>
 				</CNavItem>
 				<CNavItem>
