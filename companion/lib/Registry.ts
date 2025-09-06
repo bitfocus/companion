@@ -235,6 +235,7 @@ export class Registry {
 				this.surfaces,
 				this.graphics,
 				this.userconfig,
+				controlEvents,
 				this.exit.bind(this)
 			)
 
