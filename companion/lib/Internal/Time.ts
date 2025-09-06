@@ -18,12 +18,11 @@ import type {
 } from './Types.js'
 import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import { EventEmitter } from 'events'
-import type { InternalModuleUtils } from './Util.js'
 
 export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #startTime = Math.floor(Date.now() / 1000)
 
-	constructor(_internalUtils: InternalModuleUtils) {
+	constructor() {
 		super()
 
 		setInterval(() => {

@@ -143,9 +143,11 @@ function translateTextInputField(
 	usesInternalVariableParsing: boolean
 ): Complete<CompanionInputFieldTextInputExtended> {
 	let useVariables: CompanionFieldVariablesSupport | undefined
-	if (field.useVariables) {
+	if (usesInternalVariableParsing) {
+		useVariables = { local: true }
+	} else if (field.useVariables) {
 		useVariables = {
-			local: usesInternalVariableParsing || (typeof field.useVariables === 'object' && field.useVariables.local),
+			local: typeof field.useVariables === 'object' && field.useVariables.local,
 		}
 	}
 
@@ -247,13 +249,18 @@ function translateCustomVariableField(
 
 function translateCommonFields(
 	field: EncodeIsVisible<CompanionInputFieldBase>
-): Pick<Complete<CompanionInputFieldBaseExtended>, 'id' | 'label' | 'tooltip' | 'description' | 'isVisibleUi'> {
+): Pick<
+	Complete<CompanionInputFieldBaseExtended>,
+	'id' | 'label' | 'tooltip' | 'description' | 'expressionDescription' | 'isVisibleUi' | 'disableAutoExpression'
+> {
 	return {
 		id: field.id,
 		label: field.label,
 		tooltip: field.tooltip,
 		description: field.description,
+		expressionDescription: undefined, // Temporary until #2345
 		isVisibleUi: translateIsVisibleFn(field),
+		disableAutoExpression: true, // Temporary until #2345
 	}
 }
 

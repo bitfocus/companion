@@ -12,6 +12,8 @@
 }
 
 .form-label .feature-icons {
+	white-space: nowrap;
+
 	background-color: #ddd;
 	border-radius: 100px; // as much as possible
 
@@ -21,8 +23,8 @@
 	padding-right: 3px;
 
 	svg {
-		margin-left: 2px;
-		margin-right: 2px;
+		margin-left: 1px;
+		margin-right: 1px;
 
 		font-size: 0.8rem;
 	}

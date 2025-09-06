@@ -42,6 +42,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -169,7 +170,15 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		if (definition.options !== undefined && definition.options.length > 0) {
 			for (const opt of definition.options) {
-				entity.options[opt.id] = cloneDeep((opt as any).default)
+				const defaultValue = cloneDeep((opt as any).default)
+				if (definition.internalUsesAutoParser && !opt.disableAutoExpression) {
+					entity.options[opt.id] = {
+						isExpression: false,
+						value: defaultValue,
+					} satisfies ExpressionOrValue<any>
+				} else {
+					entity.options[opt.id] = defaultValue
+				}
 			}
 		}
 

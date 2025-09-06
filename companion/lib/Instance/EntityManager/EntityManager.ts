@@ -1,21 +1,16 @@
 import debounceFn from 'debounce-fn'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import type {
-	FeedbackInstance as ModuleFeedbackInstance,
-	HostToModuleEventsV0,
-	ModuleToHostEventsV0,
-	UpdateActionInstancesMessage,
-	UpdateFeedbackInstancesMessage,
-	UpgradeActionAndFeedbackInstancesMessage,
-} from '@companion-module/base/dist/host-api/api.js'
+import { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
+import {
+	EntityModelType,
+	SomeEntityModel,
+	SomeReplaceableEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { nanoid } from 'nanoid'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { ControlsController } from '../../Controls/Controller.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { OptionsObject } from '@companion-module/base/dist/util.js'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { Logger } from '../../Log/Controller.js'
 
 enum EntityState {
 	UNLOADED = 'UNLOADED',
@@ -35,15 +30,41 @@ interface EntityWrapper {
 	lastReferencedVariableIds?: ReadonlySet<string>
 }
 
+export interface EntityManagerMethods {
+	updateEntities(entities: EntityForUpdate[]): Promise<void>
+	upgradeEntities(entities: EntityForUpgrade[], currentUpgradeIndex: number): Promise<SomeReplaceableEntityModel[]>
+}
+
+export interface EntityForUpgrade {
+	controlId: string
+	entityModel: SomeEntityModel
+}
+
+export type EntityForUpdate =
+	| {
+			controlId: string
+			type: 'update'
+			entityId: string
+			entityModel: SomeEntityModel
+
+			parsedOptions: OptionsObject
+	  }
+	| {
+			controlId: string
+			type: 'delete'
+			entityId: string
+			entityType: EntityModelType
+	  }
+
 /**
  * This class is responsible for managing the entities that are tracked by the module
  * With this, it will ensure that the entities are run through the upgrade scripts as needed, and also
  * have the options parsed (by as much as companion supports) before being sent to the module for subscription callbacks
  */
-export class InstanceEntityManager {
+export class EntityManager {
 	readonly #logger: Logger
 
-	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
+	readonly #managerMethods: EntityManagerMethods
 	readonly #controlsController: ControlsController
 
 	readonly #entities = new Map<string, EntityWrapper>()
@@ -52,13 +73,9 @@ export class InstanceEntityManager {
 	#ready = false
 	#currentUpgradeIndex = 0
 
-	constructor(
-		ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>,
-		controlsController: ControlsController,
-		connectionId: string
-	) {
+	constructor(managerMethods: EntityManagerMethods, controlsController: ControlsController, connectionId: string) {
 		this.#logger = LogController.createLogger(`Instance/EntityManager/${connectionId}`)
-		this.#ipcWrapper = ipcWrapper
+		this.#managerMethods = managerMethods
 		this.#controlsController = controlsController
 	}
 
@@ -67,17 +84,8 @@ export class InstanceEntityManager {
 			if (!this.#ready) return
 
 			const entityIdsInThisBatch = new Map<string, string>()
-			const upgradePayload: UpgradeActionAndFeedbackInstancesMessage = {
-				actions: [],
-				feedbacks: [],
-				defaultUpgradeIndex: 0, // TODO - remove this!
-			}
-			const updateActionsPayload: UpdateActionInstancesMessage = {
-				actions: {},
-			}
-			const updateFeedbacksPayload: UpdateFeedbackInstancesMessage = {
-				feedbacks: {},
-			}
+			const upgradeEntities: EntityForUpgrade[] = []
+			const updatedEntities: EntityForUpdate[] = []
 
 			const pushEntityToUpgrade = (wrapper: EntityWrapper, entity: ControlEntityInstance) => {
 				this.#logger.silly(
@@ -85,39 +93,11 @@ export class InstanceEntityManager {
 				)
 
 				entityIdsInThisBatch.set(entity.id, wrapper.wrapperId)
-				const entityModel = entity.asEntityModel(false)
-				switch (entityModel.type) {
-					case EntityModelType.Action:
-						upgradePayload.actions.push({
-							id: entityModel.id,
-							controlId: wrapper.controlId,
-							actionId: entityModel.definitionId,
-							options: entityModel.options,
-
-							upgradeIndex: entityModel.upgradeIndex ?? null,
-							disabled: !!entityModel.disabled,
-						})
-						break
-					case EntityModelType.Feedback:
-						upgradePayload.feedbacks.push({
-							id: entityModel.id,
-							controlId: wrapper.controlId,
-							feedbackId: entityModel.definitionId,
-							options: entityModel.options,
-
-							isInverted: !!entityModel.isInverted,
-
-							upgradeIndex: entityModel.upgradeIndex ?? null,
-							disabled: !!entityModel.disabled,
-						})
-						break
-					default:
-						assertNever(entityModel)
-						this.#logger.warn('Unknown entity type', entity.type)
-				}
+				upgradeEntities.push({
+					controlId: wrapper.controlId,
+					entityModel: entity.asEntityModel(false),
+				})
 			}
-
-			const controlImageSizeCache = new Map<string, ModuleFeedbackInstance['image']>()
 
 			// First, look over all the entiites and figure out what needs to be done to each
 			for (const [entityId, wrapper] of this.#entities) {
@@ -150,47 +130,14 @@ export class InstanceEntityManager {
 							)
 							wrapper.lastReferencedVariableIds = referencedVariableIds
 
-							switch (entityModel.type) {
-								case EntityModelType.Action:
-									updateActionsPayload.actions[entityId] = {
-										id: entityModel.id,
-										controlId: wrapper.controlId,
-										actionId: entityModel.definitionId,
-										options: parsedOptions,
+							updatedEntities.push({
+								controlId: wrapper.controlId,
+								type: 'update',
+								entityId: entityModel.id,
+								entityModel: entityModel,
 
-										upgradeIndex: entityModel.upgradeIndex ?? null,
-										disabled: !!entityModel.disabled,
-									}
-									break
-								case EntityModelType.Feedback: {
-									let imageSize: ModuleFeedbackInstance['image'] | undefined
-									if (controlImageSizeCache.has(wrapper.controlId)) {
-										imageSize = controlImageSizeCache.get(wrapper.controlId)
-									} else {
-										const control = this.#controlsController.getControl(wrapper.controlId)
-										imageSize = control?.getBitmapSize() ?? undefined
-										controlImageSizeCache.set(wrapper.controlId, imageSize)
-									}
-
-									updateFeedbacksPayload.feedbacks[entityId] = {
-										id: entityModel.id,
-										controlId: wrapper.controlId,
-										feedbackId: entityModel.definitionId,
-										options: parsedOptions,
-
-										image: imageSize,
-
-										isInverted: !!entityModel.isInverted,
-
-										upgradeIndex: entityModel.upgradeIndex ?? null,
-										disabled: !!entityModel.disabled,
-									}
-									break
-								}
-								default:
-									assertNever(entityModel)
-									this.#logger.warn('Unknown entity type', entity.type)
-							}
+								parsedOptions: parsedOptions,
+							})
 						} else {
 							wrapper.state = EntityState.UPGRADING
 							pushEntityToUpgrade(wrapper, entity)
@@ -211,17 +158,12 @@ export class InstanceEntityManager {
 						const entity = wrapper.entity.deref()
 
 						if (entity) {
-							switch (entity.type) {
-								case EntityModelType.Action:
-									updateActionsPayload.actions[entityId] = null
-									break
-								case EntityModelType.Feedback:
-									updateFeedbacksPayload.feedbacks[entityId] = null
-									break
-								default:
-									assertNever(entity.type)
-									this.#logger.warn('Unknown entity type', entity.type)
-							}
+							updatedEntities.push({
+								type: 'delete',
+								controlId: wrapper.controlId,
+								entityId: entity.id,
+								entityType: entity.type,
+							})
 						}
 						break
 					}
@@ -232,28 +174,22 @@ export class InstanceEntityManager {
 			}
 
 			// Start by sending the simple payloads
-			if (Object.keys(updateActionsPayload.actions).length > 0) {
-				this.#ipcWrapper.sendWithCb('updateActions', updateActionsPayload).catch((e) => {
-					this.#logger.error('Error sending updateActions', e)
-				})
-			}
-			if (Object.keys(updateFeedbacksPayload.feedbacks).length > 0) {
-				this.#ipcWrapper.sendWithCb('updateFeedbacks', updateFeedbacksPayload).catch((e) => {
-					this.#logger.error('Error sending updateFeedbacks', e)
+			if (Object.keys(updatedEntities).length > 0) {
+				this.#managerMethods.updateEntities(updatedEntities).catch((e) => {
+					this.#logger.error('Error sending updated entities', e)
 				})
 			}
 
 			// Now we need to send the upgrades
-			if (upgradePayload.actions.length > 0 || upgradePayload.feedbacks.length > 0) {
-				this.#ipcWrapper
-					.sendWithCb('upgradeActionsAndFeedbacks', upgradePayload)
+			if (upgradeEntities.length > 0) {
+				this.#managerMethods
+					.upgradeEntities(upgradeEntities, this.#currentUpgradeIndex)
 					.then((upgraded) => {
 						if (!this.#ready) return
 
 						// We have the upgraded entities, lets patch the tracked entities
 
-						const upgradedActions = new Map(upgraded.updatedActions.map((act) => [act.id, act]))
-						const upgradedFeedbacks = new Map(upgraded.updatedFeedbacks.map((fb) => [fb.id, fb]))
+						const upgradedEntities = new Map(upgraded.map((act) => [act.id, act]))
 
 						// Loop through what we sent, as we don't get a response for all of them
 						for (const [entityId, wrapperId] of entityIdsInThisBatch) {
@@ -288,38 +224,9 @@ export class InstanceEntityManager {
 									}
 
 									try {
-										switch (entity.type) {
-											case EntityModelType.Action: {
-												const action = upgradedActions.get(entity.id)
-												if (action) {
-													control.entities.entityReplace({
-														id: action.id,
-														type: EntityModelType.Action,
-														definitionId: action.actionId,
-														options: action.options,
-														upgradeIndex: this.#currentUpgradeIndex,
-													})
-												}
-												break
-											}
-											case EntityModelType.Feedback: {
-												const feedback = upgradedFeedbacks.get(entity.id)
-												if (feedback) {
-													control.entities.entityReplace({
-														id: feedback.id,
-														type: EntityModelType.Feedback,
-														definitionId: feedback.feedbackId,
-														options: feedback.options,
-														style: feedback.style,
-														isInverted: feedback.isInverted,
-														upgradeIndex: this.#currentUpgradeIndex,
-													})
-												}
-												break
-											}
-											default:
-												assertNever(entity.type)
-												break
+										const newEntityProps = upgradedEntities.get(entity.id)
+										if (newEntityProps) {
+											control.entities.entityReplace(newEntityProps)
 										}
 									} catch (e) {
 										this.#logger.error(`Error replacing entity ${entity.id} in control ${wrapper.controlId}`, e)
@@ -478,32 +385,8 @@ export class InstanceEntityManager {
 			// If we don't know what fields need parsing, we can't do anything
 			return { parsedOptions: options, referencedVariableIds: new Set() }
 
-		const parsedOptions: OptionsObject = {}
-		const referencedVariableIds = new Set<string>()
-
 		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
-
-		for (const field of entityDefinition.options) {
-			if (field.type !== 'textinput' || !field.useVariables) {
-				// Field doesn't support variables, pass unchanged
-				parsedOptions[field.id] = options[field.id]
-				continue
-			}
-
-			// Field needs parsing
-			// Note - we don't need to care about the granularity given in `useVariables`,
-			const parseResult = parser.parseVariables(String(options[field.id]))
-			parsedOptions[field.id] = parseResult.text
-
-			// Track the variables referenced in this field
-			if (!entityDefinition.optionsToIgnoreForSubscribe.includes(field.id)) {
-				for (const variable of parseResult.variableIds) {
-					referencedVariableIds.add(variable)
-				}
-			}
-		}
-
-		return { parsedOptions, referencedVariableIds }
+		return parser.parseEntityOptions(entityDefinition, options)
 	}
 
 	/**

@@ -10,14 +10,32 @@ import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper
 import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { EventEmitter } from 'events'
+import type { OptionsObject } from '@companion-module/base/dist/util.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
-export interface FeedbackEntityModelExt extends FeedbackEntityModel {
+export interface FeedbackForInternalExecution {
 	controlId: string
 	location: ControlLocation | undefined
-	referencedVariables: string[] | null
+
+	id: string
+	definitionId: string
+
+	options: OptionsObject
+}
+
+export interface ActionForInternalExecution {
+	// controlId: string
+	// location: ControlLocation | undefined
+
+	id: string
+	definitionId: string
+
+	options: OptionsObject
+
+	rawEntity: ControlEntityInstance
 }
 
 export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor
@@ -55,9 +73,10 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	 * @returns Whether the action was handled
 	 */
 	executeAction?(
-		action: ControlEntityInstance,
+		action: ActionForInternalExecution,
 		extras: RunActionExtras,
-		actionRunner: ActionRunner
+		actionRunner: ActionRunner,
+		parser: VariablesAndExpressionParser
 	): Promise<boolean> | boolean
 
 	/**
@@ -72,7 +91,8 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	 * Get an updated value for a feedback
 	 */
 	executeFeedback?: (
-		feedback: FeedbackEntityModelExt
+		feedback: FeedbackForInternalExecution,
+		parser: VariablesAndExpressionParser
 	) => CompanionFeedbackButtonStyleResult | boolean | ExecuteFeedbackResultWithReferences | void
 
 	feedbackUpgrade?: (feedback: FeedbackEntityModel, controlId: string) => FeedbackEntityModel | void
@@ -86,8 +106,6 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 	getVariableDefinitions?: () => VariableDefinitionTmp[]
 	updateVariables?: () => void
-
-	onVariablesChanged?: (changedVariablesSet: Set<string>, fromControlId: string | null) => void
 }
 
 export interface ExecuteFeedbackResultWithReferences {
@@ -100,10 +118,15 @@ export type InternalActionDefinition = SetOptional<
 		ClientEntityDefinition,
 		'entityType' | 'showInvert' | 'feedbackType' | 'feedbackStyle' | 'hasLifecycleFunctions'
 	>,
-	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'optionsToIgnoreForSubscribe'
+	| 'hasLearn'
+	| 'learnTimeout'
+	| 'showButtonPreview'
+	| 'supportsChildGroups'
+	| 'optionsToIgnoreForSubscribe'
+	| 'internalUsesAutoParser'
 >
 
 export type InternalFeedbackDefinition = SetOptional<
 	Omit<ClientEntityDefinition, 'entityType' | 'hasLifecycleFunctions' | 'optionsToIgnoreForSubscribe'>,
-	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups'
+	'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'internalUsesAutoParser'
 >

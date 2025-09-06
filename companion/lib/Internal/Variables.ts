@@ -9,35 +9,40 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalFeedbackDefinition,
 	InternalActionDefinition,
 	ExecuteFeedbackResultWithReferences,
 	InternalModuleFragmentEvents,
+	FeedbackForInternalExecution,
+	ActionForInternalExecution,
 } from './Types.js'
-import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import {
+	ActionEntityModel,
 	FeedbackEntitySubType,
 	SomeSocketEntityLocation,
-	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { IPageStore } from '../Page/Store.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
-import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
-import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
+import {
+	CHOICES_LOCATION,
+	convertOldLocationToExpressionOrValue,
+	convertSimplePropertyToExpresionValue,
+	ParseLocationString,
+} from './Util.js'
 import { EventEmitter } from 'events'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { CompanionInputFieldDropdownExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
-const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
+const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	type: 'dropdown',
 	label: 'Operation',
 	id: 'op',
@@ -48,6 +53,7 @@ const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
 		{ id: 'gt', label: '>' },
 		{ id: 'lt', label: '<' },
 	],
+	disableAutoExpression: true,
 }
 
 function compareValues(op: any, value: any, value2: any): boolean {
@@ -64,19 +70,12 @@ function compareValues(op: any, value: any, value2: any): boolean {
 }
 
 export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
-	readonly #internalUtils: InternalModuleUtils
 	readonly #controlsController: ControlsController
 	readonly #pageStore: IPageStore
 
-	/**
-	 * The dependencies of variables that should retrigger each feedback
-	 */
-	#variableSubscriptions = new Map<string, { controlId: string; variables: ReadonlySet<string> }>()
-
-	constructor(internalUtils: InternalModuleUtils, controlsController: ControlsController, pageStore: IPageStore) {
+	constructor(controlsController: ControlsController, pageStore: IPageStore) {
 		super()
 
-		this.#internalUtils = internalUtils
 		this.#controlsController = controlsController
 		this.#pageStore = pageStore
 	}
@@ -99,6 +98,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						tooltip: 'What variable to act on?',
 						id: 'variable',
 						supportsLocal: true,
+						disableAutoExpression: true,
 					},
 					COMPARISON_OPERATION,
 					{
@@ -106,20 +106,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Value',
 						id: 'value',
 						default: '',
+						disableAutoExpression: true,
 					},
 				],
-
-				// TODO
-				// learn: (fb) => {
-				// 	let value = ''
-				// 	const id = fb.options.variable.split(':')
-				// 	self.system.emit('variable_get', id[0], id[1], (v) => (value = v))
-
-				// 	return {
-				// 		...fb.options,
-				// 		value: value,
-				// 	}
-				// },
+				internalUsesAutoParser: true,
 			},
 
 			variable_variable: {
@@ -138,6 +128,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						tooltip: 'What variable to act on?',
 						id: 'variable',
 						supportsLocal: true,
+						disableAutoExpression: true,
 					},
 					COMPARISON_OPERATION,
 					{
@@ -146,8 +137,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						tooltip: 'What variable to compare with?',
 						id: 'variable2',
 						supportsLocal: true,
+						disableAutoExpression: true,
 					},
 				],
+				internalUsesAutoParser: true,
 			},
 
 			check_expression: {
@@ -169,8 +162,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 							local: true,
 						},
 						isExpression: true,
+						disableAutoExpression: true,
 					},
 				],
+				internalUsesAutoParser: true,
 			},
 
 			expression_value: {
@@ -189,8 +184,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 							local: true,
 						},
 						isExpression: true,
+						disableAutoExpression: true,
 					},
 				],
+				internalUsesAutoParser: true,
 			},
 			user_value: {
 				feedbackType: FeedbackEntitySubType.Value,
@@ -208,6 +205,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 							type: 'expression',
 							fn: '!$(options:persist_value)',
 						},
+						disableAutoExpression: true,
 					},
 					{
 						type: 'checkbox',
@@ -215,8 +213,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						tooltip: 'If enabled, variable value will be saved and restored when Companion restarts.',
 						id: 'persist_value',
 						default: false,
+						disableAutoExpression: true,
 					},
 				],
+				internalUsesAutoParser: true,
 			},
 		}
 	}
@@ -224,11 +224,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
 			local_variable_set_value: {
-				label: 'Local Variable: Set raw value',
+				label: 'Local Variable: Set value',
 				description: undefined,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
-
+					CHOICES_LOCATION,
 					{
 						type: 'textinput',
 						label: 'Local variable',
@@ -239,58 +238,38 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Value',
 						id: 'value',
 						default: '',
+						description: 'The raw value will be written to the variable',
+						expressionDescription: 'The expression will be executed with the result written to the variable',
 					},
 				],
-			},
-			local_variable_set_expression: {
-				label: 'Local Variable: Set with expression',
-				description: undefined,
-				options: [
-					...CHOICES_DYNAMIC_LOCATION,
-
-					{
-						type: 'textinput',
-						label: 'Local variable',
-						id: 'name',
-					},
-					{
-						type: 'textinput',
-						label: 'Expression',
-						id: 'expression',
-						default: '',
-						useVariables: {
-							local: true,
-						},
-						isExpression: true,
-					},
-				],
+				internalUsesAutoParser: true,
 			},
 
 			local_variable_reset_to_default: {
 				label: 'Local Variable: Reset to startup value',
 				description: undefined,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
-
+					CHOICES_LOCATION,
 					{
 						type: 'textinput',
 						label: 'Local variable',
 						id: 'name',
 					},
 				],
+				internalUsesAutoParser: true,
 			},
 			local_variable_sync_to_default: {
 				label: 'Local Variable: Write current value to startup value',
 				description: undefined,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
-
+					CHOICES_LOCATION,
 					{
 						type: 'textinput',
 						label: 'Local variable',
 						id: 'name',
 					},
 				],
+				internalUsesAutoParser: true,
 			},
 		}
 	}
@@ -298,100 +277,84 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	/**
 	 * Get an updated value for a feedback
 	 */
-	executeFeedback(feedback: FeedbackEntityModelExt): boolean | ExecuteFeedbackResultWithReferences | void {
+	executeFeedback(
+		feedback: FeedbackForInternalExecution,
+		parser: VariablesAndExpressionParser
+	): boolean | ExecuteFeedbackResultWithReferences | void {
 		if (feedback.definitionId == 'variable_value') {
-			const result = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
-				`$(${feedback.options.variable})`,
-				feedback
-			)
+			const result = parser.parseVariables(`$(${feedback.options.variable})`)
 
-			this.#variableSubscriptions.set(feedback.id, { controlId: feedback.controlId, variables: result.variableIds })
-
-			return compareValues(feedback.options.op, result.text, feedback.options.value)
+			return {
+				value: compareValues(feedback.options.op, result.text, feedback.options.value),
+				referencedVariables: Array.from(result.variableIds),
+			}
 		} else if (feedback.definitionId == 'variable_variable') {
-			const result1 = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
-				`$(${feedback.options.variable})`,
-				feedback
-			)
-			const result2 = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
-				`$(${feedback.options.variable2})`,
-				feedback
-			)
+			const result1 = parser.parseVariables(`$(${feedback.options.variable})`)
+			const result2 = parser.parseVariables(`$(${feedback.options.variable2})`)
 
-			this.#variableSubscriptions.set(feedback.id, {
-				controlId: feedback.controlId,
-				variables: new Set([...result1.variableIds, ...result2.variableIds]),
-			})
-
-			return compareValues(feedback.options.op, result1.text, result2.text)
+			return {
+				value: compareValues(feedback.options.op, result1.text, result2.text),
+				referencedVariables: [...result1.variableIds, ...result2.variableIds],
+			}
 		} else if (feedback.definitionId == 'check_expression') {
-			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.controlId, null)
-			const res = parser.executeExpression(feedback.options.expression, 'boolean')
-
-			this.#variableSubscriptions.set(feedback.id, { controlId: feedback.controlId, variables: res.variableIds })
-
-			if (res.ok) {
-				return !!res.value
-			} else {
-				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
-				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${res.error}`)
-
-				return false
-			}
+			return !!feedback.options.expression
 		} else if (feedback.definitionId == 'expression_value') {
-			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.controlId, null)
-			const res = parser.executeExpression(feedback.options.expression, undefined)
-
-			if (res.ok) {
-				return {
-					value: res.value,
-					referencedVariables: Array.from(res.variableIds),
-				}
-			} else {
-				const logger = LogController.createLogger(`Internal/Variables/${feedback.controlId}`)
-				logger.warn(`Failed to execute expression "${feedback.options.expression}": ${res.error}`)
-
-				return {
-					value: VARIABLE_UNKNOWN_VALUE,
-					referencedVariables: Array.from(res.variableIds),
-				}
-			}
+			return feedback.options.expression as any
 		} else if (feedback.definitionId == 'user_value') {
 			// Not used
 			return false
 		}
 	}
 
-	forgetFeedback(feedback: FeedbackEntityModel): void {
-		this.#variableSubscriptions.delete(feedback.id)
+	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
+		let changed = false
+
+		if (action.definitionId === 'local_variable_set_value') {
+			changed = convertOldLocationToExpressionOrValue(action.options) || changed
+			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpresionValue(action.options, 'value') || changed
+		} else if (action.definitionId === 'local_variable_set_expression') {
+			changed = convertOldLocationToExpressionOrValue(action.options) || changed
+			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
+
+			// Rename to the combined action
+			action.definitionId = 'local_variable_set_value'
+			action.options.value = {
+				isExpression: true,
+				value: action.options.expression,
+			} satisfies ExpressionOrValue<any>
+			delete action.options.expression
+
+			changed = true
+		} else if (
+			action.definitionId === 'local_variable_reset_to_default' ||
+			action.definitionId === 'local_variable_sync_to_default'
+		) {
+			changed = convertOldLocationToExpressionOrValue(action.options) || changed
+			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
+		}
+
+		if (changed) return action
 	}
 
-	#fetchLocationAndControlId(
+	#fetchLocationAndControlIdNew(
 		options: Record<string, any>,
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		useVariableFields = false
+		extras: RunActionExtras | FeedbackForInternalExecution
 	): {
 		theControlId: string | null
 		theLocation: ControlLocation | null
-		referencedVariables: string[]
 	} {
-		const result = this.#internalUtils.parseInternalControlReferenceForActionOrFeedback(
-			extras,
-			options,
-			useVariableFields
-		)
-
-		const theControlId = result.location ? this.#pageStore.getControlIdAt(result.location) : null
+		const location = ParseLocationString(String(options.location), extras.location)
+		const theControlId = location ? this.#pageStore.getControlIdAt(location) : null
 
 		return {
 			theControlId,
-			theLocation: result.location,
-			referencedVariables: Array.from(result.referencedVariables),
+			theLocation: location,
 		}
 	}
 
 	#updateLocalVariableValue(
-		action: ControlEntityInstance,
+		action: ActionForInternalExecution,
 		extras: RunActionExtras,
 		updateValue: (
 			entityPool: ControlEntityListPoolBase,
@@ -399,9 +362,9 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			variableEntity: ControlEntityInstance
 		) => void
 	) {
-		if (!action.rawOptions.name) return
+		if (!action.options.name) return
 
-		const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
+		const { theControlId } = this.#fetchLocationAndControlIdNew(action.options, extras)
 		if (!theControlId) return
 
 		const control = this.#controlsController.getControl(theControlId)
@@ -409,7 +372,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 		const variableEntity = control.entities
 			.getAllEntities()
-			.find((ent) => ent.rawLocalVariableName === action.rawOptions.name)
+			.find((ent) => ent.rawLocalVariableName === action.options.name)
 		if (!variableEntity) return
 
 		const localVariableName = variableEntity.localVariableName
@@ -420,25 +383,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		updateValue(control.entities, 'local-variables', variableEntity) // TODO - dynamic listId
 	}
 
-	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
 		if (action.definitionId === 'local_variable_set_value') {
 			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				entityPool.entitySetVariableValue(listId, variableEntity.id, action.rawOptions.value)
-			})
-
-			return true
-		} else if (action.definitionId === 'local_variable_set_expression') {
-			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				const result = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
-					action.rawOptions.expression,
-					extras
-				)
-				if (result.ok) {
-					entityPool.entitySetVariableValue(listId, variableEntity.id, result.value)
-				} else {
-					const logger = LogController.createLogger(`Internal/Variables/${extras.controlId}`)
-					logger.warn(`${result.error}, in expression: "${action.rawOptions.expression}"`)
-				}
+				entityPool.entitySetVariableValue(listId, variableEntity.id, action.options.value)
 			})
 
 			return true
@@ -456,32 +404,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			return true
 		}
 		return false
-	}
-
-	/**
-	 * Some variables have been changed
-	 */
-	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
-		/**
-		 * Danger: It is important to not do any debounces here.
-		 * Doing so will cause triggers which are 'on variable change' with a condition to check the variable value to break
-		 */
-
-		const affectedFeedbackIds: string[] = []
-		for (const [id, { controlId, variables }] of this.#variableSubscriptions.entries()) {
-			// Skip if the changes are local variables from a different control
-			if (fromControlId && controlId !== fromControlId) continue
-
-			for (const name of variables) {
-				if (changedVariablesSet.has(name)) {
-					affectedFeedbackIds.push(id)
-					break
-				}
-			}
-		}
-		if (affectedFeedbackIds.length > 0) {
-			this.emit('checkFeedbacksById', ...affectedFeedbackIds)
-		}
 	}
 
 	/**

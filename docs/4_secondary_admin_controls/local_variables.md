@@ -8,6 +8,8 @@ The current list of supported local variables is below, but by typing `$(this:` 
   Variable: `this:column`
 - Row number of the button  
   Variable: `this:row`
+- Location of the button  
+  Variable: `this:location`
 - The current step of this button  
   Variable: `this:step`
 - Page name of the current page  

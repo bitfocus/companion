@@ -16,6 +16,8 @@ export interface ClientEntityDefinition {
 	learnTimeout: number | undefined
 	showInvert: boolean
 
+	internalUsesAutoParser: boolean
+
 	showButtonPreview: boolean
 	supportsChildGroups: EntitySupportedChildGroupDefinition[]
 }

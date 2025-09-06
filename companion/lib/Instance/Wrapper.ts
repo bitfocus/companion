@@ -53,7 +53,8 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from './ApiVersions.js'
-import { InstanceEntityManager } from './EntityManager.js'
+import type { EntityManager } from './EntityManager/EntityManager.js'
+import { createInstanceEntityManager } from './EntityManager/InstanceEntityManager.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { translateEntityInputFields } from './ConfigFields.js'
 
@@ -90,7 +91,7 @@ export class SocketEventsHandler {
 
 	#expectsLabelUpdates: boolean = false
 
-	readonly #entityManager: InstanceEntityManager | null
+	readonly #entityManager: EntityManager | null
 
 	#currentUpgradeIndex: number | null = null
 
@@ -154,7 +155,7 @@ export class SocketEventsHandler {
 		)
 
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
-			? new InstanceEntityManager(this.#ipcWrapper, this.#deps.controls, this.connectionId)
+			? createInstanceEntityManager(this.#ipcWrapper, this.#deps.controls, this.connectionId)
 			: null
 
 		const messageHandler = (msg: any) => {
@@ -714,6 +715,7 @@ export class SocketEventsHandler {
 
 				feedbackType: null,
 				feedbackStyle: undefined,
+				internalUsesAutoParser: false,
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
@@ -750,6 +752,7 @@ export class SocketEventsHandler {
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
+				internalUsesAutoParser: false,
 			} satisfies Complete<ClientEntityDefinition>
 		}
 

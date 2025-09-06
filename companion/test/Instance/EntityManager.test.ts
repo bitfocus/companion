@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { InstanceEntityManager } from '../../lib/Instance/EntityManager.js'
+import type { EntityManager } from '../../lib/Instance/EntityManager/EntityManager.js'
+import { createInstanceEntityManager } from '../../lib/Instance/EntityManager/InstanceEntityManager.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { UpdateActionInstancesMessage } from '@companion-module/base/dist/host-api/api.js'
 
 // Mock dependencies
@@ -38,13 +38,13 @@ describe('InstanceEntityManager', () => {
 		createVariablesAndExpressionParser: vi.fn().mockReturnValue(mockVariablesParser),
 	}
 
-	let entityManager: InstanceEntityManager
+	let entityManager: EntityManager
 
 	// Reset mocks before each test
 	beforeEach(() => {
 		vi.clearAllMocks()
 		// Create a new instance for each test
-		entityManager = new InstanceEntityManager(
+		entityManager = createInstanceEntityManager(
 			mockIpcWrapper as any,
 			mockControlsController as any,
 			'test-connection-id'
