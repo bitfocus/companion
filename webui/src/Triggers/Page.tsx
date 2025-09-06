@@ -1,6 +1,7 @@
-import React, { useCallback, useContext, useMemo, useRef } from 'react'
-import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { CButton, CButtonGroup, CCol, CFormSwitch, CRow, CInputGroup, CFormInput } from '@coreui/react'
 import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
+import { single as fuzzySingle } from 'fuzzysort'
 import dayjs from 'dayjs'
 import sanitizeHtml from 'sanitize-html'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -71,6 +72,19 @@ export const TriggersPage = observer(function Triggers() {
 		return allTriggers
 	}, [triggersList.triggers])
 
+	const [filter, setFilter] = useState('')
+	const clearFilter = useCallback(() => setFilter(''), [])
+	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
+
+	const TriggerItemRow = (item: TriggerDataWithId) => {
+		// Perform a fuzzy filter to hide irrelevant items
+		if (filter) {
+			const search = fuzzySingle(filter, item.name)
+			if (!search || search.score < -10000) return null
+		}
+		return <TriggersTableRow item={item} />
+	}
+
 	const matchRoute = useMatchRoute()
 	const routeMatch = matchRoute({ to: '/triggers/$controlId' })
 	const selectedTriggerId = routeMatch ? routeMatch.controlId : null
@@ -124,6 +138,19 @@ export const TriggersPage = observer(function Triggers() {
 								<FontAwesomeIcon icon={faFileExport} /> Export all
 							</CButton>
 						</div>
+
+						<CInputGroup className="variables-table-filter mt-2">
+							<CFormInput
+								type="text"
+								placeholder="Filter ..."
+								onChange={updateFilter}
+								value={filter}
+								style={{ fontSize: '1.2em' }}
+							/>
+							<CButton color="danger" onClick={clearFilter}>
+								<FontAwesomeIcon icon={faTimes} />
+							</CButton>
+						</CInputGroup>
 					</div>
 
 					<div className="scrollable-content">
@@ -172,9 +199,7 @@ function TriggerListNoContent() {
 	return <NonIdealState icon={faList} text="There are currently no triggers or scheduled tasks." />
 }
 
-function TriggerItemRow(item: TriggerDataWithId) {
-	return <TriggersTableRow item={item} />
-}
+// Item row rendering is provided inline in the component to allow filtering
 
 function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollection }) {
 	const setEnabledMutation = useMutationExt(trpc.controls.triggers.collections.setEnabled.mutationOptions())
@@ -268,7 +293,6 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
-
 			<div className="action-buttons w-auto">
 				<CButtonGroup>
 					<CFormSwitch
