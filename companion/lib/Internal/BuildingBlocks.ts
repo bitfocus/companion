@@ -341,6 +341,9 @@ export class InternalBuildingBlocks
 					await actionRunner.runMultipleActions(childActions, extras, executeSequential).catch((e) => {
 						this.#logger.error(`Failed to run actions: ${e.message}`)
 					})
+
+					// Yield to event loop to prevent tight loop
+					await setTimeout(1)
 				}
 				return true
 			})
