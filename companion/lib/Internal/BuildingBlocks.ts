@@ -25,6 +25,7 @@ import { EntityModelType, FeedbackEntityModel, FeedbackEntitySubType } from '@co
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
+import { setTimeout } from 'node:timers/promises'
 
 export class InternalBuildingBlocks
 	extends EventEmitter<InternalModuleFragmentEvents>
@@ -182,6 +183,28 @@ export class InternalBuildingBlocks
 					},
 				],
 			},
+			logic_while: {
+				label: 'Logic: While loop',
+				description: 'Execute some actions repeatedly while all of the configured conditions are true',
+				options: [],
+				hasLearn: false,
+				learnTimeout: undefined,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Feedback,
+						feedbackListType: FeedbackEntitySubType.Boolean,
+						groupId: 'condition',
+						label: 'While True',
+						entityTypeLabel: 'condition',
+					},
+					{
+						type: EntityModelType.Action,
+						groupId: 'actions',
+						label: 'Repeat',
+						entityTypeLabel: 'action',
+					},
+				],
+			},
 		}
 	}
 
@@ -251,7 +274,7 @@ export class InternalBuildingBlocks
 
 			if (!isNaN(delay) && delay > 0) {
 				// Perform the wait
-				return new Promise((resolve) => setTimeout(resolve, delay)).then(() => true)
+				return setTimeout(delay, true, { signal: extras.abortDelayed })
 			} else {
 				// No wait, return immediately
 				return true
@@ -302,6 +325,28 @@ export class InternalBuildingBlocks
 					this.#logger.error(`Failed to run actions: ${e.message}`)
 				})
 				.then(() => true)
+		} else if (action.definitionId === 'logic_while') {
+			if (extras.abortDelayed.aborted) return true
+
+			return Promise.resolve().then(async () => {
+				while (!extras.abortDelayed.aborted) {
+					const conditionValues = action.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
+					if (!booleanAnd(false, conditionValues)) break
+
+					const childActions = action.getChildren('actions')?.getDirectEntities() ?? []
+					const executeSequential = extras.executionMode === 'sequential'
+
+					if (extras.abortDelayed.aborted) break
+
+					await actionRunner.runMultipleActions(childActions, extras, executeSequential).catch((e) => {
+						this.#logger.error(`Failed to run actions: ${e.message}`)
+					})
+
+					// Yield to event loop to prevent tight loop
+					await setTimeout(1)
+				}
+				return true
+			})
 		} else {
 			return false
 		}

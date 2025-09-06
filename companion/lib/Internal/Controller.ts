@@ -51,6 +51,8 @@ import { InternalSurface } from './Surface.js'
 import { InternalTriggers } from './Triggers.js'
 import { InternalVariables } from './Variables.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import type EventEmitter from 'node:events'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -75,6 +77,7 @@ export class InternalController {
 		surfaceController: SurfaceController,
 		graphicsController: GraphicsController,
 		userConfigController: DataUserConfig,
+		controlEvents: EventEmitter<ControlCommonEvents>,
 		requestExit: (fromInternal: boolean, restart: boolean) => void
 	) {
 		this.#controlsController = controlsController
@@ -90,7 +93,7 @@ export class InternalController {
 			new InternalActionRecorder(internalUtils, controlsController.actionRecorder, pageStore),
 			new InternalInstance(internalUtils, instanceController),
 			new InternalTime(internalUtils),
-			new InternalControls(internalUtils, graphicsController, controlsController, pageStore),
+			new InternalControls(internalUtils, graphicsController, controlsController, pageStore, controlEvents),
 			new InternalCustomVariables(internalUtils, variablesController),
 			new InternalPage(internalUtils, pageStore),
 			new InternalSurface(internalUtils, surfaceController, controlsController, pageStore),
