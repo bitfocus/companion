@@ -53,7 +53,7 @@
 - Some dropdown fields not updating their options when expected
 - Duplicating triggers first execution incorrect
 - Improve drag and drop behaviour in action/feedback lists
-- 
+-
 
 ## Companion v4.0.3 - Release Notes
 
