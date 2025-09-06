@@ -11,6 +11,9 @@ import {
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { InputValue, OptionsObject } from '@companion-module/base'
+import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 /**
  * A class to parse and execute expressions with variables
@@ -81,5 +84,114 @@ export class VariablesAndExpressionParser {
 	 */
 	parseVariables(str: string): ParseVariablesResult {
 		return parseVariablesInString(str, this.#rawVariableValues, this.#valueCacheAccessor, VARIABLE_UNKNOWN_VALUE)
+	}
+
+	/**
+	 * Parse any variables in the options object for an entity.
+	 * Note: this will drop any options that are not defined in the entity definition.
+	 */
+	parseEntityOptions(
+		entityDefinition: ClientEntityDefinition | undefined,
+		options: OptionsObject
+	): {
+		parsedOptions: OptionsObject
+		referencedVariableIds: Set<string>
+	} {
+		if (!entityDefinition)
+			// If we don't know what fields need parsing, we can't do anything
+			return { parsedOptions: options, referencedVariableIds: new Set() }
+
+		const parsedOptions: OptionsObject = {}
+		const referencedVariableIds = new Set<string>()
+
+		if (entityDefinition.internalUsesAutoParser) {
+			// If the entity uses the auto parser, we can just parse all
+
+			for (const field of entityDefinition.options) {
+				let fieldType: 'expression' | 'variables' | 'generic' = 'generic'
+				if (field.type === 'textinput') {
+					if (field.isExpression) {
+						fieldType = 'expression'
+					} else if (field.useVariables) {
+						fieldType = 'variables'
+					}
+				}
+
+				const parsedValue = this.parseEntityOption(options[field.id], fieldType)
+				parsedOptions[field.id] = parsedValue.value
+
+				// Track the variables referenced in this field
+				if (!entityDefinition.optionsToIgnoreForSubscribe.includes(field.id)) {
+					for (const variable of parsedValue.referencedVariableIds) {
+						referencedVariableIds.add(variable)
+					}
+				}
+			}
+		} else {
+			// The old approach for only text inputs
+
+			for (const field of entityDefinition.options) {
+				if (field.type !== 'textinput' || !field.useVariables) {
+					// Field doesn't support variables, pass unchanged
+					parsedOptions[field.id] = options[field.id]
+					continue
+				}
+
+				// Field needs parsing
+				// Note - we don't need to care about the granularity given in `useVariables`,
+				const parseResult = this.parseVariables(String(options[field.id]))
+				parsedOptions[field.id] = parseResult.text
+
+				// Track the variables referenced in this field
+				if (!entityDefinition.optionsToIgnoreForSubscribe.includes(field.id)) {
+					for (const variable of parseResult.variableIds) {
+						referencedVariableIds.add(variable)
+					}
+				}
+			}
+		}
+
+		return { parsedOptions, referencedVariableIds }
+	}
+
+	parseEntityOption(
+		optionsValue: InputValue | undefined,
+		fieldType: 'expression' | 'variables' | 'generic'
+	): {
+		value: InputValue
+		referencedVariableIds: ReadonlySet<string>
+	} {
+		// Get the value as an ExpressionOrValue
+		const rawValue: ExpressionOrValue<any> = isExpressionOrValue(optionsValue)
+			? (optionsValue as any)
+			: { value: optionsValue, isExpression: fieldType === 'expression' }
+
+		if (rawValue.isExpression) {
+			// Parse the expression
+			const parseResult = this.executeExpression(rawValue.value || '', undefined)
+			if (!parseResult.ok) throw new Error(parseResult.error)
+
+			return {
+				value: parseResult.value as any,
+				referencedVariableIds: parseResult.variableIds,
+			}
+
+			// TODO - check value is valid according to the rules
+		} else if (fieldType === 'variables') {
+			// Field needs parsing
+			// Note - we don't need to care about the granularity given in `useVariables`,
+			const parseResult = this.parseVariables(String(rawValue.value))
+
+			return {
+				value: parseResult.text,
+				referencedVariableIds: parseResult.variableIds,
+			}
+		} else {
+			// Just use the value as-is
+			return {
+				value: rawValue.value,
+				referencedVariableIds: new Set(),
+			}
+		}
 	}
 }

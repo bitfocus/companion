@@ -1,28 +1,22 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import LogController, { type Logger } from '../Log/Controller.js'
-import type { ParseVariablesResult } from '../Variables/Util.js'
-import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import type { FeedbackEntityModelExt } from './Types.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import {
+	isExpressionOrValue,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 
-/**
- *
- */
-export function ParseInternalControlReference(
-	logger: Logger,
-	parser: VariablesAndExpressionParser,
-	pressLocation: ControlLocation | undefined,
-	options: Record<string, any>,
-	useVariableFields: boolean
-): {
-	location: ControlLocation | null
-	referencedVariables: ReadonlySet<string>
-} {
+export function ParseLocationString(
+	str: string | undefined,
+	pressLocation: ControlLocation | undefined
+): ControlLocation | null {
+	if (!str) return null
+
+	str = str.trim().toLowerCase()
+
+	// Special case handling for local special modes
+	if (str.startsWith('this')) return pressLocation ?? null
+
 	const sanitisePageNumber = (pageNumber: number): number | null => {
 		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
 	}
@@ -47,262 +41,137 @@ export function ParseInternalControlReference(
 		}
 	}
 
-	const parseLocationString = (str: string | undefined): ControlLocation | null => {
-		if (!str) return null
+	const parts = str.split('/') // TODO - more chars
 
-		const parts = str.split('/') // TODO - more chars
+	// TODO - this is horrible, and needs reworking to be simpler
 
-		// TODO - this is horrible, and needs reworking to be simpler
-
-		if (parts.length === 1 && parts[0].startsWith('bank')) {
-			return pressLocation ? parseBankString(pressLocation.pageNumber, parts[0].slice(4)) : null
-		} else if (parts.length === 2) {
-			if (parts[1].startsWith('bank')) {
-				const safePageNumber = sanitisePageNumber(Number(parts[0]))
-				if (safePageNumber === null) return null
-				return parseBankString(safePageNumber, parts[1].slice(4))
-			} else {
-				return pressLocation
-					? {
-							pageNumber: pressLocation.pageNumber,
-							column: Number(parts[1]),
-							row: Number(parts[0]),
-						}
-					: null
-			}
-		} else if (parts.length === 3) {
+	if (parts.length === 1 && parts[0].startsWith('bank')) {
+		return pressLocation ? parseBankString(pressLocation.pageNumber, parts[0].slice(4)) : null
+	} else if (parts.length === 2) {
+		if (parts[1].startsWith('bank')) {
 			const safePageNumber = sanitisePageNumber(Number(parts[0]))
 			if (safePageNumber === null) return null
-			return {
-				pageNumber: safePageNumber,
-				column: Number(parts[2]),
-				row: Number(parts[1]),
-			}
+			return parseBankString(safePageNumber, parts[1].slice(4))
 		} else {
-			return null
-		}
-	}
-
-	let location: ControlLocation | null = null
-	let referencedVariables: ReadonlySet<string> = new Set<string>()
-
-	let locationTarget = options.location_target
-	if (locationTarget?.startsWith('this:')) locationTarget = 'this'
-
-	switch (locationTarget) {
-		case 'this':
-			location = pressLocation
+			return pressLocation
 				? {
 						pageNumber: pressLocation.pageNumber,
-						column: pressLocation.column,
-						row: pressLocation.row,
+						column: Number(parts[1]),
+						row: Number(parts[0]),
 					}
 				: null
-			break
-		case 'text':
-			if (useVariableFields) {
-				const result = parser.parseVariables(options.location_text)
-
-				location = parseLocationString(result.text)
-				referencedVariables = result.variableIds
-			} else {
-				location = parseLocationString(options.location_text)
-			}
-			break
-		case 'expression':
-			if (useVariableFields) {
-				const result = parser.executeExpression(options.location_expression, 'string')
-				if (result.ok) {
-					location = parseLocationString(stringifyVariableValue(result.value) ?? '')
-				} else {
-					logger.warn(`${result.error}, in expression: "${options.location_expression}"`)
-				}
-				referencedVariables = result.variableIds
-			}
-			break
+		}
+	} else if (parts.length === 3) {
+		const safePageNumber = sanitisePageNumber(Number(parts[0]))
+		if (safePageNumber === null) return null
+		return {
+			pageNumber: safePageNumber,
+			column: Number(parts[2]),
+			row: Number(parts[1]),
+		}
+	} else {
+		return null
 	}
-
-	return { location, referencedVariables }
 }
 
-export const CHOICES_DYNAMIC_LOCATION: SomeCompanionInputField[] = [
-	{
-		type: 'dropdown',
-		label: 'Target',
-		id: 'location_target',
-		default: 'this',
-		choices: [
-			{ id: 'this', label: 'This button' },
-			{ id: 'text', label: 'From text' },
-			{ id: 'expression', label: 'From expression' },
-		],
+export const CHOICES_LOCATION: SomeCompanionInputField = {
+	type: 'textinput',
+	label: 'Location',
+	description: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
+	expressionDescription: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
+	id: 'location',
+	default: '$(this:page)/$(this:row)/$(this:column)',
+	useVariables: {
+		local: true,
 	},
-	{
-		type: 'textinput',
-		label: 'Location (text with variables)',
-		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
-		id: 'location_text',
-		default: '$(this:page)/$(this:row)/$(this:column)',
-		isVisibleUi: {
-			type: 'expression',
-			fn: '$(options:location_target) == "text"',
-		},
-		useVariables: {
-			local: true,
-		},
-	},
-	{
-		type: 'textinput',
-		label: 'Location (expression)',
-		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
-		id: 'location_expression',
-		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
-		isVisibleUi: {
-			type: 'expression',
-			fn: '$(options:location_target) == "expression"',
-		},
-		useVariables: {
-			local: true,
-		},
-		isExpression: true,
-	},
-]
+}
 
-export const CHOICES_DYNAMIC_LOCATION_OR_TRIGGER: SomeCompanionInputField[] = [
-	{
-		type: 'dropdown',
-		label: 'Target',
-		id: 'location_target',
-		default: 'this',
-		choices: [
-			{ id: 'this', label: 'This button/trigger' },
-			{ id: 'text', label: 'Button from text' },
-			{ id: 'expression', label: 'Button from expression' },
-		],
-	},
-	{
-		type: 'textinput',
-		label: 'Button location (text with variables)',
-		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
-		id: 'location_text',
-		default: '$(this:page)/$(this:row)/$(this:column)',
-		isVisibleUi: {
-			type: 'expression',
-			fn: '$(options:location_target) == "text"',
-		},
-		useVariables: {
-			local: true,
-		},
-	},
-	{
-		type: 'textinput',
-		label: 'Button location (expression)',
-		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
-		id: 'location_expression',
-		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
-		isVisibleUi: {
-			type: 'expression',
-			fn: '$(options:location_target) == "expression"',
-		},
-		useVariables: {
-			local: true,
-		},
-		isExpression: true,
-	},
-]
+export function convertOldLocationToExpressionOrValue(options: Record<string, any>): boolean {
+	if (options.location) return false
 
-export class InternalModuleUtils {
-	readonly #logger = LogController.createLogger('Internal/InternalModuleUtils')
-
-	readonly #controlsController: ControlsController
-
-	constructor(controlsController: ControlsController) {
-		this.#controlsController = controlsController
+	if (options.location_target === 'this:only-this-run') {
+		options.location = {
+			isExpression: false,
+			value: 'this-run',
+		} satisfies ExpressionOrValue<any>
+	} else if (options.location_target === 'this:all-runs') {
+		options.location = {
+			isExpression: false,
+			value: 'this-all-runs',
+		} satisfies ExpressionOrValue<any>
+	} else if (options.location_target === 'this') {
+		options.location = {
+			isExpression: false,
+			value: '$(this:location)',
+		} satisfies ExpressionOrValue<any>
+	} else if (options.location_target === 'expression') {
+		options.location = {
+			isExpression: true,
+			value: options.location_expression || '',
+		} satisfies ExpressionOrValue<any>
+	} else {
+		options.location = {
+			isExpression: false,
+			value: options.location_text || '',
+		} satisfies ExpressionOrValue<any>
 	}
 
-	/**
-	 * Parse and execute an expression in a string
-	 * @param str - String containing the expression to parse
-	 * @param extras
-	 * @param requiredType - Fail if the result is not of specified type
-	 * @param injectedVariableValues - Inject some variable values
-	 * @returns result of the expression
-	 */
-	executeExpressionForInternalActionOrFeedback(
-		str: string,
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		requiredType?: string
-		// injectedVariableValues?: VariableValues
-	): ExecuteExpressionResult {
-		const injectedVariableValuesComplete = {
-			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			// ...injectedVariableValues,
+	delete options.location_target
+	delete options.location_text
+	delete options.location_expression
+	return true
+}
+
+export function convertOldSplitOptionToExpression(
+	options: Record<string, any>,
+	keys: {
+		useVariables: string
+		simple: string
+		variable: string
+		result: string
+	},
+	variableIsExpression: boolean
+): void {
+	if (options[keys.useVariables]) {
+		if (variableIsExpression) {
+			options[keys.result] = {
+				isExpression: true,
+				value: options[keys.variable] || '',
+			} satisfies ExpressionOrValue<string>
+		} else {
+			options[keys.result] = {
+				isExpression: true,
+				value: options[keys.variable] === undefined ? '' : `parseVariables(\`${options[keys.variable]}\`)`,
+			} satisfies ExpressionOrValue<string>
 		}
-
-		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.controlId,
-			injectedVariableValuesComplete
-		)
-
-		return parser.executeExpression(String(str), requiredType)
+	} else {
+		options[keys.result] = {
+			isExpression: false,
+			value: options[keys.simple] || '',
+		} satisfies ExpressionOrValue<string>
 	}
 
-	/**
-	 * Parse the variables in a string
-	 * @param str - String to parse variables in
-	 * @param extras
-	 * @param injectedVariableValues - Inject some variable values
-	 * @returns with variables replaced with values
-	 */
-	parseVariablesForInternalActionOrFeedback(
-		str: string,
-		extras: RunActionExtras | FeedbackEntityModelExt
-		// injectedVariableValues?: VariablesCache
-	): ParseVariablesResult {
-		const injectedVariableValuesComplete = {
-			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			// ...injectedVariableValues,
-		}
+	delete options[keys.useVariables]
+	delete options[keys.variable]
+	if (keys.simple !== keys.result) delete options[keys.simple]
+}
 
-		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.controlId,
-			injectedVariableValuesComplete
-		)
+export function convertSimplePropertyToExpresionValue(
+	options: Record<string, any>,
+	key: string,
+	oldKey?: string,
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+	defaultValue?: any
+): boolean {
+	if (!isExpressionOrValue(options[key])) {
+		options[key] = {
+			isExpression: false,
+			value: options[oldKey ?? key] ?? defaultValue,
+		} satisfies ExpressionOrValue<any>
+		if (oldKey) delete options[oldKey]
 
-		return parser.parseVariables(str)
-	}
-
-	/**
-	 *
-	 */
-	parseInternalControlReferenceForActionOrFeedback(
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		options: Record<string, any>,
-		useVariableFields: boolean
-	): {
-		location: ControlLocation | null
-		referencedVariables: ReadonlySet<string>
-	} {
-		const injectedVariableValuesComplete = {
-			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
-			// ...injectedVariableValues,
-		}
-
-		const parser = this.#controlsController.createVariablesAndExpressionParser(
-			extras.controlId,
-			injectedVariableValuesComplete
-		)
-
-		return ParseInternalControlReference(this.#logger, parser, extras.location, options, useVariableFields)
-	}
-
-	/**
-	 * Variables to inject based on an internal action
-	 */
-	#getInjectedVariablesForLocation(extras: RunActionExtras): VariableValues {
-		return {
-			// Doesn't need to be reactive, it's only for an action
-			'$(this:surface_id)': extras.surfaceId,
-		}
+		return true
+	} else {
+		return false
 	}
 }

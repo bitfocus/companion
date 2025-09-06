@@ -23,6 +23,7 @@ import z from 'zod'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 
 export interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>, connection_labels: Set<string>]
@@ -159,6 +160,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		values.set('$(this:page)', location?.pageNumber)
 		values.set('$(this:column)', location?.column)
 		values.set('$(this:row)', location?.row)
+		values.set('$(this:location)', location ? formatLocation(location) : undefined)
 
 		// Reactivity happens for these because of references to the inner variables
 		values.set(

@@ -753,6 +753,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				feedbackType: null,
 				feedbackStyle: undefined,
+				internalUsesAutoParser: false,
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
@@ -789,6 +790,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
+				internalUsesAutoParser: false,
 			} satisfies Complete<ClientEntityDefinition>
 		}
 

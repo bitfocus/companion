@@ -202,7 +202,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 * @param defaultVal Default value of the variable (string)
 	 * @returns null or failure reason
 	 */
-	createVariable(name: string, defaultVal: string): string | null {
+	createVariable(name: string, defaultVal: VariableValue | undefined): string | null {
 		if (this.#custom_variables[name]) {
 			return `Variable "${name}" already exists`
 		}

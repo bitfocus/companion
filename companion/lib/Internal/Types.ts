@@ -1,20 +1,37 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VisitorReferencesCollectorVisitor } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/ReferencesUpdater.js'
-import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
+import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues, OptionsObject } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { EventEmitter } from 'events'
 import type { VariableDefinition, VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
-export interface FeedbackEntityModelExt extends FeedbackEntityModel {
+export interface FeedbackForInternalExecution {
 	controlId: string
 	location: ControlLocation | undefined
-	referencedVariables: string[] | null
+
+	id: string
+	definitionId: string
+
+	options: OptionsObject
+}
+
+export interface ActionForInternalExecution {
+	// controlId: string
+	// location: ControlLocation | undefined
+
+	id: string
+	definitionId: string
+
+	options: OptionsObject
+
+	rawEntity: ControlEntityInstance
 }
 
 export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor
@@ -52,9 +69,10 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	 * @returns Whether the action was handled
 	 */
 	executeAction?(
-		action: ControlEntityInstance,
+		action: ActionForInternalExecution,
 		extras: RunActionExtras,
-		actionRunner: ActionRunner
+		actionRunner: ActionRunner,
+		parser: VariablesAndExpressionParser
 	): Promise<boolean> | boolean
 
 	/**
@@ -69,7 +87,8 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	 * Get an updated value for a feedback
 	 */
 	executeFeedback?: (
-		feedback: FeedbackEntityModelExt
+		feedback: FeedbackForInternalExecution,
+		parser: VariablesAndExpressionParser
 	) => CompanionFeedbackButtonStyleResult | boolean | ExecuteFeedbackResultWithReferences | void
 
 	feedbackUpgrade?: (feedback: FeedbackEntityModel, controlId: string) => FeedbackEntityModel | void
@@ -83,8 +102,6 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 	getVariableDefinitions?: () => VariableDefinition[]
 	updateVariables?: () => void
-
-	onVariablesChanged?: (changedVariablesSet: Set<string>, fromControlId: string | null) => void
 }
 
 export interface ExecuteFeedbackResultWithReferences {

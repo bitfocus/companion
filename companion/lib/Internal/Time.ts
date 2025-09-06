@@ -17,13 +17,12 @@ import type {
 	InternalVisitor,
 } from './Types.js'
 import { EventEmitter } from 'events'
-import type { InternalModuleUtils } from './Util.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #startTime = Math.floor(Date.now() / 1000)
 
-	constructor(_internalUtils: InternalModuleUtils) {
+	constructor() {
 		super()
 
 		setInterval(() => {

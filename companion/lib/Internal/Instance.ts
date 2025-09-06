@@ -16,18 +16,17 @@ import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
 	InternalActionDefinition,
 	InternalFeedbackDefinition,
 	InternalModuleFragmentEvents,
+	FeedbackForInternalExecution,
+	ActionForInternalExecution,
 } from './Types.js'
 import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
-import type { InternalModuleUtils } from './Util.js'
 import LogController from '../Log/Controller.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -77,7 +76,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	)
 
-	constructor(_internalUrils: InternalModuleUtils, instanceController: InstanceController) {
+	constructor(instanceController: InstanceController) {
 		super()
 
 		this.#instanceController = instanceController
@@ -154,6 +153,8 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						],
 					},
 				],
+
+				internalUsesAutoParser: false,
 			},
 			connection_collection_enabled: {
 				label: 'Connection: Enable or disable connection collection',
@@ -176,6 +177,8 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						],
 					},
 				],
+
+				internalUsesAutoParser: false,
 			},
 		}
 	}
@@ -246,6 +249,8 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0x404040,
 					},
 				],
+
+				internalUsesAutoParser: false,
 			},
 			instance_custom_state: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -277,6 +282,8 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						],
 					},
 				],
+
+				internalUsesAutoParser: false,
 			},
 			connection_collection_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -304,91 +311,98 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						],
 					},
 				],
+
+				internalUsesAutoParser: false,
 			},
 		}
 	}
 
-	executeAction(action: ControlEntityInstance, _extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
 		if (action.definitionId === 'instance_control') {
-			let newState = action.rawOptions.enable == 'true'
-			if (action.rawOptions.enable == 'toggle') {
-				const curState = this.#instanceController.getInstanceStatus(action.rawOptions.instance_id)
+			let newState = action.options.enable == 'true'
+			if (action.options.enable == 'toggle') {
+				const curState = this.#instanceController.getInstanceStatus(String(action.options.instance_id))
 
 				newState = !curState?.category
 			}
 
-			this.#instanceController.enableDisableConnection(action.rawOptions.instance_id, newState)
+			this.#instanceController.enableDisableConnection(String(action.options.instance_id), newState)
 			return true
 		} else if (action.definitionId === 'connection_collection_enabled') {
-			let newState: boolean | 'toggle' = action.rawOptions.enable == 'true'
-			if (action.rawOptions.enable == 'toggle') newState = 'toggle'
+			let newState: boolean | 'toggle' = action.options.enable == 'true'
+			if (action.options.enable == 'toggle') newState = 'toggle'
 
-			this.#instanceController.connectionCollections.setCollectionEnabled(action.rawOptions.collection_id, newState)
+			this.#instanceController.connectionCollections.setCollectionEnabled(
+				String(action.options.collection_id),
+				newState
+			)
 			return true
 		} else {
 			return false
 		}
 	}
 
-	executeFeedback(feedback: FeedbackEntityModelExt): CompanionFeedbackButtonStyleResult | boolean | void {
+	executeFeedback(feedback: FeedbackForInternalExecution): CompanionFeedbackButtonStyleResult | boolean | void {
 		if (feedback.definitionId === 'instance_status') {
 			if (feedback.options.instance_id == 'all') {
 				if (this.#instancesError > 0) {
 					return {
-						color: feedback.options.error_fg,
-						bgcolor: feedback.options.error_bg,
+						color: feedback.options.error_fg as any,
+						bgcolor: feedback.options.error_bg as any,
 					}
 				}
 
 				if (this.#instancesWarning > 0) {
 					return {
-						color: feedback.options.warning_fg,
-						bgcolor: feedback.options.warning_bg,
+						color: feedback.options.warning_fg as any,
+						bgcolor: feedback.options.warning_bg as any,
 					}
 				}
 
 				return {
-					color: feedback.options.ok_fg,
-					bgcolor: feedback.options.ok_bg,
+					color: feedback.options.ok_fg as any,
+					bgcolor: feedback.options.ok_bg as any,
 				}
 			}
 
-			const cur_instance = this.#instanceController.getInstanceStatus(feedback.options.instance_id)
+			const cur_instance = this.#instanceController.getInstanceStatus(String(feedback.options.instance_id))
 			if (cur_instance !== undefined) {
 				switch (cur_instance.category) {
 					case 'error':
 						return {
-							color: feedback.options.error_fg,
-							bgcolor: feedback.options.error_bg,
+							color: feedback.options.error_fg as any,
+							bgcolor: feedback.options.error_bg as any,
 						}
 					case 'warning':
 						return {
-							color: feedback.options.warning_fg,
-							bgcolor: feedback.options.warning_bg,
+							color: feedback.options.warning_fg as any,
+							bgcolor: feedback.options.warning_bg as any,
 						}
 					case 'good':
 						return {
-							color: feedback.options.ok_fg,
-							bgcolor: feedback.options.ok_bg,
+							color: feedback.options.ok_fg as any,
+							bgcolor: feedback.options.ok_bg as any,
 						}
 					default:
 						return {
-							color: feedback.options.disabled_fg,
-							bgcolor: feedback.options.disabled_bg,
+							color: feedback.options.disabled_fg as any,
+							bgcolor: feedback.options.disabled_bg as any,
 						}
 				}
 			}
 			// disabled has no 'status' entry
 			return {
-				color: feedback.options.disabled_fg,
-				bgcolor: feedback.options.disabled_bg,
+				color: feedback.options.disabled_fg as any,
+				bgcolor: feedback.options.disabled_bg as any,
 			}
 		} else if (feedback.definitionId === 'instance_custom_state') {
 			const selected_status = this.#instanceStatuses[String(feedback.options.instance_id)]?.category ?? null
 
 			return selected_status == feedback.options.state
 		} else if (feedback.definitionId === 'connection_collection_enabled') {
-			const state = this.#instanceController.connectionCollections.isCollectionEnabled(feedback.options.collection_id)
+			const state = this.#instanceController.connectionCollections.isCollectionEnabled(
+				String(feedback.options.collection_id)
+			)
 			const target = feedback.options.enable == 'true'
 			return state == target
 		}

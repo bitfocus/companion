@@ -113,6 +113,8 @@ Additionally, in some places there are some builtin local variables under the `$
   - Variable: `this:column`
 - Row number of the button
   - Variable: `this:row`
+- Location of the button
+  - Variable: `this:location`
 - The current step of this button
   - Variable: `this:step`
 - Page name of the current page
