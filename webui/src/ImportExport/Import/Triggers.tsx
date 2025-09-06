@@ -4,6 +4,8 @@ import { ImportRemap } from './Page.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFileCircleMinus, faFileCirclePlus } from '@fortawesome/free-solid-svg-icons'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject
@@ -81,10 +83,11 @@ export function ImportTriggersTab({
 	return (
 		<>
 			<h4>Triggers</h4>
-			<table className="table table-responsive-sm mb-4">
+			<p>Select the triggers you want to import.</p>
+			<table className="table table-responsive-sm mb-3">
 				<thead>
 					<tr>
-						<th>&nbsp;</th>
+						<th>Import</th>
 						<th>Name</th>
 					</tr>
 				</thead>
@@ -101,24 +104,32 @@ export function ImportTriggersTab({
 					))}
 				</tbody>
 			</table>
+			<CButtonGroup className="mb-3">
+				<CButton
+					color="info"
+					onClick={selectAllTriggers}
+					disabled={selectedTriggers.length === Object.keys(snapshot.triggers || {}).length}
+				>
+					Select all
+				</CButton>
+				<CButton color="info" onClick={unselectAllTriggers} disabled={selectedTriggers.length === 0}>
+					Unselect all
+				</CButton>
+			</CButtonGroup>
 
 			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
-
-			<div className="mt-2">
-				<CButtonGroup style={{ float: 'right' }}>
-					<CButton color="info" onClick={selectAllTriggers}>
-						Select all
-					</CButton>
-					<CButton color="info" onClick={unselectAllTriggers}>
-						Unselect all
-					</CButton>
-				</CButtonGroup>
+			<h4 className="mt-3">Import Triggers</h4>
+			<p>
+				Clicking a button below will complete the import of the selected triggers. You can add the triggers to any
+				existing ones, or completely replace all current triggers with the imported ones.
+			</p>
+			<div className="mt-3">
 				<CButtonGroup>
-					<CButton color="success" data-replace={true} onClick={doImport} disabled={selectedTriggers.length === 0}>
-						Import (Replace existing)
+					<CButton color="success" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
+						<FontAwesomeIcon icon={faFileCirclePlus} /> Add to existing triggers
 					</CButton>
-					<CButton color="primary" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
-						Import (Append to existing)
+					<CButton color="warning" data-replace={true} onClick={doImport} disabled={selectedTriggers.length === 0}>
+						<FontAwesomeIcon icon={faFileCircleMinus} /> Replace existing triggers
 					</CButton>
 				</CButtonGroup>
 			</div>

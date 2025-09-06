@@ -210,14 +210,18 @@ export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: I
 
 	return (
 		<div id="import_resolve">
-			<h5>Link import connections with existing connections</h5>
-
+			<h5>Import Connections Behavior</h5>
+			<p>
+				If you have existing connections that match the type of connections in the import, you can link them here.
+				Otherwise, new connections will be created for any connections left unlinked. You can also choose to ignore
+				certain connections if they are not needed.
+			</p>
 			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
-						<th>Select connection</th>
-						<th>Config connection type</th>
-						<th>Config connection name</th>
+						<th>Behavior</th>
+						<th>Import Connection Type</th>
+						<th>Import Connection Name</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -276,7 +280,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 					<option value="_ignore">[ Ignore ]</option>
 					{currentConnections.map(([id, conn]) => (
 						<option key={id} value={id}>
-							{conn.label}
+							Link to {conn.label}
 						</option>
 					))}
 				</CFormSelect>
