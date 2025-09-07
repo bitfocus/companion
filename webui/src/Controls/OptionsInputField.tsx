@@ -89,6 +89,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 					disabled={readonly}
 					setValue={setValue2}
 					checkValid={checkValid}
+					multiline={option.multiline}
 				/>
 			)
 			break

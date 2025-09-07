@@ -129,6 +129,7 @@ export interface CompanionInputFieldTextInputExtended extends CompanionInputFiel
 	placeholder?: string
 	/** A UI hint indicating the field is an expression */
 	isExpression?: boolean
+	multiline?: boolean
 }
 export interface CompanionInputFieldDropdownExtended extends CompanionInputFieldBaseExtended {
 	type: 'dropdown'

@@ -45,6 +45,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					useVariables={features.variables}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					isExpression={definition.isExpression}
+					multiline={definition.multiline}
 					setValue={setValue2}
 					checkValid={checkValid}
 				/>
