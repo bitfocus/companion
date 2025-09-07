@@ -9,7 +9,6 @@ import type {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { ControlWithLayeredStyle } from '../Controls/IControlFragments.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
 export interface ElementStreamResult {
