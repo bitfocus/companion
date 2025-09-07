@@ -5,9 +5,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useCallback } from 'react'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
 type ExtractValue<T> = T extends ExpressionOrValue<infer U> ? U : never
 type SetValueFn<TObj, TKey extends keyof TObj> = (value: ExtractValue<TObj[TKey]>) => void
@@ -18,17 +18,16 @@ export interface InputFieldCommonProps<TObj, TKey extends keyof TObj> {
 }
 
 interface FormPropertyFieldProps<TObj, TKey extends keyof TObj> {
-	controlId: string
 	elementProps: TObj
 	property: TKey
 	label: string | React.ReactNode
-	localVariablesStore: LocalVariablesStore
 	children: (elementProp: { value: ExtractValue<TObj[TKey]> }, setValue: SetValueFn<TObj, TKey>) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField<
 	TObj extends ButtonGraphicsElementBase,
 	TKey extends string & keyof TObj,
->({ controlId, elementProps, property, label, localVariablesStore, children }: FormPropertyFieldProps<TObj, TKey>) {
+>({ elementProps, property, label, children }: FormPropertyFieldProps<TObj, TKey>) {
+	const { controlId, localVariablesStore } = useElementPropertiesContext()
 	const updateOptionValueMutation = useMutationExt(trpc.controls.styles.updateOptionValue.mutationOptions())
 	const updateOptionIsExpressionMutation = useMutationExt(
 		trpc.controls.styles.updateOptionIsExpression.mutationOptions()

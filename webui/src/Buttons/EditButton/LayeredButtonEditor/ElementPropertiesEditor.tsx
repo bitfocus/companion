@@ -11,6 +11,7 @@ import { BoxElementPropertiesEditor } from './BoxElementPropertiesEditor.js'
 import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { GroupElementPropertiesEditor } from './GroupElementPropertiesEditor.js'
 import { LineElementPropertiesEditor } from './LineElementPropertiesEditor.js'
+import { ElementPropertiesProvider } from './ElementPropertiesContext.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
@@ -23,76 +24,36 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 	localVariablesStore,
 }: ElementPropertiesEditorProps) {
 	return (
-		<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
-			<ElementCommonProperties
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-			/>
+		<ElementPropertiesProvider controlId={controlId} localVariablesStore={localVariablesStore}>
+			<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
+				<ElementCommonProperties elementProps={elementProps} />
 
-			<ElementPropertiesEditorInner
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-			/>
-		</CForm>
+				<ElementPropertiesEditorInner elementProps={elementProps} />
+			</CForm>
+		</ElementPropertiesProvider>
 	)
 })
 
+interface ElementPropertiesEditorInnerProps {
+	elementProps: Readonly<SomeButtonGraphicsElement>
+}
+
 const ElementPropertiesEditorInner = observer(function ElementPropertiesEditorInner({
-	controlId,
 	elementProps,
-	localVariablesStore,
-}: ElementPropertiesEditorProps) {
+}: ElementPropertiesEditorInnerProps) {
 	switch (elementProps.type) {
 		case 'image':
-			return (
-				<ImageElementPropertiesEditor
-					controlId={controlId}
-					elementProps={elementProps}
-					localVariablesStore={localVariablesStore}
-				/>
-			)
+			return <ImageElementPropertiesEditor elementProps={elementProps} />
 		case 'text':
-			return (
-				<TextElementPropertiesEditor
-					controlId={controlId}
-					elementProps={elementProps}
-					localVariablesStore={localVariablesStore}
-				/>
-			)
+			return <TextElementPropertiesEditor elementProps={elementProps} />
 		case 'canvas':
-			return (
-				<CanvasElementPropertiesEditor
-					controlId={controlId}
-					elementProps={elementProps}
-					localVariablesStore={localVariablesStore}
-				/>
-			)
+			return <CanvasElementPropertiesEditor elementProps={elementProps} />
 		case 'group':
-			return (
-				<GroupElementPropertiesEditor
-					controlId={controlId}
-					elementProps={elementProps}
-					localVariablesStore={localVariablesStore}
-				/>
-			)
+			return <GroupElementPropertiesEditor elementProps={elementProps} />
 		case 'box':
-			return (
-				<BoxElementPropertiesEditor
-					controlId={controlId}
-					elementProps={elementProps}
-					localVariablesStore={localVariablesStore}
-				/>
-			)
+			return <BoxElementPropertiesEditor elementProps={elementProps} />
 		case 'line':
-			return (
-				<LineElementPropertiesEditor
-					controlId={controlId}
-					elementProps={elementProps}
-					localVariablesStore={localVariablesStore}
-				/>
-			)
+			return <LineElementPropertiesEditor elementProps={elementProps} />
 		default:
 			assertNever(elementProps)
 			return <div>Unsupported element type!</div>

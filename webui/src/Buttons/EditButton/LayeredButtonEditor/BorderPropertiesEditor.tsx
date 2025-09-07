@@ -2,7 +2,6 @@ import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { ColorInputField } from '~/Components/ColorInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
@@ -16,49 +15,27 @@ type ElementWithBorderProps = ButtonGraphicsElementBase &
 	MakeExpressionable<ButtonGraphicsBorderProperties & { type: string }>
 
 interface BorderPropertiesEditorProps {
-	controlId: string
 	elementProps: Readonly<ElementWithBorderProps>
-	localVariablesStore: LocalVariablesStore
 	borderName?: string // Optional name for the border, if needed
 }
 
 export const BorderPropertiesEditor = observer(function BorderPropertiesEditor({
-	controlId,
 	elementProps,
-	localVariablesStore,
 	borderName,
 }: BorderPropertiesEditorProps) {
 	if (!borderName) borderName = 'Border'
 
 	return (
 		<>
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="borderWidth"
-				label={`${borderName} Width`}
-			>
+			<FormPropertyField elementProps={elementProps} property="borderWidth" label={`${borderName} Width`}>
 				{(elementProp, setValue) => <FieldBorderWidthInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="borderColor"
-				label={`${borderName} Color`}
-			>
+			<FormPropertyField elementProps={elementProps} property="borderColor" label={`${borderName} Color`}>
 				{(elementProp, setValue) => <FieldBorderColorInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="borderPosition"
-				label={`${borderName} Position`}
-			>
+			<FormPropertyField elementProps={elementProps} property="borderPosition" label={`${borderName} Position`}>
 				{(elementProp, setValue) => <FieldBorderPositionInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 		</>

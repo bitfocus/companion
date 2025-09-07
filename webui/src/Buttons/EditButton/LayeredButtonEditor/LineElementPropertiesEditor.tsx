@@ -2,67 +2,33 @@ import { ButtonGraphicsLineElement } from '@companion-app/shared/Model/StyleLaye
 import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { BorderPropertiesEditor } from './BorderPropertiesEditor.js'
 
 export const LineElementPropertiesEditor = observer(function LineElementPropertiesEditor({
-	controlId,
 	elementProps,
-	localVariablesStore,
 }: {
-	controlId: string
 	elementProps: Readonly<ButtonGraphicsLineElement>
-	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="fromX"
-				label="From X"
-			>
+			<FormPropertyField elementProps={elementProps} property="fromX" label="From X">
 				{(elementProp, setValue) => <FieldFromXInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="fromY"
-				label="From Y"
-			>
+			<FormPropertyField elementProps={elementProps} property="fromY" label="From Y">
 				{(elementProp, setValue) => <FieldFromYInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="toX"
-				label="To X"
-			>
+			<FormPropertyField elementProps={elementProps} property="toX" label="To X">
 				{(elementProp, setValue) => <FieldToXInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="toY"
-				label="To Y"
-			>
+			<FormPropertyField elementProps={elementProps} property="toY" label="To Y">
 				{(elementProp, setValue) => <FieldToYInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<BorderPropertiesEditor
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				borderName="Line"
-			/>
+			<BorderPropertiesEditor elementProps={elementProps} borderName="Line" />
 		</>
 	)
 })

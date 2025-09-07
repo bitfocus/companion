@@ -10,21 +10,17 @@ import {
 import { TextInputField } from '~/Components/TextInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
-	controlId,
 	elementProps,
-	localVariablesStore,
 }: {
-	controlId: string
 	elementProps: Readonly<SomeButtonGraphicsElement>
-	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
@@ -32,7 +28,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 				Element Name
 			</CFormLabel>
 			<CCol sm={8}>
-				<FieldElementNameInput controlId={controlId} elementProps={elementProps} />
+				<FieldElementNameInput elementProps={elementProps} />
 			</CCol>
 
 			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && (
@@ -43,30 +39,18 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 						</InlineHelp>
 					</CFormLabel>
 					<CCol sm={8}>
-						<FieldElementUsageInput controlId={controlId} elementProps={elementProps} />
+						<FieldElementUsageInput elementProps={elementProps} />
 					</CCol>
 				</>
 			)}
 
 			{elementProps.type !== 'canvas' && (
 				<>
-					<FormPropertyField
-						controlId={controlId}
-						elementProps={elementProps}
-						localVariablesStore={localVariablesStore}
-						property="enabled"
-						label="Enabled"
-					>
+					<FormPropertyField elementProps={elementProps} property="enabled" label="Enabled">
 						{(elementProp, setValue) => <FieldEnabledInput elementProp={elementProp} setValue={setValue} />}
 					</FormPropertyField>
 
-					<FormPropertyField
-						controlId={controlId}
-						elementProps={elementProps}
-						localVariablesStore={localVariablesStore}
-						property="opacity"
-						label="Opacity"
-					>
+					<FormPropertyField elementProps={elementProps} property="opacity" label="Opacity">
 						{(elementProp, setValue) => <FieldOpacityInput elementProp={elementProp} setValue={setValue} />}
 					</FormPropertyField>
 				</>
@@ -76,12 +60,11 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 })
 
 const FieldElementNameInput = observer(function FieldElementNameInput({
-	controlId,
 	elementProps,
 }: {
-	controlId: string
 	elementProps: ButtonGraphicsElementBase
 }) {
+	const { controlId } = useElementPropertiesContext()
 	const setElementNameMutation = useMutationExt(trpc.controls.styles.setElementName.mutationOptions())
 
 	const setName = useCallback(
@@ -102,12 +85,11 @@ const FieldElementNameInput = observer(function FieldElementNameInput({
 })
 
 const FieldElementUsageInput = observer(function FieldElementUsageInput({
-	controlId,
 	elementProps,
 }: {
-	controlId: string
 	elementProps: ButtonGraphicsElementBase
 }) {
+	const { controlId } = useElementPropertiesContext()
 	const setElementUsageMutation = useMutationExt(trpc.controls.styles.setElementUsage.mutationOptions())
 
 	const setUsage = useCallback(

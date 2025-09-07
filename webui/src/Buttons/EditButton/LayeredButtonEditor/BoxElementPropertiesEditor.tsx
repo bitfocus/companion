@@ -3,42 +3,23 @@ import { observer } from 'mobx-react-lite'
 import React from 'react'
 import { ColorInputField } from '~/Components/ColorInputField.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { ElementBoundsProperties } from './ElementBoundsProperties.js'
 import { BorderPropertiesEditor } from './BorderPropertiesEditor.js'
 
 export const BoxElementPropertiesEditor = observer(function BoxElementPropertiesEditor({
-	controlId,
 	elementProps,
-	localVariablesStore,
 }: {
-	controlId: string
 	elementProps: Readonly<ButtonGraphicsBoxElement>
-	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
-			<ElementBoundsProperties
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-			/>
+			<ElementBoundsProperties elementProps={elementProps} />
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="color"
-				label="Color"
-			>
+			<FormPropertyField elementProps={elementProps} property="color" label="Color">
 				{(elementProp, setValue) => <FieldFillColorInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<BorderPropertiesEditor
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-			/>
+			<BorderPropertiesEditor elementProps={elementProps} />
 		</>
 	)
 })

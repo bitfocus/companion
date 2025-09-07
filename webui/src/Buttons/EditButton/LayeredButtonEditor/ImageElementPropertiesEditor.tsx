@@ -10,64 +10,31 @@ import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUti
 import { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ElementBoundsProperties } from './ElementBoundsProperties.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 export const ImageElementPropertiesEditor = observer(function ImageElementPropertiesEditor({
-	controlId,
 	elementProps,
-	localVariablesStore,
 }: {
-	controlId: string
 	elementProps: Readonly<ButtonGraphicsImageElement>
-	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
-			<ElementBoundsProperties
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-			/>
+			<ElementBoundsProperties elementProps={elementProps} />
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="base64Image"
-				label="Image"
-			>
+			<FormPropertyField elementProps={elementProps} property="base64Image" label="Image">
 				{(elementProp, setValue) => <FieldImagePickerInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="halign"
-				label="Horizontal Alignment"
-			>
+			<FormPropertyField elementProps={elementProps} property="halign" label="Horizontal Alignment">
 				{(elementProp, setValue) => (
 					<FieldImageHorizontalAlignmentInput elementProp={elementProp} setValue={setValue} />
 				)}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="valign"
-				label="Vertical Alignment"
-			>
+			<FormPropertyField elementProps={elementProps} property="valign" label="Vertical Alignment">
 				{(elementProp, setValue) => <FieldImageVerticalAlignmentInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="fillMode"
-				label="Fill Mode"
-			>
+			<FormPropertyField elementProps={elementProps} property="fillMode" label="Fill Mode">
 				{(elementProp, setValue) => <FieldImageFillModeInput elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 		</>

@@ -1,6 +1,6 @@
 import { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { ControlOptionsEditor } from './ControlOptionsEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ButtonEditorExtraTabs, ButtonEditorTabs } from '../ButtonEditorTabs.js'
@@ -38,7 +38,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 		console.log('new store')
 		return new LayeredStyleStore()
 	})
-	useEffect(() => {
+	useMemo(() => {
 		console.log('update data')
 		styleStore.updateData(config.style?.layers || [])
 	}, [styleStore, config.style?.layers])

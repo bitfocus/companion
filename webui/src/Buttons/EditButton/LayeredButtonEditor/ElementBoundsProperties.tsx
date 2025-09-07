@@ -7,59 +7,30 @@ import {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 type ButtonGraphicsDrawBoundsExt = MakeExpressionable<ButtonGraphicsDrawBounds & { type: string }> &
 	ButtonGraphicsElementBase
 
 export const ElementBoundsProperties = observer(function ElementBoundsProperties({
-	controlId,
 	elementProps,
-	localVariablesStore,
 }: {
-	controlId: string
 	elementProps: Readonly<ButtonGraphicsDrawBoundsExt>
-	localVariablesStore: LocalVariablesStore
 }) {
 	return (
 		<>
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="x"
-				label="X"
-			>
+			<FormPropertyField elementProps={elementProps} property="x" label="X">
 				{(elementProp, setValue) => <FieldX elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="y"
-				label="Y"
-			>
+			<FormPropertyField elementProps={elementProps} property="y" label="Y">
 				{(elementProp, setValue) => <FieldY elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="width"
-				label="Width"
-			>
+			<FormPropertyField elementProps={elementProps} property="width" label="Width">
 				{(elementProp, setValue) => <FieldWidth elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 
-			<FormPropertyField
-				controlId={controlId}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-				property="height"
-				label="Height"
-			>
+			<FormPropertyField elementProps={elementProps} property="height" label="Height">
 				{(elementProp, setValue) => <FieldHeight elementProp={elementProp} setValue={setValue} />}
 			</FormPropertyField>
 		</>
