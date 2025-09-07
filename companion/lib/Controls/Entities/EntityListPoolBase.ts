@@ -2,6 +2,7 @@ import LogController, { Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
 	EntityOwner,
+	FeedbackEntityStyleOverride,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
@@ -591,6 +592,46 @@ export abstract class ControlEntityListPoolBase {
 		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
 		if (entity.setStyleValue(key, value)) {
+			this.commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	entityReplaceStyleOverride(
+		listId: SomeSocketEntityLocation,
+		entityId: string,
+		override: FeedbackEntityStyleOverride
+	): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		const entity = entityList.findById(entityId)
+		if (!entity) return false
+
+		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+
+		if (entity.replaceStyleOverride(override)) {
+			this.commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	entityRemoveStyleOverride(listId: SomeSocketEntityLocation, entityId: string, overrideId: string): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		const entity = entityList.findById(entityId)
+		if (!entity) return false
+
+		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+
+		if (entity.removeStyleOverride(overrideId)) {
 			this.commitChange()
 
 			return true

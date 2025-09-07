@@ -2,7 +2,12 @@ import z from 'zod'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
-import { EntityModelType, EntityOwner, zodEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	EntityOwner,
+	schemaFeedbackEntityStyleOverride,
+	zodEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import LogController from '../Log/Controller.js'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -276,6 +281,48 @@ export function createEntitiesTrpcRouter(
 					throw new Error(`Control "${controlId}" does not support entities or styles`)
 
 				return control.entities.entitySetStyleValue(entityLocation, entityId, key, value)
+			}),
+
+		replaceStyleOverride: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					entityLocation: zodEntityLocation,
+					entityId: z.string(),
+					override: schemaFeedbackEntityStyleOverride,
+				})
+			)
+			.mutation(async ({ input }) => {
+				const { controlId, entityLocation, entityId, override } = input
+
+				const control = controlsMap.get(controlId)
+				if (!control) return false
+
+				if (!control.supportsEntities || !control.supportsLayeredStyle)
+					throw new Error(`Control "${controlId}" does not support entities or layered styles`)
+
+				return control.entities.entityReplaceStyleOverride(entityLocation, entityId, override)
+			}),
+
+		removeStyleOverride: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					entityLocation: zodEntityLocation,
+					entityId: z.string(),
+					overrideId: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const { controlId, entityLocation, entityId, overrideId } = input
+
+				const control = controlsMap.get(controlId)
+				if (!control) return false
+
+				if (!control.supportsEntities || !control.supportsLayeredStyle)
+					throw new Error(`Control "${controlId}" does not support entities or layered styles`)
+
+				return control.entities.entityRemoveStyleOverride(entityLocation, entityId, overrideId)
 			}),
 
 		setVariableName: publicProcedure

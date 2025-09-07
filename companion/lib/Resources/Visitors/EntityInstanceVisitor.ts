@@ -12,6 +12,13 @@ export function visitEntityModel(visitor: InternalVisitor, entity: SomeEntityMod
 		if (entity.style?.text) {
 			visitor.visitString(entity.style, 'text')
 		}
+
+		// Fixup style overrides on layered buttons
+		if (entity.styleOverrides) {
+			for (const override of entity.styleOverrides) {
+				visitor.visitString(override, 'override', entity.id)
+			}
+		}
 	}
 
 	// Fixup any references in entity options
