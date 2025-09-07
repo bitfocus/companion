@@ -5,27 +5,33 @@ import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CForm } from '@coreui/react'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
 import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
-import { ElementPropertiesProvider } from './ElementPropertiesContext.js'
 import { elementSchemas } from './ElementPropertiesSchemas.js'
 import { OptionsInputControl, getInputFeatures } from '~/Controls/OptionsInputField.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { FormPropertyField } from './ElementPropertiesUtil.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { ElementPropertiesProvider, IsPropertyOverridden } from './ElementPropertiesContext.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
 	elementProps: SomeButtonGraphicsElement
 	localVariablesStore: LocalVariablesStore
+	isPropertyOverridden: IsPropertyOverridden
 }
 
 export const ElementPropertiesEditor = observer(function ElementPropertiesEditor({
 	controlId,
 	elementProps,
 	localVariablesStore,
+	isPropertyOverridden,
 }: ElementPropertiesEditorProps) {
 	return (
-		<ElementPropertiesProvider controlId={controlId} localVariablesStore={localVariablesStore}>
+		<ElementPropertiesProvider
+			controlId={controlId}
+			localVariablesStore={localVariablesStore}
+			isPropertyOverridden={isPropertyOverridden}
+		>
 			<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
 				<ElementCommonProperties elementProps={elementProps} />
 
