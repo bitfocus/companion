@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CFormCheck } from '@coreui/react'
+import { CButton, CButtonGroup, CCallout, CFormCheck } from '@coreui/react'
 import React, { ChangeEvent, useCallback, useEffect, useState, useContext } from 'react'
 import { ImportRemap } from './Page.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
@@ -118,21 +118,21 @@ export function ImportTriggersTab({
 			</CButtonGroup>
 
 			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
-			<h5 className="mt-3">Import Triggers</h5>
-			<p>
-				Clicking a button below will complete the import of the selected triggers. You can add the triggers to any
-				existing ones, or completely replace all current triggers with the imported ones.
-			</p>
-			<div className="mt-3">
-				<CButtonGroup>
-					<CButton color="success" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
-						<FontAwesomeIcon icon={faFileCirclePlus} /> Add to existing triggers
-					</CButton>
-					<CButton color="warning" data-replace={true} onClick={doImport} disabled={selectedTriggers.length === 0}>
-						<FontAwesomeIcon icon={faFileCircleExclamation} /> Replace existing triggers
-					</CButton>
-				</CButtonGroup>
-			</div>
+
+			<CCallout color="success">
+				<h5>Import to Existing Triggers</h5>
+				<p>This will import the selected triggers, while keeping your existing triggers.</p>
+				<CButton color="success" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
+					<FontAwesomeIcon icon={faFileCirclePlus} /> Add to existing triggers
+				</CButton>
+			</CCallout>
+			<CCallout color="warning">
+				<h5>Reset & Import Triggers</h5>
+				<p>This will remove all existing triggers and replace them with the selected ones.</p>
+				<CButton color="warning" data-replace={true} onClick={doImport} disabled={selectedTriggers.length === 0}>
+					<FontAwesomeIcon icon={faFileCircleExclamation} /> Reset and import triggers
+				</CButton>
+			</CCallout>
 		</>
 	)
 }

@@ -1,18 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
-import {
-	CAlert,
-	CButton,
-	CButtonGroup,
-	CCallout,
-	CFormCheck,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CTabContent,
-	CTabPane,
-} from '@coreui/react'
+import { CAlert, CButton, CCallout, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faClock, faDownload, faFileImport, faGlobe, faPlug, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'

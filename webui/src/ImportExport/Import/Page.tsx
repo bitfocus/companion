@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
-import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
+import { CButton, CCol, CRow, CFormSelect, CCallout } from '@coreui/react'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '~/Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
@@ -205,7 +205,9 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 						/>
 					</MyErrorBoundary>
 				</CCol>
-				<h5 className="mt-3">Import Buttons to Page</h5>
+			</CRow>
+			<CCallout color={pageNumber == -1 ? 'success' : 'warning'}>
+				<h5>Import Buttons to Page</h5>
 				<p>
 					Clicking the button below will
 					{pageNumber == -1
@@ -213,13 +215,11 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 						: ' completely override the button on the existing destination page with the buttons on the selected source page'}
 					.
 				</p>
-				<CCol xs={12} className="mt-1">
-					<CButton color={pageNumber == -1 ? 'success' : 'warning'} onClick={doImport2} disabled={isRunning}>
-						<FontAwesomeIcon icon={pageNumber == -1 ? faFileCirclePlus : faFileCircleExclamation} />
-						{pageNumber == -1 ? ' Import to new page' : ` Replace page ${pageNumber} with imported page`}
-					</CButton>
-				</CCol>
-			</CRow>
+				<CButton color={pageNumber == -1 ? 'success' : 'warning'} onClick={doImport2} disabled={isRunning}>
+					<FontAwesomeIcon icon={pageNumber == -1 ? faFileCirclePlus : faFileCircleExclamation} />
+					{pageNumber == -1 ? ' Import to new page' : ` Replace page ${pageNumber} with imported page`}
+				</CButton>
+			</CCallout>
 		</>
 	)
 })
