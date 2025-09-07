@@ -281,6 +281,9 @@ export class ControlButtonLayered
 		// Save change and redraw
 		this.commitChange(true)
 
+		// Emit element change event
+		this.deps.events.emit('layeredStyleElementChanged', this.controlId, newElement.id)
+
 		return newElement.id
 	}
 
@@ -294,6 +297,9 @@ export class ControlButtonLayered
 
 		// Save change and redraw
 		this.commitChange(true)
+
+		// Emit element change event
+		this.deps.events.emit('layeredStyleElementChanged', this.controlId, id)
 
 		return true
 	}
@@ -369,6 +375,11 @@ export class ControlButtonLayered
 		return null
 	}
 
+	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined {
+		const result = this.#findElementIndexAndParent(this.#drawElements, null, id)
+		return result?.element
+	}
+
 	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean {
 		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
 		if (!currentElementLocation) return false
@@ -416,6 +427,9 @@ export class ControlButtonLayered
 
 		// Save change and redraw
 		this.commitChange(true)
+
+		// Emit element change event
+		this.deps.events.emit('layeredStyleElementChanged', this.controlId, id)
 
 		return true
 	}
@@ -469,6 +483,9 @@ export class ControlButtonLayered
 		// Save change and redraw
 		this.commitChange(true)
 
+		// Emit element change event
+		this.deps.events.emit('layeredStyleElementChanged', this.controlId, id)
+
 		return true
 	}
 
@@ -486,13 +503,13 @@ export class ControlButtonLayered
 		)
 		const canvasElement = this.#drawElements.find((e) => e.type === 'canvas')
 
-		let changed = false
+		const changedElements = new Set<string>()
 
 		if (diff.text !== undefined) {
 			const textElement = lazyTextElement()
 			if (textElement) {
 				textElement.text = { isExpression: diff.textExpression === true, value: String(diff.text) }
-				changed = true
+				changedElements.add(textElement.id)
 			}
 		}
 
@@ -500,7 +517,7 @@ export class ControlButtonLayered
 			const textElement = lazyTextElement()
 			if (textElement) {
 				textElement.fontsize = { isExpression: false, value: Number(diff.size) || 'auto' }
-				changed = true
+				changedElements.add(textElement.id)
 			}
 		}
 
@@ -508,7 +525,7 @@ export class ControlButtonLayered
 			const textElement = lazyTextElement()
 			if (textElement) {
 				textElement.color = { isExpression: false, value: Number(diff.color) }
-				changed = true
+				changedElements.add(textElement.id)
 			}
 		}
 
@@ -518,7 +535,7 @@ export class ControlButtonLayered
 				const alignment = ParseAlignment(diff.alignment)
 				textElement.halign = { isExpression: false, value: alignment[0] }
 				textElement.valign = { isExpression: false, value: alignment[1] }
-				changed = true
+				changedElements.add(textElement.id)
 			}
 		}
 
@@ -528,7 +545,7 @@ export class ControlButtonLayered
 				const alignment = ParseAlignment(diff.pngalignment)
 				imageElement.halign = { isExpression: false, value: alignment[0] }
 				imageElement.valign = { isExpression: false, value: alignment[1] }
-				changed = true
+				changedElements.add(imageElement.id)
 			}
 		}
 
@@ -536,7 +553,7 @@ export class ControlButtonLayered
 			const imageElement = lazyImageElement()
 			if (imageElement) {
 				imageElement.base64Image = { isExpression: false, value: diff.png64 ?? null }
-				changed = true
+				changedElements.add(imageElement.id)
 			}
 		}
 
@@ -544,7 +561,7 @@ export class ControlButtonLayered
 			const boxElement = lazyBoxElement()
 			if (boxElement) {
 				boxElement.color = { isExpression: false, value: Number(diff.bgcolor) }
-				changed = true
+				changedElements.add(boxElement.id)
 			}
 		}
 
@@ -557,13 +574,20 @@ export class ControlButtonLayered
 				canvasElement.decoration = { isExpression: false, value: ButtonGraphicsDecorationType.Border }
 			}
 
-			changed = true
+			changedElements.add(canvasElement.id)
 		}
 
-		// Save changes and redraw
-		if (changed) this.commitChange(true)
+		if (changedElements.size === 0) return false
 
-		return changed
+		// Save changes and redraw
+		this.commitChange(true)
+
+		// Emit element change event
+		for (const elementId of changedElements) {
+			this.deps.events.emit('layeredStyleElementChanged', this.controlId, elementId)
+		}
+
+		return true
 	}
 
 	/**

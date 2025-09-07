@@ -1,9 +1,4 @@
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
-import type {
-	ExecuteExpressionResult,
-	ExpressionStreamResult,
-} from '@companion-app/shared/Expression/ExpressionResult.js'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import { useEffect, useState } from 'react'
@@ -12,22 +7,29 @@ import { toJS } from 'mobx'
 import type { LayeredStyleStore } from '../StyleStore.js'
 import { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { RouterInput, trpcClient } from '~/Resources/TRPC.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ElementStreamResult } from '~/../companion/lib/Preview/ElementStream.js'
 
 const DRAW_DEBOUNCE = 50
 const DRAW_DEBOUNCE_MAX = 100
 const emptySet = new Set<string>()
 
-interface CachedValue {
+interface CachedElementValue {
 	unsub: () => void
-	value: ExpressionStreamResult | Promise<ExpressionStreamResult>
+	value: ElementStreamResult | Promise<ElementStreamResult>
+}
+
+interface CachedExpressionValue {
+	unsub: () => void
+	value: ExecuteExpressionResult | Promise<ExecuteExpressionResult>
 }
 
 class LayeredButtonDrawStyleParser {
-	// readonly #parsedId = nanoid()
 	readonly #controlId: string | null
 	readonly #changed: (style: DrawStyleLayeredButtonModel) => void
 
-	readonly #latestValues = new Map<string, CachedValue>()
+	readonly #elementValues = new Map<string, CachedElementValue>()
+	readonly #expressionValues = new Map<string, CachedExpressionValue>()
 	#rawElements: SomeButtonGraphicsElement[] = []
 
 	#disposed = false
@@ -41,7 +43,10 @@ class LayeredButtonDrawStyleParser {
 		this.#disposed = true
 
 		// Unsubscribe from all streams
-		for (const sub of this.#latestValues.values()) {
+		for (const sub of this.#elementValues.values()) {
+			sub.unsub()
+		}
+		for (const sub of this.#expressionValues.values()) {
 			sub.unsub()
 		}
 	}
@@ -60,8 +65,66 @@ class LayeredButtonDrawStyleParser {
 
 	#recalculateStyle = new PromiseDebounce(
 		async () => {
+			const referencedElements = new Set<string>()
 			const referencedExpressions = new Set<string>()
-			const runStream = async (
+
+			// Stream each element individually
+			const elementPromises = this.#rawElements.map(async (element) => {
+				const elementId = element.id
+				referencedElements.add(elementId)
+
+				// Reuse existing element stream
+				const existing = this.#elementValues.get(elementId)
+				if (existing) return await existing.value
+
+				// Start a new element stream
+				const firstRunPromise = Promise.withResolvers<ElementStreamResult>()
+				let hasReceivedFirstValue = false
+				const updateValue = (value: ElementStreamResult) => {
+					if (this.#disposed) return
+
+					if (!hasReceivedFirstValue) {
+						hasReceivedFirstValue = true
+						firstRunPromise.resolve(value)
+						return
+					}
+
+					// Notify the reactive observers
+					const existing = this.#elementValues.get(elementId)
+					if (!existing) return
+
+					// Update to a concrete value
+					existing.value = value
+
+					// Queue update
+					this.#recalculateStyle.trigger()
+				}
+
+				const sub = trpcClient.preview.elementStream.watchElement.subscribe(
+					{
+						controlId: this.#controlId,
+						elementId,
+					},
+					{
+						onData: (result) => updateValue(result as ElementStreamResult), // TODO - fix this type
+						onError: (error) => {
+							console.error('Subscription to element errored:', error)
+							// TODO: handle error case
+						},
+					}
+				)
+
+				// Track the new value, to avoid duplication
+				this.#elementValues.set(elementId, {
+					unsub: () => sub.unsubscribe(),
+					value: firstRunPromise.promise,
+				})
+
+				return await firstRunPromise.promise
+			})
+
+			// Stream the built-in expressions for this control state
+			const runExpressionStream = async (
 				streamId: string,
 				args: RouterInput['preview']['expressionStream']['watchExpression']
 			): Promise<ExecuteExpressionResult> => {
@@ -76,13 +139,13 @@ class LayeredButtonDrawStyleParser {
 				referencedExpressions.add(streamId)
 
 				// Reuse existing value
-				const existing = this.#latestValues.get(streamId)
-				if (existing) return convertExpressionResult(await existing.value)
+				const existing = this.#expressionValues.get(streamId)
+				if (existing) return await existing.value
 
 				// Start a new stream
-				const firstRunPromise = Promise.withResolvers<ExpressionStreamResult>()
+				const firstRunPromise = Promise.withResolvers<ExecuteExpressionResult>()
 				let hasReceivedFirstValue = false
-				const updateValue = (value: ExpressionStreamResult) => {
+				const updateValue = (value: ExecuteExpressionResult) => {
 					if (this.#disposed) return
 
 					if (!hasReceivedFirstValue) {
@@ -92,7 +155,7 @@ class LayeredButtonDrawStyleParser {
 					}
 
 					// Notify the reactive observers
-					const existing = this.#latestValues.get(streamId)
+					const existing = this.#expressionValues.get(streamId)
 					if (!existing) return
 
 					// Update to a concrete value
@@ -103,43 +166,38 @@ class LayeredButtonDrawStyleParser {
 				}
 
 				const sub = trpcClient.preview.expressionStream.watchExpression.subscribe(args, {
-					onData: (result) => updateValue(result as ExpressionStreamResult), // TODO - fix this type
+					onData: (result) => updateValue(result as ExecuteExpressionResult), // TODO - fix this type
 					onError: (error) => {
 						console.error('Subscription to expression errored:', error)
 						updateValue({
 							ok: false,
 							error: 'Subscription failed',
+							variableIds: emptySet,
 						})
 					},
 				})
 
-				// Track the new value, to avoid duplicateion
-				this.#latestValues.set(streamId, {
+				// Track the new value, to avoid duplication
+				this.#expressionValues.set(streamId, {
 					unsub: () => sub.unsubscribe(),
 					value: firstRunPromise.promise,
 				})
 
-				return convertExpressionResult(await firstRunPromise.promise)
+				return await firstRunPromise.promise
 			}
+
 			const parseExpression = async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> =>
-				runStream(`expression::${str}`, {
+				runExpressionStream(`expression::${str}`, {
 					expression: str,
 					controlId: this.#controlId,
 					requiredType,
 					isVariableString: false,
 				})
 
-			const parseVariablesInString = async (str: string): Promise<ExecuteExpressionResult> =>
-				runStream(`variable::${str}`, {
-					expression: str,
-					controlId: this.#controlId,
-					requiredType: undefined,
-					isVariableString: true,
-				})
-
-			const [{ elements }, thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] =
+			// Wait for all element streams and control state expressions
+			const [resolvedElements, thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] =
 				await Promise.all([
-					ConvertSomeButtonGraphicsElementForDrawing(this.#rawElements, parseExpression, parseVariablesInString, false),
+					Promise.all(elementPromises),
 					parseExpression('$(this:pushed)', 'boolean'),
 					parseExpression('$(this:step_count)', 'number'),
 					parseExpression('$(this:step_count) > 1 ? $(this:step) : 0', 'number'),
@@ -148,12 +206,21 @@ class LayeredButtonDrawStyleParser {
 				])
 
 			// Unsubscribe from any streams that are no longer used
-			for (const [expression, sub] of this.#latestValues) {
-				if (!referencedExpressions.has(expression)) {
+			for (const [elementId, sub] of this.#elementValues) {
+				if (!referencedElements.has(elementId)) {
 					sub.unsub()
-					this.#latestValues.delete(expression)
+					this.#elementValues.delete(elementId)
 				}
 			}
+			for (const [expression, sub] of this.#expressionValues) {
+				if (!referencedExpressions.has(expression)) {
+					sub.unsub()
+					this.#expressionValues.delete(expression)
+				}
+			}
+
+			// Extract the draw elements from the resolved results
+			const elements = resolvedElements.map((result) => result.element)
 
 			// Emit the new elements
 			this.#changed({
@@ -179,25 +246,9 @@ class LayeredButtonDrawStyleParser {
 	)
 }
 
-function convertExpressionResult(fromValue: ExpressionStreamResult): ExecuteExpressionResult {
-	if (fromValue.ok) {
-		return {
-			ok: true,
-			value: fromValue.value,
-			variableIds: emptySet,
-		}
-	} else {
-		return {
-			ok: false,
-			error: fromValue.error,
-			variableIds: emptySet,
-		}
-	}
-}
-
 /**
  * Hook to parse a layered button draw style, replacing any expressions with real values
- * This subscribes to the necessary expressions on the backend, to update as the button should be redrawn
+ * This subscribes to the necessary element streams on the backend, to update as the button should be redrawn
  * @param controlId ControlId of the button to draw, if this is a control
  * @param styleStore The store containing the style to be drawn
  * @returns The parsed draw style, or null if not yet ready
