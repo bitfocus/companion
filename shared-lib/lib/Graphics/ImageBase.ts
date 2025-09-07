@@ -115,7 +115,17 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			await fcn(img)
 
 			await this.usingAlpha(compositeAlpha, async () => {
-				this.drawImage(img.canvasImage, 0, 0, img.width, img.height, 0, 0, this.width, this.height)
+				this.drawImage(
+					img.canvasImage,
+					0,
+					0,
+					img.canvasImage.width,
+					img.canvasImage.height,
+					0,
+					0,
+					this.width,
+					this.height
+				)
 			})
 		})
 	}
