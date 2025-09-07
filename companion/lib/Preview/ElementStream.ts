@@ -251,7 +251,9 @@ export class PreviewElementStream {
 			)
 
 			if (elements.length === 0) {
-				throw new Error('Element conversion resulted in no elements')
+				throw new Error(
+					`Element conversion resulted in no elements (element id: ${elementDef.id ?? 'unknown'}, type: ${elementDef.type ?? 'unknown'})`
+				)
 			}
 
 			return {
