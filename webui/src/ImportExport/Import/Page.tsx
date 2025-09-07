@@ -118,7 +118,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 				Choose a source page containing the buttons to import and a destination page where they will be imported. You
 				can either replace an existing page or create a new one.
 			</p>
-			<CRow className={className}>
+			<CRow className={className} style={{ overflow: 'hidden', marginBottom: '1rem' }}>
 				<CCol xs={12} xl={6}>
 					<h5>Source Page</h5>
 					<MyErrorBoundary>
@@ -193,19 +193,10 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 						</>
 					</MyErrorBoundary>
 				</CCol>
-				<CCol xs={12}>
-					<p>&nbsp;</p>
-				</CCol>
-				<CCol xs={12}>
-					<MyErrorBoundary>
-						<ImportRemap
-							snapshot={snapshot}
-							connectionRemap={connectionRemap}
-							setConnectionRemap={setConnectionRemap2}
-						/>
-					</MyErrorBoundary>
-				</CCol>
 			</CRow>
+			<MyErrorBoundary>
+				<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
+			</MyErrorBoundary>
 			<CCallout color={pageNumber == -1 ? 'success' : 'warning'}>
 				<h5>Import Buttons to Page</h5>
 				<p>
