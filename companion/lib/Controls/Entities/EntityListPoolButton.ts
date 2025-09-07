@@ -82,14 +82,18 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			expression: string,
 			requiredType?: string,
 			injectedVariableValues?: CompanionVariableValues
-		) => ExecuteExpressionResult
+		) => ExecuteExpressionResult,
+		isLayeredButton: boolean
 	) {
 		super(props)
 
 		this.#executeExpressionInControl = executeExpressionInControl
 		this.#sendRuntimePropsChange = sendRuntimePropsChange
 
-		this.#feedbacks = this.createEntityList({ type: EntityModelType.Feedback })
+		this.#feedbacks = this.createEntityList({
+			type: EntityModelType.Feedback,
+			feedbackListType: isLayeredButton ? FeedbackEntitySubType.StyleOverride : undefined,
+		})
 		this.#localVariables = this.createEntityList({
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Value,

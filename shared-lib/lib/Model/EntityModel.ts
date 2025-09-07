@@ -16,6 +16,7 @@ export enum FeedbackEntitySubType {
 	Boolean = 'boolean',
 	Advanced = 'advanced',
 	Value = 'value',
+	StyleOverride = 'style-override',
 }
 
 export function isValidFeedbackEntitySubType(value: FeedbackEntitySubType | string): value is FeedbackEntitySubType {
@@ -76,7 +77,7 @@ export interface EntitySupportedChildGroupDefinition {
 	hint?: string
 
 	/** Only valid for feedback entities */
-	feedbackListType?: FeedbackEntitySubType.Boolean | FeedbackEntitySubType.Value
+	feedbackListType?: FeedbackEntitySubType.Boolean | FeedbackEntitySubType.Value | FeedbackEntitySubType.StyleOverride
 
 	/**
 	 * Limit the maximum number of direct children in this group.

@@ -121,7 +121,8 @@ export class ControlButtonPreset
 						null, // This doesn't support local variables
 						injectedVariableValues ?? null
 					)
-					.executeExpression(expression, requiredType)
+					.executeExpression(expression, requiredType),
+			false
 		)
 
 		this.options = {

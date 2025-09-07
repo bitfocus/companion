@@ -130,7 +130,7 @@ export class ControlButtonLayered
 	}
 
 	constructor(deps: ControlDependencies, controlId: string, storage: LayeredButtonModel | null, isImport: boolean) {
-		super(deps, controlId, `Controls/Button/Normal/${controlId}`)
+		super(deps, controlId, `Controls/Button/Normal/${controlId}`, true)
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
