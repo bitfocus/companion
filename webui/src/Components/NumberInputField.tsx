@@ -11,6 +11,10 @@ interface NumberInputFieldProps {
 	setValue: (value: number) => void
 	disabled?: boolean
 	checkValid?: (value: number) => boolean
+	// When true, show the min value as a visual -∞ when value <= min
+	showMinAsNegativeInfinity?: boolean
+	// When true, show the max value as a visual ∞ when value >= max
+	showMaxAsPositiveInfinity?: boolean
 }
 
 export function NumberInputField({
@@ -23,34 +27,80 @@ export function NumberInputField({
 	setValue,
 	disabled,
 	checkValid,
+	showMinAsNegativeInfinity,
+	showMaxAsPositiveInfinity,
 }: NumberInputFieldProps): React.JSX.Element {
 	const [tmpValue, setTmpValue] = useState<string | number | null>(null)
+	const [focused, setFocused] = useState(false)
 
 	const onChange = useCallback(
 		(e: React.FormEvent<HTMLInputElement>) => {
-			const parsedValue = parseFloat(e.currentTarget.value)
-			const processedValue = isNaN(parsedValue) ? e.currentTarget.value : parsedValue
-			setTmpValue(processedValue)
-			setValue(Number(processedValue))
+			const raw = e.currentTarget.value
+			const parsedValue = parseFloat(raw)
+			if (isNaN(parsedValue)) {
+				// keep the temporary string while editing but don't send NaN upstream
+				setTmpValue(raw)
+			} else {
+				setTmpValue(parsedValue)
+				setValue(parsedValue)
+			}
 		},
 		[setValue]
 	)
 
-	// Render the input
+	// Compute whether we should visually show -∞ or ∞.
+	const numericEffective = Number(tmpValue ?? value ?? 0)
+	let showOverlayValue: string | null = null
+	if (
+		!!showMinAsNegativeInfinity &&
+		typeof min !== 'undefined' &&
+		!isNaN(numericEffective) &&
+		numericEffective <= min
+	) {
+		showOverlayValue = '-∞'
+	} else if (
+		!!showMaxAsPositiveInfinity &&
+		typeof max !== 'undefined' &&
+		!isNaN(numericEffective) &&
+		numericEffective >= max
+	) {
+		showOverlayValue = '∞'
+	}
+
 	const input = (
-		<CFormInput
-			type="number"
-			disabled={disabled}
-			value={tmpValue ?? value ?? 0}
-			min={min}
-			max={max}
-			step={step ?? 'any'}
-			style={{ color: !!checkValid && !checkValid(Number(tmpValue ?? value)) ? 'red' : undefined }}
-			title={tooltip}
-			onChange={onChange}
-			onFocus={() => setTmpValue(value ?? '')}
-			onBlur={() => setTmpValue(null)}
-		/>
+		<div style={{ position: 'relative' }}>
+			<CFormInput
+				type="number"
+				disabled={disabled}
+				value={tmpValue ?? value ?? 0}
+				min={min}
+				max={max}
+				step={step ?? 'any'}
+				style={{
+					color: !!checkValid && !checkValid(Number(tmpValue ?? value)) ? 'red' : undefined,
+					// hide the underlying number when we show the -∞ or ∞ overlay and the field is not focused
+					...(showOverlayValue && !focused ? { color: 'transparent', textShadow: '0 0 0 transparent' } : {}),
+				}}
+				title={tooltip}
+				onChange={onChange}
+				onFocus={() => {
+					setFocused(true)
+					setTmpValue(value ?? '')
+				}}
+				onBlur={() => {
+					setFocused(false)
+					setTmpValue(null)
+				}}
+			/>
+			{!!showOverlayValue && !focused ? (
+				<span
+					className="number-input-inf-overlay"
+					style={{ color: !!checkValid && !checkValid(Number(tmpValue ?? value)) ? 'red' : undefined }}
+				>
+					{showOverlayValue}
+				</span>
+			) : null}
+		</div>
 	)
 
 	if (range) {

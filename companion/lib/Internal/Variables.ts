@@ -33,7 +33,7 @@ import type { IPageStore } from '../Page/Store.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
-import type { InternalModuleUtils } from './Util.js'
+import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 import type { ControlsController } from '../Controls/Controller.js'
 
@@ -223,7 +223,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
-			/*
 			local_variable_set_value: {
 				label: 'Local Variable: Set raw value',
 				description: undefined,
@@ -293,7 +292,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 					},
 				],
 			},
-			*/
 		}
 	}
 

@@ -24,6 +24,7 @@ interface TextInputFieldProps {
 	useVariables?: boolean
 	localVariables?: DropdownChoiceInt[]
 	isExpression?: boolean
+	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
 }
@@ -39,6 +40,7 @@ export const TextInputField = observer(function TextInputField({
 	useVariables,
 	localVariables,
 	isExpression,
+	multiline,
 	autoFocus,
 	onBlur,
 }: TextInputFieldProps) {
@@ -52,7 +54,8 @@ export const TextInputField = observer(function TextInputField({
 		[setValue]
 	)
 	const doOnChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => storeValue(e.currentTarget.value),
+		(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.FormEvent<HTMLInputElement>) =>
+			storeValue(e.currentTarget.value),
 		[storeValue]
 	)
 
@@ -86,10 +89,23 @@ export const TextInputField = observer(function TextInputField({
 						placeholder={placeholder}
 						title={tooltip}
 						disabled={disabled}
-						multiline={isExpression}
+						multiline={isExpression || multiline}
 						autoFocus={autoFocus}
 					/>
 				</>
+			) : multiline ? (
+				<CFormTextarea
+					disabled={disabled}
+					value={showValue}
+					style={extraStyle}
+					title={tooltip}
+					onChange={doOnChange}
+					onFocus={focusStoreValue}
+					onBlur={blurClearValue}
+					placeholder={placeholder}
+					autoFocus={autoFocus}
+					rows={2}
+				/>
 			) : (
 				<CFormInput
 					type="text"

@@ -39,8 +39,9 @@ import {
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { nanoid } from 'nanoid'
 import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
-import { EventEmitter } from 'events'
-import { CompanionButtonStyleProps } from '@companion-module/base'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import EventEmitter from 'node:events'
+import type { CompanionButtonStyleProps } from '@companion-module/base'
 
 const CHOICES_STEP_WITH_VARIABLES: SomeCompanionInputField[] = [
 	{
@@ -91,15 +92,21 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 	readonly #pageStore: IPageStore
 
 	/**
-	 * The dependencies of locations that should retrigger each feedback
+	 * The dependencies of locations that should retrigger each feedback when buttons are drawn
 	 */
 	#buttonDrawnSubscriptions = new Map<string, string>()
+
+	/**
+	 * The dependencies of locations that should retrigger each feedback when push state changes
+	 */
+	#pushStateSubscriptions = new Map<string, string>()
 
 	constructor(
 		internalUtils: InternalModuleUtils,
 		graphicsController: GraphicsController,
 		controlsController: ControlsController,
-		pageStore: IPageStore
+		pageStore: IPageStore,
+		controlEvents: EventEmitter<ControlCommonEvents>
 	) {
 		super()
 
@@ -138,6 +145,24 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				pendingLocationInvalidations.add(formatLocation(location))
 				debounceCheckFeedbacks()
 			})
+		})
+
+		controlEvents.on('updateButtonState', (controlLocation) => {
+			// This needs to be synchronous so that it is possible to use bank_pushed inside in the condition of a logic_while
+
+			const controlLocationStr = formatLocation(controlLocation)
+
+			// Find all feedbacks that are affected by the pending location invalidations
+			const affectedIds: string[] = []
+			for (const [id, locationStr] of this.#pushStateSubscriptions.entries()) {
+				if (locationStr === controlLocationStr) {
+					affectedIds.push(id)
+				}
+			}
+
+			if (affectedIds.length > 0) {
+				this.emit('checkFeedbacksById', ...affectedIds)
+			}
 		})
 	}
 
@@ -608,9 +633,9 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			)
 
 			if (theLocation) {
-				this.#buttonDrawnSubscriptions.set(feedback.id, formatLocation(theLocation))
+				this.#pushStateSubscriptions.set(feedback.id, formatLocation(theLocation))
 			} else {
-				this.#buttonDrawnSubscriptions.delete(feedback.id)
+				this.#pushStateSubscriptions.delete(feedback.id)
 			}
 
 			const control = theControlId && this.#controlsController.getControl(theControlId)
@@ -664,6 +689,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 	forgetFeedback(feedback: FeedbackEntityModel): void {
 		this.#buttonDrawnSubscriptions.delete(feedback.id)
+		this.#pushStateSubscriptions.delete(feedback.id)
 	}
 
 	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {

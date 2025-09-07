@@ -331,7 +331,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param name Name of the emulator, or undefined to use the default
 	 * @param skipUpdate Skip emitting an update to the devices list
 	 */
-	addEmulator(id: string, name: string | undefined, skipUpdate = false): void {
+	addEmulator(id: string, name: string | undefined, skipUpdate = false): SurfaceHandler {
 		const fullId = EmulatorRoom(id)
 		if (this.#surfaceHandlers.has(fullId)) {
 			throw new Error(`Emulator "${id}" already exists!`)
@@ -341,6 +341,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		if (name !== undefined) handler.setPanelName(name)
 
 		if (!skipUpdate) this.updateDevicesList()
+
+		return handler
 	}
 
 	/**
@@ -487,6 +489,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					z.object({
 						baseId: z.string().min(1),
 						name: z.string().optional(),
+						rows: z.number().int().min(1),
+						columns: z.number().int().min(1),
 					})
 				)
 				.mutation(async ({ input }) => {
@@ -494,7 +498,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 					if (this.#surfaceHandlers.has(fullId)) throw new Error(`Emulator "${input.baseId}" already exists!`)
 
-					this.addEmulator(input.baseId, input.name || '')
+					const handler = this.addEmulator(input.baseId, input.name || '')
+
+					// Update the config to include the dimensions
+					handler.setPanelConfig({
+						...handler.getPanelConfig(),
+						emulator_rows: input.rows,
+						emulator_columns: input.columns,
+					})
 
 					return fullId
 				}),

@@ -1,5 +1,5 @@
-import React, { useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
+import { CButton, CButtonGroup, CCol, CRow, CInputGroup, CFormInput } from '@coreui/react'
 import { useComputed } from '~/Resources/util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -78,6 +78,25 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 		return allExpressionVariables
 	}, [expressionVariablesList.expressionVariables])
 
+	const [filter, setFilter] = useState('')
+	const clearFilter = useCallback(() => setFilter(''), [])
+	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
+
+	let filterRegexp: RegExp | null = null
+	if (filter) {
+		try {
+			filterRegexp = new RegExp(filter, 'i')
+		} catch (e) {
+			console.error('Failed to compile filter regexp:', e)
+		}
+	}
+
+	const ExpressionVariableItemRow = (item: ExpressionVariableDataWithId) => {
+		if (filterRegexp && !item.variableName.match(filterRegexp)) return null
+
+		return <ExpressionVariableTableRow item={item} />
+	}
+
 	const matchRoute = useMatchRoute()
 	const routeMatch = matchRoute({ to: '/variables/expression/$controlId' })
 	const selectedVariableId = routeMatch ? routeMatch.controlId : null
@@ -124,6 +143,19 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						</CButton>
 						<CreateCollectionButton />
 					</CButtonGroup>
+
+					<CInputGroup className="variables-table-filter mt-2">
+						<CFormInput
+							type="text"
+							placeholder="Filter ..."
+							onChange={updateFilter}
+							value={filter}
+							style={{ fontSize: '1.2em' }}
+						/>
+						<CButton color="danger" onClick={clearFilter}>
+							<FontAwesomeIcon icon={faTimes} />
+						</CButton>
+					</CInputGroup>
 				</div>
 
 				<PanelCollapseHelperProvider
@@ -167,10 +199,6 @@ export interface ExpressionVariableDataWithId extends Omit<ClientExpressionVaria
 
 function ExpressionVariablesListNoContent() {
 	return <NonIdealState icon={faList} text="There are currently no expression variables." />
-}
-
-function ExpressionVariableItemRow(item: ExpressionVariableDataWithId) {
-	return <ExpressionVariableTableRow item={item} />
 }
 
 interface ExpressionVariableTableRowProps {

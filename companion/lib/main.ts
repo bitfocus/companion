@@ -20,6 +20,7 @@ import { nanoid } from 'nanoid'
 import logger from './Log/Controller.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
+import net from 'net'
 
 const program = new Command()
 
@@ -73,13 +74,17 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 
 	if (options.syslogEnable) {
 		const opt: SyslogTransportOptions = {}
-		if (options.syslogHost) opt.host = options.syslogHost
+		if (net.isIPv4(options.syslogHost)) opt.host = options.syslogHost
 		if (options.syslogPort) {
 			const port = Number.parseInt(options.syslogPort)
 			if (!Number.isNaN(port) && port > 100 && port <= 65535) opt.port = port
 		}
 		if (options.syslogTcp) opt.protocol = 'tcp4'
-		if (options.syslogLocalhost) opt.localhost = options.syslogLocalhost
+		const localhost: string = options.syslogLocalhost
+			?.replaceAll(/[^a-zA-Z0-9-_. ]/gm, '')
+			.substring(0, 254)
+			.trim()
+		opt.localhost = localhost || os.hostname()
 		logger.addSyslogHost(opt)
 	}
 

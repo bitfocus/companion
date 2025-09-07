@@ -34,6 +34,8 @@ export interface CompanionInputFieldBaseExtended {
 	label: string
 	/** A hover tooltip for this field */
 	tooltip?: string
+	/** A description for this field */
+	description?: string
 
 	isVisibleUi?: IsVisibleUiFn
 
@@ -127,6 +129,7 @@ export interface CompanionInputFieldTextInputExtended extends CompanionInputFiel
 	placeholder?: string
 	/** A UI hint indicating the field is an expression */
 	isExpression?: boolean
+	multiline?: boolean
 }
 export interface CompanionInputFieldDropdownExtended extends CompanionInputFieldBaseExtended {
 	type: 'dropdown'
@@ -175,6 +178,10 @@ export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBa
 	step?: number
 	/** Whether to show a slider for the input */
 	range?: boolean
+	/** When true, show the min value as a visual -∞ when value <= min */
+	showMinAsNegativeInfinity?: boolean
+	/** When true, show the max value as a visual ∞ when value >= max */
+	showMaxAsPositiveInfinity?: boolean
 }
 export interface CompanionInputFieldCheckboxExtended extends CompanionInputFieldBaseExtended {
 	type: 'checkbox'
@@ -209,6 +216,8 @@ export interface CompanionInputFieldSecretExtended extends CompanionInputFieldBa
 	 * Note: values may not conform to this, it is a visual hint only
 	 */
 	required?: boolean
+
+	regex?: string
 }
 export type SomeCompanionConfigInputField = CompanionInputFieldBonjourDeviceExtended | CompanionInputFieldSecretExtended
 

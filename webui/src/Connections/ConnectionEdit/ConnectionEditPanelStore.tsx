@@ -19,8 +19,8 @@ export interface ConnectionConfigAndSecrets {
 
 	config: CompanionOptionValues
 	configDirty: boolean
-	hasSecrets: Record<string, boolean>
-	updatedSecrets: CompanionOptionValues
+	secrets: CompanionOptionValues
+	secretsDirty: boolean
 }
 
 /**
@@ -103,8 +103,8 @@ export class ConnectionEditPanelStore {
 
 							config: data.config as CompanionOptionValues,
 							configDirty: false,
-							hasSecrets: data.hasSecrets,
-							updatedSecrets: {},
+							secrets: data.secrets as CompanionOptionValues,
+							secretsDirty: false,
 						})
 					}
 				})
@@ -131,7 +131,7 @@ export class ConnectionEditPanelStore {
 		// Check if the config or secrets have changed
 		const configAndSecrets = this.#configAndSecrets.get()
 		if (configAndSecrets) {
-			if (configAndSecrets.configDirty || Object.keys(configAndSecrets.updatedSecrets).length > 0) {
+			if (configAndSecrets.configDirty || configAndSecrets.secretsDirty) {
 				return true
 			}
 		}
@@ -177,15 +177,7 @@ export class ConnectionEditPanelStore {
 		if (!isConfigFieldSecret(field)) {
 			return !validateInputValue(field, configAndSecrets.config[field.id])
 		} else {
-			const hasChangedValue = field.id in configAndSecrets.updatedSecrets
-
-			// Validate the value if it has changed
-			if (hasChangedValue) {
-				return !validateInputValue(field, configAndSecrets.updatedSecrets[field.id])
-			}
-
-			// If the secret has not changed, assume it is valid
-			return true
+			return !validateInputValue(field, configAndSecrets.secrets[field.id])
 		}
 	}
 
@@ -228,18 +220,12 @@ export class ConnectionEditPanelStore {
 		if (!field) return
 
 		if (isConfigFieldSecret(field)) {
-			configAndSecrets.updatedSecrets[fieldId] = value
+			configAndSecrets.secrets[fieldId] = value
+			configAndSecrets.secretsDirty = true
 		} else {
 			configAndSecrets.config[fieldId] = value
 			configAndSecrets.configDirty = true
 		}
-	})
-
-	clearSecretValue = action((fieldId: string) => {
-		const configAndSecrets = this.#configAndSecrets.get()
-		if (!configAndSecrets) return
-
-		delete configAndSecrets.updatedSecrets[fieldId]
 	})
 }
 

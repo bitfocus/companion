@@ -23,6 +23,7 @@ export interface ClientExportSelection {
 	connections: boolean
 	surfaces: boolean
 	imageLibrary: boolean
+	includeSecrets: boolean
 	format: ExportFormat
 	filename?: string
 }

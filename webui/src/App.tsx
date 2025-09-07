@@ -25,13 +25,15 @@ export default function App(): React.JSX.Element {
 
 	const connected = trpcStatus.status === TRPCConnectionStatus.Connected
 	const wasConnected = trpcStatus.wasConnected
+	const shouldReload = connected && wasConnected
 
 	useEffect(() => {
-		if (connected && wasConnected) {
+		if (shouldReload) {
+			console.log('Reloading page after TRPC reconnect')
 			// Reload the page to ensure that the UI is up-to-date and we don't have any stale data
 			window.location.reload()
 		}
-	}, [connected, wasConnected])
+	}, [shouldReload])
 
 	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
 	useSubscription(
@@ -77,12 +79,16 @@ export default function App(): React.JSX.Element {
 							</div>
 						</div>
 					</div>
-					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected} />}>
+					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected && !shouldReload} />}>
 						<DndProvider
 							backend={useTouchBackend ? TouchBackend : HTML5Backend}
 							options={useTouchBackend ? { enableMouseEvents: true } : {}}
 						>
-							<AppMain connected={connected} loadingComplete={loadingComplete} loadingProgress={loadingProgress} />
+							<AppMain
+								connected={connected && !shouldReload}
+								loadingComplete={loadingComplete}
+								loadingProgress={loadingProgress}
+							/>
 						</DndProvider>
 					</Suspense>
 				</>

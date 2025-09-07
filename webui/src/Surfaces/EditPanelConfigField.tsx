@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback } from 'react'
 import { TextInputField, NumberInputField, DropdownInputField } from '~/Components'
+import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIconsProps, InputFeatureIcons } from '~/Controls/OptionsInputField'
 import { validateInputValue } from '~/Helpers/validateInputValue'
@@ -44,6 +45,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					useVariables={features.variables}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					isExpression={definition.isExpression}
+					multiline={definition.multiline}
 					setValue={setValue2}
 					checkValid={checkValid}
 				/>
@@ -60,6 +62,8 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					value={value}
 					setValue={setValue2}
 					checkValid={checkValid}
+					showMinAsNegativeInfinity={definition.showMinAsNegativeInfinity}
+					showMaxAsPositiveInfinity={definition.showMaxAsPositiveInfinity}
 				/>
 			)
 			break
@@ -104,7 +108,9 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 				{definition.label}
 				<InputFeatureIcons {...features} />
 				{definition.tooltip && (
-					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={definition.tooltip} />
+					<InlineHelp help={definition.tooltip}>
+						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+					</InlineHelp>
 				)}
 			</CFormLabel>
 			<CCol sm={8}>{control}</CCol>

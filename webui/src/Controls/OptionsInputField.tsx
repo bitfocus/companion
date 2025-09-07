@@ -18,6 +18,7 @@ import { StaticTextFieldText } from './StaticTextField.js'
 import { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { validateInputValue } from '~/Helpers/validateInputValue.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -36,7 +37,11 @@ function OptionLabel({ option, features }: { option: SomeCompanionInputField; fe
 		<>
 			{option.label}
 			<InputFeatureIcons {...features} />
-			{option.tooltip && <FontAwesomeIcon icon={faQuestionCircle} title={option.tooltip} />}
+			{option.tooltip && (
+				<InlineHelp help={option.tooltip}>
+					<FontAwesomeIcon icon={faQuestionCircle} />
+				</InlineHelp>
+			)}
 		</>
 	)
 }
@@ -84,6 +89,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 					disabled={readonly}
 					setValue={setValue2}
 					checkValid={checkValid}
+					multiline={option.multiline}
 				/>
 			)
 			break
@@ -148,23 +154,14 @@ export const OptionsInputField = observer(function OptionsInputField({
 					disabled={readonly}
 					setValue={setValue2}
 					checkValid={checkValid}
+					showMinAsNegativeInfinity={option.showMinAsNegativeInfinity}
+					showMaxAsPositiveInfinity={option.showMaxAsPositiveInfinity}
 				/>
 			)
 			break
 		}
 		case 'static-text': {
 			control = <StaticTextFieldText {...option} />
-
-			if (option.label) {
-				control = (
-					<>
-						<CFormLabel>
-							<OptionLabel option={option} />
-						</CFormLabel>
-						{control}
-					</>
-				)
-			}
 			break
 		}
 		case 'custom-variable': {
@@ -203,6 +200,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 			</CFormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
 				{control}
+				{option.description && <div className="form-text">{option.description}</div>}
 			</CCol>
 		</>
 	)

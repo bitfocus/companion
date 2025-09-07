@@ -22,6 +22,8 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { ConnectionEditPanelStore, isConfigFieldSecret } from './ConnectionEditPanelStore.js'
 import { observable } from 'mobx'
 import { TextInputField } from '~/Components/TextInputField.js'
+import classNames from 'classnames'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -110,7 +112,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						label: saveLabel,
 						updatePolicy: panelStore.updatePolicy,
 						config: configAndSecrets.config,
-						secrets: configAndSecrets.updatedSecrets,
+						secrets: configAndSecrets.secrets,
 					})
 					if (err === 'invalid label') {
 						setSaveError(`The label "${saveLabel}" in not valid`)
@@ -235,7 +237,9 @@ function ConnectionFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputFiel
 		<>
 			{fieldInfo.label}
 			{fieldInfo.tooltip && (
-				<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} title={fieldInfo.tooltip} />
+				<InlineHelp help={fieldInfo.tooltip}>
+					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+				</InlineHelp>
 			)}
 		</>
 	)
@@ -335,11 +339,9 @@ const ConnectionUpdatePolicyInputField = observer(function ConnectionUpdatePolic
 		<>
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				Update Policy
-				<FontAwesomeIcon
-					style={{ marginLeft: '5px' }}
-					icon={faQuestionCircle}
-					title="How to check whether there are updates available for this connection"
-				/>
+				<InlineHelp help="How to check whether there are updates available for this connection">
+					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+				</InlineHelp>
 			</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CFormSelect
@@ -390,18 +392,19 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 							</CFormLabel>
 							<ConnectionSecretField
 								definition={fieldInfo}
-								hasSavedValue={!!configData.updatedSecrets[fieldInfo.id]}
-								editValue={configData.updatedSecrets[fieldInfo.id]}
-								isDirty={fieldInfo.id in configData.updatedSecrets}
+								value={configData.secrets[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
-								clearValue={() => panelStore.clearSecretValue(`secrets.${fieldInfo.id}`)}
 							/>
+							{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
 						</CCol>
 					)
 				} else {
+					// Hide certain fields when in 'xs' column size, to avoid unexpected padding
+					const hideInXs = fieldInfo.type === 'static-text' && !fieldInfo.label && !fieldInfo.value
+
 					return (
 						<CCol
-							className={`fieldtype-${fieldInfo.type}`}
+							className={classNames(`fieldtype-${fieldInfo.type}`, { 'd-none': hideInXs, 'd-sm-block': hideInXs })}
 							sm={fieldInfo.width}
 							style={{ display: !isVisible ? 'none' : undefined }}
 						>
@@ -414,6 +417,7 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
 								connectionId={panelStore.connectionId}
 							/>
+							{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
 						</CCol>
 					)
 				}

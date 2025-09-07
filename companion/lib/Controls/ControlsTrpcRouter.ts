@@ -243,6 +243,21 @@ export function createControlsTrpcRouter(
 				)
 			}),
 
+		hotAbortControl: publicProcedure
+			.input(
+				z.object({
+					location: zodLocation,
+				})
+			)
+			.mutation(async ({ input }) => {
+				logger.silly(`being told from gui to abort actions on ${formatLocation(input.location)}`)
+
+				const controlId = pageController.store.getControlIdAt(input.location)
+				if (!controlId) return
+
+				controlsController.abortAllDelayedActions(null)
+			}),
+
 		setStyleFields: publicProcedure
 			.input(
 				z.object({

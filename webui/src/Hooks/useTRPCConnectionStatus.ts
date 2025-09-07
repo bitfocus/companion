@@ -23,9 +23,12 @@ export function useTRPCConnectionStatus(): TRPCConnectionState {
 
 	useEffect(() => {
 		const setTrpcStatus = (newStatus: TRPCConnectionStatus, error?: string) => {
+			console.log('Updating TRPC status', newStatus)
 			setStatus((oldStatus) => ({
 				status: newStatus,
-				wasConnected: oldStatus.wasConnected || oldStatus.status === TRPCConnectionStatus.Connected,
+				wasConnected:
+					oldStatus.wasConnected ||
+					(oldStatus.status === TRPCConnectionStatus.Connected && newStatus !== TRPCConnectionStatus.Connected),
 				error: error,
 			}))
 		}
@@ -58,25 +61,6 @@ export function useTRPCConnectionStatus(): TRPCConnectionState {
 				setTrpcStatus(TRPCConnectionStatus.Unknown)
 			},
 		})
-
-		switch (trpcWsClient.connection?.state) {
-			case 'connecting':
-				setTrpcStatus(TRPCConnectionStatus.Connecting)
-				break
-			case 'closed':
-				setTrpcStatus(TRPCConnectionStatus.Unknown)
-				break
-			case 'open':
-				setTrpcStatus(TRPCConnectionStatus.Connected)
-				break
-			case undefined:
-				setTrpcStatus(TRPCConnectionStatus.Unknown)
-				break
-			default:
-				assertNever(trpcWsClient.connection)
-				setTrpcStatus(TRPCConnectionStatus.Unknown)
-				break
-		}
 
 		return () => {
 			handle.unsubscribe()

@@ -19,6 +19,7 @@ import { NonIdealState } from '~/Components/NonIdealState'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useNavigate } from '@tanstack/react-router'
+import { InlineHelp } from '~/Components/InlineHelp'
 
 type SurfaceInfo = ClientSurfaceItem & { groupId: string | null }
 
@@ -291,10 +292,9 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 
 						<CFormLabel htmlFor="colFormGroupId" className="col-sm-4 col-form-label col-form-label-sm">
 							Surface Group&nbsp;
-							<FontAwesomeIcon
-								icon={faQuestionCircle}
-								title="When in a group, surfaces will follow the page number of that group"
-							/>
+							<InlineHelp help="When in a group, surfaces will follow the page number of that group">
+								<FontAwesomeIcon icon={faQuestionCircle} />
+							</InlineHelp>
 						</CFormLabel>
 						<CCol sm={8}>
 							<CFormSelect

@@ -93,7 +93,11 @@ export class ExportController {
 
 	#exportTriggerListHandler: RequestHandler = (req, res, next) => {
 		const triggerControls = this.#controlsController.getAllTriggers()
-		const exp = this.#generateTriggersExport(triggerControls, true)
+		const includeSecrets = req.query.includeSecrets !== 'false'
+		const exp = this.#generateTriggersExport(triggerControls, {
+			includeCollections: true,
+			includeSecrets: includeSecrets,
+		})
 
 		const filename = this.#generateFilename(String(req.query.filename as any), 'trigger_list', 'companionconfig')
 
@@ -103,7 +107,10 @@ export class ExportController {
 	#exportTriggerSingleHandler: RequestHandler = (req, res, next) => {
 		const control = this.#controlsController.getTrigger(req.params.id)
 		if (control) {
-			const exp = this.#generateTriggersExport([control], false)
+			const exp = this.#generateTriggersExport([control], {
+				includeCollections: false,
+				includeSecrets: false,
+			})
 
 			const triggerName = control.options.name.toLowerCase().replace(/\W/, '')
 			const filename = this.#generateFilename(
@@ -138,9 +145,14 @@ export class ExportController {
 			)
 
 			// Collect referenced connections and  collections
+			const includeSecrets = req.query.includeSecrets !== 'false'
 			const connectionsExport = this.#generateReferencedConnectionConfigs(
 				referencedConnectionIds,
-				referencedConnectionLabels
+				referencedConnectionLabels,
+				{
+					minimalExport: false,
+					includeSecrets: includeSecrets,
+				}
 			)
 			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 			const filteredConnectionCollections = this.#filterReferencedCollections(
@@ -303,7 +315,13 @@ export class ExportController {
 			: `${os.hostname()}_${getTimestamp()}_${exportType}.${fileExt}`
 	}
 
-	#generateTriggersExport(triggerControls: ControlTrigger[], includeCollections: boolean): ExportTriggersListv6 {
+	#generateTriggersExport(
+		triggerControls: ControlTrigger[],
+		options: {
+			includeCollections: boolean
+			includeSecrets: boolean
+		}
+	): ExportTriggersListv6 {
 		const triggersExport: ExportTriggerContentv6 = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
@@ -331,15 +349,19 @@ export class ExportController {
 		}
 
 		// Filter collections to only include those explicitly referenced or their parents
-		const allTriggerCollections = includeCollections ? this.#controlsController.exportTriggerCollections() : []
-		const triggerCollections: TriggerCollection[] = includeCollections
+		const allTriggerCollections = options.includeCollections ? this.#controlsController.exportTriggerCollections() : []
+		const triggerCollections: TriggerCollection[] = options.includeCollections
 			? this.#filterReferencedCollections(allTriggerCollections, referencedCollectionIds)
 			: []
 
 		// Collect referenced connection and collections
 		const connectionsExport = this.#generateReferencedConnectionConfigs(
 			referencedConnectionIds,
-			referencedConnectionLabels
+			referencedConnectionLabels,
+			{
+				minimalExport: false,
+				includeSecrets: options.includeSecrets,
+			}
 		)
 		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 		const filteredConnectionCollections = this.#filterReferencedCollections(
@@ -414,20 +436,33 @@ export class ExportController {
 	#generateReferencedConnectionConfigs(
 		referencedConnectionIds: Set<string>,
 		referencedConnectionLabels: Set<string>,
-		minimalExport = false
+		options: {
+			minimalExport: boolean
+			includeSecrets: boolean
+		}
 	): ExportInstancesv6 {
 		const instancesExport: ExportInstancesv6 = {}
 
 		referencedConnectionIds.delete('internal') // Ignore the internal module
 		for (const connectionId of referencedConnectionIds) {
-			instancesExport[connectionId] = this.#instancesController.exportInstance(connectionId, minimalExport)
+			instancesExport[connectionId] = this.#instancesController.exportInstance(
+				connectionId,
+				options.minimalExport,
+				true,
+				options.includeSecrets
+			)
 		}
 
 		referencedConnectionLabels.delete('internal') // Ignore the internal module
 		for (const label of referencedConnectionLabels) {
 			const connectionId = this.#instancesController.getIdForLabel(label)
 			if (connectionId) {
-				instancesExport[connectionId] = this.#instancesController.exportInstance(connectionId, minimalExport)
+				instancesExport[connectionId] = this.#instancesController.exportInstance(
+					connectionId,
+					options.minimalExport,
+					true,
+					options.includeSecrets
+				)
 			}
 		}
 
@@ -541,15 +576,13 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.connections)) {
-			// TODO: whether to include secrets should be configurable. Perhaps these should be encrypted too?
-			exp.instances = this.#instancesController.exportAll(false)
+			exp.instances = this.#instancesController.exportAll(!config || !isFalsey(config.includeSecrets))
 			exp.connectionCollections = this.#instancesController.collections.collectionData
 		} else {
-			exp.instances = this.#generateReferencedConnectionConfigs(
-				referencedConnectionIds,
-				referencedConnectionLabels,
-				true
-			)
+			exp.instances = this.#generateReferencedConnectionConfigs(referencedConnectionIds, referencedConnectionLabels, {
+				minimalExport: true,
+				includeSecrets: false,
+			})
 
 			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(exp.instances))
 			exp.connectionCollections = this.#filterReferencedCollections(
