@@ -5,6 +5,7 @@ import {
 	CAlert,
 	CButton,
 	CButtonGroup,
+	CCallout,
 	CFormCheck,
 	CNav,
 	CNavItem,
@@ -12,7 +13,7 @@ import {
 	CTabContent,
 	CTabPane,
 } from '@coreui/react'
-import { faClock, faDownload, faFileImport, faGlobe, faTh } from '@fortawesome/free-solid-svg-icons'
+import { faClock, faDownload, faFileImport, faGlobe, faPlug, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
@@ -192,19 +193,28 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 	return (
 		<>
-			<h5>Full Import</h5>
-
-			<CAlert color="info">If you wish to do a more selective import, check the other tabs.</CAlert>
-
-			<p>It is recommended to export the system configuration first.</p>
-
-			<CButton color="success" href={makeAbsolutePath('/int/export/full')} target="_blank">
-				<FontAwesomeIcon icon={faDownload} /> Export
-			</CButton>
-
-			<p>&nbsp;</p>
-
-			<p>Reset and import the selected components:</p>
+			<h4>Full Import</h4>
+			<p>
+				A full import will replace the current system configuration of the selected components with the imported
+				configuration of the components.
+			</p>
+			<CCallout color="warning">
+				<h5>
+					<FontAwesomeIcon icon={faWarning} /> Before You Proceed
+				</h5>
+				<p>
+					It is <strong>highly recommended</strong> to export the current system configuration before performing a full
+					import.
+				</p>
+				<CButton color="warning" href={makeAbsolutePath('/int/export/full')} target="_blank">
+					<FontAwesomeIcon icon={faDownload} /> Export Current Configuration
+				</CButton>
+			</CCallout>
+			<h5>Components</h5>
+			<p>
+				Select the components you want to import. This will{' '}
+				<strong>completely reset their existing configuration</strong>, and replace it with the imported state.
+			</p>
 
 			{/* <InputCheckbox
 				config={config}
@@ -222,27 +232,74 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				''
 			)} */}
 
-			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="buttons" setValue={setValue} label="Buttons" />
-
-			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="triggers" setValue={setValue} label="Triggers" />
-
-			<InputCheckbox
-				config={config}
-				allowKeys={snapshotKeys}
-				keyName="customVariables"
-				setValue={setValue}
-				label="Custom Variables"
-			/>
-
-			<InputCheckbox
-				config={config}
-				allowKeys={snapshotKeys}
-				keyName="expressionVariables"
-				setValue={setValue}
-				label="Expression variables"
-			/>
-
-			<InputCheckbox config={config} allowKeys={snapshotKeys} keyName="surfaces" setValue={setValue} label="Surfaces" />
+			<table className="table table-responsive-sm mb-3">
+				<thead>
+					<tr>
+						<th>Import</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td className="compact">
+							<InputCheckbox
+								config={config}
+								allowKeys={snapshotKeys}
+								keyName="buttons"
+								setValue={setValue}
+								label="Buttons"
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td className="compact">
+							<InputCheckbox
+								config={config}
+								allowKeys={snapshotKeys}
+								keyName="triggers"
+								setValue={setValue}
+								label="Triggers"
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td className="compact">
+							<InputCheckbox
+								config={config}
+								allowKeys={snapshotKeys}
+								keyName="customVariables"
+								setValue={setValue}
+								label="Custom Variables"
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td className="compact">
+							<InputCheckbox
+								config={config}
+								allowKeys={snapshotKeys}
+								keyName="expressionVariables"
+								setValue={setValue}
+								label="Expression Variables"
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td className="compact">
+							<InputCheckbox
+								config={config}
+								allowKeys={snapshotKeys}
+								keyName="surfaces"
+								setValue={setValue}
+								label="Surfaces"
+							/>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<CAlert color="info" className="margin-top">
+				<FontAwesomeIcon icon={faPlug} /> <strong>Note:</strong> All the connections will be imported, as they are
+				required to be able to import any actions and feedbacks.
+			</CAlert>
 
 			{/* <InputCheckbox
 				config={config}
@@ -251,20 +308,25 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				setValue={setValue}
 				label="Settings"
 			/> */}
-
-			<CAlert color="info" className="margin-top">
-				All the connections will be imported, as they are required to be able to import any actions and feedbacks.
-			</CAlert>
-
-			<CButtonGroup>
+			<CCallout color="success">
+				<h5>Import Selected Components</h5>
+				<p>
+					This preserves any unselected components in their current state, while reseting and importing the selected
+					components.
+				</p>
 				<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>
-					<FontAwesomeIcon icon={faFileImport} /> Import, Preserving unselected components
+					<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
 				</CButton>
-
+			</CCallout>
+			<CCallout color="danger">
+				<h5>Full Reset & Import</h5>
+				<p>
+					This will perform a <strong>full reset</strong> of all components, and then import any selected components.
+				</p>
 				<CButton color="primary" data-fullreset={true} onClick={doImport} disabled={validConfigKeys.length === 0}>
-					<FontAwesomeIcon icon={faFileImport} /> Full Reset then Import
+					<FontAwesomeIcon icon={faFileImport} /> Full Reset & Import
 				</CButton>
-			</CButtonGroup>
+			</CCallout>
 		</>
 	)
 }
