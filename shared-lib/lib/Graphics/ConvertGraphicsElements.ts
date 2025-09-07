@@ -27,16 +27,31 @@ import { HorizontalAlignment, VerticalAlignment } from './Util.js'
 type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
 type ParseVariablesFn = (str: string) => Promise<ExecuteExpressionResult>
 
-class ExpressionHelper {
+class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 	readonly #executeExpression: ExecuteExpressionFn
 	readonly #parseVariables: ParseVariablesFn
+	readonly #usedVariables = new Set<string>()
 
-	readonly usedVariables = new Set<string>()
+	readonly #element: T
+	readonly #elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined
+
 	readonly onlyEnabled: boolean
 
-	constructor(executeExpression: ExecuteExpressionFn, parseVariables: ParseVariablesFn, onlyEnabled: boolean) {
+	constructor(
+		executeExpression: ExecuteExpressionFn,
+		parseVariables: ParseVariablesFn,
+		usedVariables: Set<string>,
+		element: T,
+		elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined,
+		onlyEnabled: boolean
+	) {
 		this.#executeExpression = executeExpression
 		this.#parseVariables = parseVariables
+		this.#usedVariables = usedVariables
+
+		this.#element = element
+		this.#elementOverrides = elementOverrides
+
 		this.onlyEnabled = onlyEnabled
 	}
 
@@ -48,18 +63,18 @@ class ExpressionHelper {
 
 		// Track the variables used in the expression, even when it failed
 		for (const variable of result.variableIds) {
-			this.usedVariables.add(variable)
+			this.#usedVariables.add(variable)
 		}
 
 		return result
 	}
 
-	async parseVariablesInString(str: string, defaultValue: string): Promise<string> {
+	async #parseVariablesInString(str: string, defaultValue: string): Promise<string> {
 		const result = await this.#parseVariables(str)
 
 		// Track the variables used in the expression, even when it failed
 		for (const variable of result.variableIds) {
-			this.usedVariables.add(variable)
+			this.#usedVariables.add(variable)
 		}
 
 		if (!result.ok) {
@@ -69,10 +84,17 @@ class ExpressionHelper {
 		return String(result.value)
 	}
 
+	#getValue(propertyName: keyof T): ExpressionOrValue<any> {
+		const override = this.#elementOverrides?.get(String(propertyName))
+		return override ? override : (this.#element as any)[propertyName]
+	}
+
 	async getUnknown(
-		value: ExpressionOrValue<boolean | number | string | undefined>,
+		propertyName: keyof T,
 		defaultValue: boolean | number | string | undefined
 	): Promise<boolean | number | string | undefined> {
+		const value = this.#getValue(propertyName)
+
 		if (!value.isExpression) return value.value
 
 		const result = await this.#executeExpressionAndTrackVariables(value.value, undefined)
@@ -83,7 +105,18 @@ class ExpressionHelper {
 		return result.value
 	}
 
-	async getNumber(value: ExpressionOrValue<number>, defaultValue: number, scale = 1): Promise<number> {
+	async getDrawText(propertyName: keyof T): Promise<boolean | number | string | undefined> {
+		const value = this.#getValue(propertyName)
+		if (value.isExpression) {
+			return this.getUnknown(propertyName, 'ERR')
+		} else {
+			return this.#parseVariablesInString(value.value, 'ERR')
+		}
+	}
+
+	async getNumber(propertyName: keyof T, defaultValue: number, scale = 1): Promise<number> {
+		const value = this.#getValue(propertyName)
+
 		if (!value.isExpression) return value.value * scale
 
 		const result = await this.#executeExpressionAndTrackVariables(value.value, 'number')
@@ -94,7 +127,9 @@ class ExpressionHelper {
 		return (result.value as number) * scale
 	}
 
-	async getString<T extends string | null | undefined>(value: ExpressionOrValue<T>, defaultValue: T): Promise<T> {
+	async getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): Promise<TVal> {
+		const value = this.#getValue(propertyName)
+
 		if (!value.isExpression) return value.value
 
 		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
@@ -102,10 +137,12 @@ class ExpressionHelper {
 			return defaultValue
 		}
 
-		return result.value as T
+		return result.value as TVal
 	}
 
-	async getEnum<T extends string>(value: ExpressionOrValue<T>, values: T[], defaultValue: T): Promise<T> {
+	async getEnum<TVal extends string>(propertyName: keyof T, values: TVal[], defaultValue: TVal): Promise<TVal> {
+		const value = this.#getValue(propertyName)
+
 		if (!value.isExpression) return value.value
 
 		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
@@ -114,14 +151,16 @@ class ExpressionHelper {
 		}
 
 		const strValue = result.value as string
-		if (!values.includes(strValue as T)) {
+		if (!values.includes(strValue as TVal)) {
 			return defaultValue
 		}
 
-		return strValue as T
+		return strValue as TVal
 	}
 
-	async getBoolean(value: ExpressionOrValue<boolean>, defaultValue: boolean): Promise<boolean> {
+	async getBoolean(propertyName: keyof T, defaultValue: boolean): Promise<boolean> {
+		const value = this.#getValue(propertyName)
+
 		if (!value.isExpression) return value.value
 
 		const result = await this.#executeExpressionAndTrackVariables(value.value, 'boolean')
@@ -132,9 +171,11 @@ class ExpressionHelper {
 		return result.value as boolean
 	}
 
-	async getHorizontalAlignment(value: ExpressionOrValue<HorizontalAlignment>): Promise<HorizontalAlignment> {
+	async getHorizontalAlignment(propertyName: keyof T): Promise<HorizontalAlignment> {
+		const value = this.#getValue(propertyName)
+
 		if (!value.isExpression) {
-			return this.getEnum<HorizontalAlignment>(value, ['left', 'center', 'right'], 'center')
+			return this.getEnum<HorizontalAlignment>(propertyName, ['left', 'center', 'right'], 'center')
 		}
 
 		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
@@ -154,9 +195,11 @@ class ExpressionHelper {
 				return 'center'
 		}
 	}
-	async getVerticalAlignment(value: ExpressionOrValue<VerticalAlignment>): Promise<VerticalAlignment> {
+	async getVerticalAlignment(propertyName: keyof T): Promise<VerticalAlignment> {
+		const value = this.#getValue(propertyName)
+
 		if (!value.isExpression) {
-			return this.getEnum<VerticalAlignment>(value, ['top', 'center', 'bottom'], 'center')
+			return this.getEnum<VerticalAlignment>(propertyName, ['top', 'center', 'bottom'], 'center')
 		}
 
 		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
@@ -177,62 +220,6 @@ class ExpressionHelper {
 		}
 	}
 }
-
-class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
-	get onlyEnabled(): boolean {
-		return this.helper.onlyEnabled
-	}
-
-	constructor(
-		private readonly helper: ExpressionHelper,
-		private readonly element: T,
-		private readonly elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined
-	) {}
-
-	#getValue(propertyName: keyof T): ExpressionOrValue<any> {
-		const override = this.elementOverrides?.get(String(propertyName))
-		return override ? override : (this.element as any)[propertyName]
-	}
-
-	async getUnknown(
-		propertyName: keyof T,
-		defaultValue: boolean | number | string | undefined
-	): Promise<boolean | number | string | undefined> {
-		return this.helper.getUnknown(this.#getValue(propertyName), defaultValue)
-	}
-
-	async getDrawText(propertyName: keyof T): Promise<boolean | number | string | undefined> {
-		const value = this.#getValue(propertyName)
-		if (value.isExpression) {
-			return this.helper.getUnknown(value, 'ERR')
-		} else {
-			return this.helper.parseVariablesInString(value.value, 'ERR')
-		}
-	}
-
-	async getNumber(propertyName: keyof T, defaultValue: number, scale = 1): Promise<number> {
-		return this.helper.getNumber(this.#getValue(propertyName), defaultValue, scale)
-	}
-
-	async getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): Promise<TVal> {
-		return this.helper.getString(this.#getValue(propertyName), defaultValue)
-	}
-
-	async getEnum<TVal extends string>(propertyName: keyof T, values: TVal[], defaultValue: TVal): Promise<TVal> {
-		return this.helper.getEnum(this.#getValue(propertyName), values, defaultValue)
-	}
-
-	async getBoolean(propertyName: keyof T, defaultValue: boolean): Promise<boolean> {
-		return this.helper.getBoolean(this.#getValue(propertyName), defaultValue)
-	}
-
-	async getHorizontalAlignment(propertyName: keyof T): Promise<HorizontalAlignment> {
-		return this.helper.getHorizontalAlignment(this.#getValue(propertyName))
-	}
-	async getVerticalAlignment(propertyName: keyof T): Promise<VerticalAlignment> {
-		return this.helper.getVerticalAlignment(this.#getValue(propertyName))
-	}
-}
 type ElementExpressionHelperFactory = <T extends ButtonGraphicsElementBase>(element: T) => ElementExpressionHelper<T>
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
@@ -245,16 +232,23 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	elements: SomeButtonGraphicsDrawElement[]
 	usedVariables: Set<string>
 }> {
-	const helper = new ExpressionHelper(executeExpression, parseVariables, onlyEnabled)
+	const usedVariables = new Set<string>()
 
 	const helperFactory: ElementExpressionHelperFactory = (element) =>
-		new ElementExpressionHelper(helper, element, feedbackOverrides.get(element.id))
+		new ElementExpressionHelper(
+			executeExpression,
+			parseVariables,
+			usedVariables,
+			element,
+			feedbackOverrides.get(element.id),
+			onlyEnabled
+		)
 
 	const newElements = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(helperFactory, elements)
 
 	return {
 		elements: newElements,
-		usedVariables: helper.usedVariables,
+		usedVariables: usedVariables,
 	}
 }
 
