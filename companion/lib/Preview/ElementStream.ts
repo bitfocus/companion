@@ -3,10 +3,7 @@ import type { ControlsController } from '../Controls/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import EventEmitter from 'node:events'
-import type {
-	SomeButtonGraphicsElement,
-	SomeButtonGraphicsDrawElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
@@ -155,15 +152,6 @@ export class PreviewElementStream {
 		}
 	}
 
-	#getElementFromControl(controlId: string | null, elementId: string): SomeButtonGraphicsElement | undefined {
-		if (!controlId) return undefined
-
-		const control = this.#controlsController.getControl(controlId)
-		if (!control || !control.supportsLayeredStyle) return undefined
-
-		return control.layeredStyleGetElementById(elementId)
-	}
-
 	onVariablesChanged = (changed: Set<string>, fromControlId: string | null): void => {
 		for (const [elementStreamId, session] of this.#sessions) {
 			if (fromControlId && session.controlId !== fromControlId) continue
@@ -194,9 +182,19 @@ export class PreviewElementStream {
 		element: SomeButtonGraphicsDrawElement | null
 		referencedVariableIds: Set<string>
 	}> {
-		const elementDef = this.#getElementFromControl(controlId, elementId)
-
 		const referencedVariableIds = new Set<string>()
+
+		const control = this.#controlsController.getControl(controlId)
+		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) {
+			return { element: null, referencedVariableIds }
+		}
+
+		const elementDef = control.layeredStyleGetElementById(elementId)
+		if (!elementDef) {
+			return { element: null, referencedVariableIds }
+		}
+
+		const feedbackOverrides = control.entities.getFeedbackStyleOverrides()
 
 		if (!elementDef) {
 			return { element: null, referencedVariableIds }
@@ -242,7 +240,7 @@ export class PreviewElementStream {
 			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
 			const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
 				[elementDefToProcess],
-				new Map(),
+				feedbackOverrides,
 				parseExpression,
 				parseVariablesInString,
 				false // onlyEnabled
