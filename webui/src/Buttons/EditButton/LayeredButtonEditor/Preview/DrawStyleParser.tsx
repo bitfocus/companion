@@ -1,4 +1,7 @@
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type {
+	SomeButtonGraphicsElement,
+	SomeButtonGraphicsDrawElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import { cloneDeep, isEqual } from 'lodash-es'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import { useEffect, useState } from 'react'
@@ -68,60 +71,84 @@ class LayeredButtonDrawStyleParser {
 			const referencedElements = new Set<string>()
 			const referencedExpressions = new Set<string>()
 
-			// Stream each element individually
-			const elementPromises = this.#rawElements.map(async (element) => {
-				const elementId = element.id
-				referencedElements.add(elementId)
-
-				// Reuse existing element stream
-				const existing = this.#elementValues.get(elementId)
-				if (existing) return await existing.value
-
-				// Start a new element stream
-				const firstRunPromise = Promise.withResolvers<ElementStreamResult>()
-				let hasReceivedFirstValue = false
-				const updateValue = (value: ElementStreamResult) => {
-					if (this.#disposed) return
-
-					if (!hasReceivedFirstValue) {
-						hasReceivedFirstValue = true
-						firstRunPromise.resolve(value)
-						return
+			// Step 1: Collect all element IDs recursively (including children of groups)
+			const allElementIds: string[] = []
+			const collectElementIdsRecursively = (elements: SomeButtonGraphicsElement[]) => {
+				for (const element of elements) {
+					allElementIds.push(element.id)
+					if (element.type === 'group') {
+						collectElementIdsRecursively(element.children)
 					}
-
-					// Notify the reactive observers
-					const existing = this.#elementValues.get(elementId)
-					if (!existing) return
-
-					// Update to a concrete value
-					existing.value = value
-
-					// Queue update
-					this.#recalculateStyle.trigger()
 				}
+			}
+			collectElementIdsRecursively(this.#rawElements)
 
-				const sub = trpcClient.preview.elementStream.watchElement.subscribe(
-					{
-						controlId: this.#controlId,
-						elementId,
-					},
-					{
-						onData: (result) => updateValue(result as ElementStreamResult), // TODO - fix this type
-						onError: (error) => {
-							console.error('Subscription to element errored:', error)
-							// TODO: handle error case
-						},
+			// Step 2: Start subscriptions for each element and build a map of resolved data
+			const elementDataMap = new Map<string, SomeButtonGraphicsDrawElement>()
+
+			await Promise.all(
+				allElementIds.map(async (elementId) => {
+					referencedElements.add(elementId)
+
+					// Reuse existing element stream
+					const existing = this.#elementValues.get(elementId)
+					let resolvedElement: ElementStreamResult
+
+					if (existing) {
+						resolvedElement = await existing.value
+					} else {
+						// Start a new element stream
+						const firstRunPromise = Promise.withResolvers<ElementStreamResult>()
+						let hasReceivedFirstValue = false
+						const updateValue = (value: ElementStreamResult) => {
+							if (this.#disposed) return
+
+							if (!hasReceivedFirstValue) {
+								hasReceivedFirstValue = true
+								firstRunPromise.resolve(value)
+								return
+							}
+
+							// Notify the reactive observers
+							const existing = this.#elementValues.get(elementId)
+							if (!existing) return
+
+							// Update to a concrete value
+							existing.value = value
+
+							// Queue update
+							this.#recalculateStyle.trigger()
+						}
+
+						const sub = trpcClient.preview.elementStream.watchElement.subscribe(
+							{
+								controlId: this.#controlId,
+								elementId,
+							},
+							{
+								onData: (result) => updateValue(result as ElementStreamResult), // TODO - fix this type
+								onError: (error) => {
+									console.error('Subscription to element errored:', error)
+									// TODO: handle error case
+								},
+							}
+						)
+
+						// Track the new value, to avoid duplication
+						this.#elementValues.set(elementId, {
+							unsub: () => sub.unsubscribe(),
+							value: firstRunPromise.promise,
+						})
+
+						resolvedElement = await firstRunPromise.promise
 					}
-				)
 
-				// Track the new value, to avoid duplication
-				this.#elementValues.set(elementId, {
-					unsub: () => sub.unsubscribe(),
-					value: firstRunPromise.promise,
+					// Add to map if the element loaded successfully
+					if (resolvedElement.ok && resolvedElement.element) {
+						elementDataMap.set(elementId, resolvedElement.element)
+					}
 				})
-
-				return await firstRunPromise.promise
-			})
+			)
 
 			// Stream the built-in expressions for this control state
 			const runExpressionStream = async (
@@ -194,16 +221,43 @@ class LayeredButtonDrawStyleParser {
 					isVariableString: false,
 				})
 
-			// Wait for all element streams and control state expressions
-			const [resolvedElements, thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] =
-				await Promise.all([
-					Promise.all(elementPromises),
-					parseExpression('$(this:pushed)', 'boolean'),
-					parseExpression('$(this:step_count)', 'number'),
-					parseExpression('$(this:step_count) > 1 ? $(this:step) : 0', 'number'),
-					parseExpression('$(this:button_status)', 'string'),
-					parseExpression('$(this:actions_running)', 'boolean'),
-				])
+			// Wait for control state expressions
+			const [thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] = await Promise.all([
+				parseExpression('$(this:pushed)', 'boolean'),
+				parseExpression('$(this:step_count)', 'number'),
+				parseExpression('$(this:step_count) > 1 ? $(this:step) : 0', 'number'),
+				parseExpression('$(this:button_status)', 'string'),
+				parseExpression('$(this:actions_running)', 'boolean'),
+			])
+
+			// Step 3: Reconstruct the tree structure using the cached data
+			const reconstructTree = (sourceElements: SomeButtonGraphicsElement[]): SomeButtonGraphicsDrawElement[] => {
+				const result: SomeButtonGraphicsDrawElement[] = []
+
+				for (const sourceElement of sourceElements) {
+					const resolvedElement = elementDataMap.get(sourceElement.id)
+					if (!resolvedElement) {
+						// Element hasn't loaded yet, skip it
+						continue
+					}
+
+					if (sourceElement.type === 'group' && resolvedElement.type === 'group') {
+						// Recursively reconstruct children for group elements
+						const reconstructedChildren = reconstructTree(sourceElement.children)
+						result.push({
+							...resolvedElement,
+							children: reconstructedChildren,
+						})
+					} else {
+						// Non-group element, use as-is
+						result.push(resolvedElement)
+					}
+				}
+
+				return result
+			}
+
+			const elements = reconstructTree(this.#rawElements)
 
 			// Unsubscribe from any streams that are no longer used
 			for (const [elementId, sub] of this.#elementValues) {
@@ -218,9 +272,6 @@ class LayeredButtonDrawStyleParser {
 					this.#expressionValues.delete(expression)
 				}
 			}
-
-			// Extract the draw elements from the resolved results
-			const elements = resolvedElements.map((result) => result.element)
 
 			// Emit the new elements
 			this.#changed({
