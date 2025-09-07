@@ -28,7 +28,7 @@ interface CachedExpressionValue {
 }
 
 class LayeredButtonDrawStyleParser {
-	readonly #controlId: string | null
+	readonly #controlId: string
 	readonly #changed: (style: DrawStyleLayeredButtonModel) => void
 
 	readonly #elementValues = new Map<string, CachedElementValue>()
@@ -37,7 +37,7 @@ class LayeredButtonDrawStyleParser {
 
 	#disposed = false
 
-	constructor(controlId: string | null, changed: (style: DrawStyleLayeredButtonModel) => void) {
+	constructor(controlId: string, changed: (style: DrawStyleLayeredButtonModel) => void) {
 		this.#controlId = controlId
 		this.#changed = changed
 	}
@@ -305,7 +305,7 @@ class LayeredButtonDrawStyleParser {
  * @returns The parsed draw style, or null if not yet ready
  */
 export function useLayeredButtonDrawStyleParser(
-	controlId: string | null,
+	controlId: string,
 	styleStore: LayeredStyleStore
 ): DrawStyleLayeredButtonModel | null {
 	const [drawStyle, setDrawStyle] = useState<DrawStyleLayeredButtonModel | null>(null)
