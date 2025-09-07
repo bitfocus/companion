@@ -200,6 +200,8 @@ function translateNumberField(
 		width: width,
 		required: field.required,
 		range: field.range,
+		showMinAsNegativeInfinity: field.showMinAsNegativeInfinity,
+		showMaxAsPositiveInfinity: field.showMaxAsPositiveInfinity,
 	}
 }
 function translateDropdownField(

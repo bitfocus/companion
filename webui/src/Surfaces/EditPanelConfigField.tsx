@@ -61,6 +61,8 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					value={value}
 					setValue={setValue2}
 					checkValid={checkValid}
+					showMinAsNegativeInfinity={definition.showMinAsNegativeInfinity}
+					showMaxAsPositiveInfinity={definition.showMaxAsPositiveInfinity}
 				/>
 			)
 			break

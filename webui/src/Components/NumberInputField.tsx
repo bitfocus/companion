@@ -14,7 +14,7 @@ interface NumberInputFieldProps {
 	// When true, show the min value as a visual -∞ when value <= min
 	showMinAsNegativeInfinity?: boolean
 	// When true, show the max value as a visual ∞ when value >= max
-	showMaxAsInfinity?: boolean
+	showMaxAsPositiveInfinity?: boolean
 }
 
 export function NumberInputField({
@@ -28,7 +28,7 @@ export function NumberInputField({
 	disabled,
 	checkValid,
 	showMinAsNegativeInfinity,
-	showMaxAsInfinity,
+	showMaxAsPositiveInfinity,
 }: NumberInputFieldProps): React.JSX.Element {
 	const [tmpValue, setTmpValue] = useState<string | number | null>(null)
 	const [focused, setFocused] = useState(false)
@@ -58,7 +58,12 @@ export function NumberInputField({
 		numericEffective <= min
 	) {
 		showOverlayValue = '-∞'
-	} else if (!!showMaxAsInfinity && typeof max !== 'undefined' && !isNaN(numericEffective) && numericEffective >= max) {
+	} else if (
+		!!showMaxAsPositiveInfinity &&
+		typeof max !== 'undefined' &&
+		!isNaN(numericEffective) &&
+		numericEffective >= max
+	) {
 		showOverlayValue = '∞'
 	}
 

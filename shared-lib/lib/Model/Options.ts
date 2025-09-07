@@ -177,6 +177,10 @@ export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBa
 	step?: number
 	/** Whether to show a slider for the input */
 	range?: boolean
+	/** When true, show the min value as a visual -∞ when value <= min */
+	showMinAsNegativeInfinity?: boolean
+	/** When true, show the max value as a visual ∞ when value >= max */
+	showMaxAsPositiveInfinity?: boolean
 }
 export interface CompanionInputFieldCheckboxExtended extends CompanionInputFieldBaseExtended {
 	type: 'checkbox'

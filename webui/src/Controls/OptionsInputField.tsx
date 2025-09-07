@@ -153,6 +153,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 					disabled={readonly}
 					setValue={setValue2}
 					checkValid={checkValid}
+					showMinAsNegativeInfinity={option.showMinAsNegativeInfinity}
+					showMaxAsPositiveInfinity={option.showMaxAsPositiveInfinity}
 				/>
 			)
 			break
