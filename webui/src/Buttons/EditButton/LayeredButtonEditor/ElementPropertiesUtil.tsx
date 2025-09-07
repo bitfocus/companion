@@ -1,6 +1,6 @@
 import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CFormLabel, CCol, CButton } from '@coreui/react'
-import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
+import { faFilter, faSquareRootVariable, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useCallback } from 'react'
@@ -31,7 +31,8 @@ export const FormPropertyField = observer(function FormPropertyField({
 	features,
 	children,
 }: FormPropertyFieldProps) {
-	const { controlId, localVariablesStore } = useElementPropertiesContext()
+	const { controlId, localVariablesStore, isPropertyOverridden } = useElementPropertiesContext()
+
 	const updateOptionValueMutation = useMutationExt(trpc.controls.styles.updateOptionValue.mutationOptions())
 	const updateOptionIsExpressionMutation = useMutationExt(
 		trpc.controls.styles.updateOptionIsExpression.mutationOptions()
@@ -70,11 +71,18 @@ export const FormPropertyField = observer(function FormPropertyField({
 	const elementProp = elementProps[property] as ExpressionOrValue<any>
 	const toggleExpression = useCallback(() => setIsExpression(!elementProp.isExpression), [setIsExpression, elementProp])
 
+	const isOverridden = isPropertyOverridden(elementId, property)
+
 	return (
 		<>
 			<CFormLabel className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
 				{label}
 				{!elementProp.isExpression && <InputFeatureIcons {...features} />}
+				{isOverridden ? (
+					<span title="Value is affected by at least one feedback">
+						<FontAwesomeIcon icon={faLayerGroup} />
+					</span>
+				) : null}
 			</CFormLabel>
 			<CCol sm={8} className="field-with-expression">
 				<div className="expression-field">

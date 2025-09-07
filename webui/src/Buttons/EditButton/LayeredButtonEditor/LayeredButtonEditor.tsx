@@ -44,6 +44,10 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 		console.log('update data')
 		styleStore.updateData(config.style?.layers || [])
 	}, [styleStore, config.style?.layers])
+	useMemo(() => {
+		console.log('update overrides')
+		styleStore.updateOverridesData(config.feedbacks || [])
+	}, [styleStore, config.feedbacks])
 
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
 
@@ -159,6 +163,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						controlId={controlId}
 						elementProps={elementProps}
 						localVariablesStore={localVariablesStore}
+						isPropertyOverridden={styleStore.isPropertyOverridden}
 					/>
 				) : (
 					<NonIdealState icon={faLayerGroup}>
