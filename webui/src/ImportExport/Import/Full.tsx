@@ -2,7 +2,16 @@ import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { CAlert, CButton, CCallout, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
-import { faClock, faDownload, faFileImport, faGlobe, faPlug, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCircleInfo,
+	faClock,
+	faDownload,
+	faFileImport,
+	faGlobe,
+	faPlug,
+	faTh,
+	faWarning,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
@@ -187,6 +196,10 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				A full import will replace the current system configuration of the selected components with the imported
 				configuration of the components.
 			</p>
+			<CAlert color="info" className="margin-top">
+				<FontAwesomeIcon icon={faCircleInfo} /> Want to import specific buttons or triggers instead? Use the{' '}
+				<strong>Buttons</strong> or <strong>Triggers</strong> tabs at the top.
+			</CAlert>
 			<CCallout color="warning">
 				<h5>
 					<FontAwesomeIcon icon={faWarning} /> Before You Proceed
@@ -286,8 +299,8 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				</tbody>
 			</table>
 			<CAlert color="info" className="margin-top">
-				<FontAwesomeIcon icon={faPlug} /> <strong>Note:</strong> All the connections will be imported, as they are
-				required to be able to import any actions and feedbacks.
+				<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to import
+				any actions and feedbacks.
 			</CAlert>
 
 			{/* <InputCheckbox
