@@ -39,6 +39,7 @@ export interface ControlCommonEvents {
 	invalidateControlRender: [controlId: string]
 	invalidateLocationRender: [location: ControlLocation]
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
+	layeredStyleElementChanged: [controlId: string, elementId: string]
 
 	presetDrawn: [controlId: string, render: ImageResult]
 }

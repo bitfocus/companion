@@ -3,7 +3,10 @@ import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type {
+	ButtonGraphicsElementUsage,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithStyle | ControlWithoutStyle) &
@@ -111,6 +114,13 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * @param allChangedVariables - variables with changes
 	 */
 	onVariablesChanged(allChangedVariables: Set<string>): void
+
+	/**
+	 * Get an element from the layered style by ID
+	 * @param id Element ID to find
+	 * @returns The element if found, undefined otherwise
+	 */
+	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined
 }
 
 export interface ControlWithoutStyle extends ControlBase<any> {
