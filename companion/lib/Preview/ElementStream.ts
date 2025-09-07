@@ -236,14 +236,15 @@ export class PreviewElementStream {
 
 		try {
 			// For group elements, clear children since they should be watched independently
+			let elementDefToProcess = elementDef
 			if (elementDef.type === 'group') {
-				elementDef = { ...elementDef, children: [] }
+				elementDefToProcess = { ...elementDef, children: [] }
 			}
 
 			// Convert the single element to its draw representation
 			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
 			const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
-				[elementDef],
+				[elementDefToProcess],
 				parseExpression,
 				parseVariablesInString,
 				false // onlyEnabled
