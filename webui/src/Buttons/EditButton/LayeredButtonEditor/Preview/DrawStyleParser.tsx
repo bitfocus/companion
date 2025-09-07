@@ -76,7 +76,7 @@ class LayeredButtonDrawStyleParser {
 			const collectElementIdsRecursively = (elements: SomeButtonGraphicsElement[]) => {
 				for (const element of elements) {
 					allElementIds.push(element.id)
-					if (element.type === 'group') {
+					if ('children' in element && Array.isArray(element.children)) {
 						collectElementIdsRecursively(element.children)
 					}
 				}
