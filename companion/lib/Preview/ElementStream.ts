@@ -64,26 +64,22 @@ export class PreviewElementStream {
 						if (!session) {
 							self.#logger.debug(`Client "${ctx.clientId}" subscribed to new element session: ${elementStreamId}`)
 
-							// Look up the element from the control
-							const elementDef = self.#getElementFromControl(input.controlId, input.elementId)
-
-							// Track all expressions found in this element
-							const expressionTracker = new Set<string>()
-
-							const initialValue = await self.#evaluateElement(elementDef, input.controlId, expressionTracker)
-
+							// Create session immediately with null value to prevent race conditions
 							session = {
 								elementStreamId,
 								controlId: input.controlId,
 								elementId: input.elementId,
-								trackedExpressions: expressionTracker,
+								trackedExpressions: new Set<string>(),
 
-								latestResult: initialValue,
+								latestResult: { ok: true, element: null },
 								changes: new EventEmitter(),
 								isEvaluating: false,
 								hasPendingEvaluation: false,
 							}
 							self.#sessions.set(elementStreamId, session)
+
+							// Trigger async evaluation of the initial value
+							self.#triggerElementReEvaluation(session)
 						} else {
 							self.#logger.debug(`Client "${ctx.clientId}" subscribed to existing element session: ${elementStreamId}`)
 						}
@@ -170,7 +166,7 @@ export class PreviewElementStream {
 		const control = this.#controlsController.getControl(controlId)
 		if (!control || !control.supportsLayeredStyle) return undefined
 
-		return (control as ControlWithLayeredStyle).layeredStyleGetElementById(elementId)
+		return control.layeredStyleGetElementById(elementId)
 	}
 
 	onVariablesChanged = (changed: Set<string>, fromControlId: string | null): void => {
