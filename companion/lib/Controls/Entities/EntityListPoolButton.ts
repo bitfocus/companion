@@ -21,6 +21,7 @@ import type { ControlEntityInstance } from './EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 interface CurrentStepFromExpression {
 	type: 'expression'
@@ -187,6 +188,59 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const styleBuilder = new FeedbackStyleBuilder(baseStyle)
 		this.#feedbacks.buildFeedbackStyle(styleBuilder)
 		return styleBuilder.style
+	}
+
+	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>> {
+		const result = new Map<string, Map<string, ExpressionOrValue<any>>>()
+
+		for (const feedback of this.#feedbacks.getDirectEntities()) {
+			const overrides = feedback.styleOverrides
+			if (!overrides || overrides.length === 0) continue
+
+			const entityDefinition = feedback.getEntityDefinition()
+			if (!entityDefinition) continue
+
+			switch (entityDefinition.feedbackType) {
+				case FeedbackEntitySubType.Boolean:
+					if (feedback.getBooleanFeedbackValue()) {
+						for (const override of overrides) {
+							const targetMap = result.get(override.elementId) ?? new Map<string, ExpressionOrValue<any>>()
+							targetMap.set(override.elementProperty, override.override)
+							result.set(override.elementId, targetMap)
+						}
+					}
+					break
+				case FeedbackEntitySubType.Advanced: {
+					const style = feedback.feedbackValue
+					if (!style || typeof style !== 'object') break
+					for (const override of overrides) {
+						const styleValue = style[override.override.value]
+						if (styleValue !== undefined) {
+							const targetMap = result.get(override.elementId) ?? new Map<string, ExpressionOrValue<any>>()
+							targetMap.set(override.elementProperty, {
+								isExpression: false,
+								value: styleValue,
+							})
+							result.set(override.elementId, targetMap)
+						}
+					}
+
+					break
+				}
+				case FeedbackEntitySubType.Value:
+					// Not compatible here
+					break
+				case FeedbackEntitySubType.StyleOverride:
+				case null:
+					// Not a real feedback
+					break
+				default:
+					assertNever(entityDefinition.feedbackType)
+					break
+			}
+		}
+
+		return result
 	}
 
 	getStepIds(): string[] {

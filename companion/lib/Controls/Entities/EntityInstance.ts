@@ -94,6 +94,11 @@ export class ControlEntityInstance {
 		return this.#cachedFeedbackValue
 	}
 
+	get styleOverrides(): FeedbackEntityStyleOverride[] | undefined {
+		if (this.type !== EntityModelType.Feedback) return undefined
+		return (this.#data as FeedbackEntityModel).styleOverrides
+	}
+
 	get localVariableName(): string | null {
 		if (this.type !== EntityModelType.Feedback || this.disabled) return null
 

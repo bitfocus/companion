@@ -225,9 +225,12 @@ export class ControlButtonLayered
 			injectedVariableValues
 		)
 
+		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
+
 		// Compute the new drawing
 		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
 			this.#drawElements,
+			feedbackOverrides,
 			async (str: string, requiredType?: string) => parser.executeExpression(str, requiredType),
 			async (str: string) => {
 				const res = parser.parseVariables(str)
