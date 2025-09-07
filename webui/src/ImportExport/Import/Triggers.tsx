@@ -5,7 +5,7 @@ import type { ClientImportObject } from '@companion-app/shared/Model/ImportExpor
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileCircleMinus, faFileCirclePlus } from '@fortawesome/free-solid-svg-icons'
+import { faFileCircleExclamation, faFileCirclePlus } from '@fortawesome/free-solid-svg-icons'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject
@@ -118,7 +118,7 @@ export function ImportTriggersTab({
 			</CButtonGroup>
 
 			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
-			<h4 className="mt-3">Import Triggers</h4>
+			<h5 className="mt-3">Import Triggers</h5>
 			<p>
 				Clicking a button below will complete the import of the selected triggers. You can add the triggers to any
 				existing ones, or completely replace all current triggers with the imported ones.
@@ -129,7 +129,7 @@ export function ImportTriggersTab({
 						<FontAwesomeIcon icon={faFileCirclePlus} /> Add to existing triggers
 					</CButton>
 					<CButton color="warning" data-replace={true} onClick={doImport} disabled={selectedTriggers.length === 0}>
-						<FontAwesomeIcon icon={faFileCircleMinus} /> Replace existing triggers
+						<FontAwesomeIcon icon={faFileCircleExclamation} /> Replace existing triggers
 					</CButton>
 				</CButtonGroup>
 			</div>

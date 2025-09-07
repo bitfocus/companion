@@ -115,8 +115,8 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 		<>
 			<h4>Buttons</h4>
 			<p>
-				Select a source page of buttons you want to import, and a destination page to import them. This can replace an
-				existing page, or create a entirely new page.
+				Choose a source page containing the buttons to import and a destination page where they will be imported. You
+				can either replace an existing page or create a new one.
 			</p>
 			<CRow className={className}>
 				<CCol xs={12} xl={6}>
@@ -205,12 +205,12 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 						/>
 					</MyErrorBoundary>
 				</CCol>
-				<h4 className="mt-3">Import Page</h4>
+				<h5 className="mt-3">Import Buttons to Page</h5>
 				<p>
 					Clicking the button below will
 					{pageNumber == -1
 						? ' import the source page to a new page'
-						: " completely override the existing destination page's buttons with the selected source page's buttons"}
+						: ' completely override the button on the existing destination page with the buttons on the selected source page'}
 					.
 				</p>
 				<CCol xs={12} className="mt-1">
