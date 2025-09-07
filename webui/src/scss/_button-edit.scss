@@ -63,11 +63,11 @@
 	margin: 0;
 }
 
-table.entity-table tr:not(:first-child) td,
+table.entity-table > tbody > tr:not(:first-child) > td,
 table.variables-table tr:not(:first-child) td {
 	border-top: 10px solid #f0f0f0;
 }
-table.entity-table td,
+table.entity-table > tbody > tr > td,
 table.variables-table td {
 	border-bottom: 10px solid #f0f0f0;
 }

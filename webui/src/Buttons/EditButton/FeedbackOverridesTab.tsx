@@ -1,7 +1,7 @@
 import React from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
 interface FeedbackOverridesTabProps {
@@ -32,7 +32,7 @@ export function FeedbackOverridesTab({
 			listId="feedbacks"
 			entityType={EntityModelType.Feedback}
 			entityTypeLabel="feedback"
-			feedbackListType={null}
+			feedbackListType={FeedbackEntitySubType.StyleOverride}
 			localVariablesStore={localVariablesStore}
 			localVariablePrefix={null}
 		/>

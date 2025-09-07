@@ -1,6 +1,7 @@
 import z from 'zod'
 import { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
+import { ExpressionOrValue, schemaExpressionOrValue } from './StyleLayersModel.js'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel =
@@ -44,7 +45,23 @@ export interface FeedbackEntityModel extends EntityModelBase {
 	variableName?: string
 	/** When in a list that supports advanced feedbacks, this style can be set */
 	style?: Partial<ButtonStyleProperties>
+
+	/** When in a style list on a layered button, some overrides to apply */
+	styleOverrides?: FeedbackEntityStyleOverride[]
 }
+
+export interface FeedbackEntityStyleOverride {
+	overrideId: string
+	elementId: string
+	elementProperty: string
+	override: ExpressionOrValue<any>
+}
+export const schemaFeedbackEntityStyleOverride: z.ZodType<FeedbackEntityStyleOverride> = z.object({
+	overrideId: z.string(),
+	elementId: z.string(),
+	elementProperty: z.string(),
+	override: schemaExpressionOrValue,
+})
 
 export interface EntityModelBase {
 	readonly type: EntityModelType
