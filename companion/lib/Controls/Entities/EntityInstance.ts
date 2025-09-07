@@ -776,6 +776,7 @@ export class ControlEntityInstance {
 				}
 				break
 			case FeedbackEntitySubType.Value:
+			case FeedbackEntitySubType.StyleOverride:
 				// Not valid for building a style
 				break
 			case null:
