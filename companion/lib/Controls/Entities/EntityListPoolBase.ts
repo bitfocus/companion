@@ -18,6 +18,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -135,6 +136,8 @@ export abstract class ControlEntityListPoolBase {
 	protected abstract getAllEntityLists(): ControlEntityList[]
 
 	abstract getLocalVariableEntities(): ControlEntityInstance[]
+
+	abstract getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>
 
 	getLocalVariableValues(): CompanionVariableValues {
 		const entities = this.getLocalVariableEntities()
