@@ -51,7 +51,7 @@ export class PreviewElementStream {
 			watchElement: publicProcedure
 				.input(
 					z.object({
-						controlId: z.string().nullable(),
+						controlId: z.string(),
 						elementId: z.string(),
 					})
 				)
@@ -131,18 +131,14 @@ export class PreviewElementStream {
 		session.hasPendingEvaluation = false
 
 		try {
-			// Look up the updated element definition
-			const elementDef = this.#getElementFromControl(session.controlId, session.elementId)
-
-			// Re-evaluate the element with fresh expression tracking
-			const expressionTracker = new Set<string>()
-			const newValue = await this.#evaluateElement(elementDef, session.controlId, expressionTracker)
+			// Re-evaluate the element
+			const newValue = await this.#evaluateElement(session.controlId, session.elementId)
 
 			// Update session with new value
-			session.latestResult = newValue
-			session.trackedExpressions = expressionTracker
+			session.latestResult = { ok: true, element: newValue.element }
+			session.trackedExpressions = newValue.referencedVariableIds
 
-			session.changes.emit('change', newValue)
+			session.changes.emit('change', { ok: true, element: newValue.element })
 		} catch (err) {
 			this.#logger.error(`Error re-evaluating element ${session.elementStreamId}:`, err)
 		} finally {
@@ -192,12 +188,18 @@ export class PreviewElementStream {
 	}
 
 	async #evaluateElement(
-		elementDef: SomeButtonGraphicsElement | null | undefined,
-		controlId: string | null,
-		expressionTracker: Set<string>
-	): Promise<ElementStreamResult> {
+		controlId: string,
+		elementId: string
+	): Promise<{
+		element: SomeButtonGraphicsDrawElement | null
+		referencedVariableIds: Set<string>
+	}> {
+		const elementDef = this.#getElementFromControl(controlId, elementId)
+
+		const referencedVariableIds = new Set<string>()
+
 		if (!elementDef) {
-			return { ok: true, element: null }
+			return { element: null, referencedVariableIds }
 		}
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
@@ -208,7 +210,7 @@ export class PreviewElementStream {
 
 			// Track all variables used in this expression
 			for (const variableId of result.variableIds) {
-				expressionTracker.add(variableId)
+				referencedVariableIds.add(variableId)
 			}
 
 			return result
@@ -219,7 +221,7 @@ export class PreviewElementStream {
 
 			// Track all variables used
 			for (const variableId of result.variableIds) {
-				expressionTracker.add(variableId)
+				referencedVariableIds.add(variableId)
 			}
 
 			return {
@@ -240,6 +242,7 @@ export class PreviewElementStream {
 			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
 			const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
 				[elementDefToProcess],
+				new Map(),
 				parseExpression,
 				parseVariablesInString,
 				false // onlyEnabled
@@ -252,8 +255,8 @@ export class PreviewElementStream {
 			}
 
 			return {
-				ok: true,
 				element: elements[0],
+				referencedVariableIds,
 			}
 		} catch (error) {
 			this.#logger.error('Error evaluating element:', error)
@@ -264,7 +267,7 @@ export class PreviewElementStream {
 
 interface ElementStreamSession {
 	readonly elementStreamId: string
-	readonly controlId: string | null
+	readonly controlId: string
 	readonly elementId: string
 	trackedExpressions: Set<string>
 
