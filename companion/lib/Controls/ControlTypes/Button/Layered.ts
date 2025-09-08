@@ -130,7 +130,7 @@ export class ControlButtonLayered
 	}
 
 	constructor(deps: ControlDependencies, controlId: string, storage: LayeredButtonModel | null, isImport: boolean) {
-		super(deps, controlId, `Controls/Button/Normal/${controlId}`)
+		super(deps, controlId, `Controls/Button/Normal/${controlId}`, true)
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
@@ -225,9 +225,12 @@ export class ControlButtonLayered
 			injectedVariableValues
 		)
 
+		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
+
 		// Compute the new drawing
 		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
 			this.#drawElements,
+			feedbackOverrides,
 			async (str: string, requiredType?: string) => parser.executeExpression(str, requiredType),
 			async (str: string) => {
 				const res = parser.parseVariables(str)

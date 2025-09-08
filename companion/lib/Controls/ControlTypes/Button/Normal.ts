@@ -87,7 +87,7 @@ export class ControlButtonNormal
 	}
 
 	constructor(deps: ControlDependencies, controlId: string, storage: NormalButtonModel | null, isImport: boolean) {
-		super(deps, controlId, `Controls/Button/Normal/${controlId}`)
+		super(deps, controlId, `Controls/Button/Normal/${controlId}`, false)
 
 		this.options = {
 			...cloneDeep(ButtonControlBase.DefaultOptions),
