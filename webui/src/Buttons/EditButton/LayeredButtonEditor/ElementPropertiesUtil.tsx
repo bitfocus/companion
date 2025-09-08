@@ -8,6 +8,7 @@ import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
+import { InputFeatureIcons, InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 
 type ExtractValue<T> = T extends ExpressionOrValue<infer U> ? U : never
 type SetValueFn<TObj, TKey extends keyof TObj> = (value: ExtractValue<TObj[TKey]>) => void
@@ -21,12 +22,13 @@ interface FormPropertyFieldProps<TObj, TKey extends keyof TObj> {
 	elementProps: TObj
 	property: TKey
 	label: string | React.ReactNode
+	features?: InputFeatureIconsProps
 	children: (elementProp: { value: ExtractValue<TObj[TKey]> }, setValue: SetValueFn<TObj, TKey>) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField<
 	TObj extends ButtonGraphicsElementBase,
 	TKey extends string & keyof TObj,
->({ elementProps, property, label, children }: FormPropertyFieldProps<TObj, TKey>) {
+>({ elementProps, property, label, features, children }: FormPropertyFieldProps<TObj, TKey>) {
 	const { controlId, localVariablesStore } = useElementPropertiesContext()
 	const updateOptionValueMutation = useMutationExt(trpc.controls.styles.updateOptionValue.mutationOptions())
 	const updateOptionIsExpressionMutation = useMutationExt(
@@ -68,7 +70,10 @@ export const FormPropertyField = observer(function FormPropertyField<
 
 	return (
 		<>
-			<CFormLabel className={classNames('col-sm-4 col-form-label col-form-label-sm')}>{label}</CFormLabel>
+			<CFormLabel className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
+				{label}
+				{!elementProp.isExpression && <InputFeatureIcons {...features} />}
+			</CFormLabel>
 			<CCol sm={8} className="field-with-expression">
 				<div className="expression-field">
 					{elementProp.isExpression ? (

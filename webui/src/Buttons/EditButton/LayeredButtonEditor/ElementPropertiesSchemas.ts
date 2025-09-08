@@ -1,7 +1,31 @@
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	ButtonGraphicsDecorationType,
+	type HorizontalAlignment,
+	type VerticalAlignment,
+	type LineOrientation,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 
-// Base schema fields that are common to all elements (from ElementCommonProperties)
-export const commonElementFields: SomeCompanionInputField[] = [
+// Type-safe constants for alignment and border position values
+const HORIZONTAL_ALIGNMENT_CHOICES = [
+	{ id: 'left' satisfies HorizontalAlignment, label: 'Left' },
+	{ id: 'center' satisfies HorizontalAlignment, label: 'Center' },
+	{ id: 'right' satisfies HorizontalAlignment, label: 'Right' },
+]
+
+const VERTICAL_ALIGNMENT_CHOICES = [
+	{ id: 'top' satisfies VerticalAlignment, label: 'Top' },
+	{ id: 'center' satisfies VerticalAlignment, label: 'Center' },
+	{ id: 'bottom' satisfies VerticalAlignment, label: 'Bottom' },
+]
+
+const LINE_ORIENTATION_CHOICES = [
+	{ id: 'inside' satisfies LineOrientation, label: 'Inside' },
+	{ id: 'center' satisfies LineOrientation, label: 'Center' },
+	{ id: 'outside' satisfies LineOrientation, label: 'Outside' },
+]
+
+const commonElementFields: SomeCompanionInputField[] = [
 	{
 		type: 'checkbox',
 		id: 'enabled',
@@ -20,8 +44,7 @@ export const commonElementFields: SomeCompanionInputField[] = [
 	},
 ]
 
-// Bounds properties fields (from ElementBoundsProperties)
-export const boundsFields: SomeCompanionInputField[] = [
+const boundsFields: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'x',
@@ -60,8 +83,7 @@ export const boundsFields: SomeCompanionInputField[] = [
 	},
 ]
 
-// Border properties fields (from BorderPropertiesEditor)
-export const borderFields: SomeCompanionInputField[] = [
+const borderFields: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'borderWidth',
@@ -83,16 +105,11 @@ export const borderFields: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'borderPosition',
 		label: 'Border Position',
-		choices: [
-			{ id: 'inside', label: 'Inside' },
-			{ id: 'center', label: 'Center' },
-			{ id: 'outside', label: 'Outside' },
-		],
+		choices: LINE_ORIENTATION_CHOICES,
 		default: 'inside',
 	},
 ]
 
-// Text element schema (from TextElementPropertiesEditor)
 export const textElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	...boundsFields,
@@ -103,7 +120,6 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		tooltip: "The text you see on the button you're working with. You can use variables, but not expressions.",
 		default: '',
 		useVariables: { local: true },
-		// Note: isExpression support not available in schema but used in actual implementation
 	},
 	{
 		type: 'dropdown',
@@ -143,11 +159,7 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'halign',
 		label: 'Horizontal Alignment',
-		choices: [
-			{ id: 'left', label: 'Left' },
-			{ id: 'center', label: 'Center' },
-			{ id: 'right', label: 'Right' },
-		],
+		choices: HORIZONTAL_ALIGNMENT_CHOICES,
 		default: 'center',
 	},
 	// Note: VerticalAlignmentInputField cannot be expressed with existing schemas
@@ -156,11 +168,7 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'valign',
 		label: 'Vertical Alignment',
-		choices: [
-			{ id: 'top', label: 'Top' },
-			{ id: 'center', label: 'Center' },
-			{ id: 'bottom', label: 'Bottom' },
-		],
+		choices: VERTICAL_ALIGNMENT_CHOICES,
 		default: 'center',
 	},
 ]
@@ -182,11 +190,7 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'halign',
 		label: 'Horizontal Alignment',
-		choices: [
-			{ id: 'left', label: 'Left' },
-			{ id: 'center', label: 'Center' },
-			{ id: 'right', label: 'Right' },
-		],
+		choices: HORIZONTAL_ALIGNMENT_CHOICES,
 		default: 'center',
 	},
 	// Note: VerticalAlignmentInputField cannot be expressed with existing schemas
@@ -194,11 +198,7 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'valign',
 		label: 'Vertical Alignment',
-		choices: [
-			{ id: 'top', label: 'Top' },
-			{ id: 'center', label: 'Center' },
-			{ id: 'bottom', label: 'Bottom' },
-		],
+		choices: VERTICAL_ALIGNMENT_CHOICES,
 		default: 'center',
 	},
 	{
@@ -215,7 +215,6 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 	},
 ]
 
-// Box element schema (from BoxElementPropertiesEditor)
 export const boxElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	...boundsFields,
@@ -230,7 +229,6 @@ export const boxElementSchema: SomeCompanionInputField[] = [
 	...borderFields,
 ]
 
-// Line element schema (from LineElementPropertiesEditor)
 export const lineElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	{
@@ -269,7 +267,6 @@ export const lineElementSchema: SomeCompanionInputField[] = [
 		max: 100,
 		step: 1,
 	},
-	// Border properties but labeled as "Line" instead of "Border"
 	{
 		type: 'number',
 		id: 'borderWidth',
@@ -291,19 +288,13 @@ export const lineElementSchema: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'borderPosition',
 		label: 'Line Position',
-		choices: [
-			{ id: 'inside', label: 'Inside' },
-			{ id: 'center', label: 'Center' },
-			{ id: 'outside', label: 'Outside' },
-		],
+		choices: LINE_ORIENTATION_CHOICES,
 		default: 'center',
 	},
 ]
 
-// Canvas element schema (from CanvasElementPropertiesEditor)
 export const canvasElementSchema: SomeCompanionInputField[] = [
-	// Note: Canvas elements do not get common properties like usage, enabled, opacity
-	// Note: Commented out color field in the original component
+	// Note: Canvas elements do not get common properties
 	// {
 	//   type: 'colorpicker',
 	//   id: 'color',
@@ -316,23 +307,17 @@ export const canvasElementSchema: SomeCompanionInputField[] = [
 		id: 'decoration',
 		label: 'Decoration',
 		choices: [
-			{ id: 'follow_default', label: 'Follow default' },
-			{ id: 'top_bar', label: 'Top bar' },
-			{ id: 'border', label: 'Border when pressed' },
-			{ id: 'none', label: 'None' },
+			{ id: ButtonGraphicsDecorationType.FollowDefault, label: 'Follow default' },
+			{ id: ButtonGraphicsDecorationType.TopBar, label: 'Top bar' },
+			{ id: ButtonGraphicsDecorationType.Border, label: 'Border when pressed' },
+			{ id: ButtonGraphicsDecorationType.None, label: 'None' },
 		],
-		default: 'follow_default',
+		default: ButtonGraphicsDecorationType.FollowDefault,
 	},
 ]
 
-// Group element schema (from GroupElementPropertiesEditor)
-export const groupElementSchema: SomeCompanionInputField[] = [
-	// Note: Group elements do not get usage property
-	...commonElementFields,
-	...boundsFields,
-]
+export const groupElementSchema: SomeCompanionInputField[] = [...commonElementFields, ...boundsFields]
 
-// Complete schema mapping for all element types
 export const elementSchemas = {
 	text: textElementSchema,
 	image: imageElementSchema,
