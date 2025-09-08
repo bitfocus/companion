@@ -1,14 +1,15 @@
 import { FeedbackEntityModel, FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
-import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { CButton, CFormSelect } from '@coreui/react'
-import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { CButton } from '@coreui/react'
+import { faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useState } from 'react'
 import { TextInputField } from '~/Components'
 import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
+import { ElementPickerModal } from './ElementPickerModal.js'
+import { elementSchemas } from '~/Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
 
 function makeEmptyOverride(): FeedbackEntityStyleOverride {
 	return {
@@ -17,29 +18,6 @@ function makeEmptyOverride(): FeedbackEntityStyleOverride {
 		elementProperty: '',
 		override: { isExpression: false, value: '' },
 	}
-}
-
-// Very small value editor designed to be replaced later with a FormPropertyField-like control.
-// For now it supports a simple text input and exposes a generic onChange with the raw value.
-function ValueEditor({
-	value,
-	onChange,
-}: {
-	value: ExpressionOrValue<any> | string | null
-	onChange: (v: ExpressionOrValue<any> | string | null) => void
-}) {
-	const stringified = useMemo(() => {
-		if (value === null || value === undefined) return ''
-		if (typeof value === 'string') return value
-		try {
-			return JSON.stringify(value)
-		} catch {
-			// Avoid default Object stringification; return an empty string for unknown values
-			return ''
-		}
-	}, [value])
-
-	return <input type="text" value={stringified} onChange={(e) => onChange(e.target.value)} style={{ width: '100%' }} />
 }
 
 interface LayeredStylesOverridesProps {
@@ -108,60 +86,70 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 	updateRow,
 	deleteRow,
 }: LayeredStylesOverridesRowProps) {
-	const elementsContext = useLayeredStyleElementsContext()
+	const [isModalOpen, setIsModalOpen] = useState(false)
 
-	const elementOptions = useMemo(() => {
-		const buildElementOptions = (elements: any[], prefix = ''): Array<{ value: string; label: string }> => {
-			const options: Array<{ value: string; label: string }> = []
-
-			for (const element of elements) {
-				const label = prefix ? `${prefix} > ${element.name || element.id}` : element.name || element.id
-				options.push({
-					value: element.id,
-					label: `${label} (${element.type})`,
-				})
-
-				if (element.type === 'group' && element.children) {
-					options.push(...buildElementOptions(element.children, label))
-				}
-			}
-
-			return options
-		}
-
-		const elements = elementsContext.styleStore.elements
-		return [{ value: '', label: 'Select element...' }, ...buildElementOptions(elements.slice())]
-	}, [elementsContext])
+	const handleModalSave = useCallback(
+		(override: FeedbackEntityStyleOverride) => {
+			updateRow(override)
+			setIsModalOpen(false)
+		},
+		[updateRow]
+	)
 
 	return (
-		<tr key={row.overrideId}>
-			<td>
-				<CFormSelect value={row.elementId} onChange={(e) => updateRow({ ...row, elementId: e.target.value })}>
-					{elementOptions.map((option) => (
-						<option key={option.value} value={option.value}>
-							{option.label}
-						</option>
-					))}
-				</CFormSelect>
-				<div className="mt-2">
+		<>
+			<tr key={row.overrideId}>
+				<td>
+					<div className="d-flex align-items-center cursor-pointer" onClick={() => setIsModalOpen(true)}>
+						<div className="flex-grow-1">
+							<SelectedElementProperty row={row} />
+						</div>
+						<CButton color="white" size="sm" title="Edit element and property">
+							<FontAwesomeIcon icon={faPencil} />
+						</CButton>
+					</div>
+				</td>
+				<td>
 					<TextInputField
-						value={row.elementProperty}
-						setValue={(v) => updateRow({ ...row, elementProperty: v })}
-						placeholder="e.g. color"
+						value={row.override.value}
+						setValue={(v) => updateRow({ ...row, override: { ...row.override, value: v } })}
 					/>
-				</div>
-			</td>
-			<td>
-				<TextInputField
-					value={row.override.value}
-					setValue={(v) => updateRow({ ...row, override: { ...row.override, value: v } })}
-				/>
-			</td>
-			<td>
-				<CButton color="white" size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
-					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
-			</td>
-		</tr>
+				</td>
+				<td>
+					<CButton color="white" size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
+						<FontAwesomeIcon icon={faTrash} />
+					</CButton>
+				</td>
+			</tr>
+
+			<ElementPickerModal
+				isOpen={isModalOpen}
+				onClose={() => setIsModalOpen(false)}
+				onSave={handleModalSave}
+				currentOverride={row}
+			/>
+		</>
+	)
+})
+
+const SelectedElementProperty = observer(function SelectedElementProperty({
+	row,
+}: {
+	row: FeedbackEntityStyleOverride
+}) {
+	const { styleStore } = useLayeredStyleElementsContext()
+
+	if (!row.elementId || !row.elementProperty)
+		return <div className="text-muted">Click to select element and property</div>
+
+	const selectedElement = row.elementId ? styleStore.findElementById(row.elementId) : null
+	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
+	const selectedProperty = selectedSchema?.find((prop) => prop.id === row.elementProperty)
+
+	return (
+		<>
+			<div className="fw-semibold">{selectedElement?.name || row.elementId}</div>
+			<div className="text-muted small">{selectedProperty?.label || row.elementProperty}</div>
+		</>
 	)
 })
