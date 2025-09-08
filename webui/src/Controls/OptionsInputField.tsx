@@ -21,7 +21,7 @@ import { validateInputValue } from '~/Helpers/validateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface OptionsInputFieldProps {
-	connectionId: string
+	allowInternalFields: boolean
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
@@ -47,7 +47,7 @@ function OptionLabel({ option, features }: { option: SomeCompanionInputField; fe
 }
 
 export const OptionsInputField = observer(function OptionsInputField({
-	connectionId,
+	allowInternalFields,
 	isLocatedInGrid,
 	entityType,
 	option,
@@ -69,7 +69,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 			</CFormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
 				<OptionsInputControl
-					connectionId={connectionId}
+					allowInternalFields={allowInternalFields}
 					isLocatedInGrid={isLocatedInGrid}
 					entityType={entityType}
 					option={option}
@@ -86,7 +86,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 })
 
 interface OptionsInputControlProps {
-	connectionId: string
+	allowInternalFields: boolean
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
@@ -98,7 +98,7 @@ interface OptionsInputControlProps {
 }
 
 export const OptionsInputControl = observer(function OptionsInputControl({
-	connectionId,
+	allowInternalFields,
 	isLocatedInGrid,
 	entityType,
 	option,
@@ -115,12 +115,10 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		return <p>Bad option</p>
 	}
 
-	const isInternal = connectionId === 'internal'
-
 	switch (option.type) {
 		case 'textinput': {
 			const localVariables = features?.local
-				? localVariablesStore?.getOptions(entityType, isInternal, isLocatedInGrid)
+				? localVariablesStore?.getOptions(entityType, allowInternalFields, isLocatedInGrid)
 				: undefined
 
 			return (
@@ -215,7 +213,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			break
 		default:
 			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
-			if (isInternal) {
+			if (allowInternalFields) {
 				const internalControl = InternalModuleField(
 					option as any,
 					isLocatedInGrid,
