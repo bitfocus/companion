@@ -333,3 +333,47 @@ table.variables-table {
 		}
 	}
 }
+
+// Element picker modal styles - cleaner version with more spacing
+.layered-style-element-picker-modal {
+	.element-picker-list {
+		overflow-y: auto;
+		max-height: 100%;
+		height: 100%;
+
+		height: '300px';
+		background-color: #f8f9fa;
+	}
+
+	.element-picker-item {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		padding: 0.25rem 0.5rem;
+		border-bottom: 1px solid #e9ecef;
+		align-items: center;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		--elementlist-depth: 0;
+		margin-left: calc(var(--elementlist-depth) * 1rem);
+
+		border-left: 3px solid transparent;
+
+		&:hover {
+			background-color: #f8f9fa;
+		}
+
+		&.selected {
+			background-color: #e3f2fd;
+			border-left-color: #1976d2;
+		}
+
+		.element-name {
+			font-weight: 500;
+		}
+
+		.element-icon {
+			color: #1976d2;
+		}
+	}
+}

@@ -40,6 +40,10 @@ export class LayeredStyleStore {
 		return undefined
 	}
 
+	public findElementById(id: string): SomeButtonGraphicsElement | undefined {
+		return LayeredStyleStore.#findElementById(this.elements, id)
+	}
+
 	public updateData = action((elements: SomeButtonGraphicsElement[]): void => {
 		console.log('update data')
 
