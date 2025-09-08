@@ -1,4 +1,5 @@
 @use 'variables' as *;
+@use '@coreui/coreui/scss/coreui';
 
 .edit-button-panel {
 	height: 100%;
@@ -334,14 +335,49 @@ table.variables-table {
 	}
 }
 
-// Element picker modal styles - cleaner version with more spacing
 .layered-style-element-picker-modal {
+	.modal-content {
+		// height: 65vh;
+		overflow: hidden;
+		max-height: 55vh;
+	}
+
+	.modal-body {
+		overflow-y: hidden;
+		max-height: 100%;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		column-gap: 1rem;
+		/* allow percentage-height children to resolve when used inside flex/grid parents */
+		min-height: 0;
+
+		@include coreui.media-breakpoint-down(md) {
+			overflow-y: auto;
+			display: block;
+		}
+	}
+
+	.element-modal-col {
+		overflow-y: hidden;
+		/* layout container so header + list split the column and the list can flex/scroll */
+		display: flex;
+		flex-direction: column;
+		/* allow children with percentage heights or flex to shrink properly */
+		min-height: 0;
+
+		@include coreui.media-breakpoint-down(md) {
+			&:not(:first-child) {
+				margin-top: 0.5rem;
+			}
+		}
+	}
+
 	.element-picker-list {
 		overflow-y: auto;
-		max-height: 100%;
-		height: 100%;
-
-		height: '300px';
+		/* take remaining space inside .element-modal-col and be able to shrink */
+		flex: 1 1 auto;
+		min-height: 0;
 		background-color: #f8f9fa;
 	}
 
@@ -358,10 +394,6 @@ table.variables-table {
 		margin-left: calc(var(--elementlist-depth) * 1rem);
 
 		border-left: 3px solid transparent;
-
-		&:hover {
-			background-color: #f8f9fa;
-		}
 
 		&.selected {
 			background-color: #e3f2fd;
