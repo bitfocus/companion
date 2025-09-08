@@ -89,73 +89,74 @@ export function ElementPickerModal({
 	currentOverride,
 }: ElementPickerModalProps): React.JSX.Element {
 	const { styleStore } = useLayeredStyleElementsContext()
-	const [selectedElementId, setSelectedElementId] = useState(currentOverride.elementId)
-	const [selectedProperty, setSelectedProperty] = useState(currentOverride.elementProperty)
+	const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
+	const [selectedProperty, setSelectedProperty] = useState<string | null>(null)
 
-	const selectedElement = selectedElementId ? styleStore.findElementById(selectedElementId) : null
+	const selectedElementId2 = selectedElementId ?? currentOverride.elementId
+	const selectedProperty2 = selectedProperty ?? currentOverride.elementProperty
+
+	const selectedElement = selectedElementId2 ? styleStore.findElementById(selectedElementId2) : null
 	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
 
 	const handleSave = useCallback(() => {
-		if (selectedElementId && selectedProperty) {
+		if (selectedElementId2 && selectedProperty2) {
 			onSave({
 				...currentOverride,
-				elementId: selectedElementId,
-				elementProperty: selectedProperty,
+				elementId: selectedElementId2,
+				elementProperty: selectedProperty2,
 			})
 		}
-	}, [selectedElementId, selectedProperty, currentOverride, onSave])
+	}, [selectedElementId2, selectedProperty2, currentOverride, onSave])
 
 	const handleClose = useCallback(() => {
-		// Reset to current values when canceling
-		setSelectedElementId(currentOverride.elementId)
-		setSelectedProperty(currentOverride.elementProperty)
+		// Clear values when canceling
+		setSelectedElementId(null)
+		setSelectedProperty(null)
 		onClose()
-	}, [currentOverride, onClose])
+	}, [onClose])
 
 	const handleElementSelect = useCallback((elementId: string) => setSelectedElementId(elementId), [])
 
-	const canSave = !!selectedElement && !!selectedSchema?.find((p) => p.id === selectedProperty)
+	const canSave = !!selectedElement && !!selectedSchema?.find((p) => p.id === selectedProperty2)
 
 	return (
 		<CModal visible={isOpen} onClose={handleClose} size="lg" className="layered-style-element-picker-modal">
 			<CModalHeader>
-				<CModalTitle>Select Element and Property</CModalTitle>
+				<CModalTitle>Select Override Element and Property</CModalTitle>
 			</CModalHeader>
 			<CModalBody>
-				<div className="row">
-					<div className="col-md-6">
-						<label className="form-label">Element</label>
-						<div className="element-picker-list border rounded">
-							{styleStore.elements
-								.map((element) => (
-									<ElementTreeItem
-										key={element.id}
-										element={element}
-										depth={0}
-										selectedElementId={selectedElementId}
-										onElementSelect={handleElementSelect}
-									/>
-								))
-								.toReversed()}
-						</div>
-					</div>
-
-					<div className="col-md-6">
-						<label className="form-label">Property</label>
-						<div className="element-picker-list border rounded">
-							{!selectedElementId && <div className="text-muted text-center p-3">Select an element first</div>}
-							{selectedElementId && (!selectedSchema || selectedSchema.length === 0) && (
-								<div className="text-muted text-center p-3">No properties available for this element</div>
-							)}
-							{selectedSchema?.map((option) => (
-								<PropertyListItem
-									key={option.id}
-									option={option}
-									isSelected={selectedProperty === option.id}
-									onSelect={setSelectedProperty}
+				<div className="element-modal-col">
+					<label className="form-label">Element</label>
+					<div className="element-picker-list border rounded">
+						{styleStore.elements
+							.map((element) => (
+								<ElementTreeItem
+									key={element.id}
+									element={element}
+									depth={0}
+									selectedElementId={selectedElementId2}
+									onElementSelect={handleElementSelect}
 								/>
-							))}
-						</div>
+							))
+							.toReversed()}
+					</div>
+				</div>
+
+				<div className="element-modal-col">
+					<label className="form-label">Property</label>
+					<div className="element-picker-list border rounded">
+						{!selectedElementId2 && <div className="text-muted text-center p-3">Select an element first</div>}
+						{selectedElementId2 && (!selectedSchema || selectedSchema.length === 0) && (
+							<div className="text-muted text-center p-3">No properties available for this element</div>
+						)}
+						{selectedSchema?.map((option) => (
+							<PropertyListItem
+								key={option.id}
+								option={option}
+								isSelected={selectedProperty2 === option.id}
+								onSelect={setSelectedProperty}
+							/>
+						))}
 					</div>
 				</div>
 			</CModalBody>
