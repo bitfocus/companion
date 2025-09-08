@@ -85,6 +85,10 @@ export function ImportTriggersTab({
 			<h4>Triggers</h4>
 			<p>Select the triggers you want to import.</p>
 			<table className="table table-responsive-sm mb-3">
+				<colgroup>
+					<col style={{ width: '5rem' }}></col>
+					<col style={{ width: 'auto' }}></col>
+				</colgroup>
 				<thead>
 					<tr>
 						<th>Import</th>
@@ -94,8 +98,8 @@ export function ImportTriggersTab({
 				<tbody>
 					{Object.entries(snapshot.triggers || {}).map(([id, info]) => (
 						<tr key={id}>
-							<td className="compact">
-								<div className="form-check form-check-inline mr-1">
+							<td className="compact text-center">
+								<div className="form-check form-check-inline mr-1 mt-1">
 									<CFormCheck data-id={id} checked={selectedTriggers.includes(id)} onChange={toggleTrigger} />
 								</div>
 							</td>
