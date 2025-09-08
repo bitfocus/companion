@@ -98,15 +98,14 @@ export function InternalModuleField(
 		case 'internal:vertical-alignment':
 			return <VerticalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:png-image': {
-			const field = option as any // TODO: proper typing
 			return (
 				<PngImageInputField
 					value={value}
 					setValue={setValue}
 					disabled={readonly}
-					min={field.min}
-					max={field.max}
-					allowNonPng={field.allowNonPng}
+					min={option.min}
+					max={option.max}
+					allowNonPng={option.allowNonPng}
 				/>
 			)
 		}

@@ -11,6 +11,7 @@ import { OptionsInputControl, getInputFeatures } from '~/Controls/OptionsInputFi
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { FormPropertyField } from './ElementPropertiesUtil.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
+import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
@@ -66,7 +67,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	elementProps,
 	localVariablesStore,
 }: {
-	field: any
+	field: SomeCompanionInputField
 	elementProps: SomeButtonGraphicsElement
 	localVariablesStore: LocalVariablesStore
 }) {

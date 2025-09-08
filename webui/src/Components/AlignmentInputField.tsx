@@ -31,7 +31,7 @@ export function AlignmentInputField({ value, setValue }: AlignmentInputFieldProp
 	)
 }
 
-interface AlignmentInputFieldProps2 {
+interface SplitAlignmentInputFieldProps {
 	value: string
 	setValue: (value: string) => void
 	disabled?: boolean
@@ -40,8 +40,8 @@ interface AlignmentInputFieldProps2 {
 export function HorizontalAlignmentInputField({
 	value,
 	setValue,
-	disabled,
-}: AlignmentInputFieldProps2): React.JSX.Element {
+	disabled = false,
+}: SplitAlignmentInputFieldProps): React.JSX.Element {
 	return (
 		<CButtonGroup>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'left'} title="Left" disabled={disabled}>
@@ -60,8 +60,8 @@ export function HorizontalAlignmentInputField({
 export function VerticalAlignmentInputField({
 	value,
 	setValue,
-	disabled,
-}: AlignmentInputFieldProps2): React.JSX.Element {
+	disabled = false,
+}: SplitAlignmentInputFieldProps): React.JSX.Element {
 	return (
 		<CButtonGroup>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'top'} title="Top" disabled={disabled}>
@@ -77,7 +77,10 @@ export function VerticalAlignmentInputField({
 	)
 }
 
-interface AlignmentButtonProps extends AlignmentInputFieldProps2 {
+interface AlignmentButtonProps {
+	value: string
+	setValue: (value: string) => void
+	disabled: boolean
 	buttonValue: string
 	title: string
 }
