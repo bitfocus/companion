@@ -4,7 +4,7 @@
 
 ### IMPORTANT CHANGES
 
-- This is the last version of Companion to support macOS 12. Starting with Companion 4.2 you will need to be running macOS 12 or later.
+- This is the last version of Companion to support macOS 11. Starting with Companion 4.2 you will need to be running macOS 12 or later.
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
@@ -19,7 +19,9 @@
   - Layout improvements of some pages on mobile
   - Indicate whether custom-variable value is valid while typing
   - Improved layout of the launcher window, including a new settings window
+  - Add filter/search to triggers page
 - Added Expression Variables. Similar to Custom Variables, but their value is the result of an expression that executes when needed.
+- Add new 'while loop' action
 - Ability to define 'local variables' on buttons and triggers.
   - Not all actions or feedbacks support these, this will improve over time
 - Additional expression functions
