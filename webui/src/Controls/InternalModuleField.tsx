@@ -1,6 +1,7 @@
 import React, { useCallback, useContext } from 'react'
 import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.js'
 import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '~/Components/AlignmentInputField.js'
+import { PngImageInputField } from '~/Components/PngImageInputField.js'
 import { useComputed } from '~/Resources/util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
@@ -96,6 +97,19 @@ export function InternalModuleField(
 			return <HorizontalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:vertical-alignment':
 			return <VerticalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
+		case 'internal:png-image': {
+			const field = option as any // TODO: proper typing
+			return (
+				<PngImageInputField
+					value={value}
+					setValue={setValue}
+					disabled={readonly}
+					min={field.min}
+					max={field.max}
+					allowNonPng={field.allowNonPng}
+				/>
+			)
+		}
 		default:
 			// Use fallback
 			return null

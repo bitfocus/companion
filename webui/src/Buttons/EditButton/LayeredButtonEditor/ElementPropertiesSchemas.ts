@@ -154,13 +154,14 @@ export const textElementSchema: SomeCompanionInputField[] = [
 export const imageElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	...boundsFields,
-	// Note: PNGInputField with file picker cannot be expressed with existing schemas
-	// This would require a custom file upload component
 	{
-		type: 'static-text',
+		type: 'internal:png-image',
 		id: 'base64Image',
-		value: 'Image upload not supported in schema - requires custom PNGInputField component',
 		label: 'Image',
+		default: null,
+		min: { width: 8, height: 8 },
+		max: { width: 400, height: 400 },
+		allowNonPng: true,
 	},
 	{
 		type: 'internal:horizontal-alignment',
@@ -299,8 +300,3 @@ export const elementSchemas = {
 	canvas: canvasElementSchema,
 	group: groupElementSchema,
 } as const
-
-// Notes about limitations:
-// 1. PNGInputField for image upload requires custom file handling not available in schemas
-// 2. The complex button group with trash icon for image clearing cannot be expressed
-// 3. Expression vs string mode for text fields is not supported in schemas

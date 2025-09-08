@@ -2,7 +2,6 @@ import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLaye
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { PreventDefaultHandler } from '~/Resources/util.js'
-import { ImageElementPropertiesEditor } from './ImageElementPropertiesEditor.js'
 import { CForm } from '@coreui/react'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
 import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
@@ -29,15 +28,7 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 			<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
 				<ElementCommonProperties elementProps={elementProps} />
 
-				{/* Schema-based version for comparison */}
 				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} />
-
-				{/* Original version - keeping for comparison */}
-				<hr style={{ margin: '20px 0', borderColor: '#ff6b6b' }} />
-				<div style={{ fontSize: '14px', fontWeight: 'bold', color: '#dc3545', marginBottom: '10px' }}>
-					Original Implementation:
-				</div>
-				<ElementPropertiesEditorInner elementProps={elementProps} />
 			</CForm>
 		</ElementPropertiesProvider>
 	)
@@ -57,9 +48,6 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 
 	return (
 		<>
-			<div style={{ fontSize: '14px', fontWeight: 'bold', color: '#28a745', marginBottom: '10px' }}>
-				Schema-based Implementation:
-			</div>
 			{schema.map((field) => (
 				<SchemaFieldWrapper
 					key={field.id}
@@ -101,20 +89,4 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			)}
 		</FormPropertyField>
 	)
-})
-
-interface ElementPropertiesEditorInnerProps {
-	elementProps: SomeButtonGraphicsElement
-}
-
-const ElementPropertiesEditorInner = observer(function ElementPropertiesEditorInner({
-	elementProps,
-}: ElementPropertiesEditorInnerProps) {
-	switch (elementProps.type) {
-		case 'image':
-			return <ImageElementPropertiesEditor elementProps={elementProps} />
-
-		default:
-			return null
-	}
 })
