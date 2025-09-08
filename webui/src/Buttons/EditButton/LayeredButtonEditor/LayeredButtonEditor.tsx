@@ -14,6 +14,7 @@ import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRend
 import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
 import { LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { FeedbackOverridesTab } from '../FeedbackOverridesTab.js'
+import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },
@@ -86,12 +87,14 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 								return (
 									<div className="mt-10">
 										<MyErrorBoundary>
-											<FeedbackOverridesTab
-												controlId={controlId}
-												location={location}
-												feedbacks={config.feedbacks}
-												localVariablesStore={localVariablesStore}
-											/>
+											<LayeredStyleElementsProvider styleStore={styleStore}>
+												<FeedbackOverridesTab
+													controlId={controlId}
+													location={location}
+													feedbacks={config.feedbacks}
+													localVariablesStore={localVariablesStore}
+												/>
+											</LayeredStyleElementsProvider>
 										</MyErrorBoundary>
 									</div>
 								)

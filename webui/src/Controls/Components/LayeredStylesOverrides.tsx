@@ -1,6 +1,6 @@
 import { FeedbackEntityModel, FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { CButton } from '@coreui/react'
+import { CButton, CFormSelect } from '@coreui/react'
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -8,6 +8,7 @@ import { nanoid } from 'nanoid'
 import React, { useCallback, useMemo } from 'react'
 import { TextInputField } from '~/Components'
 import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
+import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
 function makeEmptyOverride(): FeedbackEntityStyleOverride {
 	return {
@@ -71,7 +72,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 			<table className="table table-responsive-sm width-100">
 				<thead>
 					<tr>
-						<th>Path</th>
+						<th>Element & Property</th>
 						<th>Value</th>
 						<th className="fit">
 							<CButton color="white" size="sm" title="Add override" onClick={addRow}>
@@ -107,26 +108,54 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 	updateRow,
 	deleteRow,
 }: LayeredStylesOverridesRowProps) {
+	const elementsContext = useLayeredStyleElementsContext()
+
+	const elementOptions = useMemo(() => {
+		const buildElementOptions = (elements: any[], prefix = ''): Array<{ value: string; label: string }> => {
+			const options: Array<{ value: string; label: string }> = []
+
+			for (const element of elements) {
+				const label = prefix ? `${prefix} > ${element.name || element.id}` : element.name || element.id
+				options.push({
+					value: element.id,
+					label: `${label} (${element.type})`,
+				})
+
+				if (element.type === 'group' && element.children) {
+					options.push(...buildElementOptions(element.children, label))
+				}
+			}
+
+			return options
+		}
+
+		const elements = elementsContext.styleStore.elements
+		return [{ value: '', label: 'Select element...' }, ...buildElementOptions(elements.slice())]
+	}, [elementsContext])
+
 	return (
 		<tr key={row.overrideId}>
 			<td>
-				<TextInputField
-					value={row.elementId}
-					setValue={(v) => updateRow({ ...row, elementId: v })}
-					placeholder="e.g. layer"
-				/>
-				<TextInputField
-					value={row.elementProperty}
-					setValue={(v) => updateRow({ ...row, elementProperty: v })}
-					placeholder="e.g. color"
-				/>
+				<CFormSelect value={row.elementId} onChange={(e) => updateRow({ ...row, elementId: e.target.value })}>
+					{elementOptions.map((option) => (
+						<option key={option.value} value={option.value}>
+							{option.label}
+						</option>
+					))}
+				</CFormSelect>
+				<div className="mt-2">
+					<TextInputField
+						value={row.elementProperty}
+						setValue={(v) => updateRow({ ...row, elementProperty: v })}
+						placeholder="e.g. color"
+					/>
+				</div>
 			</td>
 			<td>
 				<TextInputField
 					value={row.override.value}
 					setValue={(v) => updateRow({ ...row, override: { ...row.override, value: v } })}
 				/>
-				{/* <ValueEditor value={row.value} onChange={(v) => updateRow({ ...row, value: v })} /> */}
 			</td>
 			<td>
 				<CButton color="white" size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
