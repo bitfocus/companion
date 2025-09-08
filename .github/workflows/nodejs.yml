@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.node-version'
 
@@ -46,7 +46,7 @@ jobs:
           submodules: true
           persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.node-version'
 
@@ -125,7 +125,7 @@ jobs:
           submodules: true
           persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.node-version'
 
@@ -204,7 +204,7 @@ jobs:
           submodules: true
           persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.node-version'
 
@@ -283,7 +283,7 @@ jobs:
           submodules: true
           persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.node-version'
 
@@ -366,7 +366,7 @@ jobs:
           submodules: true
           persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.node-version'
 
