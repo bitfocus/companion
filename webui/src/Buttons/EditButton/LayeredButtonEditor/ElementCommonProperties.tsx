@@ -4,13 +4,9 @@ import React, { useCallback } from 'react'
 import {
 	ButtonGraphicsElementBase,
 	ButtonGraphicsElementUsage,
-	ButtonGraphicsTextElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { FormPropertyField, InputFieldCommonProps } from './ElementPropertiesUtil.js'
-import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
-import { NumberInputField } from '~/Components/NumberInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { InlineHelp } from '~/Components/InlineHelp.js'
@@ -41,18 +37,6 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 					<CCol sm={8}>
 						<FieldElementUsageInput elementProps={elementProps} />
 					</CCol>
-				</>
-			)}
-
-			{elementProps.type !== 'canvas' && (
-				<>
-					<FormPropertyField elementProps={elementProps} property="enabled" label="Enabled">
-						{(elementProp, setValue) => <FieldEnabledInput elementProp={elementProp} setValue={setValue} />}
-					</FormPropertyField>
-
-					<FormPropertyField elementProps={elementProps} property="opacity" label="Opacity">
-						{(elementProp, setValue) => <FieldOpacityInput elementProp={elementProp} setValue={setValue} />}
-					</FormPropertyField>
 				</>
 			)}
 		</>
@@ -126,17 +110,3 @@ const elementUsageChoices: DropdownChoice[] = [
 	{ id: ButtonGraphicsElementUsage.Color, label: 'Color' },
 	{ id: ButtonGraphicsElementUsage.Image, label: 'Image' },
 ]
-
-const FieldEnabledInput = observer(function FieldEnabledInput({
-	elementProp,
-	setValue,
-}: InputFieldCommonProps<ButtonGraphicsTextElement, 'enabled'>) {
-	return <CheckboxInputField setValue={setValue} value={Boolean(elementProp.value)} />
-})
-
-const FieldOpacityInput = observer(function FieldOpacityInput({
-	elementProp,
-	setValue,
-}: InputFieldCommonProps<ButtonGraphicsTextElement, 'opacity'>) {
-	return <NumberInputField setValue={setValue} value={Number(elementProp.value)} min={0} max={100} step={1} range />
-})

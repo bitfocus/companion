@@ -57,6 +57,57 @@ export const OptionsInputField = observer(function OptionsInputField({
 	readonly,
 	localVariablesStore,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
+	const features = getInputFeatures(option)
+
+	return (
+		<>
+			<CFormLabel
+				htmlFor="colFormConnection"
+				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
+			>
+				<OptionLabel option={option} features={features} />
+			</CFormLabel>
+			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
+				<OptionsInputControl
+					connectionId={connectionId}
+					isLocatedInGrid={isLocatedInGrid}
+					entityType={entityType}
+					option={option}
+					value={value}
+					setValue={setValue}
+					readonly={readonly}
+					localVariablesStore={localVariablesStore}
+					features={features}
+				/>
+				{option.description && <div className="form-text">{option.description}</div>}
+			</CCol>
+		</>
+	)
+})
+
+interface OptionsInputControlProps {
+	connectionId: string
+	isLocatedInGrid: boolean
+	entityType: EntityModelType | null
+	option: SomeCompanionInputField
+	value: any
+	setValue: (key: string, value: any) => void
+	readonly?: boolean
+	localVariablesStore: LocalVariablesStore | null
+	features?: InputFeatureIconsProps
+}
+
+export const OptionsInputControl = observer(function OptionsInputControl({
+	connectionId,
+	isLocatedInGrid,
+	entityType,
+	option,
+	value,
+	setValue,
+	readonly,
+	localVariablesStore,
+	features,
+}: Readonly<OptionsInputControlProps>): React.JSX.Element {
 	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
 	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
 
@@ -66,24 +117,17 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 	const isInternal = connectionId === 'internal'
 
-	let control: JSX.Element | string | undefined = undefined
-	let features: InputFeatureIconsProps | undefined = undefined
 	switch (option.type) {
 		case 'textinput': {
-			features = {
-				variables: !!option.useVariables,
-				local: typeof option.useVariables === 'object' && !!option.useVariables?.local,
-			}
-
-			const localVariables = features.local
+			const localVariables = features?.local
 				? localVariablesStore?.getOptions(entityType, isInternal, isLocatedInGrid)
 				: undefined
 
-			control = (
+			return (
 				<TextInputField
 					value={value}
 					placeholder={option.placeholder}
-					useVariables={features.variables}
+					useVariables={features?.variables ?? false}
 					localVariables={localVariables}
 					isExpression={option.isExpression}
 					disabled={readonly}
@@ -92,10 +136,9 @@ export const OptionsInputField = observer(function OptionsInputField({
 					multiline={option.multiline}
 				/>
 			)
-			break
 		}
 		case 'dropdown': {
-			control = (
+			return (
 				<DropdownInputField
 					value={value}
 					choices={option.choices}
@@ -107,10 +150,9 @@ export const OptionsInputField = observer(function OptionsInputField({
 					checkValid={checkValid}
 				/>
 			)
-			break
 		}
 		case 'multidropdown': {
-			control = (
+			return (
 				<MultiDropdownInputField
 					value={value}
 					choices={option.choices}
@@ -124,14 +166,12 @@ export const OptionsInputField = observer(function OptionsInputField({
 					checkValid={checkValid}
 				/>
 			)
-			break
 		}
 		case 'checkbox': {
-			control = <CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
-			break
+			return <CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
 		}
 		case 'colorpicker': {
-			control = (
+			return (
 				<ColorInputField
 					value={value}
 					disabled={readonly}
@@ -141,10 +181,9 @@ export const OptionsInputField = observer(function OptionsInputField({
 					presetColors={option.presetColors}
 				/>
 			)
-			break
 		}
 		case 'number': {
-			control = (
+			return (
 				<NumberInputField
 					value={value}
 					min={option.min}
@@ -158,15 +197,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 					showMaxAsPositiveInfinity={option.showMaxAsPositiveInfinity}
 				/>
 			)
-			break
 		}
 		case 'static-text': {
-			control = <StaticTextFieldText {...option} />
-			break
+			return <StaticTextFieldText {...option} />
 		}
 		case 'custom-variable': {
 			if (entityType === EntityModelType.Action) {
-				control = (
+				return (
 					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue2} includeNone={true} />
 				)
 			}
@@ -179,31 +216,23 @@ export const OptionsInputField = observer(function OptionsInputField({
 		default:
 			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (isInternal) {
-				control =
-					InternalModuleField(option, isLocatedInGrid, localVariablesStore, !!readonly, value, setValue2) ?? undefined
+				const internalControl = InternalModuleField(
+					option as any,
+					isLocatedInGrid,
+					localVariablesStore,
+					!!readonly,
+					value,
+					setValue2
+				)
+				if (internalControl) {
+					return internalControl
+				}
 			}
-			// Use default below
 			break
 	}
 
-	if (control === undefined) {
-		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
-	}
-
-	return (
-		<>
-			<CFormLabel
-				htmlFor="colFormConnection"
-				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
-			>
-				<OptionLabel option={option} features={features} />
-			</CFormLabel>
-			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
-				{control}
-				{option.description && <div className="form-text">{option.description}</div>}
-			</CCol>
-		</>
-	)
+	// Fallback for unknown types
+	return <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 })
 
 export interface InputFeatureIconsProps {
@@ -218,4 +247,14 @@ export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | 
 	if (props.local) featureIcons.push(<FontAwesomeIcon key="local" icon={faGlobe} title={'Supports local variables'} />)
 
 	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
+}
+
+export function getInputFeatures(option: SomeCompanionInputField): InputFeatureIconsProps | undefined {
+	if (option.type === 'textinput') {
+		return {
+			variables: !!option.useVariables,
+			local: typeof option.useVariables === 'object' && !!option.useVariables?.local,
+		}
+	}
+	return undefined
 }

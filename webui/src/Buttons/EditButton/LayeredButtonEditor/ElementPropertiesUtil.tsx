@@ -1,4 +1,4 @@
-import { ExpressionOrValue, ButtonGraphicsElementBase } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CFormLabel, CCol, CButton } from '@coreui/react'
 import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,25 +8,29 @@ import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
+import { InputFeatureIcons, InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 
-type ExtractValue<T> = T extends ExpressionOrValue<infer U> ? U : never
-type SetValueFn<TObj, TKey extends keyof TObj> = (value: ExtractValue<TObj[TKey]>) => void
+type SetValueFn = (value: any) => void
 
-export interface InputFieldCommonProps<TObj, TKey extends keyof TObj> {
-	elementProp: { value: ExtractValue<TObj[TKey]> }
-	setValue: SetValueFn<TObj, TKey>
+export interface InputFieldCommonProps {
+	elementProp: { value: any }
+	setValue: SetValueFn
 }
 
-interface FormPropertyFieldProps<TObj, TKey extends keyof TObj> {
-	elementProps: TObj
-	property: TKey
-	label: string | React.ReactNode
-	children: (elementProp: { value: ExtractValue<TObj[TKey]> }, setValue: SetValueFn<TObj, TKey>) => React.ReactNode
+interface FormPropertyFieldProps {
+	elementProps: Record<string, any>
+	property: string
+	label: string
+	features?: InputFeatureIconsProps
+	children: (elementProp: { value: any }, setValue: SetValueFn) => React.ReactNode
 }
-export const FormPropertyField = observer(function FormPropertyField<
-	TObj extends ButtonGraphicsElementBase,
-	TKey extends string & keyof TObj,
->({ elementProps, property, label, children }: FormPropertyFieldProps<TObj, TKey>) {
+export const FormPropertyField = observer(function FormPropertyField({
+	elementProps,
+	property,
+	label,
+	features,
+	children,
+}: FormPropertyFieldProps) {
 	const { controlId, localVariablesStore } = useElementPropertiesContext()
 	const updateOptionValueMutation = useMutationExt(trpc.controls.styles.updateOptionValue.mutationOptions())
 	const updateOptionIsExpressionMutation = useMutationExt(
@@ -36,7 +40,7 @@ export const FormPropertyField = observer(function FormPropertyField<
 	const elementId = elementProps.id
 
 	const setValue = useCallback(
-		(value: ExtractValue<TObj[TKey]>) => {
+		(value: any) => {
 			updateOptionValueMutation
 				.mutateAsync({ controlId, elementId, key: property, value })
 				.then((res) => {
@@ -68,7 +72,10 @@ export const FormPropertyField = observer(function FormPropertyField<
 
 	return (
 		<>
-			<CFormLabel className={classNames('col-sm-4 col-form-label col-form-label-sm')}>{label}</CFormLabel>
+			<CFormLabel className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
+				{label}
+				{!elementProp.isExpression && <InputFeatureIcons {...features} />}
+			</CFormLabel>
 			<CCol sm={8} className="field-with-expression">
 				<div className="expression-field">
 					{elementProp.isExpression ? (
