@@ -152,8 +152,7 @@ const SelectedElementProperty = observer(function SelectedElementProperty({
 }) {
 	const { styleStore } = useLayeredStyleElementsContext()
 
-	if (!row.elementId || !row.elementProperty)
-		return <div className="text-muted">Click to select element and property</div>
+	if (!row.elementId || !row.elementProperty) return <div className="text-muted">No element selected</div>
 
 	const selectedElement = row.elementId ? styleStore.findElementById(row.elementId) : null
 	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
