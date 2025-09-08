@@ -1,5 +1,6 @@
 import React, { useCallback, useContext } from 'react'
 import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.js'
+import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '~/Components/AlignmentInputField.js'
 import { useComputed } from '~/Resources/util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
@@ -91,6 +92,10 @@ export function InternalModuleField(
 			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:date':
 			return <InternalDatePicker disabled={readonly} value={value} setValue={setValue} />
+		case 'internal:horizontal-alignment':
+			return <HorizontalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
+		case 'internal:vertical-alignment':
+			return <VerticalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
 		default:
 			// Use fallback
 			return null

@@ -1,24 +1,7 @@
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import {
-	ButtonGraphicsDecorationType,
-	type HorizontalAlignment,
-	type VerticalAlignment,
-	type LineOrientation,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ButtonGraphicsDecorationType, type LineOrientation } from '@companion-app/shared/Model/StyleLayersModel.js'
 
-// Type-safe constants for alignment and border position values
-const HORIZONTAL_ALIGNMENT_CHOICES = [
-	{ id: 'left' satisfies HorizontalAlignment, label: 'Left' },
-	{ id: 'center' satisfies HorizontalAlignment, label: 'Center' },
-	{ id: 'right' satisfies HorizontalAlignment, label: 'Right' },
-]
-
-const VERTICAL_ALIGNMENT_CHOICES = [
-	{ id: 'top' satisfies VerticalAlignment, label: 'Top' },
-	{ id: 'center' satisfies VerticalAlignment, label: 'Center' },
-	{ id: 'bottom' satisfies VerticalAlignment, label: 'Bottom' },
-]
-
+// Type-safe constants for border position values
 const LINE_ORIENTATION_CHOICES = [
 	{ id: 'inside' satisfies LineOrientation, label: 'Inside' },
 	{ id: 'center' satisfies LineOrientation, label: 'Center' },
@@ -153,22 +136,16 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		returnType: 'number',
 		enableAlpha: true,
 	},
-	// Note: HorizontalAlignmentInputField cannot be expressed with existing schemas
-	// This would be a custom button group component with left/center/right icons
 	{
-		type: 'dropdown',
+		type: 'internal:horizontal-alignment',
 		id: 'halign',
 		label: 'Horizontal Alignment',
-		choices: HORIZONTAL_ALIGNMENT_CHOICES,
 		default: 'center',
 	},
-	// Note: VerticalAlignmentInputField cannot be expressed with existing schemas
-	// This would be a custom button group component with top/center/bottom icons
 	{
-		type: 'dropdown',
+		type: 'internal:vertical-alignment',
 		id: 'valign',
 		label: 'Vertical Alignment',
-		choices: VERTICAL_ALIGNMENT_CHOICES,
 		default: 'center',
 	},
 ]
@@ -185,20 +162,16 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 		value: 'Image upload not supported in schema - requires custom PNGInputField component',
 		label: 'Image',
 	},
-	// Note: HorizontalAlignmentInputField cannot be expressed with existing schemas
 	{
-		type: 'dropdown',
+		type: 'internal:horizontal-alignment',
 		id: 'halign',
 		label: 'Horizontal Alignment',
-		choices: HORIZONTAL_ALIGNMENT_CHOICES,
 		default: 'center',
 	},
-	// Note: VerticalAlignmentInputField cannot be expressed with existing schemas
 	{
-		type: 'dropdown',
+		type: 'internal:vertical-alignment',
 		id: 'valign',
 		label: 'Vertical Alignment',
-		choices: VERTICAL_ALIGNMENT_CHOICES,
 		default: 'center',
 	},
 	{
@@ -328,12 +301,6 @@ export const elementSchemas = {
 } as const
 
 // Notes about limitations:
-// 1. HorizontalAlignmentInputField and VerticalAlignmentInputField use custom icon button groups
-//    which cannot be replicated with existing dropdown schemas
-// 2. PNGInputField for image upload requires custom file handling not available in schemas
-// 3. The complex button group with trash icon for image clearing cannot be expressed
-// 4. Expression vs string mode for text fields is not supported in schemas
-// 5. Local variables support in text fields may not work exactly the same way
-// 6. The commented-out color field in canvas elements indicates incomplete implementation
-// 7. Some conditional rendering (like usage field being excluded for canvas/group)
-//    would need to be handled externally
+// 1. PNGInputField for image upload requires custom file handling not available in schemas
+// 2. The complex button group with trash icon for image clearing cannot be expressed
+// 3. Expression vs string mode for text fields is not supported in schemas

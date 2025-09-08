@@ -30,6 +30,8 @@ export interface CompanionInputFieldBaseExtended {
 		| 'internal:connection_collection'
 		| 'internal:surface_serial'
 		| 'internal:page'
+		| 'internal:horizontal-alignment'
+		| 'internal:vertical-alignment'
 	/** The label of the field */
 	label: string
 	/** A hover tooltip for this field */
@@ -89,6 +91,16 @@ export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended 
 	includeDirection: boolean
 	default: number
 }
+export interface InternalInputFieldHorizontalAlignment extends CompanionInputFieldBaseExtended {
+	type: 'internal:horizontal-alignment'
+	/** The default value */
+	default: 'left' | 'center' | 'right'
+}
+export interface InternalInputFieldVerticalAlignment extends CompanionInputFieldBaseExtended {
+	type: 'internal:vertical-alignment'
+	/** The default value */
+	default: 'top' | 'center' | 'bottom'
+}
 
 export type InternalInputField =
 	| InternalInputFieldTime
@@ -101,6 +113,8 @@ export type InternalInputField =
 	| InternalInputFieldConnectionCollection
 	| InternalInputFieldSurfaceSerial
 	| InternalInputFieldPage
+	| InternalInputFieldHorizontalAlignment
+	| InternalInputFieldVerticalAlignment
 
 export interface CompanionInputFieldStaticTextExtended extends CompanionInputFieldBaseExtended {
 	type: 'static-text'

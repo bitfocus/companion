@@ -34,34 +34,43 @@ export function AlignmentInputField({ value, setValue }: AlignmentInputFieldProp
 interface AlignmentInputFieldProps2 {
 	value: string
 	setValue: (value: string) => void
+	disabled?: boolean
 }
 
-export function HorizontalAlignmentInputField({ value, setValue }: AlignmentInputFieldProps2): React.JSX.Element {
+export function HorizontalAlignmentInputField({
+	value,
+	setValue,
+	disabled,
+}: AlignmentInputFieldProps2): React.JSX.Element {
 	return (
 		<CButtonGroup>
-			<AlignmentButton value={value} setValue={setValue} buttonValue={'left'} title="Left">
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'left'} title="Left" disabled={disabled}>
 				<AlignLeftIcon />
 			</AlignmentButton>
-			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center">
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center" disabled={disabled}>
 				<AlignCenterHorizontallyIcon />
 			</AlignmentButton>
-			<AlignmentButton value={value} setValue={setValue} buttonValue={'right'} title="Right">
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'right'} title="Right" disabled={disabled}>
 				<AlignRightIcon />
 			</AlignmentButton>
 		</CButtonGroup>
 	)
 }
 
-export function VerticalAlignmentInputField({ value, setValue }: AlignmentInputFieldProps2): React.JSX.Element {
+export function VerticalAlignmentInputField({
+	value,
+	setValue,
+	disabled,
+}: AlignmentInputFieldProps2): React.JSX.Element {
 	return (
 		<CButtonGroup>
-			<AlignmentButton value={value} setValue={setValue} buttonValue={'top'} title="Top">
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'top'} title="Top" disabled={disabled}>
 				<AlignTopIcon />
 			</AlignmentButton>
-			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center">
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center" disabled={disabled}>
 				<AlignCenterVerticallyIcon />
 			</AlignmentButton>
-			<AlignmentButton value={value} setValue={setValue} buttonValue={'bottom'} title="Bottom">
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'bottom'} title="Bottom" disabled={disabled}>
 				<AlignBottomIcon />
 			</AlignmentButton>
 		</CButtonGroup>
@@ -78,6 +87,7 @@ function AlignmentButton({
 	setValue,
 	buttonValue,
 	title,
+	disabled,
 	children,
 }: React.PropsWithChildren<AlignmentButtonProps>) {
 	return (
@@ -85,6 +95,7 @@ function AlignmentButton({
 			color={value === buttonValue ? 'primary' : 'secondary'}
 			onClick={() => setValue(buttonValue)}
 			title={title}
+			disabled={disabled}
 		>
 			{children}
 		</CButton>
