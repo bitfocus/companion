@@ -122,7 +122,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								key={i}
 								isLocatedInGrid={!!location}
 								entityType={entity.type}
-								connectionId={entity.connectionId}
+								allowInternalFields={entity.connectionId === 'internal'}
 								option={opt}
 								value={(entity.options || {})[opt.id]}
 								setValue={service.setValue}
@@ -159,7 +159,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						entity.type === EntityModelType.Feedback &&
 						// entityDefinition?.feedbackType === FeedbackEntitySubType.
 						feedbackListType === FeedbackEntitySubType.StyleOverride && (
-							<LayeredStylesOverrides feedback={entity} service={service} />
+							<LayeredStylesOverrides feedback={entity} service={service} localVariablesStore={localVariablesStore} />
 						)}
 				</CForm>
 			</div>

@@ -83,9 +83,9 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 		<FormPropertyField elementProps={elementProps} property={field.id} label={field.label} features={features}>
 			{(elementProp, setValueFromForm) => (
 				<OptionsInputControl
-					connectionId="internal"
+					allowInternalFields={true}
 					isLocatedInGrid={false}
-					entityType={EntityModelType.Action}
+					entityType={EntityModelType.Feedback}
 					option={field}
 					value={elementProp.value}
 					setValue={(_key: string, value: any) => setValueFromForm(value)}

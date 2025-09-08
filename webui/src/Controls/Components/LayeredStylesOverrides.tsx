@@ -1,15 +1,21 @@
-import { FeedbackEntityModel, FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	FeedbackEntityModel,
+	FeedbackEntityStyleOverride,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { CButton } from '@coreui/react'
 import { faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
 import React, { useCallback, useState } from 'react'
-import { TextInputField } from '~/Components'
 import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 import { ElementPickerModal } from './ElementPickerModal.js'
 import { elementSchemas } from '~/Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
+import { OptionsInputControl } from '../OptionsInputField.js'
+import { ExpressionFieldControl } from './ExpressionFieldControl.js'
+import { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 function makeEmptyOverride(): FeedbackEntityStyleOverride {
 	return {
@@ -23,11 +29,13 @@ function makeEmptyOverride(): FeedbackEntityStyleOverride {
 interface LayeredStylesOverridesProps {
 	feedback: FeedbackEntityModel
 	service: IEntityEditorActionService
+	localVariablesStore: LocalVariablesStore | null
 }
 
 export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 	feedback,
 	service,
+	localVariablesStore,
 }: LayeredStylesOverridesProps) {
 	const overrides = feedback.styleOverrides || []
 
@@ -68,7 +76,13 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 						</tr>
 					)}
 					{overrides.map((row) => (
-						<LayeredStylesOverridesRow key={row.overrideId} row={row} updateRow={updateRow} deleteRow={deleteRow} />
+						<LayeredStylesOverridesRow
+							key={row.overrideId}
+							row={row}
+							updateRow={updateRow}
+							deleteRow={deleteRow}
+							localVariablesStore={localVariablesStore}
+						/>
 					))}
 				</tbody>
 			</table>
@@ -80,11 +94,13 @@ interface LayeredStylesOverridesRowProps {
 	row: FeedbackEntityStyleOverride
 	updateRow: (override: FeedbackEntityStyleOverride) => void
 	deleteRow: (id: string) => void
+	localVariablesStore: LocalVariablesStore | null
 }
 const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 	row,
 	updateRow,
 	deleteRow,
+	localVariablesStore,
 }: LayeredStylesOverridesRowProps) {
 	const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -110,10 +126,7 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 					</div>
 				</td>
 				<td>
-					<TextInputField
-						value={row.override.value}
-						setValue={(v) => updateRow({ ...row, override: { ...row.override, value: v } })}
-					/>
+					<PropertyValueInput row={row} updateRow={updateRow} localVariablesStore={localVariablesStore} />
 				</td>
 				<td>
 					<CButton color="white" size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
@@ -151,5 +164,62 @@ const SelectedElementProperty = observer(function SelectedElementProperty({
 			<div className="fw-semibold">{selectedElement?.name || row.elementId}</div>
 			<div className="text-muted small">{selectedProperty?.label || row.elementProperty}</div>
 		</>
+	)
+})
+
+const PropertyValueInput = observer(function PropertyValueInput({
+	row,
+	updateRow,
+	localVariablesStore,
+}: {
+	row: FeedbackEntityStyleOverride
+	updateRow: (override: FeedbackEntityStyleOverride) => void
+	localVariablesStore: LocalVariablesStore | null
+}) {
+	const { styleStore } = useLayeredStyleElementsContext()
+
+	const selectedElement = row.elementId ? styleStore.findElementById(row.elementId) : null
+	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
+	const selectedProperty = selectedSchema?.find((prop) => prop.id === row.elementProperty)
+
+	const setValue = useCallback(
+		(value: any) => {
+			updateRow({ ...row, override: { ...row.override, value } })
+		},
+		[row, updateRow]
+	)
+
+	const setIsExpression = useCallback(
+		(isExpression: boolean) => {
+			updateRow({ ...row, override: { ...row.override, isExpression } })
+		},
+		[row, updateRow]
+	)
+
+	// If no property is selected, return null
+	if (!selectedProperty) {
+		return null
+	}
+
+	return (
+		<ExpressionFieldControl
+			value={row.override}
+			setValue={setValue}
+			setIsExpression={setIsExpression}
+			localVariablesStore={localVariablesStore}
+		>
+			{(value, setValue) => (
+				<OptionsInputControl
+					allowInternalFields={true}
+					isLocatedInGrid={false}
+					entityType={EntityModelType.Feedback}
+					option={selectedProperty}
+					value={value}
+					setValue={(_key: string, val: any) => setValue(val)}
+					readonly={false}
+					localVariablesStore={localVariablesStore}
+				/>
+			)}
+		</ExpressionFieldControl>
 	)
 })
