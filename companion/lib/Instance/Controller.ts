@@ -367,10 +367,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return moduleManifest?.manifest
 	}
 
-	getCompositeElementDefinition(connectionId: string, elementId: string): CompositeElementDefinition | undefined {
-		return this.definitions.getCompositeElementDefinition(connectionId, elementId)
-	}
-
 	enableDisableInstance(id: string, state: boolean): void {
 		const connectionConfig = this.#configStore.getConfigForId(id)
 		if (connectionConfig) {

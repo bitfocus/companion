@@ -215,6 +215,9 @@ async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
 					return convertBoxElementForDrawing(helper, element)
 				case 'line':
 					return convertLineElementForDrawing(helper, element)
+				case 'composite':
+					// TODO
+					return null
 				default:
 					assertNever(element)
 					return null

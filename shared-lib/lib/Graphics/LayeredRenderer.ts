@@ -133,6 +133,9 @@ export class GraphicsLayeredButtonRenderer {
 					case 'line':
 						elementBounds = await this.#drawLineElement(img, drawBounds, element, skipDraw)
 						break
+					case 'composite':
+						// TODO
+						break
 					default:
 						assertNever(element)
 				}

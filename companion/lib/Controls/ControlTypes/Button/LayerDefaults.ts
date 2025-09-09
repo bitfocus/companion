@@ -89,6 +89,10 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				borderColor: { value: 0xffffff, isExpression: false },
 				borderPosition: { value: 'center', isExpression: false },
 			}
+		case 'composite':
+			// Composite elements should not be created directly through this function
+			// They are created with custom logic in layeredStyleAddElement
+			throw new Error('Composite elements should be created through layeredStyleAddElement')
 		default:
 			assertNever(type)
 			throw new Error(`Unknown element type: ${type}`)

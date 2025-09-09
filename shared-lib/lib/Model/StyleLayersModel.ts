@@ -4,6 +4,7 @@
 export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCanvasElement
 	| ButtonGraphicsGroupElement
+	| ButtonGraphicsCompositeElement
 	| ButtonGraphicsTextElement
 	| ButtonGraphicsImageElement
 	| ButtonGraphicsBoxElement
@@ -15,6 +16,7 @@ export type SomeButtonGraphicsElement =
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsGroupDrawElement
+	| ButtonGraphicsCompositeDrawElement
 	| ButtonGraphicsTextDrawElement
 	| ButtonGraphicsImageDrawElement
 	| ButtonGraphicsBoxDrawElement
@@ -86,6 +88,24 @@ export interface ButtonGraphicsGroupElement
 	extends ButtonGraphicsElementBase,
 		MakeExpressionable<Omit<ButtonGraphicsGroupDrawElement, 'usage' | 'children'>> {
 	children: SomeButtonGraphicsElement[]
+}
+
+export interface ButtonGraphicsCompositeDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
+	type: 'composite'
+
+	connectionId: string
+	elementId: string
+
+	[customProperty: string]: any
+}
+export interface ButtonGraphicsCompositeElement
+	extends ButtonGraphicsElementBase,
+		// Do this in reverse, as we can't easily omit all of the customProperty fields
+		MakeExpressionable<Omit<{ type: 'composite' } & ButtonGraphicsDrawBase & ButtonGraphicsDrawBounds, 'usage'>> {
+	connectionId: string
+	elementId: string
+
+	[customProperty: string]: any
 }
 
 export type HorizontalAlignment = 'left' | 'center' | 'right'

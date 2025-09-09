@@ -45,18 +45,18 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 	const { localVariablesStore } = useElementPropertiesContext()
 	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
 
-	// Check if this is a composite element
-	const compositeElementId = (elementProps as any).compositeElementId
-	let schema = elementSchemas[elementProps.type]
+	let schema: SomeCompanionInputField[] = elementSchemas[elementProps.type]
 
-	if (compositeElementId && typeof compositeElementId === 'string') {
-		// This is a composite element, get its custom schema
-		const [connectionId, elementId] = compositeElementId.split(';', 2)
-		const compositeDefinition = compositeElementDefinitions.getDefinition(connectionId, elementId)
+	// If this is a composite element, get the full schema
+	if (elementProps.type === 'composite' && elementProps.connectionId && elementProps.elementId) {
+		const compositeDefinition = compositeElementDefinitions.getDefinition(
+			elementProps.connectionId,
+			elementProps.elementId
+		)
 
 		if (compositeDefinition) {
-			// Combine the base group schema with the custom schema
-			schema = [...elementSchemas.group, ...compositeDefinition.schema]
+			// Combine common element fields with the custom schema from the composite definition
+			schema = [...schema, ...compositeDefinition.schema]
 		}
 	}
 

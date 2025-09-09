@@ -55,6 +55,10 @@ export class LayeredStyleStore {
 			: undefined
 	}
 
+	public getElementById(id: string): SomeButtonGraphicsElement | undefined {
+		return LayeredStyleStore.#findElementById(this.elements, id)
+	}
+
 	public setElementVisibility(layer: string, visible?: boolean): void {
 		if (visible === undefined) {
 			// Toggle visibility

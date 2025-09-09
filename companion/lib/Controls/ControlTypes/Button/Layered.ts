@@ -1,5 +1,6 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep } from 'lodash-es'
+import { nanoid } from 'nanoid'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
@@ -275,24 +276,30 @@ export class ControlButtonLayered
 		// Check if this is a composite element (contains semicolon)
 		if (type.includes(';')) {
 			const [connectionId, elementId] = type.split(';', 2)
-			const compositeDefinition = this.deps.instance.getCompositeElementDefinition(connectionId, elementId)
+			const compositeDefinition = this.deps.instance.definitions.getCompositeElementDefinition(connectionId, elementId)
 
 			if (compositeDefinition) {
-				// All composite elements are based on group type
-				newElement = CreateElementOfType('group')
-				// Override name with composite element name
-				newElement.name = compositeDefinition.name
-
-				// Add metadata to identify this as a composite element
-				;(newElement as any).compositeElementId = `${connectionId};${elementId}`
+				// Create a composite element directly
+				newElement = {
+					id: nanoid(),
+					name: compositeDefinition.name,
+					usage: ButtonGraphicsElementUsage.Automatic,
+					type: 'composite',
+					connectionId,
+					elementId,
+					enabled: { value: true, isExpression: false },
+					opacity: { value: 100, isExpression: false },
+					x: { value: 0, isExpression: false },
+					y: { value: 0, isExpression: false },
+					width: { value: 100, isExpression: false },
+					height: { value: 100, isExpression: false },
+				}
 
 				// Add custom properties from schema with their default values
 				for (const field of compositeDefinition.schema) {
-					if ('default' in field) {
-						;(newElement as any)[field.id] = {
-							value: field.default,
-							isExpression: false,
-						}
+					newElement[field.id] = {
+						value: 'default' in field ? field.default : undefined,
+						isExpression: false,
 					}
 				}
 			} else {
