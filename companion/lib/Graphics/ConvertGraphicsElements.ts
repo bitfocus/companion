@@ -1,4 +1,4 @@
-import type { ExecuteExpressionResult } from '../Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import {
 	ButtonGraphicsDecorationType,
 	type ButtonGraphicsDrawBounds,
@@ -19,9 +19,10 @@ import {
 	ButtonGraphicsBorderProperties,
 	ButtonGraphicsLineElement,
 	ButtonGraphicsLineDrawElement,
-} from '../Model/StyleLayersModel.js'
-import { assertNever } from '../Util.js'
-import { HorizontalAlignment, VerticalAlignment } from './Util.js'
+	ButtonGraphicsCompositeElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 
 type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
 type ParseVariablesFn = (str: string) => Promise<ExecuteExpressionResult>
@@ -216,8 +217,7 @@ async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
 				case 'line':
 					return convertLineElementForDrawing(helper, element)
 				case 'composite':
-					// TODO
-					return null
+					return convertCompositeElementForDrawing(helper, element)
 				default:
 					assertNever(element)
 					return null
@@ -272,6 +272,33 @@ async function convertGroupElementForDrawing(
 		opacity,
 		...bounds,
 		children,
+	}
+}
+
+async function convertCompositeElementForDrawing(
+	helper: ExpressionHelper,
+	element: ButtonGraphicsCompositeElement
+): Promise<ButtonGraphicsGroupDrawElement | null> {
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = await helper.getBoolean(element.enabled, true)
+	if (!enabled && helper.onlyEnabled) return null
+
+	const [opacity, bounds] = await Promise.all([
+		helper.getNumber(element.opacity, 1, 0.01),
+		convertDrawBounds(helper, element),
+		// ConvertSomeButtonGraphicsElementForDrawingWithHelper(helper, element.children),
+	])
+
+	// TODO - load in the contents here
+
+	return {
+		id: element.id,
+		type: 'group',
+		usage: element.usage,
+		enabled,
+		opacity,
+		...bounds,
+		children: [],
 	}
 }
 

@@ -16,7 +16,7 @@ export type SomeButtonGraphicsElement =
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsGroupDrawElement
-	| ButtonGraphicsCompositeDrawElement
+	// | ButtonGraphicsCompositeDrawElement
 	| ButtonGraphicsTextDrawElement
 	| ButtonGraphicsImageDrawElement
 	| ButtonGraphicsBoxDrawElement
@@ -90,18 +90,13 @@ export interface ButtonGraphicsGroupElement
 	children: SomeButtonGraphicsElement[]
 }
 
-export interface ButtonGraphicsCompositeDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsCompositeElementBase extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'composite'
-
-	connectionId: string
-	elementId: string
-
-	[customProperty: string]: any
 }
 export interface ButtonGraphicsCompositeElement
 	extends ButtonGraphicsElementBase,
 		// Do this in reverse, as we can't easily omit all of the customProperty fields
-		MakeExpressionable<Omit<{ type: 'composite' } & ButtonGraphicsDrawBase & ButtonGraphicsDrawBounds, 'usage'>> {
+		MakeExpressionable<Omit<ButtonGraphicsCompositeElementBase, 'usage'>> {
 	connectionId: string
 	elementId: string
 

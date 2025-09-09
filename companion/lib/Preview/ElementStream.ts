@@ -7,7 +7,7 @@ import type {
 	SomeButtonGraphicsElement,
 	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
