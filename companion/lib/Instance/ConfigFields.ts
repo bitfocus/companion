@@ -182,7 +182,7 @@ function translateColorPickerField(
 		type: 'colorpicker',
 		default: field.default,
 		enableAlpha: field.enableAlpha,
-		returnType: 'string',
+		returnType: field.returnType,
 		presetColors: field.presetColors,
 		width: width,
 	}
