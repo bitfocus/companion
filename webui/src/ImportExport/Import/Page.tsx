@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
-import { CButton, CCol, CRow, CFormSelect } from '@coreui/react'
+import { CButton, CCol, CRow, CFormSelect, CCallout } from '@coreui/react'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '~/Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
@@ -10,7 +10,7 @@ import {
 	ButtonInfiniteGridButtonProps,
 	ButtonInfiniteGridRef,
 } from '~/Buttons/ButtonInfiniteGrid.js'
-import { faHome } from '@fortawesome/free-solid-svg-icons'
+import { faFileCircleExclamation, faFileCirclePlus, faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import type { ClientImportObject, ClientImportObjectInstance } from '@companion-app/shared/Model/ImportExport.js'
@@ -112,84 +112,106 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 	console.log('sn', snapshotPageOptions, snapshot)
 
 	return (
-		<CRow className={className}>
-			<CCol xs={12} xl={6}>
-				<h5>Source Page</h5>
-				<MyErrorBoundary>
-					<>
-						<CCol sm={12}>
-							<PageNumberPicker
-								pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
-								changePage={isSinglePage ? undefined : changeImportPage}
-								setPage={isSinglePage ? undefined : setImportPageNumber}
-								pageOptions={snapshotPageOptions}
-							>
-								<CButton color="light" className="btn-right" title="Home Position" onClick={resetSourcePosition}>
-									<FontAwesomeIcon icon={faHome} />
-								</CButton>
-							</PageNumberPicker>
-						</CCol>
-						<div className="buttongrid" ref={hasBeenRenderedRef}>
-							{hasBeenRendered && sourceGridSize && (
-								<ButtonInfiniteGrid
-									ref={sourceGridRef}
+		<>
+			<h4>Buttons</h4>
+			<p>
+				Choose a source page containing the buttons to import and a destination page where they will be imported. You
+				can either replace an existing page or create a new one.
+			</p>
+			<CRow className={className} style={{ overflow: 'hidden', marginBottom: '1rem' }}>
+				<CCol xs={12} xl={6}>
+					<h5>Source Page</h5>
+					<MyErrorBoundary>
+						<>
+							<CCol sm={12}>
+								<PageNumberPicker
 									pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
-									gridSize={sourceGridSize}
-									buttonIconFactory={ButtonImportPreview}
-									drawScale={gridZoomValue / 100}
-								/>
-							)}
-						</div>
-					</>
-				</MyErrorBoundary>
-			</CCol>
+									changePage={isSinglePage ? undefined : changeImportPage}
+									setPage={isSinglePage ? undefined : setImportPageNumber}
+									pageOptions={snapshotPageOptions}
+								>
+									<CButton color="light" className="btn-right" title="Home Position" onClick={resetSourcePosition}>
+										<FontAwesomeIcon icon={faHome} />
+									</CButton>
+								</PageNumberPicker>
+							</CCol>
+							<div className="buttongrid" ref={hasBeenRenderedRef}>
+								{hasBeenRendered && sourceGridSize && (
+									<ButtonInfiniteGrid
+										ref={sourceGridRef}
+										pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
+										gridSize={sourceGridSize}
+										buttonIconFactory={ButtonImportPreview}
+										drawScale={gridZoomValue / 100}
+									/>
+								)}
+							</div>
+						</>
+					</MyErrorBoundary>
+				</CCol>
 
-			<CCol xs={12} xl={6}>
-				<h5>Destination Page</h5>
-				<MyErrorBoundary>
-					<>
-						<CCol sm={12}>
-							<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} newPageAtEnd>
-								<ButtonGridZoomControl
-									useCompactButtons={true}
-									gridZoomValue={gridZoomValue}
-									gridZoomController={gridZoomController}
-								/>
+				<CCol xs={12} xl={6}>
+					<h5>Destination Page</h5>
+					<MyErrorBoundary>
+						<>
+							<CCol sm={12}>
+								<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} newPageAtEnd>
+									<ButtonGridZoomControl
+										useCompactButtons={true}
+										gridZoomValue={gridZoomValue}
+										gridZoomController={gridZoomController}
+									/>
 
-								<CButton color="light" className="btn-right" title="Home Position" onClick={resetDestinationPosition}>
-									<FontAwesomeIcon icon={faHome} />
-								</CButton>
-							</ButtonGridHeader>
-						</CCol>
-						<div className="buttongrid">
-							{hasBeenRendered && destinationGridSize && (
-								<ButtonInfiniteGrid
-									ref={destinationGridRef}
-									pageNumber={pageNumber}
-									gridSize={destinationGridSize}
-									buttonIconFactory={ButtonGridIcon}
-									drawScale={gridZoomValue / 100}
-								/>
-							)}
-						</div>
-					</>
-				</MyErrorBoundary>
-			</CCol>
-			<CCol xs={12}>
-				<p>&nbsp;</p>
-			</CCol>
-			<CCol xs={12}>
-				<MyErrorBoundary>
-					<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
-				</MyErrorBoundary>
-			</CCol>
-
-			<CCol xs={12} className="mt-2">
-				<CButton color="warning" onClick={doImport2} disabled={isRunning}>
-					{pageNumber == -1 ? 'Import to new page' : `Import to page ${pageNumber}`}
+									<CButton color="light" className="btn-right" title="Home Position" onClick={resetDestinationPosition}>
+										<FontAwesomeIcon icon={faHome} />
+									</CButton>
+								</ButtonGridHeader>
+							</CCol>
+							<div className="buttongrid">
+								{hasBeenRendered && destinationGridSize && pageNumber != -1 && (
+									<ButtonInfiniteGrid
+										ref={destinationGridRef}
+										pageNumber={pageNumber}
+										gridSize={destinationGridSize}
+										buttonIconFactory={ButtonGridIcon}
+										drawScale={gridZoomValue / 100}
+									/>
+								)}
+								{pageNumber === -1 && (
+									<div
+										style={{
+											textAlign: 'center',
+											fontSize: '1.5rem',
+											marginTop: '5rem',
+										}}
+									>
+										<FontAwesomeIcon icon={faFileCirclePlus} size="4x" />
+										<p style={{ marginTop: '1rem' }}>The buttons will be imported to a new page.</p>
+									</div>
+								)}
+							</div>
+						</>
+					</MyErrorBoundary>
+				</CCol>
+			</CRow>
+			<MyErrorBoundary>
+				<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
+			</MyErrorBoundary>
+			<CCallout color={pageNumber == -1 ? 'success' : 'warning'}>
+				<h5>Import Buttons to Page</h5>
+				<p>
+					Clicking the button below will
+					{pageNumber == -1
+						? ' import the source page to a new page'
+						: ' completely override the button on the existing destination page with the buttons on the selected source page'}
+					.
+				</p>
+				<CButton color={pageNumber == -1 ? 'success' : 'warning'} onClick={doImport2} disabled={isRunning}>
+					<FontAwesomeIcon icon={pageNumber == -1 ? faFileCirclePlus : faFileCircleExclamation} />
+					{pageNumber == -1 ? ' Import to new page' : ` Replace page ${pageNumber} with imported page`}
 				</CButton>
-			</CCol>
-		</CRow>
+			</CCallout>
+		</>
 	)
 })
 
@@ -210,14 +232,18 @@ export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: I
 
 	return (
 		<div id="import_resolve">
-			<h5>Link import connections with existing connections</h5>
-
+			<h5>Import Connections Behavior</h5>
+			<p>
+				If you have existing connections that match the type of connections in the import, you can link them here.
+				Otherwise, new connections will be created for any connections left unlinked. You can also choose to ignore
+				certain connections if they are not needed.
+			</p>
 			<table className="table table-responsive-sm">
 				<thead>
 					<tr>
-						<th>Select connection</th>
-						<th>Config connection type</th>
-						<th>Config connection name</th>
+						<th>Behavior</th>
+						<th>Import Connection Type</th>
+						<th>Import Connection Name</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -276,7 +302,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 					<option value="_ignore">[ Ignore ]</option>
 					{currentConnections.map(([id, conn]) => (
 						<option key={id} value={id}>
-							{conn.label}
+							Link to {conn.label}
 						</option>
 					))}
 				</CFormSelect>
