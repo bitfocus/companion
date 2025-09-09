@@ -36,28 +36,23 @@ import {
 import type {
 	ClientEntityDefinition,
 	EntityDefinitionUpdate,
+	CompositeElementDefinitionUpdate,
+	UICompositeElementDefinition,
 } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { ButtonGraphicsElementUsage, SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { Complete } from '@companion-module/base/dist/util.js'
 
 export interface CompositeElementDefinition {
 	name: string
-	baseType: string
+	description: string | undefined
 	schema: SomeCompanionInputField[]
-}
-
-export interface CompositeElementDefinitionUpdate {
-	type: 'init' | 'add-connection' | 'forget-connection' | 'update-connection'
-	definitions?: Record<string, Record<string, CompositeElementDefinition> | undefined>
-	connectionId?: string
-	entities?: Record<string, CompositeElementDefinition | undefined>
-	added?: Record<string, CompositeElementDefinition | undefined>
-	changed?: Record<string, CompositeElementDefinition | undefined>
-	removed?: string[]
+	elements: SomeButtonGraphicsElement[]
 }
 
 type InstanceDefinitionsEvents = {
@@ -134,7 +129,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		this.#compositeElementDefinitions['internal'] = {
 			'sample-element': {
 				name: 'Sample Composite Element',
-				baseType: 'text',
+				description: 'Test',
 				schema: [
 					{
 						type: 'textinput',
@@ -143,8 +138,48 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 						default: 'Hello World',
 					},
 				],
+				elements: [
+					{
+						type: 'text',
+						id: 'sample-text',
+						name: 'Sample Text',
+						usage: ButtonGraphicsElementUsage.Automatic,
+						enabled: { value: true, isExpression: false },
+						opacity: { value: 100, isExpression: false },
+						x: { value: 0, isExpression: false },
+						y: { value: 0, isExpression: false },
+						width: { value: 100, isExpression: false },
+						height: { value: 100, isExpression: false },
+						text: { value: '$(options:text)', isExpression: false },
+						fontsize: { value: 'auto', isExpression: false },
+						color: { value: 0xffffff, isExpression: false },
+						halign: { value: 'center', isExpression: false },
+						valign: { value: 'center', isExpression: false },
+						outlineColor: { value: 0xff000000, isExpression: false },
+					},
+				],
 			},
 		}
+	}
+
+	/**
+	 * Simplify composite element definitions for UI by removing the element property
+	 */
+	#simplifyCompositeElementsForUi(
+		definitions: Record<string, Record<string, CompositeElementDefinition>>
+	): Record<string, Record<string, UICompositeElementDefinition>> {
+		const result: Record<string, Record<string, UICompositeElementDefinition>> = {}
+		for (const [connectionId, connectionDefinitions] of Object.entries(definitions)) {
+			result[connectionId] = {}
+			for (const [elementId, definition] of Object.entries(connectionDefinitions)) {
+				result[connectionId][elementId] = {
+					name: definition.name,
+					description: definition.description,
+					schema: definition.schema,
+				} satisfies Complete<UICompositeElementDefinition>
+			}
+		}
+		return result
 	}
 
 	createTrpcRouter() {
@@ -196,7 +231,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 				yield {
 					type: 'init',
-					definitions: self.#compositeElementDefinitions,
+					definitions: self.#simplifyCompositeElementsForUi(self.#compositeElementDefinitions),
 				} satisfies CompositeElementDefinitionUpdate
 
 				for await (const [update] of changes) {
@@ -306,6 +341,14 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		delete this.#feedbackDefinitions[connectionId]
 		if (this.#events.listenerCount('feedbacks') > 0) {
 			this.#events.emit('feedbacks', {
+				type: 'forget-connection',
+				connectionId,
+			})
+		}
+
+		delete this.#compositeElementDefinitions[connectionId]
+		if (this.#events.listenerCount('compositeElements') > 0) {
+			this.#events.emit('compositeElements', {
 				type: 'forget-connection',
 				connectionId,
 			})

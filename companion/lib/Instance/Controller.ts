@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { InstanceDefinitions, CompositeElementDefinition } from './Definitions.js'
+import { InstanceDefinitions } from './Definitions.js'
 import { ModuleHost } from './Host.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
