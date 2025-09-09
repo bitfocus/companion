@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { InstanceDefinitions } from './Definitions.js'
+import { InstanceDefinitions, CompositeElementDefinition } from './Definitions.js'
 import { ModuleHost } from './Host.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
@@ -365,6 +365,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const moduleManifest = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
 
 		return moduleManifest?.manifest
+	}
+
+	getCompositeElementDefinition(connectionId: string, elementId: string): CompositeElementDefinition | undefined {
+		return this.definitions.getCompositeElementDefinition(connectionId, elementId)
 	}
 
 	enableDisableInstance(id: string, state: boolean): void {

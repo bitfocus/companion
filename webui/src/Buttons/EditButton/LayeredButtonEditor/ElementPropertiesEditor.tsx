@@ -12,6 +12,8 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { FormPropertyField } from './ElementPropertiesUtil.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useContext } from 'react'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
@@ -41,8 +43,23 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 	elementProps: SomeButtonGraphicsElement
 }) {
 	const { localVariablesStore } = useElementPropertiesContext()
+	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
 
-	const schema = elementSchemas[elementProps.type]
+	// Check if this is a composite element
+	const compositeElementId = (elementProps as any).compositeElementId
+	let schema = elementSchemas[elementProps.type]
+
+	if (compositeElementId && typeof compositeElementId === 'string') {
+		// This is a composite element, get its custom schema
+		const [connectionId, elementId] = compositeElementId.split(';', 2)
+		const compositeDefinition = compositeElementDefinitions.getDefinition(connectionId, elementId)
+
+		if (compositeDefinition) {
+			// Combine the base group schema with the custom schema
+			schema = [...elementSchemas.group, ...compositeDefinition.schema]
+		}
+	}
+
 	if (!schema) {
 		return <div>No schema found for element type: {elementProps.type}</div>
 	}

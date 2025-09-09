@@ -1,5 +1,5 @@
 import { CButton, CButtonGroup, CPopover } from '@coreui/react'
-import React, { useCallback } from 'react'
+import React, { useCallback, useContext } from 'react'
 import type { LayeredStyleStore } from './StyleStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -11,6 +11,7 @@ import {
 	faT,
 	faTrash,
 	faMinus,
+	faCube,
 } from '@fortawesome/free-solid-svg-icons'
 import { Tuck } from '~/Components/Tuck.js'
 import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -18,6 +19,7 @@ import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { useMutationExt, trpc } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export function RemoveElementButton({
 	controlId,
@@ -132,13 +134,52 @@ function AddElementDropdownPopoverButton({
 	)
 }
 
-function AddElementDropdownPopoverContent({
+function AddCompositeElementDropdownPopoverButton({
+	styleStore,
+	controlId,
+	compositeElementType,
+	label,
+	icon,
+}: {
+	styleStore: LayeredStyleStore
+	controlId: string
+	compositeElementType: string
+	label: string
+	icon: IconProp
+}) {
+	const addElementMutation = useMutationExt(trpc.controls.styles.addElement.mutationOptions())
+
+	const addCallback = useCallback(() => {
+		addElementMutation
+			.mutateAsync({ controlId, type: compositeElementType, index: null })
+			.then((resId) => {
+				console.log('Added composite element', resId)
+				if (resId) styleStore.setSelectedElementId(resId)
+			})
+			.catch((e) => {
+				console.error('Failed to add composite element', e)
+			})
+	}, [addElementMutation, controlId, compositeElementType, styleStore])
+
+	return (
+		<CButton onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
+			<Tuck>
+				<FontAwesomeIcon icon={icon} />
+			</Tuck>
+			{label}
+		</CButton>
+	)
+}
+
+const AddElementDropdownPopoverContent = observer(function AddElementDropdownPopoverContent({
 	styleStore,
 	controlId,
 }: {
 	styleStore: LayeredStyleStore
 	controlId: string
 }) {
+	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
+
 	return (
 		<>
 			{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
@@ -178,7 +219,21 @@ function AddElementDropdownPopoverContent({
 					label="Line"
 					icon={faMinus}
 				/>
+
+				{/* Composite Elements */}
+				{Array.from(compositeElementDefinitions.connections.entries()).map(([connectionId, connectionDefinitions]) =>
+					Array.from(connectionDefinitions.entries()).map(([elementId, definition]) => (
+						<AddCompositeElementDropdownPopoverButton
+							key={`${connectionId};${elementId}`}
+							styleStore={styleStore}
+							controlId={controlId}
+							compositeElementType={`${connectionId};${elementId}`}
+							label={definition.name}
+							icon={faCube}
+						/>
+					))
+				)}
 			</CButtonGroup>
 		</>
 	)
-}
+})

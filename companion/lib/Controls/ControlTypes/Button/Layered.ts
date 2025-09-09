@@ -270,7 +270,38 @@ export class ControlButtonLayered
 	}
 
 	layeredStyleAddElement(type: string, index: number | null): string {
-		const newElement = CreateElementOfType(type as SomeButtonGraphicsElement['type'])
+		let newElement: SomeButtonGraphicsElement
+
+		// Check if this is a composite element (contains semicolon)
+		if (type.includes(';')) {
+			const [connectionId, elementId] = type.split(';', 2)
+			const compositeDefinition = this.deps.instance.getCompositeElementDefinition(connectionId, elementId)
+
+			if (compositeDefinition) {
+				// All composite elements are based on group type
+				newElement = CreateElementOfType('group')
+				// Override name with composite element name
+				newElement.name = compositeDefinition.name
+
+				// Add metadata to identify this as a composite element
+				;(newElement as any).compositeElementId = `${connectionId};${elementId}`
+
+				// Add custom properties from schema with their default values
+				for (const field of compositeDefinition.schema) {
+					if ('default' in field) {
+						;(newElement as any)[field.id] = {
+							value: field.default,
+							isExpression: false,
+						}
+					}
+				}
+			} else {
+				throw new Error(`Composite element not found: ${type}`)
+			}
+		} else {
+			// Standard element type
+			newElement = CreateElementOfType(type as SomeButtonGraphicsElement['type'])
+		}
 
 		if (typeof index === 'number' && index >= 0 && index < this.#drawElements.length) {
 			this.#drawElements.splice(index, 0, newElement)

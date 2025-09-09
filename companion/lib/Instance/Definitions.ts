@@ -42,6 +42,23 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+
+export interface CompositeElementDefinition {
+	name: string
+	baseType: string
+	schema: SomeCompanionInputField[]
+}
+
+export interface CompositeElementDefinitionUpdate {
+	type: 'init' | 'add-connection' | 'forget-connection' | 'update-connection'
+	definitions?: Record<string, Record<string, CompositeElementDefinition> | undefined>
+	connectionId?: string
+	entities?: Record<string, CompositeElementDefinition | undefined>
+	added?: Record<string, CompositeElementDefinition | undefined>
+	changed?: Record<string, CompositeElementDefinition | undefined>
+	removed?: string[]
+}
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -51,6 +68,7 @@ type DefinitionsEvents = {
 	presets: [update: UIPresetDefinitionUpdate]
 	actions: [update: EntityDefinitionUpdate]
 	feedbacks: [update: EntityDefinitionUpdate]
+	compositeElements: [update: CompositeElementDefinitionUpdate]
 }
 
 type RawPresetDefinition = (CompanionButtonPresetDefinition | CompanionTextPresetDefinition) & {
@@ -89,6 +107,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * The preset definitions
 	 */
 	#presetDefinitions: Record<string, Record<string, PresetDefinition>> = {}
+	/**
+	 * The composite element definitions
+	 */
+	#compositeElementDefinitions: Record<string, Record<string, CompositeElementDefinition>> = {}
 
 	#events = new EventEmitter<DefinitionsEvents>()
 
@@ -99,6 +121,30 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		this.#events.setMaxListeners(0)
 
 		this.#configStore = configStore
+
+		// Initialize with fixed composite element definitions
+		this.#initializeCompositeElements()
+	}
+
+	/**
+	 * Initialize the fixed list of composite element definitions
+	 */
+	#initializeCompositeElements(): void {
+		// For now, one fixed composite element
+		this.#compositeElementDefinitions['internal'] = {
+			'sample-element': {
+				name: 'Sample Composite Element',
+				baseType: 'text',
+				schema: [
+					{
+						type: 'textinput',
+						id: 'text',
+						label: 'ABC',
+						default: 'Hello World',
+					},
+				],
+			},
+		}
 	}
 
 	createTrpcRouter() {
@@ -139,6 +185,19 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				const changes = toIterable(self.#events, 'feedbacks', signal)
 
 				yield { type: 'init', definitions: self.#feedbackDefinitions } satisfies EntityDefinitionUpdate
+
+				for await (const [update] of changes) {
+					yield update
+				}
+			}),
+
+			compositeElements: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'compositeElements', signal)
+
+				yield {
+					type: 'init',
+					definitions: self.#compositeElementDefinitions,
+				} satisfies CompositeElementDefinitionUpdate
 
 				for await (const [update] of changes) {
 					yield update
@@ -270,6 +329,20 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				assertNever(entityType)
 				return undefined
 		}
+	}
+
+	/**
+	 * Get a composite element definition
+	 */
+	getCompositeElementDefinition(connectionId: string, elementId: string): CompositeElementDefinition | undefined {
+		return this.#compositeElementDefinitions[connectionId]?.[elementId]
+	}
+
+	/**
+	 * Get all composite element definitions
+	 */
+	getAllCompositeElementDefinitions(): Record<string, Record<string, CompositeElementDefinition>> {
+		return this.#compositeElementDefinitions
 	}
 
 	convertPresetToPreviewControlModel(connectionId: string, presetId: string): PresetButtonModel | null {
