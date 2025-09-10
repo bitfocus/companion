@@ -437,7 +437,7 @@ export class BackupController {
 		const exportData = await stringifyExport(logger, data, `${filename}.companionconfig`, format)
 		if (!exportData) throw new Error('Failed to stringify export data')
 
-		const filePath = path.join(backupDir, exportData.utf8Filename)
+		const filePath = path.join(backupDir, `${filename}.companionconfig`)
 
 		await this.#ensureFileDoesNotExist(filePath)
 
