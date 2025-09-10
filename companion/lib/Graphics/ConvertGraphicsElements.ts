@@ -178,6 +178,7 @@ class ExpressionHelper {
 	}
 }
 
+// TODO - this could probably drop all the async, now that this is just run on the backend
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	elements: SomeButtonGraphicsElement[],
 	executeExpression: ExecuteExpressionFn,
