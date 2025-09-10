@@ -468,23 +468,23 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 			lockout_device: {
 				label: 'Surface: Lockout specified surface immediately.',
-				description: undefined,
+				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [...CHOICES_SURFACE_GROUP_WITH_VARIABLES],
 			},
 			unlockout_device: {
 				label: 'Surface: Unlock specified surface immediately.',
-				description: undefined,
+				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [...CHOICES_SURFACE_GROUP_WITH_VARIABLES],
 			},
 
 			lockout_all: {
 				label: 'Surface: Lockout all immediately.',
-				description: undefined,
+				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [],
 			},
 			unlockout_all: {
 				label: 'Surface: Unlock all immediately.',
-				description: undefined,
+				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [],
 			},
 
