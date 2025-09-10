@@ -485,6 +485,9 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	 * Used by PageController for page reordering
 	 */
 	_movePageInOrder(fromIndex: number, toIndex: number): void {
+		if (fromIndex === toIndex) return
+		if (fromIndex < toIndex) toIndex -= 1
+
 		const pageId = this.#pageIds[fromIndex]
 		this.#pageIds.splice(fromIndex, 1)
 		this.#pageIds.splice(toIndex, 0, pageId)
@@ -512,19 +515,23 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	 * Load the page table with defaults
 	 */
 	#setupPages(rawPageData: Record<string, PageModel>): void {
+		// Track the ids as they get loaded, to ensure we dont accidentally have a duplicate id
+		const loadedPageIds = new Set<string>()
+
 		// Load existing data
 		for (let i = 1; ; i++) {
 			const pageInfo = rawPageData[i]
 			if (!pageInfo) break
 
 			// Ensure each page has an id defined
-			if (!pageInfo.id) {
+			if (!pageInfo.id || loadedPageIds.has(pageInfo.id)) {
 				pageInfo.id = nanoid()
 
 				// Save the changes
 				this.#dbTable.set(`${i}`, pageInfo)
 			}
 
+			loadedPageIds.add(pageInfo.id)
 			this.#pagesById[pageInfo.id] = pageInfo
 			this.#pageIds.push(pageInfo.id)
 		}
