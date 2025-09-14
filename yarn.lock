@@ -7667,13 +7667,13 @@ asn1@evs-broadcast/node-asn1:
   linkType: hard
 
 "axios@npm:^1.6.5":
-  version: 1.8.4
-  resolution: "axios@npm:1.8.4"
+  version: 1.12.1
+  resolution: "axios@npm:1.12.1"
   dependencies:
     follow-redirects: "npm:^1.15.6"
-    form-data: "npm:^4.0.0"
+    form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/450993c2ba975ffccaf0d480b68839a3b2435a5469a71fa2fb0b8a55cdb2c2ae47e609360b9c1e2b2534b73dfd69e2733a1cf9f8215bee0bcd729b72f801b0ce
+  checksum: 10c0/eda4dff56c02d13b950fd9487b678ac197ce5f21dfc98df73632df29e45d8dd24602a34e8d9b6e016d84a41ef7fd7fc4a7618060a72cc536b91cda1eaa9cd907
   languageName: node
   linkType: hard
 
