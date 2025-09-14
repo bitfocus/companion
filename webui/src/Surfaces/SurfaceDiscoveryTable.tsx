@@ -6,7 +6,7 @@ import {
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import { assertNever } from '~/Resources/util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { faBan, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faBan, faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SetupSatelliteModalRef, SetupSatelliteModal } from './SetupSatelliteModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -209,14 +209,15 @@ const StreamDeckRow = observer(function StreamDeckRow({ surfaceInfo, addRemoteSt
 			</td>
 			<td>
 				<CButtonGroup>
-					<CButton
-						onClick={() => addRemoteStreamDeck(surfaceInfo)}
-						title={isAlreadyAdded ? 'Already added' : 'Add Stream Deck'}
-						className="btn-undefined"
-						disabled={isAlreadyAdded}
-					>
-						<FontAwesomeIcon icon={faPlus} /> Add Stream Deck
-					</CButton>
+					{isAlreadyAdded ? (
+						<CButton title={'Already added'} className="btn-undefined" disabled>
+							<FontAwesomeIcon icon={faCheck} /> Already added
+						</CButton>
+					) : (
+						<CButton onClick={() => addRemoteStreamDeck(surfaceInfo)} title="Add Stream Deck" className="btn-undefined">
+							<FontAwesomeIcon icon={faPlus} /> Add Stream Deck
+						</CButton>
+					)}
 				</CButtonGroup>
 			</td>
 		</tr>
