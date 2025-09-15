@@ -10,12 +10,17 @@ export function useConnectionVersionSelectOptions(
 	moduleId: string | undefined,
 	installedInfo: ClientModuleInfo | null | undefined,
 	includeBeta: boolean
-): DropdownChoiceInt[] {
+): {
+	loaded: boolean
+	choices: DropdownChoiceInt[]
+} {
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
 	const upgradeToVersions = useModuleUpgradeToVersions(moduleId)
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
 	const latestBetaVersion = getLatestVersion(moduleStoreInfo?.versions, true)
+
+	const loaded = !!moduleStoreInfo
 
 	return useComputed(() => {
 		const choices: DropdownChoiceInt[] = []
@@ -76,6 +81,9 @@ export function useConnectionVersionSelectOptions(
 			}
 		}
 
-		return [...replacementChoices, ...choices]
-	}, [installedInfo, upgradeToVersions, latestStableVersion, latestBetaVersion, includeBeta])
+		return {
+			choices: [...replacementChoices, ...choices],
+			loaded,
+		}
+	}, [installedInfo, upgradeToVersions, latestStableVersion, latestBetaVersion, includeBeta, loaded])
 }

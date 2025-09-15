@@ -282,7 +282,7 @@ const ConnectionModuleVersionInputField = observer(function ConnectionModuleVers
 		panelStore.connectionInfo.instance_type,
 		moduleInfo,
 		true
-	)
+	).choices
 
 	return (
 		<>
