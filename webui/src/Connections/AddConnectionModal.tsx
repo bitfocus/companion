@@ -90,7 +90,11 @@ export const AddConnectionModal = observer(
 			[connections]
 		)
 
-		const versionChoices = useConnectionVersionSelectOptions(moduleInfo?.id, moduleInfo?.installedInfo, false)
+		const { choices: versionChoices, loaded: choicesLoaded } = useConnectionVersionSelectOptions(
+			moduleInfo?.id,
+			moduleInfo?.installedInfo,
+			false
+		)
 
 		// Ensure the currently selection version is a valid option
 		const defaultVersionId = moduleInfo?.installedInfo?.devVersion
@@ -172,7 +176,11 @@ export const AddConnectionModal = observer(
 												{v.label}
 											</option>
 										))}
-										{!versionChoices.length && <option value={null as any}>Loading...</option>}
+										{!versionChoices.length && (
+											<option value={null as any}>
+												{choicesLoaded ? 'No compatible versions found' : 'Loading...'}
+											</option>
+										)}
 									</CFormSelect>
 								</CCol>
 							</CForm>

@@ -76,7 +76,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 	const connectionShouldBeRunning = connectionInfo.enabled && connectionVersionExists
 
 	const isModuleOnStore = !!modules.storeList.get(connectionInfo.instance_type)
-	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true)
+	const moduleVersionChoices = useConnectionVersionSelectOptions(connectionInfo.instance_type, moduleInfo, true).choices
 
 	const [saveError, setSaveError] = useState<string | null>(null)
 
