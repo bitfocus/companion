@@ -93,11 +93,11 @@ export const AddConnectionModal = observer(
 			[connections]
 		)
 
-		const { choices: versionChoices, loaded: choicesLoaded } = useConnectionVersionSelectOptions(
-			moduleInfo?.id,
-			moduleInfo?.installedInfo,
-			false
-		)
+		const {
+			choices: versionChoices,
+			loaded: choicesLoaded,
+			hasIncompatibleNewerVersion,
+		} = useConnectionVersionSelectOptions(moduleInfo?.id, moduleInfo?.installedInfo, false)
 
 		// Ensure the currently selection version is a valid option
 		const defaultVersionId = moduleInfo?.installedInfo?.devVersion
@@ -189,6 +189,15 @@ export const AddConnectionModal = observer(
 								<CCol sm={{ span: 8, offset: 4 }} className="mt-0">
 									<div className="form-text">Additional versions can be installed in the Modules Manager page.</div>
 								</CCol>
+
+								{hasIncompatibleNewerVersion && (
+									<CCol xs={12}>
+										<CAlert color="warning" className="mt-2 mb-0">
+											There is a newer version of this module on the store, but it requires a newer version of
+											Companion.
+										</CAlert>
+									</CCol>
+								)}
 							</CForm>
 
 							{selectedVersionIsLegacy && (
