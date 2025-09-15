@@ -1,4 +1,4 @@
-import { initTRPC } from '@trpc/server'
+import { initTRPC, TRPCError } from '@trpc/server'
 import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
@@ -55,6 +55,18 @@ const loggerMiddleware = t.middleware(async ({ ctx, next, path, type }) => {
 	return result
 })
 
+const tidyZodMiddleware = t.middleware(async ({ next, path, type }) => {
+	const result = await next()
+
+	if (!result.ok && result.error instanceof TRPCError && result.error.code === 'BAD_REQUEST') {
+		throw new Error(`Invalid or malformed input provided for "${path}/${type}"`, {
+			cause: result.error.cause,
+		})
+	}
+
+	return result
+})
+
 const sentryMiddleware = t.middleware(
 	sentryTrpcMiddleware({
 		attachRpcInput: true,
@@ -67,7 +79,7 @@ const sentryMiddleware = t.middleware(
  */
 export const router = t.router
 
-export const publicProcedure = t.procedure.use(sentryMiddleware).use(loggerMiddleware)
+export const publicProcedure = t.procedure.use(sentryMiddleware).use(loggerMiddleware).use(tidyZodMiddleware)
 // export const protectedProcedure = t.procedure
 
 /**
