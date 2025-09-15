@@ -178,6 +178,9 @@ export const AddConnectionModal = observer(
 										{!versionChoices.length && <option value={null as any}>Loading...</option>}
 									</CFormSelect>
 								</CCol>
+								<CCol sm={{ span: 8, offset: 4 }} className="mt-0">
+									<div className="form-text">Additional versions can be installed in the Modules Manager page.</div>
+								</CCol>
 							</CForm>
 
 							{selectedVersionIsLegacy && (
