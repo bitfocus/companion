@@ -627,7 +627,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (!this.panel) return
 
 		pressCode = Number(pressCode)
-		if (isNaN(pressCode) || pressCode < 0 || pressCode > 9) throw new Error('Invalid key')
+		if (isNaN(pressCode) || pressCode < 0 || pressCode > 9) throw new Error(`Invalid key: ${pressCode}`)
 
 		this.#currentPincodeEntry += pressCode.toString()
 
