@@ -7,7 +7,6 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { faGamepad } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export const EmulatorList = observer(function EmulatorList() {
 	const navigate = useNavigate({ from: '/emulator' })
