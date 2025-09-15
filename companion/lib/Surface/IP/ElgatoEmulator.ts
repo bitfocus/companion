@@ -62,7 +62,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	{
 		id: 'emulator_prompt_fullscreen',
 		type: 'checkbox',
-		label: 'Prompt to enter fullscreem',
+		label: 'Prompt to enter fullscreen',
 		default: true,
 		tooltip: 'testfingsdg ',
 	},
