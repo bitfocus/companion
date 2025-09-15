@@ -54,7 +54,7 @@ There are several ways you can make your button stand out, including:
 There are also some behaviour options:
 
 - Change whether to use auto progression when multiple steps are defined [Steps](#header-steps).
-- Enable rotary actions for this button, to support the dials on a Streamdeck + (or similar).
+- Enable rotary actions for this button, to support the dials on a Stream Deck + (or similar).
 
 ![Button config](images/button-config.png?raw=true 'Button config')
 

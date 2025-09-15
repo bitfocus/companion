@@ -1,1 +1,1 @@
-In the Settings tab, you can apply some user settings
+In the Settings tab, you can configure Companion settings.

@@ -41,7 +41,7 @@ Supported operators include:
   - Subtraction assignment: `a -= 1`
   - Multiplication assignment: `a *= 1`
   - Division assignment: `a /= 1`
-  - Modulous assignment: `a %= 1`
+  - Modulus assignment: `a %= 1`
   - Increment: `a++` or `++a`
   - Decrement: `a--` or `--a`
   - Logical OR assignment: `a ||= 1`

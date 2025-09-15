@@ -8,7 +8,7 @@ The currently supported functions are:
 
 Find the length of the item passed in.
 
-- For a strings it will return the number of unicode graphemes
+- For strings, it will return the number of unicode graphemes
 - For arrays, the number of elements
 - For JSON or other objects, it will return the number of properties
 - For numbers it will return the length of the string representation
@@ -133,11 +133,11 @@ If the value isn't found, it will return -1, otherwise the index of the last occ
 
 **toUpperCase(val)**
 
-Coverts all characters in a string to uppercase
+Converts all characters in a string to uppercase
 
 **toLowerCase(val)**
 
-Coverts all characters in a string to lowercase
+Converts all characters in a string to lowercase
 
 **replaceAll(val, find, replace)**
 

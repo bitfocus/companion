@@ -1,1 +1,3 @@
-_You can collapse the sidebar by clicking the "burger" icon on the right of Companion logo, or shrink it by clicking the arrow at the bottom of the sidebar._
+_You can collapse the sidebar by clicking the icon to the left of the version number at the bottom of the sidebar._
+
+The sidebar is the main way to navigate Companion. It provides quick access to surfaces, pages, module settings, tools, and global configuration.

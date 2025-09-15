@@ -1,28 +1,61 @@
-Many modules allow for using variables in input fields. A select few places support a new concept of expressions too (including button text when in expression mode). We hope to make these available in more places over time.
+Many modules support using variables in input fields. A subset of places also support expressions (for example, button text when in expression mode). Expressions are more powerful than plain variables but require a small expression language.
 
-The key difference is that expressions are capable of a lot more, but are more complex to write.
+Key points
 
-A simple expression which will add two numeric variables, could look like `$(custom:a) + $(custom:b)`. Other operators can be used here instead.
-Or a more complex boolean expression could be `($(custom:a) > $(custom:b)) && !$(custom:c)`.
+- Expressions are written using the expression language and must be wrapped in `$()` so the renderer can locate them. Example: `$(1 + 2)` or `$(custom:a + custom:b)`.
+- Expressions can contain arithmetic and logical operators, conditional (ternary) expressions, function calls, and variable access.
 
-The normal operator precedence is used in complex expressions. Parentheses can also be used to overrule the precedence or to aid readability, such as `($(custom:a) + $(custom:b) / $(custom:c)`.
+##### Examples
 
-You can also do more complex expressions with conditional logic, such as `($(custom:a) > 0) ? $(custom:a) : 0`.
+Basic arithmetic:
 
-There are various functions that you can use. These can be used in the usual ways to do various things. For example `round($(custom:a))`. There is a full list of available functions documented below.
+```
+$(custom:a) + $(custom:b)
+```
 
-Strings can be formed using `` `${$(custom:a)}dB` `` which is known as a template string. You can use anything inside of `${` and `}` instead of `$(custom:a)`; even other string templates and conditional logic. Just make sure you've got the backticks around it for it to be processed as such.
+Boolean logic:
 
-You can split your expression over multiple lines or statements, and create intermediary values too
+```
+($(custom:a) > $(custom:b)) && !$(custom:c)
+```
+
+Conditional (ternary):
+
+```
+($(custom:a) > 0) ? $(custom:a) : 0
+```
+
+Using functions (see functions page):
+
+```
+round($(custom:a))
+```
+
+Template strings use backticks with `${...}` interpolation. The interpolated section can be any valid expression:
+
+```
+`${$(custom:a)}dB`
+```
+
+Multi-line expressions and intermediate values
+
+You can split expressions across multiple lines and create intermediate variables. The value of the last statement is taken as the expression result:
 
 ```
 myval = $(custom:a) + $(custom:b)
 myval / 2
 ```
 
-Note: the parser is looser than js in how statements have to be written, it is valid for multiple to be on one line (eg `10 20 30`).  
-The value of the last statement will be taken as the output of the expression.
+Comments
 
-And you can add either `/* block comments */` or `// end of line comments` to document your expressions.
+Block and end-of-line comments are supported:
 
-All of these features can be combined into long and complex expressions, and more is sure to be possible in the future. We look forward to seeing what you come up with!
+```
+/* block comment */
+// end of line comment
+```
+
+Notes
+
+- The parser is slightly more permissive than JavaScript when it comes to statement separation; multiple statements may appear on a single line.
+- These features can be combined to form long and complex expressions. More functionality will be added in future.
