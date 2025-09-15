@@ -67,6 +67,7 @@ export class ModuleInfoStore {
 			lastUpdated: 0,
 			lastUpdateAttempt: 0,
 			updateWarning: null,
+			moduleApiVersion: null,
 			modules: {},
 		}
 
