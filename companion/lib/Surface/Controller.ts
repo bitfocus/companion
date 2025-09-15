@@ -507,6 +507,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						emulator_columns: input.columns,
 					})
 
+					if (!(handler.panel instanceof SurfaceIPElgatoEmulator)) {
+						throw new Error(`Emulator "${input.baseId}" was not constructed properly!`)
+					}
+
+					// Emit an update to the config
+					this.#updateEvents.emit('emulatorConfig', input.baseId, handler.panel.latestConfig())
+
 					return fullId
 				}),
 
@@ -519,6 +526,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				.mutation(async ({ input }) => {
 					if (input.id.startsWith('emulator:') && this.#surfaceHandlers.has(input.id)) {
 						this.removeDevice(input.id, true)
+
+						// Emit an update to the config
+						this.#updateEvents.emit('emulatorConfig', input.id.slice('emulator:'.length), null)
 
 						return true
 					} else {
@@ -540,14 +550,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				signal,
 				input,
 			}) {
-				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
-				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
-					throw new Error(`Emulator "${input.id}" does not exist!`)
-				}
-
 				const changes = toIterable(self.#updateEvents, 'emulatorConfig', signal)
 
-				yield surface.panel.latestConfig()
+				// Emit the current config if it exists
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					yield null
+				} else {
+					yield surface.panel.latestConfig()
+				}
 
 				for await (const [changeId, changeData] of changes) {
 					if (changeId === input.id) yield changeData

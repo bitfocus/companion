@@ -2,18 +2,19 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMountEffect, PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
-import { CButton, CCol, CForm, CRow } from '@coreui/react'
+import { CAlert, CButton, CCol, CForm, CRow } from '@coreui/react'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCancel, faExpand } from '@fortawesome/free-solid-svg-icons'
+import { faCancel, faGamepad, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { ControlLocation, EmulatorConfig } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
-import { useParams } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { observable, ObservableMap, runInAction } from 'mobx'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 
 function getCacheKey(x: number, y: number): string {
 	return `${x}/${y}`
@@ -33,6 +34,7 @@ export const Emulator = observer(function Emulator() {
 		trpc.surfaces.emulatorImages.subscriptionOptions(
 			{ id: emulatorId },
 			{
+				enabled: !!config.data,
 				onStarted: () => {
 					runInAction(() => {
 						// Clear the image cache when the subscription starts
@@ -141,6 +143,10 @@ export const Emulator = observer(function Emulator() {
 						rows={config.data.emulator_rows}
 					/>
 				</>
+			) : config.data === null ? (
+				<CRow className={'loading'}>
+					<EmulatorNotFound emulatorId={emulatorId} />
+				</CRow>
 			) : (
 				<CRow className={'loading'}>
 					<LoadingRetryOrError
@@ -267,4 +273,28 @@ interface ButtonPreview2Props {
 function ButtonPreview2({ column, row, ...props }: ButtonPreview2Props) {
 	const location = useMemo(() => ({ pageNumber: 0, column, row }), [column, row])
 	return <ButtonPreview {...props} location={location} title={`Button ${column}/${row}`} />
+}
+
+function EmulatorNotFound({ emulatorId }: { emulatorId: string }) {
+	const navigate = useNavigate({ from: '/emulator' })
+
+	return (
+		<div className="emulator-not-found">
+			<NonIdealState icon={faGamepad} className="emulator-nonideal" style={{ color: '#f7f7f7' }}>
+				<div>
+					The emulator with ID <code>{emulatorId}</code> was not found.
+				</div>
+				<div>
+					<CButton
+						color="warning"
+						className="emulator-back-button"
+						onClick={() => void navigate({ to: '/emulators' })}
+						title="Back to emulator list"
+					>
+						Back
+					</CButton>
+				</div>
+			</NonIdealState>
+		</div>
+	)
 }
