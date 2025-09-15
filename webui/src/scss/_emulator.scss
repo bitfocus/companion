@@ -20,7 +20,11 @@
 		justify-content: center !important;
 	}
 
-	button {
+	.emulator-button {
+		min-height: 120px;
+		padding: 1.25rem 1rem;
+		text-align: center;
+
 		font-size: 1.7em;
 		padding: 2rem 1rem;
 		width: 100%;
@@ -79,26 +83,28 @@
 		color: var(--cui-warning);
 	}
 
-	.emulator-nonideal {
-		color: #f7f7f7 !important;
-		background: rgba(255, 255, 255, 0.02);
-		padding: 4vh;
-		border-radius: 8px;
-		text-align: center;
-		max-width: 720px;
-	}
-
-	/* Ensure the icon is visible against dark backgrounds */
-	.emulator-nonideal svg {
-		color: #f7f7f7;
-		opacity: 0.95;
-	}
-
 	.emulator-back-button {
 		margin-top: 1rem;
 		display: inline-block;
 		min-width: 96px;
 
 		color: #000;
+	}
+}
+
+.emulator-nonideal {
+	display: block;
+	margin: 0 auto;
+	color: #f7f7f7 !important;
+	background: rgba(255, 255, 255, 0.02);
+	padding: 4vh;
+	border-radius: 8px;
+	text-align: center;
+	max-width: 720px;
+
+	/* Ensure the icon is visible against dark backgrounds */
+	svg {
+		color: #f7f7f7;
+		opacity: 0.95;
 	}
 }
