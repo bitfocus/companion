@@ -223,7 +223,7 @@ export class ControlExpressionVariable
 		// Handle expression variable name changes
 		if (key === 'variableName') {
 			// Make sure the new name is valid
-			if (!isLabelValid(value)) {
+			if (value != '' && !isLabelValid(value)) {
 				throw new Error(`Invalid variable name "${value}"`)
 			}
 
