@@ -20,6 +20,8 @@
   - Indicate whether custom-variable value is valid while typing
   - Improved layout of the launcher window, including a new settings window
   - Add filter/search to triggers page
+  - Improved import page
+  - Improve emulator list page
 - Added Expression Variables. Similar to Custom Variables, but their value is the result of an expression that executes when needed.
 - Add new 'while loop' action
 - Ability to define 'local variables' on buttons and triggers.
@@ -55,7 +57,8 @@
 - Some dropdown fields not updating their options when expected
 - Duplicating triggers first execution incorrect
 - Improve drag and drop behaviour in action/feedback lists
--
+- Sanitise page ids at startup, to ensure the config is sane
+- Better handling when no compatible versions of a module are available to be installed
 
 ## Companion v4.0.3 - Release Notes
 
