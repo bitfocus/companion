@@ -3,6 +3,9 @@ export interface ModuleStoreListCacheStore {
 	lastUpdateAttempt: number
 	updateWarning: string | null
 
+	// The version of the module API that the check was made with. Note: this may not exist for older cache data
+	moduleApiVersion: string | undefined
+
 	modules: Record<string, ModuleStoreListCacheEntry>
 }
 

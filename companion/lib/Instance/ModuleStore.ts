@@ -8,7 +8,7 @@ import type {
 } from '@companion-app/shared/Model/ModulesStore.js'
 import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import semver from 'semver'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { isModuleApiVersionCompatible, MODULE_BASE_VERSION } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import createClient, { Client } from 'openapi-fetch'
 import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import { Complete } from '@companion-module/base/dist/util.js'
@@ -64,6 +64,8 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 			lastUpdateAttempt: 0,
 			updateWarning: null,
 
+			moduleApiVersion: undefined,
+
 			modules: {},
 		} satisfies ModuleStoreListCacheStore)
 
@@ -80,7 +82,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		})
 
 		// If this is the first time we're running, refresh the store data now
-		if (this.#listStore.lastUpdated === 0) {
+		if (this.#listStore.lastUpdated === 0 || this.#listStore.moduleApiVersion !== MODULE_BASE_VERSION) {
 			setImmediate(() => this.refreshStoreListData())
 		}
 		// TODO - setup some better interval stuff, so that we can notify the user of updates they can install
@@ -191,6 +193,9 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 						path: {
 							moduleType: 'connection',
 						},
+						query: {
+							'module-api-version': MODULE_BASE_VERSION,
+						},
 					},
 				})
 				this.#io.emitToAll('modules-store:list:progress', 0.5)
@@ -201,6 +206,8 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 					lastUpdated: Date.now(),
 					lastUpdateAttempt: Date.now(),
 					updateWarning: null,
+
+					moduleApiVersion: MODULE_BASE_VERSION,
 
 					modules: Object.fromEntries(
 						data.modules.map((data) => [

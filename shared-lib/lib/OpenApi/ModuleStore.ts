@@ -24,6 +24,26 @@ export interface paths {
 		patch?: never
 		trace?: never
 	}
+	'/v1/website/connections': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get a list of all published connections
+		 * @description Get a list of all published connections
+		 */
+		get: operations['getWebsiteConnections']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
 	'/v1/companion/modules/{moduleType}': {
 		parameters: {
 			query?: never
@@ -35,7 +55,7 @@ export interface paths {
 		 * Get a list of all published modules
 		 * @description Get a list of all published modules
 		 */
-		get: operations['getModules']
+		get: operations['getCompanionModules']
 		put?: never
 		post?: never
 		delete?: never
@@ -55,7 +75,47 @@ export interface paths {
 		 * Get published versions of a module
 		 * @description Get published versions of a module
 		 */
-		get: operations['getModuleVersions']
+		get: operations['getCompanionModuleVersions']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
+	'/v1/buttons/modules/{moduleType}': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get a list of all published modules
+		 * @description Get a list of all published modules
+		 */
+		get: operations['getButtonsModules']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
+	'/v1/buttons/modules/{moduleType}/{moduleName}': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get published versions of a module
+		 * @description Get published versions of a module
+		 */
+		get: operations['getButtonsModuleVersions']
 		put?: never
 		post?: never
 		delete?: never
@@ -111,12 +171,62 @@ export interface components {
 			githubUrl?: string
 			/** @description Url to the module help markdown. This may reference other assets in the same folder */
 			latestHelpUrl?: string
+			/** @description The latest version number of the module */
+			latestVersionNumber?: string
 			/** @description Old module ids that this module replaces */
 			legacyIds?: string[]
 			/** @description Reason for deprecation (if deprecated) */
 			deprecationReason?: string
 		}
 		CompanionModuleVersionInfo: {
+			/** @description Version number */
+			id: string
+			/** @description Whether this version is a prerelease */
+			isPrerelease: boolean
+			/** @description Whether this version is a legacy version (auto-translated to the modern module api) */
+			isLegacy: boolean
+			/** @description Unix timestamp when the version was published */
+			releasedAt: number
+			/** @description Url to the module tarball */
+			tarUrl?: string
+			/** @description SHA256 checksum of the tarball */
+			tarSha?: string
+			/** @description API version of the module */
+			apiVersion: string
+			/** @description Reason for deprecation (if deprecated) */
+			deprecationReason?: string
+			/** @description Url to the module help markdown. This may reference other assets in the same folder */
+			helpUrl?: string
+		}
+		ButtonsModuleInfo: {
+			/** @description Id of the module */
+			id: string
+			/** @description The type of module */
+			type: string
+			/** @description Name of the module */
+			name: string
+			/** @description Short name of the module */
+			shortname: string
+			/** @description Manufacturer of the device controller by the module */
+			manufacturer: string
+			/** @description List of products supported by the module */
+			products: string[]
+			/** @description List of keywords for the module */
+			keywords: string[]
+			/** @description Url to the module store page */
+			storeUrl: string
+			/** @description Url to the module source code */
+			githubUrl?: string
+			/** @description Url to the module help markdown. This may reference other assets in the same folder */
+			latestHelpUrl?: string
+			/** @description The latest version number of the module */
+			latestVersionNumber?: string
+			/** @description Old module ids that this module replaces */
+			legacyIds?: string[]
+			/** @description Reason for deprecation (if deprecated) */
+			deprecationReason?: string
+		}
+		ButtonsModuleVersionInfo: {
 			/** @description Version number */
 			id: string
 			/** @description Whether this version is a prerelease */
@@ -131,6 +241,27 @@ export interface components {
 			apiVersion: string
 			/** @description Reason for deprecation (if deprecated) */
 			deprecationReason?: string
+			/** @description Url to the module help markdown. This may reference other assets in the same folder */
+			helpUrl?: string
+		}
+		WebsiteConnectionInfo: {
+			/** @description Id of the module */
+			id: string
+			/** @description Version number */
+			latestVersion: string
+			/** @description Name of the module */
+			name: string
+			/** @description Manufacturer of the device controller by the module */
+			manufacturer: string
+			/** @description List of products supported by the module */
+			products: string[]
+			/** @description List of keywords for the module */
+			keywords: string[]
+			/** @description List of authors of the module */
+			authors: {
+				name: string
+				email?: string
+			}[]
 			/** @description Url to the module help markdown. This may reference other assets in the same folder */
 			helpUrl?: string
 		}
@@ -174,9 +305,34 @@ export interface operations {
 			}
 		}
 	}
-	getModules: {
+	getWebsiteConnections: {
 		parameters: {
 			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						connections: components['schemas']['WebsiteConnectionInfo'][]
+					}
+				}
+			}
+		}
+	}
+	getCompanionModules: {
+		parameters: {
+			query?: {
+				/** @description Limit versions included in results to those compatible with the given API version */
+				'module-api-version'?: string
+			}
 			header?: never
 			path: {
 				/** @description Type of module to get */
@@ -199,7 +355,7 @@ export interface operations {
 			}
 		}
 	}
-	getModuleVersions: {
+	getCompanionModuleVersions: {
 		parameters: {
 			query?: never
 			header?: never
@@ -219,6 +375,68 @@ export interface operations {
 				content: {
 					'application/json': {
 						versions: components['schemas']['CompanionModuleVersionInfo'][]
+					}
+				}
+			}
+			/** @description Module not found */
+			404: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': components['schemas']['ErrorResponse']
+				}
+			}
+		}
+	}
+	getButtonsModules: {
+		parameters: {
+			query?: {
+				/** @description Limit versions included in results to those compatible with the given API version */
+				'module-api-version'?: string
+			}
+			header?: never
+			path: {
+				/** @description Type of module to get */
+				moduleType: 'connection'
+			}
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						modules: components['schemas']['ButtonsModuleInfo'][]
+					}
+				}
+			}
+		}
+	}
+	getButtonsModuleVersions: {
+		parameters: {
+			query?: never
+			header?: never
+			path: {
+				/** @description Name of module to get */
+				moduleType: string
+			}
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						versions: components['schemas']['ButtonsModuleVersionInfo'][]
 					}
 				}
 			}

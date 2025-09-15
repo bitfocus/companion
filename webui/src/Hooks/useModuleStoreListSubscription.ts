@@ -29,6 +29,7 @@ export function useModuleStoreListSubscription(socket: CompanionSocketWrapped, s
 				lastUpdated: 0,
 				lastUpdateAttempt: 0,
 				updateWarning: null,
+				moduleApiVersion: undefined,
 				modules: {},
 			})
 			unbsubData()
