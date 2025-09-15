@@ -1,6 +1,9 @@
 name: Build binaries
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   check-types:
     runs-on: ubuntu-latest

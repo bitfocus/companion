@@ -1,6 +1,9 @@
 name: Check types
 on: [pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   check-types:
     runs-on: ubuntu-latest

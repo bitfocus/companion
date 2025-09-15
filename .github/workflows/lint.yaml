@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          fetch-depth: 0
           persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -43,6 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          fetch-depth: 0
           persist-credentials: false
       - name: Spell Check Repo
         uses: crate-ci/typos@v1
