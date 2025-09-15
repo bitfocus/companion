@@ -26,7 +26,7 @@ enum EntityState {
 }
 
 interface EntityWrapper {
-	/** A unqiue id for this wrapper, so that we know if the entity was replaced/deleted */
+	/** A unique id for this wrapper, so that we know if the entity was replaced/deleted */
 	readonly wrapperId: string
 	readonly entity: WeakRef<ControlEntityInstance>
 	readonly controlId: string

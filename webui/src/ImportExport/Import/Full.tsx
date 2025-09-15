@@ -313,7 +313,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			<CCallout color="success">
 				<h5>Import Selected Components</h5>
 				<p>
-					This preserves any unselected components in their current state, while reseting and importing the selected
+					This preserves any unselected components in their current state, while resetting and importing the selected
 					components.
 				</p>
 				<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>

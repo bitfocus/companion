@@ -928,7 +928,7 @@ export class ImportExportController {
 			}
 		}
 
-		referencesUpdater.visitEntities([], allEntities).visitButtonDrawStlye(result.style)
+		referencesUpdater.visitEntities([], allEntities).visitButtonDrawStyle(result.style)
 
 		return result
 	}

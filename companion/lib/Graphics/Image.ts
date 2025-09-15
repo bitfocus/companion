@@ -220,7 +220,7 @@ export class Image {
 	 * @param valign vertical alignment of the image in the bounding box (defaults to center)
 	 * @param scale the size factor of the image. Number scales by specified amount, fill scales to fill the bounding box neglecting aspect ratio, crop scales to fill the bounding box and crop if necessary, fit scales to fit the bounding box with the longer side
 	 */
-	async drawFromPNGdata(
+	async drawFromPngData(
 		data: Buffer,
 		xStart = 0,
 		yStart = 0,

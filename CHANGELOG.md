@@ -8,7 +8,7 @@
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
-- Various UX improvments
+- Various UX improvements
   - Connections, triggers and custom variables can be added to 'collections' for grouping
   - Connections and triggers can be enabled/disabled by their collections
   - Connections, triggers and surfaces tables have had their contents rearranged to flow more naturally
@@ -448,7 +448,7 @@ Modules are now distributed independently, and are no longer reported here
 - Fix restarts from toggling developer tools aren't a crash #3151
 - Fix don't show some local variables in triggers #3161
 - Sort custom-variables dropdown in the same order as the editor #3159
-- Update IDs of duplicated steps before commiting, #3125
+- Update IDs of duplicated steps before committing, #3125
 
 ### 🐞 MODULE FIXES
 
@@ -511,7 +511,7 @@ Modules are now distributed independently, and are no longer reported here
 - Default DB to current version
 - Use macos 10.15 compatible canvas library
 - Reject trying to drag feedback into a child of itself #3037
-- Update depedencies
+- Update dependencies
 
 ### 🐞 MODULE FIXES
 
@@ -573,7 +573,7 @@ Modules are now distributed independently, and are no longer reported here
 - Clarify 'deprecated api' options in user config
 - Navigate back buttons not working when surface is in a group
 - Safari drawing buttons over scrollbar
-- Avoid flickering when draging actions or feedbacks around the editor
+- Avoid flickering when dragging actions or feedbacks around the editor
 - Avoid ui crash when action/feedback is missing name
 - Importing triggers fails to append due to duplicate ids
 - Improved error handling
@@ -738,7 +738,7 @@ Modules are now distributed independently, and are no longer reported here
 
 ### 🐞 BUG FIXES
 
-- Less agressive log rotating #2895
+- Less aggressive log rotating #2895
 - Add error handler for logStream writer #2895
 - Handle 'node-machine-id' failures #2885
 - Ensure variables in presets button text get replaced correctly #2837
@@ -966,7 +966,7 @@ Modules are now distributed independently, and are no longer reported here
 - Show button previews in actions/feedbacks while editing triggers
 - Grid header layout issues in firefox
 - Incomplete documentation for expression syntax #2743
-- Restarting modules during development being too agressive #2741
+- Restarting modules during development being too aggressive #2741
 
 ### 🧩 UPDATED MODULES
 
@@ -1041,7 +1041,7 @@ Modules are now distributed independently, and are no longer reported here
 - Learn timeout can be configured by modules
 - Add variables about surfaces and surface groups
 - Add variables for connection statuses
-- Add seperate press/release if condition actions
+- Add separate press/release if condition actions
 
 ### 🐞 BUG FIXES
 
@@ -1208,7 +1208,7 @@ Modules are now distributed independently, and are no longer reported here
 
 ### 🐞 BUG FIXES
 
-- Fix Companion importing confir from 2.4 instead of 3.0 at first start of 3.1
+- Fix Companion importing confirm from 2.4 instead of 3.0 at first start of 3.1
 - Companion cloud buttons missing some status fields
 - Update pngjs to improve draw performance
 
@@ -2250,7 +2250,7 @@ Many of our modules have had various new features and bugfixes since our last pu
 - Datavideo VISCA: bug fixes
 - Depili clock-8001: added v4 support
 - DiGiCo OSC: additional support
-- Digitial Projection Highlight: added TCP support
+- Digital Projection Highlight: added TCP support
 - Elgato Key Light: additional support
 - Epiphan Pearl: bug fixes
 - Extron SMP351: record time remaining update

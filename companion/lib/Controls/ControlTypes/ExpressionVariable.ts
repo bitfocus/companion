@@ -233,7 +233,7 @@ export class ControlExpressionVariable
 			// Update the names map through the dependency
 			this.#expressionVariableNameMap.updateExpressionVariableName(this.controlId, oldVariableName, value)
 		} else {
-			// @ts-expect-error mistmatch in types
+			// @ts-expect-error mismatch in types
 			this.options[key] = value
 		}
 

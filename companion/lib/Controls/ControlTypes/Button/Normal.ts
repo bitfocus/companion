@@ -162,7 +162,7 @@ export class ControlButtonNormal
 		foundVariables: Set<string>
 	): void {
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
-			.visitButtonDrawStlye(this.#baseStyle)
+			.visitButtonDrawStyle(this.#baseStyle)
 			.visitEntities(this.entities.getAllEntities(), [])
 	}
 
@@ -176,7 +176,7 @@ export class ControlButtonNormal
 
 		// Fix up references
 		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
-			.visitButtonDrawStlye(this.#baseStyle)
+			.visitButtonDrawStyle(this.#baseStyle)
 			.visitEntities(allEntities, [])
 			.recheckChangedFeedbacks()
 			.hasChanges()

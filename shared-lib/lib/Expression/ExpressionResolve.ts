@@ -153,7 +153,7 @@ export function ResolveExpression(
 						const object = resolve(node.object)
 						const property = resolve(node.property)
 
-						// propogate null
+						// propagate null
 						if (object == null) return object
 
 						return object?.[property]

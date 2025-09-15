@@ -384,7 +384,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	/**
-	 * Propogate variable changes, and update the current step if the variables affect it
+	 * Propagate variable changes, and update the current step if the variables affect it
 	 */
 	stepCheckExpressionOnVariablesChanged(changedVariables: Set<string>): void {
 		if (this.#currentStep.type !== 'expression') return

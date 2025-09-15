@@ -209,9 +209,9 @@ export class GraphicsRenderer {
 				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
 
 				if (!showTopbar) {
-					await img.drawFromPNGdata(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
+					await img.drawFromPngData(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
 				} else {
-					await img.drawFromPNGdata(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
+					await img.drawFromPngData(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
 				}
 			} catch (e) {
 				console.error('error drawing image:', e)

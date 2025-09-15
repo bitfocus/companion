@@ -279,6 +279,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#logger.info('Loading fonts')
 
 		GlobalFonts.registerFromPath(generateFontUrl('Arimo-Regular.ttf'), 'Companion-sans')
+		// typos:disable-line wdth is part of the filename
 		GlobalFonts.registerFromPath(generateFontUrl('NotoSansMono-wdth-wght.ttf'), 'Companion-mono')
 		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSymbols-wght.ttf'), 'Companion-symbols1')
 		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSymbols2-Regular.ttf'), 'Companion-symbols2')

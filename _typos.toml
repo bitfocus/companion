@@ -1,0 +1,24 @@
+[default]
+extend-ignore-re = [
+  ".*// typos:disable-line[^\\n]*\\n[^\\n]*\\n",
+]
+
+[default.extend-words]
+shure = "shure" # Brandname
+Automattic = "Automattic" # Brand name in license.md
+helo = "helo" # AJA-Helo
+livetime = "livetime" # workflownetwork-livetime
+
+[default.extend-identifiers]
+latch_compatability = "latch_compatability" # Bad spelling for an internal action
+UE150 = "UE150" # Unit tests
+sACN = "sACN"
+PNGs = "PNGs"
+
+[files]
+extend-exclude = [
+  "assets/Fonts/*",
+  "companion/test/Upgrade/*/*.json",
+  "**/*.companionconfig",
+  "assets/linux/*.rules",
+]
