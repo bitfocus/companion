@@ -1,6 +1,9 @@
 name: Format check
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -31,3 +34,15 @@ jobs:
         run: |
           yarn build:ts
           yarn lint
+
+  spelling:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    env:
+      CLICOLOR: 1
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Spell Check Repo
+        uses: crate-ci/typos@v1
