@@ -921,7 +921,7 @@ if (!lock) {
 			})
 
 			child = new RespawnMonitor(
-				// @ts-expect-error - This isn't loosing nullable types
+				// @ts-expect-error - This isn't losing nullable types
 				() =>
 					[
 						// Build a new command string for each start
