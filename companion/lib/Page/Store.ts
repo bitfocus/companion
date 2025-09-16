@@ -398,7 +398,16 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 			insertedPages.push(newPageInfo)
 		}
 
+		// Insert the new page ids into the array at the requested position
 		this.#pageIds.splice(asPageNumber - 1, 0, ...insertedPages.map((p) => p.id))
+
+		// Build an array of all page numbers that changed
+		const affectedPageNumbers = new Array(this.#pageIds.length - asPageNumber + 1)
+			.fill(0)
+			.map((_, i) => i + asPageNumber)
+
+		// Save changes to the pages
+		this.#commitChanges(affectedPageNumbers)
 
 		return insertedPages
 	}
@@ -408,11 +417,21 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	 * Used by PageController for page deletion operations
 	 */
 	_removePage(pageId: string): void {
+		// Always remove any stored page data if present
 		delete this.#pagesById[pageId]
+
+		// Find the page index, if its not present then nothing more to do
 		const index = this.#pageIds.indexOf(pageId)
-		if (index >= 0) {
-			this.#pageIds.splice(index, 1)
-		}
+		if (index < 0) return
+
+		// Remove the page id from the ordered list
+		this.#pageIds.splice(index, 1)
+
+		// Build an array of all page numbers that changed
+		const affectedPageNumbers = new Array(this.#pageIds.length - index + 1).fill(0).map((_, i) => index + 1 + i)
+
+		// Save changes to the pages
+		this.#commitChanges(affectedPageNumbers)
 	}
 
 	/**
