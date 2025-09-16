@@ -37,7 +37,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 						<CNavItem className="install-name">{userConfig.properties?.installName}</CNavItem>
 					)}
 
-					{updateData.data ? (
+					{updateData.data?.message ? (
 						<CNavItem className="header-update-warn">
 							<CNavLink target="_blank" href={updateData.data.link || 'https://bitfocus.io/companion/'}>
 								<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
