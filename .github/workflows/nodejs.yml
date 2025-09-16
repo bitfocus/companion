@@ -500,9 +500,8 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends dnsutils inetutils-traceroute
+          sudo apt-get install -y --no-install-recommends dnsutils
           nslookup s4.bitfocus.io
-          traceroute s4.bitfocus.io -I
 
       - name: Build and push
         uses: docker/build-push-action@v6
