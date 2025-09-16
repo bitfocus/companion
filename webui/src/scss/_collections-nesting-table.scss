@@ -149,7 +149,7 @@
 
 	// Grid layout styles
 	.collections-nesting-table-grid-container {
-		// This can be overriden by usages of the table, to change the minimum width of grid tiles
+		// This can be overridden by usages of the table, to change the minimum width of grid tiles
 		--collection-nesting-table-grid-tile-min-width: 200px;
 
 		display: grid;

@@ -94,7 +94,7 @@ const FieldElementUsageInput = observer(function FieldElementUsageInput({
 		[setElementUsageMutation, controlId, elementProps.id]
 	)
 
-	// TODO: Should ths choices be dynamic based on the element type?
+	// TODO: Should the choices be dynamic based on the element type?
 	return (
 		<DropdownInputField
 			setValue={setUsage}

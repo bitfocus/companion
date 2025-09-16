@@ -106,7 +106,7 @@ export class GraphicsLayeredButtonRenderer {
 						await img.usingTemporaryLayer(element.opacity, async (img) => {
 							elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
 
-							// Propogate the selected
+							// Propagate the selected
 							const childElementBounds = await this.#drawElements(
 								img,
 								element.children,

@@ -1211,7 +1211,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 									})
 								)
 							)
-						: null,
+						: Promise.resolve(),
 				])
 
 				this.#logger.silly('USB: done')

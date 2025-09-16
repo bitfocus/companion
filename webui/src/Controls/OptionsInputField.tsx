@@ -249,6 +249,7 @@ export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | 
 	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function getInputFeatures(option: SomeCompanionInputField): InputFeatureIconsProps | undefined {
 	if (option.type === 'textinput') {
 		return {
