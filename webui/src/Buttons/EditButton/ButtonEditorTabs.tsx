@@ -48,13 +48,8 @@ export function ButtonEditorTabs({
 		const tabKeys: string[] = [...stepKeys.map((s) => `step:${s}`)]
 
 		if (extraTabs) {
-			for (const tab of extraTabs) {
-				if (tab.position === 'start') {
-					tabKeys.unshift(tab.id)
-				} else {
-					tabKeys.push(tab.id)
-				}
-			}
+			tabKeys.unshift(...extraTabs.filter((t) => t.position === 'start').map((t) => t.id))
+			tabKeys.push(...extraTabs.filter((t) => t.position === 'end').map((t) => t.id))
 		}
 
 		return tabKeys

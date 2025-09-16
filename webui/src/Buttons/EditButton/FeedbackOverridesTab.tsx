@@ -18,12 +18,12 @@ export function FeedbackOverridesTab({
 }: FeedbackOverridesTabProps): React.JSX.Element {
 	return (
 		<ControlEntitiesEditor
-			heading="Style Overrides"
+			heading="Feedbacks"
 			headingSummary={
 				<div className="mb-2">
-					Here you can override properties of the elements you have setup.
+					Here you can use feedbacks to override properties of the elements you have setup.
 					<br />
-					Alternatively, you can use expressions directly in the element properties to use local variables.
+					Alternatively, you can use expressions directly in the element properties with local variables.
 				</div>
 			}
 			controlId={controlId}

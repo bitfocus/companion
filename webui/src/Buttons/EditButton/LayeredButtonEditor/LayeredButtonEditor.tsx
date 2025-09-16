@@ -18,7 +18,7 @@ import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyle
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },
-	{ id: 'overrides', name: 'Overrides', position: 'start' },
+	{ id: 'feedbacks', name: 'Feedbacks', position: 'start' },
 	{ id: 'variables', name: 'Local Variables', position: 'end' },
 	{ id: 'options', name: 'Options', position: 'end' },
 ]
@@ -83,7 +83,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 								)
 							}
 
-							if (currentTab === 'overrides') {
+							if (currentTab === 'feedbacks') {
 								return (
 									<div className="mt-10">
 										<MyErrorBoundary>
