@@ -27,7 +27,7 @@ if (process.platform === 'darwin') {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const semver = require('semver')
 
-		const minimumVersion = '11.0'
+		const minimumVersion = '12.0'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
 		/** @type {any} */
