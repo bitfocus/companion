@@ -261,7 +261,7 @@ class LogController {
 			this.#logger.add(new Syslog(options))
 			this.#logger.debug(`Syslog transport initialized. Options: ${JSON.stringify(options)}`)
 		} catch (e) {
-			this.#logger.error(`Failied to initialise syslog transport ${e}`)
+			this.#logger.error(`Failed to initialise syslog transport ${e}`)
 		}
 	}
 

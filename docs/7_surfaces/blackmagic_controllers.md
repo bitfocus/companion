@@ -1,9 +1,7 @@
-It is possible to use the Blackmagic ATEM Micro Panel with Companion since v3.4.0, and the Resolve Replay Editor since v4.0.0
+It is possible to use the Blackmagic ATEM Micro Panel with Companion (since v3.4.0), and the Resolve Replay Editor (since v4.0.0).
 
-Enable support for it in the Companion settings, and rescan for USB devices.  
-This works over both usb and bluetooth. You must make sure to not be running the ATEM software at the same time, or both bits of software will be listening to presses and updating the colours.
+Enable support for it in Companion's settings and rescan for USB devices. This works over both USB and Bluetooth. Do not run the ATEM software at the same time — both programs will listen to presses and update colours.
 
-The layout matches the natural grid of the device, if you were to squash everything together to remove the blank spaces.
-However, the tbar occupies a column in this.
+The layout matches the device's natural grid when blank spaces are compacted. The T-bar occupies a column in this layout.
 
-To use the tbar, go to the surface settings and you can select a custom-variable to pipe the value to. You can also provide an expression to control how the tbar leds are lit.
+To use the T-bar, go to the surface settings and select a custom variable to receive the value. You can also provide an expression to control how the T-bar LEDs are lit.

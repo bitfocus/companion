@@ -60,8 +60,23 @@ export async function stringifyExport(
  * @returns The modified value or the original value if the conditions are not met.
  */
 function splitLongPng64Values(key: string, value: string): string {
-	if (key === 'png64' && typeof value === 'string' && value.length > 60) {
-		return btoa(atob(value)).replace(/(.{60})/g, '$1\n') + '\n'
+	if (typeof value === 'string' && value.length > 60 && (key === 'png64' || value.startsWith('data:image'))) {
+		try {
+			// Support "data:...;base64,..." by extracting the base64 payload.
+			const m = value.match(/^(data:[^;]+;base64,)([\s\S]*)$/)
+			let prefix = ''
+			let b64 = value
+			if (m) {
+				prefix = m[1]
+				b64 = m[2]
+			}
+
+			const normalized = btoa(atob(b64))
+			return (prefix ? prefix + normalized : normalized).replace(/(.{60})/g, '$1\n') + '\n'
+		} catch {
+			// If it's not valid base64, return the original value unchanged.
+			return value
+		}
 	}
 	return value
 }

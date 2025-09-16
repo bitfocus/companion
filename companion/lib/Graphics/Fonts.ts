@@ -23,6 +23,7 @@ function generateFontUrl(fontFilename: string): string {
  */
 export const FONT_DEFINITIONS = [
 	{ pathOnDisk: generateFontUrl('Arimo-Regular.ttf'), name: 'Companion-sans' },
+	// typos:disable-line wdth is part of the filename
 	{ pathOnDisk: generateFontUrl('NotoSansMono-wdth-wght.ttf'), name: 'Companion-mono' },
 	{ pathOnDisk: generateFontUrl('NotoSansSymbols-wght.ttf'), name: 'Companion-symbols1' },
 	{ pathOnDisk: generateFontUrl('NotoSansSymbols2-Regular.ttf'), name: 'Companion-symbols2' },

@@ -15,12 +15,14 @@ export function doesConnectionVersionExist(
 
 export function getLatestVersion(
 	versions: ModuleStoreModuleInfoVersion[] | undefined,
-	isBeta: boolean
+	isBeta: boolean,
+	skipCompatibleCheck = false
 ): ModuleStoreModuleInfoVersion | null {
 	let latest: ModuleStoreModuleInfoVersion | null = null
 	for (const version of versions || []) {
 		if (!version || (version.releaseChannel === 'beta') !== isBeta) continue
-		if (!isModuleApiVersionCompatible(version.apiVersion) || version.deprecationReason) continue
+		if ((!skipCompatibleCheck && !isModuleApiVersionCompatible(version.apiVersion)) || version.deprecationReason)
+			continue
 		if (!latest || semver.compare(version.id, latest.id) > 0) {
 			latest = version
 		}

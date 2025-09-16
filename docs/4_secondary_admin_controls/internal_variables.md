@@ -1,1 +1,1 @@
-Some Companion-wide info is also exposed through module variables under the internal namespace, for example date, time, hostname and IP. Have a look at the full list under the Internal module in the variables tab.
+Some Companion-wide info is also exposed through module variables under the `internal` namespace (for example: date, time, hostname and IP). See the Internal module in the Variables tab for the full list.

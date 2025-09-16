@@ -1,0 +1,19 @@
+diff --git a/lib/winston-syslog.js b/lib/winston-syslog.js
+index 0e9289db7d307c1387bce7ec3e40b206a40626a5..ff778fe595356762b0dd1c59ebd098e431ed8e30 100644
+--- a/lib/winston-syslog.js
++++ b/lib/winston-syslog.js
+@@ -195,9 +195,11 @@ class Syslog extends Transport {
+   log(info, callback) {
+     let level = info[LEVEL];
+     if (!~levels.indexOf(level)) {
+-      return callback(
+-        new Error('Cannot log unknown syslog level: ' + info[LEVEL])
+-      );
++      // The level is not valid for syslog, so discard it and hope for the best
++      return callback();
++      // return callback(
++      //   new Error('Cannot log unknown syslog level: ' + info[LEVEL])
++      // );
+     }
+     level = level === 'warn' ? 'warning' : level;
+     const output = info[MESSAGE];

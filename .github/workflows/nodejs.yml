@@ -1,6 +1,9 @@
 name: Build binaries
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   check-types:
     runs-on: ubuntu-latest
@@ -455,6 +458,10 @@ jobs:
       - linux-x64
       - linux-arm64
 
+    permissions:
+      contents: read
+      packages: write
+
     env:
       IMAGE_NAME: companion
 
@@ -491,6 +498,14 @@ jobs:
         if: ${{ steps.meta.outputs.tags }}
         with:
           persist-credentials: false
+
+      - name: Check s4 cdn
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends dnsutils
+          nslookup s4.bitfocus.io
 
       - name: Build and push
         uses: docker/build-push-action@v6

@@ -38,7 +38,7 @@ for (const [name, extractedPath] of nodeVersions) {
 }
 
 if (platformInfo.runtimePlatform === 'linux') {
-	// Create a symlink for the 'main' runtime, to make script maintainence easier
+	// Create a symlink for the 'main' runtime, to make script maintenance easier
 	await fs.createSymlink(latestRuntimeDir, path.join(runtimesDir, 'main'))
 }
 

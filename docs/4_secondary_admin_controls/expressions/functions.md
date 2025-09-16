@@ -8,7 +8,7 @@ The currently supported functions are:
 
 Find the length of the item passed in.
 
-- For a strings it will return the number of unicode graphemes
+- For strings, it will return the number of unicode graphemes
 - For arrays, the number of elements
 - For JSON or other objects, it will return the number of properties
 - For numbers it will return the length of the string representation
@@ -121,7 +121,7 @@ Find the index of the first occurrence of a value within the provided string. Fo
 
 Optionally provide an offset to begin the search from, otherwise it starts from position 0 (the beginning).
 
-If the value isn't found, it will return -1, otherwise the index of the first occurence.
+If the value isn't found, it will return -1, otherwise the index of the first occurrence.
 
 **lastIndexOf(val, find, offset)**
 
@@ -129,15 +129,15 @@ Find the index of the last occurrence of a value within the provided string, sea
 
 Optionally provide an offset to begin the search from, searching from the end.
 
-If the value isn't found, it will return -1, otherwise the index of the last occurence. The beginning is position 0.
+If the value isn't found, it will return -1, otherwise the index of the last occurrence. The beginning is position 0.
 
 **toUpperCase(val)**
 
-Coverts all characters in a string to uppercase
+Converts all characters in a string to uppercase
 
 **toLowerCase(val)**
 
-Coverts all characters in a string to lowercase
+Converts all characters in a string to lowercase
 
 **replaceAll(val, find, replace)**
 
@@ -214,7 +214,7 @@ Find the index of the first occurrence of a value within the provided array.
 
 Optionally provide an offset to begin the search from, otherwise it starts from position 0 (the beginning).
 
-If the value isn't found, it will return -1, otherwise the index of the first occurence.
+If the value isn't found, it will return -1, otherwise the index of the first occurrence.
 
 **arrayLastIndexOf(val, find, offset)**
 
@@ -222,7 +222,7 @@ Find the index of the last occurrence of a value within the provided array, sear
 
 Optionally provide an offset to begin the search from, searching from the end.
 
-If the value isn't found, it will return -1, otherwise the index of the last occurence. The beginning is position 0.
+If the value isn't found, it will return -1, otherwise the index of the last occurrence. The beginning is position 0.
 
 ##### Time operations
 

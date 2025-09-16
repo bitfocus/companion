@@ -61,7 +61,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 	{
 		id: 'emulator_prompt_fullscreen',
 		type: 'checkbox',
-		label: 'Prompt to enter fullscreem',
+		label: 'Prompt to enter fullscreen',
 		default: true,
 		tooltip: 'testfingsdg ',
 	},
@@ -69,7 +69,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 ]
 
 export type EmulatorUpdateEvents = {
-	emulatorConfig: [id: string, diff: EmulatorConfig]
+	emulatorConfig: [id: string, diff: EmulatorConfig | null]
 	emulatorImages: [id: string, images: EmulatorImage[], clearCache: boolean]
 }
 

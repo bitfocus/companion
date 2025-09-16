@@ -494,7 +494,7 @@ export class ControlTrigger
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
-		// @ts-expect-error mistmatch in types
+		// @ts-expect-error mismatch in types
 		this.options[key] = value
 
 		if (key === 'enabled') {

@@ -1,7 +1,5 @@
-Many of the [XKeys](https://xkeys.com/xkeys.html) products can be used with Companion.
+Many [XKeys](https://xkeys.com/xkeys.html) products can be used with Companion.
 
-Since Companion v3.2, xkeys will by default run in their natural layout which is often larger than the default grid size. In the settings you can opt into the old layout until you can update your configs. This option will go away in some future release of Companion
+Since Companion v3.2, XKeys devices default to their physical (native) layout, which is often larger than Companion's default grid. Prior to 4.0 it was possible to opt into the old layout; this has now been removed.
 
-In this old layout mode, Companion will map the buttons through in order (working across in rows) to buttons in Companion, using as many pages as needed.
-
-There is some limited support for T-bars and shuttle/jog wheels, which write their values to some hardcoded internal variables.
+There is limited support for T-bars and shuttle/jog wheels; their values are exposed via a few hardcoded internal variables.

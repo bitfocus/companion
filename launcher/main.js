@@ -27,7 +27,7 @@ if (process.platform === 'darwin') {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const semver = require('semver')
 
-		const minimumVersion = '11.0'
+		const minimumVersion = '12.0'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
 		/** @type {any} */
@@ -921,7 +921,7 @@ if (!lock) {
 			})
 
 			child = new RespawnMonitor(
-				// @ts-expect-error - This isn't loosing nullable types
+				// @ts-expect-error - This isn't losing nullable types
 				() =>
 					[
 						// Build a new command string for each start

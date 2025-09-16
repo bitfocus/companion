@@ -12,7 +12,7 @@ interface VariableValueDisplay {
 	/** Value to show */
 	value: any
 
-	/** An optional collaps helper for collapsing all items in the list, falls back to local state if omitted */
+	/** An optional collapse helper for collapsing all items in the list, falls back to local state if omitted */
 	panelCollapseHelper?: PanelCollapseHelperLite
 
 	/** Needed for the collapse helper, ID of this panel */
@@ -33,7 +33,7 @@ interface VariableValueDisplay {
 	[prop: string]: any
 }
 
-const TRUNCATE_LENGHT = 100
+const TRUNCATE_LENGTH = 100
 
 export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	value,
@@ -45,7 +45,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	onCopied = () => {},
 	...props
 }) => {
-	// Use the collapseHelper if we have all neccessary information, otherwise use loal state
+	// Use the collapseHelper if we have all necessary information, otherwise use loal state
 	let collapser: { isPanelCollapsed: () => boolean; setPanelCollapsed: (b: boolean) => void }
 	const [collapsed, setCollapsed] = useState(true)
 	let useCollapseHelper: boolean
@@ -75,7 +75,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	else if (value === undefined) valueStr = VARIABLE_UNKNOWN_VALUE
 	else valueStr = JSON.stringify(value, undefined, '\t') ?? VARIABLE_UNKNOWN_VALUE
 
-	const compactValue = valueStr.length > TRUNCATE_LENGHT ? `${valueStr.substring(0, TRUNCATE_LENGHT)}...` : valueStr
+	const compactValue = valueStr.length > TRUNCATE_LENGTH ? `${valueStr.substring(0, TRUNCATE_LENGTH)}...` : valueStr
 
 	const displayValue =
 		(useCollapseHelper && collapser.isPanelCollapsed()) || (!useCollapseHelper && collapsed) ? compactValue : valueStr
@@ -166,7 +166,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 						title={compactValue}
 					>
 						{elms /*displayValue */}
-						{valueStr.length <= TRUNCATE_LENGHT ? (
+						{valueStr.length <= TRUNCATE_LENGTH ? (
 							''
 						) : collapser.isPanelCollapsed() ? (
 							<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(false)}>

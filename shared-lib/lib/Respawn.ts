@@ -255,7 +255,7 @@ export class RespawnMonitor extends EventEmitter<RespawnEvents> {
 			}
 
 			child.on('error', (err) => {
-				this.emit('warn', err) // too opionated? maybe just forward err
+				this.emit('warn', err) // too opinionated? maybe just forward err
 				if (!clear()) return
 				if (this.status === 'stopping') return this.#stopped()
 				this.#crashed()

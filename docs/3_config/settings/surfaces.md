@@ -2,12 +2,12 @@ More details on supported surfaces are available in the chapter on [Surfaces](#7
 
 - **Watch for new USB Devices**
   Companion can watch for newly connected USB Surfaces if this is enabled.
-  If disabled, you will have to trigger a refresh yourself for Companion to use newly connected StreamDecks.
+  If disabled, you will have to trigger a refresh yourself for Companion to use newly connected Stream Decks.
 
 - **Watch for Discoverable Remote Surfaces**
-  Companion can scan the network for network connected Stream Decks and Companion Satellite installations.
+  Companion can scan the network for network-connected Stream Decks and Companion Satellite installations.
 
-- **Enable direct connection to Streamdecks**
+- **Enable direct connection to Stream Decks**
   Whether to enable support for connecting to Stream Deck devices directly (not using the Elgato software)
   When this is disabled, the Elgato software can be used
 

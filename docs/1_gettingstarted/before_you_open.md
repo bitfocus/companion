@@ -1,3 +1,5 @@
-- Connect the hardware and software you want to control. Make sure you are on the same network as they are.
-- In the Elgato Stream Deck app, make sure to firmware upgrade the Stream Deck to the latest version available.
-- Close the Elgato Stream Deck app. While they can work together, the best experience is with just Companion. Using both requires some additional configuration explained later.
+Connect the hardware and software you want to control. Make sure they are on the same network.
+
+In the Elgato Stream Deck app, update the firmware to the latest version.
+
+Close the Elgato Stream Deck app before using Companion. While they can run together, Companion generally works best on its own; using both requires additional configuration explained later.

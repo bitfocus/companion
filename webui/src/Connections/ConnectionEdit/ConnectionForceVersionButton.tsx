@@ -258,7 +258,11 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 	const { modules } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.modules.get(moduleId)
-	const moduleVersionChoices = useConnectionVersionSelectOptions(moduleId, moduleInfo, false)
+	const { choices: moduleVersionChoices, loaded: choicesLoaded } = useConnectionVersionSelectOptions(
+		moduleId,
+		moduleInfo,
+		false
+	)
 
 	return (
 		<CFormSelect
@@ -272,7 +276,9 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 					{v.label}
 				</option>
 			))}
-			{!moduleVersionChoices.length && <option value={null as any}>Loading...</option>}
+			{!moduleVersionChoices.length && (
+				<option value={null as any}>{choicesLoaded ? 'No compatible versions found' : 'Loading...'}</option>
+			)}
 		</CFormSelect>
 	)
 })

@@ -10,12 +10,21 @@ export function useConnectionVersionSelectOptions(
 	moduleId: string | undefined,
 	installedInfo: ClientModuleInfo | null | undefined,
 	includeBeta: boolean
-): DropdownChoiceInt[] {
+): {
+	loaded: boolean
+	hasIncompatibleNewerVersion: boolean
+	choices: DropdownChoiceInt[]
+} {
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
 	const upgradeToVersions = useModuleUpgradeToVersions(moduleId)
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
+	const latestIncompatibleStableVersion = getLatestVersion(moduleStoreInfo?.versions, false, true)
 	const latestBetaVersion = getLatestVersion(moduleStoreInfo?.versions, true)
+
+	const loaded = !!moduleStoreInfo
+	const hasIncompatibleNewerVersion =
+		!!latestIncompatibleStableVersion && latestIncompatibleStableVersion.id !== latestStableVersion?.id
 
 	return useComputed(() => {
 		const choices: DropdownChoiceInt[] = []
@@ -76,6 +85,18 @@ export function useConnectionVersionSelectOptions(
 			}
 		}
 
-		return [...replacementChoices, ...choices]
-	}, [installedInfo, upgradeToVersions, latestStableVersion, latestBetaVersion, includeBeta])
+		return {
+			choices: [...replacementChoices, ...choices],
+			hasIncompatibleNewerVersion,
+			loaded,
+		}
+	}, [
+		installedInfo,
+		upgradeToVersions,
+		latestStableVersion,
+		latestBetaVersion,
+		includeBeta,
+		loaded,
+		hasIncompatibleNewerVersion,
+	])
 }

@@ -2,6 +2,7 @@ import React, { useContext, useState, useCallback, useRef } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
+	faCog,
 	faExclamationTriangle,
 	faExternalLink,
 	faPlug,
@@ -249,6 +250,15 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 				{moduleInfo.name}
 			</div>
 			<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+				<Link to={`/modules/$moduleId`} params={{ moduleId: moduleInfo.id }} className="text-decoration-none">
+					<div
+						className="m-0"
+						style={{ display: 'inline-block', color: 'var(--cui-body-color)' }}
+						title={'Manage module'}
+					>
+						<FontAwesomeIcon icon={faCog} />
+					</div>
+				</Link>
 				{!!moduleInfo.storeInfo && (
 					<WindowLinkOpen className="m-0" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
 						<FontAwesomeIcon icon={faExternalLink} />
@@ -260,7 +270,7 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 					</WindowLinkOpen>
 				)}
 				{showHelpForVersion?.helpPath && (
-					<div className="m-0" onClick={showHelpClick}>
+					<div className="m-0" style={{ cursor: 'pointer' }} onClick={showHelpClick}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}

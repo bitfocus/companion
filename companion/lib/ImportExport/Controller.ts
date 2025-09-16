@@ -928,7 +928,7 @@ export class ImportExportController {
 
 		this.#fixupButtonControlBase(result, control, referencesUpdater, instanceIdMap)
 
-		referencesUpdater.visitButtonDrawStlye(result.style)
+		referencesUpdater.visitButtonDrawStyle(result.style)
 
 		return result
 	}

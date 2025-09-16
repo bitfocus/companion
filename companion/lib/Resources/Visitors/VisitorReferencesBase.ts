@@ -17,7 +17,7 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 		this.visitor = visitor
 	}
 
-	visitButtonDrawStlye(style: ButtonStyleProperties): this {
+	visitButtonDrawStyle(style: ButtonStyleProperties): this {
 		this.visitor.visitString(style, 'text')
 
 		return this

@@ -36,7 +36,7 @@ import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPa
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
 import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
-import { SurfaceGroup } from './Group.js'
+import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
@@ -507,6 +507,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						emulator_columns: input.columns,
 					})
 
+					if (!(handler.panel instanceof SurfaceIPElgatoEmulator)) {
+						throw new Error(`Emulator "${input.baseId}" was not constructed properly!`)
+					}
+
+					// Emit an update to the config
+					this.#updateEvents.emit('emulatorConfig', input.baseId, handler.panel.latestConfig())
+
 					return fullId
 				}),
 
@@ -519,6 +526,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				.mutation(async ({ input }) => {
 					if (input.id.startsWith('emulator:') && this.#surfaceHandlers.has(input.id)) {
 						this.removeDevice(input.id, true)
+
+						// Emit an update to the config
+						this.#updateEvents.emit('emulatorConfig', input.id.slice('emulator:'.length), null)
 
 						return true
 					} else {
@@ -540,14 +550,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				signal,
 				input,
 			}) {
-				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
-				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
-					throw new Error(`Emulator "${input.id}" does not exist!`)
-				}
-
 				const changes = toIterable(self.#updateEvents, 'emulatorConfig', signal)
 
-				yield surface.panel.latestConfig()
+				// Emit the current config if it exists
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					yield null
+				} else {
+					yield surface.panel.latestConfig()
+				}
 
 				for await (const [changeId, changeData] of changes) {
 					if (changeId === input.id) yield changeData
@@ -651,12 +662,28 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				)
 				.mutation(async ({ input }) => {
 					const group = this.#surfaceGroups.get(input.groupId)
-					if (!group) throw new Error(`Group does not exist: ${input.groupId}`)
+					if (group) {
+						return group.setGroupConfigValue(input.key, input.value)
+					}
 
-					const err = group.setGroupConfigValue(input.key, input.value)
-					if (err) return err
+					// Perhaps this is an auto-group for an offline surface?
+					const surfaceConfig = this.#dbTableSurfaces.get(input.groupId)
+					if (surfaceConfig && !this.#surfaceHandlers.has(input.groupId)) {
+						try {
+							const newValue = validateGroupConfigValue(this.#handlerDependencies.pageStore, input.key, input.value)
 
-					return undefined
+							;(surfaceConfig.groupConfig as any)[input.key] = newValue
+
+							this.#dbTableSurfaces.set(input.groupId, surfaceConfig)
+							this.#updateEvents.emit(`groupConfig:${input.groupId}`, surfaceConfig.groupConfig)
+
+							return
+						} catch (e: any) {
+							throw new Error(`Failed to update value: ${e?.message ?? e}`)
+						}
+					}
+
+					throw new Error(`Group does not exist: ${input.groupId}`)
 				}),
 
 			surfaceSetGroup: publicProcedure

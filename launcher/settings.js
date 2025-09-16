@@ -22,7 +22,7 @@ export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 
 	settingsWindow = new BrowserWindow({
 		parent: parentWindow ?? undefined,
-		modal: true,
+		// modal: true, // Can't use modal, as then window decoration disappears on mac
 		width: 1280,
 		height: 720,
 		minWidth: 640,

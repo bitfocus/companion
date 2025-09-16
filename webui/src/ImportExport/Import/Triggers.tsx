@@ -1,9 +1,11 @@
-import { CButton, CButtonGroup, CFormCheck } from '@coreui/react'
+import { CButton, CButtonGroup, CCallout, CFormCheck } from '@coreui/react'
 import React, { ChangeEvent, useCallback, useEffect, useState, useContext } from 'react'
 import { ImportRemap } from './Page.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faFileCircleExclamation, faFileCirclePlus } from '@fortawesome/free-solid-svg-icons'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject
@@ -81,18 +83,23 @@ export function ImportTriggersTab({
 	return (
 		<>
 			<h4>Triggers</h4>
-			<table className="table table-responsive-sm mb-4">
+			<p>Select the triggers you want to import.</p>
+			<table className="table table-responsive-sm mb-3">
+				<colgroup>
+					<col style={{ width: '5rem' }}></col>
+					<col style={{ width: 'auto' }}></col>
+				</colgroup>
 				<thead>
 					<tr>
-						<th>&nbsp;</th>
+						<th>Import</th>
 						<th>Name</th>
 					</tr>
 				</thead>
 				<tbody>
 					{Object.entries(snapshot.triggers || {}).map(([id, info]) => (
 						<tr key={id}>
-							<td className="compact">
-								<div className="form-check form-check-inline mr-1">
+							<td className="compact text-center">
+								<div className="form-check form-check-inline mr-1 mt-1">
 									<CFormCheck data-id={id} checked={selectedTriggers.includes(id)} onChange={toggleTrigger} />
 								</div>
 							</td>
@@ -101,27 +108,35 @@ export function ImportTriggersTab({
 					))}
 				</tbody>
 			</table>
+			<CButtonGroup className="mb-3">
+				<CButton
+					color="info"
+					onClick={selectAllTriggers}
+					disabled={selectedTriggers.length === Object.keys(snapshot.triggers || {}).length}
+				>
+					Select all
+				</CButton>
+				<CButton color="info" onClick={unselectAllTriggers} disabled={selectedTriggers.length === 0}>
+					Unselect all
+				</CButton>
+			</CButtonGroup>
 
 			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 
-			<div className="mt-2">
-				<CButtonGroup style={{ float: 'right' }}>
-					<CButton color="info" onClick={selectAllTriggers}>
-						Select all
-					</CButton>
-					<CButton color="info" onClick={unselectAllTriggers}>
-						Unselect all
-					</CButton>
-				</CButtonGroup>
-				<CButtonGroup>
-					<CButton color="success" data-replace={true} onClick={doImport} disabled={selectedTriggers.length === 0}>
-						Import (Replace existing)
-					</CButton>
-					<CButton color="primary" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
-						Import (Append to existing)
-					</CButton>
-				</CButtonGroup>
-			</div>
+			<CCallout color="success">
+				<h5>Import to Existing Triggers</h5>
+				<p>This will import the selected triggers, while keeping your existing triggers.</p>
+				<CButton color="success" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
+					<FontAwesomeIcon icon={faFileCirclePlus} /> Add to existing triggers
+				</CButton>
+			</CCallout>
+			<CCallout color="warning">
+				<h5>Reset & Import Triggers</h5>
+				<p>This will remove all existing triggers and replace them with the selected ones.</p>
+				<CButton color="warning" data-replace={true} onClick={doImport} disabled={selectedTriggers.length === 0}>
+					<FontAwesomeIcon icon={faFileCircleExclamation} /> Reset and import triggers
+				</CButton>
+			</CCallout>
 		</>
 	)
 }

@@ -572,7 +572,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					// Map the physical key to the internal location, so button-release acts on the correct internal representation
 					this.#currentButtonPresses.set(panelCoordinate, location)
 				} else {
-					// If released, use the same page/offset that was previously pressed, if availablee
+					// If released, use the same page/offset that was previously pressed, if available
 					location = this.#currentButtonPresses.get(panelCoordinate) ?? location
 					this.#currentButtonPresses.delete(panelCoordinate)
 				}
@@ -641,7 +641,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (!this.panel) return
 
 		pressCode = Number(pressCode)
-		if (isNaN(pressCode) || pressCode < 0 || pressCode > 9) throw new Error('Invalid key')
+		if (isNaN(pressCode) || pressCode < 0 || pressCode > 9) throw new Error(`Invalid key: ${pressCode}`)
 
 		this.#currentPincodeEntry += pressCode.toString()
 

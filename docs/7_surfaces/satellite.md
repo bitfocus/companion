@@ -1,5 +1,5 @@
-In some environments, it can be useful to connect a remote Streamdeck into Companion.
+In some environments, it can be useful to connect remote Stream Decks (or other supported surfaces) to a central Companion instance.
 
-We have developed [Companion Satellite](https://user.bitfocus.io/product/companion-satellite) for this purpose.
+[Companion Satellite](https://user.bitfocus.io/product/companion-satellite) provides this functionality by allowing remote devices to appear as surfaces in a central Companion server.
 
-Satellite doesn't support the same range of Surfaces as Companion does, but we hope to get this solved.
+Note: Satellite currently supports a smaller set of surfaces than a local Companion instance. We are actively working to expand compatibility.

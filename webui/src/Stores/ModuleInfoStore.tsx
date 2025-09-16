@@ -20,7 +20,7 @@ export class ModuleInfoStore {
 
 	readonly storeVersions = new ModuleStoreVersionsStore()
 
-	readonly storeUpdateInfo: Omit<ModuleStoreListCacheStore, 'modules'> = observable.object({
+	readonly storeUpdateInfo: Omit<ModuleStoreListCacheStore, 'modules' | 'moduleApiVersion'> = observable.object({
 		lastUpdated: 0,
 		lastUpdateAttempt: 0,
 		updateWarning: null,
@@ -67,6 +67,7 @@ export class ModuleInfoStore {
 			lastUpdated: 0,
 			lastUpdateAttempt: 0,
 			updateWarning: null,
+			moduleApiVersion: null,
 			modules: {},
 		}
 

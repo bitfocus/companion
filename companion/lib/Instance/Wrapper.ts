@@ -787,7 +787,7 @@ export class SocketEventsHandler {
 
 		const newVariables: VariableDefinitionTmp[] = []
 		for (const variable of msg.variables) {
-			// Enure it is correctly formed
+			// Ensure it is correctly formed
 			if (variable && typeof variable.name === 'string' && typeof variable.id === 'string') {
 				// Ensure the ids are valid
 				if (variable.id.match(idCheckRegex)) {

@@ -1,4 +1,4 @@
-Some modules can expose their state through module variables. If one of your modules supports this, it will show up in the variables tab.
+Some modules can expose their state through module variables. If a module supports this, it will appear in the Variables tab.
 
 ![Module variables Tab](images/admingui-variables.png?raw=true 'Module variables tab')
 

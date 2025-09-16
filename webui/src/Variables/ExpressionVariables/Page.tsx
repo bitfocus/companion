@@ -129,7 +129,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
-				<h4>Expression variables</h4>
+				<h4>Expression Variables</h4>
 				<p className="mb-2">Here you can create some variables from live computed expressions</p>
 
 				<div className="mb-2">

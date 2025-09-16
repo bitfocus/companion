@@ -407,7 +407,7 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 	}
 
 	private validateKey(key: string | number | symbol): asserts key is string {
-		if (!key || typeof key !== 'string') throw new Error('Invalid key')
+		if (!key || typeof key !== 'string') throw new Error(`Invalid key for "${this.tableName}": ${String(key)}`)
 	}
 
 	/**

@@ -1,24 +1,25 @@
-Mirabox offers a range of input devices in their Stream Dock line.  
-Companion supports the models:
+Mirabox's Stream Dock line includes several input devices.  
+Companion supports the following models:
 
-- 293V3 - 5x3 LCD Keys
-- N4 - 5x2 LCD Keys + 4 Rotary encoders with LCD strip + USB-Hub
+- 293V3 — 5×3 LCD keys
+- N4 — 5×2 LCD keys, plus 4 rotary encoders with an LCD strip and a USB hub
 
-If you want to use a Stream Dock with Companion the Mirabox creator software must not be running, not even minimized to the Dock, and Stream Dock support needs to be enabled in the settings.
+To use a Stream Dock with Companion, the Mirabox creator software must not be running (not even minimized to the dock). Also enable Stream Dock support in Companion's settings.
+
+Some Stream Dock models do not provide separate press and release events for all controls — this is a hardware limitation.
 
 **293V3**
 
-The layout is straight forward, all keys match the Companion grid.
+The layout is straightforward: all keys map directly to the Companion grid.
 
 **N4**
 
-The two rows with the five LCD keys each are mapped to the Companion grid like you expect.  
-The LCD strip offers four soft keys and there are four corresponding rotary encoders. For better compatibility with the layout of e.g. the Stream Deck + the four controls of these rows are mapped left aligned. That means although in reality they are spread evenly across the width of the five LCD keys, in Companion they are placed in the first four columns.
+The N4 has two rows of five LCD keys that map to the Companion grid. The LCD strip provides four soft keys and four rotary encoders. For compatibility with Stream Deck-style layouts, these four controls are left-aligned in Companion. Although the controls are evenly spaced across the width of the five LCD keys on the device, Companion places them in the first four columns.
 
-The softkeys of the LCD strip and the rotary encoders do not offer individual press and release events. The softkeys only fire an event when you release your finger and the rotary encoders only fire an event when you push the encoder. This is a limitation of the Stream Dock hardware. For your convenience the events of a softkey or a rotary encoder will trigger a press and a release in Companion.
+The soft keys and rotary encoders do not provide individual press and release events. Soft keys only generate an event when you release your finger, and the rotary encoders only generate an event when you press (push) the encoder. Companion synthesizes a press followed by a release for these controls for compatibility.
 
-To utilise the rotary encoders, enable the `Enable Rotary Actions` checkbox on the button which wants to support the encoder. This will provide additional action groups which will be used when rotating the encoder.
+To use the rotary encoders for a specific button, enable the `Enable Rotary Actions` checkbox for that button. This adds additional action groups that Companion will use when the encoder is rotated.
 
-The LCD strip also offers a swipe gesture. The events of the swipe gesture are mapped to rotary actions on the fifth button in the third row.
+The LCD strip also supports a swipe gesture. Swipe events are mapped to the rotary actions of the fifth button in the third row.
 
 ![Stream Dock N4 mapping](images/mirabox-streamdock.png?raw=true 'Stream Dock N4 mapping')

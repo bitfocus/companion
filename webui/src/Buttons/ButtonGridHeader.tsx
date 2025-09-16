@@ -32,7 +32,7 @@ export const ButtonGridHeader = observer(function ButtonGridHeader({
 		if (newPageAtEnd) {
 			pageOptions.push({
 				value: -1,
-				label: `Insert new page`,
+				label: `[ Insert new page ]`,
 			})
 		}
 		return pageOptions

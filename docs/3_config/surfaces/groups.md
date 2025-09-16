@@ -6,5 +6,5 @@ To do this, use the **+ Add Group** button to create a new surface group. Then f
 Elsewhere in Companion, the actions which can change the page of a surface will no longer see the individual surfaces, and can instead pick the group.
 
 Another use case for this, is that you can use a group as a stable id for a surface.  
-This helps setups where you need to be able to swap out a streamdeck quickly, and also need actions to reference specific streamdecks.  
+This helps setups where you need to be able to swap out a Stream Deck quickly, and also need actions to reference specific Stream Decks.  
 You can create your groups and program the system ahead of time, then later add or remove surfaces to the groups without needing to update any buttons.

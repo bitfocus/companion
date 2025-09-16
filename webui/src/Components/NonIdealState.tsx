@@ -18,7 +18,7 @@ export const NonIdealState = ({
 }): React.JSX.Element => {
 	return (
 		<>
-			<div className={className} style={{ padding: '5vh', color: '#000', textAlign: 'center', ...style }}>
+			<div className={className} style={{ padding: '5vh', textAlign: 'center', ...style }}>
 				<div style={{ opacity: 0.6 }}>
 					<FontAwesomeIcon icon={icon} size="3x" />
 				</div>
