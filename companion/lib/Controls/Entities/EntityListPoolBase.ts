@@ -187,7 +187,7 @@ export abstract class ControlEntityListPoolBase {
 
 	/**
 	 * Re-trigger 'subscribe' for all entities
-	 * This should be used when something has changed which will require all feedbacks to be re-run
+	 * This should be used when something has changed which will require all entities to be re-run
 	 * @param onlyType If set, only re-subscribe entities of this type
 	 * @param onlyConnectionId If set, only re-subscribe entities for this connection
 	 */
@@ -235,7 +235,7 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Duplicate an feedback on this control
+	 * Duplicate an entity on this control
 	 */
 	entityDuplicate(listId: SomeSocketEntityLocation, id: string): boolean {
 		const entityList = this.getEntityList(listId)
@@ -288,7 +288,7 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Learn the options for a feedback, by asking the instance for the current values
+	 * Learn the options for an entity, by asking the connection for the current values
 	 */
 	async entityLearn(listId: SomeSocketEntityLocation, id: string): Promise<boolean> {
 		const entityList = this.getEntityList(listId)
@@ -366,17 +366,17 @@ export abstract class ControlEntityListPoolBase {
 			// Ensure the new parent is not a child of the entity being moved
 			if (newOwnerId && oldInfo.item.findChildById(newOwnerId.parentId)) return false
 
-			// Check if the new parent can hold the feedback being moved
+			// Check if the new parent can hold the entity being moved
 			if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldInfo.item)) return false
-			if (!newParent && newEntityList.canAcceptEntity(oldInfo.item)) return false
+			if (!newParent && !newEntityList.canAcceptEntity(oldInfo.item)) return false
 
-			const poppedFeedback = oldInfo.parent.popEntity(oldInfo.index)
-			if (!poppedFeedback) return false
+			const poppedEntity = oldInfo.parent.popEntity(oldInfo.index)
+			if (!poppedEntity) return false
 
 			if (newParent) {
-				newParent.pushChild(poppedFeedback, newOwnerId!.childGroup, newIndex)
+				newParent.pushChild(poppedEntity, newOwnerId!.childGroup, newIndex)
 			} else {
-				newEntityList.pushEntity(poppedFeedback, newIndex)
+				newEntityList.pushEntity(poppedEntity, newIndex)
 			}
 		}
 
@@ -386,7 +386,7 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Replace a feedback with an updated version
+	 * Replace an entity with an updated version
 	 */
 	entityReplace(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): ControlEntityInstance | undefined {
 		for (const entityList of this.getAllEntityLists()) {
@@ -612,7 +612,7 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Prune all actions/feedbacks referencing unknown conncetions
+	 * Prune all entities referencing unknown conncetions
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
 	verifyConnectionIds(knownConnectionIds: Set<string>): void {
@@ -635,7 +635,7 @@ export abstract class ControlEntityListPoolBase {
 	abstract updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void
 
 	/**
-	 * Get all the connectionIds for actions and feedbacks which are active
+	 * Get all the connectionIds for entities which are active
 	 */
 	getAllEnabledConnectionIds(): Set<string> {
 		const connectionIds = new Set<string>()
