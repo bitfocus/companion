@@ -12,19 +12,11 @@ import React, { useCallback, useState } from 'react'
 import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 import { ElementPickerModal } from './ElementPickerModal.js'
+import { AddElementPickerModal } from './AddElementPickerModal.js'
 import { elementSchemas } from '~/Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
 import { OptionsInputControl } from '../OptionsInputField.js'
 import { ExpressionFieldControl } from './ExpressionFieldControl.js'
 import { LocalVariablesStore } from '../LocalVariablesStore.js'
-
-function makeEmptyOverride(): FeedbackEntityStyleOverride {
-	return {
-		overrideId: nanoid(),
-		elementId: '',
-		elementProperty: '',
-		override: { isExpression: false, value: '' },
-	}
-}
 
 interface LayeredStylesOverridesProps {
 	feedback: FeedbackEntityModel
@@ -38,11 +30,31 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 	localVariablesStore,
 }: LayeredStylesOverridesProps) {
 	const overrides = feedback.styleOverrides || []
+	const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
-	const addRow = useCallback(() => service.replaceStyleOverride(makeEmptyOverride()), [service])
 	const deleteRow = useCallback((id: string) => service.removeStyleOverride(id), [service])
 	const updateRow = useCallback(
 		(override: FeedbackEntityStyleOverride) => service.replaceStyleOverride(override),
+		[service]
+	)
+
+	const handleAddModalSave = useCallback(
+		(elementId: string, properties: string[]) => {
+			console.log('AddElementPickerModal save:', { elementId, properties })
+
+			// Create multiple overrides, one for each selected property
+			properties.forEach((propertyId) => {
+				const newOverride: FeedbackEntityStyleOverride = {
+					overrideId: nanoid(),
+					elementId,
+					elementProperty: propertyId,
+					override: { isExpression: false, value: '' },
+				}
+				service.replaceStyleOverride(newOverride)
+			})
+
+			setIsAddModalOpen(false)
+		},
 		[service]
 	)
 
@@ -61,7 +73,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 						<th>Element & Property</th>
 						<th>Value</th>
 						<th className="fit">
-							<CButton color="white" size="sm" title="Add override" onClick={addRow}>
+							<CButton color="white" size="sm" title="Add override" onClick={() => setIsAddModalOpen(true)}>
 								<FontAwesomeIcon icon={faPlus} />
 							</CButton>
 						</th>
@@ -86,6 +98,12 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 					))}
 				</tbody>
 			</table>
+
+			<AddElementPickerModal
+				isOpen={isAddModalOpen}
+				onClose={() => setIsAddModalOpen(false)}
+				onSave={handleAddModalSave}
+			/>
 		</>
 	)
 })

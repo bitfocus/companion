@@ -1,4 +1,3 @@
-import { FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -7,66 +6,66 @@ import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js
 import { elementSchemas } from '../../Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
 import { ElementPicker } from './ElementPicker.js'
 
-interface ElementPickerModalProps {
+interface AddElementPickerModalProps {
 	isOpen: boolean
 	onClose: () => void
-	onSave: (override: FeedbackEntityStyleOverride) => void
-	currentOverride: FeedbackEntityStyleOverride
+	onSave: (elementId: string, properties: string[]) => void
 }
 
-export function ElementPickerModal({
-	isOpen,
-	onClose,
-	onSave,
-	currentOverride,
-}: ElementPickerModalProps): React.JSX.Element {
+export function AddElementPickerModal({ isOpen, onClose, onSave }: AddElementPickerModalProps): React.JSX.Element {
 	const { styleStore } = useLayeredStyleElementsContext()
 	const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
-	const [selectedProperty, setSelectedProperty] = useState<string | null>(null)
+	const [selectedProperties, setSelectedProperties] = useState<string[]>([])
 
-	const selectedElementId2 = selectedElementId ?? currentOverride.elementId
-	const selectedProperty2 = selectedProperty ?? currentOverride.elementProperty
-
-	const selectedElement = selectedElementId2 ? styleStore.findElementById(selectedElementId2) : null
+	const selectedElement = selectedElementId ? styleStore.findElementById(selectedElementId) : null
 	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
 
 	const handleSave = useCallback(() => {
-		if (selectedElementId2 && selectedProperty2) {
-			onSave({
-				...currentOverride,
-				elementId: selectedElementId2,
-				elementProperty: selectedProperty2,
-			})
+		if (selectedElementId && selectedProperties.length > 0) {
+			onSave(selectedElementId, selectedProperties)
 		}
-	}, [selectedElementId2, selectedProperty2, currentOverride, onSave])
+	}, [selectedElementId, selectedProperties, onSave])
 
 	const handleClose = useCallback(() => {
 		// Clear values when canceling
 		setSelectedElementId(null)
-		setSelectedProperty(null)
+		setSelectedProperties([])
 		onClose()
 	}, [onClose])
 
-	const handleElementSelect = useCallback((elementId: string) => setSelectedElementId(elementId), [])
-
-	const handlePropertySelect = useCallback((propertyId: string) => {
-		setSelectedProperty(propertyId)
+	const handleElementSelect = useCallback((elementId: string) => {
+		setSelectedElementId(elementId)
+		// Clear selected properties when element changes
+		setSelectedProperties([])
 	}, [])
 
-	const canSave = !!selectedElement && !!selectedSchema?.find((p) => p.id === selectedProperty2)
+	const handlePropertySelect = useCallback((propertyId: string) => {
+		setSelectedProperties((prev) => {
+			if (prev.includes(propertyId)) {
+				// Remove property if already selected
+				return prev.filter((id) => id !== propertyId)
+			} else {
+				// Add property if not selected
+				return [...prev, propertyId]
+			}
+		})
+	}, [])
+
+	const canSave =
+		!!selectedElement && selectedProperties.filter((propId) => selectedSchema?.find((p) => p.id === propId)).length > 0
 
 	return (
 		<CModal visible={isOpen} onClose={handleClose} size="lg" className="layered-style-element-picker-modal">
 			<CModalHeader>
-				<CModalTitle>Select Override Element and Property</CModalTitle>
+				<CModalTitle>Add Element Properties</CModalTitle>
 			</CModalHeader>
 			<CModalBody>
 				<ElementPicker
-					selectedElementId={selectedElementId2}
-					selectedProperties={selectedProperty2 ? [selectedProperty2] : []}
+					selectedElementId={selectedElementId}
+					selectedProperties={selectedProperties}
 					onElementSelect={handleElementSelect}
 					onPropertySelect={handlePropertySelect}
-					allowMultipleProperties={false}
+					allowMultipleProperties={true}
 				/>
 			</CModalBody>
 			<CModalFooter>
@@ -74,7 +73,7 @@ export function ElementPickerModal({
 					<FontAwesomeIcon icon={faTimes} /> Cancel
 				</CButton>
 				<CButton color="primary" onClick={handleSave} disabled={!canSave}>
-					<FontAwesomeIcon icon={faCheck} /> Save
+					<FontAwesomeIcon icon={faCheck} /> Add Properties
 				</CButton>
 			</CModalFooter>
 		</CModal>
