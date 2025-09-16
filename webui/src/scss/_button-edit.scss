@@ -1,4 +1,5 @@
 @use 'variables' as *;
+@use '@coreui/coreui/scss/coreui';
 
 .edit-button-panel {
 	height: 100%;
@@ -63,11 +64,11 @@
 	margin: 0;
 }
 
-table.entity-table tr:not(:first-child) td,
+table.entity-table > tbody > tr:not(:first-child) > td,
 table.variables-table tr:not(:first-child) td {
 	border-top: 10px solid #f0f0f0;
 }
-table.entity-table td,
+table.entity-table > tbody > tr > td,
 table.variables-table td {
 	border-bottom: 10px solid #f0f0f0;
 }
@@ -313,23 +314,98 @@ table.variables-table {
 
 	.button-layer-options {
 		grid-column: 1 / span 2;
+	}
+}
 
-		.field-with-expression {
-			display: flex;
-			gap: 0.5rem;
+.field-with-expression {
+	display: flex;
+	gap: 0.5rem;
 
-			.expression-field {
-				flex-grow: 1;
+	.expression-field {
+		flex-grow: 1;
+	}
+
+	.expression-toggle-button {
+		justify-self: flex-end;
+
+		.btn {
+			height: 100%;
+			width: 3em;
+		}
+	}
+}
+
+.layered-style-element-picker-modal {
+	.modal-content {
+		// height: 65vh;
+		overflow: hidden;
+		max-height: 55vh;
+	}
+
+	.modal-body {
+		overflow-y: hidden;
+		max-height: 100%;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		column-gap: 1rem;
+		/* allow percentage-height children to resolve when used inside flex/grid parents */
+		min-height: 0;
+
+		@include coreui.media-breakpoint-down(md) {
+			overflow-y: auto;
+			display: block;
+		}
+	}
+
+	.element-modal-col {
+		overflow-y: hidden;
+		/* layout container so header + list split the column and the list can flex/scroll */
+		display: flex;
+		flex-direction: column;
+		/* allow children with percentage heights or flex to shrink properly */
+		min-height: 0;
+
+		@include coreui.media-breakpoint-down(md) {
+			&:not(:first-child) {
+				margin-top: 0.5rem;
 			}
+		}
+	}
 
-			.expression-toggle-button {
-				justify-self: flex-end;
+	.element-picker-list {
+		overflow-y: auto;
+		/* take remaining space inside .element-modal-col and be able to shrink */
+		flex: 1 1 auto;
+		min-height: 0;
+		background-color: #f8f9fa;
+	}
 
-				.btn {
-					height: 100%;
-					width: 3em;
-				}
-			}
+	.element-picker-item {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		padding: 0.25rem 0.5rem;
+		border-bottom: 1px solid #e9ecef;
+		align-items: center;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		--elementlist-depth: 0;
+		margin-left: calc(var(--elementlist-depth) * 1rem);
+
+		border-left: 3px solid transparent;
+
+		&.selected {
+			background-color: #e3f2fd;
+			border-left-color: #1976d2;
+		}
+
+		.element-name {
+			font-weight: 500;
+		}
+
+		.element-icon {
+			color: #1976d2;
 		}
 	}
 }

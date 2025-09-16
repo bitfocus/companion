@@ -3,6 +3,7 @@ import type { IEntityEditorService } from './ControlEntitiesService.js'
 import type {
 	EntityModelType,
 	EntityOwner,
+	FeedbackEntityStyleOverride,
 	SomeEntityModel,
 	SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -80,6 +81,12 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			},
 
 			setStylePropsValue: (_entityId: string, _key: string, _value: any) => {
+				// Not supported
+			},
+			replaceStyleOverride(_entityId: string, _override: FeedbackEntityStyleOverride) {
+				// Not supported
+			},
+			removeStyleOverride(_entityId: string, _overrideId: string) {
 				// Not supported
 			},
 		}),

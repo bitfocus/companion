@@ -7,6 +7,7 @@ import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase {
 	#entities: ControlEntityList
@@ -65,5 +66,9 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 		}
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
+	}
+
+	public getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>> {
+		return new Map()
 	}
 }

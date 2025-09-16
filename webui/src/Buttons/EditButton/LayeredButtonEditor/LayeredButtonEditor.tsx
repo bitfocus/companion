@@ -13,9 +13,12 @@ import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
 import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
 import { LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { FeedbackOverridesTab } from '../FeedbackOverridesTab.js'
+import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'start' },
+	{ id: 'feedbacks', name: 'Feedbacks', position: 'start' },
 	{ id: 'variables', name: 'Local Variables', position: 'end' },
 	{ id: 'options', name: 'Options', position: 'end' },
 ]
@@ -42,6 +45,10 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 		console.log('update data')
 		styleStore.updateData(config.style?.layers || [])
 	}, [styleStore, config.style?.layers])
+	useMemo(() => {
+		console.log('update overrides')
+		styleStore.updateOverridesData(config.feedbacks || [])
+	}, [styleStore, config.feedbacks])
 
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
 
@@ -71,6 +78,23 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 												styleStore={styleStore}
 												localVariablesStore={localVariablesStore}
 											/>
+										</MyErrorBoundary>
+									</div>
+								)
+							}
+
+							if (currentTab === 'feedbacks') {
+								return (
+									<div className="mt-10">
+										<MyErrorBoundary>
+											<LayeredStyleElementsProvider styleStore={styleStore}>
+												<FeedbackOverridesTab
+													controlId={controlId}
+													location={location}
+													feedbacks={config.feedbacks}
+													localVariablesStore={localVariablesStore}
+												/>
+											</LayeredStyleElementsProvider>
 										</MyErrorBoundary>
 									</div>
 								)
@@ -142,6 +166,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						controlId={controlId}
 						elementProps={elementProps}
 						localVariablesStore={localVariablesStore}
+						isPropertyOverridden={styleStore.isPropertyOverridden}
 					/>
 				) : (
 					<NonIdealState icon={faLayerGroup}>

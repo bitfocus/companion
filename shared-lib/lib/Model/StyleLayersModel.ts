@@ -1,3 +1,5 @@
+import z from 'zod'
+
 /**
  * The type of a button graphics element as stored in places where it can be edited
  */
@@ -56,6 +58,11 @@ export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: 
 export type MakeExpressionable<T extends { type: string } /*TSkip extends keyof T = 'type'*/> = {
 	[P in keyof Omit<T, 'id'>]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
 }
+
+export const schemaExpressionOrValue: z.ZodType<ExpressionOrValue<any>> = z.object({
+	value: z.any(),
+	isExpression: z.boolean(),
+})
 
 export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled' | 'opacity'> {
 	// Note: this is the background element and can only be at the bottom of the stack
