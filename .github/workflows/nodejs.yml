@@ -496,7 +496,12 @@ jobs:
           persist-credentials: false
 
       - name: Check network connectivity
-        run: traceroute s4.bitfocus.io
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends inetutils-traceroute
+          traceroute s4.bitfocus.io
 
       - name: Build and push
         uses: docker/build-push-action@v6
