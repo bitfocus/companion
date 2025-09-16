@@ -10,4 +10,5 @@ export const ConfigReleaseDirs: string[] = [
 	'v3.5',
 	'v4.0',
 	'v4.1',
+	'v4.2',
 ]
