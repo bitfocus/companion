@@ -311,41 +311,24 @@ export class SurfaceGroup {
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	setGroupConfigValue(key: string, value: any): string | undefined {
 		this.#logger.debug(`Set config "${key}" to "${value}"`)
-		switch (key) {
-			case 'use_last_page': {
-				value = Boolean(value)
 
-				this.groupConfig.use_last_page = value
-				this.#saveConfig()
+		let newValue = null
+		try {
+			newValue = validateGroupConfigValue(this.#pageStore, key, value)
+		} catch (e: any) {
+			this.#logger.warn(`Set config failed: ${e?.message ?? e}`)
+			return 'invalid value'
+		}
 
-				return
-			}
-			case 'startup_page_id': {
-				value = String(value)
-				if (!this.#pageStore.isPageIdValid(value)) {
-					this.#logger.warn(`Invalid startup_page "${value}"`)
-					return 'invalid value'
-				}
+		if (key === 'last_page_id') {
+			this.#storeNewPage(value)
 
-				this.groupConfig.startup_page_id = value
-				this.#saveConfig()
+			return
+		} else {
+			;(this.groupConfig as any)[key] = newValue
+			this.#saveConfig()
 
-				return
-			}
-			case 'last_page_id': {
-				value = String(value)
-				if (!this.#pageStore.isPageIdValid(value)) {
-					this.#logger.warn(`Invalid current_page "${value}"`)
-					return 'invalid value'
-				}
-
-				this.#storeNewPage(value)
-
-				return
-			}
-			default:
-				this.#logger.warn(`Cannot set unknown config field "${key}"`)
-				return 'invalid key'
+			return
 		}
 	}
 
@@ -387,5 +370,32 @@ export class SurfaceGroup {
 			this.#dbTable.set(this.groupId, this.groupConfig)
 			this.#updateEvents.emit(`groupConfig:${this.groupId}`, this.groupConfig)
 		}
+	}
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function validateGroupConfigValue(pageStore: IPageStore, key: string, value: any): any {
+	switch (key) {
+		case 'use_last_page': {
+			return Boolean(value)
+		}
+		case 'startup_page_id': {
+			value = String(value)
+			if (!pageStore.isPageIdValid(value)) {
+				throw new Error(`Invalid startup_page "${value}"`)
+			}
+
+			return value
+		}
+		case 'last_page_id': {
+			value = String(value)
+			if (!pageStore.isPageIdValid(value)) {
+				throw new Error(`Invalid current_page "${value}"`)
+			}
+
+			return value
+		}
+		default:
+			throw new Error(`Invalid SurfaceGroup config key: "${key}"`)
 	}
 }

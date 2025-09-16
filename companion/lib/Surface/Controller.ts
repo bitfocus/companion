@@ -36,7 +36,7 @@ import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPa
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
 import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
-import { SurfaceGroup } from './Group.js'
+import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
@@ -662,12 +662,28 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				)
 				.mutation(async ({ input }) => {
 					const group = this.#surfaceGroups.get(input.groupId)
-					if (!group) throw new Error(`Group does not exist: ${input.groupId}`)
+					if (group) {
+						return group.setGroupConfigValue(input.key, input.value)
+					}
 
-					const err = group.setGroupConfigValue(input.key, input.value)
-					if (err) return err
+					// Perhaps this is an auto-group for an offline surface?
+					const surfaceConfig = this.#dbTableSurfaces.get(input.groupId)
+					if (surfaceConfig && !this.#surfaceHandlers.has(input.groupId)) {
+						try {
+							const newValue = validateGroupConfigValue(this.#handlerDependencies.pageStore, input.key, input.value)
 
-					return undefined
+							;(surfaceConfig.groupConfig as any)[input.key] = newValue
+
+							this.#dbTableSurfaces.set(input.groupId, surfaceConfig)
+							this.#updateEvents.emit(`groupConfig:${input.groupId}`, surfaceConfig.groupConfig)
+
+							return
+						} catch (e: any) {
+							throw new Error(`Failed to update value: ${e?.message ?? e}`)
+						}
+					}
+
+					throw new Error(`Group does not exist: ${input.groupId}`)
 				}),
 
 			surfaceSetGroup: publicProcedure

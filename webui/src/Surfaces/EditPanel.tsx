@@ -343,7 +343,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 						</CCol>
 
 						<CFormLabel htmlFor="colFormStartupPage" className="col-sm-4 col-form-label col-form-label-sm">
-							Startup Page
+							{groupConfig.config.use_last_page ? 'Home Page' : 'Startup Page'}
 						</CFormLabel>
 						<CCol sm={8}>
 							<InternalPageIdDropdown
@@ -355,18 +355,22 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 							/>
 						</CCol>
 
-						<CFormLabel htmlFor="colFormCurrentPage" className="col-sm-4 col-form-label col-form-label-sm">
-							Current Page
-						</CFormLabel>
-						<CCol sm={8}>
-							<InternalPageIdDropdown
-								disabled={false}
-								includeDirection={false}
-								includeStartup={false}
-								value={groupConfig.config.last_page_id}
-								setValue={(val) => setGroupConfigValue('last_page_id', val)}
-							/>
-						</CCol>
+						{(!!groupConfig.config.use_last_page || !!surfaceInfo?.isConnected) && (
+							<>
+								<CFormLabel htmlFor="colFormCurrentPage" className="col-sm-4 col-form-label col-form-label-sm">
+									{surfaceInfo?.isConnected ? 'Current Page' : 'Last Page'}
+								</CFormLabel>
+								<CCol sm={8}>
+									<InternalPageIdDropdown
+										disabled={false}
+										includeDirection={false}
+										includeStartup={false}
+										value={groupConfig.config.last_page_id}
+										setValue={(val) => setGroupConfigValue('last_page_id', val)}
+									/>
+								</CCol>
+							</>
+						)}
 					</>
 				)}
 
