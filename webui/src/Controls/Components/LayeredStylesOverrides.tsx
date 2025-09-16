@@ -3,6 +3,7 @@ import {
 	FeedbackEntityModel,
 	FeedbackEntityStyleOverride,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CButton } from '@coreui/react'
 import { faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -17,6 +18,7 @@ import { elementSchemas } from '~/Buttons/EditButton/LayeredButtonEditor/Element
 import { OptionsInputControl } from '../OptionsInputField.js'
 import { ExpressionFieldControl } from './ExpressionFieldControl.js'
 import { LocalVariablesStore } from '../LocalVariablesStore.js'
+import { useComputed } from '~/Resources/util.js'
 
 interface LayeredStylesOverridesProps {
 	feedback: FeedbackEntityModel
@@ -29,8 +31,54 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 	service,
 	localVariablesStore,
 }: LayeredStylesOverridesProps) {
-	const overrides = feedback.styleOverrides || []
+	const { styleStore } = useLayeredStyleElementsContext()
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+
+	// Create a flat list of element IDs in their visual order (depth-first traversal)
+	const elementOrderMap = useComputed(() => {
+		const orderMap = new Map<string, number>()
+		let index = 0
+
+		const traverse = (elements: SomeButtonGraphicsElement[]) => {
+			for (const element of elements) {
+				orderMap.set(element.id, index++)
+				if (element.type === 'group' && element.children) {
+					traverse(element.children)
+				}
+			}
+		}
+
+		traverse(styleStore.elements)
+		return orderMap
+	}, [styleStore.elements])
+
+	// Sort overrides by element order, then by property name
+	const overrides = useComputed(() => {
+		const rawOverrides = feedback.styleOverrides || []
+		return [...rawOverrides].sort((a, b) => {
+			// Primary sort: element order
+			const aOrder = elementOrderMap.get(a.elementId) ?? Infinity
+			const bOrder = elementOrderMap.get(b.elementId) ?? Infinity
+
+			if (aOrder !== bOrder) {
+				// Reverse order
+				return bOrder - aOrder
+			}
+
+			// Secondary sort: property name
+			const selectedElementA = styleStore.findElementById(a.elementId)
+			const selectedElementB = styleStore.findElementById(b.elementId)
+			const selectedSchemaA = selectedElementA?.type ? elementSchemas[selectedElementA.type] : null
+			const selectedSchemaB = selectedElementB?.type ? elementSchemas[selectedElementB.type] : null
+			const selectedPropertyA = selectedSchemaA?.find((prop) => prop.id === a.elementProperty)
+			const selectedPropertyB = selectedSchemaB?.find((prop) => prop.id === b.elementProperty)
+
+			const propertyNameA = selectedPropertyA?.label || a.elementProperty
+			const propertyNameB = selectedPropertyB?.label || b.elementProperty
+
+			return propertyNameA.localeCompare(propertyNameB)
+		})
+	}, [feedback.styleOverrides, elementOrderMap, styleStore])
 
 	const deleteRow = useCallback((id: string) => service.removeStyleOverride(id), [service])
 	const updateRow = useCallback(
