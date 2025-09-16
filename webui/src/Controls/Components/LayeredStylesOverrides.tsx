@@ -2,7 +2,9 @@ import {
 	EntityModelType,
 	FeedbackEntityModel,
 	FeedbackEntityStyleOverride,
+	FeedbackEntitySubType,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CButton } from '@coreui/react'
 import { faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons'
@@ -16,18 +18,22 @@ import { ElementPickerModal } from './ElementPickerModal.js'
 import { AddElementPickerModal } from './AddElementPickerModal.js'
 import { elementSchemas } from '~/Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
 import { OptionsInputControl } from '../OptionsInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionFieldControl } from './ExpressionFieldControl.js'
 import { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { useComputed } from '~/Resources/util.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 interface LayeredStylesOverridesProps {
 	feedback: FeedbackEntityModel
+	feedbackType: FeedbackEntitySubType | null | undefined
 	service: IEntityEditorActionService
 	localVariablesStore: LocalVariablesStore | null
 }
 
 export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 	feedback,
+	feedbackType,
 	service,
 	localVariablesStore,
 }: LayeredStylesOverridesProps) {
@@ -142,6 +148,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 							updateRow={updateRow}
 							deleteRow={deleteRow}
 							localVariablesStore={localVariablesStore}
+							feedbackType={feedbackType}
 						/>
 					))}
 				</tbody>
@@ -161,12 +168,14 @@ interface LayeredStylesOverridesRowProps {
 	updateRow: (override: FeedbackEntityStyleOverride) => void
 	deleteRow: (id: string) => void
 	localVariablesStore: LocalVariablesStore | null
+	feedbackType: FeedbackEntitySubType | null | undefined
 }
 const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 	row,
 	updateRow,
 	deleteRow,
 	localVariablesStore,
+	feedbackType,
 }: LayeredStylesOverridesRowProps) {
 	const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -192,7 +201,12 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 					</div>
 				</td>
 				<td>
-					<PropertyValueInput row={row} updateRow={updateRow} localVariablesStore={localVariablesStore} />
+					<PropertyValueInput
+						row={row}
+						updateRow={updateRow}
+						localVariablesStore={localVariablesStore}
+						feedbackType={feedbackType}
+					/>
 				</td>
 				<td>
 					<CButton color="white" size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
@@ -236,10 +250,12 @@ const PropertyValueInput = observer(function PropertyValueInput({
 	row,
 	updateRow,
 	localVariablesStore,
+	feedbackType,
 }: {
 	row: FeedbackEntityStyleOverride
 	updateRow: (override: FeedbackEntityStyleOverride) => void
 	localVariablesStore: LocalVariablesStore | null
+	feedbackType: FeedbackEntitySubType | null | undefined
 }) {
 	const { styleStore } = useLayeredStyleElementsContext()
 
@@ -266,25 +282,40 @@ const PropertyValueInput = observer(function PropertyValueInput({
 		return null
 	}
 
-	return (
-		<ExpressionFieldControl
-			value={row.override}
-			setValue={setValue}
-			setIsExpression={setIsExpression}
-			localVariablesStore={localVariablesStore}
-		>
-			{(value, setValue) => (
-				<OptionsInputControl
-					allowInternalFields={true}
-					isLocatedInGrid={false}
-					entityType={EntityModelType.Feedback}
-					option={selectedProperty}
-					value={value}
-					setValue={(_key: string, val: any) => setValue(val)}
-					readonly={false}
+	// For advanced feedbacks, show a dropdown with ButtonStyleProperties instead of freeform input
+	switch (feedbackType) {
+		case FeedbackEntitySubType.Advanced:
+			return <DropdownInputField choices={ButtonStyleProperties} value={row.override.value} setValue={setValue} />
+		case FeedbackEntitySubType.Boolean:
+			// For boolean feedbacks, show a dropdown with "true" and "false"
+			return (
+				<ExpressionFieldControl
+					value={row.override}
+					setValue={setValue}
+					setIsExpression={setIsExpression}
 					localVariablesStore={localVariablesStore}
-				/>
-			)}
-		</ExpressionFieldControl>
-	)
+				>
+					{(value, setValue) => (
+						<OptionsInputControl
+							allowInternalFields={true}
+							isLocatedInGrid={false}
+							entityType={EntityModelType.Feedback}
+							option={selectedProperty}
+							value={value}
+							setValue={(_key: string, val: any) => setValue(val)}
+							readonly={false}
+							localVariablesStore={localVariablesStore}
+						/>
+					)}
+				</ExpressionFieldControl>
+			)
+		case FeedbackEntitySubType.StyleOverride:
+		case FeedbackEntitySubType.Value:
+		case undefined:
+		case null:
+			return <p>Unsupported feedback type</p>
+		default:
+			assertNever(feedbackType)
+			return <p>Unsupported feedback type</p>
+	}
 })
