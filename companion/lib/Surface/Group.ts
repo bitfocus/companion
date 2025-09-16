@@ -143,6 +143,10 @@ export class SurfaceGroup {
 		// validate the current page id
 		if (!this.#pageStore.isPageIdValid(this.#currentPageId)) {
 			this.#currentPageId = this.#pageStore.getFirstPageId()
+
+			// Update the config to match
+			this.groupConfig.last_page_id = this.#currentPageId
+			this.groupConfig.startup_page_id = this.#currentPageId
 		}
 
 		// Now attach and setup the surface
