@@ -255,7 +255,7 @@ function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
 				<CFormCheck
 					checked={config.expressionVariables}
 					onChange={(e) => setValue('expressionVariables', e.currentTarget.checked)}
-					label="Expression variables"
+					label="Expression Variables"
 				/>
 			</div>
 			<div className="indent3">
