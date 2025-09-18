@@ -26,7 +26,7 @@ export function useExpressionVariablesCollectionsApi(
 				deleteCollection: (collectionId: string) => {
 					confirmModalRef.current?.show(
 						'Delete Collection',
-						'Are you sure you want to delete this collection? All expression variables in this collection will be moved to Ungrouped Expression variables.',
+						'Are you sure you want to delete this collection? All expression variables in this collection will be moved to Ungrouped Expression Variables.',
 						'Delete',
 						() => {
 							deleteMutation.mutateAsync({ collectionId }).catch((e) => {
