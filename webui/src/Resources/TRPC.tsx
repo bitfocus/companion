@@ -11,8 +11,12 @@ export type RouterOutputs = inferRouterOutputs<AppRouter>
 
 export const queryClient = new QueryClient()
 
+// Build a full url. This is needed to support older chromium, modern browsers support simply /trpc
+let trpcUrl = window.location.origin + makeAbsolutePath(`/trpc`)
+if (trpcUrl.startsWith('http')) trpcUrl = 'ws' + trpcUrl.slice(4)
+
 export const trpcWsClient = createWSClient({
-	url: makeAbsolutePath(`/trpc`),
+	url: trpcUrl,
 })
 
 export const trpcClient = createTRPCClient<AppRouter>({
