@@ -14,6 +14,7 @@ import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import EventEmitter from 'events'
+import { ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -137,16 +138,16 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @param connectionLabel
 	 * @returns Array of defined variable names
 	 */
-	getConnectionVariableDefinitions(connectionLabel: string): string[] | undefined {
-		return this.#variablesController.values.getVariableDefinitions(connectionLabel)
+	getConnectionVariableDefinitions(connectionLabel: string): ModuleVariableDefinitions {
+		return this.#variablesController.definitions.getVariableDefinitions(connectionLabel)
 	}
 
 	/**
 	 * Get the a defined custom variable names
 	 * @returns Array of defined variable names
 	 */
-	getCustomVariableDefinitions(): string[] | undefined {
-		return this.#variablesController.values.getVariableDefinitions('custom')
+	getCustomVariableDefinitions(): ModuleVariableDefinitions {
+		return this.#variablesController.definitions.getVariableDefinitions('custom')
 	}
 
 	async triggerRescanForSurfaces(): Promise<void> {
