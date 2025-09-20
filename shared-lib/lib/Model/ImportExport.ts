@@ -59,4 +59,5 @@ export interface ClientImportObject {
 	pages?: Record<number, ClientPageInfo>
 }
 
+/** Remap old connection IDs to new IDs */
 export type ConnectionRemappings = Record<string, string | undefined>
