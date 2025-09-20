@@ -32,10 +32,12 @@ export async function getNodeJsPath(runtimeType: string): Promise<string | null>
 export function getNodeJsPermissionArguments(
 	manifest: ModuleManifest,
 	moduleApiVersion: string,
-	moduleDir: string
+	moduleDir: string,
+	enableInspect: boolean
 ): string[] {
 	// Not supported by node18
-	if (manifest.runtime.type === 'node18' || !doesModuleSupportPermissionsModel(moduleApiVersion)) return []
+	if (enableInspect || manifest.runtime.type === 'node18' || !doesModuleSupportPermissionsModel(moduleApiVersion))
+		return []
 
 	const args = [
 		'--permission',

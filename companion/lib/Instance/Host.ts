@@ -491,13 +491,28 @@ export class ModuleHost {
 				}
 			}
 
+			const enableInspect = inspectPort !== undefined
+			if (enableInspect) {
+				this.#deps.debugLogLine(
+					connectionId,
+					'error',
+					`** Disabling permissions model to enable inspector **\nMake sure to re-test the module without the inspector enabled before releasing`
+				)
+			}
+
 			const cmd: string[] = [
 				nodePath,
-				...getNodeJsPermissionArguments(moduleInfo.manifest, moduleApiVersion, moduleInfo.basePath),
-				inspectPort !== undefined ? `--inspect=${inspectPort}` : undefined,
+				...getNodeJsPermissionArguments(moduleInfo.manifest, moduleApiVersion, moduleInfo.basePath, enableInspect),
+				enableInspect ? `--inspect=${inspectPort}` : undefined,
 				jsPath,
 			].filter((v): v is string => !!v)
-			this.#logger.silly(`Connection "${baseChild.targetState.label}" command: ${JSON.stringify(cmd)}`)
+			this.#logger.debug(`Connection "${baseChild.targetState.label}" command: ${JSON.stringify(cmd)}`)
+
+			this.#deps.debugLogLine(
+				connectionId,
+				'system',
+				`** Starting Connection from "${path.join(moduleInfo.basePath, jsPath)}" **`
+			)
 
 			const monitor = new RespawnMonitor(cmd, {
 				// name: `Connection "${config.label}"(${connectionId})`,
@@ -512,12 +527,6 @@ export class ModuleHost {
 				fork: false,
 				stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 			})
-
-			this.#deps.debugLogLine(
-				connectionId,
-				'system',
-				`** Starting Connection from "${path.join(moduleInfo.basePath, jsPath)}" **`
-			)
 
 			monitor.on('start', () => {
 				child.isReady = false
