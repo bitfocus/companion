@@ -71,7 +71,6 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 			parentId={parentId}
 			index={index}
 			nestingLevel={nestingLevel}
-			isCollapsed={isCollapsed}
 		>
 			<div className="d-flex align-items-center justify-content-between" onClick={toggleExpanded2}>
 				<div className="d-flex align-items-center flex-grow-1">

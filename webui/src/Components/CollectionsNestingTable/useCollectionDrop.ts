@@ -18,8 +18,7 @@ export function useCollectionListCollectionDrop(
 	dragId: string,
 	parentId: string | null,
 	index: number,
-	collectionId: string,
-	enabled: boolean
+	collectionId: string
 ): {
 	isOver: boolean
 	canDrop: boolean
@@ -38,8 +37,6 @@ export function useCollectionListCollectionDrop(
 			dragCollectionId: monitor.canDrop() ? monitor.getItem()?.collectionId : undefined,
 		}),
 		hover(item, monitor) {
-			if (!enabled) return
-
 			// If this is the root area (collectionId is null), make the dropped collectionId top-level
 
 			// Ensure the hover targets this element, and not a child element
