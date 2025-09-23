@@ -18,6 +18,7 @@ export function canAddEntityToFeedbackList(
 				definition.feedbackType === FeedbackEntitySubType.Boolean
 			)
 		case FeedbackEntitySubType.Advanced:
+		case FeedbackEntitySubType.StyleOverride:
 			return (
 				definition.feedbackType === FeedbackEntitySubType.Advanced ||
 				definition.feedbackType === FeedbackEntitySubType.Boolean

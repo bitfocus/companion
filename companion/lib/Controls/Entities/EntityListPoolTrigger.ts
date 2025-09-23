@@ -7,6 +7,7 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
+import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList
@@ -16,7 +17,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#localVariables: ControlEntityList
 
 	constructor(props: ControlEntityListPoolProps) {
-		super(props)
+		super(props, false)
 
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,
@@ -86,5 +87,9 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		}
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
+	}
+
+	public getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>> {
+		return new Map()
 	}
 }

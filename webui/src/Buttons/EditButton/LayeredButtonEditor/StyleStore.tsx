@@ -1,8 +1,10 @@
+import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { action, computed, makeObservable, observable, toJS } from 'mobx'
 
 export class LayeredStyleStore {
 	readonly elements = observable.array<SomeButtonGraphicsElement>([])
+	readonly #feedbackOverrideIds = observable.set<string>()
 
 	readonly #selectedElementId = observable.box<string | null>(null)
 
@@ -18,7 +20,6 @@ export class LayeredStyleStore {
 
 	constructor() {
 		makeObservable(this, {
-			updateData: action,
 			setSelectedElementId: action,
 			setElementVisibility: action,
 			hiddenElements: computed, // This caches the JS set, allowing for efficient change detection
@@ -39,11 +40,30 @@ export class LayeredStyleStore {
 		return undefined
 	}
 
-	public updateData(elements: SomeButtonGraphicsElement[]): void {
+	public findElementById(id: string): SomeButtonGraphicsElement | undefined {
+		return LayeredStyleStore.#findElementById(this.elements, id)
+	}
+
+	public updateData = action((elements: SomeButtonGraphicsElement[]): void => {
 		console.log('update data')
 
 		this.elements.replace(elements)
-	}
+	})
+
+	public updateOverridesData = action((feedbacks: SomeEntityModel[]): void => {
+		if (feedbacks.length === 0) return
+
+		const newOverrideIds = new Set<string>()
+
+		for (const feedback of feedbacks) {
+			if (feedback.type !== EntityModelType.Feedback) continue
+			for (const override of feedback.styleOverrides || []) {
+				newOverrideIds.add(`${override.elementId};${override.elementProperty}`)
+			}
+		}
+
+		this.#feedbackOverrideIds.replace(newOverrideIds)
+	})
 
 	public setSelectedElementId(id: string | null): void {
 		this.#selectedElementId.set(id)
@@ -70,5 +90,9 @@ export class LayeredStyleStore {
 
 	public isElementVisible(layer: string): boolean {
 		return !this.#hiddenElements.has(layer)
+	}
+
+	public isPropertyOverridden = (elementId: string, elementProperty: string): boolean => {
+		return this.#feedbackOverrideIds.has(`${elementId};${elementProperty}`)
 	}
 }

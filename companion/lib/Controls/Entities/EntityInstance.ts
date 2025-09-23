@@ -3,6 +3,7 @@ import {
 	EntityModelType,
 	EntitySupportedChildGroupDefinition,
 	FeedbackEntityModel,
+	FeedbackEntityStyleOverride,
 	FeedbackEntitySubType,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
@@ -91,6 +92,11 @@ export class ControlEntityInstance {
 
 	get feedbackValue(): any {
 		return this.#cachedFeedbackValue
+	}
+
+	get styleOverrides(): FeedbackEntityStyleOverride[] | undefined {
+		if (this.type !== EntityModelType.Feedback) return undefined
+		return (this.#data as FeedbackEntityModel).styleOverrides
 	}
 
 	get localVariableName(): string | null {
@@ -442,6 +448,48 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Replace a style override for a feedback entity
+	 * @param override the new style override
+	 * @returns success
+	 */
+	replaceStyleOverride(override: FeedbackEntityStyleOverride): boolean {
+		if (this.#data.type !== EntityModelType.Feedback) return false
+
+		const feedbackData = this.#data as FeedbackEntityModel
+
+		if (!feedbackData.styleOverrides) feedbackData.styleOverrides = []
+
+		const index = feedbackData.styleOverrides.findIndex((o) => o.overrideId === override.overrideId)
+		if (index !== -1) {
+			feedbackData.styleOverrides[index] = override
+		} else {
+			feedbackData.styleOverrides.push(override)
+		}
+
+		return true
+	}
+
+	/**
+	 * Remove a style override for a feedback entity
+	 * @param id the id of the override to remove
+	 * @returns success
+	 */
+	removeStyleOverride(id: string): boolean {
+		if (this.#data.type !== EntityModelType.Feedback) return false
+
+		const feedbackData = this.#data as FeedbackEntityModel
+
+		if (!feedbackData.styleOverrides) return false
+
+		const index = feedbackData.styleOverrides.findIndex((o) => o.overrideId === id)
+		if (index === -1) return false
+
+		feedbackData.styleOverrides.splice(index, 1)
+
+		return true
+	}
+
+	/**
 	 * Update the selected style properties for a boolean feedback
 	 * @param selected the properties to be selected
 	 * @param baseStyle Style of the button without feedbacks applied
@@ -647,6 +695,12 @@ export class ControlEntityInstance {
 			const newPropsData = newProps as FeedbackEntityModel
 			feedbackData.isInverted = !!newPropsData.isInverted
 			feedbackData.style = Object.keys(feedbackData.style || {}).length > 0 ? feedbackData.style : newPropsData.style
+
+			// Replace the style overrides only if the new one is non-empty
+			feedbackData.styleOverrides =
+				newPropsData.styleOverrides && newPropsData.styleOverrides.length > 0
+					? newPropsData.styleOverrides
+					: feedbackData.styleOverrides
 		}
 
 		if (!skipNotifyModule) {
@@ -776,6 +830,7 @@ export class ControlEntityInstance {
 				}
 				break
 			case FeedbackEntitySubType.Value:
+			case FeedbackEntitySubType.StyleOverride:
 				// Not valid for building a style
 				break
 			case null:

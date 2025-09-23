@@ -23,6 +23,7 @@ import { useEntityEditorContext } from './EntityEditorContext.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { LayeredStylesOverrides } from './LayeredStylesOverrides.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -121,7 +122,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								key={i}
 								isLocatedInGrid={!!location}
 								entityType={entity.type}
-								connectionId={entity.connectionId}
+								allowInternalFields={entity.connectionId === 'internal'}
 								option={opt}
 								value={(entity.options || {})[opt.id]}
 								setValue={service.setValue}
@@ -154,6 +155,16 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 							/>
 						</>
 					)}
+					{!!entity &&
+						entity.type === EntityModelType.Feedback &&
+						feedbackListType === FeedbackEntitySubType.StyleOverride && (
+							<LayeredStylesOverrides
+								feedback={entity}
+								feedbackType={entityDefinition?.feedbackType}
+								service={service}
+								localVariablesStore={localVariablesStore}
+							/>
+						)}
 				</CForm>
 			</div>
 		</>

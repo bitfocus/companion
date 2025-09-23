@@ -63,7 +63,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 	protected readonly actionRunner: ControlActionRunner
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, isLayered: boolean) {
 		super(deps, controlId, debugNamespace)
 
 		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
@@ -86,7 +86,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 						null, // This doesn't support local variables
 						injectedVariableValues ?? null
 					)
-					.executeExpression(expression, requiredType)
+					.executeExpression(expression, requiredType),
+			isLayered
 		)
 	}
 

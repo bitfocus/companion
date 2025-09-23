@@ -2,6 +2,7 @@ import LogController, { Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
 	EntityOwner,
+	FeedbackEntityStyleOverride,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
@@ -17,6 +18,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -38,6 +40,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #internalModule: InternalController
 	readonly #moduleHost: ModuleHost
 	readonly #variableValues: VariablesValues
+	readonly #isLayeredDrawing: boolean
 
 	protected readonly controlId: string
 
@@ -51,7 +54,7 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	protected readonly invalidateControl: () => void
 
-	protected constructor(props: ControlEntityListPoolProps) {
+	protected constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.controlId = props.controlId
@@ -62,6 +65,7 @@ export abstract class ControlEntityListPoolBase {
 		this.#internalModule = props.internalModule
 		this.#moduleHost = props.moduleHost
 		this.#variableValues = props.variableValues
+		this.#isLayeredDrawing = isLayeredDrawing
 	}
 
 	protected createEntityList(listDefinition: ControlEntityListDefinition): ControlEntityList {
@@ -134,6 +138,12 @@ export abstract class ControlEntityListPoolBase {
 	protected abstract getAllEntityLists(): ControlEntityList[]
 
 	abstract getLocalVariableEntities(): ControlEntityInstance[]
+
+	/**
+	 * Get all the style overrides for the layered drawing elements
+	 * @returns A map of elementId -> elementProperty -> override value
+	 */
+	abstract getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>
 
 	getLocalVariableValues(): CompanionVariableValues {
 		const entities = this.getLocalVariableEntities()
@@ -396,6 +406,35 @@ export abstract class ControlEntityListPoolBase {
 			// Ignore if the types do not match
 			if (entity.type !== newProps.type) return undefined
 
+			// If this is a layered drawing, translate the style into the overrides format
+			const existingStyleOverrides = entity.styleOverrides
+			if (
+				this.#isLayeredDrawing &&
+				newProps.type === EntityModelType.Feedback &&
+				newProps.style &&
+				existingStyleOverrides
+			) {
+				const newOverrides: FeedbackEntityStyleOverride[] = []
+
+				// Translate the old advance feedback property lookup into the newly produced value
+				for (const override of existingStyleOverrides) {
+					if (!override.override.isExpression && override.override.value in newProps.style) {
+						newOverrides.push({
+							...override,
+							override: {
+								isExpression: override.override.value === 'text' && !!newProps.style['textExpression'],
+								value: (newProps.style as any)[override.override.value],
+							},
+						})
+					} else {
+						// Preserve the existing override, to minimise the lossyness
+						newOverrides.push(override)
+					}
+				}
+
+				newProps = { ...newProps, styleOverrides: newOverrides, style: undefined }
+			}
+
 			entity.replaceProps(newProps, skipNotifyModule)
 
 			this.tryTriggerLocalVariablesChanged(entity)
@@ -591,6 +630,46 @@ export abstract class ControlEntityListPoolBase {
 		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
 		if (entity.setStyleValue(key, value)) {
+			this.commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	entityReplaceStyleOverride(
+		listId: SomeSocketEntityLocation,
+		entityId: string,
+		override: FeedbackEntityStyleOverride
+	): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		const entity = entityList.findById(entityId)
+		if (!entity) return false
+
+		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+
+		if (entity.replaceStyleOverride(override)) {
+			this.commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	entityRemoveStyleOverride(listId: SomeSocketEntityLocation, entityId: string, overrideId: string): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		const entity = entityList.findById(entityId)
+		if (!entity) return false
+
+		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
+
+		if (entity.removeStyleOverride(overrideId)) {
 			this.commitChange()
 
 			return true

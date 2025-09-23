@@ -1,6 +1,7 @@
 import {
 	EntityModelType,
 	EntityOwner,
+	FeedbackEntityStyleOverride,
 	SomeEntityModel,
 	stringifySocketEntityLocation,
 	type SomeSocketEntityLocation,
@@ -39,6 +40,9 @@ export interface IEntityEditorService {
 	setVariableValue: (entityId: string, value: any) => void
 	setSelectedStyleProps: (entityId: string, keys: string[]) => void
 	setStylePropsValue: (entityId: string, key: string, value: any) => void
+
+	replaceStyleOverride: (entityId: string, override: FeedbackEntityStyleOverride) => void
+	removeStyleOverride: (entityId: string, overrideId: string) => void
 }
 
 export interface IEntityEditorActionService {
@@ -55,6 +59,9 @@ export interface IEntityEditorActionService {
 	setVariableValue: (value: any) => void
 	setSelectedStyleProps: (keys: string[]) => void
 	setStylePropsValue: (key: string, value: any) => void
+
+	replaceStyleOverride: (override: FeedbackEntityStyleOverride) => void
+	removeStyleOverride: (overrideId: string) => void
 }
 
 export function useControlEntitiesEditorService(
@@ -76,6 +83,8 @@ export function useControlEntitiesEditorService(
 	const setStyleValueMutation = useMutationExt(trpc.controls.entities.setStyleValue.mutationOptions())
 	const setVariableNameMutation = useMutationExt(trpc.controls.entities.setVariableName.mutationOptions())
 	const setVariableValueMutation = useMutationExt(trpc.controls.entities.setVariableValue.mutationOptions())
+	const replaceStyleOverrideMutation = useMutationExt(trpc.controls.entities.replaceStyleOverride.mutationOptions())
+	const removeStyleOverrideMutation = useMutationExt(trpc.controls.entities.removeStyleOverride.mutationOptions())
 
 	return useMemo(
 		() => ({
@@ -274,6 +283,31 @@ export function useControlEntitiesEditorService(
 						console.error('Failed to set entity style value', e)
 					})
 			},
+
+			replaceStyleOverride: (entityId: string, override: FeedbackEntityStyleOverride) => {
+				replaceStyleOverrideMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						override,
+					})
+					.catch((e) => {
+						console.error('Failed to replace style override', e)
+					})
+			},
+			removeStyleOverride: (entityId: string, overrideId: string) => {
+				removeStyleOverrideMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						overrideId,
+					})
+					.catch((e) => {
+						console.error('Failed to remove style override', e)
+					})
+			},
 		}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[
@@ -291,6 +325,8 @@ export function useControlEntitiesEditorService(
 			setStyleValueMutation,
 			setVariableNameMutation,
 			setVariableValueMutation,
+			replaceStyleOverrideMutation,
+			removeStyleOverrideMutation,
 
 			confirmModal,
 			controlId,
@@ -328,6 +364,9 @@ export function useControlEntityService(
 			setVariableValue: (value: any) => serviceFactory.setVariableValue(entityId, value),
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
 			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
+			replaceStyleOverride: (override: FeedbackEntityStyleOverride) =>
+				serviceFactory.replaceStyleOverride(entityId, override),
+			removeStyleOverride: (overrideId: string) => serviceFactory.removeStyleOverride(entityId, overrideId),
 		}),
 		[serviceFactory, entityId, entityTypeLabel]
 	)
