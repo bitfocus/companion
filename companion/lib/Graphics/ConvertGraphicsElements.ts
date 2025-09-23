@@ -143,19 +143,20 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 	async getEnum<TVal extends string>(propertyName: keyof T, values: TVal[], defaultValue: TVal): Promise<TVal> {
 		const value = this.#getValue(propertyName)
 
-		if (!value.isExpression) return value.value
+		let actualValue: TVal = value.value
+		if (value.isExpression) {
+			const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
+			if (!result.ok) {
+				return defaultValue
+			}
+			actualValue = result.value as TVal
+		}
 
-		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
-		if (!result.ok) {
+		if (!values.includes(actualValue)) {
 			return defaultValue
 		}
 
-		const strValue = result.value as string
-		if (!values.includes(strValue as TVal)) {
-			return defaultValue
-		}
-
-		return strValue as TVal
+		return actualValue
 	}
 
 	async getBoolean(propertyName: keyof T, defaultValue: boolean): Promise<boolean> {

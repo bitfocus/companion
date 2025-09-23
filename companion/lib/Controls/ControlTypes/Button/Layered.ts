@@ -32,7 +32,7 @@ import { CreateElementOfType } from './LayerDefaults.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import { lazy } from '../../../Resources/Util.js'
-import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
+import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -495,88 +495,72 @@ export class ControlButtonLayered
 	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean {
 		if (!this.options.canModifyStyleInApis) return false
 
-		const lazyTextElement = lazy(() =>
-			this.SelectLayerForUsage<ButtonGraphicsTextElement>(ButtonGraphicsElementUsage.Text, 'text')
-		)
-		const lazyBoxElement = lazy(() =>
-			this.SelectLayerForUsage<ButtonGraphicsBoxElement>(ButtonGraphicsElementUsage.Color, 'box')
-		)
-		const lazyImageElement = lazy(() =>
-			this.SelectLayerForUsage<ButtonGraphicsImageElement>(ButtonGraphicsElementUsage.Image, 'image')
-		)
-		const canvasElement = this.#drawElements.find((e) => e.type === 'canvas')
-
 		const changedElements = new Set<string>()
 
-		if (diff.text !== undefined) {
+		const lazyTextElement = lazy(() => {
+			const elm = this.SelectLayerForUsage<ButtonGraphicsTextElement>(ButtonGraphicsElementUsage.Text, 'text')
+			if (elm) changedElements.add(elm.id)
+			return elm
+		})
+		const lazyBoxElement = lazy(() => {
+			const elm = this.SelectLayerForUsage<ButtonGraphicsBoxElement>(ButtonGraphicsElementUsage.Color, 'box')
+			if (elm) changedElements.add(elm.id)
+			return elm
+		})
+		const lazyImageElement = lazy(() => {
+			const elm = this.SelectLayerForUsage<ButtonGraphicsImageElement>(ButtonGraphicsElementUsage.Image, 'image')
+			if (elm) changedElements.add(elm.id)
+			return elm
+		})
+		const canvasElement = this.#drawElements.find((e) => e.type === 'canvas')
+
+		const parsedStyle = ParseLegacyStyle(diff)
+
+		if (parsedStyle.text.text !== undefined) {
 			const textElement = lazyTextElement()
-			if (textElement) {
-				textElement.text = { isExpression: diff.textExpression === true, value: String(diff.text) }
-				changedElements.add(textElement.id)
-			}
+			if (textElement) textElement.text = parsedStyle.text.text
 		}
 
-		if (diff.size !== undefined) {
+		if (parsedStyle.text.size !== undefined) {
 			const textElement = lazyTextElement()
-			if (textElement) {
-				textElement.fontsize = { isExpression: false, value: Number(diff.size) || 'auto' }
-				changedElements.add(textElement.id)
-			}
+			if (textElement) textElement.fontsize = { isExpression: false, value: parsedStyle.text.size }
 		}
 
-		if (diff.color !== undefined) {
+		if (parsedStyle.text.color !== undefined) {
 			const textElement = lazyTextElement()
-			if (textElement) {
-				textElement.color = { isExpression: false, value: Number(diff.color) }
-				changedElements.add(textElement.id)
-			}
+			if (textElement) textElement.color = { isExpression: false, value: parsedStyle.text.color }
 		}
 
-		if (diff.alignment !== undefined) {
+		if (parsedStyle.text.halign !== undefined) {
 			const textElement = lazyTextElement()
-			if (textElement) {
-				const alignment = ParseAlignment(diff.alignment)
-				textElement.halign = { isExpression: false, value: alignment[0] }
-				textElement.valign = { isExpression: false, value: alignment[1] }
-				changedElements.add(textElement.id)
-			}
+			if (textElement) textElement.halign = { isExpression: false, value: parsedStyle.text.halign }
+		}
+		if (parsedStyle.text.valign !== undefined) {
+			const textElement = lazyTextElement()
+			if (textElement) textElement.valign = { isExpression: false, value: parsedStyle.text.valign }
 		}
 
-		if (diff.pngalignment !== undefined) {
+		if (parsedStyle.image.halign !== undefined) {
 			const imageElement = lazyImageElement()
-			if (imageElement) {
-				const alignment = ParseAlignment(diff.pngalignment)
-				imageElement.halign = { isExpression: false, value: alignment[0] }
-				imageElement.valign = { isExpression: false, value: alignment[1] }
-				changedElements.add(imageElement.id)
-			}
+			if (imageElement) imageElement.halign = { isExpression: false, value: parsedStyle.image.halign }
 		}
-
-		if (diff.png64 !== undefined) {
+		if (parsedStyle.image.valign !== undefined) {
 			const imageElement = lazyImageElement()
-			if (imageElement) {
-				imageElement.base64Image = { isExpression: false, value: diff.png64 ?? null }
-				changedElements.add(imageElement.id)
-			}
+			if (imageElement) imageElement.valign = { isExpression: false, value: parsedStyle.image.valign }
 		}
 
-		if (diff.bgcolor !== undefined) {
+		if (parsedStyle.image.image !== undefined) {
+			const imageElement = lazyImageElement()
+			if (imageElement) imageElement.base64Image = { isExpression: false, value: parsedStyle.image.image }
+		}
+
+		if (parsedStyle.background.color !== undefined) {
 			const boxElement = lazyBoxElement()
-			if (boxElement) {
-				boxElement.color = { isExpression: false, value: Number(diff.bgcolor) }
-				changedElements.add(boxElement.id)
-			}
+			if (boxElement) boxElement.color = { isExpression: false, value: parsedStyle.background.color }
 		}
 
-		if (diff.show_topbar !== undefined && canvasElement) {
-			if (diff.show_topbar === 'default') {
-				canvasElement.decoration = { isExpression: false, value: ButtonGraphicsDecorationType.FollowDefault }
-			} else if (diff.show_topbar === true) {
-				canvasElement.decoration = { isExpression: false, value: ButtonGraphicsDecorationType.TopBar }
-			} else if (diff.show_topbar === false) {
-				canvasElement.decoration = { isExpression: false, value: ButtonGraphicsDecorationType.Border }
-			}
-
+		if (parsedStyle.canvas.decoration !== undefined && canvasElement) {
+			canvasElement.decoration = { isExpression: false, value: parsedStyle.canvas.decoration }
 			changedElements.add(canvasElement.id)
 		}
 

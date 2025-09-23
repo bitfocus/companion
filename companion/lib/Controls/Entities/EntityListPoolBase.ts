@@ -19,6 +19,7 @@ import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -416,19 +417,25 @@ export abstract class ControlEntityListPoolBase {
 			) {
 				const newOverrides: FeedbackEntityStyleOverride[] = []
 
+				const parsedStyle = ParseLegacyStyle(newProps.style)
+
 				// Translate the old advance feedback property lookup into the newly produced value
 				for (const override of existingStyleOverrides) {
-					if (!override.override.isExpression && override.override.value in newProps.style) {
-						newOverrides.push({
-							...override,
-							override: {
-								isExpression: override.override.value === 'text' && !!newProps.style['textExpression'],
-								value: (newProps.style as any)[override.override.value],
-							},
-						})
-					} else {
-						// Preserve the existing override, to minimise the lossyness
-						newOverrides.push(override)
+					if (!override.override.isExpression) {
+						const newValue = GetLegacyStyleProperty(
+							parsedStyle,
+							newProps.style,
+							override.override.value,
+							override.elementProperty
+						)
+
+						// Only preserve ones which exist in the new style, otherwise they should be discarded as they wont have a real value to use
+						if (newValue) {
+							newOverrides.push({
+								...override,
+								override: newValue,
+							})
+						}
 					}
 				}
 

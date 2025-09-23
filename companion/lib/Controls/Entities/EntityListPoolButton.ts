@@ -22,6 +22,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 
 interface CurrentStepFromExpression {
 	type: 'expression'
@@ -193,6 +194,12 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>> {
 		const result = new Map<string, Map<string, ExpressionOrValue<any>>>()
 
+		const pushOverride = (elementId: string, elementProperty: string, override: ExpressionOrValue<any>) => {
+			const targetMap = result.get(elementId) ?? new Map<string, ExpressionOrValue<any>>()
+			targetMap.set(elementProperty, override)
+			result.set(elementId, targetMap)
+		}
+
 		for (const feedback of this.#feedbacks.getDirectEntities()) {
 			const overrides = feedback.styleOverrides
 			if (!overrides || overrides.length === 0) continue
@@ -207,9 +214,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 					// And the override stores the value to be applied
 					if (feedback.getBooleanFeedbackValue()) {
 						for (const override of overrides) {
-							const targetMap = result.get(override.elementId) ?? new Map<string, ExpressionOrValue<any>>()
-							targetMap.set(override.elementProperty, override.override)
-							result.set(override.elementId, targetMap)
+							pushOverride(override.elementId, override.elementProperty, override.override)
 						}
 					}
 					break
@@ -217,16 +222,17 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 					// For advanced feedbacks, split out the value from the feedback and inject it into the map
 					const style = feedback.feedbackValue
 					if (!style || typeof style !== 'object') break
-					for (const override of overrides) {
-						const styleValue = style[override.override.value]
-						if (styleValue !== undefined) {
-							const targetMap = result.get(override.elementId) ?? new Map<string, ExpressionOrValue<any>>()
 
-							targetMap.set(override.elementProperty, {
-								isExpression: override.override.value === 'text' && !!style['textExpression'],
-								value: styleValue,
-							})
-							result.set(override.elementId, targetMap)
+					const parsedStyle = ParseLegacyStyle(style)
+					for (const override of overrides) {
+						const newValue = GetLegacyStyleProperty(
+							parsedStyle,
+							style,
+							override.override.value,
+							override.elementProperty
+						)
+						if (newValue) {
+							pushOverride(override.elementId, override.elementProperty, newValue)
 						}
 					}
 
