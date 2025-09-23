@@ -221,8 +221,9 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 						const styleValue = style[override.override.value]
 						if (styleValue !== undefined) {
 							const targetMap = result.get(override.elementId) ?? new Map<string, ExpressionOrValue<any>>()
+
 							targetMap.set(override.elementProperty, {
-								isExpression: false,
+								isExpression: override.override.value === 'text' && !!style['textExpression'],
 								value: styleValue,
 							})
 							result.set(override.elementId, targetMap)
