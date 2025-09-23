@@ -19,7 +19,7 @@ export function FeedbackOverridesTab({
 	return (
 		<ControlEntitiesEditor
 			heading="Feedbacks"
-			headingSummary={
+			subheading={
 				<div className="mb-2">
 					Here you can use feedbacks to override properties of the elements you have setup.
 					<br />
