@@ -32,6 +32,7 @@ export class PreviewElementStream {
 
 		// Listen for element changes to trigger re-evaluation
 		this.#controlEvents.on('layeredStyleElementChanged', this.#onElementChanged)
+		this.#controlEvents.on('invalidateControlRender', this.#onControlRender)
 	}
 
 	createTrpcRouter() {
@@ -111,6 +112,18 @@ export class PreviewElementStream {
 		}
 	}
 
+	#onControlRender = (controlId: string): void => {
+		// TODO - This is rather heavy-handled, we should ideally track which elements triggered the change
+
+		// Find all sessions for this control
+		for (const [elementStreamId, session] of this.#sessions) {
+			if (session.controlId === controlId) {
+				this.#logger.silly(`Re-evaluating element: ${elementStreamId} due to control render invalidation`)
+				this.#triggerElementReEvaluation(session)
+			}
+		}
+	}
+
 	#triggerElementReEvaluation = (session: ElementStreamSession): void => {
 		if (session.isEvaluating) {
 			// Already evaluating, just mark that another evaluation is needed
@@ -166,7 +179,7 @@ export class PreviewElementStream {
 			}
 
 			if (shouldRecompute) {
-				this.#logger.debug(
+				this.#logger.silly(
 					`Re-evaluating element: ${elementStreamId} for ${session.changes.listenerCount('change')} clients`
 				)
 
