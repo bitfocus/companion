@@ -417,16 +417,18 @@ export abstract class ControlEntityListPoolBase {
 				const newOverrides: FeedbackEntityStyleOverride[] = []
 
 				// Translate the old advance feedback property lookup into the newly produced value
-				// If the property is not represented, then drop it. This may be lossy, but there is no good way to preserve it
 				for (const override of existingStyleOverrides) {
 					if (!override.override.isExpression && override.override.value in newProps.style) {
 						newOverrides.push({
 							...override,
 							override: {
-								isExpression: false,
+								isExpression: override.override.value === 'text' && !!newProps.style['textExpression'],
 								value: (newProps.style as any)[override.override.value],
 							},
 						})
+					} else {
+						// Preserve the existing override, to minimise the lossyness
+						newOverrides.push(override)
 					}
 				}
 
