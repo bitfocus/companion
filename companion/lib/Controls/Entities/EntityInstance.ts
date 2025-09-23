@@ -695,6 +695,12 @@ export class ControlEntityInstance {
 			const newPropsData = newProps as FeedbackEntityModel
 			feedbackData.isInverted = !!newPropsData.isInverted
 			feedbackData.style = Object.keys(feedbackData.style || {}).length > 0 ? feedbackData.style : newPropsData.style
+
+			// Replace the style overrides only if the new one is non-empty
+			feedbackData.styleOverrides =
+				newPropsData.styleOverrides && newPropsData.styleOverrides.length > 0
+					? newPropsData.styleOverrides
+					: feedbackData.styleOverrides
 		}
 
 		if (!skipNotifyModule) {

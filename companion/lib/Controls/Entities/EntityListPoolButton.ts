@@ -86,7 +86,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		) => ExecuteExpressionResult,
 		isLayeredButton: boolean
 	) {
-		super(props)
+		super(props, isLayeredButton)
 
 		this.#executeExpressionInControl = executeExpressionInControl
 		this.#sendRuntimePropsChange = sendRuntimePropsChange

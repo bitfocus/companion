@@ -6,7 +6,10 @@ import { ExpressionOrValue, schemaExpressionOrValue } from './StyleLayersModel.j
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel =
 	| Pick<ActionEntityModel, 'id' | 'type' | 'definitionId' | 'options' | 'upgradeIndex'>
-	| Pick<FeedbackEntityModel, 'id' | 'type' | 'definitionId' | 'style' | 'options' | 'isInverted' | 'upgradeIndex'>
+	| Pick<
+			FeedbackEntityModel,
+			'id' | 'type' | 'definitionId' | 'style' | 'styleOverrides' | 'options' | 'isInverted' | 'upgradeIndex'
+	  >
 
 export enum EntityModelType {
 	Action = 'action',

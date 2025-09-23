@@ -40,6 +40,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #internalModule: InternalController
 	readonly #moduleHost: ModuleHost
 	readonly #variableValues: VariablesValues
+	readonly #isLayeredDrawing: boolean
 
 	protected readonly controlId: string
 
@@ -53,7 +54,7 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	protected readonly invalidateControl: () => void
 
-	protected constructor(props: ControlEntityListPoolProps) {
+	protected constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.controlId = props.controlId
@@ -64,6 +65,7 @@ export abstract class ControlEntityListPoolBase {
 		this.#internalModule = props.internalModule
 		this.#moduleHost = props.moduleHost
 		this.#variableValues = props.variableValues
+		this.#isLayeredDrawing = isLayeredDrawing
 	}
 
 	protected createEntityList(listDefinition: ControlEntityListDefinition): ControlEntityList {
@@ -403,6 +405,33 @@ export abstract class ControlEntityListPoolBase {
 
 			// Ignore if the types do not match
 			if (entity.type !== newProps.type) return undefined
+
+			// If this is a layered drawing, translate the style into the overrides format
+			const existingStyleOverrides = entity.styleOverrides
+			if (
+				this.#isLayeredDrawing &&
+				newProps.type === EntityModelType.Feedback &&
+				newProps.style &&
+				existingStyleOverrides
+			) {
+				const newOverrides: FeedbackEntityStyleOverride[] = []
+
+				// Translate the old advance feedback property lookup into the newly produced value
+				// If the property is not represented, then drop it. This may be lossy, but there is no good way to preserve it
+				for (const override of existingStyleOverrides) {
+					if (!override.override.isExpression && override.override.value in newProps.style) {
+						newOverrides.push({
+							...override,
+							override: {
+								isExpression: false,
+								value: (newProps.style as any)[override.override.value],
+							},
+						})
+					}
+				}
+
+				newProps = { ...newProps, styleOverrides: newOverrides, style: undefined }
+			}
 
 			entity.replaceProps(newProps, skipNotifyModule)
 

@@ -14,7 +14,7 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 	#localVariables: ControlEntityList
 
 	constructor(props: ControlEntityListPoolProps) {
-		super(props)
+		super(props, false)
 
 		this.#entities = this.createEntityList({
 			type: EntityModelType.Feedback,
