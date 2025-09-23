@@ -27,6 +27,7 @@ import type { InternalModuleUtils } from './Util.js'
 import { booleanAnd } from '../Resources/Util.js'
 import { EventEmitter } from 'events'
 import { setTimeout } from 'node:timers/promises'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 
 export class InternalBuildingBlocks
 	extends EventEmitter<InternalModuleFragmentEvents>
@@ -277,7 +278,12 @@ export class InternalBuildingBlocks
 
 			if (!isNaN(delay) && delay > 0) {
 				// Perform the wait
-				return setTimeout(delay, true, { signal: extras.abortDelayed })
+				return setTimeout(delay, true, { signal: extras.abortDelayed }).catch(() => {
+					this.#logger.debug(`Aborted wait on ${extras.location ? formatLocation(extras.location) : extras.controlId}`)
+
+					// Discard error
+					return true
+				})
 			} else {
 				// No wait, return immediately
 				return true

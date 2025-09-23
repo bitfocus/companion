@@ -486,12 +486,27 @@ export class ImportExportController {
 				.input(z.object({ config: zodClientImportSelection.nullable(), fullReset: z.boolean() }))
 				.mutation(async ({ input: { config, fullReset }, ctx }) => {
 					return this.#checkOrRunImportTask('import', async () => {
+						console.log(
+							`Performing full import: ${fullReset ? 'Full Reset' : 'Partial Reset'} Config: ${JSON.stringify(config)}`
+						)
 						const data = ctx.pendingImport?.object
 						if (!data) throw new Error('No in-progress import object')
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						const resetArg = fullReset || !config ? null : { ...config, connections: true, userconfig: false }
+						const resetArg: ClientResetSelection | null =
+							fullReset || !config ? null : { ...config, connections: true, userconfig: false }
+						if (resetArg && !fullReset) {
+							// Dont ever reset connections during partial import
+							resetArg.connections = false
+
+							// If a partial import, don't reset disabled items
+							if (!data.pages) resetArg.buttons = false
+							if (!data.custom_variables) resetArg.customVariables = false
+							if (!data.expressionVariables) resetArg.expressionVariables = false
+							if (!data.surfaces) resetArg.surfaces = false
+							if (!data.triggers) resetArg.triggers = false
+						}
 
 						// Destroy old stuff
 						await this.#reset(resetArg, !config || config.buttons)
@@ -500,7 +515,9 @@ export class ImportExportController {
 						this.#instancesController.collections.replaceCollections(data.connectionCollections || [])
 
 						// Always Import instances
-						const instanceIdMap = this.#importInstances(data.instances, {})
+						const preserveRemap: ConnectionRemappings =
+							resetArg && !resetArg.connections ? this.#createDefaultConnectionRemap(data.instances) : {}
+						const instanceIdMap = this.#importInstances(data.instances, preserveRemap)
 
 						// import custom variables
 						if (!config || config.customVariables) {
@@ -731,6 +748,25 @@ export class ImportExportController {
 		}
 
 		return 'ok'
+	}
+
+	#createDefaultConnectionRemap(instances: ExportInstancesv6 | undefined): ConnectionRemappings {
+		const remap: ConnectionRemappings = {}
+		if (!instances) return remap
+
+		for (const [oldId, obj] of Object.entries(instances)) {
+			if (!obj || !obj.label) continue
+
+			// See if there is an existing instance with the same label and type
+			const existingId = this.#instancesController.getIdForLabel(obj.label)
+			if (existingId && this.#instancesController.getInstanceConfig(existingId)?.instance_type === obj.instance_type) {
+				remap[oldId] = existingId
+			} else {
+				remap[oldId] = undefined // Create a new instance
+			}
+		}
+
+		return remap
 	}
 
 	#importInstances(

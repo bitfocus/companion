@@ -141,9 +141,8 @@ export class ServiceEmberPlus extends ServiceBase {
 		this.#serviceApi.on('variables_changed', (variables, connection_labels) => {
 			if ((!connection_labels.has('internal') && !connection_labels.has('custom')) || this.#server == undefined) return // We don't care about any other variables
 			variables.forEach((changedVariable) => {
-				if (this.#server == undefined) return
-				let label = changedVariable.split(':')[0]
-				let name = changedVariable.split(':')[1]
+				//if (this.#server == undefined) return
+				let [label, name] = changedVariable.split(':')
 				if (label == 'internal' && name.startsWith('custom')) {
 					label = 'custom'
 					name = name.substring(7)
@@ -161,8 +160,9 @@ export class ServiceEmberPlus extends ServiceBase {
 					}
 				} else if (label === 'internal') {
 					const i = this.#internalVars.indexOf(name)
+					if (i == -1) return
 					const path = buildPathForVariable(name, 'internal', this.#internalVars)
-					if (i == -1 || path == undefined) {
+					if (path == undefined) {
 						this.logger.debug(`New internal variable: ${name} restarting server`)
 						this.debounceRestart()
 					} else {
@@ -391,8 +391,8 @@ export class ServiceEmberPlus extends ServiceBase {
 	 * Get variable structure in EmberModel form
 	 */
 	#getVariableTree(): Record<number, EmberModel.NumberedTreeNodeImpl<any>> {
-		this.#customVars = this.#serviceApi.getCustomVariableDefinitions() ?? []
-		this.#internalVars = this.#serviceApi.getConnectionVariableDefinitions('internal') ?? []
+		this.#customVars = Object.keys(this.#serviceApi.getCustomVariableDefinitions())
+		this.#internalVars = Object.keys(this.#serviceApi.getConnectionVariableDefinitions('internal'))
 		const customVarNodes: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 		const internalVarNodes: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}
 		const output: Record<number, EmberModel.NumberedTreeNodeImpl<any>> = {}

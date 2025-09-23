@@ -1,7 +1,6 @@
 import { decimalToRgb } from '../Resources/Util.js'
 import { ApiMessageError, ServiceTcpUdpApi } from './TcpUdpApi.js'
 import { ServiceTcpBase, TcpClientInfo } from './TcpBase.js'
-import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -41,17 +40,13 @@ export class ServiceTcp extends ServiceTcpBase {
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		const bgcolor = render.style.color?.color || 0
 
-		const bank = xyToOldBankIndex(location.column, location.row)
-
-		/** TODO: remove legacy 'bank' from this response */
-		if (this.clients.size > 0 && bank !== null) {
+		if (this.clients.size > 0) {
 			const color = decimalToRgb(bgcolor)
 			const response = {
 				type: 'bank_bg_change',
 				page: location.pageNumber,
 				row: location.row,
 				column: location.column,
-				bank: bank,
 				red: color.red,
 				green: color.green,
 				blue: color.blue,

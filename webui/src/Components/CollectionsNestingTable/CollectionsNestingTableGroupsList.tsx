@@ -72,8 +72,7 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 		dragId,
 		collection.id,
 		-1,
-		'contents',
-		true
+		'contents'
 	)
 
 	const collapseHelper = usePanelCollapseHelperContextForPanel(null, collection.id)

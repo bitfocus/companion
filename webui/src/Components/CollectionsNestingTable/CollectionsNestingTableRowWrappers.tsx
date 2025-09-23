@@ -87,14 +87,12 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 		parentId,
 		index,
 		nestingLevel,
-		isCollapsed,
 		children,
 	}: React.PropsWithChildren<{
 		collection: TCollection
 		parentId: string | null
 		index: number
 		nestingLevel: number
-		isCollapsed: boolean
 	}>) {
 		const { dragId, collectionsApi, gridLayout } = useCollectionsNestingTableContext<
 			TCollection,
@@ -108,8 +106,7 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 			dragId,
 			parentId,
 			index,
-			collection.id,
-			isCollapsed
+			collection.id
 		)
 
 		const [{ isDragging }, drag, preview] = useDrag<

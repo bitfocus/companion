@@ -312,7 +312,6 @@ export class InstanceInstalledModulesManager {
 		// Download into memory with a size limit
 		const chunks: Uint8Array[] = []
 		let bytesReceived = 0
-		// eslint-disable-next-line n/no-unsupported-features/node-builtins
 		for await (const chunk of response.body as ReadableStream<Uint8Array>) {
 			bytesReceived += chunk.byteLength
 			if (bytesReceived > MAX_MODULE_TAR_SIZE) {

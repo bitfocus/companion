@@ -106,6 +106,14 @@ export class VariablesInstanceDefinitions {
 		}
 	}
 
+	/**
+	 * Get the variable definitions for a connection
+	 */
+
+	getVariableDefinitions(connectionLabel: string): ModuleVariableDefinitions {
+		return this.#variableDefinitions[connectionLabel] ?? {}
+	}
+
 	getVariableLabel(connectionLabel: string, variableId: string): string | undefined {
 		return this.#variableDefinitions[connectionLabel]?.[variableId]?.label
 	}

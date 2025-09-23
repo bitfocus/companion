@@ -42,11 +42,6 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		return this.getVariableValue('custom', name)
 	}
 
-	getVariableDefinitions(label: string): string[] | undefined {
-		if (this.#variableValues[label] == undefined) return undefined
-		return Object.keys(this.#variableValues[label])
-	}
-
 	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
 		localValues: ControlEntityInstance[] | null,
