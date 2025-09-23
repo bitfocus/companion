@@ -9,7 +9,6 @@ import { observer } from 'mobx-react-lite'
 
 interface EntityEditorHeadingProps {
 	heading: JSX.Element | string | null
-	headingSummary: JSX.Element | null
 	ownerId: EntityOwner | null
 	childEntityIds: string[]
 	headingActions?: JSX.Element[]
@@ -17,7 +16,6 @@ interface EntityEditorHeadingProps {
 
 export const EntityEditorHeading = observer(function EntityEditorHeading({
 	heading,
-	headingSummary,
 	ownerId,
 	childEntityIds,
 	headingActions,
@@ -27,35 +25,32 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 	const ownerIdString = stringifyEntityOwnerId(ownerId)
 
 	return (
-		<>
-			<h5>
-				{heading}
+		<h5>
+			{heading}
 
-				<CButtonGroup className="right">
-					{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
-						<CButton
-							color="white"
-							size="sm"
-							onClick={() => panelCollapseHelper.setAllExpanded(ownerIdString, childEntityIds)}
-							title="Expand all"
-						>
-							<FontAwesomeIcon icon={faExpandArrowsAlt} />
-						</CButton>
-					)}
-					{childEntityIds.length >= 1 && panelCollapseHelper.canCollapseAll(ownerIdString, childEntityIds) && (
-						<CButton
-							color="white"
-							size="sm"
-							onClick={() => panelCollapseHelper.setAllCollapsed(ownerIdString, childEntityIds)}
-							title="Collapse all"
-						>
-							<FontAwesomeIcon icon={faCompressArrowsAlt} />
-						</CButton>
-					)}
-					{headingActions || ''}
-				</CButtonGroup>
-			</h5>
-			{headingSummary}
-		</>
+			<CButtonGroup className="right">
+				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
+					<CButton
+						color="white"
+						size="sm"
+						onClick={() => panelCollapseHelper.setAllExpanded(ownerIdString, childEntityIds)}
+						title="Expand all"
+					>
+						<FontAwesomeIcon icon={faExpandArrowsAlt} />
+					</CButton>
+				)}
+				{childEntityIds.length >= 1 && panelCollapseHelper.canCollapseAll(ownerIdString, childEntityIds) && (
+					<CButton
+						color="white"
+						size="sm"
+						onClick={() => panelCollapseHelper.setAllCollapsed(ownerIdString, childEntityIds)}
+						title="Collapse all"
+					>
+						<FontAwesomeIcon icon={faCompressArrowsAlt} />
+					</CButton>
+				)}
+				{headingActions || ''}
+			</CButtonGroup>
+		</h5>
 	)
 })

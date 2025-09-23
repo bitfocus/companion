@@ -25,7 +25,6 @@ interface ControlEntitiesEditorProps {
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	entities: SomeEntityModel[] | undefined
 	heading: JSX.Element | string | null
-	headingSummary?: JSX.Element
 	headingActions?: JSX.Element[]
 	subheading?: JSX.Element | string | null
 	localVariablesStore: LocalVariablesStore | null
@@ -41,7 +40,6 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	feedbackListType,
 	entities,
 	heading,
-	headingSummary,
 	headingActions,
 	subheading,
 	localVariablesStore,
@@ -71,7 +69,6 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 
 					<EditableEntityList
 						heading={heading}
-						headingSummary={headingSummary}
 						headingActions={headingActions}
 						subheading={subheading}
 						entities={entities}
