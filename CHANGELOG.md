@@ -1,5 +1,18 @@
 # Bitfocus Companion
 
+## Companion v4.1.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Version warning showing in the header
+- Pages not being deleted properly during reset
+- Partial import resetting unexpected portions of the system #3625 #3639
+- Unable to drag some collections around
+- Unexpected error logged when aborting an `internal: Wait` action #3645
+- UI not loading in older Chromium (~121)
+- Ember+ api reporting hidden variables #3646
+- DEBUG-INSPECT not working for all modules
+
 ## Companion v4.1.0 - Release Notes
 
 ### IMPORTANT CHANGES
