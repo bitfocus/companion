@@ -42,7 +42,9 @@ export interface PresetButtonModel extends ButtonModelBase {
 
 	options: NormalButtonOptions
 
-	style: ButtonStyleProperties
+	style: {
+		layers: SomeButtonGraphicsElement[]
+	}
 }
 
 export interface LayeredButtonModel extends ButtonModelBase {

@@ -40,7 +40,8 @@ interface ParsedLegacyStyle {
 	}
 }
 
-const TEXT_SIZE_SCALE = (100 / 72) * 1.2 // TODO - refine this scale...
+// const TEXT_SIZE_SCALE = 1 / 0.6 // TODO - when no topbar
+const TEXT_SIZE_SCALE = 2.1 // When with topbar
 
 export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>): ParsedLegacyStyle {
 	let textSize: 'auto' | number | undefined = undefined

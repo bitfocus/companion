@@ -12,7 +12,7 @@ import type {
 } from '@companion-app/shared/Model/Presets.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type {
-	NormalButtonModel,
+	LayeredButtonModel,
 	NormalButtonSteps,
 	PresetButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
@@ -42,6 +42,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { ConvertLegacyStyleToElements } from '../Resources/ConvertLegacyStyleToElements.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -279,8 +280,11 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const result: PresetButtonModel = {
 			...definition.model,
 			type: 'preset:button',
-			style: definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
 			steps: {},
+			...ConvertLegacyStyleToElements(
+				definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
+				definition.model.feedbacks
+			),
 		}
 
 		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
@@ -302,11 +306,22 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	/**
 	 * Import a preset to a location
 	 */
-	convertPresetToControlModel(connectionId: string, presetId: string): NormalButtonModel | null {
+	convertPresetToControlModel(connectionId: string, presetId: string): LayeredButtonModel | null {
 		const definition = this.#presetDefinitions[connectionId]?.[presetId]
 		if (!definition || definition.type !== 'button') return null
 
-		return definition.model
+		return {
+			...definition.model,
+			options: {
+				...definition.model.options,
+				canModifyStyleInApis: false,
+			},
+			type: 'button-layered',
+			...ConvertLegacyStyleToElements(
+				definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
+				definition.model.feedbacks
+			),
+		}
 	}
 
 	/**
