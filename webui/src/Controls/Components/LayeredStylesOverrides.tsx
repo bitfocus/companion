@@ -121,7 +121,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 				<div></div>
 			</div>
 
-			<table className="table table-responsive-sm width-100">
+			<table className="table table-responsive-sm width-100 layered-overrides-table">
 				<thead>
 					<tr>
 						<th>Element & Property</th>
