@@ -105,7 +105,7 @@ export class PreviewElementStream {
 		// Find all sessions for this control and element
 		for (const [elementStreamId, session] of this.#sessions) {
 			if (session.controlId === controlId && session.elementId === elementId) {
-				this.#logger.debug(`Re-evaluating element: ${elementStreamId} due to element change`)
+				this.#logger.silly(`Re-evaluating element: ${elementStreamId} due to element change`)
 				this.#triggerElementReEvaluation(session)
 			}
 		}

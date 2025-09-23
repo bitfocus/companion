@@ -88,7 +88,7 @@ export class PreviewExpressionStream {
 					// There is some overlap, re-evaluate the expression
 					// Future: this doesn't need to be done immediately, debounce it?
 
-					this.#logger.debug(
+					this.#logger.silly(
 						`Re-evaluating expression: ${expressionId} for ${session.changes.listenerCount('change')} clients`
 					)
 
