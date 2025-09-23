@@ -1,5 +1,5 @@
 {
-	"include": ["lib/**/*.ts", "lib/**/*.cts"],
+	"include": ["lib/**/*.ts", "lib/**/*.cts", "../companion/lib/Graphics/ConvertGraphicsElements.ts"],
 	"exclude": ["node_modules/**"],
 	"compilerOptions": {
 		"outDir": "./dist",

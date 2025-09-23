@@ -137,6 +137,10 @@ export abstract class ControlEntityListPoolBase {
 
 	abstract getLocalVariableEntities(): ControlEntityInstance[]
 
+	/**
+	 * Get all the style overrides for the layered drawing elements
+	 * @returns A map of elementId -> elementProperty -> override value
+	 */
 	abstract getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>
 
 	getLocalVariableValues(): CompanionVariableValues {

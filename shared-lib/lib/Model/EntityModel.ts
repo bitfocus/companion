@@ -54,6 +54,7 @@ export interface FeedbackEntityStyleOverride {
 	overrideId: string
 	elementId: string
 	elementProperty: string
+	// Note: When overriding advanced feedbacks, this should be set to `{ isExpression: false, value: 'color' }` or similar to indicate which property it is using
 	override: ExpressionOrValue<any>
 }
 export const schemaFeedbackEntityStyleOverride: z.ZodType<FeedbackEntityStyleOverride> = z.object({

@@ -1,4 +1,4 @@
-import type { ExecuteExpressionResult } from '../Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import {
 	ButtonGraphicsDecorationType,
 	type ButtonGraphicsDrawBounds,
@@ -20,9 +20,9 @@ import {
 	ButtonGraphicsLineElement,
 	ButtonGraphicsLineDrawElement,
 	ButtonGraphicsElementBase,
-} from '../Model/StyleLayersModel.js'
-import { assertNever } from '../Util.js'
-import { HorizontalAlignment, VerticalAlignment } from './Util.js'
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 
 type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
 type ParseVariablesFn = (str: string) => Promise<ExecuteExpressionResult>

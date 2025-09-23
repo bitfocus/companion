@@ -197,11 +197,14 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			const overrides = feedback.styleOverrides
 			if (!overrides || overrides.length === 0) continue
 
+			// Get the definition, to know how to handle it
 			const entityDefinition = feedback.getEntityDefinition()
 			if (!entityDefinition) continue
 
 			switch (entityDefinition.feedbackType) {
 				case FeedbackEntitySubType.Boolean:
+					// For boolean values, we only care about the true case
+					// And the override stores the value to be applied
 					if (feedback.getBooleanFeedbackValue()) {
 						for (const override of overrides) {
 							const targetMap = result.get(override.elementId) ?? new Map<string, ExpressionOrValue<any>>()
@@ -211,6 +214,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 					}
 					break
 				case FeedbackEntitySubType.Advanced: {
+					// For advanced feedbacks, split out the value from the feedback and inject it into the map
 					const style = feedback.feedbackValue
 					if (!style || typeof style !== 'object') break
 					for (const override of overrides) {

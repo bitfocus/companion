@@ -29,7 +29,7 @@ import {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { CreateElementOfType } from './LayerDefaults.js'
-import { ConvertSomeButtonGraphicsElementForDrawing } from '@companion-app/shared/Graphics/ConvertGraphicsElements.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { CompanionVariableValues } from '@companion-module/base'
 import { lazy } from '../../../Resources/Util.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
