@@ -1481,10 +1481,308 @@ class StreamDock extends EventEmitter {
 				},
 			],
 		},
+		'HSV 293S-2': {
+			productName: 'Stream Dock HSV 293S',
+			iconRotation: 90,
+			pid: 0x6670,
+
+			inputs: [
+				{
+					type: 'push',
+					id: 0x0d,
+					row: 0,
+					column: 0,
+					name: 'Button 1',
+				},
+				{
+					type: 'push',
+					id: 0x0a,
+					row: 0,
+					column: 1,
+					name: 'Button 2',
+				},
+				{
+					type: 'push',
+					id: 0x07,
+					row: 0,
+					column: 2,
+					name: 'Button 3',
+				},
+				{
+					type: 'push',
+					id: 0x04,
+					row: 0,
+					column: 3,
+					name: 'Button 4',
+				},
+				{
+					type: 'push',
+					id: 0x01,
+					row: 0,
+					column: 4,
+					name: 'Button 5',
+				},
+				{
+					type: 'push',
+					id: 0x0e,
+					row: 1,
+					column: 0,
+					name: 'Button 6',
+				},
+				{
+					type: 'push',
+					id: 0x0b,
+					row: 1,
+					column: 1,
+					name: 'Button 7',
+				},
+				{
+					type: 'push',
+					id: 0x08,
+					row: 1,
+					column: 2,
+					name: 'Button 8',
+				},
+				{
+					type: 'push',
+					id: 0x05,
+					row: 1,
+					column: 3,
+					name: 'Button 9',
+				},
+				{
+					type: 'push',
+					id: 0x02,
+					row: 1,
+					column: 4,
+					name: 'Button 10',
+				},
+				{
+					type: 'push',
+					id: 0x0f,
+					row: 2,
+					column: 0,
+					name: 'Button 11',
+				},
+				{
+					type: 'push',
+					id: 0x0c,
+					row: 2,
+					column: 1,
+					name: 'Button 12',
+				},
+				{
+					type: 'push',
+					id: 0x09,
+					row: 2,
+					column: 2,
+					name: 'Button 13',
+				},
+				{
+					type: 'push',
+					id: 0x06,
+					row: 2,
+					column: 3,
+					name: 'Button 14',
+				},
+				{
+					type: 'push',
+					id: 0x03,
+					row: 2,
+					column: 4,
+					name: 'Button 15',
+				},
+				{
+					type: 'push',
+					id: 0x10,
+					row: 0,
+					column: 5,
+					name: 'Softbutton 1',
+				},
+				{
+					type: 'push',
+					id: 0x11,
+					row: 1,
+					column: 5,
+					name: 'Softbutton 2',
+				},
+				{
+					type: 'push',
+					id: 0x12,
+					row: 2,
+					column: 5,
+					name: 'Softbutton 3',
+				},
+			],
+			outputs: [
+				{
+					type: 'lcd',
+					id: 0x0d,
+					row: 0,
+					column: 0,
+					name: 'LCD 1',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x0a,
+					row: 0,
+					column: 1,
+					name: 'LCD 2',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x07,
+					row: 0,
+					column: 2,
+					name: 'LCD 3',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x04,
+					row: 0,
+					column: 3,
+					name: 'LCD 4',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x01,
+					row: 0,
+					column: 4,
+					name: 'LCD 5',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x0e,
+					row: 1,
+					column: 0,
+					name: 'LCD 6',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x0b,
+					row: 1,
+					column: 1,
+					name: 'LCD 7',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x08,
+					row: 1,
+					column: 2,
+					name: 'LCD 8',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x05,
+					row: 1,
+					column: 3,
+					name: 'LCD 9',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x02,
+					row: 1,
+					column: 4,
+					name: 'LCD 10',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x0f,
+					row: 2,
+					column: 0,
+					name: 'LCD 11',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x0c,
+					row: 2,
+					column: 1,
+					name: 'LCD 12',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x09,
+					row: 2,
+					column: 2,
+					name: 'LCD 13',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x06,
+					row: 2,
+					column: 3,
+					name: 'LCD 14',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x03,
+					row: 2,
+					column: 4,
+					name: 'LCD 15',
+					resolutionx: 85,
+					resolutiony: 85,
+				},
+				{
+					type: 'lcd',
+					id: 0x10,
+					row: 0,
+					column: 5,
+					name: 'Strip 1',
+					resolutionx: 80,
+					resolutiony: 80,
+				},
+				{
+					type: 'lcd',
+					id: 0x11,
+					row: 1,
+					column: 5,
+					name: 'Strip 2',
+					resolutionx: 80,
+					resolutiony: 80,
+				},
+				{
+					type: 'lcd',
+					id: 0x12,
+					row: 2,
+					column: 5,
+					name: 'Strip 3',
+					resolutionx: 80,
+					resolutiony: 80,
+				},
+			],
+		},
 	}
 
 	private static cmdPrefix = [0x43, 0x52, 0x54, 0, 0]
-	private static packetSize = 1024
+	private packetSize = 1024
 
 	private info: Device
 	private device: HIDAsync
@@ -1514,6 +1812,9 @@ class StreamDock extends EventEmitter {
 			this.model = StreamDock.models['N4-1234']
 		} else if (this.info.productId === 0x1014) {
 			this.model = StreamDock.models['HSV 293S']
+		} else if (this.info.productId === 0x6670) {
+			this.model = StreamDock.models['HSV 293S-2']
+			this.packetSize = 512
 		} else {
 			// this.modelType = 'Unknown'
 			this.emit('remove')
@@ -1568,20 +1869,20 @@ class StreamDock extends EventEmitter {
 
 		const prefixbuffer = Buffer.from(prefix)
 		// const writebuffer = Buffer.concat([prefixbuffer, data], StreamDock.packetSize)
-		const writebuffer = Buffer.concat([Buffer.from([0]), prefixbuffer, data], StreamDock.packetSize + 1)
+		const writebuffer = Buffer.concat([Buffer.from([0]), prefixbuffer, data], this.packetSize + 1)
 
 		// if (writebuffer.byteLength != StreamDock.packetSize) {
-		if (writebuffer.byteLength != StreamDock.packetSize + 1) {
+		if (writebuffer.byteLength != this.packetSize + 1) {
 			console.error(
-				`Data length problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
+				`Data length problem while sending packet to stream dock. Should be ${this.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
 			)
 		}
 		await this.writeRaw(writebuffer).catch((e) => {
 			throw new Error('Sending command to Stream Dock failed ' + e)
 		})
 
-		if (data.byteLength + prefixbuffer.byteLength > StreamDock.packetSize) {
-			const remain = data.subarray(StreamDock.packetSize - prefixbuffer.byteLength)
+		if (data.byteLength + prefixbuffer.byteLength > this.packetSize) {
+			const remain = data.subarray(this.packetSize - prefixbuffer.byteLength)
 			await this.sendCmd(remain, []).catch((e) => {
 				console.error('Sending remaining data to Stream Dock failed ' + e)
 			})
@@ -1602,19 +1903,19 @@ class StreamDock extends EventEmitter {
 
 		const prefixbuffer = Buffer.from(prefix)
 		// const writebuffer = Buffer.concat([prefixbuffer, data], StreamDock.packetSize)
-		const writebuffer = Buffer.concat([Buffer.from([0]), prefixbuffer, data], StreamDock.packetSize + 1)
+		const writebuffer = Buffer.concat([Buffer.from([0]), prefixbuffer, data], this.packetSize + 1)
 
 		// if (writebuffer.byteLength != StreamDock.packetSize) {
-		if (writebuffer.byteLength != StreamDock.packetSize + 1) {
+		if (writebuffer.byteLength != this.packetSize + 1) {
 			console.error(
-				`Data length problem while sending packet to stream dock. Should be ${StreamDock.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
+				`Data length problem while sending packet to stream dock. Should be ${this.packetSize}B, but is ${writebuffer.byteLength}B. Payload size is ${data.length}B and prefix is [${prefix.join(',')}] `
 			)
 		}
 		let sendpr: Promise<void> | undefined
 		const writepr = this.writeRaw(writebuffer)
 
-		if (data.byteLength + prefixbuffer.byteLength > StreamDock.packetSize) {
-			const remain = data.subarray(StreamDock.packetSize - prefixbuffer.byteLength)
+		if (data.byteLength + prefixbuffer.byteLength > this.packetSize) {
+			const remain = data.subarray(this.packetSize - prefixbuffer.byteLength)
 			sendpr = this.sendCmdSync(remain, [])
 		}
 
