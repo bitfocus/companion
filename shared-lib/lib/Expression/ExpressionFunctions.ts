@@ -167,12 +167,11 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	secondsToTimestamp: (v, type) => {
 		const negative = v < 0
 		v = Math.abs(v)
+		type = type ? type : 'hh:mm:ss'
 
 		const seconds = pad(Math.floor(v) % 60, '0', 2)
 		const minutes = pad(Math.floor(v / 60) % 60, '0', 2)
 		const hours = pad(Math.floor(v / 3600), '0', 2)
-
-		if (!type) return `${negative ? '-' : ''}${hours}:${minutes}:${seconds}`
 
 		const timestamp = []
 		if (type.includes('HH') || type.includes('hh')) timestamp.push(hours)
@@ -182,14 +181,14 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		return (negative ? '-' : '') + timestamp.join(':')
 	},
 	msToTimestamp: (v, type) => {
-		v = Math.max(0, v)
+		const negative = v < 0
+		v = Math.abs(v)
+		type = type ? type : 'mm:ss.ms'
 
 		const ms = v % 1000
 		const seconds = pad(Math.floor(v / 1000) % 60, '0', 2)
 		const minutes = pad(Math.floor(v / 60000) % 60, '0', 2)
 		const hours = pad(Math.floor(v / 3600000), '0', 2)
-
-		if (!type) return `${minutes}:${seconds}.${Math.floor(ms / 100)}`
 
 		const timestamp = []
 		if (type.includes('HH') || type.includes('hh')) timestamp.push(hours)
@@ -204,8 +203,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		} else if (type.endsWith('.SSS')) {
 			timestampStr += `.${pad(ms, '0', 3)}`
 		}
-
-		return timestampStr
+		return (negative ? '-' : '') + timestampStr
 	},
 	timeOffset: (time, offset, hr12 = false) => {
 		const date = new Date()
