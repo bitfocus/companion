@@ -242,7 +242,7 @@ You can do the reverse of this with `secondsToTimestamp(str)`
 
 Convert a number of seconds into a timestamp of format 'HH:mm:ss'.
 
-Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
+Note: There is no limit to the number of hours shown, it will display values greater than 24.
 
 By supplying the format parameter, you can choose which components will be included in the output string.
 
@@ -256,7 +256,7 @@ The following components are allowed:
 
 Convert a number of milliseconds into a timestamp of format 'HH:mm:ss.SSS'.
 
-Note: If the value is less than 0, it will report 0. There is no limit to the number of hours shown, it will display values greater than 24.
+Note: There is no limit to the number of hours shown, it will display values greater than 24.
 
 By supplying the format parameter, you can choose which components will be included in the output string.
 
