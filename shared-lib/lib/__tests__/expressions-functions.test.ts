@@ -431,6 +431,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:mm:ss')).toBe('00:00:11')
 			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:mm:ss')).toBe('02:46:39')
 			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:mm:ss')).toBe('342:56:07')
+			expect(ExpressionFunctions.secondsToTimestamp(-1234567, 'hh:mm:ss')).toBe('-342:56:07')
 
 			// hh:ss
 			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:ss')).toBe('00:11')
@@ -466,11 +467,13 @@ describe('functions', () => {
 
 			expect(ExpressionFunctions.msToTimestamp('9900')).toBe('00:09.9')
 			expect(ExpressionFunctions.msToTimestamp(false)).toBe('00:00.0')
-			expect(ExpressionFunctions.msToTimestamp(-11)).toBe('00:00.0')
+			expect(ExpressionFunctions.msToTimestamp(-11)).toBe('-00:00.0')
 
 			expect(ExpressionFunctions.msToTimestamp(11000, 'hh:mm:ss')).toBe('00:00:11')
+			expect(ExpressionFunctions.msToTimestamp(-11000, 'hh:mm:ss')).toBe('-00:00:11')
 			expect(ExpressionFunctions.msToTimestamp(9999000, 'hh:mm:ss')).toBe('02:46:39')
 			expect(ExpressionFunctions.msToTimestamp(1234567890, 'hh:mm:ss')).toBe('342:56:07')
+			expect(ExpressionFunctions.msToTimestamp(-1234567890, 'hh:mm:ss')).toBe('-342:56:07')
 
 			expect(ExpressionFunctions.msToTimestamp(11000, 'hh:mm')).toBe('00:00')
 			expect(ExpressionFunctions.msToTimestamp(9999000, 'hh:mm')).toBe('02:46')
