@@ -55,7 +55,7 @@
     "@julusian/jpeg-turbo": "^2.3.0",
     "@julusian/segfault-raub": "^2.3.2",
     "@logitech-mx-creative-console/node": "^0.2.3",
-    "@loupedeck/node": "^1.2.0",
+    "@loupedeck/node": "^2.0.1",
     "@napi-rs/canvas": "0.1.80",
     "@sentry/node": "^10.15.0",
     "@trpc/server": "^11.5.1",

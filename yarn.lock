@@ -2594,25 +2594,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@loupedeck/core@portal:/home/julus/Projects/libs/node-loupedeck/packages/core::locator=%40companion-app%2Fworkspace%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@loupedeck/core@portal:/home/julus/Projects/libs/node-loupedeck/packages/core::locator=%40companion-app%2Fworkspace%40workspace%3A."
+"@loupedeck/core@npm:2.0.1":
+  version: 2.0.1
+  resolution: "@loupedeck/core@npm:2.0.1"
   dependencies:
     eventemitter3: "npm:^5.0.1"
     p-queue: "npm:^8.1.1"
     tslib: "npm:^2.8.1"
+  checksum: 10c0/930959eb0d41f62fac55b65a223d3be57f64ff48ee81ee6f5054368717464940558ba8bca8ba3668dec417ef80c90673c2999ec7ce363739417a599379cda389
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@loupedeck/node@portal:/home/julus/Projects/libs/node-loupedeck/packages/node::locator=%40companion-app%2Fworkspace%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@loupedeck/node@portal:/home/julus/Projects/libs/node-loupedeck/packages/node::locator=%40companion-app%2Fworkspace%40workspace%3A."
+"@loupedeck/node@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@loupedeck/node@npm:2.0.1"
   dependencies:
-    "@loupedeck/core": "npm:1.2.0"
+    "@loupedeck/core": "npm:2.0.1"
     serialport: "npm:^13.0.0"
     tslib: "npm:^2.8.1"
+  checksum: 10c0/1732ba608cbb1fe1bc1158e1a604aad1dadb86801a0c31e53dc01c2e567b64598dd62152682e12f30be846f9cf80b740b05d04229e634ef4c8e97ad586d456ca
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@malept/cross-spawn-promise@npm:^2.0.0":
   version: 2.0.0
@@ -8566,7 +8568,7 @@ asn1@evs-broadcast/node-asn1:
     "@julusian/jpeg-turbo": "npm:^2.3.0"
     "@julusian/segfault-raub": "npm:^2.3.2"
     "@logitech-mx-creative-console/node": "npm:^0.2.3"
-    "@loupedeck/node": "npm:^1.2.0"
+    "@loupedeck/node": "npm:^2.0.1"
     "@napi-rs/canvas": "npm:0.1.80"
     "@sentry/node": "npm:^10.15.0"
     "@sentry/webpack-plugin": "npm:^4.3.0"
