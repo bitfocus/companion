@@ -10,17 +10,9 @@
  */
 
 import { EventEmitter } from 'events'
-import {
-	LoupedeckBufferFormat,
-	LoupedeckControlInfo,
-	LoupedeckControlType,
-	LoupedeckDevice,
-	LoupedeckModelId,
-	openLoupedeck,
-} from '@loupedeck/node'
+import { LoupedeckBufferFormat, LoupedeckDevice, openLoupedeck } from '@loupedeck/node'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import LogController, { Logger } from '../../Log/Controller.js'
-import { convertPanelIndexToXY } from '../Util.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
 import {
@@ -32,110 +24,6 @@ import {
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import { ImageResult } from '../../Graphics/ImageResult.js'
-
-interface ModelInfo {
-	totalCols: number
-	totalRows: number
-	lcdCols: number
-	lcdRows: number
-	lcdXOffset: number
-	lcdAsButtons: boolean
-	encoders: Array<[x: number, y: number]>
-	buttons: Array<[x: number, y: number]>
-}
-
-const loupedeckLiveInfo: ModelInfo = {
-	totalCols: 8,
-	totalRows: 4,
-
-	lcdCols: 4,
-	lcdRows: 3,
-	lcdXOffset: 2,
-	lcdAsButtons: false,
-
-	encoders: [
-		[0, 0],
-		[0, 1],
-		[0, 2],
-		[7, 0],
-		[7, 1],
-		[7, 2],
-	],
-	buttons: [
-		[0, 3],
-		[1, 3],
-		[2, 3],
-		[3, 3],
-		[4, 3],
-		[5, 3],
-		[6, 3],
-		[7, 3],
-	],
-}
-const loupedeckLiveSInfo: ModelInfo = {
-	totalCols: 7,
-	totalRows: 3,
-
-	lcdCols: 5,
-	lcdRows: 3,
-	lcdXOffset: 1,
-	lcdAsButtons: false,
-
-	encoders: [
-		[0, 0],
-		[0, 1],
-	],
-	buttons: [
-		[0, 2],
-		[6, 0],
-		[6, 1],
-		[6, 2],
-	],
-}
-const razerStreamControllerXInfo: ModelInfo = {
-	totalCols: 5,
-	totalRows: 3,
-
-	lcdCols: 5,
-	lcdRows: 3,
-	lcdXOffset: 0,
-	lcdAsButtons: true,
-
-	encoders: [],
-	buttons: [],
-}
-
-/**
- * Convert a loupedeck control to x/y coordinates
- */
-function buttonToXY(modelInfo: ModelInfo, info: LoupedeckControlInfo): [x: number, y: number] | undefined {
-	const index = modelInfo.buttons[info.index]
-	if (info.type === LoupedeckControlType.Button && index !== undefined) {
-		return index
-	}
-
-	return undefined
-}
-/**
- * Convert a loupedeck lcd x/y coordinate to companion x/y coordinates
- */
-const translateTouchKeyIndex = (modelInfo: ModelInfo, key: number): number => {
-	const x = key % modelInfo.lcdCols
-	const y = Math.floor(key / modelInfo.lcdCols)
-	return y * modelInfo.totalCols + x + modelInfo.lcdXOffset
-}
-
-/**
- * Convert a loupedeck control to x/y coordinates
- */
-function rotaryToXY(modelInfo: ModelInfo, info: LoupedeckControlInfo): [x: number, y: number] | undefined {
-	const index = modelInfo.encoders[info.index]
-	if (info.type === LoupedeckControlType.Rotary && index !== undefined) {
-		return index
-	}
-
-	return undefined
-}
 
 const configFields: CompanionSurfaceConfigField[] = [
 	//
@@ -153,25 +41,19 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 	 */
 	readonly #loupedeck: LoupedeckDevice
 
-	/**
-	 * Information about the current loupedeck model
-	 */
-	readonly #modelInfo: ModelInfo
-
-	readonly #writeQueue: ImageWriteQueue<number, [import('../../Graphics/ImageResult.js').ImageResult]>
+	readonly #writeQueue: ImageWriteQueue<string, [ImageResult]>
 
 	config: Record<string, any>
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 
-	constructor(devicePath: string, loupedeck: LoupedeckDevice, modelInfo: ModelInfo, serialNumber: string) {
+	constructor(devicePath: string, loupedeck: LoupedeckDevice, serialNumber: string) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/Loupedeck/${devicePath}`)
 
 		this.#loupedeck = loupedeck
-		this.#modelInfo = modelInfo
 
 		this.config = {
 			brightness: 100,
@@ -186,9 +68,12 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 			deviceId: `loupedeck:${serialNumber}`,
 		}
 
+		const allRowValues = this.#loupedeck.controls.map((control) => control.row)
+		const allColumnValues = this.#loupedeck.controls.map((button) => button.column)
+
 		this.gridSize = {
-			columns: this.#modelInfo.totalCols,
-			rows: this.#modelInfo.totalRows,
+			columns: Math.max(...allColumnValues) + 1,
+			rows: Math.max(...allRowValues) + 1,
 		}
 
 		this.#loupedeck.on('error', (error) => {
@@ -197,51 +82,30 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 		})
 
 		this.#loupedeck.on('down', (info) => {
-			if (this.#modelInfo.lcdAsButtons) {
-				this.#emitClick(info.index, true)
-			} else {
-				const xy = buttonToXY(this.#modelInfo, info) ?? rotaryToXY(this.#modelInfo, info)
-				if (!xy) {
-					return
-				}
-
-				this.emit('click', ...xy, true)
-			}
+			this.emit('click', info.column, info.row, true)
 		})
 
 		this.#loupedeck.on('up', (info) => {
-			if (this.#modelInfo.lcdAsButtons) {
-				this.#emitClick(info.index, false)
-			} else {
-				const xy = buttonToXY(this.#modelInfo, info) ?? rotaryToXY(this.#modelInfo, info)
-				if (!xy) {
-					return
-				}
-
-				this.emit('click', ...xy, false)
-			}
+			this.emit('click', info.column, info.row, false)
 		})
 		this.#loupedeck.on('rotate', (info, delta) => {
-			const xy = rotaryToXY(this.#modelInfo, info)
-			if (!xy) {
-				return
-			}
+			if (info.type === 'wheel') return // TODO - handle
 
-			this.emit('rotate', ...xy, delta == 1)
+			this.emit('rotate', info.column, info.row, delta == 1)
 		})
 		this.#loupedeck.on('touchstart', (data) => {
 			for (const touch of data.changedTouches) {
-				if (touch.target.key !== undefined) {
-					const keyIndex = translateTouchKeyIndex(this.#modelInfo, touch.target.key)
-					this.#emitClick(keyIndex, true)
+				const control = touch.target.control
+				if (control !== undefined) {
+					this.emit('click', control.column, control.row, true)
 				}
 			}
 		})
 		this.#loupedeck.on('touchend', (data) => {
 			for (const touch of data.changedTouches) {
-				if (touch.target.key !== undefined) {
-					const keyIndex = translateTouchKeyIndex(this.#modelInfo, touch.target.key)
-					this.#emitClick(keyIndex, false)
+				const control = touch.target.control
+				if (control !== undefined) {
+					this.emit('click', control.column, control.row, false)
 				}
 			}
 		})
@@ -251,7 +115,7 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 		// 	this.emit('remove')
 		// })
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (key, render) => {
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (buttonId, render) => {
 			const width = this.#loupedeck.lcdKeySize
 			const height = this.#loupedeck.lcdKeySize
 
@@ -265,7 +129,7 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 			}
 
 			try {
-				await this.#loupedeck.drawKeyBuffer(key, newbuffer, LoupedeckBufferFormat.RGB)
+				await this.#loupedeck.drawKeyBuffer(buttonId, newbuffer, LoupedeckBufferFormat.RGB)
 			} catch (e) {
 				this.#logger.debug(`fillImage failed: ${e}`)
 				this.emit('remove')
@@ -274,41 +138,14 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 	}
 
 	/**
-	 * Produce a click event
-	 */
-	#emitClick(key: number, state: boolean) {
-		const xy = convertPanelIndexToXY(key, this.gridSize)
-		if (xy) {
-			this.emit('click', ...xy, state)
-		}
-	}
-
-	/**
 	 * Open a loupedeck
 	 */
 	static async create(devicePath: string): Promise<SurfaceUSBLoupedeckLive> {
 		const loupedeck = await openLoupedeck(devicePath)
 		try {
-			let info = null
-			switch (loupedeck.modelId) {
-				case LoupedeckModelId.LoupedeckLive:
-				case LoupedeckModelId.RazerStreamController:
-					info = loupedeckLiveInfo
-					break
-				case LoupedeckModelId.LoupedeckLiveS:
-					info = loupedeckLiveSInfo
-					break
-				case LoupedeckModelId.RazerStreamControllerX:
-					info = razerStreamControllerXInfo
-					break
-			}
-			if (!info) {
-				throw new Error('Unsupported model ')
-			}
-
 			const serialNumber = await loupedeck.getSerialNumber()
 
-			const self = new SurfaceUSBLoupedeckLive(devicePath, loupedeck, info, serialNumber)
+			const self = new SurfaceUSBLoupedeckLive(devicePath, loupedeck, serialNumber)
 
 			self.clearDeck()
 
@@ -346,27 +183,30 @@ export class SurfaceUSBLoupedeckLive extends EventEmitter<SurfacePanelEvents> im
 	 * Draw a button
 	 */
 	draw(x: number, y: number, render: ImageResult): void {
-		const lcdX = x - this.#modelInfo.lcdXOffset
-		if (lcdX >= 0 && lcdX < this.#modelInfo.lcdCols && y >= 0 && y < this.#modelInfo.lcdRows) {
-			const button = lcdX + y * this.#modelInfo.lcdCols
+		const control = this.#loupedeck.controls.find((c) => c.row === y && c.column === x)
+		if (!control) return
 
-			this.#writeQueue.queue(button, render)
-		}
+		if (control.type === 'wheel') {
+			// TODO
+		} else if (control.type === 'encoder') {
+			// Nothing to do
+		} else if (control.type === 'button') {
+			if (control.feedbackType === 'rgb') {
+				const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
 
-		const buttonIndex = this.#modelInfo.buttons.findIndex((btn) => btn[0] == x && btn[1] == y)
-		if (buttonIndex >= 0) {
-			const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
-
-			this.#loupedeck
-				.setButtonColor({
-					id: buttonIndex,
-					red: color.r,
-					green: color.g,
-					blue: color.b,
-				})
-				.catch((e) => {
-					this.#logger.debug(`color failed: ${e}`)
-				})
+				this.#loupedeck
+					.setButtonColor({
+						id: control.id,
+						red: color.r,
+						green: color.g,
+						blue: color.b,
+					})
+					.catch((e) => {
+						this.#logger.debug(`color failed: ${e}`)
+					})
+			} else if (control.feedbackType === 'lcd') {
+				this.#writeQueue.queue(control.id, render)
+			}
 		}
 	}
 
