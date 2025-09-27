@@ -2,6 +2,7 @@ SUBSYSTEM=="input", GROUP="input", MODE="0660"
 
 KERNEL=="hidraw*", ATTRS{idVendor}=="0203", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="1edb", ATTRS{idProduct}=="bef0", MODE:="660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="1edb", ATTRS{idProduct}=="da0e", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="1edb", ATTRS{idProduct}=="da11", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="0b33", ATTRS{idProduct}=="0010", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="0b33", ATTRS{idProduct}=="0020", MODE:="660", TAG+="uaccess"
