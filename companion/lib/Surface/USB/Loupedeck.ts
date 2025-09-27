@@ -95,8 +95,6 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 			this.emit('click', info.column, info.row, false)
 		})
 		this.#loupedeck.on('rotate', (info, delta) => {
-			if (info.type === 'wheel') return // TODO - handle
-
 			this.emit('rotate', info.column, info.row, delta == 1)
 		})
 		this.#loupedeck.on('touchstart', (data) => {
@@ -105,7 +103,8 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				if (control !== undefined) {
 					this.emit('click', control.column, control.row, true)
 				} else if (touch.target.screen == LoupedeckDisplayId.Wheel) {
-					this.emit('click', 2, 4, true)
+					const wheelControl = this.#loupedeck.controls.find((c) => c.type === 'wheel')
+					if (wheelControl) this.emit('click', wheelControl.column, wheelControl.row, true)
 				}
 			}
 		})
@@ -115,7 +114,8 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				if (control !== undefined) {
 					this.emit('click', control.column, control.row, false)
 				} else if (touch.target.screen == LoupedeckDisplayId.Wheel) {
-					this.emit('click', 2, 4, false)
+					const wheelControl = this.#loupedeck.controls.find((c) => c.type === 'wheel')
+					if (wheelControl) this.emit('click', wheelControl.column, wheelControl.row, false)
 				}
 			}
 		})
