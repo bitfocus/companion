@@ -23,10 +23,7 @@ const generatorConfig: Record<string, ConfigForPlugin> = {
 	ElgatoStreamDeck: {
 		npmPackage: '@elgato-stream-deck/node',
 	},
-	LoupedeckLive: {
-		// No rules needed for serialports
-	},
-	LoupedeckCt: {
+	Loupedeck: {
 		// No rules needed for serialports
 	},
 	BlackmagicController: {

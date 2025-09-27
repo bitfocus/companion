@@ -28,8 +28,7 @@ import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
 import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
 import { SurfaceUSBXKeys } from './USB/XKeys.js'
-import { SurfaceUSBLoupedeckLive } from './USB/LoupedeckLive.js'
-// import { SurfaceUSBLoupedeckCt } from './USB/LoupedeckCt.js'
+import { SurfaceUSBLoupedeck } from './USB/Loupedeck.js'
 import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
 import { SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
@@ -1197,19 +1196,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 									deviceInfos.map(async (deviceInfo) => {
 										this.#logger.info('found loupedeck', deviceInfo)
 										if (!this.#surfaceHandlers.has(deviceInfo.path)) {
-											// if (
-											// 	deviceInfo.model === LoupedeckModelId.LoupedeckLive ||
-											// 	deviceInfo.model === LoupedeckModelId.LoupedeckLiveS ||
-											// 	deviceInfo.model === LoupedeckModelId.RazerStreamController ||
-											// 	deviceInfo.model === LoupedeckModelId.RazerStreamControllerX
-											// ) {
-											await this.#addDevice(deviceInfo.path, {}, 'loupedeck', SurfaceUSBLoupedeckLive, true)
-											// } else if (
-											// 	deviceInfo.model === LoupedeckModelId.LoupedeckCtV2 ||
-											// 	deviceInfo.model === LoupedeckModelId.LoupedeckCtV1
-											// ) {
-											// 	await this.#addDevice(deviceInfo.path, {}, 'loupedeck-ct', SurfaceUSBLoupedeckCt, true)
-											// }
+											await this.#addDevice(deviceInfo.path, {}, 'loupedeck', SurfaceUSBLoupedeck, true)
 										}
 									})
 								)
