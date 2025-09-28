@@ -8,10 +8,11 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    timeout-minutes: 60
+  prepare:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
-
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -23,6 +24,7 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Prepare
+        id: prepare
         run: |
           corepack enable
 
@@ -33,54 +35,97 @@ jobs:
 
           yarn dist:mini
 
-      - name: Spawn Companion
-        run: |
-          # Start Companion in the background
-          node companion/dist/main.js --machine-id ci_browserstack --log-level debug &
-          export COMPANION_PID=$!
+      - name: Upload companion build
+        uses: actions/upload-artifact@v4
+        with:
+          name: companion-dist
+          path: dist
 
-          yarn wait-on http://localhost:8000 --timeout 30000 --delay 5000
+      - name: Build matrix JSON from browserstack.yml
+        id: matrix
+        run: |
+          # Create a JSON matrix that GH Actions can consume, reading platforms from playwright/browserstack.yml
+          python - <<'PY'
+          import yaml, json, sys
+          path = 'playwright/browserstack.yml'
+          with open(path) as f:
+              data = yaml.safe_load(f)
+          platforms = data.get('platforms', [])
+          if not platforms:
+              print('::error::No platforms found in browserstack.yml')
+              sys.exit(1)
+          # encode each platform as a compact JSON object to be used as matrix.include
+          matrix = { 'include': [] }
+          for p in platforms:
+              matrix['include'].append({'platform': json.dumps(p)})
+          print('::set-output name=matrix::' + json.dumps(matrix))
+          PY
+
+  test:
+    needs: prepare
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.prepare.outputs.matrix)}}
+      max-parallel: 3
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+
+      - name: Prepare
+        id: prepare
+        run: |
+          corepack enable
+
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
+
+      - name: Download companion build
+        uses: actions/download-artifact@v4
+        with:
+          name: companion-dist
 
       - name: 'BrowserStack Env Setup'
         uses: 'browserstack/github-actions/setup-env@v1.0.4'
         with:
           username: ${{ secrets.BROWSERSTACK_USERNAME }}
           access-key: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-          # build-name: BUILD_INFO
-          # project-name: REPO_NAME
+
+      - name: Prepare single-platform browserstack.yml
+        run: |
+          mkdir -p playwright
+          python - <<'PY'
+          import json, yaml, sys
+          entry = json.loads('''${{ matrix.platform }}''')
+          cfg = yaml.safe_load(open('playwright/browserstack.yml'))
+          cfg['platforms'] = [entry]
+          with open('playwright/browserstack.yml', 'w') as f:
+              yaml.safe_dump(cfg, f)
+          print('Wrote single-platform playwright/browserstack.yml')
+          PY
+
+      - name: Spawn Companion
+        run: |
+          # Start Companion from the downloaded build
+          node companion/dist/main.js --machine-id ci_browserstack --log-level debug &
+          export COMPANION_PID=$!
+
+          yarn wait-on http://localhost:8000 --timeout 30000 --delay 5000
 
       - name: Run Playwright tests
         run: |
           cd playwright
-          yarn test:ci
-
-          SRC=browserstack.yml
-          TMP=.tmp-browserstack.yml
-
-          count=$(yq eval '.platforms | length' "$SRC")
-          if [ "$count" -eq 0 ]; then
-            echo "No platforms found in $SRC"
-            exit 1
-          fi
-
-          mv $SRC $TMP
-
-          for i in $(seq 0 $((count - 1))); do
-            echo "=== Running platform #$((i+1))/$count ==="
-            # produce a temp config that contains only the i-th platform and a shared build identifier
-            yq eval \
-              '.platforms = [ .platforms['"$i"'] ] |
-              "$TMP" > "$SRC"
-
-            # Run the BrowserStack runner for that single-platform config.
-            yarn test:ci
-
-            # If you control test worker concurrency via Playwright instead:
-            # cd playwright
-            # yarn test:ci --workers=1
-
-            echo "=== Finished platform #$((i+1)) ==="
-          done
+          # Ensure single worker to avoid parallelism inside the runner
+          yarn test:ci --workers=1
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
