@@ -55,18 +55,17 @@ jobs:
           if not platforms:
               print('::error::No platforms found in browserstack.yml')
               sys.exit(1)
-              # encode each platform as a compact JSON object to be used as matrix.include
-              matrix = { 'include': [] }
-              for p in platforms:
-                # build a human-friendly name for the matrix entry
-                os = p.get('os') or p.get('deviceName') or ''
-                osVersion = p.get('osVersion') or ''
-                browserName = p.get('browserName') or ''
-                browserVersion = p.get('browserVersion') or ''
-                name = f"{os}@{osVersion} - {browserName}@{browserVersion}"
-                matrix['include'].append({'platform': json.dumps(p), 'name': name})
-            print('::set-output name=matrix::' + json.dumps(matrix))
-            PY
+          matrix = { 'include': [] }
+          for p in platforms:
+              # build a human-friendly name for the matrix entry
+              os = p.get('os') or p.get('deviceName') or ''
+              osVersion = p.get('osVersion') or ''
+              browserName = p.get('browserName') or ''
+              browserVersion = p.get('browserVersion') or ''
+              name = f"{os}@{osVersion} - {browserName}@{browserVersion}"
+              matrix['include'].append({'platform': json.dumps(p), 'name': name})
+          print('::set-output name=matrix::' + json.dumps(matrix))
+          PY
 
   test:
     needs: prepare
