@@ -36,7 +36,7 @@ jobs:
 
       - name: Build companion
         run: |
-          yarn dist:mini
+          yarn dist:prepare
 
       - name: Upload companion build
         uses: actions/upload-artifact@v4
