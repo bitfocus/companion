@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: companion-dist
-          path: dist
+          path: dist/
 
       - name: Build matrix JSON from browserstack.yml
         id: matrix
@@ -123,6 +123,11 @@ jobs:
 
       - name: Spawn Companion
         run: |
+          ls -lah
+          pwd
+
+          ls -lah dist
+
           # Start Companion from the downloaded build
           node dist/main.js --machine-id ci_browserstack --log-level debug &
           export COMPANION_PID=$!
