@@ -29,6 +29,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
+import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 
@@ -107,6 +108,26 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			},
 		}
 	)
+
+	#poolExec = async <TKey extends keyof typeof GraphicsThreadMethods>(
+		key: TKey,
+		args: Parameters<(typeof GraphicsThreadMethods)[TKey]>,
+		attempts: number
+	): Promise<ReturnType<(typeof GraphicsThreadMethods)[TKey]>> => {
+		if (DEBUG_DISABLE_RENDER_THREADING) {
+			return (GraphicsThreadMethods[key] as any)(...args)
+		}
+
+		return this.#pool.exec(key, args).catch(async (e) => {
+			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
+			if (attempts > 1 && (e instanceof workerPool.TerminateError || e?.message?.includes('Worker is terminated'))) {
+				// TODO - track termination
+				return this.#poolExec(key, args, attempts - 1)
+			} else {
+				throw e
+			}
+		})
+	}
 
 	/**
 	 * Generated pincode bitmaps
@@ -538,20 +559,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		dataUrl: string
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
-		if (DEBUG_DISABLE_RENDER_THREADING) {
-			return GraphicsRenderer.drawButtonImageUnwrapped(this.#drawOptions, drawStyle, location, pagename)
-		}
-
-		try {
-			return this.#pool.exec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename])
-		} catch (e: any) {
-			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
-			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
-				return this.#executePoolDrawButtonImage(drawStyle, location, pagename, remainingAttempts - 1)
-			} else {
-				throw e
-			}
-		}
+		return this.#poolExec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename], remainingAttempts)
 	}
 }
 

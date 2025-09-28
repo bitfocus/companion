@@ -9,9 +9,7 @@
  * this program.
  */
 
-import { GraphicsRenderer } from './Renderer.js'
+import { GraphicsThreadMethods } from './ThreadMethods.js'
 import workerPool from 'workerpool'
 
-workerPool.worker({
-	drawButtonImage: GraphicsRenderer.drawButtonImageUnwrapped.bind(GraphicsRenderer),
-})
+workerPool.worker(GraphicsThreadMethods)
