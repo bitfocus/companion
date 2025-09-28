@@ -25,6 +25,7 @@ export default defineConfig({
 	reporter: 'html',
 	/* Configure projects for major browsers */
 	projects: [
+		// This is only used for local testing
 		{
 			name: 'chrome',
 			use: {

@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test'
+import { COMPANION_URL } from './util.js'
 
 test('has title', async ({ page }) => {
-	await page.goto('http://bs-local.com:8000/')
+	await page.goto(COMPANION_URL)
 
 	// Expect a title "to contain" a substring.
-	await expect(page).toHaveTitle(/Playwright/)
+	await expect(page).toHaveTitle('Bitfocus Companion - Admin')
 })
 
 test('get started link', async ({ page }) => {

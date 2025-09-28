@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:ci": "browserstack-node-sdk playwright test --config=./playwright.config.ts",
-    "test": "browserstack-node-sdk playwright test --config=./playwright.config.ts"
+    "test:ci": "COMPANION_URL=http://bs-local.com:8000 browserstack-node-sdk playwright test --config=./playwright.config.ts",
+    "test:local": "COMPANION_URL=http://bs-local.com:8000 browserstack-node-sdk playwright test --config=./playwright.config.ts",
+    "test:watch": "PWTEST_WATCH=1 run test",
+    "test": "COMPANION_URL=http://localhost:5173 playwright test --config=./playwright.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
