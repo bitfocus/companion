@@ -38,7 +38,7 @@
   "engines": {
     "npm": "please-use-yarn",
     "yarn": "^4.5",
-    "node": ">=22.19.0 <23"
+    "node": ">=22.20.0 <23"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
