@@ -1,9 +1,16 @@
 name: Playwright Tests
 
 on:
-  push:
-    branches: [main, 'feat/browserstack']
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  # Run every week
+  schedule:
+    - cron: '43 5 * * 0'
+  # Run on pushes to main and develop if files in the playwright/ folder changed
+  push:
+    branches: [main, develop, 'feat/browserstack']
+    paths:
+      - playwright/**
 
 permissions:
   contents: read
