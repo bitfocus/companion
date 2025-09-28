@@ -401,14 +401,14 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 
 		const connectionIds = this.#instanceController.getAllInstanceIds()
 		for (const connectionId of connectionIds) {
-			const label = this.#instanceController.getLabelForInstance(connectionId)
-			if (label) {
+			const config = this.#instanceController.getInstanceConfig(connectionId)
+			if (config) {
 				const status = this.#instanceStatuses[connectionId]
 
 				let statusMessage = status?.category
-				if (statusMessage === null) statusMessage = 'disabled'
+				if (!config.enabled) statusMessage = 'disabled'
 
-				values[`connection_${label}_status`] = statusMessage ?? ''
+				values[`connection_${config.label}_status`] = statusMessage ?? ''
 			}
 		}
 
