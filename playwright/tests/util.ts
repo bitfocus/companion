@@ -10,8 +10,7 @@ export async function loadPageAndWaitForReady(page: Page, path = '', dismissWhat
 	// await expect(page.getByRole('heading', { name: 'Connecting', level: 3 })).toBeVisible()
 
 	// Wait for connecting to disappear
-	await expect(page.getByRole('heading', { name: 'Connecting', level: 3 })).not.toBeVisible({ timeout: 15000 })
-	await expect(page.getByRole('heading', { name: 'Syncing', level: 3 })).not.toBeVisible({ timeout: 15000 })
+	await expect(page.locator('.app-loading')).not.toBeVisible({ timeout: 20000 })
 
 	await assertNoErrorBoundaries(page)
 

@@ -264,7 +264,7 @@ interface AppLoadingProps {
 function AppLoading({ progress, connected }: AppLoadingProps) {
 	const message = connected ? 'Syncing' : 'Connecting'
 	return (
-		<CContainer fluid className="fadeIn loading">
+		<CContainer fluid className="fadeIn loading app-loading">
 			<CRow>
 				<CCol xxl={4} md={3} sm={2} xs={1}></CCol>
 				<CCol xxl={4} md={6} sm={8} xs={10}>
