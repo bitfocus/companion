@@ -49,25 +49,21 @@ jobs:
           # build-name: BUILD_INFO
           # project-name: REPO_NAME
 
-      - name: 'BrowserStackLocal Setup'
-        uses: 'browserstack/github-actions/setup-local@v1.0.4'
-        with:
-          local-testing: start
-          local-identifier: random
-
+      # - name: 'BrowserStackLocal Setup'
+      #   uses: 'browserstack/github-actions/setup-local@v1.0.4'
+      #   with:
+      #     local-testing: start
+      #     local-identifier: random
       - name: Run Playwright tests
         run: |
           cd playwright
           yarn test:ci
-        # env:
-        #   BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-        #   BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
 
-      - name: 'BrowserStackLocal Setup'
-        uses: 'browserstack/github-actions/setup-local@v1.0.4'
-        with:
-          local-testing: stop
-          local-identifier: $BROWSERSTACK_LOCAL_IDENTIFIER
+      # - name: 'BrowserStackLocal Setup'
+      #   uses: 'browserstack/github-actions/setup-local@v1.0.4'
+      #   with:
+      #     local-testing: stop
+      #     local-identifier: $BROWSERSTACK_LOCAL_IDENTIFIER
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

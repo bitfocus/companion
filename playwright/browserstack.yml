@@ -1,8 +1,7 @@
 # ======================
 # BrowserStack Reporting
 # ======================
-projectName: Bitfocus Companion
-# Set `buildName` as the name of the job / testsuite being run
+projectName: companion-local # This gets overridden in CI
 buildName: browserstack-playwright
 # `buildIdentifier` is a unique id to differentiate every execution that gets appended to
 # buildName. Choose your buildIdentifier format from the available expressions:

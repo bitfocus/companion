@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test:ci": "browserstack-node-sdk playwright test --config=./playwright.config.ts",
-    "test": "browserstack-node-sdk playwright test --config=./playwright.local.config.ts"
+    "test": "browserstack-node-sdk playwright test --config=./playwright.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
