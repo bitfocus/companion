@@ -1417,7 +1417,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			if (surface) {
 				// Device is currently loaded
 				surface.setPanelConfig(surfaceConfig.config)
-				surface.saveGroupConfig(surfaceConfig.groupConfig)
+				if (surfaceConfig.groupConfig) surface.saveGroupConfig(surfaceConfig.groupConfig)
 				surface.setPanelName(surfaceConfig.name)
 
 				// Update the groupId
@@ -1437,7 +1437,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				//  (note: I tried moving `&& group.surfaceHandlers.length > 0` to `group.#isAutoGroup` in Group.ts,
 				//  but it resulted in bogus groups being created when a device was attached -- and these groups only show up on next restart or on export.)
 				if (group && group.surfaceHandlers.length > 0) {
-					group.setName(surfaceConfig.groupConfig.name ?? '')
+					group.setName(surfaceConfig.groupConfig?.name ?? '')
 					for (const [key, value] of Object.entries(surfaceConfig.groupConfig)) {
 						if (key === 'name') continue
 						group.setGroupConfigValue(key, value)
@@ -1449,9 +1449,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				if (surfaceId.startsWith('emulator:')) {
 					this.addEmulator(surfaceId.substring(9), undefined, true)
-					// need the following to put the emulator on the "current" page, to match its export state
-					const group = this.#surfaceGroups.get(surfaceId)
-					group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+
+					if (surfaceConfig.groupConfig) {
+						// need the following to put the emulator on the "current" page, to match its export state
+						const group = this.#surfaceGroups.get(surfaceId)
+						group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+					}
 				}
 			}
 		}
