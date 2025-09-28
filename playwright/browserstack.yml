@@ -21,11 +21,11 @@ platforms:
     osVersion: Sequoia
     browserName: playwright-webkit
     browserVersion: latest
-  - os: OS X
-    # typos:disable-line
-    osVersion: Big Sur
-    browserName: playwright-webkit
-    browserVersion: 15.4
+  # - os: OS X
+  #   # typos:disable-line
+  #   osVersion: Big Sur
+  #   browserName: playwright-webkit
+  #   browserVersion: 15.4 # not compatible with modern playwright
 
   # Windows
   - os: Windows
@@ -46,9 +46,9 @@ platforms:
     browserName: chrome
 
   # iOS
-  - deviceName: iPad Air 13 2025
-    osVersion: 26
-    browserName: safari
+  # - deviceName: iPad Air 13 2025
+  #   osVersion: 26 # not available while in beta
+  #   browserName: safari
   - deviceName: iPad Air 13 2025
     osVersion: 17.5
     browserName: safari
