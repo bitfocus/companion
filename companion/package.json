@@ -105,7 +105,7 @@
     "videohub-server": "^0.3.0",
     "winston": "^3.17.0",
     "winston-syslog": "patch:winston-syslog@npm%3A2.7.1#~/.yarn/patches/winston-syslog-npm-2.7.1-c8df046508.patch",
-    "workerpool": "^9.3.4",
+    "workerpool": "patch:workerpool@npm%3A9.3.4#~/.yarn/patches/workerpool-npm-9.3.4-5ceb006f53.patch",
     "ws": "^8.18.3",
     "xkeys": "^3.3.0",
     "yaml": "^2.8.1",

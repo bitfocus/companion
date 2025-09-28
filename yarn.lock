@@ -8637,7 +8637,7 @@ asn1@evs-broadcast/node-asn1:
     webpack-cli: "npm:^6.0.1"
     winston: "npm:^3.17.0"
     winston-syslog: "patch:winston-syslog@npm%3A2.7.1#~/.yarn/patches/winston-syslog-npm-2.7.1-c8df046508.patch"
-    workerpool: "npm:^9.3.4"
+    workerpool: "patch:workerpool@npm%3A9.3.4#~/.yarn/patches/workerpool-npm-9.3.4-5ceb006f53.patch"
     ws: "npm:^8.18.3"
     xkeys: "npm:^3.3.0"
     yaml: "npm:^2.8.1"
@@ -19153,10 +19153,17 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"workerpool@npm:^9.3.4":
+"workerpool@npm:9.3.4":
   version: 9.3.4
   resolution: "workerpool@npm:9.3.4"
   checksum: 10c0/b09d80c81c6e50dab1bc6cc3a4180d4222068f17ada9b04fb7053bf98fdbe3dbd6bdd04ad1420363f5391cbf57d622ecd2680469ad0137aef990f510ab807a09
+  languageName: node
+  linkType: hard
+
+"workerpool@patch:workerpool@npm%3A9.3.4#~/.yarn/patches/workerpool-npm-9.3.4-5ceb006f53.patch":
+  version: 9.3.4
+  resolution: "workerpool@patch:workerpool@npm%3A9.3.4#~/.yarn/patches/workerpool-npm-9.3.4-5ceb006f53.patch::version=9.3.4&hash=c8e993"
+  checksum: 10c0/58a28a780f4049eaf6fb9e2986aef2db15471f6547b5f17deee9d8c93e2a0f5211cd909766cd53d158d8bacf2234f628ec1c7d42f9175e3e7904577634cecbf7
   languageName: node
   linkType: hard
 
