@@ -8,8 +8,9 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 	/* Retry on CI only */
 	retries: process.env.CI ? 2 : 0,
-	/* Opt out of parallel tests on CI. */
-	workers: process.env.CI ? 1 : undefined,
+	/* We must run tests sequentially, as they rely on common app state. */
+	workers: 1,
+	fullyParallel: false,
 
 	/* Maximum time one test can run for. */
 	timeout: 90 * 1000,

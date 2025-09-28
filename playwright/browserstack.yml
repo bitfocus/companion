@@ -32,12 +32,7 @@ platforms:
 # =======================
 # Parallels per Platform
 # =======================
-# The number of parallel threads to be used for each platform set.
-# BrowserStack's SDK runner will select the best strategy based on the configured value
-#
-# Example 1 - If you have configured 3 platforms and set `parallelsPerPlatform` as 2, a total of 6 (2 * 3) parallel threads will be used on BrowserStack
-#
-# Example 2 - If you have configured 1 platform and set `parallelsPerPlatform` as 5, a total of 5 (1 * 5) parallel threads will be used on BrowserStack
+# Force non-parallel because of shared app state
 parallelsPerPlatform: 1
 
 # ==========================================

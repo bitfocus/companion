@@ -3,10 +3,10 @@
   "version": "4.2.0",
   "private": true,
   "type": "module",
-	"scripts": {
+  "scripts": {
     "test:ci": "browserstack-node-sdk playwright test --config=./playwright.config.ts",
     "test": "browserstack-node-sdk playwright test --config=./playwright.local.config.ts"
-	},
+  },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
     "browserstack-node-sdk": "^1.43.0"
