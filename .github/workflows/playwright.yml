@@ -25,7 +25,6 @@ jobs:
           node-version-file: '.node-version'
 
       - name: Prepare
-        id: prepare
         run: |
           corepack enable
 
@@ -34,6 +33,8 @@ jobs:
 
           yarn --immutable
 
+      - name: Build companion
+        run: |
           yarn dist:mini
 
       - name: Upload companion build
