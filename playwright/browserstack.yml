@@ -16,18 +16,48 @@ buildIdentifier: '#${BUILD_NUMBER}' # Supports strings along with either/both ${
 # Platforms object contains all the browser / device combinations you want to test on.
 # Entire list available here -> (https://www.browserstack.com/list-of-browsers-and-platforms/automate)
 platforms:
+  # macos
+  - os: OS X
+    osVersion: Sequoia
+    browserName: playwright-webkit
+    browserVersion: latest
   - os: OS X
     # typos:disable-line
     osVersion: Big Sur
+    browserName: playwright-webkit
+    browserVersion: 15.4
+
+  # Windows
+  - os: Windows
+    osVersion: 11
     browserName: chrome
     browserVersion: latest
   - os: Windows
-    osVersion: 10
-    browserName: edge
-    browserVersion: latest
+    osVersion: 11
+    browserName: chrome
+    browserVersion: 122
+
+  # Android
   - deviceName: Samsung Galaxy S22 Ultra
-    browserName: chrome # Try 'samsung' for Samsung browser
     osVersion: 12.0
+    browserName: chrome
+  - deviceName: Pixel 10 Pro
+    osVersion: 16.0
+    browserName: chrome
+
+  # iOS
+  - deviceName: iPad Air 13 2025
+    osVersion: 26
+    browserName: safari
+  - deviceName: iPad Air 13 2025
+    osVersion: 17.5
+    browserName: safari
+  - deviceName: iPad Pro 12.9 2018
+    osVersion: 12.1
+    browserName: safari
+  - deviceName: iPad 9th
+    osVersion: 15.6
+    browserName: safari
 
 # =======================
 # Parallels per Platform
