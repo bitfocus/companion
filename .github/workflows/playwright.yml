@@ -49,24 +49,35 @@ jobs:
         run: |
           # Create a JSON matrix that GH Actions can consume, reading platforms from playwright/browserstack.yml
           python - <<'PY'
-          import yaml, json, sys
+          import yaml, json, sys, os
+
           path = 'playwright/browserstack.yml'
           with open(path) as f:
               data = yaml.safe_load(f)
+
           platforms = data.get('platforms', [])
           if not platforms:
               print('::error::No platforms found in browserstack.yml')
               sys.exit(1)
+
           matrix = { 'include': [] }
           for p in platforms:
               # build a human-friendly name for the matrix entry
-              os = p.get('os') or p.get('deviceName') or ''
+              platform_os = p.get('os') or p.get('deviceName') or ''
               osVersion = p.get('osVersion') or ''
               browserName = p.get('browserName') or ''
               browserVersion = p.get('browserVersion') or ''
-              name = f"{os}@{osVersion} - {browserName}@{browserVersion}"
+              name = f"{platform_os}@{osVersion} - {browserName}@{browserVersion}"
               matrix['include'].append({'platform': json.dumps(p), 'name': name})
-          print('::set-output name=matrix::' + json.dumps(matrix))
+
+          # emit matrix using the GITHUB_OUTPUT file (set-output is deprecated)
+          gha_out = os.environ.get('GITHUB_OUTPUT')
+          if gha_out:
+              with open(gha_out, 'a') as fh:
+                  fh.write('matrix=' + json.dumps(matrix) + "\n")
+          else:
+              # Fallback for older runners: print to stdout (not recommended)
+              print('matrix=' + json.dumps(matrix))
           PY
 
   test:
