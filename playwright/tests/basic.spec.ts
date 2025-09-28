@@ -1,5 +1,15 @@
 import { test, expect } from '@playwright/test'
 import { assertNoErrorBoundaries, loadPageAndWaitForReady } from './util.js'
+import { performFullReset, closeTrpcConnection } from './trpc.js'
+
+test.beforeAll(async () => {
+	await performFullReset()
+})
+
+test.afterAll(async () => {
+	// Always close the connection to prevent hanging processes
+	await closeTrpcConnection()
+})
 
 test('basic page loading', async ({ page }) => {
 	await loadPageAndWaitForReady(page, '', false)

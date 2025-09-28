@@ -1,8 +1,18 @@
 import { test, expect } from '@playwright/test'
 import { assertNoErrorBoundaries, loadPageAndWaitForReady } from './util.js'
+import { closeTrpcConnection, performFullReset } from './trpc.js'
+
+test.beforeAll(async () => {
+	await performFullReset()
+})
+
+test.afterAll(async () => {
+	// Always close the connection to prevent hanging processes
+	await closeTrpcConnection()
+})
 
 test('create emulator', async ({ page }) => {
-	await loadPageAndWaitForReady(page, 'surfaces/configured', true)
+	await loadPageAndWaitForReady(page, 'surfaces/configured')
 
 	// Check that there are no errors shown
 	await assertNoErrorBoundaries(page)
@@ -24,4 +34,22 @@ test('create emulator', async ({ page }) => {
 
 	// ensure there is now an emulators
 	await expect(page.locator('.surfaces-grid-container b', { hasText: 'Emulator' })).toBeVisible()
+})
+
+test('open first emulator', async ({ page }) => {
+	await loadPageAndWaitForReady(page, 'emulator')
+
+	// Check one emulator exists
+	const emulatorButtons = page.locator('.emulator-button')
+	await expect(emulatorButtons).toHaveCount(1)
+
+	// Check button looks sane
+	await expect(emulatorButtons.first().locator('div')).toHaveText('Emulator')
+
+	// Open first emulator
+	await emulatorButtons.first().click()
+
+	// Count visible buttons
+	const buttons = page.locator('.emulatorgrid .button-control')
+	await expect(buttons).toHaveCount(32)
 })
