@@ -1135,6 +1135,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 									) {
 										await this.#addDevice(deviceInfo.path, {}, 'infinitton', SurfaceUSBInfinitton)
 									} else if (isAShuttleDevice(deviceInfo)) {
+										// Note: this must be before the xkeys, as the pid can clash
 										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
 										}
