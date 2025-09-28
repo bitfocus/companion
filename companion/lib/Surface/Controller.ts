@@ -1134,6 +1134,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										(deviceInfo.productId === 0x1f40 || deviceInfo.productId === 0x1f41)
 									) {
 										await this.#addDevice(deviceInfo.path, {}, 'infinitton', SurfaceUSBInfinitton)
+									} else if (isAShuttleDevice(deviceInfo)) {
+										// Note: this must be before the xkeys, as the pid can clash
+										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
+											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
+										}
 									} else if (
 										// More specific match has to be above xkeys
 										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
@@ -1145,10 +1150,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
 										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'xkeys', SurfaceUSBXKeys)
-										}
-									} else if (isAShuttleDevice(deviceInfo)) {
-										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
 										}
 									} else if (
 										deviceInfo.vendorId === 0x32ac && // frame.work

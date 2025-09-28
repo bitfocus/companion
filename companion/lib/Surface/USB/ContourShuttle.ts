@@ -252,6 +252,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 					info = contourShuttleXpressInfo
 					break
 				case ProductModelId.ShuttleProV1:
+				case ProductModelId.ShuttleProV1a:
 					info = contourShuttleProV1Info
 					break
 				case ProductModelId.ShuttleProV2:
