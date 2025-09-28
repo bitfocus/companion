@@ -3,6 +3,7 @@ name: Playwright Tests
 on:
   push:
     branches: [main, 'feat/browserstack']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -101,6 +102,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: companion-dist
+          path: dist
 
       - name: 'BrowserStack Env Setup'
         uses: 'browserstack/github-actions/setup-env@v1.0.4'
