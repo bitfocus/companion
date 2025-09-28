@@ -1,0 +1,17 @@
+{
+  "name": "@companion-app/playwright",
+  "version": "4.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:ci": "COMPANION_URL=http://bs-local.com:8000 browserstack-node-sdk playwright test --config=./playwright.config.ts",
+    "test:local": "COMPANION_URL=http://bs-local.com:8000 browserstack-node-sdk playwright test --config=./playwright.config.ts",
+    "test:watch": "PWTEST_WATCH=1 run test",
+    "test": "COMPANION_URL=http://localhost:5173 playwright test --config=./playwright.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "browserstack-node-sdk": "^1.43.0"
+  },
+  "packageManager": "yarn@4.10.3"
+}

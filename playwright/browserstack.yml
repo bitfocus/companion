@@ -1,0 +1,92 @@
+# ======================
+# BrowserStack Reporting
+# ======================
+projectName: companion-local # This gets overridden in CI
+buildName: browserstack-playwright
+# `buildIdentifier` is a unique id to differentiate every execution that gets appended to
+# buildName. Choose your buildIdentifier format from the available expressions:
+# ${BUILD_NUMBER} (Default): Generates an incremental counter with every execution
+# ${DATE_TIME}: Generates a Timestamp with every execution. Eg. 05-Nov-19:30
+# Read more about buildIdentifiers here -> https://www.browserstack.com/docs/automate/selenium/organize-tests
+buildIdentifier: '#${BUILD_NUMBER}' # Supports strings along with either/both ${expression}
+
+# =======================================
+# Platforms (Browsers / Devices to test)
+# =======================================
+# Platforms object contains all the browser / device combinations you want to test on.
+# Entire list available here -> (https://www.browserstack.com/list-of-browsers-and-platforms/automate)
+platforms:
+  # macos
+  - os: OS X
+    osVersion: Sequoia
+    browserName: playwright-webkit
+    browserVersion: latest
+  # - os: OS X
+  #   # typos:disable-line
+  #   osVersion: Big Sur
+  #   browserName: playwright-webkit
+  #   browserVersion: 15.4 # not compatible with modern playwright
+
+  # Windows
+  - os: Windows
+    osVersion: 11
+    browserName: chrome
+    browserVersion: latest
+  - os: Windows
+    osVersion: 11
+    browserName: chrome
+    browserVersion: 122
+
+  # Android
+  - deviceName: Samsung Galaxy S22 Ultra
+    osVersion: 12.0
+    browserName: chrome
+  - deviceName: Pixel 10 Pro
+    osVersion: 16.0
+    browserName: chrome
+
+  # iOS
+  # - deviceName: iPad Air 13 2025
+  #   osVersion: 26 # not available while in beta
+  #   browserName: safari
+  - deviceName: iPad Air 13 2025
+    osVersion: 17.5
+    browserName: safari
+  - deviceName: iPad Pro 12.9 2018
+    osVersion: 12.1
+    browserName: safari
+  - deviceName: iPad 9th
+    osVersion: 15.6
+    browserName: safari
+
+# =======================
+# Parallels per Platform
+# =======================
+# Force non-parallel because of shared app state
+parallelsPerPlatform: 1
+
+# ==========================================
+# BrowserStack Local
+# (For localhost, staging/private websites)
+# ==========================================
+# Set browserStackLocal to true if your website under test is not accessible publicly over the internet
+# Learn more about how BrowserStack Local works here -> https://www.browserstack.com/docs/automate/selenium/local-testing-introduction
+browserstackLocal: true
+# browserStackLocalOptions:
+# Options to be passed to BrowserStack local in-case of advanced configurations
+# localIdentifier: # <string> (Default: null) Needed if you need to run multiple instances of local.
+# forceLocal: true  # <boolean> (Default: false) Set to true if you need to resolve all your traffic via BrowserStack Local tunnel.
+# Entire list of arguments available here -> https://www.browserstack.com/docs/automate/selenium/manage-incoming-connections
+
+# ===================
+# Debugging features
+# ===================
+debug: false # <boolean> # Set to true if you need screenshots for every selenium command ran
+networkLogs: false # <boolean> Set to true to enable HAR logs capturing
+consoleLogs: verbose # <string> Remote browser's console debug levels to be printed (Default: errors)
+# Available options are `disable`, `errors`, `warnings`, `info`, `verbose` (Default: errors)
+# CUSTOM_TAG_<INT>: # <string> (Default: parent folder name of the test file) Custom tag for your test suite
+
+# Test Reporting And Analytics is an intelligent test reporting & debugging product. It collects data using the SDK. Read more about what data is collected at https://www.browserstack.com/docs/test-reporting-and-analytics/references/terms-and-conditions
+# Visit automation.browserstack.com to see your test reports and insights. To disable test reporting and analytics, specify `testReporting: false` in the key below.
+testReporting: true

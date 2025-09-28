@@ -51,6 +51,7 @@ export const EmulatorList = observer(function EmulatorList() {
 												params: { emulatorId: surface.id },
 											})
 										}
+										data-surfaceId={surface.id}
 									>
 										<div className="mt-2">{surface.name || 'Emulator'}</div>
 									</CButton>

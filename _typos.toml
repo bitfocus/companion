@@ -1,6 +1,6 @@
 [default]
 extend-ignore-re = [
-  ".*// typos:disable-line[^\\n]*\\n[^\\n]*\\n",
+  ".*[//|#] typos:disable-line[^\\n]*\\n[^\\n]*\\n",
 ]
 
 [default.extend-words]

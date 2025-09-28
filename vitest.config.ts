@@ -17,6 +17,7 @@ export default defineConfig({
 						'**/build/**',
 						'**/coverage/**',
 						'**/webui/**',
+						'**/playwright/**',
 					],
 				},
 			},
