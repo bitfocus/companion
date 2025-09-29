@@ -262,7 +262,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.panel.on('pincodeKey', this.#onDevicePincodeKey.bind(this))
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
-		this.panel.on('setVariable', this.#onSetVariable.bind(this))
 		this.panel.on('setCustomVariable', this.#onSetCustomVariable.bind(this))
 
 		setImmediate(() => {
@@ -654,13 +653,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				},
 			])
 		}
-	}
-
-	/**
-	 * Set the value of a variable
-	 */
-	#onSetVariable(name: string, value: CompanionVariableValue): void {
-		this.#variables.values.setVariableValues('internal', [{ id: name, value: value }])
 	}
 
 	/**
