@@ -35,6 +35,25 @@ const configFields: CompanionSurfaceConfigField[] = [
 	...LockConfigFields,
 ]
 
+const jogConfigField: CompanionSurfaceConfigField = {
+	id: 'jogValueVariable',
+	type: 'custom-variable',
+	label: 'Variable to store Jog value to',
+	tooltip: 'This will pulse with -1 or 1 before returning to 0 when rotated.',
+}
+const shuttleConfigField: CompanionSurfaceConfigField = {
+	id: 'shuttleValueVariable',
+	type: 'custom-variable',
+	label: 'Variable to store Shuttle value to',
+	tooltip: 'This produces a value between -7 and 7. You can use an expression to convert it into a different range.',
+}
+const tbarConfigField: CompanionSurfaceConfigField = {
+	id: 'tbarValueVariable',
+	type: 'custom-variable',
+	label: 'Variable to store T-Bar value to',
+	tooltip: 'This produces a value between 0 and 255. You can use an expression to convert it into a different range.',
+}
+
 export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
 
@@ -70,7 +89,7 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		this.info = {
 			type: `XKeys ${this.#myXkeysPanel.info.name}`,
 			devicePath: devicePath,
-			configFields: configFields,
+			configFields: [...configFields],
 			deviceId: deviceId,
 		}
 
@@ -150,29 +169,50 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		})
 
 		// Listen to jog wheel changes:
-		this.#myXkeysPanel.on('jog', (index, deltaPos, metadata) => {
-			this.#logger.silly(`Jog ${index} position has changed`, deltaPos, metadata)
-			this.emit('setVariable', 'jog', deltaPos)
-			setTimeout(() => {
-				this.emit('setVariable', 'jog', 0)
-			}, 20)
-		})
+		if (panel.info.hasJog) {
+			this.info.configFields.push(jogConfigField)
+			this.#myXkeysPanel.on('jog', (index, deltaPos, metadata) => {
+				const jogVariableName = this.config.jogValueVariable
+				if (!jogVariableName) return
+
+				this.#logger.silly(`Jog ${index} position has changed`, deltaPos, metadata)
+				this.emit('setCustomVariable', jogVariableName, deltaPos)
+				setTimeout(() => {
+					this.emit('setCustomVariable', jogVariableName, 0)
+				}, 20)
+			})
+		}
+
 		// Listen to shuttle changes:
-		this.#myXkeysPanel.on('shuttle', (index, shuttlePos, metadata) => {
-			this.#logger.silly(`Shuttle ${index} position has changed`, shuttlePos, metadata)
-			this.emit('setVariable', 'shuttle', shuttlePos)
-		})
+		if (panel.info.hasShuttle) {
+			this.info.configFields.push(shuttleConfigField)
+			this.#myXkeysPanel.on('shuttle', (index, shuttlePos, metadata) => {
+				const shuttleVariableName = this.config.shuttleValueVariable
+				if (!shuttleVariableName) return
+
+				this.#logger.silly(`Shuttle ${index} position has changed`, shuttlePos, metadata)
+				this.emit('setCustomVariable', shuttleVariableName, shuttlePos)
+			})
+		}
 		// Listen to joystick changes:
-		this.#myXkeysPanel.on('joystick', (index, position, metadata) => {
-			this.#logger.silly(`Joystick ${index} position has changed`, position, metadata) // {x, y, z}
-			//TODO
-			// this.emit('setVariable', 'joystick', position)
-		})
-		// Listen to t-bar changes:
-		this.#myXkeysPanel.on('tbar', (index, position, metadata) => {
-			this.#logger.silly(`T-bar ${index} position has changed`, position, metadata)
-			this.emit('setVariable', 't-bar', position)
-		})
+		if (panel.info.hasJoystick) {
+			this.#myXkeysPanel.on('joystick', (index, position, metadata) => {
+				this.#logger.silly(`Joystick ${index} position has changed`, position, metadata) // {x, y, z}
+				//TODO
+				// this.emit('setVariable', 'joystick', position)
+			})
+		}
+		if (panel.info.hasTbar) {
+			this.info.configFields.push(tbarConfigField)
+			// Listen to t-bar changes:
+			this.#myXkeysPanel.on('tbar', (index, position, metadata) => {
+				const tbarVariableName = this.config.tbarValueVariable
+				if (!tbarVariableName) return
+
+				this.#logger.silly(`T-bar ${index} position has changed`, position, metadata)
+				this.emit('setCustomVariable', tbarVariableName, position)
+			})
+		}
 	}
 
 	/**
