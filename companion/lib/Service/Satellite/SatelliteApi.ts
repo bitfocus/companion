@@ -35,7 +35,7 @@ import { GridSize } from '@companion-app/shared/Model/Surfaces.js'
  * 1.8.0 - Add support for remote surface to handle display of locked state
  * 1.9.0 - Add support for complex surface schemas
  */
-const API_VERSION = '1.99.0' // nocommit - this is a temporary change until precise api version is determined
+const API_VERSION = '1.9.0'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
