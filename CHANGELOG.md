@@ -1050,7 +1050,7 @@ Modules are now distributed independently, and are no longer reported here
 - Bonjour discovery broker to assist modules in discovering possible devices to control
 - Indicate variables support on text input fields
 - Internal action to set or create custom variable
-- Slow down connection initiaisation at startup, to avoid crashes on lower power machines
+- Slow down connection initialisation at startup, to avoid crashes on lower power machines
 - Change webui build tooling to be more modern
 - Rework backend code to be loosely typed
 - Rework various api implementations, to support customisable grid size and avoid 'bank' terminology

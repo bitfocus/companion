@@ -1134,6 +1134,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										(deviceInfo.productId === 0x1f40 || deviceInfo.productId === 0x1f41)
 									) {
 										await this.#addDevice(deviceInfo.path, {}, 'infinitton', SurfaceUSBInfinitton)
+									} else if (isAShuttleDevice(deviceInfo)) {
+										// Note: this must be before the xkeys, as the pid can clash
+										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
+											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
+										}
 									} else if (
 										// More specific match has to be above xkeys
 										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
@@ -1145,10 +1150,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
 										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'xkeys', SurfaceUSBXKeys)
-										}
-									} else if (isAShuttleDevice(deviceInfo)) {
-										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
 										}
 									} else if (
 										deviceInfo.vendorId === 0x32ac && // frame.work
@@ -1172,11 +1173,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
 										}
 									} else if (
-										(deviceInfo.vendorId === 0x6602 || deviceInfo.vendorId === 0x6603) && // Mirabox
+										(deviceInfo.vendorId === 0x6602 ||
+											deviceInfo.vendorId === 0x6603 ||
+											deviceInfo.vendorId === 0x5548) && // Mirabox
 										(deviceInfo.productId === 0x1001 ||
 											deviceInfo.productId === 0x1007 ||
 											deviceInfo.productId === 0x1005 ||
 											deviceInfo.productId === 0x1014 || // Stream Dock HSV 293S
+											deviceInfo.productId == 0x6670 || // Mirabox 293S
 											deviceInfo.productId === 0x1006) && // Stream Dock N4 or 293V3
 										deviceInfo.interface === 0
 									) {
@@ -1419,7 +1423,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			if (surface) {
 				// Device is currently loaded
 				surface.setPanelConfig(surfaceConfig.config)
-				surface.saveGroupConfig(surfaceConfig.groupConfig)
+				if (surfaceConfig.groupConfig) surface.saveGroupConfig(surfaceConfig.groupConfig)
 				surface.setPanelName(surfaceConfig.name)
 
 				// Update the groupId
@@ -1439,7 +1443,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				//  (note: I tried moving `&& group.surfaceHandlers.length > 0` to `group.#isAutoGroup` in Group.ts,
 				//  but it resulted in bogus groups being created when a device was attached -- and these groups only show up on next restart or on export.)
 				if (group && group.surfaceHandlers.length > 0) {
-					group.setName(surfaceConfig.groupConfig.name ?? '')
+					group.setName(surfaceConfig.groupConfig?.name ?? '')
 					for (const [key, value] of Object.entries(surfaceConfig.groupConfig)) {
 						if (key === 'name') continue
 						group.setGroupConfigValue(key, value)
@@ -1451,9 +1455,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				if (surfaceId.startsWith('emulator:')) {
 					this.addEmulator(surfaceId.substring(9), undefined, true)
-					// need the following to put the emulator on the "current" page, to match its export state
-					const group = this.#surfaceGroups.get(surfaceId)
-					group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+
+					if (surfaceConfig.groupConfig) {
+						// need the following to put the emulator on the "current" page, to match its export state
+						const group = this.#surfaceGroups.get(surfaceId)
+						group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+					}
 				}
 			}
 		}

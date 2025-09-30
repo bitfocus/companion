@@ -39,8 +39,11 @@ import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type * as imageRs from '@julusian/image-rs'
 import type { DataDatabase } from '../Data/Database.js'
 import { ImageLibrary } from './ImageLibrary.js'
+import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
+const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
+const WORKER_TERMINATION_THRESHOLD = 30 // High limit, to catch extreme cases
 
 const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADING === '1'
 
@@ -105,6 +108,46 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			},
 		}
 	)
+
+	// Track recent worker terminations (timestamps in ms)
+	#workerTerminationTimestamps: number[] = []
+
+	#poolExec = async <TKey extends keyof typeof GraphicsThreadMethods>(
+		key: TKey,
+		args: Parameters<(typeof GraphicsThreadMethods)[TKey]>,
+		attempts: number
+	): Promise<ReturnType<(typeof GraphicsThreadMethods)[TKey]>> => {
+		if (DEBUG_DISABLE_RENDER_THREADING) {
+			return (GraphicsThreadMethods[key] as any)(...args)
+		}
+
+		return this.#pool.exec(key, args).catch(async (e) => {
+			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
+			if (attempts > 1 && (e instanceof workerPool.TerminateError || e?.message?.includes('Worker is terminated'))) {
+				// Track termination timestamps in a sliding window
+
+				const now = Date.now()
+				this.#workerTerminationTimestamps.push(now)
+				const cutoff = now - WORKER_TERMINATION_WINDOW_MS
+
+				// prune old timestamps
+				this.#workerTerminationTimestamps = this.#workerTerminationTimestamps.filter((timestamp) => timestamp >= cutoff)
+
+				if (this.#workerTerminationTimestamps.length > WORKER_TERMINATION_THRESHOLD) {
+					this.#logger.error(
+						`More than ${WORKER_TERMINATION_THRESHOLD} worker terminations within ${WORKER_TERMINATION_WINDOW_MS / 1000}s. Terminating.`
+					)
+					// Force an immediate exit, as this suggests a major problem
+					// eslint-disable-next-line n/no-process-exit
+					process.exit(5)
+				}
+
+				return this.#poolExec(key, args, attempts - 1)
+			} else {
+				throw e
+			}
+		})
+	}
 
 	#pendingVariables: CompanionVariableValues | null = null
 	/**
@@ -589,27 +632,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		dataUrl: string
 		processedStyle: ImageResultProcessedStyle
 	}> {
-		const args: Parameters<typeof GraphicsRenderer.drawButtonImageUnwrapped> = [
-			this.#drawOptions,
-			drawStyle,
-			location,
-			pagename,
-		]
-
-		if (DEBUG_DISABLE_RENDER_THREADING) {
-			return GraphicsRenderer.drawButtonImageUnwrapped(...args)
-		}
-
-		try {
-			return this.#pool.exec('drawButtonImage', args)
-		} catch (e: any) {
-			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
-			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
-				return this.#executePoolDrawButtonImage(drawStyle, location, pagename, remainingAttempts - 1)
-			} else {
-				throw e
-			}
-		}
+		return this.#poolExec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename], remainingAttempts)
 	}
 
 	/**
@@ -625,38 +648,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
 	): Promise<Uint8Array> {
-		const args: Parameters<typeof GraphicsRenderer.drawButtonBareImageUnwrapped> = [
-			this.#drawOptions,
-			drawStyle,
-			location,
-			pagename,
-			resolution,
-			rotation,
-			format,
-		]
-
-		if (DEBUG_DISABLE_RENDER_THREADING) {
-			return GraphicsRenderer.drawButtonBareImageUnwrapped(...args)
-		}
-
-		try {
-			return this.#pool.exec('drawButtonBareImage', args)
-		} catch (e: any) {
-			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
-			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
-				return this.#executePoolDrawButtonBareImage(
-					drawStyle,
-					location,
-					pagename,
-					resolution,
-					rotation,
-					format,
-					remainingAttempts - 1
-				)
-			} else {
-				throw e
-			}
-		}
+		return this.#poolExec(
+			'drawButtonBareImage',
+			[this.#drawOptions, drawStyle, location, pagename, resolution, rotation, format],
+			remainingAttempts
+		)
 	}
 
 	/**
@@ -666,22 +662,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		originalDataUrl: string,
 		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
 	): Promise<{ width: number; height: number; previewDataUrl: string }> {
-		const args: Parameters<typeof GraphicsRenderer.createImagePreview> = [originalDataUrl]
-
-		if (DEBUG_DISABLE_RENDER_THREADING) {
-			return GraphicsRenderer.createImagePreview(...args)
-		}
-
-		try {
-			return this.#pool.exec('createImagePreview', args)
-		} catch (e: any) {
-			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
-			if (remainingAttempts > 1 && e?.message?.includes('Worker is terminated')) {
-				return this.executeCreatePreview(originalDataUrl, remainingAttempts - 1)
-			} else {
-				throw e
-			}
-		}
+		return this.#poolExec('createImagePreview', [originalDataUrl], remainingAttempts)
 	}
 }
 

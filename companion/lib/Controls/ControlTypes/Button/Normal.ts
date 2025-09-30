@@ -69,7 +69,7 @@ export class ControlButtonNormal
 	readonly supportsLayeredStyle = false
 
 	/**
-	 * The variabls referenced in the last draw. Whenever one of these changes, a redraw should be performed
+	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
 	#last_draw_variables: ReadonlySet<string> | null = null
 

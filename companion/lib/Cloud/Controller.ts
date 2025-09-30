@@ -88,7 +88,7 @@ export class CloudController {
 	 */
 	readonly protocolVersion = 1
 	/**
-	 * The current comapnion ID
+	 * The current companion ID
 	 */
 	readonly companionId: string
 	/**

@@ -221,6 +221,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.includes(912, '91')).toBe(true)
 			expect(ExpressionFunctions.includes(912, '92')).toBe(false)
 			expect(ExpressionFunctions.includes(false, 'al')).toBe(true)
+			// typos:disable-line
 			expect(ExpressionFunctions.includes(false, 'tru')).toBe(false)
 			expect(ExpressionFunctions.includes('something else', 'ng el')).toBe(true)
 			expect(ExpressionFunctions.includes('somethingelse', 'ng el')).toBe(false)
@@ -231,6 +232,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.indexOf(912, '91')).toBe(0)
 			expect(ExpressionFunctions.indexOf(912, '92')).toBe(-1)
 			expect(ExpressionFunctions.indexOf(false, 'al')).toBe(1)
+			// typos:disable-line
 			expect(ExpressionFunctions.indexOf(false, 'tru')).toBe(-1)
 			expect(ExpressionFunctions.indexOf('something else', 'ng el')).toBe(7)
 			expect(ExpressionFunctions.indexOf('somethingelse', 'ng el')).toBe(-1)
@@ -245,6 +247,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.lastIndexOf(912, '91')).toBe(0)
 			expect(ExpressionFunctions.lastIndexOf(912, '92')).toBe(-1)
 			expect(ExpressionFunctions.lastIndexOf(false, 'al')).toBe(1)
+			// typos:disable-line
 			expect(ExpressionFunctions.lastIndexOf(false, 'tru')).toBe(-1)
 			expect(ExpressionFunctions.lastIndexOf('something else', 'ng el')).toBe(7)
 			expect(ExpressionFunctions.lastIndexOf('somethingelse', 'ng el')).toBe(-1)
