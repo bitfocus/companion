@@ -1,0 +1,102 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Satellite Surface Layout",
+	"description": "Schema describing a satellite surface layout: default styling and a map of controls with positions and optional style overrides.",
+	"type": "object",
+	"$defs": {
+		"size": {
+			"title": "SatelliteConfigSize",
+			"description": "Pixel size for bitmap content.",
+			"type": "object",
+			"properties": {
+				"w": {
+					"description": "Width in pixels (non-negative).",
+					"type": "number",
+					"minimum": 0
+				},
+				"h": {
+					"description": "Height in pixels (non-negative).",
+					"type": "number",
+					"minimum": 0
+				}
+			},
+			"required": ["w", "h"],
+			"additionalProperties": false
+		},
+		"stylePreset": {
+			"title": "SatelliteControlStylePreset",
+			"description": "Styling options that can be applied to controls. Can be used as the default style or as per-control overrides.",
+			"type": "object",
+			"properties": {
+				"bitmap": {
+					"description": "If set, bitmaps of the specified size will be reported.",
+					"$ref": "#/$defs/size"
+				},
+				"text": {
+					"description": "If true, the control requests text to be reported.",
+					"type": "boolean"
+				},
+				"textStyle": {
+					"description": "If true, the control requests text style properties to be reported",
+					"type": "boolean"
+				},
+				"colors": {
+					"description": "If set, the control requests colours to be reported.",
+					"type": "string",
+					"enum": ["hex", "rgb"]
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"properties": {
+		"stylePresets": {
+			"description": "Named collection of style presets. The preset named `default` is required and is used as the fallback style for controls when no `stylePreset` is specified.",
+			"type": "object",
+			"properties": {
+				"default": {
+					"$ref": "#/$defs/stylePreset"
+				}
+			},
+			"patternProperties": {
+				"^.+$": {
+					"$ref": "#/$defs/stylePreset"
+				}
+			},
+			"required": ["default"],
+			"additionalProperties": false
+		},
+		"controls": {
+			"type": "object",
+			"patternProperties": {
+				"^[a-zA-Z0-9\\-\\/]+$": {
+					"title": "SatelliteControlDefinition",
+					"description": "Single control definition. The id must be unique and may be user facing in logs. Typically the id would be in the form of 1/0, matching the row/column of the control.",
+					"type": "object",
+					"properties": {
+						"row": {
+							"description": "Zero-based row index for layout placement.",
+							"type": "number",
+							"minimum": 0
+						},
+						"column": {
+							"description": "Zero-based column index for layout placement.",
+							"type": "number",
+							"minimum": 0
+						},
+						"stylePreset": {
+							"description": "Optional name of a style preset defined in `stylePresets`. If present, the control will use the named preset instead of the default style.",
+							"type": "string",
+							"pattern": "^.+$"
+						}
+					},
+					"required": ["row", "column"],
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"required": ["stylePresets", "controls"],
+	"additionalProperties": false
+}

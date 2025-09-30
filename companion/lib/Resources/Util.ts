@@ -240,12 +240,12 @@ export function parseLineParameters(line: string): ParsedParams {
  * If it is not in the list but a trueish value, the defaultVal will be returned.
  * Otherwise returns null.
  */
-export function parseStringParamWithBooleanFallback(
-	list: string[],
-	defaultVal: string,
+export function parseStringParamWithBooleanFallback<T extends string>(
+	list: T[],
+	defaultVal: T,
 	parameter: unknown
-): string | null {
-	const param = String(parameter)
+): T | null {
+	const param = String(parameter) as T
 	if (list.includes(param)) {
 		return param
 	}

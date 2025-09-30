@@ -199,8 +199,19 @@ export function executeExpression(
 				if (valueMatch && valueMatch[0] === value) {
 					return getVariableValue(`${valueMatch[1]}:${valueMatch[2]}`)
 				} else {
+					// Wrap the cache, to inject $RE for this variable to avoid unbound recursion
+					const wrappedCache: VariableValueCache = {
+						has: (id: string) => id === fullId || cachedVariableValues.has(id),
+						get: (id: string) => (id === fullId ? '$RE' : cachedVariableValues.get(id)),
+						set: (id: string, val: CompanionVariableValue | undefined) => {
+							if (id === fullId) return
+
+							cachedVariableValues.set(id, val)
+						},
+					}
+
 					// Fallback to parsing the string
-					const parsedValue = parseVariablesInString(value, rawVariableValues, cachedVariableValues)
+					const parsedValue = parseVariablesInString(value, rawVariableValues, wrappedCache)
 					value = parsedValue.text
 
 					for (const id of parsedValue.variableIds) {
