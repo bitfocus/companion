@@ -2594,25 +2594,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@loupedeck/core@npm:2.0.1":
-  version: 2.0.1
-  resolution: "@loupedeck/core@npm:2.0.1"
+"@loupedeck/core@npm:2.0.3":
+  version: 2.0.3
+  resolution: "@loupedeck/core@npm:2.0.3"
   dependencies:
     eventemitter3: "npm:^5.0.1"
     p-queue: "npm:^8.1.1"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/930959eb0d41f62fac55b65a223d3be57f64ff48ee81ee6f5054368717464940558ba8bca8ba3668dec417ef80c90673c2999ec7ce363739417a599379cda389
+  checksum: 10c0/0e1cd2751914cb735986bbf3ff46aeb5252aab540fcefdc09597e91c27a9f0dc931af295bbb207ddea559932074ee8a1bde8ad8323dcd856ed727899c689c5a6
   languageName: node
   linkType: hard
 
-"@loupedeck/node@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@loupedeck/node@npm:2.0.1"
+"@loupedeck/node@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "@loupedeck/node@npm:2.0.3"
   dependencies:
-    "@loupedeck/core": "npm:2.0.1"
+    "@loupedeck/core": "npm:2.0.3"
     serialport: "npm:^13.0.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/1732ba608cbb1fe1bc1158e1a604aad1dadb86801a0c31e53dc01c2e567b64598dd62152682e12f30be846f9cf80b740b05d04229e634ef4c8e97ad586d456ca
+  checksum: 10c0/152a4fb5eb34ffde86f81f5bf0c7cc2dbd2f9c5726e75e512d4b73d0f07b0a67424173627fc1f0eb87f29a2c83fb886de668ff7341485c7f02c746546e5f4201
   languageName: node
   linkType: hard
 
@@ -8568,7 +8568,7 @@ asn1@evs-broadcast/node-asn1:
     "@julusian/jpeg-turbo": "npm:^2.3.0"
     "@julusian/segfault-raub": "npm:^2.3.2"
     "@logitech-mx-creative-console/node": "npm:^0.2.3"
-    "@loupedeck/node": "npm:^2.0.1"
+    "@loupedeck/node": "npm:^2.0.3"
     "@napi-rs/canvas": "npm:0.1.80"
     "@sentry/node": "npm:^10.15.0"
     "@sentry/webpack-plugin": "npm:^4.3.0"
