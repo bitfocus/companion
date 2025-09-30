@@ -1,7 +1,7 @@
 import { ServiceBase } from './Base.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
-import { SatelliteSocketWrapper, ServiceSatelliteApi } from './SatelliteApi.js'
+import { SatelliteSocketWrapper, ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
 import { WebSocketServer, WebSocket } from 'ws'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { SurfaceController } from '../Surface/Controller.js'

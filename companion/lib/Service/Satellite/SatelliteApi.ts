@@ -4,12 +4,16 @@ import {
 	ParsedParams,
 	parseLineParameters,
 	parseStringParamWithBooleanFallback,
-} from '../Resources/Util.js'
-import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../Resources/Constants.js'
-import { Logger } from '../Log/Controller.js'
-import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../Surface/IP/Satellite.js'
-import type { AppInfo } from '../Registry.js'
-import type { SurfaceController } from '../Surface/Controller.js'
+} from '../../Resources/Util.js'
+import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
+import { Logger } from '../../Log/Controller.js'
+import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surface/IP/Satellite.js'
+import type { AppInfo } from '../../Registry.js'
+import type { SurfaceController } from '../../Surface/Controller.js'
+import { SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
+// eslint-disable-next-line n/no-missing-import
+import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
+import { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -29,8 +33,9 @@ import type { SurfaceController } from '../Surface/Controller.js'
  *       - allow surface to opt out of brightness slider and messages
  * 1.7.1 - Respond with variable name in SET-VARIABLE-VALUE success message
  * 1.8.0 - Add support for remote surface to handle display of locked state
+ * 1.9.0 - Add support for complex surface schemas
  */
-const API_VERSION = '1.8.0'
+const API_VERSION = '1.9.0'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
@@ -132,30 +137,88 @@ export class ServiceSatelliteApi {
 			}
 		}
 
-		const keysTotal = params.KEYS_TOTAL ? Number(params.KEYS_TOTAL) : LEGACY_MAX_BUTTONS
-		if (isNaN(keysTotal) || keysTotal <= 0) {
-			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_TOTAL')
-		}
+		let surfaceManifest: SatelliteSurfaceLayout
+		let surfaceManifestFromClient: boolean
+		let gridSize: GridSize
 
-		const keysPerRow = params.KEYS_PER_ROW ? Number(params.KEYS_PER_ROW) : LEGACY_BUTTONS_PER_ROW
-		if (isNaN(keysPerRow) || keysPerRow <= 0) {
-			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_PER_ROW')
+		if (params.LAYOUT_MANIFEST) {
+			surfaceManifestFromClient = true
+			try {
+				surfaceManifest = JSON.parse(Buffer.from(String(params.LAYOUT_MANIFEST), 'base64').toString())
+
+				if (!validateSurfaceManifest(surfaceManifest)) {
+					const errors = validateSurfaceManifest.errors
+					if (!errors) throw new Error(`Failed with unknown reason`)
+
+					throw new Error(`Failed with errors: ${JSON.stringify(errors)}`)
+				}
+			} catch (e: any) {
+				socketLogger.error(`Manifest validation failed: ${e?.message ?? e}`)
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid LAYOUT_MANIFEST')
+			}
+
+			// Find the max bounds of this surface
+			gridSize = Object.values(surfaceManifest.controls).reduce(
+				(gridSize, control): GridSize => ({
+					columns: Math.max(gridSize.columns, control.column + 1),
+					rows: Math.max(gridSize.rows, control.row + 1),
+				}),
+				{ columns: 0, rows: 0 }
+			)
+		} else {
+			// Generate a simple manifest from the old properties. This is an approximation, and will likely result in sending more data than is needed
+			surfaceManifestFromClient = false
+			surfaceManifest = {
+				controls: {},
+				stylePresets: {
+					default: {},
+				},
+			}
+
+			const keysTotal = params.KEYS_TOTAL ? Number(params.KEYS_TOTAL) : LEGACY_MAX_BUTTONS
+			if (isNaN(keysTotal) || keysTotal <= 0) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_TOTAL')
+			}
+
+			const keysPerRow = params.KEYS_PER_ROW ? Number(params.KEYS_PER_ROW) : LEGACY_BUTTONS_PER_ROW
+			if (isNaN(keysPerRow) || keysPerRow <= 0) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_PER_ROW')
+			}
+
+			for (let i = 0; i < keysTotal; i++) {
+				const row = Math.floor(i / keysPerRow)
+				const column = i % keysPerRow
+
+				surfaceManifest.controls[`${row}/${column}`] = {
+					row,
+					column,
+				}
+			}
+
+			gridSize = {
+				columns: keysPerRow,
+				rows: Math.ceil(keysTotal / keysPerRow),
+			}
+
+			if (params.BITMAPS !== undefined && !isFalsey(params.BITMAPS)) {
+				let streamBitmapSize = Number(params.BITMAPS)
+				if (isNaN(streamBitmapSize) || streamBitmapSize < 5) {
+					// If it looks like a boolean value, use the old hardcoded size
+					streamBitmapSize = 72
+				}
+
+				surfaceManifest.stylePresets.default.bitmap = { w: streamBitmapSize, h: streamBitmapSize }
+			}
+
+			const streamColors = parseStringParamWithBooleanFallback(['hex', 'rgb'], 'hex', params.COLORS) || undefined
+			surfaceManifest.stylePresets.default.colors = streamColors
+
+			surfaceManifest.stylePresets.default.text = params.TEXT !== undefined && isTruthy(params.TEXT)
+			surfaceManifest.stylePresets.default.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		}
 
 		socketLogger.debug(`add surface "${id}"`)
 
-		let streamBitmapSize = null
-		if (params.BITMAPS !== undefined && !isFalsey(params.BITMAPS)) {
-			streamBitmapSize = Number(params.BITMAPS)
-			if (isNaN(streamBitmapSize) || streamBitmapSize < 5) {
-				// If it looks like a boolean value, use the old hardcoded size
-				streamBitmapSize = 72
-			}
-		}
-
-		const streamColors = parseStringParamWithBooleanFallback(['hex', 'rgb'], 'hex', params.COLORS) || false
-		const streamText = params.TEXT !== undefined && isTruthy(params.TEXT)
-		const streamTextStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 		const supportsLockedState =
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
@@ -169,20 +232,15 @@ export class ServiceSatelliteApi {
 
 		const device = this.#surfaceController.addSatelliteDevice({
 			path: id,
-			gridSize: {
-				columns: keysPerRow,
-				rows: keysTotal / keysPerRow,
-			},
+			gridSize,
 			socket,
 			deviceId: id,
 			productName: `${params.PRODUCT_NAME}`,
 			supportsBrightness,
-			streamBitmapSize,
-			streamColors,
-			streamText,
-			streamTextStyle,
 			transferVariables,
 			supportsLockedState,
+			surfaceManifestFromClient,
+			surfaceManifest,
 		})
 
 		this.#devices.set(id, {
@@ -347,19 +405,36 @@ export class ServiceSatelliteApi {
 		if (!device) return
 		const id = device.id
 
-		if (!params.KEY) {
-			return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
-		}
-		const xy = device.device.parseKeyParam(params.KEY.toString())
-		if (!xy) {
-			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
-		}
-		if (!params.PRESSED) {
-			return this.#formatAndSendError(socket, messageName, id, 'Missing PRESSED')
-		}
-		const pressed = !isFalsey(params.PRESSED)
+		if (device.device.surfaceManifestFromClient) {
+			if (!params.CONTROLID) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing CONTROLID')
+			}
+			const controlId = `${params.CONTROLID}`
 
-		device.device.doButton(...xy, pressed)
+			if (!params.PRESSED) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing PRESSED')
+			}
+			const pressed = !isFalsey(params.PRESSED)
+
+			if (!device.device.doButtonFromId(controlId, pressed)) {
+				return this.#formatAndSendError(socket, messageName, id, 'Unknown CONTROLID')
+			}
+		} else {
+			if (!params.KEY) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
+			}
+			const xy = device.device.parseKeyParam(params.KEY.toString())
+			if (!xy) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
+			}
+			if (!params.PRESSED) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing PRESSED')
+			}
+			const pressed = !isFalsey(params.PRESSED)
+
+			device.device.doButton(...xy, pressed)
+		}
+
 		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
@@ -396,20 +471,37 @@ export class ServiceSatelliteApi {
 		if (!device) return
 		const id = device.id
 
-		if (!params.KEY) {
-			return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
-		}
-		const xy = device.device.parseKeyParam(params.KEY.toString())
-		if (!xy) {
-			return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
-		}
-		if (!params.DIRECTION) {
-			return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
+		if (device.device.surfaceManifestFromClient) {
+			if (!params.CONTROLID) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing CONTROLID')
+			}
+			const controlId = `${params.CONTROLID}`
+
+			if (!params.DIRECTION) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
+			}
+			const direction = params.DIRECTION >= '1'
+
+			if (!device.device.doRotateFromId(controlId, direction)) {
+				return this.#formatAndSendError(socket, messageName, id, 'Unknown CONTROLID')
+			}
+		} else {
+			if (!params.KEY) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing KEY')
+			}
+			const xy = device.device.parseKeyParam(params.KEY.toString())
+			if (!xy) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
+			}
+			if (!params.DIRECTION) {
+				return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
+			}
+
+			const direction = params.DIRECTION >= '1'
+
+			device.device.doRotate(...xy, direction)
 		}
 
-		const direction = params.DIRECTION >= '1'
-
-		device.device.doRotate(...xy, direction)
 		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
