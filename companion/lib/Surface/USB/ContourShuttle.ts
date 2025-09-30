@@ -239,7 +239,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 	}
 
 	/**
-	 * Open a countour shuttle
+	 * Open a contour shuttle
 	 */
 	static async create(devicePath: string): Promise<SurfaceUSBContourShuttle> {
 		const contourShuttle = await setupShuttle(devicePath)
