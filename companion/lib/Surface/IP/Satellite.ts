@@ -258,7 +258,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		// Include the global identifier depending on the mode
 		if (!this.surfaceManifestFromClient) {
-			const keyIndex = convertXYToIndexForPanel(controlDefinition.row, controlDefinition.column, this.gridSize)
+			const keyIndex = convertXYToIndexForPanel(controlDefinition.column, controlDefinition.row, this.gridSize)
 			if (keyIndex === null) return
 
 			params['KEY'] = keyIndex
