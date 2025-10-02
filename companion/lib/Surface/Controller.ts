@@ -962,15 +962,23 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		})
 
 		const groupsMap = new Map<string, ClientDevicesListItem>()
+		let groupIndexSkippedCount = 0
 		surfaceGroups.forEach((group, index) => {
+			const surfaces = group.surfaceHandlers.map((handler) =>
+				translateSurfaceConfig(handler.surfaceId, handler.getFullConfig(), handler)
+			)
+
+			// Check if this is an auto group with no controls, and shouldnt be assigned an 'index'
+			const skipThisGroupIndex =
+				group.isAutoGroup && surfaces.every((s) => s.size && s.size.rows === 0 && s.size.columns === 0)
+			if (skipThisGroupIndex) groupIndexSkippedCount++
+
 			const groupResult: ClientDevicesListItem = {
 				id: group.groupId,
-				index: index,
+				index: !skipThisGroupIndex ? index - groupIndexSkippedCount : null,
 				displayName: group.displayName,
 				isAutoGroup: group.isAutoGroup,
-				surfaces: group.surfaceHandlers.map((handler) =>
-					translateSurfaceConfig(handler.surfaceId, handler.getFullConfig(), handler)
-				),
+				surfaces,
 			}
 			result.push(groupResult)
 			groupsMap.set(group.groupId, groupResult)

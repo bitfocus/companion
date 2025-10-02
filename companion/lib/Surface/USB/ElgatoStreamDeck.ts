@@ -128,13 +128,18 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			this.info.firmwareUpdateVersionsUrl = STREAMDECK_UPDATE_VERSIONS_URL
 		}
 
-		const allRowValues = this.#streamDeck.CONTROLS.map((control) => control.row)
-		const allColumnValues = this.#streamDeck.CONTROLS.map((button) => button.column)
+		if (this.#streamDeck.CONTROLS.length === 0) {
+			// Handle the Network dock, which has no controls
+			this.gridSize = { rows: 0, columns: 0 }
+		} else {
+			const allRowValues = this.#streamDeck.CONTROLS.map((control) => control.row)
+			const allColumnValues = this.#streamDeck.CONTROLS.map((button) => button.column)
 
-		// Future: maybe this should consider the min values too, but that requires handling in a bunch of places here
-		this.gridSize = {
-			columns: Math.max(...allColumnValues) + 1,
-			rows: Math.max(...allRowValues) + 1,
+			// Future: maybe this should consider the min values too, but that requires handling in a bunch of places here
+			this.gridSize = {
+				columns: Math.max(...allColumnValues) + 1,
+				rows: Math.max(...allRowValues) + 1,
+			}
 		}
 
 		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, x, y, render) => {
