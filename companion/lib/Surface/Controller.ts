@@ -68,6 +68,10 @@ import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
+import { PluginWrapper, SurfaceHostContext } from '@companion-surface/base/host'
+// @ts-expect-error yes its bad
+// eslint-disable-next-line n/no-missing-import
+import elgatoPluginTest from '../../../../module-local-dev/companion-surface-elgato-stream-deck/dist/main.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -101,6 +105,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * The last sent json object
 	 */
 	#lastSentJson: Record<string, ClientDevicesListItem> = {}
+
+	readonly #surfacePlugins = new Map<string, PluginWrapper>()
 
 	/**
 	 * All the opened and active surfaces
@@ -150,6 +156,35 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#handlerDependencies = handlerDependencies
 
 		this.#updateEvents.setMaxListeners(0)
+
+		const pluginHostContext: SurfaceHostContext = {
+			// 		readonly lockingGraphics: LockingGraphicsGenerator
+			// readonly cardsGenerator: HostCardGenerator
+
+			// readonly capabilities: HostCapabilities
+			capabilities: {},
+
+			surfaceEvents: {
+				disconnected: (surfaceId: string) => {
+					this.#logger.info(`Plugin surface disconnected: ${surfaceId}`)
+				},
+				inputPress: (surfaceId: string, x: number, y: number, pressed: boolean) => {
+					console.log(`Plugin input press: ${surfaceId} ${x},${y} = ${pressed}`)
+				},
+				inputRotate: (surfaceId: string, x: number, y: number, delta: number) => {
+					console.log(`Plugin input rotate: ${surfaceId} ${x},${y} = ${delta}`)
+				},
+				setVariableValue: (surfaceId: string, name: string, value: any) => {
+					console.log(`Plugin set variable: ${surfaceId} ${name} = ${value}`)
+				},
+				pincodeEntry: (surfaceId: string, char: number) => {
+					console.log(`Plugin pincode entry: ${surfaceId} char=${char}`)
+				},
+			},
+		}
+
+		// HACK: do this properly, and with a layer of ipc/threading!
+		this.#surfacePlugins.set('elgato', new PluginWrapper(pluginHostContext, elgatoPluginTest))
 
 		this.#outboundController = new SurfaceOutboundController(this, db)
 		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.updateDevicesList())
@@ -1118,9 +1153,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						Promise.allSettled(
 							deviceInfos.map(async (deviceInfo) => {
 								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
+
+								await Promise.allSettled(
+									Array.from(this.#surfacePlugins.values()).map(async (plugin) => {
+										const d = await plugin.openHidDevice(deviceInfo)
+										if (!d) return
+
+										// TODO - does this need error handling?
+
+										//
+										console.log('opened', d)
+									})
+								)
+
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
 									if (!ignoreStreamDeck && getStreamDeckDeviceInfo(deviceInfo)) {
-										await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
+										// await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
 										return
 									} else if (
 										getMXCreativeConsoleDeviceInfo(deviceInfo) &&

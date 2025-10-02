@@ -48,6 +48,7 @@
     "@blackmagic-controller/node": "^1.0.2",
     "@companion-app/shared": "*",
     "@companion-module/base": "^1.13.2",
+    "@companion-surface/base": "0.0.0",
     "@elgato-stream-deck/node": "^7.3.2",
     "@elgato-stream-deck/tcp": "^7.3.2",
     "@julusian/bonjour-service": "^1.4.2",
