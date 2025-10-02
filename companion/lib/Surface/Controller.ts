@@ -68,10 +68,13 @@ import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
-import { PluginWrapper, SurfaceHostContext } from '@companion-surface/base/host'
+import { OpenHidDeviceResult, PluginWrapper, SurfaceHostContext } from '@companion-surface/base/host'
 // @ts-expect-error yes its bad
 // eslint-disable-next-line n/no-missing-import
 import elgatoPluginTest from '../../../../module-local-dev/companion-surface-elgato-stream-deck/dist/main.js'
+import { LockingGraphicsGeneratorImpl } from './Plugin/LockingGraphics.js'
+import { CardGenerator } from './Plugin/Cards.js'
+import { SurfacePluginPanel } from './Plugin/Panel.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -158,21 +161,28 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#updateEvents.setMaxListeners(0)
 
 		const pluginHostContext: SurfaceHostContext = {
-			// 		readonly lockingGraphics: LockingGraphicsGenerator
-			// readonly cardsGenerator: HostCardGenerator
+			lockingGraphics: new LockingGraphicsGeneratorImpl(),
+			cardsGenerator: new CardGenerator(),
 
-			// readonly capabilities: HostCapabilities
-			capabilities: {},
+			capabilities: {
+				// For future use
+			},
 
 			surfaceEvents: {
 				disconnected: (surfaceId: string) => {
 					this.#logger.info(`Plugin surface disconnected: ${surfaceId}`)
 				},
-				inputPress: (surfaceId: string, x: number, y: number, pressed: boolean) => {
-					console.log(`Plugin input press: ${surfaceId} ${x},${y} = ${pressed}`)
+				inputPress: (surfaceId: string, controlId: string, pressed: boolean) => {
+					console.log(`Plugin input press: ${surfaceId} ${controlId} = ${pressed}`)
+
+					const surface = this.#surfaceHandlers.get(surfaceId)
+					if (surface) {
+						const panel = surface.panel as SurfacePluginPanel
+						panel.inputPress(controlId, pressed)
+					}
 				},
-				inputRotate: (surfaceId: string, x: number, y: number, delta: number) => {
-					console.log(`Plugin input rotate: ${surfaceId} ${x},${y} = ${delta}`)
+				inputRotate: (surfaceId: string, controlId: string, delta: number) => {
+					console.log(`Plugin input rotate: ${surfaceId} ${controlId} = ${delta}`)
 				},
 				setVariableValue: (surfaceId: string, name: string, value: any) => {
 					console.log(`Plugin set variable: ${surfaceId} ${name} = ${value}`)
@@ -1159,10 +1169,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										const d = await plugin.openHidDevice(deviceInfo)
 										if (!d) return
 
-										// TODO - does this need error handling?
-
-										//
-										console.log('opened', d)
+										await this.#addDevice2(deviceInfo, plugin, d)
 									})
 								)
 
@@ -1339,6 +1346,33 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		})
 
 		return device
+	}
+
+	async #addDevice2(_hidDevice: HID.Device, plugin: PluginWrapper<unknown>, surfaceInfo: OpenHidDeviceResult) {
+		this.removeDevice(surfaceInfo.surfaceId) // TODO: is this correct/ok?
+
+		this.#logger.debug(`opened device: ${surfaceInfo.surfaceId}`)
+
+		const pluginName = 'demo' // TODO
+
+		// Define something, so that it is known it is loading
+		this.#surfaceHandlers.set(surfaceInfo.surfaceId, null)
+
+		try {
+			const panel = new SurfacePluginPanel(plugin, surfaceInfo, this.#surfaceExecuteExpression.bind(this))
+			this.#createSurfaceHandler(surfaceInfo.surfaceId, pluginName, panel)
+
+			setImmediate(() => {
+				this.updateDevicesList()
+			})
+		} catch (e) {
+			this.#logger.error(`Failed to add surface "${surfaceInfo.surfaceId}": ${e}`)
+
+			// TODO - tell plugin to close the device?
+
+			// Failed, remove the placeholder
+			this.#surfaceHandlers.delete(surfaceInfo.surfaceId)
+		}
 	}
 
 	async #addDevice(
