@@ -13,7 +13,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 	const doManageModule = useCallback(
 		(moduleId: string | null) => {
 			if (moduleId) {
-				void navigate({ to: `/connections/modules/${moduleId}` })
+				void navigate({ to: '/connections/modules/$moduleId', params: { moduleId } })
 			} else {
 				void navigate({ to: '/connections/modules' })
 			}
