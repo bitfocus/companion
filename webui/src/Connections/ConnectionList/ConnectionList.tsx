@@ -43,7 +43,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 			if (!connectionId) {
 				void navigate({ to: '/connections/configured' })
 			} else {
-				void navigate({ to: `/connections/configured/${connectionId}`, params: { connectionId } })
+				void navigate({ to: '/connections/configured/$connectionId', params: { connectionId } })
 			}
 		},
 		[navigate]
