@@ -84,16 +84,16 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 		[typeFilter]
 	)
 
-	const navigate = useNavigate({ from: '/connections/' })
+	const navigate = useNavigate({ from: '/connections/configured' })
 	const doConfigureConnection = useCallback(
 		(connectionId: string) => {
-			void navigate({ to: `/connections/${connectionId}` })
+			void navigate({ to: `/connections/configured/${connectionId}` })
 		},
 		[navigate]
 	)
 
 	const doCloseAddConnections = useCallback(() => {
-		void navigate({ to: '/connections' })
+		void navigate({ to: '/connections/configured' })
 	}, [navigate])
 
 	return (
@@ -250,7 +250,11 @@ function AddConnectionEntry({ moduleInfo, addConnection }: AddConnectionEntryPro
 				{moduleInfo.name}
 			</div>
 			<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-				<Link to={`/modules/$moduleId`} params={{ moduleId: moduleInfo.id }} className="text-decoration-none">
+				<Link
+					to={`/connections/modules/$moduleId`}
+					params={{ moduleId: moduleInfo.id }}
+					className="text-decoration-none"
+				>
 					<div
 						className="m-0"
 						style={{ display: 'inline-block', color: 'var(--cui-body-color)' }}

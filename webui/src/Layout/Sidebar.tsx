@@ -28,7 +28,6 @@ import {
 	faComments,
 	IconDefinition,
 	faSquareCaretRight,
-	faPuzzlePiece,
 	faInfo,
 	faStar,
 	faHatWizard,
@@ -178,7 +177,10 @@ export const MySidebar = memo(function MySidebar() {
 				</CSidebarBrand>
 			</CSidebarHeader>
 			<CSidebarNav className="nav-main-scroller">
-				<SidebarMenuItem name="Connections" icon={faPlug} path="/connections" />
+				<SidebarMenuItemGroup name="Connections" icon={faPlug} path="/connections">
+					<SidebarMenuItem name="Configured" icon={null} path="/connections/configured" />
+					<SidebarMenuItem name="Modules" icon={null} path="/connections/modules" />
+				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
 				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
 					<SidebarMenuItem name="Configured" icon={null} path="/surfaces/configured" />
@@ -192,7 +194,6 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Internal" icon={null} path="/variables/connection/internal" />
 					<SidebarVariablesGroups />
 				</SidebarMenuItemGroup>
-				<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
 				<SidebarMenuItemGroup name="Settings" icon={faCog} path="/settings">
 					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
 					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
