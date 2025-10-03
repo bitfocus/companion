@@ -240,7 +240,7 @@ You can do the reverse of this with `secondsToTimestamp(str)`
 
 **secondsToTimestamp(seconds, format)**
 
-Convert a number of seconds into a timestamp of format 'HH:mm:ss'.
+Convert a number of seconds into a timestamp of format 'n:HH:mm:ss'.
 
 Note: There is no limit to the number of hours shown, it will display values greater than 24.
 
@@ -248,13 +248,14 @@ By supplying the format parameter, you can choose which components will be inclu
 
 The following components are allowed:
 
+- `N` / `n` - minus sign
 - `HH` / `hh` - hours
 - `mm` - minutes
 - `ss` - seconds
 
 **msToTimestamp(milliseconds, format)**
 
-Convert a number of milliseconds into a timestamp of format 'HH:mm:ss.SSS'.
+Convert a number of milliseconds into a timestamp of format 'n:HH:mm:ss.SSS'.
 
 Note: There is no limit to the number of hours shown, it will display values greater than 24.
 
@@ -262,6 +263,7 @@ By supplying the format parameter, you can choose which components will be inclu
 
 The following components are allowed:
 
+- `N` / `n` - minus sign
 - `HH` / `hh` - hours
 - `mm` - minutes
 - `ss` - seconds
