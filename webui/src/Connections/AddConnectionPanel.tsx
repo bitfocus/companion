@@ -87,7 +87,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 	const navigate = useNavigate({ from: '/connections/configured' })
 	const doConfigureConnection = useCallback(
 		(connectionId: string) => {
-			void navigate({ to: `/connections/configured/${connectionId}` })
+			void navigate({ to: '/connections/configured/$connectionId', params: { connectionId } })
 		},
 		[navigate]
 	)
