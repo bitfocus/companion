@@ -8658,7 +8658,6 @@ asn1@evs-broadcast/node-asn1:
     undici: "npm:^6.21.3"
     usb: "npm:^2.16.0"
     uuid: "npm:^13.0.0"
-    vec-footpedal: "npm:^2.0.1"
     videohub-server: "npm:^0.3.0"
     webpack: "npm:^5.101.3"
     webpack-cli: "npm:^6.0.1"
@@ -18435,7 +18434,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"usb@npm:^2.15.0, usb@npm:^2.16.0, usb@npm:^2.5.2, usb@npm:^2.9.0":
+"usb@npm:^2.15.0, usb@npm:^2.16.0, usb@npm:^2.5.2":
   version: 2.16.0
   resolution: "usb@npm:2.16.0"
   dependencies:
@@ -18573,16 +18572,6 @@ asn1@evs-broadcast/node-asn1:
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
   checksum: 10c0/f15d588d79f3675135ba783c91a4083dcd290a2a5be9fcb6514220a1634e23df116847b1cc51f66bfb0644cf9353b2abb7815ae499bab06e46dd33c1a6bf1f4f
-  languageName: node
-  linkType: hard
-
-"vec-footpedal@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "vec-footpedal@npm:2.0.1"
-  dependencies:
-    node-hid: "npm:^3.1.0"
-    usb: "npm:^2.9.0"
-  checksum: 10c0/2e158005d8ffc8547a929e9d9ab4ce2f1762d19df9c89037f701ec65d4915e1fc0543f16fd611c11de77298ddd81ff485484e34c68c8dd6fca9b49c6e7842d22
   languageName: node
   linkType: hard
 

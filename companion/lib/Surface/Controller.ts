@@ -19,7 +19,6 @@ import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
 import { isAShuttleDevice } from 'shuttle-node'
-import vecFootpedal from 'vec-footpedal'
 import { listLoupedecks } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
@@ -30,7 +29,7 @@ import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
 import { SurfaceUSBXKeys } from './USB/XKeys.js'
 import { SurfaceUSBLoupedeck } from './USB/Loupedeck.js'
 import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
-import { SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
+import { isVecFootpedal, SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
@@ -1148,8 +1147,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										}
 									} else if (
 										// More specific match has to be above xkeys
-										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
-										deviceInfo.productId === vecFootpedal.pids.FOOTPEDAL
+										isVecFootpedal(deviceInfo)
 									) {
 										if (this.#handlerDependencies.userconfig.getKey('vec_footpedal_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'vec-footpedal', SurfaceUSBVECFootpedal)

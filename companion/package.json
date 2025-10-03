@@ -101,7 +101,6 @@
     "undici": "^6.21.3",
     "usb": "^2.16.0",
     "uuid": "^13.0.0",
-    "vec-footpedal": "^2.0.1",
     "videohub-server": "^0.3.0",
     "winston": "^3.17.0",
     "winston-syslog": "patch:winston-syslog@npm%3A2.7.1#~/.yarn/patches/winston-syslog-npm-2.7.1-c8df046508.patch",

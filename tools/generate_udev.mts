@@ -3,7 +3,6 @@ import { readdir, writeFile } from 'fs/promises'
 import { createRequire } from 'module'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import vecFootpedal from 'vec-footpedal'
 import { readFileSync } from 'fs'
 
 const require = createRequire(import.meta.url)
@@ -61,8 +60,8 @@ const generatorConfig: Record<string, ConfigForPlugin> = {
 		// npmPackage: 'vec-footpedal',
 		manualRules: [
 			{
-				vendorId: vecFootpedal.vids.VEC,
-				productIds: [vecFootpedal.pids.FOOTPEDAL],
+				vendorId: 0x05f3,
+				productIds: [0x00ff],
 			},
 		],
 	},
