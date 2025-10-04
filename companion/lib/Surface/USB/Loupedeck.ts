@@ -12,6 +12,7 @@
 import { EventEmitter } from 'events'
 import {
 	LoupedeckBufferFormat,
+	LoupedeckControlDefinition,
 	LoupedeckDevice,
 	LoupedeckDisplayId,
 	LoupedeckModelId,
@@ -45,7 +46,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 	 */
 	readonly #loupedeck: LoupedeckDevice
 
-	readonly #writeQueue: ImageWriteQueue<string, [DrawButtonItem]>
+	readonly #writeQueue: ImageWriteQueue<string, [item: DrawButtonItem, rowOffset: number]>
 
 	config: Record<string, any>
 
@@ -98,36 +99,28 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 		this.#loupedeck.on('touchstart', (data) => {
 			for (const touch of data.changedTouches) {
 				const control = touch.target.control
-				if (control !== undefined) {
+				if (!control) continue
+
+				if (control.type === 'button' || control.type === 'wheel') {
 					this.emit('click', control.column, control.row, true)
-				} else if (touch.target.screen == LoupedeckDisplayId.Wheel) {
-					const wheelControl = this.#loupedeck.controls.find((c) => c.type === 'wheel')
-					if (wheelControl) this.emit('click', wheelControl.column, wheelControl.row, true)
-				} else if (
-					this.#loupedeck.displayLeftStrip &&
-					(touch.target.screen === LoupedeckDisplayId.Left || touch.target.screen === LoupedeckDisplayId.Right)
-				) {
-					const x = touch.target.screen === LoupedeckDisplayId.Left ? 1 : 6
-					const y = Math.floor((touch.y / this.#loupedeck.displayLeftStrip.height) * 3)
-					this.emit('click', x, y, true)
+				} else if (control.type === 'lcd-segment' && this.#loupedeck.displayLeftStrip) {
+					// Sample with the left strip
+					const y = control.row + Math.floor((touch.y / this.#loupedeck.displayLeftStrip.height) * control.rowSpan)
+					this.emit('click', control.column, y, true)
 				}
 			}
 		})
 		this.#loupedeck.on('touchend', (data) => {
 			for (const touch of data.changedTouches) {
 				const control = touch.target.control
-				if (control !== undefined) {
+				if (!control) continue
+
+				if (control.type === 'button' || control.type === 'wheel') {
 					this.emit('click', control.column, control.row, false)
-				} else if (touch.target.screen == LoupedeckDisplayId.Wheel) {
-					const wheelControl = this.#loupedeck.controls.find((c) => c.type === 'wheel')
-					if (wheelControl) this.emit('click', wheelControl.column, wheelControl.row, false)
-				} else if (
-					this.#loupedeck.displayLeftStrip &&
-					(touch.target.screen === LoupedeckDisplayId.Left || touch.target.screen === LoupedeckDisplayId.Right)
-				) {
-					const x = touch.target.screen === LoupedeckDisplayId.Left ? 1 : 6
-					const y = Math.floor((touch.y / this.#loupedeck.displayLeftStrip.height) * 3)
-					this.emit('click', x, y, false)
+				} else if (control.type === 'lcd-segment' && this.#loupedeck.displayLeftStrip) {
+					// Sample with the left strip
+					const y = control.row + Math.floor((touch.y / this.#loupedeck.displayLeftStrip.height) * control.rowSpan)
+					this.emit('click', control.column, y, false)
 				}
 			}
 		})
@@ -181,7 +174,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 		// 	this.emit('remove')
 		// })
 
-		this.#writeQueue = new ImageWriteQueue(this.#logger, async (controlId, drawItem) => {
+		this.#writeQueue = new ImageWriteQueue(this.#logger, async (controlId, drawItem, rowOffset) => {
 			const control = this.#loupedeck.controls.find((c) => c.id === controlId)
 			if (!control) return
 
@@ -233,6 +226,38 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 					this.#logger.debug(`fillImage failed: ${e}`)
 					this.emit('remove')
 				}
+			} else if (control.type === 'lcd-segment') {
+				if (!this.#loupedeck.displayLeftStrip) return
+
+				// This isn't good math, but it is simpler and good enough for the existing models
+				const width = this.#loupedeck.displayLeftStrip.width
+				const height = this.#loupedeck.displayLeftStrip.height / 3
+
+				let newbuffer: Uint8Array
+				try {
+					newbuffer = await drawItem.defaultRender.drawNative(width, height, this.config.rotation, 'rgb')
+				} catch (e) {
+					this.#logger.debug(`scale image failed: ${e}`)
+					this.emit('remove')
+					return
+				}
+
+				const displayId = control.id === 'left' ? LoupedeckDisplayId.Left : LoupedeckDisplayId.Right
+
+				try {
+					await this.#loupedeck.drawBuffer(
+						displayId,
+						Buffer.from(newbuffer),
+						LoupedeckBufferFormat.RGB,
+						width,
+						height,
+						0,
+						rowOffset * height
+					)
+				} catch (e) {
+					this.#logger.debug(`fillImage failed: ${e}`)
+					this.emit('remove')
+				}
 			}
 		})
 	}
@@ -278,15 +303,30 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 		})
 	}
 
+	#findDrawControl(item: DrawButtonItem): { control: LoupedeckControlDefinition | null; rowOffset: number } {
+		for (const control of this.#loupedeck.controls) {
+			if (control.type === 'lcd-segment') {
+				if (item.y >= control.row && item.y < control.row + control.rowSpan && item.x === control.column) {
+					// This is a multi-row control, so we need to calculate the row offset
+					return { control, rowOffset: item.y - control.row }
+				}
+			} else if (control.column === item.x && control.row === item.y) {
+				// Default behaviour of single cell control
+				return { control, rowOffset: 0 }
+			}
+		}
+		return { control: null, rowOffset: 0 }
+	}
+
 	/**
 	 * Draw a button
 	 */
 	draw(item: DrawButtonItem): void {
-		const control = this.#loupedeck.controls.find((c) => c.column === item.x && c.row === item.y)
+		const { control, rowOffset } = this.#findDrawControl(item)
 		if (!control) return
 
 		if (control.type === 'wheel') {
-			this.#writeQueue.queue(control.id, item)
+			this.#writeQueue.queue(control.id, item, 0)
 		} else if (control.type === 'encoder') {
 			// Nothing to do
 		} else if (control.type === 'button') {
@@ -307,8 +347,10 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 						this.#logger.debug(`color failed: ${e}`)
 					})
 			} else if (control.feedbackType === 'lcd') {
-				this.#writeQueue.queue(control.id, item)
+				this.#writeQueue.queue(control.id, item, 0)
 			}
+		} else if (control.type === 'lcd-segment') {
+			this.#writeQueue.queue(control.id, item, rowOffset)
 		}
 	}
 
