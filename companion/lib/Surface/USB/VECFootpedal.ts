@@ -10,35 +10,12 @@
  */
 
 import EventEmitter from 'events'
-import vecFootpedal, { VecFootpedalDeviceInfo } from 'vec-footpedal'
 import LogController, { Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-
-type XYValue = [x: number, y: number]
-interface ModelInfo {
-	totalCols: number
-	totalRows: number
-	buttons: XYValue[]
-}
-
-const vecFootpedalInfo: ModelInfo = {
-	// Treat as:
-	// 3 buttons
-	totalCols: 3,
-	totalRows: 1,
-
-	buttons: [
-		[0, 0],
-		[1, 0],
-		[2, 0],
-	],
-}
-
-function buttonToXy(modelInfo: ModelInfo, info: number): XYValue | undefined {
-	return modelInfo.buttons[info - 1]
-}
+import { Device, HIDAsync } from 'node-hid'
+import crypto from 'crypto'
 
 const configFields: CompanionSurfaceConfigField[] = [
 	//
@@ -46,6 +23,10 @@ const configFields: CompanionSurfaceConfigField[] = [
 	RotationConfigField,
 	...LockConfigFields,
 ]
+
+export function isVecFootpedal(device: Device): boolean {
+	return device.vendorId === 0x05f3 && device.productId === 0x00ff
+}
 
 export class SurfaceUSBVECFootpedal extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger: Logger
@@ -55,23 +36,19 @@ export class SurfaceUSBVECFootpedal extends EventEmitter<SurfacePanelEvents> imp
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 
-	readonly #vecFootpedal: typeof vecFootpedal
-	readonly #deviceInfo: VecFootpedalDeviceInfo
-	readonly #modelInfo: ModelInfo
+	readonly #hidDevice: HIDAsync
 
-	constructor(
-		devicePath: string,
-		device: typeof vecFootpedal,
-		modelInfo: ModelInfo,
-		deviceInfo: VecFootpedalDeviceInfo
-	) {
+	constructor(devicePath: string, hidDevice: HIDAsync, info: Device) {
 		super()
 
 		this.#logger = LogController.createLogger(`Surface/USB/VECFootpedal/${devicePath}`)
 
-		this.#vecFootpedal = device
-		this.#deviceInfo = deviceInfo
-		this.#modelInfo = modelInfo
+		const fakeSerial = crypto
+			.createHash('md5')
+			.update(info.serialNumber || devicePath)
+			.digest('hex')
+
+		this.#hidDevice = hidDevice
 
 		this.config = {
 			// No config currently present
@@ -80,43 +57,40 @@ export class SurfaceUSBVECFootpedal extends EventEmitter<SurfacePanelEvents> imp
 		this.#logger.debug(`Adding VEC Footpedal USB device ${devicePath}`)
 
 		this.info = {
-			type: `VEC Footpedal ${this.#deviceInfo.name}`,
+			type: `VEC Footpedal`,
 			devicePath: devicePath,
 			configFields: configFields,
-			deviceId: `vecfootpedal:${this.#deviceInfo.id}`,
+			deviceId: `vecfootpedal:${fakeSerial}`,
 		}
 
 		this.gridSize = {
-			columns: this.#modelInfo.totalCols,
-			rows: this.#modelInfo.totalRows,
+			columns: 3,
+			rows: 1,
 		}
 
-		this.#vecFootpedal.on('error', (error) => {
+		this.#hidDevice.on('error', (error) => {
 			console.error(error)
 			this.emit('remove')
 		})
 
-		this.#vecFootpedal.on('buttondown', (info) => {
-			const xy = buttonToXy(this.#modelInfo, info)
-			if (xy === undefined) {
-				return
-			}
+		const buttonState: boolean[] = new Array(3).fill(false)
+		const buttonMasks = [0x0001, 0x0002, 0x0004]
 
-			this.emit('click', ...xy, true)
-		})
+		this.#hidDevice.on('data', (data: Buffer) => {
+			if (data.length !== 2) return
 
-		this.#vecFootpedal.on('buttonup', (info) => {
-			const xy = buttonToXy(this.#modelInfo, info)
-			if (xy === undefined) {
-				return
-			}
+			const buttonsRaw = data.readUint16LE()
 
-			this.emit('click', ...xy, false)
-		})
-
-		this.#vecFootpedal.on('disconnected', (error) => {
-			console.error(error)
-			this.emit('remove')
+			// Treat buttons a little differently. Need to do button up and button down events
+			buttonMasks.forEach((mask, index) => {
+				const button = buttonsRaw & mask
+				if (button && !buttonState[index]) {
+					this.emit('click', index, 0, true)
+				} else if (!button && buttonState[index]) {
+					this.emit('click', index, 0, false)
+				}
+				buttonState[index] = button > 0
+			})
 		})
 	}
 
@@ -124,32 +98,19 @@ export class SurfaceUSBVECFootpedal extends EventEmitter<SurfacePanelEvents> imp
 	 * Open a VEC Footpedal
 	 */
 	static async create(devicePath: string): Promise<SurfaceUSBVECFootpedal> {
-		const pedal = vecFootpedal
-		// We're doing device search via Companion so don't run it here too
-		pedal.start(false)
+		let hidDevice: HIDAsync | undefined
+
 		try {
-			let deviceInfo: VecFootpedalDeviceInfo | undefined = undefined
-			let info = null
-			pedal.connect(devicePath)
-			deviceInfo = pedal.getDeviceByPath(devicePath)
-			if (!deviceInfo) throw new Error('Device not found!')
+			hidDevice = await HIDAsync.open(devicePath)
+			if (!hidDevice) throw new Error('Failed to open device')
 
-			switch (deviceInfo.name) {
-				case 'VEC Footpedal':
-					info = vecFootpedalInfo
-					break
-				default:
-					throw new Error(`Unknown VEC Footpedal device detected: ${deviceInfo.name}`)
-			}
-			if (!info) {
-				throw new Error('Unsupported model')
-			}
+			const info = await hidDevice.getDeviceInfo()
 
-			const self = new SurfaceUSBVECFootpedal(devicePath, pedal, info, deviceInfo)
+			const self = new SurfaceUSBVECFootpedal(devicePath, hidDevice, info)
 
 			return self
 		} catch (e) {
-			pedal.stop()
+			hidDevice?.close().catch(() => null)
 
 			throw e
 		}
@@ -164,11 +125,11 @@ export class SurfaceUSBVECFootpedal extends EventEmitter<SurfacePanelEvents> imp
 	}
 
 	quit(): void {
-		this.#vecFootpedal.stop()
+		this.#hidDevice.close().catch(() => null)
 	}
 
 	draw(): void {
-		// Should never be fired
+		// Not relevant for this device
 	}
 
 	clearDeck(): void {

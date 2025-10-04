@@ -19,8 +19,7 @@ import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
 import { isAShuttleDevice } from 'shuttle-node'
-import vecFootpedal from 'vec-footpedal'
-import { listLoupedecks, LoupedeckModelId } from '@loupedeck/node'
+import { listLoupedecks } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
@@ -28,10 +27,9 @@ import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
 import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
 import { SurfaceUSBXKeys } from './USB/XKeys.js'
-import { SurfaceUSBLoupedeckLive } from './USB/LoupedeckLive.js'
-import { SurfaceUSBLoupedeckCt } from './USB/LoupedeckCt.js'
+import { SurfaceUSBLoupedeck } from './USB/Loupedeck.js'
 import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
-import { SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
+import { isVecFootpedal, SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
@@ -962,15 +960,23 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		})
 
 		const groupsMap = new Map<string, ClientDevicesListItem>()
+		let groupIndexSkippedCount = 0
 		surfaceGroups.forEach((group, index) => {
+			const surfaces = group.surfaceHandlers.map((handler) =>
+				translateSurfaceConfig(handler.surfaceId, handler.getFullConfig(), handler)
+			)
+
+			// Check if this is an auto group with no controls, and shouldnt be assigned an 'index'
+			const skipThisGroupIndex =
+				group.isAutoGroup && surfaces.every((s) => s.size && s.size.rows === 0 && s.size.columns === 0)
+			if (skipThisGroupIndex) groupIndexSkippedCount++
+
 			const groupResult: ClientDevicesListItem = {
 				id: group.groupId,
-				index: index,
+				index: !skipThisGroupIndex ? index - groupIndexSkippedCount : null,
 				displayName: group.displayName,
 				isAutoGroup: group.isAutoGroup,
-				surfaces: group.surfaceHandlers.map((handler) =>
-					translateSurfaceConfig(handler.surfaceId, handler.getFullConfig(), handler)
-				),
+				surfaces,
 			}
 			result.push(groupResult)
 			groupsMap.set(group.groupId, groupResult)
@@ -1141,8 +1147,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 										}
 									} else if (
 										// More specific match has to be above xkeys
-										deviceInfo.vendorId === vecFootpedal.vids.VEC &&
-										deviceInfo.productId === vecFootpedal.pids.FOOTPEDAL
+										isVecFootpedal(deviceInfo)
 									) {
 										if (this.#handlerDependencies.userconfig.getKey('vec_footpedal_enable')) {
 											await this.#addDevice(deviceInfo.path, {}, 'vec-footpedal', SurfaceUSBVECFootpedal)
@@ -1198,19 +1203,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 									deviceInfos.map(async (deviceInfo) => {
 										this.#logger.info('found loupedeck', deviceInfo)
 										if (!this.#surfaceHandlers.has(deviceInfo.path)) {
-											if (
-												deviceInfo.model === LoupedeckModelId.LoupedeckLive ||
-												deviceInfo.model === LoupedeckModelId.LoupedeckLiveS ||
-												deviceInfo.model === LoupedeckModelId.RazerStreamController ||
-												deviceInfo.model === LoupedeckModelId.RazerStreamControllerX
-											) {
-												await this.#addDevice(deviceInfo.path, {}, 'loupedeck-live', SurfaceUSBLoupedeckLive, true)
-											} else if (
-												deviceInfo.model === LoupedeckModelId.LoupedeckCt ||
-												deviceInfo.model === LoupedeckModelId.LoupedeckCtV1
-											) {
-												await this.#addDevice(deviceInfo.path, {}, 'loupedeck-ct', SurfaceUSBLoupedeckCt, true)
-											}
+											await this.#addDevice(deviceInfo.path, {}, 'loupedeck', SurfaceUSBLoupedeck, true)
 										}
 									})
 								)
