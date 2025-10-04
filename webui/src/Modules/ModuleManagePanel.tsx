@@ -54,7 +54,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
 
 	const doCloseModule = useCallback(() => {
-		void navigate({ to: '/modules' })
+		void navigate({ to: '/connections/modules' })
 	}, [navigate])
 
 	return (

@@ -32,9 +32,9 @@ interface ConnectionEditPanelProps {
 export const ConnectionEditPanel = observer(function ConnectionEditPanel({ connectionId }: ConnectionEditPanelProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: `/connections/$connectionId` })
+	const navigate = useNavigate({ from: `/connections/configured/$connectionId` })
 	const closeConfigurePanel = useCallback(() => {
-		void navigate({ to: `/connections` })
+		void navigate({ to: `/connections/configured` })
 	}, [navigate])
 
 	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)

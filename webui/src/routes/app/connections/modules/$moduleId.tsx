@@ -16,13 +16,13 @@ const RouteComponent = observer(function RouteComponent() {
 	// Ensure the selected module is valid
 	useComputed(() => {
 		if (moduleId && !modules.modules.get(moduleId) && !modules.storeList.has(moduleId)) {
-			void navigate({ to: `/modules` })
+			void navigate({ to: `/connections/modules` })
 		}
 	}, [navigate, modules, moduleId])
 
 	return <MyErrorBoundary>{moduleId && <ModuleManagePanel key={moduleId} moduleId={moduleId} />}</MyErrorBoundary>
 })
 
-export const Route = createFileRoute('/_app/modules/$moduleId')({
+export const Route = createFileRoute('/_app/connections/modules/$moduleId')({
 	component: RouteComponent,
 })

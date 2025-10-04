@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ModulesPage } from '~/Modules/index.js'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_app/modules')({
-	component: ModulesPage,
+	loader: () => {
+		throw redirect({ to: '/connections/modules' })
+	},
 })
