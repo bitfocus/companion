@@ -100,22 +100,20 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 		this.#loupedeck.on('touchstart', (data) => {
 			for (const touch of data.changedTouches) {
 				const control = touch.target.control
-				if (control !== undefined) {
+				if (!control) continue
+
+				if (control.type === 'button' || control.type === 'wheel') {
 					this.emit('click', control.column, control.row, true)
-				} else if (touch.target.screen == LoupedeckDisplayId.Wheel) {
-					const wheelControl = this.#loupedeck.controls.find((c) => c.type === 'wheel')
-					if (wheelControl) this.emit('click', wheelControl.column, wheelControl.row, true)
 				}
 			}
 		})
 		this.#loupedeck.on('touchend', (data) => {
 			for (const touch of data.changedTouches) {
 				const control = touch.target.control
-				if (control !== undefined) {
+				if (!control) continue
+
+				if (control.type === 'button' || control.type === 'wheel') {
 					this.emit('click', control.column, control.row, false)
-				} else if (touch.target.screen == LoupedeckDisplayId.Wheel) {
-					const wheelControl = this.#loupedeck.controls.find((c) => c.type === 'wheel')
-					if (wheelControl) this.emit('click', wheelControl.column, wheelControl.row, false)
 				}
 			}
 		})
