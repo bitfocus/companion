@@ -282,6 +282,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			style: definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
 			steps: {},
 		}
+		if ('previewStyle' in definition && definition.previewStyle !== undefined) {
+			// don't let feedbacks override the previewStyle.
+			result.feedbacks = []
+		}
 
 		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
 		for (const [stepId, step] of Object.entries(definition.model.steps)) {
