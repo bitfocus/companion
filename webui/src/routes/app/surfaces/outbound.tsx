@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { OutboundSurfacesPage } from '~/Surfaces/OutboundSurfacesPage.js'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_app/surfaces/outbound')({
-	component: OutboundSurfacesPage,
+	loader: () => {
+		throw redirect({ to: '/surfaces/remote' })
+	},
 })
