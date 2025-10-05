@@ -282,9 +282,23 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			style: definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
 			steps: {},
 		}
+
+		// make sure that feedbacks don't override previewStyle:
 		if ('previewStyle' in definition && definition.previewStyle !== undefined) {
-			// don't let feedbacks override the previewStyle.
+			// copy all objects so they don't alter the regular button def. (Shallow should be enough.)
+			const feedbacks = result.feedbacks // the original
 			result.feedbacks = []
+			for (const feedback of feedbacks) {
+				const mergedFeedback = Object.assign({}, feedback)
+				if ('style' in mergedFeedback && mergedFeedback.style !== undefined) {
+					// merge into a copy of the existing style
+					mergedFeedback.style = Object.assign({}, mergedFeedback.style, definition.previewStyle)
+				} else {
+					// assign as a new style (typically for 'advanced' feedbacks)
+					Object.assign(mergedFeedback, { style: definition.previewStyle })
+				}
+				result.feedbacks.push(mergedFeedback)
+			}
 		}
 
 		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
