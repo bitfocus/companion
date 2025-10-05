@@ -17,6 +17,8 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import type { OptionsObject } from '@companion-module/base/dist/util.js'
 import LogController, { Logger } from '../Log/Controller.js'
 
+const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
+
 enum EntityState {
 	UNLOADED = 'UNLOADED',
 	UPGRADING = 'UPGRADING',
@@ -66,16 +68,16 @@ export class InstanceEntityManager {
 		() => {
 			if (!this.#ready) return
 
-			const entityIdsInThisBatch = new Map<string, string>()
-			const upgradePayload: UpgradeActionAndFeedbackInstancesMessage = {
+			let entityIdsInThisBatch = new Map<string, string>()
+			let upgradePayload: UpgradeActionAndFeedbackInstancesMessage = {
 				actions: [],
 				feedbacks: [],
 				defaultUpgradeIndex: 0, // TODO - remove this!
 			}
-			const updateActionsPayload: UpdateActionInstancesMessage = {
+			let updateActionsPayload: UpdateActionInstancesMessage = {
 				actions: {},
 			}
-			const updateFeedbacksPayload: UpdateFeedbackInstancesMessage = {
+			let updateFeedbacksPayload: UpdateFeedbackInstancesMessage = {
 				feedbacks: {},
 			}
 
@@ -114,6 +116,21 @@ export class InstanceEntityManager {
 					default:
 						assertNever(entityModel)
 						this.#logger.warn('Unknown entity type', entity.type)
+				}
+
+				// If the payloads are getting large, send them now and reset
+				// We do this to avoid sending too much data in one go, which can cause issues with IPC
+				// The exact limits here are somewhat arbitrary, but should be sufficient for most use cases
+				if (entityIdsInThisBatch.size > MAX_UPDATE_PER_BATCH) {
+					this.#sendUpgradeBatch(entityIdsInThisBatch, upgradePayload)
+
+					// Start a new batch
+					entityIdsInThisBatch = new Map()
+					upgradePayload = {
+						actions: [],
+						feedbacks: [],
+						defaultUpgradeIndex: 0, // TODO - remove this!
+					}
 				}
 			}
 
@@ -229,6 +246,26 @@ export class InstanceEntityManager {
 					default:
 						assertNever(wrapper.state)
 				}
+
+				// If the payloads are getting large, send them now and reset
+				// We do this to avoid sending too much data in one go, which can cause issues with IPC
+				// The exact limits here are somewhat arbitrary, but should be sufficient for most use cases
+				if (Object.keys(updateActionsPayload.actions).length > MAX_UPDATE_PER_BATCH) {
+					this.#ipcWrapper.sendWithCb('updateActions', updateActionsPayload).catch((e) => {
+						this.#logger.error('Error sending updateActions', e)
+					})
+
+					// Start a new batch
+					updateActionsPayload = { actions: {} }
+				}
+				if (Object.keys(updateFeedbacksPayload.feedbacks).length > MAX_UPDATE_PER_BATCH) {
+					this.#ipcWrapper.sendWithCb('updateFeedbacks', updateFeedbacksPayload).catch((e) => {
+						this.#logger.error('Error sending updateFeedbacks', e)
+					})
+
+					// Start a new batch
+					updateFeedbacksPayload = { feedbacks: {} }
+				}
 			}
 
 			// Start by sending the simple payloads
@@ -244,126 +281,8 @@ export class InstanceEntityManager {
 			}
 
 			// Now we need to send the upgrades
-			if (upgradePayload.actions.length > 0 || upgradePayload.feedbacks.length > 0) {
-				this.#ipcWrapper
-					.sendWithCb('upgradeActionsAndFeedbacks', upgradePayload)
-					.then((upgraded) => {
-						if (!this.#ready) return
-
-						// We have the upgraded entities, lets patch the tracked entities
-
-						const upgradedActions = new Map(upgraded.updatedActions.map((act) => [act.id, act]))
-						const upgradedFeedbacks = new Map(upgraded.updatedFeedbacks.map((fb) => [fb.id, fb]))
-
-						// Loop through what we sent, as we don't get a response for all of them
-						for (const [entityId, wrapperId] of entityIdsInThisBatch) {
-							const wrapper = this.#entities.get(entityId)
-							// Entity may have been deleted or recreated, if so we can ignore it
-							if (!wrapper || wrapper.wrapperId !== wrapperId) continue
-
-							const entity = wrapper.entity.deref()
-							if (!entity) {
-								this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, terminating upgrade`)
-								this.#entities.delete(entityId)
-								continue
-							}
-
-							this.#logger.silly(
-								`Processing entity ${entityId} in control ${wrapper.controlId} with state ${wrapper.state}`
-							)
-
-							switch (wrapper.state) {
-								case EntityState.UPGRADING_INVALIDATED:
-									// It has been invalidated, it needs to be re-run
-									wrapper.state = EntityState.UNLOADED
-									break
-								case EntityState.UPGRADING: {
-									// It has been upgraded, so we can update the entity
-
-									// We need to do this via the EntityPool method, so that it gets persisted correctly
-									const control = this.#controlsController.getControl(wrapper.controlId)
-									if (!control || !control.supportsEntities) {
-										this.#logger.warn(`Control ${wrapper.controlId} not found`)
-										continue
-									}
-
-									try {
-										switch (entity.type) {
-											case EntityModelType.Action: {
-												const action = upgradedActions.get(entity.id)
-												if (action) {
-													control.entities.entityReplace({
-														id: action.id,
-														type: EntityModelType.Action,
-														definitionId: action.actionId,
-														options: action.options,
-														upgradeIndex: this.#currentUpgradeIndex,
-													})
-												}
-												break
-											}
-											case EntityModelType.Feedback: {
-												const feedback = upgradedFeedbacks.get(entity.id)
-												if (feedback) {
-													control.entities.entityReplace({
-														id: feedback.id,
-														type: EntityModelType.Feedback,
-														definitionId: feedback.feedbackId,
-														options: feedback.options,
-														style: feedback.style,
-														isInverted: feedback.isInverted,
-														upgradeIndex: this.#currentUpgradeIndex,
-													})
-												}
-												break
-											}
-											default:
-												assertNever(entity.type)
-												break
-										}
-									} catch (e) {
-										this.#logger.error(`Error replacing entity ${entity.id} in control ${wrapper.controlId}`, e)
-										// If we fail to replace the entity, we can just ignore it
-										continue
-									}
-
-									break
-								}
-								case EntityState.READY:
-								case EntityState.UNLOADED:
-									// Shouldn't happen, lets pretend it didnt
-									break
-								case EntityState.PENDING_DELETE:
-									// About to be deleted, so we can ignore it
-									break
-
-								default:
-									assertNever(wrapper.state)
-									break
-							}
-						}
-
-						this.#debounceProcessPending()
-					})
-					.catch((e) => {
-						this.#logger.error('Error sending upgradeActionsAndFeedbacks', e)
-
-						// There isn't much we can do to retry the upgrade, the best we can do is pretend it was fine and progress the entities through the process
-						for (const [entityId, wrapperId] of entityIdsInThisBatch) {
-							const wrapper = this.#entities.get(entityId)
-							if (!wrapper || wrapper.wrapperId !== wrapperId) continue
-							if (wrapper.state === EntityState.UPGRADING) {
-								// Pretend it was fine
-								wrapper.state = EntityState.READY
-							} else if (wrapper.state === EntityState.UPGRADING_INVALIDATED) {
-								// This can be retried
-								wrapper.state = EntityState.UNLOADED
-							}
-						}
-
-						// Make sure anything pending is processed
-						this.#debounceProcessPending()
-					})
+			if (entityIdsInThisBatch.size > 0) {
+				this.#sendUpgradeBatch(entityIdsInThisBatch, upgradePayload)
 			}
 		},
 		{
@@ -373,6 +292,131 @@ export class InstanceEntityManager {
 			wait: 10,
 		}
 	)
+
+	#sendUpgradeBatch(
+		entityIdsInThisBatch: ReadonlyMap<string, string>,
+		upgradePayload: UpgradeActionAndFeedbackInstancesMessage
+	): void {
+		this.#ipcWrapper
+			.sendWithCb('upgradeActionsAndFeedbacks', upgradePayload)
+			.then((upgraded) => {
+				if (!this.#ready) return
+
+				// We have the upgraded entities, lets patch the tracked entities
+
+				const upgradedActions = new Map(upgraded.updatedActions.map((act) => [act.id, act]))
+				const upgradedFeedbacks = new Map(upgraded.updatedFeedbacks.map((fb) => [fb.id, fb]))
+
+				// Loop through what we sent, as we don't get a response for all of them
+				for (const [entityId, wrapperId] of entityIdsInThisBatch) {
+					const wrapper = this.#entities.get(entityId)
+					// Entity may have been deleted or recreated, if so we can ignore it
+					if (!wrapper || wrapper.wrapperId !== wrapperId) continue
+
+					const entity = wrapper.entity.deref()
+					if (!entity) {
+						this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, terminating upgrade`)
+						this.#entities.delete(entityId)
+						continue
+					}
+
+					this.#logger.silly(
+						`Processing entity ${entityId} in control ${wrapper.controlId} with state ${wrapper.state}`
+					)
+
+					switch (wrapper.state) {
+						case EntityState.UPGRADING_INVALIDATED:
+							// It has been invalidated, it needs to be re-run
+							wrapper.state = EntityState.UNLOADED
+							break
+						case EntityState.UPGRADING: {
+							// It has been upgraded, so we can update the entity
+
+							// We need to do this via the EntityPool method, so that it gets persisted correctly
+							const control = this.#controlsController.getControl(wrapper.controlId)
+							if (!control || !control.supportsEntities) {
+								this.#logger.warn(`Control ${wrapper.controlId} not found`)
+								continue
+							}
+
+							try {
+								switch (entity.type) {
+									case EntityModelType.Action: {
+										const action = upgradedActions.get(entity.id)
+										if (action) {
+											control.entities.entityReplace({
+												id: action.id,
+												type: EntityModelType.Action,
+												definitionId: action.actionId,
+												options: action.options,
+												upgradeIndex: this.#currentUpgradeIndex,
+											})
+										}
+										break
+									}
+									case EntityModelType.Feedback: {
+										const feedback = upgradedFeedbacks.get(entity.id)
+										if (feedback) {
+											control.entities.entityReplace({
+												id: feedback.id,
+												type: EntityModelType.Feedback,
+												definitionId: feedback.feedbackId,
+												options: feedback.options,
+												style: feedback.style,
+												isInverted: feedback.isInverted,
+												upgradeIndex: this.#currentUpgradeIndex,
+											})
+										}
+										break
+									}
+									default:
+										assertNever(entity.type)
+										break
+								}
+							} catch (e) {
+								this.#logger.error(`Error replacing entity ${entity.id} in control ${wrapper.controlId}`, e)
+								// If we fail to replace the entity, we can just ignore it
+								continue
+							}
+
+							break
+						}
+						case EntityState.READY:
+						case EntityState.UNLOADED:
+							// Shouldn't happen, lets pretend it didnt
+							break
+						case EntityState.PENDING_DELETE:
+							// About to be deleted, so we can ignore it
+							break
+
+						default:
+							assertNever(wrapper.state)
+							break
+					}
+				}
+
+				this.#debounceProcessPending()
+			})
+			.catch((e) => {
+				this.#logger.error('Error sending upgradeActionsAndFeedbacks', e)
+
+				// There isn't much we can do to retry the upgrade, the best we can do is pretend it was fine and progress the entities through the process
+				for (const [entityId, wrapperId] of entityIdsInThisBatch) {
+					const wrapper = this.#entities.get(entityId)
+					if (!wrapper || wrapper.wrapperId !== wrapperId) continue
+					if (wrapper.state === EntityState.UPGRADING) {
+						// Pretend it was fine
+						wrapper.state = EntityState.READY
+					} else if (wrapper.state === EntityState.UPGRADING_INVALIDATED) {
+						// This can be retried
+						wrapper.state = EntityState.UNLOADED
+					}
+				}
+
+				// Make sure anything pending is processed
+				this.#debounceProcessPending()
+			})
+	}
 
 	/**
 	 * Start the processing of entities in the manager.
