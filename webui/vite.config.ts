@@ -57,6 +57,10 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
+			[`${normalizedBase}/connections/configured/instance`]: {
+				target: `http://${upstreamUrl}`,
+				rewrite: (path) => path.slice(normalizedBase.length),
+			},
 			[`${normalizedBase}/int`]: {
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),

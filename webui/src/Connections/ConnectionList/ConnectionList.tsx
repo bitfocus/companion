@@ -37,13 +37,13 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 
 	const connectionStatuses = useConnectionStatuses()
 
-	const navigate = useNavigate({ from: '/connections' })
+	const navigate = useNavigate({ from: '/connections/configured' })
 	const doConfigureConnection = useCallback(
 		(connectionId: string | null) => {
 			if (!connectionId) {
-				void navigate({ to: '/connections' })
+				void navigate({ to: '/connections/configured' })
 			} else {
-				void navigate({ to: `/connections/$connectionId`, params: { connectionId } })
+				void navigate({ to: '/connections/configured/$connectionId', params: { connectionId } })
 			}
 		},
 		[navigate]
@@ -104,7 +104,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 							color="primary"
 							size="sm"
 							className="d-xl-none"
-							onClick={() => void navigate({ to: '/connections/add' })}
+							onClick={() => void navigate({ to: '/connections/configured/add' })}
 						>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
 							Add Connection
