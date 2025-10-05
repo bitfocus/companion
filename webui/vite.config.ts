@@ -47,6 +47,7 @@ export default defineConfig({
 		sourcemap: true,
 	},
 	server: {
+		allowedHosts: ['bs-local.com'],
 		proxy: {
 			[`${normalizedBase}/instance`]: {
 				target: `http://${upstreamUrl}`,
