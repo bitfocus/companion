@@ -322,23 +322,27 @@ export class GraphicsRenderer {
 
 		// next error or warning icon
 		if (location) {
+			let statusColor: string | undefined
 			switch (drawStyle.button_status) {
 				case 'error':
-					img.box(rightMax - 10, 3, rightMax - 2, 11, 'red')
-					rightMax -= 10
+					statusColor = 'red'
 					break
 				case 'warning':
-					img.drawFilledPath(
-						[
-							[rightMax - 10, 11],
-							[rightMax - 2, 11],
-							[rightMax - 6, 3],
-						],
-						'rgb(255, 127, 0)'
-					)
-					img.drawTextLineAligned(rightMax - 6, 11, '!', colorBlack, 7, 'center', 'bottom')
-					rightMax -= 10
+					statusColor = 'rgb(255, 127, 0)'
 					break
+			}
+
+			if (statusColor) {
+				img.drawFilledPath(
+					[
+						[rightMax - 11, 11],
+						[rightMax - 2, 11],
+						[rightMax - 6.5, 2],
+					],
+					statusColor
+				)
+				img.drawTextLineAligned(rightMax - 6.5, 11, '!', colorBlack, 7, 'center', 'bottom', 'bold')
+				rightMax -= 11
 			}
 
 			// last running icon
