@@ -38,6 +38,7 @@ import { Route as VariablesExpressionRouteImport } from './routes/app/variables/
 import { Route as VariablesCustomRouteImport } from './routes/app/variables/custom.tsx'
 import { Route as VariablesOldLabelRouteImport } from './routes/app/variables/$oldLabel.tsx'
 import { Route as TriggersControlIdRouteImport } from './routes/app/triggers/$controlId.tsx'
+import { Route as SurfacesRemoteRouteImport } from './routes/app/surfaces/remote.tsx'
 import { Route as SurfacesOutboundRouteImport } from './routes/app/surfaces/outbound.tsx'
 import { Route as SurfacesDiscoverRouteImport } from './routes/app/surfaces/discover.tsx'
 import { Route as SurfacesConfiguredRouteImport } from './routes/app/surfaces/configured.tsx'
@@ -232,6 +233,11 @@ const TriggersControlIdRoute = TriggersControlIdRouteImport.update({
   path: '/$controlId',
   getParentRoute: () => TriggersRoute,
 } as any)
+const SurfacesRemoteRoute = SurfacesRemoteRouteImport.update({
+  id: '/surfaces/remote',
+  path: '/surfaces/remote',
+  getParentRoute: () => appRoute,
+} as any)
 const SurfacesOutboundRoute = SurfacesOutboundRouteImport.update({
   id: '/surfaces/outbound',
   path: '/surfaces/outbound',
@@ -408,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/surfaces/configured': typeof SurfacesConfiguredRouteWithChildren
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
+  '/surfaces/remote': typeof SurfacesRemoteRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
@@ -459,6 +466,7 @@ export interface FileRoutesByTo {
   '/surfaces/$': typeof SurfacesSplatRoute
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
+  '/surfaces/remote': typeof SurfacesRemoteRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
@@ -517,6 +525,7 @@ export interface FileRoutesById {
   '/_app/surfaces/configured': typeof SurfacesConfiguredRouteWithChildren
   '/_app/surfaces/discover': typeof SurfacesDiscoverRoute
   '/_app/surfaces/outbound': typeof SurfacesOutboundRoute
+  '/_app/surfaces/remote': typeof SurfacesRemoteRoute
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
   '/_app/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/_app/variables/custom': typeof VariablesCustomRoute
@@ -576,6 +585,7 @@ export interface FileRouteTypes {
     | '/surfaces/configured'
     | '/surfaces/discover'
     | '/surfaces/outbound'
+    | '/surfaces/remote'
     | '/triggers/$controlId'
     | '/variables/$oldLabel'
     | '/variables/custom'
@@ -627,6 +637,7 @@ export interface FileRouteTypes {
     | '/surfaces/$'
     | '/surfaces/discover'
     | '/surfaces/outbound'
+    | '/surfaces/remote'
     | '/triggers/$controlId'
     | '/variables/$oldLabel'
     | '/variables/custom'
@@ -684,6 +695,7 @@ export interface FileRouteTypes {
     | '/_app/surfaces/configured'
     | '/_app/surfaces/discover'
     | '/_app/surfaces/outbound'
+    | '/_app/surfaces/remote'
     | '/_app/triggers/$controlId'
     | '/_app/variables/$oldLabel'
     | '/_app/variables/custom'
@@ -932,6 +944,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/triggers/$controlId'
       preLoaderRoute: typeof TriggersControlIdRouteImport
       parentRoute: typeof TriggersRoute
+    }
+    '/_app/surfaces/remote': {
+      id: '/_app/surfaces/remote'
+      path: '/surfaces/remote'
+      fullPath: '/surfaces/remote'
+      preLoaderRoute: typeof SurfacesRemoteRouteImport
+      parentRoute: typeof appRoute
     }
     '/_app/surfaces/outbound': {
       id: '/_app/surfaces/outbound'
@@ -1236,6 +1255,7 @@ interface appRouteChildren {
   SurfacesConfiguredRoute: typeof SurfacesConfiguredRouteWithChildren
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
+  SurfacesRemoteRoute: typeof SurfacesRemoteRoute
   VariablesOldLabelRoute: typeof VariablesOldLabelRoute
   VariablesCustomRoute: typeof VariablesCustomRoute
   VariablesExpressionRoute: typeof VariablesExpressionRouteWithChildren
@@ -1266,6 +1286,7 @@ const appRouteChildren: appRouteChildren = {
   SurfacesConfiguredRoute: SurfacesConfiguredRouteWithChildren,
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
+  SurfacesRemoteRoute: SurfacesRemoteRoute,
   VariablesOldLabelRoute: VariablesOldLabelRoute,
   VariablesCustomRoute: VariablesCustomRoute,
   VariablesExpressionRoute: VariablesExpressionRouteWithChildren,

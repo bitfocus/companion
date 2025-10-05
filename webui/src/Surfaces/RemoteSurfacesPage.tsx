@@ -4,15 +4,17 @@ import { OutboundSurfacesTable } from './OutboundSurfacesTable.js'
 import { faAdd } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddOutboundSurfaceModal, AddOutboundSurfaceModalRef } from './AddOutboundSurfaceModal.js'
+import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 
-export function OutboundSurfacesPage(): React.JSX.Element {
+export function RemoteSurfacesPage(): React.JSX.Element {
 	const addModalRef = useRef<AddOutboundSurfaceModalRef>(null)
 
 	const addSurface = useCallback(() => addModalRef?.current?.show(), [])
 
 	return (
-		<CRow>
-			<CCol xs={12} className="flex-column-layout">
+		<CRow className="split-panels">
+			<CCol xl={6} className="primary-panel flex-column-layout collapse-under-xl">
 				<div className="fixed-header">
 					<h4>Remote Surfaces</h4>
 
@@ -34,7 +36,34 @@ export function OutboundSurfacesPage(): React.JSX.Element {
 				</div>
 
 				<div className="scrollable-content mt-2">
-					<OutboundSurfacesTable />
+					<MyErrorBoundary>
+						<OutboundSurfacesTable />
+					</MyErrorBoundary>
+				</div>
+			</CCol>
+
+			<CCol xl={6} className="secondary-panel">
+				<div className="secondary-panel-simple">
+					<div className="secondary-panel-simple-header">
+						<h4 className="panel-title">Discover Surfaces</h4>
+					</div>
+
+					<div className="secondary-panel-simple-body">
+						<div className="fixed-header">
+							<p style={{ marginBottom: '0.5rem' }}>
+								Discovered remote surfaces, such as Companion Satellite, Stream Deck Studio or Stream Deck Network Dock
+								will be listed here. You can easily configure them to connect to Companion from here.
+								<br />
+								This requires Companion Satellite version 1.9.0 and later.
+							</p>
+						</div>
+
+						<div className="scrollable-content mt-2">
+							<MyErrorBoundary>
+								<SurfaceDiscoveryTable />
+							</MyErrorBoundary>
+						</div>
+					</div>
 				</div>
 			</CCol>
 		</CRow>
