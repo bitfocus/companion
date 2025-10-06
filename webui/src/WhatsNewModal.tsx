@@ -39,6 +39,12 @@ export const WhatsNewModal = observer(
 
 		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined)
 		useEffect(() => {
+			// Check if the What's New dialog is disabled via build environment variable
+			if (import.meta.env.VITE_DISABLE_WHATS_NEW === 'true') {
+				console.log('WhatsNewModal disabled via VITE_DISABLE_WHATS_NEW environment variable')
+				return
+			}
+
 			if (!storedLatest || (latestPage._version && semver.lt(storedLatest, latestPage._version))) {
 				setTimeout(() => {
 					setShow(true)

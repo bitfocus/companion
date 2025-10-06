@@ -8,6 +8,7 @@ interface ViteTypeOptions {
 
 interface ImportMetaEnv {
 	readonly VITE_SENTRY_DSN: string
+	readonly VITE_DISABLE_WHATS_NEW: string
 	// more env variables...
 }
 

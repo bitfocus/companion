@@ -3,7 +3,10 @@ import { expect, type Page } from '@playwright/test'
 export const COMPANION_URL = process.env.COMPANION_URL || 'http://localhost:8000/'
 
 export async function loadPageAndWaitForReady(page: Page, path = '', dismissWhatsNew = true): Promise<void> {
+	console.log(`Loading page: ${COMPANION_URL + '/' + path}`)
 	await page.goto(COMPANION_URL + '/' + path)
+
+	console.log('Page loaded, waiting for ready state...')
 
 	if (dismissWhatsNew) {
 		const button = page.locator('.modal-whatsnew button[aria-label="Close"]')
@@ -15,7 +18,9 @@ export async function loadPageAndWaitForReady(page: Page, path = '', dismissWhat
 	// await expect(page.getByRole('heading', { name: 'Connecting', level: 3 })).toBeVisible()
 
 	// Wait for connecting to disappear
-	await expect(page.locator('.app-loading')).not.toBeVisible({ timeout: 20000 })
+	await expect(page.locator('.app-loading')).toHaveCount(0, { timeout: 20000 })
+
+	console.log('Page ready')
 
 	await assertNoErrorBoundaries(page)
 

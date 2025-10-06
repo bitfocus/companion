@@ -3,9 +3,13 @@ import type { AppRouter } from '../../companion/lib/UI/TRPC.js'
 import { COMPANION_URL } from './util.js'
 
 // Build WebSocket URL for tRPC
-const trpcUrl = COMPANION_URL.replace(/^http/, 'ws') + '/trpc'
+let trpcUrl = COMPANION_URL.replace(/^http/, 'ws') + '/trpc'
 
-// console.log('Connecting to tRPC at:', trpcUrl)
+if (trpcUrl.includes('bs-local.com') && !process.env.CI) {
+	trpcUrl = trpcUrl.replace('bs-local.com', 'localhost')
+}
+
+console.log('Connecting to tRPC at:', trpcUrl)
 
 export const trpcWsClient = createWSClient({
 	url: trpcUrl,
@@ -28,7 +32,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
  * This will reset all aspects of the system to a clean state
  */
 export async function performFullReset(): Promise<void> {
-	// console.log('Performing full configuration reset...')
+	console.log('Performing full configuration reset...')
 
 	try {
 		await trpcClient.importExport.resetConfiguration.mutate({
@@ -41,7 +45,7 @@ export async function performFullReset(): Promise<void> {
 			userconfig: true,
 		})
 
-		// console.log('Full configuration reset completed successfully')
+		console.log('Full configuration reset completed successfully')
 	} catch (error) {
 		console.error('Failed to reset configuration:', error)
 		throw error

@@ -16,9 +16,9 @@ test('basic page loading', async ({ page }) => {
 
 	await expect(page).toHaveTitle('Bitfocus Companion - Admin')
 
-	// Check that the whats new dialog is visible, and dismiss it
-	await expect(page.locator('.modal-whatsnew')).toBeVisible()
-	await page.locator('.modal-whatsnew button[aria-label="Close"]').click()
+	// // Check that the whats new dialog is visible, and dismiss it
+	// await expect(page.locator('.modal-whatsnew')).toBeVisible()
+	// await page.locator('.modal-whatsnew button[aria-label="Close"]').click()
 
 	// Check that the whats new dialog is gone
 	await expect(page.locator('.modal-whatsnew')).not.toBeVisible()

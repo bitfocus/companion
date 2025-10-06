@@ -44,6 +44,8 @@ jobs:
       - name: Build companion
         run: |
           yarn dist:prepare
+        env:
+          VITE_DISABLE_WHATS_NEW: 'true' # Disable What's New dialog for testing
 
       - name: Upload companion build
         uses: actions/upload-artifact@v4
