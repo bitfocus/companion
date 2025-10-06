@@ -170,7 +170,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		return msToStamp(v, type)
 	},
 	msToTimestamp: (v, type) => {
-		type = type ? type : 'nmm:ss.ms'
+		type = type ? type : 'nmm:ss.S'
 		return msToStamp(v, type)
 	},
 	timeOffset: (time, offset, hr12 = false) => {
