@@ -11,6 +11,7 @@ import { ServiceSatelliteTcp } from './SatelliteTcp.js'
 import { ServiceSurfaceDiscovery } from './SurfaceDiscovery.js'
 import { ServiceTcp } from './Tcp.js'
 import { ServiceUdp } from './Udp.js'
+import { MqttService } from './Mqtt.js'
 import { ServiceVideohubPanel } from './VideohubPanel.js'
 import type { UIHandler } from '../UI/Handler.js'
 import { ServiceSatelliteWebsocket } from './SatelliteWebsocket.js'
@@ -46,6 +47,7 @@ export class ServiceController {
 	readonly tcp: ServiceTcp
 	readonly udp: ServiceUdp
 	readonly emberplus: ServiceEmberPlus
+	readonly mqtt: MqttService
 	readonly artnet: ServiceArtnet
 	readonly rosstalk: ServiceRosstalk
 	readonly satelliteTcp: ServiceSatelliteTcp
@@ -72,6 +74,7 @@ export class ServiceController {
 		this.tcp = new ServiceTcp(serviceApi, userconfig)
 		this.udp = new ServiceUdp(serviceApi, userconfig)
 		this.emberplus = new ServiceEmberPlus(serviceApi, userconfig, pageStore)
+		this.mqtt = new MqttService(serviceApi, userconfig)
 		this.artnet = new ServiceArtnet(serviceApi, userconfig)
 		this.rosstalk = new ServiceRosstalk(serviceApi, userconfig)
 		this.satelliteTcp = new ServiceSatelliteTcp(serviceApi.appInfo, surfaceController, userconfig)
@@ -99,6 +102,7 @@ export class ServiceController {
 		this.elgatoPlugin.updateUserConfig(key, value)
 		this.emberplus.updateUserConfig(key, value)
 		this.https.updateUserConfig(key, value)
+		this.mqtt.updateUserConfig(key, value)
 		this.oscListener.updateUserConfig(key, value)
 		this.oscSender.updateUserConfig(key, value)
 		this.rosstalk.updateUserConfig(key, value)

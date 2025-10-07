@@ -9,6 +9,7 @@ import { RosstalkConfig } from './Sections/RosstalkConfig.js'
 import { ArtnetConfig } from './Sections/ArtnetConfig.js'
 import { VideohubServerConfig } from './Sections/VideohubServerConfig.js'
 import { HttpConfig } from './Sections/HttpConfig.js'
+import { MqttConfig } from './Sections/MqttConfig.js'
 import { observer } from 'mobx-react-lite'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ArtnetProtocol } from './Sections/ArtnetProtocol.js'
@@ -18,6 +19,7 @@ import { RosstalkProtocol } from './Sections/RosstalkProtocol.js'
 import { EmberPlusProtocol } from './Sections/EmberPlusProtocol.js'
 import { TcpUdpProtocol } from './Sections/TcpUdpProtocol.js'
 import { useUserConfigProps } from './Context.js'
+import { MqttProtocol } from './Sections/MqttProtocol.js'
 
 export const SettingsProtocolsPage = memo(function UserConfig() {
 	return (
@@ -66,13 +68,14 @@ const UserConfigTable = observer(function UserConfigTable() {
 				<EmberPlusConfig {...userConfigProps} />
 				<VideohubServerConfig {...userConfigProps} />
 				<ArtnetConfig {...userConfigProps} />
+				<MqttConfig {...userConfigProps} />
 			</tbody>
 		</table>
 	)
 })
 
 const RemoteControlInfo = memo(function RemoteControlInfo() {
-	const [activeTab, setActiveTab] = useState<'tcp-udp' | 'http' | 'osc' | 'artnet' | 'rosstalk' | 'emberplus'>(
+	const [activeTab, setActiveTab] = useState<'tcp-udp' | 'http' | 'osc' | 'artnet' | 'rosstalk' | 'emberplus' | 'mqtt'>(
 		'tcp-udp'
 	)
 
@@ -109,6 +112,11 @@ const RemoteControlInfo = memo(function RemoteControlInfo() {
 						Ember+
 					</CNavLink>
 				</CNavItem>
+				<CNavItem>
+					<CNavLink active={activeTab === 'mqtt'} onClick={() => setActiveTab('mqtt')}>
+						MQTT
+					</CNavLink>
+				</CNavItem>
 			</CNav>
 			<CTabContent>
 				<CTabPane role="tabpanel" aria-labelledby="tcp-udp-tab" visible={activeTab === 'tcp-udp'}>
@@ -139,6 +147,11 @@ const RemoteControlInfo = memo(function RemoteControlInfo() {
 				<CTabPane role="tabpanel" aria-labelledby="emberplus-tab" visible={activeTab === 'emberplus'}>
 					<MyErrorBoundary>
 						<EmberPlusProtocol />
+					</MyErrorBoundary>
+				</CTabPane>
+				<CTabPane role="tabpanel" aria-labelledby="mqtt-tab" visible={activeTab === 'mqtt'}>
+					<MyErrorBoundary>
+						<MqttProtocol />
 					</MyErrorBoundary>
 				</CTabPane>
 			</CTabContent>

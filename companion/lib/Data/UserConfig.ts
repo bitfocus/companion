@@ -76,6 +76,13 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		rosstalk_enabled: false,
 
+		mqtt_enabled: false,
+		mqtt_broker: 'localhost',
+		mqtt_port: 1883,
+		mqtt_username: '',
+		mqtt_password: '',
+		mqtt_topic: 'companion',
+
 		emberplus_enabled: false,
 
 		videohub_panel_enabled: false,

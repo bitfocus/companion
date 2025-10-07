@@ -38,6 +38,13 @@ export interface UserConfigModel {
 
 	rosstalk_enabled: boolean
 
+	mqtt_enabled: boolean
+	mqtt_broker: string
+	mqtt_port: number
+	mqtt_username: string
+	mqtt_password: string
+	mqtt_topic: string
+
 	emberplus_enabled: boolean
 
 	videohub_panel_enabled: boolean
