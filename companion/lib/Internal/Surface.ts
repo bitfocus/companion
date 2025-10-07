@@ -145,7 +145,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	/**
 	 * Page history for surfaces
 	 */
-	readonly #pageHistory = new Map<string, { history: string[]; index: number }>()
+	//readonly #pageHistory = new Map<string, { history: string[]; index: number }>()
 
 	constructor(
 		internalUtils: InternalModuleUtils,
@@ -550,6 +550,13 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		}
 	}
 
+	incrPage(surfaceId: string, forward: boolean): boolean {
+		//const surfaceId = this.#fetchSurfaceId({controller: surfaceId}, undefined as unknown as RunActionExtras,  false)
+		if (!surfaceId) return true
+		this.#changeSurfacePage(surfaceId, forward ? '+1' : '-1')
+		return true
+	}
+
 	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
 		if (action.definitionId === 'set_brightness') {
 			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
@@ -692,65 +699,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	/**
 	 * Change the page of a surface
 	 */
-	#changeSurfacePage(surfaceId: string, toPage: string | 'back' | 'forward' | '+1' | '-1'): void {
+	#changeSurfacePage(
+		surfaceId: string,
+		toPage: string | 'back' | 'forward' | '+1' | '-1',
+		defer = !(surfaceId in ['back', 'forward'])
+	): void {
 		const groupId = this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
 		if (!groupId) return
-
-		const currentPage = this.#surfaceController.devicePageGet(groupId, true)
-		if (currentPage === undefined) {
-			// Bad groupId
-		} else {
-			// no history yet
-			// start with the current (from) page
-			let pageHistory = this.#pageHistory.get(groupId)
-			if (!pageHistory) {
-				pageHistory = {
-					history: [currentPage],
-					index: 0,
-				}
-				this.#pageHistory.set(groupId, pageHistory)
-			}
-
-			if (toPage === 'back' || toPage === 'forward') {
-				// determine the 'to' page
-				const pageDirection = toPage === 'back' ? -1 : 1
-				const pageIndex = pageHistory.index + pageDirection
-				const pageTarget = pageHistory.history[pageIndex]
-
-				// change only if pageIndex points to a real page
-				if (pageTarget !== undefined) {
-					pageHistory.index = pageIndex
-
-					this.#surfaceController.devicePageSet(groupId, pageTarget, true)
-				}
-			} else {
-				let newPage: string | null = toPage
-				if (newPage === '+1') {
-					newPage = this.#pageStore.getOffsetPageId(currentPage, 1)
-				} else if (newPage === '-1') {
-					newPage = this.#pageStore.getOffsetPageId(currentPage, -1)
-				} else {
-					newPage = String(newPage)
-				}
-				if (!newPage || !this.#pageStore.isPageIdValid(newPage)) newPage = this.#pageStore.getFirstPageId()
-
-				// Change page
-				this.#surfaceController.devicePageSet(groupId, newPage, true, true)
-
-				// Clear forward page history beyond current index, add new history entry, increment index;
-				pageHistory.history = pageHistory.history.slice(0, pageHistory.index + 1)
-				pageHistory.history.push(newPage)
-				pageHistory.index += 1
-
-				// Limit the max history
-				const maxPageHistory = 100
-				if (pageHistory.history.length > maxPageHistory) {
-					const startIndex = pageHistory.history.length - maxPageHistory
-					pageHistory.history = pageHistory.history.slice(startIndex)
-					pageHistory.index = pageHistory.history.length - 1
-				}
-			}
-		}
+		this.#surfaceController.devicePageSet(groupId, toPage, true, defer)
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
