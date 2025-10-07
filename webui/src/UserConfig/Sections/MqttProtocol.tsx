@@ -8,7 +8,7 @@ export const MqttProtocol = observer(function MqttProtocol() {
 	return (
 		<>
 			<p>
-				Currently the MQTT service only supports publishing instance variables to your MQTT broker.
+				The MQTT protocol is currently <b>experimental</b>.
 			</p>
 			<p>Variables are published to the topic <code>{userConfig.properties?.mqtt_topic ? userConfig.properties.mqtt_topic + '/variables/<connection>/<variable>': 'disabled'}</code>.</p>
 		</>

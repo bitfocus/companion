@@ -9,7 +9,7 @@ import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
 export const MqttConfig = observer(function MqttConfig(props: UserConfigProps) {
 	return (
 		<>
-			<UserConfigHeadingRow label="MQTT" />
+			<UserConfigHeadingRow label="MQTT (Experimental)" />
 			<UserConfigSwitchRow userConfig={props} label="MQTT Service" field="mqtt_enabled" />
 
 			{props.config.mqtt_enabled && (
