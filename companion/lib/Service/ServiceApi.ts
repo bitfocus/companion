@@ -8,7 +8,7 @@ import type { VariablesCustomVariableEvents } from '../Variables/CustomVariable.
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import type {	CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
