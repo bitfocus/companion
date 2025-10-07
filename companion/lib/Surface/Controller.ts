@@ -1543,7 +1543,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	devicePageSet(surfaceOrGroupId: string, pageId: string, looseIdMatching = false, defer = false): void {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
-			surfaceGroup.changePage(pageId, defer)
+			surfaceGroup.setCurrentPage(pageId, defer)
 		}
 	}
 	/**

@@ -227,7 +227,7 @@ export class SurfaceGroup {
 	/**
 	 * Set the current page of this surface group
 	 */
-	setCurrentPage(newPageId: string, defer = false): void {
+	#setCurrentPageInternal(newPageId: string, defer = false): void {
 		if (!this.#pageStore.isPageIdValid(newPageId)) return
 
 		this.#storeNewPage(newPageId, defer)
@@ -252,11 +252,11 @@ export class SurfaceGroup {
 	}
 
 	#increasePage() {
-		this.changePage('+1')
+		this.setCurrentPage('+1')
 	}
 
 	#decreasePage() {
-		this.changePage('-1')
+		this.setCurrentPage('-1')
 	}
 
 	/**
@@ -267,7 +267,7 @@ export class SurfaceGroup {
 	/**
 	 * Change the page of a surface, keeping a history of previous pages
 	 */
-	changePage(toPage: string | 'back' | 'forward' | '+1' | '-1', defer = false): void {
+	setCurrentPage(toPage: string | 'back' | 'forward' | '+1' | '-1', defer = false): void {
 		const groupId = this.groupId //this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
 		if (!groupId) return
 
@@ -296,7 +296,7 @@ export class SurfaceGroup {
 				if (pageTarget !== undefined) {
 					pageHistory.index = pageIndex
 
-					this.setCurrentPage(pageTarget, defer) // #surfaceController.devicePageSet(groupId, pageTarget, true)
+					this.#setCurrentPageInternal(pageTarget, defer) // #surfaceController.devicePageSet(groupId, pageTarget, true)
 				}
 			} else {
 				let newPage: string | null = toPage
@@ -310,7 +310,7 @@ export class SurfaceGroup {
 				if (!newPage || !this.#pageStore.isPageIdValid(newPage)) newPage = this.#pageStore.getFirstPageId()
 
 				// Change page
-				this.setCurrentPage(newPage, defer) //#surfaceController.devicePageSet(groupId, newPage, true, true)
+				this.#setCurrentPageInternal(newPage, defer) //#surfaceController.devicePageSet(groupId, newPage, true, true)
 
 				// Clear forward page history beyond current index, add new history entry, increment index;
 				pageHistory.history = pageHistory.history.slice(0, pageHistory.index + 1)

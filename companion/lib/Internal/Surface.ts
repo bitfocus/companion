@@ -142,11 +142,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	readonly #surfaceController: SurfaceController
 	readonly #pageStore: IPageStore
 
-	/**
-	 * Page history for surfaces
-	 */
-	//readonly #pageHistory = new Map<string, { history: string[]; index: number }>()
-
 	constructor(
 		internalUtils: InternalModuleUtils,
 		surfaceController: SurfaceController,
