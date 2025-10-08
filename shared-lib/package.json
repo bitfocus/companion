@@ -23,9 +23,9 @@
     "jsep": "^1.4.0",
     "jsonpath-plus": "^10.3.0",
     "ps-tree": "^1.2.0",
-    "semver": "^7.7.2",
+    "semver": "^7.7.3",
     "unicode-segmenter": "^0.14.0",
-    "zod": "^4.1.11"
+    "zod": "^4.1.12"
   },
   "scripts": {
     "build": "run build:ts",
