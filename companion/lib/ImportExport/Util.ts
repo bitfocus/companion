@@ -9,7 +9,6 @@ const gzipAsync = promisify(zlib.gzip)
 
 export interface StringifiedExportData {
 	data: string | Buffer
-	contentType: string
 	asciiFilename: string
 	utf8Filename: string
 }
@@ -25,7 +24,6 @@ export async function stringifyExport(
 			const dataGz = await gzipAsync(JSON.stringify(data))
 			return {
 				data: dataGz,
-				contentType: 'application/json',
 				...formatAttachmentFilename(filename),
 			}
 		} catch (err) {
@@ -35,13 +33,11 @@ export async function stringifyExport(
 	} else if (format === 'json') {
 		return {
 			data: JSON.stringify(data, undefined, '\t'),
-			contentType: 'application/json',
 			...formatAttachmentFilename(filename),
 		}
 	} else if (format === 'yaml') {
 		return {
 			data: yaml.stringify(data, splitLongPng64Values),
-			contentType: 'application/yaml',
 			...formatAttachmentFilename(filename),
 		}
 	} else {
