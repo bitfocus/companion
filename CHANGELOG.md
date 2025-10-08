@@ -1,5 +1,24 @@
 # Bitfocus Companion
 
+## Companion v4.1.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- surface import/export errors with `last_page_id` or `name` #3650
+- stream deck mini not working with network dock #3682
+- don't assign elgato network dock an index in the surfaces table
+- very old contour shuttle pro v1 has an XKey vendor ID (#3658)
+- Template literal parsing in some expressions has unbound recursion #3655
+- disabled module count incorrect at startup #3679
+- connection status variables showing empty instead of disabled at startup #3652
+- Surface Groups should always show "Current Page" (#3685)
+- hide deprecated modules from add panel if no versions are installed #3684
+- Preset previewStyle is overridden by feedback (#3673)
+- ensure invalid version doesnt crash connections page
+- ios safari downloading exports with bad extension #3676
+- ensure modules being installed look like connections
+- ember+ api not including custom variables (#3681)
+
 ## Companion v4.1.1 - Release Notes
 
 ### 🐞 BUG FIXES
