@@ -208,7 +208,6 @@ export class ExportController {
 
 		sendExportData(res, {
 			data: csvOut,
-			contentType: 'text/csv',
 			...formatAttachmentFilename(filename),
 		})
 	}
