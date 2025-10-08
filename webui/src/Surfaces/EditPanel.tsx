@@ -358,7 +358,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 						{(surfaceId === null || !!surfaceInfo?.isConnected || !!groupConfig.config.use_last_page) && (
 							<>
 								<CFormLabel htmlFor="colFormCurrentPage" className="col-sm-4 col-form-label col-form-label-sm">
-									{!groupConfig.config.use_last_page ? 'Current Page' : 'Last Page'}
+									{surfaceId === null || surfaceInfo?.isConnected ? 'Current Page' : 'Last Page'}
 								</CFormLabel>
 								<CCol sm={8}>
 									<InternalPageIdDropdown
