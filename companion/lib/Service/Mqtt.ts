@@ -52,14 +52,14 @@ export class MqttService extends ServiceBase {
 
 				// Subscribe to actions topic
 				const actionsTopic = `${this.topic}/commands/#`
-				this.#client?.subscribe(actionsTopic, (err) => {
+				this.#client!.subscribe(actionsTopic, (err) => {
 					if (err) {
 						this.logger.error(`Failed to subscribe to MQTT topic ${actionsTopic}: ${err.message}`)
 					}
 				})
 
 				// Handle incoming messages
-				this.#client?.on('message', (topic, message) => {
+				this.#client!.on('message', (topic, message) => {
 					this.handleMessage(topic, message)
 					this.logger.debug(`Received MQTT message on topic ${topic}: ${message.toString()}`)
 				})
@@ -87,7 +87,6 @@ export class MqttService extends ServiceBase {
 			this.#client.end()
 			this.#client = null
 			this.currentState = false
-			this.logger.info('Disconnected from MQTT broker')
 		}
 	}
 
@@ -144,7 +143,6 @@ export class MqttService extends ServiceBase {
 				return
 			}
 			const [page, row, column, action] = match.slice(1)
-			this.logger.info(`MQTT command for button at Page ${page}, Row ${row}, Column ${column} - Action ${action}`)
 
 			const controlId = this.#serviceApi.getControlIdAt({
 				pageNumber: parseInt(page),
