@@ -78,7 +78,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 	)
 
 	return (
-		<CModalExt visible={show} onClose={doClose} onClosed={onClosed}>
+		<CModalExt visible={show} onClose={doClose} onClosed={onClosed} className="modal-add-emulator">
 			<CModalHeader closeButton>
 				<h5>Add Emulator</h5>
 			</CModalHeader>
@@ -247,7 +247,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 										})
 									}}
 								>
-									Add {isSubmitting ? '...' : ''}
+									Add{isSubmitting ? ' ...' : ''}
 								</CButton>
 							</>
 						)}

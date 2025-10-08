@@ -8,7 +8,7 @@ interface ErrorFallbackProps {
 }
 export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps): React.JSX.Element {
 	return (
-		<CAlert color="danger">
+		<CAlert color="danger" className="my-error-boundary">
 			<p>Something went wrong:</p>
 			<pre>{error?.message ?? ''}</pre>
 			<CButton color="primary" size="sm" onClick={resetErrorBoundary}>

@@ -1,0 +1,158 @@
+name: Playwright Tests
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  # Run every week
+  schedule:
+    - cron: '43 5 * * 0'
+  # Run on pushes to main and develop if files in the playwright/ folder changed
+  push:
+    branches: [main, develop, 'feat/browserstack']
+    paths:
+      - playwright/**
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare Companion build
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+
+      - name: Prepare
+        run: |
+          corepack enable
+
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
+
+      - name: Build companion
+        run: |
+          yarn dist:prepare
+        env:
+          VITE_DISABLE_WHATS_NEW: 'true' # Disable What's New dialog for testing
+
+      - name: Upload companion build
+        uses: actions/upload-artifact@v4
+        with:
+          name: companion-dist
+          path: dist/
+
+      - name: Build matrix JSON from browserstack.yml
+        id: matrix
+        run: |
+          # Create a JSON matrix that GH Actions can consume, reading platforms from playwright/browserstack.yml
+          python - <<'PY'
+          import yaml, json, sys, os
+
+          path = 'playwright/browserstack.yml'
+          with open(path) as f:
+              data = yaml.safe_load(f)
+
+          platforms = data.get('platforms', [])
+          if not platforms:
+              print('::error::No platforms found in browserstack.yml')
+              sys.exit(1)
+
+          matrix = { 'include': [] }
+          for p in platforms:
+              # build a human-friendly name for the matrix entry
+              platform_os = p.get('os') or p.get('deviceName') or ''
+              osVersion = p.get('osVersion') or ''
+              browserName = p.get('browserName') or ''
+              browserVersion = p.get('browserVersion') or ''
+              name = f"{platform_os}@{osVersion} - {browserName}@{browserVersion}"
+              matrix['include'].append({'platform': json.dumps(p), 'name': name})
+
+          # emit matrix using the GITHUB_OUTPUT file (set-output is deprecated)
+          gha_out = os.environ.get('GITHUB_OUTPUT')
+          if gha_out:
+              with open(gha_out, 'a') as fh:
+                  fh.write('matrix=' + json.dumps(matrix) + "\n")
+          else:
+              # Fallback for older runners: print to stdout (not recommended)
+              print('matrix=' + json.dumps(matrix))
+          PY
+
+  test:
+    needs: prepare
+    name: Playwright ${{ matrix.name }}
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.prepare.outputs.matrix)}}
+      max-parallel: 3
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+
+      - name: Prepare
+        id: prepare
+        run: |
+          corepack enable
+
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn --immutable
+
+      - name: Download companion build
+        uses: actions/download-artifact@v4
+        with:
+          name: companion-dist
+          path: dist
+
+      - name: 'BrowserStack Env Setup'
+        uses: 'browserstack/github-actions/setup-env@v1.0.4'
+        with:
+          username: ${{ secrets.BROWSERSTACK_USERNAME }}
+          access-key: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+
+      - name: Prepare single-platform browserstack.yml
+        run: |
+          mkdir -p playwright
+          python - <<'PY'
+          import json, yaml, sys
+          entry = json.loads('''${{ matrix.platform }}''')
+          cfg = yaml.safe_load(open('playwright/browserstack.yml'))
+          cfg['platforms'] = [entry]
+          with open('playwright/browserstack.yml', 'w') as f:
+              yaml.safe_dump(cfg, f)
+          print('Wrote single-platform playwright/browserstack.yml')
+          PY
+
+      - name: Spawn Companion
+        run: |
+          # Start Companion from the downloaded build
+          node dist/main.js --machine-id ci_browserstack --log-level debug &
+          export COMPANION_PID=$!
+
+          yarn wait-on http://localhost:8000 --timeout 30000 --delay 5000
+
+      - name: Run Playwright tests
+        run: |
+          cd playwright
+          # Ensure single worker to avoid parallelism inside the runner
+          yarn test:ci --workers=1

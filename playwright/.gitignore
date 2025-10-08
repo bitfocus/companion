@@ -1,0 +1,5 @@
+/log
+/playwright-report/
+/test-results/
+/browserstackSetupConfig.json
+/playwright-browserstack*

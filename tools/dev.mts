@@ -107,7 +107,7 @@ chokidar
 	.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
 		ignoreInitial: true,
 		cwd: '..',
-		ignored: ['**/node_modules/**', 'webui', 'launcher', 'module-local-dev', 'tools', 'test'],
+		ignored: ['**/node_modules/**', 'webui', 'launcher', 'playwright', 'module-local-dev', 'tools', 'test'],
 	})
 	.on('all', (event, filename) => {
 		if (filename.endsWith('shared-lib/lib/Paths.mts')) {
