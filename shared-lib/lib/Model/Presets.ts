@@ -10,7 +10,7 @@ export interface PresetDefinitionButton {
 	category: string
 	type: 'button'
 	model: NormalButtonModel
-	previewStyle: CompanionButtonStyleProps | undefined
+	previewStyle: Partial<CompanionButtonStyleProps> | undefined
 }
 
 export interface PresetDefinitionText {
