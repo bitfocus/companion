@@ -279,8 +279,29 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const result: PresetButtonModel = {
 			...definition.model,
 			type: 'preset:button',
-			style: definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
+			style: definition.previewStyle
+				? convertPresetStyleToDrawStyle(Object.assign({}, definition.model.style, definition.previewStyle))
+				: definition.model.style,
 			steps: {},
+		}
+
+		// make sure that feedbacks don't override previewStyle:
+		if ('previewStyle' in definition && definition.previewStyle !== undefined) {
+			const newExpressionFeedback: FeedbackEntityModel = {
+				type: EntityModelType.Feedback,
+				id: nanoid(),
+				connectionId: 'internal',
+				definitionId: 'check_expression',
+				options: {
+					expression: 'true',
+				},
+				isInverted: false,
+				style: definition.previewStyle,
+				upgradeIndex: undefined,
+			}
+
+			// copy all objects so they don't alter the regular button def. (Shallow should be enough.)
+			result.feedbacks = [...result.feedbacks, newExpressionFeedback]
 		}
 
 		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
