@@ -114,7 +114,7 @@ export function getHelpPathForInstalledModule(moduleId: string, versionId: strin
 	return `/int/help/module/${moduleId}/${versionId}/HELP.md`
 }
 
-
 export function isModuleManifestAConnection(manifest: ModuleManifest): boolean {
 	const type = (manifest as any).type
-	return (type === undefined || type === 'connection')
+	return type === undefined || type === 'connection'
+}
