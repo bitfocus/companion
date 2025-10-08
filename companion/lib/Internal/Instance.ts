@@ -28,8 +28,10 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
+import LogController from '../Log/Controller.js'
 
 export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('InternalInstance')
 	readonly #instanceController: InstanceController
 
 	#instanceStatuses: Record<string, ConnectionStatusEntry | undefined> = {}
@@ -416,41 +418,45 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 	}
 
 	#calculateInstanceErrors(instanceStatuses: Record<string, ConnectionStatusEntry | undefined>): void {
-		let numTotal = 0
-		let numDisabled = 0
-		let numError = 0
-		let numWarn = 0
-		let numOk = 0
+		try {
+			let numTotal = 0
+			let numDisabled = 0
+			let numError = 0
+			let numWarn = 0
+			let numOk = 0
 
-		const connectionIds = this.#instanceController.getAllInstanceIds()
-		for (const connectionId of connectionIds) {
-			const status = instanceStatuses[connectionId]
+			const connectionIds = this.#instanceController.getAllInstanceIds()
+			for (const connectionId of connectionIds) {
+				const status = instanceStatuses[connectionId]
 
-			const config = this.#instanceController.getInstanceConfig(connectionId)
-			if (!config) continue
+				const config = this.#instanceController.getInstanceConfig(connectionId)
+				if (!config) continue
 
-			numTotal++
+				numTotal++
 
-			if (!config.enabled || !status || status.category === null) {
-				numDisabled++
-			} else if (status.category === 'good') {
-				numOk++
-			} else if (status.category === 'warning') {
-				numWarn++
-			} else if (status.category === 'error') {
-				numError++
+				if (!config.enabled || !status || status.category === null) {
+					numDisabled++
+				} else if (status.category === 'good') {
+					numOk++
+				} else if (status.category === 'warning') {
+					numWarn++
+				} else if (status.category === 'error') {
+					numError++
+				}
 			}
+
+			this.#instanceStatuses = instanceStatuses
+			this.#instancesTotal = numTotal
+			this.#instancesDisabled = numDisabled
+			this.#instancesError = numError
+			this.#instancesWarning = numWarn
+			this.#instancesOk = numOk
+
+			this.updateVariables()
+			this.#debounceCheckFeedbacks()
+		} catch (e) {
+			this.#logger.error('Error calculating instance counts', e)
 		}
-
-		this.#instanceStatuses = instanceStatuses
-		this.#instancesTotal = numTotal
-		this.#instancesDisabled = numDisabled
-		this.#instancesError = numError
-		this.#instancesWarning = numWarn
-		this.#instancesOk = numOk
-
-		this.updateVariables()
-		this.#debounceCheckFeedbacks()
 	}
 
 	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
