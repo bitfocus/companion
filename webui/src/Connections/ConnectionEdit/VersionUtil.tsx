@@ -23,7 +23,7 @@ export function getLatestVersion(
 		if (!version || (version.releaseChannel === 'beta') !== isBeta) continue
 		if ((!skipCompatibleCheck && !isModuleApiVersionCompatible(version.apiVersion)) || version.deprecationReason)
 			continue
-		if (!latest || semver.compare(version.id, latest.id) > 0) {
+		if (!latest || semver.compare(version.id, latest.id, { loose: true }) > 0) {
 			latest = version
 		}
 	}
