@@ -310,6 +310,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				setValue={setValue}
 				label="Settings"
 			/> */}
+			{/* This partial import is a bit flawed currently, it is resetting things that it shouldn't. Needs more work.
 			<CCallout color="success">
 				<h5>Import Selected Components</h5>
 				<p>
@@ -319,7 +320,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>
 					<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
 				</CButton>
-			</CCallout>
+			</CCallout> */}
 			<CCallout color="danger">
 				<h5>Full Reset & Import</h5>
 				<p>
