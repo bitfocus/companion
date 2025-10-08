@@ -32,7 +32,7 @@ export class InstanceModuleInfo {
 		for (const version of Object.values(this.installedVersions)) {
 			if (!version || version.isBeta !== isBeta) continue
 			if (!isModuleApiVersionCompatible(version.manifest.runtime.apiVersion)) continue
-			if (!latest || semver.compare(version.versionId, latest.versionId) > 0) {
+			if (!latest || semver.compare(version.versionId, latest.versionId, { loose: true }) > 0) {
 				latest = version
 			}
 		}

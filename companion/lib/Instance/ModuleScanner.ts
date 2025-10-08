@@ -59,6 +59,11 @@ export class InstanceModuleScanner {
 			const manifestJsonStr = await fs.readFile(manifestPath)
 			const manifestJson: ModuleManifest = JSON.parse(manifestJsonStr.toString())
 
+			if (!isModuleManifestAConnection(manifestJson)) {
+				this.#logger.silly(`Ignoring "${fullpath}", as it is not a connection module`)
+				return
+			}
+
 			validateManifest(manifestJson, true)
 
 			const helpPath = path.join(fullpath, 'companion/HELP.md')

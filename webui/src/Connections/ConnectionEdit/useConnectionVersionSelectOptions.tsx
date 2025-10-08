@@ -48,7 +48,7 @@ export function useConnectionVersionSelectOptions(
 			latestStableVersion &&
 			!listedVersions.has(latestStableVersion.id) &&
 			(!installedInfo?.stableVersion ||
-				semver.compare(latestStableVersion.id, installedInfo.stableVersion.versionId) > 0)
+				semver.compare(latestStableVersion.id, installedInfo.stableVersion.versionId, { loose: true }) > 0)
 		) {
 			choices.push({ value: latestStableVersion.id, label: `v${latestStableVersion.id} (Install latest stable)` })
 		}
@@ -57,7 +57,8 @@ export function useConnectionVersionSelectOptions(
 			includeBeta &&
 			latestBetaVersion &&
 			!listedVersions.has(latestBetaVersion.id) &&
-			(!installedInfo?.betaVersion || semver.compare(latestBetaVersion.id, installedInfo.betaVersion.versionId) > 0)
+			(!installedInfo?.betaVersion ||
+				semver.compare(latestBetaVersion.id, installedInfo.betaVersion.versionId, { loose: true }) > 0)
 		) {
 			choices.push({
 				value: latestBetaVersion.id,
@@ -65,7 +66,7 @@ export function useConnectionVersionSelectOptions(
 			})
 		}
 
-		choices.sort((a, b) => semver.compare(String(b.value), String(a.value)))
+		choices.sort((a, b) => semver.compare(String(b.value), String(a.value), { loose: true }))
 
 		if (installedInfo?.devVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
 
