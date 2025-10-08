@@ -1182,6 +1182,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 											deviceInfo.vendorId === 0x6603 ||
 											deviceInfo.vendorId === 0x5548) && // Mirabox
 										(deviceInfo.productId === 0x1001 ||
+											deviceInfo.productId === 0x1003 ||
 											deviceInfo.productId === 0x1007 ||
 											deviceInfo.productId === 0x1005 ||
 											deviceInfo.productId === 0x1014 || // Stream Dock HSV 293S

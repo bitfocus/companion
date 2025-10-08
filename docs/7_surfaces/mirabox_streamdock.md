@@ -2,6 +2,7 @@ Mirabox's Stream Dock line includes several input devices.
 Companion supports the following models:
 
 - 293V3 — 5×3 LCD keys
+- N3 - 3x2 LCD keys, 3 non-LCD buttons, and 3 rotary encoders.
 - N4 — 5×2 LCD keys, plus 4 rotary encoders with an LCD strip and a USB hub
 
 To use a Stream Dock with Companion, the Mirabox creator software must not be running (not even minimized to the dock). Also enable Stream Dock support in Companion's settings.
@@ -11,6 +12,14 @@ Some Stream Dock models do not provide separate press and release events for all
 **293V3**
 
 The layout is straightforward: all keys map directly to the Companion grid.
+
+**N3**
+
+The N3 has two rows of 3 LCD keys that map to the Companion grid. There are three non-LCD buttons underneath.
+
+There's a large rotary encoder, shown as Rotary 1 and two smaller encoders shown as Rotary 2 and 3. To use the rotary encoders for a specific button, enable the `Enable Rotary Actions` checkbox for that button. This adds additional action groups that Companion will use when the encoder is rotated.
+
+![Stream Dock N3 mapping](images/mirabox-streamdock-n3.png?raw=true 'Stream Dock N3 mapping')
 
 **N4**
 
