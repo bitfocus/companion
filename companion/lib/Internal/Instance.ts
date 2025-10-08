@@ -422,10 +422,16 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		let numWarn = 0
 		let numOk = 0
 
-		for (const status of Object.values(instanceStatuses)) {
+		const connectionIds = this.#instanceController.getAllInstanceIds()
+		for (const connectionId of connectionIds) {
+			const status = instanceStatuses[connectionId]
+
+			const config = this.#instanceController.getInstanceConfig(connectionId)
+			if (!config) continue
+
 			numTotal++
 
-			if (status.category === null) {
+			if (!config.enabled || status.category === null) {
 				numDisabled++
 			} else if (status.category === 'good') {
 				numOk++
