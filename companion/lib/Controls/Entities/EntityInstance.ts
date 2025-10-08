@@ -621,7 +621,7 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Prune all entities referencing unknown conncetions
+	 * Prune all entities referencing unknown connections
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
 	verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
