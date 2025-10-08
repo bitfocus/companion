@@ -4,14 +4,20 @@ import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 
-export function useAllConnectionProducts(modules: ModuleInfoStore, includeUnreleased?: boolean): FuzzyProduct[] {
+export function useAllConnectionProducts(
+	modules: ModuleInfoStore,
+	includeUnreleased?: boolean,
+	includeDeprecated?: boolean
+): FuzzyProduct[] {
 	return useComputed(() => {
 		const allProducts: Record<string, FuzzyProduct> = {}
 
 		// Start with all installed modules
 		for (const moduleInfo of modules.modules.values()) {
+			const latestVersion = moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.devVersion
+			if (!latestVersion) continue // shouldn't happen, but just in case
+
 			for (const product of moduleInfo.display.products) {
-				const latestVersion = moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.devVersion
 				const key = `${moduleInfo.display.id}-${product}`
 				allProducts[key] = {
 					id: moduleInfo.display.id,
@@ -35,6 +41,8 @@ export function useAllConnectionProducts(modules: ModuleInfoStore, includeUnrele
 		for (const moduleInfo of modules.storeList.values()) {
 			// If there is no help URL, it has no stable version and should often be hidden
 			if (!includeUnreleased && !moduleInfo.helpUrl) continue
+			// If we are hiding deprecated modules, skip these
+			if (!includeDeprecated && moduleInfo.deprecationReason) continue
 
 			for (const product of moduleInfo.products) {
 				const key = `${moduleInfo.id}-${product}`
