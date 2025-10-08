@@ -17,6 +17,7 @@ import crypto from 'node:crypto'
 import semver from 'semver'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import z from 'zod'
+import { isModuleManifestAConnection } from './ModuleScanner.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -471,7 +472,11 @@ async function extractManifestFromTar(tarData: Buffer): Promise<ModuleManifest |
 					const manifestStr = Buffer.concat(dataBuffers).toString('utf8')
 
 					try {
-						resolve(JSON.parse(manifestStr))
+						const manifestJson = JSON.parse(manifestStr)
+						if (!isModuleManifestAConnection(manifestJson)) {
+							throw new Error('Not a connection module')
+						}
+						resolve(manifestJson)
 					} catch (e) {
 						reject(e as Error)
 					}
@@ -545,9 +550,14 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 						const manifestStr = Buffer.concat(dataBuffers).toString('utf8')
 
 						try {
+							const manifestJson = JSON.parse(manifestStr)
+							if (!isModuleManifestAConnection(manifestJson)) {
+								return
+							}
+
 							moduleInfos.push({
 								subDir: moduleDirName,
-								manifestJson: JSON.parse(manifestStr),
+								manifestJson: manifestJson,
 							})
 						} catch (_e) {
 							// Ignore

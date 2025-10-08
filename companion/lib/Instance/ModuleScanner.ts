@@ -108,3 +108,8 @@ export class InstanceModuleScanner {
 export function getHelpPathForInstalledModule(moduleId: string, versionId: string): string {
 	return `/int/help/module/${moduleId}/${versionId}/HELP.md`
 }
+
+
+export function isModuleManifestAConnection(manifest: ModuleManifest): boolean {
+	const type = (manifest as any).type
+	return (type === undefined || type === 'connection')
