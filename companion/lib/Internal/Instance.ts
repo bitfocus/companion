@@ -32,7 +32,7 @@ import type { InternalModuleUtils } from './Util.js'
 export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #instanceController: InstanceController
 
-	#instanceStatuses: Record<string, ConnectionStatusEntry> = {}
+	#instanceStatuses: Record<string, ConnectionStatusEntry | undefined> = {}
 	#instancesTotal: number = 0
 	#instancesDisabled: number = 0
 	#instancesError: number = 0
@@ -415,7 +415,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		this.emit('setVariables', values)
 	}
 
-	#calculateInstanceErrors(instanceStatuses: Record<string, ConnectionStatusEntry>): void {
+	#calculateInstanceErrors(instanceStatuses: Record<string, ConnectionStatusEntry | undefined>): void {
 		let numTotal = 0
 		let numDisabled = 0
 		let numError = 0
@@ -431,7 +431,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 
 			numTotal++
 
-			if (!config.enabled || status.category === null) {
+			if (!config.enabled || !status || status.category === null) {
 				numDisabled++
 			} else if (status.category === 'good') {
 				numOk++
