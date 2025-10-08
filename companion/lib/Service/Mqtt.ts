@@ -7,6 +7,8 @@ import mqtt from 'mqtt'
 export class MqttService extends ServiceBase {
 	readonly #serviceApi: ServiceApi
 
+	readonly #releaseTime = 20
+
 	broker: string = 'localhost'
 	port: number = 1883
 	topic: string = 'companion'
@@ -17,8 +19,6 @@ export class MqttService extends ServiceBase {
 
 	constructor(serviceApi: ServiceApi, userconfig: DataUserConfig) {
 		super(userconfig, 'Service/Mqtt', 'mqtt_enabled', null)
-
-		this.logger.info('MqttService: constructor')
 
 		this.#serviceApi = serviceApi
 
@@ -47,8 +47,22 @@ export class MqttService extends ServiceBase {
 				this.currentState = true
 				this.logger.info(`Connected to MQTT broker at ${this.broker}:${this.port}`)
 
-				// Set up event listeners for variable change
+				// Set up event listeners
 				this.startEventListeners()
+
+				// Subscribe to actions topic
+				const actionsTopic = `${this.topic}/commands/#`
+				this.#client?.subscribe(actionsTopic, (err) => {
+					if (err) {
+						this.logger.error(`Failed to subscribe to MQTT topic ${actionsTopic}: ${err.message}`)
+					}
+				})
+
+				// Handle incoming messages
+				this.#client?.on('message', (topic, message) => {
+					this.handleMessage(topic, message)
+					this.logger.debug(`Received MQTT message on topic ${topic}: ${message.toString()}`)
+				})
 			})
 
 			this.#client.on('error', (error) => {
@@ -78,7 +92,7 @@ export class MqttService extends ServiceBase {
 	}
 
 	private startEventListeners(): void {
-		//this.logger.info('Starting MQTT event listeners for variable changes')
+		// Listen for variable changes
 		this.#serviceApi.on('variables_changed', (variables) => {
 			if (this.#client === null) return
 
@@ -110,5 +124,62 @@ export class MqttService extends ServiceBase {
 				})
 			}
 		})
+	}
+
+	private handleMessage(topic: string, message: any): void {
+		if (this.#client === null) return
+
+		// Strip topic prefix
+		const baseTopic = `${this.topic}/commands/`
+		topic = topic.slice(baseTopic.length)
+
+		const parts = topic.split('/')
+
+		if (parts[0] === 'location') {
+			// Handle button actions based on location
+			// Expected format: location/<page>/<row>/<column>/<action>
+			const match = topic.match(/location\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([a-zA-Z0-9_]+)/)
+			if (!match) {
+				this.logger.info(`Invalid MQTT location command format: ${topic}`)
+				return
+			}
+			const [page, row, column, action] = match.slice(1)
+			this.logger.info(`MQTT command for button at Page ${page}, Row ${row}, Column ${column} - Action ${action}`)
+
+			const controlId = this.#serviceApi.getControlIdAt({
+				pageNumber: parseInt(page),
+				row: parseInt(row),
+				column: parseInt(column),
+			})
+			if (!controlId) {
+				this.logger.info(`No button found at Page ${page}, Row ${row}, Column ${column}`)
+				return
+			}
+
+			if (action === 'press') {
+				this.#serviceApi.pressControl(controlId, true, 'mqtt')
+
+				setTimeout(() => {
+					this.#serviceApi.pressControl(controlId, false, 'mqtt')
+				}, this.#releaseTime)
+			}
+			if (action === 'down') {
+				this.#serviceApi.pressControl(controlId, true, 'mqtt')
+			}
+			if (action === 'up') {
+				this.#serviceApi.pressControl(controlId, false, 'mqtt')
+			}
+		}
+		if (parts[0] === 'custom-variable') {
+			// Handle custom variable actions
+			const varName = parts[1]
+			const action = parts[2] ?? 'value' // Default to value but allow for future actions
+			if (!varName) return
+
+			if (action === 'value') {
+				const value = message.toString()
+				this.#serviceApi.setCustomVariableValue(varName, value)
+			}
+		}
 	}
 }
