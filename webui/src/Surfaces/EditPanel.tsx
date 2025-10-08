@@ -347,7 +347,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 						</CFormLabel>
 						<CCol sm={8}>
 							<InternalPageIdDropdown
-								disabled={!!groupConfig.config.use_last_page}
+								disabled={false}
 								includeDirection={false}
 								includeStartup={false}
 								value={groupConfig.config.startup_page_id}
