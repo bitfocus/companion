@@ -22,6 +22,7 @@ import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { useConnectionListContext } from './ConnectionListContext.js'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 
 interface ConnectionsTableRowProps {
 	connection: ClientConnectionConfigWithId
@@ -102,23 +103,25 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			</div>
 
 			<div onClick={doEdit} className="no-break">
-				{moduleVersion?.isLegacy && (
-					<>
-						<FontAwesomeIcon
-							icon={faExclamationTriangle}
-							color="#f80"
-							title="This module has not been updated for Companion 3.0, and may not work fully"
-						/>{' '}
-					</>
-				)}
-				{moduleVersion?.isBeta && (
-					<>
-						<FontAwesomeIcon icon={faFlask} title="Beta" />{' '}
-					</>
-				)}
-				{moduleVersion?.displayName ?? connection.moduleVersionId}
+				<MyErrorBoundary>
+					{moduleVersion?.isLegacy && (
+						<>
+							<FontAwesomeIcon
+								icon={faExclamationTriangle}
+								color="#f80"
+								title="This module has not been updated for Companion 3.0, and may not work fully"
+							/>{' '}
+						</>
+					)}
+					{moduleVersion?.isBeta && (
+						<>
+							<FontAwesomeIcon icon={faFlask} title="Beta" />{' '}
+						</>
+					)}
+					{moduleVersion?.displayName ?? connection.moduleVersionId}
 
-				<UpdateConnectionToLatestButton connection={connection} />
+					<UpdateConnectionToLatestButton connection={connection} />
+				</MyErrorBoundary>
 			</div>
 			<div onClick={doEdit} className="ms-2">
 				<ConnectionStatusCell isEnabled={showAsEnabled} status={connection.status} />

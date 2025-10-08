@@ -20,6 +20,7 @@ import { useComputed } from '~/Resources/util.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -222,7 +223,11 @@ function ConnectionListItemWrapper(
 		}
 	}
 
-	return <ConnectionsTableRow connection={item} isSelected={selectedItemId === item.id} />
+	return (
+		<MyErrorBoundary>
+			<ConnectionsTableRow connection={item} isSelected={selectedItemId === item.id} />
+		</MyErrorBoundary>
+	)
 }
 
 function CreateCollectionButton() {
