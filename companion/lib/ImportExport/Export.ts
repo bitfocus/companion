@@ -606,7 +606,7 @@ function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 function sendExportData(res: express.Response, data: StringifiedExportData) {
 	res.status(200)
 	res.set({
-		'Content-Type': data.contentType,
+		'Content-Type': 'application/octet-stream', // Force it to have a 'download' mime, to avoid safari changing the extension
 		'Content-Disposition': `attachment; filename=${data.asciiFilename}; filename*=UTF-8''${data.utf8Filename}`,
 	})
 	res.end(data.data)
