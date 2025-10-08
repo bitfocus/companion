@@ -8,6 +8,7 @@ import type { VariablesCustomVariableEvents } from '../Variables/CustomVariable.
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
@@ -146,8 +147,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * Get the a defined custom variable names
 	 * @returns Array of defined variable names
 	 */
-	getCustomVariableDefinitions(): ModuleVariableDefinitions {
-		return this.#variablesController.definitions.getVariableDefinitions('custom')
+	getCustomVariableDefinitions(): CustomVariablesModel {
+		return this.#variablesController.custom.getDefinitions()
 	}
 
 	async triggerRescanForSurfaces(): Promise<void> {
