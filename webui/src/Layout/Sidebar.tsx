@@ -34,7 +34,7 @@ import {
 	faSquareRootVariable,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
+import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
@@ -177,7 +177,12 @@ export const MySidebar = memo(function MySidebar() {
 				</CSidebarBrand>
 			</CSidebarHeader>
 			<CSidebarNav className="nav-main-scroller">
-				<SidebarMenuItemGroup name="Connections" icon={faPlug} path="/connections">
+				<SidebarMenuItemGroup
+					name="Connections"
+					icon={faPlug}
+					notifications={ConnectionsTabNotifyIcon}
+					path="/connections"
+				>
 					<SidebarMenuItem name="Configured" icon={null} path="/connections/configured" />
 					<SidebarMenuItem name="Modules" icon={null} path="/connections/modules" />
 				</SidebarMenuItemGroup>

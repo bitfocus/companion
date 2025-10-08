@@ -7,10 +7,11 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
 
-export const MissingVersionsWarning = observer(function MissingVersionsWarning() {
+// eslint-disable-next-line react-refresh/only-export-components
+export function useMissingVersionsCount(): number {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const missingCount = useComputed(() => {
+	return useComputed(() => {
 		let count = 0
 
 		for (const connection of connections.connections.values()) {
@@ -35,6 +36,10 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning()
 
 		return count
 	}, [connections, modules])
+}
+
+export const MissingVersionsWarning = observer(function MissingVersionsWarning() {
+	const missingCount = useMissingVersionsCount()
 
 	const installMissingMutation = useMutationExt(trpc.connections.modulesManager.installAllMissing.mutationOptions())
 
