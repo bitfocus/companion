@@ -15,6 +15,7 @@ import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
 import debounceFn from 'debounce-fn'
+import { CompanionVariableValue } from '@companion-module/base'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1
@@ -722,7 +723,7 @@ export class ServiceEmberPlus extends ServiceBase {
 		) {
 			const customVar = this.#customVars[parseInt(pathInfo[3])]
 			if (value !== undefined && value !== null) {
-				this.#serviceApi.setCustomVariableValue(customVar, value.toString())
+				this.#serviceApi.setCustomVariableValue(customVar, value as CompanionVariableValue)
 			}
 		} else if (pathInfo[0] === '0' && pathInfo[1] === ACTION_RECORDER_NODE.toString()) {
 			switch (pathInfo[2]) {
