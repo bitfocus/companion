@@ -1,4 +1,4 @@
-import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { CSpinner } from '@coreui/react'
 import { faCheckCircle, faTriangleExclamation, faPowerOff } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,7 +8,7 @@ import { observer } from 'mobx-react-lite'
 
 interface ConnectionStatusCellProps {
 	isEnabled: boolean
-	status: ConnectionStatusEntry | undefined
+	status: InstanceStatusEntry | undefined
 }
 export const ConnectionStatusCell = observer(function ConnectionStatusCell({
 	isEnabled,
