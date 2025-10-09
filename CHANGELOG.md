@@ -1,5 +1,11 @@
 # Bitfocus Companion
 
+## Companion v4.1.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Crash at startup when checking instance statuses
+
 ## Companion v4.1.2 - Release Notes
 
 ### 🐞 BUG FIXES
