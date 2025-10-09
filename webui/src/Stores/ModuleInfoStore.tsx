@@ -13,7 +13,7 @@ import {
 import { nanoid } from 'nanoid'
 import { trpc } from '~/Resources/TRPC'
 import { applyJsonPatchInPlace } from './ApplyDiffToMap'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class ModuleInfoStore {
 	readonly moduleType: ModuleInstanceType

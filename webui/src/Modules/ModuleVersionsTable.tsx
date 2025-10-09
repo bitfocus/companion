@@ -22,7 +22,7 @@ import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVi
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 dayjs.extend(relativeTime)
 

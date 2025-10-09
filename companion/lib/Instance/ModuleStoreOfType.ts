@@ -14,7 +14,7 @@ import EventEmitter from 'node:events'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import type { AppInfo } from '../Registry.js'
 import { toIterable } from '../UI/TRPC.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'

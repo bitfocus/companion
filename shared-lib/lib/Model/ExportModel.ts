@@ -1,5 +1,6 @@
 import type { UserConfigGridSize } from './UserConfigModel.js'
-import type { ConnectionCollection, ConnectionConfig, ConnectionUpdatePolicy } from './Connections.js'
+import type { ConnectionCollection } from './Connections.js'
+import type { InstanceConfig, InstanceVersionUpdatePolicy } from './Instance.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
 import type { TriggerCollection } from './TriggerModel.js'
 import type { ExpressionVariableCollection, ExpressionVariableModel } from './ExpressionVariableModel.js'
@@ -10,6 +11,20 @@ export interface ExportBase<Type extends string> {
 	readonly version: 6 | 7 | 8 | 9
 	readonly type: Type
 	readonly companionBuild: string | undefined // The build of the companion that exported this
+}
+
+export interface ExportInstanceConfigv6 {
+	label: string
+	config: unknown
+	secrets: unknown | undefined
+	isFirstInit: boolean
+	lastUpgradeIndex: number
+	instance_type: string
+	enabled: boolean
+	sortOrder: number
+	moduleVersionId: string | null
+	updatePolicy: InstanceVersionUpdatePolicy // TODO - upgrade script
+	collectionId?: string
 }
 
 export interface ExportFullv6 extends ExportBase<'full'> {
@@ -54,7 +69,7 @@ export type ExportControlv6 = Record<string, any> // TODO
 
 export type ExportInstancesv6 =
 	| Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6>
-	| Record<string, ConnectionConfig | undefined> // TODO - tidy
+	| Record<string, InstanceConfig | undefined> // TODO - tidy
 
 export type ExportInstanceFullv6 = {
 	label: string
@@ -63,7 +78,7 @@ export type ExportInstanceFullv6 = {
 	isFirstInit: boolean
 	lastUpgradeIndex: number
 	moduleVersionId?: string // Added in v4.0
-	updatePolicy?: ConnectionUpdatePolicy // Added in v4.0
+	updatePolicy?: InstanceVersionUpdatePolicy // Added in v4.0
 	instance_type: string
 	enabled: boolean
 	sortOrder?: number
@@ -75,7 +90,7 @@ export type ExportInstanceMinimalv6 = {
 	instance_type: string
 	lastUpgradeIndex: number
 	moduleVersionId?: string // Added in v4.0
-	updatePolicy?: ConnectionUpdatePolicy // Added in v4.0
+	updatePolicy?: InstanceVersionUpdatePolicy // Added in v4.0
 	sortOrder?: number
 	collectionId?: string
 }

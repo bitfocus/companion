@@ -42,7 +42,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import { InstanceConfigStore } from './ConfigStore.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]

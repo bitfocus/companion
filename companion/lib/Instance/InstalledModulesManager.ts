@@ -16,7 +16,7 @@ import crypto from 'node:crypto'
 import semver from 'semver'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import z from 'zod'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 

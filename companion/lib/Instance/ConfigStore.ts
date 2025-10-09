@@ -1,9 +1,9 @@
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
-	ConnectionConfig,
-	ClientConnectionConfig,
-	ConnectionUpdatePolicy,
+	InstanceConfig,
+	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
-} from '@companion-app/shared/Model/Connections.js'
+} from '@companion-app/shared/Model/Instance.js'
 import { DataDatabase } from '../Data/Database.js'
 // import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
@@ -13,19 +13,19 @@ import { cloneDeep } from 'lodash-es'
 
 export interface AddConnectionProps {
 	versionId: string | null
-	updatePolicy: ConnectionUpdatePolicy
+	updatePolicy: InstanceVersionUpdatePolicy
 	disabled: boolean
 	collectionId?: string
 	sortOrder?: number
 }
 
 export class InstanceConfigStore {
-	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
+	// readonly #logger = LogController.createLogger('Instance/InstanceConfigStore')
 
-	readonly #dbTable: DataStoreTableView<Record<string, ConnectionConfig>>
+	readonly #dbTable: DataStoreTableView<Record<string, InstanceConfig>>
 	readonly #afterSave: (connectionIds: string[], updateConnectionHost: boolean) => void
 
-	#store: Map<string, ConnectionConfig>
+	#store: Map<string, InstanceConfig>
 
 	constructor(db: DataDatabase, afterSave: (connectionIds: string[], updateConnectionHost: boolean) => void) {
 		this.#dbTable = db.getTableView('connections')
@@ -63,7 +63,7 @@ export class InstanceConfigStore {
 		return undefined
 	}
 
-	getConfigOfTypeForId(connectionId: string, _instanceType: ModuleInstanceType | null): ConnectionConfig | undefined {
+	getConfigOfTypeForId(connectionId: string, _instanceType: ModuleInstanceType | null): InstanceConfig | undefined {
 		return this.#store.get(connectionId)
 	}
 
@@ -76,7 +76,7 @@ export class InstanceConfigStore {
 		label: string,
 		product: string | undefined,
 		props: AddConnectionProps
-	): [id: string, config: ConnectionConfig] {
+	): [id: string, config: InstanceConfig] {
 		// Find the highest rank given to an instance
 		const highestRank =
 			Math.max(
@@ -90,7 +90,8 @@ export class InstanceConfigStore {
 
 		// const collectionIdIsValid = this.#store
 
-		const newConfig: ConnectionConfig = {
+		const newConfig: InstanceConfig = {
+			moduleInstanceType: ModuleInstanceType.Connection,
 			instance_type: moduleType,
 			moduleVersionId: props.versionId,
 			updatePolicy: props.updatePolicy,
@@ -117,7 +118,7 @@ export class InstanceConfigStore {
 		this.commitChanges([id], true)
 	}
 
-	exportAll(includeSecrets: boolean): Record<string, ConnectionConfig | undefined> {
+	exportAll(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
 		const obj = Object.fromEntries(this.#store.entries())
 		if (includeSecrets) return obj
 

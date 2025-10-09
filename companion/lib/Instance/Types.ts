@@ -1,4 +1,4 @@
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleManifestExt } from '@companion-app/shared/Model/ModuleManifest.js'
 
