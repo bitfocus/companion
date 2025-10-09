@@ -289,7 +289,7 @@ const ConnectionModuleVersionInputField = observer(function ConnectionModuleVers
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				Module Version&nbsp;
 				{isModuleOnStore && !connectionShouldBeRunning && (
-					<ModuleVersionsRefresh moduleId={panelStore.connectionInfo.instance_type} />
+					<ModuleVersionsRefresh modules={modules} moduleId={panelStore.connectionInfo.instance_type} />
 				)}
 			</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>

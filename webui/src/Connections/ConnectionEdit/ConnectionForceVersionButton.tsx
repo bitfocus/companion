@@ -150,7 +150,7 @@ export function ConnectionForceVersionButton({
 										<CFormLabel htmlFor="colFormExecuteWhileHeld" className="col-sm-3 col-form-label col-form-label-sm">
 											Version
 											{!!modules.storeList.get(form.state.values.moduleId) && (
-												<ModuleVersionsRefresh moduleId={form.state.values.moduleId} />
+												<ModuleVersionsRefresh modules={modules} moduleId={form.state.values.moduleId} />
 											)}
 										</CFormLabel>
 										<CCol sm={9}>

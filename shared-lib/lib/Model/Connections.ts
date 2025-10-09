@@ -1,5 +1,10 @@
 import type { CollectionBase } from './Collections.js'
 
+export enum ModuleInstanceType {
+	Connection = 'connection',
+	// Surface = 'surface', // Future
+}
+
 export interface ConnectionConfig {
 	label: string
 	config: unknown

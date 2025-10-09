@@ -165,7 +165,7 @@ export const AddConnectionModal = observer(
 												<FontAwesomeIcon icon={faQuestionCircle} />
 											</div>
 										)}
-										{isModuleOnStore && <ModuleVersionsRefresh moduleId={moduleInfo.id} />}
+										{isModuleOnStore && <ModuleVersionsRefresh modules={modules} moduleId={moduleInfo.id} />}
 									</div>
 								</CFormLabel>
 								<CCol sm={8}>

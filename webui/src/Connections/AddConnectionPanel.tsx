@@ -170,7 +170,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 
 					<div>
 						<div className="refresh-and-last-updated mb-3">
-							<RefreshModulesList btnSize="sm" />
+							<RefreshModulesList modules={modules} btnSize="sm" />
 							<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 						</div>
 

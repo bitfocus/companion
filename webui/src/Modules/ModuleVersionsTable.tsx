@@ -22,6 +22,7 @@ import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVi
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 
 dayjs.extend(relativeTime)
 
@@ -287,6 +288,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 		setIsRunningInstallOrUninstall(true)
 		installStoreModuleMutation // TODO: 30s timeout?
 			.mutateAsync({
+				moduleType: ModuleInstanceType.Connection,
 				moduleId,
 				versionId,
 			})

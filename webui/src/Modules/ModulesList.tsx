@@ -131,7 +131,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<ImportModules />
 
 				<div className="refresh-and-last-updated">
-					<RefreshModulesList />
+					<RefreshModulesList modules={modules} />
 					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 				</div>
 
