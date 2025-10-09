@@ -17,7 +17,8 @@ import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ClientEditConnectionConfig, ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type { ClientEditConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import {
 	ClientConnectionConfig,
 	ClientConnectionsUpdate,
@@ -408,7 +409,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#logger.debug(`Error while deleting instance "${label ?? id}": `, e)
 		}
 
-		this.status.forgetConnectionStatus(id)
+		this.status.forgetInstanceStatus(id)
 		this.#configStore.forgetConnection(id)
 
 		this.emit('connection_deleted', id)
@@ -519,8 +520,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	/**
 	 * Get the status of an instance
 	 */
-	getConnectionStatus(connectionId: string): ConnectionStatusEntry | undefined {
-		return this.status.getConnectionStatus(connectionId)
+	getConnectionStatus(connectionId: string): InstanceStatusEntry | undefined {
+		return this.status.getInstanceStatus(connectionId)
 	}
 
 	/**

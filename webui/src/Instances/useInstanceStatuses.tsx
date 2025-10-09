@@ -1,31 +1,31 @@
-import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { ObservableMap, observable, runInAction } from 'mobx'
 import { useMemo } from 'react'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever } from '~/Resources/util.js'
 
-export function useConnectionStatuses(): ObservableMap<string, ConnectionStatusEntry> {
-	const connectionStatuses = useMemo(() => observable.map<string, ConnectionStatusEntry>(), [])
+export function useInstanceStatuses(): ObservableMap<string, InstanceStatusEntry> {
+	const instanceStatuses = useMemo(() => observable.map<string, InstanceStatusEntry>(), [])
 
 	useSubscription(
 		trpc.connections.statuses.watch.subscriptionOptions(undefined, {
 			onStarted: () => {
 				runInAction(() => {
-					connectionStatuses.clear()
+					instanceStatuses.clear()
 				})
 			},
 			onData: (data) => {
 				runInAction(() => {
 					switch (data.type) {
 						case 'init':
-							connectionStatuses.replace(data.statuses)
+							instanceStatuses.replace(data.statuses)
 							break
 						case 'remove':
-							connectionStatuses.delete(data.connectionId)
+							instanceStatuses.delete(data.instanceId)
 							break
 						case 'update':
-							connectionStatuses.set(data.connectionId, data.status)
+							instanceStatuses.set(data.instanceId, data.status)
 							break
 						default:
 							assertNever(data)
@@ -39,5 +39,5 @@ export function useConnectionStatuses(): ObservableMap<string, ConnectionStatusE
 		})
 	)
 
-	return connectionStatuses
+	return instanceStatuses
 }

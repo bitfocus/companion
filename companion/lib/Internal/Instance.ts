@@ -11,7 +11,7 @@
 
 import debounceFn from 'debounce-fn'
 import type { InstanceController } from '../Instance/Controller.js'
-import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
 import type {
 	ActionForVisitor,
@@ -34,7 +34,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 	readonly #logger = LogController.createLogger('InternalInstance')
 	readonly #instanceController: InstanceController
 
-	#instanceStatuses: Record<string, ConnectionStatusEntry | undefined> = {}
+	#instanceStatuses: Record<string, InstanceStatusEntry | undefined> = {}
 	#instancesTotal: number = 0
 	#instancesDisabled: number = 0
 	#instancesError: number = 0
@@ -417,7 +417,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		this.emit('setVariables', values)
 	}
 
-	#calculateInstanceErrors(instanceStatuses: Record<string, ConnectionStatusEntry | undefined>): void {
+	#calculateInstanceErrors(instanceStatuses: Record<string, InstanceStatusEntry | undefined>): void {
 		try {
 			let numTotal = 0
 			let numDisabled = 0

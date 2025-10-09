@@ -37,32 +37,6 @@ export interface EmulatorImage {
 
 export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
 
-export interface ConnectionStatusEntry {
-	category: string | null
-	level: string | null
-	message: string | null
-}
-
-export type ConnectionStatusUpdate =
-	| ConnectionStatusUpdateInitOp
-	| ConnectionStatusUpdateRemoveOp
-	| ConnectionStatusUpdateUpdateOp
-
-export interface ConnectionStatusUpdateInitOp {
-	type: 'init'
-	statuses: Record<string, ConnectionStatusEntry>
-}
-export interface ConnectionStatusUpdateRemoveOp {
-	type: 'remove'
-	connectionId: string
-}
-export interface ConnectionStatusUpdateUpdateOp {
-	type: 'update'
-	connectionId: string
-
-	status: ConnectionStatusEntry
-}
-
 export interface ClientBonjourService {
 	subId: string
 	fqdn: string
