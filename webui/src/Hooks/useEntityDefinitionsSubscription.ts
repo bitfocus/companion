@@ -6,7 +6,7 @@ import { EntityDefinitionUpdate } from '@companion-app/shared/Model/EntityDefini
 
 export function useEntityDefinitionsSubscription(
 	store: EntityDefinitionsForTypeStore,
-	endpoint: typeof trpc.connections.definitions.actions | typeof trpc.connections.definitions.feedbacks
+	endpoint: typeof trpc.instances.definitions.actions | typeof trpc.instances.definitions.feedbacks
 ): boolean {
 	const [ready, setReady] = useState(false)
 

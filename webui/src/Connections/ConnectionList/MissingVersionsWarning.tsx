@@ -41,7 +41,7 @@ export function useMissingVersionsCount(): number {
 export const MissingVersionsWarning = observer(function MissingVersionsWarning() {
 	const missingCount = useMissingVersionsCount()
 
-	const installMissingMutation = useMutationExt(trpc.connections.modulesManager.installAllMissing.mutationOptions())
+	const installMissingMutation = useMutationExt(trpc.instances.modulesManager.installAllMissing.mutationOptions())
 
 	const doInstallAllMissing = useCallback(() => {
 		installMissingMutation.mutateAsync().catch((e) => {

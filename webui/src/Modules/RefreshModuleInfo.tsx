@@ -15,7 +15,7 @@ interface RefreshModulesListProps {
 export const RefreshModuleInfo = observer(function RefreshModuleInfo({ modules, moduleId }: RefreshModulesListProps) {
 	const refreshProgress = modules.storeRefreshProgress.get(moduleId) ?? 1
 
-	const refreshInfoMutation = useMutationExt(trpc.connections.modulesStore.refreshModuleInfo.mutationOptions())
+	const refreshInfoMutation = useMutationExt(trpc.instances.modulesStore.refreshModuleInfo.mutationOptions())
 
 	const doRefreshModules = useCallback(() => {
 		refreshInfoMutation.mutateAsync({ moduleType: modules.moduleType, moduleId }).catch((err) => {

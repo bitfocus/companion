@@ -19,7 +19,7 @@ export interface AddConnectionProps {
 	sortOrder?: number
 }
 
-export class ConnectionConfigStore {
+export class InstanceConfigStore {
 	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
 
 	readonly #dbTable: DataStoreTableView<Record<string, ConnectionConfig>>

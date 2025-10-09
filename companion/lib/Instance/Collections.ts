@@ -1,5 +1,5 @@
 import type { ConnectionCollection, ConnectionCollectionData } from '@companion-app/shared/Model/Connections.js'
-import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import type { InstanceConfigStore } from './ConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
@@ -8,9 +8,9 @@ import z from 'zod'
 export class InstanceCollections extends CollectionsBaseController<ConnectionCollectionData> {
 	readonly #emitUpdated: () => void
 
-	readonly #configStore: ConnectionConfigStore
+	readonly #configStore: InstanceConfigStore
 
-	constructor(db: DataDatabase, configStore: ConnectionConfigStore, emitUpdated: () => void) {
+	constructor(db: DataDatabase, configStore: InstanceConfigStore, emitUpdated: () => void) {
 		super(db.getTableView<Record<string, ConnectionCollection>>('connection_collections'))
 
 		this.#emitUpdated = emitUpdated

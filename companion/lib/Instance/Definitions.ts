@@ -40,7 +40,7 @@ import type {
 import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
-import { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import { InstanceConfigStore } from './ConfigStore.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 
@@ -76,7 +76,7 @@ type RawPresetDefinition = (CompanionButtonPresetDefinition | CompanionTextPrese
 export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents> {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
-	readonly #configStore: ConnectionConfigStore
+	readonly #configStore: InstanceConfigStore
 
 	/**
 	 * The action definitions
@@ -93,7 +93,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 	#events = new EventEmitter<DefinitionsEvents>()
 
-	constructor(configStore: ConnectionConfigStore) {
+	constructor(configStore: InstanceConfigStore) {
 		super()
 
 		this.setMaxListeners(0)

@@ -9,7 +9,7 @@ export function useInstanceStatuses(): ObservableMap<string, InstanceStatusEntry
 	const instanceStatuses = useMemo(() => observable.map<string, InstanceStatusEntry>(), [])
 
 	useSubscription(
-		trpc.connections.statuses.watch.subscriptionOptions(undefined, {
+		trpc.instances.statuses.watch.subscriptionOptions(undefined, {
 			onStarted: () => {
 				runInAction(() => {
 					instanceStatuses.clear()

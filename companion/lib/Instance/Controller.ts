@@ -13,11 +13,10 @@ import { InstanceDefinitions } from './Definitions.js'
 import { ModuleHost } from './Host.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
-import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
+import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ClientEditConnectionConfig } from '@companion-app/shared/Model/Common.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import {
 	ClientConnectionConfig,
@@ -28,7 +27,7 @@ import {
 } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
-import { AddConnectionProps, ConnectionConfigStore } from './ConnectionConfigStore.js'
+import { AddConnectionProps, InstanceConfigStore } from './ConfigStore.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './SharedUdpManager.js'
@@ -43,21 +42,21 @@ import type { DataCache } from '../Data/Cache.js'
 import { InstanceCollections } from './Collections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
-import { translateConnectionConfigFields } from './ConfigFields.js'
 import { Complete } from '@companion-module/base/dist/util.js'
+import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
 
 type CreateConnectionData = {
 	type: string
 	product?: string
 }
 
-interface InstanceControllerEvents {
+export interface InstanceControllerEvents {
 	connection_added: [connectionId?: string]
 	connection_updated: [connectionId: string]
 	connection_deleted: [connectionId: string]
 	connection_collections_enabled: []
 
-	uiUpdate: [changes: ClientConnectionsUpdate[]]
+	uiConnectionsUpdate: [changes: ClientConnectionsUpdate[]]
 	[id: `debugLog:${string}`]: [level: string, message: string]
 }
 
@@ -68,7 +67,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #variablesController: VariablesController
 	readonly #collectionsController: InstanceCollections
 
-	readonly #configStore: ConnectionConfigStore
+	readonly #configStore: InstanceConfigStore
 
 	#lastClientJson: Record<string, ClientConnectionConfig> | null = null
 
@@ -102,7 +101,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController = variables
 		this.#controlsController = controls
 
-		this.#configStore = new ConnectionConfigStore(db, (connectionIds, updateConnectionHost) => {
+		this.#configStore = new InstanceConfigStore(db, (connectionIds, updateConnectionHost) => {
 			// Ensure any changes to collectionId update the enabled state
 			if (updateConnectionHost) {
 				for (const connectionId of connectionIds) {
@@ -114,7 +113,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				}
 			}
 
-			this.broadcastChanges(connectionIds)
+			this.#broadcastConnectionChanges(connectionIds)
 		})
 		this.#collectionsController = new InstanceCollections(db, this.#configStore, () => {
 			this.emit('connection_collections_enabled')
@@ -180,7 +179,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		// Prepare for clients already
-		this.broadcastChanges(this.#configStore.getInstanceIdsForAllTypes())
+		this.#broadcastConnectionChanges(this.#configStore.getInstanceIdsForAllTypes())
 	}
 
 	getAllInstanceIds(): string[] {
@@ -459,8 +458,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	/**
 	 * Inform clients of changes to the list of connections
 	 */
-	broadcastChanges(connectionIds: string[]): void {
-		const newJson = this.getClientJson()
+	#broadcastConnectionChanges(connectionIds: string[]): void {
+		const newJson = this.getConnectionClientJson(false)
 
 		const changes: ClientConnectionsUpdate[] = []
 
@@ -485,8 +484,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		// Now broadcast to any interested clients
-		if (this.listenerCount('uiUpdate') > 0) {
-			this.emit('uiUpdate', changes)
+		if (this.listenerCount('uiConnectionsUpdate') > 0) {
+			this.emit('uiConnectionsUpdate', changes)
 		}
 	}
 
@@ -619,248 +618,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			modulesStore: this.modulesStore.createTrpcRouter(),
 			statuses: this.status.createTrpcRouter(),
 
-			watch: publicProcedure.subscription(async function* ({ signal }) {
-				const changes = toIterable(selfEvents, 'uiUpdate', signal)
-
-				yield [{ type: 'init', info: self.#lastClientJson || self.getClientJson() }] satisfies ClientConnectionsUpdate[]
-
-				for await (const [change] of changes) {
-					yield change
-				}
-			}),
-
-			add: publicProcedure
-				.input(
-					z.object({
-						module: z.object({
-							type: z.string(),
-							product: z.string().optional(),
-						}),
-						label: z.string(),
-						versionId: z.string(),
-					})
-				)
-				.mutation(({ input }) => {
-					const connectionInfo = this.addInstanceWithLabel(input.module, input.label, {
-						versionId: input.versionId,
-						updatePolicy: ConnectionUpdatePolicy.Stable,
-						disabled: false,
-					})
-					return connectionInfo[0]
-				}),
-
-			delete: publicProcedure
-				.input(
-					z.object({
-						connectionId: z.string(),
-					})
-				)
-				.mutation(async ({ input }) => {
-					await this.deleteInstance(input.connectionId)
-				}),
-
-			reorder: publicProcedure
-				.input(
-					z.object({
-						collectionId: z.string().nullable(),
-						connectionId: z.string(),
-						dropIndex: z.number(),
-					})
-				)
-				.mutation(({ input }) => {
-					this.#configStore.moveConnection(input.collectionId, input.connectionId, input.dropIndex)
-				}),
-
-			setEnabled: publicProcedure
-				.input(
-					z.object({
-						connectionId: z.string(),
-						enabled: z.boolean(),
-					})
-				)
-				.mutation(({ input }) => {
-					this.enableDisableInstance(input.connectionId, input.enabled)
-				}),
-
-			edit: publicProcedure
-				.input(
-					z.object({
-						connectionId: z.string(),
-					})
-				)
-				.query(async ({ input }) => {
-					// Check if the instance exists
-					const instanceConf = this.#configStore.getConfigOfTypeForId(input.connectionId, ModuleInstanceType.Connection)
-					if (!instanceConf) return null
-
-					// Make sure the collection is enabled
-					if (!this.collections.isCollectionEnabled(instanceConf.collectionId)) return null
-
-					const instance = this.moduleHost.getChild(input.connectionId)
-					if (!instance) return null
-
-					try {
-						const fields = await instance.requestConfigFields()
-
-						const result: ClientEditConnectionConfig = {
-							fields: translateConnectionConfigFields(fields),
-							config: instanceConf.config,
-							secrets: instanceConf.secrets || {},
-						}
-						return result
-					} catch (e: any) {
-						this.#logger.silly(`Failed to load instance config_fields: ${e.message}`)
-						return null
-					}
-				}),
-
-			setLabelAndConfig: publicProcedure
-				.input(
-					z.object({
-						connectionId: z.string(),
-						label: z.string(),
-						config: z.record(z.string(), z.any()),
-						secrets: z.record(z.string(), z.any()),
-						updatePolicy: z.enum(ConnectionUpdatePolicy),
-					})
-				)
-				.mutation(({ input }) => {
-					const idUsingLabel = this.getIdForLabel(input.label)
-					if (idUsingLabel && idUsingLabel !== input.connectionId) {
-						return 'duplicate label'
-					}
-
-					if (!isLabelValid(input.label)) {
-						return 'invalid label'
-					}
-
-					this.setInstanceLabelAndConfig(input.connectionId, {
-						label: input.label,
-						config: input.config,
-						secrets: input.secrets,
-						updatePolicy: input.updatePolicy,
-						upgradeIndex: null,
-					})
-
-					return null
-				}),
-
-			setLabelAndVersion: publicProcedure
-				.input(
-					z.object({
-						connectionId: z.string(),
-						label: z.string(),
-						versionId: z.string().nullable(),
-						updatePolicy: z.enum(ConnectionUpdatePolicy).nullable(),
-					})
-				)
-				.mutation(({ input }) => {
-					const config = this.#configStore.getConfigOfTypeForId(input.connectionId, ModuleInstanceType.Connection)
-					if (!config) return 'no connection'
-
-					this.#logger.info('Setting label and version', input.connectionId, input.label, input.versionId)
-					const idUsingLabel = this.getIdForLabel(input.label)
-					if (idUsingLabel && idUsingLabel !== input.connectionId) {
-						return 'duplicate label'
-					}
-
-					if (!isLabelValid(input.label)) {
-						return 'invalid label'
-					}
-
-					// TODO - refactor/optimise/tidy this
-
-					this.setInstanceLabelAndConfig(input.connectionId, {
-						label: input.label,
-						config: null,
-						secrets: null,
-						updatePolicy: null,
-						upgradeIndex: null,
-					})
-
-					// Don't validate the version, as it might not yet be installed
-					// const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
-					// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
-
-					if (input.versionId?.includes('@')) {
-						// Its a moduleId and version
-						const [moduleId, version] = input.versionId.split('@')
-						config.instance_type = moduleId
-						config.moduleVersionId = version || null
-					} else {
-						// Its a simple version
-						config.moduleVersionId = input.versionId
-					}
-
-					// Update the config
-					if (input.updatePolicy) config.updatePolicy = input.updatePolicy
-					this.#configStore.commitChanges([input.connectionId], false)
-
-					// Install the module if needed
-					const moduleInfo = this.modules.getModuleManifest(
-						ModuleInstanceType.Connection,
-						config.instance_type,
-						config.moduleVersionId
-					)
-					if (!moduleInfo) {
-						this.userModulesManager.ensureModuleIsInstalled(
-							ModuleInstanceType.Connection,
-							config.instance_type,
-							config.moduleVersionId
-						)
-					}
-
-					// Trigger a restart (or as much as possible)
-					if (config.enabled) {
-						this.#queueUpdateConnectionState(input.connectionId, false, true)
-					}
-
-					return null
-				}),
-
-			setModuleAndVersion: publicProcedure
-				.input(
-					z.object({
-						connectionId: z.string(),
-						moduleId: z.string(),
-						versionId: z.string().nullable(),
-					})
-				)
-				.mutation(({ input }) => {
-					const config = this.#configStore.getConfigOfTypeForId(input.connectionId, ModuleInstanceType.Connection)
-					if (!config) return 'no connection'
-
-					// Don't validate the version, as it might not yet be installed
-					// const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
-					// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
-
-					// Update the config
-					config.instance_type = input.moduleId
-					config.moduleVersionId = input.versionId
-					// if (updatePolicy) config.updatePolicy = updatePolicy
-					this.#configStore.commitChanges([input.connectionId], false)
-
-					// Install the module if needed
-					const moduleInfo = this.modules.getModuleManifest(
-						ModuleInstanceType.Connection,
-						config.instance_type,
-						input.versionId
-					)
-					if (!moduleInfo) {
-						this.userModulesManager.ensureModuleIsInstalled(
-							ModuleInstanceType.Connection,
-							config.instance_type,
-							input.versionId
-						)
-					}
-
-					// Trigger a restart (or as much as possible)
-					if (config.enabled) {
-						this.#queueUpdateConnectionState(input.connectionId, false, true)
-					}
-
-					return null
-				}),
+			connections: createConnectionsTrpcRouter(
+				this.#logger,
+				this,
+				this,
+				this.#configStore,
+				this.#queueUpdateConnectionState.bind(this)
+			),
 
 			debugLog: publicProcedure
 				.input(
@@ -881,7 +645,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 	}
 
-	getClientJson(): Record<string, ClientConnectionConfig> {
+	getConnectionClientJson(allowCached: boolean): Record<string, ClientConnectionConfig> {
+		if (allowCached && this.#lastClientJson) return this.#lastClientJson
+
 		const result = this.#configStore.getPartialClientJson()
 
 		for (const [id, config] of Object.entries(result)) {
@@ -890,6 +656,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				config.hasRecordActionsHandler = instance.hasRecordActionsHandler
 			}
 		}
+
+		// Cache it for next time
+		if (!this.#lastClientJson) this.#lastClientJson = cloneDeep(result)
 
 		return result
 	}

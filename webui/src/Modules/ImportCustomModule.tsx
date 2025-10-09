@@ -16,7 +16,7 @@ export function ImportModules(): React.JSX.Element {
 	const [importSessionId, setImportSessionId] = useState<string | null>(null)
 
 	useSubscription(
-		trpc.connections.modulesManager.bundleUpload.watchProgress.subscriptionOptions(
+		trpc.instances.modulesManager.bundleUpload.watchProgress.subscriptionOptions(
 			{
 				sessionId: importSessionId ?? '',
 			},
@@ -50,7 +50,7 @@ export function ImportModules(): React.JSX.Element {
 
 	const [importError, setImportError] = useState<string | null>(null)
 
-	const installTarMutation = useMutationExt(trpc.connections.modulesManager.installModuleTar.mutationOptions())
+	const installTarMutation = useMutationExt(trpc.instances.modulesManager.installModuleTar.mutationOptions())
 	const loadModuleFile = useCallback(
 		(e: React.FormEvent<HTMLInputElement>) => {
 			const newFile = e.currentTarget.files?.[0]
@@ -95,15 +95,13 @@ export function ImportModules(): React.JSX.Element {
 		[installTarMutation, notifier]
 	)
 
-	const startBundleImportMutation = useMutationExt(trpc.connections.modulesManager.bundleUpload.start.mutationOptions())
-	const cancelBundleImportMutation = useMutationExt(
-		trpc.connections.modulesManager.bundleUpload.cancel.mutationOptions()
-	)
+	const startBundleImportMutation = useMutationExt(trpc.instances.modulesManager.bundleUpload.start.mutationOptions())
+	const cancelBundleImportMutation = useMutationExt(trpc.instances.modulesManager.bundleUpload.cancel.mutationOptions())
 	const uploadBundleChunkMutation = useMutationExt(
-		trpc.connections.modulesManager.bundleUpload.uploadChunk.mutationOptions()
+		trpc.instances.modulesManager.bundleUpload.uploadChunk.mutationOptions()
 	)
 	const completeBundleImportMutation = useMutationExt(
-		trpc.connections.modulesManager.bundleUpload.complete.mutationOptions()
+		trpc.instances.modulesManager.bundleUpload.complete.mutationOptions()
 	)
 
 	const loadModuleBundle = useCallback(

@@ -50,7 +50,7 @@ export const AddConnectionModal = observer(
 			setConnectionLabel('')
 		}, [])
 
-		const addMutation = useMutationExt(trpc.connections.add.mutationOptions())
+		const addMutation = useMutationExt(trpc.instances.connections.add.mutationOptions())
 
 		const doAction = () => {
 			if (!moduleInfo || !connectionLabel || !selectedVersion) return
