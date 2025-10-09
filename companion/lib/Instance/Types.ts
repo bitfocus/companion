@@ -1,13 +1,26 @@
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import type { ModuleManifest } from '@companion-module/base'
+import type { ModuleManifestExt } from '@companion-app/shared/Model/ModuleManifest.js'
 
-export interface ModuleVersionInfo {
+export type SomeModuleVersionInfo = ConnectionModuleVersionInfo // | SurfaceModuleVersionInfo
+
+export interface ModuleVersionInfoBase {
 	versionId: string // 'dev' or a semver version
 	basePath: string
 	helpPath: string | null
-	display: ModuleDisplayInfo
-	manifest: ModuleManifest
 	isPackaged: boolean
 	isBeta: boolean
+	display: ModuleDisplayInfo
+}
+
+// export interface SurfaceModuleVersionInfo extends ModuleVersionInfoBase {
+// 	type: ModuleInstanceType.Surface
+// 	manifest: SurfaceModuleManifest
+// 	isLegacy: false
+// }
+
+export interface ConnectionModuleVersionInfo extends ModuleVersionInfoBase {
+	type: ModuleInstanceType.Connection
+	manifest: ModuleManifestExt
 	isLegacy: boolean
 }

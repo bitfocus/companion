@@ -155,10 +155,10 @@ export class Registry {
 	/**
 	 * Create a new application <code>Registry</code>
 	 * @param configDir - the configuration path
-	 * @param modulesDir - the path for storing modules
+	 * @param modulesDirs - the paths for storing modules
 	 * @param machineId - the machine uuid
 	 */
-	constructor(configDir: string, modulesDir: string, machineId: string) {
+	constructor(configDir: string, modulesDirs: AppInfo['modulesDirs'], machineId: string) {
 		if (!configDir) throw new Error(`Missing configDir`)
 		if (!machineId) throw new Error(`Missing machineId`)
 
@@ -169,7 +169,7 @@ export class Registry {
 
 		this.#appInfo = {
 			configDir: configDir,
-			modulesDir: modulesDir,
+			modulesDirs: modulesDirs,
 			machineId: machineId,
 			appVersion: pkgInfo.version!,
 			appBuild: buildNumber,
@@ -468,7 +468,9 @@ export interface AppInfo {
 	/** The current config directory */
 	configDir: string
 	/** The base directory for storing installed modules */
-	modulesDir: string
+	modulesDirs: {
+		connection: string
+	}
 	machineId: string
 	appVersion: string
 	appBuild: string

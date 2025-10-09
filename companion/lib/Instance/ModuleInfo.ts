@@ -1,25 +1,28 @@
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import type { ModuleVersionInfo } from './Types.js'
 import semver from 'semver'
 import { compact } from 'lodash-es'
+import type { SomeModuleVersionInfo } from './Types.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { getHelpPathForInstalledModule } from './ModuleScanner.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 
 /**
  * Information about a module
  */
 export class InstanceModuleInfo {
-	id: string
+	readonly moduleType: ModuleInstanceType
+	readonly id: string
 
-	devModule: ModuleVersionInfo | null = null
+	devModule: SomeModuleVersionInfo | null = null
 
-	installedVersions: Record<string, ModuleVersionInfo | undefined> = {}
+	installedVersions: Record<string, SomeModuleVersionInfo | undefined> = {}
 
-	constructor(id: string) {
+	constructor(moduleType: ModuleInstanceType, id: string) {
+		this.moduleType = moduleType
 		this.id = id
 	}
 
-	getVersion(versionId: string | null): ModuleVersionInfo | null {
+	getVersion(versionId: string | null): SomeModuleVersionInfo | null {
 		if (versionId === 'dev') return this.devModule
 
 		if (versionId === null) return null // TODO - is this correct?
@@ -27,12 +30,12 @@ export class InstanceModuleInfo {
 		return this.installedVersions[versionId] ?? null
 	}
 
-	getLatestVersion(isBeta: boolean): ModuleVersionInfo | null {
-		let latest: ModuleVersionInfo | null = null
+	getLatestVersion(isBeta: boolean): SomeModuleVersionInfo | null {
+		let latest: SomeModuleVersionInfo | null = null
 		for (const version of Object.values(this.installedVersions)) {
 			if (!version || version.isBeta !== isBeta) continue
 			if (!isModuleApiVersionCompatible(version.manifest.runtime.apiVersion)) continue
-			if (!latest || semver.compare(version.versionId, latest.versionId, { loose: true }) > 0) {
+			if (!latest || semver.compare(version.versionId, latest.versionId) > 0) {
 				latest = version
 			}
 		}
@@ -60,7 +63,7 @@ export class InstanceModuleInfo {
 	}
 }
 
-function translateStableVersion(version: ModuleVersionInfo | null): ClientModuleVersionInfo | null {
+function translateStableVersion(version: SomeModuleVersionInfo | null): ClientModuleVersionInfo | null {
 	if (!version) return null
 	if (version.versionId === 'dev') {
 		return {
@@ -81,7 +84,7 @@ function translateStableVersion(version: ModuleVersionInfo | null): ClientModule
 	}
 }
 
-function translateReleaseVersion(version: ModuleVersionInfo): ClientModuleVersionInfo {
+function translateReleaseVersion(version: SomeModuleVersionInfo): ClientModuleVersionInfo {
 	return {
 		displayName: `v${version.versionId}`,
 		isLegacy: version.isLegacy,

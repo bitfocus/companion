@@ -215,9 +215,13 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 	}
 
-	const modulesDir = path.join(rootConfigDir, 'modules')
-
-	const registry = new Registry(configDir, modulesDir, machineId)
+	const registry = new Registry(
+		configDir,
+		{
+			connection: path.join(rootConfigDir, 'modules'), // For backwards compatibility
+		},
+		machineId
+	)
 
 	registry
 		.ready(options.extraModulePath, adminIp, options.adminPort)

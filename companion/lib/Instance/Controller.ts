@@ -24,6 +24,7 @@ import {
 	ClientConnectionsUpdate,
 	ConnectionConfig,
 	ConnectionUpdatePolicy,
+	ModuleInstanceType,
 } from '@companion-app/shared/Model/Connections.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
@@ -124,7 +125,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(this.#configStore)
 		this.status = new InstanceStatus()
-		this.modules = new InstanceModules(this, apiRouter, appInfo.modulesDir)
+		this.modules = new InstanceModules(this, apiRouter, appInfo.modulesDirs)
 		this.moduleHost = new ModuleHost(
 			{
 				controls: controls,
@@ -161,8 +162,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			appInfo,
 			this.modules,
 			this.modulesStore,
-			this.#configStore,
-			appInfo.modulesDir
+			this.#configStore
 		)
 		this.modules.listenToStoreEvents(this.modulesStore)
 
@@ -180,11 +180,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		// Prepare for clients already
-		this.broadcastChanges(this.#configStore.getAllInstanceIds())
+		this.broadcastChanges(this.#configStore.getInstanceIdsForAllTypes())
 	}
 
 	getAllInstanceIds(): string[] {
-		return this.#configStore.getAllInstanceIds()
+		return this.#configStore.getInstanceIdsForAllTypes()
 	}
 
 	/**
@@ -194,7 +194,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (event == 'resume') {
 			this.#logger.info('Power: Resuming')
 
-			for (const id of this.#configStore.getAllInstanceIds()) {
+			for (const id of this.#configStore.getInstanceIdsForAllTypes()) {
 				this.#queueUpdateConnectionState(id)
 			}
 		} else if (event == 'suspend') {
@@ -213,9 +213,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	async initInstances(extraModulePath: string): Promise<void> {
 		await this.userModulesManager.init()
 
-		await this.modules.initInstances(extraModulePath)
+		await this.modules.initModules(extraModulePath)
 
-		const connectionIds = this.#configStore.getAllInstanceIds()
+		const connectionIds = this.#configStore.getInstanceIdsForAllTypes()
 		this.#logger.silly('instance_init', connectionIds)
 		for (const id of connectionIds) {
 			this.#queueUpdateConnectionState(id)
@@ -224,7 +224,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.emit('connection_added')
 	}
 
-	async reloadUsesOfModule(moduleId: string, versionId: string): Promise<void> {
+	async reloadUsesOfModule(_moduleType: ModuleInstanceType, moduleId: string, versionId: string): Promise<void> {
 		// restart usages of this module
 		const { connectionIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleId, versionId)
 		for (const id of connectionIds) {
@@ -235,7 +235,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#logger.info(`Reloading ${labels.length} connections: ${labels.join(', ')}`)
 	}
 
-	findActiveUsagesOfModule(moduleId: string, versionId?: string): { connectionIds: string[]; labels: string[] } {
+	findActiveUsagesOfModule(
+		_moduleType: ModuleInstanceType,
+		moduleId: string,
+		versionId?: string
+	): { connectionIds: string[]; labels: string[] } {
 		return this.#configStore.findActiveUsagesOfModule(moduleId, versionId)
 	}
 
@@ -256,7 +260,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			patchSecrets?: boolean // If true, only secrets defined in the object are updated
 		}
 	): void {
-		const connectionConfig = this.#configStore.getConfigForId(id)
+		const connectionConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (!connectionConfig) {
 			this.#logger.warn(`setInstanceLabelAndConfig id "${id}" does not exist!`)
 			return
@@ -333,11 +337,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		if (props.versionId === null) {
 			// Get the latest installed version
-			props.versionId = this.modules.getLatestVersionOfModule(moduleId, false)
+			props.versionId = this.modules.getLatestVersionOfModule(ModuleInstanceType.Connection, moduleId, false)
 		}
 
 		// Ensure the requested module and version is installed
-		this.userModulesManager.ensureModuleIsInstalled(moduleId, props.versionId)
+		this.userModulesManager.ensureModuleIsInstalled(ModuleInstanceType.Connection, moduleId, props.versionId)
 
 		const label = this.#configStore.makeLabelUnique(labelBase)
 
@@ -356,7 +360,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	getLabelForInstance(id: string): string | undefined {
-		return this.#configStore.getConfigForId(id)?.label
+		return this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)?.label
 	}
 
 	getIdForLabel(label: string): string | undefined {
@@ -364,16 +368,20 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	getManifestForInstance(id: string): ModuleManifest | undefined {
-		const config = this.#configStore.getConfigForId(id)
+		const config = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (!config) return undefined
 
-		const moduleManifest = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
+		const moduleManifest = this.modules.getModuleManifest(
+			ModuleInstanceType.Connection,
+			config.instance_type,
+			config.moduleVersionId
+		)
 
 		return moduleManifest?.manifest
 	}
 
 	enableDisableInstance(id: string, state: boolean): void {
-		const connectionConfig = this.#configStore.getConfigForId(id)
+		const connectionConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (connectionConfig) {
 			const label = connectionConfig.label
 			if (connectionConfig.enabled !== state) {
@@ -394,7 +402,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	async deleteInstance(id: string): Promise<void> {
-		const config = this.#configStore.getConfigForId(id)
+		const config = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (!config) {
 			this.#logger.warn(`Can't delete connection "${id}" which does not exist!`)
 			return
@@ -423,7 +431,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	async deleteAllInstances(deleteCollections: boolean): Promise<void> {
 		const ps: Promise<void>[] = []
-		for (const instanceId of this.#configStore.getAllInstanceIds()) {
+		for (const instanceId of this.#configStore.getInstanceIdsForAllTypes()) {
 			ps.push(this.deleteInstance(instanceId))
 		}
 
@@ -491,7 +499,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		clone = true,
 		includeSecrets = true
 	): ExportInstanceFullv6 | ExportInstanceMinimalv6 | undefined {
-		const rawObj = this.#configStore.getConfigForId(instanceId)
+		const rawObj = this.#configStore.getConfigOfTypeForId(instanceId, null)
 		if (!rawObj) return undefined
 
 		const obj = minimal
@@ -528,12 +536,12 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 * Get the config object of an instance
 	 */
 	getInstanceConfig(connectionId: string): ConnectionConfig | undefined {
-		return this.#configStore.getConfigForId(connectionId)
+		return this.#configStore.getConfigOfTypeForId(connectionId, null)
 	}
 
 	#queueUpdateAllConnectionState(): void {
 		// Queue an update of all connections
-		for (const id of this.#configStore.getAllInstanceIds()) {
+		for (const id of this.#configStore.getInstanceIdsForAllTypes()) {
 			try {
 				this.#queueUpdateConnectionState(id)
 			} catch (e) {
@@ -546,14 +554,18 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 * Start an instance running
 	 */
 	#queueUpdateConnectionState(id: string, forceCommitChanges = false, forceRestart = false): void {
-		const config = this.#configStore.getConfigForId(id)
+		const config = this.#configStore.getConfigOfTypeForId(id, null)
 		if (!config) throw new Error('Cannot activate unknown module')
 
 		let changed = false
 
 		// Seamless fixup old configs
 		if (!config.moduleVersionId) {
-			config.moduleVersionId = this.modules.getLatestVersionOfModule(config.instance_type, true)
+			config.moduleVersionId = this.modules.getLatestVersionOfModule(
+				ModuleInstanceType.Connection,
+				config.instance_type,
+				true
+			)
 			changed = !!config.moduleVersionId
 		}
 
@@ -678,7 +690,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				)
 				.query(async ({ input }) => {
 					// Check if the instance exists
-					const instanceConf = this.#configStore.getConfigForId(input.connectionId)
+					const instanceConf = this.#configStore.getConfigOfTypeForId(input.connectionId, ModuleInstanceType.Connection)
 					if (!instanceConf) return null
 
 					// Make sure the collection is enabled
@@ -743,6 +755,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					})
 				)
 				.mutation(({ input }) => {
+					const config = this.#configStore.getConfigOfTypeForId(input.connectionId, ModuleInstanceType.Connection)
+					if (!config) return 'no connection'
+
 					this.#logger.info('Setting label and version', input.connectionId, input.label, input.versionId)
 					const idUsingLabel = this.getIdForLabel(input.label)
 					if (idUsingLabel && idUsingLabel !== input.connectionId) {
@@ -763,9 +778,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						upgradeIndex: null,
 					})
 
-					const config = this.#configStore.getConfigForId(input.connectionId)
-					if (!config) return 'no connection'
-
 					// Don't validate the version, as it might not yet be installed
 					// const moduleInfo = this.modules.getModuleManifest(config.instance_type, versionId)
 					// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
@@ -785,9 +797,17 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					this.#configStore.commitChanges([input.connectionId], false)
 
 					// Install the module if needed
-					const moduleInfo = this.modules.getModuleManifest(config.instance_type, config.moduleVersionId)
+					const moduleInfo = this.modules.getModuleManifest(
+						ModuleInstanceType.Connection,
+						config.instance_type,
+						config.moduleVersionId
+					)
 					if (!moduleInfo) {
-						this.userModulesManager.ensureModuleIsInstalled(config.instance_type, config.moduleVersionId)
+						this.userModulesManager.ensureModuleIsInstalled(
+							ModuleInstanceType.Connection,
+							config.instance_type,
+							config.moduleVersionId
+						)
 					}
 
 					// Trigger a restart (or as much as possible)
@@ -807,7 +827,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					})
 				)
 				.mutation(({ input }) => {
-					const config = this.#configStore.getConfigForId(input.connectionId)
+					const config = this.#configStore.getConfigOfTypeForId(input.connectionId, ModuleInstanceType.Connection)
 					if (!config) return 'no connection'
 
 					// Don't validate the version, as it might not yet be installed
@@ -821,9 +841,17 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					this.#configStore.commitChanges([input.connectionId], false)
 
 					// Install the module if needed
-					const moduleInfo = this.modules.getModuleManifest(config.instance_type, input.versionId)
+					const moduleInfo = this.modules.getModuleManifest(
+						ModuleInstanceType.Connection,
+						config.instance_type,
+						input.versionId
+					)
 					if (!moduleInfo) {
-						this.userModulesManager.ensureModuleIsInstalled(config.instance_type, input.versionId)
+						this.userModulesManager.ensureModuleIsInstalled(
+							ModuleInstanceType.Connection,
+							config.instance_type,
+							input.versionId
+						)
 					}
 
 					// Trigger a restart (or as much as possible)
@@ -841,7 +869,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
-					if (!self.#configStore.getConfigForId(input.connectionId))
+					if (!self.#configStore.getConfigOfTypeForId(input.connectionId, null))
 						throw new Error(`Unknown connectionId ${input.connectionId}`)
 
 					const lines = toIterable(selfEvents, `debugLog:${input.connectionId}`, signal)
