@@ -7,6 +7,15 @@ export interface ClientConnectionConfig extends ClientInstanceConfigBase {
 	collectionId: string | null
 }
 
+export interface ClientSurfaceInstanceConfig {
+	label: string
+	moduleId: string
+	moduleVersionId: string | null
+	updatePolicy: InstanceVersionUpdatePolicy
+	enabled: boolean
+	sortOrder: number
+}
+
 export interface ConnectionCollectionData {
 	enabled: boolean
 }
@@ -31,4 +40,24 @@ export interface ClientConnectionsUpdateUpdateOp {
 	id: string
 
 	info: ClientConnectionConfig
+}
+
+export type ClientSurfaceInstancesUpdate =
+	| ClientSurfaceInstancesUpdateInitOp
+	| ClientSurfaceInstancesUpdateUpdateOp
+	| ClientSurfaceInstancesUpdateRemoveOp
+
+export interface ClientSurfaceInstancesUpdateInitOp {
+	type: 'init'
+	info: Record<string, ClientSurfaceInstanceConfig>
+}
+export interface ClientSurfaceInstancesUpdateRemoveOp {
+	type: 'remove'
+	id: string
+}
+export interface ClientSurfaceInstancesUpdateUpdateOp {
+	type: 'update'
+	id: string
+
+	info: ClientSurfaceInstanceConfig
 }

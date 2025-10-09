@@ -48,7 +48,7 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	clearDeck(): void
 	draw(x: number, y: number, render: ImageResult): void
 	drawMany?: (entries: DrawButtonItem[]) => void
-	setConfig(config: any, force?: boolean): void
+	setConfig(config: Record<string, any>, force?: boolean): void
 	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void
 	quit(): void

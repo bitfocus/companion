@@ -29,7 +29,7 @@ export type ModuleStoreServiceEvents = {
 	[id: `update:${string}`]: [data: ModuleStoreModuleInfoStore | null]
 }
 
-type CacheStoreKey = 'module_store_list' // | 'surface_store_list'
+type CacheStoreKey = 'module_store_list' | 'surface_store_list'
 
 export class ModuleStoreOfTypeService extends EventEmitter<ModuleStoreServiceEvents> {
 	readonly #logger: Logger

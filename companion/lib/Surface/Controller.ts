@@ -67,6 +67,13 @@ import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
+import { OpenHidDeviceResult, PluginWrapper, SurfaceHostContext } from '@companion-surface/base/host'
+// @ts-expect-error yes its bad
+// eslint-disable-next-line n/no-missing-import
+import elgatoPluginTest from '../../../../module-local-dev/companion-surface-elgato-stream-deck/dist/main.js'
+import { LockingGraphicsGeneratorImpl } from './Plugin/LockingGraphics.js'
+import { CardGenerator } from './Plugin/Cards.js'
+import { SurfacePluginPanel } from './Plugin/Panel.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -100,6 +107,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * The last sent json object
 	 */
 	#lastSentJson: Record<string, ClientDevicesListItem> = {}
+
+	readonly #surfacePlugins = new Map<string, PluginWrapper>()
 
 	/**
 	 * All the opened and active surfaces
@@ -155,43 +164,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
 
-		setImmediate(() => {
-			// Setup groups
-			const groupsConfigs = this.#dbTableGroups.all()
-			for (const groupId of Object.keys(groupsConfigs)) {
-				const newGroup = new SurfaceGroup(
-					this,
-					this.#dbTableGroups,
-					this.#handlerDependencies.pageStore,
-					this.#handlerDependencies.userconfig,
-					this.#updateEvents,
-					groupId,
-					null,
-					this.isPinLockEnabled()
-				)
-				this.#surfaceGroups.set(groupId, newGroup)
-			}
-
-			// Setup defined emulators
-			const instances = this.#dbTableSurfaces.all()
-			for (const id of Object.keys(instances)) {
-				// If the id starts with 'emulator:' then re-add it
-				if (id.startsWith('emulator:')) {
-					this.addEmulator(id.substring(9), undefined, true)
-				}
-			}
-
-			// Initial search for USB devices
-			this.#refreshDevices().catch(() => {
-				this.#logger.warn('Initial USB scan failed')
-			})
-			this.#outboundController.init()
-
-			this.updateDevicesList()
-
-			this.#startStopLockoutTimer()
-		})
-
 		this.triggerRefreshDevicesEvent = this.triggerRefreshDevicesEvent.bind(this)
 
 		const runHotplug = this.#handlerDependencies.userconfig.getKey('usb_hotplug')
@@ -203,6 +175,103 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 			this.#runningUsbHotplug = true
 		}
+	}
+
+	async init(): Promise<void> {
+		const pluginHostContext: SurfaceHostContext = {
+			lockingGraphics: new LockingGraphicsGeneratorImpl(),
+			cardsGenerator: new CardGenerator(),
+
+			capabilities: {
+				// For future use
+			},
+
+			surfaceEvents: {
+				disconnected: (surfaceId: string) => {
+					this.#logger.info(`Plugin surface disconnected: ${surfaceId}`)
+
+					// TODO - something?
+				},
+				inputPress: (surfaceId: string, controlId: string, pressed: boolean) => {
+					console.log(`Plugin input press: ${surfaceId} ${controlId} = ${pressed}`)
+
+					const surface = this.#surfaceHandlers.get(surfaceId)
+					if (surface && surface.panel instanceof SurfacePluginPanel) {
+						surface.panel.inputPress(controlId, pressed)
+					} else {
+						this.#logger.warn(`Received input press for unknown surface: ${surfaceId}`)
+					}
+				},
+				inputRotate: (surfaceId: string, controlId: string, delta: number) => {
+					console.log(`Plugin input rotate: ${surfaceId} ${controlId} = ${delta}`)
+
+					const surface = this.#surfaceHandlers.get(surfaceId)
+					if (surface && surface.panel instanceof SurfacePluginPanel) {
+						surface.panel.inputRotate(controlId, delta)
+					} else {
+						this.#logger.warn(`Received input rotate for unknown surface: ${surfaceId}`)
+					}
+				},
+				setVariableValue: (surfaceId: string, name: string, value: any) => {
+					console.log(`Plugin set variable: ${surfaceId} ${name} = ${value}`)
+
+					const surface = this.#surfaceHandlers.get(surfaceId)
+					if (surface && surface.panel instanceof SurfacePluginPanel) {
+						surface.panel.inputVariableValue(name, value)
+					} else {
+						this.#logger.warn(`Received input variable value for unknown surface: ${surfaceId}`)
+					}
+				},
+				pincodeEntry: (surfaceId: string, char: number) => {
+					console.log(`Plugin pincode entry: ${surfaceId} char=${char}`)
+
+					const surface = this.#surfaceHandlers.get(surfaceId)
+					if (surface && surface.panel instanceof SurfacePluginPanel) {
+						surface.panel.inputPincode(char)
+					} else {
+						this.#logger.warn(`Received input pincode for unknown surface: ${surfaceId}`)
+					}
+				},
+			},
+		}
+
+		// HACK: do this properly, and with a layer of ipc/threading!
+		this.#surfacePlugins.set('elgato', new PluginWrapper(pluginHostContext, elgatoPluginTest))
+
+		// Setup groups
+		const groupsConfigs = this.#dbTableGroups.all()
+		for (const groupId of Object.keys(groupsConfigs)) {
+			const newGroup = new SurfaceGroup(
+				this,
+				this.#dbTableGroups,
+				this.#handlerDependencies.pageStore,
+				this.#handlerDependencies.userconfig,
+				this.#updateEvents,
+				groupId,
+				null,
+				this.isPinLockEnabled()
+			)
+			this.#surfaceGroups.set(groupId, newGroup)
+		}
+
+		// Setup defined emulators
+		const instances = this.#dbTableSurfaces.all()
+		for (const id of Object.keys(instances)) {
+			// If the id starts with 'emulator:' then re-add it
+			if (id.startsWith('emulator:')) {
+				this.addEmulator(id.substring(9), undefined, true)
+			}
+		}
+
+		// Initial search for USB devices
+		this.#refreshDevices().catch(() => {
+			this.#logger.warn('Initial USB scan failed')
+		})
+		this.#outboundController.init()
+
+		this.updateDevicesList()
+
+		this.#startStopLockoutTimer()
 	}
 
 	/**
@@ -1125,9 +1194,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						Promise.allSettled(
 							deviceInfos.map(async (deviceInfo) => {
 								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
+
+								await Promise.allSettled(
+									Array.from(this.#surfacePlugins.values()).map(async (plugin) => {
+										const d = await plugin.openHidDevice(deviceInfo)
+										if (!d) return
+
+										await this.#addDevice2(deviceInfo, plugin, d)
+									})
+								)
+
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
 									if (!ignoreStreamDeck && getStreamDeckDeviceInfo(deviceInfo)) {
-										await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
+										// await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
 										return
 									} else if (
 										getMXCreativeConsoleDeviceInfo(deviceInfo) &&
@@ -1298,6 +1377,33 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		})
 
 		return device
+	}
+
+	async #addDevice2(_hidDevice: HID.Device, plugin: PluginWrapper<unknown>, surfaceInfo: OpenHidDeviceResult) {
+		this.removeDevice(surfaceInfo.surfaceId) // TODO: is this correct/ok?
+
+		this.#logger.debug(`opened device: ${surfaceInfo.surfaceId}`)
+
+		const pluginName = 'demo' // TODO
+
+		// Define something, so that it is known it is loading
+		this.#surfaceHandlers.set(surfaceInfo.surfaceId, null)
+
+		try {
+			const panel = new SurfacePluginPanel(plugin, surfaceInfo, this.#surfaceExecuteExpression.bind(this))
+			this.#createSurfaceHandler(surfaceInfo.surfaceId, pluginName, panel)
+
+			setImmediate(() => {
+				this.updateDevicesList()
+			})
+		} catch (e) {
+			this.#logger.error(`Failed to add surface "${surfaceInfo.surfaceId}": ${e}`)
+
+			// TODO - tell plugin to close the device?
+
+			// Failed, remove the placeholder
+			this.#surfaceHandlers.delete(surfaceInfo.surfaceId)
+		}
 	}
 
 	async #addDevice(

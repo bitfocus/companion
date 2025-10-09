@@ -108,7 +108,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			// 	if (this.#currentSession) throw new Error('Already active')
 
 			// 	if (!Array.isArray(instanceIds0)) throw new Error('Expected array of instance ids')
-			// 	const allValidIds = new Set(this.instance.getAllInstanceIds())
+			// 	const allValidIds = new Set(this.instance.getAllConnectionIds())
 			// 	const instanceIds = instanceIds0.filter((id) => allValidIds.has(id))
 			// 	if (instanceIds.length === 0) throw new Error('No instance ids provided')
 

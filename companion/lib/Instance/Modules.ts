@@ -29,7 +29,7 @@ import { InstanceModuleInfo } from './ModuleInfo.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 import type { AppInfo } from '../Registry.js'
-import { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 
 type InstanceModulesEvents = {
 	modulesUpdate: [moduleType: ModuleInstanceType, change: ModuleInfoUpdate]
@@ -49,12 +49,14 @@ export class InstanceModules {
 	 */
 	#lastModulesJson: Record<ModuleInstanceType, Record<string, ClientModuleInfo> | null> = {
 		[ModuleInstanceType.Connection]: null,
+		[ModuleInstanceType.Surface]: null,
 	}
 
 	/**
 	 * Known module info
 	 */
 	readonly #knownConnectionModules = new Map<string, InstanceModuleInfo>()
+	readonly #knownSurfaceModules = new Map<string, InstanceModuleInfo>()
 
 	/**
 	 * Module scanner helper
@@ -84,6 +86,8 @@ export class InstanceModules {
 		switch (type) {
 			case ModuleInstanceType.Connection:
 				return this.#knownConnectionModules
+			case ModuleInstanceType.Surface:
+				return this.#knownSurfaceModules
 			default:
 				throw new Error(`Invalid module type: ${type}`)
 		}
@@ -185,6 +189,22 @@ export class InstanceModules {
 			}
 		}
 
+		const installedSurfaceModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#modulesDirs.surface, true)
+		for (const candidate of installedSurfaceModules) {
+			if (candidate.type !== ModuleInstanceType.Surface) {
+				this.#logger.warn(
+					`Skipping module ${candidate.manifest.id} in installed modules dir, as it is not a surface module`
+				)
+				continue
+			}
+
+			const moduleInfo = this.#getOrCreateModuleEntry(candidate.type, candidate.manifest.id)
+			moduleInfo.installedVersions[candidate.versionId] = {
+				...candidate,
+				isPackaged: true,
+			}
+		}
+
 		if (extraModulePath) {
 			this.#logger.info(`Looking for extra modules in: ${extraModulePath}`)
 			const candidates = await this.#moduleScanner.loadInfoForModulesInDir(extraModulePath, true)
@@ -202,6 +222,7 @@ export class InstanceModules {
 
 		// Log the loaded modules
 		this.#logLoadedModules(this.#knownConnectionModules, 'Connection:')
+		this.#logLoadedModules(this.#knownSurfaceModules, 'Surface:')
 	}
 
 	#logLoadedModules(knownModules: Map<string, InstanceModuleInfo>, prefix: string): void {
@@ -265,6 +286,7 @@ export class InstanceModules {
 
 			// Find the dev module which shares this path, and remove it as an option
 			findModule(this.#knownConnectionModules)
+			findModule(this.#knownSurfaceModules)
 
 			if (changedModule) {
 				this.#emitModuleUpdate(changedModule.moduleType, changedModule.id)

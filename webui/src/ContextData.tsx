@@ -57,6 +57,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			modules: new ModuleInfoStore(ModuleInstanceType.Connection),
 			connections: new ConnectionsStore(),
 
+			surfaceModules: new ModuleInfoStore(ModuleInstanceType.Surface),
+
 			activeLearns: observable.set(),
 
 			entityDefinitions: new EntityDefinitionsStore(),
@@ -86,14 +88,18 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		rootStore.entityDefinitions.feedbacks,
 		trpc.instances.definitions.feedbacks
 	)
-	const moduleInfoReady = useModuleInfoSubscription(rootStore.modules)
-	const moduleStoreReady = useModuleStoreListSubscription(rootStore.modules)
+	const connectionModuleInfoReady = useModuleInfoSubscription(rootStore.modules)
+	const connectionModuleStoreReady = useModuleStoreListSubscription(rootStore.modules)
+	const connectionModuleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(rootStore.connections)
 	const connectionGroupsReady = useGenericCollectionsSubscription(
 		rootStore.connections,
 		trpc.instances.connections.collections.watchQuery,
 		undefined
 	)
+	const surfaceModuleInfoReady = useModuleInfoSubscription(rootStore.surfaceModules)
+	const surfaceModuleStoreReady = useModuleStoreListSubscription(rootStore.surfaceModules)
+	const surfaceModuleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.surfaceModules)
 	const triggersListReady = useTriggersListSubscription(rootStore.triggersList)
 	const triggerGroupsReady = useGenericCollectionsSubscription(
 		rootStore.triggersList,
@@ -113,15 +119,16 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		trpc.controls.expressionVariables.collections.watchQuery,
 		undefined
 	)
-	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.modules)
 	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
 
 	const steps: boolean[] = [
-		moduleInfoReady,
-		moduleStoreReady,
+		connectionModuleInfoReady,
+		connectionModuleStoreReady,
 		connectionsReady,
 		connectionGroupsReady,
+		surfaceModuleInfoReady,
+		surfaceModuleStoreReady,
 		variablesReady,
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,
@@ -137,7 +144,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		triggerGroupsReady,
 		entityDefinitionsReady,
 		activeLearnRequestsReady,
-		moduleStoreProgressReady,
+		connectionModuleStoreProgressReady,
+		surfaceModuleStoreProgressReady,
 	]
 	const completedSteps = steps.filter((s) => !!s)
 

@@ -18,7 +18,12 @@ import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
+import {
+	ClientConnectionConfig,
+	ClientConnectionsUpdate,
+	ClientSurfaceInstanceConfig,
+	ClientSurfaceInstancesUpdate,
+} from '@companion-app/shared/Model/Connections.js'
 import {
 	InstanceConfig,
 	InstanceVersionUpdatePolicy,
@@ -41,6 +46,7 @@ import type { DataCache } from '../Data/Cache.js'
 import { InstanceCollections } from './Collections.js'
 import { Complete } from '@companion-module/base/dist/util.js'
 import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
+import { createSurfacesTrpcRouter } from './Surface/TrpcRouter.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 
@@ -55,7 +61,12 @@ export interface InstanceControllerEvents {
 	connection_deleted: [connectionId: string]
 	connection_collections_enabled: []
 
+	surface_instance_added: [instanceId?: string]
+	surface_instance_updated: [instanceId: string]
+	surface_instance_deleted: [instanceId: string]
+
 	uiConnectionsUpdate: [changes: ClientConnectionsUpdate[]]
+	uiSurfaceInstancesUpdate: [changes: ClientSurfaceInstancesUpdate[]]
 	[id: `debugLog:${string}`]: [level: string, message: string]
 }
 
@@ -220,6 +231,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		this.emit('connection_added')
+		this.emit('surface_instance_added')
 	}
 
 	async reloadUsesOfModule(moduleType: ModuleInstanceType, moduleId: string, versionId: string): Promise<void> {
@@ -449,6 +461,167 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.getModuleVersionsMetrics(ModuleInstanceType.Connection)
 	}
 
+	// Surface Instance Management Methods
+
+	/**
+	 * Add a new surface instance with a predetermined label
+	 */
+	addSurfaceInstanceWithLabel(
+		moduleId: string,
+		labelBase: string,
+		props: AddInstanceProps
+	): [id: string, config: InstanceConfig] {
+		if (props.versionId === null) {
+			// Get the latest installed version
+			props.versionId = this.modules.getLatestVersionOfModule(ModuleInstanceType.Surface, moduleId, false)
+		}
+
+		// Ensure the requested module and version is installed
+		this.userModulesManager.ensureModuleIsInstalled(ModuleInstanceType.Surface, moduleId, props.versionId)
+
+		const label = this.#configStore.makeLabelUnique(ModuleInstanceType.Surface, labelBase)
+
+		if (this.getIdForLabel(label)) throw new Error(`Label "${label}" already in use`)
+
+		this.#logger.info('Adding surface module ' + moduleId)
+
+		delete props.collectionId // Surfaces don't use collections
+		const [id, config] = this.#configStore.addSurface(moduleId, label, props)
+
+		this.#queueUpdateInstanceState(id, true)
+
+		this.#logger.silly(`surface_instance_added: ${id}`)
+		this.emit('surface_instance_added', id)
+
+		return [id, config]
+	}
+
+	enableDisableSurfaceInstance(id: string, state: boolean): void {
+		const surfaceConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Surface)
+		if (surfaceConfig) {
+			const label = surfaceConfig.label
+			if (surfaceConfig.enabled !== state) {
+				this.#logger.info((state ? 'Enable' : 'Disable') + ' surface ' + label)
+				surfaceConfig.enabled = state
+
+				this.#configStore.commitChanges([id], false)
+
+				this.#queueUpdateInstanceState(id, false, true)
+			} else {
+				if (state === true) {
+					this.#logger.warn(`Attempting to enable surface "${label}" that is already enabled`)
+				} else {
+					this.#logger.warn(`Attempting to disable surface "${label}" that is already disabled`)
+				}
+			}
+		}
+	}
+
+	async removeSurfaceInstance(instanceId: string): Promise<void> {
+		const config = this.#configStore.getConfigOfTypeForId(instanceId, ModuleInstanceType.Surface)
+		if (!config) {
+			this.#logger.warn(`Can't delete surface instance "${instanceId}" which does not exist!`)
+			return
+		}
+
+		const label = config.label
+		this.#logger.info(`Deleting surface instance: ${label ?? instanceId}`)
+
+		try {
+			this.processManager.queueUpdateInstanceState(instanceId, null, true)
+		} catch (e) {
+			this.#logger.debug(`Error while deleting surface instance "${label ?? instanceId}": `, e)
+		}
+
+		this.status.forgetInstanceStatus(instanceId)
+		this.#configStore.forgetInstance(instanceId)
+
+		this.emit('surface_instance_deleted', instanceId)
+
+		// forward cleanup elsewhere
+		// TODO
+
+		this.broadcastSurfaceInstanceChanges([instanceId])
+	}
+
+	setSurfaceInstanceLabelAndConfig(
+		instanceId: string,
+		data: {
+			label: string | null
+			config: unknown | null
+			updatePolicy: InstanceVersionUpdatePolicy | null
+		}
+	): void {
+		const surfaceConfig = this.#configStore.getConfigOfTypeForId(instanceId, ModuleInstanceType.Surface)
+		if (surfaceConfig) {
+			if (data.label !== null) {
+				surfaceConfig.label = data.label
+			}
+			if (data.config !== null) {
+				surfaceConfig.config = data.config
+			}
+			if (data.updatePolicy !== null) {
+				surfaceConfig.updatePolicy = data.updatePolicy
+			}
+
+			this.#configStore.commitChanges([instanceId], false)
+
+			this.broadcastSurfaceInstanceChanges([instanceId])
+		}
+
+		this.#logger.debug(`surface instance "${surfaceConfig?.label}" configuration updated`)
+	}
+
+	getSurfaceInstanceClientJson(): Record<string, ClientSurfaceInstanceConfig> {
+		const result: Record<string, ClientSurfaceInstanceConfig> = {}
+
+		for (const [id, config] of this.#configStore.getAllInstanceConfigs()) {
+			if (config.moduleInstanceType !== ModuleInstanceType.Surface) continue
+
+			// const instance = this.moduleHost.getSurfaceChild(id, true)
+
+			result[id] = {
+				moduleId: config.instance_type,
+				moduleVersionId: config.moduleVersionId,
+				updatePolicy: config.updatePolicy,
+				label: config.label,
+				enabled: config.enabled,
+				sortOrder: config.sortOrder,
+			}
+		}
+
+		return result
+	}
+
+	/**
+	 * Inform clients of changes to the list of surfaces
+	 */
+	broadcastSurfaceInstanceChanges(instanceIds: string[]): void {
+		const newJson = this.getSurfaceInstanceClientJson()
+
+		const changes: ClientSurfaceInstancesUpdate[] = []
+
+		for (const surfaceId of instanceIds) {
+			if (!newJson[surfaceId]) {
+				changes.push({ type: 'remove', id: surfaceId })
+			} else {
+				changes.push({ type: 'update', id: surfaceId, info: newJson[surfaceId] })
+			}
+		}
+
+		// Now broadcast to any interested clients
+		if (this.listenerCount('uiSurfaceInstancesUpdate') > 0) {
+			this.emit('uiSurfaceInstancesUpdate', changes)
+		}
+	}
+
+	/**
+	 * Get information for the metrics system about the current surfaces
+	 */
+	getSurfacesMetrics(): Record<string, Record<string, number>> {
+		return this.#configStore.getModuleVersionsMetrics(ModuleInstanceType.Surface)
+	}
+
 	/**
 	 * Stop/destroy all running instances
 	 */
@@ -628,6 +801,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			statuses: this.status.createTrpcRouter(),
 
 			connections: createConnectionsTrpcRouter(
+				this.#logger,
+				this,
+				this,
+				this.#configStore,
+				this.#queueUpdateInstanceState.bind(this)
+			),
+
+			surfaces: createSurfacesTrpcRouter(
 				this.#logger,
 				this,
 				this,

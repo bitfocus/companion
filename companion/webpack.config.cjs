@@ -13,6 +13,7 @@ module.exports = {
 		main: './dist/main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
 		RenderThread: './dist/Graphics/Thread.js',
+		SurfaceThread: './dist/Surface/Plugin/Entrypoint.js',
 	},
 	mode: 'production',
 	devtool: sentryAuthToken ? 'source-map' : undefined,

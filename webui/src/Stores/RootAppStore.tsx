@@ -22,8 +22,10 @@ export interface RootAppStore {
 	readonly helpViewer: React.RefObject<HelpModalRef> // TODO - this is not good
 	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good
 
-	readonly modules: ModuleInfoStore
+	readonly modules: ModuleInfoStore // TODO - rename
 	readonly connections: ConnectionsStore
+
+	readonly surfaceModules: ModuleInfoStore
 
 	/** Currently running 'learn' callbacks */
 	readonly activeLearns: ObservableSet<string>

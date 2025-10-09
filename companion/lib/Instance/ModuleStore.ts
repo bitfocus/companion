@@ -4,7 +4,12 @@ import type {
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
 import type { DataCache } from '../Data/Cache.js'
-import { isModuleApiVersionCompatible, MODULE_BASE_VERSION } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import {
+	isModuleApiVersionCompatible,
+	isSurfaceApiVersionCompatible,
+	MODULE_BASE_VERSION,
+	SURFACE_BASE_VERSION,
+} from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -33,10 +38,22 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 				isModuleApiVersionCompatible,
 				ModuleInstanceType.Connection
 			),
+			[ModuleInstanceType.Surface]: new ModuleStoreOfTypeService(
+				appInfo,
+				cacheStore,
+				'surface_store_list',
+				cacheStore.getTableView('surface_store'),
+				SURFACE_BASE_VERSION,
+				isSurfaceApiVersionCompatible,
+				ModuleInstanceType.Surface
+			),
 		}
 
 		this.#instances.connection.on('storeListUpdated', (data) =>
 			this.emit('storeListUpdated', ModuleInstanceType.Connection, data)
+		)
+		this.#instances.surface.on('storeListUpdated', (data) =>
+			this.emit('storeListUpdated', ModuleInstanceType.Surface, data)
 		)
 	}
 

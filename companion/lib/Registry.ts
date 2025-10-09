@@ -27,6 +27,7 @@ import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -158,18 +159,18 @@ export class Registry {
 	 * @param modulesDirs - the paths for storing modules
 	 * @param machineId - the machine uuid
 	 */
-	constructor(configDir: string, modulesDirs: AppInfo['modulesDirs'], machineId: string) {
-		if (!configDir) throw new Error(`Missing configDir`)
+	constructor(paths: Pick<AppInfo, 'configDir' | 'modulesDirs'>, machineId: string) {
+		if (!paths.configDir) throw new Error(`Missing configDir`)
 		if (!machineId) throw new Error(`Missing machineId`)
 
 		this.#logger = LogController.createLogger('Registry')
 
 		this.#logger.info(`Build ${buildNumber}`)
-		this.#logger.info(`configuration directory: ${configDir}`)
+		this.#logger.info(`configuration directory: ${paths.configDir}`)
 
 		this.#appInfo = {
-			configDir: configDir,
-			modulesDirs: modulesDirs,
+			configDir: paths.configDir,
+			modulesDirs: paths.modulesDirs,
 			machineId: machineId,
 			appVersion: pkgInfo.version!,
 			appBuild: buildNumber,
@@ -343,8 +344,9 @@ export class Registry {
 			this.internalModule.firstUpdate()
 			this.graphics.regenerateAll(false)
 
-			// We are ready to start the instances/connections
+			// We are ready to start the instances/connections/surfaces
 			await this.instance.initInstances(extraModulePath)
+			await this.surfaces.init()
 
 			// Instances are loaded, start up http
 			const router = createTrpcRouter(this)
@@ -468,9 +470,7 @@ export interface AppInfo {
 	/** The current config directory */
 	configDir: string
 	/** The base directory for storing installed modules */
-	modulesDirs: {
-		connection: string
-	}
+	modulesDirs: Record<ModuleInstanceType, string>
 	machineId: string
 	appVersion: string
 	appBuild: string

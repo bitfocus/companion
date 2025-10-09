@@ -140,6 +140,42 @@ export class InstanceConfigStore {
 	}
 
 	/**
+	 * Add a new surface
+	 * Note: this does not persist the changes
+	 */
+	addSurface(moduleId: string, label: string, props: AddInstanceProps): [id: string, config: InstanceConfig] {
+		// Find the highest rank given to an instance
+		const highestRank =
+			Math.max(
+				0,
+				...Array.from(this.#store.values())
+					.map((c) => c?.sortOrder)
+					.filter((n) => typeof n === 'number')
+			) || 0
+
+		const id = nanoid()
+
+		const newConfig: InstanceConfig = {
+			moduleInstanceType: ModuleInstanceType.Surface,
+			instance_type: moduleId,
+			moduleVersionId: props.versionId,
+			updatePolicy: props.updatePolicy,
+			sortOrder: props.sortOrder ?? highestRank + 1,
+			collectionId: props.collectionId ?? undefined,
+			label: label,
+			isFirstInit: true,
+			config: {},
+			secrets: {},
+			lastUpgradeIndex: -1,
+			enabled: !props.disabled,
+		}
+
+		this.#store.set(id, newConfig)
+
+		return [id, newConfig]
+	}
+
+	/**
 	 * Get all instance configurations
 	 */
 	getAllInstanceConfigs(): Map<string, InstanceConfig> {

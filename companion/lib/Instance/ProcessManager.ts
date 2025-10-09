@@ -18,6 +18,7 @@ import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { InstanceConfig, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { SurfaceChildHandler } from './Surface/ChildHandler.js'
 
 const require = createRequire(import.meta.url)
 
@@ -72,7 +73,7 @@ export class InstanceProcessManager {
 
 	readonly #deps: ConnectionChildHandlerDependencies
 	readonly #modules: InstanceModules
-	readonly #InstanceConfigStore: InstanceConfigStore
+	readonly #instanceConfigStore: InstanceConfigStore
 
 	/**
 	 * Queue for starting instances, to limit how many can be starting concurrently
@@ -84,11 +85,11 @@ export class InstanceProcessManager {
 	constructor(
 		deps: ConnectionChildHandlerDependencies,
 		modules: InstanceModules,
-		InstanceConfigStore: InstanceConfigStore
+		instanceConfigStore: InstanceConfigStore
 	) {
 		this.#deps = deps
 		this.#modules = modules
-		this.#InstanceConfigStore = InstanceConfigStore
+		this.#instanceConfigStore = instanceConfigStore
 
 		const cpuCount = os.cpus().length // An approximation
 		this.#startQueue = new PQueue({ concurrency: Math.max(cpuCount - 1, 1) })
@@ -163,6 +164,9 @@ export class InstanceProcessManager {
 					case ModuleInstanceType.Connection:
 						child.handler = new ConnectionChildHandler(this.#deps, child.monitor, child.instanceId, apiVersion)
 						break
+					case ModuleInstanceType.Surface:
+						child.handler = new SurfaceChildHandler(child.monitor, child.instanceId)
+						break
 					default:
 						assertNever(child.targetState.moduleType)
 						this.#logger.debug(
@@ -177,7 +181,7 @@ export class InstanceProcessManager {
 				this.#logger.debug(`Registered module client "${child.lastLabel}"`)
 
 				// TODO module-lib - can we get this in a cleaner way?
-				const config = this.#InstanceConfigStore.getConfigOfTypeForId(child.instanceId, child.moduleType)
+				const config = this.#instanceConfigStore.getConfigOfTypeForId(child.instanceId, child.moduleType)
 				if (!config) {
 					this.#logger.verbose(`Missing config for instance "${child.lastLabel}"`)
 					forceRestart()
@@ -236,6 +240,15 @@ export class InstanceProcessManager {
 	getConnectionChild(connectionId: string, allowInitialising?: boolean): ConnectionChildHandler | undefined {
 		const child = this.getChild(connectionId, allowInitialising)
 		if (child && child instanceof ConnectionChildHandler) {
+			return child
+		} else {
+			return undefined
+		}
+	}
+
+	getSurfaceChild(connectionId: string, allowInitialising?: boolean): SurfaceChildHandler | undefined {
+		const child = this.getChild(connectionId, allowInitialising)
+		if (child && child instanceof SurfaceChildHandler) {
 			return child
 		} else {
 			return undefined

@@ -49,6 +49,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	moduleStoreBaseInfo,
 }: ModuleManagePanelInnerProps) {
 	const { modules } = useContext(RootAppStoreContext)
+
 	const moduleStoreInfo = useModuleStoreInfo(modules, moduleId)
 	const navigate = useNavigate()
 

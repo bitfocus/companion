@@ -216,9 +216,12 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	}
 
 	const registry = new Registry(
-		configDir,
 		{
-			connection: path.join(rootConfigDir, 'modules'), // For backwards compatibility
+			configDir,
+			modulesDirs: {
+				connection: path.join(rootConfigDir, 'modules'), // For backwards compatibility
+				surface: path.join(rootConfigDir, 'surfaces'),
+			},
 		},
 		machineId
 	)

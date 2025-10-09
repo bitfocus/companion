@@ -34,7 +34,7 @@ export function useInstanceStatuses(): ObservableMap<string, InstanceStatusEntry
 				})
 			},
 			onError: (error) => {
-				console.error('Error in connection statuses subscription', error)
+				console.error('Error in instance statuses subscription', error)
 			},
 		})
 	)
