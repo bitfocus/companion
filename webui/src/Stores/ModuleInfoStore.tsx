@@ -201,6 +201,7 @@ export class ModuleStoreVersionsStore {
 		// First subscriber, actually subscribe
 		const sub = trpc.connections.modules.watchUpgradeToOther
 			.subscriptionOptions({
+				moduleType: this.#moduleType,
 				moduleId,
 			})
 			.subscribe({

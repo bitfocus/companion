@@ -5,7 +5,6 @@ import type { InstanceModules } from './Modules.js'
 import zlib from 'node:zlib'
 import * as ts from 'tar-stream'
 import { Readable } from 'node:stream'
-import { ModuleManifest } from '@companion-module/base'
 import * as tarfs from 'tar-fs'
 import type { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
@@ -17,8 +16,9 @@ import crypto from 'node:crypto'
 import semver from 'semver'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import z from 'zod'
-import { isModuleManifestAConnection } from './ModuleScanner.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -45,14 +45,9 @@ export class InstanceInstalledModulesManager {
 	readonly #modulesStore: ModuleStoreService
 
 	/**
-	 * The config store of the connections
+	 * The config store of the instances
 	 */
 	readonly #configStore: ConnectionConfigStore
-
-	/**
-	 * Absolute path for storing store modules on disk
-	 */
-	readonly #modulesDir: string
 
 	readonly #multipartUploader = new MultipartUploader(
 		'Instance/UserModulesManager',
@@ -75,7 +70,7 @@ export class InstanceInstalledModulesManager {
 			for (const moduleInfo of moduleInfos) {
 				try {
 					const moduleDir = path.join(
-						this.#modulesDir,
+						this.#getModulesDirForType(moduleInfo.manifestJson.type),
 						`${moduleInfo.manifestJson.id}-${moduleInfo.manifestJson.version}`
 					)
 					if (!fs.existsSync(moduleDir)) {
@@ -105,72 +100,82 @@ export class InstanceInstalledModulesManager {
 		appInfo: AppInfo,
 		modulesManager: InstanceModules,
 		modulesStore: ModuleStoreService,
-		configStore: ConnectionConfigStore,
-		installedModulesDir: string
+		configStore: ConnectionConfigStore
 	) {
 		this.#appInfo = appInfo
 		this.#modulesManager = modulesManager
 		this.#modulesStore = modulesStore
 		this.#configStore = configStore
-		this.#modulesDir = installedModulesDir
 	}
 
 	/**
 	 * Initialise the user modules manager
 	 */
 	async init(): Promise<void> {
-		await fs.mkdirp(this.#modulesDir)
+		await fs.mkdirp(this.#appInfo.modulesDirs.connection)
 		await fs.writeFile(
-			path.join(this.#modulesDir, 'README'),
+			path.join(this.#appInfo.modulesDirs.connection, 'README'),
 			'This directory contains installed modules\r\nDo not modify unless you know what you are doing\n'
 		)
 	}
 
+	#getModulesDirForType(moduleType: SomeModuleManifest['type'] | ModuleInstanceType): string {
+		switch (moduleType) {
+			case ModuleInstanceType.Connection:
+			case 'connection':
+			case undefined:
+				return this.#appInfo.modulesDirs.connection
+			default:
+				assertNever(moduleType)
+				throw new Error(`Unknown module type ${moduleType}`)
+		}
+	}
+
 	#modulesBeingInstalled = new Set<string>()
-	ensureModuleIsInstalled(moduleId: string, versionId: string | null): void {
+	ensureModuleIsInstalled(moduleType: ModuleInstanceType, moduleId: string, versionId: string | null): void {
 		this.#logger.debug(`Ensuring module "${moduleId}" is installed`)
 
-		if (this.#modulesManager.getModuleManifest(moduleId, versionId)) {
+		if (this.#modulesManager.getModuleManifest(moduleType, moduleId, versionId)) {
 			this.#logger.silly(`Module "${moduleId}" is already installed`)
 			return
 		}
 
 		// Future: track as pending install in the db, and write some retry logic
 
-		const installingModuleId = `${moduleId}-${versionId ?? 'latest'}`
+		const installingModuleId = `${moduleType}-${moduleId}-${versionId ?? 'latest'}`
 		if (this.#modulesBeingInstalled.has(installingModuleId)) {
 			this.#logger.info(`Module "${moduleId}" v${versionId ?? 'latest'} is already being installed`)
 			return
 		}
 		this.#modulesBeingInstalled.add(installingModuleId)
 
-		this.#logger.info(`Queuing install of module "${moduleId}" v${versionId ?? 'latest'}`)
+		this.#logger.info(`Queuing install of ${moduleType} module "${moduleId}" v${versionId ?? 'latest'}`)
 
 		this.#modulesStore
-			.fetchModuleVersionInfo(ModuleInstanceType.Connection, moduleId, versionId, true)
+			.fetchModuleVersionInfo(moduleType, moduleId, versionId, true)
 			.then(async (versionInfo) => {
 				if (!versionInfo) {
 					this.#logger.warn(`Module "${moduleId}" v${versionId ?? 'latest'} does not exist in the store`)
 					return
 				}
 
-				await this.#installModuleVersionFromStore(moduleId, versionInfo)
+				await this.#installModuleVersionFromStore(moduleType, moduleId, versionInfo)
 
 				if (!versionId) {
-					const changedConnectionIds: string[] = []
-					for (const connectionId of this.#configStore.getAllInstanceIds()) {
-						const config = this.#configStore.getConfigForId(connectionId)
+					const changedInstanceIds: string[] = []
+					for (const instanceIds of this.#configStore.getInstanceIdsForAllTypes()) {
+						const config = this.#configStore.getConfigOfTypeForId(instanceIds, moduleType)
 						if (!config) continue
 
 						if (config.instance_type !== moduleId) continue
 						if (config.moduleVersionId !== null) continue
 
 						config.moduleVersionId = versionInfo.id
-						changedConnectionIds.push(connectionId)
+						changedInstanceIds.push(instanceIds)
 					}
 
 					// Save the changes
-					this.#configStore.commitChanges(changedConnectionIds, true)
+					this.#configStore.commitChanges(changedInstanceIds, true)
 				}
 			})
 			.catch((e) => {
@@ -189,11 +194,11 @@ export class InstanceInstalledModulesManager {
 			installAllMissing: publicProcedure.mutation(async () => {
 				this.#logger.debug('modules:install-all-missing')
 
-				for (const connectionId of this.#configStore.getAllInstanceIds()) {
-					const config = this.#configStore.getConfigForId(connectionId)
+				for (const connectionId of this.#configStore.getInstanceIdsForAllTypes()) {
+					const config = this.#configStore.getConfigOfTypeForId(connectionId, null)
 					if (!config) continue
 
-					this.ensureModuleIsInstalled(config.instance_type, config.moduleVersionId)
+					this.ensureModuleIsInstalled(ModuleInstanceType.Connection, config.instance_type, config.moduleVersionId)
 				}
 			}),
 
@@ -229,7 +234,10 @@ export class InstanceInstalledModulesManager {
 						return `Invalid module version: ${manifestJson.version}`
 					}
 
-					const moduleDir = path.join(this.#modulesDir, `${manifestJson.id}-${manifestJson.version}`)
+					const moduleDir = path.join(
+						this.#getModulesDirForType(manifestJson.type),
+						`${manifestJson.id}-${manifestJson.version}`
+					)
 					if (fs.existsSync(moduleDir)) {
 						this.#logger.warn(`Module ${manifestJson.id} v${manifestJson.version} already exists on disk`)
 						return `Module ${manifestJson.id} v${manifestJson.version} already exists`
@@ -259,7 +267,7 @@ export class InstanceInstalledModulesManager {
 						return `Module ${input.moduleId} v${input.versionId} not found`
 					}
 
-					return this.#installModuleVersionFromStore(input.moduleId, versionInfo)
+					return this.#installModuleVersionFromStore(input.moduleType, input.moduleId, versionInfo)
 				}),
 
 			uninstallModule: publicProcedure
@@ -270,12 +278,15 @@ export class InstanceInstalledModulesManager {
 					})
 				)
 				.mutation(async ({ input }) => {
-					return this.#uninstallModule(input.moduleId, input.versionId)
+					const moduleType = ModuleInstanceType.Connection // TODO - dynamic
+
+					return this.#uninstallModule(moduleType, input.moduleId, input.versionId)
 				}),
 		})
 	}
 
 	async #installModuleVersionFromStore(
+		moduleType: ModuleInstanceType,
 		moduleId: string,
 		versionInfo: ModuleStoreModuleInfoVersion
 	): Promise<string | null> {
@@ -286,7 +297,7 @@ export class InstanceInstalledModulesManager {
 			return `Invalid module version: ${moduleVersion}`
 		}
 
-		const moduleDir = path.join(this.#modulesDir, `${moduleId}-${moduleVersion}`)
+		const moduleDir = path.join(this.#getModulesDirForType(moduleType), `${moduleId}-${moduleVersion}`)
 		if (fs.existsSync(moduleDir)) {
 			this.#logger.warn(`Module ${moduleId} v${moduleVersion} already exists on disk`)
 			return `Module ${moduleId} v${moduleVersion} already exists`
@@ -360,6 +371,11 @@ export class InstanceInstalledModulesManager {
 			this.#logger.warn(msg)
 			return msg
 		}
+		if (manifestJson.type !== moduleType) {
+			const msg = `Module type does not match requested module type. Got ${manifestJson.type}, expected ${moduleType}`
+			this.#logger.warn(msg)
+			return msg
+		}
 
 		return this.#installModuleFromTarBuffer(moduleDir, manifestJson, decompressedData, null, {
 			forceVersion: moduleVersion,
@@ -368,7 +384,7 @@ export class InstanceInstalledModulesManager {
 
 	async #installModuleFromTarBuffer(
 		moduleDir: string,
-		manifestJson: ModuleManifest,
+		manifestJson: SomeModuleManifest,
 		uncompressedData: Buffer,
 		subdirName: string | null,
 		options?: { forceVersion?: string }
@@ -418,7 +434,7 @@ export class InstanceInstalledModulesManager {
 			throw e
 		}
 
-		this.#logger.info(`Installed module ${manifestJson.id} v${manifestJson.version}`)
+		this.#logger.info(`Installed ${manifestJson.type} module ${manifestJson.id} v${manifestJson.version}`)
 
 		// Let other interested parties know that a module has been installed
 		await this.#modulesManager.loadInstalledModule(moduleDir, manifestJson)
@@ -426,15 +442,15 @@ export class InstanceInstalledModulesManager {
 		return null
 	}
 
-	async #uninstallModule(moduleId: string, versionId: string): Promise<string | null> {
-		this.#logger.info(`Uninstalling ${moduleId} v${versionId}`)
+	async #uninstallModule(moduleType: ModuleInstanceType, moduleId: string, versionId: string): Promise<string | null> {
+		this.#logger.info(`Uninstalling ${moduleType} ${moduleId} v${versionId}`)
 
 		try {
-			const moduleDir = path.join(this.#modulesDir, `${moduleId}-${versionId}`)
-			if (!fs.existsSync(moduleDir)) return `Module ${moduleId} v${versionId} doesn't exist`
+			const moduleDir = path.join(this.#getModulesDirForType(moduleType), `${moduleId}-${versionId}`)
+			if (!fs.existsSync(moduleDir)) return `Module ${moduleType} ${moduleId} v${versionId} doesn't exist`
 
 			// Stop any usages of the module
-			await this.#modulesManager.uninstallModule(moduleId, versionId)
+			await this.#modulesManager.uninstallModule(moduleType, moduleId, versionId)
 
 			// Delete the module code
 			await fs
@@ -453,8 +469,8 @@ export class InstanceInstalledModulesManager {
 	}
 }
 
-async function extractManifestFromTar(tarData: Buffer): Promise<ModuleManifest | null> {
-	return new Promise<ModuleManifest | null>((resolve, reject) => {
+async function extractManifestFromTar(tarData: Buffer): Promise<SomeModuleManifest | null> {
+	return new Promise<SomeModuleManifest | null>((resolve, reject) => {
 		const extract = ts.extract()
 
 		let rootDir: string | undefined // Determine the root directory of the tarball
@@ -478,11 +494,10 @@ async function extractManifestFromTar(tarData: Buffer): Promise<ModuleManifest |
 					const manifestStr = Buffer.concat(dataBuffers).toString('utf8')
 
 					try {
-						const manifestJson = JSON.parse(manifestStr)
-						if (!isModuleManifestAConnection(manifestJson)) {
-							throw new Error('Not a connection module')
-						}
-						resolve(manifestJson)
+						const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
+						if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+
+						resolve(parsedManifest)
 					} catch (e) {
 						reject(e as Error)
 					}
@@ -523,7 +538,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<ModuleManifest |
 
 interface ListModuleDirsInfo {
 	subDir: string
-	manifestJson: ModuleManifest
+	manifestJson: SomeModuleManifest
 }
 async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[]> {
 	return new Promise<ListModuleDirsInfo[]>((resolve, reject) => {
@@ -556,14 +571,12 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 						const manifestStr = Buffer.concat(dataBuffers).toString('utf8')
 
 						try {
-							const manifestJson = JSON.parse(manifestStr)
-							if (!isModuleManifestAConnection(manifestJson)) {
-								return
-							}
+							const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
+							if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
 
 							moduleInfos.push({
 								subDir: moduleDirName,
-								manifestJson: manifestJson,
+								manifestJson: parsedManifest,
 							})
 						} catch (_e) {
 							// Ignore

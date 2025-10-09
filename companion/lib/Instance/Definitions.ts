@@ -42,6 +42,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import { ConnectionConfigStore } from './ConnectionConfigStore.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -157,7 +158,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const definition = this.getEntityDefinition(entityType, connectionId, definitionId)
 		if (!definition) return null
 
-		const connectionConfig = this.#configStore.getConfigForId(connectionId)
+		const connectionConfig = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 
 		const entity: Omit<EntityModelBase, 'type'> = {
 			id: nanoid(),
@@ -394,7 +395,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	setPresetDefinitions(connectionId: string, label: string, rawPresets: RawPresetDefinition[]): void {
 		const newPresets: Record<string, PresetDefinition> = {}
 
-		const connectionUpgradeIndex = this.#configStore.getConfigForId(connectionId)?.lastUpgradeIndex
+		const connectionUpgradeIndex = this.#configStore.getConfigOfTypeForId(
+			connectionId,
+			ModuleInstanceType.Connection
+		)?.lastUpgradeIndex
 
 		for (const rawPreset of rawPresets) {
 			try {

@@ -304,8 +304,6 @@ export class ModuleStoreOfTypeService extends EventEmitter<ModuleStoreServiceEve
 				versions: [],
 			}
 
-			console.log('err', e)
-
 			moduleData.lastUpdateAttempt = Date.now()
 			moduleData.updateWarning = 'Failed to update the module version list from the store'
 		}

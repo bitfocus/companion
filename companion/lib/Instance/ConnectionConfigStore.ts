@@ -2,6 +2,7 @@ import {
 	ConnectionConfig,
 	ClientConnectionConfig,
 	ConnectionUpdatePolicy,
+	ModuleInstanceType,
 } from '@companion-app/shared/Model/Connections.js'
 import { DataDatabase } from '../Data/Database.js'
 // import LogController from '../Log/Controller.js'
@@ -49,7 +50,7 @@ export class ConnectionConfigStore {
 		this.#afterSave(connectionIds, updateConnectionHost)
 	}
 
-	getAllInstanceIds(): string[] {
+	getInstanceIdsForAllTypes(): string[] {
 		return Array.from(this.#store.keys())
 	}
 
@@ -62,7 +63,7 @@ export class ConnectionConfigStore {
 		return undefined
 	}
 
-	getConfigForId(connectionId: string): ConnectionConfig | undefined {
+	getConfigOfTypeForId(connectionId: string, _instanceType: ModuleInstanceType | null): ConnectionConfig | undefined {
 		return this.#store.get(connectionId)
 	}
 

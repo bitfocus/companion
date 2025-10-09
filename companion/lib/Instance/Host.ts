@@ -16,6 +16,7 @@ import { CompanionOptionValues } from '@companion-module/base'
 import { Serializable } from 'child_process'
 import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 
 const require = createRequire(import.meta.url)
 
@@ -155,7 +156,7 @@ export class ModuleHost {
 				this.#logger.debug(`Registered module client "${connectionId}"`)
 
 				// TODO module-lib - can we get this in a cleaner way?
-				const config = this.#connectionConfigStore.getConfigForId(child.connectionId)
+				const config = this.#connectionConfigStore.getConfigOfTypeForId(child.connectionId, null)
 				if (!config) {
 					this.#logger.verbose(`Missing config for instance "${connectionId}"`)
 					forceRestart()
@@ -413,6 +414,7 @@ export class ModuleHost {
 			await this.#doStopConnectionInner(connectionId, false)
 
 			const moduleInfo = this.#modules.getModuleManifest(
+				ModuleInstanceType.Connection,
 				baseChild.targetState.moduleId,
 				baseChild.targetState.moduleVersionId
 			)
@@ -420,7 +422,7 @@ export class ModuleHost {
 				this.#logger.error(
 					`Configured instance "${baseChild.targetState.moduleId}" could not be loaded, unknown module`
 				)
-				if (this.#modules.hasModule(baseChild.targetState.moduleId)) {
+				if (this.#modules.hasModule(ModuleInstanceType.Connection, baseChild.targetState.moduleId)) {
 					this.#deps.instanceStatus.updateInstanceStatus(connectionId, 'system', 'Unknown module version')
 				} else {
 					this.#deps.instanceStatus.updateInstanceStatus(connectionId, 'system', 'Unknown module')
