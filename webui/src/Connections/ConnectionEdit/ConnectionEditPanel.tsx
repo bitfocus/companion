@@ -4,7 +4,8 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormLabel } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCircleExclamation, faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -191,7 +192,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 							moduleInfo={moduleInfo}
 						/>
 
-						<ConnectionUpdatePolicyInputField panelStore={panelStore} />
+						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
 						<CCol className={`fieldtype-textinput`} sm={12}>
 							<CAlert color="warning">
 								Be careful when downgrading the module version. Some features may not be available in older versions.
@@ -330,7 +331,7 @@ const ConnectionModuleVersionInputField = observer(function ConnectionModuleVers
 	)
 })
 
-const ConnectionUpdatePolicyInputField = observer(function ConnectionUpdatePolicyInputField({
+const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField({
 	panelStore,
 }: {
 	panelStore: ConnectionEditPanelStore
@@ -347,7 +348,7 @@ const ConnectionUpdatePolicyInputField = observer(function ConnectionUpdatePolic
 				<CFormSelect
 					name="colFormUpdatePolicy"
 					value={panelStore.updatePolicy}
-					onChange={(e) => panelStore.setUpdatePolicy(e.currentTarget.value as ConnectionUpdatePolicy)}
+					onChange={(e) => panelStore.setUpdatePolicy(e.currentTarget.value as InstanceVersionUpdatePolicy)}
 				>
 					<option value="manual">Manual</option>
 					<option value="stable">Stable</option>

@@ -1,5 +1,4 @@
 import type { UserConfigGridSize } from './UserConfigModel.js'
-import type { ConnectionConfig } from './Connections.js'
 import type { CustomVariablesModel } from './CustomVariableModel.js'
 
 export type SomeExportv4 = ExportFullv4 | ExportPageModelv4 | ExportTriggersListv4
@@ -40,9 +39,7 @@ export interface ExportPageContentv4 {
 
 export type ExportControlv4 = Record<string, any> // TODO
 
-export type ExportInstancesv4 =
-	| Record<string, ExportInstanceFullv4 | ExportInstanceMinimalv4>
-	| Record<string, ConnectionConfig | undefined> // TODO - tidy
+export type ExportInstancesv4 = Record<string, ExportInstanceFullv4 | ExportInstanceMinimalv4>
 
 export type ExportInstanceFullv4 = {
 	label: string

@@ -18,13 +18,12 @@ import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import {
-	ClientConnectionConfig,
-	ClientConnectionsUpdate,
-	ConnectionConfig,
-	ConnectionUpdatePolicy,
+	InstanceConfig,
+	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
-} from '@companion-app/shared/Model/Connections.js'
+} from '@companion-app/shared/Model/Instance.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
 import { AddConnectionProps, InstanceConfigStore } from './ConfigStore.js'
@@ -134,7 +133,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceDefinitions: this.definitions,
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
-				setConnectionConfig: (connectionId, config, secrets, upgradeIndex) => {
+				setInstanceConfig: (connectionId, config, secrets, upgradeIndex) => {
 					this.setInstanceLabelAndConfig(
 						connectionId,
 						{
@@ -251,7 +250,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			label: string | null
 			config: unknown | null
 			secrets: unknown | null
-			updatePolicy: ConnectionUpdatePolicy | null
+			updatePolicy: InstanceVersionUpdatePolicy | null
 			upgradeIndex: number | null
 		},
 		options?: {
@@ -330,7 +329,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		data: CreateConnectionData,
 		labelBase: string,
 		props: AddConnectionProps
-	): [id: string, config: ConnectionConfig] {
+	): [id: string, config: InstanceConfig] {
 		const moduleId = data.type
 		const product = data.product
 
@@ -520,7 +519,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return clone ? cloneDeep(obj) : obj
 	}
 
-	exportAll(includeSecrets: boolean): Record<string, ConnectionConfig | undefined> {
+	exportAll(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
 		return this.#configStore.exportAll(includeSecrets)
 	}
 
@@ -534,7 +533,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	/**
 	 * Get the config object of an instance
 	 */
-	getInstanceConfig(connectionId: string): ConnectionConfig | undefined {
+	getInstanceConfig(connectionId: string): InstanceConfig | undefined {
 		return this.#configStore.getConfigOfTypeForId(connectionId, null)
 	}
 

@@ -1,10 +1,7 @@
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientEditConnectionConfig } from '@companion-app/shared/Model/Common.js'
-import {
-	ClientConnectionsUpdate,
-	ConnectionUpdatePolicy,
-	ModuleInstanceType,
-} from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
+import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import z from 'zod'
 import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
 import { translateConnectionConfigFields } from '../ConfigFields.js'
@@ -48,7 +45,7 @@ export function createConnectionsTrpcRouter(
 			.mutation(({ input }) => {
 				const connectionInfo = instanceController.addInstanceWithLabel(input.module, input.label, {
 					versionId: input.versionId,
-					updatePolicy: ConnectionUpdatePolicy.Stable,
+					updatePolicy: InstanceVersionUpdatePolicy.Stable,
 					disabled: false,
 				})
 				return connectionInfo[0]
@@ -126,7 +123,7 @@ export function createConnectionsTrpcRouter(
 					label: z.string(),
 					config: z.record(z.string(), z.any()),
 					secrets: z.record(z.string(), z.any()),
-					updatePolicy: z.enum(ConnectionUpdatePolicy),
+					updatePolicy: z.enum(InstanceVersionUpdatePolicy),
 				})
 			)
 			.mutation(({ input }) => {
@@ -159,7 +156,7 @@ export function createConnectionsTrpcRouter(
 					connectionId: z.string(),
 					label: z.string(),
 					versionId: z.string().nullable(),
-					updatePolicy: z.enum(ConnectionUpdatePolicy).nullable(),
+					updatePolicy: z.enum(InstanceVersionUpdatePolicy).nullable(),
 				})
 			)
 			.mutation(({ input }) => {

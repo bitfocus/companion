@@ -33,7 +33,7 @@ import { trpc } from './Resources/TRPC.js'
 import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
 import { useExpressionVariablesListSubscription } from './Hooks/useExpressionVariablesListSubscription.js'
 import { ExpressionVariablesListStore } from './Stores/ExpressionVariablesListStore.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]

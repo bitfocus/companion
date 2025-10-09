@@ -4,7 +4,7 @@ import { compact } from 'lodash-es'
 import type { SomeModuleVersionInfo } from './Types.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { getHelpPathForInstalledModule } from './ModuleScanner.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 /**
  * Information about a module

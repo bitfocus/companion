@@ -6,7 +6,7 @@ import type { ConnectionModuleVersionInfo, SomeModuleVersionInfo } from './Types
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 
 export class InstanceModuleScanner {

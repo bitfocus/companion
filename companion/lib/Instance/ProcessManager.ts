@@ -16,7 +16,7 @@ import { CompanionOptionValues } from '@companion-module/base'
 import { Serializable } from 'child_process'
 import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import { ConnectionConfig, ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { InstanceConfig, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
 const require = createRequire(import.meta.url)
@@ -61,7 +61,7 @@ interface ModuleChildTargetState {
 }
 
 export interface ChildProcessHandlerBase {
-	init(config: ConnectionConfig): Promise<void>
+	init(config: InstanceConfig): Promise<void>
 
 	destroy(): Promise<void>
 	cleanup(): void

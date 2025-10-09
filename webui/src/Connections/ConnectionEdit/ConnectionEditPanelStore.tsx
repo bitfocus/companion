@@ -1,5 +1,6 @@
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ClientConnectionConfig, ConnectionUpdatePolicy } from '@companion-app/shared/Model/Connections.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { action, observable, runInAction } from 'mobx'
@@ -12,7 +13,7 @@ import { trpcClient } from '~/Resources/TRPC'
 export interface ConnectionBasicInfoChanges {
 	label?: string
 	versionId?: string | null
-	updatePolicy?: ConnectionUpdatePolicy
+	updatePolicy?: InstanceVersionUpdatePolicy
 }
 export interface ConnectionConfigAndSecrets {
 	fields: Array<SomeCompanionInputField>
@@ -202,10 +203,12 @@ export class ConnectionEditPanelStore {
 		})
 	})
 
-	get updatePolicy(): ConnectionUpdatePolicy {
-		return this.#basicChanges.get().updatePolicy ?? (this.connectionInfo.updatePolicy || ConnectionUpdatePolicy.Manual)
+	get updatePolicy(): InstanceVersionUpdatePolicy {
+		return (
+			this.#basicChanges.get().updatePolicy ?? (this.connectionInfo.updatePolicy || InstanceVersionUpdatePolicy.Manual)
+		)
 	}
-	setUpdatePolicy = action((value: ConnectionUpdatePolicy) => {
+	setUpdatePolicy = action((value: InstanceVersionUpdatePolicy) => {
 		this.#basicChanges.set({
 			...this.#basicChanges.get(),
 			updatePolicy: value,
