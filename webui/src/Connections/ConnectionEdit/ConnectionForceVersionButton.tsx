@@ -16,12 +16,12 @@ import { CModalExt } from '~/Components/CModalExt.js'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useAllConnectionProducts } from '~/Hooks/useFilteredProducts.js'
+import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
 import { useComputed } from '~/Resources/util.js'
-import { useConnectionVersionSelectOptions } from './useConnectionVersionSelectOptions.js'
-import { ModuleVersionsRefresh } from '../ModuleVersionsRefresh.js'
+import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
+import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface ConnectionForceVersionButtonProps {
@@ -213,7 +213,7 @@ const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
 }: SelectedModuleDropdownProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const allProducts = useAllConnectionProducts(modules)
+	const allProducts = useAllModuleProducts(modules)
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
 
@@ -258,7 +258,8 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 	const { modules } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.modules.get(moduleId)
-	const { choices: moduleVersionChoices, loaded: choicesLoaded } = useConnectionVersionSelectOptions(
+	const { choices: moduleVersionChoices, loaded: choicesLoaded } = useModuleVersionSelectOptions(
+		modules,
 		moduleId,
 		moduleInfo,
 		false

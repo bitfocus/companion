@@ -1,11 +1,12 @@
 import type { ModuleUpgradeToOtherVersion } from '@companion-app/shared/Model/ModuleInfo.js'
-import { useContext, useEffect } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import { useEffect } from 'react'
 import { useComputed } from '~/Resources/util'
+import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
 
-export function useModuleUpgradeToVersions(moduleId: string | undefined): ModuleUpgradeToOtherVersion[] {
-	const { modules } = useContext(RootAppStoreContext)
-
+export function useModuleUpgradeToVersions(
+	modules: ModuleInfoStore,
+	moduleId: string | undefined
+): ModuleUpgradeToOtherVersion[] {
 	useEffect(() => {
 		if (!moduleId) return
 

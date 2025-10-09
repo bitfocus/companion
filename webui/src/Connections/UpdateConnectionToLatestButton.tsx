@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { observer } from 'mobx-react-lite'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
@@ -8,6 +8,7 @@ import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connect
 import { InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import { faCircleUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface UpdateConnectionToLatestButtonProps {
 	connection: ClientConnectionConfig
@@ -27,8 +28,10 @@ export const UpdateConnectionToLatestButton = observer(function UpdateConnection
 const UpdateConnectionToLatestButtonInner = observer(function ModuleVersionInfoInner({
 	connection,
 }: UpdateConnectionToLatestButtonProps) {
-	const moduleStoreInfo = useModuleStoreInfo(connection.instance_type) // TODO - put these into a central store, to minimise the impact
-	const upgradeToVersions = useModuleUpgradeToVersions(connection.instance_type)
+	const { modules } = useContext(RootAppStoreContext)
+
+	const moduleStoreInfo = useModuleStoreInfo(modules, connection.instance_type) // TODO - put these into a central store, to minimise the impact
+	const upgradeToVersions = useModuleUpgradeToVersions(modules, connection.instance_type)
 
 	let message: string | undefined
 

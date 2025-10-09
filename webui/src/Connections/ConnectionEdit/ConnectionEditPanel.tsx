@@ -11,10 +11,10 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ModuleVersionsRefresh } from '../ModuleVersionsRefresh.js'
+import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { ConnectionForceVersionButton } from './ConnectionForceVersionButton.js'
 import { doesConnectionVersionExist } from './VersionUtil.js'
-import { useConnectionVersionSelectOptions } from './useConnectionVersionSelectOptions.js'
+import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ConnectionSecretField } from './ConnectionSecretField.js'
@@ -279,7 +279,8 @@ const ConnectionModuleVersionInputField = observer(function ConnectionModuleVers
 	const { modules } = useContext(RootAppStoreContext)
 
 	const isModuleOnStore = !!modules.storeList.get(panelStore.connectionInfo.instance_type)
-	const moduleVersionChoices = useConnectionVersionSelectOptions(
+	const moduleVersionChoices = useModuleVersionSelectOptions(
+		modules,
 		panelStore.connectionInfo.instance_type,
 		moduleInfo,
 		true

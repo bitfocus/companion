@@ -7,7 +7,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { useAllConnectionProducts, filterProducts, FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
+import { useAllModuleProducts, filterProducts, FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
@@ -36,7 +36,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	const [filter, setFilter] = useState('')
 
-	const allProducts = useAllConnectionProducts(modules, true, true)
+	const allProducts = useAllModuleProducts(modules, true, true)
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {

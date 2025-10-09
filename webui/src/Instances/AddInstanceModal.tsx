@@ -15,66 +15,60 @@ import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { makeLabelSafe } from '@companion-app/shared/Label.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { useConnectionVersionSelectOptions } from './ConnectionEdit/useConnectionVersionSelectOptions.js'
+import { useModuleVersionSelectOptions } from './useModuleVersionSelectOptions.js'
 import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { AddInstanceService } from './AddInstanceService.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
-export interface AddConnectionModalRef {
+export interface AddInstanceModalRef {
 	show(info: FuzzyProduct): void
 }
 
-interface AddConnectionModalProps {
-	doConfigureConnection: (connectionId: string) => void
+interface AddInstanceModalProps {
+	service: AddInstanceService
+	openConfigureInstance: (instanceId: string) => void
 }
 
-export const AddConnectionModal = observer(
-	forwardRef<AddConnectionModalRef, AddConnectionModalProps>(function AddActionsModal({ doConfigureConnection }, ref) {
-		const { helpViewer, notifier, connections, modules } = useContext(RootAppStoreContext)
+export const AddInstanceModal = observer(
+	forwardRef<AddInstanceModalRef, AddInstanceModalProps>(function AddInstanceModal(
+		{ service, openConfigureInstance },
+		ref
+	) {
+		const { helpViewer, notifier } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<FuzzyProduct | null>(null)
 		const [selectedVersion, setSelectedVersion] = useState<string | null>(null)
-		const [connectionLabel, setConnectionLabel] = useState<string>('')
+		const [instanceLabel, setInstanceLabel] = useState<string>('')
 
-		const isModuleOnStore = !!moduleInfo && !!modules.storeList.get(moduleInfo?.id)
+		const isModuleOnStore = !!moduleInfo && !!service.modules.storeList.get(moduleInfo?.id)
 
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
 			setModuleInfo(null)
 			setSelectedVersion(null)
-			setConnectionLabel('')
+			setInstanceLabel('')
 		}, [])
 
-		const addMutation = useMutationExt(trpc.instances.connections.add.mutationOptions())
-
 		const doAction = () => {
-			if (!moduleInfo || !connectionLabel || !selectedVersion) return
+			if (!moduleInfo || !instanceLabel || !selectedVersion) return
 
-			addMutation
-				.mutateAsync({
-					module: {
-						type: moduleInfo.id,
-						product: moduleInfo.product,
-					},
-					label: connectionLabel,
-					versionId: selectedVersion,
-				})
+			service
+				.performAddInstance(moduleInfo, instanceLabel, selectedVersion)
 				.then((id) => {
-					console.log('NEW CONNECTION', id)
+					console.log('NEW INSTANCE', id)
 					setShow(false)
 					setTimeout(() => {
 						// Wait a bit to let the server catch up
-						doConfigureConnection(id)
+						openConfigureInstance(id)
 					}, 1000)
 				})
 				.catch((e) => {
-					notifier.current?.show(`Failed to create connection`, `Failed: ${e}`)
-					console.error('Failed to create connection:', e)
+					notifier.current?.show(`Failed to create instance`, `Failed: ${e}`)
+					console.error('Failed to create instance:', e)
 				})
 		}
 
@@ -87,17 +81,19 @@ export const AddConnectionModal = observer(
 
 					// There is a useEffect below that ensures this is valid
 					setSelectedVersion(null)
-					setConnectionLabel(findNextConnectionLabel(connections.connections, info.shortname))
+					setInstanceLabel(service.findNextLabel(info))
 				},
 			}),
-			[connections]
+			[service]
 		)
 
 		const {
 			choices: versionChoices,
 			loaded: choicesLoaded,
 			hasIncompatibleNewerVersion,
-		} = useConnectionVersionSelectOptions(moduleInfo?.id, moduleInfo?.installedInfo, false)
+		} = useModuleVersionSelectOptions(service.modules, moduleInfo?.id, moduleInfo?.installedInfo, false)
+
+		console.log('Version choices', versionChoices, choicesLoaded)
 
 		// Ensure the currently selection version is a valid option
 		const defaultVersionId = moduleInfo?.installedInfo?.devVersion
@@ -140,11 +136,13 @@ export const AddConnectionModal = observer(
 							</h5>
 						</CModalHeader>
 						<CModalBody>
-							<p>
-								It is now possible to load install different versions of modules without updating Companion. Once you
-								have installed different versions of a module, you can choose which one to use for a new connection
-								here.
-							</p>
+							{service.moduleType === ModuleInstanceType.Connection && (
+								<p>
+									It is now possible to load install different versions of modules without updating Companion. Once you
+									have installed different versions of a module, you can choose which one to use for a new connection
+									here.
+								</p>
+							)}
 							<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 								<CFormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
 									Label&nbsp;
@@ -152,8 +150,8 @@ export const AddConnectionModal = observer(
 								<CCol sm={8}>
 									<CFormInput
 										name="colFormLabel"
-										value={connectionLabel}
-										onChange={(e) => setConnectionLabel(e.currentTarget.value)}
+										value={instanceLabel}
+										onChange={(e) => setInstanceLabel(e.currentTarget.value)}
 									/>
 								</CCol>
 
@@ -165,7 +163,7 @@ export const AddConnectionModal = observer(
 												<FontAwesomeIcon icon={faQuestionCircle} />
 											</div>
 										)}
-										{isModuleOnStore && <ModuleVersionsRefresh modules={modules} moduleId={moduleInfo.id} />}
+										{isModuleOnStore && <ModuleVersionsRefresh modules={service.modules} moduleId={moduleInfo.id} />}
 									</div>
 								</CFormLabel>
 								<CCol sm={8}>
@@ -229,7 +227,7 @@ export const AddConnectionModal = observer(
 							<CButton
 								color="primary"
 								onClick={doAction}
-								disabled={!moduleInfo || !connectionLabel || !selectedVersion || !versionChoices.length}
+								disabled={!moduleInfo || !instanceLabel || !selectedVersion || !versionChoices.length}
 							>
 								Add
 							</CButton>
@@ -240,30 +238,3 @@ export const AddConnectionModal = observer(
 		)
 	})
 )
-
-// TODO: this is a copy of the function from companion/lib/Instance/ConnectionConfigStore.ts
-function findNextConnectionLabel(
-	connections: ReadonlyMap<string, ClientConnectionConfig>,
-	shortname: string,
-	ignoreId?: string
-): string {
-	let prefix = shortname
-
-	const knownLabels = new Set()
-	for (const [id, obj] of connections) {
-		if (id !== ignoreId && obj && obj.label) {
-			knownLabels.add(obj.label)
-		}
-	}
-
-	prefix = makeLabelSafe(prefix)
-
-	let label = prefix
-	let i = 1
-	while (knownLabels.has(label)) {
-		// Try the next
-		label = `${prefix}_${++i}`
-	}
-
-	return label
-}

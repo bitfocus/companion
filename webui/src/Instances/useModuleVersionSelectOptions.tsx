@@ -4,9 +4,11 @@ import { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { useComputed } from '~/Resources/util.js'
-import { getLatestVersion } from './VersionUtil.js'
+import { getLatestVersion } from '../Connections/ConnectionEdit/VersionUtil.js'
+import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 
-export function useConnectionVersionSelectOptions(
+export function useModuleVersionSelectOptions(
+	modules: ModuleInfoStore,
 	moduleId: string | undefined,
 	installedInfo: ClientModuleInfo | null | undefined,
 	includeBeta: boolean
@@ -15,8 +17,8 @@ export function useConnectionVersionSelectOptions(
 	hasIncompatibleNewerVersion: boolean
 	choices: DropdownChoiceInt[]
 } {
-	const moduleStoreInfo = useModuleStoreInfo(moduleId)
-	const upgradeToVersions = useModuleUpgradeToVersions(moduleId)
+	const moduleStoreInfo = useModuleStoreInfo(modules, moduleId)
+	const upgradeToVersions = useModuleUpgradeToVersions(modules, moduleId)
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
 	const latestIncompatibleStableVersion = getLatestVersion(moduleStoreInfo?.versions, false, true)

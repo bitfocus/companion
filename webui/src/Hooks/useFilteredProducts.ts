@@ -4,7 +4,7 @@ import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 
-export function useAllConnectionProducts(
+export function useAllModuleProducts(
 	modules: ModuleInfoStore,
 	includeUnreleased?: boolean,
 	includeDeprecated?: boolean

@@ -1,10 +1,11 @@
-import { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
-import { useContext, useEffect } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import type { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
+import { useEffect } from 'react'
+import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
 
-export function useModuleStoreInfo(moduleId: string | undefined): ModuleStoreModuleInfoStore | null {
-	const { modules } = useContext(RootAppStoreContext)
-
+export function useModuleStoreInfo(
+	modules: ModuleInfoStore,
+	moduleId: string | undefined
+): ModuleStoreModuleInfoStore | null {
 	useEffect(() => {
 		if (!moduleId) return
 
