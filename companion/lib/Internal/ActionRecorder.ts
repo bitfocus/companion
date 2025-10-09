@@ -22,7 +22,7 @@ import type {
 	InternalFeedbackDefinition,
 	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'

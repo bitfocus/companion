@@ -8,7 +8,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
-import type { ModuleHost } from '../../Instance/Host.js'
+import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { isEqual } from 'lodash-es'
 import type { InstanceDefinitionsForEntity } from './Types.js'
@@ -21,7 +21,7 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
 	internalModule: InternalController
-	moduleHost: ModuleHost
+	processManager: InstanceProcessManager
 	variableValues: VariablesValues
 	controlId: string
 	commitChange: (redraw?: boolean) => void
@@ -36,7 +36,7 @@ export abstract class ControlEntityListPoolBase {
 
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalController
-	readonly #moduleHost: ModuleHost
+	readonly #processManager: InstanceProcessManager
 	readonly #variableValues: VariablesValues
 
 	protected readonly controlId: string
@@ -60,7 +60,7 @@ export abstract class ControlEntityListPoolBase {
 
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule
-		this.#moduleHost = props.moduleHost
+		this.#processManager = props.processManager
 		this.#variableValues = props.variableValues
 	}
 
@@ -68,7 +68,7 @@ export abstract class ControlEntityListPoolBase {
 		return new ControlEntityList(
 			this.#instanceDefinitions,
 			this.#internalModule,
-			this.#moduleHost,
+			this.#processManager,
 			this.controlId,
 			null,
 			listDefinition

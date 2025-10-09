@@ -528,7 +528,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		// Find ones to start recording
 		for (const connectionId of targetRecordingConnectionIds.values()) {
 			// Future: skip checking if they already know, to make sure they dont get stuck
-			const connection = this.#registry.instance.moduleHost.getChild(connectionId)
+			const connection = this.#registry.instance.processManager.getConnectionChild(connectionId)
 			if (connection) {
 				ps.push(
 					connection.startStopRecordingActions(true).catch((e) => {
@@ -541,7 +541,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		// Find ones to stop recording
 		for (const connectionId of this.#currentlyRecordingConnectionIds.values()) {
 			if (!targetRecordingConnectionIds.has(connectionId)) {
-				const connection = this.#registry.instance.moduleHost.getChild(connectionId)
+				const connection = this.#registry.instance.processManager.getConnectionChild(connectionId)
 				if (connection) {
 					ps.push(
 						connection.startStopRecordingActions(false).catch((e) => {

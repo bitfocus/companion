@@ -101,7 +101,7 @@ export function createConnectionsTrpcRouter(
 				// Make sure the collection is enabled
 				if (!instanceController.collections.isCollectionEnabled(instanceConf.collectionId)) return null
 
-				const instance = instanceController.moduleHost.getChild(input.connectionId)
+				const instance = instanceController.processManager.getConnectionChild(input.connectionId)
 				if (!instance) return null
 
 				try {

@@ -17,7 +17,7 @@ import type {
 	VariableDefinitionUpdate,
 	VariableDefinitionUpdateInitOp,
 } from '@companion-app/shared/Model/Variables.js'
-import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
 import { diffObjects } from '@companion-app/shared/Diff.js'

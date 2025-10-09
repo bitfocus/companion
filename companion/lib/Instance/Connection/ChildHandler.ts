@@ -1,4 +1,4 @@
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { Logger } from '../../Log/Controller.js'
 import { IpcEventHandlers, IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
 import semver from 'semver'
 import type express from 'express'
@@ -27,7 +27,7 @@ import type {
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
 } from '@companion-module/base/dist/host-api/api.js'
-import type { InstanceStatus } from './Status.js'
+import type { InstanceStatus } from '../Status.js'
 import type { ConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
 	assertNever,
@@ -37,10 +37,10 @@ import {
 	type LogLevel,
 } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { InstanceDefinitions } from './Definitions.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import type { VariablesController } from '../Variables/Controller.js'
-import type { ServiceOscSender } from '../Service/OscSender.js'
+import type { InstanceDefinitions } from '../Definitions.js'
+import type { ControlsController } from '../../Controls/Controller.js'
+import type { VariablesController } from '../../Variables/Controller.js'
+import type { ServiceOscSender } from '../../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import {
 	ActionEntityModel,
@@ -52,12 +52,13 @@ import {
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from './ApiVersions.js'
-import { InstanceEntityManager } from './EntityManager.js'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import { translateEntityInputFields } from './ConfigFields.js'
+import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from '../ApiVersions.js'
+import { ConnectionEntityManager } from './EntityManager.js'
+import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import { translateEntityInputFields } from '../ConfigFields.js'
+import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 
-export interface InstanceModuleWrapperDependencies {
+export interface ConnectionChildHandlerDependencies {
 	readonly controls: ControlsController
 	readonly variables: VariablesController
 	readonly oscSender: ServiceOscSender
@@ -75,12 +76,12 @@ export interface InstanceModuleWrapperDependencies {
 	readonly debugLogLine: (connectionId: string, level: string, message: string) => void
 }
 
-export class SocketEventsHandler {
+export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	logger: Logger
 
 	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
 
-	readonly #deps: InstanceModuleWrapperDependencies
+	readonly #deps: ConnectionChildHandlerDependencies
 
 	readonly connectionId: string
 
@@ -90,7 +91,7 @@ export class SocketEventsHandler {
 
 	#expectsLabelUpdates: boolean = false
 
-	readonly #entityManager: InstanceEntityManager | null
+	readonly #entityManager: ConnectionEntityManager | null
 
 	#currentUpgradeIndex: number | null = null
 
@@ -105,12 +106,12 @@ export class SocketEventsHandler {
 	#unsubListeners: () => void
 
 	constructor(
-		deps: InstanceModuleWrapperDependencies,
+		deps: ConnectionChildHandlerDependencies,
 		monitor: RespawnMonitor,
 		connectionId: string,
 		apiVersion0: string
 	) {
-		this.logger = LogController.createLogger(`Instance/Wrapper/${connectionId}`)
+		this.logger = LogController.createLogger(`Instance/Connection/${connectionId}`)
 
 		const apiVersion = semver.parse(apiVersion0)
 		if (!apiVersion) throw new Error(`Failed to parse apiVersion "${apiVersion0}"`)
@@ -154,7 +155,7 @@ export class SocketEventsHandler {
 		)
 
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
-			? new InstanceEntityManager(this.#ipcWrapper, this.#deps.controls, this.connectionId)
+			? new ConnectionEntityManager(this.#ipcWrapper, this.#deps.controls, this.connectionId)
 			: null
 
 		const messageHandler = (msg: any) => {
@@ -171,7 +172,7 @@ export class SocketEventsHandler {
 	 * Initialise the instance class running in the child process
 	 */
 	async init(config: ConnectionConfig): Promise<void> {
-		this.logger = LogController.createLogger(`Instance/Wrapper/${config.label}`)
+		this.logger = LogController.createLogger(`Instance/Connection/${config.label}`)
 		this.#label = config.label
 
 		// Ensure each entity knows its upgradeIndex
@@ -215,13 +216,16 @@ export class SocketEventsHandler {
 		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 
 		this.#entityManager?.start(config.lastUpgradeIndex)
+
+		// Inform action recorder
+		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
 	}
 
 	/**
 	 * Forward an updated config object to the instance class
 	 */
 	async updateConfigAndLabel(config: ConnectionConfig): Promise<void> {
-		this.logger = LogController.createLogger(`Instance/Wrapper/${config.label}`)
+		this.logger = LogController.createLogger(`Instance/Connection/${config.label}`)
 		this.#label = config.label
 
 		if (this.#expectsLabelUpdates) {
@@ -599,9 +603,15 @@ export class SocketEventsHandler {
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
+		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
 		this.#entityManager?.destroy()
+
+		this.#deps.instanceDefinitions.forgetConnection(this.connectionId)
+		this.#deps.variables.values.forgetConnection(this.connectionId, this.#label)
+		this.#deps.variables.definitions.forgetConnection(this.connectionId, this.#label)
+		this.#deps.controls.clearConnectionState(this.connectionId)
 	}
 
 	/**

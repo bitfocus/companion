@@ -1,5 +1,5 @@
 import debounceFn from 'debounce-fn'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type {
 	FeedbackInstance as ModuleFeedbackInstance,
 	HostToModuleEventsV0,
@@ -12,10 +12,10 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
 import { nanoid } from 'nanoid'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { ControlsController } from '../../Controls/Controller.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { OptionsObject } from '@companion-module/base/dist/util.js'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { Logger } from '../../Log/Controller.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -42,7 +42,7 @@ interface EntityWrapper {
  * With this, it will ensure that the entities are run through the upgrade scripts as needed, and also
  * have the options parsed (by as much as companion supports) before being sent to the module for subscription callbacks
  */
-export class InstanceEntityManager {
+export class ConnectionEntityManager {
 	readonly #logger: Logger
 
 	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
@@ -59,7 +59,7 @@ export class InstanceEntityManager {
 		controlsController: ControlsController,
 		connectionId: string
 	) {
-		this.#logger = LogController.createLogger(`Instance/EntityManager/${connectionId}`)
+		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
 		this.#ipcWrapper = ipcWrapper
 		this.#controlsController = controlsController
 	}

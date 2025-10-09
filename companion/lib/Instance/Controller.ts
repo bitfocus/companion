@@ -10,7 +10,7 @@
  */
 
 import { InstanceDefinitions } from './Definitions.js'
-import { ModuleHost } from './Host.js'
+import { InstanceProcessManager } from './ProcessManager.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
@@ -30,7 +30,7 @@ import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-a
 import { AddConnectionProps, InstanceConfigStore } from './ConfigStore.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
-import { InstanceSharedUdpManager } from './SharedUdpManager.js'
+import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -73,7 +73,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly definitions: InstanceDefinitions
 	readonly status: InstanceStatus
-	readonly moduleHost: ModuleHost
+	readonly processManager: InstanceProcessManager
 	readonly modules: InstanceModules
 	readonly sharedUdpManager: InstanceSharedUdpManager
 	readonly modulesStore: ModuleStoreService
@@ -125,7 +125,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.definitions = new InstanceDefinitions(this.#configStore)
 		this.status = new InstanceStatus()
 		this.modules = new InstanceModules(this, apiRouter, appInfo.modulesDirs)
-		this.moduleHost = new ModuleHost(
+		this.processManager = new InstanceProcessManager(
 			{
 				controls: controls,
 				variables: variables,
@@ -165,14 +165,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		)
 		this.modules.listenToStoreEvents(this.modulesStore)
 
-		graphics.on('resubscribeFeedbacks', () => this.moduleHost.resubscribeAllFeedbacks())
+		graphics.on('resubscribeFeedbacks', () => this.processManager.resubscribeAllFeedbacks())
 
 		this.connectionApiRouter.use('/:label', (req, res, _next) => {
 			const label = req.params.label
 			const connectionId = this.getIdForLabel(label) || label
-			const instance = this.moduleHost.getChild(connectionId)
-			if (instance) {
-				instance.executeHttpRequest(req, res)
+			const connection = this.processManager.getConnectionChild(connectionId)
+			if (connection) {
+				connection.executeHttpRequest(req, res)
 			} else {
 				res.status(404).send(JSON.stringify({ status: 404, message: 'Not Found' }))
 			}
@@ -199,7 +199,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		} else if (event == 'suspend') {
 			this.#logger.info('Power: Suspending')
 
-			this.moduleHost.queueStopAllConnections().catch((e) => {
+			this.processManager.queueStopAllInstances().catch((e) => {
 				this.#logger.debug(`Error suspending instances: ${e?.message ?? e}`)
 			})
 		}
@@ -308,9 +308,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.#configStore.commitChanges([id], false)
 
-		const instance = this.moduleHost.getChild(id, true)
+		const instance = this.processManager.getConnectionChild(id, true)
 		if (values.label) {
-			this.moduleHost.updateChildLabel(id, values.label)
+			this.processManager.updateChildLabel(id, values.label)
 		}
 
 		const updateInstance = !!values.label || ((values.config || values.secrets) && !options?.skipNotifyConnection)
@@ -411,7 +411,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#logger.info(`Deleting instance: ${label ?? id}`)
 
 		try {
-			this.moduleHost.queueUpdateConnectionState(id, null, true)
+			this.processManager.queueUpdateInstanceState(id, null, true)
 		} catch (e) {
 			this.#logger.debug(`Error while deleting instance "${label ?? id}": `, e)
 		}
@@ -452,7 +452,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 * Stop/destroy all running instances
 	 */
 	async destroyAllInstances(): Promise<void> {
-		return this.moduleHost.queueStopAllConnections()
+		return this.processManager.queueStopAllInstances()
 	}
 
 	/**
@@ -593,10 +593,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const enableConnection = config.enabled !== false && this.collections.isCollectionEnabled(config.collectionId)
 
-		this.moduleHost.queueUpdateConnectionState(
+		this.processManager.queueUpdateInstanceState(
 			id,
 			enableConnection
 				? {
+						moduleType: ModuleInstanceType.Connection,
 						label: config.label,
 						moduleId: config.instance_type,
 						moduleVersionId: config.moduleVersionId,
@@ -651,7 +652,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const result = this.#configStore.getPartialClientJson()
 
 		for (const [id, config] of Object.entries(result)) {
-			const instance = this.moduleHost.getChild(id, true)
+			const instance = this.processManager.getConnectionChild(id, true)
 			if (instance) {
 				config.hasRecordActionsHandler = instance.hasRecordActionsHandler
 			}

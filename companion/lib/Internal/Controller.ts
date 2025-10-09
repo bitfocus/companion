@@ -19,7 +19,7 @@ import type {
 	InternalModuleFragment,
 	InternalVisitor,
 } from './Types.js'
-import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'

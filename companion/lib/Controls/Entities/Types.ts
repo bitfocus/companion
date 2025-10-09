@@ -1,11 +1,11 @@
-import type { ModuleHost } from '../../Instance/Host.js'
+import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import { InternalController } from '../../Internal/Controller.js'
 
 export type InstanceDefinitionsForEntity = Pick<InstanceDefinitions, 'getEntityDefinition'>
 
-export type ModuleHostForEntity = Pick<
-	ModuleHost,
+export type ProcessManagerForEntity = Pick<
+	InstanceProcessManager,
 	'connectionEntityUpdate' | 'connectionEntityDelete' | 'connectionEntityLearnOptions'
 >
 
