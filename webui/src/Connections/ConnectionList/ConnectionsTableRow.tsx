@@ -42,8 +42,8 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 
 	const showAsEnabled = isEnabled && isCollectionEnabled(connections.rootCollections(), connection.collectionId)
 
-	const deleteMutation = useMutationExt(trpc.connections.delete.mutationOptions())
-	const setEnabledMutation = useMutationExt(trpc.connections.setEnabled.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.instances.connections.delete.mutationOptions())
+	const setEnabledMutation = useMutationExt(trpc.instances.connections.setEnabled.mutationOptions())
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current?.show(

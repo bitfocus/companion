@@ -18,7 +18,7 @@ export const RefreshModulesList = observer(function RefreshModulesList({
 
 	const [refreshError, setLoadError] = useState<string | null>(null)
 
-	const refreshListMutation = useMutationExt(trpc.connections.modulesStore.refreshList.mutationOptions())
+	const refreshListMutation = useMutationExt(trpc.instances.modulesStore.refreshList.mutationOptions())
 
 	const doRefreshModules = useCallback(() => {
 		refreshListMutation.mutateAsync({ moduleType: modules.moduleType }).catch((err) => {

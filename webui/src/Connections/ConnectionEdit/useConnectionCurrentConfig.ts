@@ -4,7 +4,7 @@ import { trpc } from '~/Resources/TRPC'
 
 export function useConnectionCurrentConfig(connectionId: string): UseQueryResult<ClientEditConnectionConfig> {
 	const query = useQuery(
-		trpc.connections.edit.queryOptions(
+		trpc.instances.connections.edit.queryOptions(
 			{ connectionId },
 			{
 				retryDelay: 2000,

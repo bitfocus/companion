@@ -11,7 +11,7 @@ import type { AppInfo } from '../Registry.js'
 import { promisify } from 'util'
 import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import { InstanceConfigStore } from './ConfigStore.js'
 import crypto from 'node:crypto'
 import semver from 'semver'
 import { publicProcedure, router } from '../UI/TRPC.js'
@@ -47,7 +47,7 @@ export class InstanceInstalledModulesManager {
 	/**
 	 * The config store of the instances
 	 */
-	readonly #configStore: ConnectionConfigStore
+	readonly #configStore: InstanceConfigStore
 
 	readonly #multipartUploader = new MultipartUploader(
 		'Instance/UserModulesManager',
@@ -100,7 +100,7 @@ export class InstanceInstalledModulesManager {
 		appInfo: AppInfo,
 		modulesManager: InstanceModules,
 		modulesStore: ModuleStoreService,
-		configStore: ConnectionConfigStore
+		configStore: InstanceConfigStore
 	) {
 		this.#appInfo = appInfo
 		this.#modulesManager = modulesManager

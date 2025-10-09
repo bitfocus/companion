@@ -84,8 +84,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		connectionVersionExists &&
 		isCollectionEnabled(connections.rootCollections(), panelStore.connectionInfo.collectionId)
 
-	const setLabelAndVersionMutation = useMutationExt(trpc.connections.setLabelAndVersion.mutationOptions())
-	const setLabelAndConfigMutation = useMutationExt(trpc.connections.setLabelAndConfig.mutationOptions())
+	const setLabelAndVersionMutation = useMutationExt(trpc.instances.connections.setLabelAndVersion.mutationOptions())
+	const setLabelAndConfigMutation = useMutationExt(trpc.instances.connections.setLabelAndConfig.mutationOptions())
 
 	const isSaving = observable.box(false)
 	const [saveError, setSaveError] = useState<string | null>(null)

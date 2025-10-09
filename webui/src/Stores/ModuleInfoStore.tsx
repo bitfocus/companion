@@ -144,7 +144,7 @@ export class ModuleStoreVersionsStore {
 		}
 
 		// First subscriber, actually subscribe
-		const sub = trpc.connections.modulesStore.watchModuleInfo
+		const sub = trpc.instances.modulesStore.watchModuleInfo
 			.subscriptionOptions({
 				moduleType: this.#moduleType,
 				moduleId,
@@ -199,7 +199,7 @@ export class ModuleStoreVersionsStore {
 		}
 
 		// First subscriber, actually subscribe
-		const sub = trpc.connections.modules.watchUpgradeToOther
+		const sub = trpc.instances.modules.watchUpgradeToOther
 			.subscriptionOptions({
 				moduleType: this.#moduleType,
 				moduleId,

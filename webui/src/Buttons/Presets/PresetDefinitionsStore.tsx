@@ -54,7 +54,7 @@ export function usePresetsDefinitions(store: PresetDefinitionsStore): {
 	const [loadError, setLoadError] = useState<string | null>(null)
 
 	const sub = useSubscription(
-		trpc.connections.definitions.presets.subscriptionOptions(undefined, {
+		trpc.instances.definitions.presets.subscriptionOptions(undefined, {
 			onStarted: () => {
 				setIsReady(false)
 				setLoadError(null)

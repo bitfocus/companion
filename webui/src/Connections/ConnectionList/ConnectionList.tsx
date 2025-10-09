@@ -180,7 +180,7 @@ function ConnectionListNoConnections() {
 }
 
 function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCollection }) {
-	const setEnabledMutation = useMutationExt(trpc.connections.collections.setEnabled.mutationOptions())
+	const setEnabledMutation = useMutationExt(trpc.instances.collections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,7 +231,7 @@ function ConnectionListItemWrapper(
 }
 
 function CreateCollectionButton() {
-	const createMutation = useMutationExt(trpc.connections.collections.add.mutationOptions())
+	const createMutation = useMutationExt(trpc.instances.collections.add.mutationOptions())
 
 	const doCreateCollection = useCallback(() => {
 		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {

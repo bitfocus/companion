@@ -75,7 +75,7 @@ export class ConnectionEditPanelStore {
 			this.#loadError.set(null)
 		})
 
-		trpcClient.connections.edit
+		trpcClient.instances.connections.edit
 			.query({
 				connectionId: this.connectionId,
 			})

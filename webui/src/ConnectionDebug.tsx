@@ -49,7 +49,7 @@ export function ConnectionDebug(): React.JSX.Element {
 	}, [trpcStatus.status])
 
 	useSubscription(
-		trpc.connections.debugLog.subscriptionOptions(
+		trpc.instances.debugLog.subscriptionOptions(
 			{
 				connectionId,
 			},
@@ -96,7 +96,7 @@ export function ConnectionDebug(): React.JSX.Element {
 		link.remove()
 	}, [linesBuffer])
 
-	const setEnabledMutation = useMutationExt(trpc.connections.setEnabled.mutationOptions())
+	const setEnabledMutation = useMutationExt(trpc.instances.connections.setEnabled.mutationOptions())
 	const doStopConnection = useCallback(() => {
 		if (!connectionId) return
 		setEnabledMutation.mutateAsync({ connectionId, enabled: false }).catch((e) => {

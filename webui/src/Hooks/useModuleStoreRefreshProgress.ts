@@ -5,7 +5,7 @@ import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
 
 export function useModuleStoreRefreshProgressSubscription(store: ModuleInfoStore): boolean {
 	useSubscription(
-		trpc.connections.modulesStore.watchRefreshProgress.subscriptionOptions(
+		trpc.instances.modulesStore.watchRefreshProgress.subscriptionOptions(
 			{ moduleType: store.moduleType },
 			{
 				onStarted: () => {

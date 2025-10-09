@@ -232,7 +232,7 @@ function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstal
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
 
-	const uninstallModuleMutation = useMutationExt(trpc.connections.modulesManager.uninstallModule.mutationOptions())
+	const uninstallModuleMutation = useMutationExt(trpc.instances.modulesManager.uninstallModule.mutationOptions())
 	const doRemove = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
 		uninstallModuleMutation
@@ -281,9 +281,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
 
-	const installStoreModuleMutation = useMutationExt(
-		trpc.connections.modulesManager.installStoreModule.mutationOptions()
-	)
+	const installStoreModuleMutation = useMutationExt(trpc.instances.modulesManager.installStoreModule.mutationOptions())
 	const doInstall = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
 		installStoreModuleMutation // TODO: 30s timeout?

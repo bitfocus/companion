@@ -80,18 +80,18 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 	const actionDefinitionsReady = useEntityDefinitionsSubscription(
 		rootStore.entityDefinitions.actions,
-		trpc.connections.definitions.actions
+		trpc.instances.definitions.actions
 	)
 	const feedbackDefinitionsReady = useEntityDefinitionsSubscription(
 		rootStore.entityDefinitions.feedbacks,
-		trpc.connections.definitions.feedbacks
+		trpc.instances.definitions.feedbacks
 	)
 	const moduleInfoReady = useModuleInfoSubscription(rootStore.modules)
 	const moduleStoreReady = useModuleStoreListSubscription(rootStore.modules)
 	const connectionsReady = useConnectionsConfigSubscription(rootStore.connections)
 	const connectionGroupsReady = useGenericCollectionsSubscription(
 		rootStore.connections,
-		trpc.connections.collections.watchQuery,
+		trpc.instances.collections.watchQuery,
 		undefined
 	)
 	const triggersListReady = useTriggersListSubscription(rootStore.triggersList)

@@ -7,7 +7,7 @@ export function useModuleInfoSubscription(store: ModuleInfoStore): boolean {
 	const [ready, setReady] = useState(false)
 
 	useSubscription(
-		trpc.connections.modules.watch.subscriptionOptions(
+		trpc.instances.modules.watch.subscriptionOptions(
 			{
 				moduleType: store.moduleType,
 			},

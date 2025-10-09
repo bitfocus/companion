@@ -46,7 +46,7 @@ export function ConnectionForceVersionButton({
 		buttonRef.current?.focus()
 	}
 
-	const setModuleAndVersionMutation = useMutationExt(trpc.connections.setModuleAndVersion.mutationOptions())
+	const setModuleAndVersionMutation = useMutationExt(trpc.instances.connections.setModuleAndVersion.mutationOptions())
 
 	const [saveError, setSaveError] = useState<string | null>(null)
 	const form = useForm({

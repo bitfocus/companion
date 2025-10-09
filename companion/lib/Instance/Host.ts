@@ -9,7 +9,7 @@ import os from 'os'
 import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { InstanceModules } from './Modules.js'
-import type { ConnectionConfigStore } from './ConnectionConfigStore.js'
+import type { InstanceConfigStore } from './ConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionOptionValues } from '@companion-module/base'
@@ -62,7 +62,7 @@ export class ModuleHost {
 
 	readonly #deps: InstanceModuleWrapperDependencies
 	readonly #modules: InstanceModules
-	readonly #connectionConfigStore: ConnectionConfigStore
+	readonly #InstanceConfigStore: InstanceConfigStore
 
 	/**
 	 * Queue for starting connections, to limit how many can be starting concurrently
@@ -74,11 +74,11 @@ export class ModuleHost {
 	constructor(
 		deps: InstanceModuleWrapperDependencies,
 		modules: InstanceModules,
-		connectionConfigStore: ConnectionConfigStore
+		InstanceConfigStore: InstanceConfigStore
 	) {
 		this.#deps = deps
 		this.#modules = modules
-		this.#connectionConfigStore = connectionConfigStore
+		this.#InstanceConfigStore = InstanceConfigStore
 
 		const cpuCount = os.cpus().length // An approximation
 		this.#startQueue = new PQueue({ concurrency: Math.max(cpuCount - 1, 1) })
@@ -156,7 +156,7 @@ export class ModuleHost {
 				this.#logger.debug(`Registered module client "${connectionId}"`)
 
 				// TODO module-lib - can we get this in a cleaner way?
-				const config = this.#connectionConfigStore.getConfigOfTypeForId(child.connectionId, null)
+				const config = this.#InstanceConfigStore.getConfigOfTypeForId(child.connectionId, null)
 				if (!config) {
 					this.#logger.verbose(`Missing config for instance "${connectionId}"`)
 					forceRestart()
