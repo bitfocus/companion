@@ -7,20 +7,23 @@ export function useModuleStoreListSubscription(store: ModuleInfoStore): boolean 
 	const [ready, setReady] = useState(false)
 
 	useSubscription(
-		trpc.connections.modulesStore.watchList.subscriptionOptions(undefined, {
-			onStarted: () => {
-				store.updateStoreInfo(null)
-				setReady(false)
-			},
-			onData: (data) => {
-				store.updateStoreInfo(data)
-				setReady(true)
-			},
-			onError: (error) => {
-				store.updateStoreInfo(null)
-				console.error('Failed to load modules store', error)
-			},
-		})
+		trpc.connections.modulesStore.watchList.subscriptionOptions(
+			{ moduleType: store.moduleType },
+			{
+				onStarted: () => {
+					store.updateStoreInfo(null)
+					setReady(false)
+				},
+				onData: (data) => {
+					store.updateStoreInfo(data)
+					setReady(true)
+				},
+				onError: (error) => {
+					store.updateStoreInfo(null)
+					console.error('Failed to load modules store', error)
+				},
+			}
+		)
 	)
 
 	return ready

@@ -48,6 +48,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	moduleInfo,
 	moduleStoreBaseInfo,
 }: ModuleManagePanelInnerProps) {
+	const { modules } = useContext(RootAppStoreContext)
 	const moduleStoreInfo = useModuleStoreInfo(moduleId)
 	const navigate = useNavigate()
 
@@ -79,7 +80,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 			</div>
 			<div className="secondary-panel-simple-body">
 				<div className="refresh-and-last-updated">
-					<RefreshModuleInfo moduleId={moduleId} />
+					<RefreshModuleInfo modules={modules} moduleId={moduleId} />
 					<LastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
 				</div>
 				{moduleStoreInfo?.updateWarning && <CAlert color="danger">{moduleStoreInfo.updateWarning}</CAlert>}

@@ -18,6 +18,7 @@ import semver from 'semver'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import z from 'zod'
 import { isModuleManifestAConnection } from './ModuleScanner.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -146,7 +147,7 @@ export class InstanceInstalledModulesManager {
 		this.#logger.info(`Queuing install of module "${moduleId}" v${versionId ?? 'latest'}`)
 
 		this.#modulesStore
-			.fetchModuleVersionInfo(moduleId, versionId, true)
+			.fetchModuleVersionInfo(ModuleInstanceType.Connection, moduleId, versionId, true)
 			.then(async (versionInfo) => {
 				if (!versionInfo) {
 					this.#logger.warn(`Module "${moduleId}" v${versionId ?? 'latest'} does not exist in the store`)
@@ -240,6 +241,7 @@ export class InstanceInstalledModulesManager {
 			installStoreModule: publicProcedure
 				.input(
 					z.object({
+						moduleType: z.enum(ModuleInstanceType),
 						moduleId: z.string(),
 						versionId: z.string(),
 					})
@@ -247,7 +249,11 @@ export class InstanceInstalledModulesManager {
 				.mutation(async ({ input }) => {
 					this.#logger.info(`Installing ${input.moduleId} v${input.versionId} from store`)
 
-					const versionInfo = this.#modulesStore.getCachedModuleVersionInfo(input.moduleId, input.versionId)
+					const versionInfo = this.#modulesStore.getCachedModuleVersionInfo(
+						input.moduleType,
+						input.moduleId,
+						input.versionId
+					)
 					if (!versionInfo) {
 						this.#logger.warn(`Unable to install ${input.moduleId} v${input.versionId}, it is not known in the store`)
 						return `Module ${input.moduleId} v${input.versionId} not found`

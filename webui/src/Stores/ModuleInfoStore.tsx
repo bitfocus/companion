@@ -13,12 +13,17 @@ import {
 import { nanoid } from 'nanoid'
 import { trpc } from '~/Resources/TRPC'
 import { applyJsonPatchInPlace } from './ApplyDiffToMap'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 
 export class ModuleInfoStore {
+	readonly moduleType: ModuleInstanceType
+
 	// TODO - should this be more granular/observable?
 	readonly modules = observable.map<string, ClientModuleInfo>()
 
-	readonly storeVersions = new ModuleStoreVersionsStore()
+	readonly storeRefreshProgress = observable.map<string | null, number>()
+
+	readonly storeVersions: ModuleStoreVersionsStore
 
 	readonly storeUpdateInfo: Omit<ModuleStoreListCacheStore, 'modules' | 'moduleApiVersion'> = observable.object({
 		lastUpdated: 0,
@@ -29,6 +34,12 @@ export class ModuleInfoStore {
 
 	public get count(): number {
 		return this.modules.size
+	}
+
+	constructor(moduleType: ModuleInstanceType) {
+		this.moduleType = moduleType
+
+		this.storeVersions = new ModuleStoreVersionsStore(moduleType)
 	}
 
 	public updateStore = action((change: ModuleInfoUpdate | null) => {
@@ -93,11 +104,17 @@ interface Unsubscribable {
 }
 
 export class ModuleStoreVersionsStore {
+	readonly #moduleType: ModuleInstanceType
+
 	readonly #versionsState = observable.map<string, ModuleStoreModuleInfoStore>()
 	readonly #versionsSubscribers = new Map<string, VersionSubsInfo>()
 
 	readonly #upgradeToVersionsState = observable.map<string, ModuleUpgradeToOtherVersion[]>()
 	readonly #upgradeToVersionsSubscribers = new Map<string, VersionSubsInfo>()
+
+	constructor(moduleType: ModuleInstanceType) {
+		this.#moduleType = moduleType
+	}
 
 	getModuleStoreVersions(moduleId: string): ModuleStoreModuleInfoStore | null {
 		return this.#versionsState.get(moduleId) ?? null
@@ -129,6 +146,7 @@ export class ModuleStoreVersionsStore {
 		// First subscriber, actually subscribe
 		const sub = trpc.connections.modulesStore.watchModuleInfo
 			.subscriptionOptions({
+				moduleType: this.#moduleType,
 				moduleId,
 			})
 			.subscribe({

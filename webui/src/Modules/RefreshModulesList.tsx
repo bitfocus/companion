@@ -1,27 +1,31 @@
-import { useCallback, useContext, useState } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useCallback, useState } from 'react'
 import React from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
 
-export const RefreshModulesList = observer(function RefreshModulesList({ btnSize }: { btnSize?: 'sm' | 'lg' }) {
-	const { moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
-
-	const refreshProgress = moduleStoreRefreshProgress.get(null) ?? 1
+export const RefreshModulesList = observer(function RefreshModulesList({
+	modules,
+	btnSize,
+}: {
+	modules: ModuleInfoStore
+	btnSize?: 'sm' | 'lg'
+}) {
+	const refreshProgress = modules.storeRefreshProgress.get(null) ?? 1
 
 	const [refreshError, setLoadError] = useState<string | null>(null)
 
 	const refreshListMutation = useMutationExt(trpc.connections.modulesStore.refreshList.mutationOptions())
 
 	const doRefreshModules = useCallback(() => {
-		refreshListMutation.mutateAsync().catch((err) => {
+		refreshListMutation.mutateAsync({ moduleType: modules.moduleType }).catch((err) => {
 			console.error('Failed to refresh modules', err)
 			setLoadError('Failed to refresh modules: ' + err)
 		})
-	}, [refreshListMutation])
+	}, [refreshListMutation, modules])
 
 	return (
 		<div>

@@ -28,6 +28,7 @@ import { ModuleStoreService } from './ModuleStore.js'
 import { router, publicProcedure, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
 import z from 'zod'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
 
 type InstanceModulesEvents = {
 	modulesUpdate: [change: ModuleInfoUpdate]
@@ -354,7 +355,7 @@ export class InstanceModules {
 		const candidateVersions: ModuleUpgradeToOtherVersion[] = []
 
 		// First, push the store versions of each module
-		const cachedStoreInfo = this.#instanceController.modulesStore.getCachedStoreList()
+		const cachedStoreInfo = this.#instanceController.modulesStore.getCachedStoreList(ModuleInstanceType.Connection)
 		for (const [storeModuleId, storeModuleInfo] of Object.entries(cachedStoreInfo)) {
 			if (storeModuleId === moduleId || storeModuleInfo.deprecationReason) continue
 			if (storeModuleInfo.legacyIds.includes(moduleId)) {
