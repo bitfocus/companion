@@ -6,7 +6,7 @@ import mqtt from 'mqtt'
 
 const DEBOUNCE_REINIT_DELAY = 5000
 
-export class MqttService extends ServiceBase {
+export class ServiceMqtt extends ServiceBase {
 	readonly #serviceApi: ServiceApi
 
 	readonly #releaseTime = 20
