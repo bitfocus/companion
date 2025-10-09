@@ -1,8 +1,10 @@
 import { ServiceBase } from './Base.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
-
+import debounceFn from 'debounce-fn'
 import mqtt from 'mqtt'
+
+const DEBOUNCE_REINIT_DELAY = 5000
 
 export class MqttService extends ServiceBase {
 	readonly #serviceApi: ServiceApi
@@ -36,6 +38,7 @@ export class MqttService extends ServiceBase {
 		const options: mqtt.IClientOptions = {
 			username: this.username || undefined,
 			password: this.password || undefined,
+			reconnectPeriod: 0, // Disable automatic reconnection from mqtt lib, we handle it with the module restart
 		}
 
 		this.logger.info(`Connecting to MQTT broker at ${this.broker}:${this.port}...`)
@@ -44,7 +47,6 @@ export class MqttService extends ServiceBase {
 			this.#client = mqtt.connect(`mqtt://${this.broker}:${this.port}`, options)
 
 			this.#client.on('connect', () => {
-				this.currentState = true
 				this.logger.info(`Connected to MQTT broker at ${this.broker}:${this.port}`)
 
 				// Set up event listeners
@@ -67,18 +69,16 @@ export class MqttService extends ServiceBase {
 
 			this.#client.on('error', (error) => {
 				this.logger.error(`MQTT error: ${error.message}`)
-				this.currentState = false
+				this.debounceRestart()
 			})
 
 			this.#client.on('close', () => {
 				this.logger.info('Disconnected from MQTT broker')
-				this.#client?.end()
-				this.currentState = false
+				this.debounceRestart()
 			})
 		} catch (error) {
 			this.logger.error(`Failed to connect to MQTT broker: ${(error as Error).message}`)
-			this.currentState = false
-			return
+			this.debounceRestart()
 		}
 	}
 
@@ -86,7 +86,6 @@ export class MqttService extends ServiceBase {
 		if (this.#client) {
 			this.#client.end()
 			this.#client = null
-			this.currentState = false
 		}
 	}
 
@@ -180,4 +179,11 @@ export class MqttService extends ServiceBase {
 			}
 		}
 	}
+
+	debounceRestart = debounceFn(
+		() => {
+			this.restartModule()
+		},
+		{ wait: DEBOUNCE_REINIT_DELAY, maxWait: 4 * DEBOUNCE_REINIT_DELAY }
+	)
 }
