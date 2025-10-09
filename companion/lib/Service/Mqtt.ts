@@ -49,6 +49,8 @@ export class MqttService extends ServiceBase {
 			this.#client.on('connect', () => {
 				this.logger.info(`Connected to MQTT broker at ${this.broker}:${this.port}`)
 
+				this.currentState = true
+
 				// Set up event listeners
 				this.startEventListeners()
 
@@ -69,15 +71,18 @@ export class MqttService extends ServiceBase {
 
 			this.#client.on('error', (error) => {
 				this.logger.error(`MQTT error: ${error.message}`)
+				this.stopEventListeners()
 				this.debounceRestart()
 			})
 
 			this.#client.on('close', () => {
 				this.logger.info('Disconnected from MQTT broker')
+				this.stopEventListeners()
 				this.debounceRestart()
 			})
 		} catch (error) {
 			this.logger.error(`Failed to connect to MQTT broker: ${(error as Error).message}`)
+			this.stopEventListeners()
 			this.debounceRestart()
 		}
 	}
@@ -87,41 +92,48 @@ export class MqttService extends ServiceBase {
 			this.#client.end()
 			this.#client = null
 		}
+		this.stopEventListeners()
 	}
 
 	private startEventListeners(): void {
 		// Listen for variable changes
-		this.#serviceApi.on('variables_changed', (variables) => {
-			if (this.#client === null) return
+		this.#serviceApi.on('variables_changed', this.variablesChanged)
+	}
 
-			for (const variable of variables) {
-				let [label, name] = variable.split(':')
+	private stopEventListeners(): void {
+		this.#serviceApi.removeListener('variables_changed', this.variablesChanged)
+	}
 
-				if (label == 'internal' && name.startsWith('custom')) {
-					label = 'custom'
-					name = name.substring(7)
-				}
+	private variablesChanged = (variables: Set<string>): void => {
+		if (this.#client === null) return
 
-				let value = undefined
+		for (const variable of variables) {
+			let [label, name] = variable.split(':')
 
-				if (label === 'custom') {
-					value = this.#serviceApi.getCustomVariableValue(name)?.toString()
-					if (value === undefined) return
-				} else {
-					value = this.#serviceApi.getConnectionVariableValue(label, name)?.toString()
-					if (value === undefined) return
-				}
-
-				const topic = `${this.topic}/variables/${label}/${name}`
-				const message = value
-
-				this.#client.publish(topic, message, (err) => {
-					if (err) {
-						this.logger.error(`Failed to publish MQTT message: ${err.message}`)
-					}
-				})
+			if (label == 'internal' && name.startsWith('custom')) {
+				label = 'custom'
+				name = name.substring(7)
 			}
-		})
+
+			let value = undefined
+
+			if (label === 'custom') {
+				value = this.#serviceApi.getCustomVariableValue(name)?.toString()
+				if (value === undefined) return
+			} else {
+				value = this.#serviceApi.getConnectionVariableValue(label, name)?.toString()
+				if (value === undefined) return
+			}
+
+			const topic = `${this.topic}/variables/${label}/${name}`
+			const message = value
+
+			this.#client.publish(topic, message, (err) => {
+				if (err) {
+					this.logger.error(`Failed to publish MQTT message: ${err.message}`)
+				}
+			})
+		}
 	}
 
 	private handleMessage(topic: string, message: any): void {
