@@ -1,4 +1,4 @@
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
 	InstanceConfig,
 	InstanceVersionUpdatePolicy,
@@ -11,7 +11,7 @@ import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import { DataStoreTableView } from '../Data/StoreBase.js'
 import { cloneDeep } from 'lodash-es'
 
-export interface AddConnectionProps {
+export interface AddInstanceProps {
 	versionId: string | null
 	updatePolicy: InstanceVersionUpdatePolicy
 	disabled: boolean
@@ -20,51 +20,83 @@ export interface AddConnectionProps {
 }
 
 export class InstanceConfigStore {
-	// readonly #logger = LogController.createLogger('Instance/InstanceConfigStore')
+	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
 
 	readonly #dbTable: DataStoreTableView<Record<string, InstanceConfig>>
-	readonly #afterSave: (connectionIds: string[], updateConnectionHost: boolean) => void
+	readonly #afterSave: (instanceIds: string[], updateProcessManager: boolean) => void
 
 	#store: Map<string, InstanceConfig>
 
-	constructor(db: DataDatabase, afterSave: (connectionIds: string[], updateConnectionHost: boolean) => void) {
-		this.#dbTable = db.getTableView('connections')
+	constructor(db: DataDatabase, afterSave: (instanceIds: string[], updateProcessManager: boolean) => void) {
+		this.#dbTable = db.getTableView('connections') // TODO - rename?
 		this.#afterSave = afterSave
 
 		this.#store = new Map(Object.entries(this.#dbTable.all()))
+
+		// Ensure all entries are defined
+		for (const [id, config] of this.#store) {
+			if (!config) this.#store.delete(id)
+		}
+
+		// Ensure all entries have the moduleInstanceType set
+		// TODO - do properly?
+		for (const instance of this.#store.values()) {
+			if (!instance.moduleInstanceType) instance.moduleInstanceType = ModuleInstanceType.Connection
+		}
 	}
 
 	/**
 	 * Write the changes to the database, and perform any post-save hooks
 	 */
-	commitChanges(connectionIds: string[], updateConnectionHost: boolean): void {
-		for (const connectionId of connectionIds) {
-			const entry = this.#store.get(connectionId)
+	commitChanges(instanceIds: string[], updateProcessManager: boolean): void {
+		for (const instanceId of instanceIds) {
+			const entry = this.#store.get(instanceId)
 			if (entry) {
-				this.#dbTable.set(connectionId, entry)
+				this.#dbTable.set(instanceId, entry)
 			} else {
-				this.#dbTable.delete(connectionId)
+				this.#dbTable.delete(instanceId)
 			}
 		}
 
-		this.#afterSave(connectionIds, updateConnectionHost)
+		this.#afterSave(instanceIds, updateProcessManager)
 	}
 
+	/**
+	 * Get all connection IDs
+	 */
+	getAllConnectionIds(): string[] {
+		const ids: string[] = []
+		for (const [id, conf] of this.#store) {
+			if (conf.moduleInstanceType === ModuleInstanceType.Connection) {
+				ids.push(id)
+			}
+		}
+		return ids
+	}
+
+	/**
+	 * Get all instance IDs, regardless of type
+	 */
 	getInstanceIdsForAllTypes(): string[] {
 		return Array.from(this.#store.keys())
 	}
 
-	getIdFromLabel(label: string): string | undefined {
+	getConnectionIdFromLabel(label: string): string | undefined {
 		for (const [id, conf] of this.#store) {
-			if (conf && conf.label === label) {
+			if (conf && conf.moduleInstanceType === ModuleInstanceType.Connection && conf.label === label) {
 				return id
 			}
 		}
 		return undefined
 	}
 
-	getConfigOfTypeForId(connectionId: string, _instanceType: ModuleInstanceType | null): InstanceConfig | undefined {
-		return this.#store.get(connectionId)
+	getConfigOfTypeForId(instanceId: string, instanceType: ModuleInstanceType | null): InstanceConfig | undefined {
+		const config = this.#store.get(instanceId)
+		if (!config) return undefined
+
+		if (instanceType && config.moduleInstanceType !== instanceType) return undefined
+
+		return config
 	}
 
 	/**
@@ -72,10 +104,10 @@ export class InstanceConfigStore {
 	 * Note: this does not persist the changes
 	 */
 	addConnection(
-		moduleType: string,
+		moduleId: string,
 		label: string,
 		product: string | undefined,
-		props: AddConnectionProps
+		props: AddInstanceProps
 	): [id: string, config: InstanceConfig] {
 		// Find the highest rank given to an instance
 		const highestRank =
@@ -92,7 +124,7 @@ export class InstanceConfigStore {
 
 		const newConfig: InstanceConfig = {
 			moduleInstanceType: ModuleInstanceType.Connection,
-			instance_type: moduleType,
+			instance_type: moduleId,
 			moduleVersionId: props.versionId,
 			updatePolicy: props.updatePolicy,
 			sortOrder: props.sortOrder ?? highestRank + 1,
@@ -112,28 +144,42 @@ export class InstanceConfigStore {
 		return [id, newConfig]
 	}
 
-	forgetConnection(id: string): void {
+	/**
+	 * Get all instance configurations
+	 */
+	getAllInstanceConfigs(): Map<string, InstanceConfig> {
+		return this.#store
+	}
+
+	forgetInstance(id: string): void {
 		this.#store.delete(id)
 
 		this.commitChanges([id], true)
 	}
 
-	exportAll(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
-		const obj = Object.fromEntries(this.#store.entries())
-		if (includeSecrets) return obj
+	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
+		const result: Record<string, InstanceConfig | undefined> = {}
 
-		const newObj = cloneDeep(obj)
-		for (const config of Object.values(newObj)) {
-			delete config.secrets
+		for (const [id, config] of this.#store) {
+			if (config.moduleInstanceType === ModuleInstanceType.Connection) {
+				if (includeSecrets) {
+					result[id] = config
+				} else {
+					const newConfig = cloneDeep(config)
+					delete newConfig.secrets
+					result[id] = newConfig
+				}
+			}
 		}
-		return newObj
+
+		return result
 	}
 
-	getPartialClientJson(): Record<string, ClientConnectionConfig> {
+	getPartialClientConnectionsJson(): Record<string, ClientConnectionConfig> {
 		const result: Record<string, ClientConnectionConfig> = {}
 
 		for (const [id, config] of this.#store) {
-			if (!config) continue
+			if (config.moduleInstanceType !== ModuleInstanceType.Connection) continue
 
 			result[id] = {
 				instance_type: config.instance_type,
@@ -152,11 +198,15 @@ export class InstanceConfigStore {
 		return result
 	}
 
-	getModuleVersionsMetrics(): Record<string, Record<string, number>> {
+	getModuleVersionsMetrics(moduleType: ModuleInstanceType): Record<string, Record<string, number>> {
 		const moduleVersionCounts: Record<string, Record<string, number>> = {}
 
 		for (const moduleConfig of this.#store.values()) {
-			if (moduleConfig && moduleConfig.instance_type !== 'bitfocus-companion' && !!moduleConfig.enabled) {
+			if (
+				moduleConfig.moduleInstanceType === moduleType &&
+				moduleConfig.instance_type !== 'bitfocus-companion' &&
+				!!moduleConfig.enabled
+			) {
 				const moduleId = moduleConfig.instance_type
 				const versionId = moduleConfig.moduleVersionId ?? ''
 
@@ -176,10 +226,10 @@ export class InstanceConfigStore {
 	/**
 	 *
 	 */
-	makeLabelUnique(prefix: string, ignoreId?: string): string {
+	makeLabelUnique(moduleType: ModuleInstanceType, prefix: string, ignoreId?: string): string {
 		const knownLabels = new Set()
 		for (const [id, obj] of this.#store) {
-			if (id !== ignoreId && obj && obj.label) {
+			if (id !== ignoreId && obj && obj.label && obj.moduleInstanceType === moduleType) {
 				knownLabels.add(obj.label)
 			}
 		}
@@ -198,7 +248,7 @@ export class InstanceConfigStore {
 
 	moveConnection(collectionId: string | null, connectionId: string, dropIndex: number): boolean {
 		const thisConnection = this.#store.get(connectionId)
-		if (!thisConnection) return false
+		if (!thisConnection || thisConnection.moduleInstanceType !== ModuleInstanceType.Connection) return false
 
 		const changedIds: string[] = []
 
@@ -208,7 +258,8 @@ export class InstanceConfigStore {
 				([id, config]) =>
 					config &&
 					((!config.collectionId && !collectionId) || config.collectionId === collectionId) &&
-					id !== connectionId
+					id !== connectionId &&
+					config.moduleInstanceType === ModuleInstanceType.Connection
 			)
 			.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
 			.map(([id]) => id)
@@ -249,10 +300,12 @@ export class InstanceConfigStore {
 	cleanUnknownCollectionIds(validCollectionIds: Set<string>): void {
 		const changedIds: string[] = []
 
+		// Note: only connections have collections
+
 		// Figure out the first sort order
 		let nextSortOrder = 0
 		for (const config of this.#store.values()) {
-			if (config && !config?.collectionId) {
+			if (config && !config?.collectionId && config.moduleInstanceType === ModuleInstanceType.Connection) {
 				nextSortOrder = Math.max(nextSortOrder, config.sortOrder + 1)
 			}
 		}
@@ -260,7 +313,12 @@ export class InstanceConfigStore {
 		// Validate the collectionIds, and do something sensible with the sort order
 		// Future: maybe this could try to preserve the order in some way?
 		for (const [id, config] of this.#store) {
-			if (config && config.collectionId && !validCollectionIds.has(config.collectionId)) {
+			if (
+				config &&
+				config.moduleInstanceType === ModuleInstanceType.Connection &&
+				config.collectionId &&
+				!validCollectionIds.has(config.collectionId)
+			) {
 				config.collectionId = undefined
 				config.sortOrder = nextSortOrder++
 				changedIds.push(id)
@@ -270,22 +328,27 @@ export class InstanceConfigStore {
 		this.commitChanges(changedIds, true)
 	}
 
-	findActiveUsagesOfModule(moduleId: string, versionId?: string): { connectionIds: string[]; labels: string[] } {
-		const connectionIds: string[] = []
+	findActiveUsagesOfModule(
+		moduleType: ModuleInstanceType,
+		moduleId: string,
+		versionId?: string
+	): { instanceIds: string[]; labels: string[] } {
+		const instanceIds: string[] = []
 		const labels: string[] = []
 
 		for (const [id, config] of this.#store) {
 			if (
 				config &&
+				config.moduleInstanceType === moduleType &&
 				config.instance_type === moduleId &&
 				config.enabled &&
 				(versionId === undefined || config.moduleVersionId === versionId)
 			) {
-				connectionIds.push(id)
+				instanceIds.push(id)
 				labels.push(config.label)
 			}
 		}
 
-		return { connectionIds, labels }
+		return { instanceIds, labels }
 	}
 }

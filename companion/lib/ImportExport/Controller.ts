@@ -63,6 +63,7 @@ import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -693,7 +694,7 @@ export class ImportExportController {
 		}
 
 		if (!config || config.connections) {
-			await this.#instancesController.deleteAllInstances(true)
+			await this.#instancesController.deleteAllConnections(true)
 		}
 
 		if (!config || config.surfaces) {
@@ -739,7 +740,11 @@ export class ImportExportController {
 
 			// See if there is an existing instance with the same label and type
 			const existingId = this.#instancesController.getIdForLabel(obj.label)
-			if (existingId && this.#instancesController.getInstanceConfig(existingId)?.instance_type === obj.instance_type) {
+			if (
+				existingId &&
+				this.#instancesController.getInstanceConfigOfType(existingId, ModuleInstanceType.Connection)?.instance_type ===
+					obj.instance_type
+			) {
 				remap[oldId] = existingId
 			} else {
 				remap[oldId] = undefined // Create a new instance
@@ -762,7 +767,7 @@ export class ImportExportController {
 				if (!obj || !obj.label) continue
 
 				const remapId = instanceRemapping[oldId]
-				const remapLabel = remapId ? this.#instancesController.getLabelForInstance(remapId) : undefined
+				const remapLabel = remapId ? this.#instancesController.getLabelForConnection(remapId) : undefined
 				if (remapId === '_ignore') {
 					// Ignore
 					instanceIdMap[oldId] = { id: '_ignore', label: 'Ignore' }
@@ -776,7 +781,7 @@ export class ImportExportController {
 					}
 				} else {
 					// Create a new instance
-					const [newId, newConfig] = this.#instancesController.addInstanceWithLabel(
+					const [newId, newConfig] = this.#instancesController.addConnectionWithLabel(
 						{ type: obj.instance_type },
 						obj.label,
 						{
@@ -788,7 +793,7 @@ export class ImportExportController {
 						}
 					)
 					if (newId && newConfig) {
-						this.#instancesController.setInstanceLabelAndConfig(newId, {
+						this.#instancesController.setConnectionLabelAndConfig(newId, {
 							label: null,
 							config: 'config' in obj ? obj.config : null,
 							secrets: 'secrets' in obj ? obj.secrets : null,
@@ -797,7 +802,7 @@ export class ImportExportController {
 						})
 
 						if (!('enabled' in obj) || obj.enabled !== false) {
-							this.#instancesController.enableDisableInstance(newId, true)
+							this.#instancesController.enableDisableConnection(newId, true)
 						}
 
 						instanceIdMap[oldId] = {

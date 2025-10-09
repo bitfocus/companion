@@ -29,6 +29,7 @@ import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.j
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
 import LogController from '../Log/Controller.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('InternalInstance')
@@ -114,9 +115,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			},
 		]
 
-		const connectionIds = this.#instanceController.getAllInstanceIds()
+		const connectionIds = this.#instanceController.getAllConnectionIds()
 		for (const connectionId of connectionIds) {
-			const label = this.#instanceController.getLabelForInstance(connectionId)
+			const label = this.#instanceController.getLabelForConnection(connectionId)
 			if (label) {
 				variables.push({
 					label: `Connection Status: ${label}`,
@@ -310,12 +311,12 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		if (action.definitionId === 'instance_control') {
 			let newState = action.rawOptions.enable == 'true'
 			if (action.rawOptions.enable == 'toggle') {
-				const curState = this.#instanceController.getConnectionStatus(action.rawOptions.instance_id)
+				const curState = this.#instanceController.getInstanceStatus(action.rawOptions.instance_id)
 
 				newState = !curState?.category
 			}
 
-			this.#instanceController.enableDisableInstance(action.rawOptions.instance_id, newState)
+			this.#instanceController.enableDisableConnection(action.rawOptions.instance_id, newState)
 			return true
 		} else if (action.definitionId === 'connection_collection_enabled') {
 			let newState: boolean | 'toggle' = action.rawOptions.enable == 'true'
@@ -351,7 +352,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				}
 			}
 
-			const cur_instance = this.#instanceController.getConnectionStatus(feedback.options.instance_id)
+			const cur_instance = this.#instanceController.getInstanceStatus(feedback.options.instance_id)
 			if (cur_instance !== undefined) {
 				switch (cur_instance.category) {
 					case 'error':
@@ -401,9 +402,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			instance_oks: this.#instancesOk,
 		}
 
-		const connectionIds = this.#instanceController.getAllInstanceIds()
+		const connectionIds = this.#instanceController.getAllConnectionIds()
 		for (const connectionId of connectionIds) {
-			const config = this.#instanceController.getInstanceConfig(connectionId)
+			const config = this.#instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
 			if (config) {
 				const status = this.#instanceStatuses[connectionId]
 
@@ -425,11 +426,11 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			let numWarn = 0
 			let numOk = 0
 
-			const connectionIds = this.#instanceController.getAllInstanceIds()
+			const connectionIds = this.#instanceController.getAllConnectionIds()
 			for (const connectionId of connectionIds) {
 				const status = instanceStatuses[connectionId]
 
-				const config = this.#instanceController.getInstanceConfig(connectionId)
+				const config = this.#instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
 				if (!config) continue
 
 				numTotal++

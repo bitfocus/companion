@@ -43,7 +43,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				const connectionInfo = instanceController.addInstanceWithLabel(input.module, input.label, {
+				const connectionInfo = instanceController.addConnectionWithLabel(input.module, input.label, {
 					versionId: input.versionId,
 					updatePolicy: InstanceVersionUpdatePolicy.Stable,
 					disabled: false,
@@ -58,7 +58,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(async ({ input }) => {
-				await instanceController.deleteInstance(input.connectionId)
+				await instanceController.removeConnection(input.connectionId)
 			}),
 
 		reorder: publicProcedure
@@ -81,7 +81,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				instanceController.enableDisableInstance(input.connectionId, input.enabled)
+				instanceController.enableDisableConnection(input.connectionId, input.enabled)
 			}),
 
 		edit: publicProcedure
@@ -139,7 +139,7 @@ export function createConnectionsTrpcRouter(
 					return 'invalid label'
 				}
 
-				instanceController.setInstanceLabelAndConfig(input.connectionId, {
+				instanceController.setConnectionLabelAndConfig(input.connectionId, {
 					label: input.label,
 					config: input.config,
 					secrets: input.secrets,
@@ -176,7 +176,7 @@ export function createConnectionsTrpcRouter(
 
 				// TODO - refactor/optimise/tidy this
 
-				instanceController.setInstanceLabelAndConfig(input.connectionId, {
+				instanceController.setConnectionLabelAndConfig(input.connectionId, {
 					label: input.label,
 					config: null,
 					secrets: null,

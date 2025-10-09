@@ -15,6 +15,7 @@ import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { EntityModelType, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface ActionRecorderEvents {
 	sessions_changed: [sessionIds: string[]]
@@ -402,7 +403,10 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			const session = this.#currentSession
 
 			if (session.connectionIds.includes(connectionId)) {
-				const currentUpgradeIndex = this.#registry.instance.getInstanceConfig(connectionId)?.lastUpgradeIndex
+				const currentUpgradeIndex = this.#registry.instance.getInstanceConfigOfType(
+					connectionId,
+					ModuleInstanceType.Connection
+				)?.lastUpgradeIndex
 
 				const newAction: RecordActionEntityModel = {
 					type: EntityModelType.Action,
@@ -502,7 +506,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	 */
 	setSelectedConnectionIds(connectionIds0: string[]): void {
 		if (!Array.isArray(connectionIds0)) throw new Error('Expected array of connection ids')
-		const allValidIds = new Set(this.#registry.instance.getAllInstanceIds())
+		const allValidIds = new Set(this.#registry.instance.getAllConnectionIds())
 		const connectionIds = connectionIds0.filter((id) => allValidIds.has(id))
 
 		this.#currentSession.connectionIds = connectionIds
