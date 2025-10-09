@@ -429,7 +429,7 @@ export class Registry {
 			}
 
 			try {
-				await this.instance.destroyAllInstances()
+				await this.instance.shutdownAllInstances()
 			} catch (_e) {
 				//do nothing
 			}

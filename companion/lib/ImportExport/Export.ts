@@ -413,7 +413,7 @@ export class ExportController {
 
 		referencedConnectionIds.delete('internal') // Ignore the internal module
 		for (const connectionId of referencedConnectionIds) {
-			instancesExport[connectionId] = this.#instancesController.exportInstance(
+			instancesExport[connectionId] = this.#instancesController.exportConnection(
 				connectionId,
 				options.minimalExport,
 				true,
@@ -425,7 +425,7 @@ export class ExportController {
 		for (const label of referencedConnectionLabels) {
 			const connectionId = this.#instancesController.getIdForLabel(label)
 			if (connectionId) {
-				instancesExport[connectionId] = this.#instancesController.exportInstance(
+				instancesExport[connectionId] = this.#instancesController.exportConnection(
 					connectionId,
 					options.minimalExport,
 					true,
@@ -544,7 +544,7 @@ export class ExportController {
 		}
 
 		if (!config || !isFalsey(config.connections)) {
-			exp.instances = this.#instancesController.exportAll(!config || !isFalsey(config.includeSecrets))
+			exp.instances = this.#instancesController.exportAllConnections(!config || !isFalsey(config.includeSecrets))
 			exp.connectionCollections = this.#instancesController.collections.collectionData
 		} else {
 			exp.instances = this.#generateReferencedConnectionConfigs(referencedConnectionIds, referencedConnectionLabels, {

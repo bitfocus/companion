@@ -148,7 +148,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		// Figure out the combined status
 		let status: ButtonStatus = 'good'
 		for (const connectionId of connectionIds) {
-			const connectionStatus = this.deps.instance.getConnectionStatus(connectionId)
+			const connectionStatus = this.deps.instance.getInstanceStatus(connectionId)
 			if (connectionStatus) {
 				// TODO - can this be made simpler
 				switch (connectionStatus.category) {

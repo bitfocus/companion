@@ -26,7 +26,7 @@ import {
 } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
-import { AddConnectionProps, InstanceConfigStore } from './ConfigStore.js'
+import { AddInstanceProps, InstanceConfigStore } from './ConfigStore.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
@@ -39,10 +39,10 @@ import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
 import { InstanceCollections } from './Collections.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
 import { Complete } from '@companion-module/base/dist/util.js'
 import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import z from 'zod'
 
 type CreateConnectionData = {
 	type: string
@@ -100,19 +100,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController = variables
 		this.#controlsController = controls
 
-		this.#configStore = new InstanceConfigStore(db, (connectionIds, updateConnectionHost) => {
+		this.#configStore = new InstanceConfigStore(db, (instanceIds, updateProcessManager) => {
 			// Ensure any changes to collectionId update the enabled state
-			if (updateConnectionHost) {
-				for (const connectionId of connectionIds) {
+			if (updateProcessManager) {
+				for (const instanceId of instanceIds) {
 					try {
-						this.#queueUpdateConnectionState(connectionId, true, false)
+						this.#queueUpdateInstanceState(instanceId, true, false)
 					} catch (e) {
-						this.#logger.warn(`Error updating connection state for ${connectionId}: `, e)
+						this.#logger.warn(`Error updating instance state for ${instanceId}: `, e)
 					}
 				}
 			}
 
-			this.#broadcastConnectionChanges(connectionIds)
+			this.#broadcastConnectionChanges(instanceIds)
 		})
 		this.#collectionsController = new InstanceCollections(db, this.#configStore, () => {
 			this.emit('connection_collections_enabled')
@@ -134,7 +134,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
 				setInstanceConfig: (connectionId, config, secrets, upgradeIndex) => {
-					this.setInstanceLabelAndConfig(
+					this.setConnectionLabelAndConfig(
 						connectionId,
 						{
 							label: null,
@@ -178,10 +178,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		// Prepare for clients already
-		this.#broadcastConnectionChanges(this.#configStore.getInstanceIdsForAllTypes())
+		this.#broadcastConnectionChanges(this.#configStore.getAllConnectionIds())
 	}
 
-	getAllInstanceIds(): string[] {
+	getAllConnectionIds(): string[] {
+		return this.#configStore.getAllConnectionIds()
+	}
+
+	getInstanceIdsForAllTypes(): string[] {
 		return this.#configStore.getInstanceIdsForAllTypes()
 	}
 
@@ -193,7 +197,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#logger.info('Power: Resuming')
 
 			for (const id of this.#configStore.getInstanceIdsForAllTypes()) {
-				this.#queueUpdateConnectionState(id)
+				this.#queueUpdateInstanceState(id)
 			}
 		} else if (event == 'suspend') {
 			this.#logger.info('Power: Suspending')
@@ -213,38 +217,38 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		await this.modules.initModules(extraModulePath)
 
-		const connectionIds = this.#configStore.getInstanceIdsForAllTypes()
-		this.#logger.silly('instance_init', connectionIds)
-		for (const id of connectionIds) {
-			this.#queueUpdateConnectionState(id)
+		const instanceIds = this.#configStore.getInstanceIdsForAllTypes()
+		this.#logger.silly('instance_init', instanceIds)
+		for (const id of instanceIds) {
+			this.#queueUpdateInstanceState(id)
 		}
 
 		this.emit('connection_added')
 	}
 
-	async reloadUsesOfModule(_moduleType: ModuleInstanceType, moduleId: string, versionId: string): Promise<void> {
+	async reloadUsesOfModule(moduleType: ModuleInstanceType, moduleId: string, versionId: string): Promise<void> {
 		// restart usages of this module
-		const { connectionIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleId, versionId)
-		for (const id of connectionIds) {
+		const { instanceIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleType, moduleId, versionId)
+		for (const id of instanceIds) {
 			// Restart it
-			this.#queueUpdateConnectionState(id, false, true)
+			this.#queueUpdateInstanceState(id, false, true)
 		}
 
-		this.#logger.info(`Reloading ${labels.length} connections: ${labels.join(', ')}`)
+		this.#logger.info(`Reloading ${labels.length} instances: ${labels.join(', ')}`)
 	}
 
 	findActiveUsagesOfModule(
-		_moduleType: ModuleInstanceType,
+		moduleType: ModuleInstanceType,
 		moduleId: string,
 		versionId?: string
-	): { connectionIds: string[]; labels: string[] } {
-		return this.#configStore.findActiveUsagesOfModule(moduleId, versionId)
+	): { instanceIds: string[]; labels: string[] } {
+		return this.#configStore.findActiveUsagesOfModule(moduleType, moduleId, versionId)
 	}
 
 	/**
 	 *
 	 */
-	setInstanceLabelAndConfig(
+	setConnectionLabelAndConfig(
 		id: string,
 		values: {
 			label: string | null
@@ -325,10 +329,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	/**
 	 * Add a new instance of a module with a predetermined label
 	 */
-	addInstanceWithLabel(
+	addConnectionWithLabel(
 		data: CreateConnectionData,
 		labelBase: string,
-		props: AddConnectionProps
+		props: AddInstanceProps
 	): [id: string, config: InstanceConfig] {
 		const moduleId = data.type
 		const product = data.product
@@ -341,7 +345,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// Ensure the requested module and version is installed
 		this.userModulesManager.ensureModuleIsInstalled(ModuleInstanceType.Connection, moduleId, props.versionId)
 
-		const label = this.#configStore.makeLabelUnique(labelBase)
+		const label = this.#configStore.makeLabelUnique(ModuleInstanceType.Connection, labelBase)
 
 		if (this.getIdForLabel(label)) throw new Error(`Label "${label}" already in use`)
 
@@ -349,7 +353,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const [id, config] = this.#configStore.addConnection(moduleId, label, product, props)
 
-		this.#queueUpdateConnectionState(id, true)
+		this.#queueUpdateInstanceState(id, true)
 
 		this.#logger.silly('instance_add', id)
 		this.emit('connection_added', id)
@@ -357,15 +361,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return [id, config]
 	}
 
-	getLabelForInstance(id: string): string | undefined {
+	getLabelForConnection(id: string): string | undefined {
 		return this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)?.label
 	}
 
 	getIdForLabel(label: string): string | undefined {
-		return this.#configStore.getIdFromLabel(label)
+		return this.#configStore.getConnectionIdFromLabel(label)
 	}
 
-	getManifestForInstance(id: string): ModuleManifest | undefined {
+	getManifestForConnection(id: string): ModuleManifest | undefined {
 		const config = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (!config) return undefined
 
@@ -375,10 +379,12 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			config.moduleVersionId
 		)
 
+		if (moduleManifest?.type !== ModuleInstanceType.Connection) return undefined
+
 		return moduleManifest?.manifest
 	}
 
-	enableDisableInstance(id: string, state: boolean): void {
+	enableDisableConnection(id: string, state: boolean): void {
 		const connectionConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (connectionConfig) {
 			const label = connectionConfig.label
@@ -388,7 +394,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 				this.#configStore.commitChanges([id], false)
 
-				this.#queueUpdateConnectionState(id, false, true)
+				this.#queueUpdateInstanceState(id, false, true)
 			} else {
 				if (state === true) {
 					this.#logger.warn(`Attempting to enable connection "${label}" that is already enabled`)
@@ -399,38 +405,38 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 	}
 
-	async deleteInstance(id: string): Promise<void> {
-		const config = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
+	async removeConnection(connectionId: string): Promise<void> {
+		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!config) {
-			this.#logger.warn(`Can't delete connection "${id}" which does not exist!`)
+			this.#logger.warn(`Can't delete connection "${connectionId}" which does not exist!`)
 			return
 		}
 
 		const label = config.label
-		this.#logger.info(`Deleting instance: ${label ?? id}`)
+		this.#logger.info(`Deleting instance: ${label ?? connectionId}`)
 
 		try {
-			this.processManager.queueUpdateInstanceState(id, null, true)
+			this.processManager.queueUpdateInstanceState(connectionId, null, true)
 		} catch (e) {
-			this.#logger.debug(`Error while deleting instance "${label ?? id}": `, e)
+			this.#logger.debug(`Error while deleting instance "${label ?? connectionId}": `, e)
 		}
 
-		this.status.forgetInstanceStatus(id)
-		this.#configStore.forgetConnection(id)
+		this.status.forgetInstanceStatus(connectionId)
+		this.#configStore.forgetInstance(connectionId)
 
-		this.emit('connection_deleted', id)
+		this.emit('connection_deleted', connectionId)
 
 		// forward cleanup elsewhere
-		this.definitions.forgetConnection(id)
-		this.#variablesController.values.forgetConnection(id, label)
-		this.#variablesController.definitions.forgetConnection(id, label)
-		this.#controlsController.forgetConnection(id)
+		this.definitions.forgetConnection(connectionId)
+		this.#variablesController.values.forgetConnection(connectionId, label)
+		this.#variablesController.definitions.forgetConnection(connectionId, label)
+		this.#controlsController.forgetConnection(connectionId)
 	}
 
-	async deleteAllInstances(deleteCollections: boolean): Promise<void> {
+	async deleteAllConnections(deleteCollections: boolean): Promise<void> {
 		const ps: Promise<void>[] = []
-		for (const instanceId of this.#configStore.getInstanceIdsForAllTypes()) {
-			ps.push(this.deleteInstance(instanceId))
+		for (const connectionId of this.#configStore.getAllConnectionIds()) {
+			ps.push(this.removeConnection(connectionId))
 		}
 
 		if (deleteCollections) {
@@ -444,13 +450,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 * Get information for the metrics system about the current connections
 	 */
 	getConnectionsMetrics(): Record<string, Record<string, number>> {
-		return this.#configStore.getModuleVersionsMetrics()
+		return this.#configStore.getModuleVersionsMetrics(ModuleInstanceType.Connection)
 	}
 
 	/**
 	 * Stop/destroy all running instances
 	 */
-	async destroyAllInstances(): Promise<void> {
+	async shutdownAllInstances(): Promise<void> {
 		return this.processManager.queueStopAllInstances()
 	}
 
@@ -491,13 +497,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	/**
 	 *
 	 */
-	exportInstance(
-		instanceId: string,
+	exportConnection(
+		connectionId: string,
 		minimal = false,
 		clone = true,
 		includeSecrets = true
 	): ExportInstanceFullv6 | ExportInstanceMinimalv6 | undefined {
-		const rawObj = this.#configStore.getConfigOfTypeForId(instanceId, null)
+		const rawObj = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!rawObj) return undefined
 
 		const obj = minimal
@@ -519,29 +525,29 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return clone ? cloneDeep(obj) : obj
 	}
 
-	exportAll(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
-		return this.#configStore.exportAll(includeSecrets)
+	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
+		return this.#configStore.exportAllConnections(includeSecrets)
 	}
 
 	/**
 	 * Get the status of an instance
 	 */
-	getConnectionStatus(connectionId: string): InstanceStatusEntry | undefined {
+	getInstanceStatus(connectionId: string): InstanceStatusEntry | undefined {
 		return this.status.getInstanceStatus(connectionId)
 	}
 
 	/**
 	 * Get the config object of an instance
 	 */
-	getInstanceConfig(connectionId: string): InstanceConfig | undefined {
-		return this.#configStore.getConfigOfTypeForId(connectionId, null)
+	getInstanceConfigOfType(connectionId: string, instanceType: ModuleInstanceType | null): InstanceConfig | undefined {
+		return this.#configStore.getConfigOfTypeForId(connectionId, instanceType)
 	}
 
 	#queueUpdateAllConnectionState(): void {
 		// Queue an update of all connections
-		for (const id of this.#configStore.getInstanceIdsForAllTypes()) {
+		for (const id of this.#configStore.getAllConnectionIds()) {
 			try {
-				this.#queueUpdateConnectionState(id)
+				this.#queueUpdateInstanceState(id)
 			} catch (e) {
 				this.#logger.error(`Error updating connection state for ${id}: `, e)
 			}
@@ -551,7 +557,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	/**
 	 * Start an instance running
 	 */
-	#queueUpdateConnectionState(id: string, forceCommitChanges = false, forceRestart = false): void {
+	#queueUpdateInstanceState(id: string, forceCommitChanges = false, forceRestart = false): void {
 		const config = this.#configStore.getConfigOfTypeForId(id, null)
 		if (!config) throw new Error('Cannot activate unknown module')
 
@@ -560,29 +566,31 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// Seamless fixup old configs
 		if (!config.moduleVersionId) {
 			config.moduleVersionId = this.modules.getLatestVersionOfModule(
-				ModuleInstanceType.Connection,
+				config.moduleInstanceType,
 				config.instance_type,
 				true
 			)
 			changed = !!config.moduleVersionId
 		}
 
-		// Ensure that the label is valid according to the new rules
-		// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
-		const safeLabel = makeLabelSafe(config.label)
-		if (safeLabel !== config.label) {
-			this.setInstanceLabelAndConfig(
-				id,
-				{
-					label: safeLabel,
-					config: null,
-					secrets: null,
-					updatePolicy: null,
-					upgradeIndex: null,
-				},
-				{ skipNotifyConnection: true }
-			)
-			changed = true
+		if (config.moduleInstanceType === ModuleInstanceType.Connection) {
+			// Ensure that the label is valid according to the new rules
+			// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
+			const safeLabel = makeLabelSafe(config.label)
+			if (safeLabel !== config.label) {
+				this.setConnectionLabelAndConfig(
+					id,
+					{
+						label: safeLabel,
+						config: null,
+						secrets: null,
+						updatePolicy: null,
+						upgradeIndex: null,
+					},
+					{ skipNotifyConnection: true }
+				)
+				changed = true
+			}
 		}
 
 		if (changed || forceCommitChanges) {
@@ -590,14 +598,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#configStore.commitChanges([id], false)
 		}
 
-		const enableConnection = config.enabled !== false && this.collections.isCollectionEnabled(config.collectionId)
+		let enableInstance = config.enabled !== false
+		if (
+			config.moduleInstanceType === ModuleInstanceType.Connection &&
+			!this.collections.isCollectionEnabled(config.collectionId)
+		)
+			enableInstance = false
 
 		this.processManager.queueUpdateInstanceState(
 			id,
-			enableConnection
+			enableInstance
 				? {
-						moduleType: ModuleInstanceType.Connection,
 						label: config.label,
+						moduleType: config.moduleInstanceType,
 						moduleId: config.instance_type,
 						moduleVersionId: config.moduleVersionId,
 					}
@@ -609,6 +622,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	createTrpcRouter() {
 		const self = this
 		const selfEvents: EventEmitter<InstanceControllerEvents> = this
+
 		return router({
 			collections: this.collections.createTrpcRouter(),
 			definitions: this.definitions.createTrpcRouter(),
@@ -623,20 +637,20 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				this,
 				this,
 				this.#configStore,
-				this.#queueUpdateConnectionState.bind(this)
+				this.#queueUpdateInstanceState.bind(this)
 			),
 
 			debugLog: publicProcedure
 				.input(
 					z.object({
-						connectionId: z.string(),
+						instanceId: z.string(),
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
-					if (!self.#configStore.getConfigOfTypeForId(input.connectionId, null))
-						throw new Error(`Unknown connectionId ${input.connectionId}`)
+					if (!self.#configStore.getConfigOfTypeForId(input.instanceId, null))
+						throw new Error(`Unknown instanceId ${input.instanceId}`)
 
-					const lines = toIterable(selfEvents, `debugLog:${input.connectionId}`, signal)
+					const lines = toIterable(selfEvents, `debugLog:${input.instanceId}`, signal)
 
 					for await (const [level, message] of lines) {
 						yield { level, message }
@@ -648,7 +662,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	getConnectionClientJson(allowCached: boolean): Record<string, ClientConnectionConfig> {
 		if (allowCached && this.#lastClientJson) return this.#lastClientJson
 
-		const result = this.#configStore.getPartialClientJson()
+		const result = this.#configStore.getPartialClientConnectionsJson()
 
 		for (const [id, config] of Object.entries(result)) {
 			const instance = this.processManager.getConnectionChild(id, true)

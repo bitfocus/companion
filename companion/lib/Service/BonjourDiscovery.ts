@@ -140,7 +140,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 			return existingSession
 		}
 
-		const manifest = this.#instanceController.getManifestForInstance(connectionId)
+		const manifest = this.#instanceController.getManifestForConnection(connectionId)
 		let bonjourQueries = manifest?.bonjourQueries?.[queryId]
 		if (!bonjourQueries) throw new Error('Missing bonjour query')
 

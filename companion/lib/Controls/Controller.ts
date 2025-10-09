@@ -712,7 +712,7 @@ export class ControlsController {
 	 * @access public
 	 */
 	verifyConnectionIds(): void {
-		const knownConnectionIds = new Set(this.#registry.instance.getAllInstanceIds())
+		const knownConnectionIds = new Set(this.#registry.instance.getAllConnectionIds())
 		knownConnectionIds.add('internal')
 
 		for (const control of this.#controls.values()) {

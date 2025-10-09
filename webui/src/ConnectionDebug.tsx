@@ -51,7 +51,7 @@ export function ConnectionDebug(): React.JSX.Element {
 	useSubscription(
 		trpc.instances.debugLog.subscriptionOptions(
 			{
-				connectionId,
+				instanceId: connectionId,
 			},
 			{
 				enabled: !!connectionId,
