@@ -9,7 +9,7 @@
  * this program.
  */
 
-import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForVisitor,

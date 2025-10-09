@@ -15,7 +15,7 @@ import { isEqual } from 'lodash-es'
 import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,

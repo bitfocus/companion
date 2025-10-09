@@ -19,7 +19,7 @@ import {
 import {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
-	ModuleHostForEntity,
+	ProcessManagerForEntity,
 } from '../../../lib/Controls/Entities/Types.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
@@ -28,8 +28,8 @@ import { mock } from 'vitest-mock-extended'
 
 function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
 	const getEntityDefinition = vi.fn<InstanceDefinitionsForEntity['getEntityDefinition']>()
-	const connectionEntityUpdate = vi.fn<ModuleHostForEntity['connectionEntityUpdate']>(async () => false)
-	const connectionEntityDelete = vi.fn<ModuleHostForEntity['connectionEntityDelete']>(async () => false)
+	const connectionEntityUpdate = vi.fn<ProcessManagerForEntity['connectionEntityUpdate']>(async () => false)
+	const connectionEntityDelete = vi.fn<ProcessManagerForEntity['connectionEntityDelete']>(async () => false)
 	const internalEntityUpdate = vi.fn<InternalControllerForEntity['entityUpdate']>()
 	const internalEntityUpgrade = vi.fn<InternalControllerForEntity['entityUpgrade']>()
 	const internalEntityDelete = vi.fn<InternalControllerForEntity['entityDelete']>()
@@ -37,7 +37,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 	const instanceDefinitions: InstanceDefinitionsForEntity = {
 		getEntityDefinition,
 	}
-	const moduleHost: ModuleHostForEntity = {
+	const processManager: ProcessManagerForEntity = {
 		connectionEntityUpdate,
 		connectionEntityDelete,
 		connectionEntityLearnOptions: null as any,
@@ -52,7 +52,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 	const list = new ControlEntityList(
 		instanceDefinitions,
 		internalController,
-		moduleHost,
+		processManager,
 		controlId,
 		ownerId ?? null,
 		listId ?? {
@@ -71,7 +71,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 	const newAction = new ControlEntityInstance(
 		instanceDefinitions,
 		internalController,
-		moduleHost,
+		processManager,
 		controlId,
 		newActionModel,
 		false
@@ -90,7 +90,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		internalEntityDelete,
 		instanceDefinitions,
 		internalController,
-		moduleHost,
+		processManager,
 		newActionModel,
 		newAction,
 	}

@@ -6,7 +6,7 @@ import type {
 	CompanionOptionValues,
 	CompanionVariableValue,
 } from '@companion-module/base'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'

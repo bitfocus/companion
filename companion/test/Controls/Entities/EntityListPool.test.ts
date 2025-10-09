@@ -7,7 +7,7 @@ describe('EntityListPool', () => {
 		return {
 			instanceDefinitions: null as any,
 			internalModule: null as any,
-			moduleHost: null as any,
+			processManager: null as any,
 			controlId,
 			commitChange: vi.fn(),
 			triggerRedraw: vi.fn(),

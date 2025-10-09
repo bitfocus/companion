@@ -290,7 +290,7 @@ export class Registry {
 			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
 			controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
 
-			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
+			this.graphics.on('resubscribeFeedbacks', () => this.instance.processManager.resubscribeAllFeedbacks())
 			this.graphics.on('presetDrawn', (controlId, render) => controlEvents.emit('presetDrawn', controlId, render))
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
@@ -315,7 +315,7 @@ export class Registry {
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
 				this.internalModule.onVariablesChanged(all_changed_variables_set, null)
 				this.controls.onVariablesChanged(all_changed_variables_set, null)
-				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
+				this.instance.processManager.onVariablesChanged(all_changed_variables_set)
 				this.preview.onVariablesChanged(all_changed_variables_set, null)
 				this.surfaces.onVariablesChanged(all_changed_variables_set)
 			})

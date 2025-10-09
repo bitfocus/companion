@@ -16,7 +16,7 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import type { VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
 

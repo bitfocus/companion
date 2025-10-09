@@ -1,5 +1,5 @@
 import type { Registry } from '../Registry.js'
-import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
@@ -38,7 +38,7 @@ export class ActionRunner {
 		if (action.connectionId === 'internal') {
 			await this.#registry.internalModule.executeAction(action, extras)
 		} else {
-			const instance = this.#registry.instance.moduleHost.getChild(action.connectionId)
+			const instance = this.#registry.instance.processManager.getConnectionChild(action.connectionId)
 			if (instance) {
 				const entityModel = action.asEntityModel(false)
 				if (entityModel.type !== EntityModelType.Action)

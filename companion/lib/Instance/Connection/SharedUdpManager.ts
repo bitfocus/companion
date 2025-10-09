@@ -1,6 +1,6 @@
 import { Socket, createSocket } from 'dgram'
 import { nanoid } from 'nanoid'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { Logger } from '../../Log/Controller.js'
 
 /**
  * Class providing 'shared' udp sockets for modules.

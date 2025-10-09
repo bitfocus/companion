@@ -2,7 +2,7 @@ import LogController, { Logger } from '../Log/Controller.js'
 import PQueue from 'p-queue'
 import { nanoid } from 'nanoid'
 import path from 'path'
-import { InstanceModuleWrapperDependencies, SocketEventsHandler } from './Wrapper.js'
+import { ConnectionChildHandlerDependencies, ConnectionChildHandler } from './Connection/ChildHandler.js'
 import fs from 'fs-extra'
 import ejson from 'ejson'
 import os from 'os'
@@ -16,7 +16,8 @@ import { CompanionOptionValues } from '@companion-module/base'
 import { Serializable } from 'child_process'
 import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { ConnectionConfig, ModuleInstanceType } from '@companion-app/shared/Model/Connections.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 const require = createRequire(import.meta.url)
 
@@ -36,7 +37,8 @@ function sleepStrategy(i: number): number {
 }
 
 interface ModuleChild {
-	connectionId: string
+	moduleType: ModuleInstanceType
+	instanceId: string
 	logger: Logger
 	restartCount: number
 	isReady: boolean
@@ -44,35 +46,43 @@ interface ModuleChild {
 	lastLabel: string
 
 	monitor?: RespawnMonitor
-	handler?: SocketEventsHandler
+	handler?: ChildProcessHandlerBase
 	lifeCycleQueue: PQueue
 	authToken?: string
 	crashed?: NodeJS.Timeout
-	skipApiVersionCheck?: boolean
+	cleanupStopped?: () => void
 }
 
 interface ModuleChildTargetState {
 	label: string
+	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleVersionId: string | null
 }
 
-export class ModuleHost {
-	readonly #logger = LogController.createLogger('Instance/ModuleHost')
+export interface ChildProcessHandlerBase {
+	init(config: ConnectionConfig): Promise<void>
 
-	readonly #deps: InstanceModuleWrapperDependencies
+	destroy(): Promise<void>
+	cleanup(): void
+}
+
+export class InstanceProcessManager {
+	readonly #logger = LogController.createLogger('Instance/ProcessManager')
+
+	readonly #deps: ConnectionChildHandlerDependencies
 	readonly #modules: InstanceModules
 	readonly #InstanceConfigStore: InstanceConfigStore
 
 	/**
-	 * Queue for starting connections, to limit how many can be starting concurrently
+	 * Queue for starting instances, to limit how many can be starting concurrently
 	 */
 	readonly #startQueue: PQueue
 
 	#children: Map<string, ModuleChild>
 
 	constructor(
-		deps: InstanceModuleWrapperDependencies,
+		deps: ConnectionChildHandlerDependencies,
 		modules: InstanceModules,
 		InstanceConfigStore: InstanceConfigStore
 	) {
@@ -89,9 +99,14 @@ export class ModuleHost {
 	/**
 	 * Bind events/initialise a connected child process
 	 */
-	#listenToModuleSocket(child: ModuleChild, startupCompleted: () => void, startupFailed: (err: Error) => void): void {
+	#listenToModuleSocket(
+		child: ModuleChild,
+		apiVersion: string,
+		startupCompleted: () => void,
+		startupFailed: (err: Error) => void
+	): void {
 		const forceRestart = () => {
-			// Force restart the connection, as it failed to initialise and will be broken
+			// Force restart the instance, as it failed to initialise and will be broken
 			child.restartCount++
 
 			child.monitor?.off('exit', forceRestart)
@@ -104,7 +119,7 @@ export class ModuleHost {
 			if (!child.crashed && child.targetState) {
 				child.crashed = setTimeout(() => {
 					// Restart after a short sleep
-					this.queueUpdateConnectionState(child.connectionId, child.targetState, true)
+					this.queueUpdateInstanceState(child.instanceId, child.targetState, true)
 				}, sleepDuration)
 			}
 
@@ -117,21 +132,10 @@ export class ModuleHost {
 		const initHandler = (msg0: Serializable): void => {
 			const msg = msg0 as Record<string, any>
 			if (msg.direction === 'call' && msg.name === 'register' && msg.callbackId && msg.payload) {
-				const { apiVersion, connectionId, verificationToken } = ejson.parse(msg.payload)
-				if (!child.skipApiVersionCheck && !isModuleApiVersionCompatible(apiVersion)) {
-					this.#logger.debug(`Got register for unsupported api version "${apiVersion}" connectionId: "${connectionId}"`)
-					this.#deps.debugLogLine(
-						child.connectionId,
-						'error',
-						`Got register for unsupported api version "${apiVersion}"`
-					)
-
-					forceRestart()
-					return
-				}
+				const { verificationToken } = ejson.parse(msg.payload)
 
 				if (child.authToken !== verificationToken) {
-					this.#logger.debug(`Got register with bad auth token for connectionId: "${connectionId}"`)
+					this.#logger.debug(`Got register with bad auth token for instance: "${child.lastLabel}"`)
 					forceRestart()
 					return
 				}
@@ -143,31 +147,42 @@ export class ModuleHost {
 				}
 
 				if (!child.monitor || !child.monitor.child) {
-					this.#logger.debug(`Got register with child not initialised: "${connectionId}"`)
+					this.#logger.debug(`Got register with child not initialised: "${child.lastLabel}"`)
+					forceRestart()
+					return
+				}
+
+				if (!child.targetState) {
+					this.#logger.debug(`Got register with no target state: "${child.lastLabel}"`)
 					forceRestart()
 					return
 				}
 
 				// Bind the event listeners
-				child.handler = new SocketEventsHandler(this.#deps, child.monitor, connectionId, apiVersion)
+				switch (child.targetState.moduleType) {
+					case ModuleInstanceType.Connection:
+						child.handler = new ConnectionChildHandler(this.#deps, child.monitor, child.instanceId, apiVersion)
+						break
+					default:
+						assertNever(child.targetState.moduleType)
+						this.#logger.debug(
+							`Got register with unknown module type "${child.targetState.moduleType}" for "${child.lastLabel}"`
+						)
+						forceRestart()
+						return
+				}
 
 				// Register successful
 				// child.doWorkTask = registerResult.doWorkTask
-				this.#logger.debug(`Registered module client "${connectionId}"`)
+				this.#logger.debug(`Registered module client "${child.lastLabel}"`)
 
 				// TODO module-lib - can we get this in a cleaner way?
-				const config = this.#InstanceConfigStore.getConfigOfTypeForId(child.connectionId, null)
+				const config = this.#InstanceConfigStore.getConfigOfTypeForId(child.instanceId, child.moduleType)
 				if (!config) {
-					this.#logger.verbose(`Missing config for instance "${connectionId}"`)
+					this.#logger.verbose(`Missing config for instance "${child.lastLabel}"`)
 					forceRestart()
 					return
 				}
-				// const moduleInfo = this.registry.instance.modules.known_modules[config.instance_type]
-				// if (!moduleInfo) {
-				// 	this.#logger.verbose(`Missing manifest for instance "${connectionId}"`)
-				// 	forceRestart()
-				// 	return
-				// }
 
 				// report success
 				child.monitor.child.send({
@@ -180,7 +195,7 @@ export class ModuleHost {
 				// TODO module-lib - start pings
 
 				// Init module
-				this.#deps.instanceStatus.updateInstanceStatus(connectionId, 'initializing', null)
+				this.#deps.instanceStatus.updateInstanceStatus(child.instanceId, 'initializing', null)
 
 				child.handler
 					.init(config)
@@ -193,13 +208,10 @@ export class ModuleHost {
 
 						// mark child as ready to receive
 						child.isReady = true
-
-						// Inform action recorder
-						this.#deps.controls.actionRecorder.connectionAvailabilityChange(connectionId, true)
 					})
 					.catch((e) => {
-						this.#logger.warn(`Instance "${config.label || child.connectionId}" failed to init: ${e} ${e?.stack}`)
-						this.#deps.debugLogLine(child.connectionId, 'error', `Failed to init: ${e} ${e?.stack}`)
+						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${e} ${e?.stack}`)
+						this.#deps.debugLogLine(child.instanceId, 'error', `Failed to init: ${e} ${e?.stack}`)
 
 						forceRestart()
 					})
@@ -212,10 +224,19 @@ export class ModuleHost {
 	/**
 	 * Get a handle to an active instance
 	 */
-	getChild(connectionId: string, allowInitialising?: boolean): SocketEventsHandler | undefined {
-		const child = this.#children.get(connectionId)
+	getChild(instanceId: string, allowInitialising?: boolean): ChildProcessHandlerBase | undefined {
+		const child = this.#children.get(instanceId)
 		if (child && (child.isReady || allowInitialising)) {
 			return child.handler
+		} else {
+			return undefined
+		}
+	}
+
+	getConnectionChild(connectionId: string, allowInitialising?: boolean): ConnectionChildHandler | undefined {
+		const child = this.getChild(connectionId, allowInitialising)
+		if (child && child instanceof ConnectionChildHandler) {
+			return child
 		} else {
 			return undefined
 		}
@@ -227,9 +248,9 @@ export class ModuleHost {
 	 */
 	resubscribeAllFeedbacks(): void {
 		for (const child of this.#children.values()) {
-			if (child.handler && child.isReady) {
+			if (child.handler && child.isReady && child.handler instanceof ConnectionChildHandler) {
 				child.handler.sendAllFeedbackInstances().catch((e) => {
-					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.connectionId}": ${e}`)
+					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.instanceId}": ${e}`)
 				})
 			}
 		}
@@ -243,9 +264,9 @@ export class ModuleHost {
 		const changedVariableIds = Array.from(all_changed_variables_set)
 
 		for (const child of this.#children.values()) {
-			if (child.handler && child.isReady) {
+			if (child.handler && child.isReady && child.handler instanceof ConnectionChildHandler) {
 				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds).catch((e) => {
-					this.#logger.warn(`sendVariablesChanged failed for "${child.connectionId}": ${e}`)
+					this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
 				})
 			}
 		}
@@ -254,9 +275,9 @@ export class ModuleHost {
 	/**
 	 * Stop all running instances
 	 */
-	async queueStopAllConnections(): Promise<void> {
-		for (const connectionId of this.#children.keys()) {
-			this.queueUpdateConnectionState(connectionId, null, true)
+	async queueStopAllInstances(): Promise<void> {
+		for (const instanceId of this.#children.keys()) {
+			this.queueUpdateInstanceState(instanceId, null, true)
 		}
 
 		// This is not efficient, but this is only used for shutdown, so it doesn't matter
@@ -274,11 +295,11 @@ export class ModuleHost {
 
 	/**
 	 * Stop an instance running
-	 * @param connectionId
+	 * @param instanceId
 	 * @param allowDeleteIfEmpty delete the work-queue if it has no further jobs
 	 */
-	async #doStopConnectionInner(connectionId: string, allowDeleteIfEmpty: boolean): Promise<void> {
-		const child = this.#children.get(connectionId)
+	async #doStopInstanceInner(instanceId: string, allowDeleteIfEmpty: boolean): Promise<void> {
+		const child = this.#children.get(instanceId)
 		if (child) {
 			// Ensure a new child cant register
 			delete child.authToken
@@ -307,57 +328,56 @@ export class ModuleHost {
 
 			if (allowDeleteIfEmpty && child.lifeCycleQueue.size === 0) {
 				// Delete the queue now that it is empty
-				this.#children.delete(connectionId)
+				this.#children.delete(instanceId)
 			}
 
-			// mark connection as disabled
-			this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Disabled')
-			// Cleanup any artifacts
-			this.#cleanupStoppedConnection(connectionId, child.lastLabel)
+			// mark instance as disabled
+			this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Disabled')
 		}
 	}
 
 	/**
 	 * Update the logger label for a child process
 	 */
-	updateChildLabel(connectionId: string, label: string): void {
-		const child = this.#children.get(connectionId)
+	updateChildLabel(instanceId: string, label: string): void {
+		const child = this.#children.get(instanceId)
 		if (child) {
 			child.lastLabel = label
-			child.logger = LogController.createLogger(`Instance/${label}`)
+			child.logger = LogController.createLogger(`Instance/Child/${label}`)
 		}
 	}
 
 	/**
 	 * Start or restart an instance process
 	 */
-	queueUpdateConnectionState(
-		connectionId: string,
+	queueUpdateInstanceState(
+		instanceId: string,
 		targetState: ModuleChildTargetState | null,
 		forceRestart: boolean
 	): void {
-		let baseChild = this.#children.get(connectionId)
+		let baseChild = this.#children.get(instanceId)
 		if (!baseChild) {
 			if (!targetState) {
-				// Connection is not running, nothing to do
+				// Instance is not running, nothing to do
 				return
 			}
 
 			// Create a new child entry
 			baseChild = {
-				connectionId: connectionId,
+				moduleType: targetState.moduleType,
+				instanceId: instanceId,
 				lifeCycleQueue: new PQueue({ concurrency: 1 }),
-				logger: LogController.createLogger(`Instance/${targetState.label}`),
+				logger: LogController.createLogger(`Instance/Child/${targetState.label}`),
 				restartCount: 0,
 				isReady: false,
 				targetState: targetState,
 				lastLabel: targetState.label,
 			}
-			this.#children.set(connectionId, baseChild)
+			this.#children.set(instanceId, baseChild)
 
-			this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Starting')
+			this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Starting')
 
-			forceRestart = true // Force restart if it is a new connection
+			forceRestart = true // Force restart if it is a new instance
 		}
 
 		if (!forceRestart && baseChild.targetState && targetState) {
@@ -367,7 +387,7 @@ export class ModuleHost {
 				baseChild.targetState.moduleVersionId === targetState.moduleVersionId &&
 				baseChild.targetState.label === targetState.label
 			) {
-				this.#logger.debug(`Connection "${connectionId}" already in target state, not restarting`)
+				this.#logger.debug(`Instance "${instanceId}" already in target state, not restarting`)
 				return
 			}
 		}
@@ -383,20 +403,20 @@ export class ModuleHost {
 		// Queue the work
 		baseChild.lifeCycleQueue
 			.add(async () => {
-				await this.#queueRestartConnectionInner(connectionId, baseChild).catch((e) => {
-					this.#logger.error(`Unhandled error restarting connection: ${e}`)
+				await this.#queueRestartInstanceInner(instanceId, baseChild).catch((e) => {
+					this.#logger.error(`Unhandled error restarting instance: ${e}`)
 				})
 			})
 			.catch((e) => {
-				this.#logger.error(`Configured instance "${connectionId}" failed to start: `, e)
+				this.#logger.error(`Configured instance "${instanceId}" failed to start: `, e)
 			})
 	}
 
-	async #queueRestartConnectionInner(connectionId: string, baseChild: ModuleChild) {
-		// No target state, so stop the connection
+	async #queueRestartInstanceInner(instanceId: string, baseChild: ModuleChild) {
+		// No target state, so stop the instance
 		if (!baseChild.targetState) {
-			this.#logger.debug(`Stopping connection: "${connectionId}"`)
-			await this.#doStopConnectionInner(connectionId, true)
+			this.#logger.debug(`Stopping instance: "${baseChild.lastLabel}"`)
+			await this.#doStopInstanceInner(instanceId, true)
 			return
 		}
 
@@ -404,17 +424,17 @@ export class ModuleHost {
 		await this.#startQueue.add(async () => {
 			// If the target state is null, then a stop must be queued now, so don't try to start it
 			if (!baseChild.targetState) {
-				this.#logger.debug(`No target state for connection: "${connectionId}", not starting`)
+				this.#logger.debug(`No target state for instance: "${baseChild.lastLabel}", not starting`)
 				return
 			}
 
-			this.#logger.info(`Starting connection: "${baseChild.targetState.label}" (${connectionId})`)
+			this.#logger.info(`Starting instance: ${baseChild.targetState.label}`)
 
 			// stop any existing child process
-			await this.#doStopConnectionInner(connectionId, false)
+			await this.#doStopInstanceInner(instanceId, false)
 
 			const moduleInfo = this.#modules.getModuleManifest(
-				ModuleInstanceType.Connection,
+				baseChild.moduleType,
 				baseChild.targetState.moduleId,
 				baseChild.targetState.moduleVersionId
 			)
@@ -422,23 +442,23 @@ export class ModuleHost {
 				this.#logger.error(
 					`Configured instance "${baseChild.targetState.moduleId}" could not be loaded, unknown module`
 				)
-				if (this.#modules.hasModule(ModuleInstanceType.Connection, baseChild.targetState.moduleId)) {
-					this.#deps.instanceStatus.updateInstanceStatus(connectionId, 'system', 'Unknown module version')
+				if (this.#modules.hasModule(baseChild.moduleType, baseChild.targetState.moduleId)) {
+					this.#deps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module version')
 				} else {
-					this.#deps.instanceStatus.updateInstanceStatus(connectionId, 'system', 'Unknown module')
+					this.#deps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module')
 				}
 				return
 			}
 
-			if (moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
-				this.#logger.error(`Only nodejs-ipc api is supported currently: "${connectionId}"`)
+			if (moduleInfo.type === ModuleInstanceType.Connection && moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
+				this.#logger.error(`Only nodejs-ipc api is supported currently: "${baseChild.lastLabel}"`)
 				return
 			}
 
 			const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
 			if (!nodePath) {
 				this.#logger.error(
-					`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${connectionId}"`
+					`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${baseChild.lastLabel}"`
 				)
 				return
 			}
@@ -454,24 +474,23 @@ export class ModuleHost {
 					const moduleLibPackage = require(moduleLibPackagePath)
 					moduleApiVersion = moduleLibPackage.version
 				} catch (e) {
-					this.#logger.error(`Failed to get module api version: "${connectionId}" ${e}`)
+					this.#logger.error(`Failed to get module api version: "${baseChild.lastLabel}" ${e}`)
 					return
 				}
 			}
 
 			if (!isModuleApiVersionCompatible(moduleApiVersion)) {
-				this.#logger.error(`Module Api version is too new/old: "${connectionId}" ${moduleApiVersion}`)
+				this.#logger.error(`Module Api version is too new/old: "${baseChild.lastLabel}" ${moduleApiVersion}`)
 				return
 			}
 
-			const child = this.#children.get(connectionId)
+			const child = this.#children.get(instanceId)
 			if (!child) {
-				this.#logger.verbose(`Lost tracking object for connection: "${connectionId}"`)
+				this.#logger.verbose(`Lost tracking object for instance: "${baseChild.lastLabel}"`)
 				return
 			}
 
 			child.authToken = nanoid()
-			child.skipApiVersionCheck = !moduleInfo.isPackaged
 
 			const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
 			const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
@@ -496,7 +515,7 @@ export class ModuleHost {
 			const enableInspect = inspectPort !== undefined
 			if (enableInspect) {
 				this.#deps.debugLogLine(
-					connectionId,
+					instanceId,
 					'error',
 					`** Disabling permissions model to enable inspector **\nMake sure to re-test the module without the inspector enabled before releasing`
 				)
@@ -508,18 +527,17 @@ export class ModuleHost {
 				enableInspect ? `--inspect=${inspectPort}` : undefined,
 				jsPath,
 			].filter((v): v is string => !!v)
-			this.#logger.debug(`Connection "${baseChild.targetState.label}" command: ${JSON.stringify(cmd)}`)
+			this.#logger.debug(`Instance "${baseChild.targetState.label}" command: ${JSON.stringify(cmd)}`)
 
 			this.#deps.debugLogLine(
-				connectionId,
+				instanceId,
 				'system',
-				`** Starting Connection from "${path.join(moduleInfo.basePath, jsPath)}" **`
+				`** Starting Instance from "${path.join(moduleInfo.basePath, jsPath)}" **`
 			)
 
 			const monitor = new RespawnMonitor(cmd, {
-				// name: `Connection "${config.label}"(${connectionId})`,
 				env: {
-					CONNECTION_ID: connectionId,
+					CONNECTION_ID: instanceId,
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
 				},
@@ -534,36 +552,28 @@ export class ModuleHost {
 				child.isReady = false
 				child.handler?.cleanup()
 
-				child.logger.info(`Connection started process ${monitor.child?.pid}`)
-				this.#deps.debugLogLine(connectionId, 'system', '** Connection started **')
+				child.logger.info(`Process started process ${monitor.child?.pid}`)
+				this.#deps.debugLogLine(instanceId, 'system', '** Process started **')
 			})
 			monitor.on('stop', () => {
 				child.isReady = false
 				child.handler?.cleanup()
 
 				this.#deps.instanceStatus.updateInstanceStatus(
-					connectionId,
+					instanceId,
 					child.crashed ? 'crashed' : null,
 					child.crashed ? '' : 'Stopped'
 				)
-				child.logger.debug(`Connection stopped`)
-				this.#deps.debugLogLine(connectionId, 'system', '** Connection stopped **')
-
-				this.#deps.controls.actionRecorder.connectionAvailabilityChange(connectionId, false)
-
-				// Cleanup any artifacts
-				this.#cleanupStoppedConnection(connectionId, child.lastLabel)
+				child.logger.debug(`Process stopped`)
+				this.#deps.debugLogLine(instanceId, 'system', '** Process stopped **')
 			})
 			monitor.on('crash', () => {
 				child.isReady = false
 				child.handler?.cleanup()
 
-				this.#deps.instanceStatus.updateInstanceStatus(connectionId, null, 'Crashed')
-				child.logger.debug(`Connection crashed`)
-				this.#deps.debugLogLine(connectionId, 'system', '** Connection crashed **')
-
-				// Cleanup any artifacts
-				this.#cleanupStoppedConnection(connectionId, child.lastLabel)
+				this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Crashed')
+				child.logger.debug(`Process crashed`)
+				this.#deps.debugLogLine(instanceId, 'system', '** Process crashed **')
 			})
 			monitor.on('stdout', (data) => {
 				if (moduleInfo.versionId === 'dev') {
@@ -571,17 +581,17 @@ export class ModuleHost {
 					child.logger.verbose(`stdout: ${data.toString()}`)
 				}
 
-				this.#deps.debugLogLine(connectionId, 'console', data.toString())
+				this.#deps.debugLogLine(instanceId, 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
 				child.logger.verbose(`stderr: ${data.toString()}`)
-				this.#deps.debugLogLine(connectionId, 'error', data.toString())
+				this.#deps.debugLogLine(instanceId, 'error', data.toString())
 			})
 
 			child.monitor = monitor
 
 			const initialisedPromise = new Promise<void>((resolve, reject) => {
-				this.#listenToModuleSocket(child, resolve, reject)
+				this.#listenToModuleSocket(child, moduleApiVersion, resolve, reject)
 			})
 
 			// Start the child
@@ -596,15 +606,8 @@ export class ModuleHost {
 		})
 	}
 
-	#cleanupStoppedConnection(connectionId: string, label: string) {
-		this.#deps.instanceDefinitions.forgetConnection(connectionId)
-		this.#deps.variables.values.forgetConnection(connectionId, label)
-		this.#deps.variables.definitions.forgetConnection(connectionId, label)
-		this.#deps.controls.clearConnectionState(connectionId)
-	}
-
 	async connectionEntityUpdate(entity: ControlEntityInstance, controlId: string): Promise<boolean> {
-		const connection = this.getChild(entity.connectionId, true)
+		const connection = this.getConnectionChild(entity.connectionId, true)
 		if (!connection) return false
 
 		await connection.entityUpdate(entity, controlId)
@@ -612,7 +615,7 @@ export class ModuleHost {
 		return true
 	}
 	async connectionEntityDelete(entityModel: SomeEntityModel, _controlId: string): Promise<boolean> {
-		const connection = this.getChild(entityModel.connectionId, true)
+		const connection = this.getConnectionChild(entityModel.connectionId, true)
 		if (!connection) return false
 
 		await connection.entityDelete(entityModel)
@@ -623,7 +626,7 @@ export class ModuleHost {
 		entityModel: SomeEntityModel,
 		controlId: string
 	): Promise<CompanionOptionValues | undefined | void> {
-		const connection = this.getChild(entityModel.connectionId)
+		const connection = this.getConnectionChild(entityModel.connectionId)
 		if (!connection) return undefined
 
 		return connection.entityLearnValues(entityModel, controlId)

@@ -12,7 +12,7 @@
 import debounceFn from 'debounce-fn'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,

@@ -17,7 +17,7 @@ import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
+import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ProcessManagerForEntity } from './Types.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
 export class ControlEntityInstance {
@@ -28,7 +28,7 @@ export class ControlEntityInstance {
 
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
-	readonly #moduleHost: ModuleHostForEntity
+	readonly #processManager: ProcessManagerForEntity
 
 	/**
 	 * Id of the control this belongs to
@@ -122,7 +122,7 @@ export class ControlEntityInstance {
 	/**
 	 * @param instanceDefinitions
 	 * @param internalModule
-	 * @param moduleHost
+	 * @param processManager
 	 * @param controlId - id of the control
 	 * @param data
 	 * @param isCloned Whether this is a cloned instance and should generate new ids
@@ -130,7 +130,7 @@ export class ControlEntityInstance {
 	constructor(
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
-		moduleHost: ModuleHostForEntity,
+		processManager: ProcessManagerForEntity,
 		controlId: string,
 		data: SomeEntityModel,
 		isCloned: boolean
@@ -139,7 +139,7 @@ export class ControlEntityInstance {
 
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
-		this.#moduleHost = moduleHost
+		this.#processManager = processManager
 		this.#controlId = controlId
 
 		{
@@ -186,7 +186,7 @@ export class ControlEntityInstance {
 		const childGroup = new ControlEntityList(
 			this.#instanceDefinitions,
 			this.#internalModule,
-			this.#moduleHost,
+			this.#processManager,
 			this.#controlId,
 			{ parentId: this.id, childGroup: listDefinition.groupId },
 			listDefinition
@@ -227,7 +227,7 @@ export class ControlEntityInstance {
 		if (this.#data.connectionId === 'internal') {
 			this.#internalModule.entityDelete(this.asEntityModel())
 		} else {
-			this.#moduleHost.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
+			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
 				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 			})
 		}
@@ -255,7 +255,7 @@ export class ControlEntityInstance {
 			if (this.#data.connectionId === 'internal') {
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
-				this.#moduleHost.connectionEntityUpdate(this, this.#controlId).catch((e) => {
+				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
 					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 				})
 			}
@@ -373,7 +373,7 @@ export class ControlEntityInstance {
 	 * Learn the options for an entity, by asking the connection for the current values
 	 */
 	async learnOptions(): Promise<boolean> {
-		const newOptions = await this.#moduleHost.connectionEntityLearnOptions(this.asEntityModel(), this.#controlId)
+		const newOptions = await this.#processManager.connectionEntityLearnOptions(this.asEntityModel(), this.#controlId)
 		if (newOptions) {
 			this.setOptions(newOptions)
 

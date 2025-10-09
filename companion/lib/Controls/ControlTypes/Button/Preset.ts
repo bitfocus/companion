@@ -110,7 +110,7 @@ export class ControlButtonPreset
 				invalidateControl: this.triggerRedraw.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
-				moduleHost: deps.instance.moduleHost,
+				processManager: deps.instance.processManager,
 				variableValues: deps.variables.values,
 			},
 			this.sendRuntimePropsChange.bind(this),
