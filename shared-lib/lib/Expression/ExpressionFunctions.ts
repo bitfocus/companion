@@ -1,4 +1,4 @@
-import { pad } from '../Util.js'
+import { msToStamp, pad } from '../Util.js'
 import { JSONPath } from 'jsonpath-plus'
 import { countGraphemes } from 'unicode-segmenter/grapheme'
 
@@ -165,45 +165,13 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		}
 	},
 	secondsToTimestamp: (v, type) => {
-		const negative = v < 0
-		v = Math.abs(v)
-		type = type ? type : 'hh:mm:ss'
-
-		const seconds = pad(Math.floor(v) % 60, '0', 2)
-		const minutes = pad(Math.floor(v / 60) % 60, '0', 2)
-		const hours = pad(Math.floor(v / 3600), '0', 2)
-
-		const timestamp = []
-		if (type.includes('HH') || type.includes('hh')) timestamp.push(hours)
-		if (type.includes('mm')) timestamp.push(minutes)
-		if (type.includes('ss')) timestamp.push(seconds)
-
-		return (negative ? '-' : '') + timestamp.join(':')
+		type = type ? type : 'nHH:mm:ss'
+		v = v * 1000
+		return msToStamp(v, type)
 	},
 	msToTimestamp: (v, type) => {
-		const negative = v < 0
-		v = Math.abs(v)
-		type = type ? type : 'mm:ss.ms'
-
-		const ms = v % 1000
-		const seconds = pad(Math.floor(v / 1000) % 60, '0', 2)
-		const minutes = pad(Math.floor(v / 60000) % 60, '0', 2)
-		const hours = pad(Math.floor(v / 3600000), '0', 2)
-
-		const timestamp = []
-		if (type.includes('HH') || type.includes('hh')) timestamp.push(hours)
-		if (type.includes('mm')) timestamp.push(minutes)
-		if (type.includes('ss')) timestamp.push(seconds)
-
-		let timestampStr = timestamp.join(':')
-		if (type.endsWith('.ms') || type.endsWith('.S')) {
-			timestampStr += `.${Math.floor(ms / 100)}`
-		} else if (type.endsWith('.SS')) {
-			timestampStr += `.${pad(Math.floor(ms / 10), '0', 2)}`
-		} else if (type.endsWith('.SSS')) {
-			timestampStr += `.${pad(ms, '0', 3)}`
-		}
-		return (negative ? '-' : '') + timestampStr
+		type = type ? type : 'nmm:ss.S'
+		return msToStamp(v, type)
 	},
 	timeOffset: (time, offset, hr12 = false) => {
 		const date = new Date()
