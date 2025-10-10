@@ -42,6 +42,11 @@ export class SurfaceGroup {
 	#currentPageId: string
 
 	/**
+	 * Page history for surfaces
+	 */
+	readonly #pageHistory: { history: string[]; index: number }
+
+	/**
 	 * The surfaces belonging to this group
 	 */
 	surfaceHandlers: SurfaceHandler[] = []
@@ -149,6 +154,8 @@ export class SurfaceGroup {
 			this.groupConfig.startup_page_id = this.#currentPageId
 		}
 
+		this.#pageHistory = { history: [this.#currentPageId], index: 0 }
+
 		// Now attach and setup the surface
 		if (soleHandler) this.attachSurface(soleHandler)
 
@@ -214,20 +221,9 @@ export class SurfaceGroup {
 	}
 
 	/**
-	 * Perform page-down for this surface group
-	 */
-	doPageDown(): void {
-		if (this.#userconfig.getKey('page_direction_flipped') === true) {
-			this.#increasePage()
-		} else {
-			this.#decreasePage()
-		}
-	}
-
-	/**
 	 * Set the current page of this surface group
 	 */
-	setCurrentPage(newPageId: string, defer = false): void {
+	#setCurrentPageInternal(newPageId: string, defer = false): void {
 		if (!this.#pageStore.isPageIdValid(newPageId)) return
 
 		this.#storeNewPage(newPageId, defer)
@@ -238,6 +234,17 @@ export class SurfaceGroup {
 	 */
 	getCurrentPageId(): string {
 		return this.#currentPageId
+	}
+
+	/**
+	 * Perform page-down for this surface group
+	 */
+	doPageDown(): void {
+		if (this.#userconfig.getKey('page_direction_flipped') === true) {
+			this.#increasePage()
+		} else {
+			this.#decreasePage()
+		}
 	}
 
 	/**
@@ -252,15 +259,60 @@ export class SurfaceGroup {
 	}
 
 	#increasePage() {
-		const newPageId = this.#pageStore.getOffsetPageId(this.#currentPageId, 1)
-		if (!newPageId) return
-		this.setCurrentPage(newPageId)
+		this.setCurrentPage('+1')
 	}
 
 	#decreasePage() {
-		const newPageId = this.#pageStore.getOffsetPageId(this.#currentPageId, -1)
-		if (!newPageId) return
-		this.setCurrentPage(newPageId)
+		this.setCurrentPage('-1')
+	}
+
+	/**
+	 * Change the page of a surface, keeping a history of previous pages
+	 */
+	setCurrentPage(toPage: string | 'back' | 'forward' | '+1' | '-1', defer = false): void {
+		const currentPage = this.#currentPageId
+		const pageHistory = this.#pageHistory
+
+		if (toPage === 'back' || toPage === 'forward') {
+			// determine the 'to' page
+			const pageDirection = toPage === 'back' ? -1 : 1
+			const pageIndex = pageHistory.index + pageDirection
+			const pageTarget = pageHistory.history[pageIndex]
+
+			// change only if pageIndex points to a real page
+			if (pageTarget !== undefined) {
+				pageHistory.index = pageIndex
+
+				this.#setCurrentPageInternal(pageTarget, defer)
+			}
+		} else {
+			let newPage: string | null = toPage
+			// note: getOffsetPageId() calculates the new page with wrap around
+			if (newPage === '+1') {
+				newPage = this.#pageStore.getOffsetPageId(currentPage, 1)
+			} else if (newPage === '-1') {
+				newPage = this.#pageStore.getOffsetPageId(currentPage, -1)
+			} else {
+				newPage = String(newPage)
+			}
+			if (!newPage || !this.#pageStore.isPageIdValid(newPage)) newPage = this.#pageStore.getFirstPageId()
+
+			// Change page
+			this.#setCurrentPageInternal(newPage, defer)
+
+			// Clear forward page history beyond current index, add new history entry, increment index;
+			pageHistory.history = pageHistory.history.slice(0, pageHistory.index + 1)
+			pageHistory.history.push(newPage)
+			pageHistory.index += 1
+
+			// Limit the max history
+			const maxPageHistory = 100
+			if (pageHistory.history.length > maxPageHistory) {
+				const startIndex = pageHistory.history.length - maxPageHistory
+				pageHistory.history = pageHistory.history.slice(startIndex)
+				pageHistory.index = pageHistory.history.length - 1
+			}
+		}
 	}
 
 	/**
