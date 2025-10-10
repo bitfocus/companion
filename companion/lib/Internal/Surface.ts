@@ -545,13 +545,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		}
 	}
 
-	incrPage(surfaceId: string, forward: boolean): boolean {
-		//const surfaceId = this.#fetchSurfaceId({controller: surfaceId}, undefined as unknown as RunActionExtras,  false)
-		if (!surfaceId) return true
-		this.#changeSurfacePage(surfaceId, forward ? '+1' : '-1')
-		return true
-	}
-
 	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
 		if (action.definitionId === 'set_brightness') {
 			const surfaceId = this.#fetchSurfaceId(action.rawOptions, extras, true)
