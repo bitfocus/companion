@@ -19,6 +19,8 @@ export function createConnectionsTrpcRouter(
 	queueUpdateConnectionState: (id: string, forceCommitChanges?: boolean, forceRestart?: boolean) => void
 ) {
 	return router({
+		collections: instanceController.connectionCollections.createTrpcRouter(),
+
 		watch: publicProcedure.subscription(async function* ({ signal }) {
 			const changes = toIterable(instanceEvents, 'uiConnectionsUpdate', signal)
 
@@ -96,7 +98,7 @@ export function createConnectionsTrpcRouter(
 				if (!instanceConf) return null
 
 				// Make sure the collection is enabled
-				if (!instanceController.collections.isCollectionEnabled(instanceConf.collectionId)) return null
+				if (!instanceController.connectionCollections.isCollectionEnabled(instanceConf.collectionId)) return null
 
 				const instance = instanceController.processManager.getConnectionChild(input.connectionId)
 				if (!instance) return null

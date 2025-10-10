@@ -151,7 +151,7 @@ export class ExportController {
 			)
 			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 			const filteredConnectionCollections = this.#filterReferencedCollections(
-				this.#instancesController.collections.collectionData,
+				this.#instancesController.connectionCollections.collectionData,
 				referencedConnectionCollectionIds
 			)
 
@@ -347,7 +347,7 @@ export class ExportController {
 		)
 		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 		const filteredConnectionCollections = this.#filterReferencedCollections(
-			this.#instancesController.collections.collectionData,
+			this.#instancesController.connectionCollections.collectionData,
 			referencedConnectionCollectionIds
 		)
 
@@ -545,7 +545,7 @@ export class ExportController {
 
 		if (!config || !isFalsey(config.connections)) {
 			exp.instances = this.#instancesController.exportAllConnections(!config || !isFalsey(config.includeSecrets))
-			exp.connectionCollections = this.#instancesController.collections.collectionData
+			exp.connectionCollections = this.#instancesController.connectionCollections.collectionData
 		} else {
 			exp.instances = this.#generateReferencedConnectionConfigs(referencedConnectionIds, referencedConnectionLabels, {
 				minimalExport: true,
@@ -554,7 +554,7 @@ export class ExportController {
 
 			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(exp.instances))
 			exp.connectionCollections = this.#filterReferencedCollections(
-				this.#instancesController.collections.collectionData,
+				this.#instancesController.connectionCollections.collectionData,
 				referencedConnectionCollectionIds
 			)
 		}

@@ -8,9 +8,9 @@ export type ConnectionCollectionsApi = NestingCollectionsApi
 export function useConnectionCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 ): ConnectionCollectionsApi {
-	const renameMutation = useMutationExt(trpc.instances.collections.setName.mutationOptions())
-	const deleteMutation = useMutationExt(trpc.instances.collections.remove.mutationOptions())
-	const reorderMutation = useMutationExt(trpc.instances.collections.reorder.mutationOptions())
+	const renameMutation = useMutationExt(trpc.instances.connections.collections.setName.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.instances.connections.collections.remove.mutationOptions())
+	const reorderMutation = useMutationExt(trpc.instances.connections.collections.reorder.mutationOptions())
 	const reorderItemsMutation = useMutationExt(trpc.instances.connections.reorder.mutationOptions())
 
 	return useMemo(

@@ -163,7 +163,7 @@ export class InstanceInstalledModulesManager {
 
 				if (!versionId) {
 					const changedInstanceIds: string[] = []
-					for (const instanceIds of this.#configStore.getInstanceIdsForAllTypes()) {
+					for (const instanceIds of this.#configStore.getAllInstanceIdsOfType(moduleType)) {
 						const config = this.#configStore.getConfigOfTypeForId(instanceIds, moduleType)
 						if (!config) continue
 
@@ -191,16 +191,22 @@ export class InstanceInstalledModulesManager {
 		return router({
 			bundleUpload: this.#multipartUploader.createTrpcRouter(),
 
-			installAllMissing: publicProcedure.mutation(async () => {
-				this.#logger.debug('modules:install-all-missing')
+			installAllMissing: publicProcedure
+				.input(
+					z.object({
+						moduleType: z.enum(ModuleInstanceType).nullable(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					this.#logger.debug('modules:install-all-missing')
 
-				for (const connectionId of this.#configStore.getInstanceIdsForAllTypes()) {
-					const config = this.#configStore.getConfigOfTypeForId(connectionId, null)
-					if (!config) continue
+					for (const connectionId of this.#configStore.getAllInstanceIdsOfType(input.moduleType)) {
+						const config = this.#configStore.getConfigOfTypeForId(connectionId, input.moduleType)
+						if (!config) continue
 
-					this.ensureModuleIsInstalled(ModuleInstanceType.Connection, config.instance_type, config.moduleVersionId)
-				}
-			}),
+						this.ensureModuleIsInstalled(config.moduleInstanceType, config.instance_type, config.moduleVersionId)
+					}
+				}),
 
 			installModuleTar: publicProcedure
 				.input(

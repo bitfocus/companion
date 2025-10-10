@@ -322,7 +322,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			let newState: boolean | 'toggle' = action.rawOptions.enable == 'true'
 			if (action.rawOptions.enable == 'toggle') newState = 'toggle'
 
-			this.#instanceController.collections.setCollectionEnabled(action.rawOptions.collection_id, newState)
+			this.#instanceController.connectionCollections.setCollectionEnabled(action.rawOptions.collection_id, newState)
 			return true
 		} else {
 			return false
@@ -387,7 +387,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 
 			return selected_status == feedback.options.state
 		} else if (feedback.definitionId === 'connection_collection_enabled') {
-			const state = this.#instanceController.collections.isCollectionEnabled(feedback.options.collection_id)
+			const state = this.#instanceController.connectionCollections.isCollectionEnabled(feedback.options.collection_id)
 			const target = feedback.options.enable == 'true'
 			return state == target
 		}

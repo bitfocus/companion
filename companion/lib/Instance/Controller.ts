@@ -64,7 +64,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
-	readonly #collectionsController: InstanceCollections
+	readonly #connectionCollectionsController: InstanceCollections
 
 	readonly #configStore: InstanceConfigStore
 
@@ -80,8 +80,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly connectionApiRouter = express.Router()
 
-	get collections(): InstanceCollections {
-		return this.#collectionsController
+	get connectionCollections(): InstanceCollections {
+		return this.#connectionCollectionsController
 	}
 
 	constructor(
@@ -114,10 +114,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 			this.#broadcastConnectionChanges(instanceIds)
 		})
-		this.#collectionsController = new InstanceCollections(db, this.#configStore, () => {
+		this.#connectionCollectionsController = new InstanceCollections(db, this.#configStore, () => {
 			this.emit('connection_collections_enabled')
 
-			this.#queueUpdateAllConnectionState()
+			this.#queueUpdateAllConnectionState(ModuleInstanceType.Connection)
 		})
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
@@ -178,15 +178,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		})
 
 		// Prepare for clients already
-		this.#broadcastConnectionChanges(this.#configStore.getAllConnectionIds())
+		this.#broadcastConnectionChanges(this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection))
 	}
 
 	getAllConnectionIds(): string[] {
-		return this.#configStore.getAllConnectionIds()
-	}
-
-	getInstanceIdsForAllTypes(): string[] {
-		return this.#configStore.getInstanceIdsForAllTypes()
+		return this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)
 	}
 
 	/**
@@ -196,7 +192,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (event == 'resume') {
 			this.#logger.info('Power: Resuming')
 
-			for (const id of this.#configStore.getInstanceIdsForAllTypes()) {
+			for (const id of this.#configStore.getAllInstanceIdsOfType(null)) {
 				this.#queueUpdateInstanceState(id)
 			}
 		} else if (event == 'suspend') {
@@ -217,7 +213,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		await this.modules.initModules(extraModulePath)
 
-		const instanceIds = this.#configStore.getInstanceIdsForAllTypes()
+		const instanceIds = this.#configStore.getAllInstanceIdsOfType(null)
 		this.#logger.silly('instance_init', instanceIds)
 		for (const id of instanceIds) {
 			this.#queueUpdateInstanceState(id)
@@ -435,12 +431,12 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	async deleteAllConnections(deleteCollections: boolean): Promise<void> {
 		const ps: Promise<void>[] = []
-		for (const connectionId of this.#configStore.getAllConnectionIds()) {
+		for (const connectionId of this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
 			ps.push(this.removeConnection(connectionId))
 		}
 
 		if (deleteCollections) {
-			this.#collectionsController.discardAllCollections()
+			this.#connectionCollectionsController.discardAllCollections()
 		}
 
 		await Promise.all(ps)
@@ -543,9 +539,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.getConfigOfTypeForId(connectionId, instanceType)
 	}
 
-	#queueUpdateAllConnectionState(): void {
+	#queueUpdateAllConnectionState(type: ModuleInstanceType | null): void {
 		// Queue an update of all connections
-		for (const id of this.#configStore.getAllConnectionIds()) {
+		for (const id of this.#configStore.getAllInstanceIdsOfType(type)) {
 			try {
 				this.#queueUpdateInstanceState(id)
 			} catch (e) {
@@ -601,7 +597,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		let enableInstance = config.enabled !== false
 		if (
 			config.moduleInstanceType === ModuleInstanceType.Connection &&
-			!this.collections.isCollectionEnabled(config.collectionId)
+			!this.#connectionCollectionsController.isCollectionEnabled(config.collectionId)
 		)
 			enableInstance = false
 
@@ -624,7 +620,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const selfEvents: EventEmitter<InstanceControllerEvents> = this
 
 		return router({
-			collections: this.collections.createTrpcRouter(),
 			definitions: this.definitions.createTrpcRouter(),
 
 			modules: this.modules.createTrpcRouter(),

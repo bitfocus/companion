@@ -506,7 +506,7 @@ export class ImportExportController {
 						await this.#reset(resetArg, !config || config.buttons)
 
 						// Import connection collections if provided
-						this.#instancesController.collections.replaceCollections(data.connectionCollections || [])
+						this.#instancesController.connectionCollections.replaceCollections(data.connectionCollections || [])
 
 						// Always Import instances
 						const preserveRemap: ConnectionRemappings =
@@ -821,7 +821,7 @@ export class ImportExportController {
 		instanceIdMap['bitfocus-companion'] = { id: 'internal', label: 'internal' }
 
 		// Ensure any group references are valid
-		this.#instancesController.collections.removeUnknownCollectionReferences()
+		this.#instancesController.connectionCollections.removeUnknownCollectionReferences()
 
 		return instanceIdMap
 	}

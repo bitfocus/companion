@@ -6,6 +6,7 @@ import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useMissingVersionsCount(): number {
@@ -44,7 +45,7 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning()
 	const installMissingMutation = useMutationExt(trpc.instances.modulesManager.installAllMissing.mutationOptions())
 
 	const doInstallAllMissing = useCallback(() => {
-		installMissingMutation.mutateAsync().catch((e) => {
+		installMissingMutation.mutateAsync({ moduleType: ModuleInstanceType.Connection }).catch((e) => {
 			console.error('Install all missing failed', e)
 		})
 	}, [installMissingMutation])

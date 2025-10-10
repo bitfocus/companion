@@ -91,7 +91,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const connectionsReady = useConnectionsConfigSubscription(rootStore.connections)
 	const connectionGroupsReady = useGenericCollectionsSubscription(
 		rootStore.connections,
-		trpc.instances.collections.watchQuery,
+		trpc.instances.connections.collections.watchQuery,
 		undefined
 	)
 	const triggersListReady = useTriggersListSubscription(rootStore.triggersList)

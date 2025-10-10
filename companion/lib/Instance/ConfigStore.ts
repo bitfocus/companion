@@ -64,21 +64,16 @@ export class InstanceConfigStore {
 	/**
 	 * Get all connection IDs
 	 */
-	getAllConnectionIds(): string[] {
+	getAllInstanceIdsOfType(type: ModuleInstanceType | null): string[] {
+		if (!type) return Array.from(this.#store.keys())
+
 		const ids: string[] = []
 		for (const [id, conf] of this.#store) {
-			if (conf.moduleInstanceType === ModuleInstanceType.Connection) {
+			if (conf.moduleInstanceType === type) {
 				ids.push(id)
 			}
 		}
 		return ids
-	}
-
-	/**
-	 * Get all instance IDs, regardless of type
-	 */
-	getInstanceIdsForAllTypes(): string[] {
-		return Array.from(this.#store.keys())
 	}
 
 	getConnectionIdFromLabel(label: string): string | undefined {
