@@ -221,15 +221,6 @@ export class SurfaceGroup {
 	}
 
 	/**
-	 * Set the current page of this surface group
-	 */
-	#setCurrentPageInternal(newPageId: string, defer = false): void {
-		if (!this.#pageStore.isPageIdValid(newPageId)) return
-
-		this.#storeNewPage(newPageId, defer)
-	}
-
-	/**
 	 * Get the current page of this surface group
 	 */
 	getCurrentPageId(): string {
@@ -240,30 +231,16 @@ export class SurfaceGroup {
 	 * Perform page-down for this surface group
 	 */
 	doPageDown(): void {
-		if (this.#userconfig.getKey('page_direction_flipped') === true) {
-			this.#increasePage()
-		} else {
-			this.#decreasePage()
-		}
+		const increase = this.#userconfig.getKey('page_direction_flipped') === true
+		this.setCurrentPage(increase ? '+1' : '-1')
 	}
 
 	/**
 	 * Perform page-up for this surface group
 	 */
 	doPageUp(): void {
-		if (this.#userconfig.getKey('page_direction_flipped') === true) {
-			this.#decreasePage()
-		} else {
-			this.#increasePage()
-		}
-	}
-
-	#increasePage() {
-		this.setCurrentPage('+1')
-	}
-
-	#decreasePage() {
-		this.setCurrentPage('-1')
+		const decrease = this.#userconfig.getKey('page_direction_flipped') === true
+		this.setCurrentPage(decrease ? '-1' : '+1')
 	}
 
 	/**
@@ -283,7 +260,10 @@ export class SurfaceGroup {
 			if (pageTarget !== undefined) {
 				pageHistory.index = pageIndex
 
-				this.#setCurrentPageInternal(pageTarget, defer)
+				// TODO - should this search for the first valid pageId?
+				if (!this.#pageStore.isPageIdValid(pageTarget)) return
+
+				this.#storeNewPage(pageTarget, defer)
 			}
 		} else {
 			let newPage: string | null = toPage
@@ -298,7 +278,7 @@ export class SurfaceGroup {
 			if (!newPage || !this.#pageStore.isPageIdValid(newPage)) newPage = this.#pageStore.getFirstPageId()
 
 			// Change page
-			this.#setCurrentPageInternal(newPage, defer)
+			this.#storeNewPage(newPage, defer)
 
 			// Clear forward page history beyond current index, add new history entry, increment index;
 			pageHistory.history = pageHistory.history.slice(0, pageHistory.index + 1)
