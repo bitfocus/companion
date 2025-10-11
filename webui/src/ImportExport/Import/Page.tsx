@@ -287,7 +287,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 
 	const moduleManifest = moduleInfo?.display ?? storeInfo
 
-	const currentConnections = connections.getAllOfType(connection.instance_type)
+	const currentConnections = connections.getAllOfModuleId(connection.instance_type)
 
 	const onChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => setConnectionRemap(id, e.currentTarget.value),

@@ -39,7 +39,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 							Internal
 						</CButton>
 						{sortedConnections.map((connectionInfo) => {
-							const compactName = modules.getModuleFriendlyName(connectionInfo.instance_type)
+							const compactName = modules.getModuleFriendlyName(connectionInfo.moduleId)
 
 							return (
 								<CButton

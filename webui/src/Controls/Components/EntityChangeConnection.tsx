@@ -19,7 +19,7 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 	const connectionChoices = useComputed(() => {
 		const connectionInfo = connections.getInfo(entityConnectionId)
 
-		const connectionsWithSameType = connectionInfo ? connections.getAllOfType(connectionInfo.instance_type) : []
+		const connectionsWithSameType = connectionInfo ? connections.getAllOfModuleId(connectionInfo.moduleId) : []
 
 		return connectionsWithSameType
 			.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)

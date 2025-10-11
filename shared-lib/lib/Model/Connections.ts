@@ -1,12 +1,7 @@
 import type { CollectionBase } from './Collections.js'
-import type { InstanceVersionUpdatePolicy } from './Instance.js'
+import type { ClientInstanceConfigBase } from './Instance.js'
 
-export interface ClientConnectionConfig {
-	label: string
-	instance_type: string
-	moduleVersionId: string | null
-	updatePolicy: InstanceVersionUpdatePolicy
-	enabled: boolean
+export interface ClientConnectionConfig extends ClientInstanceConfigBase {
 	sortOrder: number
 	hasRecordActionsHandler: boolean
 	collectionId: string | null

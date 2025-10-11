@@ -107,7 +107,7 @@ export const ImportExportPage = observer(function ImportExport() {
 												let matchingLabelId = ''
 
 												for (const [otherId, otherObj] of connections.connections.entries()) {
-													if (otherObj.instance_type === obj.instance_type) {
+													if (otherObj.moduleId === obj.instance_type) {
 														candidateIds.push(otherId)
 														if (otherObj.label === obj.label) {
 															matchingLabelId = otherId

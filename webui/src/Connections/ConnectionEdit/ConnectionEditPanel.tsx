@@ -77,7 +77,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		[connectionId, connectionInfo]
 	)
 
-	const moduleInfo = modules.modules.get(panelStore.connectionInfo.instance_type)
+	const moduleInfo = modules.modules.get(panelStore.connectionInfo.moduleId)
 
 	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, panelStore.connectionInfo.moduleVersionId)
 	const connectionShouldBeRunning =
@@ -278,10 +278,10 @@ const ConnectionModuleVersionInputField = observer(function ConnectionModuleVers
 }): React.JSX.Element {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const isModuleOnStore = !!modules.storeList.get(panelStore.connectionInfo.instance_type)
+	const isModuleOnStore = !!modules.storeList.get(panelStore.connectionInfo.moduleId)
 	const moduleVersionChoices = useModuleVersionSelectOptions(
 		modules,
-		panelStore.connectionInfo.instance_type,
+		panelStore.connectionInfo.moduleId,
 		moduleInfo,
 		true
 	).choices
@@ -291,7 +291,7 @@ const ConnectionModuleVersionInputField = observer(function ConnectionModuleVers
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				Module Version&nbsp;
 				{isModuleOnStore && !connectionShouldBeRunning && (
-					<ModuleVersionsRefresh modules={modules} moduleId={panelStore.connectionInfo.instance_type} />
+					<ModuleVersionsRefresh modules={modules} moduleId={panelStore.connectionInfo.moduleId} />
 				)}
 			</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
@@ -323,7 +323,7 @@ const ConnectionModuleVersionInputField = observer(function ConnectionModuleVers
 					<ConnectionForceVersionButton
 						connectionId={panelStore.connectionId}
 						disabled={connectionShouldBeRunning}
-						currentModuleId={panelStore.connectionInfo.instance_type}
+						currentModuleId={panelStore.connectionInfo.moduleId}
 						currentVersionId={panelStore.connectionInfo.moduleVersionId}
 					/>
 				</CInputGroup>

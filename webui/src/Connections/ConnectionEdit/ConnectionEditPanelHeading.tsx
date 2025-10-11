@@ -18,7 +18,7 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 }: ConnectionEditPanelHeadingProps) {
 	const { helpViewer, modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(connectionInfo.instance_type)
+	const moduleInfo = modules.modules.get(connectionInfo.moduleId)
 	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo.moduleVersionId)
 
 	const doShowHelp = useCallback(
@@ -26,16 +26,16 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 			moduleVersion?.helpPath &&
 			helpViewer.current?.showFromUrl(
 				ModuleInstanceType.Connection,
-				connectionInfo.instance_type,
+				connectionInfo.moduleId,
 				moduleVersion.versionId,
 				moduleVersion.helpPath
 			),
-		[helpViewer, connectionInfo.instance_type, moduleVersion]
+		[helpViewer, connectionInfo.moduleId, moduleVersion]
 	)
 
 	return (
 		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Connection: {moduleInfo?.display?.name ?? connectionInfo.instance_type}</h4>
+			<h4 className="panel-title">Edit Connection: {moduleInfo?.display?.name ?? connectionInfo.moduleId}</h4>
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
 					<div className="float_right" onClick={doShowHelp} title="Show help for this connection">

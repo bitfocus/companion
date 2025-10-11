@@ -15,7 +15,7 @@ import React, { useContext, useCallback } from 'react'
 import { Tuck } from '~/Components/Tuck.js'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { UpdateConnectionToLatestButton } from '../UpdateConnectionToLatestButton.js'
+import { UpdateInstanceToLatestBadge } from '../../Instances/UpdateInstanceToLatestBadge.js'
 import { getModuleVersionInfoForConnection } from '../Util.js'
 import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
@@ -37,7 +37,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const { showVariables, deleteModalRef, configureConnection } = useConnectionListContext()
 
 	const id = connection.id
-	const moduleInfo = modules.modules.get(connection.instance_type)
+	const moduleInfo = modules.modules.get(connection.moduleId)
 
 	const isEnabled = connection.enabled === undefined || connection.enabled
 
@@ -88,16 +88,16 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			moduleVersion?.helpPath &&
 			helpViewer.current?.showFromUrl(
 				ModuleInstanceType.Connection,
-				connection.instance_type,
+				connection.moduleId,
 				moduleVersion.versionId,
 				moduleVersion.helpPath
 			),
-		[helpViewer, connection.instance_type, moduleVersion]
+		[helpViewer, connection.moduleId, moduleVersion]
 	)
 
 	const moduleDisplayName = moduleInfo
 		? `${moduleInfo.display.manufacturer ?? ''}: ${moduleInfo.display.products?.join('; ') ?? ''}`
-		: connection.instance_type
+		: connection.moduleId
 
 	return (
 		<div className="flex flex-row align-items-center gap-2 hand">
@@ -126,7 +126,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					)}
 					{moduleVersion?.displayName ?? connection.moduleVersionId}
 
-					<UpdateConnectionToLatestButton connection={connection} />
+					<UpdateInstanceToLatestBadge modules={modules} instance={connection} />
 				</MyErrorBoundary>
 			</div>
 			<div onClick={doEdit} className="ms-2">

@@ -177,7 +177,8 @@ export class InstanceConfigStore {
 			if (config.moduleInstanceType !== ModuleInstanceType.Connection) continue
 
 			result[id] = {
-				instance_type: config.instance_type,
+				moduleType: config.moduleInstanceType,
+				moduleId: config.instance_type,
 				moduleVersionId: config.moduleVersionId,
 				updatePolicy: config.updatePolicy,
 				label: config.label,

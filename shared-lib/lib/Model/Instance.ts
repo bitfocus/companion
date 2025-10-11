@@ -24,3 +24,12 @@ export interface InstanceConfig {
 	updatePolicy: InstanceVersionUpdatePolicy // TODO - upgrade script
 	collectionId?: string
 }
+
+export interface ClientInstanceConfigBase {
+	label: string
+	moduleType: ModuleInstanceType
+	moduleId: string
+	moduleVersionId: string | null
+	updatePolicy: InstanceVersionUpdatePolicy
+	enabled: boolean
+}

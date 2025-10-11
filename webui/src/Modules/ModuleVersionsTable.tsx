@@ -159,13 +159,13 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 	const doShowHelp = useCallback(() => {
 		if (!helpPath) return
 		helpViewer.current?.showFromUrl(moduleType, moduleId, versionDisplayName, helpPath)
-	}, [helpViewer, moduleId, versionDisplayName, helpPath])
+	}, [helpViewer, moduleType, moduleId, versionDisplayName, helpPath])
 
 	if (!storeInfo && !installedInfo) return null // Should never happen
 
 	let matchingConnections = 0
 	for (const connection of connections.connections.values()) {
-		if (connection.instance_type !== moduleId) continue
+		if (connection.moduleId !== moduleId) continue
 
 		if (versionId && connection.moduleVersionId === versionId) {
 			matchingConnections++

@@ -9,7 +9,7 @@ import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
-import { MissingVersionsWarning } from './MissingVersionsWarning.js'
+import { MissingVersionsWarning } from '../../Instances/MissingVersionsWarning.js'
 import { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { useConnectionCollectionsApi } from './ConnectionListApi.js'
 import { useInstanceStatuses } from '../../Instances/useInstanceStatuses.js'
@@ -34,7 +34,7 @@ interface ConnectionsListProps {
 }
 
 export const ConnectionsList = observer(function ConnectionsList({ selectedConnectionId }: ConnectionsListProps) {
-	const { connections } = useContext(RootAppStoreContext)
+	const { modules, connections } = useContext(RootAppStoreContext)
 
 	const connectionStatuses = useInstanceStatuses()
 
@@ -94,7 +94,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 					know how to communicate with whatever you want to control.
 				</p>
 
-				<MissingVersionsWarning />
+				<MissingVersionsWarning modules={modules} instances={connections.connections} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
