@@ -16,7 +16,7 @@ import { Tuck } from '~/Components/Tuck.js'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { UpdateInstanceToLatestBadge } from '../../Instances/UpdateInstanceToLatestBadge.js'
-import { getModuleVersionInfoForConnection } from '../Util.js'
+import { getModuleVersionInfo } from '../../Instances/Util.js'
 import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { useConnectionListContext } from './ConnectionListContext.js'
@@ -81,7 +81,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 		if (url) windowLinkOpen({ href: url })
 	}, [moduleInfo])
 
-	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection.moduleVersionId)
+	const moduleVersion = getModuleVersionInfo(moduleInfo, connection.moduleVersionId)
 
 	const doShowHelp = useCallback(
 		() =>

@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { getModuleVersionInfoForConnection } from '../Util.js'
+import { getModuleVersionInfo } from '../../Instances/Util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ConnectionEditPanelHeadingProps {
@@ -19,7 +19,7 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 	const { helpViewer, modules } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.modules.get(connectionInfo.moduleId)
-	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo.moduleVersionId)
+	const moduleVersion = getModuleVersionInfo(moduleInfo, connectionInfo.moduleVersionId)
 
 	const doShowHelp = useCallback(
 		() =>

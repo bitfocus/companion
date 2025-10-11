@@ -1,6 +1,6 @@
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
-export function getModuleVersionInfoForConnection(
+export function getModuleVersionInfo(
 	moduleInfo: ClientModuleInfo | null | undefined,
 	moduleVersionId: string | null
 ): ClientModuleVersionInfo | null | undefined {
