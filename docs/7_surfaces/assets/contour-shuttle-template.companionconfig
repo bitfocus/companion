@@ -1,1 +1,840 @@
-{"version":3,"type":"page","controls":{"bank:1-1":{"type":"button","style":{"text":"Top 1","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true,"rotaryActions":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[],"rotate_left":[],"rotate_right":[]},"options":{"runWhileHeld":[]}}}},"bank:1-2":{"type":"button","style":{"text":"Top 2","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-3":{"type":"button","style":{"text":"Top 3","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-4":{"type":"button","style":{"text":"Top 4","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-9":{"type":"button","style":{"text":"Mid 1","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-10":{"type":"button","style":{"text":"Mid 2","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-11":{"type":"button","style":{"text":"Mid 3","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-12":{"type":"button","style":{"text":"Mid 4","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-13":{"type":"button","style":{"text":"Mid 5","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-17":{"type":"button","style":{"text":"Left","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-18":{"type":"button","style":{"text":"Jog","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":0,"bgcolor":65280,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true,"rotaryActions":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[],"rotate_left":[{"id":"G40VWIrl0HwS4HgL93x_H","action":"bgcolor","instance":"internal","options":{"color":16711680,"page_from_variable":false,"page":0,"page_variable":"1","bank_from_variable":false,"bank":0,"bank_variable":"1"},"delay":0}],"rotate_right":[{"id":"0IZiMhVewDSX6YT54oRjD","action":"bgcolor","instance":"internal","options":{"color":65280,"page_from_variable":false,"page":0,"page_variable":"1","bank_from_variable":false,"bank":0,"bank_variable":"1"},"delay":0}]},"options":{"runWhileHeld":[]}}}},"bank:1-19":{"type":"button","style":{"text":"Shuttle","size":"18","png":null,"alignment":"center:center","pngalignment":"center:center","color":0,"bgcolor":16711680,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true,"rotaryActions":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[],"rotate_left":[{"id":"-MzIw775SEy4bmcRs-vpJ","action":"bgcolor","instance":"internal","options":{"color":16711680,"page_from_variable":false,"page":0,"page_variable":"1","bank_from_variable":false,"bank":0,"bank_variable":"1"},"delay":0}],"rotate_right":[{"id":"OfiQevxR9NUfmRzwFLCdO","action":"bgcolor","instance":"internal","options":{"color":65280,"page_from_variable":false,"page":0,"page_variable":"1","bank_from_variable":false,"bank":0,"bank_variable":"1"},"delay":0}]},"options":{"runWhileHeld":[]}}}},"bank:1-20":{"type":"button","style":{"text":"Right","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-25":{"type":"button","style":{"text":"Bottom Top L","size":"auto","png":null,"alignment":"center:top","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default","textExpression":false},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-26":{"type":"button","style":{"text":"Bottom Bot L","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-27":{"type":"button","style":{"text":"Bottom Bot R","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}},"bank:1-28":{"type":"button","style":{"text":"Bottom Top R","size":"auto","png":null,"alignment":"center:center","pngalignment":"center:center","color":16777215,"bgcolor":0,"show_topbar":"default"},"options":{"relativeDelay":false,"stepAutoProgress":true},"feedbacks":[],"steps":{"0":{"action_sets":{"down":[],"up":[]},"options":{"runWhileHeld":[]}}}}},"page":{"name":"Contour Shuttle"},"instances":{},"oldPageNumber":1}
+version: 9
+type: full
+companionBuild: 4.2.0+8509-Contour-Shuttle-Shuttle-Ring-af97e75c0a
+pages:
+  "1":
+    id: cEaGMcmhsrhjpJzHYARKQ
+    name: Contour Shuttle Template
+    controls:
+      "0":
+        "0":
+          type: button
+          style:
+            text: Top 1
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: NKRp76pvnZO6Y0-z9Bvyd
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "1":
+          type: button
+          style:
+            text: Top 2
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: aIRRJqAozmemTEv0mXek7
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "2":
+          type: button
+          style:
+            text: Top 3
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: jE_BMtRB-IpMNHX3aKDl7
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "3":
+          type: button
+          style:
+            text: Top 4
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: KH48drYSb1GDF6AOF21Fe
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+      "1":
+        "0":
+          type: button
+          style:
+            text: Mid 1
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: GS-uY11CFF51GGa-0o4OC
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "1":
+          type: button
+          style:
+            text: Mid 2
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: qLdSONim0kjgBu83VtLmA
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "2":
+          type: button
+          style:
+            text: Mid 3
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: iJ_Ckns3YN3Kw15niT3e8
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "3":
+          type: button
+          style:
+            text: Mid 4
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: iP87SwZxRFphaN2H5eDl5
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "4":
+          type: button
+          style:
+            text: Mid 5
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: ZyleZQWgOMIxfjv5HEpXg
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+      "2":
+        "0":
+          type: button
+          style:
+            text: Left (ProV2)
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: RkBlDORcsfCR6MeQ9hCJJ
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "1":
+          type: button
+          style:
+            text: Jog\n$(internal:jog)
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: 26112
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: true
+          feedbacks:
+            - id: huyosDBlORt5CPlYGPB_8
+              definitionId: variable_value
+              connectionId: internal
+              options:
+                variable: internal:jog
+                op: eq
+                value: "-1"
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 16711680
+              isInverted: false
+              children: {}
+            - id: z3iEu0NpsCUwv0aEaJCYD
+              definitionId: variable_value
+              connectionId: internal
+              options:
+                variable: internal:jog
+                op: eq
+                value: "1"
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 16711935
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+                rotate_left: []
+                rotate_right: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "2":
+          type: button
+          style:
+            text: Shuttle, non-repeat\n$(internal:shuttle)
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 0
+            bgcolor: 16711680
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: true
+          feedbacks: []
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+                rotate_left:
+                  - id: vrlv0pvxottpc70AVFt37
+                    definitionId: bgcolor
+                    connectionId: internal
+                    options:
+                      color: 16711680
+                      location_target: this
+                      location_text: $(this:page)/$(this:row)/$(this:column)
+                      location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                    type: action
+                    children: {}
+                rotate_right:
+                  - id: 66HRyR5yJGPbbkRUVJGJx
+                    definitionId: bgcolor
+                    connectionId: internal
+                    options:
+                      color: 16776960
+                      location_target: this
+                      location_text: $(this:page)/$(this:row)/$(this:column)
+                      location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                    type: action
+                    children: {}
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "3":
+          type: button
+          style:
+            text: Shuttle, Repeating\n$(internal:shuttle)/$(local:temp)
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 0
+            bgcolor: 16744448
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: true
+          feedbacks: []
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+                rotate_left:
+                  - id: BqETDdqWGJKwAMqkBWgHW
+                    definitionId: button_pressrelease
+                    connectionId: internal
+                    options:
+                      location_target: this
+                      location_text: $(this:page)/$(this:row)/$(this:column)
+                      location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                      force: true
+                    type: action
+                    children: {}
+                  - id: mMPnEX0uYj0Au9h6KSkeA
+                    definitionId: local_variable_set_expression
+                    connectionId: internal
+                    options:
+                      location_target: this
+                      location_text: $(this:page)/$(this:row)/$(this:column)
+                      location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                      name: temp
+                      expression: $(local:temp)-1
+                    type: action
+                    children: {}
+                rotate_right:
+                  - id: KhM-dO6nOiBh7sQYCQu9O
+                    definitionId: local_variable_set_expression
+                    connectionId: internal
+                    options:
+                      location_target: this
+                      location_text: $(this:page)/$(this:row)/$(this:column)
+                      location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                      name: temp
+                      expression: $(local:temp)+1
+                    type: action
+                    children: {}
+                  - id: zh-SOv5TVgtpG_5lASw2c
+                    definitionId: button_pressrelease
+                    connectionId: internal
+                    options:
+                      location_target: this
+                      location_text: $(this:page)/$(this:row)/$(this:column)
+                      location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                      force: true
+                    type: action
+                    children: {}
+              options:
+                runWhileHeld: []
+          localVariables:
+            - id: nUORjnKaTo2RDrdo2Vjjt
+              definitionId: user_value
+              connectionId: internal
+              options:
+                startup_value: "1"
+                persist_value: false
+              type: feedback
+              style: {}
+              isInverted: false
+              variableName: temp
+              children: {}
+        "4":
+          type: button
+          style:
+            text: Right (ProV2)
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: OmRb0wJSOzjjdDUWxXkDs
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+      "3":
+        "0":
+          type: button
+          style:
+            text: Bottom\nTop L
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: ZI6nuV3cWCRxtmP_-TYQ4
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "1":
+          type: button
+          style:
+            text: Bottom\nBot L
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: 60DzmxIQo4VS8MmVxLAHy
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "2":
+          type: button
+          style:
+            text: Bottom\nBot R
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: yR1VBoUpB6Kg4Wi93o_kF
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+        "3":
+          type: button
+          style:
+            text: Bottom\nTop R
+            textExpression: false
+            size: auto
+            png64: null
+            alignment: center:center
+            pngalignment: center:center
+            color: 16777215
+            bgcolor: "0"
+            show_topbar: default
+          options:
+            stepProgression: auto
+            stepExpression: ""
+            rotaryActions: false
+          feedbacks:
+            - id: m7MELdlBRuLzigxzBGHax
+              definitionId: bank_pushed
+              connectionId: internal
+              options:
+                location_target: this
+                location_text: $(this:page)/$(this:row)/$(this:column)
+                location_expression: concat($(this:page), '/', $(this:row), '/', $(this:column))
+                latch_compatability: false
+              type: feedback
+              style:
+                color: 16777215
+                bgcolor: 8421631
+              isInverted: false
+              children: {}
+          steps:
+            "0":
+              action_sets:
+                down: []
+                up: []
+              options:
+                runWhileHeld: []
+          localVariables: []
+    gridSize:
+      minColumn: 0
+      maxColumn: 7
+      minRow: 0
+      maxRow: 3
+triggers: {}
+triggerCollections: []
+custom_variables: {}
+customVariablesCollections: []
+expressionVariables:
+  GSGkeLWFP9nr9dh56STKF:
+    type: expression-variable
+    options:
+      variableName: AudioMic1_Fmt
+      description: An expression variable
+      sortOrder: 0
+    entity:
+      id: rY8rn6h6vq4sMPteUqE82
+      definitionId: expression_value
+      connectionId: internal
+      options:
+        expression: "$(gostream:AudioFader_mic1) % 1 === 0 ?
+          `${$(gostream:AudioFader_mic1)}.0` : $(gostream:AudioFader_mic1)"
+      type: feedback
+      style: {}
+      isInverted: false
+      children: {}
+    localVariables: []
+expressionVariablesCollections: []
+instances: {}
+connectionCollections: []
+surfaces:
+  contourshuttle:shuttlepro_v1-dev1:
+    groupConfig:
+      name: Auto group
+      last_page_id: uGbeO0TGLSyBmfvn5l44A
+      startup_page_id: uGbeO0TGLSyBmfvn5l44A
+      use_last_page: true
+      page: 1
+      last_page: 1
+      startup_page: 1
+    config:
+      brightness: 100
+      rotation: 0
+      never_lock: false
+      xOffset: 0
+      yOffset: 0
+      groupId: null
+    type: Contour Shuttle ShuttlePro v1
+    integrationType: contour-shuttle
+    gridSize:
+      columns: 5
+      rows: 4
+    groupId: group:contourShuttle
+    name: shuttle
+surfaceGroups:
+  group:contourShuttle:
+    name: Contour Shuttle
+    last_page_id: cEaGMcmhsrhjpJzHYARKQ
+    startup_page_id: 2IISGOHFi7vvpEG00DXJw
+    use_last_page: false
+    last_page: 1
+    startup_page: 1

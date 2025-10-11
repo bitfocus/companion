@@ -1,19 +1,19 @@
-It is possible to use the Contour ShuttleXpress and ShuttlePro v1 and v2 with Companion (since v3.1.0).
+It is possible to use the Contour ShuttleXpress and ShuttlePro v1 and v2 with Companion (since v3.1.0; note: support for very old versions of ShuttlePro v1 was added in v4.1.3)
 
-Enable support for it in Companion's settings and rescan for USB devices.
+You must enable it in Companion's Settings > Surfaces section and rescan for USB devices. (You do not need to restart for the setting to "take"... since at least v4.0)
 
-The layout closely matches the device.
+The button layout closely matches the device.
 
-For the shuttle ring you have the choice of defining:
+For the shuttle ring you have the choice of two different buttons:
 
-- **rotate-left/rotate-right actions**: these will execute once for each "stop" on the ring (+/- 7),
-- **button press/release actions**: press actions will repeat at a with increasing frequency proportional as the ring is turned away from the neutral position. Use `$(internal:shuttle)` to determine direction and magnitude; `$(internal:shuttle-sign)` if all you need is direction. When the ring returns to zero a single release action will be performed.
+- ***row2/col2***: a rotate action will be sent once for each "stop" on the ring (+/- 7, including 0),
+- ***row2/col3***: a rotate action will be sent will repeat at a with increasing frequency proportional as the ring is turned away from the neutral position. Use the variable: `$(internal:shuttle)` if you need to determine direction and magnitude. (No action is sent when the shuttle returns to 0)
+- NOTE: In either case, ***rotate-left*** is emitted when the jog is to the left of zero (the neutral position) and ***rotate-right*** is sent when the jog is to the right of zero, regardless of the physical rotation direction.
 
 The contour shuttle defines two internal variables:
 
-- `$(internal:shuttle)` -7 to +7; indicates the current shuttle position
-- `$(internal:shuttle-sign)` -1, 0, or 1 to indicate the direction of action. (Multiply this by your "increment" value.)
-- `$(internal:jog)` indicates the rotational direction of the jog wheel for 20 ms after each click-stop (+/-1).
+- `$(internal:shuttle)` (-7 to +7): indicates the current shuttle position
+- `$(internal:jog)` (+1/-1): indicates the rotational direction of the jog wheel for 20 ms after each click-stop.
 
 ![Contour Shuttle template](images/contour-shuttle.png?raw=true 'Contour Shuttle template')
 
