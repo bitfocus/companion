@@ -82,6 +82,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 			return (
 				<ModuleVersionRow
 					key={versionId}
+					moduleType={modules.moduleType}
 					moduleId={moduleId}
 					versionId={versionId}
 					storeInfo={storeInfo}
@@ -136,6 +137,7 @@ interface VisibleVersionsState {
 }
 
 interface ModuleVersionRowProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	versionId: string
 	installedInfo: ClientModuleVersionInfo | undefined
@@ -143,6 +145,7 @@ interface ModuleVersionRowProps {
 }
 
 const ModuleVersionRow = observer(function ModuleVersionRow({
+	moduleType,
 	moduleId,
 	versionId,
 	installedInfo,
@@ -155,7 +158,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 
 	const doShowHelp = useCallback(() => {
 		if (!helpPath) return
-		helpViewer.current?.showFromUrl(moduleId, versionDisplayName, helpPath)
+		helpViewer.current?.showFromUrl(moduleType, moduleId, versionDisplayName, helpPath)
 	}, [helpViewer, moduleId, versionDisplayName, helpPath])
 
 	if (!storeInfo && !installedInfo) return null // Should never happen

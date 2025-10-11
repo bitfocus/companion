@@ -3,6 +3,7 @@ import { go as fuzzySearch } from 'fuzzysort'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export function useAllModuleProducts(
 	modules: ModuleInfoStore,
@@ -20,6 +21,7 @@ export function useAllModuleProducts(
 			for (const product of moduleInfo.display.products) {
 				const key = `${moduleInfo.display.id}-${product}`
 				allProducts[key] = {
+					moduleType: modules.moduleType,
 					id: moduleInfo.display.id,
 
 					installedInfo: moduleInfo,
@@ -52,6 +54,7 @@ export function useAllModuleProducts(
 					installedInfo.storeInfo = moduleInfo
 				} else {
 					allProducts[key] = {
+						moduleType: modules.moduleType,
 						id: moduleInfo.id,
 
 						installedInfo: null,
@@ -84,6 +87,7 @@ export function filterProducts(allProducts: FuzzyProduct[], filter: string): Fuz
 }
 
 export interface FuzzyProduct {
+	moduleType: ModuleInstanceType
 	id: string
 
 	installedInfo: ClientModuleInfo | null

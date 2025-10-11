@@ -23,6 +23,7 @@ import { useConnectionListContext } from './ConnectionListContext.js'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ConnectionsTableRowProps {
 	connection: ClientConnectionConfigWithId
@@ -85,7 +86,12 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const doShowHelp = useCallback(
 		() =>
 			moduleVersion?.helpPath &&
-			helpViewer.current?.showFromUrl(connection.instance_type, moduleVersion.versionId, moduleVersion.helpPath),
+			helpViewer.current?.showFromUrl(
+				ModuleInstanceType.Connection,
+				connection.instance_type,
+				moduleVersion.versionId,
+				moduleVersion.helpPath
+			),
 		[helpViewer, connection.instance_type, moduleVersion]
 	)
 

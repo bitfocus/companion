@@ -221,7 +221,7 @@ const ModulesListRow = observer(function ModulesListRow({
 		if (!moduleInfo.helpUrl) return
 		const latestVersionName =
 			moduleInfo.installedInfo?.stableVersion?.versionId ?? moduleInfo.installedInfo?.betaVersion?.versionId ?? ''
-		helpViewer.current?.showFromUrl(id, latestVersionName, moduleInfo.helpUrl)
+		helpViewer.current?.showFromUrl(moduleInfo.moduleType, id, latestVersionName, moduleInfo.helpUrl)
 	}, [helpViewer, id, moduleInfo])
 
 	const doEdit = () => {

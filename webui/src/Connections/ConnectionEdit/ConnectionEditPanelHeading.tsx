@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite'
 import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { getModuleVersionInfoForConnection } from '../Util.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ConnectionEditPanelHeadingProps {
 	connectionInfo: ClientConnectionConfig
@@ -23,7 +24,12 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 	const doShowHelp = useCallback(
 		() =>
 			moduleVersion?.helpPath &&
-			helpViewer.current?.showFromUrl(connectionInfo.instance_type, moduleVersion.versionId, moduleVersion.helpPath),
+			helpViewer.current?.showFromUrl(
+				ModuleInstanceType.Connection,
+				connectionInfo.instance_type,
+				moduleVersion.versionId,
+				moduleVersion.helpPath
+			),
 		[helpViewer, connectionInfo.instance_type, moduleVersion]
 	)
 

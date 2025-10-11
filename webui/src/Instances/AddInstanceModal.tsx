@@ -123,8 +123,13 @@ export const AddInstanceModal = observer(
 
 		const showHelpClick = useCallback(() => {
 			if (!moduleInfo?.id || !selectedVersionInfo) return
-			helpViewer.current?.showFromUrl(moduleInfo.id, selectedVersionInfo.versionId, selectedVersionInfo.helpPath)
-		}, [helpViewer, moduleInfo?.id, selectedVersionInfo])
+			helpViewer.current?.showFromUrl(
+				moduleInfo.moduleType,
+				moduleInfo.id,
+				selectedVersionInfo.versionId,
+				selectedVersionInfo.helpPath
+			)
+		}, [helpViewer, moduleInfo?.moduleType, moduleInfo?.id, selectedVersionInfo])
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>

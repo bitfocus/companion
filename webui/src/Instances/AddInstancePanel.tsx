@@ -202,8 +202,13 @@ function AddInstanceEntry({ moduleInfo, addInstance }: AddInstanceEntryProps) {
 	const showHelpClick = useCallback(
 		() =>
 			showHelpForVersion?.helpPath &&
-			helpViewer.current?.showFromUrl(moduleInfo.id, showHelpForVersion.versionId, showHelpForVersion.helpPath),
-		[helpViewer, moduleInfo.id, showHelpForVersion?.helpPath, showHelpForVersion?.versionId]
+			helpViewer.current?.showFromUrl(
+				moduleInfo.moduleType,
+				moduleInfo.id,
+				showHelpForVersion.versionId,
+				showHelpForVersion.helpPath
+			),
+		[helpViewer, moduleInfo.moduleType, moduleInfo.id, showHelpForVersion?.helpPath, showHelpForVersion?.versionId]
 	)
 
 	return (

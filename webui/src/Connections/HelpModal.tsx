@@ -7,13 +7,16 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import semver from 'semver'
-import { makeAbsolutePath } from '~/Resources/util.js'
+import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
+import { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface HelpModalRef {
-	showFromUrl(moduleId: string, versionDisplayName: string, url: string): void
+	showFromUrl(moduleType: ModuleInstanceType, moduleId: string, versionDisplayName: string, url: string): void
 }
 
 interface HelpDisplayInfo {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	versionDisplayName: string
 	markdown: string
@@ -33,7 +36,7 @@ export const HelpModal = observer(
 		useImperativeHandle(
 			ref,
 			() => ({
-				showFromUrl(moduleId, versionId, url) {
+				showFromUrl(moduleType, moduleId, versionId, url) {
 					let versionDisplayName = versionId
 					if (versionId) {
 						const parsed = semver.parse(versionId)
@@ -47,6 +50,7 @@ export const HelpModal = observer(
 							const text = await response.text()
 
 							setContent({
+								moduleType,
 								moduleId,
 								versionDisplayName: versionDisplayName,
 								markdown: text,
@@ -56,6 +60,7 @@ export const HelpModal = observer(
 						})
 						.catch((e) => {
 							setContent({
+								moduleType,
 								moduleId,
 								versionDisplayName: versionDisplayName,
 								markdown: `Failed to load help text: ${e}`,
@@ -84,7 +89,19 @@ export const HelpModal = observer(
 				}
 			: undefined
 
-		const moduleInfo = content && modules.modules.get(content.moduleId)
+		let moduleStore: ModuleInfoStore | undefined
+		if (content) {
+			switch (content?.moduleType) {
+				case ModuleInstanceType.Connection:
+					moduleStore = modules
+					break
+				default:
+					assertNever(content.moduleType)
+					break
+			}
+		}
+
+		const moduleInfo = content && moduleStore?.modules.get(content.moduleId)
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
