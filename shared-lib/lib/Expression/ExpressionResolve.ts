@@ -48,8 +48,12 @@ export function ResolveExpression(
 				const left = resolve(node.left)
 				const right = resolve(node.right)
 				switch (node.operator) {
-					case '+':
-						return Number(left) + Number(right)
+					case '+': {
+						// This behaves like the Javascript '+' except that
+						// a leading space or '' will not force string concat, since Number(' ') = 0, and Number(' 7') = 7
+						const result = Number(left) + Number(right)
+						return isNaN(result) ? left + right : result
+					}
 					case '-':
 						return Number(left) - Number(right)
 					case '*':
@@ -275,8 +279,12 @@ function mutateValueForAssignment(operator: unknown, leftValue: any, rightValue:
 			return Number(leftValue) / Number(rightValue)
 		case '%=':
 			return Number(leftValue) % Number(rightValue)
-		case '+=':
-			return Number(leftValue) + Number(rightValue)
+		case '+=': {
+			// This behaves like the Javascript '+=' except that
+			// a leading space or '' will not force string concat, since Number(' ') = 0, and Number(' 7') = 7
+			const result = Number(leftValue) + Number(rightValue)
+			return isNaN(result) ? leftValue + rightValue : result
+		}
 		case '-=':
 			return Number(leftValue) - Number(rightValue)
 		case '<<=':
