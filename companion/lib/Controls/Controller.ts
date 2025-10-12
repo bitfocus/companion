@@ -560,13 +560,13 @@ export class ControlsController {
 	/**
 	 * Execute rotation of a control
 	 * @param controlId Id of the control
-	 * @param direction Whether the control is rotated to the right
+	 * @param rightward Whether the control is rotated to the right
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(controlId: string, direction: boolean, surfaceId: string | undefined): boolean {
+	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
 		const control = this.getControl(controlId)
 		if (control && control.supportsActionSets) {
-			control.rotateControl(direction, surfaceId)
+			control.rotateControl(rightward, surfaceId)
 			return true
 		}
 
