@@ -254,7 +254,7 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			this.emit('setVariable', 'shuttle', shuttle)
 
 			// Direction of rotation events (true triggers "rotate-right") is different than for knobs
-			// because the ring has limitted travel and always springs back to zero. In typical usage,
+			// because the ring has limited travel and always springs back to zero. In typical usage,
 			// a shuttle-ring emits "go forward" commands if shuttle > 0 and "reverse" commands when
 			// it's on the negative side of zero, regardless of direction of rotation.
 			// So we define "rotate-right/left" here to mean right/left side of zero (i.e. positive/negative values)
