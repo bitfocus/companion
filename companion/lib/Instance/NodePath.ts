@@ -2,8 +2,8 @@ import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'node:url'
 import path from 'path'
-import type { ModuleManifest } from '@companion-module/base'
 import { doesModuleSupportPermissionsModel } from './ApiVersions.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 
 // This isn't used once webpacked, but avoiding including it in the final build becomes messy
 const nodeVersionsStr = fs.readFileSync(new URL('../../../nodejs-versions.json', import.meta.url)).toString()
@@ -30,11 +30,14 @@ export async function getNodeJsPath(runtimeType: string): Promise<string | null>
 }
 
 export function getNodeJsPermissionArguments(
-	manifest: ModuleManifest,
+	manifest: SomeModuleManifest,
 	moduleApiVersion: string,
 	moduleDir: string,
 	enableInspect: boolean
 ): string[] {
+	// Not supported by surfaces
+	if (manifest.type === 'surface') return []
+
 	// Not supported by node18
 	if (enableInspect || manifest.runtime.type === 'node18' || !doesModuleSupportPermissionsModel(moduleApiVersion))
 		return []
