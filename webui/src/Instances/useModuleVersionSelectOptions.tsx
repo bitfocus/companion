@@ -5,10 +5,10 @@ import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { useComputed } from '~/Resources/util.js'
 import { getLatestVersion } from '../Connections/ConnectionEdit/VersionUtil.js'
-import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export function useModuleVersionSelectOptions(
-	modules: ModuleInfoStore,
+	moduleType: ModuleInstanceType,
 	moduleId: string | undefined,
 	installedInfo: ClientModuleInfo | null | undefined,
 	includeBeta: boolean
@@ -17,8 +17,8 @@ export function useModuleVersionSelectOptions(
 	hasIncompatibleNewerVersion: boolean
 	choices: DropdownChoiceInt[]
 } {
-	const moduleStoreInfo = useModuleStoreInfo(modules, moduleId)
-	const upgradeToVersions = useModuleUpgradeToVersions(modules, moduleId)
+	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
+	const upgradeToVersions = useModuleUpgradeToVersions(moduleType, moduleId)
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
 	const latestIncompatibleStableVersion = getLatestVersion(moduleStoreInfo?.versions, false, true)

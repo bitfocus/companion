@@ -21,6 +21,7 @@ import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -34,7 +35,7 @@ interface ConnectionsListProps {
 }
 
 export const ConnectionsList = observer(function ConnectionsList({ selectedConnectionId }: ConnectionsListProps) {
-	const { modules, connections } = useContext(RootAppStoreContext)
+	const { connections } = useContext(RootAppStoreContext)
 
 	const connectionStatuses = useInstanceStatuses()
 
@@ -94,7 +95,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 					know how to communicate with whatever you want to control.
 				</p>
 
-				<MissingVersionsWarning modules={modules} instances={connections.connections} />
+				<MissingVersionsWarning moduleType={ModuleInstanceType.Connection} instances={connections.connections} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />

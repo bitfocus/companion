@@ -82,7 +82,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		panelStore.triggerReload()
 	}, [panelStore, connectionInfo.moduleId, connectionInfo.moduleVersionId])
 
-	const moduleInfo = modules.modules.get(panelStore.connectionInfo.moduleId)
+	const moduleInfo = modules.getModuleInfo(panelStore.connectionInfo.moduleType, panelStore.connectionInfo.moduleId)
 
 	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, panelStore.connectionInfo.moduleVersionId)
 	const connectionShouldBeRunning =

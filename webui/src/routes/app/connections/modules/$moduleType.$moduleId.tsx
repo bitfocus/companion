@@ -5,24 +5,35 @@ import { useComputed } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const { moduleId } = Route.useParams()
+	const { moduleType, moduleId } = Route.useParams()
+
+	const moduleTypeCast = moduleType as ModuleInstanceType
 
 	const navigate = Route.useNavigate()
 
 	// Ensure the selected module is valid
 	useComputed(() => {
-		if (moduleId && !modules.modules.get(moduleId) && !modules.storeList.has(moduleId)) {
+		if (
+			moduleId &&
+			!modules.getModuleInfo(moduleTypeCast, moduleId) &&
+			!modules.getStoreInfo(moduleTypeCast, moduleId)
+		) {
 			void navigate({ to: `/connections/modules` })
 		}
 	}, [navigate, modules, moduleId])
 
-	return <MyErrorBoundary>{moduleId && <ModuleManagePanel key={moduleId} moduleId={moduleId} />}</MyErrorBoundary>
+	return (
+		<MyErrorBoundary>
+			{moduleId && <ModuleManagePanel key={moduleId} moduleType={moduleTypeCast} moduleId={moduleId} />}
+		</MyErrorBoundary>
+	)
 })
 
-export const Route = createFileRoute('/_app/connections/modules/$moduleId')({
+export const Route = createFileRoute('/_app/connections/modules/$moduleType/$moduleId')({
 	component: RouteComponent,
 })

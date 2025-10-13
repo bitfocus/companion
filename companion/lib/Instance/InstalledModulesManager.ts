@@ -279,14 +279,13 @@ export class InstanceInstalledModulesManager {
 			uninstallModule: publicProcedure
 				.input(
 					z.object({
+						moduleType: z.enum(ModuleInstanceType),
 						moduleId: z.string(),
 						versionId: z.string(),
 					})
 				)
 				.mutation(async ({ input }) => {
-					const moduleType = ModuleInstanceType.Connection // TODO - dynamic
-
-					return this.#uninstallModule(moduleType, input.moduleId, input.versionId)
+					return this.#uninstallModule(input.moduleType, input.moduleId, input.versionId)
 				}),
 		})
 	}

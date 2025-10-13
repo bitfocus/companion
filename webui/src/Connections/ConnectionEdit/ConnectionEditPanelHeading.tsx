@@ -18,7 +18,7 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 }: ConnectionEditPanelHeadingProps) {
 	const { helpViewer, modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(connectionInfo.moduleId)
+	const moduleInfo = modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
 	const moduleVersion = getModuleVersionInfo(moduleInfo, connectionInfo.moduleVersionId)
 
 	const doShowHelp = useCallback(

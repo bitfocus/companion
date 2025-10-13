@@ -37,7 +37,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const { showVariables, deleteModalRef, configureConnection } = useConnectionListContext()
 
 	const id = connection.id
-	const moduleInfo = modules.modules.get(connection.moduleId)
+	const moduleInfo = modules.getModuleInfo(connection.moduleType, connection.moduleId)
 
 	const isEnabled = connection.enabled === undefined || connection.enabled
 
@@ -126,7 +126,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					)}
 					{moduleVersion?.displayName ?? connection.moduleVersionId}
 
-					<UpdateInstanceToLatestBadge modules={modules} instance={connection} />
+					<UpdateInstanceToLatestBadge instance={connection} />
 				</MyErrorBoundary>
 			</div>
 			<div onClick={doEdit} className="ms-2">

@@ -1,19 +1,19 @@
 import { CCol, CRow } from '@coreui/react'
 import React, { memo, useCallback } from 'react'
-import { ModulesList } from './ModulesList.js'
+import { ModulesList, ModuleTypeAndIdPair } from './ModulesList.js'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 
 export const ModulesPage = memo(function ConnectionsPage() {
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/connections/modules/$moduleId' })
-	const selectedModuleId = routeMatch ? routeMatch.moduleId : null
+	const routeMatch = matchRoute({ to: '/connections/modules/$moduleType/$moduleId' })
+	const selectedModuleInfo: ModuleTypeAndIdPair | null = routeMatch ? (routeMatch as ModuleTypeAndIdPair) : null
 
 	const navigate = useNavigate({ from: '/connections/modules' })
 
 	const doManageModule = useCallback(
-		(moduleId: string | null) => {
-			if (moduleId) {
-				void navigate({ to: '/connections/modules/$moduleId', params: { moduleId } })
+		(moduleInfo: ModuleTypeAndIdPair | null) => {
+			if (moduleInfo) {
+				void navigate({ to: '/connections/modules/$moduleType/$moduleId', params: moduleInfo })
 			} else {
 				void navigate({ to: '/connections/modules' })
 			}
@@ -21,13 +21,13 @@ export const ModulesPage = memo(function ConnectionsPage() {
 		[navigate]
 	)
 
-	const showPrimaryPanel = !selectedModuleId
-	const showSecondaryPanel = !!selectedModuleId
+	const showPrimaryPanel = !selectedModuleInfo
+	const showSecondaryPanel = !!selectedModuleInfo
 
 	return (
 		<CRow className="connections-page split-panels">
 			<CCol xs={12} xl={6} className={`connections-panel primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
-				<ModulesList doManageModule={doManageModule} selectedModuleId={selectedModuleId} />
+				<ModulesList doManageModule={doManageModule} selectedModuleInfo={selectedModuleInfo} />
 			</CCol>
 
 			<CCol

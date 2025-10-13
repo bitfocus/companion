@@ -1,5 +1,5 @@
 import React from 'react'
-import type { ObservableSet } from 'mobx'
+import type { ObservableMap, ObservableSet } from 'mobx'
 import type { NotificationsManagerRef } from '~/Components/Notifications.js'
 import type { PagesStore } from './PagesStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
@@ -39,6 +39,8 @@ export interface RootAppStore {
 	readonly triggersList: TriggersListStore
 
 	readonly userConfig: UserConfigStore
+
+	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
 
 	readonly showWizardEvent: EventTarget
 	readonly showWizard: () => void

@@ -39,7 +39,9 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 
 	if (connectionAndCategory[0]) {
 		const connectionInfo = connections.getInfo(connectionAndCategory[0])
-		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.moduleId) : undefined
+		const moduleInfo = connectionInfo
+			? modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
+			: undefined
 
 		const presets = presetsDefinitionsStore.presets.get(connectionAndCategory[0])
 

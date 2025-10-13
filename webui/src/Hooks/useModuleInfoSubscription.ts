@@ -7,25 +7,20 @@ export function useModuleInfoSubscription(store: ModuleInfoStore): boolean {
 	const [ready, setReady] = useState(false)
 
 	useSubscription(
-		trpc.instances.modules.watch.subscriptionOptions(
-			{
-				moduleType: store.moduleType,
+		trpc.instances.modules.watch.subscriptionOptions(undefined, {
+			onStarted: () => {
+				store.updateStore(null)
+				setReady(false)
 			},
-			{
-				onStarted: () => {
-					store.updateStore(null)
-					setReady(false)
-				},
-				onData: (data) => {
-					setReady(true)
-					store.updateStore(data)
-				},
-				onError: (err) => {
-					store.updateStore(null)
-					console.error('Failed to subscribe to module info updates', err)
-				},
-			}
-		)
+			onData: (data) => {
+				setReady(true)
+				store.updateStore(data)
+			},
+			onError: (err) => {
+				store.updateStore(null)
+				console.error('Failed to subscribe to module info updates', err)
+			},
+		})
 	)
 
 	return ready

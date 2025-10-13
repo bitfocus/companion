@@ -51,6 +51,8 @@ export class InstanceModuleInfo {
 		if (!baseVersion) return null
 
 		return {
+			moduleType: this.moduleType,
+
 			display: baseVersion.display,
 
 			devVersion: translateStableVersion(this.devModule),

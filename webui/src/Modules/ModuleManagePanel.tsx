@@ -13,16 +13,18 @@ import { faExternalLink, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { useNavigate } from '@tanstack/react-router'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ModuleManagePanelProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 }
 
-export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleId }: ModuleManagePanelProps) {
+export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleType, moduleId }: ModuleManagePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(moduleId)?.display
-	const moduleStoreInfo = modules.storeList.get(moduleId)
+	const moduleInfo = modules.getModuleInfo(moduleType, moduleId)?.display
+	const moduleStoreInfo = modules.getStoreInfo(moduleType, moduleId)
 
 	if (!moduleInfo && !moduleStoreInfo) {
 		return (
@@ -34,22 +36,30 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleId 
 		)
 	}
 
-	return <ModuleManagePanelInner moduleId={moduleId} moduleInfo={moduleInfo} moduleStoreBaseInfo={moduleStoreInfo} />
+	return (
+		<ModuleManagePanelInner
+			moduleType={moduleType}
+			moduleId={moduleId}
+			moduleInfo={moduleInfo}
+			moduleStoreBaseInfo={moduleStoreInfo}
+		/>
+	)
 })
 
 interface ModuleManagePanelInnerProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleInfo: ModuleDisplayInfo | undefined
 	moduleStoreBaseInfo: ModuleStoreListCacheEntry | undefined
 }
 
 const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
+	moduleType,
 	moduleId,
 	moduleInfo,
 	moduleStoreBaseInfo,
 }: ModuleManagePanelInnerProps) {
-	const { modules } = useContext(RootAppStoreContext)
-	const moduleStoreInfo = useModuleStoreInfo(modules, moduleId)
+	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
 	const navigate = useNavigate()
 
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
@@ -80,12 +90,12 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 			</div>
 			<div className="secondary-panel-simple-body">
 				<div className="refresh-and-last-updated">
-					<RefreshModuleInfo modules={modules} moduleId={moduleId} />
+					<RefreshModuleInfo moduleType={moduleType} moduleId={moduleId} />
 					<LastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
 				</div>
 				{moduleStoreInfo?.updateWarning && <CAlert color="danger">{moduleStoreInfo.updateWarning}</CAlert>}
 
-				<ModuleVersionsTable moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
+				<ModuleVersionsTable moduleType={moduleType} moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
 			</div>
 		</>
 	)

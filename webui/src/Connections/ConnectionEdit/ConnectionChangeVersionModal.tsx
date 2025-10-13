@@ -24,6 +24,7 @@ import { useComputed } from '~/Resources/util.js'
 import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ConnectionChangeVersionButtonProps {
 	connectionId: string
@@ -145,8 +146,11 @@ export function ConnectionChangeVersionButton({
 											<>
 												<CFormLabel htmlFor={field.name} className="col-sm-3 col-form-label col-form-label-sm">
 													Version
-													{!!modules.storeList.get(effectiveModuleId) && (
-														<ModuleVersionsRefresh modules={modules} moduleId={effectiveModuleId} />
+													{!!modules.getStoreInfo(ModuleInstanceType.Connection, effectiveModuleId) && (
+														<ModuleVersionsRefresh
+															moduleType={ModuleInstanceType.Connection}
+															moduleId={effectiveModuleId}
+														/>
 													)}
 												</CFormLabel>
 												<CCol sm={9}>
@@ -246,20 +250,18 @@ const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
 	onChange,
 	onBlur,
 }: SelectedModuleDropdownProps) {
-	const { modules } = useContext(RootAppStoreContext)
-
-	const allProducts = useAllModuleProducts(modules)
+	const allProducts = useAllModuleProducts(ModuleInstanceType.Connection)
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
 
 		// If the current value is missing, add it with some formatting
-		const hasCurrent = allProducts.find((p) => p.id === value)
+		const hasCurrent = allProducts.find((p) => p.moduleId === value)
 		if (!hasCurrent) choices.push({ id: value, label: `Unknown module: ${value}` })
 
 		// Push all the products. Use an object as an easy way to deduplicate by id
 		const choicesObj: Record<string, DropdownChoice> = {}
 		for (const product of allProducts) {
-			choicesObj[product.id] = { id: product.id, label: product.name }
+			choicesObj[product.moduleId] = { id: product.moduleId, label: product.name }
 		}
 
 		return Object.values(choicesObj).sort((a, b) => a.label.localeCompare(b.label))
@@ -292,9 +294,9 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 }: SelectedVersionDropdownProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(moduleId)
+	const moduleInfo = modules.getModuleInfo(ModuleInstanceType.Connection, moduleId)
 	const { choices: moduleVersionChoices, loaded: choicesLoaded } = useModuleVersionSelectOptions(
-		modules,
+		ModuleInstanceType.Connection,
 		moduleId,
 		moduleInfo,
 		false

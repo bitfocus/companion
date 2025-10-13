@@ -248,7 +248,7 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 				<SidebarMenuItem
 					key={connectionInfo.id}
 					name={connectionInfo.label}
-					subheading={modules.getModuleFriendlyName(connectionInfo.moduleId)}
+					subheading={modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)}
 					icon={null}
 					path={`/variables/connection/${connectionInfo.label}`}
 				/>

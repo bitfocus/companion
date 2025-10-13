@@ -1,12 +1,13 @@
+import type { ModuleInstanceType } from './Instance.js'
+
 export interface ModuleStoreListCacheStore {
 	lastUpdated: number
 	lastUpdateAttempt: number
 	updateWarning: string | null
 
 	// The version of the module API that the check was made with. Note: this may not exist for older cache data
-	moduleApiVersion: string | null
-
-	modules: Record<string, ModuleStoreListCacheEntry>
+	connectionModuleApiVersion: string | null
+	connectionModules: Record<string, ModuleStoreListCacheEntry> | null
 }
 
 export interface ModuleStoreListCacheEntry {
@@ -35,6 +36,7 @@ export interface ModuleStoreListCacheEntry {
 
 export interface ModuleStoreModuleInfoStore {
 	id: string
+	moduleType: ModuleInstanceType
 
 	lastUpdated: number
 	lastUpdateAttempt: number

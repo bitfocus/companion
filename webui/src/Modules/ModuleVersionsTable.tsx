@@ -27,16 +27,18 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 dayjs.extend(relativeTime)
 
 interface ModuleVersionsTableProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleStoreInfo: ModuleStoreModuleInfoStore | null
 }
 
 export const ModuleVersionsTable = observer(function ModuleVersionsTable({
+	moduleType,
 	moduleId,
 	moduleStoreInfo,
 }: ModuleVersionsTableProps) {
 	const { modules } = useContext(RootAppStoreContext)
-	const moduleInstalledInfo = modules.modules.get(moduleId)
+	const moduleInstalledInfo = modules.getModuleInfo(moduleType, moduleId)
 
 	const allVersionsSet = new Set<string>()
 	const installedModuleVersions = new Map<string, ClientModuleVersionInfo>()
@@ -82,7 +84,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 			return (
 				<ModuleVersionRow
 					key={versionId}
-					moduleType={modules.moduleType}
+					moduleType={moduleType}
 					moduleId={moduleId}
 					versionId={versionId}
 					storeInfo={storeInfo}
@@ -176,9 +178,15 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 		<tr>
 			<td>
 				{installedInfo ? (
-					<ModuleUninstallButton moduleId={moduleId} versionId={versionId} disabled={matchingConnections > 0} />
+					<ModuleUninstallButton
+						moduleType={moduleType}
+						moduleId={moduleId}
+						versionId={versionId}
+						disabled={matchingConnections > 0}
+					/>
 				) : (
 					<ModuleInstallButton
+						moduleType={moduleType}
 						moduleId={moduleId}
 						versionId={versionId}
 						apiVersion={storeInfo!.apiVersion}
@@ -225,12 +233,13 @@ function LastUpdatedTimestamp({ releasedAt }: { releasedAt: number | undefined }
 }
 
 interface ModuleUninstallButtonProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	versionId: string
 	disabled: boolean
 }
 
-function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstallButtonProps) {
+function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: ModuleUninstallButtonProps) {
 	const { notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
@@ -239,10 +248,7 @@ function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstal
 	const doRemove = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
 		uninstallModuleMutation
-			.mutateAsync({
-				moduleId,
-				versionId,
-			})
+			.mutateAsync({ moduleType, moduleId, versionId })
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to uninstall module', failureReason)
@@ -256,7 +262,7 @@ function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstal
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [uninstallModuleMutation, notifier, moduleId, versionId])
+	}, [uninstallModuleMutation, notifier, moduleType, moduleId, versionId])
 
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
@@ -273,13 +279,14 @@ function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstal
 }
 
 interface ModuleInstallButtonProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	versionId: string
 	apiVersion: string
 	hasTarUrl: boolean
 }
 
-function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: ModuleInstallButtonProps) {
+function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasTarUrl }: ModuleInstallButtonProps) {
 	const { notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
@@ -288,11 +295,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 	const doInstall = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
 		installStoreModuleMutation // TODO: 30s timeout?
-			.mutateAsync({
-				moduleType: ModuleInstanceType.Connection,
-				moduleId,
-				versionId,
-			})
+			.mutateAsync({ moduleType, moduleId, versionId })
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to install module', failureReason)
@@ -306,7 +309,7 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [installStoreModuleMutation, notifier, moduleId, versionId])
+	}, [installStoreModuleMutation, notifier, moduleType, moduleId, versionId])
 
 	if (!hasTarUrl) {
 		return (

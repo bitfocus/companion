@@ -7,15 +7,12 @@ import semver from 'semver'
 import { InstanceVersionUpdatePolicy, ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import { faCircleUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 
 interface UpdateInstanceToLatestBadgeProps {
-	modules: ModuleInfoStore
 	instance: ClientInstanceConfigBase
 }
 
 export const UpdateInstanceToLatestBadge = observer(function UpdateInstanceToLatestBadge({
-	modules,
 	instance,
 }: UpdateInstanceToLatestBadgeProps) {
 	// Don't show for dev versions
@@ -23,15 +20,14 @@ export const UpdateInstanceToLatestBadge = observer(function UpdateInstanceToLat
 	// Return early if manual updates are enabled
 	if (instance.updatePolicy === InstanceVersionUpdatePolicy.Manual) return null
 
-	return <UpdateInstanceToLatestBadgeInner modules={modules} instance={instance} />
+	return <UpdateInstanceToLatestBadgeInner instance={instance} />
 })
 
 const UpdateInstanceToLatestBadgeInner = observer(function UpdateInstanceToLatestBadgeInner({
-	modules,
 	instance,
 }: UpdateInstanceToLatestBadgeProps) {
-	const moduleStoreInfo = useModuleStoreInfo(modules, instance.moduleId) // TODO - put these into a central store, to minimise the impact
-	const upgradeToVersions = useModuleUpgradeToVersions(modules, instance.moduleId)
+	const moduleStoreInfo = useModuleStoreInfo(instance.moduleType, instance.moduleId) // TODO - put these into a central store, to minimise the impact
+	const upgradeToVersions = useModuleUpgradeToVersions(instance.moduleType, instance.moduleId)
 
 	let message: string | undefined
 

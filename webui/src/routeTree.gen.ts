@@ -62,9 +62,9 @@ import { Route as VariablesExpressionControlIdRouteImport } from './routes/app/v
 import { Route as VariablesConnectionDotlabelRouteImport } from './routes/app/variables/connection.$label.tsx'
 import { Route as SurfacesConfiguredItemIdRouteImport } from './routes/app/surfaces/configured/$itemId.tsx'
 import { Route as SettingsBackupsRuleIdRouteImport } from './routes/app/settings/backups/$ruleId.tsx'
-import { Route as ConnectionsModulesModuleIdRouteImport } from './routes/app/connections/modules/$moduleId.tsx'
 import { Route as ConnectionsConfiguredAddRouteImport } from './routes/app/connections/configured/add.tsx'
 import { Route as ConnectionsConfiguredConnectionIdRouteImport } from './routes/app/connections/configured/$connectionId.tsx'
+import { Route as ConnectionsModulesModuleTypeDotmoduleIdRouteImport } from './routes/app/connections/modules/$moduleType.$moduleId.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
 const GettingStartedDotlazyRouteImport = createFileRoute('/getting-started')()
@@ -358,12 +358,6 @@ const SettingsBackupsRuleIdRoute = SettingsBackupsRuleIdRouteImport.update({
   path: '/$ruleId',
   getParentRoute: () => SettingsBackupsRoute,
 } as any)
-const ConnectionsModulesModuleIdRoute =
-  ConnectionsModulesModuleIdRouteImport.update({
-    id: '/$moduleId',
-    path: '/$moduleId',
-    getParentRoute: () => ConnectionsModulesRoute,
-  } as any)
 const ConnectionsConfiguredAddRoute =
   ConnectionsConfiguredAddRouteImport.update({
     id: '/add',
@@ -375,6 +369,12 @@ const ConnectionsConfiguredConnectionIdRoute =
     id: '/$connectionId',
     path: '/$connectionId',
     getParentRoute: () => ConnectionsConfiguredRoute,
+  } as any)
+const ConnectionsModulesModuleTypeDotmoduleIdRoute =
+  ConnectionsModulesModuleTypeDotmoduleIdRouteImport.update({
+    id: '/$moduleType/$moduleId',
+    path: '/$moduleType/$moduleId',
+    getParentRoute: () => ConnectionsModulesRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -424,7 +424,6 @@ export interface FileRoutesByFullPath {
   '/variables': typeof VariablesIndexRoute
   '/connections/configured/$connectionId': typeof ConnectionsConfiguredConnectionIdRoute
   '/connections/configured/add': typeof ConnectionsConfiguredAddRoute
-  '/connections/modules/$moduleId': typeof ConnectionsModulesModuleIdRoute
   '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
   '/variables/connection/$label': typeof VariablesConnectionDotlabelRoute
@@ -434,6 +433,7 @@ export interface FileRoutesByFullPath {
   '/settings/backups/': typeof SettingsBackupsIndexRoute
   '/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
   '/variables/expression/': typeof VariablesExpressionIndexRoute
+  '/connections/modules/$moduleType/$moduleId': typeof ConnectionsModulesModuleTypeDotmoduleIdRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
@@ -475,7 +475,6 @@ export interface FileRoutesByTo {
   '/variables': typeof VariablesIndexRoute
   '/connections/configured/$connectionId': typeof ConnectionsConfiguredConnectionIdRoute
   '/connections/configured/add': typeof ConnectionsConfiguredAddRoute
-  '/connections/modules/$moduleId': typeof ConnectionsModulesModuleIdRoute
   '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
   '/variables/connection/$label': typeof VariablesConnectionDotlabelRoute
@@ -485,6 +484,7 @@ export interface FileRoutesByTo {
   '/settings/backups': typeof SettingsBackupsIndexRoute
   '/surfaces/configured': typeof SurfacesConfiguredIndexRoute
   '/variables/expression': typeof VariablesExpressionIndexRoute
+  '/connections/modules/$moduleType/$moduleId': typeof ConnectionsModulesModuleTypeDotmoduleIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -535,7 +535,6 @@ export interface FileRoutesById {
   '/_app/variables/': typeof VariablesIndexRoute
   '/_app/connections/configured/$connectionId': typeof ConnectionsConfiguredConnectionIdRoute
   '/_app/connections/configured/add': typeof ConnectionsConfiguredAddRoute
-  '/_app/connections/modules/$moduleId': typeof ConnectionsModulesModuleIdRoute
   '/_app/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/_app/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
   '/_app/variables/connection/$label': typeof VariablesConnectionDotlabelRoute
@@ -545,6 +544,7 @@ export interface FileRoutesById {
   '/_app/settings/backups/': typeof SettingsBackupsIndexRoute
   '/_app/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
   '/_app/variables/expression/': typeof VariablesExpressionIndexRoute
+  '/_app/connections/modules/$moduleType/$moduleId': typeof ConnectionsModulesModuleTypeDotmoduleIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -595,7 +595,6 @@ export interface FileRouteTypes {
     | '/variables'
     | '/connections/configured/$connectionId'
     | '/connections/configured/add'
-    | '/connections/modules/$moduleId'
     | '/settings/backups/$ruleId'
     | '/surfaces/configured/$itemId'
     | '/variables/connection/$label'
@@ -605,6 +604,7 @@ export interface FileRouteTypes {
     | '/settings/backups/'
     | '/surfaces/configured/'
     | '/variables/expression/'
+    | '/connections/modules/$moduleType/$moduleId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -646,7 +646,6 @@ export interface FileRouteTypes {
     | '/variables'
     | '/connections/configured/$connectionId'
     | '/connections/configured/add'
-    | '/connections/modules/$moduleId'
     | '/settings/backups/$ruleId'
     | '/surfaces/configured/$itemId'
     | '/variables/connection/$label'
@@ -656,6 +655,7 @@ export interface FileRouteTypes {
     | '/settings/backups'
     | '/surfaces/configured'
     | '/variables/expression'
+    | '/connections/modules/$moduleType/$moduleId'
   id:
     | '__root__'
     | '/_app'
@@ -705,7 +705,6 @@ export interface FileRouteTypes {
     | '/_app/variables/'
     | '/_app/connections/configured/$connectionId'
     | '/_app/connections/configured/add'
-    | '/_app/connections/modules/$moduleId'
     | '/_app/settings/backups/$ruleId'
     | '/_app/surfaces/configured/$itemId'
     | '/_app/variables/connection/$label'
@@ -715,6 +714,7 @@ export interface FileRouteTypes {
     | '/_app/settings/backups/'
     | '/_app/surfaces/configured/'
     | '/_app/variables/expression/'
+    | '/_app/connections/modules/$moduleType/$moduleId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1113,13 +1113,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsBackupsRuleIdRouteImport
       parentRoute: typeof SettingsBackupsRoute
     }
-    '/_app/connections/modules/$moduleId': {
-      id: '/_app/connections/modules/$moduleId'
-      path: '/$moduleId'
-      fullPath: '/connections/modules/$moduleId'
-      preLoaderRoute: typeof ConnectionsModulesModuleIdRouteImport
-      parentRoute: typeof ConnectionsModulesRoute
-    }
     '/_app/connections/configured/add': {
       id: '/_app/connections/configured/add'
       path: '/add'
@@ -1133,6 +1126,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/connections/configured/$connectionId'
       preLoaderRoute: typeof ConnectionsConfiguredConnectionIdRouteImport
       parentRoute: typeof ConnectionsConfiguredRoute
+    }
+    '/_app/connections/modules/$moduleType/$moduleId': {
+      id: '/_app/connections/modules/$moduleType/$moduleId'
+      path: '/$moduleType/$moduleId'
+      fullPath: '/connections/modules/$moduleType/$moduleId'
+      preLoaderRoute: typeof ConnectionsModulesModuleTypeDotmoduleIdRouteImport
+      parentRoute: typeof ConnectionsModulesRoute
     }
   }
 }
@@ -1181,13 +1181,14 @@ const ConnectionsConfiguredRouteWithChildren =
   )
 
 interface ConnectionsModulesRouteChildren {
-  ConnectionsModulesModuleIdRoute: typeof ConnectionsModulesModuleIdRoute
   ConnectionsModulesIndexRoute: typeof ConnectionsModulesIndexRoute
+  ConnectionsModulesModuleTypeDotmoduleIdRoute: typeof ConnectionsModulesModuleTypeDotmoduleIdRoute
 }
 
 const ConnectionsModulesRouteChildren: ConnectionsModulesRouteChildren = {
-  ConnectionsModulesModuleIdRoute: ConnectionsModulesModuleIdRoute,
   ConnectionsModulesIndexRoute: ConnectionsModulesIndexRoute,
+  ConnectionsModulesModuleTypeDotmoduleIdRoute:
+    ConnectionsModulesModuleTypeDotmoduleIdRoute,
 }
 
 const ConnectionsModulesRouteWithChildren =

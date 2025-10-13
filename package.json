@@ -62,6 +62,7 @@
     "openapi-typescript": "^7.10.1",
     "p-retry": "^7.1.0",
     "prettier": "^3.6.2",
+    "solid-js": "^1.9.9",
     "tsx": "^4.20.6",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.1",

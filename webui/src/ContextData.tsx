@@ -33,7 +33,6 @@ import { trpc } from './Resources/TRPC.js'
 import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
 import { useExpressionVariablesListSubscription } from './Hooks/useExpressionVariablesListSubscription.js'
 import { ExpressionVariablesListStore } from './Stores/ExpressionVariablesListStore.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -54,7 +53,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			helpViewer: helpModalRef,
 			whatsNewModal: whatsNewModalRef,
 
-			modules: new ModuleInfoStore(ModuleInstanceType.Connection),
+			modules: new ModuleInfoStore(),
 			connections: new ConnectionsStore(),
 
 			activeLearns: observable.set(),
@@ -70,6 +69,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			triggersList: new TriggersListStore(),
 
 			userConfig: new UserConfigStore(),
+
+			moduleStoreRefreshProgress: observable.map(),
 
 			showWizardEvent,
 			showWizard: () => showWizardEvent.dispatchEvent(new Event('show')),
@@ -113,7 +114,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		trpc.controls.expressionVariables.collections.watchQuery,
 		undefined
 	)
-	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.modules)
+	const moduleStoreProgressReady = useModuleStoreRefreshProgressSubscription(rootStore.moduleStoreRefreshProgress)
 	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
 

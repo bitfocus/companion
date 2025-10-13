@@ -2,17 +2,19 @@ import { CAlert, CButton } from '@coreui/react'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
-import { ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
-import { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
+import { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useMissingVersionsCount(
-	modules: ModuleInfoStore,
+	moduleType: ModuleInstanceType,
 	instances: ReadonlyMap<string, ClientInstanceConfigBase>
 ): number {
+	const { modules } = useContext(RootAppStoreContext)
+
 	return useComputed(() => {
 		let count = 0
 
@@ -22,7 +24,7 @@ export function useMissingVersionsCount(
 				continue
 			}
 
-			const module = modules.modules.get(instance.moduleId)
+			const module = modules.getModuleInfo(moduleType, instance.moduleId)
 			if (!module) {
 				count++
 				continue
@@ -37,23 +39,22 @@ export function useMissingVersionsCount(
 		}
 
 		return count
-	}, [instances, modules])
+	}, [instances, modules, moduleType])
 }
 
 export interface MissingVersionsWarningProps {
-	modules: ModuleInfoStore
+	moduleType: ModuleInstanceType
 	instances: ReadonlyMap<string, ClientInstanceConfigBase>
 }
 
 export const MissingVersionsWarning = observer(function MissingVersionsWarning({
-	modules,
+	moduleType,
 	instances,
 }: MissingVersionsWarningProps) {
-	const missingCount = useMissingVersionsCount(modules, instances)
+	const missingCount = useMissingVersionsCount(moduleType, instances)
 
 	const installMissingMutation = useMutationExt(trpc.instances.modulesManager.installAllMissing.mutationOptions())
 
-	const moduleType = modules.moduleType
 	const doInstallAllMissing = useCallback(() => {
 		installMissingMutation.mutateAsync({ moduleType }).catch((e) => {
 			console.error('Install all missing failed', e)

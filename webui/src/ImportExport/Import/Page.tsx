@@ -21,6 +21,7 @@ import { ButtonGridZoomControl } from '~/Buttons/ButtonGridZoomControl.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
 import { useQuery } from '@tanstack/react-query'
 import { trpc } from '~/Resources/TRPC'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject
@@ -282,8 +283,8 @@ const ImportRemapRow = observer(function ImportRemapRow({
 }: ImportRemapRowProps) {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const storeInfo = modules.storeList.get(connection.instance_type)
-	const moduleInfo = modules.modules.get(connection.instance_type)
+	const storeInfo = modules.getStoreInfo(ModuleInstanceType.Connection, connection.instance_type)
+	const moduleInfo = modules.getModuleInfo(ModuleInstanceType.Connection, connection.instance_type)
 
 	const moduleManifest = moduleInfo?.display ?? storeInfo
 

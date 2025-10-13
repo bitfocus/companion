@@ -53,14 +53,13 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 })
 
 function useAddConnectionService(): AddInstanceService {
-	const { modules, connections } = useContext(RootAppStoreContext)
+	const { connections } = useContext(RootAppStoreContext)
 	const navigate = useNavigate({ from: '/connections/configured' })
 	const addMutation = useMutationExt(trpc.instances.connections.add.mutationOptions())
 
 	return useMemo(
 		() => ({
 			moduleType: ModuleInstanceType.Connection,
-			modules: modules,
 
 			closeAddInstance: () => {
 				void navigate({ to: '/connections/configured' })
@@ -72,7 +71,7 @@ function useAddConnectionService(): AddInstanceService {
 			performAddInstance: async (moduleInfo, label, versionId) => {
 				return addMutation.mutateAsync({
 					module: {
-						type: moduleInfo.id,
+						type: moduleInfo.moduleId,
 						product: moduleInfo.product,
 					},
 					label: label,
@@ -84,7 +83,7 @@ function useAddConnectionService(): AddInstanceService {
 				return findNextConnectionLabel(connections.connections, moduleInfo.shortname)
 			},
 		}),
-		[navigate, modules, connections, addMutation]
+		[navigate, connections, addMutation]
 	)
 }
 
