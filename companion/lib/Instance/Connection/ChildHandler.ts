@@ -68,7 +68,7 @@ export interface ConnectionChildHandlerDependencies {
 	readonly instanceStatus: InstanceStatus
 	readonly sharedUdpManager: InstanceSharedUdpManager
 
-	readonly setInstanceConfig: (
+	readonly setConnectionConfig: (
 		connectionId: string,
 		config: unknown | null,
 		secrets: unknown | null,
@@ -225,7 +225,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
 		this.#currentUpgradeIndex = config.lastUpgradeIndex = msg.newUpgradeIndex
-		this.#deps.setInstanceConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
+		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 
 		this.#entityManager?.start(config.lastUpgradeIndex)
 
@@ -857,7 +857,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 */
 	async #handleSaveConfig(msg: SaveConfigMessage): Promise<void> {
 		// Save config and secrets, but do not automatically call this module's updateConfig again
-		this.#deps.setInstanceConfig(this.connectionId, msg.config || null, msg.secrets || null, null)
+		this.#deps.setConnectionConfig(this.connectionId, msg.config || null, msg.secrets || null, null)
 	}
 
 	/**

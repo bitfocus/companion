@@ -27,6 +27,7 @@ import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
 import path from 'path'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const pkgInfoStr = await fs.readFile(
 	isPackaged() ? path.join(__dirname, './package.json') : new URL('../package.json', import.meta.url)
@@ -464,9 +465,7 @@ export interface AppInfo {
 	/** The current config directory */
 	configDir: string
 	/** The base directory for storing installed modules */
-	modulesDirs: {
-		connection: string
-	}
+	modulesDirs: Record<ModuleInstanceType, string>
 	machineId: string
 	appVersion: string
 	appBuild: string

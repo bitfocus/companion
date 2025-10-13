@@ -17,6 +17,7 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { SomeModuleVersionInfo } from './Types.js'
+import { SurfaceChildHandler } from './Surface/ChildHandler.js'
 
 const require = createRequire(import.meta.url)
 
@@ -124,6 +125,15 @@ export class InstanceProcessManager {
 	getConnectionChild(connectionId: string, allowInitialising?: boolean): ConnectionChildHandler | undefined {
 		const child = this.getChild(connectionId, allowInitialising)
 		if (child && child instanceof ConnectionChildHandler) {
+			return child
+		} else {
+			return undefined
+		}
+	}
+
+	getSurfaceChild(connectionId: string, allowInitialising?: boolean): SurfaceChildHandler | undefined {
+		const child = this.getChild(connectionId, allowInitialising)
+		if (child && child instanceof SurfaceChildHandler) {
 			return child
 		} else {
 			return undefined
@@ -606,6 +616,10 @@ export class InstanceProcessManager {
 					onRegisterReceived
 				)
 				break
+			case ModuleInstanceType.Surface:
+				throw new Error('Surface modules not fully implemented!')
+				// child.handler = new SurfaceChildHandler(child.monitor, child.instanceId)
+				break
 			default:
 				assertNever(child.targetState.moduleType)
 				this.#logger.debug(
@@ -671,8 +685,10 @@ export class InstanceProcessManager {
 					},
 				}
 			}
+			case ModuleInstanceType.Surface:
+				throw new Error('Surface modules not fully implemented!')
 			default:
-				assertNever(moduleInfo.type)
+				assertNever(moduleInfo)
 				this.#logger.error(`Unknown module type "${moduleType}" for api version check: "${lastLabel}"`)
 				return null
 		}
