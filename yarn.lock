@@ -1916,6 +1916,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@companion-surface/base@npm:~0.2.0":
+  version: 0.2.0
+  resolution: "@companion-surface/base@npm:0.2.0"
+  dependencies:
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/526c1188d5e610da51d33b22adb2a051b38722674914bb1f1c17792dc55e83e7832ae8bea89bf92e8a09ca090678870523e5416da3ae74e5fedf707cf6c7f552
+  languageName: node
+  linkType: hard
+
 "@coreui/coreui@npm:^5.1.2, @coreui/coreui@npm:^5.4.3":
   version: 5.4.3
   resolution: "@coreui/coreui@npm:5.4.3"
@@ -11169,6 +11178,7 @@ asn1@evs-broadcast/node-asn1:
     "@blackmagic-controller/node": "npm:^1.0.2"
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:^1.14.0"
+    "@companion-surface/base": "npm:~0.2.0"
     "@elgato-stream-deck/node": "npm:^7.4.0"
     "@elgato-stream-deck/tcp": "npm:^7.4.0"
     "@julusian/bonjour-service": "npm:^1.4.2"

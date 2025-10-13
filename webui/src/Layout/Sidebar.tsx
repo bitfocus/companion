@@ -187,6 +187,7 @@ export const MySidebar = memo(function MySidebar() {
 				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
 				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
 					<SidebarMenuItem name="Configured" icon={null} path="/surfaces/configured" />
+					<SidebarMenuItem name="Instances" icon={null} path="/surfaces/instances" />
 					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/remote" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />

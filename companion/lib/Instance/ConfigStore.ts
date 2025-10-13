@@ -75,9 +75,9 @@ export class InstanceConfigStore {
 		return ids
 	}
 
-	getConnectionIdFromLabel(label: string): string | undefined {
+	getIdFromLabel(moduleType: ModuleInstanceType, label: string): string | undefined {
 		for (const [id, conf] of this.#store) {
-			if (conf && conf.moduleInstanceType === ModuleInstanceType.Connection && conf.label === label) {
+			if (conf && conf.moduleInstanceType === moduleType && conf.label === label) {
 				return id
 			}
 		}
@@ -128,6 +128,42 @@ export class InstanceConfigStore {
 			config: {
 				product: product,
 			},
+			secrets: {},
+			lastUpgradeIndex: -1,
+			enabled: !props.disabled,
+		}
+
+		this.#store.set(id, newConfig)
+
+		return [id, newConfig]
+	}
+
+	/**
+	 * Add a new surface
+	 * Note: this does not persist the changes
+	 */
+	addSurface(moduleId: string, label: string, props: AddInstanceProps): [id: string, config: InstanceConfig] {
+		// Find the highest rank given to an instance
+		const highestRank =
+			Math.max(
+				0,
+				...Array.from(this.#store.values())
+					.map((c) => c?.sortOrder)
+					.filter((n) => typeof n === 'number')
+			) || 0
+
+		const id = nanoid()
+
+		const newConfig: InstanceConfig = {
+			moduleInstanceType: ModuleInstanceType.Surface,
+			instance_type: moduleId,
+			moduleVersionId: props.versionId,
+			updatePolicy: props.updatePolicy,
+			sortOrder: props.sortOrder ?? highestRank + 1,
+			collectionId: props.collectionId ?? undefined,
+			label: label,
+			isFirstInit: true,
+			config: {},
 			secrets: {},
 			lastUpgradeIndex: -1,
 			enabled: !props.disabled,
@@ -242,34 +278,39 @@ export class InstanceConfigStore {
 		return label
 	}
 
-	moveConnection(collectionId: string | null, connectionId: string, dropIndex: number): boolean {
-		const thisConnection = this.#store.get(connectionId)
-		if (!thisConnection || thisConnection.moduleInstanceType !== ModuleInstanceType.Connection) return false
+	moveInstance(
+		collectionId: string | null,
+		moduleType: ModuleInstanceType,
+		instanceId: string,
+		dropIndex: number
+	): boolean {
+		const thisInstance = this.#store.get(instanceId)
+		if (!thisInstance || thisInstance.moduleInstanceType !== moduleType) return false
 
 		const changedIds: string[] = []
 
-		// find all the other connections with the matching collectionId
-		const sortedConnectionIds = Array.from(this.#store)
+		// find all the other instances with the matching collectionId
+		const sortedInstanceIds = Array.from(this.#store)
 			.filter(
 				([id, config]) =>
 					config &&
 					((!config.collectionId && !collectionId) || config.collectionId === collectionId) &&
-					id !== connectionId &&
-					config.moduleInstanceType === ModuleInstanceType.Connection
+					id !== instanceId &&
+					config.moduleInstanceType === moduleType
 			)
 			.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
 			.map(([id]) => id)
 
 		if (dropIndex < 0) {
-			// Push the connection to the end of the array
-			sortedConnectionIds.push(connectionId)
+			// Push the instance to the end of the array
+			sortedInstanceIds.push(instanceId)
 		} else {
-			// Insert the connection at the drop index
-			sortedConnectionIds.splice(dropIndex, 0, connectionId)
+			// Insert the instance at the drop index
+			sortedInstanceIds.splice(dropIndex, 0, instanceId)
 		}
 
-		// update the sort order of the connections in the store, tracking which ones changed
-		sortedConnectionIds.forEach((id, index) => {
+		// update the sort order of the instances in the store, tracking which ones changed
+		sortedInstanceIds.forEach((id, index) => {
 			const entry = this.#store.get(id)
 			if (entry && entry.sortOrder !== index) {
 				entry.sortOrder = index
@@ -277,11 +318,11 @@ export class InstanceConfigStore {
 			}
 		})
 
-		// Also update the collectionId of the connection being moved if needed
-		if (thisConnection.collectionId !== collectionId) {
-			thisConnection.collectionId = collectionId ?? undefined
-			if (!changedIds.includes(connectionId)) {
-				changedIds.push(connectionId)
+		// Also update the collectionId of the instance being moved if needed
+		if (thisInstance.collectionId !== collectionId) {
+			thisInstance.collectionId = collectionId ?? undefined
+			if (!changedIds.includes(instanceId)) {
+				changedIds.push(instanceId)
 			}
 		}
 

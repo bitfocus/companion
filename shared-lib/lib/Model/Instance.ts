@@ -6,7 +6,7 @@ export enum InstanceVersionUpdatePolicy {
 
 export enum ModuleInstanceType {
 	Connection = 'connection',
-	// Surface = 'surface', // Future
+	Surface = 'surface',
 }
 
 export interface InstanceConfig {

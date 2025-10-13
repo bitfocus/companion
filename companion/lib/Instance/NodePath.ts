@@ -1,8 +1,8 @@
 import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
-import type { ModuleManifest } from '@companion-module/base'
 import { doesModuleSupportPermissionsModel } from './ApiVersions.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 
 /**
  * Get the path to the Node.js binary for the given runtime type.
@@ -31,11 +31,14 @@ export async function getNodeJsPath(runtimeType: string): Promise<string | null>
 }
 
 export function getNodeJsPermissionArguments(
-	manifest: ModuleManifest,
+	manifest: SomeModuleManifest,
 	moduleApiVersion: string,
 	moduleDir: string,
 	enableInspect: boolean
 ): string[] {
+	// Not supported by surfaces
+	if (manifest.type === 'surface') return []
+
 	// Not supported by node18
 	if (enableInspect || manifest.runtime.type === 'node18' || !doesModuleSupportPermissionsModel(moduleApiVersion))
 		return []

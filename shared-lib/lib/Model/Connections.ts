@@ -1,7 +1,8 @@
 import type { CollectionBase } from './Collections.js'
-import type { ClientInstanceConfigBase } from './Instance.js'
+import type { ClientInstanceConfigBase, ModuleInstanceType } from './Instance.js'
 
 export interface ClientConnectionConfig extends ClientInstanceConfigBase {
+	moduleType: ModuleInstanceType.Connection
 	hasRecordActionsHandler: boolean
 }
 

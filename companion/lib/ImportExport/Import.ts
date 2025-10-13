@@ -381,7 +381,7 @@ export class ImportController {
 			if (!obj || !obj.label) continue
 
 			// See if there is an existing instance with the same label and type
-			const existingId = this.#instancesController.getIdForLabel(obj.label)
+			const existingId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, obj.label)
 			if (
 				existingId &&
 				this.#instancesController.getInstanceConfigOfType(existingId, ModuleInstanceType.Connection)?.instance_type ===

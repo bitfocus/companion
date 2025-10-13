@@ -1,8 +1,9 @@
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleManifestExt } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { SurfaceModuleManifest } from '@companion-surface/base'
 
-export type SomeModuleVersionInfo = ConnectionModuleVersionInfo // | SurfaceModuleVersionInfo
+export type SomeModuleVersionInfo = ConnectionModuleVersionInfo | SurfaceModuleVersionInfo
 
 export interface ModuleVersionInfoBase {
 	versionId: string // 'dev' or a semver version
@@ -13,11 +14,11 @@ export interface ModuleVersionInfoBase {
 	display: ModuleDisplayInfo
 }
 
-// export interface SurfaceModuleVersionInfo extends ModuleVersionInfoBase {
-// 	type: ModuleInstanceType.Surface
-// 	manifest: SurfaceModuleManifest
-// 	isLegacy: false
-// }
+export interface SurfaceModuleVersionInfo extends ModuleVersionInfoBase {
+	type: ModuleInstanceType.Surface
+	manifest: SurfaceModuleManifest
+	isLegacy: false
+}
 
 export interface ConnectionModuleVersionInfo extends ModuleVersionInfoBase {
 	type: ModuleInstanceType.Connection

@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import React, { useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditPanel } from '~/Connections/ConnectionEdit/ConnectionEditPanel'
-import { nanoid } from 'nanoid'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { connectionId } = Route.useParams()
@@ -13,8 +12,6 @@ const RouteComponent = observer(function RouteComponent() {
 
 	const navigate = useNavigate({ from: '/connections/$connectionId' })
 
-	const [tabResetToken] = useState<string>(nanoid())
-
 	// Ensure the selected connection is valid
 	useComputed(() => {
 		if (!connections.connections.has(connectionId)) {
@@ -22,7 +19,7 @@ const RouteComponent = observer(function RouteComponent() {
 		}
 	}, [navigate, connections, connectionId])
 
-	return <ConnectionEditPanel key={tabResetToken} connectionId={connectionId} />
+	return <ConnectionEditPanel key={connectionId} connectionId={connectionId} />
 })
 
 export const Route = createFileRoute('/_app/connections/$connectionId')({

@@ -117,6 +117,12 @@ export class InstanceInstalledModulesManager {
 			path.join(this.#appInfo.modulesDirs.connection, 'README'),
 			'This directory contains installed modules\r\nDo not modify unless you know what you are doing\n'
 		)
+
+		await fs.mkdirp(this.#appInfo.modulesDirs.surface)
+		await fs.writeFile(
+			path.join(this.#appInfo.modulesDirs.surface, 'README'),
+			'This directory contains installed modules\r\nDo not modify unless you know what you are doing\n'
+		)
 	}
 
 	#getModulesDirForType(moduleType: SomeModuleManifest['type'] | ModuleInstanceType): string {
@@ -125,6 +131,9 @@ export class InstanceInstalledModulesManager {
 			case 'connection':
 			case undefined:
 				return this.#appInfo.modulesDirs.connection
+			case ModuleInstanceType.Surface:
+			case 'surface':
+				return this.#appInfo.modulesDirs.surface
 			default:
 				assertNever(moduleType)
 				throw new Error(`Unknown module type ${moduleType}`)
