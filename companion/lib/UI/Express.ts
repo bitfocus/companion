@@ -91,9 +91,6 @@ export class UIExpress {
 		this.app.use('/connections/instance', async (req, res) => {
 			res.redirect(301, `/instance${req.url}`)
 		})
-		this.app.use('/connections/configured/instance', async (req, res) => {
-			res.redirect(301, `/instance${req.url}`)
-		})
 
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use('/api', async (r, s, n) => this.#apiRouter(r, s, n))

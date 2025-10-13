@@ -7,8 +7,8 @@ import { Outlet, useMatchRoute } from '@tanstack/react-router'
 
 export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.Element {
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/connections/configured/$connectionId' })
-	const addConnectionsMatch = matchRoute({ to: '/connections/configured/add' })
+	const routeMatch = matchRoute({ to: '/connections/$connectionId' })
+	const addConnectionsMatch = matchRoute({ to: '/connections/add' })
 	const selectedConnectionId = routeMatch ? routeMatch.connectionId : null
 
 	// On narrow screens, show only one panel at a time

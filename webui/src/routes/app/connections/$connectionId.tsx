@@ -11,20 +11,20 @@ const RouteComponent = observer(function RouteComponent() {
 
 	const { connections } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: '/connections/configured/$connectionId' })
+	const navigate = useNavigate({ from: '/connections/$connectionId' })
 
 	const [tabResetToken] = useState<string>(nanoid())
 
 	// Ensure the selected connection is valid
 	useComputed(() => {
 		if (!connections.connections.has(connectionId)) {
-			void navigate({ to: `/connections/configured` })
+			void navigate({ to: `/connections` })
 		}
 	}, [navigate, connections, connectionId])
 
 	return <ConnectionEditPanel key={tabResetToken} connectionId={connectionId} />
 })
 
-export const Route = createFileRoute('/_app/connections/configured/$connectionId')({
+export const Route = createFileRoute('/_app/connections/$connectionId')({
 	component: RouteComponent,
 })

@@ -4,7 +4,7 @@ import React from 'react'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 
-export const Route = createFileRoute('/_app/connections/modules/')({
+export const Route = createFileRoute('/_app/modules/')({
 	component: RouteComponent,
 })
 

@@ -23,7 +23,7 @@ const RouteComponent = observer(function RouteComponent() {
 			!modules.getModuleInfo(moduleTypeCast, moduleId) &&
 			!modules.getStoreInfo(moduleTypeCast, moduleId)
 		) {
-			void navigate({ to: `/connections/modules` })
+			void navigate({ to: `/modules` })
 		}
 	}, [navigate, modules, moduleId])
 
@@ -34,6 +34,6 @@ const RouteComponent = observer(function RouteComponent() {
 	)
 })
 
-export const Route = createFileRoute('/_app/connections/modules/$moduleType/$moduleId')({
+export const Route = createFileRoute('/_app/modules/$moduleType/$moduleId')({
 	component: RouteComponent,
 })

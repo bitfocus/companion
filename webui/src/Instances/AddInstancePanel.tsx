@@ -243,7 +243,7 @@ function AddInstanceEntry({ moduleInfo, addInstance }: AddInstanceEntryProps) {
 			</div>
 			<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
 				<Link
-					to={`/connections/modules/$moduleType/$moduleId`}
+					to={`/modules/$moduleType/$moduleId`}
 					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
 					className="text-decoration-none"
 				>

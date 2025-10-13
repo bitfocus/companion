@@ -5,17 +5,17 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 
 export const ModulesPage = memo(function ConnectionsPage() {
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/connections/modules/$moduleType/$moduleId' })
+	const routeMatch = matchRoute({ to: '/modules/$moduleType/$moduleId' })
 	const selectedModuleInfo: ModuleTypeAndIdPair | null = routeMatch ? (routeMatch as ModuleTypeAndIdPair) : null
 
-	const navigate = useNavigate({ from: '/connections/modules' })
+	const navigate = useNavigate({ from: '/modules' })
 
 	const doManageModule = useCallback(
 		(moduleInfo: ModuleTypeAndIdPair | null) => {
 			if (moduleInfo) {
-				void navigate({ to: '/connections/modules/$moduleType/$moduleId', params: moduleInfo })
+				void navigate({ to: '/modules/$moduleType/$moduleId', params: moduleInfo })
 			} else {
-				void navigate({ to: '/connections/modules' })
+				void navigate({ to: '/modules' })
 			}
 		},
 		[navigate]

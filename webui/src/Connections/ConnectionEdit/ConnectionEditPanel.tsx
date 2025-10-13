@@ -33,9 +33,9 @@ interface ConnectionEditPanelProps {
 export const ConnectionEditPanel = observer(function ConnectionEditPanel({ connectionId }: ConnectionEditPanelProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: `/connections/configured/$connectionId` })
+	const navigate = useNavigate({ from: `/connections/$connectionId` })
 	const closeConfigurePanel = useCallback(() => {
-		void navigate({ to: `/connections/configured` })
+		void navigate({ to: `/connections` })
 	}, [navigate])
 
 	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)
@@ -438,7 +438,7 @@ const ConnectionFormButtons = observer(function ConnectionFormButtons({
 				deleteMutation.mutateAsync({ connectionId: panelStore.connectionId }).catch((e) => {
 					console.error('Delete failed', e)
 				})
-				void navigate({ to: '/connections/configured' })
+				void navigate({ to: '/connections' })
 			}
 		)
 	}, [deleteMutation, confirmModalRef, panelStore, navigate])
