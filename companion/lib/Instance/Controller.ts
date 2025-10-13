@@ -37,11 +37,17 @@ import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
-import { InstanceCollections } from './Collections.js'
+import { ConnectionsCollections } from './Connection/Collections.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
+import { createSurfacesTrpcRouter } from './Surface/TrpcRouter.js'
+import type {
+	ClientSurfaceInstanceConfig,
+	ClientSurfaceInstancesUpdate,
+} from '@companion-app/shared/Model/SurfaceInstance.js'
+import { SurfaceInstanceCollections } from './Surface/Collections.js'
 
 type CreateConnectionData = {
 	type: string
@@ -54,7 +60,13 @@ export interface InstanceControllerEvents {
 	connection_deleted: [connectionId: string]
 	connection_collections_enabled: []
 
+	surface_instance_added: [instanceId?: string]
+	surface_instance_updated: [instanceId: string]
+	surface_instance_deleted: [instanceId: string]
+	surface_collections_enabled: []
+
 	uiConnectionsUpdate: [changes: ClientConnectionsUpdate[]]
+	uiSurfaceInstancesUpdate: [changes: ClientSurfaceInstancesUpdate[]]
 	[id: `debugLog:${string}`]: [time: number | null, source: string, level: string, message: string]
 }
 
@@ -63,7 +75,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
-	readonly #connectionCollectionsController: InstanceCollections
+	readonly #connectionCollectionsController: ConnectionsCollections
+	readonly #surfaceInstanceCollectionsController: SurfaceInstanceCollections
 
 	readonly #configStore: InstanceConfigStore
 
@@ -79,8 +92,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly connectionApiRouter = express.Router()
 
-	get connectionCollections(): InstanceCollections {
+	get connectionCollections(): ConnectionsCollections {
 		return this.#connectionCollectionsController
+	}
+	get surfaceInstanceCollections(): SurfaceInstanceCollections {
+		return this.#surfaceInstanceCollectionsController
 	}
 
 	constructor(
@@ -112,11 +128,17 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			}
 
 			this.#broadcastConnectionChanges(instanceIds)
+			this.#broadcastSurfaceInstanceChanges(instanceIds)
 		})
-		this.#connectionCollectionsController = new InstanceCollections(db, this.#configStore, () => {
+		this.#connectionCollectionsController = new ConnectionsCollections(db, this.#configStore, () => {
 			this.emit('connection_collections_enabled')
 
 			this.#queueUpdateAllConnectionState(ModuleInstanceType.Connection)
+		})
+		this.#surfaceInstanceCollectionsController = new SurfaceInstanceCollections(db, this.#configStore, () => {
+			this.emit('surface_collections_enabled')
+
+			this.#queueUpdateAllConnectionState(ModuleInstanceType.Surface)
 		})
 
 		this.sharedUdpManager = new InstanceSharedUdpManager()
@@ -132,9 +154,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceDefinitions: this.definitions,
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
-				setInstanceConfig: (connectionId, config, secrets, upgradeIndex) => {
+				setConnectionConfig: (instanceId, config, secrets, upgradeIndex) => {
 					this.setConnectionLabelAndConfig(
-						connectionId,
+						instanceId,
 						{
 							label: null,
 							enabled: null,
@@ -168,7 +190,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.connectionApiRouter.use('/:label', (req, res, _next) => {
 			const label = req.params.label
-			const connectionId = this.getIdForLabel(label) || label
+			const connectionId = this.getIdForLabel(ModuleInstanceType.Connection, label) || label
 			const connection = this.processManager.getConnectionChild(connectionId)
 			if (connection) {
 				connection.executeHttpRequest(req, res)
@@ -179,6 +201,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		// Prepare for clients already
 		this.#broadcastConnectionChanges(this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection))
+		this.#broadcastSurfaceInstanceChanges(this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface))
 	}
 
 	getAllConnectionIds(): string[] {
@@ -220,6 +243,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		this.emit('connection_added')
+		this.emit('surface_instance_added')
 	}
 
 	async reloadUsesOfModule(moduleType: ModuleInstanceType, moduleId: string, versionId: string): Promise<void> {
@@ -263,7 +287,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (!connectionConfig) return { ok: false, message: 'no connection instance' }
 
 		if (values.label !== null) {
-			const idUsingLabel = this.getIdForLabel(values.label)
+			const idUsingLabel = this.getIdForLabel(ModuleInstanceType.Connection, values.label)
 			if (idUsingLabel && idUsingLabel !== id) {
 				return { ok: false, message: 'duplicate label' }
 			}
@@ -319,6 +343,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.#configStore.commitChanges([id], false)
 
+		this.#logger.debug(`instance "${connectionConfig.label}" configuration updated`)
+
 		// If enabled has changed, start/stop the connection
 		if (values.enabled !== null) {
 			this.#queueUpdateInstanceState(id, false, false)
@@ -339,8 +365,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instance.logger.warn('Error updating instance configuration: ' + e.message)
 			})
 		}
-
-		this.#logger.debug(`instance "${connectionConfig.label}" configuration updated`)
 
 		return { ok: true }
 	}
@@ -366,7 +390,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const label = this.#configStore.makeLabelUnique(ModuleInstanceType.Connection, labelBase)
 
-		if (this.getIdForLabel(label)) throw new Error(`Label "${label}" already in use`)
+		if (this.getIdForLabel(ModuleInstanceType.Connection, label)) throw new Error(`Label "${label}" already in use`)
 
 		this.#logger.info('Adding connection ' + moduleId + ' ' + product)
 
@@ -384,8 +408,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)?.label
 	}
 
-	getIdForLabel(label: string): string | undefined {
-		return this.#configStore.getConnectionIdFromLabel(label)
+	getIdForLabel(moduleType: ModuleInstanceType, label: string): string | undefined {
+		return this.#configStore.getIdFromLabel(moduleType, label)
 	}
 
 	getManifestForConnection(id: string): ModuleManifest | undefined {
@@ -470,6 +494,190 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 */
 	getConnectionsMetrics(): Record<string, Record<string, number>> {
 		return this.#configStore.getModuleVersionsMetrics(ModuleInstanceType.Connection)
+	}
+
+	/**
+	 * Add a new surface instance with a predetermined label
+	 */
+	addSurfaceInstanceWithLabel(
+		moduleId: string,
+		labelBase: string,
+		props: AddInstanceProps
+	): [id: string, config: InstanceConfig] {
+		if (props.versionId === null) {
+			// Get the latest installed version
+			props.versionId = this.modules.getLatestVersionOfModule(ModuleInstanceType.Surface, moduleId, false)
+		}
+
+		// Ensure the requested module and version is installed
+		this.userModulesManager.ensureModuleIsInstalled(ModuleInstanceType.Surface, moduleId, props.versionId)
+
+		const label = this.#configStore.makeLabelUnique(ModuleInstanceType.Surface, labelBase)
+
+		if (this.getIdForLabel(ModuleInstanceType.Surface, label)) throw new Error(`Label "${label}" already in use`)
+
+		this.#logger.info('Adding surface module ' + moduleId)
+
+		delete props.collectionId // Surfaces don't use collections
+		const [id, config] = this.#configStore.addSurface(moduleId, label, props)
+
+		this.#queueUpdateInstanceState(id, true)
+
+		this.#logger.silly(`surface_instance_added: ${id}`)
+		this.emit('surface_instance_added', id)
+
+		return [id, config]
+	}
+
+	enableDisableSurfaceInstance(id: string, state: boolean): void {
+		const surfaceConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Surface)
+		if (surfaceConfig) {
+			const label = surfaceConfig.label
+			if (surfaceConfig.enabled !== state) {
+				this.#logger.info((state ? 'Enable' : 'Disable') + ' surface ' + label)
+				surfaceConfig.enabled = state
+
+				this.#configStore.commitChanges([id], false)
+
+				this.#queueUpdateInstanceState(id, false, true)
+			} else {
+				if (state === true) {
+					this.#logger.warn(`Attempting to enable surface "${label}" that is already enabled`)
+				} else {
+					this.#logger.warn(`Attempting to disable surface "${label}" that is already disabled`)
+				}
+			}
+		}
+	}
+
+	async removeSurfaceInstance(instanceId: string): Promise<void> {
+		const config = this.#configStore.getConfigOfTypeForId(instanceId, ModuleInstanceType.Surface)
+		if (!config) {
+			this.#logger.warn(`Can't delete surface instance "${instanceId}" which does not exist!`)
+			return
+		}
+
+		const label = config.label
+		this.#logger.info(`Deleting surface instance: ${label ?? instanceId}`)
+
+		try {
+			this.processManager.queueUpdateInstanceState(instanceId, null, true)
+		} catch (e) {
+			this.#logger.debug(`Error while deleting surface instance "${label ?? instanceId}": `, e)
+		}
+
+		this.status.forgetInstanceStatus(instanceId)
+		this.#configStore.forgetInstance(instanceId)
+
+		this.emit('surface_instance_deleted', instanceId)
+
+		// forward cleanup elsewhere
+		// TODO
+	}
+
+	setSurfaceInstanceLabelAndConfig(
+		instanceId: string,
+		data: {
+			label: string | null
+			enabled: boolean | null
+			config: unknown | null
+			updatePolicy: InstanceVersionUpdatePolicy | null
+		}
+	): { ok: true } | { ok: false; message: string } {
+		const surfaceConfig = this.#configStore.getConfigOfTypeForId(instanceId, ModuleInstanceType.Surface)
+		if (!surfaceConfig) return { ok: false, message: 'no surface instance' }
+
+		if (data.label !== null) {
+			const idUsingLabel = this.getIdForLabel(ModuleInstanceType.Surface, data.label)
+			if (idUsingLabel && idUsingLabel !== instanceId) {
+				return { ok: false, message: 'duplicate label' }
+			}
+
+			if (!isLabelValid(data.label)) {
+				return { ok: false, message: 'invalid label' }
+			}
+		}
+
+		if (data.label !== null) {
+			surfaceConfig.label = data.label
+		}
+		if (data.config !== null) {
+			surfaceConfig.config = data.config
+		}
+		if (data.updatePolicy !== null) {
+			surfaceConfig.updatePolicy = data.updatePolicy
+		}
+		if (data.enabled !== null) {
+			surfaceConfig.enabled = data.enabled
+		}
+
+		this.#configStore.commitChanges([instanceId], false)
+
+		this.#logger.debug(`surface instance "${surfaceConfig?.label}" configuration updated`)
+
+		// If enabled has changed, start/stop the connection
+		if (data.enabled !== null) {
+			this.#queueUpdateInstanceState(instanceId, false, false)
+			if (!surfaceConfig.enabled) {
+				// If new state is disabled, stop processing here
+				return { ok: true }
+			}
+		}
+
+		return { ok: true }
+	}
+
+	getSurfaceInstanceClientJson(): Record<string, ClientSurfaceInstanceConfig> {
+		const result: Record<string, ClientSurfaceInstanceConfig> = {}
+
+		for (const [id, config] of this.#configStore.getAllInstanceConfigs()) {
+			if (config.moduleInstanceType !== ModuleInstanceType.Surface) continue
+
+			// const instance = this.moduleHost. (id, true)
+
+			result[id] = {
+				id: id,
+				moduleType: config.moduleInstanceType,
+				moduleId: config.instance_type,
+				moduleVersionId: config.moduleVersionId,
+				updatePolicy: config.updatePolicy,
+				label: config.label,
+				enabled: config.enabled,
+				sortOrder: config.sortOrder,
+				collectionId: config.collectionId ?? null,
+			}
+		}
+
+		return result
+	}
+
+	/**
+	 * Inform clients of changes to the list of surfaces
+	 */
+	#broadcastSurfaceInstanceChanges(instanceIds: string[]): void {
+		const newJson = this.getSurfaceInstanceClientJson()
+
+		const changes: ClientSurfaceInstancesUpdate[] = []
+
+		for (const surfaceId of instanceIds) {
+			if (!newJson[surfaceId]) {
+				changes.push({ type: 'remove', id: surfaceId })
+			} else {
+				changes.push({ type: 'update', id: surfaceId, info: newJson[surfaceId] })
+			}
+		}
+
+		// Now broadcast to any interested clients
+		if (this.listenerCount('uiSurfaceInstancesUpdate') > 0) {
+			this.emit('uiSurfaceInstancesUpdate', changes)
+		}
+	}
+
+	/**
+	 * Get information for the metrics system about the current surfaces
+	 */
+	getSurfacesMetrics(): Record<string, Record<string, number>> {
+		return this.#configStore.getModuleVersionsMetrics(ModuleInstanceType.Surface)
 	}
 
 	setModuleVersionAndActivate(
@@ -665,6 +873,11 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			!this.#connectionCollectionsController.isCollectionEnabled(config.collectionId)
 		)
 			enableInstance = false
+		else if (
+			config.moduleInstanceType === ModuleInstanceType.Surface &&
+			!this.#surfaceInstanceCollectionsController.isCollectionEnabled(config.collectionId)
+		)
+			enableInstance = false
 
 		this.processManager.queueUpdateInstanceState(
 			id,
@@ -693,6 +906,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			statuses: this.status.createTrpcRouter(),
 
 			connections: createConnectionsTrpcRouter(this.#logger, this, this, this.#configStore),
+
+			surfaces: createSurfacesTrpcRouter(this.#logger, this, this, this.#configStore),
 
 			debugLog: publicProcedure
 				.input(

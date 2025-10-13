@@ -83,11 +83,14 @@ export function useAllModuleProducts(
 	}, [modules, includeUnreleased])
 }
 
-export function filterProducts(allProducts: FuzzyProduct[], filter: string): FuzzyProduct[] {
+export function filterProducts(allProducts: FuzzyProduct[], filter: string, includeType: boolean): FuzzyProduct[] {
 	if (!filter) return allProducts //.map((p) => p.info)
 
+	const keys: Array<keyof FuzzyProduct> = ['product', 'name', 'keywords']
+	if (includeType) keys.push('moduleType')
+
 	return fuzzySearch(filter, allProducts, {
-		keys: ['product', 'name', 'keywords'] satisfies Array<keyof FuzzyProduct>,
+		keys,
 		threshold: -10_000,
 	}).map((x) => x.obj)
 }

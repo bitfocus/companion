@@ -5,6 +5,7 @@ import type { ModuleStoreListCacheStore } from '@companion-app/shared/Model/Modu
 export interface DataCacheDefaultTable {
 	cloud_servers: Record<string, unknown>
 	module_store_list: ModuleStoreListCacheStore
+	surface_store_list: ModuleStoreListCacheStore
 }
 
 /**

@@ -14,6 +14,7 @@ import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { capitalize } from 'lodash-es'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -72,7 +73,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	let components: JSX.Element[] = []
 	try {
-		const searchResults = filterProducts(typeProducts, filter)
+		const searchResults = filterProducts(typeProducts, filter, true)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
@@ -255,9 +256,7 @@ const ModulesListRow = observer(function ModulesListRow({
 		>
 			<td onClick={doEdit} className="hand">
 				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
-
-				{moduleInfo.name}
-
+				{moduleInfo.name} ({capitalize(moduleInfo.moduleType)})
 				{/* {moduleInfo.installedVersions.?.isLegacy && (
 					<>
 						<FontAwesomeIcon
