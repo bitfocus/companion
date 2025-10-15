@@ -4,7 +4,7 @@ import { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { useComputed } from '~/Resources/util.js'
-import { getLatestVersion } from '../Connections/ConnectionEdit/VersionUtil.js'
+import { getLatestVersion } from './VersionUtil.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export function useModuleVersionSelectOptions(

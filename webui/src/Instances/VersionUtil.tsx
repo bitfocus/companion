@@ -3,10 +3,7 @@ import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/M
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import semver from 'semver'
 
-export function doesConnectionVersionExist(
-	moduleInfo: ClientModuleInfo | undefined,
-	versionId: string | null
-): boolean {
+export function doesInstanceVersionExist(moduleInfo: ClientModuleInfo | undefined, versionId: string | null): boolean {
 	if (versionId === null) return false
 	if (versionId === 'dev') return !!moduleInfo?.devVersion
 

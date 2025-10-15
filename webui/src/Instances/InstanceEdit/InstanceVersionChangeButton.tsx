@@ -25,20 +25,22 @@ import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelec
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { InstanceEditPanelService } from './InstanceEditPanelService'
 
-interface ConnectionChangeVersionButtonProps {
-	connectionId: string
+interface InstanceVersionChangeButtonProps {
+	service: InstanceEditPanelService
 	currentModuleId: string
 	currentVersionId: string | null
-	currentVersionLabel: string | null
+
+	changeModuleDangerMessage: React.ReactNode
 }
 
-export function ConnectionChangeVersionButton({
-	connectionId,
+export function InstanceVersionChangeButton({
+	service,
 	currentModuleId,
 	currentVersionId,
-	currentVersionLabel,
-}: ConnectionChangeVersionButtonProps): React.JSX.Element {
+	changeModuleDangerMessage,
+}: InstanceVersionChangeButtonProps): React.JSX.Element {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const [show, setShow] = useState(false)
@@ -60,7 +62,7 @@ export function ConnectionChangeVersionButton({
 		},
 		onSubmit: async ({ value }) => {
 			const error = await setModuleAndVersionMutation.mutateAsync({
-				connectionId,
+				connectionId: service.instanceId,
 				moduleId: value.moduleId,
 				versionId: value.versionId,
 			})
@@ -101,12 +103,10 @@ export function ConnectionChangeVersionButton({
 
 	return (
 		<>
-			<div className="d-flex align-items-center gap-2">
-				<span className="fw-medium">{currentVersionLabel}</span>
-				<CButton color="light" size="sm" title="Change module version" onClick={doShow}>
-					<FontAwesomeIcon icon={faPencil} />
-				</CButton>
-			</div>
+			<CButton color="light" size="sm" title="Change module version" onClick={doShow}>
+				<FontAwesomeIcon icon={faPencil} />
+			</CButton>
+
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
 					<h5>Change Module Version</h5>
@@ -146,15 +146,13 @@ export function ConnectionChangeVersionButton({
 											<>
 												<CFormLabel htmlFor={field.name} className="col-sm-3 col-form-label col-form-label-sm">
 													Version
-													{!!modules.getStoreInfo(ModuleInstanceType.Connection, effectiveModuleId) && (
-														<ModuleVersionsRefresh
-															moduleType={ModuleInstanceType.Connection}
-															moduleId={effectiveModuleId}
-														/>
+													{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
+														<ModuleVersionsRefresh moduleType={service.moduleType} moduleId={effectiveModuleId} />
 													)}
 												</CFormLabel>
 												<CCol sm={9}>
 													<SelectedVersionDropdown
+														moduleType={service.moduleType}
 														moduleId={effectiveModuleId}
 														htmlName={field.name}
 														value={field.state.value}
@@ -180,8 +178,7 @@ export function ConnectionChangeVersionButton({
 						<CCollapse visible={advancedMode} className="row g-sm-2 p-0">
 							<CCol sm={12}>
 								<CAlert color="danger" className="mt-0 mb-3">
-									Changing the module type can break the connection and corrupt any existing actions and feedbacks. Only
-									use this if you are sure of what you are doing.
+									{changeModuleDangerMessage}
 								</CAlert>
 							</CCol>
 
@@ -193,6 +190,7 @@ export function ConnectionChangeVersionButton({
 									name="moduleId"
 									children={(field) => (
 										<SelectedModuleDropdown
+											moduleType={service.moduleType}
 											htmlName={field.name}
 											value={field.state.value}
 											onChange={(val) => {
@@ -238,6 +236,7 @@ export function ConnectionChangeVersionButton({
 }
 
 interface SelectedModuleDropdownProps {
+	moduleType: ModuleInstanceType
 	htmlName: string
 	value: string
 	onChange: (value: string) => void
@@ -245,12 +244,13 @@ interface SelectedModuleDropdownProps {
 }
 
 const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
+	moduleType,
 	htmlName,
 	value,
 	onChange,
 	onBlur,
 }: SelectedModuleDropdownProps) {
-	const allProducts = useAllModuleProducts(ModuleInstanceType.Connection)
+	const allProducts = useAllModuleProducts(moduleType)
 	const choices = useComputed(() => {
 		const choices: DropdownChoice[] = []
 
@@ -279,6 +279,7 @@ const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
 })
 
 interface SelectedVersionDropdownProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	htmlName: string
 	value: string | null
@@ -286,6 +287,7 @@ interface SelectedVersionDropdownProps {
 	onBlur: () => void
 }
 const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
+	moduleType,
 	moduleId,
 	htmlName,
 	value,
@@ -294,9 +296,9 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 }: SelectedVersionDropdownProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.getModuleInfo(ModuleInstanceType.Connection, moduleId)
+	const moduleInfo = modules.getModuleInfo(moduleType, moduleId)
 	const { choices: moduleVersionChoices, loaded: choicesLoaded } = useModuleVersionSelectOptions(
-		ModuleInstanceType.Connection,
+		moduleType,
 		moduleId,
 		moduleInfo,
 		false

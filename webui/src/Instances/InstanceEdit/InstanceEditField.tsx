@@ -11,20 +11,23 @@ import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js
 import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 import { validateInputValue } from '~/Helpers/validateInputValue'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
-interface ConnectionEditFieldProps {
+interface InstanceEditFieldProps {
 	setValue: (value: any) => void
 	definition: SomeCompanionInputField
 	value: any
-	connectionId: string
+	moduleType: ModuleInstanceType
+	instanceId: string
 }
 
-export function ConnectionEditField({
+export function InstanceEditField({
 	setValue,
 	definition,
 	value,
-	connectionId,
-}: ConnectionEditFieldProps): React.JSX.Element {
+	moduleType,
+	instanceId,
+}: InstanceEditFieldProps): React.JSX.Element {
 	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
 
 	const fieldType = definition.type
@@ -98,13 +101,10 @@ export function ConnectionEditField({
 			break
 		}
 		case 'bonjour-device':
-			return (
-				<BonjourDeviceInputField
-					value={value}
-					setValue={setValue}
-					connectionId={connectionId}
-					queryId={definition.id}
-				/>
+			return moduleType === ModuleInstanceType.Connection ? (
+				<BonjourDeviceInputField value={value} setValue={setValue} connectionId={instanceId} queryId={definition.id} />
+			) : (
+				<p>Bonjour field not supported</p>
 			)
 		default:
 			return <p>Unknown field "{fieldType}"</p>

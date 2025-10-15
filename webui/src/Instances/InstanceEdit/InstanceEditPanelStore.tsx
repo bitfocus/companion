@@ -1,6 +1,5 @@
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { action, observable, runInAction } from 'mobx'
@@ -10,13 +9,13 @@ import { validateInputValue } from '~/Helpers/validateInputValue'
 import { parseIsVisibleFn } from '~/Hooks/useOptionsAndIsVisible'
 import { trpcClient } from '~/Resources/TRPC'
 
-export interface ConnectionBasicInfoChanges {
+export interface InstanceBasicInfoChanges {
 	label?: string
 	enabled?: boolean
 	versionId?: string | null
 	updatePolicy?: InstanceVersionUpdatePolicy
 }
-export interface ConnectionConfigAndSecrets {
+export interface InstanceConfigAndSecrets {
 	fields: Array<SomeCompanionInputField>
 
 	config: CompanionOptionValues
@@ -26,22 +25,22 @@ export interface ConnectionConfigAndSecrets {
 }
 
 /**
- * Store for the Connection Edit Panel
+ * Store for the Instance Edit Panel
  * This used to use tanstack/react-form, but that was challenging because of the complex flows and changing form fields, often leaving the form in an invalid state.
- * Instead, this uses MobX to manage the state of the form and the connection configuration in a more predictable way.
+ * Instead, this uses MobX to manage the state of the form and the instance configuration in a more predictable way.
  */
-export class ConnectionEditPanelStore {
-	readonly connectionId: string
-	readonly connectionInfo: ClientConnectionConfig
+export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
+	readonly instanceId: string
+	readonly instanceInfo: TConfig
 
 	#isLoading = observable.box<string | null>(null)
 	#loadError = observable.box<string | null>(null)
 
-	#configAndSecrets = observable.box<ConnectionConfigAndSecrets | null>(null)
+	#configAndSecrets = observable.box<InstanceConfigAndSecrets | null>(null)
 
-	#basicChanges = observable.box<ConnectionBasicInfoChanges>({})
+	#basicChanges = observable.box<InstanceBasicInfoChanges>({})
 
-	get configAndSecrets(): ConnectionConfigAndSecrets | null {
+	get configAndSecrets(): InstanceConfigAndSecrets | null {
 		return this.#configAndSecrets.get()
 	}
 
@@ -53,9 +52,9 @@ export class ConnectionEditPanelStore {
 		return this.#isLoading.get() !== null
 	}
 
-	constructor(connectionId: string, connectionInfo: ClientConnectionConfig) {
-		this.connectionId = connectionId
-		this.connectionInfo = connectionInfo
+	constructor(instanceId: string, instanceInfo: TConfig) {
+		this.instanceId = instanceId
+		this.instanceInfo = instanceInfo
 
 		this.triggerReload()
 	}
@@ -79,7 +78,7 @@ export class ConnectionEditPanelStore {
 
 		trpcClient.instances.connections.edit
 			.query({
-				connectionId: this.connectionId,
+				connectionId: this.instanceId,
 			})
 			.then((data) => {
 				runInAction(() => {
@@ -91,7 +90,7 @@ export class ConnectionEditPanelStore {
 						if (retryCount > 5) {
 							this.#isLoading.set(null)
 							this.#configAndSecrets.set(null)
-							this.#loadError.set('Connection not found or running')
+							this.#loadError.set('Connection not found or not running')
 						} else {
 							setTimeout(() => {
 								if (this.#isLoading.get() !== loadingId) return
@@ -171,7 +170,7 @@ export class ConnectionEditPanelStore {
 		return true // If no isVisibleFn, assume visible
 	})
 
-	#isFieldValueValid(configAndSecrets: ConnectionConfigAndSecrets, field: SomeCompanionInputField): boolean {
+	#isFieldValueValid(configAndSecrets: InstanceConfigAndSecrets, field: SomeCompanionInputField): boolean {
 		if (!this.isVisible(field)) {
 			return true // If the field is not visible, it is considered valid
 		}
@@ -184,7 +183,7 @@ export class ConnectionEditPanelStore {
 	}
 
 	get enabled(): boolean {
-		return this.#basicChanges.get().enabled ?? this.connectionInfo.enabled
+		return this.#basicChanges.get().enabled ?? this.instanceInfo.enabled
 	}
 	setEnabled = action((value: boolean) => {
 		this.#basicChanges.set({
@@ -194,7 +193,7 @@ export class ConnectionEditPanelStore {
 	})
 
 	get labelValue(): string {
-		return this.#basicChanges.get().label ?? this.connectionInfo.label
+		return this.#basicChanges.get().label ?? this.instanceInfo.label
 	}
 	setLabelValue = action((value: string) => {
 		this.#basicChanges.set({
@@ -204,19 +203,9 @@ export class ConnectionEditPanelStore {
 	})
 	checkLabelIsValid = (value: string): boolean => isLabelValid(value)
 
-	get moduleVersionId(): string | null {
-		return this.#basicChanges.get().versionId ?? this.connectionInfo.moduleVersionId
-	}
-	setModuleVersionId = action((value: string | null) => {
-		this.#basicChanges.set({
-			...this.#basicChanges.get(),
-			versionId: value,
-		})
-	})
-
 	get updatePolicy(): InstanceVersionUpdatePolicy {
 		return (
-			this.#basicChanges.get().updatePolicy ?? (this.connectionInfo.updatePolicy || InstanceVersionUpdatePolicy.Manual)
+			this.#basicChanges.get().updatePolicy ?? (this.instanceInfo.updatePolicy || InstanceVersionUpdatePolicy.Manual)
 		)
 	}
 	setUpdatePolicy = action((value: InstanceVersionUpdatePolicy) => {

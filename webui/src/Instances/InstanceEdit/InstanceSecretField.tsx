@@ -3,13 +3,13 @@ import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { SecretTextInputField } from '~/Components/SecretTextInputField'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 
-interface ConnectionSecretFieldProps {
+interface InstanceSecretFieldProps {
 	setValue: (value: any) => void
 	definition: SomeCompanionInputField
 	value: any
 }
 
-export function ConnectionSecretField({ setValue, definition, value }: ConnectionSecretFieldProps): React.JSX.Element {
+export function InstanceSecretField({ setValue, definition, value }: InstanceSecretFieldProps): React.JSX.Element {
 	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
 
 	const fieldType = definition.type

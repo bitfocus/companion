@@ -2,9 +2,7 @@ import type { CollectionBase } from './Collections.js'
 import type { ClientInstanceConfigBase } from './Instance.js'
 
 export interface ClientConnectionConfig extends ClientInstanceConfigBase {
-	sortOrder: number
 	hasRecordActionsHandler: boolean
-	collectionId: string | null
 }
 
 export interface ConnectionCollectionData {

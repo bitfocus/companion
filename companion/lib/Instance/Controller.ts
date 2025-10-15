@@ -13,7 +13,7 @@ import { InstanceDefinitions } from './Definitions.js'
 import { InstanceProcessManager } from './ProcessManager.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
-import { makeLabelSafe } from '@companion-app/shared/Label.js'
+import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -259,11 +259,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			skipNotifyConnection?: boolean
 			patchSecrets?: boolean // If true, only secrets defined in the object are updated
 		}
-	): void {
+	): { ok: true } | { ok: false; message: string } {
 		const connectionConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
-		if (!connectionConfig) {
-			this.#logger.warn(`setInstanceLabelAndConfig id "${id}" does not exist!`)
-			return
+		if (!connectionConfig) return { ok: false, message: 'no connection instance' }
+
+		if (values.label !== null) {
+			const idUsingLabel = this.getIdForLabel(values.label)
+			if (idUsingLabel && idUsingLabel !== id) {
+				return { ok: false, message: 'duplicate label' }
+			}
+
+			if (!isLabelValid(values.label)) {
+				return { ok: false, message: 'invalid label' }
+			}
 		}
 
 		if (values.config) {
@@ -317,7 +325,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#queueUpdateInstanceState(id, false, false)
 			if (!connectionConfig.enabled) {
 				// If new state is disabled, stop processing here
-				return
+				return { ok: true }
 			}
 		}
 
@@ -334,6 +342,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		this.#logger.debug(`instance "${connectionConfig.label}" configuration updated`)
+
+		return { ok: true }
 	}
 
 	/**
@@ -461,6 +471,47 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 */
 	getConnectionsMetrics(): Record<string, Record<string, number>> {
 		return this.#configStore.getModuleVersionsMetrics(ModuleInstanceType.Connection)
+	}
+
+	setModuleVersionAndActivate(
+		instanceId: string,
+		newVersionId: string | null,
+		newUpdatePolicy: InstanceVersionUpdatePolicy | null
+	): boolean {
+		const config = this.#configStore.getConfigOfTypeForId(instanceId, null)
+		if (!config) return false
+
+		// Don't validate the version, as it might not yet be installed
+		// const moduleInfo = instanceController.modules.getModuleManifest(config.instance_type, versionId)
+		// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
+
+		if (newVersionId?.includes('@')) {
+			// Its a moduleId and version
+			const [moduleId, version] = newVersionId.split('@')
+			config.instance_type = moduleId
+			config.moduleVersionId = version || null
+		} else {
+			// Its a simple version
+			config.moduleVersionId = newVersionId
+		}
+
+		// Update the config
+		if (newUpdatePolicy) config.updatePolicy = newUpdatePolicy
+		this.#configStore.commitChanges([instanceId], false)
+
+		// Install the module if needed
+		this.userModulesManager.ensureModuleIsInstalled(
+			config.moduleInstanceType,
+			config.instance_type,
+			config.moduleVersionId
+		)
+
+		// Trigger a restart (or as much as possible)
+		if (config.enabled) {
+			this.#queueUpdateInstanceState(instanceId, false, true)
+		}
+
+		return true
 	}
 
 	/**
@@ -642,13 +693,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			modulesStore: this.modulesStore.createTrpcRouter(),
 			statuses: this.status.createTrpcRouter(),
 
-			connections: createConnectionsTrpcRouter(
-				this.#logger,
-				this,
-				this,
-				this.#configStore,
-				this.#queueUpdateInstanceState.bind(this)
-			),
+			connections: createConnectionsTrpcRouter(this.#logger, this, this, this.#configStore),
 
 			debugLog: publicProcedure
 				.input(
