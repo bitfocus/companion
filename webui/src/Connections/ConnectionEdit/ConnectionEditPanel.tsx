@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
@@ -25,6 +25,7 @@ import { observable } from 'mobx'
 import { TextInputField } from '~/Components/TextInputField.js'
 import classNames from 'classnames'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -460,24 +461,59 @@ const ConnectionFormButtons = observer(function ConnectionFormButtons({
 }): React.JSX.Element {
 	const isValid = panelStore.isValid()
 
+	const navigate = useNavigate()
+
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
+
 	const isLoading = connectionShouldBeRunning && panelStore.isLoading
+
+	const deleteMutation = useMutationExt(trpc.instances.connections.delete.mutationOptions())
+
+	const doDelete = useCallback(() => {
+		confirmModalRef.current?.show(
+			'Delete connection',
+			[
+				`Are you sure you want to delete "${panelStore.labelValue}"?`,
+				'This will remove all actions and feedbacks associated with this connection.',
+			],
+			'Delete',
+			() => {
+				deleteMutation.mutateAsync({ connectionId: panelStore.connectionId }).catch((e) => {
+					console.error('Delete failed', e)
+				})
+				void navigate({ to: '/connections/configured' })
+			}
+		)
+	}, [deleteMutation, confirmModalRef, panelStore, navigate])
 
 	return (
 		<div className="row connection-form-buttons border-top">
 			<CCol sm={12}>
-				<CButton
-					color="success"
-					className="me-md-1"
-					disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
-					type="submit"
-					title={!isValid ? 'Please fix the errors before saving' : undefined}
-				>
-					Save {isSaving ? '...' : ''}
-				</CButton>
+				<div className="flex flex-row">
+					<GenericConfirmModal ref={confirmModalRef} />
 
-				<CButton color="secondary" onClick={closeConfigurePanel} disabled={isSaving || isLoading}>
-					Cancel
-				</CButton>
+					<div className="grow">
+						<CButton
+							color="success"
+							className="me-md-1"
+							disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
+							type="submit"
+							title={!isValid ? 'Please fix the errors before saving' : undefined}
+						>
+							Save {isSaving ? '...' : ''}
+						</CButton>
+
+						<CButton color="secondary" onClick={closeConfigurePanel} disabled={isSaving || isLoading}>
+							Cancel
+						</CButton>
+					</div>
+
+					<div>
+						<CButton color="danger" onClick={doDelete} disabled={isSaving || isLoading}>
+							Delete
+						</CButton>
+					</div>
+				</div>
 			</CCol>
 		</div>
 	)
