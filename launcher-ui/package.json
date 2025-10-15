@@ -19,7 +19,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.544.0",
+    "lucide-react": "^0.545.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-error-boundary": "^6.0.0",
@@ -29,7 +29,7 @@
     "terser": "^5.44.0",
     "typescript": "~5.9.3",
     "usehooks-ts": "^3.1.1",
-    "vite": "^7.1.9",
+    "vite": "^7.1.10",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "scripts": {
