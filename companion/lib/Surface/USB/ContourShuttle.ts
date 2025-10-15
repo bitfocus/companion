@@ -34,7 +34,6 @@ const contourShuttleXpressInfo: ShuttleModelInfo = {
 	totalCols: 4,
 	totalRows: 2,
 
-	// TODO(Someone with hardware): This mapping is guesswork and hasn't been tested
 	//  [column, row] (reversed from how Admin displays it)
 	jog: [1, 1],
 	shuttle: [2, 1],
