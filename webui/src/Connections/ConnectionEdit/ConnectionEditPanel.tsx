@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
-import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSelect, CAlert, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCircleExclamation, faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
@@ -11,10 +11,8 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditField } from './ConnectionEditField.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
-import { ConnectionForceVersionButton } from './ConnectionForceVersionButton.js'
+import { ConnectionChangeVersionButton } from './ConnectionChangeVersionModal.js'
 import { doesConnectionVersionExist } from './VersionUtil.js'
-import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ConnectionSecretField } from './ConnectionSecretField.js'
@@ -26,6 +24,7 @@ import { TextInputField } from '~/Components/TextInputField.js'
 import classNames from 'classnames'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { getModuleVersionInfo } from '~/Instances/Util.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -192,17 +191,11 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 
 						<ConnectionModuleVersionInputField
 							panelStore={panelStore}
-							connectionVersionExists={connectionVersionExists}
 							connectionShouldBeRunning={connectionShouldBeRunning}
 							moduleInfo={moduleInfo}
 						/>
 
 						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
-						<CCol className={`fieldtype-textinput`} sm={12}>
-							<CAlert color="warning">
-								Be careful when downgrading the module version. Some features may not be available in older versions.
-							</CAlert>
-						</CCol>
 
 						{!connectionShouldBeRunning && (
 							<CCol xs={12}>
@@ -272,66 +265,24 @@ const ConnectionLabelInputField = observer(function ConnectionLabelInputField({
 
 const ConnectionModuleVersionInputField = observer(function ConnectionModuleVersionInputField({
 	panelStore,
-	connectionVersionExists,
-	connectionShouldBeRunning,
 	moduleInfo,
 }: {
 	panelStore: ConnectionEditPanelStore
-	connectionVersionExists: boolean
 	connectionShouldBeRunning: boolean
 	moduleInfo: ClientModuleInfo | undefined
 }): React.JSX.Element {
-	const { modules } = useContext(RootAppStoreContext)
-
-	const isModuleOnStore = !!modules.storeList.get(panelStore.connectionInfo.moduleId)
-	const moduleVersionChoices = useModuleVersionSelectOptions(
-		modules,
-		panelStore.connectionInfo.moduleId,
-		moduleInfo,
-		true
-	).choices
+	const moduleVersion = getModuleVersionInfo(moduleInfo, panelStore.connectionInfo.moduleVersionId)
 
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
-				Module Version&nbsp;
-				{isModuleOnStore && !connectionShouldBeRunning && (
-					<ModuleVersionsRefresh modules={modules} moduleId={panelStore.connectionInfo.moduleId} />
-				)}
-			</CFormLabel>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Module Version</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<CInputGroup>
-					<CFormSelect
-						name="colFormVersion"
-						value={panelStore.moduleVersionId as string}
-						onChange={(e) => panelStore.setModuleVersionId(e.target.value)}
-						disabled={connectionShouldBeRunning}
-						title={
-							connectionShouldBeRunning
-								? 'Connection must be disabled to change version'
-								: 'Select the version of the module to use for this connection'
-						}
-					>
-						{!connectionVersionExists &&
-							!moduleVersionChoices.find((v) => v.value === panelStore.connectionInfo.moduleVersionId) && (
-								<option value={panelStore.connectionInfo.moduleVersionId as string}>
-									{panelStore.connectionInfo.moduleVersionId} (Missing)
-								</option>
-							)}
-						{moduleVersionChoices.map((v) => (
-							<option key={v.value} value={v.value}>
-								{v.label}
-							</option>
-						))}
-					</CFormSelect>
-
-					<ConnectionForceVersionButton
-						connectionId={panelStore.connectionId}
-						disabled={connectionShouldBeRunning}
-						currentModuleId={panelStore.connectionInfo.moduleId}
-						currentVersionId={panelStore.connectionInfo.moduleVersionId}
-					/>
-				</CInputGroup>
+				<ConnectionChangeVersionButton
+					connectionId={panelStore.connectionId}
+					currentModuleId={panelStore.connectionInfo.moduleId}
+					currentVersionId={panelStore.connectionInfo.moduleVersionId}
+					currentVersionLabel={moduleVersion?.displayName ?? panelStore.connectionInfo.moduleVersionId}
+				/>
 			</CCol>
 		</>
 	)
@@ -397,6 +348,7 @@ const ConnectionConfigFields = observer(function ConnectionConfigFields({
 
 	return (
 		<>
+			<hr className="my-3" />
 			{configData.fields.map((fieldInfo) => {
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
