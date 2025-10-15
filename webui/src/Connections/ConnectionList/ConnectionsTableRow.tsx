@@ -20,7 +20,7 @@ import { getModuleVersionInfo } from '../../Instances/Util.js'
 import { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { ConnectionStatusCell } from './ConnectionStatusCell.js'
 import { useConnectionListContext } from './ConnectionListContext.js'
-import { isCollectionEnabled } from '~/Resources/util.js'
+import { isCollectionEnabled, makeAbsolutePath } from '~/Resources/util.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -190,7 +190,9 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 								</CButton>
 
 								<CButton
-									onMouseDown={() => windowLinkOpen({ href: `/connection-debug/${id}`, title: 'View debug log' })}
+									onMouseDown={() =>
+										windowLinkOpen({ href: makeAbsolutePath(`/connection-debug/${id}`), title: 'View debug log' })
+									}
 									title="Logs"
 									color="secondary"
 									style={{ textAlign: 'left' }}
