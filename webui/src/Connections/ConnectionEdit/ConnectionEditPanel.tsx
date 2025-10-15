@@ -77,6 +77,11 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 		[connectionId, connectionInfo]
 	)
 
+	// Ensure a reload happens each time the version changes
+	useEffect(() => {
+		panelStore.triggerReload()
+	}, [panelStore, connectionInfo.moduleId, connectionInfo.moduleVersionId])
+
 	const moduleInfo = modules.modules.get(panelStore.connectionInfo.moduleId)
 
 	const connectionVersionExists = doesConnectionVersionExist(moduleInfo, panelStore.connectionInfo.moduleVersionId)

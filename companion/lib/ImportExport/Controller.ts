@@ -795,15 +795,12 @@ export class ImportExportController {
 					if (newId && newConfig) {
 						this.#instancesController.setConnectionLabelAndConfig(newId, {
 							label: null,
+							enabled: obj.enabled !== false,
 							config: 'config' in obj ? obj.config : null,
 							secrets: 'secrets' in obj ? obj.secrets : null,
 							updatePolicy: null,
 							upgradeIndex: obj.lastUpgradeIndex,
 						})
-
-						if (!('enabled' in obj) || obj.enabled !== false) {
-							this.#instancesController.enableDisableConnection(newId, true)
-						}
 
 						instanceIdMap[oldId] = {
 							id: newId,
