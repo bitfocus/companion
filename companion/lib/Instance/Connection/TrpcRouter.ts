@@ -123,6 +123,7 @@ export function createConnectionsTrpcRouter(
 				z.object({
 					connectionId: z.string(),
 					label: z.string(),
+					enabled: z.boolean().optional(),
 					config: z.record(z.string(), z.any()),
 					secrets: z.record(z.string(), z.any()),
 					updatePolicy: z.enum(InstanceVersionUpdatePolicy),
@@ -143,6 +144,7 @@ export function createConnectionsTrpcRouter(
 
 				instanceController.setConnectionLabelAndConfig(input.connectionId, {
 					label: input.label,
+					enabled: input.enabled ?? null,
 					config: input.config,
 					secrets: input.secrets,
 					updatePolicy: input.updatePolicy,
@@ -156,6 +158,7 @@ export function createConnectionsTrpcRouter(
 			.input(
 				z.object({
 					connectionId: z.string(),
+					enabled: z.boolean().optional(),
 					label: z.string(),
 					versionId: z.string().nullable(),
 					updatePolicy: z.enum(InstanceVersionUpdatePolicy).nullable(),
@@ -180,6 +183,7 @@ export function createConnectionsTrpcRouter(
 
 				instanceController.setConnectionLabelAndConfig(input.connectionId, {
 					label: input.label,
+					enabled: input.enabled ?? null,
 					config: null,
 					secrets: null,
 					updatePolicy: null,

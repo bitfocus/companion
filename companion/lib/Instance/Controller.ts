@@ -138,6 +138,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						connectionId,
 						{
 							label: null,
+							enabled: null,
 							config,
 							secrets,
 							updatePolicy: null,
@@ -248,6 +249,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		id: string,
 		values: {
 			label: string | null
+			enabled: boolean | null
 			config: unknown | null
 			secrets: unknown | null
 			updatePolicy: InstanceVersionUpdatePolicy | null
@@ -302,10 +304,22 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (values.upgradeIndex !== null) {
 			connectionConfig.lastUpgradeIndex = values.upgradeIndex
 		}
+		if (values.enabled !== null) {
+			connectionConfig.enabled = values.enabled
+		}
 
 		this.emit('connection_updated', id)
 
 		this.#configStore.commitChanges([id], false)
+
+		// If enabled has changed, start/stop the connection
+		if (values.enabled !== null) {
+			this.#queueUpdateInstanceState(id, false, false)
+			if (!connectionConfig.enabled) {
+				// If new state is disabled, stop processing here
+				return
+			}
+		}
 
 		const instance = this.processManager.getConnectionChild(id, true)
 		if (values.label) {
@@ -578,6 +592,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					id,
 					{
 						label: safeLabel,
+						enabled: null,
 						config: null,
 						secrets: null,
 						updatePolicy: null,

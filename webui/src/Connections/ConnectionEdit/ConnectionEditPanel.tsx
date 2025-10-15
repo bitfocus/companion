@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
-import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormLabel } from '@coreui/react'
+import { CRow, CCol, CButton, CFormSelect, CAlert, CInputGroup, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCircleExclamation, faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
@@ -111,6 +111,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					const err = await setLabelAndConfigMutation.mutateAsync({
 						connectionId: panelStore.connectionId,
 						label: saveLabel,
+						enabled: panelStore.enabled,
 						updatePolicy: panelStore.updatePolicy,
 						config: configAndSecrets.config,
 						secrets: configAndSecrets.secrets,
@@ -132,6 +133,7 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 					const err = await setLabelAndVersionMutation.mutateAsync({
 						connectionId: panelStore.connectionId,
 						label: saveLabel,
+						enabled: panelStore.enabled,
 						versionId: panelStore.moduleVersionId,
 						updatePolicy: panelStore.updatePolicy,
 					})
@@ -185,6 +187,8 @@ const ConnectionEditPanelInner = observer(function ConnectionEditPanelInner({
 						)}
 
 						<ConnectionLabelInputField panelStore={panelStore} />
+						<InstanceEnabledInputField panelStore={panelStore} />
+
 						<ConnectionModuleVersionInputField
 							panelStore={panelStore}
 							connectionVersionExists={connectionVersionExists}
@@ -332,6 +336,21 @@ const ConnectionModuleVersionInputField = observer(function ConnectionModuleVers
 	)
 })
 
+const InstanceEnabledInputField = observer(function InstanceEnabledInputField({
+	panelStore,
+}: {
+	panelStore: ConnectionEditPanelStore
+}): React.JSX.Element {
+	return (
+		<>
+			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Enabled</CFormLabel>
+			<CCol className={`fieldtype-textinput`} sm={8}>
+				<CFormSwitch checked={panelStore.enabled} onChange={(e) => panelStore.setEnabled(e.target.checked)} size="xl" />
+			</CCol>
+		</>
+	)
+})
+
 const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField({
 	panelStore,
 }: {
@@ -351,7 +370,7 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 					value={panelStore.updatePolicy}
 					onChange={(e) => panelStore.setUpdatePolicy(e.currentTarget.value as InstanceVersionUpdatePolicy)}
 				>
-					<option value="manual">Manual</option>
+					<option value="manual">Disabled</option>
 					<option value="stable">Stable</option>
 					<option value="beta">Stable and Beta</option>
 				</CFormSelect>

@@ -12,6 +12,7 @@ import { trpcClient } from '~/Resources/TRPC'
 
 export interface ConnectionBasicInfoChanges {
 	label?: string
+	enabled?: boolean
 	versionId?: string | null
 	updatePolicy?: InstanceVersionUpdatePolicy
 }
@@ -181,6 +182,16 @@ export class ConnectionEditPanelStore {
 			return !validateInputValue(field, configAndSecrets.secrets[field.id])
 		}
 	}
+
+	get enabled(): boolean {
+		return this.#basicChanges.get().enabled ?? this.connectionInfo.enabled
+	}
+	setEnabled = action((value: boolean) => {
+		this.#basicChanges.set({
+			...this.#basicChanges.get(),
+			enabled: value,
+		})
+	})
 
 	get labelValue(): string {
 		return this.#basicChanges.get().label ?? this.connectionInfo.label
