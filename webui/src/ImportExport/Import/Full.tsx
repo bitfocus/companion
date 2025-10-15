@@ -159,6 +159,17 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		// userconfig: true,
 	}))
 
+	// make sure config matches the available data. This is resilient, but it might be
+	// cleaner/simpler to just manually add snapshotKeys.includes('keyname') in useState?
+	const availableConfig = { ...config }
+	for (const k in availableConfig) {
+		const key = k as keyof typeof config // get around TypeScript errors
+		availableConfig[key] &&= snapshotKeys.includes(key)
+		if (availableConfig[key] !== config[key]) {
+			setConfig(availableConfig) // note: this is effectively a noop after the first change is detected.
+		}
+	}
+
 	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
 	// console.log('validkeys', validConfigKeys)
 
@@ -310,17 +321,18 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				setValue={setValue}
 				label="Settings"
 			/> */}
-			{/* This partial import is a bit flawed currently, it is resetting things that it shouldn't. Needs more work.
-			<CCallout color="success">
-				<h5>Import Selected Components</h5>
-				<p>
-					This preserves any unselected components in their current state, while resetting and importing the selected
-					components.
-				</p>
-				<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>
-					<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
-				</CButton>
-			</CCallout> */}
+			{
+				<CCallout color="success">
+					<h5>Import Selected Components</h5>
+					<p>
+						This preserves any unselected components in their current state, while resetting and importing the selected
+						components.
+					</p>
+					<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>
+						<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
+					</CButton>
+				</CCallout>
+			}
 			<CCallout color="danger">
 				<h5>Full Reset & Import</h5>
 				<p>
