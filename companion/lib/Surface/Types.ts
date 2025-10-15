@@ -72,7 +72,7 @@ export interface SurfacePanelEvents {
 	error: [error: Error]
 
 	click: [x: number, y: number, pressed: boolean, pageOffset?: number]
-	rotate: [x: number, y: number, direction: boolean, pageOffset?: number]
+	rotate: [x: number, y: number, rightward: boolean, pageOffset?: number]
 	pincodeKey: [key: number]
 
 	setVariable: [variableId: string, value: CompanionVariableValue]

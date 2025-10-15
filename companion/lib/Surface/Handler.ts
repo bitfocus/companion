@@ -583,7 +583,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		}
 	}
 
-	#onDeviceRotate(x: number, y: number, direction: boolean, pageOffset?: number): void {
+	#onDeviceRotate(x: number, y: number, rightward: boolean, pageOffset?: number): void {
 		if (!this.panel) return
 
 		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
@@ -612,9 +612,9 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					row: y2 + yOffset,
 				})
 				if (controlId) {
-					this.#controls.rotateControl(controlId, direction, this.surfaceId)
+					this.#controls.rotateControl(controlId, rightward, this.surfaceId)
 				}
-				this.#logger.debug(`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${direction ? 'right' : 'left'}`)
+				this.#logger.debug(`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${rightward ? 'right' : 'left'}`)
 			} else {
 				// Ignore when locked out
 			}

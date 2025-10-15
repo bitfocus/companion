@@ -51,7 +51,7 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 			<UserConfigSwitchRow
 				userConfig={props}
 				label="Enable connected Contour Shuttle"
-				requiresRestart
+				requiresRestart={false}
 				field="contour_shuttle_enable"
 			/>
 			<UserConfigSwitchRow

@@ -341,11 +341,11 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 	/**
 	 * Execute a rotate of this control
-	 * @param direction Whether the control was rotated to the right
+	 * @param rightward Whether the control was rotated to the right
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(direction: boolean, surfaceId: string | undefined): void {
-		const actions = this.entities.getActionsToExecuteForSet(direction ? 'rotate_right' : 'rotate_left')
+	rotateControl(rightward: boolean, surfaceId: string | undefined): void {
+		const actions = this.entities.getActionsToExecuteForSet(rightward ? 'rotate_right' : 'rotate_left')
 
 		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 
