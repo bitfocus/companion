@@ -164,7 +164,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	const availableConfig = { ...config }
 	for (const k in availableConfig) {
 		const key = k as keyof typeof config // get around TypeScript errors
-		availableConfig[key] &&= snapshotKeys.includes(key)
+		availableConfig[key] &&= snapshotKeys.includes(k) // check-types doesn't like `key` as arg to `includes())`
 		if (availableConfig[key] !== config[key]) {
 			setConfig(availableConfig) // note: this is effectively a noop after the first change is detected.
 		}
