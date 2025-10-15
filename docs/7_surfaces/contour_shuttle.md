@@ -1,6 +1,6 @@
 It is possible to use the Contour ShuttleXpress and ShuttlePro v1 and v2 with Companion (since v3.1.0; note: support for very old versions of ShuttlePro v1 was added in v4.1.3)
 
-You must enable it in Companion's Settings > Surfaces section and rescan for USB devices. (You do not need to restart for the setting to "take"... since at least v4.0)
+You must enable it in Companion's Settings > Surfaces section and rescan for USB devices.
 
 The button layout closely matches the device.
 
