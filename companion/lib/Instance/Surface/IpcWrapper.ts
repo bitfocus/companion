@@ -69,11 +69,8 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 	): Promise<ReturnType<TOutbound[T]>> {
 		if (timeout <= 0) timeout = this.#defaultTimeout
 
-		const callbacks: PendingCallback = { timeout: undefined, resolve: () => null, reject: () => null }
-		const promise = new Promise<ReturnType<TOutbound[T]>>((resolve, reject) => {
-			callbacks.resolve = resolve
-			callbacks.reject = reject
-		})
+		const promise = Promise.withResolvers<ReturnType<TOutbound[T]>>()
+		const callbacks: PendingCallback = { timeout: undefined, resolve: promise.resolve, reject: promise.reject }
 
 		// Reset the id when it gets really high
 		if (this.#nextCallbackId > MAX_CALLBACK_ID) this.#nextCallbackId = 1
@@ -95,7 +92,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 			this.#pendingCallbacks.delete(id)
 		}, timeout)
 
-		return promise
+		return promise.promise
 	}
 
 	sendWithNoCb<T extends keyof TOutbound>(name: T, msg: ParamsIfReturnIsNever<TOutbound[T]>[0]): void {
