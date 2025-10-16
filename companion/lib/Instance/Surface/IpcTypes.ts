@@ -1,6 +1,6 @@
 import type { IpcWrapper } from './IpcWrapper.js'
 import type { HIDDevice, LogLevel, SurfaceDrawProps } from '@companion-surface/base'
-import type { OpenHidDeviceResult } from '@companion-surface/base/host'
+import type { OpenDeviceResult } from '@companion-surface/base/host'
 
 export type SurfaceIpcWrapper = IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>
 
@@ -28,9 +28,10 @@ export interface HostToSurfaceModuleEvents {
 	destroy: (msg: Record<string, never>) => void
 
 	checkHidDevice: (msg: CheckHidDeviceMessage) => CheckHidDeviceResponseMessage
-	openHidDevice: (msg: OpenHidDeviceMessage) => OpenHidDeviceResponseMessage
+	openHidDevice: (msg: OpenHidDeviceMessage) => OpenDeviceResponseMessage
 
 	scanDevices: (msg: Record<string, never>) => ScanDevicesResponseMessage
+	openScannedDevice: (msg: OpenScannedDeviceMessage) => OpenDeviceResponseMessage
 
 	setBrightness: (msg: SetBrightnessMessage) => void
 	drawControls: (msg: DrawControlMessage) => void
@@ -52,24 +53,26 @@ export interface CheckHidDeviceMessage {
 	device: HIDDevice
 }
 export interface CheckHidDeviceResponseMessage {
-	info: {
-		surfaceId: string
-		description: string
-	} | null
+	info: CheckHidDeviceInfo | null
+}
+export interface CheckHidDeviceInfo {
+	surfaceId: string
+	description: string
 }
 
 export interface ScanDevicesResponseMessage {
-	devices: {
-		surfaceId: string
-		description: string
-	}[]
+	devices: CheckHidDeviceInfo[]
+}
+
+export interface OpenScannedDeviceMessage {
+	device: CheckHidDeviceInfo
 }
 
 export interface OpenHidDeviceMessage {
 	device: HIDDevice
 }
-export interface OpenHidDeviceResponseMessage {
-	info: OpenHidDeviceResult | null // TODO - convert to safe form?
+export interface OpenDeviceResponseMessage {
+	info: OpenDeviceResult | null // TODO - convert to safe form?
 }
 
 export interface DisconnectMessage {

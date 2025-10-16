@@ -17,7 +17,7 @@ import type { InstanceStatus } from '../Status.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
 import { LogLevel } from '@companion-surface/base'
 import type * as HID from 'node-hid'
-import type { OpenHidDeviceResult } from '@companion-surface/base/host'
+import type { OpenDeviceResult } from '@companion-surface/base/host'
 import { IpcWrapper, IpcEventHandlers } from './IpcWrapper.js'
 
 export interface SurfaceChildHandlerDependencies {
@@ -164,8 +164,33 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 			this.#ipcWrapper
 				.sendWithCb('scanDevices', {})
 				.then((msg) => {
-					// TODO - process these
-					console.log('scanDevices returned ' + msg.devices.length)
+					this.logger.debug(`scan devices returned ${msg.devices.length} devices`)
+
+					for (const device of msg.devices) {
+						// Future: track this as a known surface?
+
+						// Already opened, stop here
+						if (this.#panels.has(device.surfaceId)) return
+
+						// Check if it can be opened here
+						const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(device.surfaceId)
+						if (!reserveCb) return
+
+						this.#ipcWrapper
+							.sendWithCb('openScannedDevice', { device })
+							.then(async (openInfo) => {
+								if (!openInfo.info) return
+
+								await this.#setupSurfacePanel(openInfo.info)
+							})
+							.finally(() => {
+								// clear the reservation, if it hasnt been used
+								reserveCb()
+							})
+							.catch((e) => {
+								this.logger.warn(`Error performing openScannedDevice: ${e.message}`)
+							})
+					}
 				})
 				.catch((e) => {
 					this.logger.warn(`Error performing scanDevices: ${e.message}`)
@@ -205,7 +230,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		}
 	}
 
-	async #setupSurfacePanel(info: OpenHidDeviceResult): Promise<void> {
+	async #setupSurfacePanel(info: OpenDeviceResult): Promise<void> {
 		try {
 			this.logger.info(`Opening surface panel: ${info.surfaceId} - ${info.description}`)
 

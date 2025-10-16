@@ -8,7 +8,7 @@ import type {
 	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from './Types.js'
-import type { OpenHidDeviceResult } from '@companion-surface/base/host'
+import type { OpenDeviceResult } from '@companion-surface/base/host'
 import LogController, { Logger } from '../Log/Controller.js'
 import {
 	BrightnessConfigField,
@@ -42,7 +42,7 @@ interface SatelliteOutputVariableInfo {
 }
 
 function generateConfigFields(
-	surfaceInfo: OpenHidDeviceResult,
+	surfaceInfo: OpenDeviceResult,
 	gridSize: GridSize,
 	inputVariables: Record<string, SatelliteInputVariableInfo>,
 	outputVariables: Record<string, SatelliteOutputVariableInfo>
@@ -144,7 +144,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 	readonly #ipcWrapper: IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>
 
-	readonly #surfaceInfo: OpenHidDeviceResult
+	readonly #surfaceInfo: OpenDeviceResult
 	readonly #executeExpression: SurfaceExecuteExpressionFn
 
 	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
@@ -161,7 +161,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	constructor(
 		ipcWrapper: IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>,
 		instanceId: string,
-		surfaceInfo: OpenHidDeviceResult,
+		surfaceInfo: OpenDeviceResult,
 		executeExpression: SurfaceExecuteExpressionFn
 	) {
 		super()
