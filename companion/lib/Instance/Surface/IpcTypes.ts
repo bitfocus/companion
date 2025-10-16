@@ -34,6 +34,7 @@ export interface HostToSurfaceModuleEvents {
 
 	setBrightness: (msg: SetBrightnessMessage) => void
 	drawControls: (msg: DrawControlMessage) => void
+	blankSurface: (msg: BlankSurfaceMessage) => void
 	setLocked: (msg: SetLockedMessage) => void
 	setOutputVariable: (msg: SetOutputVariableMessage) => void
 }
@@ -115,6 +116,10 @@ export interface DrawControlMessage {
 
 export interface IpcDrawProps extends Omit<SurfaceDrawProps, 'image'> {
 	image?: string
+}
+
+export interface BlankSurfaceMessage {
+	surfaceId: string
 }
 
 export interface SetLockedMessage {

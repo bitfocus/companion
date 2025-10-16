@@ -45,6 +45,13 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
 			const info = await plugin.openHidDevice(msg.device)
+
+			// Make sure the surface is ready
+			if (info) {
+				// TODO - verify this is the correct place for this
+				await plugin.readySurface(info.surfaceId)
+			}
+
 			return { info }
 		},
 		checkHidDevice: async (msg) => {
@@ -86,6 +93,11 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 					image: d.image ? Buffer.from(d.image, 'base64') : undefined,
 				}))
 			)
+		},
+		blankSurface: async (msg) => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			await plugin.blankSurface(msg.surfaceId)
 		},
 		setLocked: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')

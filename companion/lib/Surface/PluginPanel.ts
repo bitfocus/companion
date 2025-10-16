@@ -254,19 +254,19 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.info = {
 			deviceId: surfaceInfo.surfaceId,
-			devicePath: surfaceInfo.surfaceId, //surfaceInfo.path?,
+			devicePath: surfaceInfo.surfaceId, // Future: this will be deprecated
 			type: surfaceInfo.description,
 			configFields: configFields,
-			// location?: string
+			location: surfaceInfo.location ?? undefined,
 			// firmwareUpdateVersionsUrl?: string
 			// hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 		}
 	}
 
 	clearDeck(): void {
-		// this.#plugin.blankSurface(this.#surfaceInfo.surfaceId).catch((e) => {
-		// 	this.#logger.error(`Error clearing deck: ${e.message}`)
-		// })
+		this.#ipcWrapper.sendWithCb('blankSurface', { surfaceId: this.#surfaceInfo.surfaceId }).catch((e) => {
+			this.#logger.error(`Error clearing deck: ${e.message}`)
+		})
 	}
 
 	draw(x: number, y: number, image: ImageResult): void {
