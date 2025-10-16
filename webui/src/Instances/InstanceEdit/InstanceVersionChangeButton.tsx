@@ -24,23 +24,23 @@ import { useComputed } from '~/Resources/util.js'
 import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { InstanceEditPanelService } from './InstanceEditPanelService'
 
-interface InstanceVersionChangeButtonProps {
-	service: InstanceEditPanelService
+interface InstanceVersionChangeButtonProps<TConfig extends ClientInstanceConfigBase> {
+	service: InstanceEditPanelService<TConfig>
 	currentModuleId: string
 	currentVersionId: string | null
 
 	changeModuleDangerMessage: React.ReactNode
 }
 
-export function InstanceVersionChangeButton({
+export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfigBase>({
 	service,
 	currentModuleId,
 	currentVersionId,
 	changeModuleDangerMessage,
-}: InstanceVersionChangeButtonProps): React.JSX.Element {
+}: InstanceVersionChangeButtonProps<TConfig>): React.JSX.Element {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const [show, setShow] = useState(false)

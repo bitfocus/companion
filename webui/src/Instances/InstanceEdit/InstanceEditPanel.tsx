@@ -22,22 +22,18 @@ import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import { capitalize } from 'lodash-es'
 
-interface InstanceGenericEditPanelProps {
-	instanceId: string
-	instanceInfo: ClientInstanceConfigBase
-	service: InstanceEditPanelService
+interface InstanceGenericEditPanelProps<TConfig extends ClientInstanceConfigBase> {
+	instanceInfo: TConfig
+	service: InstanceEditPanelService<TConfig>
 	changeModuleDangerMessage: React.ReactNode
 }
 
-export const InstanceGenericEditPanel = observer(function InstanceGenericEditPanel({
-	instanceId,
-	instanceInfo,
-	service,
-	changeModuleDangerMessage,
-}: InstanceGenericEditPanelProps) {
+export const InstanceGenericEditPanel = observer(function InstanceGenericEditPanel<
+	TConfig extends ClientInstanceConfigBase,
+>({ instanceInfo, service, changeModuleDangerMessage }: InstanceGenericEditPanelProps<TConfig>) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const panelStore = useMemo(() => new InstanceEditPanelStore(instanceId, instanceInfo), [instanceId, instanceInfo])
+	const panelStore = useMemo(() => new InstanceEditPanelStore(service, instanceInfo), [service, instanceInfo])
 
 	// Ensure a reload happens each time the version changes
 	useEffect(() => {
@@ -108,13 +104,12 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 						<InstanceEnabledInputField panelStore={panelStore} />
 
 						<InstanceModuleVersionInputField
-							service={service}
 							panelStore={panelStore}
 							moduleInfo={moduleInfo}
 							changeModuleDangerMessage={changeModuleDangerMessage}
 						/>
 
-						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} service={service} />
+						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
 
 						{!instanceShouldBeRunning && (
 							<CCol xs={12}>
@@ -138,9 +133,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 							</CCol>
 						)}
 
-						{instanceShouldBeRunning && !panelStore.isLoading && (
-							<InstanceConfigFields panelStore={panelStore} service={service} />
-						)}
+						{instanceShouldBeRunning && !panelStore.isLoading && <InstanceConfigFields panelStore={panelStore} />}
 					</div>
 				</div>
 
@@ -148,7 +141,6 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 					panelStore={panelStore}
 					instanceShouldBeRunning={instanceShouldBeRunning}
 					isSaving={isSaving.get()}
-					service={service}
 				/>
 			</CForm>
 		</>
@@ -168,10 +160,10 @@ function InstanceFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputField 
 	)
 }
 
-const InstanceLabelInputField = observer(function InstanceLabelInputField({
+const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfig extends ClientInstanceConfigBase>({
 	panelStore,
 }: {
-	panelStore: InstanceEditPanelStore<ClientInstanceConfigBase>
+	panelStore: InstanceEditPanelStore<TConfig>
 }): React.JSX.Element {
 	return (
 		<>
@@ -187,14 +179,14 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField({
 	)
 })
 
-const InstanceModuleVersionInputField = observer(function InstanceModuleVersionInputField({
-	service,
+const InstanceModuleVersionInputField = observer(function InstanceModuleVersionInputField<
+	TConfig extends ClientInstanceConfigBase,
+>({
 	panelStore,
 	moduleInfo,
 	changeModuleDangerMessage,
 }: {
-	service: InstanceEditPanelService
-	panelStore: InstanceEditPanelStore<ClientInstanceConfigBase>
+	panelStore: InstanceEditPanelStore<TConfig>
 	moduleInfo: ClientModuleInfo | undefined
 	changeModuleDangerMessage: React.ReactNode
 }): React.JSX.Element {
@@ -208,7 +200,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 					<span className="fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
 
 					<InstanceVersionChangeButton
-						service={service}
+						service={panelStore.service}
 						currentModuleId={panelStore.instanceInfo.moduleId}
 						currentVersionId={panelStore.instanceInfo.moduleVersionId}
 						changeModuleDangerMessage={changeModuleDangerMessage}
@@ -219,11 +211,9 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 	)
 })
 
-const InstanceEnabledInputField = observer(function InstanceEnabledInputField({
-	panelStore,
-}: {
-	panelStore: InstanceEditPanelStore<ClientInstanceConfigBase>
-}): React.JSX.Element {
+const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
+	TConfig extends ClientInstanceConfigBase,
+>({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
 	return (
 		<>
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Enabled</CFormLabel>
@@ -234,18 +224,16 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField({
 	)
 })
 
-const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField({
-	panelStore,
-	service,
-}: {
-	panelStore: InstanceEditPanelStore<ClientInstanceConfigBase>
-	service: InstanceEditPanelService
-}): React.JSX.Element {
+const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField<
+	TConfig extends ClientInstanceConfigBase,
+>({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
 	return (
 		<>
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				Update Policy
-				<InlineHelp help={`How to check whether there are updates available for this ${service.moduleTypeDisplayName}`}>
+				<InlineHelp
+					help={`How to check whether there are updates available for this ${panelStore.service.moduleTypeDisplayName}`}
+				>
 					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
 				</InlineHelp>
 			</CFormLabel>
@@ -264,12 +252,10 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 	)
 })
 
-const InstanceConfigFields = observer(function InstanceConfigFields({
+const InstanceConfigFields = observer(function InstanceConfigFields<TConfig extends ClientInstanceConfigBase>({
 	panelStore,
-	service,
 }: {
-	panelStore: InstanceEditPanelStore<ClientInstanceConfigBase>
-	service: InstanceEditPanelService
+	panelStore: InstanceEditPanelStore<TConfig>
 }): React.JSX.Element {
 	const configData = panelStore.configAndSecrets
 
@@ -279,7 +265,9 @@ const InstanceConfigFields = observer(function InstanceConfigFields({
 
 	if (configData.fields.length === 0) {
 		return (
-			<NonIdealState icon={faCheck}>{capitalize(service.moduleTypeDisplayName)} has no configuration</NonIdealState>
+			<NonIdealState icon={faCheck}>
+				{capitalize(panelStore.service.moduleTypeDisplayName)} has no configuration
+			</NonIdealState>
 		)
 	}
 
@@ -327,7 +315,7 @@ const InstanceConfigFields = observer(function InstanceConfigFields({
 								value={configData.config[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
 								moduleType={panelStore.instanceInfo.moduleType}
-								instanceId={panelStore.instanceId}
+								instanceId={panelStore.service.instanceId}
 							/>
 							{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
 						</CCol>
@@ -338,22 +326,20 @@ const InstanceConfigFields = observer(function InstanceConfigFields({
 	)
 })
 
-const InstanceFormButtons = observer(function InstanceFormButtons({
+const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extends ClientInstanceConfigBase>({
 	panelStore,
 	isSaving,
 	instanceShouldBeRunning,
-	service,
 }: {
-	panelStore: InstanceEditPanelStore<ClientInstanceConfigBase>
+	panelStore: InstanceEditPanelStore<TConfig>
 	isSaving: boolean
 	instanceShouldBeRunning: boolean
-	service: InstanceEditPanelService
 }): React.JSX.Element {
 	const isValid = panelStore.isValid()
 
 	const isLoading = instanceShouldBeRunning && panelStore.isLoading
 
-	const doDelete = useCallback(() => service.deleteInstance(panelStore.labelValue), [service, panelStore])
+	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
 	return (
 		<div className="row connection-form-buttons border-top">
@@ -370,7 +356,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons({
 							Save {isSaving ? '...' : ''}
 						</CButton>
 
-						<CButton color="secondary" onClick={service.closePanel} disabled={isSaving || isLoading}>
+						<CButton color="secondary" onClick={panelStore.service.closePanel} disabled={isSaving || isLoading}>
 							Cancel
 						</CButton>
 					</div>

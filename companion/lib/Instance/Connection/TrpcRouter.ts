@@ -1,4 +1,4 @@
-import type { ClientEditConnectionConfig } from '@companion-app/shared/Model/Common.js'
+import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import z from 'zod'
@@ -104,7 +104,7 @@ export function createConnectionsTrpcRouter(
 				try {
 					const fields = await instance.requestConfigFields()
 
-					const result: ClientEditConnectionConfig = {
+					const result: ClientEditInstanceConfig = {
 						fields: translateConnectionConfigFields(fields),
 						config: instanceConf.config,
 						secrets: instanceConf.secrets || {},

@@ -2,16 +2,17 @@ import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { CRow, CCol } from '@coreui/react'
 import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 import { useNavigate } from '@tanstack/react-router'
-import { RouterInputs, trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RouterInputs, trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { InstanceEditPanelStore } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
 import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
+import { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
@@ -41,8 +42,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 
 			<ConnectionEditPanelHeading connectionInfo={connectionInfo} closeConfigurePanel={service.closePanel} />
 
-			<InstanceGenericEditPanel
-				instanceId={connectionId}
+			<InstanceGenericEditPanel<ClientConnectionConfig>
 				instanceInfo={connectionInfo}
 				service={service}
 				changeModuleDangerMessage={
@@ -59,7 +59,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 function useInstanceEditPanelService(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>,
 	instanceId: string
-): InstanceEditPanelService {
+): InstanceEditPanelService<ClientConnectionConfig> {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const navigate = useNavigate({ from: `/connections/$connectionId` })
@@ -93,12 +93,12 @@ function useInstanceEditPanelService(
 	const saveConfig = useCallback(
 		async (
 			instanceShouldBeRunning: boolean,
-			panelStore: InstanceEditPanelStore<ClientInstanceConfigBase>
+			panelStore: InstanceEditPanelStore<ClientConnectionConfig>
 		): Promise<string | null> => {
 			const saveLabel = panelStore.labelValue
 
 			const saveConfigProps: RouterInputs['instances']['connections']['setConfig'] = {
-				connectionId: panelStore.instanceId,
+				connectionId: instanceId,
 				label: saveLabel,
 				enabled: panelStore.enabled,
 				updatePolicy: panelStore.updatePolicy,
@@ -131,7 +131,7 @@ function useInstanceEditPanelService(
 				return null
 			}
 		},
-		[setConfigMutation]
+		[setConfigMutation, instanceId]
 	)
 
 	return useMemo(
@@ -140,6 +140,11 @@ function useInstanceEditPanelService(
 			instanceId,
 
 			moduleTypeDisplayName: 'connection',
+
+			fetchConfig: async () =>
+				trpcClient.instances.connections.edit.query({
+					connectionId: instanceId,
+				}) as Promise<ClientEditInstanceConfig | null>,
 
 			isCollectionEnabled: (collectionId) => isCollectionEnabled(connections.rootCollections(), collectionId),
 

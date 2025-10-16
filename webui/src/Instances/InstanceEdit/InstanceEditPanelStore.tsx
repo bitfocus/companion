@@ -7,7 +7,7 @@ import { computedFn } from 'mobx-utils'
 import { nanoid } from 'nanoid'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 import { parseIsVisibleFn } from '~/Hooks/useOptionsAndIsVisible'
-import { trpcClient } from '~/Resources/TRPC'
+import { InstanceEditPanelService } from './InstanceEditPanelService'
 
 export interface InstanceBasicInfoChanges {
 	label?: string
@@ -30,7 +30,7 @@ export interface InstanceConfigAndSecrets {
  * Instead, this uses MobX to manage the state of the form and the instance configuration in a more predictable way.
  */
 export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
-	readonly instanceId: string
+	readonly service: InstanceEditPanelService<TConfig>
 	readonly instanceInfo: TConfig
 
 	#isLoading = observable.box<string | null>(null)
@@ -52,8 +52,8 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 		return this.#isLoading.get() !== null
 	}
 
-	constructor(instanceId: string, instanceInfo: TConfig) {
-		this.instanceId = instanceId
+	constructor(service: InstanceEditPanelService<TConfig>, instanceInfo: TConfig) {
+		this.service = service
 		this.instanceInfo = instanceInfo
 
 		this.triggerReload()
@@ -76,10 +76,8 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 			this.#loadError.set(null)
 		})
 
-		trpcClient.instances.connections.edit
-			.query({
-				connectionId: this.instanceId,
-			})
+		this.service
+			.fetchConfig()
 			.then((data) => {
 				runInAction(() => {
 					const currentLoadingId = this.#isLoading.get()

@@ -69,7 +69,7 @@ export interface WrappedImage {
 	isUsed: boolean
 }
 
-export interface ClientEditConnectionConfig {
+export interface ClientEditInstanceConfig {
 	fields: Array<SomeCompanionInputField>
 	config: unknown
 	secrets: unknown
