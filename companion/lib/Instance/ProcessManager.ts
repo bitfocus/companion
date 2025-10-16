@@ -10,7 +10,10 @@ import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { InstanceModules } from './Modules.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import {
+	isModuleApiVersionCompatible,
+	isSurfaceApiVersionCompatible,
+} from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionOptionValues } from '@companion-module/base'
 import { Serializable } from 'child_process'
@@ -18,7 +21,10 @@ import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { InstanceConfig, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { SurfaceChildHandler } from './Surface/ChildHandler.js'
+import { SurfaceChildHandler, SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
+import { SomeModuleVersionInfo } from './Types.js'
+import { isPackaged } from '../Resources/Util.js'
+import { fileURLToPath } from 'url'
 
 const require = createRequire(import.meta.url)
 
@@ -71,7 +77,8 @@ export interface ChildProcessHandlerBase {
 export class InstanceProcessManager {
 	readonly #logger = LogController.createLogger('Instance/ProcessManager')
 
-	readonly #deps: ConnectionChildHandlerDependencies
+	readonly #connectionDeps: ConnectionChildHandlerDependencies
+	readonly #surfaceDeps: SurfaceChildHandlerDependencies
 	readonly #modules: InstanceModules
 	readonly #instanceConfigStore: InstanceConfigStore
 
@@ -83,11 +90,13 @@ export class InstanceProcessManager {
 	#children: Map<string, ModuleChild>
 
 	constructor(
-		deps: ConnectionChildHandlerDependencies,
+		connectionDeps: ConnectionChildHandlerDependencies,
+		surfaceDeps: SurfaceChildHandlerDependencies,
 		modules: InstanceModules,
 		instanceConfigStore: InstanceConfigStore
 	) {
-		this.#deps = deps
+		this.#connectionDeps = connectionDeps
+		this.#surfaceDeps = surfaceDeps
 		this.#modules = modules
 		this.#instanceConfigStore = instanceConfigStore
 
@@ -133,7 +142,8 @@ export class InstanceProcessManager {
 		const initHandler = (msg0: Serializable): void => {
 			const msg = msg0 as Record<string, any>
 			if (msg.direction === 'call' && msg.name === 'register' && msg.callbackId && msg.payload) {
-				const { verificationToken } = ejson.parse(msg.payload)
+				const { verificationToken, ...registerProps } =
+					child.moduleType === ModuleInstanceType.Connection ? ejson.parse(msg.payload) : msg.payload
 
 				if (child.authToken !== verificationToken) {
 					this.#logger.debug(`Got register with bad auth token for instance: "${child.lastLabel}"`)
@@ -162,11 +172,21 @@ export class InstanceProcessManager {
 				// Bind the event listeners
 				switch (child.targetState.moduleType) {
 					case ModuleInstanceType.Connection:
-						child.handler = new ConnectionChildHandler(this.#deps, child.monitor, child.instanceId, apiVersion)
+						child.handler = new ConnectionChildHandler(
+							this.#connectionDeps,
+							child.monitor,
+							child.instanceId,
+							apiVersion
+						)
 						break
 					case ModuleInstanceType.Surface:
-						throw new Error('Surface modules not fully implemented!')
-						// child.handler = new SurfaceChildHandler(child.monitor, child.instanceId)
+						child.handler = new SurfaceChildHandler(
+							this.#surfaceDeps,
+							child.monitor,
+							child.targetState.moduleId,
+							child.instanceId,
+							registerProps
+						)
 						break
 					default:
 						assertNever(child.targetState.moduleType)
@@ -194,13 +214,13 @@ export class InstanceProcessManager {
 					direction: 'response',
 					callbackId: msg.callbackId,
 					success: true,
-					payload: ejson.stringify({}),
+					payload: child.moduleType === ModuleInstanceType.Connection ? ejson.stringify({}) : {},
 				})
 
 				// TODO module-lib - start pings
 
 				// Init module
-				this.#deps.instanceStatus.updateInstanceStatus(child.instanceId, 'initializing', null)
+				this.#connectionDeps.instanceStatus.updateInstanceStatus(child.instanceId, 'initializing', null)
 
 				child.handler
 					.init(config)
@@ -216,7 +236,7 @@ export class InstanceProcessManager {
 					})
 					.catch((e) => {
 						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${e} ${e?.stack}`)
-						this.#deps.debugLogLine(child.instanceId, 'error', `Failed to init: ${e} ${e?.stack}`)
+						this.#connectionDeps.debugLogLine(child.instanceId, 'error', `Failed to init: ${e} ${e?.stack}`)
 
 						forceRestart()
 					})
@@ -332,6 +352,7 @@ export class InstanceProcessManager {
 				} catch (e) {
 					console.error(`Destroy failed: ${e}`)
 				}
+				delete child.handler
 			}
 
 			if (child.monitor) {
@@ -346,7 +367,7 @@ export class InstanceProcessManager {
 			}
 
 			// mark instance as disabled
-			this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Disabled')
+			this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, null, 'Disabled')
 		}
 	}
 
@@ -389,7 +410,7 @@ export class InstanceProcessManager {
 			}
 			this.#children.set(instanceId, baseChild)
 
-			this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Starting')
+			this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, null, 'Starting')
 
 			forceRestart = true // Force restart if it is a new instance
 		}
@@ -457,44 +478,21 @@ export class InstanceProcessManager {
 					`Configured instance "${baseChild.targetState.moduleId}" could not be loaded, unknown module`
 				)
 				if (this.#modules.hasModule(baseChild.moduleType, baseChild.targetState.moduleId)) {
-					this.#deps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module version')
+					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module version')
 				} else {
-					this.#deps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module')
+					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module')
 				}
 				return
 			}
 
-			if (moduleInfo.type === ModuleInstanceType.Connection && moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
-				this.#logger.error(`Only nodejs-ipc api is supported currently: "${baseChild.lastLabel}"`)
-				return
-			}
+			const runtimeInfo = await this.#findAndValidateModuleInfo(moduleInfo, instanceId, baseChild.lastLabel)
+			if (!runtimeInfo) return
 
 			const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
 			if (!nodePath) {
 				this.#logger.error(
 					`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${baseChild.lastLabel}"`
 				)
-				return
-			}
-
-			// Determine the module api version
-			let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
-			if (!moduleInfo.isPackaged) {
-				// When not packaged, lookup the version from the library itself
-				try {
-					const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
-						paths: [moduleInfo.basePath],
-					})
-					const moduleLibPackage = require(moduleLibPackagePath)
-					moduleApiVersion = moduleLibPackage.version
-				} catch (e) {
-					this.#logger.error(`Failed to get module api version: "${baseChild.lastLabel}" ${e}`)
-					return
-				}
-			}
-
-			if (!isModuleApiVersionCompatible(moduleApiVersion)) {
-				this.#logger.error(`Module Api version is too new/old: "${baseChild.lastLabel}" ${moduleApiVersion}`)
 				return
 			}
 
@@ -505,13 +503,6 @@ export class InstanceProcessManager {
 			}
 
 			child.authToken = nanoid()
-
-			const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
-			const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
-			if (!(await fs.pathExists(jsFullPath))) {
-				this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
-				return
-			}
 
 			// Allow running node with `--inspect`
 			let inspectPort = undefined
@@ -528,7 +519,7 @@ export class InstanceProcessManager {
 
 			const enableInspect = inspectPort !== undefined
 			if (enableInspect) {
-				this.#deps.debugLogLine(
+				this.#connectionDeps.debugLogLine(
 					instanceId,
 					'error',
 					`** Disabling permissions model to enable inspector **\nMake sure to re-test the module without the inspector enabled before releasing`
@@ -537,23 +528,28 @@ export class InstanceProcessManager {
 
 			const cmd: string[] = [
 				nodePath,
-				...getNodeJsPermissionArguments(moduleInfo.manifest, moduleApiVersion, moduleInfo.basePath, enableInspect),
+				...getNodeJsPermissionArguments(
+					moduleInfo.manifest,
+					runtimeInfo.apiVersion,
+					moduleInfo.basePath,
+					enableInspect
+				),
 				enableInspect ? `--inspect=${inspectPort}` : undefined,
-				jsPath,
+				runtimeInfo.entrypoint,
 			].filter((v): v is string => !!v)
 			this.#logger.debug(`Instance "${baseChild.targetState.label}" command: ${JSON.stringify(cmd)}`)
 
-			this.#deps.debugLogLine(
+			this.#connectionDeps.debugLogLine(
 				instanceId,
 				'system',
-				`** Starting Instance from "${path.join(moduleInfo.basePath, jsPath)}" **`
+				`** Starting Instance from "${runtimeInfo.entrypoint}" **`
 			)
 
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
-					CONNECTION_ID: instanceId,
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
+					...runtimeInfo.env,
 				},
 				maxRestarts: -1,
 				kill: 5000,
@@ -567,27 +563,27 @@ export class InstanceProcessManager {
 				child.handler?.cleanup()
 
 				child.logger.info(`Process started process ${monitor.child?.pid}`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process started **')
+				this.#connectionDeps.debugLogLine(instanceId, 'system', '** Process started **')
 			})
 			monitor.on('stop', () => {
 				child.isReady = false
 				child.handler?.cleanup()
 
-				this.#deps.instanceStatus.updateInstanceStatus(
+				this.#connectionDeps.instanceStatus.updateInstanceStatus(
 					instanceId,
 					child.crashed ? 'crashed' : null,
 					child.crashed ? '' : 'Stopped'
 				)
 				child.logger.debug(`Process stopped`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process stopped **')
+				this.#connectionDeps.debugLogLine(instanceId, 'system', '** Process stopped **')
 			})
 			monitor.on('crash', () => {
 				child.isReady = false
 				child.handler?.cleanup()
 
-				this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Crashed')
+				this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, null, 'Crashed')
 				child.logger.debug(`Process crashed`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process crashed **')
+				this.#connectionDeps.debugLogLine(instanceId, 'system', '** Process crashed **')
 			})
 			monitor.on('stdout', (data) => {
 				if (moduleInfo.versionId === 'dev') {
@@ -595,17 +591,17 @@ export class InstanceProcessManager {
 					child.logger.verbose(`stdout: ${data.toString()}`)
 				}
 
-				this.#deps.debugLogLine(instanceId, 'console', data.toString())
+				this.#connectionDeps.debugLogLine(instanceId, 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
 				child.logger.verbose(`stderr: ${data.toString()}`)
-				this.#deps.debugLogLine(instanceId, 'error', data.toString())
+				this.#connectionDeps.debugLogLine(instanceId, 'error', data.toString())
 			})
 
 			child.monitor = monitor
 
 			const initialisedPromise = new Promise<void>((resolve, reject) => {
-				this.#listenToModuleSocket(child, moduleApiVersion, resolve, reject)
+				this.#listenToModuleSocket(child, runtimeInfo.apiVersion, resolve, reject)
 			})
 
 			// Start the child
@@ -618,6 +614,98 @@ export class InstanceProcessManager {
 
 			// TODO module-lib - timeout for first contact
 		})
+	}
+
+	async #findAndValidateModuleInfo(
+		moduleInfo: SomeModuleVersionInfo,
+		instanceId: string,
+		lastLabel: string
+	): Promise<{
+		entrypoint: string
+		apiVersion: string
+		env: Record<string, string>
+	} | null> {
+		const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
+		const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
+		if (!(await fs.pathExists(jsFullPath))) {
+			this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
+			return null
+		}
+
+		const moduleType = moduleInfo.type
+		switch (moduleInfo.type) {
+			case ModuleInstanceType.Connection: {
+				if (moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
+					this.#logger.error(`Only nodejs-ipc api is supported currently: "${lastLabel}"`)
+					return null
+				}
+
+				// Determine the module api version
+				let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
+				if (!moduleInfo.isPackaged) {
+					// When not packaged, lookup the version from the library itself
+					try {
+						const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
+							paths: [moduleInfo.basePath],
+						})
+						const moduleLibPackage = require(moduleLibPackagePath)
+						moduleApiVersion = moduleLibPackage.version
+					} catch (e) {
+						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
+						return null
+					}
+				}
+
+				if (!isModuleApiVersionCompatible(moduleApiVersion)) {
+					this.#logger.error(`Module Api version is too new/old: "${lastLabel}" ${moduleApiVersion}`)
+					return null
+				}
+
+				return {
+					apiVersion: moduleApiVersion,
+					entrypoint: jsFullPath,
+					env: {
+						CONNECTION_ID: instanceId,
+					},
+				}
+			}
+			case ModuleInstanceType.Surface: {
+				// Determine the module api version
+				let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
+				if (!moduleInfo.isPackaged) {
+					// When not packaged, lookup the version from the library itself
+					try {
+						const moduleLibPackagePath = require.resolve('@companion-surface/base/package.json', {
+							paths: [moduleInfo.basePath],
+						})
+						const moduleLibPackage = require(moduleLibPackagePath)
+						moduleApiVersion = moduleLibPackage.version
+					} catch (e) {
+						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
+						return null
+					}
+				}
+
+				if (!isSurfaceApiVersionCompatible(moduleApiVersion)) {
+					this.#logger.error(`Module Api version is too new/old: "${lastLabel}" ${moduleApiVersion}`)
+					return null
+				}
+
+				return {
+					apiVersion: moduleApiVersion,
+					entrypoint: isPackaged()
+						? path.join(__dirname, './SurfaceThread.js') // TODO - test this in production
+						: fileURLToPath(new URL('./Surface/Thread/Entrypoint.js', import.meta.url)),
+					env: {
+						MODULE_ENTRYPOINT: jsFullPath,
+					},
+				}
+			}
+			default:
+				assertNever(moduleInfo)
+				this.#logger.error(`Unknown module type "${moduleType}" for api version check: "${lastLabel}"`)
+				return null
+		}
 	}
 
 	async connectionEntityUpdate(entity: ControlEntityInstance, controlId: string): Promise<boolean> {
