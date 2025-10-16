@@ -10,6 +10,9 @@ export interface SurfaceModuleToHostEvents {
 
 	disconnect: (msg: DisconnectMessage) => never
 
+	shouldOpenDiscoveredSurface: (msg: ShouldOpenDeviceMessage) => ShouldOpenDeviceResponseMessage
+	notifyOpenedDiscoveredDevice: (msg: NotifyOpenedDeviceMessage) => never
+
 	/** The connection has a message for the Companion log */
 	'log-message': (msg: LogMessageMessage) => never
 
@@ -53,19 +56,19 @@ export interface CheckHidDeviceMessage {
 	device: HIDDevice
 }
 export interface CheckHidDeviceResponseMessage {
-	info: CheckHidDeviceInfo | null
+	info: CheckDeviceInfo | null
 }
-export interface CheckHidDeviceInfo {
+export interface CheckDeviceInfo {
 	surfaceId: string
 	description: string
 }
 
 export interface ScanDevicesResponseMessage {
-	devices: CheckHidDeviceInfo[]
+	devices: CheckDeviceInfo[]
 }
 
 export interface OpenScannedDeviceMessage {
-	device: CheckHidDeviceInfo
+	device: CheckDeviceInfo
 }
 
 export interface OpenHidDeviceMessage {
@@ -78,6 +81,16 @@ export interface OpenDeviceResponseMessage {
 export interface DisconnectMessage {
 	surfaceId: string
 	reason: string | null
+}
+
+export interface ShouldOpenDeviceMessage {
+	info: CheckDeviceInfo
+}
+export interface ShouldOpenDeviceResponseMessage {
+	shouldOpen: boolean
+}
+export interface NotifyOpenedDeviceMessage {
+	info: OpenDeviceResult // TODO - convert to safe form?
 }
 
 export interface LogMessageMessage {

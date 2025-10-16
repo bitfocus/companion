@@ -6,9 +6,12 @@ import type {
 	InputPressMessage,
 	InputRotateMessage,
 	LogMessageMessage,
+	NotifyOpenedDeviceMessage,
 	PincodeEntryMessage,
 	RegisterMessage,
 	SetVariableValueMessage,
+	ShouldOpenDeviceMessage,
+	ShouldOpenDeviceResponseMessage,
 	SurfaceModuleToHostEvents,
 } from './IpcTypes.js'
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
@@ -85,6 +88,9 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 
 			disconnect: this.#handleDisconnectMessage.bind(this),
 
+			shouldOpenDiscoveredSurface: this.#handleShouldOpenDiscoveredSurface.bind(this),
+			notifyOpenedDiscoveredDevice: this.#handleNotifyOpenedDiscoveredDevice.bind(this),
+
 			// TODO - this wants to be setup before init. how can that be done?
 			'log-message': this.#handleLogMessage.bind(this),
 
@@ -160,7 +166,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 	}
 
 	#scanDevices = (hidDevices: HID.Device[]): void => {
-		if (this.features.supportsScan) {
+		if (this.features.supportsScan || this.features.supportsDetection) {
 			this.#ipcWrapper
 				.sendWithCb('scanDevices', {})
 				.then((msg) => {
@@ -273,6 +279,25 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		} else {
 			this.logger.warn(`Received disconnect for unknown surface: ${msg.surfaceId}`)
 		}
+	}
+
+	async #handleShouldOpenDiscoveredSurface(msg: ShouldOpenDeviceMessage): Promise<ShouldOpenDeviceResponseMessage> {
+		// Already opened, stop here
+		if (this.#panels.has(msg.info.surfaceId)) return { shouldOpen: false }
+
+		// Check if it can be opened here
+		const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(msg.info.surfaceId)
+		if (!reserveCb) return { shouldOpen: false }
+
+		// Clear the reservation, as we are just checking
+		reserveCb()
+
+		return { shouldOpen: true }
+	}
+	async #handleNotifyOpenedDiscoveredDevice(msg: NotifyOpenedDeviceMessage): Promise<void> {
+		this.#setupSurfacePanel(msg.info).catch((e) => {
+			this.logger.warn(`Error opening discovered surface panel: ${e}`)
+		})
 	}
 
 	/**
