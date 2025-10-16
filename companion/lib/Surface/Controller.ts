@@ -1481,6 +1481,29 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.updateDevicesList()
 	}
 
+	/**
+	 * Reserve a surface ID for opening.
+	 * This prevents race conditions if two instances try to open the same surface at once.
+	 * If the surface is already open, or already reserved, this will return null.
+	 * @returns A function to clear the reservation, or null if it could not be reserved
+	 */
+	reserveSurfaceForOpening(surfaceId: string): (() => void) | null {
+		// Ensure it isnt already open
+		if (this.#surfaceHandlers.has(surfaceId)) return null
+
+		// Future: check if the config of the surface/global config allows it to be opened
+
+		// Reserve it
+		this.#surfaceHandlers.set(surfaceId, null)
+
+		return () => {
+			// Clear the reservation
+			if (this.#surfaceHandlers.get(surfaceId) === null) {
+				this.#surfaceHandlers.delete(surfaceId)
+			}
+		}
+	}
+
 	initInstance(_instanceId: string, features: SurfaceChildFeatures): void {
 		if (this.#runningUsbHotplug && (features.supportsHid || features.supportsScan)) {
 			this.triggerRefreshDevices().catch(() => {

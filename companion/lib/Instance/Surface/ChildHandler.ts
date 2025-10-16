@@ -184,11 +184,20 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 					// Already opened, stop here
 					if (this.#panels.has(msg.info.surfaceId)) return
 
-					// Try and open it
-					const openInfo = await this.#ipcWrapper.sendWithCb('openHidDevice', { device })
-					if (!openInfo.info) return
+					// Check if it can be opened here
+					const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(msg.info.surfaceId)
+					if (!reserveCb) return
 
-					await this.#setupSurfacePanel(openInfo.info)
+					try {
+						// Try and open it
+						const openInfo = await this.#ipcWrapper.sendWithCb('openHidDevice', { device })
+						if (!openInfo.info) return
+
+						await this.#setupSurfacePanel(openInfo.info)
+					} finally {
+						// clear the reservation, if it hasnt been used
+						reserveCb()
+					}
 				})
 				.catch((e) => {
 					this.logger.warn(`Error performing checkHidDevice: ${e.message}`)
