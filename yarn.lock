@@ -1495,6 +1495,7 @@ __metadata:
     openapi-typescript: "npm:^7.10.1"
     p-retry: "npm:^7.1.0"
     prettier: "npm:^3.6.2"
+    socket: "npm:^1.1.25"
     solid-js: "npm:^1.9.9"
     tsx: "npm:^4.20.6"
     typescript: "npm:~5.9.3"
@@ -7382,7 +7383,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"b4a@npm:^1.6.4, b4a@npm:^1.6.6":
+"b4a@npm:^1.6.4":
   version: 1.6.7
   resolution: "b4a@npm:1.6.7"
   checksum: 10c0/ec2f004d1daae04be8c5a1f8aeb7fea213c34025e279db4958eb0b82c1729ee25f7c6e89f92a5f65c8a9cf2d017ce27e3dda912403341d1781bd74528a4849d4
@@ -7462,47 +7463,17 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"bare-events@npm:^2.0.0, bare-events@npm:^2.2.0":
+"bare-events@npm:^2.2.0":
   version: 2.5.0
   resolution: "bare-events@npm:2.5.0"
   checksum: 10c0/afbeec4e8be4d93fb4a3be65c3b4a891a2205aae30b5a38fafd42976cc76cf30dad348963fe330a0d70186e15dc507c11af42c89af5dddab2a54e5aff02e2896
   languageName: node
   linkType: hard
 
-"bare-fs@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "bare-fs@npm:4.0.1"
-  dependencies:
-    bare-events: "npm:^2.0.0"
-    bare-path: "npm:^3.0.0"
-    bare-stream: "npm:^2.0.0"
-  checksum: 10c0/db2f4e2646faa011e322cbdc4615fe0cac865a03c2f76d7c686eccf96b0b5eea2bc71dfa37e8cfb14f4f61f8cd3ca95ff7b745d37c55fca319e40ec351d4ae0c
-  languageName: node
-  linkType: hard
-
-"bare-os@npm:^3.0.1":
-  version: 3.4.0
-  resolution: "bare-os@npm:3.4.0"
-  checksum: 10c0/2d1a4467ef8aff0a13d738e549aac30bbecf7631721f7099de78d6f8fc0ced9334ab391e489de28d69809f788f64081ac25108303a9a9e122f9bf87a8d589025
-  languageName: node
-  linkType: hard
-
-"bare-path@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "bare-path@npm:3.0.0"
-  dependencies:
-    bare-os: "npm:^3.0.1"
-  checksum: 10c0/56a3ca82a9f808f4976cb1188640ac206546ce0ddff582afafc7bd2a6a5b31c3bd16422653aec656eeada2830cfbaa433c6cbf6d6b4d9eba033d5e06d60d9a68
-  languageName: node
-  linkType: hard
-
-"bare-stream@npm:^2.0.0":
-  version: 2.3.0
-  resolution: "bare-stream@npm:2.3.0"
-  dependencies:
-    b4a: "npm:^1.6.6"
-    streamx: "npm:^2.20.0"
-  checksum: 10c0/374a517542e6a0c3c07f3a1d567db612685e66708f79781112aa0e81c1f117ec561cc1ff3926144f15a2200316a77030c95dcc13a1b96d5303f0748798b764cf
+"bare-fs@npm:empty-npm-package@1.0.0, bare-path@npm:empty-npm-package@1.0.0, unix-dgram@npm:empty-npm-package@1.0.0":
+  version: 1.0.0
+  resolution: "empty-npm-package@npm:1.0.0"
+  checksum: 10c0/86dc2266288d7e3456205b8fe69ef30a1561d2365783439df0870124e5f4cf64b845ef3fea9b3312107d5a08e8d0b56813392be80a98825b4ad75d22b7e68ce0
   languageName: node
   linkType: hard
 
@@ -16614,6 +16585,19 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
+"socket@npm:^1.1.25":
+  version: 1.1.25
+  resolution: "socket@npm:1.1.25"
+  bin:
+    socket: bin/cli.js
+    socket-npm: bin/npm-cli.js
+    socket-npx: bin/npx-cli.js
+    socket-pnpm: bin/pnpm-cli.js
+    socket-yarn: bin/yarn-cli.js
+  checksum: 10c0/9b10ffa8a21785b27a6ec22fb8c8cef8194fc60b0a80f3ba5c663cbdd05d784d13545207b2179dbcf9280fa8f717cdf77ca33e8dea36018d384b139958a4295d
+  languageName: node
+  linkType: hard
+
 "socketcluster-client@npm:^19.2.7":
   version: 19.2.7
   resolution: "socketcluster-client@npm:19.2.7"
@@ -16872,7 +16856,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"streamx@npm:^2.15.0, streamx@npm:^2.20.0":
+"streamx@npm:^2.15.0":
   version: 2.20.1
   resolution: "streamx@npm:2.20.1"
   dependencies:
@@ -18044,13 +18028,6 @@ asn1@evs-broadcast/node-asn1:
   version: 2.0.1
   resolution: "universalify@npm:2.0.1"
   checksum: 10c0/73e8ee3809041ca8b818efb141801a1004e3fc0002727f1531f4de613ea281b494a40909596dae4a042a4fb6cd385af5d4db2e137b1362e0e91384b828effd3a
-  languageName: node
-  linkType: hard
-
-"unix-dgram@npm:empty-npm-package@1.0.0":
-  version: 1.0.0
-  resolution: "empty-npm-package@npm:1.0.0"
-  checksum: 10c0/86dc2266288d7e3456205b8fe69ef30a1561d2365783439df0870124e5f4cf64b845ef3fea9b3312107d5a08e8d0b56813392be80a98825b4ad75d22b7e68ce0
   languageName: node
   linkType: hard
 
