@@ -162,6 +162,9 @@ export const ImportExportPage = observer(function ImportExport() {
 		return <ImportWizard importInfo={importInfo} clearImport={clearImport} />
 	}
 
+	// As of October 2025, this is only available on iOS Safari and iPadOS Safari
+	const isMobileSafari = 'ongesturechange' in window
+
 	return (
 		<div>
 			<ResetWizardModal ref={resetRef} />
@@ -202,7 +205,7 @@ export const ImportExportPage = observer(function ImportExport() {
 									type="file"
 									onChange={loadSnapshot}
 									style={{ display: 'none' }}
-									accept=".companionconfig,.yaml"
+									accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
 								/>
 							</label>
 						</div>
