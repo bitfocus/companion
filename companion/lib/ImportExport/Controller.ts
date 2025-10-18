@@ -363,7 +363,7 @@ export class ImportExportController {
 			importSinglePage: publicProcedure
 				.input(
 					z.object({
-						targetPage: z.number().int().min(1),
+						targetPage: z.number().int().min(1).or(z.literal(-1)), // -1 means add a new page at the end
 						sourcePage: z.number().int().min(1),
 						connectionIdRemapping: z.record(z.string(), z.string().optional()),
 					})
