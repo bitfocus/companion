@@ -424,27 +424,28 @@ describe('functions', () => {
 			expect(ExpressionFunctions.secondsToTimestamp(11)).toBe('00:00:11')
 			expect(ExpressionFunctions.secondsToTimestamp(999)).toBe('00:16:39')
 			expect(ExpressionFunctions.secondsToTimestamp(9999)).toBe('02:46:39')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567)).toBe('342:56:07')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567)).toBe('06:56:07')
 
 			expect(ExpressionFunctions.secondsToTimestamp('99')).toBe('00:01:39')
 			expect(ExpressionFunctions.secondsToTimestamp(false)).toBe('00:00:00')
 			expect(ExpressionFunctions.secondsToTimestamp(-11)).toBe('-00:00:11')
 
 			// hh:mm:ss
-			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:mm:ss')).toBe('00:00:11')
-			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:mm:ss')).toBe('02:46:39')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:mm:ss')).toBe('342:56:07')
-			expect(ExpressionFunctions.secondsToTimestamp(-1234567, 'hh:mm:ss')).toBe('-342:56:07')
+			expect(ExpressionFunctions.secondsToTimestamp(11, 'HH:mm:ss')).toBe('00:00:11')
+			expect(ExpressionFunctions.secondsToTimestamp(9999, 'HH:mm:ss')).toBe('02:46:39')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'dd:HH:mm:ss')).toBe('14:06:56:07')
+			expect(ExpressionFunctions.secondsToTimestamp(-1234567, 'dd:HH:mm:ss')).toBe('14:06:56:07')
+			expect(ExpressionFunctions.secondsToTimestamp(-1234567, 'ndd:HH:mm:ss')).toBe('-14:06:56:07')
 
 			// hh:ss
-			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:ss')).toBe('00:11')
-			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:ss')).toBe('02:39')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:ss')).toBe('342:07')
+			expect(ExpressionFunctions.secondsToTimestamp(11, 'HH:ss')).toBe('00:11')
+			expect(ExpressionFunctions.secondsToTimestamp(9999, 'HH:ss')).toBe('02:39')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'HH:ss')).toBe('06:07')
 
 			// hh:mm
-			expect(ExpressionFunctions.secondsToTimestamp(11, 'hh:mm')).toBe('00:00')
-			expect(ExpressionFunctions.secondsToTimestamp(9999, 'hh:mm')).toBe('02:46')
-			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'hh:mm')).toBe('342:56')
+			expect(ExpressionFunctions.secondsToTimestamp(11, 'HH:mm')).toBe('00:00')
+			expect(ExpressionFunctions.secondsToTimestamp(9999, 'HH:mm')).toBe('02:46')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'HH:mm')).toBe('06:56')
 
 			// mm:ss
 			expect(ExpressionFunctions.secondsToTimestamp(11, 'mm:ss')).toBe('00:11')
@@ -464,23 +465,64 @@ describe('functions', () => {
 		})
 
 		it('msToTimestamp', () => {
+			const SECOND = 1000
+			const MINUTE = SECOND * 60
+			const HOUR = MINUTE * 60
+			const DAY = HOUR * 24
+
+			const oneDayHourMinuteSecondMs = DAY + HOUR + MINUTE + SECOND + 111
+			expect(ExpressionFunctions.msToTimestamp(-10, 'n')).toBe('-')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'dd')).toBe('01')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'd')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'HH')).toBe('01')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'H')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'hh')).toBe('01')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'h')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'mm')).toBe('01')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'm')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'ss')).toBe('01')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 's')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'S')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'SS')).toBe('11')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'SSS')).toBe('111')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'a')).toBe('AM')
+
+			const afternoon = 13 * HOUR
+			const beforeNoon = HOUR
+			expect(ExpressionFunctions.msToTimestamp(beforeNoon, 'h a')).toBe('1 AM')
+			expect(ExpressionFunctions.msToTimestamp(afternoon, 'h a')).toBe('1 PM')
+			expect(ExpressionFunctions.msToTimestamp(beforeNoon + DAY, 'd h a')).toBe('1 1 AM')
+			expect(ExpressionFunctions.msToTimestamp(afternoon + DAY, 'd h a')).toBe('1 1 PM')
+
+			expect(ExpressionFunctions.msToTimestamp(1, 'S')).toBe('0')
+			expect(ExpressionFunctions.msToTimestamp(1, 'SS')).toBe('00')
+			expect(ExpressionFunctions.msToTimestamp(1, 'SSS')).toBe('001')
+
 			expect(ExpressionFunctions.msToTimestamp(1100)).toBe('00:01.1')
 			expect(ExpressionFunctions.msToTimestamp(999123)).toBe('16:39.1')
 			expect(ExpressionFunctions.msToTimestamp(1234567)).toBe('20:34.5')
 
 			expect(ExpressionFunctions.msToTimestamp('9900')).toBe('00:09.9')
+			expect(ExpressionFunctions.msToTimestamp('-9900')).toBe('-00:09.9')
 			expect(ExpressionFunctions.msToTimestamp(false)).toBe('00:00.0')
 			expect(ExpressionFunctions.msToTimestamp(-11)).toBe('-00:00.0')
 
-			expect(ExpressionFunctions.msToTimestamp(11000, 'hh:mm:ss')).toBe('00:00:11')
-			expect(ExpressionFunctions.msToTimestamp(-11000, 'hh:mm:ss')).toBe('-00:00:11')
-			expect(ExpressionFunctions.msToTimestamp(9999000, 'hh:mm:ss')).toBe('02:46:39')
-			expect(ExpressionFunctions.msToTimestamp(1234567890, 'hh:mm:ss')).toBe('342:56:07')
-			expect(ExpressionFunctions.msToTimestamp(-1234567890, 'hh:mm:ss')).toBe('-342:56:07')
+			expect(ExpressionFunctions.msToTimestamp(11000, 'HH:mm:ss')).toBe('00:00:11')
+			expect(ExpressionFunctions.msToTimestamp(-11000, 'HH:mm:ss')).toBe('00:00:11')
+			expect(ExpressionFunctions.msToTimestamp(-11000, 'nHH:mm:ss')).toBe('-00:00:11')
+			expect(ExpressionFunctions.msToTimestamp(9999000, 'HH:mm:ss')).toBe('02:46:39')
+			expect(ExpressionFunctions.msToTimestamp(1234567890, 'dd:HH:mm:ss')).toBe('14:06:56:07')
+			expect(ExpressionFunctions.msToTimestamp(-1234567890, 'dd:HH:mm:ss')).toBe('14:06:56:07')
+			expect(ExpressionFunctions.msToTimestamp(-1234567890, 'ndd:HH:mm:ss')).toBe('-14:06:56:07')
 
-			expect(ExpressionFunctions.msToTimestamp(11000, 'hh:mm')).toBe('00:00')
-			expect(ExpressionFunctions.msToTimestamp(9999000, 'hh:mm')).toBe('02:46')
-			expect(ExpressionFunctions.msToTimestamp(1234567890, 'hh:mm')).toBe('342:56')
+			expect(ExpressionFunctions.msToTimestamp(11000, 'HH:mm')).toBe('00:00')
+			expect(ExpressionFunctions.msToTimestamp(9999000, 'HH:mm')).toBe('02:46')
+			expect(ExpressionFunctions.msToTimestamp(1234567890, 'HH:mm')).toBe('06:56')
+
+			const testValue2 = 23 * HOUR + 46 * MINUTE + 39 * SECOND
+			expect(ExpressionFunctions.msToTimestamp(testValue2, 'HH-mm-ss')).toBe('23-46-39')
+			expect(ExpressionFunctions.msToTimestamp(testValue2, 'HH#mm#ss')).toBe('23#46#39')
+			expect(ExpressionFunctions.msToTimestamp(testValue2, 'ss mm HH')).toBe('39 46 23')
 		})
 
 		it('timeOffset', () => {
