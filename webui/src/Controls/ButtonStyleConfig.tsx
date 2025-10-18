@@ -18,6 +18,7 @@ import { InlineHelp } from '~/Components/InlineHelp.js'
 import { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -169,15 +170,24 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 						)}
 					</label>
 					<CInputGroup>
-						<TextInputField
-							tooltip={'Button text'}
-							setValue={setTextValue}
-							value={values.text ?? ''}
-							useVariables
-							localVariables={textLocalVariables}
-							isExpression={values.textExpression}
-							style={{ fontWeight: 'bold', fontSize: 18 }}
-						/>
+						{values.textExpression ? (
+							<ExpressionInputField
+								tooltip={'Button text'}
+								setValue={setTextValue}
+								value={values.text ?? ''}
+								localVariables={textLocalVariables}
+								style={{ fontWeight: 'bold', fontSize: 18 }}
+							/>
+						) : (
+							<TextInputField
+								tooltip={'Button text'}
+								setValue={setTextValue}
+								value={values.text ?? ''}
+								useVariables
+								localVariables={textLocalVariables}
+								style={{ fontWeight: 'bold', fontSize: 18 }}
+							/>
+						)}
 						<CButton
 							color="info"
 							variant="outline"

@@ -13,7 +13,7 @@ import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
-interface TextInputFieldProps {
+interface ExpressionInputFieldProps {
 	tooltip?: string
 	placeholder?: string
 	value: string
@@ -21,14 +21,12 @@ interface TextInputFieldProps {
 	setValue: (value: string) => void
 	checkValid?: (valid: string) => boolean
 	disabled?: boolean
-	useVariables?: boolean
 	localVariables?: DropdownChoiceInt[]
-	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
 }
 
-export const TextInputField = observer(function TextInputField({
+export const ExpressionInputField = observer(function ExpressionInputField({
 	tooltip,
 	placeholder,
 	value,
@@ -36,12 +34,10 @@ export const TextInputField = observer(function TextInputField({
 	setValue,
 	checkValid,
 	disabled,
-	useVariables,
 	localVariables,
-	multiline,
 	autoFocus,
 	onBlur,
-}: TextInputFieldProps) {
+}: ExpressionInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
 	const storeValue = useCallback(
@@ -50,11 +46,6 @@ export const TextInputField = observer(function TextInputField({
 			setValue(value)
 		},
 		[setValue]
-	)
-	const doOnChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.FormEvent<HTMLInputElement>) =>
-			storeValue(e.currentTarget.value),
-		[storeValue]
 	)
 
 	const currentValueRef = useRef<string>()
@@ -74,51 +65,19 @@ export const TextInputField = observer(function TextInputField({
 
 	// Render the input
 	return (
-		<>
-			{useVariables ? (
-				<>
-					<VariablesSelect
-						showValue={showValue}
-						style={extraStyle}
-						localVariables={localVariables}
-						storeValue={storeValue}
-						focusStoreValue={focusStoreValue}
-						blurClearValue={blurClearValue}
-						placeholder={placeholder}
-						title={tooltip}
-						disabled={disabled}
-						multiline={multiline}
-						autoFocus={autoFocus}
-					/>
-				</>
-			) : multiline ? (
-				<CFormTextarea
-					disabled={disabled}
-					value={showValue}
-					style={extraStyle}
-					title={tooltip}
-					onChange={doOnChange}
-					onFocus={focusStoreValue}
-					onBlur={blurClearValue}
-					placeholder={placeholder}
-					autoFocus={autoFocus}
-					rows={2}
-				/>
-			) : (
-				<CFormInput
-					type="text"
-					disabled={disabled}
-					value={showValue}
-					style={extraStyle}
-					title={tooltip}
-					onChange={doOnChange}
-					onFocus={focusStoreValue}
-					onBlur={blurClearValue}
-					placeholder={placeholder}
-					autoFocus={autoFocus}
-				/>
-			)}
-		</>
+		<VariablesSelect
+			showValue={showValue}
+			style={extraStyle}
+			localVariables={localVariables}
+			storeValue={storeValue}
+			focusStoreValue={focusStoreValue}
+			blurClearValue={blurClearValue}
+			placeholder={placeholder}
+			title={tooltip}
+			disabled={disabled}
+			multiline={true}
+			autoFocus={autoFocus}
+		/>
 	)
 })
 
