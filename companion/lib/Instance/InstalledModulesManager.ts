@@ -22,7 +22,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
-const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 10 // 50MB
+const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 20 // 20MB
 const MAX_MODULE_BUNDLE_TAR_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
 /**
