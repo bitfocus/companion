@@ -126,7 +126,7 @@ export class ControlExpressionVariable
 			this.options = storage.options || this.options
 			this.entities.loadStorage(storage, true, isImport)
 
-			if (isImport) this.#postProcessImport()
+			if (isImport) setImmediate(() => this.#postProcessImport())
 			else this.commitChange()
 		}
 	}
