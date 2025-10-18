@@ -105,7 +105,7 @@ Split a string based on a separator
 
 Join an array of values into a single string separated by the specified separator
 
-**concat(str1, str2)**
+**concat(str1, str2, [str3, ...])**
 
 Combine one or more values into a single string
 
