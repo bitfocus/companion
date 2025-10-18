@@ -338,7 +338,7 @@ export class InstanceInstalledModulesManager {
 		for await (const chunk of response.body as ReadableStream<Uint8Array>) {
 			bytesReceived += chunk.byteLength
 			if (bytesReceived > MAX_MODULE_TAR_SIZE) {
-				abortControl.abort()
+				setImmediate(() => abortControl.abort()) // Defer the abort, until the trpc call is finished
 				this.#logger.error(`Module too large to download safely`)
 				return 'Module is too large to download safely'
 			}

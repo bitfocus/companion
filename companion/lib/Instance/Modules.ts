@@ -48,7 +48,7 @@ export class InstanceModules {
 	/**
 	 * Last module info sent to clients
 	 */
-	#lastModulesJson: Record<string, ClientModuleInfo> | null = null
+	#lastModulesJson: Record<string, ClientModuleInfo> = {}
 
 	/**
 	 * Known module info
@@ -199,6 +199,8 @@ export class InstanceModules {
 			this.#logger.info(`Found ${candidates.length} extra modules`)
 		}
 
+		this.#lastModulesJson = this.#compileClientModulesJson()
+
 		// Log the loaded modules
 		this.#logLoadedModules(this.#knownConnectionModules, 'Connection:')
 	}
@@ -275,10 +277,6 @@ export class InstanceModules {
 	}
 
 	#emitModuleUpdate = (moduleType: ModuleInstanceType, changedModuleId: string): void => {
-		if (!this.#lastModulesJson) {
-			this.#lastModulesJson = this.#getModulesJson()
-		}
-
 		// Fetch the old and new module json
 		const changedModuleIdFull = `${moduleType}:${changedModuleId}` as const
 		const oldModuleJson = this.#lastModulesJson[changedModuleIdFull]
@@ -334,7 +332,7 @@ export class InstanceModules {
 
 				yield {
 					type: 'init',
-					info: self.#lastModulesJson || self.#getModulesJson(),
+					info: self.#lastModulesJson,
 				} satisfies ModuleInfoUpdate
 
 				for await (const [change] of changes) {
@@ -435,7 +433,7 @@ export class InstanceModules {
 	/**
 	 * Get display version of module infos
 	 */
-	#getModulesJson(): Record<ModuleInfoUpdateId, ClientModuleInfo> {
+	#compileClientModulesJson(): Record<ModuleInfoUpdateId, ClientModuleInfo> {
 		const result: Record<ModuleInfoUpdateId, ClientModuleInfo> = {}
 
 		const processMap = (moduleType: ModuleInstanceType, map: Map<string, InstanceModuleInfo>) => {
