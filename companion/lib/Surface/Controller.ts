@@ -1644,6 +1644,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param forceUnlock Force all surfaces to be unlocked
 	 */
 	setAllLocked(locked: boolean, forceUnlock = false): void {
+		this.#logger.debug(`Setting lock state of all surfaces to ${locked} (forceUnlock=${forceUnlock})`)
+
 		if (forceUnlock) {
 			locked = false
 		} else {
@@ -1653,7 +1655,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#surfacesAllLocked = !!locked
 
 		for (const surfaceGroup of this.#surfaceGroups.values()) {
-			this.#surfacesLastInteraction.set(surfaceGroup.groupId, Date.now())
+			if (locked) {
+				this.#surfacesLastInteraction.delete(surfaceGroup.groupId)
+			} else {
+				this.#surfacesLastInteraction.set(surfaceGroup.groupId, Date.now())
+			}
 
 			surfaceGroup.setLocked(!!locked)
 		}
@@ -1669,17 +1675,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			this.setAllLocked(locked)
 		} else {
 			this.#surfacesAllLocked = false
+			this.#logger.debug(`Setting lock state of ${surfaceOrGroupId} to ${locked}`)
+
+			let resolvedGroupId = surfaceOrGroupId
+
+			// Perform the lock/unlock if connected
+			const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
+			if (surfaceGroup) {
+				resolvedGroupId = surfaceGroup.groupId
+				surfaceGroup.setLocked(!!locked)
+			}
 
 			// Track the lock/unlock state, even if the device isn't online
 			if (locked) {
-				this.#surfacesLastInteraction.delete(surfaceOrGroupId)
+				this.#surfacesLastInteraction.delete(resolvedGroupId)
 			} else {
-				this.#surfacesLastInteraction.set(surfaceOrGroupId, Date.now())
-			}
-
-			const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
-			if (surfaceGroup) {
-				surfaceGroup.setLocked(!!locked)
+				this.#surfacesLastInteraction.set(resolvedGroupId, Date.now())
 			}
 		}
 	}
