@@ -29,6 +29,9 @@ export class SurfaceGroup {
 		last_page_id: '',
 		startup_page_id: '',
 		use_last_page: true,
+		swipe_can_change_page: true,
+		restrict_pages: false,
+		allowed_page_ids: [],
 	}
 
 	/**
@@ -267,11 +270,21 @@ export class SurfaceGroup {
 			}
 		} else {
 			let newPage: string | null = toPage
+			const validPages = this.groupConfig.restrict_pages ? (this.groupConfig.allowed_page_ids ?? []) : []
+			const getNewPage = (currentPage: string, offset: number) => {
+				if (validPages.length > 0) {
+					let newPage = (validPages.indexOf(currentPage) + offset) % validPages.length
+					if (newPage < 0) newPage = validPages.length - 1
+					return validPages[newPage]
+				} else {
+					return this.#pageStore.getOffsetPageId(currentPage, offset)
+				}
+			}
 			// note: getOffsetPageId() calculates the new page with wrap around
 			if (newPage === '+1') {
-				newPage = this.#pageStore.getOffsetPageId(currentPage, 1)
+				newPage = getNewPage(currentPage, 1)
 			} else if (newPage === '-1') {
-				newPage = this.#pageStore.getOffsetPageId(currentPage, -1)
+				newPage = getNewPage(currentPage, -1)
 			} else {
 				newPage = String(newPage)
 			}
@@ -426,6 +439,19 @@ export function validateGroupConfigValue(pageStore: IPageStore, key: string, val
 			}
 
 			return value
+		}
+		case 'swipe_can_change_page':
+		case 'restrict_pages':
+			return Boolean(value)
+
+		case 'allowed_page_ids': {
+			const values = value as string[]
+			const errors = values.filter((page) => !pageStore.isPageIdValid(page))
+			if (errors.length > 0) {
+				throw new Error(`Invalid allowed_page_ids "${errors.join(',')}"`)
+			}
+
+			return values
 		}
 		default:
 			throw new Error(`Invalid SurfaceGroup config key: "${key}"`)

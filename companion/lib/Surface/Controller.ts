@@ -1571,6 +1571,17 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			return undefined
 		}
 	}
+	/**
+	 * Get permission for swipe to change pages
+	 */
+	deviceAllowsSwipeToChangePage(surfaceOrGroupId: string, looseIdMatching = false): boolean | undefined {
+		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
+		if (surfaceGroup) {
+			return surfaceGroup.groupConfig.swipe_can_change_page
+		} else {
+			return undefined
+		}
+	}
 
 	/**
 	 * Get the groupId for a surfaceId (or groupId)
@@ -1579,6 +1590,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 
 		return surfaceGroup?.groupId
+	}
+
+	/**
+	 * Get the groupId for a surfaceId (or groupId)
+	 */
+	getGroupNameFromDeviceId(surfaceOrGroupId: string, looseIdMatching = false): string | undefined {
+		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
+
+		return surfaceGroup?.displayName
 	}
 
 	#resetAllDevices() {
