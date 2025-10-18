@@ -16,11 +16,11 @@ export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
 
 export interface ClientExportSelection {
 	buttons: boolean
+	connections: boolean
+	surfaces: boolean
 	triggers: boolean
 	customVariables: boolean
 	expressionVariables: boolean
-	connections: boolean
-	surfaces: boolean
 	includeSecrets: boolean
 	format: ExportFormat
 	filename?: string
@@ -50,10 +50,10 @@ export interface ClientImportObject {
 	type: 'page' | 'full'
 	instances: Record<string, ClientImportObjectInstance>
 	controls: boolean
-	customVariables: boolean
-	expressionVariables: boolean
 	surfaces: boolean
 	triggers: boolean | Record<string, { name: string }>
+	customVariables: boolean
+	expressionVariables: boolean
 	oldPageNumber?: number
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>
