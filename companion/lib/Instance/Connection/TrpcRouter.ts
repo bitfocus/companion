@@ -70,7 +70,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				configStore.moveConnection(input.collectionId, input.connectionId, input.dropIndex)
+				configStore.moveInstance(input.collectionId, ModuleInstanceType.Connection, input.connectionId, input.dropIndex)
 			}),
 
 		setEnabled: publicProcedure

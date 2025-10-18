@@ -27,6 +27,7 @@ import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
@@ -223,6 +224,7 @@ export class Registry {
 				this.controls,
 				this.graphics,
 				this.variables,
+				this.surfaces,
 				oscSender
 			)
 			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
@@ -468,9 +470,7 @@ export interface AppInfo {
 	/** The current config directory */
 	configDir: string
 	/** The base directory for storing installed modules */
-	modulesDirs: {
-		connection: string
-	}
+	modulesDirs: Record<ModuleInstanceType, string>
 	machineId: string
 	appVersion: string
 	appBuild: string

@@ -5,10 +5,9 @@ import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
-import { useParams } from '@tanstack/react-router'
-import { trpc, useMutationExt } from './Resources/TRPC'
+import { trpc } from '~/Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus'
+import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 
 interface DebugLogLine {
 	level: string
@@ -28,12 +27,18 @@ const LogsOnDiskInfoLine: DebugLogLine = {
 	message: 'Starting log. Only lines generated since opening the page are shown here',
 }
 
-// const route = getRouteApi('/connection-debug/$connectionId')
+export interface InstanceDebugLogProps {
+	instanceId: string
+	instanceTypeStr: string
+	setEnabled: (enabled: boolean) => void
+}
 
-export function ConnectionDebug(): React.JSX.Element {
+export function InstanceDebugLog({
+	instanceId,
+	instanceTypeStr,
+	setEnabled,
+}: InstanceDebugLogProps): React.JSX.Element {
 	const trpcStatus = useTRPCConnectionStatus()
-
-	const { connectionId } = useParams({ from: '/connection-debug/$connectionId' })
 
 	// const [loadError, setLoadError]=useState(null)
 	const [linesBuffer, setLinesBuffer] = useState<DebugLogLine[]>([])
@@ -51,13 +56,13 @@ export function ConnectionDebug(): React.JSX.Element {
 	useSubscription(
 		trpc.instances.debugLog.subscriptionOptions(
 			{
-				instanceId: connectionId,
+				instanceId: instanceId,
 			},
 			{
-				enabled: !!connectionId,
+				enabled: !!instanceId,
 				onStarted: () => {
 					setLinesBuffer([])
-					console.log('Subscribed to connection debug log', connectionId)
+					console.log('Subscribed to connection debug log', instanceId)
 				},
 				onData: (data) => {
 					setLinesBuffer((oldLines) => [...oldLines, data])
@@ -96,25 +101,14 @@ export function ConnectionDebug(): React.JSX.Element {
 		link.remove()
 	}, [linesBuffer])
 
-	const setEnabledMutation = useMutationExt(trpc.instances.connections.setEnabled.mutationOptions())
-	const doStopConnection = useCallback(() => {
-		if (!connectionId) return
-		setEnabledMutation.mutateAsync({ connectionId, enabled: false }).catch((e) => {
-			console.error('Failed', e)
-		})
-	}, [setEnabledMutation, connectionId])
-	const doStartConnection = useCallback(() => {
-		if (!connectionId) return
-		setEnabledMutation.mutateAsync({ connectionId, enabled: true }).catch((e) => {
-			console.error('Failed', e)
-		})
-	}, [setEnabledMutation, connectionId])
+	const doStopInstance = useCallback(() => setEnabled(false), [setEnabled])
+	const doStartInstance = useCallback(() => setEnabled(true), [setEnabled])
 
-	const [config, setConfig] = useState<DebugConfig>(() => loadConfig(connectionId ?? ''))
+	const [config, setConfig] = useState<DebugConfig>(() => loadConfig(instanceId ?? ''))
 	// Save the config when it changes
 	useEffect(() => {
-		window.localStorage.setItem(`module_debug:${connectionId}`, JSON.stringify(config))
-	}, [config, connectionId])
+		window.localStorage.setItem(`module_debug:${instanceId}`, JSON.stringify(config))
+	}, [config, instanceId])
 
 	const doToggleConfig = useCallback((key: keyof DebugConfig) => {
 		setConfig((oldConfig) => ({
@@ -153,11 +147,11 @@ export function ConnectionDebug(): React.JSX.Element {
 						</CButtonGroup>
 
 						<CButtonGroup>
-							<CButton color="danger" size="sm" onClick={doStopConnection}>
-								Stop connection
+							<CButton color="danger" size="sm" onClick={doStopInstance}>
+								Stop {instanceTypeStr}
 							</CButton>
-							<CButton color="success" size="sm" onClick={doStartConnection}>
-								Start connection
+							<CButton color="success" size="sm" onClick={doStartInstance}>
+								Start {instanceTypeStr}
 							</CButton>
 						</CButtonGroup>
 
@@ -342,8 +336,8 @@ const LogLineInner = memo(({ h, innerRef }: LogLineInnerProps) => {
 	)
 })
 
-function loadConfig(connectionId: string): DebugConfig {
-	const saveId = `module_debug:${connectionId}`
+function loadConfig(instanceId: string): DebugConfig {
+	const saveId = `module_debug:${instanceId}`
 	try {
 		const rawConfig = window.localStorage.getItem(saveId)
 		if (!rawConfig) throw new Error()

@@ -6,14 +6,14 @@ import React from 'react'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { observer } from 'mobx-react-lite'
 
-interface ConnectionStatusCellProps {
+interface InstanceTableStatusCellProps {
 	isEnabled: boolean
 	status: InstanceStatusEntry | undefined
 }
-export const ConnectionStatusCell = observer(function ConnectionStatusCell({
+export const InstanceTableStatusCell = observer(function InstanceTableStatusCell({
 	isEnabled,
 	status,
-}: ConnectionStatusCellProps) {
+}: InstanceTableStatusCellProps) {
 	if (isEnabled) {
 		const messageStr =
 			!!status &&

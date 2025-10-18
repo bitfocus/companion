@@ -1,23 +1,26 @@
-import type { ConnectionCollection, ConnectionCollectionData } from '@companion-app/shared/Model/Connections.js'
-import type { InstanceConfigStore } from './ConfigStore.js'
-import type { DataDatabase } from '../Data/Database.js'
-import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
-import { publicProcedure, router } from '../UI/TRPC.js'
+import type { InstanceConfigStore } from '../ConfigStore.js'
+import type { DataDatabase } from '../../Data/Database.js'
+import { CollectionsBaseController } from '../../Resources/CollectionsBase.js'
+import { publicProcedure, router } from '../../UI/TRPC.js'
 import z from 'zod'
+import type {
+	SurfaceInstanceCollection,
+	SurfaceInstanceCollectionData,
+} from '@companion-app/shared/Model/SurfaceInstance.js'
 
-export class InstanceCollections extends CollectionsBaseController<ConnectionCollectionData> {
+export class SurfaceInstanceCollections extends CollectionsBaseController<SurfaceInstanceCollectionData> {
 	readonly #emitUpdated: () => void
 
 	readonly #configStore: InstanceConfigStore
 
 	constructor(db: DataDatabase, configStore: InstanceConfigStore, emitUpdated: () => void) {
-		super(db.getTableView<Record<string, ConnectionCollection>>('connection_collections'))
+		super(db.getTableView<Record<string, SurfaceInstanceCollection>>('surface_instance_collections'))
 
 		this.#emitUpdated = emitUpdated
 		this.#configStore = configStore
 
 		// TODO: remove this soon - fixup existing data
-		const fixupCollections = (collections: ConnectionCollection[]) => {
+		const fixupCollections = (collections: SurfaceInstanceCollection[]) => {
 			for (const collection of collections) {
 				if (collection.metaData === undefined) {
 					collection.metaData = { enabled: true }
@@ -47,14 +50,14 @@ export class InstanceCollections extends CollectionsBaseController<ConnectionCol
 	}
 
 	/**
-	 * Ensure that all collectionIds in connections are valid collections
+	 * Ensure that all collectionIds in surface instances are valid collections
 	 */
 	override removeUnknownCollectionReferences(): void {
 		this.#configStore.cleanUnknownCollectionIds(this.collectAllCollectionIds())
 	}
 
-	override emitUpdateUser(_rows: ConnectionCollection[]): void {
-		// Emit event to trigger feedback updates for connection collection enabled states
+	override emitUpdateUser(_rows: SurfaceInstanceCollection[]): void {
+		// Emit event to trigger feedback updates for surface instance collection enabled states
 		this.#emitUpdated()
 	}
 

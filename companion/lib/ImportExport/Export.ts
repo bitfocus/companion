@@ -46,6 +46,7 @@ import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { formatAttachmentFilename, StringifiedExportData, stringifyExport } from './Util.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
@@ -423,7 +424,7 @@ export class ExportController {
 
 		referencedConnectionLabels.delete('internal') // Ignore the internal module
 		for (const label of referencedConnectionLabels) {
-			const connectionId = this.#instancesController.getIdForLabel(label)
+			const connectionId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, label)
 			if (connectionId) {
 				instancesExport[connectionId] = this.#instancesController.exportConnection(
 					connectionId,

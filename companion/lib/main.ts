@@ -21,6 +21,7 @@ import logger from './Log/Controller.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
 import net from 'net'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const program = new Command()
 
@@ -218,7 +219,8 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const registry = new Registry(
 		configDir,
 		{
-			connection: path.join(rootConfigDir, 'modules'), // For backwards compatibility
+			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // For backwards compatibility
+			[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
 		},
 		machineId
 	)

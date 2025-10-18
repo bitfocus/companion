@@ -57,7 +57,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 
 	let candidates: JSX.Element[] = []
 	try {
-		const searchResults = filterProducts(typeProducts, filter)
+		const searchResults = filterProducts(typeProducts, filter, false)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
