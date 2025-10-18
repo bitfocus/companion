@@ -45,7 +45,7 @@ export class InstanceModules {
 	/**
 	 * Last module info sent to clients
 	 */
-	#lastModulesJson: Record<string, ClientModuleInfo> | null = null
+	#lastModulesJson: Record<string, ClientModuleInfo> = {}
 
 	/**
 	 * Known module info
@@ -174,6 +174,8 @@ export class InstanceModules {
 			this.#logger.info(`Found ${candidates.length} extra modules`)
 		}
 
+		this.#lastModulesJson = this.#compileClientModulesJson()
+
 		// Log the loaded modules
 		for (const id of Array.from(this.#knownModules.keys()).sort()) {
 			const moduleInfo = this.#knownModules.get(id)
@@ -240,7 +242,7 @@ export class InstanceModules {
 	}
 
 	#emitModuleUpdate = (changedModuleId: string): void => {
-		const newJson = cloneDeep(this.getModulesJson())
+		const newJson = cloneDeep(this.#compileClientModulesJson())
 
 		const newObj = newJson[changedModuleId]
 
@@ -290,7 +292,7 @@ export class InstanceModules {
 
 				yield {
 					type: 'init',
-					info: self.#lastModulesJson || self.getModulesJson(),
+					info: self.#lastModulesJson,
 				} satisfies ModuleInfoUpdate
 
 				for await (const [change] of changes) {
@@ -390,7 +392,7 @@ export class InstanceModules {
 	/**
 	 * Get display version of module infos
 	 */
-	getModulesJson(): Record<string, ClientModuleInfo> {
+	#compileClientModulesJson(): Record<string, ClientModuleInfo> {
 		const result: Record<string, ClientModuleInfo> = {}
 
 		for (const [id, moduleInfo] of this.#knownModules.entries()) {
