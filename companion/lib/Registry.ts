@@ -228,6 +228,7 @@ export class Registry {
 			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
 			this.internalModule = new InternalController(
+				this.#appInfo,
 				this.controls,
 				pageStore,
 				this.instance,
