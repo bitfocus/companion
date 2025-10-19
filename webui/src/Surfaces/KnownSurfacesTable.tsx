@@ -249,15 +249,17 @@ const SurfaceRow = observer(function SurfaceRow({
 		>
 			<div className="grid-cell">{index !== null ? `#${index}` : ''}</div>
 			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
-				<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
-				{!!surface.hasFirmwareUpdates && (
-					<>
-						{' '}
-						<WindowLinkOpen href={surface.hasFirmwareUpdates.updaterDownloadUrl}>
-							<FontAwesomeIcon icon={faCircleUp} title="Firmware update is available" />
-						</WindowLinkOpen>
-					</>
-				)}
+				<div>
+					<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
+					{!!surface.hasFirmwareUpdates && (
+						<>
+							{' '}
+							<WindowLinkOpen href={surface.hasFirmwareUpdates.updaterDownloadUrl}>
+								<FontAwesomeIcon icon={faCircleUp} title="Firmware update is available" />
+							</WindowLinkOpen>
+						</>
+					)}
+				</div>
 				<div className="surface-id-row">
 					<span className="surface-id" title={surface.id}>
 						{surface.id}
