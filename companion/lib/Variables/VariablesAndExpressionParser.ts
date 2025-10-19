@@ -10,6 +10,7 @@ import {
 } from './Util.js'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 
 /**
  * A class to parse and execute expressions with variables
@@ -79,6 +80,6 @@ export class VariablesAndExpressionParser {
 	 * @returns with variables replaced with values
 	 */
 	parseVariables(str: string): ParseVariablesResult {
-		return parseVariablesInString(str, this.#rawVariableValues, this.#valueCacheAccessor)
+		return parseVariablesInString(str, this.#rawVariableValues, this.#valueCacheAccessor, VARIABLE_UNKNOWN_VALUE)
 	}
 }

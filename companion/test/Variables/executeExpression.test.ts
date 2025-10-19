@@ -93,6 +93,18 @@ describe('executeExpression', () => {
 		expect(res).toMatchObject({ value: '1/2/3', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
+	test('undefined variables', () => {
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', '$(another:value)')
+		injectedVariableValues.set('$(another:value)', undefined)
+
+		const res = executeExpression('parseVariables("$(another:value)", "sub")', {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: 'sub', variableIds: new Set(['another:value']) })
+
+		const res2 = executeExpression('parseVariables("$(test:something)", "sub")', {}, undefined, injectedVariableValues)
+		expect(res2).toMatchObject({ value: 'sub', variableIds: new Set(['test:something', 'another:value']) })
+	})
+
 	test('falsey variables', () => {
 		const res = executeExpression(
 			"concat($(test:page), '/', $(test:row), '/', $(test:col))",

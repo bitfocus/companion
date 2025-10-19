@@ -157,9 +157,11 @@ Decode a string from the requested format ('hex','base64'). If `enc` is missing,
 
 eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
-**parseVariables(string)**
+**parseVariables(string, ?undefinedValue)**
 
 In some cases you may need nested variable evaluation (for example `$(custom:$(custom:b))`). The expression parser does not support that nested variable syntax directly. To evaluate nested variables inside an expression, pass the string to `parseVariables`, which will interpret string-variable and template syntax.
+
+Optionally, you can provide the value to substitute in when a variable is `undefined`. This should be a string.
 
 eg `parseVariables('$(custom:$(custom:b))')`
 

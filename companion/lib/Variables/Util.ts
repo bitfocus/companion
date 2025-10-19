@@ -33,7 +33,8 @@ export interface ParseVariablesResult {
 export function parseVariablesInString(
 	string: CompanionVariableValue,
 	rawVariableValues: VariableValueData,
-	cachedVariableValues: VariableValueCache
+	cachedVariableValues: VariableValueCache,
+	undefinedValue: string
 ): ParseVariablesResult {
 	if (string === undefined || string === null || string === '') {
 		return {
@@ -83,7 +84,7 @@ export function parseVariablesInString(
 			// Fetch the raw value, and parse variables inside of it
 			const rawValue = rawVariableValues[connectionLabel]?.[variableId]
 			if (rawValue !== undefined) {
-				const result = parseVariablesInString(rawValue, rawVariableValues, cachedVariableValues)
+				const result = parseVariablesInString(rawValue, rawVariableValues, cachedVariableValues, undefinedValue)
 				value = result.text
 
 				for (const id of result.variableIds) {
@@ -91,13 +92,13 @@ export function parseVariablesInString(
 				}
 			} else {
 				// Variable has no value
-				value = VARIABLE_UNKNOWN_VALUE
+				value = undefinedValue
 			}
 
 			cachedVariableValues.set(fullId, value)
 		}
 
-		if (value === undefined) value = ''
+		if (value === undefined) value = undefinedValue
 
 		// Pass a function, to avoid special interpreting of `$$` and other sequences
 		const cachedValueConst = value?.toString()
@@ -212,7 +213,7 @@ export function executeExpression(
 					}
 
 					// Fallback to parsing the string
-					const parsedValue = parseVariablesInString(value, rawVariableValues, wrappedCache)
+					const parsedValue = parseVariablesInString(value, rawVariableValues, wrappedCache, VARIABLE_UNKNOWN_VALUE)
 					value = parsedValue.text
 
 					for (const id of parsedValue.variableIds) {
@@ -226,8 +227,14 @@ export function executeExpression(
 
 		const functions = {
 			...ExpressionFunctions,
-			parseVariables: (str: string): string => {
-				const result = parseVariablesInString(str, rawVariableValues, cachedVariableValues)
+			parseVariables: (str: string, undefinedValue?: string): string => {
+				console.log('cal', str, undefinedValue)
+				const result = parseVariablesInString(
+					str,
+					rawVariableValues,
+					cachedVariableValues,
+					typeof undefinedValue === 'string' ? undefinedValue : VARIABLE_UNKNOWN_VALUE
+				)
 
 				// Track referenced variables
 				for (const varId of result.variableIds) {
