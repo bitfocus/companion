@@ -16,7 +16,7 @@ import { ParseExpression } from '@companion-app/shared/Expression/ExpressionPars
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ReadonlyDeep } from 'type-fest'
-import { SplitVariableId, VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 
 // Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
 const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/

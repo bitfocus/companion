@@ -124,4 +124,46 @@ describe('executeExpression', () => {
 		)
 		expect(res).toMatchObject({ value: '0//$NA', variableIds: new Set(['test:page', 'test:row', 'test:col']) })
 	})
+
+	test('getVariable single-arg form', () => {
+		const res = executeExpression(
+			"getVariable('test:page')",
+			{
+				test: {
+					page: 'abc',
+				},
+			},
+			undefined,
+			new Map()
+		)
+		expect(res).toMatchObject({ value: 'abc', variableIds: new Set(['test:page']) })
+	})
+
+	test('getVariable two-arg form', () => {
+		const res = executeExpression(
+			"getVariable('test','row')",
+			{
+				test: {
+					row: 'def',
+				},
+			},
+			undefined,
+			new Map()
+		)
+		expect(res).toMatchObject({ value: 'def', variableIds: new Set(['test:row']) })
+	})
+
+	test('getVariable missing returns undefined', () => {
+		const res = executeExpression("getVariable('another:missing')", {}, undefined, new Map())
+		expect(res).toMatchObject({ value: undefined, variableIds: new Set(['another:missing']) })
+	})
+
+	test('getVariable chained resolution', () => {
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', '$(another:value)')
+		injectedVariableValues.set('$(another:value)', 'something')
+
+		const res = executeExpression("getVariable('test:something')", {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })
+	})
 })
