@@ -1,5 +1,6 @@
-import type { languages } from 'monaco-editor'
+import type { IRange, languages } from 'monaco-editor'
 import type { Monaco } from '@monaco-editor/react'
+import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
 export const COMPANION_EXPRESSION_LANGUAGE_ID = 'companionExpression'
 
@@ -358,13 +359,51 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 	provideCompletionItems: (model, position) => {
 		const suggestions: languages.CompletionItem[] = []
 
+		// Get companion variables from model metadata
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+		const companionVariables = ((model as any)._companionVariables ?? []) as DropdownChoiceInt[]
+
 		// Get the word being typed
 		const word = model.getWordUntilPosition(position)
-		const range = {
+		const range: IRange = {
 			startLineNumber: position.lineNumber,
 			endLineNumber: position.lineNumber,
 			startColumn: word.startColumn,
 			endColumn: word.endColumn,
+		}
+
+		// Check if we're typing a companion variable
+		const lineContent = model.getLineContent(position.lineNumber)
+		const textBeforeCursor = lineContent.substring(0, position.column - 1)
+		const textAfterCursor = lineContent.substring(position.column - 1)
+		const companionVarMatch = textBeforeCursor.match(/\$\([a-zA-Z0-9_\-:]*$/)
+
+		if (companionVarMatch) {
+			// We're inside a companion variable, suggest companion variables
+			const matchStart = position.column - (companionVarMatch[0].length - 2) // -2 for the $(
+
+			// Check if there's already a closing parenthesis after the cursor
+			const hasClosingParen = textAfterCursor.startsWith(')')
+
+			const companionRange: IRange = {
+				startLineNumber: position.lineNumber,
+				endLineNumber: position.lineNumber,
+				startColumn: matchStart,
+				endColumn: position.column,
+			}
+
+			for (const variable of companionVariables) {
+				const variableId = String(variable.value)
+				suggestions.push({
+					label: variableId,
+					kind: 6, // Variable
+					detail: variable.label,
+					insertText: hasClosingParen ? variableId : variableId + ')',
+					range: companionRange,
+				})
+			}
+
+			return { suggestions }
 		}
 
 		// Add built-in function completions
@@ -385,6 +424,18 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 				label: keyword,
 				kind: 14, // Keyword
 				insertText: keyword,
+				range: range,
+			})
+		}
+
+		// Add companion variable completions (when not inside $(...))
+		for (const variable of companionVariables) {
+			const variableId = String(variable.value)
+			suggestions.push({
+				label: `$(${variableId})`,
+				kind: 6, // Variable
+				detail: variable.label,
+				insertText: `$(${variableId})`,
 				range: range,
 			})
 		}

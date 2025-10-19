@@ -6,6 +6,7 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
+import { registerCompanionExpressionLanguage } from './Resources/Expression.monarch.js'
 
 // TODO: is all of this needed?
 
@@ -30,6 +31,11 @@ self.MonacoEnvironment = {
 loader.config({ monaco })
 
 // TODO - tie this into the app loading state?
-loader.init().catch((error) => {
-	console.error('Error initializing Monaco Editor:', error)
-})
+loader
+	.init()
+	.then((monaco) => {
+		registerCompanionExpressionLanguage(monaco)
+	})
+	.catch((error) => {
+		console.error('Error initializing Monaco Editor:', error)
+	})
