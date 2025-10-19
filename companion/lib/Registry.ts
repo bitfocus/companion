@@ -15,7 +15,7 @@ import { PageController } from './Page/Controller.js'
 import { ServiceController } from './Service/Controller.js'
 import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
-import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
+import { isPackaged, sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
 import { ImportExportController } from './ImportExport/Controller.js'
@@ -27,8 +27,11 @@ import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import path from 'path'
 
-const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
+const pkgInfoStr = await fs.readFile(
+	isPackaged() ? path.join(__dirname, './package.json') : new URL('../package.json', import.meta.url)
+)
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
 
 let buildNumber: string
