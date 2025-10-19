@@ -356,6 +356,7 @@ const companionExpressionTokensProvider: languages.IMonarchLanguage = {
 }
 
 const companionExpressionCompletionItemProvider: languages.CompletionItemProvider = {
+	triggerCharacters: ['('],
 	provideCompletionItems: (model, position) => {
 		const suggestions: languages.CompletionItem[] = []
 
@@ -380,7 +381,9 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 
 		if (companionVarMatch) {
 			// We're inside a companion variable, suggest companion variables
-			const matchStart = position.column - (companionVarMatch[0].length - 2) // -2 for the $(
+			// Extract the text after $( that we're matching
+			const afterDollarParen = companionVarMatch[0].substring(2) // Remove the $(
+			const matchStart = position.column - afterDollarParen.length
 
 			// Check if there's already a closing parenthesis after the cursor
 			const hasClosingParen = textAfterCursor.startsWith(')')
@@ -428,17 +431,37 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 			})
 		}
 
-		// Add companion variable completions (when not inside $(...))
-		for (const variable of companionVariables) {
-			const variableId = String(variable.value)
+		// Extract user-defined variables from the code
+		const userDefinedVars = new Set<string>()
+		const fullText = model.getValue()
+		// Match variable assignments: identifier = value
+		// This regex looks for identifiers followed by = (with optional whitespace)
+		const varAssignmentRegex = /\b([a-zA-Z_$][\w$]*)\s*=/g
+		let match
+		while ((match = varAssignmentRegex.exec(fullText)) !== null) {
+			const varName = match[1]
+			// Exclude keywords and built-in functions
+			if (
+				!keywords.includes(varName) &&
+				!typeKeywords.includes(varName) &&
+				!builtinFunctionCompletions.some((fn) => fn.name === varName)
+			) {
+				userDefinedVars.add(varName)
+			}
+		}
+
+		// Add user-defined variable completions
+		for (const varName of userDefinedVars) {
 			suggestions.push({
-				label: `$(${variableId})`,
+				label: varName,
 				kind: 6, // Variable
-				detail: variable.label,
-				insertText: `$(${variableId})`,
+				detail: 'User-defined variable',
+				insertText: varName,
 				range: range,
 			})
 		}
+
+		// Note: intentionally not showing variable suggestions when not inside $(...), to avoid clutter
 
 		return { suggestions }
 	},
