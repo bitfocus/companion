@@ -119,6 +119,9 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 					folding: false,
 					fixedOverflowWidgets: true,
 					fontSize: 15,
+					// Make suggest widget rows tall enough for two lines (name + description)
+					suggestFontSize: 14,
+					suggestLineHeight: 34,
 				}}
 			/>
 		</div>
