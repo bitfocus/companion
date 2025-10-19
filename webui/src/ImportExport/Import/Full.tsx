@@ -159,15 +159,13 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		// userconfig: true,
 	}))
 
-	// make sure config matches the available data. This is resilient, but it might be
-	// cleaner/simpler to just manually add snapshotKeys.includes('keyname') in useState?
-	const availableConfig = { ...config }
-	for (const k in availableConfig) {
+	// Make sure config matches the available data, so set false if field will be disabled.
+	// Note that this only cleans up the value returned to the server: it doesn't affect the
+	//  rendering because the only values it changes are disabled by `validConfigKeys`.
+	//  (As an aside, this is probably correct anyway just like a value computed from the reactive values.)
+	for (const k in config) {
 		const key = k as keyof typeof config // get around TypeScript errors
-		availableConfig[key] &&= snapshotKeys.includes(k) // check-types doesn't like `key` as arg to `includes())`
-		if (availableConfig[key] !== config[key]) {
-			setConfig(availableConfig) // note: this is effectively a noop after the first change is detected.
-		}
+		config[key] &&= snapshotKeys.includes(k) // check-types doesn't like `key` as arg to `includes())`
 	}
 
 	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))

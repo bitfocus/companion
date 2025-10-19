@@ -506,8 +506,11 @@ export class ImportExportController {
 						// Destroy old stuff
 						await this.#reset(resetArg, config.buttons)
 
+						// Always Import instances
 						// Import connection collections if provided
-						this.#instancesController.connectionCollections.replaceCollections(data.connectionCollections || [])
+						if (data.connectionCollections && data.connectionCollections.length > 0) {
+							this.#instancesController.connectionCollections.replaceCollections(data.connectionCollections || [])
+						}
 
 						// Always Import instances
 						const preserveRemap: ConnectionRemappings =
@@ -533,9 +536,9 @@ export class ImportExportController {
 						}
 
 						// note data.pages is needed only to satisfy TypeScript, since config.buttons is false if pages is missing.
-						if (data.pages && config.buttons) {
+						if (config.buttons) {
 							// Import pages
-							for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
+							for (const [pageNumber0, pageInfo] of Object.entries(data.pages ?? {})) {
 								if (!pageInfo) continue
 
 								const pageNumber = Number(pageNumber0)
