@@ -163,6 +163,14 @@ In some cases you may need nested variable evaluation (for example `$(custom:$(c
 
 eg `parseVariables('$(custom:$(custom:b))')`
 
+**getVariable(string) or getVariable(string, string)**
+
+Dynamically fetch a variable value.
+
+Note: when possible, prefer using the `$(internal:time_hms)` syntax, as it allows for Companion to statically detect the usage and auto-rename the reference when needed.
+
+eg `getVariable('internal:time_hms')` or `getVariable('internal', 'time_hms')`
+
 ##### Bool operations
 
 **bool(val)**
