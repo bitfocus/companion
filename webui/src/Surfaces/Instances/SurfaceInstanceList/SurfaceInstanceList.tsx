@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useRef } from 'react'
-import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -89,9 +89,13 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				<h4>Surface Instances</h4>
 
 				<p>
-					To allow various hardware panels to integrate with Companion, you need to setup an instance here. TODO - what
-					should this say?
+					Similar to connections, surface instances represent the ability to use different hardware or virtual surfaces
+					to trigger buttons in Companion. Here you enable and configure the types of surfaces you want to use.
 				</p>
+				<CAlert color="danger">
+					<strong>Warning:</strong> Surface instances are still an experimental feature. We recommend using the old
+					implementations for now.
+				</CAlert>
 
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
