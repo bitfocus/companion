@@ -1,36 +1,38 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { CRow, CCol } from '@coreui/react'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
+import { SurfaceInstanceEditPanelHeading } from './SurfaceInstanceEditPanelHeading.js'
 import { useNavigate } from '@tanstack/react-router'
-import { trpc, trpcClient, useMutationExt, type RouterInputs } from '~/Resources/TRPC.js'
+import { type RouterInputs, trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import type { InstanceEditPanelStore } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
 import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
+import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
 
-interface ConnectionEditPanelProps {
-	connectionId: string
+interface SurfaceInstanceEditPanelProps {
+	instanceId: string
 }
 
-export const ConnectionEditPanel = observer(function ConnectionEditPanel({ connectionId }: ConnectionEditPanelProps) {
-	const { connections } = useContext(RootAppStoreContext)
+export const SurfaceInstanceEditPanel = observer(function SurfaceInstanceEditPanel({
+	instanceId,
+}: SurfaceInstanceEditPanelProps) {
+	const { surfaceInstances } = useContext(RootAppStoreContext)
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
-	const service = useInstanceEditPanelService(confirmModalRef, connectionId)
+	const service = useInstanceEditPanelService(confirmModalRef, instanceId)
 
-	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)
+	const instanceInfo = surfaceInstances.getInfo(instanceId)
 
-	if (!connectionInfo) {
+	if (!instanceInfo) {
 		return (
 			<CRow className="edit-connection">
 				<CCol xs={12}>
-					<p>Connection not found</p>
+					<p>Instance not found</p>
 				</CCol>
 			</CRow>
 		)
@@ -40,15 +42,14 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 		<>
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<ConnectionEditPanelHeading connectionInfo={connectionInfo} closeConfigurePanel={service.closePanel} />
+			<SurfaceInstanceEditPanelHeading instanceInfo={instanceInfo} closeConfigurePanel={service.closePanel} />
 
-			<InstanceGenericEditPanel<ClientConnectionConfig>
-				instanceInfo={connectionInfo}
+			<InstanceGenericEditPanel<ClientSurfaceInstanceConfig>
+				instanceInfo={instanceInfo}
 				service={service}
 				changeModuleDangerMessage={
 					<>
-						Changing the module type can break the connection and corrupt any existing actions and feedbacks. Only use
-						this if you are sure of what you are doing.
+						Changing the module type can break the linked surfaces. Only use this if you are sure of what you are doing.
 					</>
 				}
 			/>
@@ -59,28 +60,28 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 function useInstanceEditPanelService(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>,
 	instanceId: string
-): InstanceEditPanelService<ClientConnectionConfig> {
-	const { connections } = useContext(RootAppStoreContext)
+): InstanceEditPanelService<ClientSurfaceInstanceConfig> {
+	const { surfaceInstances } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: `/connections/$connectionId` })
+	const navigate = useNavigate({ from: `/surfaces/instances/$instanceId` })
 	const closePanel = useCallback(() => {
-		void navigate({ to: `/connections` })
+		void navigate({ to: `/surfaces/instances` })
 	}, [navigate])
 
-	const setConfigMutation = useMutationExt(trpc.instances.connections.setConfig.mutationOptions())
-	const deleteMutation = useMutationExt(trpc.instances.connections.delete.mutationOptions())
+	const setConfigMutation = useMutationExt(trpc.instances.surfaces.setConfig.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.instances.surfaces.delete.mutationOptions())
 
 	const deleteInstance = useCallback(
 		(currentLabel: string) => {
 			confirmModalRef.current?.show(
-				'Delete connection',
+				'Delete surface instance',
 				[
 					`Are you sure you want to delete "${currentLabel}"?`,
-					'This will remove all actions and feedbacks associated with this connection.',
+					'This will disable all surfaces associated with this instance.',
 				],
 				'Delete',
 				() => {
-					deleteMutation.mutateAsync({ connectionId: instanceId }).catch((e) => {
+					deleteMutation.mutateAsync({ instanceId }).catch((e) => {
 						console.error('Delete failed', e)
 					})
 					closePanel()
@@ -93,24 +94,24 @@ function useInstanceEditPanelService(
 	const saveConfig = useCallback(
 		async (
 			instanceShouldBeRunning: boolean,
-			panelStore: InstanceEditPanelStore<ClientConnectionConfig>
+			panelStore: InstanceEditPanelStore<ClientSurfaceInstanceConfig>
 		): Promise<string | null> => {
 			const saveLabel = panelStore.labelValue
 
-			const saveConfigProps: RouterInputs['instances']['connections']['setConfig'] = {
-				connectionId: instanceId,
+			const saveConfigProps: RouterInputs['instances']['surfaces']['setConfig'] = {
+				instanceId: instanceId,
 				label: saveLabel,
 				enabled: panelStore.enabled,
 				updatePolicy: panelStore.updatePolicy,
 			}
 
 			if (instanceShouldBeRunning) {
-				if (panelStore.isLoading) throw new Error('Connection is still loading, cannot save changes')
+				if (panelStore.isLoading) throw new Error('Surface instance is still loading, cannot save changes')
 
 				const configAndSecrets = panelStore.configAndSecrets
 				if (configAndSecrets) {
 					saveConfigProps.config = configAndSecrets.config
-					saveConfigProps.secrets = configAndSecrets.secrets
+					// saveConfigProps.secrets = configAndSecrets.secrets
 				}
 			}
 
@@ -119,12 +120,12 @@ function useInstanceEditPanelService(
 			if (err === 'invalid label') {
 				return `The label "${saveLabel}" in not valid`
 			} else if (err === 'duplicate label') {
-				return `The label "${saveLabel}" is already in use. Please use a unique label for this connection`
+				return `The label "${saveLabel}" is already in use. Please use a unique label for this surface instance`
 			} else if (err) {
-				return `Unable to save connection config: "${err}"`
+				return `Unable to save surface instance config: "${err}"`
 			} else {
 				if (instanceShouldBeRunning) {
-					// Perform a reload of the connection config and secrets
+					// Perform a reload of the surface instance config and secrets
 					panelStore.triggerReload()
 				}
 
@@ -136,17 +137,17 @@ function useInstanceEditPanelService(
 
 	return useMemo(
 		() => ({
-			moduleType: ModuleInstanceType.Connection,
+			moduleType: ModuleInstanceType.Surface,
 			instanceId,
 
-			moduleTypeDisplayName: 'connection',
+			moduleTypeDisplayName: 'surface instance',
 
 			fetchConfig: async () =>
-				trpcClient.instances.connections.edit.query({
-					connectionId: instanceId,
+				trpcClient.instances.surfaces.edit.query({
+					instanceId,
 				}) as Promise<ClientEditInstanceConfig | null>,
 
-			isCollectionEnabled: (collectionId) => isCollectionEnabled(connections.rootCollections(), collectionId),
+			isCollectionEnabled: (collectionId) => isCollectionEnabled(surfaceInstances.rootCollections(), collectionId),
 
 			deleteInstance,
 
@@ -154,6 +155,6 @@ function useInstanceEditPanelService(
 
 			closePanel,
 		}),
-		[instanceId, connections, deleteInstance, saveConfig, closePanel]
+		[instanceId, surfaceInstances, deleteInstance, saveConfig, closePanel]
 	)
 }

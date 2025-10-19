@@ -116,7 +116,7 @@ export function createSurfacesTrpcRouter(
 		setConfig: publicProcedure
 			.input(
 				z.object({
-					connectionId: z.string(),
+					instanceId: z.string(),
 					label: z.string(),
 					enabled: z.boolean().optional(),
 					config: z.record(z.string(), z.any()).optional(),
@@ -124,9 +124,9 @@ export function createSurfacesTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				logger.info('Updating config for ', input.connectionId, input.label)
+				logger.info('Updating config for ', input.instanceId, input.label)
 
-				const res = instanceController.setSurfaceInstanceLabelAndConfig(input.connectionId, {
+				const res = instanceController.setSurfaceInstanceLabelAndConfig(input.instanceId, {
 					label: input.label,
 					enabled: input.enabled ?? null,
 					config: input.config ?? null,
