@@ -113,6 +113,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 					automaticLayout: true,
 					lineNumbers: 'off',
 					folding: false,
+					fixedOverflowWidgets: true,
 				}}
 			/>
 		</div>
