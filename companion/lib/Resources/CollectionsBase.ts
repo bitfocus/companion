@@ -67,7 +67,7 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		this.data.sort((a, b) => a.sortOrder - b.sortOrder)
 
 		this.emitUpdate(this.data)
-
+		// remove collectionId fields from connection objects (i.e. this does not affect collection objects themselves)
 		this.removeUnknownCollectionReferences()
 	}
 

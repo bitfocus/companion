@@ -507,9 +507,8 @@ export class ImportExportController {
 						await this.#reset(resetArg, config.buttons)
 
 						// Always Import instances
-						// Import connection collections if provided 
-						// note: the first two conditions are equivalent to: `fullReset || resetArg!.connections`
-						if (!resetArg || resetArg.connections || (data.connectionCollections && data.connectionCollections.length > 0)) {
+						// Import connection collections if provided
+						if (data.connectionCollections && data.connectionCollections.length > 0) {
 							this.#instancesController.connectionCollections.replaceCollections(data.connectionCollections || [])
 						}
 

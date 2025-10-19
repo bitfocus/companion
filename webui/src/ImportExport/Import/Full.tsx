@@ -159,15 +159,6 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		// userconfig: true,
 	}))
 
-	// Make sure config matches the available data, so set false if field will be disabled.
-	// Note that this only cleans up the value returned to the server: it doesn't affect the
-	//  rendering because the only values it changes are disabled by `validConfigKeys`.
-	//  (As an aside, this is probably correct anyway just like a value computed from the reactive values.)
-	for (const k in config) {
-		const key = k as keyof typeof config // get around TypeScript errors
-		config[key] &&= snapshotKeys.includes(k) // check-types doesn't like `key` as arg to `includes())`
-	}
-
 	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
 	// console.log('validkeys', validConfigKeys)
 
@@ -182,6 +173,11 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	const doImport = useCallback(
 		(e: React.MouseEvent<HTMLElement>) => {
 			const fullReset = e.currentTarget.getAttribute('data-fullreset') === 'true'
+			// Make sure config matches the available data, so set false if data is missing.
+			for (const k in config) {
+				const key = k as keyof typeof config // get around TypeScript errors
+				config[key] &&= snapshotKeys.includes(k) // check-types doesn't like `key` as arg to `includes())`
+			}
 
 			importFullMutation // TODO: 60s timeout?
 				.mutateAsync({ config: config, fullReset: fullReset })
@@ -195,7 +191,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				})
 			console.log('do import!')
 		},
-		[importFullMutation, notifier, config]
+		[importFullMutation, notifier, config, snapshotKeys]
 	)
 
 	return (
