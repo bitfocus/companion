@@ -109,11 +109,16 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 					readOnly: disabled,
 					minimap: { enabled: false },
 					wordWrap: 'on',
+					// Prevent wrapping inside Companion variables like $(foo:bar)
+					// Only allow wrapping at whitespace to avoid breaking between '$' and '('
+					wordWrapBreakBeforeCharacters: '',
+					wordWrapBreakAfterCharacters: ' \t',
 					scrollBeyondLastLine: false,
 					automaticLayout: true,
 					lineNumbers: 'off',
 					folding: false,
 					fixedOverflowWidgets: true,
+					fontSize: 15,
 				}}
 			/>
 		</div>

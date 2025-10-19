@@ -202,6 +202,8 @@ const companionExpressionLanguageConfiguration: languages.LanguageConfiguration 
 		lineComment: '//',
 		blockComment: ['/*', '*/'],
 	},
+	// Treat Companion variables like $(foo:bar) as a single word for navigation/selection
+	wordPattern: /\$\([a-zA-Z0-9_\-:]+\)|[a-zA-Z_$][\w$]*/,
 	brackets: [
 		['{', '}'],
 		['[', ']'],
