@@ -9,10 +9,386 @@ export function registerCompanionExpressionLanguage(monaco: Monaco): void {
 	}
 	monaco.languages.setLanguageConfiguration(COMPANION_EXPRESSION_LANGUAGE_ID, companionExpressionLanguageConfiguration)
 	monaco.languages.setMonarchTokensProvider(COMPANION_EXPRESSION_LANGUAGE_ID, companionExpressionTokensProvider)
+	monaco.languages.registerCompletionItemProvider(
+		COMPANION_EXPRESSION_LANGUAGE_ID,
+		companionExpressionCompletionItemProvider
+	)
 }
 
-const companionExpressionLanguageConfiguration: languages.LanguageConfiguration = {}
+const builtinFunctionCompletions: Array<{
+	name: string
+	detail: string
+	documentation?: string
+}> = [
+	// General operations
+	{ name: 'length', detail: 'length(value)', documentation: 'Returns the length of a string, array, or object' },
+
+	// Number operations
+	{ name: 'round', detail: 'round(number)', documentation: 'Rounds a number to the nearest integer' },
+	{ name: 'floor', detail: 'floor(number)', documentation: 'Rounds a number down to the nearest integer' },
+	{ name: 'ceil', detail: 'ceil(number)', documentation: 'Rounds a number up to the nearest integer' },
+	{ name: 'abs', detail: 'abs(number)', documentation: 'Returns the absolute value of a number' },
+	{
+		name: 'fromRadix',
+		detail: 'fromRadix(string, radix)',
+		documentation: 'Parses a string as an integer in the specified radix',
+	},
+	{
+		name: 'toRadix',
+		detail: 'toRadix(number, radix)',
+		documentation: 'Converts a number to a string in the specified radix',
+	},
+	{
+		name: 'toFixed',
+		detail: 'toFixed(number, decimals)',
+		documentation: 'Formats a number with a fixed number of decimal places',
+	},
+	{ name: 'isNumber', detail: 'isNumber(value)', documentation: 'Returns true if the value is a valid number' },
+	{ name: 'max', detail: 'max(...numbers)', documentation: 'Returns the maximum value' },
+	{ name: 'min', detail: 'min(...numbers)', documentation: 'Returns the minimum value' },
+	{
+		name: 'randomInt',
+		detail: 'randomInt(min, max)',
+		documentation: 'Returns a random integer between min and max',
+	},
+	{ name: 'log', detail: 'log(number)', documentation: 'Returns the natural logarithm of a number' },
+	{ name: 'log10', detail: 'log10(number)', documentation: 'Returns the base-10 logarithm of a number' },
+
+	// String operations
+	{ name: 'trim', detail: 'trim(string)', documentation: 'Removes whitespace from both ends of a string' },
+	{ name: 'strlen', detail: 'strlen(string)', documentation: 'Returns the byte length of a string' },
+	{
+		name: 'substr',
+		detail: 'substr(string, start, end)',
+		documentation: 'Extracts a substring from a string',
+	},
+	{
+		name: 'split',
+		detail: 'split(string, separator)',
+		documentation: 'Splits a string into an array by a separator',
+	},
+	{
+		name: 'join',
+		detail: 'join(array, separator)',
+		documentation: 'Joins array elements into a string with a separator',
+	},
+	{ name: 'concat', detail: 'concat(...strings)', documentation: 'Concatenates multiple strings' },
+	{
+		name: 'includes',
+		detail: 'includes(string, substring)',
+		documentation: 'Returns true if string contains substring',
+	},
+	{
+		name: 'indexOf',
+		detail: 'indexOf(string, substring, offset)',
+		documentation: 'Returns the index of the first occurrence of substring',
+	},
+	{
+		name: 'lastIndexOf',
+		detail: 'lastIndexOf(string, substring, offset)',
+		documentation: 'Returns the index of the last occurrence of substring',
+	},
+	{ name: 'toUpperCase', detail: 'toUpperCase(string)', documentation: 'Converts string to uppercase' },
+	{ name: 'toLowerCase', detail: 'toLowerCase(string)', documentation: 'Converts string to lowercase' },
+	{
+		name: 'replaceAll',
+		detail: 'replaceAll(string, find, replace)',
+		documentation: 'Replaces all occurrences of find with replace',
+	},
+	{
+		name: 'decode',
+		detail: 'decode(string, encoding)',
+		documentation: 'Decodes a string from specified encoding',
+	},
+	{
+		name: 'encode',
+		detail: 'encode(string, encoding)',
+		documentation: 'Encodes a string to specified encoding',
+	},
+
+	// Bool operations
+	{ name: 'bool', detail: 'bool(value)', documentation: 'Converts a value to boolean' },
+
+	// Object/array operations
+	{
+		name: 'jsonpath',
+		detail: 'jsonpath(object, path)',
+		documentation: 'Queries an object using JSONPath syntax',
+	},
+	{ name: 'jsonparse', detail: 'jsonparse(string)', documentation: 'Parses a JSON string' },
+	{ name: 'jsonstringify', detail: 'jsonstringify(object)', documentation: 'Converts an object to JSON string' },
+	{
+		name: 'arrayIncludes',
+		detail: 'arrayIncludes(array, value)',
+		documentation: 'Returns true if array contains value',
+	},
+	{
+		name: 'arrayIndexOf',
+		detail: 'arrayIndexOf(array, value, offset)',
+		documentation: 'Returns the index of value in array',
+	},
+	{
+		name: 'arrayLastIndexOf',
+		detail: 'arrayLastIndexOf(array, value, offset)',
+		documentation: 'Returns the last index of value in array',
+	},
+
+	// Time operations
+	{ name: 'unixNow', detail: 'unixNow()', documentation: 'Returns the current Unix timestamp in milliseconds' },
+	{
+		name: 'timestampToSeconds',
+		detail: 'timestampToSeconds(string)',
+		documentation: 'Converts a HH:MM:SS timestamp to seconds',
+	},
+	{
+		name: 'secondsToTimestamp',
+		detail: 'secondsToTimestamp(seconds, format)',
+		documentation: 'Converts seconds to a timestamp string',
+	},
+	{
+		name: 'msToTimestamp',
+		detail: 'msToTimestamp(milliseconds, format)',
+		documentation: 'Converts milliseconds to a timestamp string',
+	},
+	{
+		name: 'timeOffset',
+		detail: 'timeOffset(time, offset, hr12)',
+		documentation: 'Adds an offset to a time string',
+	},
+	{
+		name: 'timeDiff',
+		detail: 'timeDiff(from, to)',
+		documentation: 'Calculates the difference between two times in seconds',
+	},
+]
+
+const keywords = ['return', 'undefined']
+const typeKeywords = ['true', 'false', 'null']
+
+const companionExpressionLanguageConfiguration: languages.LanguageConfiguration = {
+	comments: {
+		lineComment: '//',
+		blockComment: ['/*', '*/'],
+	},
+	brackets: [
+		['{', '}'],
+		['[', ']'],
+		['(', ')'],
+	],
+	autoClosingPairs: [
+		{ open: '{', close: '}' },
+		{ open: '[', close: ']' },
+		{ open: '(', close: ')' },
+		{ open: '"', close: '"' },
+		{ open: "'", close: "'" },
+		{ open: '`', close: '`' },
+	],
+	surroundingPairs: [
+		{ open: '{', close: '}' },
+		{ open: '[', close: ']' },
+		{ open: '(', close: ')' },
+		{ open: '"', close: '"' },
+		{ open: "'", close: "'" },
+		{ open: '`', close: '`' },
+	],
+}
 
 const companionExpressionTokensProvider: languages.IMonarchLanguage = {
-	// TODO
+	defaultToken: 'invalid',
+	tokenPostfix: '.expr',
+
+	keywords: keywords,
+
+	builtinFunctions: builtinFunctionCompletions.map((fn) => fn.name),
+
+	typeKeywords: typeKeywords,
+
+	operators: [
+		'<=',
+		'>=',
+		'==',
+		'!=',
+		'===',
+		'!==',
+		'=>',
+		'++',
+		'--',
+		'<<',
+		'>>',
+		'&&',
+		'||',
+		'??',
+		'+=',
+		'-=',
+		'*=',
+		'**=',
+		'/=',
+		'%=',
+		'<<=',
+		'>>=',
+		'&=',
+		'|=',
+		'^=',
+		'||=',
+		'&&=',
+		'??=',
+		'**',
+		'+',
+		'-',
+		'*',
+		'/',
+		'%',
+		'&',
+		'|',
+		'^',
+		'~',
+		'!',
+		'=',
+		'<',
+		'>',
+		'?',
+		':',
+	],
+
+	// Common regular expressions
+	symbols: /[=><!~?:&|+\-*/^%]+/,
+	escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+	digits: /\d+(_+\d+)*/,
+	octaldigits: /[0-7]+(_+[0-7]+)*/,
+	binarydigits: /[0-1]+(_+[0-1]+)*/,
+	hexdigits: /[[0-9a-fA-F]+(_+[0-9a-fA-F]+)*/,
+
+	// The main tokenizer
+	tokenizer: {
+		root: [
+			// Companion variables: $(variable:name)
+			[/\$\([a-zA-Z0-9_\-:]+\)/, 'variable.companion'],
+
+			// Identifiers and keywords
+			[
+				/[a-zA-Z_$][\w$]*/,
+				{
+					cases: {
+						'@typeKeywords': 'keyword',
+						'@keywords': 'keyword',
+						'@builtinFunctions': 'predefined',
+						'@default': 'identifier',
+					},
+				},
+			],
+
+			// Whitespace
+			{ include: '@whitespace' },
+
+			// Delimiters and operators
+			[/[{}()[\]]/, '@brackets'],
+			[/[<>](?!@symbols)/, '@brackets'],
+			[
+				/@symbols/,
+				{
+					cases: {
+						'@operators': 'operator',
+						'@default': '',
+					},
+				},
+			],
+
+			// Numbers
+			[/(@digits)[eE]([-+]?(@digits))?/, 'number.float'],
+			[/(@digits)\.(@digits)([eE][-+]?(@digits))?/, 'number.float'],
+			[/0[xX](@hexdigits)/, 'number.hex'],
+			[/0[oO]?(@octaldigits)/, 'number.octal'],
+			[/0[bB](@binarydigits)/, 'number.binary'],
+			[/(@digits)/, 'number'],
+
+			// Delimiter: after number because of .\d floats
+			[/[;,.]/, 'delimiter'],
+
+			// Strings
+			[/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
+			[/'([^'\\]|\\.)*$/, 'string.invalid'], // non-teminated string
+			[/"/, 'string', '@string_double'],
+			[/'/, 'string', '@string_single'],
+			[/`/, 'string', '@string_backtick'],
+		],
+
+		whitespace: [
+			[/[ \t\r\n]+/, ''],
+			[/\/\*/, 'comment', '@comment'],
+			[/\/\/.*$/, 'comment'],
+		],
+
+		comment: [
+			[/[^/*]+/, 'comment'],
+			[/\*\//, 'comment', '@pop'],
+			[/[/*]/, 'comment'],
+		],
+
+		string_double: [
+			[/[^\\"]+/, 'string'],
+			[/@escapes/, 'string.escape'],
+			[/\\./, 'string.escape.invalid'],
+			[/"/, 'string', '@pop'],
+		],
+
+		string_single: [
+			[/[^\\']+/, 'string'],
+			[/@escapes/, 'string.escape'],
+			[/\\./, 'string.escape.invalid'],
+			[/'/, 'string', '@pop'],
+		],
+
+		string_backtick: [
+			[/\$\{/, { token: 'delimiter.bracket', next: '@bracketCounting' }],
+			[/[^\\`$]+/, 'string'],
+			[/@escapes/, 'string.escape'],
+			[/\\./, 'string.escape.invalid'],
+			[/`/, 'string', '@pop'],
+		],
+
+		bracketCounting: [
+			[/\{/, 'delimiter.bracket', '@bracketCounting'],
+			[/\}/, 'delimiter.bracket', '@pop'],
+			{ include: 'root' },
+		],
+	},
+}
+
+const companionExpressionCompletionItemProvider: languages.CompletionItemProvider = {
+	provideCompletionItems: (model, position) => {
+		const suggestions: languages.CompletionItem[] = []
+
+		// Get the word being typed
+		const word = model.getWordUntilPosition(position)
+		const range = {
+			startLineNumber: position.lineNumber,
+			endLineNumber: position.lineNumber,
+			startColumn: word.startColumn,
+			endColumn: word.endColumn,
+		}
+
+		// Add built-in function completions
+		for (const fn of builtinFunctionCompletions) {
+			suggestions.push({
+				label: fn.name,
+				kind: 1, // Function
+				detail: fn.detail,
+				documentation: fn.documentation,
+				insertText: fn.name,
+				range: range,
+			})
+		}
+
+		// Add keyword completions
+		for (const keyword of [...keywords, ...typeKeywords]) {
+			suggestions.push({
+				label: keyword,
+				kind: 14, // Keyword
+				insertText: keyword,
+				range: range,
+			})
+		}
+
+		return { suggestions }
+	},
 }
