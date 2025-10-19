@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest'
-import { VARIABLE_UNKNOWN_VALUE, parseVariablesInString } from '../../lib/Variables/Util.js'
+import { parseVariablesInString } from '../../lib/Variables/Util.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 
 describe('variable parsing', () => {
 	test('undefined string', () => {

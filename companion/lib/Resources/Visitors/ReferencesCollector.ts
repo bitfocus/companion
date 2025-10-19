@@ -1,5 +1,5 @@
 import type { InternalController } from '../../Internal/Controller.js'
-import { TrySplitVariableId } from '../Util.js'
+import { TrySplitVariableId } from '@companion-app/shared/Variables.js'
 import { VisitorReferencesBase } from './VisitorReferencesBase.js'
 
 export class VisitorReferencesCollector extends VisitorReferencesBase<VisitorReferencesCollectorVisitor> {

@@ -21,7 +21,7 @@ import {
 	RotationConfigField,
 } from '../CommonConfigFields.js'
 import debounceFn from 'debounce-fn'
-import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type {

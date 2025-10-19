@@ -37,7 +37,7 @@ import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
-import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
