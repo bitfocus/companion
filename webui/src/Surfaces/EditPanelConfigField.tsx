@@ -42,10 +42,8 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 			control = definition.isExpression ? (
 				<ExpressionInputField
 					value={value}
-					placeholder={definition.placeholder}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					setValue={setValue2}
-					checkValid={checkValid}
 				/>
 			) : (
 				<TextInputField

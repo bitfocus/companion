@@ -81,14 +81,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 				: undefined
 
 			control = option.isExpression ? (
-				<ExpressionInputField
-					value={value}
-					placeholder={option.placeholder}
-					localVariables={localVariables}
-					disabled={readonly}
-					setValue={setValue2}
-					checkValid={checkValid}
-				/>
+				<ExpressionInputField value={value} localVariables={localVariables} disabled={readonly} setValue={setValue2} />
 			) : (
 				<TextInputField
 					value={value}

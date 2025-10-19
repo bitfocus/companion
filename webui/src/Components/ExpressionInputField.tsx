@@ -1,64 +1,55 @@
-import React, { useMemo, useState, useCallback, useRef, useContext, useEffect } from 'react'
+import React, { useState, useCallback, useRef, useContext, useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
 import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 import Editor, { Monaco } from '@monaco-editor/react'
 import { editor } from 'monaco-editor'
-import { COMPANION_EXPRESSION_LANGUAGE_ID, registerCompanionExpressionLanguage } from '~/Resources/Expression.monarch'
+import { COMPANION_EXPRESSION_LANGUAGE_ID } from '~/Resources/Expression.monarch'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import classNames from 'classnames'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 
 interface ExpressionInputFieldProps {
-	tooltip?: string
-	placeholder?: string
 	value: string
-	style?: React.CSSProperties
 	setValue: (value: string) => void
-	checkValid?: (valid: string) => boolean
 	disabled?: boolean
 	localVariables?: DropdownChoiceInt[]
-	autoFocus?: boolean
-	onBlur?: () => void
 }
 
 export const ExpressionInputField = observer(function ExpressionInputField({
-	tooltip,
-	placeholder,
 	value,
-	style,
 	setValue,
-	checkValid,
 	disabled,
 	localVariables,
-	autoFocus,
-	onBlur,
 }: ExpressionInputFieldProps) {
 	const { variablesStore } = useContext(RootAppStoreContext)
-	const [tmpValue, setTmpValue] = useState<string | null>(null)
-
-	const storeValue = useCallback(
-		(value: string) => {
-			setTmpValue(value)
-			setValue(value)
-		},
-		[setValue]
-	)
-
-	const currentValueRef = useRef<string>()
-	currentValueRef.current = value ?? ''
-	const focusStoreValue = useCallback(() => setTmpValue(currentValueRef.current ?? ''), [])
-	const blurClearValue = useCallback(() => {
-		setTmpValue(null)
-		onBlur?.()
-	}, [onBlur])
-
-	const showValue = (tmpValue ?? value ?? '').toString()
-	const showValue2 = (value ?? '').toString()
-
-	const extraStyle = useMemo(
-		() => ({ color: !!checkValid && !checkValid(showValue) ? 'red' : undefined, ...style }),
-		[checkValid, showValue, style]
-	)
 
 	const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(null)
+	const valueRef = useRef<string>(value ?? '')
+	const [isValid, setValid] = useState(true)
+
+	// Keep track of whether we're updating from external changes
+	const isExternalUpdate = useRef(false)
+
+	// Update valueRef when value prop changes
+	useEffect(() => {
+		if (editor && value !== valueRef.current) {
+			const model = editor.getModel()
+			if (model && model.getValue() !== value) {
+				// External change - update the editor
+				isExternalUpdate.current = true
+				const position = editor.getPosition()
+				model.setValue(value ?? '')
+				// Restore cursor position if possible
+				if (position) {
+					editor.setPosition(position)
+				}
+				isExternalUpdate.current = false
+			}
+			valueRef.current = value ?? ''
+
+			setValid(isExpressionValid(value ?? ''))
+		}
+	}, [value, editor])
 
 	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
 	useEffect(() => {
@@ -88,28 +79,50 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 
 	const storeValue2 = useCallback(
 		(value: string | undefined, _ev: editor.IModelContentChangedEvent) => {
-			// setTmpValue(value)
-			setValue(value ?? '')
+			// Skip updates that we initiated from external changes
+			if (isExternalUpdate.current) return
+
+			const newValue = value ?? ''
+			valueRef.current = newValue
+			setValue(newValue)
+
+			setValid(isExpressionValid(newValue))
 		},
 		[setValue]
 	)
 
 	// Render the input
 	return (
-		<Editor
-			height="10vh" // TODO - properly
-			value={showValue2}
-			onChange={storeValue2}
-			defaultLanguage={COMPANION_EXPRESSION_LANGUAGE_ID}
-			onMount={handleEditorDidMount}
-			options={{
-				minimap: { enabled: false },
-				wordWrap: 'on',
-				scrollBeyondLastLine: false,
-				automaticLayout: true,
-				lineNumbers: 'off',
-				folding: false,
-			}}
-		/>
+		<div
+			className={classNames('expression-editor-container', {
+				'syntax-error': !isValid,
+			})}
+		>
+			<Editor
+				height="100%"
+				defaultValue={value ?? ''}
+				onChange={storeValue2}
+				defaultLanguage={COMPANION_EXPRESSION_LANGUAGE_ID}
+				onMount={handleEditorDidMount}
+				options={{
+					readOnly: disabled,
+					minimap: { enabled: false },
+					wordWrap: 'on',
+					scrollBeyondLastLine: false,
+					automaticLayout: true,
+					lineNumbers: 'off',
+					folding: false,
+				}}
+			/>
+		</div>
 	)
 })
+
+function isExpressionValid(value: string): boolean {
+	try {
+		ParseExpression(value)
+		return true
+	} catch (_e) {
+		return false
+	}
+}

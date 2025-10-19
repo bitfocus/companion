@@ -96,11 +96,9 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					<div style={{ width: '100%' }}>
 						<CFormLabel>Step Progression Expression</CFormLabel>
 						<ExpressionInputField
-							tooltip={'Current step of button'}
 							setValue={setStepExpressionValue}
 							value={options.stepExpression ?? ''}
 							localVariables={ControlLocalVariables}
-							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>
 					</div>
 				</div>

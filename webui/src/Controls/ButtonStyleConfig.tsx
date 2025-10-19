@@ -172,11 +172,9 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 					<CInputGroup>
 						{values.textExpression ? (
 							<ExpressionInputField
-								tooltip={'Button text'}
 								setValue={setTextValue}
 								value={values.text ?? ''}
 								localVariables={textLocalVariables}
-								style={{ fontWeight: 'bold', fontSize: 18 }}
 							/>
 						) : (
 							<TextInputField
