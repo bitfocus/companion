@@ -11,7 +11,7 @@
 
 import LogController from '../Log/Controller.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { CompanionVariableValue } from '@companion-module/base'
@@ -162,10 +162,10 @@ export function executeExpression(
 	const referencedVariableIds = new Set<string>()
 
 	try {
-		const getVariableValue = (variableId: string): CompanionVariableValue => {
-			referencedVariableIds.add(variableId)
+		const getVariableValue = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+			referencedVariableIds.add(props.variableId)
 
-			const fullId = `$(${variableId})`
+			const fullId = `$(${props.variableId})`
 			// First check for an injected value
 			let value: CompanionVariableValue | undefined
 			if (cachedVariableValues.has(fullId)) {
@@ -180,11 +180,10 @@ export function executeExpression(
 				}
 			} else {
 				// No value, lookup the raw value
-				const [connectionLabel, variableName] = SplitVariableId(variableId)
-				if (connectionLabel == 'internal' && variableName.substring(0, 7) === 'custom_') {
-					value = rawVariableValues['custom']?.[variableName.substring(7)]
+				if (props.label == 'internal' && props.name.substring(0, 7) === 'custom_') {
+					value = rawVariableValues['custom']?.[props.name.substring(7)]
 				} else {
-					value = rawVariableValues[connectionLabel]?.[variableName]
+					value = rawVariableValues[props.label]?.[props.name]
 				}
 
 				cachedVariableValues.set(fullId, value)
@@ -195,7 +194,11 @@ export function executeExpression(
 				// First check if it is a direct reference to another variable, so that the type can be preserved
 				const valueMatch = value.match(VARIABLE_REGEX)
 				if (valueMatch && valueMatch[0] === value) {
-					return getVariableValue(`${valueMatch[1]}:${valueMatch[2]}`)
+					return getVariableValue({
+						variableId: `${valueMatch[1]}:${valueMatch[2]}`,
+						label: valueMatch[1],
+						name: valueMatch[2],
+					})
 				} else {
 					// Wrap the cache, to inject $RE for this variable to avoid unbound recursion
 					const wrappedCache: VariableValueCache = {
@@ -217,9 +220,6 @@ export function executeExpression(
 					}
 				}
 			}
-
-			// Make sure to return a value, even if its undefined
-			if (value === undefined) return VARIABLE_UNKNOWN_VALUE
 
 			return value
 		}

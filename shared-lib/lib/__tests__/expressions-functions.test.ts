@@ -151,7 +151,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.trim('  99  ')).toBe('99')
 			expect(ExpressionFunctions.trim('\t aa \n')).toBe('aa')
 			expect(ExpressionFunctions.trim('')).toBe('')
-			expect(ExpressionFunctions.trim(undefined)).toBe('undefined')
+			expect(ExpressionFunctions.trim(undefined)).toBe('')
 			expect(ExpressionFunctions.trim(false)).toBe('false')
 			expect(ExpressionFunctions.trim(true)).toBe('true')
 		})
@@ -162,7 +162,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.strlen('\t aa \n')).toBe(6)
 			expect(ExpressionFunctions.strlen('')).toBe(0)
 			expect(ExpressionFunctions.strlen('ä')).toBe(2) // codepoints U+0061 U+0308, one grapheme, two bytes
-			expect(ExpressionFunctions.strlen(undefined)).toBe(9)
+			expect(ExpressionFunctions.strlen(undefined)).toBe(0)
 			expect(ExpressionFunctions.strlen(false)).toBe(5)
 			expect(ExpressionFunctions.strlen(true)).toBe(4)
 		})
@@ -178,7 +178,7 @@ describe('functions', () => {
 
 			expect(ExpressionFunctions.substr(11)).toBe('11')
 			expect(ExpressionFunctions.substr('', 0, 1)).toBe('')
-			expect(ExpressionFunctions.substr(undefined)).toBe('undefined')
+			expect(ExpressionFunctions.substr(undefined)).toBe('')
 			expect(ExpressionFunctions.substr(false)).toBe('false')
 			expect(ExpressionFunctions.substr(true)).toBe('true')
 		})
@@ -192,7 +192,7 @@ describe('functions', () => {
 		})
 
 		it('split', () => {
-			expect(ExpressionFunctions.split()).toEqual(['undefined'])
+			expect(ExpressionFunctions.split()).toEqual([])
 			expect(ExpressionFunctions.split(9, 'a')).toEqual(['9'])
 			expect(ExpressionFunctions.split('abc', 'b')).toEqual(['a', 'c'])
 			expect(ExpressionFunctions.split('abc', 'c')).toEqual(['ab', ''])
@@ -260,7 +260,7 @@ describe('functions', () => {
 		it('toUpperCase', () => {
 			expect(ExpressionFunctions.toUpperCase(11)).toBe('11')
 			expect(ExpressionFunctions.toUpperCase('anoNs2')).toBe('ANONS2')
-			expect(ExpressionFunctions.toUpperCase(undefined)).toBe('UNDEFINED')
+			expect(ExpressionFunctions.toUpperCase(undefined)).toBe('')
 			expect(ExpressionFunctions.toUpperCase(false)).toBe('FALSE')
 			expect(ExpressionFunctions.toUpperCase(true)).toBe('TRUE')
 		})
@@ -268,7 +268,7 @@ describe('functions', () => {
 		it('toLowerCase', () => {
 			expect(ExpressionFunctions.toLowerCase(11)).toBe('11')
 			expect(ExpressionFunctions.toLowerCase('anoNs2')).toBe('anons2')
-			expect(ExpressionFunctions.toLowerCase(undefined)).toBe('undefined')
+			expect(ExpressionFunctions.toLowerCase(undefined)).toBe('')
 			expect(ExpressionFunctions.toLowerCase(false)).toBe('false')
 			expect(ExpressionFunctions.toLowerCase(true)).toBe('true')
 		})

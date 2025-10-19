@@ -9,7 +9,7 @@ describe('executeExpression', () => {
 
 	test('missing variables', () => {
 		const res = executeExpression("concat($(test:something), '=', $(another:value))", {}, undefined, new Map())
-		expect(res).toMatchObject({ value: '$NA=$NA', variableIds: new Set(['test:something', 'another:value']) })
+		expect(res).toMatchObject({ value: '=', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
 	test('normal variables', () => {
@@ -96,6 +96,22 @@ describe('executeExpression', () => {
 	test('falsey variables', () => {
 		const res = executeExpression(
 			"concat($(test:page), '/', $(test:row), '/', $(test:col))",
+			{
+				test: {
+					page: 0,
+					row: '',
+					col: undefined,
+				},
+			},
+			undefined,
+			new Map()
+		)
+		expect(res).toMatchObject({ value: '0//', variableIds: new Set(['test:page', 'test:row', 'test:col']) })
+	})
+
+	test('falsey variables interpolation', () => {
+		const res = executeExpression(
+			'`${$(test:page)}/${$(test:row)}/${$(test:col)}`',
 			{
 				test: {
 					page: 0,
