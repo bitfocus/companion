@@ -104,6 +104,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 				onChange={storeValue2}
 				defaultLanguage={COMPANION_EXPRESSION_LANGUAGE_ID}
 				onMount={handleEditorDidMount}
+				theme="companion-expression-light"
 				options={{
 					readOnly: disabled,
 					minimap: { enabled: false },

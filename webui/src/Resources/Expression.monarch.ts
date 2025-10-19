@@ -14,6 +14,30 @@ export function registerCompanionExpressionLanguage(monaco: Monaco): void {
 		COMPANION_EXPRESSION_LANGUAGE_ID,
 		companionExpressionCompletionItemProvider
 	)
+
+	// Define custom theme for Companion Expression language (based on JavaScript colors)
+	monaco.editor.defineTheme('companion-expression-light', {
+		base: 'vs',
+		inherit: true,
+		rules: [
+			{ token: 'variable.companion', foreground: 'E07020', fontStyle: 'bold' }, // Companion variables - orange (like template strings)
+			{ token: 'predefined', foreground: '795E26' }, // Built-in functions - brownish (like JS functions)
+			{ token: 'keyword', foreground: '0000FF' }, // Keywords - blue (classic JS keywords)
+			{ token: 'string', foreground: 'A31515' }, // Strings - red (JS string color)
+			{ token: 'string.escape', foreground: 'EE0000' }, // String escapes - bright red
+			{ token: 'number', foreground: '098658' }, // Numbers - green (JS number color)
+			{ token: 'number.hex', foreground: '098658' },
+			{ token: 'number.octal', foreground: '098658' },
+			{ token: 'number.binary', foreground: '098658' },
+			{ token: 'number.float', foreground: '098658' },
+			{ token: 'operator', foreground: '000000' }, // Operators - black (default)
+			{ token: 'delimiter', foreground: '000000' }, // Delimiters - black
+			{ token: 'delimiter.bracket', foreground: '000000' }, // Brackets - black
+			{ token: 'comment', foreground: '008000', fontStyle: 'italic' }, // Comments - green (JS comment color)
+			{ token: 'identifier', foreground: '001080' }, // Identifiers - dark blue (JS identifiers)
+		],
+		colors: {},
+	})
 }
 
 const builtinFunctionCompletions: Array<{
@@ -109,6 +133,13 @@ const builtinFunctionCompletions: Array<{
 
 	// Bool operations
 	{ name: 'bool', detail: 'bool(value)', documentation: 'Converts a value to boolean' },
+
+	// Variable operations
+	{
+		name: 'parseVariables',
+		detail: 'parseVariables(string)',
+		documentation: 'Parses and resolves Companion variables in a string',
+	},
 
 	// Object/array operations
 	{
