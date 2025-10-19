@@ -75,7 +75,6 @@ export interface SurfacePanelEvents {
 	rotate: [x: number, y: number, rightward: boolean, pageOffset?: number]
 	pincodeKey: [key: number]
 
-	setVariable: [variableId: string, value: CompanionVariableValue]
 	setCustomVariable: [variableId: string, value: CompanionVariableValue]
 
 	resized: []

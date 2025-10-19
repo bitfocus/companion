@@ -126,10 +126,22 @@ function buttonToXy(modelInfo: ShuttleModelInfo, info: number): [number, number]
 }
 
 const configFields: CompanionSurfaceConfigField[] = [
-	//
 	...OffsetConfigFields,
 	RotationConfigField,
 	...LockConfigFields,
+
+	{
+		id: 'jogValueVariable',
+		type: 'custom-variable',
+		label: 'Variable to store Jog value to',
+		tooltip: 'This will pulse with -1 or 1 before returning to 0 when rotated.',
+	},
+	{
+		id: 'shuttleValueVariable',
+		type: 'custom-variable',
+		label: 'Variable to store Shuttle value to',
+		tooltip: 'This produces a value between -7 and 7. You can use an expression to convert it into a different range.',
+	},
 ]
 
 export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
@@ -223,10 +235,14 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			}
 
 			//console.log(`Jog position has changed`, delta)
-			this.emit('setVariable', 'jog', delta)
-			setTimeout(() => {
-				this.emit('setVariable', 'jog', 0)
-			}, 20)
+			const jogVariableName = this.config.jogValueVariable
+			if (jogVariableName) {
+				this.#logger.debug(`Setting jog variable ${jogVariableName} to ${delta}`)
+				this.emit('setCustomVariable', jogVariableName, delta)
+				setTimeout(() => {
+					this.emit('setCustomVariable', jogVariableName, 0)
+				}, 20)
+			}
 
 			this.emit('rotate', ...xy, delta == 1)
 		})
@@ -250,7 +266,11 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			}
 
 			// do this before emitting any events:
-			this.emit('setVariable', 'shuttle', shuttle)
+			const shuttleVariableName = this.config.shuttleValueVariable
+			if (shuttleVariableName) {
+				this.#logger.debug(`Setting shuttle variable ${shuttleVariableName} to ${shuttle}`)
+				this.emit('setCustomVariable', shuttleVariableName, shuttle)
+			}
 
 			// Direction of rotation events (true triggers "rotate-right") is different than for knobs
 			// because the ring has limited travel and always springs back to zero. In typical usage,
