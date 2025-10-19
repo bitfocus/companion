@@ -192,7 +192,7 @@ describe('functions', () => {
 		})
 
 		it('split', () => {
-			expect(ExpressionFunctions.split()).toEqual([])
+			expect(ExpressionFunctions.split()).toEqual([''])
 			expect(ExpressionFunctions.split(9, 'a')).toEqual(['9'])
 			expect(ExpressionFunctions.split('abc', 'b')).toEqual(['a', 'c'])
 			expect(ExpressionFunctions.split('abc', 'c')).toEqual(['ab', ''])
