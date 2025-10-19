@@ -1,5 +1,5 @@
-import type { IRange, languages } from 'monaco-editor'
-import type { Monaco } from '@monaco-editor/react'
+import { languages, type IRange } from 'monaco-editor'
+import { type Monaco } from '@monaco-editor/react'
 import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
 export const COMPANION_EXPRESSION_LANGUAGE_ID = 'companionExpression'
@@ -429,7 +429,7 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 				const variableId = String(variable.value)
 				suggestions.push({
 					label: variableId,
-					kind: 6, // Variable
+					kind: languages.CompletionItemKind.Variable,
 					detail: variable.label,
 					insertText: hasClosingParen ? variableId : variableId + ')',
 					range: companionRange,
@@ -443,7 +443,7 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 		for (const fn of builtinFunctionCompletions) {
 			suggestions.push({
 				label: fn.name,
-				kind: 1, // Function
+				kind: languages.CompletionItemKind.Function,
 				detail: fn.detail,
 				documentation: fn.documentation,
 				insertText: fn.name,
@@ -455,7 +455,7 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 		for (const keyword of [...keywords, ...typeKeywords]) {
 			suggestions.push({
 				label: keyword,
-				kind: 14, // Keyword
+				kind: languages.CompletionItemKind.Keyword,
 				insertText: keyword,
 				range: range,
 			})
@@ -484,7 +484,7 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 		for (const varName of userDefinedVars) {
 			suggestions.push({
 				label: varName,
-				kind: 6, // Variable
+				kind: languages.CompletionItemKind.Variable,
 				detail: 'User-defined variable',
 				insertText: varName,
 				range: range,
