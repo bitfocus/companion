@@ -16,7 +16,6 @@ if (process.env.NODE_ENV === 'development') {
 
 // polyfills
 import 'intersection-observer'
-import './monacoInit.js'
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
