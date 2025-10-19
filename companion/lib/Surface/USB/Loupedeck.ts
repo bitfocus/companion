@@ -150,7 +150,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				const touch = data.changedTouches.find(
 					(touch) => touch.target.screen == LoupedeckDisplayId.Right || touch.target.screen == LoupedeckDisplayId.Left
 				)
-				if (touch && touch.target.screen == LoupedeckDisplayId.Right) {
+				if (touch && touch.target.screen == LoupedeckDisplayId.Right && this.config.rightFaderValueVariable) {
 					const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
 					this.emit('setCustomVariable', this.config.rightFaderValueVariable, val)
 					this.#loupedeck
@@ -163,7 +163,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 						.catch((e) => {
 							this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + e)
 						})
-				} else if (touch && touch.target.screen == LoupedeckDisplayId.Left) {
+				} else if (touch && touch.target.screen == LoupedeckDisplayId.Left && this.config.leftFaderValueVariable) {
 					const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
 					this.emit('setCustomVariable', this.config.leftFaderValueVariable, val)
 					this.#loupedeck
