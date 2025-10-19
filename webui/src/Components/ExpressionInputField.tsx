@@ -66,10 +66,10 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 
 		if (localVariables) suggestions.push(...localVariables)
 
-		// Set companion variables metadata on the model
-		const model = editor.getModel() as editor.ITextModel
+		// Set companion variables metadata on the model (typed via augmentation)
+		const model = editor.getModel()
 		if (model) {
-			;(model as any)._companionVariables = suggestions
+			model._companionVariables = suggestions
 		}
 	}, [editor, baseVariableDefinitions, localVariables])
 

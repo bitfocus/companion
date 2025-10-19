@@ -391,9 +391,8 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 	provideCompletionItems: (model, position) => {
 		const suggestions: languages.CompletionItem[] = []
 
-		// Get companion variables from model metadata
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-		const companionVariables = ((model as any)._companionVariables ?? []) as DropdownChoiceInt[]
+		// Get companion variables from model metadata (typed via augmentation)
+		const companionVariables: DropdownChoiceInt[] = model._companionVariables ?? []
 
 		// Get the word being typed
 		const word = model.getWordUntilPosition(position)
