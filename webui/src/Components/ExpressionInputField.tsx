@@ -100,7 +100,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 		>
 			<Editor
 				height="100%"
-				defaultValue={value ?? ''}
+				defaultValue={String(value ?? '')}
 				onChange={storeValue2}
 				defaultLanguage={COMPANION_EXPRESSION_LANGUAGE_ID}
 				onMount={handleEditorDidMount}
