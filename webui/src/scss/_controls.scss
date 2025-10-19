@@ -44,6 +44,25 @@ label.disabled {
 	}
 }
 
+.expression-editor-container {
+	height: 90px;
+	min-height: 90px; // ~5 lines at default font size (18px per line)
+	resize: vertical;
+	overflow: auto;
+
+	flex-grow: 1;
+
+	border: var(--cui-border-width) solid var(--cui-border-color);
+	// border-radius: var(--cui-border-radius);
+	transition:
+		border-color 0.15s ease-in-out,
+		box-shadow 0.15s ease-in-out;
+
+	&.syntax-error {
+		border-color: rgb(255, 12, 138);
+	}
+}
+
 .variable-select-root {
 	display: flex;
 	flex-grow: 1;

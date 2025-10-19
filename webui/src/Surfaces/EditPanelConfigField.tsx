@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback } from 'react'
 import { TextInputField, NumberInputField, DropdownInputField } from '~/Components'
+import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIconsProps, InputFeatureIcons } from '~/Controls/OptionsInputField'
@@ -38,13 +39,18 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					}
 				: {}
 
-			control = (
+			control = definition.isExpression ? (
+				<ExpressionInputField
+					value={value}
+					localVariables={features.local ? SurfaceLocalVariables : undefined}
+					setValue={setValue2}
+				/>
+			) : (
 				<TextInputField
 					value={value}
 					placeholder={definition.placeholder}
 					useVariables={features.variables}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
-					isExpression={definition.isExpression}
 					multiline={definition.multiline}
 					setValue={setValue2}
 					checkValid={checkValid}

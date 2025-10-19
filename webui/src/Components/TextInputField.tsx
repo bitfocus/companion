@@ -23,7 +23,6 @@ interface TextInputFieldProps {
 	disabled?: boolean
 	useVariables?: boolean
 	localVariables?: DropdownChoiceInt[]
-	isExpression?: boolean
 	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
@@ -39,7 +38,6 @@ export const TextInputField = observer(function TextInputField({
 	disabled,
 	useVariables,
 	localVariables,
-	isExpression,
 	multiline,
 	autoFocus,
 	onBlur,
@@ -77,7 +75,7 @@ export const TextInputField = observer(function TextInputField({
 	// Render the input
 	return (
 		<>
-			{useVariables || isExpression ? (
+			{useVariables ? (
 				<>
 					<VariablesSelect
 						showValue={showValue}
@@ -89,7 +87,7 @@ export const TextInputField = observer(function TextInputField({
 						placeholder={placeholder}
 						title={tooltip}
 						disabled={disabled}
-						multiline={isExpression || multiline}
+						multiline={multiline}
 						autoFocus={autoFocus}
 					/>
 				</>

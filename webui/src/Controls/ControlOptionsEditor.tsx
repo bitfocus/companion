@@ -5,7 +5,7 @@ import { InlineHelp } from '~/Components/InlineHelp.js'
 import { NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { DropdownChoice } from '@companion-module/base'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ControlLocalVariables } from './LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
@@ -95,14 +95,10 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 				<div className="flex w-full gap-2rem flex-form">
 					<div style={{ width: '100%' }}>
 						<CFormLabel>Step Progression Expression</CFormLabel>
-						<TextInputField
-							tooltip={'Current step of button'}
+						<ExpressionInputField
 							setValue={setStepExpressionValue}
 							value={options.stepExpression ?? ''}
-							useVariables
 							localVariables={ControlLocalVariables}
-							isExpression
-							style={{ fontWeight: 'bold', fontSize: 18 }}
 						/>
 					</div>
 				</div>

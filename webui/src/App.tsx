@@ -17,6 +17,7 @@ import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from './Resources/TRPC.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
+import { MonacoLoader } from './Resources/MonacoLoader.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
@@ -80,6 +81,7 @@ export default function App(): React.JSX.Element {
 						</div>
 					</div>
 					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected && !shouldReload} />}>
+						<MonacoLoader />
 						<DndProvider
 							backend={useTouchBackend ? TouchBackend : HTML5Backend}
 							options={useTouchBackend ? { enableMouseEvents: true } : {}}
