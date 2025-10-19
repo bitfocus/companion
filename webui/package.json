@@ -87,7 +87,7 @@
   "scripts": {
     "start": "vite",
     "dev": "run start",
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --base=/ROOT_URL_HERE",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 vite build --base=/ROOT_URL_HERE",
     "serve": "vite preview"
   },
   "devDependencies": {

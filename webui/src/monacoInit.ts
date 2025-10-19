@@ -8,8 +8,6 @@ import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import { registerCompanionExpressionLanguage } from './Resources/Expression.monarch.js'
 
-// TODO: is all of this needed?
-
 self.MonacoEnvironment = {
 	getWorker(_, label) {
 		if (label === 'json') {

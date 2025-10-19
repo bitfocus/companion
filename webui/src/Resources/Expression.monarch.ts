@@ -337,8 +337,8 @@ const companionExpressionTokensProvider: languages.IMonarchLanguage = {
 			[/[;,.]/, 'delimiter'],
 
 			// Strings
-			[/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
-			[/'([^'\\]|\\.)*$/, 'string.invalid'], // non-teminated string
+			[/"([^"\\]|\\.)*$/, 'string.invalid'], // non-terminated string
+			[/'([^'\\]|\\.)*$/, 'string.invalid'], // non-terminated string
 			[/"/, 'string', '@string_double'],
 			[/'/, 'string', '@string_single'],
 			[/`/, 'string', '@string_backtick'],
