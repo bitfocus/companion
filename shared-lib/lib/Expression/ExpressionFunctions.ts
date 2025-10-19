@@ -62,9 +62,9 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	},
 	split: (str, separator) => {
 		if (separator === undefined) {
-			return [toString(str)];
+			return [toString(str)]
 		}
-		return toString(str).split(toString(separator));
+		return toString(str).split(toString(separator))
 	},
 	join: (arr = [], separator = ',') => {
 		return (Array.isArray(arr) ? arr.map(toString) : [toString(arr)]).join(toString(separator))

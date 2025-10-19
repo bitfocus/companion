@@ -228,7 +228,6 @@ export function executeExpression(
 		const functions = {
 			...ExpressionFunctions,
 			parseVariables: (str: string, undefinedValue?: string): string => {
-				console.log('cal', str, undefinedValue)
 				const result = parseVariablesInString(
 					str,
 					rawVariableValues,
