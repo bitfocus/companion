@@ -76,7 +76,7 @@ export class InstanceModules {
 
 		this.#events.setMaxListeners(0)
 
-		apiRouter.get('/help/module/:moduleId/:versionId/*path', this.#getHelpAsset)
+		apiRouter.get('/help/module/:moduleType/:moduleId/:versionId/*path', this.#getHelpAsset)
 	}
 
 	#getModuleMapForType(type: ModuleInstanceType): Map<string, InstanceModuleInfo> {
@@ -473,16 +473,14 @@ export class InstanceModules {
 	 * Return a module help asset over http
 	 */
 	#getHelpAsset = (
-		req: express.Request<{ moduleId: string; versionId: string; path: string[] }>,
+		req: express.Request<{ moduleType: string; moduleId: string; versionId: string; path: string[] }>,
 		res: express.Response,
 		next: express.NextFunction
 	): void => {
+		const moduleType = req.params.moduleType as ModuleInstanceType
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
 		const versionId = req.params.versionId
 		const file = req.params.path?.join('/')?.replace(/\.\.+/g, '')
-
-		// TODO - handle surface modules
-		const moduleType = ModuleInstanceType.Connection
 
 		const moduleInfo = this.#getModuleMapForType(moduleType).get(moduleId)?.getVersion(versionId)
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {

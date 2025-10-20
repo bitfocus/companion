@@ -92,7 +92,7 @@ export class InstanceModuleScanner {
 			id: manifestJson.id,
 			name: manifestJson.manufacturer + ': ' + manifestJson.products.join('; '),
 			// version: manifestJson.version,
-			helpPath: getHelpPathForInstalledModule(manifestJson.id, manifestJson.version),
+			helpPath: getHelpPathForInstalledModule(ModuleInstanceType.Connection, manifestJson.id, manifestJson.version),
 			bugUrl: manifestJson.bugs || manifestJson.repository,
 			shortname: manifestJson.shortname,
 			manufacturer: manifestJson.manufacturer,
@@ -125,6 +125,10 @@ export class InstanceModuleScanner {
 	}
 }
 
-export function getHelpPathForInstalledModule(moduleId: string, versionId: string): string {
-	return `/int/help/module/${moduleId}/${versionId}/HELP.md`
+export function getHelpPathForInstalledModule(
+	moduleType: ModuleInstanceType,
+	moduleId: string,
+	versionId: string
+): string {
+	return `/int/help/module/${moduleType}/${moduleId}/${versionId}/HELP.md`
 }
