@@ -91,19 +91,22 @@ export function ImportFullWizard({
 						<FullImportTab snapshot={snapshot} />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane visible={activeTab === 'buttons'}>
-					<MyErrorBoundary>
-						{snapshot.controls ? (
-							<ImportPageWizard
-								snapshot={snapshot}
-								connectionRemap={connectionRemap}
-								setConnectionRemap={setConnectionRemap}
-								doImport={doSinglePageImport}
-							/>
-						) : (
-							''
-						)}
-					</MyErrorBoundary>
+				<CTabPane visible={activeTab === 'buttons'} style={{ height: '100%' }}>
+					<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+						<h4>Buttons</h4>
+						<MyErrorBoundary>
+							{snapshot.controls ? (
+								<ImportPageWizard
+									snapshot={snapshot}
+									connectionRemap={connectionRemap}
+									setConnectionRemap={setConnectionRemap}
+									doImport={doSinglePageImport}
+								/>
+							) : (
+								''
+							)}
+						</MyErrorBoundary>
+					</div>
 				</CTabPane>
 				<CTabPane visible={activeTab === 'triggers'}>
 					<MyErrorBoundary>

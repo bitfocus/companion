@@ -1,15 +1,33 @@
 .import-wizard {
-	display: grid;
-	grid-template-rows: auto auto 1fr;
-	overflow-y: hidden;
+	&.import-full {
+		display: grid;
+		grid-template-rows: auto auto 1fr;
+		overflow-y: hidden;
 
-	> .tab-content {
-		overflow-y: scroll;
+		> .tab-content {
+			overflow-y: scroll;
+		}
 	}
-}
 
-.import-wizard .import-single-page {
-	overflow: hidden;
-	overflow-y: scroll;
-	margin: 0;
+	&.single-page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		overflow-y: scroll;
+		overflow-x: hidden;
+	}
+
+	.import-page-row {
+		margin-bottom: 1rem;
+		flex-grow: 1;
+	}
+	.import-page-grid {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.buttongrid {
+		flex: 1;
+		min-height: 0;
+	}
 }
