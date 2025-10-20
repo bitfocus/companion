@@ -36,7 +36,6 @@ export function useAllModuleProducts(
 					product,
 					keywords: moduleInfo.display.keywords?.join(';') ?? '',
 					name: moduleInfo.display.name,
-					manufacturer: moduleInfo.display.manufacturer,
 					shortname: moduleInfo.display.shortname,
 
 					bugUrl: moduleInfo.display.bugUrl,
@@ -71,7 +70,6 @@ export function useAllModuleProducts(
 						product,
 						keywords: moduleInfo.keywords?.join(';') ?? '',
 						name: moduleInfo.name,
-						manufacturer: moduleInfo.manufacturer,
 						shortname: moduleInfo.shortname,
 
 						bugUrl: moduleInfo.githubUrl ?? undefined,
@@ -89,7 +87,7 @@ export function filterProducts(allProducts: FuzzyProduct[], filter: string): Fuz
 	if (!filter) return allProducts //.map((p) => p.info)
 
 	return fuzzySearch(filter, allProducts, {
-		keys: ['product', 'name', 'manufacturer', 'keywords'] satisfies Array<keyof FuzzyProduct>,
+		keys: ['product', 'name', 'keywords'] satisfies Array<keyof FuzzyProduct>,
 		threshold: -10_000,
 	}).map((x) => x.obj)
 }
@@ -104,7 +102,6 @@ export interface FuzzyProduct {
 	product: string
 	keywords: string
 	name: string
-	manufacturer: string
 	shortname: string
 
 	bugUrl: string | undefined

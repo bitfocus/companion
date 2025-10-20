@@ -414,13 +414,17 @@ function getLatestModuleVersionInfo(
 function transformApiModuleToCache(
 	data: ModuleStoreOpenApiComponents['schemas']['CompanionModuleInfo']
 ): Complete<ModuleStoreListCacheEntry> {
+	let products = data.products
+	if (data.manufacturer) products = products.map((p) => `${data.manufacturer}: ${p}`)
+
+	if (products.length === 0) products = [data.manufacturer ?? data.name]
+
 	// Match what the on disk scanner generates
 	return {
 		id: data.id,
-		name: data.manufacturer + ': ' + data.products.join('; '),
-		manufacturer: data.manufacturer,
+		name: products.join('; '),
 		shortname: data.shortname,
-		products: data.products,
+		products: products,
 		keywords: data.keywords,
 
 		storeUrl: data.storeUrl,

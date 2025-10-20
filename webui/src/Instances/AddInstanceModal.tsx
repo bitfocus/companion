@@ -136,9 +136,7 @@ export const AddInstanceModal = observer(
 				{moduleInfo && (
 					<>
 						<CModalHeader closeButton>
-							<h5>
-								Add {moduleInfo.manufacturer} {moduleInfo.product}
-							</h5>
+							<h5>Add {moduleInfo.product}</h5>
 						</CModalHeader>
 						<CModalBody>
 							{service.moduleType === ModuleInstanceType.Connection && (

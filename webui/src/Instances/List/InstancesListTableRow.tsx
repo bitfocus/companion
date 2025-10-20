@@ -73,9 +73,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 		[helpViewer, instance.moduleType, instance.moduleId, moduleVersion]
 	)
 
-	const moduleDisplayName = moduleInfo
-		? `${moduleInfo.display.manufacturer ?? ''}: ${moduleInfo.display.products?.join('; ') ?? ''}`
-		: instance.moduleId
+	const moduleDisplayName = moduleInfo ? moduleInfo.display.name : instance.moduleId
 
 	return (
 		<div className="flex flex-row align-items-center gap-2 hand">

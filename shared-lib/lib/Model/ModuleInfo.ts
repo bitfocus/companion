@@ -7,7 +7,6 @@ export interface ModuleDisplayInfo {
 	helpPath: string
 	bugUrl: string
 	shortname: string
-	manufacturer: string
 	products: string[]
 	keywords: string[]
 }

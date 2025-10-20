@@ -88,15 +88,19 @@ export class InstanceModuleScanner {
 		const helpPath = path.join(fullpath, 'companion/HELP.md')
 		const hasHelp = await fs.pathExists(helpPath)
 
+		let products = manifestJson.products.map((p) => `${manifestJson.manufacturer}: ${p}`)
+		if (products.length === 0) {
+			products = [manifestJson.manufacturer]
+		}
+
 		const moduleDisplay: ModuleDisplayInfo = {
 			id: manifestJson.id,
-			name: manifestJson.manufacturer + ': ' + manifestJson.products.join('; '),
+			name: products.join('; '),
 			// version: manifestJson.version,
 			helpPath: getHelpPathForInstalledModule(ModuleInstanceType.Connection, manifestJson.id, manifestJson.version),
 			bugUrl: manifestJson.bugs || manifestJson.repository,
 			shortname: manifestJson.shortname,
-			manufacturer: manifestJson.manufacturer,
-			products: manifestJson.products,
+			products: products,
 			keywords: manifestJson.keywords,
 		}
 
