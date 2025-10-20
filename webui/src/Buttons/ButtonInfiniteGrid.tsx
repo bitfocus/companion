@@ -36,11 +36,22 @@ interface ButtonInfiniteGridProps {
 	doGrow?: (direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => void
 	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
 	drawScale: number
+	maxHeightToMatchCanvas?: boolean
 }
 
 export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfiniteGridProps>(
 	function ButtonInfiniteGrid(
-		{ isHot, pageNumber, buttonClick, selectedButton, gridSize, doGrow, buttonIconFactory, drawScale },
+		{
+			isHot,
+			pageNumber,
+			buttonClick,
+			selectedButton,
+			gridSize,
+			doGrow,
+			buttonIconFactory,
+			drawScale,
+			maxHeightToMatchCanvas,
+		},
 		ref
 	) {
 		const { minColumn, maxColumn, minRow, maxRow } = gridSize
@@ -191,14 +202,23 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			doGrow('bottom', amount)
 		}, [doGrow])
 
+		const canvasWidth = Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2
+		const canvasHeight = Math.max(countRows * tileSize, windowSize.height) + growHeight * 2
+
 		const gridCanvasStyle = useMemo(
 			() => ({
-				width: Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2,
-				height: Math.max(countRows * tileSize, windowSize.height) + growHeight * 2,
+				width: canvasWidth,
+				height: canvasHeight,
 				'--tile-inner-size': tileInnerSize,
 				'--grid-scale': drawScale,
 			}),
-			[countColumns, countRows, tileSize, windowSize, growWidth, growHeight, tileInnerSize, drawScale]
+			[canvasWidth, canvasHeight, tileInnerSize, drawScale]
+		)
+		const gridWrapperStyle = useMemo(
+			() => ({
+				maxHeight: maxHeightToMatchCanvas ? countRows * tileSize + 30 : 'none', // Pad for possible scrollbar
+			}),
+			[maxHeightToMatchCanvas, countRows, tileSize]
 		)
 
 		return (
@@ -207,6 +227,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				className={classNames('button-infinite-grid', {
 					'button-armed': isHot,
 				})}
+				style={gridWrapperStyle}
 			>
 				<div className="button-grid-canvas" style={gridCanvasStyle}>
 					{doGrow && (

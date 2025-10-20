@@ -47,40 +47,31 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps): Re
 		[importSinglePageMutation, clearImport, notifier]
 	)
 
-	return (
-		<div className="import-wizard">
-			{snapshot.type === 'page' ? (
-				<>
-					<h4>
-						Import Single Page
-						<CButton color="danger" size="sm" onClick={clearImport}>
-							Cancel
-						</CButton>
-					</h4>
+	return snapshot.type === 'page' ? (
+		<div className="import-wizard single-page px-1">
+			<h4>
+				Import Single Page
+				<CButton color="danger" size="sm" onClick={clearImport}>
+					Cancel
+				</CButton>
+			</h4>
 
-					<ImportPageWizard
-						snapshot={snapshot}
-						connectionRemap={connectionRemap}
-						setConnectionRemap={setConnectionRemap}
-						doImport={doSinglePageImport}
-						className="import-single-page"
-					/>
-				</>
-			) : (
-				<>
-					<h4>
-						Import Configuration
-						<CButton color="danger" size="sm" onClick={clearImport}>
-							Cancel
-						</CButton>
-					</h4>
-					<ImportFullWizard
-						snapshot={snapshot}
-						connectionRemap={connectionRemap}
-						setConnectionRemap={setConnectionRemap}
-					/>
-				</>
-			)}
+			<ImportPageWizard
+				snapshot={snapshot}
+				connectionRemap={connectionRemap}
+				setConnectionRemap={setConnectionRemap}
+				doImport={doSinglePageImport}
+			/>
+		</div>
+	) : (
+		<div className="import-wizard import-full">
+			<h4>
+				Import Configuration
+				<CButton color="danger" size="sm" onClick={clearImport}>
+					Cancel
+				</CButton>
+			</h4>
+			<ImportFullWizard snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap} />
 		</div>
 	)
 }

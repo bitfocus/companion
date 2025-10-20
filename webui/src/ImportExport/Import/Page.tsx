@@ -28,7 +28,6 @@ interface ImportPageWizardProps {
 	connectionRemap: Record<string, string | undefined>
 	setConnectionRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
 	doImport: (importPageNumber: number, pageNumber: number, connectionRemap: Record<string, string | undefined>) => void
-	className?: string
 }
 
 export const ImportPageWizard = observer(function ImportPageWizard({
@@ -36,7 +35,6 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 	connectionRemap,
 	setConnectionRemap,
 	doImport,
-	className,
 }: ImportPageWizardProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
 
@@ -110,17 +108,14 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 
 	const [gridZoomController, gridZoomValue] = useGridZoom('import')
 
-	console.log('sn', snapshotPageOptions, snapshot)
-
 	return (
 		<>
-			<h4>Buttons</h4>
 			<p>
 				Choose a source page containing the buttons to import and a destination page where they will be imported. You
 				can either replace an existing page or create a new one.
 			</p>
-			<CRow className={className} style={{ overflow: 'hidden', marginBottom: '1rem' }}>
-				<CCol xs={12} xl={6}>
+			<CRow className="import-page-row">
+				<CCol xs={12} xl={6} className="import-page-grid">
 					<h5>Source Page</h5>
 					<MyErrorBoundary>
 						<>
@@ -144,6 +139,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										gridSize={sourceGridSize}
 										buttonIconFactory={ButtonImportPreview}
 										drawScale={gridZoomValue / 100}
+										maxHeightToMatchCanvas
 									/>
 								)}
 							</div>
@@ -151,7 +147,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 					</MyErrorBoundary>
 				</CCol>
 
-				<CCol xs={12} xl={6}>
+				<CCol xs={12} xl={6} className="import-page-grid">
 					<h5>Destination Page</h5>
 					<MyErrorBoundary>
 						<>
@@ -176,6 +172,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										gridSize={destinationGridSize}
 										buttonIconFactory={ButtonGridIcon}
 										drawScale={gridZoomValue / 100}
+										maxHeightToMatchCanvas
 									/>
 								)}
 								{pageNumber === -1 && (
@@ -187,7 +184,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										}}
 									>
 										<FontAwesomeIcon icon={faFileCirclePlus} size="4x" />
-										<p style={{ marginTop: '1rem' }}>The buttons will be imported to a new page.</p>
+										<p className="mt-1">The buttons will be imported to a new page.</p>
 									</div>
 								)}
 							</div>
