@@ -19,7 +19,7 @@ import type {
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
 import semver from 'semver'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import dayjs from 'dayjs'
@@ -331,7 +331,7 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 		)
 	}
 
-	if (!isModuleApiVersionCompatible(apiVersion)) {
+	if (!isSomeModuleApiVersionCompatible(moduleType, apiVersion)) {
 		return (
 			<span title="Module is not compatible with this version of Companion">
 				<FontAwesomeIcon icon={faWarning} className="disabled button-size" />
