@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import type { SurfaceHandler } from './Handler.js'
 import LogController from '../Log/Controller.js'
 

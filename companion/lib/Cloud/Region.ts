@@ -10,7 +10,7 @@
  */
 
 import SCClient from 'socketcluster-client'
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import { delay } from '../Resources/Util.js'
 import LogController, { Logger } from '../Log/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'

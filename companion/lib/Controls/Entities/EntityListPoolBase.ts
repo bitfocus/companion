@@ -10,7 +10,7 @@ import { isInternalUserValueFeedback, type ControlEntityInstance } from './Entit
 import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
 import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import type { InstanceDefinitionsForEntity } from './Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionVariableValues } from '@companion-module/base'

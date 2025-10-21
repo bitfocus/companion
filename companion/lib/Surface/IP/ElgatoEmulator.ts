@@ -11,7 +11,8 @@
  */
 
 import { EventEmitter } from 'events'
-import { cloneDeep, isEqual } from 'lodash-es'
+import { cloneDeep } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import LogController from '../../Log/Controller.js'
 import debounceFn from 'debounce-fn'
 import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'

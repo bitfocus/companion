@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import { ServiceBase } from './Base.js'
 import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'

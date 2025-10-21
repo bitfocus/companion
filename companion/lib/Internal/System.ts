@@ -11,7 +11,7 @@
 
 import os from 'os'
 import { exec } from 'child_process'
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 import type { CompanionVariableValues } from '@companion-module/base'

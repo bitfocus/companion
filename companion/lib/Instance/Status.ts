@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 // import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import type { InstanceStatusEntry, InstanceStatusUpdate } from '@companion-app/shared/Model/InstanceStatus.js'

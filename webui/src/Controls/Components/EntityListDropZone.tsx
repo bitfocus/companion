@@ -1,5 +1,4 @@
 import { EntityOwner, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-import { isEqual } from 'lodash-es'
 import React, { useDeferredValue } from 'react'
 import { useDrop } from 'react-dnd'
 import { DragState } from '~/Resources/DragAndDrop'
@@ -35,7 +34,7 @@ export function EntityDropPlaceholderZone({
 		},
 		hover(item, _monitor) {
 			// Can't move into itself
-			if (ownerId && isEqual(item.entityId, ownerId.parentId)) return
+			if (ownerId && item.entityId === ownerId.parentId) return
 
 			serviceFactory.moveCard(item.listId, item.entityId, ownerId, 0)
 

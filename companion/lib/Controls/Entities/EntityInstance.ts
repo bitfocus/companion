@@ -8,7 +8,8 @@ import {
 	SomeReplaceableEntityModel,
 	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { cloneDeep, isEqual } from 'lodash-es'
+import { cloneDeep } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import { ControlEntityList } from './EntityList.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
