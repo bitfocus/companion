@@ -184,8 +184,16 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				{versionId}
-				{storeInfo?.releaseChannel === 'beta' && <FontAwesomeIcon className="pad-left" icon={faFlask} title="Beta" />}
-				{storeInfo?.deprecationReason && <FontAwesomeIcon className="pad-left" icon={faWarning} title="Deprecated" />}
+				{storeInfo?.releaseChannel === 'beta' && (
+					<span title="Beta">
+						<FontAwesomeIcon className="pad-left" icon={faFlask} />
+					</span>
+				)}
+				{storeInfo?.deprecationReason && (
+					<span title="Deprecated">
+						<FontAwesomeIcon className="pad-left" icon={faWarning} />
+					</span>
+				)}
 			</td>
 			<td>
 				{!!storeInfo && (
@@ -257,12 +265,13 @@ function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstal
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
 			{isRunningInstallOrUninstall ? (
-				<FontAwesomeIcon icon={faSync} spin title="Removing" />
+				<span title="Removing">
+					<FontAwesomeIcon icon={faSync} spin />
+				</span>
 			) : (
-				<FontAwesomeIcon
-					icon={faTrash}
-					title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}
-				/>
+				<span title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}>
+					<FontAwesomeIcon icon={faTrash} />
+				</span>
 			)}
 		</CButton>
 	)
@@ -313,20 +322,22 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 
 	if (!isModuleApiVersionCompatible(apiVersion)) {
 		return (
-			<FontAwesomeIcon
-				icon={faWarning}
-				className="disabled button-size"
-				title="Module is not compatible with this version of Companion"
-			/>
+			<span title="Module is not compatible with this version of Companion">
+				<FontAwesomeIcon icon={faWarning} className="disabled button-size" />
+			</span>
 		)
 	}
 
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall} onClick={doInstall}>
 			{isRunningInstallOrUninstall ? (
-				<FontAwesomeIcon icon={faSync} spin title="Installing" />
+				<span title="Installing">
+					<FontAwesomeIcon icon={faSync} />
+				</span>
 			) : (
-				<FontAwesomeIcon icon={faPlus} title="Install version" />
+				<span title="Install version">
+					<FontAwesomeIcon icon={faPlus} />
+				</span>
 			)}
 		</CButton>
 	)
