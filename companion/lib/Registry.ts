@@ -23,7 +23,6 @@ import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
-import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
@@ -54,13 +53,6 @@ try {
 if (process.env.COMPANION_IPC_PARENT && !process.send) {
 	console.error('COMPANION_IPC_PARENT is set, but process.send is undefined')
 	process.exit(1)
-}
-
-// Setup support for HTTP_PROXY before anything might use it
-if (process.env.NODE_USE_ENV_PROXY) {
-	// HACK: This is temporary and should be removed once https://github.com/nodejs/node/pull/57165 has been backported to node 22
-	const envHttpProxyAgent = new EnvHttpProxyAgent()
-	setGlobalDispatcher(envHttpProxyAgent)
 }
 
 /**
