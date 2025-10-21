@@ -23,4 +23,3 @@ Note: the exact list of settings varies by surface type.
 - **Never pin code lock**: Exclude this device from pin-code locking.
 
 In the settings for each **Emulator**, you can configure additional parameters such as the row and column count here.
-

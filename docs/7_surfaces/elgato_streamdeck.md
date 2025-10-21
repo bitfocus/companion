@@ -19,13 +19,14 @@ We recommend connecting Stream Decks without the Elgato software. If you use the
 
 The Stream Deck + has rotary encoders and a touch strip.
 
-The touch strip is mapped to four button. These buttons provide *press* events to Companion without a separate *release* event; "pressing" (tapping) the strip generates both down and up actions with a short delay. Consequently, the touch strip cannot respond to long-press actions.
+The touch strip is mapped to four button. These buttons provide _press_ events to Companion without a separate _release_ event; "pressing" (tapping) the strip generates both down and up actions with a short delay. Consequently, the touch strip cannot respond to long-press actions.
 
-The touch strip also supports two types of swipe responses: 
+The touch strip also supports two types of swipe responses:
+
 - swiping horizontally will change the page: swipe left to get the next page; right to get the previous page (as if you're dragging a piece of paper that is just under the surface.) To enable or disable page-turning, [change the settings in the Surfaces tab](#3_config/surfaces.md).
-- swiping vertically: up emits *rotate-right*"*; down emits *rotate-left* (enable the `Enable Rotary Actions` checkbox for the button to access these events).
+- swiping vertically: up emits _rotate-right_"*; down emits *rotate-left\* (enable the `Enable Rotary Actions` checkbox for the button to access these events).
 
-Note that the LCD Strip may occasionally confuse a vertical swipe with a press, so best practice may be to chose either *rotation* actions or *press* actions for the LCD buttons but not both at once. Or else to avoid *press actions* that change something critical, if using both.
+Note that the LCD Strip may occasionally confuse a vertical swipe with a press, so best practice may be to chose either _rotation_ actions or _press_ actions for the LCD buttons but not both at once. Or else to avoid _press actions_ that change something critical, if using both.
 
 To use the rotary encoders for a control, enable the `Enable Rotary Actions` checkbox for that control. This adds additional action groups used when rotating the encoder.
 
