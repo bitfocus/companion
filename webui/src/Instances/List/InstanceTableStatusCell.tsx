@@ -41,7 +41,9 @@ export const InstanceTableStatusCell = observer(function InstanceTableStatusCell
 					case 'Connecting':
 						return (
 							<InlineHelp help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
-								<CSpinner color="warning" style={{ width: '29px', height: '29px' }} />
+								<div style={{ padding: '0 3.5px' }}>
+									<CSpinner color="warning" style={{ width: '29px', height: '29px' }} />
+								</div>
 							</InlineHelp>
 						)
 					default:
