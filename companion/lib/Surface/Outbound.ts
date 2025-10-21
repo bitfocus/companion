@@ -38,7 +38,6 @@ export class SurfaceOutboundController {
 
 		this.#updateEvents.setMaxListeners(0)
 
-		// @ts-expect-error why is this failing?
 		this.#streamdeckTcpConnectionManager.on('connected', (streamdeck) => {
 			this.#logger.info(
 				`Connected to TCP Streamdeck ${streamdeck.remoteAddress}:${streamdeck.remotePort} (${streamdeck.PRODUCT_NAME})`
@@ -50,7 +49,6 @@ export class SurfaceOutboundController {
 				// streamdeck.close()
 			})
 		})
-		// @ts-expect-error why is this failing?
 		this.#streamdeckTcpConnectionManager.on('error', (error) => {
 			this.#logger.error(`Error from TCP Streamdeck: ${error}`)
 		})
