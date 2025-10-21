@@ -38,7 +38,7 @@ export function DocsContent({ file }: DocsContentProps): React.JSX.Element {
 					)}
 					<ReactMarkdown
 						urlTransform={(src, key, _node) => {
-							if (key === 'src' || (key === 'href' && !src.startsWith('http'))) {
+							if (key === 'src' || (key === 'href' && !src.startsWith('http') && !src.startsWith('#'))) {
 								// img tag
 								return makeAbsolutePath(`/docs/${baseUrl}${defaultUrlTransform(src)}`)
 							} else {
