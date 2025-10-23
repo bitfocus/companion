@@ -2,6 +2,8 @@
 const path = require('path')
 const fs = require('fs')
 const { sentryWebpackPlugin } = require('@sentry/webpack-plugin')
+// eslint-disable-next-line n/no-extraneous-require
+const TerserPlugin = require('terser-webpack-plugin')
 
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
 
@@ -13,6 +15,7 @@ module.exports = {
 		main: './dist/main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
 		RenderThread: './dist/Graphics/Thread.js',
+		SurfaceThread: './dist/Instance/Surface/Thread/Entrypoint.js',
 	},
 	mode: 'production',
 	devtool: sentryAuthToken ? 'source-map' : undefined,
@@ -75,6 +78,16 @@ module.exports = {
 					filename: 'SENTRY',
 				},
 			},
+		],
+	},
+	optimization: {
+		minimize: true,
+		minimizer: [
+			new TerserPlugin({
+				terserOptions: {
+					module: true,
+				},
+			}),
 		],
 	},
 	plugins: [

@@ -218,7 +218,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const registry = new Registry(
 		configDir,
 		{
-			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // For backwards compatibility
+			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // Naming for backwards compatibility
 			[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
 		},
 		machineId

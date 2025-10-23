@@ -67,6 +67,9 @@ import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
+import type { SurfacePluginPanel } from './PluginPanel.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -85,6 +88,8 @@ export interface SurfaceControllerEvents {
 	group_page: [groupId: string, pageId: string]
 	'group-add': [groupId: string]
 	'group-delete': [surfaceId: string]
+
+	scanDevices: [hidDevices: HID.Device[]]
 }
 
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
@@ -1121,8 +1126,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			try {
 				await Promise.allSettled([
-					HID.devicesAsync().then(async (deviceInfos) =>
-						Promise.allSettled(
+					HID.devicesAsync().then(async (deviceInfos) => {
+						// emit to plugins
+						this.emit('scanDevices', deviceInfos)
+
+						await Promise.allSettled(
 							deviceInfos.map(async (deviceInfo) => {
 								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
 								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
@@ -1197,7 +1205,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								}
 							})
 						)
-					),
+					}),
 					scanForLoupedeck
 						? listLoupedecks().then(async (deviceInfos) =>
 								Promise.allSettled(
@@ -1250,7 +1258,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	addSatelliteDevice(deviceInfo: SatelliteDeviceInfo): SurfaceIPSatellite {
 		this.removeDevice(deviceInfo.path)
 
-		const device = new SurfaceIPSatellite(deviceInfo, this.#surfaceExecuteExpression.bind(this))
+		const device = new SurfaceIPSatellite(deviceInfo, this.surfaceExecuteExpression.bind(this))
 
 		this.#createSurfaceHandler(deviceInfo.path, 'satellite', device)
 
@@ -1259,6 +1267,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		})
 
 		return device
+	}
+
+	/**
+	 * Add a new plugin panel
+	 */
+	addPluginPanel(moduleId: string, panel: SurfacePluginPanel): void {
+		this.removeDevice(panel.info.deviceId)
+
+		this.#createSurfaceHandler(panel.info.deviceId, moduleId, panel)
+
+		setImmediate(() => {
+			this.updateDevicesList()
+		})
 	}
 
 	/**
@@ -1330,7 +1351,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		try {
 			const dev = await factory.create(devicePath, {
 				...deviceOptions,
-				executeExpression: this.#surfaceExecuteExpression.bind(this),
+				executeExpression: this.surfaceExecuteExpression.bind(this),
 			})
 			this.#createSurfaceHandler(devicePath, type, dev)
 
@@ -1345,11 +1366,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	#surfaceExecuteExpression(
+	surfaceExecuteExpression(
 		str: string,
 		surfaceId: string,
 		injectedVariableValues: CompanionVariableValues | undefined
-	) {
+	): ExecuteExpressionResult {
 		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
 			...injectedVariableValues,
 			...this.#getInjectedVariablesForSurfaceId(surfaceId),
@@ -1464,6 +1485,35 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
+	 * Reserve a surface ID for opening.
+	 * This prevents race conditions if two instances try to open the same surface at once.
+	 * If the surface is already open, or already reserved, this will return null.
+	 * @returns A function to clear the reservation, or null if it could not be reserved
+	 */
+	reserveSurfaceForOpening(surfaceId: string): (() => void) | null {
+		// Ensure it isnt already open
+		if (this.#surfaceHandlers.has(surfaceId)) return null
+
+		// Future: check if the config of the surface/global config allows it to be opened
+
+		// Reserve it
+		this.#surfaceHandlers.set(surfaceId, null)
+
+		return () => {
+			// Clear the reservation
+			if (this.#surfaceHandlers.get(surfaceId) === null) {
+				this.#surfaceHandlers.delete(surfaceId)
+			}
+		}
+	}
+
+	initInstance(_instanceId: string, features: SurfaceChildFeatures): void {
+		if (this.#runningUsbHotplug && (features.supportsHid || features.supportsDetection || features.supportsScan)) {
+			this.triggerRefreshDevicesEvent()
+		}
+	}
+
+	/**
 	 * Remove a surface
 	 */
 	removeDevice(devicePath: string, purge = false): void {
@@ -1489,6 +1539,17 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 
 		this.updateDevicesList()
+	}
+
+	/**
+	 * Remove all surfaces belonging to an instance
+	 */
+	unloadSurfacesForInstance(instanceId: string): void {
+		for (const [id, surface] of this.#surfaceHandlers.entries()) {
+			if (surface?.panel.instanceId === instanceId) {
+				this.removeDevice(id)
+			}
+		}
 	}
 
 	quit(): void {
