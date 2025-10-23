@@ -4,7 +4,7 @@
 import { cloneDeep } from 'lodash-es'
 import stripAnsi from 'strip-ansi'
 import fs from 'fs-extra'
-import winston from 'winston'
+import winston, { LeveledLogMethod, LogMethod } from 'winston'
 import Transport from 'winston-transport'
 import { Syslog, type SyslogTransportOptions } from 'winston-syslog'
 import supportsColor from 'supports-color'
@@ -16,7 +16,22 @@ import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
 
-export type Logger = winston.Logger
+export interface Logger {
+	readonly source: string
+
+	child(options: { source: string }): Logger
+
+	log: LogMethod
+	error: LeveledLogMethod
+	warn: LeveledLogMethod
+	info: LeveledLogMethod
+	debug: LeveledLogMethod
+	verbose: LeveledLogMethod
+	silly: LeveledLogMethod
+
+	isDebugEnabled(): boolean
+	isSillyEnabled(): boolean
+}
 
 const SentrySeverity = {
 	debug: 'debug',
@@ -66,7 +81,7 @@ class LogController {
 	#history: ClientLogLine[] = []
 
 	#winston: winston.Logger
-	#logger: winston.Logger
+	#logger: Logger
 
 	readonly #events = new EventEmitter<{ update: [ClientLogUpdate] }>()
 
@@ -151,7 +166,27 @@ class LogController {
 	 * Create a child logger
 	 */
 	createLogger(source: string): Logger {
-		return this.#winston.child({ source })
+		const winstonLogger = this.#winston.child({ source })
+
+		return {
+			source,
+
+			child: (options: { source: string }) => {
+				return this.createLogger(`${source}/${options.source}`)
+			},
+
+			log: winstonLogger.log.bind(winstonLogger),
+
+			error: winstonLogger.error.bind(winstonLogger),
+			warn: winstonLogger.warn.bind(winstonLogger),
+			info: winstonLogger.info.bind(winstonLogger),
+			debug: winstonLogger.debug.bind(winstonLogger),
+			verbose: winstonLogger.verbose.bind(winstonLogger),
+			silly: winstonLogger.silly.bind(winstonLogger),
+
+			isDebugEnabled: () => winstonLogger.isDebugEnabled(),
+			isSillyEnabled: () => winstonLogger.isSillyEnabled(),
+		}
 	}
 
 	createTrpcRouter() {
@@ -258,7 +293,7 @@ class LogController {
 	addSyslogHost(options: SyslogTransportOptions): void {
 		try {
 			options.app_name = 'Companion'
-			this.#logger.add(new Syslog(options))
+			this.#winston.add(new Syslog(options))
 			this.#logger.debug(`Syslog transport initialized. Options: ${JSON.stringify(options)}`)
 		} catch (e) {
 			this.#logger.error(`Failed to initialise syslog transport ${e}`)
