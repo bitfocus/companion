@@ -43,6 +43,8 @@ export interface SurfacePanelInfo {
 }
 
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
+	readonly instanceId?: string // Future: make required
+
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	clearDeck(): void

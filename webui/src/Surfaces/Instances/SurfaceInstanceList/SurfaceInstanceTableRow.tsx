@@ -58,7 +58,7 @@ export const SurfaceInstanceTableRow = observer(function SurfaceInstanceTableRow
 			doDelete={doDelete}
 			doEdit={doEdit}
 			doToggleEnabled={doToggleEnabled}
-			debugLogUrl={null} //{`/connection-debug/${id}`}
+			debugLogUrl={`/surfaces/debug/${id}`}
 		/>
 	)
 })

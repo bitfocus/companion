@@ -256,7 +256,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 						.GET('/v1/companion/modules/{moduleType}', {
 							params: {
 								path: {
-									moduleType: 'surface' as 'connection',
+									moduleType: 'surface',
 								},
 								query: {
 									'module-api-version': SURFACE_BASE_VERSION,
@@ -337,7 +337,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 				{
 					params: {
 						path: {
-							moduleType: moduleType as 'connection',
+							moduleType: moduleType,
 							moduleName: moduleId,
 						},
 					},
