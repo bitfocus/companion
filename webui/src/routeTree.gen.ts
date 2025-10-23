@@ -38,6 +38,7 @@ import { Route as TriggersIndexRouteImport } from './routes/app/triggers/index.t
 import { Route as SettingsIndexRouteImport } from './routes/app/settings/index.tsx'
 import { Route as ModulesIndexRouteImport } from './routes/app/modules/index.tsx'
 import { Route as ConnectionsIndexRouteImport } from './routes/app/connections/index.tsx'
+import { Route as SurfacesDotdebugDotinstanceIdRouteImport } from './routes/self-contained/surfaces.debug.$instanceId.tsx'
 import { Route as VariablesExpressionRouteImport } from './routes/app/variables/expression.tsx'
 import { Route as VariablesCustomRouteImport } from './routes/app/variables/custom.tsx'
 import { Route as VariablesOldLabelRouteImport } from './routes/app/variables/$oldLabel.tsx'
@@ -229,6 +230,12 @@ const ConnectionsIndexRoute = ConnectionsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ConnectionsRoute,
 } as any)
+const SurfacesDotdebugDotinstanceIdRoute =
+  SurfacesDotdebugDotinstanceIdRouteImport.update({
+    id: '/surfaces/debug/$instanceId',
+    path: '/surfaces/debug/$instanceId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const VariablesExpressionRoute = VariablesExpressionRouteImport.update({
   id: '/variables/expression',
   path: '/variables/expression',
@@ -445,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
   '/variables/expression': typeof VariablesExpressionRouteWithChildren
+  '/surfaces/debug/$instanceId': typeof SurfacesDotdebugDotinstanceIdRoute
   '/connections/': typeof ConnectionsIndexRoute
   '/modules/': typeof ModulesIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -499,6 +507,7 @@ export interface FileRoutesByTo {
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
+  '/surfaces/debug/$instanceId': typeof SurfacesDotdebugDotinstanceIdRoute
   '/connections': typeof ConnectionsIndexRoute
   '/modules': typeof ModulesIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -564,6 +573,7 @@ export interface FileRoutesById {
   '/_app/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/_app/variables/custom': typeof VariablesCustomRoute
   '/_app/variables/expression': typeof VariablesExpressionRouteWithChildren
+  '/surfaces/debug/$instanceId': typeof SurfacesDotdebugDotinstanceIdRoute
   '/_app/connections/': typeof ConnectionsIndexRoute
   '/_app/modules/': typeof ModulesIndexRoute
   '/_app/settings/': typeof SettingsIndexRoute
@@ -629,6 +639,7 @@ export interface FileRouteTypes {
     | '/variables/$oldLabel'
     | '/variables/custom'
     | '/variables/expression'
+    | '/surfaces/debug/$instanceId'
     | '/connections/'
     | '/modules/'
     | '/settings'
@@ -683,6 +694,7 @@ export interface FileRouteTypes {
     | '/triggers/$controlId'
     | '/variables/$oldLabel'
     | '/variables/custom'
+    | '/surfaces/debug/$instanceId'
     | '/connections'
     | '/modules'
     | '/settings'
@@ -747,6 +759,7 @@ export interface FileRouteTypes {
     | '/_app/variables/$oldLabel'
     | '/_app/variables/custom'
     | '/_app/variables/expression'
+    | '/surfaces/debug/$instanceId'
     | '/_app/connections/'
     | '/_app/modules/'
     | '/_app/settings/'
@@ -782,6 +795,7 @@ export interface RootRouteChildren {
   RedirectsTablet3Route: typeof RedirectsTablet3Route
   TabletDotlazyRoute: typeof TabletDotlazyRoute
   ConnectionDebugDotconnectionIdRoute: typeof ConnectionDebugDotconnectionIdRoute
+  SurfacesDotdebugDotinstanceIdRoute: typeof SurfacesDotdebugDotinstanceIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -988,6 +1002,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/connections/'
       preLoaderRoute: typeof ConnectionsIndexRouteImport
       parentRoute: typeof ConnectionsRoute
+    }
+    '/surfaces/debug/$instanceId': {
+      id: '/surfaces/debug/$instanceId'
+      path: '/surfaces/debug/$instanceId'
+      fullPath: '/surfaces/debug/$instanceId'
+      preLoaderRoute: typeof SurfacesDotdebugDotinstanceIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/variables/expression': {
       id: '/_app/variables/expression'
@@ -1438,6 +1459,7 @@ const rootRouteChildren: RootRouteChildren = {
   RedirectsTablet3Route: RedirectsTablet3Route,
   TabletDotlazyRoute: TabletDotlazyRoute,
   ConnectionDebugDotconnectionIdRoute: ConnectionDebugDotconnectionIdRoute,
+  SurfacesDotdebugDotinstanceIdRoute: SurfacesDotdebugDotinstanceIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -9,7 +9,10 @@ import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type { InstanceModules } from './Modules.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import {
+	isModuleApiVersionCompatible,
+	isSurfaceApiVersionCompatible,
+} from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { createRequire } from 'module'
@@ -17,7 +20,9 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { SomeModuleVersionInfo } from './Types.js'
-import { SurfaceChildHandler } from './Surface/ChildHandler.js'
+import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
+import { isPackaged } from '../Resources/Util.js'
+import { fileURLToPath } from 'url'
 
 /**
  * A backoff sleep strategy
@@ -82,7 +87,8 @@ export interface ChildProcessHandlerBase {
 export class InstanceProcessManager {
 	readonly #logger = LogController.createLogger('Instance/ProcessManager')
 
-	readonly #deps: ConnectionChildHandlerDependencies
+	readonly #connectionDeps: ConnectionChildHandlerDependencies
+	readonly #surfaceDeps: SurfaceChildHandlerDependencies
 	readonly #modules: InstanceModules
 	readonly #instanceConfigStore: InstanceConfigStore
 
@@ -94,11 +100,13 @@ export class InstanceProcessManager {
 	#children: Map<string, ModuleChild>
 
 	constructor(
-		deps: ConnectionChildHandlerDependencies,
+		connectionDeps: ConnectionChildHandlerDependencies,
+		surfaceDeps: SurfaceChildHandlerDependencies,
 		modules: InstanceModules,
 		instanceConfigStore: InstanceConfigStore
 	) {
-		this.#deps = deps
+		this.#connectionDeps = connectionDeps
+		this.#surfaceDeps = surfaceDeps
 		this.#modules = modules
 		this.#instanceConfigStore = instanceConfigStore
 
@@ -230,7 +238,7 @@ export class InstanceProcessManager {
 			}
 
 			// mark instance as disabled
-			this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Disabled')
+			this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, null, 'Disabled')
 		}
 	}
 
@@ -273,7 +281,7 @@ export class InstanceProcessManager {
 			}
 			this.#children.set(instanceId, baseChild)
 
-			this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Starting')
+			this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, null, 'Starting')
 
 			forceRestart = true // Force restart if it is a new instance
 		}
@@ -341,9 +349,9 @@ export class InstanceProcessManager {
 					`Configured instance "${baseChild.targetState.moduleId}" could not be loaded, unknown module`
 				)
 				if (this.#modules.hasModule(baseChild.moduleType, baseChild.targetState.moduleId)) {
-					this.#deps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module version')
+					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module version')
 				} else {
-					this.#deps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module')
+					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module')
 				}
 				return
 			}
@@ -388,7 +396,7 @@ export class InstanceProcessManager {
 
 			const enableInspect = inspectPort !== undefined
 			if (enableInspect) {
-				this.#deps.debugLogLine(
+				this.#connectionDeps.debugLogLine(
 					instanceId,
 					Date.now(),
 					'System',
@@ -410,7 +418,7 @@ export class InstanceProcessManager {
 			].filter((v): v is string => !!v)
 			this.#logger.debug(`Instance "${baseChild.targetState.label}" command: ${JSON.stringify(cmd)}`)
 
-			this.#deps.debugLogLine(
+			this.#connectionDeps.debugLogLine(
 				instanceId,
 				Date.now(),
 				'System',
@@ -437,27 +445,27 @@ export class InstanceProcessManager {
 				child.handler?.cleanup()
 
 				child.logger.info(`Process started process ${monitor.child?.pid}`)
-				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process started **')
+				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process started **')
 			})
 			monitor.on('stop', () => {
 				child.isReady = false
 				child.handler?.cleanup()
 
-				this.#deps.instanceStatus.updateInstanceStatus(
+				this.#connectionDeps.instanceStatus.updateInstanceStatus(
 					instanceId,
 					child.crashed ? 'crashed' : null,
 					child.crashed ? '' : 'Stopped'
 				)
 				child.logger.debug(`Process stopped`)
-				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process stopped **')
+				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process stopped **')
 			})
 			monitor.on('crash', () => {
 				child.isReady = false
 				child.handler?.cleanup()
 
-				this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Crashed')
+				this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, null, 'Crashed')
 				child.logger.debug(`Process crashed`)
-				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process crashed **')
+				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process crashed **')
 			})
 			monitor.on('stdout', (data) => {
 				if (moduleInfo.versionId === 'dev') {
@@ -465,12 +473,12 @@ export class InstanceProcessManager {
 					child.logger.verbose(`stdout: ${data.toString()}`)
 				}
 
-				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'console', data.toString())
+				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'Console', 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
 				const str = data.toString()
 				child.logger.verbose(`stderr: ${str}`)
-				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'error', str)
+				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'Console', 'error', str)
 			})
 
 			child.monitor = monitor
@@ -580,7 +588,7 @@ export class InstanceProcessManager {
 				}
 
 				// Init module
-				this.#deps.instanceStatus.updateInstanceStatus(child.instanceId, 'initializing', null)
+				this.#connectionDeps.instanceStatus.updateInstanceStatus(child.instanceId, 'initializing', null)
 
 				child.handler
 					.init(config)
@@ -597,7 +605,13 @@ export class InstanceProcessManager {
 					})
 					.catch((e) => {
 						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${e} ${e?.stack}`)
-						this.#deps.debugLogLine(child.instanceId, Date.now(), 'System', 'error', `Failed to init: ${e} ${e?.stack}`)
+						this.#connectionDeps.debugLogLine(
+							child.instanceId,
+							Date.now(),
+							'System',
+							'error',
+							`Failed to init: ${e} ${e?.stack}`
+						)
 
 						forceRestart()
 					})
@@ -608,7 +622,7 @@ export class InstanceProcessManager {
 		switch (child.targetState.moduleType) {
 			case ModuleInstanceType.Connection:
 				child.handler = new ConnectionChildHandler(
-					this.#deps,
+					this.#connectionDeps,
 					monitor,
 					child.instanceId,
 					runtimeInfo.apiVersion,
@@ -616,8 +630,13 @@ export class InstanceProcessManager {
 				)
 				break
 			case ModuleInstanceType.Surface:
-				throw new Error('Surface modules not fully implemented!')
-				// child.handler = new SurfaceChildHandler(child.monitor, child.instanceId)
+				child.handler = new SurfaceChildHandler(
+					this.#surfaceDeps,
+					monitor,
+					child.targetState.moduleId,
+					child.instanceId,
+					onRegisterReceived
+				)
 				break
 			default:
 				assertNever(child.targetState.moduleType)
@@ -639,7 +658,11 @@ export class InstanceProcessManager {
 		moduleInfo: SomeModuleVersionInfo,
 		instanceId: string,
 		lastLabel: string
-	): Promise<RuntimeInfo | null> {
+	): Promise<{
+		entrypoint: string
+		apiVersion: string
+		env: Record<string, string>
+	} | null> {
 		const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
 		const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
 		if (!(await fs.pathExists(jsFullPath))) {
@@ -686,8 +709,40 @@ export class InstanceProcessManager {
 					},
 				}
 			}
-			case ModuleInstanceType.Surface:
-				throw new Error('Surface modules not fully implemented!')
+			case ModuleInstanceType.Surface: {
+				// Determine the module api version
+				let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
+				if (!moduleInfo.isPackaged) {
+					// When not packaged, lookup the version from the library itself
+					try {
+						const require = createRequire(moduleInfo.basePath)
+
+						const moduleLibPackagePath = require.resolve('@companion-surface/base/package.json', {
+							paths: [moduleInfo.basePath],
+						})
+						const moduleLibPackage = require(moduleLibPackagePath)
+						moduleApiVersion = moduleLibPackage.version
+					} catch (e) {
+						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
+						return null
+					}
+				}
+
+				if (!isSurfaceApiVersionCompatible(moduleApiVersion)) {
+					this.#logger.error(`Module Api version is too new/old: "${lastLabel}" ${moduleApiVersion}`)
+					return null
+				}
+
+				return {
+					apiVersion: moduleApiVersion,
+					entrypoint: isPackaged()
+						? path.join(__dirname, './SurfaceThread.js') // TODO - test this in production
+						: fileURLToPath(new URL('./Surface/Thread/Entrypoint.js', import.meta.url)),
+					env: {
+						MODULE_ENTRYPOINT: jsFullPath,
+					},
+				}
+			}
 			default:
 				assertNever(moduleInfo)
 				this.#logger.error(`Unknown module type "${moduleType}" for api version check: "${lastLabel}"`)
