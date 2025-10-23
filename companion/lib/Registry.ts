@@ -225,6 +225,7 @@ export class Registry {
 				this.controls,
 				this.graphics,
 				this.variables,
+				this.surfaces,
 				oscSender
 			)
 			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter

@@ -118,7 +118,7 @@ function useInstanceEditPanelService(
 			const err: string | null = await setConfigMutation.mutateAsync(saveConfigProps)
 
 			if (err === 'invalid label') {
-				return `The label "${saveLabel}" in not valid`
+				return `The label "${saveLabel}" is not valid`
 			} else if (err === 'duplicate label') {
 				return `The label "${saveLabel}" is already in use. Please use a unique label for this surface instance`
 			} else if (err) {

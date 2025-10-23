@@ -1,7 +1,7 @@
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleManifestExt } from '@companion-app/shared/Model/ModuleManifest.js'
-import type { SurfaceModuleManifest } from '@companion-surface/base'
+import type { SurfaceModuleManifest } from '@companion-surface/host'
 
 export type SomeModuleVersionInfo = ConnectionModuleVersionInfo | SurfaceModuleVersionInfo
 
