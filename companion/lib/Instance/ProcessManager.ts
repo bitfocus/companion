@@ -211,7 +211,7 @@ export class InstanceProcessManager {
 					})
 					.catch((e) => {
 						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${e} ${e?.stack}`)
-						this.#deps.debugLogLine(child.instanceId, 'error', `Failed to init: ${e} ${e?.stack}`)
+						this.#deps.debugLogLine(child.instanceId, Date.now(), 'System', 'error', `Failed to init: ${e} ${e?.stack}`)
 
 						forceRestart()
 					})
@@ -516,6 +516,8 @@ export class InstanceProcessManager {
 			if (enableInspect) {
 				this.#deps.debugLogLine(
 					instanceId,
+					Date.now(),
+					'System',
 					'error',
 					`** Disabling permissions model to enable inspector **\nMake sure to re-test the module without the inspector enabled before releasing`
 				)
@@ -531,6 +533,8 @@ export class InstanceProcessManager {
 
 			this.#deps.debugLogLine(
 				instanceId,
+				Date.now(),
+				'System',
 				'system',
 				`** Starting Instance from "${path.join(moduleInfo.basePath, jsPath)}" **`
 			)
@@ -553,7 +557,7 @@ export class InstanceProcessManager {
 				child.handler?.cleanup()
 
 				child.logger.info(`Process started process ${monitor.child?.pid}`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process started **')
+				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process started **')
 			})
 			monitor.on('stop', () => {
 				child.isReady = false
@@ -565,7 +569,7 @@ export class InstanceProcessManager {
 					child.crashed ? '' : 'Stopped'
 				)
 				child.logger.debug(`Process stopped`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process stopped **')
+				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process stopped **')
 			})
 			monitor.on('crash', () => {
 				child.isReady = false
@@ -573,7 +577,7 @@ export class InstanceProcessManager {
 
 				this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Crashed')
 				child.logger.debug(`Process crashed`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process crashed **')
+				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process crashed **')
 			})
 			monitor.on('stdout', (data) => {
 				if (moduleInfo.versionId === 'dev') {
@@ -581,11 +585,11 @@ export class InstanceProcessManager {
 					child.logger.verbose(`stdout: ${data.toString()}`)
 				}
 
-				this.#deps.debugLogLine(instanceId, 'console', data.toString())
+				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
 				child.logger.verbose(`stderr: ${data.toString()}`)
-				this.#deps.debugLogLine(instanceId, 'error', data.toString())
+				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'error', data.toString())
 			})
 
 			child.monitor = monitor

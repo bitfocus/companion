@@ -73,7 +73,13 @@ export interface ConnectionChildHandlerDependencies {
 		secrets: unknown | null,
 		newUpgradeIndex: number | null
 	) => void
-	readonly debugLogLine: (connectionId: string, level: string, message: string) => void
+	readonly debugLogLine: (
+		connectionId: string,
+		time: number | null,
+		source: string,
+		level: string,
+		message: string
+	) => void
 }
 
 export class ConnectionChildHandler implements ChildProcessHandlerBase {
@@ -685,7 +691,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 * Send a message to the module 'debug' log page
 	 */
 	#sendToModuleLog(level: LogLevel | 'system', message: string): void {
-		this.#deps.debugLogLine(this.connectionId, level, message)
+		this.#deps.debugLogLine(this.connectionId, Date.now(), 'Module', level, message)
 	}
 
 	/**

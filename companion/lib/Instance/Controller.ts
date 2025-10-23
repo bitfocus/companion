@@ -56,7 +56,7 @@ export interface InstanceControllerEvents {
 	connection_collections_enabled: []
 
 	uiConnectionsUpdate: [changes: ClientConnectionsUpdate[]]
-	[id: `debugLog:${string}`]: [level: string, message: string]
+	[id: `debugLog:${string}`]: [time: number | null, source: string, level: string, message: string]
 }
 
 export class InstanceController extends EventEmitter<InstanceControllerEvents> {
@@ -149,8 +149,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						}
 					)
 				},
-				debugLogLine: (connectionId: string, level: string, message: string) => {
-					this.emit(`debugLog:${connectionId}`, level, message)
+				debugLogLine: (connectionId: string, time: number | null, source: string, level: string, message: string) => {
+					this.emit(`debugLog:${connectionId}`, time, source, level, message)
 				},
 			},
 			this.modules,
@@ -707,8 +707,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 					const lines = toIterable(selfEvents, `debugLog:${input.instanceId}`, signal)
 
-					for await (const [level, message] of lines) {
-						yield { level, message }
+					for await (const [time, source, level, message] of lines) {
+						yield { time, source, level, message }
 					}
 				}),
 		})
