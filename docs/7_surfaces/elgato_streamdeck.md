@@ -24,7 +24,7 @@ The touch strip is mapped to four button. These buttons provide _press_ events t
 The touch strip also supports two types of swipe responses:
 
 - swiping horizontally will change the page: swipe left to get the next page; right to get the previous page (as if you're dragging a piece of paper that is just under the surface.) To enable or disable page-turning, [change the settings in the Surfaces tab](#3_config/surfaces.md).
-- swiping vertically: up emits _rotate-right_"*; down emits *rotate-left\* (enable the `Enable Rotary Actions` checkbox for the button to access these events).
+- swiping vertically: up emits _rotate-right_; down emits _rotate-left_ (enable the `Enable Rotary Actions` checkbox for the button to access these events).
 
 Note that the LCD Strip may occasionally confuse a vertical swipe with a press, so best practice may be to chose either _rotation_ actions or _press_ actions for the LCD buttons but not both at once. Or else to avoid _press actions_ that change something critical, if using both.
 
