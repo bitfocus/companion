@@ -49,6 +49,7 @@ import type {
 	ClientSurfaceInstancesUpdate,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { SurfaceInstanceCollections } from './Surface/Collections.js'
+import type { SurfaceController } from '../Surface/Controller.js'
 
 type CreateConnectionData = {
 	type: string
@@ -108,6 +109,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		controls: ControlsController,
 		graphics: GraphicsController,
 		variables: VariablesController,
+		surfaces: SurfaceController,
 		oscSender: ServiceOscSender
 	) {
 		super()
@@ -173,6 +175,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				},
 				debugLogLine: (connectionId: string, time: number | null, source: string, level: string, message: string) => {
 					this.emit(`debugLog:${connectionId}`, time, source, level, message)
+				},
+			},
+			{
+				surfaceController: surfaces,
+				instanceStatus: this.status,
+				debugLogLine: (instanceId: string, time: number | null, source: string, level: string, message: string) => {
+					this.emit(`debugLog:${instanceId}`, time, source, level, message)
 				},
 			},
 			this.modules,
@@ -633,8 +642,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		for (const [id, config] of this.#configStore.getAllInstanceConfigs()) {
 			if (config.moduleInstanceType !== ModuleInstanceType.Surface) continue
-
-			// const instance = this.moduleHost. (id, true)
 
 			result[id] = {
 				moduleType: config.moduleInstanceType,

@@ -18,18 +18,6 @@ export class SurfaceInstanceCollections extends CollectionsBaseController<Surfac
 
 		this.#emitUpdated = emitUpdated
 		this.#configStore = configStore
-
-		// TODO: remove this soon - fixup existing data
-		const fixupCollections = (collections: SurfaceInstanceCollection[]) => {
-			for (const collection of collections) {
-				if (collection.metaData === undefined) {
-					collection.metaData = { enabled: true }
-				}
-				fixupCollections(collection.children || [])
-			}
-			return collections
-		}
-		fixupCollections(this.data)
 	}
 
 	isCollectionEnabled(collectionId: string | null | undefined): boolean {
