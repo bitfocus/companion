@@ -316,7 +316,9 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 
 	if (!hasTarUrl) {
 		return (
-			<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" title="Module is no longer available" />
+			<span title="Module is no longer available">
+				<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" />
+			</span>
 		)
 	}
 
