@@ -251,8 +251,8 @@ const SurfaceRow = observer(function SurfaceRow({
 					{!!surface.hasFirmwareUpdates && (
 						<>
 							{' '}
-							<WindowLinkOpen href={surface.hasFirmwareUpdates.updaterDownloadUrl}>
-								<FontAwesomeIcon icon={faCircleUp} title="Firmware update is available" />
+							<WindowLinkOpen href={surface.hasFirmwareUpdates.updaterDownloadUrl} title="Firmware update is available">
+								<FontAwesomeIcon icon={faCircleUp} />
 							</WindowLinkOpen>
 						</>
 					)}
