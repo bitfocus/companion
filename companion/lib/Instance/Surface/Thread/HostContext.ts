@@ -4,6 +4,7 @@ import type {
 	HostSurfaceEvents,
 	OpenDeviceResult,
 	SurfaceHostContext,
+	SurfaceFirmwareUpdateInfo,
 } from '@companion-surface/host'
 import type { SurfaceIpcWrapper } from '../IpcTypes.js'
 import { LockingGraphicsGeneratorImpl } from './LockingGraphics.js'
@@ -42,6 +43,9 @@ export class HostContext implements SurfaceHostContext {
 			},
 			pincodeEntry: (surfaceId: string, char: number) => {
 				this.#ipcWrapper.sendWithNoCb('pincode-entry', { surfaceId, keycode: char })
+			},
+			firmwareUpdateInfo: (surfaceId: string, updateInfo: SurfaceFirmwareUpdateInfo | null) => {
+				this.#ipcWrapper.sendWithNoCb('firmware-update-info', { surfaceId, updateInfo })
 			},
 		}
 	}

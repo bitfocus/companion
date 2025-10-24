@@ -80,6 +80,8 @@ export interface SurfacePanelEvents {
 
 	setCustomVariable: [variableId: string, value: CompanionVariableValue]
 
+	firmwareUpdateInfo: []
+
 	resized: []
 }
 

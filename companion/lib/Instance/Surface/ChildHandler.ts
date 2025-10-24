@@ -2,6 +2,7 @@ import LogController, { type Logger } from '../../Log/Controller.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type {
 	DisconnectMessage,
+	FirmwareUpdateInfoMessage,
 	HostToSurfaceModuleEvents,
 	InputPressMessage,
 	InputRotateMessage,
@@ -109,6 +110,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 			'pincode-entry': this.#handlePincodeEntry.bind(this),
 
 			'set-variable-value': this.#handleSetVariableValue.bind(this),
+
+			'firmware-update-info': this.#handleFirmwareUpdateInfo.bind(this),
 		}
 
 		this.#ipcWrapper = new IpcWrapper(
@@ -355,6 +358,15 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 			surface.inputVariableValue(msg.name, msg.value)
 		} else {
 			this.logger.warn(`Received input variable value for unknown surface: ${msg.surfaceId}`)
+		}
+	}
+
+	async #handleFirmwareUpdateInfo(msg: FirmwareUpdateInfoMessage): Promise<void> {
+		const surface = this.#panels.get(msg.surfaceId)
+		if (surface) {
+			surface.updateFirmwareUpdateInfo(msg.updateInfo?.updateUrl ?? null)
+		} else {
+			this.logger.warn(`Received firmware updateinfo for unknown surface: ${msg.surfaceId}`)
 		}
 	}
 }

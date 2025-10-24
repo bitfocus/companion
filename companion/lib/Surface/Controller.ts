@@ -14,6 +14,7 @@ import findProcess from 'find-process'
 import HID from 'node-hid'
 import jsonPatch from 'fast-json-patch'
 import pDebounce from 'p-debounce'
+import debounceFn from 'debounce-fn'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
@@ -155,7 +156,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#updateEvents.setMaxListeners(0)
 
 		this.#outboundController = new SurfaceOutboundController(this, db)
-		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.updateDevicesList())
+		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.triggerUpdateDevicesList())
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
 
@@ -181,7 +182,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			for (const id of Object.keys(instances)) {
 				// If the id starts with 'emulator:' then re-add it
 				if (id.startsWith('emulator:')) {
-					this.addEmulator(id.substring(9), undefined, true)
+					this.addEmulator(id.substring(9), undefined)
 				}
 			}
 
@@ -191,7 +192,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			})
 			this.#outboundController.init()
 
-			this.updateDevicesList()
+			this.triggerUpdateDevicesList()
 
 			this.#startStopLockoutTimer()
 		})
@@ -331,9 +332,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Add an emulator
 	 * @param id base id of the emulator
 	 * @param name Name of the emulator, or undefined to use the default
-	 * @param skipUpdate Skip emitting an update to the devices list
 	 */
-	addEmulator(id: string, name: string | undefined, skipUpdate = false): SurfaceHandler {
+	addEmulator(id: string, name: string | undefined): SurfaceHandler {
 		const fullId = EmulatorRoom(id)
 		if (this.#surfaceHandlers.has(fullId)) {
 			throw new Error(`Emulator "${id}" already exists!`)
@@ -342,7 +342,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#updateEvents, id))
 		if (name !== undefined) handler.setPanelName(name)
 
-		if (!skipUpdate) this.updateDevicesList()
+		this.triggerUpdateDevicesList()
 
 		return handler
 	}
@@ -661,7 +661,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					newGroup.setName(input.name)
 					this.#surfaceGroups.set(groupId, newGroup)
 
-					this.updateDevicesList()
+					this.triggerUpdateDevicesList()
 
 					return groupId
 				}),
@@ -686,7 +686,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					group.forgetConfig()
 					this.#surfaceGroups.delete(input.groupId)
 
-					this.updateDevicesList()
+					this.triggerUpdateDevicesList()
 				}),
 
 			groupSetConfigKey: publicProcedure
@@ -746,7 +746,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 						this.#attachSurfaceToGroup(surfaceHandler)
 
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 						return
 					}
 
@@ -756,7 +756,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						surfaceConfig.groupId = input.groupId
 						this.#dbTableSurfaces.set(input.surfaceId, surfaceConfig)
 
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 						return
 					}
 
@@ -779,7 +779,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					}
 
 					if (this.setDeviceConfig(input.surfaceId, undefined)) {
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 
 						return true
 					}
@@ -799,7 +799,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					const group = this.#surfaceGroups.get(input.surfaceOrGroupId)
 					if (group && !group.isAutoGroup) {
 						group.setName(input.name)
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 						return
 					}
 
@@ -807,7 +807,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					for (const surface of this.#surfaceHandlers.values()) {
 						if (surface && surface.surfaceId == input.surfaceOrGroupId) {
 							surface.setPanelName(input.name)
-							this.updateDevicesList()
+							this.triggerUpdateDevicesList()
 							return
 						}
 					}
@@ -817,7 +817,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					if (surfaceConfig) {
 						surfaceConfig.name = input.name
 						this.#dbTableSurfaces.set(input.surfaceOrGroupId, surfaceConfig)
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 						return
 					}
 
@@ -847,7 +847,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								group.syncLocked()
 							}
 
-							setImmediate(() => this.updateDevicesList())
+							this.triggerUpdateDevicesList()
 						}
 					}
 					return 'device not found'
@@ -1071,10 +1071,17 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		await new Promise((resolve) => setTimeout(resolve, 500))
 
 		this.#resetAllDevices()
-		this.updateDevicesList()
+		this.triggerUpdateDevicesList()
 	}
 
-	updateDevicesList(): void {
+	triggerUpdateDevicesList = debounceFn(() => this.#updateDevicesList(), {
+		before: false,
+		after: true,
+		wait: 50,
+		maxWait: 200,
+	})
+
+	#updateDevicesList(): void {
 		const newJsonArr = structuredClone(this.getDevicesList())
 
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
@@ -1291,7 +1298,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#createSurfaceHandler(fakePath, 'elgato-streamdeck-tcp', device)
 
-		setImmediate(() => this.updateDevicesList())
+		this.triggerUpdateDevicesList()
 
 		return device
 	}
@@ -1306,9 +1313,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#createSurfaceHandler(deviceInfo.path, 'satellite', device)
 
-		setImmediate(() => {
-			this.updateDevicesList()
-		})
+		this.triggerUpdateDevicesList()
 
 		return device
 	}
@@ -1321,9 +1326,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#createSurfaceHandler(panel.info.deviceId, moduleId, panel)
 
-		setImmediate(() => {
-			this.updateDevicesList()
-		})
+		this.triggerUpdateDevicesList()
 	}
 
 	/**
@@ -1336,9 +1339,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#createSurfaceHandler(deviceInfo.path, 'videohub-panel', device)
 
-		setImmediate(() => {
-			this.updateDevicesList()
-		})
+		this.triggerUpdateDevicesList()
 
 		return device
 	}
@@ -1358,9 +1359,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#createSurfaceHandler(devicePath, 'elgato-plugin', device)
 
-		setImmediate(() => {
-			this.updateDevicesList()
-		})
+		this.triggerUpdateDevicesList()
 
 		return device
 	}
@@ -1399,9 +1398,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			})
 			this.#createSurfaceHandler(devicePath, type, dev)
 
-			setImmediate(() => {
-				this.updateDevicesList()
-			})
+			this.triggerUpdateDevicesList()
 		} catch (e) {
 			this.#logger.error(`Failed to add "${type}" device: ${e}`)
 
@@ -1513,7 +1510,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				this.setDeviceConfig(surfaceId, surfaceConfig)
 
 				if (surfaceId.startsWith('emulator:')) {
-					this.addEmulator(surfaceId.substring(9), undefined, true)
+					this.addEmulator(surfaceId.substring(9), undefined)
 
 					if (surfaceConfig.groupConfig) {
 						// need the following to put the emulator on the "current" page, to match its export state
@@ -1525,7 +1522,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 		}
 
-		this.updateDevicesList()
+		this.triggerUpdateDevicesList()
 	}
 
 	/**
@@ -1582,7 +1579,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			this.emit('surface-delete', surfaceId)
 		}
 
-		this.updateDevicesList()
+		this.triggerUpdateDevicesList()
 	}
 
 	/**
@@ -1609,7 +1606,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#outboundController.quit()
 
 		this.#surfaceHandlers.clear()
-		this.updateDevicesList()
+		this.triggerUpdateDevicesList()
 	}
 
 	/**

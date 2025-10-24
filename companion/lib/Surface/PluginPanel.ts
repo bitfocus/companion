@@ -424,4 +424,14 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.emit('setCustomVariable', targetCustomVariable, variableValue)
 	}
+
+	updateFirmwareUpdateInfo(firmwareUpdateUrl: string | null): void {
+		this.info.hasFirmwareUpdates = firmwareUpdateUrl
+			? {
+					updaterDownloadUrl: firmwareUpdateUrl,
+				}
+			: undefined
+
+		this.emit('firmwareUpdateInfo')
+	}
 }

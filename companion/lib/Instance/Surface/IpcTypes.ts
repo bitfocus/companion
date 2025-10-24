@@ -1,5 +1,11 @@
 import type { IpcWrapper } from './IpcWrapper.js'
-import type { HIDDevice, LogLevel, SurfaceDrawProps, OpenDeviceResult } from '@companion-surface/host'
+import type {
+	HIDDevice,
+	LogLevel,
+	SurfaceDrawProps,
+	OpenDeviceResult,
+	SurfaceFirmwareUpdateInfo,
+} from '@companion-surface/host'
 
 export type SurfaceIpcWrapper = IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>
 
@@ -21,6 +27,8 @@ export interface SurfaceModuleToHostEvents {
 	'pincode-entry': (msg: PincodeEntryMessage) => never
 
 	'set-variable-value': (msg: SetVariableValueMessage) => never
+
+	'firmware-update-info': (msg: FirmwareUpdateInfoMessage) => never
 }
 
 export interface HostToSurfaceModuleEvents {
@@ -118,6 +126,12 @@ export interface SetVariableValueMessage {
 	surfaceId: string
 	name: string
 	value: any
+}
+
+export interface FirmwareUpdateInfoMessage {
+	surfaceId: string
+
+	updateInfo: SurfaceFirmwareUpdateInfo | null
 }
 
 export interface SetBrightnessMessage {
