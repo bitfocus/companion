@@ -1323,7 +1323,7 @@ __metadata:
     "@types/plist": "npm:^3.0.5"
     chokidar: "npm:^3.6.0"
     debounce-fn: "npm:^6.0.0"
-    electron: "npm:37.7.0"
+    electron: "npm:37.7.1"
     electron-builder: "npm:26.0.20"
     electron-reloader: "npm:^1.2.3"
     electron-store: "npm:^10.1.0"
@@ -9280,16 +9280,16 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"electron@npm:37.7.0":
-  version: 37.7.0
-  resolution: "electron@npm:37.7.0"
+"electron@npm:37.7.1":
+  version: 37.7.1
+  resolution: "electron@npm:37.7.1"
   dependencies:
     "@electron/get": "npm:^2.0.0"
     "@types/node": "npm:^22.7.7"
     extract-zip: "npm:^2.0.1"
   bin:
     electron: cli.js
-  checksum: 10c0/92dc07a31190c3f98d322829922c2042e610fb782df70dc145d6ac6aa16c9777c882462f137daa130932e0bba3063dcd40441e0c0361833a8682d7bd3bf55a39
+  checksum: 10c0/de7a734af5ee7e027890774a3ce275504930b0435754e04d4c8ff9ae95acb1931a6b74bd99e65bb2e5b2f567e6d3c6285e77a2a49e1be731349d00c84f2e7eb0
   languageName: node
   linkType: hard
 
@@ -18332,8 +18332,8 @@ asn1@evs-broadcast/node-asn1:
   linkType: hard
 
 "vite@npm:^5.0.0 || ^6.0.0 || ^7.0.0-0, vite@npm:^7.1.5":
-  version: 7.1.5
-  resolution: "vite@npm:7.1.5"
+  version: 7.1.12
+  resolution: "vite@npm:7.1.12"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.5.0"
@@ -18382,7 +18382,7 @@ asn1@evs-broadcast/node-asn1:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/782d2f20c25541b26d1fb39bef5f194149caff39dc25b7836e25f049ca919f2e2ce186bddb21f3f20f6195354b3579ec637a8ca08d65b117f8b6f81e3e730a9c
+  checksum: 10c0/cef4d4b4a84e663e09b858964af36e916892ac8540068df42a05ced637ceeae5e9ef71c72d54f3cfc1f3c254af16634230e221b6e2327c2a66d794bb49203262
   languageName: node
   linkType: hard
 
