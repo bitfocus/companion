@@ -263,6 +263,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
 		this.panel.on('setCustomVariable', this.#onSetCustomVariable.bind(this))
+		this.panel.on('firmwareUpdateInfo', this.#onFirmwareUpdateInfo.bind(this))
 
 		setImmediate(() => {
 			this.#saveConfig()
@@ -660,6 +661,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	#onSetCustomVariable(name: string, value: CompanionVariableValue): void {
 		this.#variables.custom.setValue(name, value)
+	}
+
+	#onFirmwareUpdateInfo(): void {
+		this.#surfaces.triggerUpdateDevicesList()
 	}
 
 	/**
