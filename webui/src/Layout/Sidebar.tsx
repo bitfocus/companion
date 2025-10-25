@@ -1,17 +1,18 @@
 import React, {
 	createContext,
-	CSSProperties,
 	memo,
-	ReactNode,
 	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
+	type CSSProperties,
+	type ReactNode,
 } from 'react'
 import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop } from '@coreui/react'
 import {
+	type IconDefinition,
 	faFileImport,
 	faCog,
 	faClipboardList,
@@ -26,7 +27,6 @@ import {
 	faBug,
 	faUsers,
 	faComments,
-	IconDefinition,
 	faSquareCaretRight,
 	faPuzzlePiece,
 	faInfo,

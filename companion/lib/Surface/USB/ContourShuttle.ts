@@ -10,8 +10,8 @@
  */
 
 import EventEmitter from 'events'
-import { Shuttle, setupShuttle, ProductModelId } from 'shuttle-node'
-import LogController, { Logger } from '../../Log/Controller.js'
+import { setupShuttle, ProductModelId, type Shuttle } from 'shuttle-node'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'

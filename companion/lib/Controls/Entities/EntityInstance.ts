@@ -1,12 +1,12 @@
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
-	EntitySupportedChildGroupDefinition,
-	FeedbackEntityModel,
 	FeedbackEntitySubType,
-	SomeEntityModel,
-	SomeReplaceableEntityModel,
 	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
+	type EntitySupportedChildGroupDefinition,
+	type FeedbackEntityModel,
+	type SomeEntityModel,
+	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { cloneDeep } from 'lodash-es'
 import isEqual from 'fast-deep-equal'

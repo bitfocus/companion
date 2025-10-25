@@ -1,10 +1,10 @@
-import React, { useCallback, useContext, ChangeEvent, RefObject } from 'react'
+import React, { useCallback, useContext, type RefObject } from 'react'
 import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { CButton, CButtonGroup, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { MultiDropdownInputField } from '~/Components/index.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -50,7 +50,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	}, [abortSessionMutation, sessionId, confirmRef])
 
 	const changeRecording = useCallback(
-		(e: ChangeEvent<HTMLInputElement> | boolean) => {
+		(e: React.ChangeEvent<HTMLInputElement> | boolean) => {
 			const isRunning = typeof e === 'boolean' ? e : e.target.checked
 			setRecordingMutation.mutateAsync({ sessionId, isRunning }).catch((e) => {
 				console.error(e)

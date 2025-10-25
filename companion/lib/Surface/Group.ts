@@ -17,7 +17,7 @@ import type { SurfaceController } from './Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
-import EventEmitter from 'node:events'
+import type EventEmitter from 'node:events'
 import type { UpdateEvents } from './Types.js'
 
 export class SurfaceGroup {

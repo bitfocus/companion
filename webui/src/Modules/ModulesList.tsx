@@ -7,13 +7,13 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { useAllModuleProducts, filterProducts, FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
+import { useAllModuleProducts, filterProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface VisibleModulesState {
 	installed: boolean

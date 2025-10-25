@@ -5,7 +5,7 @@ import { useComputed } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { modules } = useContext(RootAppStoreContext)

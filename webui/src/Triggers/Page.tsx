@@ -15,10 +15,10 @@ import {
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
-import { ConfirmExportModal, ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
-import { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
+import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
+import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'

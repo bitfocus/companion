@@ -12,13 +12,13 @@
 import { EventEmitter } from 'events'
 import {
 	LoupedeckBufferFormat,
-	LoupedeckDevice,
 	LoupedeckDisplayId,
 	LoupedeckModelId,
 	openLoupedeck,
+	type LoupedeckDevice,
 } from '@loupedeck/node'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
 import {
@@ -28,8 +28,8 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import { ImageResult } from '../../Graphics/ImageResult.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 const configFields: CompanionSurfaceConfigField[] = [
 	//

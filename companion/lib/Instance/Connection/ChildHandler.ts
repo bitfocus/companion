@@ -1,5 +1,5 @@
-import LogController, { Logger } from '../../Log/Controller.js'
-import { IpcEventHandlers, IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
+import { IpcWrapper, type IpcEventHandlers } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
 import semver from 'semver'
 import type express from 'express'
 import type {
@@ -43,11 +43,11 @@ import type { VariablesController } from '../../Variables/Controller.js'
 import type { ServiceOscSender } from '../../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import {
-	ActionEntityModel,
 	EntityModelType,
-	FeedbackEntityModel,
 	isValidFeedbackEntitySubType,
-	SomeEntityModel,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'

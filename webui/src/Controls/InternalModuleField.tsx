@@ -3,13 +3,13 @@ import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.
 import { useComputed } from '~/Resources/util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
-import { InternalInputField } from '@companion-app/shared/Model/Options.js'
-import { DropdownChoice } from '@companion-module/base'
+import type { InternalInputField } from '@companion-app/shared/Model/Options.js'
+import type { DropdownChoice } from '@companion-module/base'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
-import { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
-import { LocalVariablesStore } from './LocalVariablesStore'
+import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import type { LocalVariablesStore } from './LocalVariablesStore'
 
 export function InternalModuleField(
 	option: InternalInputField,

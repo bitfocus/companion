@@ -26,11 +26,11 @@ import {
 	spawn,
 	fork,
 	exec,
-	ChildProcessByStdio,
-	SpawnOptionsWithoutStdio,
-	ForkOptions,
-	Serializable,
-	StdioOptions,
+	type ChildProcessByStdio,
+	type SpawnOptionsWithoutStdio,
+	type ForkOptions,
+	type Serializable,
+	type StdioOptions,
 } from 'child_process'
 import type { Writable, Readable } from 'stream'
 import ps from 'ps-tree'

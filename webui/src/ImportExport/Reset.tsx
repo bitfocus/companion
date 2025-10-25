@@ -1,4 +1,4 @@
-import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
 import { makeAbsolutePath, PreventDefaultHandler } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -59,7 +59,7 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 
 	const resetConfigMutation = useMutationExt(trpc.importExport.resetConfiguration.mutationOptions())
 	const doSave = useCallback(
-		(e: FormEvent) => {
+		(e: React.FormEvent) => {
 			e.preventDefault()
 
 			resetConfigMutation // TODO: 30s timeout?

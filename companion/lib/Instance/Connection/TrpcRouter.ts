@@ -5,7 +5,7 @@ import z from 'zod'
 import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
 import { translateConnectionConfigFields } from '../ConfigFields.js'
 import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
-import { InstanceConfigStore } from '../ConfigStore.js'
+import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { Logger } from '../../Log/Controller.js'
 import type EventEmitter from 'events'
 

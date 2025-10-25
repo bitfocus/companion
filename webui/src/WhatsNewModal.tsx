@@ -18,7 +18,7 @@ import { useLocalStorage } from 'usehooks-ts'
 import semver from 'semver'
 
 import docsStructure from '@docs/structure.json'
-import { DocsSection } from './GettingStarted/GettingStarted.js'
+import type { DocsSection } from './GettingStarted/GettingStarted.js'
 
 interface WhatsNewPage extends DocsSection {
 	_version?: string

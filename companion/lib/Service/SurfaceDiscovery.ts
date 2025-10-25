@@ -2,7 +2,7 @@ import isEqual from 'fast-deep-equal'
 import { ServiceBase } from './Base.js'
 import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
-import { StreamDeckTcpDefinition, StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
+import { StreamDeckTcpDiscoveryService, type StreamDeckTcpDefinition } from '@elgato-stream-deck/tcp'
 import type {
 	ClientDiscoveredSurfaceInfo,
 	CompanionExternalAddresses,

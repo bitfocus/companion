@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { SecretTextInputField } from '~/Components/SecretTextInputField'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 

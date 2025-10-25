@@ -1,4 +1,4 @@
-import { DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoiceId } from '@companion-module/base'
 import React, { useContext } from 'react'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'

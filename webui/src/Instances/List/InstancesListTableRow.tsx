@@ -1,5 +1,5 @@
-import { ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
-import { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import type { ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { CFormSwitch, CPopover, CButtonGroup, CButton } from '@coreui/react'
 import {
 	faExclamationTriangle,
@@ -17,7 +17,7 @@ import { Tuck } from '~/Components/Tuck'
 import { windowLinkOpen } from '~/Helpers/Window'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { isCollectionEnabled, makeAbsolutePath } from '~/Resources/util'
-import { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
+import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { InstanceTableStatusCell } from './InstanceTableStatusCell'
 import { UpdateInstanceToLatestBadge } from '../UpdateInstanceToLatestBadge'

@@ -10,9 +10,9 @@
  */
 
 import { EventEmitter } from 'events'
-import { DeviceModelId, JPEGEncodeOptions, openStreamDeck, StreamDeck } from '@elgato-stream-deck/node'
+import { DeviceModelId, openStreamDeck, type JPEGEncodeOptions, type StreamDeck } from '@elgato-stream-deck/node'
 import util from 'util'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'

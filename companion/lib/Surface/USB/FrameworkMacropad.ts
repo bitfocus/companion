@@ -10,9 +10,9 @@
  */
 
 import { EventEmitter } from 'events'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { HIDAsync } from 'node-hid'
-import { colorToRgb, RgbColor } from './Util.js'
+import { colorToRgb, type RgbColor } from './Util.js'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,

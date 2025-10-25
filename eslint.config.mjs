@@ -76,6 +76,8 @@ export default [
 			'@typescript-eslint/no-floating-promises': 'error',
 			'@typescript-eslint/promise-function-async': 'error',
 			'@typescript-eslint/require-await': 'off', // conflicts with 'promise-function-async'
+			'@typescript-eslint/consistent-type-imports': 'error',
+			'no-duplicate-imports': 'error',
 
 			/** Disable some annoyingly strict rules from the 'recommended-requiring-type-checking' pack */
 			'@typescript-eslint/no-unsafe-assignment': 0,

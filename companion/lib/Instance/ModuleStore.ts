@@ -8,14 +8,14 @@ import type {
 import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import semver from 'semver'
 import { isSomeModuleApiVersionCompatible, MODULE_BASE_VERSION } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import createClient, { Client } from 'openapi-fetch'
+import createClient, { type Client } from 'openapi-fetch'
 import type {
 	paths as ModuleStoreOpenApiPaths,
 	components as ModuleStoreOpenApiComponents,
 } from '@companion-app/shared/OpenApi/ModuleStore.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 import EventEmitter from 'node:events'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'

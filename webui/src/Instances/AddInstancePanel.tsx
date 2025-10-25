@@ -12,16 +12,16 @@ import {
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { AddInstanceModal, AddInstanceModalRef } from './AddInstanceModal.js'
+import { AddInstanceModal, type AddInstanceModalRef } from './AddInstanceModal.js'
 import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
 import { LastUpdatedTimestamp } from '~/Modules/LastUpdatedTimestamp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
-import { filterProducts, FuzzyProduct, useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
+import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { Link } from '@tanstack/react-router'
-import { AddInstanceService } from './AddInstanceService.js'
+import type { AddInstanceService } from './AddInstanceService.js'
 
 interface AddInstancePanelProps {
 	service: AddInstanceService

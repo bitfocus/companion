@@ -10,9 +10,9 @@
  */
 
 import { EventEmitter } from 'events'
-import { openMxCreativeConsole, MXCreativeConsole } from '@logitech-mx-creative-console/node'
+import { openMxCreativeConsole, type MXCreativeConsole } from '@logitech-mx-creative-console/node'
 import util from 'util'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import {

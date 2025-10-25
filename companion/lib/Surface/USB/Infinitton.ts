@@ -13,7 +13,7 @@ import * as imageRs from '@julusian/image-rs'
 import Infinitton from 'infinitton-idisplay'
 import { translateRotation } from '../../Resources/Util.js'
 import { EventEmitter } from 'events'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
 import {
 	OffsetConfigFields,

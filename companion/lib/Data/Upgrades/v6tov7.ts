@@ -10,9 +10,13 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import { ActionEntityModel, EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import {
+	EntityModelType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 
 /**
  * do the database upgrades to convert from the v6 to the v7 format

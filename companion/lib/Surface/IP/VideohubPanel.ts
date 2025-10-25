@@ -12,7 +12,7 @@ import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { convertPanelIndexToXY } from '../Util.js'
 // @ts-expect-error no types for this package
-import VideohubServer from 'videohub-server'
+import type VideohubServer from 'videohub-server'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,

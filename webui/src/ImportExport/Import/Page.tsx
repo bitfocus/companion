@@ -1,14 +1,14 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CCol, CRow, CFormSelect, CCallout } from '@coreui/react'
 import { MyErrorBoundary } from '~/Resources/Error'
-import { ButtonGridHeader, PageNumberOption, PageNumberPicker } from '~/Buttons/ButtonGridHeader.js'
+import { ButtonGridHeader, PageNumberPicker, type PageNumberOption } from '~/Buttons/ButtonGridHeader.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import {
 	ButtonGridIcon,
 	ButtonGridIconBase,
 	ButtonInfiniteGrid,
-	ButtonInfiniteGridButtonProps,
-	ButtonInfiniteGridRef,
+	type ButtonInfiniteGridButtonProps,
+	type ButtonInfiniteGridRef,
 } from '~/Buttons/ButtonInfiniteGrid.js'
 import { faFileCircleExclamation, faFileCirclePlus, faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

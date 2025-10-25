@@ -1,7 +1,7 @@
 import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
-import { ModuleManifest, validateManifest } from '@companion-module/base'
+import { validateManifest, type ModuleManifest } from '@companion-module/base'
 import type { ConnectionModuleVersionInfo, SomeModuleVersionInfo } from './Types.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'

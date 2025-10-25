@@ -1,12 +1,12 @@
 import { type CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
 import type { ReadonlyDeep } from 'type-fest'
 import {
-	VariableValueData,
-	VariablesCache,
 	executeExpression,
-	ParseVariablesResult,
 	parseVariablesInString,
-	VariableValueCache,
+	type VariableValueData,
+	type VariablesCache,
+	type ParseVariablesResult,
+	type VariableValueCache,
 } from './Util.js'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'

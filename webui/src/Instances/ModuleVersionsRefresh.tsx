@@ -4,7 +4,7 @@ import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ModuleVersionsRefreshProps {
 	moduleType: ModuleInstanceType

@@ -6,7 +6,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
-import { CompanionVariableValue } from '@companion-module/base'
+import type { CompanionVariableValue } from '@companion-module/base'
 
 const OSC_API_SURFACE_ID = 'osc'
 

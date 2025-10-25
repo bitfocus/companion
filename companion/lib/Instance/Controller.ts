@@ -18,15 +18,15 @@ import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import {
-	InstanceConfig,
-	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
+	type InstanceConfig,
+	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
-import { AddInstanceProps, InstanceConfigStore } from './ConfigStore.js'
+import { InstanceConfigStore, type AddInstanceProps } from './ConfigStore.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
@@ -39,7 +39,7 @@ import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
 import { InstanceCollections } from './Collections.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'

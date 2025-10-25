@@ -1,5 +1,5 @@
 import { ServiceBase } from './Base.js'
-import net, { Socket } from 'net'
+import net, { type Socket } from 'net'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { SatelliteSocketWrapper, ServiceSatelliteApi } from './Satellite/SatelliteApi.js'

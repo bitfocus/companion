@@ -7,7 +7,7 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import { action, observable } from 'mobx'
 import { assertNever } from '~/Resources/util.js'
-import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
 
 export class SurfacesStore {

@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CFormInput, CFormTextarea } from '@coreui/react'
 import Select, {
-	ControlProps,
-	OptionProps,
 	components as SelectComponents,
-	ValueContainerProps,
 	createFilter,
+	type ControlProps,
+	type OptionProps,
+	type ValueContainerProps,
 } from 'react-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'

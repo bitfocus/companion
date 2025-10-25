@@ -5,7 +5,7 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
-import {
+import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
 	SurfaceGroupConfig,

@@ -15,7 +15,7 @@ import {
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
-import { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
+import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 

@@ -15,7 +15,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
-import { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import type { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 

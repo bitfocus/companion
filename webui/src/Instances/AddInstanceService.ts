@@ -1,5 +1,5 @@
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { FuzzyProduct } from '~/Hooks/useFilteredProducts'
+import type { FuzzyProduct } from '~/Hooks/useFilteredProducts'
 
 export interface AddInstanceService {
 	readonly moduleType: ModuleInstanceType

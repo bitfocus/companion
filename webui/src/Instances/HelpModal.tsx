@@ -8,7 +8,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import semver from 'semver'
 import { makeAbsolutePath } from '~/Resources/util.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface HelpModalRef {
 	showFromUrl(moduleType: ModuleInstanceType, moduleId: string, versionDisplayName: string, url: string): void

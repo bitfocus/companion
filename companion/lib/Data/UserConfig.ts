@@ -4,7 +4,7 @@ import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Mo
 import { EventEmitter } from 'events'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
 import LogController from '../Log/Controller.js'
-import { DataStoreTableView } from './StoreBase.js'
+import type { DataStoreTableView } from './StoreBase.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 

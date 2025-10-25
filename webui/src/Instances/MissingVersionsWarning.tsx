@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext } from 'react'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
-import { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
 // eslint-disable-next-line react-refresh/only-export-components

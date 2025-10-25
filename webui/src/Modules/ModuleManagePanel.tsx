@@ -3,7 +3,7 @@ import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
+import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
@@ -13,7 +13,7 @@ import { faExternalLink, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { useNavigate } from '@tanstack/react-router'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ModuleManagePanelProps {
 	moduleType: ModuleInstanceType

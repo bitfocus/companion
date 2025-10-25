@@ -1,14 +1,14 @@
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
-	InstanceConfig,
-	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
+	type InstanceConfig,
+	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
-import { DataDatabase } from '../Data/Database.js'
+import type { DataDatabase } from '../Data/Database.js'
 // import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { cloneDeep } from 'lodash-es'
 
 export interface AddInstanceProps {

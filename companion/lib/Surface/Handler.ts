@@ -15,7 +15,7 @@ import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type {
 	SurfaceGroupConfig,
 	GridSize,

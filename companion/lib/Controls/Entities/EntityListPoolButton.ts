@@ -6,12 +6,12 @@ import type {
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
-	SomeEntityModel,
 	type SomeSocketEntityLocation,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
-import { ControlEntityList } from './EntityList.js'
-import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlEntityList } from './EntityList.js'
+import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'

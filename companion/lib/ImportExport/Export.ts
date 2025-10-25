@@ -16,7 +16,7 @@ import archiver from 'archiver'
 import path from 'path'
 import fs from 'fs'
 import { stringify as csvStringify } from 'csv-stringify/sync'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type express from 'express'
 import type { ParsedQs } from 'qs'
 import type {
@@ -44,8 +44,8 @@ import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
-import { formatAttachmentFilename, StringifiedExportData, stringifyExport } from './Util.js'
+import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import { formatAttachmentFilename, stringifyExport, type StringifiedExportData } from './Util.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')

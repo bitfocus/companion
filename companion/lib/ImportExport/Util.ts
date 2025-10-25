@@ -2,7 +2,7 @@ import zlib from 'node:zlib'
 import yaml from 'yaml'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
-import type { Logger } from 'winston'
+import type { Logger } from '../Log/Controller.js'
 import { promisify } from 'node:util'
 
 const gzipAsync = promisify(zlib.gzip)

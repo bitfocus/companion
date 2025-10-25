@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useContext } from 'react'
-import { ColorResult, SketchPicker } from '@hello-pangea/color-picker'
+import { SketchPicker, type ColorResult } from '@hello-pangea/color-picker'
 import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '~/Resources/util.js'
 import { usePopper } from 'react-popper'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { colord } from 'colord'
-import { CompanionColorPresetValue } from '@companion-module/base'
+import type { CompanionColorPresetValue } from '@companion-module/base'
 
 function splitColor(color: number | string) {
 	if (typeof color === 'number' || !isNaN(Number(color))) {

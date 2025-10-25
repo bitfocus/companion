@@ -4,7 +4,7 @@ import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { getLatestVersion } from './VersionUtil.js'
 import semver from 'semver'
-import { InstanceVersionUpdatePolicy, ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
+import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import { faCircleUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 

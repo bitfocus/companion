@@ -1,4 +1,4 @@
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import { action, makeObservable, observable } from 'mobx'
 import { useEffect, useMemo } from 'react'

@@ -22,7 +22,7 @@ import type {
 import LogController from '../Log/Controller.js'
 import type { InstanceController } from './Controller.js'
 import jsonPatch from 'fast-json-patch'
-import { ModuleStoreService } from './ModuleStore.js'
+import type { ModuleStoreService } from './ModuleStore.js'
 import { router, publicProcedure, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
 import z from 'zod'
@@ -30,7 +30,7 @@ import { InstanceModuleInfo } from './ModuleInfo.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 import type { AppInfo } from '../Registry.js'
-import { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 
 type InstanceModulesEvents = {
 	modulesUpdate: [change: ModuleInfoUpdate]

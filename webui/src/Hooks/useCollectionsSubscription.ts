@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { DecorateSubscriptionProcedure, useSubscription } from '@trpc/tanstack-react-query'
-import { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore.js'
-import { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { useSubscription, type DecorateSubscriptionProcedure } from '@trpc/tanstack-react-query'
+import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore.js'
+import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 
 export function useGenericCollectionsSubscription<TInput, TOutput, TErrorShape>(
 	store: GenericCollectionsStore<TOutput>,

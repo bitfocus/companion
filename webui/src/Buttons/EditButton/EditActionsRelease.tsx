@@ -1,6 +1,6 @@
-import { ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CButton } from '@coreui/react'
 import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,10 +8,10 @@ import React, { useRef, useCallback } from 'react'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import {
-	EditDurationGroupPropertiesModalRef,
 	EditDurationGroupPropertiesModal,
+	type EditDurationGroupPropertiesModalRef,
 } from './EditDurationGroupPropertiesModal.js'
-import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
+import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface EditActionsReleaseProps {

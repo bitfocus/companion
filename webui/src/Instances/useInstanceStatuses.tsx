@@ -1,6 +1,6 @@
-import { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { ObservableMap, observable, runInAction } from 'mobx'
+import { observable, runInAction, type ObservableMap } from 'mobx'
 import { useMemo } from 'react'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever } from '~/Resources/util.js'

@@ -1,5 +1,5 @@
 import { ServiceBase } from './Base.js'
-import net, { Socket } from 'net'
+import net, { type Socket } from 'net'
 
 /**
  * Abstract class providing base functionality for TCP services.

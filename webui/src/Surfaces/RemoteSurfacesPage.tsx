@@ -3,7 +3,7 @@ import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { OutboundSurfacesTable } from './OutboundSurfacesTable.js'
 import { faAdd } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { AddOutboundSurfaceModal, AddOutboundSurfaceModalRef } from './AddOutboundSurfaceModal.js'
+import { AddOutboundSurfaceModal, type AddOutboundSurfaceModalRef } from './AddOutboundSurfaceModal.js'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 

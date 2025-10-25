@@ -1,5 +1,5 @@
 import { ServiceTcpUdpApi } from './TcpUdpApi.js'
-import { DgramRemoteInfo, ServiceUdpBase } from './UdpBase.js'
+import { ServiceUdpBase, type DgramRemoteInfo } from './UdpBase.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ServiceApi } from './ServiceApi.js'
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useMemo } from 'react'
 import { CCallout, CCol, CRow } from '@coreui/react'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import type { RecordSessionUpdate } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { RecorderSessionFinishModal } from './RecorderSessionFinishModal.js'
 import { RecorderSessionHeading } from './RecorderSessionHeading.js'

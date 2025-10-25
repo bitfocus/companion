@@ -1,6 +1,6 @@
-import { ObservableSet } from 'mobx'
+import type { ObservableSet } from 'mobx'
 import React, { Fragment } from 'react'
-import { DocsSection } from './GettingStarted.js'
+import type { DocsSection } from './GettingStarted.js'
 import { observer } from 'mobx-react-lite'
 
 const style = {

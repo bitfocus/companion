@@ -1,4 +1,4 @@
-import { observable, ObservableMap, runInAction } from 'mobx'
+import { observable, runInAction, type ObservableMap } from 'mobx'
 import { useEffect, useMemo } from 'react'
 import type { CompanionVariableValue } from '@companion-module/base'
 import { useQuery } from '@tanstack/react-query'

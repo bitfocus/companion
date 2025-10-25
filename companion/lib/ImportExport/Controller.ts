@@ -61,8 +61,8 @@ import z from 'zod'
 import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
-import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
-import { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory

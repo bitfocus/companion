@@ -2,7 +2,7 @@ import React, { Fragment, useEffect } from 'react'
 import { useHash, useSize } from 'react-use'
 import { useIntersectionObserver, useResizeObserver } from 'usehooks-ts'
 import { useStickyScroller } from './useStickyScroller.js'
-import { observable, ObservableSet, runInAction } from 'mobx'
+import { observable, runInAction, type ObservableSet } from 'mobx'
 import { getFilenameForSection, GettingStartedMenu } from './SideMenu.js'
 import { DocsContent } from './DocsContent.js'
 

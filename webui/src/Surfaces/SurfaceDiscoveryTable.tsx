@@ -1,4 +1,4 @@
-import {
+import type {
 	ClientDiscoveredSurfaceInfo,
 	ClientDiscoveredSurfaceInfoSatellite,
 	ClientDiscoveredSurfaceInfoStreamDeck,
@@ -8,7 +8,7 @@ import { assertNever } from '~/Resources/util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { faBan, faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { SetupSatelliteModalRef, SetupSatelliteModal } from './SetupSatelliteModal.js'
+import { SetupSatelliteModal, type SetupSatelliteModalRef } from './SetupSatelliteModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { observer } from 'mobx-react-lite'

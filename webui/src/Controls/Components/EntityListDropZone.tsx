@@ -1,7 +1,7 @@
-import { EntityOwner, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import type { EntityOwner, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import React, { useDeferredValue } from 'react'
 import { useDrop } from 'react-dnd'
-import { DragState } from '~/Resources/DragAndDrop'
+import type { DragState } from '~/Resources/DragAndDrop'
 import { useEntityEditorContext } from './EntityEditorContext'
 
 export interface EntityListDragItem {

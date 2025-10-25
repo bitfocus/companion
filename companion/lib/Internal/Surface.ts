@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { combineRgb, CompanionVariableValues } from '@companion-module/base'
+import { combineRgb, type CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import debounceFn from 'debounce-fn'
 import type {

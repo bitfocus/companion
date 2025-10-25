@@ -6,9 +6,9 @@ import { observer } from 'mobx-react-lite'
 import { capitalize } from 'lodash-es'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
-import { ObservableMap } from 'mobx'
-import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ObservableMap } from 'mobx'
+import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
 interface AddEntitiesModalProps {

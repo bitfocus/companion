@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
+import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC'
 

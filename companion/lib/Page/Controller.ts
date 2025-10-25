@@ -1,5 +1,5 @@
 import { default_nav_buttons_definitions } from './Defaults.js'
-import { IPageStore, PageStore } from './Store.js'
+import type { IPageStore, PageStore } from './Store.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	PageModel,

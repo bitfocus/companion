@@ -10,7 +10,7 @@
  *
  */
 
-import LogController from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs/promises'
 import nodeCron from 'node-cron'
@@ -18,9 +18,7 @@ import { nanoid } from 'nanoid'
 import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { AppInfo } from '../Registry.js'
 import type { VariablesValues } from '../Variables/Values.js'
-import type winston from 'winston'
 import { stringifyExport } from './Util.js'
-import { Logger } from 'winston'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { ExportController } from './Export.js'
 import type { DataDatabase } from '../Data/Database.js'
@@ -376,7 +374,7 @@ export class BackupController {
 	 * @param rule Configuration for the backup
 	 * @returns Promise resolving to the backup filename or null if failed
 	 */
-	async #createBackup(logger: winston.Logger, rule: BackupRulesConfig): Promise<PreviousBackupInfo | null> {
+	async #createBackup(logger: Logger, rule: BackupRulesConfig): Promise<PreviousBackupInfo | null> {
 		try {
 			await this.#ensureBackupDirExists()
 

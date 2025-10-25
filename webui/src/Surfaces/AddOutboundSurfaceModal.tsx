@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { CAlert, CButton, CForm, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CModalExt } from '~/Components/CModalExt.js'
@@ -31,7 +31,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, ob
 
 		const addOutboundMutation = useMutationExt(trpc.surfaces.outbound.add.mutationOptions())
 		const doAction = useCallback(
-			(e: FormEvent) => {
+			(e: React.FormEvent) => {
 				if (e) e.preventDefault()
 
 				if (!info) return
@@ -76,7 +76,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, ob
 			[]
 		)
 
-		const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+		const onNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newName = e.currentTarget.value
 			setInfo(
 				(oldInfo) =>
@@ -87,7 +87,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, ob
 			)
 		}, [])
 
-		const onAddressChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+		const onAddressChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newAddress = e.currentTarget.value
 			setInfo(
 				(oldInfo) =>
@@ -97,7 +97,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, ob
 					}
 			)
 		}, [])
-		const onPortChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+		const onPortChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newPort = Number(e.currentTarget.value)
 			if (isNaN(newPort)) return
 

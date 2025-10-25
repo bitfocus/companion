@@ -1,5 +1,5 @@
 import { CButton, CButtonGroup, CCallout, CFormCheck } from '@coreui/react'
-import React, { ChangeEvent, useCallback, useEffect, useState, useContext } from 'react'
+import React, { useCallback, useEffect, useState, useContext } from 'react'
 import { ImportRemap } from './Page.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -40,7 +40,7 @@ export function ImportTriggersTab({
 
 	useEffect(() => selectAllTriggers(), [selectAllTriggers])
 
-	const toggleTrigger = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+	const toggleTrigger = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		const id = e.target.getAttribute('data-id')
 		const checked = e.target.checked
 		if (id) {

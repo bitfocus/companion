@@ -15,8 +15,8 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import { EmulatorPageConfig, EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
-import { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
+import type { EmulatorPageConfig, EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
+import type { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
 
 export type SurfacePanelFactory = {
 	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>

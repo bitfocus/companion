@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { PRIMARY_COLOR } from './Constants.js'
 import { BarLoader, PuffLoader } from 'react-spinners'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
-import { TRPCClientErrorLike } from '@trpc/client'
+import type { TRPCClientErrorLike } from '@trpc/client'
 import { CCol, CAlert, CButton } from '@coreui/react'
 
 type LoadingBarProps = LoaderHeightWidthProps

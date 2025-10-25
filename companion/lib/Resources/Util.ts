@@ -3,7 +3,7 @@ import { colord } from 'colord'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionAlignment } from '@companion-module/base'
-import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**

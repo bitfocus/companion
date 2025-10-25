@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, memo, useRef, useMemo } from 'react'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
+import { VariableSizeList as List, type ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
