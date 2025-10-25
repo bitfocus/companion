@@ -140,6 +140,7 @@ export default [
 			'tools/**/*',
 			'module-local-dev/**/*',
 			'launcher/dev.cjs',
+			'webui/public/_deps/**/*',
 			// TMP
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',

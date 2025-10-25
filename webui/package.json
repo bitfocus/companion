@@ -51,7 +51,6 @@
     "mobx": "^6.15.0",
     "mobx-react-lite": "^4.1.1",
     "mobx-utils": "^6.1.1",
-    "monaco-editor": "^0.54.0",
     "nanoid": "^5.1.6",
     "parse-numeric-range": "^1.3.0",
     "query-string": "^9.3.1",
@@ -85,12 +84,14 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "scripts": {
+    "postinstall": "rm -Rf public/_deps; mkdir public/_deps && cp -R ../node_modules/monaco-editor/min/vs public/_deps/monaco",
     "start": "vite",
     "dev": "run start",
-    "build": "NODE_OPTIONS=--max-old-space-size=8192 vite build --base=/ROOT_URL_HERE",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --base=/ROOT_URL_HERE",
     "serve": "vite preview"
   },
   "devDependencies": {
-    "jsdom": "^27.0.1"
+    "jsdom": "^27.0.1",
+    "monaco-editor": "^0.54.0"
   }
 }
