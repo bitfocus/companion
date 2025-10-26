@@ -4,7 +4,7 @@
 import { cloneDeep } from 'lodash-es'
 import stripAnsi from 'strip-ansi'
 import fs from 'fs-extra'
-import winston, { LeveledLogMethod, LogMethod } from 'winston'
+import winston, { type LeveledLogMethod, type LogMethod } from 'winston'
 import Transport from 'winston-transport'
 import { Syslog, type SyslogTransportOptions } from 'winston-syslog'
 import supportsColor from 'supports-color'
