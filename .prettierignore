@@ -14,3 +14,4 @@ module-local-dev
 bundled-modules
 
 companion/test/Upgrade/*/*.*.json
+webui/public/_deps
