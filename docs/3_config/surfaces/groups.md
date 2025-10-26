@@ -19,13 +19,14 @@ You can create your groups and program the system ahead of time, then later add 
 
 ## Use Case 3: Establishing "Permission Groups" with restricted access
 
-Starting with v4.2, groups -- or ungrouped surfaces -- now provide the option to restrict which pages a device in that group may access. For example:
+Starting with v4.2, groups -- as well as ungrouped surfaces -- now provide the option to restrict which pages a device in that group may access.  Using this in a surface-group configuration can be very useful if:
 
----
+1. Each surface is controlled independently (for example, each surface is controlled by its own computer or Raspberry Pi)
 
-## ![Restrict Pages Setting](images/restrict_pages.png?raw=true 'Discovery')
+...OR...
 
-This allows you to distribute a single site configuration but with access to particular pages defined by a person's role. Each group can be limited to just one or a few pages relevant to their role.
-Any surface "registered" to (i.e. included in) a particular group will then be able to access only the pages allowed for that surface group.
+2. It is expected that all user in a group should be on the same page (for example, if users are restricted to a single page)
 
-_Tip_: Next/previous page buttons, swiping, and actions will follow the order selected here.
+By creating groups for each role, a single site configuration can be created, with page access permissions determined by the device or group ID. Any surface "registered" to (i.e. included in) a particular group will then be able to access only the pages allowed for that surface group.
+
+See: [Page Permissions](#3_config/surfaces/pagepermissions.md) for additional details.
