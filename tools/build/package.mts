@@ -67,7 +67,7 @@ if (platformInfo.runtimePlatform === 'win') {
 		}
 	}
 
-	const prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true })
+	const prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true, expandDirectories: false })
 	console.log(`Cleaning ${prebuildDirs.length} prebuild directories`)
 	for (const dirname of prebuildDirs) {
 		console.log(`pruning prebuilds from: ${dirname}`)
