@@ -29,7 +29,6 @@ export class SurfaceGroup {
 		last_page_id: '',
 		startup_page_id: '',
 		use_last_page: true,
-		swipe_can_change_page: true,
 		restrict_pages: false,
 		allowed_page_ids: [],
 	}
@@ -476,7 +475,6 @@ export function validateGroupConfigValue(pageStore: IPageStore, key: string, val
 
 			return value
 		}
-		case 'swipe_can_change_page':
 		case 'restrict_pages':
 			return Boolean(value)
 

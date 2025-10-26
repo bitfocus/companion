@@ -259,7 +259,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		this.panel.on('click', this.#onDeviceClick.bind(this))
 		this.panel.on('rotate', this.#onDeviceRotate.bind(this))
-		this.panel.on('swipePage', this.#onDeviceSwipePage.bind(this))
+		this.panel.on('changePage', this.#onDeviceChangePage.bind(this))
 		this.panel.on('pincodeKey', this.#onDevicePincodeKey.bind(this))
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
@@ -583,22 +583,18 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		}
 	}
 
-	#onDeviceSwipePage(forward: boolean): void {
+	#onDeviceChangePage(forward: boolean): void {
 		if (this.#isSurfaceLocked || !this.panel) return
 
 		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
 		if (!pageNumber) return
+		const name = this.displayName
 
-		if (this.#surfaces.deviceAllowsSwipeToChangePage(this.surfaceId, true)) {
-			try {
-				this.#surfaces.devicePageSet(this.surfaceId, forward ? '+1' : '-1', true)
-				this.#logger.debug(`Swipe page ${pageNumber}: ${forward ? 'forward' : 'backward'}`)
-			} catch (e) {
-				this.#logger.error(`Swipe failed: ${e}`)
-			}
-		} else {
-			const name = this.#surfaces.getGroupNameFromDeviceId(this.surfaceId, true)
-			this.#logger.debug(`Swipe page ${pageNumber} disabled in Surface/Group config for "${name}".`)
+		try {
+			this.#surfaces.devicePageSet(this.surfaceId, forward ? '+1' : '-1', true)
+			this.#logger.debug(`Change page ${pageNumber}: ${forward ? 'forward' : 'backward'} initiated by ${name}`)
+		} catch (e) {
+			this.#logger.error(`Change page failed for ${name}: ${e}`)
 		}
 	}
 

@@ -402,27 +402,6 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 								</CCol>
 							</>
 						)}
-
-						{
-							/*!(surfaceInfo && surfaceInfo.type.toLowerCase() === 'emulator')
-						   TODO: Generalize the condition for showing lcd-strip swipes? */
-							(!surfaceInfo || surfaceInfo.type.toLowerCase() === 'elgato stream deck +') && (
-								<>
-									<CFormLabel htmlFor="colFormSwipePage" className="col-sm-4 col-form-label col-form-label-sm">
-										Allow Swipe to Change Pages (SD+)
-									</CFormLabel>
-									<CCol sm={8}>
-										<CFormSwitch
-											name="colFormSwipePage"
-											className="mx-2"
-											size="xl"
-											checked={!!groupConfig.config.swipe_can_change_page}
-											onChange={(e) => setGroupConfigValue('swipe_can_change_page', !!e.currentTarget.checked)}
-										/>
-									</CCol>
-								</>
-							)
-						}
 					</>
 				)}
 

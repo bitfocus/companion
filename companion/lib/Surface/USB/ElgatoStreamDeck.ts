@@ -38,10 +38,22 @@ export const StreamDeckJpegOptions: JPEGEncodeOptions = {
 function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] {
 	const fields: CompanionSurfaceConfigField[] = [...OffsetConfigFields]
 
+	if (streamDeck.MODEL === DeviceModelId.PLUS) {
+		// place it above offset, etc.
+		fields.unshift({
+			id: 'swipe_can_change_page',
+			label: 'Horizontal Swipe Changes Page',
+			type: 'checkbox',
+			default: true,
+			tooltip: 'Swiping horizontally on the Stream Deck+ LCD-strip will change pages, if enabled.',
+		} as CompanionSurfaceConfigField)
+	}
+
 	// Hide brightness for the pedal
 	const hasBrightness = !!streamDeck.CONTROLS.find(
 		(c) => c.type === 'lcd-segment' || (c.type === 'button' && c.feedbackType !== 'none')
 	)
+	// is it safe/advisable to be pushing the object instead of a copy?
 	if (hasBrightness) fields.push(BrightnessConfigField)
 
 	fields.push(LegacyRotationConfigField, ...LockConfigFields)
@@ -311,9 +323,9 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			if (angle >= 50 && toButton === fromButton) {
 				//vertical swipe. note that y=0 is the top of the screen so for swipe up `from.y` is the higher
 				this.emit('rotate', fromButton, control.row, from.y > to.y)
-			} else if (angle <= 22.5) {
+			} else if (angle <= 22.5 && this.config.swipe_can_change_page) {
 				// horizontal swipe, change pages: (note that the angle of the SD+ screen diagonal is 7 degrees, i.e. atan 1/8)
-				this.emit('swipePage', from.x > to.x) //swipe left moves to next page, as if your finger is moving a piece of paper under the screen
+				this.emit('changePage', from.x > to.x) //swipe left moves to next page, as if your finger is moving a piece of paper under the screen
 			}
 		})
 	}

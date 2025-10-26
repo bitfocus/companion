@@ -65,7 +65,6 @@ export interface SurfaceGroupConfig {
 	last_page_id: string
 	startup_page_id: string
 	use_last_page: boolean
-	swipe_can_change_page?: boolean
 	restrict_pages?: boolean
 	allowed_page_ids?: string[]
 
