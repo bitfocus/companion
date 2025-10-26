@@ -19,7 +19,7 @@ You can create your groups and program the system ahead of time, then later add 
 
 ## Use Case 3: Establishing "Permission Groups" with restricted access
 
-Starting with v4.2, groups -- as well as ungrouped surfaces -- now provide the option to restrict which pages a device in that group may access.  Using this in a surface-group configuration can be very useful if:
+Starting with v4.2, groups -- as well as ungrouped surfaces -- now provide the option to restrict which pages a device in that group may access. Using this in a surface-group configuration can be very useful if:
 
 1. Each surface is controlled independently (for example, each surface is controlled by its own computer or Raspberry Pi)
 
