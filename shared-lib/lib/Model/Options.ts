@@ -190,6 +190,7 @@ export interface CompanionInputFieldCheckboxExtended extends CompanionInputField
 }
 export interface CompanionInputFieldCustomVariableExtended extends CompanionInputFieldBaseExtended {
 	type: 'custom-variable'
+	default?: never // needed to avoid TypeScript errors (all other input fields have default props)
 }
 
 export type ExtendedInputField =
