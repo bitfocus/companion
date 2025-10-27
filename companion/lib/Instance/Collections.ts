@@ -1,11 +1,11 @@
 import type { ConnectionCollection, ConnectionCollectionData } from '@companion-app/shared/Model/Connections.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import type { DataDatabase } from '../Data/Database.js'
-import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
+import { EnabledCollectionsBaseController } from '../Resources/EnabledCollectionsBase.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import z from 'zod'
 
-export class InstanceCollections extends CollectionsBaseController<ConnectionCollectionData> {
+export class InstanceCollections extends EnabledCollectionsBaseController<ConnectionCollectionData> {
 	readonly #emitUpdated: () => void
 
 	readonly #configStore: InstanceConfigStore
@@ -27,23 +27,8 @@ export class InstanceCollections extends CollectionsBaseController<ConnectionCol
 			return collections
 		}
 		fixupCollections(this.data)
-	}
 
-	isCollectionEnabled(collectionId: string | null | undefined): boolean {
-		if (!collectionId) return true
-
-		const info = this.findCollectionAndParent(collectionId)
-		return !!info?.collection.metaData.enabled
-	}
-
-	setCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {
-		this.collectionModifyMetaData(collectionId, (collection) => {
-			if (enabled === 'toggle') {
-				collection.metaData.enabled = !collection.metaData.enabled
-			} else {
-				collection.metaData.enabled = enabled
-			}
-		})
+		this.rebuildEnabledCollectionIds()
 	}
 
 	/**
@@ -67,19 +52,6 @@ export class InstanceCollections extends CollectionsBaseController<ConnectionCol
 					enabled: true,
 				})
 			}),
-
-			setEnabled: publicProcedure
-				.input(
-					z.object({
-						collectionId: z.string(),
-						enabled: z.boolean(),
-					})
-				)
-				.mutation(async ({ input }) => {
-					this.collectionModifyMetaData(input.collectionId, (collection) => {
-						collection.metaData.enabled = input.enabled
-					})
-				}),
 		})
 	}
 }

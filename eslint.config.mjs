@@ -96,6 +96,7 @@ export default [
 				{
 					allowedNames: [
 						'createTrpcRouter', // The router wants to be inferred
+						'createTrpcRouterBase', // The router wants to be inferred
 					],
 				},
 			],

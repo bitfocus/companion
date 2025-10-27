@@ -335,7 +335,6 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		return null
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	protected createTrpcRouterBase() {
 		const self = this
 		return {
