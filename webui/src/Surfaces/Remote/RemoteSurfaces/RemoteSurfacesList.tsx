@@ -17,6 +17,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { OutboundSurfaceInfo, OutboundSurfaceCollection } from '@companion-app/shared/Model/Surfaces.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { AddOutboundSurfaceModal, type AddOutboundSurfaceModalRef } from '~/Surfaces/Remote/AddOutboundSurfaceModal.js'
+import { AddRemoteSurfaceButton } from './AddRemoteSurfaceButton.js'
 
 interface RemoteSurfacesListProps {
 	selectedRemoteConnectionId: string | null
@@ -79,6 +80,7 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 						<CButton color="primary" onClick={addSurface}>
 							<FontAwesomeIcon icon={faAdd} /> Add Remote Surface
 						</CButton>
+						<AddRemoteSurfaceButton />
 						<CButton
 							color="info"
 							className="d-xl-none"
