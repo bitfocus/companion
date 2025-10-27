@@ -22,6 +22,8 @@ import type { SurfaceController } from '../../Surface/Controller.js'
 import type { OpenDeviceResult } from '@companion-surface/host'
 import type * as HID from 'node-hid'
 import { IpcWrapper, type IpcEventHandlers } from './IpcWrapper.js'
+import type { CompanionSurfaceConfigField, ModernOutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { RemoteSurfaceConnectionInfo } from '@companion-surface/base'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -34,12 +36,17 @@ export interface SurfaceChildHandlerDependencies {
 		level: string,
 		message: string
 	) => void
+
+	readonly invalidateClientJson: (instanceId: string) => void
 }
 
 export interface SurfaceChildFeatures {
 	readonly supportsDetection: boolean
 	readonly supportsHid: boolean
 	readonly supportsScan: boolean
+	readonly supportsRemote: {
+		configFields: CompanionSurfaceConfigField[]
+	} | null
 }
 
 export class SurfaceChildHandler implements ChildProcessHandlerBase {
@@ -83,6 +90,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 			supportsDetection: false,
 			supportsHid: false,
 			supportsScan: false,
+			supportsRemote: null,
 		}
 
 		this.#unsubListeners = () => null // will be set properly on registration
@@ -139,16 +147,78 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 			supportsDetection: !!registerProps.supportsDetection,
 			supportsHid: !!registerProps.supportsHid,
 			supportsScan: !!registerProps.supportsScan,
+			supportsRemote: registerProps.supportsOutbound ?? null,
 		}
 		this.logger.debug(`Received features: ${JSON.stringify(this.features)}`)
 
 		if (this.features.supportsScan || this.features.supportsDetection || this.features.supportsHid) {
 			this.#deps.surfaceController.on('scanDevices', this.#scanDevices)
 		}
+
+		if (this.features.supportsRemote) {
+			this.#deps.surfaceController.outbound.events.on(`startStop:${this.instanceId}`, this.#startStopConnections)
+
+			// Compute default config for the instance
+			const config: Record<string, any> = {}
+			for (const fieldDef of this.features.supportsRemote.configFields) {
+				// Handle different field types that have default values
+				if ('default' in fieldDef && fieldDef.default !== undefined) {
+					config[fieldDef.id] = fieldDef.default
+				}
+			}
+
+			this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, config)
+		}
+	}
+
+	#startStopConnections = (connectionInfo: ModernOutboundSurfaceInfo) => {
+		if (connectionInfo.enabled) {
+			this.#ipcWrapper
+				.sendWithCb('setupRemoteConnections', {
+					connectionInfos: [
+						{
+							connectionId: connectionInfo.id,
+							config: connectionInfo.config,
+						},
+					],
+				})
+				.catch((e) => {
+					this.logger.warn(`Error setting up remote connection: ${e.message}`)
+				})
+		} else {
+			this.#ipcWrapper
+				.sendWithCb('stopRemoteConnections', {
+					connectionIds: [connectionInfo.id],
+				})
+				.catch((e) => {
+					this.logger.warn(`Error tearing down remote connection: ${e.message}`)
+				})
+		}
 	}
 
 	async init(): Promise<void> {
+		// Nothing to do
+	}
+	async ready(): Promise<void> {
 		this.#deps.surfaceController.initInstance(this.instanceId, this.features)
+
+		this.#deps.invalidateClientJson(this.instanceId)
+
+		// Start up any existing outbound connections for this instance
+		const remoteConnections = this.#deps.surfaceController.outbound.getAllEnabledConnectionsForInstance(this.instanceId)
+		this.#ipcWrapper
+			.sendWithCb('setupRemoteConnections', {
+				connectionInfos: remoteConnections.map(
+					(conn) =>
+						({
+							connectionId: conn.id,
+							config: conn.config,
+						}) satisfies RemoteSurfaceConnectionInfo
+				),
+			})
+			.catch((e) => {
+				this.logger.warn(`Error setting up initial remote connections: ${e.message}`)
+			})
 	}
 
 	/**
@@ -170,6 +240,10 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 	}
 
 	cleanup(): void {
+		this.#deps.invalidateClientJson(this.instanceId)
+		this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, null)
+		this.#deps.surfaceController.outbound.events.off(`startStop:${this.instanceId}`, this.#startStopConnections)
+
 		this.#deps.surfaceController.off('scanDevices', this.#scanDevices)
 		this.#deps.surfaceController.unloadSurfacesForInstance(this.instanceId)
 	}

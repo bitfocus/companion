@@ -122,6 +122,7 @@ function generateUnsupportedField<T extends EncodeIsVisible<CompanionInputFieldB
 		type: 'static-text',
 		width: width,
 		value: `Unsupported field type ${field.type}`,
+		default: undefined,
 	}
 }
 
@@ -135,6 +136,7 @@ function translateStaticTextField(
 		value: field.value,
 		width: width,
 		description: field.description,
+		default: undefined,
 	}
 }
 function translateTextInputField(

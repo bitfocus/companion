@@ -76,6 +76,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	readonly #controlsController: ControlsController
 	readonly #variablesController: VariablesController
+	readonly #surfacesController: SurfaceController
 	readonly #connectionCollectionsController: ConnectionsCollections
 	readonly #surfaceInstanceCollectionsController: SurfaceInstanceCollections
 
@@ -115,6 +116,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.setMaxListeners(0)
 
 		this.#variablesController = variables
+		this.#surfacesController = surfaces
 		this.#controlsController = controls
 
 		this.#configStore = new InstanceConfigStore(db, (instanceIds, updateProcessManager) => {
@@ -181,6 +183,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceStatus: this.status,
 				debugLogLine: (instanceId: string, time: number | null, source: string, level: string, message: string) => {
 					this.emit(`debugLog:${instanceId}`, time, source, level, message)
+				},
+				invalidateClientJson: (instanceId: string) => {
+					this.#broadcastSurfaceInstanceChanges([instanceId])
 				},
 			},
 			this.modules,
@@ -581,7 +586,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.emit('surface_instance_deleted', instanceId)
 
 		// forward cleanup elsewhere
-		// TODO
+		this.#broadcastSurfaceInstanceChanges([instanceId])
+		this.#surfacesController.outbound.removeAllForSurfaceInstance(instanceId)
 	}
 
 	setSurfaceInstanceLabelAndConfig(
@@ -642,6 +648,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		for (const [id, config] of this.#configStore.getAllInstanceConfigs()) {
 			if (config.moduleInstanceType !== ModuleInstanceType.Surface) continue
 
+			const instance = this.processManager.getSurfaceChild(id)
+
 			result[id] = {
 				id: id,
 				moduleType: config.moduleInstanceType,
@@ -652,6 +660,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				enabled: config.enabled,
 				sortOrder: config.sortOrder,
 				collectionId: config.collectionId ?? null,
+
+				remoteConfigFields: instance?.features.supportsRemote?.configFields ?? null,
 			}
 		}
 

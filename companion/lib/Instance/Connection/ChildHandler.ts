@@ -60,7 +60,7 @@ import {
 } from '../ApiVersions.js'
 import { ConnectionEntityManager } from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import { translateEntityInputFields } from '../ConfigFields.js'
+import { translateEntityInputFields } from './ConfigFields.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 
 export interface ConnectionChildHandlerDependencies {

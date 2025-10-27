@@ -9,6 +9,7 @@ import {
 } from '@companion-surface/host'
 import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
+import { translateOutboundConfigFields } from './ConfigFields.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')
@@ -112,6 +113,17 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 
 			await plugin.onVariableValue(msg.surfaceId, msg.name, msg.value)
 		},
+
+		setupRemoteConnections: async (msg) => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			await plugin.setupRemoteConnections(msg.connectionInfos)
+		},
+		stopRemoteConnections: async (msg) => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			await plugin.stopRemoteConnections(msg.connectionIds)
+		},
 	},
 	(msg) => {
 		process.send!(msg)
@@ -151,6 +163,11 @@ ipcWrapper
 		supportsDetection: pluginFeatures.supportsDetection,
 		supportsHid: pluginFeatures.supportsHid,
 		supportsScan: pluginFeatures.supportsScan,
+		supportsOutbound: pluginFeatures.supportsOutbound
+			? {
+					configFields: translateOutboundConfigFields(pluginFeatures.supportsOutbound.configFields),
+				}
+			: null,
 	})
 	.then(async () => {
 		logger.info(`Module-host accepted registration`)

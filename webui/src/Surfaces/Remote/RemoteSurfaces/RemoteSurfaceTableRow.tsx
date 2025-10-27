@@ -1,11 +1,12 @@
 import { observer } from 'mobx-react-lite'
-import React, { useCallback } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { useRemoteSurfacesListContext } from './RemoteSurfacesListContext.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { CButton, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface RemoteSurfaceTableRowProps {
 	remoteConnection: OutboundSurfaceInfo
@@ -15,6 +16,8 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 	remoteConnection,
 	isSelected,
 }: RemoteSurfaceTableRowProps) {
+	const { surfaceInstances } = useContext(RootAppStoreContext)
+
 	const { deleteModalRef, configureRemoteConnection } = useRemoteSurfacesListContext()
 
 	const id = remoteConnection.id
@@ -49,7 +52,14 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 	const editClickId = isSelected ? null : id // If this row is selected, don't allow editing on click, as it will close the selection
 	const doEdit = useCallback(() => configureRemoteConnection(editClickId), [configureRemoteConnection, editClickId])
 
-	const surfaceInstanceDisplayName = 'IP Stream Deck'
+	let surfaceInstanceDisplayName = 'Unknown Surface Instance'
+	if (remoteConnection.type === 'plugin') {
+		const instanceInfo = surfaceInstances.instances.get(remoteConnection.instanceId)
+
+		if (instanceInfo) surfaceInstanceDisplayName = instanceInfo.label
+	} else {
+		surfaceInstanceDisplayName = 'IP Stream Deck'
+	}
 
 	return (
 		<div className="flex flex-row align-items-center gap-2 hand">
@@ -58,11 +68,6 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 				<span className="auto-ellipsis" title={surfaceInstanceDisplayName}>
 					{surfaceInstanceDisplayName}
 				</span>
-			</div>
-
-			<div onClick={doEdit} className="no-break">
-				{remoteConnection.address}
-				{remoteConnection.port != null ? `:${remoteConnection.port}` : ''}
 			</div>
 
 			<div className="flex align-items-center">

@@ -1,8 +1,11 @@
 import type { CollectionBase } from './Collections.js'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from './Instance.js'
+import type { CompanionSurfaceConfigField } from './Surfaces.js'
 
 export interface ClientSurfaceInstanceConfig extends ClientInstanceConfigBase {
 	moduleType: ModuleInstanceType.Surface
+
+	remoteConfigFields: CompanionSurfaceConfigField[] | null
 }
 
 export interface SurfaceInstanceCollectionData {
