@@ -146,6 +146,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	readonly #firmwareUpdates: SurfaceFirmwareUpdateCheck
 
+	get outbound(): SurfaceOutboundController {
+		return this.#outboundController
+	}
+
 	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies) {
 		super()
 

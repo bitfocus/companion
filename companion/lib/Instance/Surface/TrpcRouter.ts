@@ -3,7 +3,6 @@ import type { ClientSurfaceInstancesUpdate } from '@companion-app/shared/Model/S
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import z from 'zod'
 import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
-import { translateConnectionConfigFields } from '../ConfigFields.js'
 import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { Logger } from '../../Log/Controller.js'
@@ -101,7 +100,7 @@ export function createSurfacesTrpcRouter(
 					// const fields = await instance.requestConfigFields()
 
 					const result: ClientEditInstanceConfig = {
-						fields: translateConnectionConfigFields(fields),
+						fields: fields,
 						useNewLayout: true,
 						config: instanceConf.config,
 						secrets: instanceConf.secrets || {},

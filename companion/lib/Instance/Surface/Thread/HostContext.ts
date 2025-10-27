@@ -28,8 +28,6 @@ export class HostContext implements SurfaceHostContext {
 
 		this.surfaceEvents = {
 			disconnected: (surfaceId: string) => {
-				console.log(`Plugin surface disconnected: ${surfaceId}`)
-
 				this.#ipcWrapper.sendWithNoCb('disconnect', { surfaceId, reason: null })
 			},
 			inputPress: (surfaceId: string, controlId: string, pressed: boolean) => {
