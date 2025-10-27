@@ -14,8 +14,7 @@ import { RemoteSurfaceTableRow } from './RemoteSurfaceTableRow.js'
 import { useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
-import type { SurfaceInstanceCollection } from '@companion-app/shared/Model/SurfaceInstance.js'
-import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { OutboundSurfaceInfo, OutboundSurfaceCollection } from '@companion-app/shared/Model/Surfaces.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { AddOutboundSurfaceModal, type AddOutboundSurfaceModalRef } from '~/Surfaces/Remote/AddOutboundSurfaceModal.js'
 
@@ -103,7 +102,7 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 						deleteModalRef={confirmModalRef}
 						configureRemoteConnection={doConfigureRemoteConnection}
 					>
-						<CollectionsNestingTable<SurfaceInstanceCollection, OutboundSurfaceInfo>
+						<CollectionsNestingTable<OutboundSurfaceCollection, OutboundSurfaceInfo>
 							NoContent={RemoteSurfacesListNoInstances}
 							ItemRow={RemoteSurfaceItemRow}
 							GroupHeaderContent={RemoteSurfacesGroupHeaderContent}
