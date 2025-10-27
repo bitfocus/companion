@@ -25,7 +25,7 @@ export const RemoteSurfaceEditPanel = observer<SurfaceEditPanelProps>(function R
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">Settings for {remoteInfo?.displayName}</h4>
 				<div className="header-buttons">
-					<div className="float_right d-xl-none" onClick={doCloseSurface} title="Close">
+					<div className="float_right" onClick={doCloseSurface} title="Close">
 						<FontAwesomeIcon icon={faTimes} size="lg" />
 					</div>
 				</div>
