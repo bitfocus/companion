@@ -347,8 +347,8 @@ export class SurfaceOutboundController {
 						this.#dbTable.set(connection.id, connection)
 						this.#updateEvents.emit('info', {
 							type: 'add',
-							itemId: connectionId,
-							info: thisConnection,
+							itemId: connection.id,
+							info: connection,
 						})
 					})
 
