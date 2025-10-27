@@ -27,6 +27,7 @@ import type {
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
 } from '@companion-module/base/dist/host-api/api.js'
+import type { ModuleRegisterMessage, ModuleToHostEventsInit } from '@companion-module/base/dist/host-api/versions.js'
 import type { InstanceStatus } from '../Status.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import {
@@ -115,7 +116,8 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		deps: ConnectionChildHandlerDependencies,
 		monitor: RespawnMonitor,
 		connectionId: string,
-		apiVersion0: string
+		apiVersion0: string,
+		onRegister: (verificationToken: string) => Promise<void>
 	) {
 		this.logger = LogController.createLogger(`Instance/Connection/${connectionId}`)
 
@@ -128,7 +130,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		this.#label = connectionId // Give a default label until init is called
 		this.#expectsLabelUpdates = doesModuleExpectLabelUpdates(apiVersion)
 
-		const funcs: IpcEventHandlers<ModuleToHostEventsV0> = {
+		const funcs: IpcEventHandlers<ModuleToHostEventsV0 & ModuleToHostEventsInit> = {
+			register: async (msg: ModuleRegisterMessage) => {
+				// Call back to ProcessManager to handle registration
+				await onRegister(msg.verificationToken)
+			},
 			'log-message': this.#handleLogMessage.bind(this),
 			'set-status': this.#handleSetStatus.bind(this),
 			setActionDefinitions: this.#handleSetActionDefinitions.bind(this),
@@ -167,10 +173,10 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		const messageHandler = (msg: any) => {
 			this.#ipcWrapper.receivedMessage(msg)
 		}
-		monitor.child?.on('message', messageHandler)
+		monitor.on('message', messageHandler)
 
 		this.#unsubListeners = () => {
-			monitor.child?.off('message', messageHandler)
+			monitor.off('message', messageHandler)
 		}
 	}
 
