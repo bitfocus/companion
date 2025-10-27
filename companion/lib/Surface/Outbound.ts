@@ -310,7 +310,7 @@ export class SurfaceOutboundController {
 
 					if (!this.#collections.doesCollectionIdExist(collectionId)) return false
 
-					// update the collectionId of the trigger being moved if needed
+					// update the collectionId of the connection being moved if needed
 					if (thisConnection.collectionId !== (collectionId ?? null)) {
 						thisConnection.collectionId = collectionId
 
@@ -324,7 +324,7 @@ export class SurfaceOutboundController {
 						})
 					}
 
-					// find all the other triggers with the matching collectionId
+					// find all the other connections with the matching collectionId
 					const sortedConnections = Array.from(this.#storage.values())
 						.filter(
 							(connection) =>
@@ -334,10 +334,10 @@ export class SurfaceOutboundController {
 						.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 
 					if (dropIndex < 0) {
-						// Push the trigger to the end of the array
+						// Push the connection to the end of the array
 						sortedConnections.push(thisConnection)
 					} else {
-						// Insert the trigger at the drop index
+						// Insert the connection at the drop index
 						sortedConnections.splice(dropIndex, 0, thisConnection)
 					}
 
