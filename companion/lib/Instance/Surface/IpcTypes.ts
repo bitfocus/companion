@@ -6,6 +6,8 @@ import type {
 	OpenDeviceResult,
 	SurfaceFirmwareUpdateInfo,
 } from '@companion-surface/host'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { RemoteSurfaceConnectionInfo } from '@companion-surface/base'
 
 export type SurfaceIpcWrapper = IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>
 
@@ -46,6 +48,9 @@ export interface HostToSurfaceModuleEvents {
 	blankSurface: (msg: BlankSurfaceMessage) => void
 	setLocked: (msg: SetLockedMessage) => void
 	setOutputVariable: (msg: SetOutputVariableMessage) => void
+
+	setupRemoteConnections: (msg: SetupRemoteConnectionsMessage) => void
+	stopRemoteConnections: (msg: StopRemoteConnectionsMessage) => void
 }
 
 export interface RegisterMessage {
@@ -54,6 +59,9 @@ export interface RegisterMessage {
 	supportsDetection: boolean
 	supportsHid: boolean
 	supportsScan: boolean
+	supportsOutbound: {
+		configFields: CompanionSurfaceConfigField[]
+	} | null
 }
 export type RegisterResponseMessage = Record<string, never>
 
@@ -161,4 +169,11 @@ export interface SetOutputVariableMessage {
 	surfaceId: string
 	name: string
 	value: any
+}
+
+export interface SetupRemoteConnectionsMessage {
+	connectionInfos: RemoteSurfaceConnectionInfo[]
+}
+export interface StopRemoteConnectionsMessage {
+	connectionIds: string[]
 }
