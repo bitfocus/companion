@@ -87,7 +87,7 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 	)
 })
 
-interface SurfaceEditPanelOldProps {
+interface SurfaceEditPanelContentProps {
 	surfaceInfo: SurfaceInfo | null
 	groupInfo: ClientDevicesListItem | null
 }
@@ -160,7 +160,7 @@ function useGroupConfig(groupId: string | null) {
 	}
 }
 
-const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function SurfaceEditPanelContent({
+const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function SurfaceEditPanelContent({
 	surfaceInfo,
 	groupInfo,
 }) {

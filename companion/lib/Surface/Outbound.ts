@@ -9,6 +9,7 @@ import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import { EventEmitter } from 'node:events'
+import { OutboundSurfaceCollections } from './OutboundCollections.js'
 
 export class SurfaceOutboundController {
 	/**
@@ -17,15 +18,17 @@ export class SurfaceOutboundController {
 	readonly #logger = LogController.createLogger('SurfaceOutboundController')
 
 	readonly #controller: SurfaceController
+	readonly #collections: OutboundSurfaceCollections
 
 	/**
 	 * The core database library
 	 */
 	readonly #dbTable: DataStoreTableView<Record<string, OutboundSurfaceInfo>>
 
-	#storage: Record<string, OutboundSurfaceInfo> = {}
+	#storage = new Map<string, OutboundSurfaceInfo>()
 
 	readonly #updateEvents = new EventEmitter<{ info: [update: OutboundSurfacesUpdate] }>()
+	readonly #enabledConnectionIds = new Set<string>()
 
 	#streamdeckTcpConnectionManager = new StreamDeckTcpConnectionManager({
 		jpegOptions: StreamDeckJpegOptions,
@@ -37,6 +40,12 @@ export class SurfaceOutboundController {
 		this.#dbTable = db.getTableView('surfaces_remote')
 
 		this.#updateEvents.setMaxListeners(0)
+
+		this.#collections = new OutboundSurfaceCollections(
+			db,
+			(validCollectionIds) => this.#cleanUnknownCollectionIds(validCollectionIds),
+			() => this.#startStopAllConnections()
+		)
 
 		this.#streamdeckTcpConnectionManager.on('connected', (streamdeck) => {
 			this.#logger.info(
@@ -54,14 +63,46 @@ export class SurfaceOutboundController {
 		})
 	}
 
+	#cleanUnknownCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		// Figure out the first sort order
+		let nextSortOrder = 0
+		for (const config of this.#storage.values()) {
+			if (config && !config?.collectionId) {
+				nextSortOrder = Math.max(nextSortOrder, config.sortOrder + 1)
+			}
+		}
+
+		// Validate the collectionIds, and do something sensible with the sort order
+		// Future: maybe this could try to preserve the order in some way?
+		for (const [id, config] of this.#storage) {
+			if (config && config.collectionId && !validCollectionIds.has(config.collectionId)) {
+				config.collectionId = null
+				config.sortOrder = nextSortOrder++
+
+				this.#updateEvents.emit('info', {
+					type: 'add',
+					itemId: id,
+					info: config,
+				})
+				this.#startStopConnection(config)
+			}
+		}
+	}
+
 	/**
 	 * Initialize the module, loading the configuration from the db
 	 * @access public
 	 */
 	init(): void {
-		this.#storage = this.#dbTable.all()
+		this.#storage = new Map(Object.entries(this.#dbTable.all()))
 
-		for (const surfaceInfo of Object.values(this.#storage)) {
+		let sortOrderCounter = 0
+		for (const surfaceInfo of this.#storage.values()) {
+			// Fixup old config
+			if (surfaceInfo.collectionId === undefined) surfaceInfo.collectionId = null
+			if (surfaceInfo.sortOrder === undefined) surfaceInfo.sortOrder = sortOrderCounter
+			sortOrderCounter++
+
 			if (surfaceInfo.enabled === undefined) surfaceInfo.enabled = true // Fixup old config
 
 			if (!surfaceInfo.enabled) {
@@ -77,15 +118,29 @@ export class SurfaceOutboundController {
 		}
 	}
 
+	#startStopAllConnections(): void {
+		for (const surfaceInfo of this.#storage.values()) {
+			this.#startStopConnection(surfaceInfo)
+		}
+	}
+
 	#startStopConnection(surfaceInfo: OutboundSurfaceInfo): void {
 		if (surfaceInfo.type !== 'elgato') {
 			this.#logger.error(`Remote surface type "${surfaceInfo.type}" is not supported`)
 			return
 		}
 
-		if (surfaceInfo.enabled) {
+		const enabled = surfaceInfo.enabled && this.#collections.isCollectionEnabled(surfaceInfo.collectionId)
+		if (enabled === this.#enabledConnectionIds.has(surfaceInfo.id)) {
+			// No change
+			return
+		}
+
+		if (enabled) {
+			this.#enabledConnectionIds.add(surfaceInfo.id)
 			this.#streamdeckTcpConnectionManager.connectTo(surfaceInfo.address, surfaceInfo.port)
 		} else {
+			this.#enabledConnectionIds.delete(surfaceInfo.id)
 			this.#streamdeckTcpConnectionManager.disconnectFrom(surfaceInfo.address, surfaceInfo.port)
 		}
 	}
@@ -93,11 +148,13 @@ export class SurfaceOutboundController {
 	createTrpcRouter() {
 		const self = this
 		return router({
+			collections: this.#collections.createTrpcRouter(),
+
 			watch: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(self.#updateEvents, 'info', signal)
 
 				// Initial data
-				yield { type: 'init', items: self.#storage } satisfies OutboundSurfacesUpdate
+				yield { type: 'init', items: Object.fromEntries(self.#storage) } satisfies OutboundSurfacesUpdate
 
 				for await (const [data] of changes) {
 					yield data
@@ -122,12 +179,20 @@ export class SurfaceOutboundController {
 					const port = input.port || DEFAULT_TCP_PORT
 
 					// check for duplicate
-					const existingAddressAndPort = Object.values(this.#storage).find(
+					const existingAddressAndPort = Array.from(this.#storage.values()).find(
 						(surfaceInfo) => surfaceInfo.address === address && surfaceInfo.port === port
 					)
 					if (existingAddressAndPort) throw new Error('Specified address and port is already defined')
 
 					this.#logger.info(`Adding new Remote Streamdeck at ${address}:${port} (${name})`)
+
+					const highestRank =
+						Math.max(
+							0,
+							...Array.from(this.#storage.values())
+								.map((c) => (c?.collectionId ? c.sortOrder : null))
+								.filter((n) => typeof n === 'number')
+						) || 0
 
 					const id = nanoid()
 					const newInfo: OutboundSurfaceInfo = {
@@ -137,8 +202,10 @@ export class SurfaceOutboundController {
 						enabled: true,
 						port,
 						displayName: name ?? '',
+						sortOrder: highestRank + 1,
+						collectionId: null,
 					}
-					this.#storage[id] = newInfo
+					this.#storage.set(id, newInfo)
 					this.#dbTable.set(id, newInfo)
 
 					this.#updateEvents.emit('info', {
@@ -162,10 +229,10 @@ export class SurfaceOutboundController {
 				.mutation(async ({ input }) => {
 					const { id } = input
 
-					const surfaceInfo = this.#storage[id]
+					const surfaceInfo = this.#storage.get(id)
 					if (!surfaceInfo) return // Not found, pretend all was ok
 
-					delete this.#storage[id]
+					this.#storage.delete(id)
 					this.#dbTable.delete(id)
 
 					this.#updateEvents.emit('info', {
@@ -186,7 +253,7 @@ export class SurfaceOutboundController {
 				.mutation(async ({ input }) => {
 					const { id, name } = input
 
-					const surfaceInfo = this.#storage[id]
+					const surfaceInfo = this.#storage.get(id)
 					if (!surfaceInfo) throw new Error('Surface not found')
 
 					surfaceInfo.displayName = name
@@ -210,7 +277,7 @@ export class SurfaceOutboundController {
 				.mutation(async ({ input }) => {
 					const { id, enabled } = input
 
-					const surfaceInfo = this.#storage[id]
+					const surfaceInfo = this.#storage.get(id)
 					if (!surfaceInfo) throw new Error('Surface not found')
 
 					surfaceInfo.enabled = !!enabled
@@ -226,6 +293,67 @@ export class SurfaceOutboundController {
 						info: surfaceInfo,
 					})
 				}),
+
+			reorder: publicProcedure
+				.input(
+					z.object({
+						collectionId: z.string().nullable(),
+						connectionId: z.string(),
+						dropIndex: z.number(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const { collectionId, connectionId, dropIndex } = input
+
+					const thisConnection = this.#storage.get(connectionId)
+					if (!thisConnection) return false
+
+					if (!this.#collections.doesCollectionIdExist(collectionId)) return false
+
+					// update the collectionId of the trigger being moved if needed
+					if (thisConnection.collectionId !== (collectionId ?? undefined)) {
+						thisConnection.collectionId = collectionId
+						// thisConnection.setCollectionEnabled(triggerCollections.isCollectionEnabled(collectionId))
+						this.#dbTable.set(connectionId, thisConnection)
+						this.#updateEvents.emit('info', {
+							type: 'add',
+							itemId: connectionId,
+							info: thisConnection,
+						})
+					}
+
+					// find all the other triggers with the matching collectionId
+					const sortedConnections = Array.from(this.#storage.values())
+						.filter(
+							(connection) =>
+								connection.id !== connectionId &&
+								((!connection.collectionId && !collectionId) || connection.collectionId === collectionId)
+						)
+						.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+
+					if (dropIndex < 0) {
+						// Push the trigger to the end of the array
+						sortedConnections.push(thisConnection)
+					} else {
+						// Insert the trigger at the drop index
+						sortedConnections.splice(dropIndex, 0, thisConnection)
+					}
+
+					// update the sort order of the connections in the store, tracking which ones changed
+					sortedConnections.forEach((connection, index) => {
+						if (connection.sortOrder === index) return // No change
+
+						connection.sortOrder = index
+						this.#dbTable.set(connection.id, connection)
+						this.#updateEvents.emit('info', {
+							type: 'add',
+							itemId: connectionId,
+							info: thisConnection,
+						})
+					})
+
+					return true
+				}),
 		})
 	}
 
@@ -237,7 +365,7 @@ export class SurfaceOutboundController {
 			items: {},
 		})
 
-		this.#storage = {}
+		this.#storage.clear()
 		this.#dbTable.clear()
 	}
 

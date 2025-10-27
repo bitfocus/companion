@@ -1,9 +1,8 @@
 import type {
-	ClientDiscoveredSurfaceInfo,
 	ClientDiscoveredSurfaceInfoSatellite,
 	ClientDiscoveredSurfaceInfoStreamDeck,
 } from '@companion-app/shared/Model/Surfaces.js'
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef } from 'react'
 import { assertNever } from '~/Resources/util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { faBan, faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
@@ -12,11 +11,11 @@ import { SetupSatelliteModal, type SetupSatelliteModalRef } from './SetupSatelli
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { observer } from 'mobx-react-lite'
-import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useSurfaceDiscoveryContext } from './SurfaceDiscoveryContext.js'
 
 export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
-	const discoveredSurfaces = useSurfaceDiscoverySubscription()
+	const { discoveredSurfaces } = useSurfaceDiscoveryContext()
 	const { userConfig } = useContext(RootAppStoreContext)
 
 	const setupSatelliteRef = useRef<SetupSatelliteModalRef>(null)
@@ -66,7 +65,7 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 									case 'satellite':
 										return <SatelliteRow key={id} surfaceInfo={svc} showSetupSatellite={showSetupSatellite} />
 									case 'streamdeck':
-										return <StreamDeckRow key={id} surfaceInfo={svc} addRemoteStreamDeck={addRemoteStreamDeck} />
+										return <DiscoveredSurfaceRow key={id} surfaceInfo={svc} addRemoteStreamDeck={addRemoteStreamDeck} />
 									case undefined:
 										return null
 									default:
@@ -94,52 +93,6 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 		</>
 	)
 })
-
-function useSurfaceDiscoverySubscription() {
-	const [discoveredSurfaces, setDiscoveredSurfaces] = useState<Record<string, ClientDiscoveredSurfaceInfo | undefined>>(
-		{}
-	)
-
-	/*const discoverySub = */ useSubscription(
-		trpc.surfaceDiscovery.watchForSurfaces.subscriptionOptions(undefined, {
-			onStarted: () => {
-				setDiscoveredSurfaces({}) // Clear when the subscription starts
-			},
-			onData: (data) => {
-				// TODO - should this debounce?
-
-				setDiscoveredSurfaces((surfaces) => {
-					switch (data.type) {
-						case 'init': {
-							const newSurfaces: typeof surfaces = {}
-							for (const svc of data.infos) {
-								// TODO - how to avoid this cast?
-								newSurfaces[svc.id] = svc as ClientDiscoveredSurfaceInfo
-							}
-							return newSurfaces
-						}
-						case 'update': {
-							const newSurfaces = { ...surfaces }
-							// TODO - how to avoid this cast?
-							newSurfaces[data.info.id] = data.info as ClientDiscoveredSurfaceInfo
-							return newSurfaces
-						}
-						case 'remove': {
-							const newSurfaces = { ...surfaces }
-							delete newSurfaces[data.itemId]
-							return newSurfaces
-						}
-						default:
-							console.warn('Unknown bonjour event type', data)
-							return surfaces
-					}
-				})
-			},
-		})
-	)
-
-	return discoveredSurfaces
-}
 
 interface SatelliteRowProps {
 	surfaceInfo: ClientDiscoveredSurfaceInfoSatellite
@@ -195,7 +148,10 @@ interface StreamDeckRowProps {
 	addRemoteStreamDeck: (surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck) => void
 }
 
-const StreamDeckRow = observer(function StreamDeckRow({ surfaceInfo, addRemoteStreamDeck }: StreamDeckRowProps) {
+const DiscoveredSurfaceRow = observer(function DiscoveredSurfaceRow({
+	surfaceInfo,
+	addRemoteStreamDeck,
+}: StreamDeckRowProps) {
 	const { surfaces } = useContext(RootAppStoreContext)
 
 	const isAlreadyAdded = !!surfaces.getOutboundStreamDeckSurface(surfaceInfo.address, surfaceInfo.port)
