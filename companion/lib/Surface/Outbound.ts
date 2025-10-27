@@ -311,7 +311,7 @@ export class SurfaceOutboundController {
 					if (!this.#collections.doesCollectionIdExist(collectionId)) return false
 
 					// update the collectionId of the trigger being moved if needed
-					if (thisConnection.collectionId !== (collectionId ?? undefined)) {
+					if (thisConnection.collectionId !== (collectionId ?? null)) {
 						thisConnection.collectionId = collectionId
 						// thisConnection.setCollectionEnabled(triggerCollections.isCollectionEnabled(collectionId))
 						this.#dbTable.set(connectionId, thisConnection)
