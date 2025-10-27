@@ -477,7 +477,7 @@ export class ImportExportController {
 				}),
 
 			importFull: publicProcedure
-				.input(z.object({ config: zodClientImportSelection.nullable(), fullReset: z.boolean() }))
+				.input(z.object({ config: zodClientImportSelection, fullReset: z.boolean() }))
 				.mutation(async ({ input: { config, fullReset }, ctx }) => {
 					return this.#checkOrRunImportTask('import', async () => {
 						console.log(
@@ -488,25 +488,32 @@ export class ImportExportController {
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						const resetArg: ClientResetSelection | null =
-							fullReset || !config ? null : { ...config, connections: true, userconfig: false }
-						if (resetArg && !fullReset) {
-							// Dont ever reset connections during partial import
-							resetArg.connections = false
-
-							// If a partial import, don't reset disabled items
-							if (!data.pages) resetArg.buttons = false
-							if (!data.custom_variables) resetArg.customVariables = false
-							if (!data.expressionVariables) resetArg.expressionVariables = false
-							if (!data.surfaces) resetArg.surfaces = false
-							if (!data.triggers) resetArg.triggers = false
+						// `config` tells what to load. Ensure that config is false for missing sections:
+						// note: this is failsafe is not strictly necessary, since Full.tsx does it right, now.
+						// note that config doesn't have a entries for 'connections' or 'userconfig'...
+						for (const key in config) {
+							let dataKey = key.replace(/^customVariables$/, 'custom_variables')
+							dataKey = dataKey.replace(/^buttons$/, 'pages')
+							config[key as keyof typeof config] &&= dataKey in data
 						}
 
-						// Destroy old stuff
-						await this.#reset(resetArg, !config || config.buttons)
+						// Add fields missing from config
+						// If partial import, dont ever reset connections (or userconfig until added to UI)
+						const resetArg: ClientResetSelection | null = fullReset
+							? null
+							: { ...config, connections: false, userconfig: false }
 
+						// Destroy old stuff
+						await this.#reset(resetArg, config.buttons)
+
+						// Always Import instances
 						// Import connection collections if provided
-						this.#instancesController.connectionCollections.replaceCollections(data.connectionCollections || [])
+						if (data.connectionCollections && data.connectionCollections.length > 0) {
+							this.#instancesController.connectionCollections.replaceCollections(
+								data.connectionCollections || [],
+								!fullReset
+							)
+						}
 
 						// Always Import instances
 						const preserveRemap: ConnectionRemappings =
@@ -514,13 +521,13 @@ export class ImportExportController {
 						const instanceIdMap = this.#importInstances(data.instances, preserveRemap)
 
 						// import custom variables
-						if (!config || config.customVariables) {
+						if (config.customVariables) {
 							this.#variablesController.custom.replaceCollections(data.customVariablesCollections || [])
 							this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
 						}
 
 						// Import expression variables
-						if (!config || config.expressionVariables) {
+						if (config.expressionVariables) {
 							this.#controlsController.replaceExpressionVariableCollections(data.expressionVariablesCollections || [])
 
 							for (const [id, variableDefinition] of Object.entries(data.expressionVariables || {})) {
@@ -531,9 +538,10 @@ export class ImportExportController {
 							}
 						}
 
-						if (data.pages && (!config || config.buttons)) {
+						// note data.pages is needed only to satisfy TypeScript, since config.buttons is false if pages is missing.
+						if (config.buttons) {
 							// Import pages
-							for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
+							for (const [pageNumber0, pageInfo] of Object.entries(data.pages ?? {})) {
 								if (!pageInfo) continue
 
 								const pageNumber = Number(pageNumber0)
@@ -555,7 +563,7 @@ export class ImportExportController {
 							}
 						}
 
-						if (!config || config.surfaces) {
+						if (config.surfaces) {
 							const surfaces = data.surfaces || ({} as Record<number, SurfaceConfig>)
 							const surfaceGroups = data.surfaceGroups || ({} as Record<number, SurfaceGroupConfig>)
 							const getPageId = (val: number) =>
@@ -583,7 +591,7 @@ export class ImportExportController {
 							this.#surfacesController.importSurfaces(surfaceGroups, surfaces)
 						}
 
-						if (!config || config.triggers) {
+						if (config.triggers) {
 							// Import trigger collections if provided
 							if (data.triggerCollections) {
 								this.#controlsController.replaceTriggerCollections(data.triggerCollections)

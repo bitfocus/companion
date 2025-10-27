@@ -32,7 +32,7 @@ export class InstanceCollections extends EnabledCollectionsBaseController<Connec
 	}
 
 	/**
-	 * Ensure that all collectionIds in connections are valid collections
+	 * Ensure that all collectionId fields in connection objects point to valid collections
 	 */
 	override removeUnknownCollectionReferences(): void {
 		this.#configStore.cleanUnknownCollectionIds(this.collectAllCollectionIds())

@@ -1408,6 +1408,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				if (key === 'name') continue
 				group.setGroupConfigValue(key, value)
 			}
+			group.clearPageHistory()
 		}
 
 		for (const [surfaceId, surfaceConfig] of Object.entries(surfaces)) {
@@ -1440,6 +1441,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						if (key === 'name') continue
 						group.setGroupConfigValue(key, value)
 					}
+					group.clearPageHistory()
 				}
 			} else {
 				// Device is not loaded
@@ -1452,6 +1454,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						// need the following to put the emulator on the "current" page, to match its export state
 						const group = this.#surfaceGroups.get(surfaceId)
 						group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+						group?.clearPageHistory()
 					}
 				}
 			}

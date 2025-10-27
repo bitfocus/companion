@@ -243,6 +243,11 @@ export class SurfaceGroup {
 		this.setCurrentPage(decrease ? '-1' : '+1')
 	}
 
+	clearPageHistory(): void {
+		this.#pageHistory.history = [this.#currentPageId]
+		this.#pageHistory.index = 0
+	}
+
 	/**
 	 * Change the page of a surface, keeping a history of previous pages
 	 */
