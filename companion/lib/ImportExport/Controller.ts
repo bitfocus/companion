@@ -509,7 +509,10 @@ export class ImportExportController {
 						// Always Import instances
 						// Import connection collections if provided
 						if (data.connectionCollections && data.connectionCollections.length > 0) {
-							this.#instancesController.connectionCollections.replaceCollections(data.connectionCollections || [])
+							this.#instancesController.connectionCollections.replaceCollections(
+								data.connectionCollections || [],
+								fullReset
+							)
 						}
 
 						// Always Import instances
