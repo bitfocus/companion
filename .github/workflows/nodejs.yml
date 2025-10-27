@@ -92,7 +92,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -172,7 +172,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -251,7 +251,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -334,7 +334,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -427,7 +427,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
