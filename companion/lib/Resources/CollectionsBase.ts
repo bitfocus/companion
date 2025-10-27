@@ -49,20 +49,20 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	}
 
 	/**
-	 * ~Replace~ Update all collections with imported collections
-	 * if `reset` is false, preserve existing entries with the same ID. (This could lead to sortOrder clashes, but it shouldn't matter)
+	 * Replace Update all collections with imported collections
+	 * if `merge` is true, preserve existing entries with the same ID. (This could lead to sortOrder clashes, but it shouldn't matter)
 	 * TODO: add merge options? deal with sortOrder clashes?
 	 */
-	replaceCollections(collections: CollectionBase<TCollectionMetadata>[], reset = true): void {
+	replaceCollections(collections: CollectionBase<TCollectionMetadata>[], merge = false): void {
 		// Clear existing collections
-		if (reset) {
+		if (!merge) {
 			this.#dbTable.clear()
 			this.data = []
 		}
 
 		// Import new collections
 		for (const collection of collections) {
-			if (reset || !this.#dbTable.get(collection.id)) {
+			if (!merge || !this.#dbTable.get(collection.id)) {
 				this.#sortCollectionRecursively(collection)
 				this.data.push(collection)
 				this.#dbTable.set(collection.id, collection)
