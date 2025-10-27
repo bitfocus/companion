@@ -124,7 +124,7 @@ function RemoteSurfacesListNoInstances() {
 	return <NonIdealState icon={faPlug}>No remote surface connections are configured</NonIdealState>
 }
 
-function RemoteSurfacesGroupHeaderContent({ collection }: { collection: SurfaceInstanceCollection }) {
+function RemoteSurfacesGroupHeaderContent({ collection }: { collection: OutboundSurfaceCollection }) {
 	const setEnabledMutation = useMutationExt(trpc.surfaces.outbound.collections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
