@@ -313,7 +313,9 @@ export class SurfaceOutboundController {
 					// update the collectionId of the trigger being moved if needed
 					if (thisConnection.collectionId !== (collectionId ?? null)) {
 						thisConnection.collectionId = collectionId
-						// thisConnection.setCollectionEnabled(triggerCollections.isCollectionEnabled(collectionId))
+
+						this.#startStopConnection(thisConnection)
+
 						this.#dbTable.set(connectionId, thisConnection)
 						this.#updateEvents.emit('info', {
 							type: 'add',
