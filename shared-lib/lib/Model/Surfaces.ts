@@ -7,6 +7,7 @@ import type {
 	CompanionInputFieldNumberExtended,
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
+import type { CollectionBase } from './Collections.js'
 
 export type GridSize = { columns: number; rows: number }
 export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0' | 0 | -90 | 90 | 180
@@ -121,7 +122,16 @@ export interface OutboundSurfaceInfo {
 	enabled: boolean
 	address: string
 	port: number
+
+	collectionId: string | null
+	sortOrder: number
 }
+
+export interface OutboundSurfaceCollectionData {
+	enabled: boolean
+}
+
+export type OutboundSurfaceCollection = CollectionBase<OutboundSurfaceCollectionData>
 
 export type OutboundSurfacesUpdate =
 	| OutboundSurfacesUpdateInitOp

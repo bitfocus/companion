@@ -105,6 +105,14 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const { ready: userConfigReady } = useUserConfigSubscription(rootStore.userConfig)
 	const surfacesReady = useSurfacesSubscription(rootStore.surfaces)
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(rootStore.surfaces)
+	const outboundSurfacesCollectionsReady = useGenericCollectionsSubscription(
+		{
+			resetCollections: rootStore.surfaces.resetOutboundSurfaceCollections.bind(rootStore.surfaces),
+			rootCollections: rootStore.surfaces.outboundSurfaceRootCollections.bind(rootStore.surfaces),
+		},
+		trpc.surfaces.outbound.collections.watchQuery,
+		undefined
+	)
 	const variablesReady = useVariablesSubscription(rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(rootStore.variablesStore)
 	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(rootStore.variablesStore)
@@ -133,6 +141,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		userConfigReady,
 		surfacesReady,
 		outboundSurfacesReady,
+		outboundSurfacesCollectionsReady,
 		pagesReady,
 		triggersListReady,
 		triggerGroupsReady,
