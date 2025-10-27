@@ -15,7 +15,7 @@ interface FormInfo {
 }
 
 export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, object>(
-	function SurfaceEditModal(_props, ref) {
+	function AddOutboundSurfaceModal(_props, ref) {
 		const [show, setShow] = useState(false)
 		const [running, setRunning] = useState(false)
 		const [saveError, setSaveError] = useState<string | null>(null)
@@ -111,7 +111,7 @@ export const AddOutboundSurfaceModal = forwardRef<AddOutboundSurfaceModalRef, ob
 		}, [])
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onShow={() => console.log('show')}>
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed}>
 				<CModalHeader closeButton>
 					<h5>Add Stream Deck Studio or Network Dock</h5>
 				</CModalHeader>
