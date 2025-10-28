@@ -166,6 +166,7 @@ ipcWrapper
 		supportsOutbound: pluginFeatures.supportsOutbound
 			? {
 					configFields: translateOutboundConfigFields(pluginFeatures.supportsOutbound.configFields),
+					configMatchesExpression: pluginFeatures.supportsOutbound.configMatchesExpression ?? null,
 				}
 			: null,
 	})

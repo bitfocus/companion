@@ -64,6 +64,7 @@ export interface RegisterMessage {
 	supportsScan: boolean
 	supportsOutbound: {
 		configFields: CompanionSurfaceConfigField[]
+		configMatchesExpression: string | null
 	} | null
 }
 export type RegisterResponseMessage = Record<string, never>

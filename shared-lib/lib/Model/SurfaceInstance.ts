@@ -6,6 +6,7 @@ export interface ClientSurfaceInstanceConfig extends ClientInstanceConfigBase {
 	moduleType: ModuleInstanceType.Surface
 
 	remoteConfigFields: CompanionSurfaceConfigField[] | null
+	remoteConfigMatches: string | null
 }
 
 export interface SurfaceInstanceCollectionData {

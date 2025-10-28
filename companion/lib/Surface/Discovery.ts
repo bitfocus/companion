@@ -211,6 +211,20 @@ export class ServiceSurfaceDiscovery {
 		}
 	}
 
+	getInfoForConnectionId(instanceId: string, connectionId: string): DiscoveredRemoteSurfaceInfo | undefined {
+		const connections = this.#knownSurfaces.get(instanceId)
+		if (!connections) return undefined
+
+		for (const connectionInfo of connections.values()) {
+			const fullId = `${instanceId}:${connectionInfo.id}`
+			if (fullId === connectionId) {
+				return connectionInfo
+			}
+		}
+
+		return undefined
+	}
+
 	createTrpcRouter() {
 		const self = this
 		return router({
@@ -360,5 +374,6 @@ function convertPluginConnectionToUi(
 		instanceId: instanceId,
 		name: info.displayName,
 		description: info.description,
+		config: info.config,
 	}
 }
