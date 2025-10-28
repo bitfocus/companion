@@ -320,32 +320,25 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				<h5>Import Selected Components</h5>
 				<p>
 					Full Import always resets the selected components before importing them. <br />
-					Checking "Perform full reset" will reset <strong>all</strong> components before importing the selected ones.
+					Checking{' '}
+					<em>
+						<strong>Perform full reset</strong>
+					</em>{' '}
+					will reset <strong>all</strong> components before importing the selected ones.
 					<br />
 					Full reset is generally the safer option as it reduces the chance of producing an inconsistent setup.
 				</p>
-				<table>
-					<tr>
-						<td>
-							<CButton
-								color={fullReset ? 'danger' : 'success'}
-								onClick={doImport}
-								disabled={validConfigKeys.length === 0}
-							>
-								<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
-							</CButton>
-						</td>
-						<td style={{ paddingLeft: '20px' }}>
-							<CFormCheck
-								id={'check_full_reset'}
-								label={'Perform full reset'}
-								checked={fullReset}
-								onChange={() => setFullReset((fullReset) => !fullReset)}
-								disabled={false}
-							/>
-						</td>
-					</tr>
-				</table>
+				<CButton color={fullReset ? 'danger' : 'success'} onClick={doImport} disabled={validConfigKeys.length === 0}>
+					<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
+				</CButton>
+				<CFormCheck
+					id={'check_full_reset'}
+					label={'Perform full reset'}
+					checked={fullReset}
+					onChange={() => setFullReset((fullReset) => !fullReset)}
+					inline
+					style={{ marginLeft: '1em' }}
+				/>
 			</CCallout>
 		</>
 	)
