@@ -44,6 +44,7 @@ export const AddRemoteSurfaceButton = observer(function AddRemoteSurfaceButton()
 })
 
 function AddRemoteSurfacePopoverButton({ instanceId, label }: { instanceId: string; label: string }) {
+	const { notifier } = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 
 	const addOutboundMutation = useMutationExt(trpc.surfaces.outbound.add2.mutationOptions())
@@ -53,15 +54,19 @@ function AddRemoteSurfacePopoverButton({ instanceId, label }: { instanceId: stri
 			.mutateAsync({
 				instanceId: instanceId,
 			})
-			.then((id) => {
-				console.log('Created new outbound connection:', id)
+			.then((res) => {
+				console.log('Created new outbound connection:', res)
 
-				void navigate({ to: '/surfaces/remote/$connectionId', params: { connectionId: id } })
+				if (!res.ok) {
+					notifier.show('Failed to setup connection', res.error ?? 'Unknown error')
+				} else {
+					void navigate({ to: '/surfaces/remote/$connectionId', params: { connectionId: res.id } })
+				}
 			})
 			.catch((e) => {
 				console.error('Failed to create outbound connection:', e)
 			})
-	}, [addOutboundMutation, instanceId, navigate])
+	}, [addOutboundMutation, instanceId, navigate, notifier])
 
 	return (
 		<CButton onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
