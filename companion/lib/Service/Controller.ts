@@ -8,7 +8,6 @@ import { ServiceOscListener } from './OscListener.js'
 import type { ServiceOscSender } from './OscSender.js'
 import { ServiceRosstalk } from './Rosstalk.js'
 import { ServiceSatelliteTcp } from './SatelliteTcp.js'
-import { ServiceSurfaceDiscovery } from './SurfaceDiscovery.js'
 import { ServiceTcp } from './Tcp.js'
 import { ServiceUdp } from './Udp.js'
 import { ServiceVideohubPanel } from './VideohubPanel.js'
@@ -53,7 +52,6 @@ export class ServiceController {
 	readonly elgatoPlugin: ServiceElgatoPlugin
 	readonly videohubPanel: ServiceVideohubPanel
 	readonly bonjourDiscovery: ServiceBonjourDiscovery
-	readonly surfaceDiscovery: ServiceSurfaceDiscovery
 
 	constructor(
 		serviceApi: ServiceApi,
@@ -79,7 +77,6 @@ export class ServiceController {
 		this.elgatoPlugin = new ServiceElgatoPlugin(serviceApi, surfaceController, userconfig)
 		this.videohubPanel = new ServiceVideohubPanel(surfaceController, userconfig)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
-		this.surfaceDiscovery = new ServiceSurfaceDiscovery(userconfig)
 	}
 
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
@@ -107,6 +104,5 @@ export class ServiceController {
 		this.tcp.updateUserConfig(key, value)
 		this.udp.updateUserConfig(key, value)
 		this.videohubPanel.updateUserConfig(key, value)
-		this.surfaceDiscovery.updateUserConfig(key, value)
 	}
 }

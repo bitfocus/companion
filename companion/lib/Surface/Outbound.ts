@@ -16,6 +16,7 @@ import { EventEmitter } from 'node:events'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { OutboundSurfaceCollections } from './OutboundCollections.js'
 import { isEqual } from 'lodash-es'
+import { ServiceSurfaceDiscovery } from './Discovery.js'
 
 export interface SurfaceOutboundControllerEvents {
 	clientInfo: [update: OutboundSurfacesUpdate]
@@ -29,6 +30,8 @@ export class SurfaceOutboundController {
 
 	readonly #controller: SurfaceController
 	readonly #collections: OutboundSurfaceCollections
+
+	readonly #discoveryController = new ServiceSurfaceDiscovery()
 
 	/**
 	 * The core database library
@@ -46,6 +49,10 @@ export class SurfaceOutboundController {
 		jpegOptions: StreamDeckJpegOptions,
 		autoConnectToSecondaries: true,
 	})
+
+	get discovery(): ServiceSurfaceDiscovery {
+		return this.#discoveryController
+	}
 
 	constructor(controller: SurfaceController, db: DataDatabase) {
 		this.#controller = controller
@@ -191,6 +198,8 @@ export class SurfaceOutboundController {
 	createTrpcRouter() {
 		const self = this
 		return router({
+			discovery: this.#discoveryController.createTrpcRouter(),
+
 			collections: this.#collections.createTrpcRouter(),
 
 			watch: publicProcedure.subscription(async function* ({ signal }) {
@@ -268,10 +277,13 @@ export class SurfaceOutboundController {
 				.input(
 					z.object({
 						instanceId: z.string(),
+						connectionId: z.string().optional(),
 					})
 				)
 				.mutation(async ({ input }) => {
 					this.#logger.info(`Adding new Remote Surface Connection for ${input.instanceId}`)
+
+					// TODO - use connectionId
 
 					const highestRank =
 						Math.max(
@@ -502,6 +514,8 @@ export class SurfaceOutboundController {
 	}
 
 	quit(): void {
+		this.#discoveryController.quit()
+
 		this.#streamdeckTcpConnectionManager.disconnectFromAll()
 	}
 }

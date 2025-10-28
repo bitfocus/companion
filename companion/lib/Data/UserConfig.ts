@@ -130,8 +130,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				lastRan: 0,
 			},
 		],
-
-		discoveryEnabled: true,
 	}
 	/**
 	 * The user configuration settings
@@ -249,8 +247,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				emberplus_enabled: true,
 
 				xkeys_enable: false,
-
-				discoveryEnabled: true,
 			}
 
 			// check if these fields have already been defined

@@ -7,6 +7,8 @@ import type {
 	InputPressMessage,
 	InputRotateMessage,
 	LogMessageMessage,
+	NotifyConnectionsForgottenMessage,
+	NotifyConnectionsFoundMessage,
 	NotifyOpenedDeviceMessage,
 	PincodeEntryMessage,
 	RegisterMessage,
@@ -109,6 +111,9 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 
 			shouldOpenDiscoveredSurface: this.#handleShouldOpenDiscoveredSurface.bind(this),
 			notifyOpenedDiscoveredDevice: this.#handleNotifyOpenedDiscoveredDevice.bind(this),
+
+			notifyConnectionsFound: this.#handleNotifyConnectionsFound.bind(this),
+			notifyConnectionsForgotten: this.#handleNotifyConnectionsForgotten.bind(this),
 
 			'log-message': this.#handleLogMessage.bind(this),
 
@@ -243,6 +248,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		this.#deps.invalidateClientJson(this.instanceId)
 		this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, null)
 		this.#deps.surfaceController.outbound.events.off(`startStop:${this.instanceId}`, this.#startStopConnections)
+		this.#deps.surfaceController.outbound.discovery.instanceForget(this.instanceId)
 
 		this.#deps.surfaceController.off('scanDevices', this.#scanDevices)
 		this.#deps.surfaceController.unloadSurfacesForInstance(this.instanceId)
@@ -383,6 +389,21 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		this.#setupSurfacePanel(msg.info).catch((e) => {
 			this.logger.warn(`Error opening discovered surface panel: ${e}`)
 		})
+	}
+
+	async #handleNotifyConnectionsFound(msg: NotifyConnectionsFoundMessage): Promise<void> {
+		try {
+			this.#deps.surfaceController.outbound.discovery.instanceConnectionsFound(this.instanceId, msg.connectionInfos)
+		} catch (e) {
+			this.logger.warn(`Error handling notifyConnectionsFound: ${e}`)
+		}
+	}
+	async #handleNotifyConnectionsForgotten(msg: NotifyConnectionsForgottenMessage): Promise<void> {
+		try {
+			this.#deps.surfaceController.outbound.discovery.instanceConnectionsForgotten(this.instanceId, msg.connectionIds)
+		} catch (e) {
+			this.logger.warn(`Error handling notifyConnectionsForgotten: ${e}`)
+		}
 	}
 
 	/**

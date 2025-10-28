@@ -95,7 +95,6 @@ export function createTrpcRouter(registry: Registry) {
 
 		actionRecorder: registry.controls.actionRecorder.createTrpcRouter(),
 		surfaces: registry.surfaces.createTrpcRouter(),
-		surfaceDiscovery: registry.services.surfaceDiscovery.createTrpcRouter(),
 
 		controls: registry.controls.createTrpcRouter(),
 
