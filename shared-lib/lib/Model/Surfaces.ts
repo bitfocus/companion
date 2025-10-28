@@ -169,7 +169,10 @@ export interface OutboundSurfacesUpdateAddOp {
 	info: OutboundSurfaceInfo
 }
 
-export type ClientDiscoveredSurfaceInfo = ClientDiscoveredSurfaceInfoSatellite | ClientDiscoveredSurfaceInfoStreamDeck
+export type ClientDiscoveredSurfaceInfo =
+	| ClientDiscoveredSurfaceInfoSatellite
+	| ClientDiscoveredSurfaceInfoStreamDeck
+	| ClientDiscoveredSurfaceInfoPlugin
 
 export interface ClientDiscoveredSurfaceInfoSatellite {
 	id: string
@@ -193,7 +196,16 @@ export interface ClientDiscoveredSurfaceInfoStreamDeck {
 	port: number
 
 	modelName: string
-	serialnumber: string | undefined
+}
+
+export interface ClientDiscoveredSurfaceInfoPlugin {
+	id: string
+
+	surfaceType: 'plugin'
+	instanceId: string
+
+	name: string
+	description: string
 }
 
 export type SurfacesDiscoveryUpdate =

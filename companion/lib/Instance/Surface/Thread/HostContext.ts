@@ -5,6 +5,7 @@ import type {
 	OpenDeviceResult,
 	SurfaceHostContext,
 	SurfaceFirmwareUpdateInfo,
+	DiscoveredRemoteSurfaceInfo,
 } from '@companion-surface/host'
 import type { SurfaceIpcWrapper } from '../IpcTypes.js'
 import { LockingGraphicsGeneratorImpl } from './LockingGraphics.js'
@@ -55,5 +56,12 @@ export class HostContext implements SurfaceHostContext {
 	}
 	readonly notifyOpenedDiscoveredSurface = async (info: OpenDeviceResult): Promise<void> => {
 		this.#ipcWrapper.sendWithNoCb('notifyOpenedDiscoveredDevice', { info })
+	}
+
+	readonly connectionsFound = (connectionInfos: DiscoveredRemoteSurfaceInfo[]): void => {
+		this.#ipcWrapper.sendWithNoCb('notifyConnectionsFound', { connectionInfos })
+	}
+	readonly connectionsForgotten = (connectionIds: string[]): void => {
+		this.#ipcWrapper.sendWithNoCb('notifyConnectionsForgotten', { connectionIds })
 	}
 }
