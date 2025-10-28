@@ -5,6 +5,7 @@ import { StreamDeckJpegOptions } from './USB/ElgatoStreamDeck.js'
 import type { SurfaceController } from './Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type {
+	CompanionSurfaceConfigField,
 	ModernOutboundSurfaceInfo,
 	OutboundSurfaceInfo,
 	OutboundSurfacesUpdate,
@@ -17,6 +18,9 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import { OutboundSurfaceCollections } from './OutboundCollections.js'
 import { isEqual } from 'lodash-es'
 import { ServiceSurfaceDiscovery } from './Discovery.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 
 export interface SurfaceOutboundControllerEvents {
 	clientInfo: [update: OutboundSurfacesUpdate]
@@ -40,7 +44,13 @@ export class SurfaceOutboundController {
 
 	#storage = new Map<string, OutboundSurfaceInfo>()
 
-	readonly #surfaceInstanceDefaultConfig = new Map<string, Record<string, any>>()
+	readonly #surfaceInstancesInfo = new Map<
+		string,
+		{
+			defaultConfig: Record<string, any>
+			configMatchExpression: string | null
+		}
+	>()
 
 	readonly events = new EventEmitter<SurfaceOutboundControllerEvents>()
 	readonly #enabledConnectionIds = new Set<string>()
@@ -149,11 +159,29 @@ export class SurfaceOutboundController {
 		}
 	}
 
-	updateDefaultConfigForSurfaceInstance(instanceId: string, defaultConfig: Record<string, any> | null): void {
-		if (defaultConfig) {
-			this.#surfaceInstanceDefaultConfig.set(instanceId, defaultConfig)
+	updateDefaultConfigForSurfaceInstance(
+		instanceId: string,
+		info: {
+			configFields: CompanionSurfaceConfigField[]
+			configMatchesExpression: string | null
+		} | null
+	): void {
+		if (info) {
+			// Compute default config for the instance
+			const config: Record<string, any> = {}
+			for (const fieldDef of info.configFields) {
+				// Handle different field types that have default values
+				if ('default' in fieldDef && fieldDef.default !== undefined) {
+					config[fieldDef.id] = fieldDef.default
+				}
+			}
+
+			this.#surfaceInstancesInfo.set(instanceId, {
+				defaultConfig: config,
+				configMatchExpression: info.configMatchesExpression,
+			})
 		} else {
-			this.#surfaceInstanceDefaultConfig.delete(instanceId)
+			this.#surfaceInstancesInfo.delete(instanceId)
 		}
 	}
 
@@ -281,9 +309,25 @@ export class SurfaceOutboundController {
 					})
 				)
 				.mutation(async ({ input }) => {
-					this.#logger.info(`Adding new Remote Surface Connection for ${input.instanceId}`)
+					this.#logger.info(`Adding new Remote Surface Connection for ${input.instanceId} (${input.connectionId})`)
 
-					// TODO - use connectionId
+					let displayName = 'New Remote Surface'
+					let config = this.#surfaceInstancesInfo.get(input.instanceId)?.defaultConfig
+					if (input.connectionId) {
+						const connectionInfo = this.discovery.getInfoForConnectionId(input.instanceId, input.connectionId)
+						if (!connectionInfo) {
+							this.#logger.warn(`Unknown connection ID ${input.connectionId} for instance ${input.instanceId}`)
+							return { ok: false, error: 'Unknown connection' } as const
+						}
+
+						displayName = connectionInfo.displayName
+						config = connectionInfo.config
+
+						// Check if an existing surface matches this config
+						if (this.#doesExistingSurfaceMatchNewConfig(input.instanceId, config)) {
+							return { ok: false, error: 'A connection with matching configuration already exists' } as const
+						}
+					}
 
 					const highestRank =
 						Math.max(
@@ -298,9 +342,9 @@ export class SurfaceOutboundController {
 						id,
 						type: 'plugin',
 						enabled: true,
-						displayName: 'New Remote Surface',
+						displayName: displayName,
 						instanceId: input.instanceId,
-						config: structuredClone(this.#surfaceInstanceDefaultConfig.get(input.instanceId) ?? {}),
+						config: structuredClone(config ?? {}),
 						sortOrder: highestRank + 1,
 						collectionId: null,
 					}
@@ -316,7 +360,7 @@ export class SurfaceOutboundController {
 
 					this.#startStopConnection(newInfo)
 
-					return id
+					return { ok: true, id } as const
 				}),
 
 			remove: publicProcedure
@@ -517,5 +561,47 @@ export class SurfaceOutboundController {
 		this.#discoveryController.quit()
 
 		this.#streamdeckTcpConnectionManager.disconnectFromAll()
+	}
+
+	#doesExistingSurfaceMatchNewConfig(instanceId: string, config: Record<string, any>): boolean {
+		const matchExpression = this.#surfaceInstancesInfo.get(instanceId)?.configMatchExpression
+		if (!matchExpression) return false
+
+		try {
+			const expression = ParseExpression(matchExpression)
+			const doesMatch = (otherConfig: Record<string, any>) => {
+				try {
+					const val = ResolveExpression(
+						expression,
+						(props) => {
+							if (props.label === 'objA') {
+								return config?.[props.name]
+							} else if (props.label === 'objB') {
+								return otherConfig[props.name]
+							} else {
+								throw new Error(`Unknown variable "${props.variableId}"`)
+							}
+						},
+						ExpressionFunctions
+					)
+					return !!val && val !== 'false' && val !== '0'
+				} catch (e) {
+					console.error('Failed to resolve expression', e)
+					return false
+				}
+			}
+
+			// Find a surface which matches
+			for (const surface of this.#storage.values()) {
+				if (surface.type === 'plugin' && surface.instanceId === instanceId && doesMatch(surface.config)) {
+					return true
+				}
+			}
+
+			return false
+		} catch (e) {
+			this.#logger.warn(`Failed to process remoteConfigMatches expression: ${e}`)
+			return false
+		}
 	}
 }

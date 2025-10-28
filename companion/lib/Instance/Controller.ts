@@ -662,6 +662,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				collectionId: config.collectionId ?? null,
 
 				remoteConfigFields: instance?.features.supportsRemote?.configFields ?? null,
+				remoteConfigMatches: instance?.features.supportsRemote?.configMatchesExpression ?? null,
 			}
 		}
 
