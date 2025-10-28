@@ -206,6 +206,8 @@ export interface ClientDiscoveredSurfaceInfoPlugin {
 
 	name: string
 	description: string
+
+	config: Record<string, any>
 }
 
 export type SurfacesDiscoveryUpdate =

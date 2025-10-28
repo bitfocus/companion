@@ -48,6 +48,7 @@ export interface SurfaceChildFeatures {
 	readonly supportsScan: boolean
 	readonly supportsRemote: {
 		configFields: CompanionSurfaceConfigField[]
+		configMatchesExpression: string | null
 	} | null
 }
 
@@ -163,16 +164,10 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		if (this.features.supportsRemote) {
 			this.#deps.surfaceController.outbound.events.on(`startStop:${this.instanceId}`, this.#startStopConnections)
 
-			// Compute default config for the instance
-			const config: Record<string, any> = {}
-			for (const fieldDef of this.features.supportsRemote.configFields) {
-				// Handle different field types that have default values
-				if ('default' in fieldDef && fieldDef.default !== undefined) {
-					config[fieldDef.id] = fieldDef.default
-				}
-			}
-
-			this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, config)
+			this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(
+				this.instanceId,
+				this.features.supportsRemote
+			)
 		}
 	}
 
