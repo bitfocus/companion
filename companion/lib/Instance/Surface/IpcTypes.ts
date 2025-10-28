@@ -7,7 +7,7 @@ import type {
 	SurfaceFirmwareUpdateInfo,
 } from '@companion-surface/host'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { RemoteSurfaceConnectionInfo } from '@companion-surface/base'
+import type { DiscoveredRemoteSurfaceInfo, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
 
 export type SurfaceIpcWrapper = IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>
 
@@ -19,6 +19,9 @@ export interface SurfaceModuleToHostEvents {
 
 	shouldOpenDiscoveredSurface: (msg: ShouldOpenDeviceMessage) => ShouldOpenDeviceResponseMessage
 	notifyOpenedDiscoveredDevice: (msg: NotifyOpenedDeviceMessage) => never
+
+	notifyConnectionsFound: (msg: NotifyConnectionsFoundMessage) => never
+	notifyConnectionsForgotten: (msg: NotifyConnectionsForgottenMessage) => never
 
 	/** The connection has a message for the Companion log */
 	'log-message': (msg: LogMessageMessage) => never
@@ -175,5 +178,12 @@ export interface SetupRemoteConnectionsMessage {
 	connectionInfos: RemoteSurfaceConnectionInfo[]
 }
 export interface StopRemoteConnectionsMessage {
+	connectionIds: string[]
+}
+
+export interface NotifyConnectionsFoundMessage {
+	connectionInfos: DiscoveredRemoteSurfaceInfo[]
+}
+export interface NotifyConnectionsForgottenMessage {
 	connectionIds: string[]
 }

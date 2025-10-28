@@ -72,9 +72,6 @@ export interface UserConfigModel {
 	installName: string
 	default_export_filename: string
 
-	/** Whether to run the mdns  */
-	discoveryEnabled: boolean
-
 	backups: BackupRulesConfig[]
 }
 

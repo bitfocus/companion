@@ -1,18 +1,19 @@
 import isEqual from 'fast-deep-equal'
-import { ServiceBase } from './Base.js'
 import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
 import { StreamDeckTcpDiscoveryService, type StreamDeckTcpDefinition } from '@elgato-stream-deck/tcp'
 import type {
 	ClientDiscoveredSurfaceInfo,
+	ClientDiscoveredSurfaceInfoPlugin,
 	CompanionExternalAddresses,
 	SurfacesDiscoveryUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { DropdownChoice } from '@companion-module/base'
-import type { DataUserConfig } from '../Data/UserConfig.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import EventEmitter from 'node:events'
+import LogController from '../Log/Controller.js'
+import type { DiscoveredRemoteSurfaceInfo } from '@companion-surface/host'
 
 /**
  * Class providing the discovery of Satellite Surface.
@@ -29,8 +30,9 @@ import EventEmitter from 'node:events'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ServiceSurfaceDiscovery extends ServiceBase {
-	#bonjour = new Bonjour()
+export class ServiceSurfaceDiscovery {
+	readonly #logger = LogController.createLogger('Surface/Discovery')
+	readonly #bonjour = new Bonjour()
 
 	#satelliteBrowser: Browser | undefined
 	#streamDeckDiscovery: StreamDeckTcpDiscoveryService | undefined
@@ -39,84 +41,122 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 
 	#surfaceEvents = new EventEmitter<{ event: [info: SurfacesDiscoveryUpdate] }>()
 
-	constructor(userconfig: DataUserConfig) {
-		super(userconfig, 'Service/SurfaceDiscovery', 'discoveryEnabled', null)
+	#knownSurfaces = new Map<string, Map<string, DiscoveredRemoteSurfaceInfo>>()
 
-		this.init()
-	}
+	constructor() {
+		try {
+			this.#satelliteBrowser = this.#bonjour.find({ type: 'companion-satellite', protocol: 'tcp' })
 
-	listen(): void {
-		this.currentState = true
+			this.#satelliteExpireInterval = setInterval(() => {
+				this.#satelliteBrowser?.expire()
+			}, 30000)
 
-		if (!this.#satelliteBrowser) {
-			try {
-				this.#satelliteBrowser = this.#bonjour.find({ type: 'companion-satellite', protocol: 'tcp' })
-
-				this.#satelliteExpireInterval = setInterval(() => {
-					this.#satelliteBrowser?.expire()
-				}, 30000)
-
-				this.#satelliteBrowser.on('up', (service) => {
-					this.#updateSatelliteService(undefined, service)
-				})
-				this.#satelliteBrowser.on('down', (service) => {
-					this.#forgetSatelliteService(service)
-				})
-				this.#satelliteBrowser.on('txt-update', (newService, oldService) => {
-					this.#updateSatelliteService(oldService, newService)
-				})
-				this.#satelliteBrowser.on('srv-update', (newService, oldService) => {
-					this.#updateSatelliteService(oldService, newService)
-				})
-			} catch (_e) {
-				this.logger.debug(`ERROR failed to start searching for companion satellite devices`)
-			}
+			this.#satelliteBrowser.on('up', (service) => {
+				this.#updateSatelliteService(undefined, service)
+			})
+			this.#satelliteBrowser.on('down', (service) => {
+				this.#forgetSatelliteService(service)
+			})
+			this.#satelliteBrowser.on('txt-update', (newService, oldService) => {
+				this.#updateSatelliteService(oldService, newService)
+			})
+			this.#satelliteBrowser.on('srv-update', (newService, oldService) => {
+				this.#updateSatelliteService(oldService, newService)
+			})
+		} catch (_e) {
+			this.#logger.debug(`ERROR failed to start searching for companion satellite devices`)
 		}
 
-		if (!this.#streamDeckDiscovery) {
-			try {
-				this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
+		try {
+			this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
 
-				this.#streamDeckDiscovery.on('up', (streamdeck) => {
-					const uiService = this.#convertStreamDeckForUi(streamdeck)
-					if (!uiService) return
+			this.#streamDeckDiscovery.on('up', (streamdeck) => {
+				const uiService = this.#convertStreamDeckForUi(streamdeck)
+				if (!uiService) return
 
-					this.logger.debug(
-						`Found streamdeck tcp device ${streamdeck.name} at ${streamdeck.address}:${streamdeck.port}`
-					)
+				this.#logger.debug(`Found streamdeck tcp device ${streamdeck.name} at ${streamdeck.address}:${streamdeck.port}`)
 
-					this.#surfaceEvents.emit('event', {
-						type: 'update',
-						info: uiService,
-					})
+				this.#surfaceEvents.emit('event', {
+					type: 'update',
+					info: uiService,
 				})
-				this.#streamDeckDiscovery.on('down', (streamdeck) => {
-					const uiService = this.#convertStreamDeckForUi(streamdeck)
-					if (!uiService) return
+			})
+			this.#streamDeckDiscovery.on('down', (streamdeck) => {
+				const uiService = this.#convertStreamDeckForUi(streamdeck)
+				if (!uiService) return
 
-					this.#surfaceEvents.emit('event', {
-						type: 'remove',
-						itemId: uiService.id,
-					})
+				this.#surfaceEvents.emit('event', {
+					type: 'remove',
+					itemId: uiService.id,
 				})
+			})
 
-				setImmediate(() => {
-					this.#streamDeckDiscovery?.query()
-				})
-			} catch (_e) {
-				this.logger.debug(`ERROR failed to start searching for streamdeck tcp devices`)
-			}
+			setImmediate(() => {
+				this.#streamDeckDiscovery?.query()
+			})
+		} catch (_e) {
+			this.#logger.debug(`ERROR failed to start searching for streamdeck tcp devices`)
 		}
 	}
 
-	close(): void {
+	quit(): void {
 		this.#streamDeckDiscovery?.destroy()
 		this.#streamDeckDiscovery = undefined
+
 		this.#bonjour.destroy()
+
+		if (this.#satelliteExpireInterval) clearInterval(this.#satelliteExpireInterval)
+	}
+
+	instanceForget(instanceId: string): void {
+		const connectionsToForget = this.#knownSurfaces.get(instanceId)
+		this.#knownSurfaces.delete(instanceId)
+
+		if (!connectionsToForget) return
+
+		for (const id of connectionsToForget.keys()) {
+			this.#surfaceEvents.emit('event', {
+				type: 'remove',
+				itemId: id,
+			})
+		}
+	}
+	instanceConnectionsFound(instanceId: string, connectionInfos: DiscoveredRemoteSurfaceInfo[]): void {
+		const connections = this.#knownSurfaces.get(instanceId) ?? new Map()
+		this.#knownSurfaces.set(instanceId, connections)
+
+		for (const info of connectionInfos) {
+			const oldInfo = connections.get(info.id)
+
+			// TODO - ignore config in the diff
+			if (!oldInfo || !isEqual(oldInfo, info)) {
+				connections.set(info.id, info)
+
+				this.#surfaceEvents.emit('event', {
+					type: 'update',
+					info: convertPluginConnectionToUi(instanceId, info),
+				})
+			}
+		}
+	}
+	instanceConnectionsForgotten(instanceId: string, connectionInfos: string[]): void {
+		const connections = this.#knownSurfaces.get(instanceId) ?? new Map()
+		this.#knownSurfaces.set(instanceId, connections)
+
+		for (const infoId of connectionInfos) {
+			if (connections.has(infoId)) {
+				connections.delete(infoId)
+
+				this.#surfaceEvents.emit('event', {
+					type: 'remove',
+					itemId: `${instanceId}:${infoId}`,
+				})
+			}
+		}
 	}
 
 	#updateSatelliteService(oldService: DiscoveredService | undefined, service: DiscoveredService) {
-		this.logger.debug(`Found companion satellite device ${service.name} at ${service.addresses?.[0]}:${service.port}`)
+		this.#logger.debug(`Found companion satellite device ${service.name} at ${service.addresses?.[0]}:${service.port}`)
 
 		if (oldService) {
 			const oldServiceInfo = this.#convertSatelliteServiceForUi(oldService)
@@ -168,45 +208,6 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			port: streamdeck.port,
 
 			modelName: streamdeck.modelName,
-			serialnumber: streamdeck.serialNumber,
-		}
-	}
-
-	/**
-	 * Kill the socket, if exists.
-	 * @access protected
-	 * @override
-	 */
-	protected disableModule(): void {
-		if (this.currentState) {
-			this.currentState = false
-			try {
-				if (this.#satelliteBrowser) {
-					for (const service of this.#satelliteBrowser.services) {
-						this.#forgetSatelliteService(service)
-					}
-					this.#satelliteBrowser.stop()
-					this.#satelliteBrowser = undefined
-				}
-
-				clearTimeout(this.#satelliteExpireInterval)
-				this.#satelliteExpireInterval = undefined
-
-				this.logger.info(`Stopped searching for satellite devices`)
-			} catch (e: any) {
-				this.logger.silly(`Could not stop searching for satellite devices: ${e.message}`)
-			}
-
-			try {
-				if (this.#streamDeckDiscovery) {
-					this.#streamDeckDiscovery.destroy()
-					this.#streamDeckDiscovery = undefined
-				}
-
-				this.logger.info(`Stopped searching for streamdeck tcp devices`)
-			} catch (e: any) {
-				this.logger.silly(`Could not stop searching for streamdeck tcp devices: ${e.message}`)
-			}
 		}
 	}
 
@@ -244,7 +245,7 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 					url.hostname = input.satelliteInfo.addresses[0] // TODO - choose correct address
 					url.port = input.satelliteInfo.port.toString()
 
-					this.logger.info(
+					this.#logger.info(
 						`Setting up satellite ${input.satelliteInfo.name} at ${url.toString()} to ${input.companionAddress}:${16622}`
 					)
 
@@ -284,6 +285,12 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 					for (const service of self.#streamDeckDiscovery.knownStreamDecks) {
 						const uiService = self.#convertStreamDeckForUi(service)
 						if (uiService) initialServices.push(uiService)
+					}
+				}
+
+				for (const [instanceId, knownSurfaces] of self.#knownSurfaces) {
+					for (const surface of knownSurfaces.values()) {
+						initialServices.push(convertPluginConnectionToUi(instanceId, surface))
 					}
 				}
 
@@ -340,5 +347,18 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 		return {
 			addresses,
 		}
+	}
+}
+
+function convertPluginConnectionToUi(
+	instanceId: string,
+	info: DiscoveredRemoteSurfaceInfo
+): ClientDiscoveredSurfaceInfoPlugin {
+	return {
+		id: `${instanceId}:${info.id}`,
+		surfaceType: 'plugin',
+		instanceId: instanceId,
+		name: info.displayName,
+		description: info.description,
 	}
 }
