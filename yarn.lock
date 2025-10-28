@@ -1525,22 +1525,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:~0.2.0":
-  version: 0.2.0
-  resolution: "@companion-surface/base@npm:0.2.0"
+"@companion-surface/base@npm:~0.3.0":
+  version: 0.3.0
+  resolution: "@companion-surface/base@npm:0.3.0"
   dependencies:
     tslib: "npm:^2.8.1"
-  checksum: 10c0/526c1188d5e610da51d33b22adb2a051b38722674914bb1f1c17792dc55e83e7832ae8bea89bf92e8a09ca090678870523e5416da3ae74e5fedf707cf6c7f552
+  checksum: 10c0/6f404ebdf6a7b10c19adb5ed06d98cb276badee835a385736dc139b3710ad749582befd4eee4376cb2b18a8e2769afcf8af7881579ff5e2907bf8f5a2ad21fb5
   languageName: node
   linkType: hard
 
-"@companion-surface/host@npm:~0.2.0":
-  version: 0.2.0
-  resolution: "@companion-surface/host@npm:0.2.0"
+"@companion-surface/host@npm:~0.3.0":
+  version: 0.3.0
+  resolution: "@companion-surface/host@npm:0.3.0"
   dependencies:
-    "@companion-surface/base": "npm:~0.2.0"
+    "@companion-surface/base": "npm:~0.3.0"
+    fast-deep-equal: "npm:^3.1.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/6f7664e7dbae005f7ebbc52acecaf28f57f33b8b4c9444358e872b25a1577983abddf9b46748fd3f401a98b77617e114f17b882527b79f24568a3969f6e35db1
+  checksum: 10c0/3f962c77b910d76b9d13beecd40fb43a69d736c4026f14e73c3d96242c139d811e5e01372a88f4bf3944b69a5223b68c290c7631eee8e42947076ecd9ae461a7
   languageName: node
   linkType: hard
 
@@ -8383,7 +8384,7 @@ asn1@evs-broadcast/node-asn1:
     "@blackmagic-controller/node": "npm:^1.0.2"
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:^1.13.4"
-    "@companion-surface/host": "npm:~0.2.0"
+    "@companion-surface/host": "npm:~0.3.0"
     "@elgato-stream-deck/node": "npm:^7.3.4"
     "@elgato-stream-deck/tcp": "npm:^7.3.4"
     "@julusian/bonjour-service": "npm:^1.4.2"
