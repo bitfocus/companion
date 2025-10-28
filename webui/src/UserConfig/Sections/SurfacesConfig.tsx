@@ -14,18 +14,6 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 				userConfig={props}
 				label={
 					<>
-						Watch for Discoverable Remote Surfaces
-						<br />
-						Such as Companion Satellite, Stream Deck Studio and Stream Deck Network Dock
-					</>
-				}
-				field="discoveryEnabled"
-			/>
-
-			<UserConfigSwitchRow
-				userConfig={props}
-				label={
-					<>
 						Enable direct connection to Streamdecks
 						<br />
 						When disabled support for the Elgato software Plugin will be enabled
