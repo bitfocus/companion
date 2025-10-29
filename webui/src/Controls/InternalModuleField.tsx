@@ -185,7 +185,6 @@ interface InternalPageIdDropdownProps {
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
-	multiple?: boolean
 }
 
 export const InternalPageIdDropdown = observer(function InternalPageDropdown({
@@ -195,7 +194,6 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 	value,
 	setValue,
 	disabled,
-	multiple,
 }: InternalPageIdDropdownProps) {
 	const { pages } = useContext(RootAppStoreContext)
 
@@ -218,11 +216,7 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 		return choices
 	}, [pages, /*isLocatedInGrid,*/ includeStartup, includeDirection])
 
-	if (multiple === undefined || !multiple) {
-		return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
-	} else {
-		return <MultiDropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
-	}
+	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalCustomVariableDropdownProps {

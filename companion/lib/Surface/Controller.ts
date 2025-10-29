@@ -1581,15 +1581,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return surfaceGroup?.groupId
 	}
 
-	/**
-	 * Get the groupId for a surfaceId (or groupId)
-	 */
-	getGroupNameFromDeviceId(surfaceOrGroupId: string, looseIdMatching = false): string | undefined {
-		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
-
-		return surfaceGroup?.displayName
-	}
-
 	#resetAllDevices() {
 		// Destroy any groups and detach their contents
 		for (const surfaceGroup of this.#surfaceGroups.values()) {

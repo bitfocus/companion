@@ -29,8 +29,6 @@ export class SurfaceGroup {
 		last_page_id: '',
 		startup_page_id: '',
 		use_last_page: true,
-		restrict_pages: false,
-		allowed_page_ids: [],
 	}
 
 	/**
@@ -148,8 +146,8 @@ export class SurfaceGroup {
 		}
 
 		// validate the current page id
-		if (!this.#isPageIdValid(this.#currentPageId)) {
-			this.#currentPageId = this.#getFirstPageId()
+		if (!this.#pageStore.isPageIdValid(this.#currentPageId)) {
+			this.#currentPageId = this.#pageStore.getFirstPageId()
 
 			// Update the config to match
 			this.groupConfig.last_page_id = this.#currentPageId
@@ -246,46 +244,11 @@ export class SurfaceGroup {
 	}
 
 	/**
-	 * Get first page ID, taking into account `groupConfig.allowed_page_ids`
-	 */
-	#getFirstPageId(): string {
-		const validPages = this.groupConfig.restrict_pages ? (this.groupConfig.allowed_page_ids ?? []) : []
-		return validPages.length > 0 ? validPages[0] : this.#pageStore.getFirstPageId()
-	}
-
-	/**
-	 * Check if a page ID is valid, taking into account `groupConfig.allowed_page_ids`
-	 */
-	#isPageIdValid(pageID: string): boolean {
-		const allowedPages = this.groupConfig.restrict_pages ? (this.groupConfig.allowed_page_ids ?? []) : []
-		if (!this.#pageStore.isPageIdValid(pageID)) {
-			return false
-		} else if (allowedPages.length > 0) {
-			const isAllowed = allowedPages.includes(pageID)
-			if (!isAllowed && this.#pageHistory) {
-				const pageHistory = this.#pageHistory
-				// if page is valid but not on the "allowed" list: clean up history
-				if (pageHistory.history.some((p) => !allowedPages.includes(p))) {
-					pageHistory.history = pageHistory.history.filter((p) => allowedPages.includes(p))
-					// not sure what's best here, but this should do...
-					pageHistory.index = pageHistory.history.length - 1
-				}
-			}
-			return isAllowed
-		} else {
-			// page is valid and there are no page restrictions
-			return true
-		}
-	}
-
-	/**
 	 * Change the page of a surface, keeping a history of previous pages
 	 */
 	setCurrentPage(toPage: string | 'back' | 'forward' | '+1' | '-1', defer = false): void {
 		const currentPage = this.#currentPageId
 		const pageHistory = this.#pageHistory
-
-		const validPages = this.groupConfig.restrict_pages ? (this.groupConfig.allowed_page_ids ?? []) : []
 
 		if (toPage === 'back' || toPage === 'forward') {
 			// determine the 'to' page
@@ -294,36 +257,25 @@ export class SurfaceGroup {
 			const pageTarget = pageHistory.history[pageIndex]
 
 			// change only if pageIndex points to a real page
-			// note that in all common situations, the only way pageTarget is undefined
-			// is when we're trying to go beyond the beginning or end of history,
-			// in which case, doing nothing is the correct action.
 			if (pageTarget !== undefined) {
 				pageHistory.index = pageIndex
-				if (!this.#isPageIdValid(pageTarget)) return
+
+				// TODO - should this search for the first valid pageId?
+				if (!this.#pageStore.isPageIdValid(pageTarget)) return
 
 				this.#storeNewPage(pageTarget, defer)
 			}
 		} else {
 			let newPage: string | null = toPage
-			const getNewPage = (currentPage: string, offset: number) => {
-				if (validPages.length > 0) {
-					let newPage = (validPages.indexOf(currentPage) + offset) % validPages.length
-					if (newPage < 0) newPage = validPages.length - 1
-					return validPages[newPage]
-				} else {
-					// note: getOffsetPageId() calculates the new page with wrap around
-					return this.#pageStore.getOffsetPageId(currentPage, offset)
-				}
-			}
-			// note: getNewPage() calculates the new page with wrap around
+			// note: getOffsetPageId() calculates the new page with wrap around
 			if (newPage === '+1') {
-				newPage = getNewPage(currentPage, 1)
+				newPage = this.#pageStore.getOffsetPageId(currentPage, 1)
 			} else if (newPage === '-1') {
-				newPage = getNewPage(currentPage, -1)
+				newPage = this.#pageStore.getOffsetPageId(currentPage, -1)
 			} else {
 				newPage = String(newPage)
 			}
-			if (!newPage || !this.#isPageIdValid(newPage)) newPage = this.#getFirstPageId()
+			if (!newPage || !this.#pageStore.isPageIdValid(newPage)) newPage = this.#pageStore.getFirstPageId()
 
 			// Change page
 			this.#storeNewPage(newPage, defer)
@@ -347,9 +299,9 @@ export class SurfaceGroup {
 	 * Update the current page if the total number of pages change
 	 */
 	#pageCountChange = (_pageCount: number): void => {
-		if (!this.#isPageIdValid(this.#currentPageId)) {
+		if (!this.#pageStore.isPageIdValid(this.#currentPageId)) {
 			// TODO - choose a better value?
-			this.#storeNewPage(this.#getFirstPageId(), true)
+			this.#storeNewPage(this.#pageStore.getFirstPageId(), true)
 		}
 	}
 
@@ -474,18 +426,6 @@ export function validateGroupConfigValue(pageStore: IPageStore, key: string, val
 			}
 
 			return value
-		}
-		case 'restrict_pages':
-			return Boolean(value)
-
-		case 'allowed_page_ids': {
-			const values = value as string[]
-			const errors = values.filter((page) => !pageStore.isPageIdValid(page))
-			if (errors.length > 0) {
-				throw new Error(`Invalid allowed_page_ids values: [${errors.join(',')}]`)
-			}
-
-			return values
 		}
 		default:
 			throw new Error(`Invalid SurfaceGroup config key: "${key}"`)

@@ -592,7 +592,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		try {
 			this.#surfaces.devicePageSet(this.surfaceId, forward ? '+1' : '-1', true)
-			this.#logger.debug(`Change page ${pageNumber}: ${forward ? 'forward' : 'backward'} initiated by ${name}`)
+			this.#logger.debug(`Change page ${pageNumber}: "${forward ? '+1' : '-1'}" initiated by ${name}`)
 		} catch (e) {
 			this.#logger.error(`Change page failed for ${name}: ${e}`)
 		}

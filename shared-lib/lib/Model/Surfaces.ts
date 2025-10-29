@@ -65,15 +65,11 @@ export interface SurfaceGroupConfig {
 	last_page_id: string
 	startup_page_id: string
 	use_last_page: boolean
-	restrict_pages?: boolean
-	allowed_page_ids?: string[]
 
-	/** @deprecated. replaced by last_page_id but still used for export */
+	/** @deprecated. replaced by last_page_id */
 	last_page?: number
-	/** @deprecated. replaced by startup_page_id but still used for export */
+	/** @deprecated. replaced by startup_page_id */
 	startup_page?: number
-	/** @deprecated.  used for export */
-	allowed_pages?: number[]
 }
 
 export interface SurfacePanelConfig {
