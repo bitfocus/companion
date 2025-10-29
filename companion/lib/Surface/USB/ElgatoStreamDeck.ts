@@ -38,9 +38,17 @@ export const StreamDeckJpegOptions: JPEGEncodeOptions = {
 function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] {
 	const fields: CompanionSurfaceConfigField[] = [...OffsetConfigFields]
 
+	fields.push(LegacyRotationConfigField)
+
+	// Hide brightness for the pedal
+	const hasBrightness = !!streamDeck.CONTROLS.find(
+		(c) => c.type === 'lcd-segment' || (c.type === 'button' && c.feedbackType !== 'none')
+	)
+	if (hasBrightness) fields.push(BrightnessConfigField)
+
 	if (streamDeck.MODEL === DeviceModelId.PLUS) {
 		// place it above offset, etc.
-		fields.unshift({
+		fields.push({
 			id: 'swipe_can_change_page',
 			label: 'Horizontal Swipe Changes Page',
 			type: 'checkbox',
@@ -49,14 +57,7 @@ function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] 
 		} as CompanionSurfaceConfigField)
 	}
 
-	// Hide brightness for the pedal
-	const hasBrightness = !!streamDeck.CONTROLS.find(
-		(c) => c.type === 'lcd-segment' || (c.type === 'button' && c.feedbackType !== 'none')
-	)
-	// is it safe/advisable to be pushing the object instead of a copy?
-	if (hasBrightness) fields.push(BrightnessConfigField)
-
-	fields.push(LegacyRotationConfigField, ...LockConfigFields)
+	fields.push(...LockConfigFields)
 
 	if (streamDeck.HAS_NFC_READER)
 		fields.push({
