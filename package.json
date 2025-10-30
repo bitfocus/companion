@@ -47,6 +47,7 @@
   "devDependencies": {
     "@eslint/js": "^9.38.0",
     "@tanstack/eslint-plugin-query": "^5.91.2",
+    "@types/express-serve-static-core": "^5.1.0",
     "@types/node": "^22.18.12",
     "@types/ps-tree": "^1.1.6",
     "@vitest/coverage-v8": "^3.2.4",
@@ -84,6 +85,7 @@
     "@xkeys-lib/core@npm:3.3.0": "patch:@xkeys-lib/core@npm%3A3.3.0#~/.yarn/patches/@xkeys-lib-core-npm-3.3.0-1a65b6423b.patch",
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",
-    "bare-path": "npm:empty-npm-package@1.0.0"
+    "bare-path": "npm:empty-npm-package@1.0.0",
+    "@types/express-serve-static-core": "^5.1.0"
   }
 }
