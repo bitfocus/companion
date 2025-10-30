@@ -264,6 +264,11 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			// firmwareUpdateVersionsUrl?: string
 			// hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 		}
+
+		// Send all variables immediately
+		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
+			this.#triggerOutputVariable(name, outputVariable)
+		}
 	}
 
 	clearDeck(): void {
@@ -299,6 +304,14 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		for (const inputVariable of Object.values(this.#inputVariables)) {
 			if (config[inputVariable.id] && (force || this.#config[inputVariable.id] !== config[inputVariable.id])) {
 				this.emit('setCustomVariable', config[inputVariable.id], inputVariable.lastValue)
+			}
+		}
+
+		// Ensure output variables are running
+		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
+			if (config[outputVariable.id] && (force || this.#config[outputVariable.id] !== config[outputVariable.id])) {
+				this.#triggerOutputVariable(name, outputVariable)
+				break
 			}
 		}
 

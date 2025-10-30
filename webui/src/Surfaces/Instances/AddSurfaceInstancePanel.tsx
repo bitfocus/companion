@@ -74,7 +74,7 @@ function useAddSurfaceInstanceService(): AddInstanceService {
 
 			findNextLabel: (moduleInfo) => {
 				// There are no exclusivity rules on these (yet?)
-				return moduleInfo.name
+				return moduleInfo.shortname
 			},
 		}),
 		[navigate, addMutation]
