@@ -17,6 +17,7 @@
     "dev:inner": "yarn workspace companion dev:inner",
     "dev:debug": "yarn workspace companion dev:debug",
     "dev:webui": "yarn workspace @companion-app/webui dev",
+    "dev:docs": "yarn workspace @companion-app/docs start",
     "build:ts": "yarn workspaces foreach --all run build:ts",
     "dist:webui": "run build:ts && yarn workspace @companion-app/webui build",
     "dist": "tsx ./tools/build/complete.mts",
