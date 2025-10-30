@@ -8,7 +8,7 @@
     "webui",
     "launcher",
     "launcher-ui",
-    "docs2"
+    "docs"
   ],
   "type": "module",
   "scripts": {

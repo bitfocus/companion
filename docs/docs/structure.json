@@ -286,7 +286,7 @@
 	},
 	{
 		"label": "Surfaces",
-		"file": "7_surfaces.md",
+		"file": "7_surfaces/index.md",
 		"children": [
 			{
 				"label": "Elgato Stream Deck",

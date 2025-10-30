@@ -1,3 +1,8 @@
+---
+title: Mirabox Stream Dock
+sidebar_position: 5
+---
+
 Mirabox's Stream Dock line includes several input devices.  
 Companion supports the following models:
 

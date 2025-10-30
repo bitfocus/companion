@@ -24286,9 +24286,9 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"test@workspace:docs2":
+"test@workspace:docs":
   version: 0.0.0-use.local
-  resolution: "test@workspace:docs2"
+  resolution: "test@workspace:docs"
   dependencies:
     "@docusaurus/core": "npm:3.9.2"
     "@docusaurus/module-type-aliases": "npm:3.9.2"

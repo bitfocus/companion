@@ -1,6 +1,6 @@
 There are two ways of setting up buttons
 
-#### Using presets
+## Using presets
 
 The fastest way to define buttons is to use the presets.
 
@@ -26,7 +26,7 @@ Keep in mind you may still need to configure the preset after adding it to a but
 
 _**Note:** you can't add new presets as a user, they are all pre-made in code._
 
-#### Manually defining
+## Manually defining
 
 1. Click on the button space you want the button to be located on.
 2. Set the button's type:

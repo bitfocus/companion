@@ -5,7 +5,7 @@ Key points
 - Expressions are written using the expression language and must be wrapped in `$()` so the renderer can locate them. Example: `$(1 + 2)` or `$(custom:a + custom:b)`.
 - Expressions can contain arithmetic and logical operators, conditional (ternary) expressions, function calls, and variable access.
 
-##### Examples
+### Examples
 
 Basic arithmetic:
 

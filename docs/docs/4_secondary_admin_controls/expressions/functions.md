@@ -2,7 +2,7 @@ There are various supported functions, and we are willing to add more. Let us kn
 
 The currently supported functions are:
 
-##### General operations
+### General operations
 
 **length(val)**
 
@@ -13,7 +13,7 @@ Find the length of the item passed in.
 - For JSON or other objects, it will return the number of properties
 - For numbers it will return the length of the string representation
 
-##### Numeric operations
+### Numeric operations
 
 **round(val)**
 
@@ -74,7 +74,7 @@ Calculate the natural logarithm of a number.
 
 Calculate the base 10 logarithm of a number.
 
-##### String operations
+### String operations
 
 **trim(val)**
 
@@ -88,12 +88,12 @@ Find the length of the given string. For Unicode strings this will count the byt
 
 substr() extracts characters from indexStart up to but not including indexEnd. For Unicode strings, this will count based on the bytes not the graphemes.
 
-- If indexStart >= str.length, an empty string is returned.
-- If indexStart < 0, the index is counted from the end of the string. More formally, in this case, the substring starts at max(indexStart + str.length, 0).
+- If indexStart &gt;= str.length, an empty string is returned.
+- If indexStart &lt; 0, the index is counted from the end of the string. More formally, in this case, the substring starts at max(indexStart + str.length, 0).
 - If indexStart is omitted, undefined, or cannot be converted to a number, it's treated as 0.
-- If indexEnd is omitted, undefined, or cannot be converted to a number, or if indexEnd >= str.length, substr() extracts to the end of the string.
-- If indexEnd < 0, the index is counted from the end of the string.
-- If indexEnd <= indexStart after normalizing negative values, an empty string is returned.
+- If indexEnd is omitted, undefined, or cannot be converted to a number, or if indexEnd &gt;= str.length, substr() extracts to the end of the string.
+- If indexEnd &lt; 0, the index is counted from the end of the string.
+- If indexEnd &lt;= indexStart after normalizing negative values, an empty string is returned.
 
 Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
 
@@ -163,7 +163,7 @@ In some cases you may need nested variable evaluation (for example `$(custom:$(c
 
 eg `parseVariables('$(custom:$(custom:b))')`
 
-##### Bool operations
+### Bool operations
 
 **bool(val)**
 
@@ -176,7 +176,7 @@ Any of the following will be interpreted as true:
 
 Everything else will be false.
 
-##### Object/Array operations
+### Object/Array operations
 
 **jsonpath(obj, path)**
 
@@ -224,7 +224,7 @@ Optionally provide an offset to begin the search from, searching from the end.
 
 If the value isn't found, it will return -1, otherwise the index of the last occurrence. The beginning is position 0.
 
-##### Time operations
+### Time operations
 
 **unixNow()**
 

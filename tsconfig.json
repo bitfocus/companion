@@ -6,6 +6,6 @@
 		{ "path": "./shared-lib" },
 		{ "path": "./webui" },
 		{ "path": "./launcher-ui" },
-		{ "path": "./docs2" }
+		{ "path": "./docs" }
 	]
 }
