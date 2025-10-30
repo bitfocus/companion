@@ -12,7 +12,7 @@ import type { VariablesStore } from './VariablesStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { HelpModalRef } from '~/Instances/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
-import type { WhatsNewModalRef } from '~/WhatsNewModal.js'
+import type { WhatsNewModalRef } from '~/WhatsNewModal/WhatsNew.js'
 import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?

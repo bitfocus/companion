@@ -114,7 +114,7 @@ export class UIExpress {
 			getResourcePath('static'),
 			getResourcePath('webui/build'),
 		])
-		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs')])
+		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs/placeholder')])
 		const webuiServerWithRewriter: Express.RequestHandler = async (req, res, next) => {
 			// This is pretty horrible, but we need to rewrite the ROOT_URL_HERE in the html/js/css files to the correct prefix
 			// First ignore a few file types that we don't want to rewrite

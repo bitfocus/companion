@@ -15,4 +15,6 @@ export const routes = rootRoute('__root.tsx', [
 	route('/tablet2.html', '-redirects/tablet2-html.tsx'),
 	route('/ipad.html', '-redirects/ipad-html.tsx'),
 	route('/tablet3', '-redirects/tablet3.tsx'),
+
+	route('/getting-started', '-redirects/getting-started.tsx'),
 ])

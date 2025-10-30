@@ -54,10 +54,11 @@ await $`yarn workspace companion build`
 // Build webui
 await $`yarn workspace @companion-app/webui build`
 await $`yarn workspace @companion-app/launcher-ui build`
+await $`yarn workspace @companion-app/docs build`
 
 // generate the 'static' zip files to serve
 await zipDirectory('./webui/build', 'dist/webui.zip')
-await zipDirectory('./docs', 'dist/docs.zip')
+await zipDirectory('./docs/build', 'dist/docs.zip')
 
 // generate a package.json for the required native dependencies
 const require = createRequire(import.meta.url)
