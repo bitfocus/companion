@@ -12,13 +12,19 @@ import {
 } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { MyErrorBoundary } from './Resources/Error.js'
-import { DocsContent } from './GettingStarted/DocsContent.js'
+import { MyErrorBoundary } from '../Resources/Error.js'
+import { DocsContent } from './DocsContent.js'
 import { useLocalStorage } from 'usehooks-ts'
 import semver from 'semver'
 
-import docsStructure from '@docs/structure.json'
-import type { DocsSection } from './GettingStarted/GettingStarted.js'
+// import docsStructure from '@docs/structure.json'
+interface DocsSection {
+	label: string
+	file?: string
+	children?: DocsSection[]
+}
+
+const docsStructure: DocsSection[] = []
 
 interface WhatsNewPage extends DocsSection {
 	_version?: string
@@ -26,8 +32,8 @@ interface WhatsNewPage extends DocsSection {
 }
 
 const whatsNewPages: WhatsNewPage[] =
-	(docsStructure.find((section) => section._whatsnew)?.children as WhatsNewPage[]).filter((f) => !!f._version) ?? []
-const latestPage: WhatsNewPage | undefined = whatsNewPages[0]
+	(docsStructure.find((section) => section._whatsnew)?.children as WhatsNewPage[])?.filter((f) => !!f._version) ?? []
+const latestPage: WhatsNewPage | undefined = whatsNewPages?.[0]
 
 export interface WhatsNewModalRef {
 	show(): void
@@ -39,7 +45,7 @@ export const WhatsNewModal = observer(
 
 		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined)
 		useEffect(() => {
-			if (!storedLatest || (latestPage._version && semver.lt(storedLatest, latestPage._version))) {
+			if (!storedLatest || (latestPage?._version && semver.lt(storedLatest, latestPage._version))) {
 				setTimeout(() => {
 					setShow(true)
 				}, 10)
@@ -47,12 +53,12 @@ export const WhatsNewModal = observer(
 			}
 		}, [storedLatest])
 
-		const [selectedVersion, setSelectedVersion] = useState(latestPage.file)
+		const [selectedVersion, setSelectedVersion] = useState(latestPage?.file)
 
 		const selectedPage = selectedVersion && whatsNewPages?.find((page) => page.file === selectedVersion)
 
 		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setStoredLatest(latestPage._version), [setStoredLatest])
+		const onClosed = useCallback(() => setStoredLatest(latestPage?._version), [setStoredLatest])
 
 		useImperativeHandle(
 			ref,

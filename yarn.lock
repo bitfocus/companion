@@ -2051,6 +2051,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@companion-app/docs@workspace:docs":
+  version: 0.0.0-use.local
+  resolution: "@companion-app/docs@workspace:docs"
+  dependencies:
+    "@docusaurus/core": "npm:3.9.2"
+    "@docusaurus/module-type-aliases": "npm:3.9.2"
+    "@docusaurus/preset-classic": "npm:3.9.2"
+    "@docusaurus/tsconfig": "npm:3.9.2"
+    "@docusaurus/types": "npm:3.9.2"
+    "@mdx-js/react": "npm:^3.0.0"
+    clsx: "npm:^2.0.0"
+    prism-react-renderer: "npm:^2.3.0"
+    react: "npm:^19.0.0"
+    react-dom: "npm:^19.0.0"
+    typescript: "npm:~5.6.2"
+  languageName: unknown
+  linkType: soft
+
 "@companion-app/launcher-ui@workspace:launcher-ui":
   version: 0.0.0-use.local
   resolution: "@companion-app/launcher-ui@workspace:launcher-ui"
@@ -24285,24 +24303,6 @@ asn1@evs-broadcast/node-asn1:
   checksum: 10c0/6d67b9af4336a2e12b26a68c83308c7863534c65f27ed4ff7068a56f5a58f7ac703e8fc80f698a19bb154fd8f705cdf7ec347d9512b2c522c737269507e7b263
   languageName: node
   linkType: hard
-
-"test@workspace:docs":
-  version: 0.0.0-use.local
-  resolution: "test@workspace:docs"
-  dependencies:
-    "@docusaurus/core": "npm:3.9.2"
-    "@docusaurus/module-type-aliases": "npm:3.9.2"
-    "@docusaurus/preset-classic": "npm:3.9.2"
-    "@docusaurus/tsconfig": "npm:3.9.2"
-    "@docusaurus/types": "npm:3.9.2"
-    "@mdx-js/react": "npm:^3.0.0"
-    clsx: "npm:^2.0.0"
-    prism-react-renderer: "npm:^2.3.0"
-    react: "npm:^19.0.0"
-    react-dom: "npm:^19.0.0"
-    typescript: "npm:~5.6.2"
-  languageName: unknown
-  linkType: soft
 
 "text-decoder@npm:^1.1.0":
   version: 1.2.0

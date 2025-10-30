@@ -55,6 +55,13 @@ const config: Config = {
 		colorMode: {
 			respectPrefersColorScheme: true,
 		},
+		navbar: {
+			title: 'Bitfocus Companion - Documentation',
+			logo: {
+				alt: 'Logo',
+				src: 'img/logo.png',
+			},
+		},
 		// footer: {
 		// 	style: 'dark',
 		// 	links: [
