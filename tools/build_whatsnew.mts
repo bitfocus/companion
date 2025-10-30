@@ -111,16 +111,16 @@ async function discoverVersions(): Promise<WhatsNewFile[]> {
  * Process a single markdown file
  */
 async function processMarkdownFile(version: WhatsNewFile): Promise<void> {
-	const inputPath = path.join(docsDir, version.markdownFile)
-	const outputPath = path.join(outputDir, `${version.version}.md`)
+	const inputPath = path.join(docsDir, `${version.file}.md`)
+	const outputPath = path.join(outputDir, `${version.file}.md`)
 
-	console.log(`Processing ${version.version}...`)
+	console.log(`Processing ${version.label}...`)
 
 	// Read the markdown file
 	const content = await fs.readFile(inputPath, 'utf-8')
 
 	// Strip frontmatter
-	const processedContent = stripFrontmatter(content)
+	const { content: processedContent } = parseFrontmatter(content)
 
 	// Write the processed file
 	await fs.writeFile(outputPath, processedContent, 'utf-8')
@@ -130,12 +130,8 @@ async function processMarkdownFile(version: WhatsNewFile): Promise<void> {
  * Copy images for a version
  */
 async function copyImages(version: WhatsNewFile): Promise<void> {
-	if (!version.imageDir) {
-		return
-	}
-
-	const sourceImageDir = path.join(docsDir, version.imageDir)
-	const destImageDir = path.join(outputDir, version.imageDir)
+	const sourceImageDir = path.join(docsDir, version.file)
+	const destImageDir = path.join(outputDir, version.file)
 
 	try {
 		// Check if source directory exists
@@ -158,7 +154,7 @@ async function copyImages(version: WhatsNewFile): Promise<void> {
 			}
 		}
 	} catch (error) {
-		console.log(`  No images directory for ${version.version}`)
+		console.log(`  No images directory for ${version.file}`)
 	}
 }
 
@@ -170,10 +166,20 @@ console.log('Building WhatsNew content...')
 // Create output directory
 await fs.mkdir(outputDir, { recursive: true })
 
+// Discover versions from docs directory
+const versions = await discoverVersions()
+
+console.log(`Found ${versions.length} versions:`, versions.map((v) => v.label).join(', '))
+
 // Process each version
 for (const version of versions) {
 	await processMarkdownFile(version)
 	await copyImages(version)
 }
+
+// Write manifest file for the UI to consume
+const manifestPath = path.join(outputDir, 'manifest.json')
+await fs.writeFile(manifestPath, JSON.stringify(versions, null, 2), 'utf-8')
+console.log(`Wrote manifest with ${versions.length} versions`)
 
 console.log('WhatsNew content built successfully!')
