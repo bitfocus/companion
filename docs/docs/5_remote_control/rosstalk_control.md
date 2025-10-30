@@ -1,6 +1,10 @@
+---
+title: RossTalk Control
+---
+
 Remote triggering can be done by sending RossTalk commands to port `7788`.
 
-**Commands**
+## Commands
 
 - `CC <page>/<row>/<column>`  
   _Press and release button_
@@ -8,7 +12,7 @@ Remote triggering can be done by sending RossTalk commands to port `7788`.
 - `CC <page>:<button>`  
   _Press and release button_
 
-**Examples**
+## Examples
 
 Press and release row 3, column 1 on page 2
 `CC 2/3/1`

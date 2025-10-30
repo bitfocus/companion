@@ -1,3 +1,8 @@
+---
+title: Log
+sidebar_position: 7
+---
+
 The Log section gives status updates of Companion. Different log levels can be filtered.
 
 More detailed module specific logs can be viewed from the **Connections** page

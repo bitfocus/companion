@@ -1,3 +1,8 @@
+---
+title: Functions
+sidebar_position: 2
+---
+
 There are various supported functions, and we are willing to add more. Let us know if you think something is missing.
 
 The currently supported functions are:

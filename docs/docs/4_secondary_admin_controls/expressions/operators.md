@@ -1,3 +1,8 @@
+---
+title: Operators
+sidebar_position: 1
+---
+
 Supported operators include:
 
 - Ternary operator:

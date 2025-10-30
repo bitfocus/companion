@@ -1,3 +1,7 @@
+---
+title: EmberPlus Control
+---
+
 The following controls are available via emberplus:
 
 | Companion Product Information |                                             |
@@ -36,7 +40,7 @@ The following controls are available via emberplus:
 
 ---
 
-**Provider Restarts**
+## Provider Restarts
 
 The Ember Plus provider will automatically restart to rebuild the ember tree under the following conditions:
 
@@ -48,7 +52,7 @@ The Ember Plus provider will automatically restart to rebuild the ember tree und
 
 This will disconnect clients and should be avoided during production use.
 
-**Node path stability**
+## Node path stability
 
 The Ember Plus server cannot guarantee the stability of the numerical paths to variables between Companion restarts, as this is contingent upon initialization order.
 Whenever possible one should preference use of textual paths such as `Companion Tree/variables/internal/instance_warns` rather than `0.3.1.3` as these are stable. After significant changes a full Companion restart can help stabilize the numeric paths.

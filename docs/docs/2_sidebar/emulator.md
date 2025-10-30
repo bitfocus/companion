@@ -1,3 +1,7 @@
+---
+title: Emulator
+---
+
 The **Emulator** provides a Stream Deck–like interface in your browser. It interacts with Companion just like a physical Stream Deck and can be used to test setups or give someone a low-cost set of buttons.
 
 ![Emulator](images/emulator.png?raw=true 'Emulator')

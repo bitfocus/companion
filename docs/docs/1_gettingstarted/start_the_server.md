@@ -1,3 +1,8 @@
+---
+title: Start the server
+sidebar_position: 2
+---
+
 When you open Companion, the launcher window will appear. From the opening screen, choose your network interface and change the port if needed — the default is 8000. This is the port of the Companion server.
 
 ![Launcher](images/launcher.png?raw=true 'Launcher')

@@ -1,3 +1,8 @@
+---
+title: The user interface
+sidebar_position: 3
+---
+
 The main window is divided into three sections. From left to right:
 
 - Sidebar

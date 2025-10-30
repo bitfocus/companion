@@ -1,6 +1,11 @@
+---
+title: OSC Control
+sidebar_position: 3
+---
+
 Remote triggering can be done by sending OSC commands to port `12321` (the port number is configurable).
 
-**Commands**
+## Commands
 
 - `/location/<page>/<row>/<column>/press`  
   _Press and release a button (run both down and up actions)_
@@ -31,7 +36,7 @@ Remote triggering can be done by sending OSC commands to port `12321` (the port 
 - `/surfaces/rescan`
   _Rescan for USB surfaces_
 
-**Examples**
+## Examples
 
 Press row 0, column 5 on page 1 down and hold  
 `/location/1/0/5/press`
@@ -47,7 +52,7 @@ Change the text of row 0, column 5 on page 1 to ONLINE
 Change custom variable "cue" to value "intro":  
 `/custom-variable/cue/value intro`
 
-**Deprecated Commands**
+## Deprecated Commands
 
 The following commands are deprecated and have replacements listed above. They will be removed in a future version of Companion.
 

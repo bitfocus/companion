@@ -1,7 +1,7 @@
 [
 	{
 		"label": "Getting started",
-		"file": "1_welcome.md",
+		"file": "index.md",
 		"children": [
 			{
 				"label": "Before you open Companion",
@@ -19,12 +19,8 @@
 	},
 	{
 		"label": "Sidebar",
-		"file": "2_sidebar.md",
+		"file": "2_sidebar/index.md",
 		"children": [
-			{
-				"label": "Community links",
-				"file": "2_sidebar/community_links.md"
-			},
 			{
 				"label": "Emulator",
 				"file": "2_sidebar/emulator.md"
@@ -37,21 +33,10 @@
 	},
 	{
 		"label": "Configuration GUI",
-		"file": "3_config.md",
 		"children": [
 			{
 				"label": "Connections",
-				"file": "3_config/connections.md",
-				"children": [
-					{
-						"label": "Adding a connection",
-						"file": "3_config/connections/creating.md"
-					},
-					{
-						"label": "Configuring a connection",
-						"file": "3_config/connections/configuring.md"
-					}
-				]
+				"file": "3_config/connections.md"
 			},
 			{
 				"label": "Buttons",
@@ -81,103 +66,19 @@
 			},
 			{
 				"label": "Surfaces",
-				"file": "3_config/surfaces.md",
-				"children": [
-					{
-						"label": "Surface Groups",
-						"file": "3_config/surfaces/groups.md"
-					},
-					{
-						"label": "Discover",
-						"file": "3_config/surfaces/discover.md"
-					}
-				]
+				"file": "3_config/surfaces.md"
 			},
 			{
 				"label": "Triggers",
-				"file": "3_config/triggers.md",
-				"children": [
-					{
-						"label": "Trigger Setup",
-						"file": "3_config/triggers/trigger_setup.md"
-					}
-				]
+				"file": "3_config/triggers.md"
 			},
 			{
 				"label": "Settings",
-				"file": "3_config/settings.md",
-				"children": [
-					{
-						"label": "Installation Name",
-						"file": "3_config/settings/install_name.md"
-					},
-					{
-						"label": "Navigation buttons",
-						"file": "3_config/settings/navigation_buttons.md"
-					},
-					{
-						"label": "Surfaces",
-						"file": "3_config/settings/surfaces.md"
-					},
-					{
-						"label": "PIN lockout",
-						"file": "3_config/settings/pin_lockout.md"
-					},
-					{
-						"label": "Satellite",
-						"file": "3_config/settings/satellite.md"
-					},
-					{
-						"label": "TCP",
-						"file": "3_config/settings/tcp_listener.md"
-					},
-					{
-						"label": "UDP",
-						"file": "3_config/settings/udp_listener.md"
-					},
-					{
-						"label": "OSC",
-						"file": "3_config/settings/osc_listener.md"
-					},
-					{
-						"label": "RossTalk",
-						"file": "3_config/settings/rosstalk.md"
-					},
-					{
-						"label": "Ember+",
-						"file": "3_config/settings/emberplus.md"
-					},
-					{
-						"label": "Artnet Listener",
-						"file": "3_config/settings/artnet_listener.md"
-					},
-					{
-						"label": "Admin UI Password",
-						"file": "3_config/settings/admin_password.md"
-					},
-					{
-						"label": "HTTPS Web Server",
-						"file": "3_config/settings/https_web_server.md"
-					}
-				]
+				"file": "3_config/settings.md"
 			},
 			{
 				"label": "Import / Export",
-				"file": "3_config/import_export.md",
-				"children": [
-					{
-						"label": "Import",
-						"file": "3_config/import-export/import.md"
-					},
-					{
-						"label": "Export",
-						"file": "3_config/import-export/export.md"
-					},
-					{
-						"label": "Reset",
-						"file": "3_config/import-export/reset.md"
-					}
-				]
+				"file": "3_config/import_export.md"
 			},
 			{
 				"label": "Log",
@@ -206,20 +107,8 @@
 			},
 			{
 				"label": "Expressions",
-				"file": "4_secondary_admin_controls/expressions/expressions.md",
+				"file": "4_secondary_admin_controls/expressions/index.md",
 				"children": [
-					{
-						"label": "Valid Expressions",
-						"file": "4_secondary_admin_controls/expressions/valid_expressions.md"
-					},
-					{
-						"label": "Number Literals",
-						"file": "4_secondary_admin_controls/expressions/number_literals.md"
-					},
-					{
-						"label": "Dynamic and Custom Variables",
-						"file": "4_secondary_admin_controls/expressions/dynamic_and_custom_variables.md"
-					},
 					{
 						"label": "Operators",
 						"file": "4_secondary_admin_controls/expressions/operators.md"
@@ -227,10 +116,6 @@
 					{
 						"label": "Functions",
 						"file": "4_secondary_admin_controls/expressions/functions.md"
-					},
-					{
-						"label": "Invalid Expressions",
-						"file": "4_secondary_admin_controls/expressions/invalid_expressions.md"
 					}
 				]
 			}
@@ -238,7 +123,6 @@
 	},
 	{
 		"label": "Remote control",
-		"file": "5_remote_control.md",
 		"children": [
 			{
 				"label": "TCP / UDP Control",
@@ -272,17 +156,7 @@
 	},
 	{
 		"label": "Modules",
-		"file": "6_modules.md",
-		"children": [
-			{
-				"label": "Module list",
-				"file": "6_modules/list.md"
-			},
-			{
-				"label": "Managing a module",
-				"file": "6_modules/manage.md"
-			}
-		]
+		"file": "6_modules.md"
 	},
 	{
 		"label": "Surfaces",

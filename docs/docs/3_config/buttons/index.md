@@ -1,6 +1,11 @@
+---
+title: Buttons
+sidebar_position: 2
+---
+
 In the Buttons tab, you can configure the buttons for your Stream Deck. The number of buttons in the grid can be changed in the settings, it can be grown in all 4 directions.
 
-![Buttons Page](images/buttons.png?raw=true 'Buttons Page')
+![Buttons Page](../images/buttons.png?raw=true 'Buttons Page')
 
 The Buttons layout has multiple pages that can be navigated using the grey left/right arrows or the dropdown. Each page is also listed in the **Pages** tab in the right panel where you can manage pages and give them names.
 

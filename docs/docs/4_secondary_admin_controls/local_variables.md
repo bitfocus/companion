@@ -1,3 +1,8 @@
+---
+title: Local Variables
+sidebar_position: 4
+---
+
 In some contexts (for example when configuring a button) you can use Local Variables. These are indicated by the globe icon next to the input. Local variables provide information relative to the current item, such as the button's page, column and row.
 
 Type `$(this:` in a text field to see available local variable suggestions.

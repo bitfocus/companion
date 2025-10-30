@@ -1,6 +1,11 @@
+---
+title: TCP / UDP Control
+sidebar_position: 1
+---
+
 Remote triggering can be done by sending TCP (port `51234`) or UDP (port `51235`) commands.
 
-**Commands**
+## Commands
 
 - `SURFACE <surface id> PAGE-SET <page number>`  
   _Set a surface to a specific page_
@@ -34,7 +39,8 @@ Remote triggering can be done by sending TCP (port `51234`) or UDP (port `51235`
 - `SURFACES RESCAN`
   _Make Companion rescan for USB surfaces_
 
-**Examples**  
+## Examples
+
 Set the emulator surface to page 23:  
 `SURFACE emulator PAGE-SET 23`
 
@@ -44,7 +50,7 @@ Press page 1 row 2 column 3:
 Change custom variable "cue" to value "intro":  
 `CUSTOM-VARIABLE cue SET-VALUE intro`
 
-**Deprecated Commands**
+## Deprecated Commands
 
 The following commands are deprecated and have replacements listed above. They will be removed in a future version of Companion.
 

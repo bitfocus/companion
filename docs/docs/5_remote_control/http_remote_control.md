@@ -1,6 +1,11 @@
+---
+title: HTTP Remote Control
+sidebar_position: 2
+---
+
 Remote triggering can be done by sending `HTTP` Requests to the same IP and port Companion is running on.
 
-**Commands**
+## Commands
 
 This API tries to follow REST principles, and the convention that a `POST` request will modify a value, and a `GET` request will retrieve values.
 
@@ -62,7 +67,8 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Method: POST  
   Path: `/api/surfaces/rescan`
 
-**Examples**  
+## Examples
+
 Press page 1 row 0 column 2:  
 POST `/api/location/1/0/2/press`
 
@@ -92,7 +98,7 @@ Content-Type `application/json`
 Body: `{"name":"Douglas", "answer":42}` - Body needs to be a valid JSON.  
 The object will be stored in the variable value and will not be converted to a string. You can also use the data types boolean, number, array or null. JSON does not support sending undefined as a value, but we interpret an empty body as undefined, properties of an object can of course be undefined.
 
-**Deprecated Commands**
+## Deprecated Commands
 
 The following commands are deprecated and have replacements listed above. They will be removed in a future version of Companion.
 

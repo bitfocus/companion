@@ -1,3 +1,8 @@
+---
+title: Creating buttons
+sidebar_position: 1
+---
+
 There are two ways of setting up buttons
 
 ## Using presets
@@ -38,7 +43,7 @@ _**Note:** you can't add new presets as a user, they are all pre-made in code._
 
 ![Selecting type](images/selecting-type.png?raw=true 'Selecting type')
 
-**Button styling**
+### Button styling
 
 There are several ways you can make your button stand out, including:
 
@@ -58,7 +63,7 @@ There are also some behaviour options:
 
 ![Button config](images/button-config.png?raw=true 'Button config')
 
-**Creating a button**
+### Creating a button
 
 Enter your button's text in the **Button text** field, then select the alignment and font size. Text and background colors can also be changed.
 
@@ -77,7 +82,7 @@ You can hide the topbar with the dropdown. This can be configured globally in th
 ![Button with topbar](images/button-with-topbar.png?raw=true 'Button with topbar') ![Button without topbar](images/button-without-topbar.png?raw=true 'Button without topbar')  
 _Same 72x72px image, but with and without the topbar_
 
-**Adding a PNG**
+### Adding a PNG
 
 Make a 72x58px PNG image or use a 72x72px PNG, but it will get cropped to fit 72x58px by the topbar. Unless you disable the bar in the settings tab. See the [Settings](#header-5-settings) section below.
 

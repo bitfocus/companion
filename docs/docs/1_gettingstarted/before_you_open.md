@@ -1,3 +1,8 @@
+---
+title: Before you open
+sidebar_position: 1
+---
+
 Connect the hardware and software you want to control. Make sure they are on the same network.
 
 In the Elgato Stream Deck app, update the firmware to the latest version.

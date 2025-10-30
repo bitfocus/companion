@@ -1,3 +1,8 @@
+---
+title: Feedbacks
+sidebar_position: 3
+---
+
 Feedbacks are a way of dynamically updating a buttons style based on the state of devices or other variables.
 
 Some modules are able to provide feedback back to the button, such as changing the button's foreground or background colors to reflect the current status of the device.

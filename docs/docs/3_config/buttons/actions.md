@@ -1,3 +1,8 @@
+---
+title: Actions
+sidebar_position: 2
+---
+
 These actions define the behaviour of the button when it is pressed or depressed (or when triggered externally).
 
 Multiple actions, even those from multiple modules, can be linked to a button. Most actions have options to let you customize how it performs.

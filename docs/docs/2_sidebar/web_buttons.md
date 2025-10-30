@@ -1,3 +1,7 @@
+---
+title: Web buttons
+---
+
 The **Web buttons** view shows all your buttons across all pages on a single screen. This is useful if you want to use a web browser on a tablet to control Companion.
 
 ![Web Buttons](images/webbuttons.png?raw=true 'Web Buttons')

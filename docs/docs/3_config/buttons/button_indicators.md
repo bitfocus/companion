@@ -1,3 +1,8 @@
+---
+title: Button indicators
+sidebar_position: 5
+---
+
 There are several button indicators you should be familiar with:
 
 | Button                                                                                   | Description                                                                                                                 |

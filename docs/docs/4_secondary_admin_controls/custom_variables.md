@@ -1,3 +1,8 @@
+---
+title: Custom Variables
+sidebar_position: 3
+---
+
 The variables tab also includes a section for custom variables. The button labeled `Custom Variables`, which appears alongside other modules that expose module variables, takes you to the **Custom Variables** view.
 
 Custom Variables behave just like module variables, they can be used within Button text and some modules allow their use within the options of their actions. Please check the module documentation for availability.  
