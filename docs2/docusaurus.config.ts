@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic'
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-	title: 'Bitfocus Comppanion',
+	title: 'Bitfocus Companion',
 	tagline: 'User documentation',
 	favicon: 'img/favicon.ico',
 
@@ -54,26 +54,6 @@ const config: Config = {
 		// image: 'img/docusaurus-social-card.jpg',
 		colorMode: {
 			respectPrefersColorScheme: true,
-		},
-		navbar: {
-			title: 'My Site',
-			logo: {
-				alt: 'My Site Logo',
-				src: 'img/logo.svg',
-			},
-			items: [
-				{
-					type: 'docSidebar',
-					sidebarId: 'tutorialSidebar',
-					position: 'left',
-					label: 'Tutorial',
-				},
-				{
-					href: 'https://github.com/facebook/docusaurus',
-					label: 'GitHub',
-					position: 'right',
-				},
-			],
 		},
 		// footer: {
 		// 	style: 'dark',
