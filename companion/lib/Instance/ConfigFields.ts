@@ -245,6 +245,7 @@ function translateCustomVariableField(
 		...translateCommonFields(field),
 		type: 'custom-variable',
 		width: width,
+		default: undefined, // type-check complains otherwise
 	}
 }
 

@@ -25,12 +25,26 @@ export function createOrSanitizeSurfaceHandlerConfig(
 	let panelConfig = existingConfig?.config
 	if (!panelConfig) {
 		panelConfig = cloneDeep(PanelDefaults)
+		// add properties & defaults from their UI definitions (so a redundant `getDefaultConfig()` is not needed)
+		for (const cfield of panel.info.configFields) {
+			if (!(cfield.id in panelConfig) || 'default' in cfield) {
+				Object.assign(panelConfig, { [cfield.id]: cfield.default })
+			}
+		}
+		// if `panel.getDefaultConfig() is present, let it override the previous sources...
 		if (typeof panel.getDefaultConfig === 'function') {
 			Object.assign(panelConfig, panel.getDefaultConfig())
 		}
 
 		panelConfig.xOffset = Math.max(0, gridSize.minColumn)
 		panelConfig.yOffset = Math.max(0, gridSize.minRow)
+	} else {
+		// check for new properties but don't change existing fields
+		for (const cfield of panel.info.configFields) {
+			if (!(cfield.id in panelConfig)) {
+				Object.assign(panelConfig, { [cfield.id]: cfield.default })
+			}
+		}
 	}
 
 	if (panelConfig.xOffset === undefined || panelConfig.yOffset === undefined) {

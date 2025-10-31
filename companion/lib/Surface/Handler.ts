@@ -727,6 +727,15 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			redraw = true
 		}
 
+		// if this is an import, the config file may have been missing fields:
+		//  (note: import does not call `createOrSanitizeSurfaceHandlerConfig`, which might be a better option?)
+		for (const cfield of this.panel.info.configFields) {
+			if (!(cfield.id in newconfig)) {
+				Object.assign(newconfig, { [cfield.id]: cfield.default })
+				redraw = true
+			}
+		}
+
 		this.#surfaceConfig.config = newconfig
 		this.#saveConfig()
 
