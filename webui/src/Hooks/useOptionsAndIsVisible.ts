@@ -5,7 +5,7 @@ import type { CompanionOptionValues } from '@companion-module/base'
 import { cloneDeep } from 'lodash-es'
 import { toJS } from 'mobx'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { type GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 
 export function useOptionsVisibility(

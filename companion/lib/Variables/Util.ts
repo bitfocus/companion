@@ -11,7 +11,7 @@
 
 import LogController from '../Log/Controller.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { type GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { CompanionVariableValue } from '@companion-module/base'

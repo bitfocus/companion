@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { ParseExpression as parse } from '../Expression/ExpressionParse.js'
-import { GetVariableValueProps, ResolveExpression as resolve } from '../Expression/ExpressionResolve.js'
+import { type GetVariableValueProps, ResolveExpression as resolve } from '../Expression/ExpressionResolve.js'
 import jsep from 'jsep'
 import type { CompanionVariableValue } from '@companion-module/base'
 
