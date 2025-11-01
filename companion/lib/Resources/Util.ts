@@ -140,6 +140,16 @@ export const getTimestamp = (): string => {
 }
 
 /**
+ * @returns Seconds since Jan 01 1970. (UTC)
+ */
+export const getTimestampUnix = (): number => {
+	const d = new Date()
+	const ms = d.getTime()
+	const out = Math.floor(ms / 1000)
+	return out
+}
+
+/**
  * Convert a number to a 2 digit string
  */
 export const convert2Digit = (num: number): string => {
