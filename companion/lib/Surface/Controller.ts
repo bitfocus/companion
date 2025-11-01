@@ -84,6 +84,7 @@ export interface SurfaceControllerEvents {
 	'surface-delete': [surfaceId: string]
 
 	'surface-in-group': [surfaceId: string, groupId: string | null]
+	'surface-config': [surfaceId: string, config: SurfacePanelConfig | null]
 
 	group_name: [groupId: string, name: string]
 	group_page: [groupId: string, pageId: string]
@@ -403,6 +404,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	createTrpcRouter() {
 		const self = this
+		const selfEvents = this as EventEmitter<SurfaceControllerEvents>
+
 		return router({
 			outbound: this.#outboundController.createTrpcRouter(),
 
@@ -450,7 +453,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					})
 				)
 				.subscription(async function* ({ input, signal }) {
-					const changes = toIterable(self.#updateEvents, `surfaceConfig:${input.surfaceId}`, signal)
+					const changes = toIterable(selfEvents, 'surface-config', signal)
 
 					let initialData: SurfacePanelConfig | null = null
 					for (const surface of self.#surfaceHandlers.values()) {
@@ -468,8 +471,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					}
 					yield initialData
 
-					for await (const [change] of changes) {
-						yield change
+					for await (const [surfaceId, change] of changes) {
+						if (surfaceId === input.surfaceId) yield change
 					}
 				}),
 
@@ -897,10 +900,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		if (surfaceConfig) {
 			this.#dbTableSurfaces.set(surfaceId, surfaceConfig)
-			this.#updateEvents.emit(`surfaceConfig:${surfaceId}`, surfaceConfig.config)
+			this.emit('surface-config', surfaceId, surfaceConfig.config)
 		} else {
 			this.#dbTableSurfaces.delete(surfaceId)
-			this.#updateEvents.emit(`surfaceConfig:${surfaceId}`, null)
+			this.emit('surface-config', surfaceId, null)
 		}
 
 		return exists
