@@ -814,6 +814,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.exportAllConnections(includeSecrets)
 	}
 
+	exportAllSurfaceInstances(): Record<string, InstanceConfig | undefined> {
+		return this.#configStore.exportAllSurfaceInstances()
+	}
+
 	/**
 	 * Get the status of an instance
 	 */
