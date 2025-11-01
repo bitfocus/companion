@@ -48,7 +48,7 @@ import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js
 import { formatAttachmentFilename, stringifyExport, type StringifiedExportData } from './Util.js'
 
 export class ExportController {
-	readonly #logger = LogController.createLogger('ImportExport/Controller')
+	readonly #logger = LogController.createLogger('ImportExport/Export')
 
 	readonly #appInfo: AppInfo
 	readonly #controlsController: ControlsController
