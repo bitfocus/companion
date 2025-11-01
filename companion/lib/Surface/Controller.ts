@@ -70,6 +70,7 @@ import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared
 import type { SurfacePluginPanel } from './PluginPanel.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
+import type { HIDDevice } from '@companion-surface/host'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -90,7 +91,7 @@ export interface SurfaceControllerEvents {
 	'group-add': [groupId: string]
 	'group-delete': [surfaceId: string]
 
-	scanDevices: [hidDevices: HID.Device[]]
+	scanDevices: [hidDevices: HIDDevice[]]
 }
 
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
@@ -1182,8 +1183,16 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			try {
 				await Promise.allSettled([
 					HID.devicesAsync().then(async (deviceInfos) => {
+						const sanitisedDevics: HIDDevice[] = []
+						for (const deviceInfo of deviceInfos) {
+							if (!deviceInfo.path) continue
+							sanitisedDevics.push({
+								...deviceInfo,
+								path: deviceInfo.path,
+							})
+						}
 						// emit to plugins
-						this.emit('scanDevices', deviceInfos)
+						this.emit('scanDevices', sanitisedDevics)
 
 						await Promise.allSettled(
 							deviceInfos.map(async (deviceInfo) => {

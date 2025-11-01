@@ -22,10 +22,9 @@ import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
-import type * as HID from 'node-hid'
 import { IpcWrapper, type IpcEventHandlers } from './IpcWrapper.js'
 import type { CompanionSurfaceConfigField, ModernOutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import type { RemoteSurfaceConnectionInfo } from '@companion-surface/base'
+import type { HIDDevice, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -258,7 +257,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		this.#deps.surfaceController.unloadSurfacesForInstance(this.instanceId)
 	}
 
-	#scanDevices = (hidDevices: HID.Device[]): void => {
+	#scanDevices = (hidDevices: HIDDevice[]): void => {
 		if (this.features.supportsScan || this.features.supportsDetection) {
 			this.#ipcWrapper
 				.sendWithCb('scanDevices', {})
