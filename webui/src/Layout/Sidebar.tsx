@@ -35,7 +35,12 @@ import {
 	faSquareRootVariable,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
+import {
+	SurfacesConfiguredTabNotifyIcon,
+	ConnectionsTabNotifyIcon,
+	SurfacesTabNotifyIcon,
+	SurfacesInstancesTabNotifyIcon,
+} from '~/Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
@@ -186,8 +191,18 @@ export const MySidebar = memo(function MySidebar() {
 				/>
 				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
 				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
-					<SidebarMenuItem name="Configured" icon={null} path="/surfaces/configured" />
-					<SidebarMenuItem name="Instances" icon={null} path="/surfaces/instances" />
+					<SidebarMenuItem
+						name="Configured"
+						icon={null}
+						notifications={SurfacesConfiguredTabNotifyIcon}
+						path="/surfaces/configured"
+					/>
+					<SidebarMenuItem
+						name="Instances"
+						notifications={SurfacesInstancesTabNotifyIcon}
+						icon={null}
+						path="/surfaces/instances"
+					/>
 					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/remote" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
