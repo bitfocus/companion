@@ -159,6 +159,10 @@ export class SurfaceOutboundController {
 		}
 	}
 
+	exportAll(): Record<string, OutboundSurfaceInfo> {
+		return Object.fromEntries(this.#storage)
+	}
+
 	updateDefaultConfigForSurfaceInstance(
 		instanceId: string,
 		info: {

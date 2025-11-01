@@ -27,7 +27,11 @@ export const ExportWizardModal = observer(
 		const defaultFormValues: ClientExportSelection = {
 			connections: true,
 			buttons: true,
-			surfaces: true,
+			surfaces: {
+				known: true,
+				instances: true,
+				remote: true,
+			},
 			triggers: true,
 			customVariables: true,
 			expressionVariables: true,
@@ -195,12 +199,91 @@ export const ExportWizardModal = observer(
 								<div className="indent3">
 									<form.Field
 										name="surfaces"
+										children={(field) => {
+											const isAChildChecked = !!field.state.value && Object.values(field.state.value).some((v) => !!v)
+											const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => !v)
+
+											return (
+												<CFormCheck
+													indeterminate={isAChildChecked && isAChildUnchecked}
+													checked={isAChildChecked}
+													onChange={(e) =>
+														field.handleChange(
+															e.currentTarget.checked
+																? {
+																		known: true,
+																		instances: true,
+																		remote: true,
+																	}
+																: null
+														)
+													}
+													onBlur={field.handleBlur}
+													label="Surfaces"
+												/>
+											)
+										}}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="surfaces.known"
 										children={(field) => (
 											<CFormCheck
+												className="ms-4"
 												checked={!!field.state.value}
 												onChange={(e) => field.handleChange(e.currentTarget.checked)}
 												onBlur={field.handleBlur}
-												label="Surfaces"
+												label={
+													<>
+														Known Surfaces
+														<InlineHelp help="The list of known connections, and their settings">
+															<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+														</InlineHelp>
+													</>
+												}
+											/>
+										)}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="surfaces.instances"
+										children={(field) => (
+											<CFormCheck
+												className="ms-4"
+												checked={!!field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label={
+													<>
+														Surface Instances
+														<InlineHelp help="The configured surface instances">
+															<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+														</InlineHelp>
+													</>
+												}
+											/>
+										)}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="surfaces.remote"
+										children={(field) => (
+											<CFormCheck
+												className="ms-4"
+												checked={!!field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label={
+													<>
+														Remote Surfaces
+														<InlineHelp help="Connections for surfaces that are connected remotely">
+															<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+														</InlineHelp>
+													</>
+												}
 											/>
 										)}
 									/>

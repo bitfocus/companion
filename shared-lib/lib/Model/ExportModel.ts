@@ -4,6 +4,8 @@ import type { InstanceConfig, InstanceVersionUpdatePolicy } from './Instance.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
 import type { TriggerCollection } from './TriggerModel.js'
 import type { ExpressionVariableCollection, ExpressionVariableModel } from './ExpressionVariableModel.js'
+import type { SurfaceInstanceCollection } from './SurfaceInstance.js'
+import type { OutboundSurfaceInfo } from './Surfaces.js'
 
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
@@ -39,6 +41,9 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	connectionCollections?: ConnectionCollection[] // Added in v4.1
 	surfaces?: unknown // Record<number, SurfaceConfig>
 	surfaceGroups?: unknown // Record<number, SurfaceGroupConfig>
+	surfacesRemote?: Record<string, OutboundSurfaceInfo> // Added in v4.2
+	surfaceInstances?: ExportInstancesv6 // Added in v4.2
+	surfaceInstanceCollections?: SurfaceInstanceCollection[] // Added in v4.2
 }
 
 export interface ExportPageModelv6 extends ExportBase<'page'> {

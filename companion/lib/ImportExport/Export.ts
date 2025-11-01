@@ -580,7 +580,7 @@ export class ExportController {
 			)
 		}
 
-		if (!config || config.surfaces) {
+		if (!config || config.surfaces?.known) {
 			const surfaces = this.#surfacesController.exportAll()
 			const surfaceGroups = this.#surfacesController.exportAllGroups()
 			const findPage = (id: string) => this.#pagesStore.getPageNumber(id)
@@ -605,6 +605,13 @@ export class ExportController {
 
 			exp.surfaces = surfaces
 			exp.surfaceGroups = surfaceGroups
+		}
+		if (!config || config.surfaces?.remote) {
+			exp.surfacesRemote = this.#surfacesController.exportAllRemote()
+		}
+		if (!config || config.surfaces?.instances) {
+			exp.surfaceInstances = this.#instancesController.exportAllSurfaceInstances()
+			exp.surfaceInstanceCollections = this.#instancesController.surfaceInstanceCollections.collectionData
 		}
 
 		return exp

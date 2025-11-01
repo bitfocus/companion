@@ -41,6 +41,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
+	OutboundSurfaceInfo,
 	SurfaceConfig,
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
@@ -1457,6 +1458,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	exportAllGroups(): Record<number, SurfaceGroupConfig> {
 		return this.#dbTableGroups.all()
+	}
+
+	exportAllRemote(): Record<string, OutboundSurfaceInfo> {
+		return this.#outboundController.exportAll()
 	}
 
 	/**

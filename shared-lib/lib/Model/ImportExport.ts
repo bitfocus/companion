@@ -28,11 +28,23 @@ const zodQueryBoolean = z.preprocess((val) => {
 	}
 	return val
 }, z.boolean())
+const zodQueryNull = z.preprocess((val) => {
+	if (typeof val === 'string') {
+		return val === '' ? null : val
+	}
+	return val
+}, z.null())
 
 export const zodClientExportSelection = z.object({
 	buttons: zodQueryBoolean,
 	connections: zodQueryBoolean,
-	surfaces: zodQueryBoolean,
+	surfaces: z
+		.object({
+			known: zodQueryBoolean,
+			instances: zodQueryBoolean,
+			remote: zodQueryBoolean,
+		})
+		.or(zodQueryNull),
 	triggers: zodQueryBoolean,
 	customVariables: zodQueryBoolean,
 	expressionVariables: zodQueryBoolean,
