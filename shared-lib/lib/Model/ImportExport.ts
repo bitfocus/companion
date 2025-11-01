@@ -14,14 +14,21 @@ export const zodClientResetSelection = z.object({
 
 export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
 
+const zodQueryBoolean = z.preprocess((val) => {
+	if (typeof val === 'string') {
+		return val === 'true' || val === '1'
+	}
+	return val
+}, z.boolean())
+
 export const zodClientExportSelection = z.object({
-	buttons: z.boolean(),
-	connections: z.boolean(),
-	surfaces: z.boolean(),
-	triggers: z.boolean(),
-	customVariables: z.boolean(),
-	expressionVariables: z.boolean(),
-	includeSecrets: z.boolean(),
+	buttons: zodQueryBoolean,
+	connections: zodQueryBoolean,
+	surfaces: zodQueryBoolean,
+	triggers: zodQueryBoolean,
+	customVariables: zodQueryBoolean,
+	expressionVariables: zodQueryBoolean,
+	includeSecrets: zodQueryBoolean,
 	format: zodExportFormat,
 	filename: z.string().optional(),
 })

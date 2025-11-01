@@ -11,6 +11,7 @@ import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { useForm } from '@tanstack/react-form'
+import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
 
 export interface ExportWizardModalRef {
 	show(): void
@@ -39,13 +40,12 @@ export const ExportWizardModal = observer(
 		const form = useForm({
 			defaultValues: defaultFormValues,
 			onSubmit: async ({ value }) => {
+				// Use generic flattening function to convert nested object to dot-notation query params
+				const flatParams = flattenToQueryParams(value)
+
 				const params = new URLSearchParams()
-				for (const [key, val] of Object.entries(value)) {
-					if (typeof val === 'boolean') {
-						params.set(key, val ? '1' : '0')
-					} else {
-						params.set(key, val + '')
-					}
+				for (const [key, val] of Object.entries(flatParams)) {
+					params.set(key, val)
 				}
 
 				const link = document.createElement('a')
@@ -197,7 +197,7 @@ export const ExportWizardModal = observer(
 										name="surfaces"
 										children={(field) => (
 											<CFormCheck
-												checked={field.state.value}
+												checked={!!field.state.value}
 												onChange={(e) => field.handleChange(e.currentTarget.checked)}
 												onBlur={field.handleBlur}
 												label="Surfaces"
@@ -205,6 +205,7 @@ export const ExportWizardModal = observer(
 										)}
 									/>
 								</div>
+
 								<div style={{ paddingTop: '1em' }}>
 									<CFormLabel>File format</CFormLabel>
 									<form.Field
