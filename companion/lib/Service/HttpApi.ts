@@ -1,4 +1,4 @@
-import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
+import { getTimestampUnix, ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import Express from 'express'
 import type { UIExpress } from '../UI/Express.js'
@@ -320,6 +320,14 @@ export class ServiceHttpApi {
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
 
+		// JSON
+		this.#apiRouter.get('/appinfo/json', this.#appInfoGetJson)
+		this.#apiRouter.get('/connections/json', this.#connectionGetJson)
+		this.#apiRouter.get('/variables/:label/json', this.#variablesGetJson)
+
+		// Prometheus metrics
+		this.#apiRouter.get('/variables/:label/metrics', this.#variablesGetMetrics)
+
 		// Finally, default all unhandled to 404
 		this.#apiRouter.use((_req, res) => {
 			res.status(404).send('')
@@ -640,5 +648,165 @@ export class ServiceHttpApi {
 				res.send(result)
 			}
 		}
+	}
+
+	/**
+	 * Provides JSON appinfo
+	 *
+	 */
+	#appInfoGetJson = (_req: Express.Request, res: Express.Response): void => {
+		this.logger.debug(`Got HTTP /api/appinfo/json`)
+		res.json({
+			success: true,
+			message: 'App information retrieved successfully',
+			timestamp: getTimestampUnix(),
+			data: {
+				appinfo: this.#serviceApi.appInfo,
+			},
+		})
+		return
+	}
+
+	/**
+	 * Provides JSON for connection status
+	 *
+	 */
+	#connectionGetJson = (_req: Express.Request, res: Express.Response): void => {
+		this.logger.debug(`Got HTTP /api/connections/json`)
+
+		const internalVariables = this.#serviceApi.getConnectionVariableDefinitions('internal')
+
+		const connections = Object.entries(internalVariables)
+			.filter(([key]) => key.startsWith('connection_') && key.endsWith('_status'))
+			.map(([key]) => ({
+				name: key.replace('connection_', '').replace('_status', ''),
+				status: this.#serviceApi.getConnectionVariableValue('internal', key),
+			}))
+
+		const instanceStatus = Object.entries(internalVariables)
+			.filter(([key]) => key.startsWith('instance_'))
+			.reduce(
+				(acc, [key]) => ({
+					...acc,
+					[key.replace('instance_', '')]: {
+						count: this.#serviceApi.getConnectionVariableValue('internal', key),
+					},
+				}),
+				{}
+			)
+
+		res.json({
+			success: true,
+			message: 'Connection information retrieved successfully',
+			timestamp: getTimestampUnix(),
+			data: {
+				connections,
+				instanceStatus,
+			},
+		})
+		return
+	}
+
+	/**
+	 * Provides JSON for module or custom variables
+	 *
+	 */
+	#variablesGetJson = (req: Express.Request, res: Express.Response): void => {
+		const connectionLabel = req.params.label
+		this.logger.debug(`Got HTTP /api/variables/${connectionLabel}/json`)
+
+		// Determine variable type and fetch definitions
+		const isCustomVariable = connectionLabel === 'custom'
+		const variableDefinitions = isCustomVariable
+			? this.#serviceApi.getCustomVariableDefinitions()
+			: this.#serviceApi.getConnectionVariableDefinitions(connectionLabel)
+
+		const result: Record<string, any> = {}
+
+		for (const [variableName, obj] of Object.entries(variableDefinitions)) {
+			const value = isCustomVariable
+				? this.#serviceApi.getCustomVariableValue(variableName)
+				: this.#serviceApi.getConnectionVariableValue(connectionLabel, variableName)
+
+			if (value !== undefined) {
+				result[variableName] = {
+					value,
+					...obj,
+				}
+			}
+		}
+
+		if (Object.keys(result).length == 0) {
+			res.status(404).json({
+				success: false,
+				message: 'No variables found for this connection',
+				timestamp: getTimestampUnix(),
+				data: {
+					connection: connectionLabel,
+				},
+			})
+			return
+		}
+
+		res.json({
+			success: true,
+			message: 'Variables retrieved successfully',
+			timestamp: getTimestampUnix(),
+			data: {
+				connection: connectionLabel,
+				variableCount: Object.keys(result).length,
+				variables: result,
+			},
+		})
+		return
+	}
+
+	/**
+	 * Provides Prometheus metrics for module or custom variables
+	 *
+	 */
+	#variablesGetMetrics = (req: Express.Request, res: Express.Response): void => {
+		const connectionLabel = req.params.label
+		this.logger.debug(`Got HTTP /api/variables/${connectionLabel}/metrics`)
+
+		// Determine variable type and fetch definitions
+		const isCustomVariable = connectionLabel == 'custom'
+		const variableDefinitions = isCustomVariable
+			? this.#serviceApi.getCustomVariableDefinitions()
+			: this.#serviceApi.getConnectionVariableDefinitions(connectionLabel)
+
+		let result = ''
+
+		for (const [variableName, obj] of Object.entries(variableDefinitions)) {
+			const variableNamePrint = variableName.replace(/-/g, '_')
+			const metricName = `${connectionLabel}:${variableNamePrint}`
+
+			const value = isCustomVariable
+				? this.#serviceApi.getCustomVariableValue(variableName)
+				: this.#serviceApi.getConnectionVariableValue(connectionLabel, variableName)
+
+			const labelPrint = (isCustomVariable ? obj.description : obj.label)
+				.replace(/\\/g, '\\\\')
+				.replace(/"/g, '\\"')
+				.replace(/\n/g, '\\n')
+
+			result += `# HELP ${connectionLabel}:${variableNamePrint} ${labelPrint}\n`
+			result += `# TYPE ${connectionLabel}:${variableNamePrint} gauge\n`
+
+			// Format metric based on value type
+			if (value === null || value === undefined) {
+				result += `${metricName}{description="${labelPrint}"} NaN\n`
+			} else if (!isNaN(Number(value))) {
+				result += `${metricName}{description="${labelPrint}"} ${Number(value)}\n`
+			} else {
+				const escapedValue = value.toString().replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
+				result += `${metricName}_string{description="${labelPrint}",value="${escapedValue}"} 1\n`
+			}
+		}
+
+		// Return 404 if result is empty
+		res.status(result != '' ? 200 : 404)
+		res.header('Content-Type', 'text/plain; version=0.0.4')
+		res.send(result)
 	}
 }

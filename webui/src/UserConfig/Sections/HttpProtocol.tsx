@@ -134,6 +134,44 @@ export function HttpProtocol(): React.JSX.Element {
 					<br />
 					Path: <code>/api/surfaces/rescan</code>
 				</li>
+
+				<br />
+
+				<li>
+					Get all custom variables values in JSON format
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Content-Type: <code>application/json</code>
+					<br />
+					Path: <code>/api/variables/custom/json</code>
+				</li>
+				<li>
+					Get all Module variables values in JSON format
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Content-Type: <code>application/json</code>
+					<br />
+					Path: <code>/api/variables/</code>&lt;Connection label&gt;<code>/json</code>
+				</li>
+
+				<br />
+
+				<li>
+					Get all custom variables values for Prometheus metrics
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Path: <code>/api/variables/custom/metrics</code>
+				</li>
+				<li>
+					Get all Module variables values for Prometheus metrics
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Path: <code>/api/variables/</code>&lt;Connection label&gt;<code>/metrics</code>
+				</li>
 			</ul>
 
 			<p>
