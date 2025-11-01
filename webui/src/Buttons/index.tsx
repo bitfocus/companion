@@ -107,6 +107,16 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			// e.target is the actual element where the event happened, e.currentTarget is the element where the event listener is attached
 			const targetElement = e.target as HTMLElement
 
+			// TODO - this feels messy, perhaps this can be done cleaner?
+			if (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA') {
+				// Don't interfere with typing in inputs
+				return
+			}
+			if (targetElement.classList.contains('native-edit-context')) {
+				// Don't interfere with typing in the expression editor
+				return
+			}
+
 			if (isControlOrCommandCombo && e.key === '=') {
 				e.preventDefault()
 				gridZoomController.zoomIn(true)
@@ -116,7 +126,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			} else if (isControlOrCommandCombo && e.key === '0') {
 				e.preventDefault()
 				gridZoomController.zoomReset()
-			} else if (targetElement.tagName !== 'INPUT' && targetElement.tagName !== 'TEXTAREA') {
+			} else {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {
