@@ -307,7 +307,7 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 function ExpressionVariableCurrentValue({ name }: { controlId: string; name: string }) {
 	const { notifier } = useContext(RootAppStoreContext)
 
-	const onCopied = useCallback(() => notifier.current?.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
+	const onCopied = useCallback(() => notifier.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
 
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(

@@ -327,6 +327,38 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 		if (sidebarState.showToggle) setVisibleMobile(false)
 	}, [sidebarState.showToggle])
 
+	const handleOnClick = useCallback(
+		(event: Event) => {
+			const target = event.target as HTMLAnchorElement
+			if (
+				target &&
+				target.classList.contains('nav-link') &&
+				!target.classList.contains('nav-group-toggle') &&
+				sidebarState.showToggle
+			) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle]
+	)
+
+	const handleKeyup = useCallback(
+		(event: Event) => {
+			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle, sidebarRef]
+	)
+	const handleClickOutside = useCallback(
+		(event: Event) => {
+			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle, sidebarRef]
+	)
+
 	useEffect(() => {
 		window.addEventListener('mouseup', handleClickOutside)
 		window.addEventListener('keyup', handleKeyup)
@@ -341,30 +373,7 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 
 			sideBarElement?.removeEventListener('mouseup', handleOnClick)
 		}
-	})
-
-	const handleKeyup = (event: Event) => {
-		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-			setVisibleMobile(false)
-		}
-	}
-	const handleClickOutside = (event: Event) => {
-		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-			setVisibleMobile(false)
-		}
-	}
-
-	const handleOnClick = (event: Event) => {
-		const target = event.target as HTMLAnchorElement
-		if (
-			target &&
-			target.classList.contains('nav-link') &&
-			!target.classList.contains('nav-group-toggle') &&
-			sidebarState.showToggle
-		) {
-			setVisibleMobile(false)
-		}
-	}
+	}, [sidebarRef, handleOnClick, handleKeyup, handleClickOutside])
 
 	return (
 		<>

@@ -167,10 +167,7 @@ const ManualGroupRow = observer(function ManualGroupRow({
 						<span className="surface-id" title={group.id}>
 							{group.id}
 						</span>
-						<CopyToClipboard
-							text={group.id}
-							onCopy={() => notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)}
-						>
+						<CopyToClipboard text={group.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
 							<CButton size="sm" title="Copy group id" className="p-0 px-1">
 								<FontAwesomeIcon icon={faCopy} color="#000" />
 							</CButton>
@@ -264,10 +261,7 @@ const SurfaceRow = observer(function SurfaceRow({
 					<span className="surface-id" title={surface.id}>
 						{surface.id}
 					</span>
-					<CopyToClipboard
-						text={surface.id}
-						onCopy={() => notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)}
-					>
+					<CopyToClipboard text={surface.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
 						<CButton size="sm" title="Copy surface id" className="p-0 px-1">
 							<FontAwesomeIcon icon={faCopy} color="#000" />
 						</CButton>

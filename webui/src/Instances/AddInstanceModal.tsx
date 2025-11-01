@@ -67,7 +67,7 @@ export const AddInstanceModal = observer(
 					}, 1000)
 				})
 				.catch((e) => {
-					notifier.current?.show(`Failed to create instance`, `Failed: ${e}`)
+					notifier.show(`Failed to create instance`, `Failed: ${e}`)
 					console.error('Failed to create instance:', e)
 				})
 		}
