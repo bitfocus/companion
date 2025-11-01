@@ -21,7 +21,7 @@ import type {
 	CompanionSurfaceInputFieldTextInput,
 } from '@companion-app/shared/Model/Surfaces.js'
 
-export function translateOutboundConfigFields(fields: SurfaceInputField[]): CompanionSurfaceConfigField[] {
+export function translateSurfaceConfigFields(fields: SurfaceInputField[]): CompanionSurfaceConfigField[] {
 	return fields.map((o) => {
 		switch (o.type) {
 			case 'static-text':
@@ -90,7 +90,7 @@ function translateNumberField(field: CompanionInputFieldNumber): Complete<Compan
 		default: field.default,
 		min: field.min,
 		max: field.max,
-		step: undefined,
+		step: field.step,
 		required: undefined,
 		range: undefined,
 		showMinAsNegativeInfinity: undefined,

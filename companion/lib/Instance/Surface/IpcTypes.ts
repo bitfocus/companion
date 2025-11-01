@@ -46,6 +46,9 @@ export interface HostToSurfaceModuleEvents {
 	scanDevices: (msg: Record<string, never>) => ScanDevicesResponseMessage
 	openScannedDevice: (msg: OpenScannedDeviceMessage) => OpenDeviceResponseMessage
 
+	readySurface: (msg: ReadySurfaceMessage) => void
+	updateConfig: (msg: UpdateConfigMessage) => void
+
 	setBrightness: (msg: SetBrightnessMessage) => void
 	drawControls: (msg: DrawControlMessage) => void
 	blankSurface: (msg: BlankSurfaceMessage) => void
@@ -88,11 +91,20 @@ export interface OpenScannedDeviceMessage {
 	device: CheckDeviceInfo
 }
 
+export interface ReadySurfaceMessage {
+	surfaceId: string
+	initialConfig: Record<string, any>
+}
+export interface UpdateConfigMessage {
+	surfaceId: string
+	newConfig: Record<string, any>
+}
+
 export interface OpenHidDeviceMessage {
 	device: HIDDevice
 }
 export interface OpenDeviceResponseMessage {
-	info: OpenDeviceResult | null // TODO - convert to safe form?
+	info: HostOpenDeviceResult | null
 }
 
 export interface DisconnectMessage {
@@ -107,7 +119,7 @@ export interface ShouldOpenDeviceResponseMessage {
 	shouldOpen: boolean
 }
 export interface NotifyOpenedDeviceMessage {
-	info: OpenDeviceResult // TODO - convert to safe form?
+	info: HostOpenDeviceResult
 }
 
 export interface LogMessageMessage {
@@ -187,4 +199,10 @@ export interface NotifyConnectionsFoundMessage {
 }
 export interface NotifyConnectionsForgottenMessage {
 	connectionIds: string[]
+}
+
+export interface HostOpenDeviceResult extends Omit<OpenDeviceResult, 'configFields'> {
+	configFields: CompanionSurfaceConfigField[] | null
+
+	// TODO - sanitise more?
 }

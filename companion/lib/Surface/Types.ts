@@ -3,7 +3,6 @@ import type {
 	GridSize,
 	SurfaceFirmwareUpdateInfo,
 	SurfaceGroupConfig,
-	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
@@ -114,5 +113,4 @@ export type UpdateEvents = EmulatorUpdateEvents & {
 	surfaces: [changes: SurfacesUpdate[]]
 
 	[id: `groupConfig:${string}`]: [config: SurfaceGroupConfig | null]
-	[id: `surfaceConfig:${string}`]: [config: SurfacePanelConfig | null]
 }
