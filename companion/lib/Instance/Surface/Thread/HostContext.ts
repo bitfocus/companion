@@ -10,6 +10,7 @@ import type {
 import type { SurfaceIpcWrapper } from '../IpcTypes.js'
 import { LockingGraphicsGeneratorImpl } from './LockingGraphics.js'
 import { CardGenerator } from './Cards.js'
+import { convertOpenDeviceResult } from './Util.js'
 
 /**
  * The context of methods and properties provided to the surfaces, which they can use to report events or make requests.
@@ -55,7 +56,9 @@ export class HostContext implements SurfaceHostContext {
 		return result.shouldOpen
 	}
 	readonly notifyOpenedDiscoveredSurface = async (info: OpenDeviceResult): Promise<void> => {
-		this.#ipcWrapper.sendWithNoCb('notifyOpenedDiscoveredDevice', { info })
+		this.#ipcWrapper.sendWithNoCb('notifyOpenedDiscoveredDevice', {
+			info: convertOpenDeviceResult(info),
+		})
 	}
 
 	readonly connectionsFound = (connectionInfos: DiscoveredRemoteSurfaceInfo[]): void => {

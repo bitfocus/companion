@@ -17,17 +17,14 @@ import {
 } from './CommonConfigFields.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ReadonlyDeep } from 'type-fest'
-import type {
-	OpenDeviceResult,
-	SurfaceSchemaControlStylePreset,
-	SurfaceSchemaLayoutDefinition,
-} from '@companion-surface/host'
+import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { IpcWrapper } from '../Instance/Surface/IpcWrapper.js'
 import type {
+	HostOpenDeviceResult,
 	HostToSurfaceModuleEvents,
 	IpcDrawProps,
 	SurfaceModuleToHostEvents,
@@ -45,7 +42,7 @@ interface SatelliteOutputVariableInfo {
 }
 
 function generateConfigFields(
-	surfaceInfo: OpenDeviceResult,
+	surfaceInfo: HostOpenDeviceResult,
 	gridSize: GridSize,
 	inputVariables: Record<string, SatelliteInputVariableInfo>,
 	outputVariables: Record<string, SatelliteOutputVariableInfo>
@@ -59,6 +56,9 @@ function generateConfigFields(
 	if (gridSize.columns > 0 && gridSize.rows > 0) {
 		fields.push(RotationConfigField, ...LockConfigFields)
 	}
+
+	// Add any additional config fields from the surface info
+	if (surfaceInfo.configFields) fields.push(...surfaceInfo.configFields)
 
 	for (const variable of surfaceInfo.transferVariables || []) {
 		if (variable.type === 'input') {
@@ -147,7 +147,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 	readonly #ipcWrapper: IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>
 
-	readonly #surfaceInfo: OpenDeviceResult
+	readonly #surfaceInfo: HostOpenDeviceResult
 	readonly #executeExpression: SurfaceExecuteExpressionFn
 
 	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
@@ -164,7 +164,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	constructor(
 		ipcWrapper: IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>,
 		instanceId: string,
-		surfaceInfo: OpenDeviceResult,
+		surfaceInfo: HostOpenDeviceResult,
 		executeExpression: SurfaceExecuteExpressionFn
 	) {
 		super()

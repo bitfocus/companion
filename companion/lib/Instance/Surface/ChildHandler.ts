@@ -3,6 +3,7 @@ import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type {
 	DisconnectMessage,
 	FirmwareUpdateInfoMessage,
+	HostOpenDeviceResult,
 	HostToSurfaceModuleEvents,
 	InputPressMessage,
 	InputRotateMessage,
@@ -21,7 +22,6 @@ import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
-import type { OpenDeviceResult } from '@companion-surface/host'
 import type * as HID from 'node-hid'
 import { IpcWrapper, type IpcEventHandlers } from './IpcWrapper.js'
 import type { CompanionSurfaceConfigField, ModernOutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
@@ -60,6 +60,9 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 	readonly #deps: SurfaceChildHandlerDependencies
 
 	readonly #panels = new Map<string, SurfacePluginPanel>()
+
+	/** Map of surfaceId -> unsub for surfaceController surfaceConfig events */
+	readonly #surfaceConfigListeners = new Map<string, () => void>()
 
 	readonly moduleId: string
 	readonly instanceId: string
@@ -243,6 +246,12 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		this.#deps.invalidateClientJson(this.instanceId)
 		this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, null)
 		this.#deps.surfaceController.outbound.events.off(`startStop:${this.instanceId}`, this.#startStopConnections)
+
+		// Unsubscribe any remaining surface config listeners
+		for (const unsub of this.#surfaceConfigListeners.values()) {
+			unsub()
+		}
+		this.#surfaceConfigListeners.clear()
 		this.#deps.surfaceController.outbound.discovery.instanceForget(this.instanceId)
 
 		this.#deps.surfaceController.off('scanDevices', this.#scanDevices)
@@ -322,7 +331,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		}
 	}
 
-	async #setupSurfacePanel(info: OpenDeviceResult): Promise<void> {
+	async #setupSurfacePanel(info: HostOpenDeviceResult): Promise<void> {
 		try {
 			this.logger.info(`Opening surface panel: ${info.surfaceId} - ${info.description}`)
 
@@ -332,6 +341,18 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 				// TODO - tell the child, as something has probably gone wrong
 				return
 			}
+
+			// Fetch the initial config for this surface from the surfaceController
+			const surfaceConfig = this.#deps.surfaceController.getDeviceConfig(info.surfaceId)
+			const initialConfig = surfaceConfig?.config || {}
+			this.#ipcWrapper
+				.sendWithCb('readySurface', {
+					surfaceId: info.surfaceId,
+					initialConfig,
+				})
+				.catch((e) => {
+					this.logger.warn(`Error marking surface as ready: ${e.message}`)
+				})
 
 			const panel = new SurfacePluginPanel(
 				this.#ipcWrapper,
@@ -343,6 +364,24 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 
 			this.#deps.surfaceController.addPluginPanel(this.moduleId, panel)
 
+			// Listen for config changes for this surface and forward them to the child process
+			const listener = (surfaceId: string, newConfig: Record<string, any> | null) => {
+				if (surfaceId !== info.surfaceId) return
+
+				this.#ipcWrapper
+					.sendWithCb('updateConfig', {
+						surfaceId,
+						newConfig: newConfig || {},
+					})
+					.catch((e) => {
+						this.logger.warn(`Failed forwarding surface config to child for ${surfaceId}: ${e}`)
+					})
+			}
+
+			this.#surfaceConfigListeners.set(info.surfaceId, () => {
+				this.#deps.surfaceController.off('surface-config', listener)
+			})
+			this.#deps.surfaceController.on('surface-config', listener)
 			this.logger.info(`Surface panel ready: ${info.surfaceId}`)
 		} catch (e) {
 			// TODO - tell the child, as something has gone wrong
@@ -362,6 +401,12 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 			this.logger.info(`Surface panel disconnected: ${msg.surfaceId} (${msg.reason ?? 'no reason given'})`)
 			surface.emit('remove')
 			this.#panels.delete(msg.surfaceId)
+
+			const unsub = this.#surfaceConfigListeners.get(msg.surfaceId)
+			if (unsub) {
+				this.#surfaceConfigListeners.delete(msg.surfaceId)
+				unsub()
+			}
 		} else {
 			this.logger.warn(`Received disconnect for unknown surface: ${msg.surfaceId}`)
 		}
