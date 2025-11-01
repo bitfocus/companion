@@ -1,9 +1,10 @@
 import zlib from 'node:zlib'
 import yaml from 'yaml'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportPageContentv6, SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { Logger } from '../Log/Controller.js'
 import { promisify } from 'node:util'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 
 const gzipAsync = promisify(zlib.gzip)
 
@@ -112,4 +113,36 @@ export function formatAttachmentFilename(filename: string): {
 		asciiFilename: quotedFallbackAsciiFilename,
 		utf8Filename: modernUnicodeFilename,
 	}
+}
+
+export const find_smallest_grid_for_page = (pageInfo: ExportPageContentv6): UserConfigGridSize => {
+	const gridSize: UserConfigGridSize = {
+		minColumn: 0,
+		maxColumn: 7,
+		minRow: 0,
+		maxRow: 3,
+	}
+
+	// Scan through the data in the export, to find the minimum possible grid size
+	for (const [row0, rowObj] of Object.entries(pageInfo.controls || {})) {
+		const row = Number(row0)
+		let foundControl = false
+
+		for (const column0 of Object.keys(rowObj)) {
+			const column = Number(column0)
+
+			if (!rowObj[column]) continue
+			foundControl = true
+
+			if (column < gridSize.minColumn) gridSize.minColumn = column
+			if (column > gridSize.maxColumn) gridSize.maxColumn = column
+		}
+
+		if (foundControl) {
+			if (row < gridSize.minRow) gridSize.minRow = row
+			if (row > gridSize.maxRow) gridSize.maxRow = row
+		}
+	}
+
+	return gridSize
 }

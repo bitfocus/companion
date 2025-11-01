@@ -2,7 +2,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState, useConte
 import { CButton, CForm, CFormCheck, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { makeAbsolutePath, PreventDefaultHandler } from '~/Resources/util.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
@@ -10,6 +10,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import { useForm } from '@tanstack/react-form'
 
 export interface ExportWizardModalRef {
 	show(): void
@@ -20,7 +21,9 @@ export const ExportWizardModal = observer(
 		const { userConfig } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
-		const [config, setConfig] = useState<ClientExportSelection>({
+		const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
+
+		const defaultFormValues: ClientExportSelection = {
 			connections: true,
 			buttons: true,
 			surfaces: true,
@@ -30,23 +33,18 @@ export const ExportWizardModal = observer(
 			includeSecrets: true,
 			// userconfig: true,
 			format: ExportFormatDefault,
-			filename: userConfig.properties?.default_export_filename,
-		})
+			filename: userConfig.properties?.default_export_filename ?? '',
+		}
 
-		const doClose = useCallback(() => {
-			setShow(false)
-		}, [])
-
-		const doSave = useCallback(
-			(e: React.FormEvent) => {
-				e.preventDefault()
-
+		const form = useForm({
+			defaultValues: defaultFormValues,
+			onSubmit: async ({ value }) => {
 				const params = new URLSearchParams()
-				for (const [key, value] of Object.entries(config)) {
-					if (typeof value === 'boolean') {
-						params.set(key, value ? '1' : '0')
+				for (const [key, val] of Object.entries(value)) {
+					if (typeof val === 'boolean') {
+						params.set(key, val ? '1' : '0')
 					} else {
-						params.set(key, value + '')
+						params.set(key, val + '')
 					}
 				}
 
@@ -57,51 +55,39 @@ export const ExportWizardModal = observer(
 				link.click()
 				link.remove()
 
-				doClose()
+				setShow(false)
 			},
-			[config, doClose]
-		)
+		})
 
-		const setValue = (key: keyof ClientExportSelection, value: any) => {
-			setConfig((oldState) => ({
-				...oldState,
-				[key]: value,
-			}))
-		}
-
-		const defaultExportFilename = userConfig.properties?.default_export_filename ?? ''
+		const doClose = useCallback(() => {
+			setShow(false)
+			form.reset()
+		}, [form])
 
 		useImperativeHandle(
 			ref,
 			() => ({
 				show() {
-					setConfig({
-						connections: true,
-						buttons: true,
-						surfaces: true,
-						triggers: true,
-						customVariables: true,
-						expressionVariables: true,
-						includeSecrets: true,
-						// userconfig: true,
-						format: ExportFormatDefault,
-						filename: defaultExportFilename,
-					})
-
+					form.reset()
 					setShow(true)
 				},
 			}),
-			[defaultExportFilename]
+			[form]
 		)
-
-		const canExport = Object.values(config).find((v) => !!v)
-
-		const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
 
 		return (
 			<CModal ref={setModalRef} visible={show} onClose={doClose} className={'wizard'} backdrop="static">
 				<MenuPortalContext.Provider value={modalRef}>
-					<CForm className={'flex-form'} onSubmit={PreventDefaultHandler}>
+					<CForm
+						className={'flex-form'}
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							form.handleSubmit().catch((err) => {
+								console.error('Form submission error', err)
+							})
+						}}
+					>
 						<CModalHeader>
 							<h2>
 								<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
@@ -109,15 +95,163 @@ export const ExportWizardModal = observer(
 							</h2>
 						</CModalHeader>
 						<CModalBody>
-							<ExportOptionsStep config={config} setValue={setValue} />
+							<div>
+								<h5>Export Options</h5>
+								<p>Please select the components you'd like to export:</p>
+								<div className="indent3">
+									<form.Field
+										name="connections"
+										children={(field) => (
+											<CFormCheck
+												id="wizard_connections"
+												checked={field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label="Connections"
+											/>
+										)}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="includeSecrets"
+										children={(field) => (
+											<form.Subscribe
+												selector={(state) => [state.values.connections]}
+												children={([connections]) => (
+													<CFormCheck
+														id="wizard_include_secrets"
+														className="ms-4"
+														checked={field.state.value}
+														disabled={!connections}
+														onChange={(e) => field.handleChange(e.currentTarget.checked)}
+														onBlur={field.handleBlur}
+														label={
+															<>
+																Include secrets
+																<InlineHelp help="Some connections have secret values that can be omitted from the export. Not all modules are compatible with this">
+																	<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+																</InlineHelp>
+															</>
+														}
+													/>
+												)}
+											/>
+										)}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="buttons"
+										children={(field) => (
+											<CFormCheck
+												checked={field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label="Buttons"
+											/>
+										)}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="triggers"
+										children={(field) => (
+											<CFormCheck
+												checked={field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label="Triggers"
+											/>
+										)}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="customVariables"
+										children={(field) => (
+											<CFormCheck
+												checked={field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label="Custom Variables"
+											/>
+										)}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="expressionVariables"
+										children={(field) => (
+											<CFormCheck
+												checked={field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label="Expression Variables"
+											/>
+										)}
+									/>
+								</div>
+								<div className="indent3">
+									<form.Field
+										name="surfaces"
+										children={(field) => (
+											<CFormCheck
+												checked={field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label="Surfaces"
+											/>
+										)}
+									/>
+								</div>
+								<div style={{ paddingTop: '1em' }}>
+									<CFormLabel>File format</CFormLabel>
+									<form.Field
+										name="format"
+										children={(field) => (
+											<SelectExportFormat value={field.state.value} setValue={(val) => field.handleChange(val)} />
+										)}
+									/>
+								</div>
+								<div style={{ paddingTop: '1em' }}>
+									<CFormLabel>File name</CFormLabel>
+									<form.Field
+										name="filename"
+										children={(field) => (
+											<TextInputField
+												value={String(field.state.value)}
+												setValue={(val) => field.handleChange(val)}
+												useVariables={true}
+											/>
+										)}
+									/>
+								</div>
+							</div>
 						</CModalBody>
 						<CModalFooter>
-							<CButton color="secondary" onClick={doClose}>
-								Close
-							</CButton>
-							<CButton color="primary" onClick={doSave} disabled={!canExport}>
-								Download
-							</CButton>
+							<form.Subscribe
+								selector={(state) => [state.canSubmit, state.isSubmitting]}
+								children={([canSubmit, isSubmitting]) => (
+									<>
+										<CButton color="secondary" onClick={doClose} disabled={isSubmitting}>
+											Close
+										</CButton>
+										<CButton
+											color="primary"
+											disabled={!canSubmit || isSubmitting}
+											type="submit"
+											onClick={() => {
+												form.handleSubmit().catch((err) => {
+													console.error('Form submission error', err)
+												})
+											}}
+										>
+											Download {isSubmitting ? '...' : ''}
+										</CButton>
+									</>
+								)}
+							/>
 						</CModalFooter>
 					</CForm>
 				</MenuPortalContext.Provider>
@@ -125,99 +259,3 @@ export const ExportWizardModal = observer(
 		)
 	})
 )
-
-interface ExportOptionsStepProps {
-	config: ClientExportSelection
-	setValue: (key: keyof ClientExportSelection, value: any) => void
-}
-
-function ExportOptionsStep({ config, setValue }: ExportOptionsStepProps) {
-	const updateProp = useCallback((val: string) => setValue('filename', val), [setValue])
-	return (
-		<div>
-			<h5>Export Options</h5>
-			<p>Please select the components you'd like to export:</p>
-			<div className="indent3">
-				<CFormCheck
-					id="wizard_connections"
-					checked={config.connections}
-					onChange={(e) => setValue('connections', e.currentTarget.checked)}
-					label="Connections"
-				/>
-				{/* {!config.connections && (config.buttons || config.triggers) && (
-					<CAlert color="warning">
-						Any connections referenced by buttons or triggers will still be included in the export, with the config
-						options removed.
-					</CAlert>
-				)} */}
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					id="wizard_include_secrets"
-					className="ms-4"
-					checked={config.includeSecrets}
-					disabled={!config.connections}
-					onChange={(e) => setValue('includeSecrets', e.currentTarget.checked)}
-					label={
-						<>
-							Include secrets
-							<InlineHelp help="Some connections have secret values that can be omitted from the export. Not all modules are compatible with this">
-								<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-							</InlineHelp>
-						</>
-					}
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.buttons}
-					onChange={(e) => setValue('buttons', e.currentTarget.checked)}
-					label="Buttons"
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.triggers}
-					onChange={(e) => setValue('triggers', e.currentTarget.checked)}
-					label="Triggers"
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.customVariables}
-					onChange={(e) => setValue('customVariables', e.currentTarget.checked)}
-					label="Custom Variables"
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.expressionVariables}
-					onChange={(e) => setValue('expressionVariables', e.currentTarget.checked)}
-					label="Expression Variables"
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.surfaces}
-					onChange={(e) => setValue('surfaces', e.currentTarget.checked)}
-					label="Surfaces"
-				/>
-			</div>
-			{/* <div className="indent3">
-				<CFormCheck
-					checked={config.userconfig}
-					onChange={(e) => setValue('userconfig', e.currentTarget.checked)}
-					label='Settings'
-				/>
-			</div> */}
-			<div style={{ paddingTop: '1em' }}>
-				<CFormLabel>File format</CFormLabel>
-				<SelectExportFormat value={config.format} setValue={(val) => setValue('format', val)} />
-			</div>
-			<div style={{ paddingTop: '1em' }}>
-				<CFormLabel>File name</CFormLabel>
-				<TextInputField value={String(config.filename)} setValue={updateProp} useVariables={true} />
-			</div>
-		</div>
-	)
-}

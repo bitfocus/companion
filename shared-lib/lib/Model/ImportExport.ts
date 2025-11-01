@@ -1,5 +1,5 @@
 import z from 'zod'
-import type { ExportFormat } from './ExportFormat.js'
+import { zodExportFormat } from './ExportFormat.js'
 import type { UserConfigGridSize } from './UserConfigModel.js'
 
 export const zodClientResetSelection = z.object({
@@ -14,17 +14,19 @@ export const zodClientResetSelection = z.object({
 
 export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
 
-export interface ClientExportSelection {
-	buttons: boolean
-	connections: boolean
-	surfaces: boolean
-	triggers: boolean
-	customVariables: boolean
-	expressionVariables: boolean
-	includeSecrets: boolean
-	format: ExportFormat
-	filename?: string
-}
+export const zodClientExportSelection = z.object({
+	buttons: z.boolean(),
+	connections: z.boolean(),
+	surfaces: z.boolean(),
+	triggers: z.boolean(),
+	customVariables: z.boolean(),
+	expressionVariables: z.boolean(),
+	includeSecrets: z.boolean(),
+	format: zodExportFormat,
+	filename: z.string().optional(),
+})
+
+export type ClientExportSelection = z.infer<typeof zodClientExportSelection>
 
 export const zodClientImportSelection = z.object({
 	buttons: z.boolean(),
