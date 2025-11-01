@@ -7482,7 +7482,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"bare-fs@npm:empty-npm-package@1.0.0, bare-path@npm:empty-npm-package@1.0.0, unix-dgram@npm:empty-npm-package@1.0.0":
+"bare-fs@npm:empty-npm-package@1.0.0, bare-path@npm:empty-npm-package@1.0.0, serialport@npm:empty-npm-package@1.0.0, unix-dgram@npm:empty-npm-package@1.0.0":
   version: 1.0.0
   resolution: "empty-npm-package@npm:1.0.0"
   checksum: 10c0/86dc2266288d7e3456205b8fe69ef30a1561d2365783439df0870124e5f4cf64b845ef3fea9b3312107d5a08e8d0b56813392be80a98825b4ad75d22b7e68ce0
