@@ -9,7 +9,7 @@ import {
 } from '@companion-surface/host'
 import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
-import { translateOutboundConfigFields } from './ConfigFields.js'
+import { translateSurfaceConfigFields } from './ConfigFields.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')
@@ -43,13 +43,6 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
 			const info = await plugin.openHidDevice(msg.device)
-
-			// Make sure the surface is ready
-			if (info) {
-				// TODO - verify this is the correct place for this
-				await plugin.readySurface(info.surfaceId)
-			}
-
 			return { info }
 		},
 		checkHidDevice: async (msg) => {
@@ -69,6 +62,16 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 
 			const info = await plugin.openScannedDevice(msg.device)
 			return { info }
+		},
+		readySurface: async (msg) => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			await plugin.readySurface(msg.surfaceId, msg.initialConfig)
+		},
+		updateConfig: async (msg) => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			await plugin.updateConfig(msg.surfaceId, msg.newConfig)
 		},
 		destroy: async () => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
@@ -165,7 +168,7 @@ ipcWrapper
 		supportsScan: pluginFeatures.supportsScan,
 		supportsOutbound: pluginFeatures.supportsOutbound
 			? {
-					configFields: translateOutboundConfigFields(pluginFeatures.supportsOutbound.configFields),
+					configFields: translateSurfaceConfigFields(pluginFeatures.supportsOutbound.configFields),
 					configMatchesExpression: pluginFeatures.supportsOutbound.configMatchesExpression ?? null,
 				}
 			: null,
