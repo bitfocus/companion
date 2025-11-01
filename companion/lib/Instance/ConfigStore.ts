@@ -205,6 +205,18 @@ export class InstanceConfigStore {
 		return result
 	}
 
+	exportAllSurfaceInstances(): Record<string, InstanceConfig | undefined> {
+		const result: Record<string, InstanceConfig | undefined> = {}
+
+		for (const [id, config] of this.#store) {
+			if (config.moduleInstanceType === ModuleInstanceType.Surface) {
+				result[id] = config
+			}
+		}
+
+		return result
+	}
+
 	getPartialClientConnectionsJson(): Record<string, ClientConnectionConfig> {
 		const result: Record<string, ClientConnectionConfig> = {}
 
