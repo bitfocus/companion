@@ -20,6 +20,9 @@ import type { SomeModuleVersionInfo } from './Types.js'
 
 const require = createRequire(import.meta.url)
 
+// Regex to identify Node.js security warning lines
+const SECURITY_WARNING_RE = /^\(node:(\d+)\) SecurityWarning: /
+
 /**
  * A backoff sleep strategy
  * @returns ms to sleep
@@ -459,8 +462,15 @@ export class InstanceProcessManager {
 				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
-				child.logger.verbose(`stderr: ${data.toString()}`)
-				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'error', data.toString())
+				const str = data.toString()
+
+				// Check if the message starts with a security warning
+				if (SECURITY_WARNING_RE.test(str)) {
+					return
+				}
+
+				child.logger.verbose(`stderr: ${str}`)
+				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'error', str)
 			})
 
 			child.monitor = monitor
