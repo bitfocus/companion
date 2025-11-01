@@ -144,6 +144,7 @@ export default [
 			'module-local-dev/**/*',
 			'launcher/dev.cjs',
 			'webui/public/_deps/**/*',
+			'.yarnrc.yml',
 			// TMP
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',

@@ -9,6 +9,7 @@ webui/build/
 webui/public/legacy
 webui/src/routeTree.gen.ts
 /LICENSE.md
+/.yarnrc.yml
 
 module-local-dev
 bundled-modules
