@@ -570,6 +570,9 @@ export class ExportController {
 
 				groupConfig.last_page = findPage(groupConfig.last_page_id) ?? 1
 				groupConfig.startup_page = findPage(groupConfig.startup_page_id) ?? 1
+				if (groupConfig.allowed_page_ids !== undefined) {
+					groupConfig.allowed_pages = groupConfig.allowed_page_ids.map((id) => findPage(id) ?? 1)
+				}
 			}
 
 			for (const surface of Object.values(surfaces)) {

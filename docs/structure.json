@@ -90,6 +90,10 @@
 					{
 						"label": "Discover",
 						"file": "3_config/surfaces/discover.md"
+					},
+					{
+						"label": "Page Permissions",
+						"file": "3_config/surfaces/pagepermissions.md"
 					}
 				]
 			},
@@ -160,6 +164,11 @@
 						"file": "3_config/settings/https_web_server.md"
 					}
 				]
+			},
+			{
+				"label": "Security Considerations",
+				"file": "security.md",
+				"children": []
 			},
 			{
 				"label": "Import / Export",
