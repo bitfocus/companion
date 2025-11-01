@@ -3,7 +3,6 @@ import type {
 	GridSize,
 	SurfaceFirmwareUpdateInfo,
 	SurfaceGroupConfig,
-	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
@@ -43,6 +42,8 @@ export interface SurfacePanelInfo {
 }
 
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
+	readonly instanceId?: string // Future: make required
+
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	clearDeck(): void
@@ -77,6 +78,8 @@ export interface SurfacePanelEvents {
 
 	setCustomVariable: [variableId: string, value: CompanionVariableValue]
 
+	firmwareUpdateInfo: []
+
 	resized: []
 }
 
@@ -110,5 +113,4 @@ export type UpdateEvents = EmulatorUpdateEvents & {
 	surfaces: [changes: SurfacesUpdate[]]
 
 	[id: `groupConfig:${string}`]: [config: SurfaceGroupConfig | null]
-	[id: `surfaceConfig:${string}`]: [config: SurfacePanelConfig | null]
 }

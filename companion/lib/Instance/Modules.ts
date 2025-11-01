@@ -31,6 +31,7 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 import type { AppInfo } from '../Registry.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 type InstanceModulesEvents = {
 	modulesUpdate: [change: ModuleInfoUpdate]
@@ -54,6 +55,7 @@ export class InstanceModules {
 	 * Known module info
 	 */
 	readonly #knownConnectionModules = new Map<string, InstanceModuleInfo>()
+	readonly #knownSurfaceModules = new Map<string, InstanceModuleInfo>()
 
 	/**
 	 * Module scanner helper
@@ -83,7 +85,10 @@ export class InstanceModules {
 		switch (type) {
 			case ModuleInstanceType.Connection:
 				return this.#knownConnectionModules
+			case ModuleInstanceType.Surface:
+				return this.#knownSurfaceModules
 			default:
+				assertNever(type)
 				throw new Error(`Invalid module type: ${type}`)
 		}
 	}
@@ -159,20 +164,12 @@ export class InstanceModules {
 		return moduleInfo
 	}
 
-	/**
-	 * Initialise modules from disk
-	 * @param extraModulePath - extra directory to search for modules
-	 */
-	async initModules(extraModulePath: string): Promise<void> {
-		// Add modules from the installed modules directory
-		const installedConnectionModules = await this.#moduleScanner.loadInfoForModulesInDir(
-			this.#modulesDirs.connection,
-			true
-		)
-		for (const candidate of installedConnectionModules) {
-			if (candidate.type !== ModuleInstanceType.Connection) {
+	async #initModulesOfType(moduleType: ModuleInstanceType): Promise<void> {
+		const installedModules = await this.#moduleScanner.loadInfoForModulesInDir(this.#modulesDirs[moduleType], true)
+		for (const candidate of installedModules) {
+			if (candidate.type !== moduleType) {
 				this.#logger.warn(
-					`Skipping module ${candidate.manifest.id} in installed modules dir, as it is not a connection module`
+					`Skipping module ${candidate.manifest.id} in installed modules dir, as it is not a ${moduleType} module`
 				)
 				continue
 			}
@@ -183,6 +180,16 @@ export class InstanceModules {
 				isPackaged: true,
 			}
 		}
+	}
+
+	/**
+	 * Initialise modules from disk
+	 * @param extraModulePath - extra directory to search for modules
+	 */
+	async initModules(extraModulePath: string): Promise<void> {
+		// Add modules from the installed modules directory
+		await this.#initModulesOfType(ModuleInstanceType.Connection)
+		await this.#initModulesOfType(ModuleInstanceType.Surface)
 
 		if (extraModulePath) {
 			this.#logger.info(`Looking for extra modules in: ${extraModulePath}`)
@@ -203,6 +210,7 @@ export class InstanceModules {
 
 		// Log the loaded modules
 		this.#logLoadedModules(this.#knownConnectionModules, 'Connection:')
+		this.#logLoadedModules(this.#knownSurfaceModules, 'Surface:')
 	}
 
 	#logLoadedModules(knownModules: Map<string, InstanceModuleInfo>, prefix: string): void {
@@ -266,6 +274,7 @@ export class InstanceModules {
 
 			// Find the dev module which shares this path, and remove it as an option
 			findModule(this.#knownConnectionModules)
+			findModule(this.#knownSurfaceModules)
 
 			if (changedModule) {
 				this.#emitModuleUpdate(changedModule.moduleType, changedModule.id)
@@ -446,7 +455,7 @@ export class InstanceModules {
 		}
 
 		processMap(ModuleInstanceType.Connection, this.#knownConnectionModules)
-		// Future: include more here!
+		processMap(ModuleInstanceType.Surface, this.#knownSurfaceModules)
 
 		return result
 	}

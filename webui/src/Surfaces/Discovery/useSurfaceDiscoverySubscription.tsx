@@ -9,7 +9,7 @@ export function useSurfaceDiscoverySubscription(): Record<string, ClientDiscover
 	)
 
 	/*const discoverySub = */ useSubscription(
-		trpc.surfaceDiscovery.watchForSurfaces.subscriptionOptions(undefined, {
+		trpc.surfaces.outbound.discovery.watchForSurfaces.subscriptionOptions(undefined, {
 			onStarted: () => {
 				setDiscoveredSurfaces({}) // Clear when the subscription starts
 			},

@@ -336,7 +336,7 @@ export interface operations {
 			header?: never
 			path: {
 				/** @description Type of module to get */
-				moduleType: 'connection'
+				moduleType: 'connection' | 'surface'
 			}
 			cookie?: never
 		}
