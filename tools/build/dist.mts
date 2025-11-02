@@ -107,9 +107,6 @@ await fs.writeFile(
 )
 await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file, to keep deps as similar as possible
 await fs.copyFile('.node-version', 'dist/.node-version')
-// note: `os: ... platformInfo.nodePlatform` is needed to load @napi-rs/canvas-win32-x64-msvc when building win32 from WSL, perhaps for any cross-platform build?
-//     os: ['current', ...] does not appear to be needed, but if used, perhaps remove unneeded prebuild in package.mts?
-//     Do we need to force arm64?? (if so, how? add to cpu?)
 await fs.writeFile(
 	'dist/.yarnrc.yml',
 	yaml.stringify({
