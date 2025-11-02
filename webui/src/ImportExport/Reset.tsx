@@ -9,7 +9,6 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
-import { cloneDeep } from 'lodash-es'
 
 export interface ResetWizardModalRef {
 	show(): void
@@ -30,7 +29,7 @@ const defaultFullResetConfig: ClientImportOrResetSelection = {
 const { fieldContext, useFieldContext, formContext } = createFormHookContexts()
 
 const resetFormOpts = formOptions({
-	defaultValues: cloneDeep(defaultFullResetConfig),
+	defaultValues: defaultFullResetConfig,
 })
 
 const { useAppForm, withForm } = createFormHook({

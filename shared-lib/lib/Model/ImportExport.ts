@@ -58,7 +58,7 @@ export interface ClientImportObject {
 	connections: Record<string, ClientImportObjectInstance>
 	buttons: boolean
 	surfaces: boolean
-	triggers: boolean | Record<string, { name: string }>
+	triggers: Record<string, { name: string }> | null
 	customVariables: boolean
 	expressionVariables: boolean
 	oldPageNumber?: number

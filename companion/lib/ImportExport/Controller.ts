@@ -129,7 +129,7 @@ export class ImportExportController {
 				customVariables: 'custom_variables' in object,
 				expressionVariables: 'expressionVariables' in object,
 				surfaces: 'surfaces' in object,
-				triggers: 'triggers' in object,
+				triggers: null,
 			}
 
 			for (const [connectionId, connectionConfig] of Object.entries(object.instances || {})) {
