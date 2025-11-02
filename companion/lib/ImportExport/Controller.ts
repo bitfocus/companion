@@ -392,9 +392,9 @@ export class ImportExportController {
 					})
 				}),
 
-			importFull: publicProcedure
-				.input(z.object({ config: zodClientImportSelection, fullReset: z.boolean() }))
-				.mutation(async ({ input: { config, fullReset }, ctx }) => {
+			importAndResetCustom: publicProcedure
+				.input(z.object({ config: zodClientImportSelection }))
+				.mutation(async ({ input: { config }, ctx }) => {
 					return this.#checkOrRunImportTask('import', async () => {
 						console.log(
 							`Performing full import: ${fullReset ? 'Full Reset' : 'Partial Reset'} Config: ${JSON.stringify(config)}`

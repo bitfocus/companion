@@ -2,14 +2,27 @@ import z from 'zod'
 import { zodExportFormat } from './ExportFormat.js'
 import type { UserConfigGridSize } from './UserConfigModel.js'
 
-export const zodClientResetSelection = z.object({
-	buttons: z.boolean(),
-	connections: z.boolean(),
-	surfaces: z.boolean(),
-	triggers: z.boolean(),
-	customVariables: z.boolean(),
-	expressionVariables: z.boolean(),
-	userconfig: z.boolean(),
+export const zodImportOrResetType = z.enum(['unchanged', 'reset-and-import', 'reset'])
+export type ImportOrResetType = z.infer<typeof zodImportOrResetType>
+
+export const zodResetType = z.enum(['unchanged', 'reset-and-import', 'reset'])
+export type ResetType = z.infer<typeof zodResetType>
+
+export const zodClientImportSelection = z.object({
+	buttons: zodImportOrResetType,
+	surfaces: z.object({
+		known: zodImportOrResetType,
+	}),
+	triggers: zodImportOrResetType,
+	customVariables: zodImportOrResetType,
+	expressionVariables: zodImportOrResetType,
+})
+
+export type ClientImportSelection = z.infer<typeof zodClientImportSelection>
+
+export const zodClientResetSelection = zodClientImportSelection.extend({
+	connections: zodResetType,
+	userconfig: zodResetType,
 })
 
 export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
@@ -34,16 +47,6 @@ export const zodClientExportSelection = z.object({
 })
 
 export type ClientExportSelection = z.infer<typeof zodClientExportSelection>
-
-export const zodClientImportSelection = z.object({
-	buttons: z.boolean(),
-	surfaces: z.boolean(),
-	triggers: z.boolean(),
-	customVariables: z.boolean(),
-	expressionVariables: z.boolean(),
-})
-
-export type ClientImportSelection = z.infer<typeof zodClientImportSelection>
 
 export interface ClientPageInfo {
 	name: string

@@ -1,182 +1,212 @@
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
-import { makeAbsolutePath, PreventDefaultHandler } from '~/Resources/util.js'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
+import { makeAbsolutePath } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
-import type { ClientResetSelection } from '@companion-app/shared/Model/ImportExport.js'
+import type { ResetType, ClientResetSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
+import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
+import { observer } from 'mobx-react-lite'
+import { cloneDeep } from 'lodash-es'
 
 export interface ResetWizardModalRef {
 	show(): void
 }
 
-export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardModal(_props, ref) {
-	const { notifier } = useContext(RootAppStoreContext)
+const defaultFullResetConfig: ClientResetSelection = {
+	connections: 'reset',
+	buttons: 'reset',
+	surfaces: {
+		known: 'reset',
+	},
+	triggers: 'reset',
+	customVariables: 'reset',
+	expressionVariables: 'reset',
+	userconfig: 'reset',
+}
 
-	const [currentStep, setCurrentStep] = useState(1)
-	const maxSteps = 3
-	const applyStep = 3
-	const [clear, setClear] = useState(true)
-	const [show, setShow] = useState(false)
-	const [config, setConfig] = useState<ClientResetSelection>({
-		connections: true,
-		buttons: true,
-		surfaces: true,
-		triggers: true,
-		customVariables: true,
-		expressionVariables: true,
-		userconfig: true,
-	})
+const { fieldContext, useFieldContext, formContext } = createFormHookContexts()
 
-	const doClose = useCallback(() => {
-		setShow(false)
-		setClear(true)
-	}, [])
+const resetFormOpts = formOptions({
+	defaultValues: cloneDeep(defaultFullResetConfig),
+})
 
-	const doNextStep = useCallback(() => {
-		let newStep = currentStep
-		// Make sure step is set to something reasonable
-		if (newStep >= maxSteps - 1) {
-			newStep = maxSteps
-		} else {
-			newStep = newStep + 1
-		}
+const { useAppForm, withForm } = createFormHook({
+	fieldComponents: {
+		ResetToggleField,
+	},
+	formComponents: {
+		// 	FormSubmitButton,
+	},
+	fieldContext,
+	formContext,
+})
 
-		setCurrentStep(newStep)
-	}, [currentStep, maxSteps])
+export const ResetWizardModal = observer(
+	forwardRef<ResetWizardModalRef>(function ResetWizardModal(_props, ref) {
+		const { notifier } = useContext(RootAppStoreContext)
 
-	const doPrevStep = useCallback(() => {
-		let newStep = currentStep
-		if (newStep <= 1) {
-			newStep = 1
-		} else {
-			newStep = newStep - 1
-		}
+		const [currentStep, setCurrentStep] = useState(1)
+		const maxSteps = 3
+		const applyStep = 3
+		const [show, setShow] = useState(false)
+		const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
 
-		setCurrentStep(newStep)
-	}, [currentStep])
+		const resetConfigMutation = useMutationExt(trpc.importExport.resetConfiguration.mutationOptions())
 
-	const resetConfigMutation = useMutationExt(trpc.importExport.resetConfiguration.mutationOptions())
-	const doSave = useCallback(
-		(e: React.FormEvent) => {
-			e.preventDefault()
+		const form = useAppForm({
+			...resetFormOpts,
+			onSubmit: async ({ value }) => {
+				setCurrentStep(maxSteps) // Move to completion step
 
-			resetConfigMutation // TODO: 30s timeout?
-				.mutateAsync(config)
-				.then((status) => {
+				try {
+					const status = await resetConfigMutation.mutateAsync(value)
 					if (status !== 'ok') {
-						notifier.show(`Reset failed`, `An unspecified error occurred during the reset.  Please try again.`, 10000)
+						notifier.show(`Reset failed`, `An unspecified error occurred during the reset. Please try again.`, 10000)
 					}
 
 					doClose()
-				})
-				.catch((e) => {
-					notifier.show(`Reset failed`, 'An error occurred:' + e, 10000)
-					doNextStep()
-				})
-
-			doNextStep()
-		},
-		[resetConfigMutation, notifier, config, doNextStep, doClose]
-	)
-
-	const setValue = (key: keyof ClientResetSelection, value: boolean) => {
-		setConfig((oldState: ClientResetSelection) => ({
-			...oldState,
-			[key]: value,
-		}))
-	}
-
-	useImperativeHandle(
-		ref,
-		() => ({
-			show() {
-				if (clear) {
-					setConfig({
-						connections: true,
-						buttons: true,
-						surfaces: true,
-						triggers: true,
-						customVariables: true,
-						expressionVariables: true,
-						userconfig: true,
-					})
-
-					setCurrentStep(1)
+				} catch (e) {
+					notifier.show(`Reset failed`, 'An error occurred: ' + e, 10000)
 				}
-				setShow(true)
-				setClear(false)
 			},
-		}),
-		[clear]
-	)
+		})
 
-	let nextButton
-	switch (currentStep) {
-		case applyStep:
-			nextButton = (
-				<CButton color="primary" onClick={doSave}>
-					Apply
-				</CButton>
-			)
-			break
-		case maxSteps:
-			nextButton = (
-				<CButton color="primary" onClick={doClose}>
-					Finish
-				</CButton>
-			)
-			break
-		default:
-			nextButton = (
-				<CButton color="primary" onClick={doNextStep}>
-					Next
-				</CButton>
-			)
-	}
+		const doClose = useCallback(() => {
+			setShow(false)
+			form.reset()
+			setCurrentStep(1)
+		}, [form])
 
-	let modalBody
-	switch (currentStep) {
-		case 1:
-			modalBody = <ResetBeginStep />
-			break
-		case 2:
-			modalBody = <ResetOptionsStep config={config} setValue={setValue} />
-			break
-		case 3:
-			modalBody = <ResetApplyStep config={config} />
-			break
-		default:
-	}
+		const doNextStep = useCallback(() => {
+			let newStep = currentStep
+			// Make sure step is set to something reasonable
+			if (newStep >= maxSteps - 1) {
+				newStep = maxSteps
+			} else {
+				newStep = newStep + 1
+			}
 
-	return (
-		<CModal visible={show} onClose={doClose} className={'wizard'} backdrop="static">
-			<CForm onSubmit={PreventDefaultHandler}>
-				<CModalHeader>
-					<h2>
-						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
-						Reset Configuration
-					</h2>
-				</CModalHeader>
-				<CModalBody>{modalBody}</CModalBody>
-				<CModalFooter>
-					{currentStep <= applyStep && (
-						<>
-							<CButton color="secondary" onClick={doClose}>
-								Cancel
+			setCurrentStep(newStep)
+		}, [currentStep, maxSteps])
+
+		const doPrevStep = useCallback(() => {
+			let newStep = currentStep
+			if (newStep <= 1) {
+				newStep = 1
+			} else {
+				newStep = newStep - 1
+			}
+
+			setCurrentStep(newStep)
+		}, [currentStep])
+
+		useImperativeHandle(
+			ref,
+			() => ({
+				show() {
+					form.reset()
+					setCurrentStep(1)
+					setShow(true)
+				},
+			}),
+			[form]
+		)
+
+		let nextButton
+		switch (currentStep) {
+			case applyStep:
+				nextButton = (
+					<form.Subscribe
+						selector={(state) => [state.canSubmit, state.isSubmitting]}
+						children={([canSubmit, isSubmitting]) => (
+							<CButton
+								color="primary"
+								disabled={!canSubmit || isSubmitting}
+								onClick={() => {
+									form.handleSubmit().catch((err) => {
+										console.error('Form submission error', err)
+									})
+								}}
+							>
+								Apply {isSubmitting ? '...' : ''}
 							</CButton>
-							<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
-								Back
-							</CButton>
-						</>
-					)}
-					{nextButton}
-				</CModalFooter>
-			</CForm>
-		</CModal>
-	)
-})
+						)}
+					/>
+				)
+				break
+			case maxSteps:
+				nextButton = (
+					<CButton color="primary" onClick={doClose}>
+						Finish
+					</CButton>
+				)
+				break
+			default:
+				nextButton = (
+					<CButton color="primary" onClick={doNextStep}>
+						Next
+					</CButton>
+				)
+		}
+
+		let modalBody
+		switch (currentStep) {
+			case 1:
+				modalBody = <ResetBeginStep />
+				break
+			case 2:
+				modalBody = <ResetOptionsStep form={form} />
+				break
+			case 3:
+				modalBody = <ResetApplyStep form={form} />
+				break
+			default:
+		}
+
+		return (
+			<CModal ref={setModalRef} visible={show} onClose={doClose} className={'wizard'} backdrop="static">
+				<MenuPortalContext.Provider value={modalRef}>
+					<form.AppForm>
+						<form
+							className={'flex-form'}
+							onSubmit={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								form.handleSubmit().catch((err) => {
+									console.error('Form submission error', err)
+								})
+							}}
+						>
+							<CModalHeader>
+								<h2>
+									<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
+									Reset Configuration
+								</h2>
+							</CModalHeader>
+							<CModalBody>{modalBody}</CModalBody>
+							<CModalFooter>
+								{currentStep <= applyStep && (
+									<>
+										<CButton color="secondary" onClick={doClose}>
+											Cancel
+										</CButton>
+										<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+											Back
+										</CButton>
+									</>
+								)}
+								{nextButton}
+							</CModalFooter>
+						</form>
+					</form.AppForm>
+				</MenuPortalContext.Provider>
+			</CModal>
+		)
+	})
+)
 
 function ResetBeginStep() {
 	return (
@@ -193,136 +223,145 @@ function ResetBeginStep() {
 	)
 }
 
-interface ResetOptionsStepProps {
-	config: ClientResetSelection
-	setValue: (key: keyof ClientResetSelection, value: boolean) => void
-}
+const ResetOptionsStep = withForm({
+	defaultValues: defaultFullResetConfig, // Just for types
+	render: function ResetOptionsStep({ form }) {
+		return (
+			<div>
+				<h5>Reset Options</h5>
+				<p>Please select the components you'd like to reset.</p>
 
-function ResetOptionsStep({ config, setValue }: ResetOptionsStepProps) {
+				<div className="indent3">
+					<form.AppField name="connections">{(field) => <field.ResetToggleField label="Connections" />}</form.AppField>
+					<form.Subscribe
+						selector={(state: any) => [state.values.connections, state.values.buttons, state.values.triggers]}
+						children={([connections, buttons, triggers]: any[]) =>
+							connections !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
+								<CAlert color="warning">
+									Resetting 'Connections' will remove all actions, feedbacks, and triggers associated with the
+									connections even if 'Buttons' and/or 'Triggers' are not also reset.
+								</CAlert>
+							) : null
+						}
+					/>
+				</div>
+
+				<div className="indent3">
+					<form.AppField name="buttons">{(field) => <field.ResetToggleField label="Buttons" />}</form.AppField>
+				</div>
+				<div className="indent3">
+					<form.AppField name="triggers">{(field) => <field.ResetToggleField label="Triggers" />}</form.AppField>
+				</div>
+
+				<div className="indent3">
+					<form.AppField name="customVariables">
+						{(field) => <field.ResetToggleField label="Custom Variables" />}
+					</form.AppField>
+					<form.Subscribe
+						selector={(state: any) => [state.values.customVariables, state.values.buttons, state.values.triggers]}
+						children={([customVariables, buttons, triggers]: any[]) =>
+							customVariables !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
+								<CAlert color="warning">
+									Resetting 'Custom Variables' without also resetting 'Buttons', and 'Triggers' that may utilize them
+									can create an unstable environment.
+								</CAlert>
+							) : null
+						}
+					/>
+				</div>
+				<div className="indent3">
+					<form.AppField name="expressionVariables">
+						{(field) => <field.ResetToggleField label="Expression Variables" />}
+					</form.AppField>
+				</div>
+
+				<div className="indent3">
+					<form.AppField name="surfaces.known">{(field) => <field.ResetToggleField label="Surfaces" />}</form.AppField>
+				</div>
+
+				<div className="indent3">
+					<form.AppField name="userconfig">{(field) => <field.ResetToggleField label="Settings" />}</form.AppField>
+				</div>
+			</div>
+		)
+	},
+})
+
+interface ResetToggleFieldProps {
+	label: string
+}
+function ResetToggleField({ label }: ResetToggleFieldProps) {
+	const field = useFieldContext<ResetType>()
+
 	return (
-		<div>
-			<h5>Reset Options</h5>
-			<p>Please select the components you'd like to reset.</p>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.connections}
-					onChange={(e) => setValue('connections', e.currentTarget.checked)}
-					label="Connections"
-				/>
-				{config.connections && !(config.buttons && config.triggers) ? (
-					<CAlert color="warning">
-						Resetting 'Connections' will remove all actions, feedbacks, and triggers associated with the connections
-						even if 'Buttons' and/or 'Triggers' are not also reset.
-					</CAlert>
-				) : (
-					''
-				)}
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.buttons}
-					onChange={(e) => setValue('buttons', e.currentTarget.checked)}
-					label="Buttons"
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.triggers}
-					onChange={(e) => setValue('triggers', e.currentTarget.checked)}
-					label="Triggers"
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.customVariables}
-					onChange={(e) => setValue('customVariables', e.currentTarget.checked)}
-					label="Custom Variables"
-				/>
-				{config.customVariables && !(config.buttons && config.triggers) ? (
-					<CAlert color="warning">
-						Resetting 'Custom Variables' without also resetting 'Buttons', and 'Triggers' that may utilize them can
-						create an unstable environment.
-					</CAlert>
-				) : (
-					''
-				)}
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.expressionVariables}
-					onChange={(e) => setValue('expressionVariables', e.currentTarget.checked)}
-					label="Expression Variables"
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.surfaces}
-					onChange={(e) => setValue('surfaces', e.currentTarget.checked)}
-					label="Surfaces"
-				/>
-			</div>
-			<div className="indent3">
-				<CFormCheck
-					checked={config.userconfig}
-					onChange={(e) => setValue('userconfig', e.currentTarget.checked)}
-					label="Settings"
-				/>
-			</div>
-		</div>
+		<CFormCheck
+			checked={field.state.value !== 'unchanged'}
+			onChange={(e) => field.handleChange(e.currentTarget.checked ? 'reset' : 'unchanged')}
+			onBlur={field.handleBlur}
+			label={label}
+		/>
 	)
 }
 
-interface ResetApplyStepProps {
-	config: ClientResetSelection
-}
+const ResetApplyStep = withForm({
+	defaultValues: defaultFullResetConfig, // Just for types
+	render: function ResetApplyStep({ form }) {
+		return (
+			<form.Subscribe
+				selector={(state) => [state.values]}
+				children={([config]) => {
+					const changes = []
 
-function ResetApplyStep({ config }: ResetApplyStepProps) {
-	const changes = []
+					if (config.connections !== 'unchanged' && config.buttons === 'unchanged' && config.triggers === 'unchanged') {
+						changes.push(<li key="connections">All connections including their actions, feedbacks, and triggers.</li>)
+					} else if (config.connections !== 'unchanged' && config.buttons === 'unchanged') {
+						changes.push(<li key="connections">All connections including their button actions and feedbacks.</li>)
+					} else if (config.connections !== 'unchanged' && config.triggers === 'unchanged') {
+						changes.push(<li key="connections">All connections including their triggers and trigger actions.</li>)
+					} else if (config.connections !== 'unchanged') {
+						changes.push(<li key="connections">All connections.</li>)
+					}
 
-	if (config.connections && !config.buttons && !config.triggers) {
-		changes.push(<li key="connections">All connections including their actions, feedbacks, and triggers.</li>)
-	} else if (config.connections && !config.buttons) {
-		changes.push(<li key="connections">All connections including their button actions and feedbacks.</li>)
-	} else if (config.connections && !config.triggers) {
-		changes.push(<li key="connections">All connections including their triggers and trigger actions.</li>)
-	} else if (config.connections) {
-		changes.push(<li key="connections">All connections.</li>)
-	}
+					if (config.buttons !== 'unchanged') {
+						changes.push(<li key="buttons">All button styles, actions, and feedbacks.</li>)
+					}
 
-	if (config.buttons) {
-		changes.push(<li key="buttons">All button styles, actions, and feedbacks.</li>)
-	}
+					if (config.surfaces.known !== 'unchanged') {
+						changes.push(<li key="surfaces">All surface settings.</li>)
+					}
 
-	if (config.surfaces) {
-		changes.push(<li key="surfaces">All surface settings.</li>)
-	}
+					if (config.triggers !== 'unchanged') {
+						changes.push(<li key="triggers">All triggers.</li>)
+					}
 
-	if (config.triggers) {
-		changes.push(<li key="triggers">All triggers.</li>)
-	}
+					if (config.customVariables !== 'unchanged') {
+						changes.push(<li key="custom-variables">All custom variables.</li>)
+					}
 
-	if (config.customVariables) {
-		changes.push(<li key="custom-variables">All custom variables.</li>)
-	}
+					if (config.expressionVariables !== 'unchanged') {
+						changes.push(<li key="expression-variables">All expression variables.</li>)
+					}
 
-	if (config.expressionVariables) {
-		changes.push(<li key="expression-variables">All expression variables.</li>)
-	}
+					if (config.userconfig !== 'unchanged') {
+						changes.push(<li key="userconfig">All settings, including enabled remote control services.</li>)
+					}
 
-	if (config.userconfig) {
-		changes.push(<li key="userconfig">All settings, including enabled remote control services.</li>)
-	}
+					if (changes.length === 0) {
+						changes.push(<li key="no-change">No changes to the configuration will be made.</li>)
+					}
 
-	if (changes.length === 0) {
-		changes.push(<li key="no-change">No changes to the configuration will be made.</li>)
-	}
-
-	return (
-		<div>
-			<h5>Review Changes</h5>
-			<p>The following data will be reset:</p>
-			<ul>{changes}</ul>
-			{changes.length > 0 ? <CAlert color="danger">Proceeding will permanently clear the above data.</CAlert> : ''}
-		</div>
-	)
-}
+					return (
+						<div>
+							<h5>Review Changes</h5>
+							<p>The following data will be reset:</p>
+							<ul>{changes}</ul>
+							{changes.length > 0 ? (
+								<CAlert color="danger">Proceeding will permanently clear the above data.</CAlert>
+							) : null}
+						</div>
+					)
+				}}
+			/>
+		)
+	},
+})
