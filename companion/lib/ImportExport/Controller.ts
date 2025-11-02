@@ -124,7 +124,7 @@ export class ImportExportController {
 			// Build a minimal object to send back to the client
 			const clientObject: ClientImportObject = {
 				type: object.type,
-				instances: {},
+				connections: {},
 				buttons: 'pages' in object,
 				customVariables: 'custom_variables' in object,
 				expressionVariables: 'expressionVariables' in object,
@@ -135,8 +135,8 @@ export class ImportExportController {
 			for (const [connectionId, connectionConfig] of Object.entries(object.instances || {})) {
 				if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
 
-				clientObject.instances[connectionId] = {
-					instance_type: connectionConfig.instance_type,
+				clientObject.connections[connectionId] = {
+					moduleId: connectionConfig.instance_type,
 					moduleVersionId: connectionConfig.moduleVersionId ?? null,
 					label: connectionConfig.label,
 					sortOrder: connectionConfig.sortOrder,

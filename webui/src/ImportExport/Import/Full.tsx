@@ -143,11 +143,6 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			if (val) keys.push(key)
 		}
 
-		{
-			const i = keys.indexOf('instances')
-			if (i !== -1) keys[i] = 'connections'
-		}
-
 		return keys
 	}, [snapshot])
 

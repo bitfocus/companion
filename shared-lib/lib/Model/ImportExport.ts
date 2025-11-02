@@ -53,13 +53,13 @@ export interface ClientPageInfo {
 }
 export interface ClientImportObjectInstance {
 	label: string
-	instance_type: string
+	moduleId: string
 	moduleVersionId: string | null
 	sortOrder?: number
 }
 export interface ClientImportObject {
 	type: 'page' | 'full'
-	instances: Record<string, ClientImportObjectInstance>
+	connections: Record<string, ClientImportObjectInstance>
 	buttons: boolean
 	surfaces: boolean
 	triggers: boolean | Record<string, { name: string }>
