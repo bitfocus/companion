@@ -4566,25 +4566,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/node-core@npm:10.17.0":
-  version: 10.17.0
-  resolution: "@sentry/node-core@npm:10.17.0"
-  dependencies:
-    "@sentry/core": "npm:10.17.0"
-    "@sentry/opentelemetry": "npm:10.17.0"
-    import-in-the-middle: "npm:^1.14.2"
-  peerDependencies:
-    "@opentelemetry/api": ^1.9.0
-    "@opentelemetry/context-async-hooks": ^1.30.1 || ^2.1.0
-    "@opentelemetry/core": ^1.30.1 || ^2.1.0
-    "@opentelemetry/instrumentation": ">=0.57.1 <1"
-    "@opentelemetry/resources": ^1.30.1 || ^2.1.0
-    "@opentelemetry/sdk-trace-base": ^1.30.1 || ^2.1.0
-    "@opentelemetry/semantic-conventions": ^1.37.0
-  checksum: 10c0/e8723f362a2cc31e582e786fb8b676b298103c1237dd746a7e0ca9b7638a5be4f2a73954c901c467976a3662e3ac30134a7a33ea5c178d00d87694d889c9cb20
-  languageName: node
-  linkType: hard
-
 "@sentry/node-core@npm:10.22.0":
   version: 10.22.0
   resolution: "@sentry/node-core@npm:10.22.0"
@@ -4602,6 +4583,26 @@ __metadata:
     "@opentelemetry/sdk-trace-base": ^1.30.1 || ^2.1.0
     "@opentelemetry/semantic-conventions": ^1.37.0
   checksum: 10c0/ec2ad6d8cc39b0d262ddff30e46d019aabdb423b806a32051b2372d3f2b865641a7d385add4c349ac42e2c9d4fdc0eec283e2ef854492dc0a84d3f8ea6f567c3
+  languageName: node
+  linkType: hard
+
+"@sentry/node-core@patch:@sentry/node-core@npm%3A10.22.0#~/.yarn/patches/@sentry-node-core-npm-10.22.0-e586fad107.patch":
+  version: 10.22.0
+  resolution: "@sentry/node-core@patch:@sentry/node-core@npm%3A10.22.0#~/.yarn/patches/@sentry-node-core-npm-10.22.0-e586fad107.patch::version=10.22.0&hash=f18876"
+  dependencies:
+    "@apm-js-collab/tracing-hooks": "npm:^0.3.1"
+    "@sentry/core": "npm:10.22.0"
+    "@sentry/opentelemetry": "npm:10.22.0"
+    import-in-the-middle: "npm:^1.14.2"
+  peerDependencies:
+    "@opentelemetry/api": ^1.9.0
+    "@opentelemetry/context-async-hooks": ^1.30.1 || ^2.1.0
+    "@opentelemetry/core": ^1.30.1 || ^2.1.0
+    "@opentelemetry/instrumentation": ">=0.57.1 <1"
+    "@opentelemetry/resources": ^1.30.1 || ^2.1.0
+    "@opentelemetry/sdk-trace-base": ^1.30.1 || ^2.1.0
+    "@opentelemetry/semantic-conventions": ^1.37.0
+  checksum: 10c0/ee7503d9ac81b7b5807de816a4257b89d960fcb8d8f661e0c14310c2c9268e3fab4021aa1ad68a7e376af78e8faa7c7495952e4b482127c38a7b408fe87aa902
   languageName: node
   linkType: hard
 

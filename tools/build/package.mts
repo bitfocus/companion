@@ -67,7 +67,10 @@ if (platformInfo.runtimePlatform === 'win') {
 		}
 	}
 
-	const prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true, expandDirectories: false })
+	let prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true, expandDirectories: false })
+	// Note: adding "dist/node_modules/@napi-rs" to this list should never hurt
+	// but it only does anything when os: 'current' is included in 'dist/.yarnrc.yml' (see dist.mts)
+	prebuildDirs.push('dist/node_modules/@napi-rs')
 	console.log(`Cleaning ${prebuildDirs.length} prebuild directories`)
 	for (const dirname of prebuildDirs) {
 		console.log(`pruning prebuilds from: ${dirname}`)
@@ -88,6 +91,11 @@ if (!process.env.SKIP_LAUNCH_CHECK) {
 			: path.join(latestRuntimeDir, 'bin/node')
 
 	// Note: the ./${nodeExePath} syntax is a workaround for windows
+	if (platformInfo.runtimePlatform === 'win' && process.platform === 'linux') {
+		// Assume we're in WSL: exe files are not executable by default. Alt: add is-wsl package... (but this code is harmless)
+		await $`chmod +x ./${nodeExePath}`
+	}
+	// (Note that Windows "loses" the current directory since UNC paths are not supported, but that's OK here.)
 	const launchCheck = await $`./${nodeExePath} dist/main.js check-launches`.exitCode
 	if (launchCheck !== 89) throw new Error("Launch check failed. Build looks like it won't launch!")
 }

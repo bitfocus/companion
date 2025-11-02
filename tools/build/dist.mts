@@ -107,12 +107,15 @@ await fs.writeFile(
 )
 await fs.copyFile('yarn.lock', 'dist/yarn.lock') // use the same yarn.lock file, to keep deps as similar as possible
 await fs.copyFile('.node-version', 'dist/.node-version')
+// note: `os: ... platformInfo.nodePlatform` is needed to load @napi-rs/canvas-win32-x64-msvc when building win32 from WSL, perhaps for any cross-platform build?
+//     os: ['current', ...] does not appear to be needed, but if used, perhaps remove unneeded prebuild in package.mts?
+//     Do we need to force arm64?? (if so, how? add to cpu?)
 await fs.writeFile(
 	'dist/.yarnrc.yml',
 	yaml.stringify({
 		nodeLinker: 'node-modules',
 		supportedArchitectures: {
-			os: 'current',
+			os: platformInfo.nodePlatform,
 			cpu: platformInfo.nodeArch,
 		},
 	})
@@ -130,9 +133,12 @@ for (const name of copyPrebuildsFromDependencies) {
 	await fs.copy(path.join('node_modules', name, 'prebuilds'), 'dist/prebuilds')
 }
 
-// Make sure the correct sqlite3 prebuild is installed, and copy it to the output
-await $`yarn --cwd node_modules/better-sqlite3 prebuild-install --arch=${platformInfo.nodeArch}`
+// Make sure the sqlite3 prebuild for the target is installed, then copy it to the output
+// (Note: w/o --platform, the wrong binary is loaded when building win32 on WSL)
+await $`yarn --cwd node_modules/better-sqlite3 prebuild-install --arch=${platformInfo.nodeArch} --platform=${platformInfo.nodePlatform}`
 await fs.copy('node_modules/better-sqlite3/build/Release/better_sqlite3.node', 'dist/prebuilds/better_sqlite3.node')
+// now restore the correct one or `yarn dev` will be broken after a cross-plaform build!
+await $`yarn --cwd node_modules/better-sqlite3 prebuild-install`
 
 // Copy fonts
 await fs.mkdirp('dist/assets/Fonts')
