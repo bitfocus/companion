@@ -137,7 +137,7 @@ for (const name of copyPrebuildsFromDependencies) {
 // (Note: w/o --platform, the wrong binary is loaded when building win32 on WSL)
 await $`yarn --cwd node_modules/better-sqlite3 prebuild-install --arch=${platformInfo.nodeArch} --platform=${platformInfo.nodePlatform}`
 await fs.copy('node_modules/better-sqlite3/build/Release/better_sqlite3.node', 'dist/prebuilds/better_sqlite3.node')
-// now restore the correct one or `yarn dev` will be broken after a cross-plaform build!
+// now restore the correct one or `yarn dev` will be broken after a cross-platform build!
 await $`yarn --cwd node_modules/better-sqlite3 prebuild-install`
 
 // Copy fonts

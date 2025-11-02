@@ -19,7 +19,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 
 // `import.meta.url` gets hardcoded to the build time file by webpack (or so Google's AI Overview insists... regardless, it _is_ getting hardcoded)
-//  so it puts the build-time path into main.js.  The following "trick" fixes it. 
+//  so it puts the build-time path into main.js.  The following "trick" fixes it.
 // (Unfortunately, I haven't found a way that skips hardcoding the filename. Using '.' or '' in new URL() fails; the latter fails after build. And fileURLToPath() doesn't help either.)
 const require = createRequire(new URL('ProcessManager.js', import.meta.url))
 
