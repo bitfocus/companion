@@ -418,10 +418,10 @@ export class ImportExportController {
 						// const importArg = validImportConfigFromImport(config, data)
 
 						// Destroy old stuff
-						await this.#reset(config, config.buttons !== 'unchanged')
+						await this.#reset(config)
 
 						// Perform the import
-						this.#importController.importFull(data, config, config.connections === 'unchanged') // TODO - rework this resetArg usage
+						this.#importController.importFull(data, config)
 
 						// trigger startup triggers to run
 						setImmediate(() => {
@@ -437,8 +437,9 @@ export class ImportExportController {
 	 * Note: sections are reset if the corresponding value in the config is not 'unchanged'.
 	 * As this function does not do any importing, `reset-and-import` is treated the same as `reset`
 	 */
-	async #reset(config: ClientImportOrResetSelection, skipNavButtons = false): Promise<'ok'> {
+	async #reset(config: ClientImportOrResetSelection): Promise<'ok'> {
 		const shouldReset = (value: ImportOrResetType): boolean => value !== 'unchanged'
+		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
 
 		const controls = this.#controlsController.getAllControls()
 
@@ -451,7 +452,8 @@ export class ImportExportController {
 
 			// Reset page 1
 			this.#pagesController.resetPage(1) // Note: controls were already deleted above
-			if (!skipNavButtons) {
+			if (!isImporting(config.buttons)) {
+				// If not importing buttons, recreate the nav buttons
 				this.#pagesController.createPageDefaultNavButtons(1)
 			}
 			this.#graphicsController.clearAllForPage(1)

@@ -130,7 +130,9 @@ export class ImportController {
 		return instanceRemap2
 	}
 
-	importFull(data: ExportFullv6, config: ClientImportOrResetSelection, mergeConnections: boolean): void {
+	importFull(data: ExportFullv6, config: ClientImportOrResetSelection): void {
+		const mergeConnections = config.connections === 'unchanged'
+
 		// Always Import instances
 		// Import connection collections if provided
 		if (data.connectionCollections && data.connectionCollections.length > 0) {

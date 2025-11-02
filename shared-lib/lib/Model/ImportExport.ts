@@ -16,15 +16,11 @@ export const zodClientImportOrResetSelection = z.object({
 	triggers: zodImportOrResetType,
 	customVariables: zodImportOrResetType,
 	expressionVariables: zodImportOrResetType,
-	connections: zodResetType,
-	userconfig: zodResetType,
+	connections: zodResetType, // Future: This should become zodImportOrResetType, once there is a plan for how that should work
+	userconfig: zodResetType, // Future: This should become zodImportOrResetType, or more likely an object describing subsections
 })
 
 export type ClientImportOrResetSelection = z.infer<typeof zodClientImportOrResetSelection>
-
-// export const zodClientResetSelection = zodClientImportOrResetSelection.extend({})
-
-// export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
 
 const zodQueryBoolean = z.preprocess((val) => {
 	if (typeof val === 'string') {
