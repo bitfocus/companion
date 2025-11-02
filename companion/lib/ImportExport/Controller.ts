@@ -92,47 +92,50 @@ export class ImportExportController {
 				return ['Unknown import type', null]
 			}
 
-			let object = upgradeImport(rawObject)
+			let importObject = upgradeImport(rawObject)
 
 			// fix any db instances missing the upgradeIndex property
-			if (object.instances) {
-				for (const connectionConfig of Object.values(object.instances)) {
+			if (importObject.instances) {
+				for (const connectionConfig of Object.values(importObject.instances)) {
 					if (connectionConfig) {
 						connectionConfig.lastUpgradeIndex = connectionConfig.lastUpgradeIndex ?? -1
 					}
 				}
 			}
 
-			if (object.type === 'trigger_list') {
-				object = {
+			if (importObject.type === 'trigger_list') {
+				importObject = {
 					type: 'full',
 					version: FILE_VERSION,
-					companionBuild: object.companionBuild,
-					triggers: object.triggers,
-					triggerCollections: object.triggerCollections,
-					instances: object.instances,
-					connectionCollections: object.connectionCollections,
+					companionBuild: importObject.companionBuild,
+					triggers: importObject.triggers,
+					triggerCollections: importObject.triggerCollections,
+					instances: importObject.instances,
+					connectionCollections: importObject.connectionCollections,
 				} satisfies ExportFullv6
 			}
 
 			// Store the object on the client
 			sessionCtx.pendingImport = {
-				object,
+				object: importObject,
 				timeout: null, // TODO
 			}
 
+			const importContainsKey = (key: keyof (ExportFullv6 & ExportPageContentv6)): boolean =>
+				key in importObject && Object.keys(importObject[key as keyof typeof importObject] || {}).length > 0
+
 			// Build a minimal object to send back to the client
 			const clientObject: ClientImportObject = {
-				type: object.type,
+				type: importObject.type,
 				connections: {},
-				buttons: 'pages' in object,
-				customVariables: 'custom_variables' in object,
-				expressionVariables: 'expressionVariables' in object,
-				surfaces: 'surfaces' in object,
+				buttons: 'pages' in importObject,
+				customVariables: importContainsKey('custom_variables'),
+				expressionVariables: importContainsKey('expressionVariables'),
+				surfaces: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
 				triggers: null,
 			}
 
-			for (const [connectionId, connectionConfig] of Object.entries(object.instances || {})) {
+			for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
 				if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
 
 				clientObject.connections[connectionId] = {
@@ -150,21 +153,21 @@ export class ImportExportController {
 				}
 			}
 
-			if (object.type === 'page') {
-				clientObject.page = simplifyPageForClient(object.page)
-				clientObject.oldPageNumber = object.oldPageNumber || 1
+			if (importObject.type === 'page') {
+				clientObject.page = simplifyPageForClient(importObject.page)
+				clientObject.oldPageNumber = importObject.oldPageNumber || 1
 			} else {
-				if (object.pages) {
+				if (importObject.pages) {
 					clientObject.pages = Object.fromEntries(
-						Object.entries(object.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
+						Object.entries(importObject.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
 					)
 				}
 
 				// Simplify triggers
-				if (object.triggers) {
+				if (importObject.triggers && Object.keys(importObject.triggers).length > 0) {
 					clientObject.triggers = {}
 
-					for (const [id, trigger] of Object.entries(object.triggers)) {
+					for (const [id, trigger] of Object.entries(importObject.triggers)) {
 						clientObject.triggers[id] = {
 							name: trigger.options.name,
 						}
