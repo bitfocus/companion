@@ -6,7 +6,7 @@ import type {
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientImportSelection, ConnectionRemappings } from '@companion-app/shared/Model/ImportExport.js'
+import type { ClientImportOrResetSelection, ConnectionRemappings } from '@companion-app/shared/Model/ImportExport.js'
 import {
 	fixupControl,
 	fixupExpressionVariableControl,
@@ -130,7 +130,7 @@ export class ImportController {
 		return instanceRemap2
 	}
 
-	importFull(data: ExportFullv6, config: ClientImportSelection, mergeConnections: boolean): void {
+	importFull(data: ExportFullv6, config: ClientImportOrResetSelection, mergeConnections: boolean): void {
 		// Always Import instances
 		// Import connection collections if provided
 		if (data.connectionCollections && data.connectionCollections.length > 0) {

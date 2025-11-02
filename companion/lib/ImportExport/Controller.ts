@@ -16,11 +16,11 @@ import type express from 'express'
 import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { AppInfo } from '../Registry.js'
 import {
-	zodClientImportSelection,
-	zodClientResetSelection,
+	type ImportOrResetType,
+	zodClientImportOrResetSelection,
 	type ClientImportObject,
 	type ClientPageInfo,
-	type ClientResetSelection,
+	type ClientImportOrResetSelection,
 } from '@companion-app/shared/Model/ImportExport.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -277,14 +277,16 @@ export class ImportExportController {
 				delete ctx.pendingImport
 			}),
 
-			resetConfiguration: publicProcedure.input(zodClientResetSelection).mutation(async ({ input, ctx }) => {
-				// Make sure no import is pending
-				delete ctx.pendingImport
+			resetConfiguration: publicProcedure
+				.input(z.object({ config: zodClientImportOrResetSelection }))
+				.mutation(async ({ input, ctx }) => {
+					// Make sure no import is pending
+					delete ctx.pendingImport
 
-				return this.#checkOrRunImportTask('reset', async () => {
-					return this.#reset(input)
-				})
-			}),
+					return this.#checkOrRunImportTask('reset', async () => {
+						return this.#reset(input.config)
+					})
+				}),
 
 			controlPreview: publicProcedure
 				.input(
@@ -392,38 +394,34 @@ export class ImportExportController {
 					})
 				}),
 
-			importAndResetCustom: publicProcedure
-				.input(z.object({ config: zodClientImportSelection }))
+			importFull: publicProcedure
+				.input(z.object({ config: zodClientImportOrResetSelection }))
 				.mutation(async ({ input: { config }, ctx }) => {
 					return this.#checkOrRunImportTask('import', async () => {
+						const isPartialReset = Object.values(config).some((val) => val === 'unchanged')
 						console.log(
-							`Performing full import: ${fullReset ? 'Full Reset' : 'Partial Reset'} Config: ${JSON.stringify(config)}`
+							`Performing full import: ${isPartialReset ? 'Partial Reset' : 'Full Reset'} Config: ${JSON.stringify(config)}`
 						)
 						const data = ctx.pendingImport?.object
 						if (!data) throw new Error('No in-progress import object')
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						// `config` tells what to load. Ensure that config is false for missing sections:
-						// note: this is failsafe is not strictly necessary, since Full.tsx does it right, now.
-						// note that config doesn't have a entries for 'connections' or 'userconfig'...
-						for (const key in config) {
-							let dataKey = key.replace(/^customVariables$/, 'custom_variables')
-							dataKey = dataKey.replace(/^buttons$/, 'pages')
-							config[key as keyof typeof config] &&= dataKey in data
-						}
+						// // Add fields missing from config
+						// // If partial import, dont ever reset connections (or userconfig until added to UI)
+						// const resetArg: ClientResetSelection = {
+						// 	...config,
+						// 	connections: 'unchanged',
+						// 	userconfig: 'unchanged',
+						// }
 
-						// Add fields missing from config
-						// If partial import, dont ever reset connections (or userconfig until added to UI)
-						const resetArg: ClientResetSelection | null = fullReset
-							? null
-							: { ...config, connections: false, userconfig: false }
+						// const importArg = validImportConfigFromImport(config, data)
 
 						// Destroy old stuff
-						await this.#reset(resetArg, config.buttons)
+						await this.#reset(config, config.buttons !== 'unchanged')
 
 						// Perform the import
-						this.#importController.importFull(data, config, !!resetArg && !resetArg.connections)
+						this.#importController.importFull(data, config, config.connections === 'unchanged') // TODO - rework this resetArg usage
 
 						// trigger startup triggers to run
 						setImmediate(() => {
@@ -434,10 +432,17 @@ export class ImportExportController {
 		})
 	}
 
-	async #reset(config: ClientResetSelection | null, skipNavButtons = false): Promise<'ok'> {
+	/**
+	 * Perform a reset according to the given configuration
+	 * Note: sections are reset if the corresponding value in the config is not 'unchanged'.
+	 * As this function does not do any importing, `reset-and-import` is treated the same as `reset`
+	 */
+	async #reset(config: ClientImportOrResetSelection, skipNavButtons = false): Promise<'ok'> {
+		const shouldReset = (value: ImportOrResetType): boolean => value !== 'unchanged'
+
 		const controls = this.#controlsController.getAllControls()
 
-		if (!config || config.buttons) {
+		if (shouldReset(config.buttons)) {
 			for (const [controlId, control] of controls.entries()) {
 				if (control.type !== 'trigger') {
 					this.#controlsController.deleteControl(controlId)
@@ -461,15 +466,15 @@ export class ImportExportController {
 			this.#userConfigController.resetKey('gridSize')
 		}
 
-		if (!config || config.connections) {
+		if (shouldReset(config.connections)) {
 			await this.#instancesController.deleteAllConnections(true)
 		}
 
-		if (!config || config.surfaces) {
+		if (shouldReset(config.surfaces.known)) {
 			await this.#surfacesController.reset()
 		}
 
-		if (!config || config.triggers) {
+		if (shouldReset(config.triggers)) {
 			for (const [controlId, control] of controls.entries()) {
 				if (control.type === 'trigger') {
 					this.#controlsController.deleteControl(controlId)
@@ -478,11 +483,11 @@ export class ImportExportController {
 			this.#controlsController.replaceTriggerCollections([])
 		}
 
-		if (!config || config.customVariables) {
+		if (shouldReset(config.customVariables)) {
 			this.#variablesController.custom.reset()
 		}
 
-		if (!config || config.expressionVariables) {
+		if (shouldReset(config.expressionVariables)) {
 			this.#controlsController.replaceExpressionVariableCollections([])
 
 			// Delete existing expression variables
@@ -492,10 +497,20 @@ export class ImportExportController {
 			}
 		}
 
-		if (!config || config.userconfig) {
+		if (shouldReset(config.userconfig)) {
 			this.#userConfigController.reset()
 		}
 
 		return 'ok'
 	}
 }
+
+// function validImportConfigFromImport(
+// 	config: ClientImportOrResetSelection,
+// 	importObject: ExportFullv6
+// ): ClientImportOrResetSelection {
+// 	// TODO - how to do the full reset
+// 	return {
+// 		buttons: importObject.pages ? config.buttons : 'unchanged',
+// 	}
+// }

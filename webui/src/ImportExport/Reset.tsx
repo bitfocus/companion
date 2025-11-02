@@ -3,7 +3,7 @@ import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormC
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
-import type { ResetType, ClientResetSelection } from '@companion-app/shared/Model/ImportExport.js'
+import type { ResetType, ClientImportOrResetSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
@@ -15,7 +15,7 @@ export interface ResetWizardModalRef {
 	show(): void
 }
 
-const defaultFullResetConfig: ClientResetSelection = {
+const defaultFullResetConfig: ClientImportOrResetSelection = {
 	connections: 'reset',
 	buttons: 'reset',
 	surfaces: {
@@ -62,7 +62,7 @@ export const ResetWizardModal = observer(
 				setCurrentStep(maxSteps) // Move to completion step
 
 				try {
-					const status = await resetConfigMutation.mutateAsync(value)
+					const status = await resetConfigMutation.mutateAsync({ config: value })
 					if (status !== 'ok') {
 						notifier.show(`Reset failed`, `An unspecified error occurred during the reset. Please try again.`, 10000)
 					}

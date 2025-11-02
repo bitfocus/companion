@@ -5,10 +5,10 @@ import type { UserConfigGridSize } from './UserConfigModel.js'
 export const zodImportOrResetType = z.enum(['unchanged', 'reset-and-import', 'reset'])
 export type ImportOrResetType = z.infer<typeof zodImportOrResetType>
 
-export const zodResetType = z.enum(['unchanged', 'reset-and-import', 'reset'])
+export const zodResetType = z.enum(['unchanged', 'reset'])
 export type ResetType = z.infer<typeof zodResetType>
 
-export const zodClientImportSelection = z.object({
+export const zodClientImportOrResetSelection = z.object({
 	buttons: zodImportOrResetType,
 	surfaces: z.object({
 		known: zodImportOrResetType,
@@ -16,16 +16,15 @@ export const zodClientImportSelection = z.object({
 	triggers: zodImportOrResetType,
 	customVariables: zodImportOrResetType,
 	expressionVariables: zodImportOrResetType,
-})
-
-export type ClientImportSelection = z.infer<typeof zodClientImportSelection>
-
-export const zodClientResetSelection = zodClientImportSelection.extend({
 	connections: zodResetType,
 	userconfig: zodResetType,
 })
 
-export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
+export type ClientImportOrResetSelection = z.infer<typeof zodClientImportOrResetSelection>
+
+// export const zodClientResetSelection = zodClientImportOrResetSelection.extend({})
+
+// export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
 
 const zodQueryBoolean = z.preprocess((val) => {
 	if (typeof val === 'string') {

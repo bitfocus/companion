@@ -15,9 +15,12 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
-import type { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import type { ClientImportObject, ClientImportOrResetSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+
+// These can't be imported currently
+type ClientImportSelection = Omit<ClientImportOrResetSelection, 'connections' | 'userconfig'>
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject
@@ -183,7 +186,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		}
 
 		importFullMutation // TODO: 60s timeout?
-			.mutateAsync({ config: config, fullReset: fullReset })
+			.mutateAsync({ config: config })
 			.then(() => {
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()
