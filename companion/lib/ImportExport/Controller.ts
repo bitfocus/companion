@@ -125,7 +125,7 @@ export class ImportExportController {
 			const clientObject: ClientImportObject = {
 				type: object.type,
 				instances: {},
-				controls: 'pages' in object,
+				buttons: 'pages' in object,
 				customVariables: 'custom_variables' in object,
 				expressionVariables: 'expressionVariables' in object,
 				surfaces: 'surfaces' in object,

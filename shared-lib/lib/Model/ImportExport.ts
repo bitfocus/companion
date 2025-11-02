@@ -60,7 +60,7 @@ export interface ClientImportObjectInstance {
 export interface ClientImportObject {
 	type: 'page' | 'full'
 	instances: Record<string, ClientImportObjectInstance>
-	controls: boolean
+	buttons: boolean
 	surfaces: boolean
 	triggers: boolean | Record<string, { name: string }>
 	customVariables: boolean

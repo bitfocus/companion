@@ -73,7 +73,7 @@ export function ImportFullWizard({
 					<CNavLink
 						active={activeTab === 'buttons'}
 						onClick={() => setActiveTab('buttons')}
-						disabled={!snapshot.controls}
+						disabled={!snapshot.buttons}
 					>
 						<FontAwesomeIcon icon={faTh} /> Buttons
 					</CNavLink>
@@ -98,7 +98,7 @@ export function ImportFullWizard({
 					<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 						<h4>Buttons</h4>
 						<MyErrorBoundary>
-							{snapshot.controls ? (
+							{snapshot.buttons ? (
 								<ImportPageWizard
 									snapshot={snapshot}
 									connectionRemap={connectionRemap}
@@ -147,10 +147,6 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			const i = keys.indexOf('instances')
 			if (i !== -1) keys[i] = 'connections'
 		}
-		{
-			const i = keys.indexOf('controls')
-			if (i !== -1) keys[i] = 'buttons'
-		}
 
 		return keys
 	}, [snapshot])
@@ -186,7 +182,14 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		}
 
 		importFullMutation // TODO: 60s timeout?
-			.mutateAsync({ config: config })
+			.mutateAsync({
+				config: {
+					...config,
+					// These are not user selectable, so vary depending on whether this is a full reset or not
+					connections: fullReset ? 'reset' : 'unchanged',
+					userconfig: fullReset ? 'reset' : 'unchanged',
+				},
+			})
 			.then(() => {
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()
