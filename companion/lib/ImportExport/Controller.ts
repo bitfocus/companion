@@ -410,16 +410,6 @@ export class ImportExportController {
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						// // Add fields missing from config
-						// // If partial import, dont ever reset connections (or userconfig until added to UI)
-						// const resetArg: ClientResetSelection = {
-						// 	...config,
-						// 	connections: 'unchanged',
-						// 	userconfig: 'unchanged',
-						// }
-
-						// const importArg = validImportConfigFromImport(config, data)
-
 						// Destroy old stuff
 						await this.#reset(config)
 
@@ -509,13 +499,3 @@ export class ImportExportController {
 		return 'ok'
 	}
 }
-
-// function validImportConfigFromImport(
-// 	config: ClientImportOrResetSelection,
-// 	importObject: ExportFullv6
-// ): ClientImportOrResetSelection {
-// 	// TODO - how to do the full reset
-// 	return {
-// 		buttons: importObject.pages ? config.buttons : 'unchanged',
-// 	}
-// }
