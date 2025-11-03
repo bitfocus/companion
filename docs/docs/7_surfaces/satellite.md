@@ -1,6 +1,7 @@
 ---
 title: Companion Satellite
 sidebar_position: 2
+description: Connect remote surfaces via Companion Satellite.
 ---
 
 In some environments, it can be useful to connect remote Stream Decks (or other supported surfaces) to a central Companion instance.

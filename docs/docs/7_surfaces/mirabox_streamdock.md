@@ -1,6 +1,7 @@
 ---
 title: Mirabox Stream Dock
 sidebar_position: 5
+description: Configuration guide for Mirabox Stream Dock models.
 ---
 
 Mirabox's Stream Dock line includes several input devices.  

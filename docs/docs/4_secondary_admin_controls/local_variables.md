@@ -1,6 +1,7 @@
 ---
 title: Local Variables
 sidebar_position: 4
+description: Use local variables scoped to buttons or triggers.
 ---
 
 In some contexts (for example when configuring a button) you can use Local Variables. These are indicated by the globe icon next to the input. Local variables provide information relative to the current item, such as the button's page, column and row.

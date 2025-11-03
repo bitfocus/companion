@@ -1,6 +1,7 @@
 ---
 title: Steps
 sidebar_position: 4
+description: Create multi-step buttons that cycle through actions.
 ---
 
 Steps is a new concept in 3.0, to allow for creating much more powerful and complex buttons. This replaces the **Latch** functionality that was possible in previous versions.

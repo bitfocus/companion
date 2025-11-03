@@ -1,6 +1,7 @@
 ---
 title: Surfaces
 sidebar_position: 3
+description: Configure Stream Decks and control surfaces.
 ---
 
 This tab allows you to configure your Stream Decks and other **Surfaces**.

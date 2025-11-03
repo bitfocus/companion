@@ -1,6 +1,7 @@
 ---
 title: Connection Variables
 sidebar_position: 1
+description: Access module-provided variables for device state.
 ---
 
 Some modules can expose their state through module variables. If a module supports this, it will appear in the Variables tab.

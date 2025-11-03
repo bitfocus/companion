@@ -1,6 +1,7 @@
 ---
 title: Operators
 sidebar_position: 1
+description: Reference guide for operators in Companion expressions.
 ---
 
 Supported operators include:

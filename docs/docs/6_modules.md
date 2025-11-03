@@ -1,5 +1,6 @@
 ---
 title: Modules
+description: Modules work as plugins to control external devices.
 ---
 
 All the connections in Companion are modules, and a module is what's used to control an external device or piece of software. Modules used to be built-in to Companion, but starting with 4.0 they are downloadable plugins.

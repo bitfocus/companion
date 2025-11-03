@@ -1,6 +1,7 @@
 ---
 title: Connections
 sidebar_position: 1
+description: Add and manage device connections.
 ---
 
 From the Connections tab, you can add, configure and remove devices. You can also see the status of a connection, as well as other information about it in the table.

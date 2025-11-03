@@ -1,6 +1,7 @@
 ---
 title: Loupedeck Live
 sidebar_position: 4
+description: Setup guide for Loupedeck and Razer controllers.
 ---
 
 It is possible to use the Loupedeck Live, Loupedeck Live S, Loupedeck CT and Razer Stream Controller with Companion.

@@ -1,6 +1,7 @@
 ---
 title: XKeys
 sidebar_position: 3
+description: Configure XKeys keyboards as control surfaces.
 ---
 
 Many [XKeys](https://xkeys.com/xkeys.html) products can be used with Companion.

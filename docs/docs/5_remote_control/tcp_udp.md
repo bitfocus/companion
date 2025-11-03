@@ -1,6 +1,7 @@
 ---
 title: TCP / UDP Control
 sidebar_position: 1
+description: Control Companion remotely via TCP or UDP commands.
 ---
 
 Remote triggering can be done by sending TCP (port `51234`) or UDP (port `51235`) commands.

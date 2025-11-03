@@ -1,6 +1,7 @@
 ---
 sidebar_position: 0
 title: Welcome
+description: Introduction to Companion and getting started.
 ---
 
 Remember that Companion is **open source and free**.

@@ -1,6 +1,7 @@
 ---
 title: Button indicators
 sidebar_position: 5
+description: Visual indicators for button states, errors, and latches.
 ---
 
 There are several button indicators you should be familiar with:

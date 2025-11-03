@@ -1,6 +1,7 @@
 ---
 title: OSC Control
 sidebar_position: 3
+description: Send OSC commands to control Companion buttons.
 ---
 
 Remote triggering can be done by sending OSC commands to port `12321` (the port number is configurable).

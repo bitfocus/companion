@@ -1,5 +1,6 @@
 ---
 title: RossTalk Control
+description: Control Companion via RossTalk protocol.
 ---
 
 Remote triggering can be done by sending RossTalk commands to port `7788`.

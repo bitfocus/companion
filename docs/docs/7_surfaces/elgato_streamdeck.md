@@ -1,6 +1,7 @@
 ---
 title: Elgato Stream Deck
 sidebar_position: 1
+description: Setup guide for Elgato Stream Deck models.
 ---
 
 Companion is primarily intended to be used with various [Elgato Stream Deck](https://www.elgato.com/en/stream-deck) models.

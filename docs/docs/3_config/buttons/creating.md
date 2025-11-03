@@ -1,6 +1,7 @@
 ---
 title: Creating buttons
 sidebar_position: 1
+description: Create buttons using presets or manual styling and configuration.
 ---
 
 There are two ways of setting up buttons

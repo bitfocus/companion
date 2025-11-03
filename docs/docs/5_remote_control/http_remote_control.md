@@ -1,6 +1,7 @@
 ---
 title: HTTP Remote Control
 sidebar_position: 2
+description: Use REST-style HTTP API to remotely control Companion.
 ---
 
 Remote triggering can be done by sending `HTTP` Requests to the same IP and port Companion is running on.

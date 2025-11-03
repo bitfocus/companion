@@ -1,5 +1,6 @@
 ---
 title: Supported Surfaces
+description: Overview of supported physical and virtual input devices.
 ---
 
 Companion supports a variety of physical and virtual input devices (surfaces) in addition to remote-control protocols. Surfaces provide buttons, encoders, displays, and other controls that you can map to actions in Companion.

@@ -1,6 +1,7 @@
 ---
 title: Log
 sidebar_position: 7
+description: View and filter log messages for debugging.
 ---
 
 The Log section gives status updates of Companion. Different log levels can be filtered.

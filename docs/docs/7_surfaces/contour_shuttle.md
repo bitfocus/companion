@@ -1,6 +1,7 @@
 ---
 title: Contour Shuttle
 sidebar_position: 6
+description: Setup guide for Contour ShuttleXpress and ShuttlePro.
 ---
 
 It is possible to use the Contour ShuttleXpress and ShuttlePro v1 and v2 with Companion (since v3.1.0; note: support for very old versions of ShuttlePro v1 was added in v4.1.3)

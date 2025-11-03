@@ -1,6 +1,7 @@
 ---
 title: Custom Variables
 sidebar_position: 3
+description: Create and manage custom variables with different types.
 ---
 
 The variables tab also includes a section for custom variables. The button labeled `Custom Variables`, which appears alongside other modules that expose module variables, takes you to the **Custom Variables** view.

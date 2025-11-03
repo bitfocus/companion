@@ -1,5 +1,6 @@
 ---
 title: EmberPlus Control
+description: Control Companion via Ember+ protocol.
 ---
 
 The following controls are available via emberplus:

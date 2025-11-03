@@ -1,6 +1,7 @@
 ---
 title: Before you open
 sidebar_position: 1
+description: Prepare hardware and software before launching Companion.
 ---
 
 Connect the hardware and software you want to control. Make sure they are on the same network.

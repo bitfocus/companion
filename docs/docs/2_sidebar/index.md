@@ -1,5 +1,6 @@
 ---
 title: Sidebar
+description: Sidebar navigation for surfaces, pages, modules, and settings.
 ---
 
 _You can collapse the sidebar by clicking the icon to the left of the version number at the bottom of the sidebar._

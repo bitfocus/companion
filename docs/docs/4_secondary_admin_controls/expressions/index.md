@@ -1,6 +1,7 @@
 ---
 title: Expressions
 sidebar_position: 5
+description: Write expressions using operators, functions, and variables.
 ---
 
 Many modules support using variables in input fields. A subset of places also support expressions (for example, button text when in expression mode). Expressions are more powerful than plain variables but require a small expression language.

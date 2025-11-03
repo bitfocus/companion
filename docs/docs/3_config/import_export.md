@@ -1,6 +1,7 @@
 ---
 title: Import / Export
 sidebar_position: 6
+description: Backup, restore, or migrate configuration files.
 ---
 
 This tab lets you import or export your configuration to a `.companionconfig` file, which can be used to backup your configuration or move it to a new computer. You can also choose to import just a single page from your file.

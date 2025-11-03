@@ -1,6 +1,7 @@
 ---
 title: Triggers
 sidebar_position: 4
+description: Set up automated triggers for actions and schedules.
 ---
 
 In the Triggers tab, you can add, edit and remove triggers for your Companion Setup.

@@ -1,6 +1,7 @@
 ---
 title: Settings
 sidebar_position: 5
+description: Configure overall settings, protocols, and security.
 ---
 
 In the Settings tab, you can configure Companion settings.

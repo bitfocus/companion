@@ -1,6 +1,7 @@
 ---
 title: Actions
 sidebar_position: 2
+description: Define button behavior with press, release, and duration actions.
 ---
 
 These actions define the behaviour of the button when it is pressed or depressed (or when triggered externally).

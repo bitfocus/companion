@@ -1,6 +1,7 @@
 ---
 title: Feedbacks
 sidebar_position: 3
+description: Configure dynamic button styling based on device state.
 ---
 
 Feedbacks are a way of dynamically updating a buttons style based on the state of devices or other variables.

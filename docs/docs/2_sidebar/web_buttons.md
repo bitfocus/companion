@@ -1,5 +1,6 @@
 ---
 title: Web buttons
+description: View all buttons across all pages in a single web interface.
 ---
 
 The **Web buttons** view shows all your buttons across all pages on a single screen. This is useful if you want to use a web browser on a tablet to control Companion.
