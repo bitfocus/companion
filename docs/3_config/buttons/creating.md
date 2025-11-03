@@ -70,7 +70,7 @@ A live preview of the button will be shown on the top right corner. Button infor
 
 Add actions to the button from the **Add Press/on action** drop-down menu.
 
-You can add multiple actions and set delay times for each action. Delay times are in milliseconds. 1000ms = 1 second.
+You can add multiple actions and use the **internal: Wait** Action to delay when certain things happen. Delay times are in milliseconds. 1000ms = 1 second.
 
 You can hide the topbar with the dropdown. This can be configured globally in the settings, or overridden per button.
 
