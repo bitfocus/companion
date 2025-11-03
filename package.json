@@ -86,8 +86,6 @@
     "@xkeys-lib/core@npm:3.3.0": "patch:@xkeys-lib/core@npm%3A3.3.0#~/.yarn/patches/@xkeys-lib-core-npm-3.3.0-1a65b6423b.patch",
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",
-    "bare-path": "npm:empty-npm-package@1.0.0",
-    "@sentry/node-core@npm:10.17.0": "patch:@sentry/node-core@npm%3A10.22.0#~/.yarn/patches/@sentry-node-core-npm-10.22.0-e586fad107.patch",
-    "@sentry/node-core@npm:10.22.0": "patch:@sentry/node-core@npm%3A10.22.0#~/.yarn/patches/@sentry-node-core-npm-10.22.0-e586fad107.patch"
+    "bare-path": "npm:empty-npm-package@1.0.0"
   }
 }

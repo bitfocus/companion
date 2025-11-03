@@ -7,6 +7,7 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import yaml from 'yaml'
 import { determinePlatformInfo } from './util.mts'
+import webpackConfig from '../../companion/webpack.config.js'
 
 $.verbose = true
 
@@ -61,12 +62,12 @@ await zipDirectory('./docs', 'dist/docs.zip')
 
 // generate a package.json for the required native dependencies
 const require = createRequire(import.meta.url)
-const dependencies = {}
-const webpackConfig = require('../../companion/webpack.config.cjs')
+const dependencies = {} as Partial<typeof webpackConfig.externals>
+
 const neededDependencies = Object.keys(webpackConfig.externals)
 for (const name of neededDependencies) {
 	const pkgJson = require(`${name}/package.json`)
-	dependencies[name] = pkgJson.version
+	Object.assign(dependencies, { [name]: pkgJson.version })
 }
 
 if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x64') {
@@ -83,7 +84,7 @@ const packageResolutions = {
 // Preserve some resolutions to the dist package.json
 for (const [name, version] of Object.entries(companionPkgJson.resolutions)) {
 	if (name.startsWith('@napi-rs/canvas')) {
-		packageResolutions[name] = version
+		Object.assign(packageResolutions, { [name]: version })
 	}
 }
 

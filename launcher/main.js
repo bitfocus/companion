@@ -15,6 +15,8 @@ import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { showSettings, getSettingsWindow } from './settings.js'
 import os from 'os'
+import plist from 'plist'
+import semver from 'semver'
 
 // Show a warning in the launcher window
 let version_warning = null
@@ -22,11 +24,6 @@ let version_warning = null
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
-		const plist = require('plist')
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
-		const semver = require('semver')
-
 		const minimumVersion = '12.0'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 

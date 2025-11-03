@@ -6,9 +6,6 @@ import { determinePlatformInfo } from './util.mts'
 import { generateVersionString } from '../lib.mts'
 import { fetchNodejs } from '../fetch_nodejs.mts'
 import electronBuilder from 'electron-builder'
-import { createRequire } from 'module'
-
-const require = createRequire(import.meta.url)
 
 $.verbose = true
 
@@ -39,7 +36,7 @@ for (const [name, extractedPath] of nodeVersions) {
 
 if (platformInfo.runtimePlatform === 'linux') {
 	// Create a symlink for the 'main' runtime, to make script maintenance easier
-	await fs.createSymlink(latestRuntimeDir, path.join(runtimesDir, 'main'))
+	await fs.createSymlink(latestRuntimeDir, path.join(runtimesDir, 'main'), 'dir')
 }
 
 // Install dependencies
@@ -68,8 +65,8 @@ if (platformInfo.runtimePlatform === 'win') {
 	}
 
 	let prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true, expandDirectories: false })
-	// Note: adding "dist/node_modules/@napi-rs" to this list should never hurt
-	// but it only does anything when os: 'current' is included in 'dist/.yarnrc.yml' (see dist.mts)
+	// Note: "dist/node_modules/@napi-rs" will usually have only the relevant prebuild folder (canvas-osname)
+	// so this only does anything when `os:` in 'dist/.yarnrc.yml' is a list (see dist.mts)
 	prebuildDirs.push('dist/node_modules/@napi-rs')
 	console.log(`Cleaning ${prebuildDirs.length} prebuild directories`)
 	for (const dirname of prebuildDirs) {
@@ -84,6 +81,13 @@ await fs.remove('dist/node_modules/usb/libusb')
 await fs.remove('dist/node_modules/usb/node_modules/node-addon-api')
 await fs.remove('dist/node_modules/node-addon-api')
 
+// sadly, manually replacing it with `import.meta.url` has the exact same effect as using `importMeta: false, but this works:
+//  (note, during development only, either with `output.pathinfo: true` or devtool: 'eval-source-map' the quotes are backquoted.)
+const pattern = new RegExp('((\\\\)?")file:///.*/companion(/node_modules/@sentry/node-core/build/esm/sdk/esmLoader.js(\\\\)?")', 'g')
+let distMain = fs.readFileSync('dist/main.js', 'utf8')
+distMain = distMain.replaceAll(pattern, '$1..$3') // this doesn't help either: "/* webpackIgnore: true */ import.meta.url")
+fs.writeFileSync('dist/main.js', distMain)
+
 if (!process.env.SKIP_LAUNCH_CHECK) {
 	const nodeExePath =
 		platformInfo.runtimePlatform === 'win'
@@ -92,8 +96,8 @@ if (!process.env.SKIP_LAUNCH_CHECK) {
 
 	// Note: the ./${nodeExePath} syntax is a workaround for windows
 	if (platformInfo.runtimePlatform === 'win' && process.platform === 'linux') {
-		// Assume we're in WSL: exe files are not executable by default. Alt: add is-wsl package... (but this code is harmless)
-		await $`chmod +x ./${nodeExePath}`
+		// Assume we're in WSL: exe files are not executable by default. Alt test: add is-wsl package... (but this code is harmless)
+		fs.chmodSync(nodeExePath, 0o755)
 	}
 	// (Note that Windows "loses" the current directory since UNC paths are not supported, but that's OK here.)
 	const launchCheck = await $`./${nodeExePath} dist/main.js check-launches`.exitCode

@@ -1,14 +1,17 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const path = require('path')
-const fs = require('fs')
-const { sentryWebpackPlugin } = require('@sentry/webpack-plugin')
+import path from 'path'
+import fs from 'fs'
+import { sentryWebpackPlugin } from '@sentry/webpack-plugin'
+import { fileURLToPath } from 'url'
+// import { createRequire } from 'module'
+// const require = createRequire(import.meta.url)
 
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
+const modulePath = path.dirname(fileURLToPath(import.meta.url))
 
-const distPath = path.resolve(__dirname, '../dist')
-const buildFile = fs.readFileSync(path.join(__dirname, '../BUILD')).toString().trim()
+const distPath = path.resolve(modulePath, '../dist')
+const buildFile = fs.readFileSync(path.resolve(modulePath, '../BUILD')).toString().trim()
 
-module.exports = {
+export default {
 	entry: {
 		main: './dist/main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
@@ -19,8 +22,9 @@ module.exports = {
 	output: {
 		// filename: 'main.js',
 		path: distPath,
+		clean: true,
 	},
-	context: path.resolve(__dirname, '.'),
+	context: path.resolve(modulePath, '.'),
 	target: 'node',
 	// node: {
 	// 	__dirname: true,
