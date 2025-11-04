@@ -682,7 +682,7 @@ describe('TriggersEventTimer - Sun Events (DST)', () => {
 			})
 		})
 
-		test('FAILING TEST: sunset times should not jump by 1 hour due to DST bug', () => {
+		test('sunset times should not jump by 1 hour due to DST bug', () => {
 			/**
 			 * This is the key test that detects issue #3737
 			 *
@@ -723,7 +723,7 @@ describe('TriggersEventTimer - Sun Events (DST)', () => {
 			// don't have a 60-minute jump across DST boundaries
 		})
 
-		test('FAILING TEST: offset application should account for timezone offset changes', () => {
+		test('offset application should account for timezone offset changes', () => {
 			/**
 			 * When a user specifies an offset (e.g., 30 minutes before sunset),
 			 * this test verifies the offset is applied to the CORRECT sunset time,
