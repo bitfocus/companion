@@ -26,11 +26,16 @@ import { ServiceApi } from './Service/ServiceApi.js'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
-import path from 'path'
 
-const pkgInfoStr = await fs.readFile(
-	isPackaged() ? path.join(__dirname, './package.json') : new URL('../package.json', import.meta.url)
-)
+let infoFileName: URL
+// note this could be done in one line, but webpack was having trouble before url processing was disabled.
+if (isPackaged()) {
+	infoFileName = new URL('./package.json', import.meta.url)
+} else {
+	infoFileName = new URL('../package.json', import.meta.url)
+}
+//console.log(`infoFileName: ${infoFileName}; `)
+const pkgInfoStr = await fs.readFile(infoFileName)
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
 
 let buildNumber: string
@@ -39,7 +44,7 @@ try {
 		buildNumber = '0.0.0-VITEST'
 	} else {
 		buildNumber = fs
-			.readFileSync(new URL('../../BUILD', import.meta.url))
+			.readFileSync(new URL(isPackaged() ? './BUILD' : '../../BUILD', import.meta.url))
 			.toString()
 			.trim()
 			.replace(/^-/, '')

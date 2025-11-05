@@ -5,6 +5,9 @@ import { fileURLToPath } from 'url'
 // import { createRequire } from 'module'
 // const require = createRequire(import.meta.url)
 
+const devMode = process.env.WEBPACK_IN_DEV_MODE ? 'development' : 'production'
+console.log(`Running webpack in ${devMode} mode.`)
+
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
 const modulePath = path.dirname(fileURLToPath(import.meta.url))
 
@@ -17,19 +20,26 @@ export default {
 		// Handler: './lib/Surface/USB/Handler.js',
 		RenderThread: './dist/Graphics/Thread.js',
 	},
-	mode: 'production',
-	devtool: sentryAuthToken ? 'source-map' : undefined,
+	mode: devMode,
+	// note: `undefined` defaults to 'eval', which is not compatible with `output.module: true` (particularly when `importMeta: false`)
+	devtool: 'source-map', //sentryAuthToken ? 'source-map' : false,
 	output: {
-		// filename: 'main.js',
+		filename: '[name].js', // override default .mjs for `output.module: true`
 		path: distPath,
-		clean: true,
+		//clean: true, // works but maybe safer not to since we call webpack twice.
+		pathinfo: true,
+		// environment: {
+		// 	module: true,
+		// },
+		module: true,
+		// scriptType: 'module', // the default when module is true.
 	},
 	context: path.resolve(modulePath, '.'),
 	target: 'node',
 	// node: {
-	// 	__dirname: true,
-	// 	__filename: true,
-	// 	global: false,
+	// 	__dirname: true, //'node-module',
+	// 	__filename: true, // 'node-module',
+	// 	//global: false,
 	// },
 	resolve: {
 		extensionAlias: {
@@ -50,20 +60,28 @@ export default {
 	},
 	externalsPresets: { node: true },
 	externals: {
-		// Native libs that are needed
-		usb: 'commonjs2 usb',
-		bufferutil: 'commonjs2 bufferutil',
-		'@serialport/bindings-cpp': 'commonjs2 @serialport/bindings-cpp',
-		'@napi-rs/canvas': 'commonjs2 @napi-rs/canvas',
+		// Native libs that are needed (note: the commonjs2 modifier is incompatible with `output.module: true` )
+		usb: 'usb',
+		bufferutil: 'bufferutil',
+		'@serialport/bindings-cpp': '@serialport/bindings-cpp',
+		'@napi-rs/canvas': '@napi-rs/canvas',
 	},
 	experiments: {
 		topLevelAwait: true,
+		outputModule: true,
 	},
 	module: {
 		rules: [
 			// {
 			// 	test: /\.json/,
 			// 	type: 'asset/inline',
+			// },
+			// {
+			// 	test: /\.\/package\.json$/,
+			// 	type: 'asset/resource',
+			// 	generator: {
+			// 		filename: 'package.json',
+			// 	},
 			// },
 			{
 				test: /BUILD$/,
@@ -80,6 +98,12 @@ export default {
 				},
 			},
 		],
+		parser: {
+			javascript: {
+				importMeta: false, // don't convert import.meta.url to a hardcoded string
+				url: false, // 'relative', doesn't work or doesn't do what we want
+			},
+		},
 	},
 	plugins: [
 		sentryAuthToken

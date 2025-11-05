@@ -645,8 +645,6 @@ export class InstanceProcessManager {
 				if (!moduleInfo.isPackaged) {
 					// When not packaged, lookup the version from the library itself
 					try {
-						// `import.meta.url` in `createRequire()` gets hardcoded to the build time file by webpack so it puts the build-time path into main.js.
-						// Using `moduleInfo.basePath` here avoids the problem and may be more appropriate anyway.
 						const require = createRequire(moduleInfo.basePath)
 
 						const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {

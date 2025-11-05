@@ -41,24 +41,15 @@ async function zipDirectory(sourceDir: string, outPath: string): Promise<void> {
 	})
 }
 
+// Trash old
+await fs.remove('dist')
+fs.mkdirSync('dist') // so next line puts files in dist:
+
 await $`tsx tools/build_writefile.mts`
 
 const buildString = await generateMiniVersionString()
 
-// Trash old
-await fs.remove('dist')
 
-// Build application
-await $`yarn workspace @companion-app/shared build:ts`
-await $`yarn workspace companion build`
-
-// Build webui
-await $`yarn workspace @companion-app/webui build`
-await $`yarn workspace @companion-app/launcher-ui build`
-
-// generate the 'static' zip files to serve
-await zipDirectory('./webui/build', 'dist/webui.zip')
-await zipDirectory('./docs', 'dist/docs.zip')
 
 // generate a package.json for the required native dependencies
 const require = createRequire(import.meta.url)
@@ -97,6 +88,7 @@ await fs.writeFile(
 			version: buildString,
 			license: 'MIT',
 			main: 'main.js',
+			type: 'module',
 			dependencies: dependencies,
 			engines: { node: nodeVersion.toString().trim() },
 			resolutions: packageResolutions,
@@ -141,3 +133,17 @@ await $`yarn --cwd node_modules/better-sqlite3 prebuild-install`
 // Copy fonts
 await fs.mkdirp('dist/assets/Fonts')
 await fs.copy(path.join('assets', 'Fonts'), 'dist/assets/Fonts')
+
+// Do this last so webpack can find resources (esp. package.json)
+// (note currently this isn't needed since we've disabled URL processing, but in the future this may help...)
+// Build application
+await $`yarn workspace @companion-app/shared build:ts`
+await $`yarn workspace companion build`
+
+// Build webui
+await $`yarn workspace @companion-app/webui build`
+await $`yarn workspace @companion-app/launcher-ui build`
+
+// generate the 'static' zip files to serve
+await zipDirectory('./webui/build', 'dist/webui.zip')
+await zipDirectory('./docs', 'dist/docs.zip')

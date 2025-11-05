@@ -5,21 +5,21 @@ import path from 'path'
 import type { ModuleManifest } from '@companion-module/base'
 import { doesModuleSupportPermissionsModel } from './ApiVersions.js'
 
-// This isn't used once webpacked, but avoiding including it in the final build becomes messy
-const nodeVersionsStr = fs.readFileSync(new URL('../../../nodejs-versions.json', import.meta.url)).toString()
-const nodeVersionsJson = JSON.parse(nodeVersionsStr)
-
 /**
  * Get the path to the Node.js binary for the given runtime type.
  */
 export async function getNodeJsPath(runtimeType: string): Promise<string | null> {
-	const versionNumber = nodeVersionsJson[runtimeType]
-	if (!versionNumber) return null
-
-	const pathToDir = isPackaged() ? path.join(__dirname, '/node-runtimes') : '../../../.cache/node-runtime'
+	if (!isPackaged()) {
+		const nodeVersionsStr = fs.readFileSync(new URL('../../../nodejs-versions.json', import.meta.url)).toString()
+		const nodeVersionsJson = JSON.parse(nodeVersionsStr)
+		const versionNumber = nodeVersionsJson[runtimeType]
+		if (!versionNumber) return null
+		runtimeType = `${process.platform}-${process.arch}-${versionNumber}`
+	}
+	const pathToDir = isPackaged() ? './node-runtimes' : '../../../.cache/node-runtime'
 	const nodePath = path.join(
-		isPackaged() ? pathToDir : fileURLToPath(new URL(pathToDir, import.meta.url)),
-		isPackaged() ? runtimeType : `${process.platform}-${process.arch}-${versionNumber}`,
+		fileURLToPath(new URL(pathToDir, import.meta.url)),
+		runtimeType,
 		process.platform === 'win32' ? 'node.exe' : 'bin/node'
 	)
 

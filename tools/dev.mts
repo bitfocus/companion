@@ -101,7 +101,7 @@ concurrently([
 	process.exit(1)
 })
 
-const cachedDebounces = {}
+const cachedDebounces = {} as Record<string, any>
 
 chokidar
 	.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
@@ -209,7 +209,7 @@ const restart = debounceFn(
 	}
 )
 
-function signalHandler(signal) {
+function signalHandler(signal:NodeJS.Signals) {
 	process.exit()
 }
 
