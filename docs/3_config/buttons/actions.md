@@ -30,8 +30,8 @@ These groups have a few modes of execution
 - **Inherit** follows the mode of the parent group
 - **Concurrent** this is equivalent to previous releases of Companion, with **Absolute Delays** enabled.  
   In this mode, the actions get executed in parallel, broken up between any **internal: Wait** actions.
-- **Sequeuntial** In this mode, the actions get executed in order, waiting for the previous one to complete execution before starting the next.
+- **Sequential** In this mode, the actions get executed in order, waiting for the previous one to complete execution before starting the next.
   Not every module implementats actions in a way that lets Companion know that execution has completed, but many do.  
-  This allows for programming complex sequeunces that must be done in a particular order without relying on small delays
+  This allows for programming complex sequences that must be done in a particular order without relying on small delays
 
 ![Action Group Sequential](images/action-group-sequential.png?raw=true 'Action Group Sequential')
