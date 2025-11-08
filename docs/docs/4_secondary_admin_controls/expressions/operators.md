@@ -59,4 +59,6 @@ Supported operators include:
   - Bitwise OR assignment: `a |= 1`
   - Exponent assignment: `a **= 2`
 
-> **Note:** In the examples `a` and `b` should be replaced with custom variables, module variables or number literals. They are only used here for brevity.
+:::note
+In the examples `a` and `b` should be replaced with custom variables, module variables or number literals. They are only used here for brevity.
+:::

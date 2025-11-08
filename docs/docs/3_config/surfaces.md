@@ -14,7 +14,9 @@ Here you can see all your current surfaces, both local and connected over Satell
 
 Click the **Settings** button next to a device to change how that surface behaves.
 
-Note: the exact list of settings varies by surface type.
+:::note
+The exact list of settings will vary based on surface type.
+:::
 
 - **Surface Group**: Assign this surface to a [Surface Group](#3_config/surfaces/groups.md).
 - **Use Last Page At Startup**: Whether the surface should remember the last page it was on at startup, or use the Startup Page setting instead.

@@ -14,7 +14,10 @@ For the shuttle ring you have the choice of two different buttons:
 
 - **_row2/col2_**: a rotate action will be sent once for each "stop" on the ring (+/- 7, including 0),
 - **_row2/col3_**: a rotate action will be sent will repeat at a with increasing frequency proportional as the ring is turned away from the neutral position. Use the variable: `$(internal:shuttle)` if you need to determine direction and magnitude. (No action is sent when the shuttle returns to 0)
-- NOTE: In either case, **_rotate-left_** is emitted when the jog is to the left of zero (the neutral position) and **_rotate-right_** is sent when the jog is to the right of zero, regardless of the physical rotation direction.
+
+:::note
+In either case, **_rotate-left_** is emitted when the jog is to the left of zero (the neutral position) and **_rotate-right_** is sent when the jog is to the right of zero, regardless of the physical rotation direction.
+:::
 
 The contour shuttle defines two internal variables:
 

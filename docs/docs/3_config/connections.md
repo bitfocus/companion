@@ -10,8 +10,11 @@ From the Connections tab, you can add, configure and remove devices. You can als
 
 In 4.0, the modules have been moved to be downloadable plugins. This allows you to get updates to modules much quicker and easier than before. As part of this, we do not distribute modules anymore with Companion.
 
-Note: When updating Companion, your modules are no longer automatically updated for you. You will need to visit them here to update them when you are ready to.  
-Similarly, when importing a config, you should visit here to make sure appropriate versions of the module are selected and are installed.
+:::note
+When updating Companion, your modules are no longer automatically updated for you. You will need to manually update them when on this page when you are ready.
+
+Similarly, when importing a config, you should make sure appropriate versions of the module are selected and are installed using this page.
+:::
 
 If you are on an offline system, the list of the right will likely be empty and you will need to download and import the offline module bundle from the website. You can read more about this in the [Modules section](#6_modules.md)
 
@@ -28,7 +31,9 @@ If you have not already installed a version of the module you need, you may need
 Your new device should now show in the Connections tab along with all the other devices you want to control.
 Each device needs to be a separate connection. If you have two separate Barco E2, you need to add both of them as separate connections.
 
-Note: if you have multiple connections using the same module, they can now each be running different versions of the module.
+:::note
+If you have multiple connections using the same module, they can now each be running different versions of the module.
+:::
 
 Once you have added your connections, you can reorder or filter them in the table. In the rightmost column, you can expand a list of buttons:
 

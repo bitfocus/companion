@@ -101,7 +101,9 @@ substr() extracts characters from indexStart up to but not including indexEnd. F
 - If indexEnd &lt; 0, the index is counted from the end of the string.
 - If indexEnd &lt;= indexStart after normalizing negative values, an empty string is returned.
 
-Tip: If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
+:::tip
+If you don't want the behaviour of negative numbers, you can use `max(0, index)` to limit the value to never be below 0.
+:::
 
 **split(str, separator)**
 

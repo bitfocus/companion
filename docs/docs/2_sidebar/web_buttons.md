@@ -7,7 +7,9 @@ The **Web buttons** view shows all your buttons across all pages on a single scr
 
 ![Web Buttons](images/webbuttons.png?raw=true 'Web Buttons')
 
-Note: the Web buttons view does not appear to Companion as a **Surface**, so it cannot follow page changes you set up on buttons.
+:::note
+The Web buttons view does not appear to Companion as a **Surface**, so it cannot follow page changes you set up on buttons.
+:::
 
 There are many configuration options available on this page — click the cog in the top right to open the panel. Once you have configured it, bookmark the URL; your selection is stored as URL parameters.
 

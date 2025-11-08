@@ -30,7 +30,11 @@ _Here is an example of presets made for an ATEM ME1 program_
 Drag the preset buttons onto a page's button when in the Button Layout view.
 Keep in mind you may still need to configure the preset after adding it to a button.
 
-_**Note:** you can't add new presets as a user, they are all pre-made in code._
+:::note
+You can't add new presets as a user, they are all pre-made by the module developer.
+
+If you think additional presets may be helpful, you can request them on the module's GitHub Issues page.
+:::
 
 ## Manually defining
 
