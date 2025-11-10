@@ -114,7 +114,7 @@ export class UIExpress {
 			getResourcePath('static'),
 			getResourcePath('webui/build'),
 		])
-		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs')])
+		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs/build')])
 		const webuiServerWithRewriter: Express.RequestHandler = async (req, res, next) => {
 			// This is pretty horrible, but we need to rewrite the ROOT_URL_HERE in the html/js/css files to the correct prefix
 			// First ignore a few file types that we don't want to rewrite
@@ -196,8 +196,12 @@ export class UIExpress {
 			return webuiServer(req, res, next)
 		}
 
-		// Serve docs folder as static and public
-		this.app.use('/docs', docsServer)
+		// Serve user-guide folder as static and public
+		this.app.use('/user-guide', docsServer)
+		this.app.get('/user-guide', (_req, res) => {
+			// Redirect to add trailing slash
+			res.redirect(301, '/user-guide/')
+		})
 
 		// Serve the webui directory
 		this.app.use(compression(), webuiServerWithRewriter)

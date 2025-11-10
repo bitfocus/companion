@@ -127,7 +127,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/getting-started#6_modules.md')} className="text-decoration-none">
+					<a target="_blank" href={makeAbsolutePath('/user-guide/modules')} className="text-decoration-none">
 						Check our guidance for getting device support
 					</a>
 					.<br />

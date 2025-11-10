@@ -16,6 +16,7 @@ import { Route as RedirectsTablet2HtmlRouteImport } from './routes/-redirects/ta
 import { Route as RedirectsTabletHtmlRouteImport } from './routes/-redirects/tablet-html.tsx'
 import { Route as RedirectsIpadHtmlRouteImport } from './routes/-redirects/ipad-html.tsx'
 import { Route as RedirectsHelpHtmlRouteImport } from './routes/-redirects/help-html.tsx'
+import { Route as RedirectsGettingStartedRouteImport } from './routes/-redirects/getting-started.tsx'
 import { Route as RedirectsEmulatorsRouteImport } from './routes/-redirects/emulators.tsx'
 import { Route as RedirectsEmulator2RouteImport } from './routes/-redirects/emulator2.tsx'
 import { Route as RedirectsEmulatorHtmlRouteImport } from './routes/-redirects/emulator-html.tsx'
@@ -68,7 +69,6 @@ import { Route as SettingsBackupsRuleIdRouteImport } from './routes/app/settings
 import { Route as ModulesModuleTypeDotmoduleIdRouteImport } from './routes/app/modules/$moduleType.$moduleId.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
-const GettingStartedDotlazyRouteImport = createFileRoute('/getting-started')()
 const EmulatorEmulatorIdDotlazyRouteImport = createFileRoute(
   '/emulator/$emulatorId',
 )()
@@ -79,15 +79,6 @@ const TabletDotlazyRoute = TabletDotlazyRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() =>
   import('./routes/self-contained/tablet.lazy.tsx').then((d) => d.Route),
-)
-const GettingStartedDotlazyRoute = GettingStartedDotlazyRouteImport.update({
-  id: '/getting-started',
-  path: '/getting-started',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() =>
-  import('./routes/self-contained/getting-started.lazy.tsx').then(
-    (d) => d.Route,
-  ),
 )
 const RedirectsTablet3Route = RedirectsTablet3RouteImport.update({
   id: '/tablet3',
@@ -112,6 +103,11 @@ const RedirectsIpadHtmlRoute = RedirectsIpadHtmlRouteImport.update({
 const RedirectsHelpHtmlRoute = RedirectsHelpHtmlRouteImport.update({
   id: '/help.html',
   path: '/help.html',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedirectsGettingStartedRoute = RedirectsGettingStartedRouteImport.update({
+  id: '/getting-started',
+  path: '/getting-started',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RedirectsEmulatorsRoute = RedirectsEmulatorsRouteImport.update({
@@ -386,12 +382,12 @@ export interface FileRoutesByFullPath {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
+  '/getting-started': typeof RedirectsGettingStartedRoute
   '/help.html': typeof RedirectsHelpHtmlRoute
   '/ipad.html': typeof RedirectsIpadHtmlRoute
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedDotlazyRoute
   '/tablet': typeof TabletDotlazyRoute
   '/$': typeof SplatRoute
   '/buttons': typeof ButtonsRouteWithChildren
@@ -444,12 +440,12 @@ export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
+  '/getting-started': typeof RedirectsGettingStartedRoute
   '/help.html': typeof RedirectsHelpHtmlRoute
   '/ipad.html': typeof RedirectsIpadHtmlRoute
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedDotlazyRoute
   '/tablet': typeof TabletDotlazyRoute
   '/$': typeof SplatRoute
   '/buttons': typeof ButtonsRouteWithChildren
@@ -498,12 +494,12 @@ export interface FileRoutesById {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
+  '/getting-started': typeof RedirectsGettingStartedRoute
   '/help.html': typeof RedirectsHelpHtmlRoute
   '/ipad.html': typeof RedirectsIpadHtmlRoute
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedDotlazyRoute
   '/tablet': typeof TabletDotlazyRoute
   '/_app/$': typeof SplatRoute
   '/_app/buttons': typeof ButtonsRouteWithChildren
@@ -559,12 +555,12 @@ export interface FileRouteTypes {
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
+    | '/getting-started'
     | '/help.html'
     | '/ipad.html'
     | '/tablet.html'
     | '/tablet2.html'
     | '/tablet3'
-    | '/getting-started'
     | '/tablet'
     | '/$'
     | '/buttons'
@@ -617,12 +613,12 @@ export interface FileRouteTypes {
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
+    | '/getting-started'
     | '/help.html'
     | '/ipad.html'
     | '/tablet.html'
     | '/tablet2.html'
     | '/tablet3'
-    | '/getting-started'
     | '/tablet'
     | '/$'
     | '/buttons'
@@ -670,12 +666,12 @@ export interface FileRouteTypes {
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
+    | '/getting-started'
     | '/help.html'
     | '/ipad.html'
     | '/tablet.html'
     | '/tablet2.html'
     | '/tablet3'
-    | '/getting-started'
     | '/tablet'
     | '/_app/$'
     | '/_app/buttons'
@@ -731,12 +727,12 @@ export interface RootRouteChildren {
   RedirectsEmulatorHtmlRoute: typeof RedirectsEmulatorHtmlRoute
   RedirectsEmulator2Route: typeof RedirectsEmulator2Route
   RedirectsEmulatorsRoute: typeof RedirectsEmulatorsRoute
+  RedirectsGettingStartedRoute: typeof RedirectsGettingStartedRoute
   RedirectsHelpHtmlRoute: typeof RedirectsHelpHtmlRoute
   RedirectsIpadHtmlRoute: typeof RedirectsIpadHtmlRoute
   RedirectsTabletHtmlRoute: typeof RedirectsTabletHtmlRoute
   RedirectsTablet2HtmlRoute: typeof RedirectsTablet2HtmlRoute
   RedirectsTablet3Route: typeof RedirectsTablet3Route
-  GettingStartedDotlazyRoute: typeof GettingStartedDotlazyRoute
   TabletDotlazyRoute: typeof TabletDotlazyRoute
   ConnectionDebugDotconnectionIdRoute: typeof ConnectionDebugDotconnectionIdRoute
 }
@@ -748,13 +744,6 @@ declare module '@tanstack/react-router' {
       path: '/tablet'
       fullPath: '/tablet'
       preLoaderRoute: typeof TabletDotlazyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/getting-started': {
-      id: '/getting-started'
-      path: '/getting-started'
-      fullPath: '/getting-started'
-      preLoaderRoute: typeof GettingStartedDotlazyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tablet3': {
@@ -790,6 +779,13 @@ declare module '@tanstack/react-router' {
       path: '/help.html'
       fullPath: '/help.html'
       preLoaderRoute: typeof RedirectsHelpHtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/getting-started': {
+      id: '/getting-started'
+      path: '/getting-started'
+      fullPath: '/getting-started'
+      preLoaderRoute: typeof RedirectsGettingStartedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/emulators': {
@@ -1342,12 +1338,12 @@ const rootRouteChildren: RootRouteChildren = {
   RedirectsEmulatorHtmlRoute: RedirectsEmulatorHtmlRoute,
   RedirectsEmulator2Route: RedirectsEmulator2Route,
   RedirectsEmulatorsRoute: RedirectsEmulatorsRoute,
+  RedirectsGettingStartedRoute: RedirectsGettingStartedRoute,
   RedirectsHelpHtmlRoute: RedirectsHelpHtmlRoute,
   RedirectsIpadHtmlRoute: RedirectsIpadHtmlRoute,
   RedirectsTabletHtmlRoute: RedirectsTabletHtmlRoute,
   RedirectsTablet2HtmlRoute: RedirectsTablet2HtmlRoute,
   RedirectsTablet3Route: RedirectsTablet3Route,
-  GettingStartedDotlazyRoute: GettingStartedDotlazyRoute,
   TabletDotlazyRoute: TabletDotlazyRoute,
   ConnectionDebugDotconnectionIdRoute: ConnectionDebugDotconnectionIdRoute,
 }
