@@ -16,7 +16,7 @@ When updating Companion, your modules are no longer automatically updated for yo
 Similarly, when importing a config, you should make sure appropriate versions of the module are selected and are installed using this page.
 :::
 
-If you are on an offline system, the list of the right will likely be empty and you will need to download and import the offline module bundle from the website. You can read more about this in the [Modules section](#6_modules.md)
+If you are on an offline system, the list of the right will likely be empty and you will need to download and import the offline module bundle from the website. You can read more about this in the [Modules section](../6_modules.md)
 
 ## Adding a connection
 

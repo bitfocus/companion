@@ -25,7 +25,7 @@ The **Installation Name** is used to define the name this installation of Compan
 
 ## Surfaces
 
-More details on supported surfaces are available in the chapter on [Surfaces](#7_surfaces.md).
+More details on supported surfaces are available in the chapter on [Surfaces](../7_surfaces/index.md).
 
 - **Watch for new USB Devices**
   Companion can watch for newly connected USB Surfaces if this is enabled.

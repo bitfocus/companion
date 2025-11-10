@@ -63,7 +63,7 @@ There are several ways you can make your button stand out, including:
 
 There are also some behaviour options:
 
-- Change whether to use auto progression when multiple steps are defined [Steps](#header-steps).
+- Change whether to use auto progression when multiple steps are defined [Steps](./creating.md).
 - Enable rotary actions for this button, to support the dials on a Stream Deck + (or similar).
 
 ![Button config](images/button-config.png?raw=true 'Button config')
@@ -89,6 +89,6 @@ _Same 72x72px image, but with and without the topbar_
 
 ### Adding a PNG
 
-Make a 72x58px PNG image or use a 72x72px PNG, but it will get cropped to fit 72x58px by the topbar. Unless you disable the bar in the settings tab. See the [Settings](#header-5-settings) section below.
+Make a 72x58px PNG image or use a 72x72px PNG, but it will get cropped to fit 72x58px by the topbar. Unless you disable the bar in the settings tab. See the [Settings](../settings.md#buttons) section below.
 
 Click the red **Browse** button and choose the PNG file you want to use. The picture will appear on the top right preview of the button. Text can be applied over the image.
