@@ -62,6 +62,22 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Method: POST  
   Path: `/api/surfaces/rescan`
 
+- Get all custom variables values in JSON format  
+  Method: GET  
+  Content-Type `application/json`  
+  Path: `/api/variables/custom/json`
+- Get all Module variables values in JSON format  
+  Method: GET  
+  Content-Type `application/json`  
+  Path: `/api/variables/<Connection Label>/json`
+
+- Get all custom variables values for Prometheus metrics  
+  Method: GET  
+  Path: `/api/variables/custom/metrics`
+- Get all Module variables values for Prometheus metrics  
+  Method: GET  
+  Path: `/api/variables/<Connection Label>/metrics`
+
 **Examples**  
 Press page 1 row 0 column 2:  
 POST `/api/location/1/0/2/press`
