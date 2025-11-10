@@ -39,6 +39,7 @@ const config: Config = {
 			'classic',
 			{
 				docs: {
+					path: './user-guide',
 					routeBasePath: '/',
 					sidebarPath: './sidebars.ts',
 					editUrl: 'https://github.com/bitfocus/companion/tree/main/docs/',
