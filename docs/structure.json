@@ -1,33 +1,33 @@
 [
 	{
 		"label": "Getting started",
-		"file": "docs/index.md",
+		"file": "user-guide/index.md",
 		"children": [
 			{
 				"label": "Before you open Companion",
-				"file": "docs/1_gettingstarted/before_you_open.md"
+				"file": "user-guide/1_gettingstarted/before_you_open.md"
 			},
 			{
 				"label": "Start the server",
-				"file": "docs/1_gettingstarted/start_the_server.md"
+				"file": "user-guide/1_gettingstarted/start_the_server.md"
 			},
 			{
 				"label": "The user interface",
-				"file": "docs/1_gettingstarted/the_user_interface.md"
+				"file": "user-guide/1_gettingstarted/the_user_interface.md"
 			}
 		]
 	},
 	{
 		"label": "Sidebar",
-		"file": "docs/2_sidebar/index.md",
+		"file": "user-guide/2_sidebar/index.md",
 		"children": [
 			{
 				"label": "Emulator",
-				"file": "docs/2_sidebar/emulator.md"
+				"file": "user-guide/2_sidebar/emulator.md"
 			},
 			{
 				"label": "Web buttons",
-				"file": "docs/2_sidebar/web_buttons.md"
+				"file": "user-guide/2_sidebar/web_buttons.md"
 			}
 		]
 	},
@@ -36,53 +36,53 @@
 		"children": [
 			{
 				"label": "Connections",
-				"file": "docs/3_config/connections.md"
+				"file": "user-guide/3_config/connections.md"
 			},
 			{
 				"label": "Buttons",
-				"file": "docs/3_config/buttons.md",
+				"file": "user-guide/3_config/buttons.md",
 				"children": [
 					{
 						"label": "Creating buttons",
-						"file": "docs/3_config/buttons/creating.md"
+						"file": "user-guide/3_config/buttons/creating.md"
 					},
 					{
 						"label": "Actions",
-						"file": "docs/3_config/buttons/actions.md"
+						"file": "user-guide/3_config/buttons/actions.md"
 					},
 					{
 						"label": "Feedbacks",
-						"file": "docs/3_config/buttons/feedbacks.md"
+						"file": "user-guide/3_config/buttons/feedbacks.md"
 					},
 					{
 						"label": "Steps",
-						"file": "docs/3_config/buttons/steps.md"
+						"file": "user-guide/3_config/buttons/steps.md"
 					},
 					{
 						"label": "Button indicators",
-						"file": "docs/3_config/buttons/button_indicators.md"
+						"file": "user-guide/3_config/buttons/button_indicators.md"
 					}
 				]
 			},
 			{
 				"label": "Surfaces",
-				"file": "docs/3_config/surfaces.md"
+				"file": "user-guide/3_config/surfaces.md"
 			},
 			{
 				"label": "Triggers",
-				"file": "docs/3_config/triggers.md"
+				"file": "user-guide/3_config/triggers.md"
 			},
 			{
 				"label": "Settings",
-				"file": "docs/3_config/settings.md"
+				"file": "user-guide/3_config/settings.md"
 			},
 			{
 				"label": "Import / Export",
-				"file": "docs/3_config/import_export.md"
+				"file": "user-guide/3_config/import_export.md"
 			},
 			{
 				"label": "Log",
-				"file": "docs/3_config/log.md"
+				"file": "user-guide/3_config/log.md"
 			}
 		]
 	},
@@ -91,31 +91,31 @@
 		"children": [
 			{
 				"label": "Module variables",
-				"file": "docs/4_secondary_admin_controls/module_variables.md"
+				"file": "user-guide/4_secondary_admin_controls/module_variables.md"
 			},
 			{
 				"label": "Internal variables",
-				"file": "docs/4_secondary_admin_controls/internal_variables.md"
+				"file": "user-guide/4_secondary_admin_controls/internal_variables.md"
 			},
 			{
 				"label": "Custom variables",
-				"file": "docs/4_secondary_admin_controls/custom_variables.md"
+				"file": "user-guide/4_secondary_admin_controls/custom_variables.md"
 			},
 			{
 				"label": "Local variables",
-				"file": "docs/4_secondary_admin_controls/local_variables.md"
+				"file": "user-guide/4_secondary_admin_controls/local_variables.md"
 			},
 			{
 				"label": "Expressions",
-				"file": "docs/4_secondary_admin_controls/expressions/index.md",
+				"file": "user-guide/4_secondary_admin_controls/expressions/index.md",
 				"children": [
 					{
 						"label": "Operators",
-						"file": "docs/4_secondary_admin_controls/expressions/operators.md"
+						"file": "user-guide/4_secondary_admin_controls/expressions/operators.md"
 					},
 					{
 						"label": "Functions",
-						"file": "docs/4_secondary_admin_controls/expressions/functions.md"
+						"file": "user-guide/4_secondary_admin_controls/expressions/functions.md"
 					}
 				]
 			}
@@ -126,77 +126,77 @@
 		"children": [
 			{
 				"label": "TCP / UDP Control",
-				"file": "docs/5_remote_control/tcp_udp.md"
+				"file": "user-guide/5_remote_control/tcp_udp.md"
 			},
 			{
 				"label": "HTTP Remote Control",
-				"file": "docs/5_remote_control/http_remote_control.md"
+				"file": "user-guide/5_remote_control/http_remote_control.md"
 			},
 			{
 				"label": "OSC Control",
-				"file": "docs/5_remote_control/osc_control.md"
+				"file": "user-guide/5_remote_control/osc_control.md"
 			},
 			{
 				"label": "Artnet / DMX Control",
-				"file": "docs/5_remote_control/artnet_dmx_control.md"
+				"file": "user-guide/5_remote_control/artnet_dmx_control.md"
 			},
 			{
 				"label": "RossTalk Control",
-				"file": "docs/5_remote_control/rosstalk_control.md"
+				"file": "user-guide/5_remote_control/rosstalk_control.md"
 			},
 			{
 				"label": "EmberPlus Control",
-				"file": "docs/5_remote_control/emberplus_control.md"
+				"file": "user-guide/5_remote_control/emberplus_control.md"
 			},
 			{
 				"label": "Satellite Protocol",
-				"file": "docs/5_remote_control/satellite.md"
+				"file": "user-guide/5_remote_control/satellite.md"
 			}
 		]
 	},
 	{
 		"label": "Modules",
-		"file": "docs/6_modules.md"
+		"file": "user-guide/6_modules.md"
 	},
 	{
 		"label": "Surfaces",
-		"file": "docs/7_surfaces/index.md",
+		"file": "user-guide/7_surfaces/index.md",
 		"children": [
 			{
 				"label": "Elgato Stream Deck",
-				"file": "docs/7_surfaces/elgato_streamdeck.md"
+				"file": "user-guide/7_surfaces/elgato_streamdeck.md"
 			},
 			{
 				"label": "Satellite",
-				"file": "docs/7_surfaces/satellite.md"
+				"file": "user-guide/7_surfaces/satellite.md"
 			},
 			{
 				"label": "XKeys",
-				"file": "docs/7_surfaces/xkeys.md"
+				"file": "user-guide/7_surfaces/xkeys.md"
 			},
 			{
 				"label": "Loupedeck Live",
-				"file": "docs/7_surfaces/loupedeck-live.md"
+				"file": "user-guide/7_surfaces/loupedeck-live.md"
 			},
 			{
 				"label": "Mirabox Stream Dock",
-				"file": "docs/7_surfaces/mirabox_streamdock.md"
+				"file": "user-guide/7_surfaces/mirabox_streamdock.md"
 			},
 			{
 				"label": "Contour Shuttle",
-				"file": "docs/7_surfaces/contour_shuttle.md"
+				"file": "user-guide/7_surfaces/contour_shuttle.md"
 			},
 			{
 				"label": "VEC Footpedal",
-				"file": "docs/7_surfaces/vec_footpedal.md"
+				"file": "user-guide/7_surfaces/vec_footpedal.md"
 			},
 			{
 				"label": "Blackmagic ATEM Micro Panel",
-				"file": "docs/7_surfaces/blackmagic_controllers.md"
+				"file": "user-guide/7_surfaces/blackmagic_controllers.md"
 			},
 			{
 				"label": "203 Systems Mystrix",
-				"file": "docs/7_surfaces/mystrix.md"
+				"file": "user-guide/7_surfaces/mystrix.md"
 			}
 		]
 	},
@@ -208,22 +208,22 @@
 			{
 				"_version": "4.1.0",
 				"label": "v4.1.0",
-				"file": "docs/9_whatsnew/v4-1-0.md"
+				"file": "user-guide/9_whatsnew/v4-1-0.md"
 			},
 			{
 				"_version": "4.0.0",
 				"label": "v4.0.0",
-				"file": "docs/9_whatsnew/v4-0-0.md"
+				"file": "user-guide/9_whatsnew/v4-0-0.md"
 			},
 			{
 				"_version": "3.5.0",
 				"label": "v3.5.0",
-				"file": "docs/9_whatsnew/v3-5-0.md"
+				"file": "user-guide/9_whatsnew/v3-5-0.md"
 			},
 			{
 				"_version": "3.4.0",
 				"label": "v3.4.0",
-				"file": "docs/9_whatsnew/v3-4-0.md"
+				"file": "user-guide/9_whatsnew/v3-4-0.md"
 			}
 		]
 	}

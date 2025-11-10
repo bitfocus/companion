@@ -17,7 +17,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const rootDir = path.resolve(__dirname, '..')
-const docsDir = path.join(rootDir, 'docs', 'docs', '9_whatsnew')
+const docsDir = path.join(rootDir, 'docs', 'user-guide', '9_whatsnew')
 const outputDir = path.join(rootDir, 'webui', 'public', 'whatsnew')
 
 interface WhatsNewFile {
