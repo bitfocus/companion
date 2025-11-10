@@ -159,7 +159,6 @@ if (!lock) {
 
 	let sentryDsn
 	try {
-		//console.log('Looking for sentry at: ' + new URL('../SENTRY', import.meta.url))
 		sentryDsn = fs
 			.readFileSync(new URL('../SENTRY', import.meta.url))
 			.toString()
