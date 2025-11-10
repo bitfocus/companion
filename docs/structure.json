@@ -91,7 +91,7 @@
 		"children": [
 			{
 				"label": "Module variables",
-				"file": "docs/4_secondary_admin_controls/dynamic_variables.md"
+				"file": "docs/4_secondary_admin_controls/module_variables.md"
 			},
 			{
 				"label": "Internal variables",
