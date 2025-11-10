@@ -18,7 +18,7 @@ import type { ExpressionVariablesListStore } from './ExpressionVariablesListStor
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
 export interface RootAppStore {
-	readonly notifier: React.RefObject<NotificationsManagerRef> // TODO - this is not good
+	readonly notifier: NotificationsManagerRef
 	readonly helpViewer: React.RefObject<HelpModalRef> // TODO - this is not good
 	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good
 

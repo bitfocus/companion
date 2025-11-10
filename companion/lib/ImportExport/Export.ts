@@ -10,7 +10,7 @@
  */
 
 import os from 'os'
-import { getTimestamp, isFalsey } from '../Resources/Util.js'
+import { getTimestamp } from '../Resources/Util.js'
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import archiver from 'archiver'
 import path from 'path'
@@ -19,6 +19,8 @@ import { stringify as csvStringify } from 'csv-stringify/sync'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type express from 'express'
 import type { ParsedQs } from 'qs'
+import { unflattenQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
+import { ZodError } from 'zod'
 import type {
 	ExportFullv6,
 	ExportInstancesv6,
@@ -30,7 +32,7 @@ import type {
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { AppInfo } from '../Registry.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import { zodClientExportSelection, type ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -48,7 +50,7 @@ import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js
 import { formatAttachmentFilename, stringifyExport, type StringifiedExportData } from './Util.js'
 
 export class ExportController {
-	readonly #logger = LogController.createLogger('ImportExport/Controller')
+	readonly #logger = LogController.createLogger('ImportExport/Export')
 
 	readonly #appInfo: AppInfo
 	readonly #controlsController: ControlsController
@@ -173,11 +175,28 @@ export class ExportController {
 	}
 
 	#exportCustomHandler: RequestHandler = (req, res, next) => {
-		const exp = this.generateCustomExport(req.query as any)
+		try {
+			// Convert flat dot-notation query params back to nested object
+			const unflattened = unflattenQueryParams(req.query)
 
-		const filename = this.#generateFilename(String(req.query.filename as any), '', 'companionconfig')
+			// Validate with Zod schema - it handles type coercion!
+			const config = zodClientExportSelection.parse(unflattened)
 
-		downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+			const exp = this.generateCustomExport(config)
+
+			const filename = this.#generateFilename(config.filename ?? '', 'custom_config', 'companionconfig')
+
+			downloadBlob(this.#logger, res, next, exp, filename, config.format)
+		} catch (error) {
+			if (error instanceof ZodError) {
+				res.status(400).json({
+					error: 'Invalid query parameters',
+					details: error.issues,
+				})
+			} else {
+				next(error)
+			}
+		}
 	}
 
 	#exportFullHandler: RequestHandler = (req, res, next) => {
@@ -481,7 +500,7 @@ export class ExportController {
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
 
-		if (!config || !isFalsey(config.buttons)) {
+		if (!config || config.buttons) {
 			exp.pages = {}
 
 			const pageInfos = this.#pagesStore.getAll()
@@ -495,7 +514,7 @@ export class ExportController {
 			}
 		}
 
-		if (!config || !isFalsey(config.triggers)) {
+		if (!config || config.triggers) {
 			const triggersExport: ExportTriggerContentv6 = {}
 			const triggerControls = this.#controlsController.getAllTriggers()
 			for (const control of triggerControls) {
@@ -517,12 +536,12 @@ export class ExportController {
 			exp.triggerCollections = this.#controlsController.exportTriggerCollections()
 		}
 
-		if (!config || !isFalsey(config.customVariables)) {
+		if (!config || config.customVariables) {
 			exp.custom_variables = this.#variablesController.custom.getDefinitions()
 			exp.customVariablesCollections = this.#variablesController.custom.exportCollections()
 		}
 
-		if (!config || !isFalsey(config.expressionVariables)) {
+		if (!config || config.expressionVariables) {
 			exp.expressionVariables = {}
 			exp.expressionVariablesCollections = this.#controlsController.exportExpressionVariableCollections()
 
@@ -543,8 +562,8 @@ export class ExportController {
 			}
 		}
 
-		if (!config || !isFalsey(config.connections)) {
-			exp.instances = this.#instancesController.exportAllConnections(!config || !isFalsey(config.includeSecrets))
+		if (!config || config.connections) {
+			exp.instances = this.#instancesController.exportAllConnections(!config || config.includeSecrets)
 			exp.connectionCollections = this.#instancesController.connectionCollections.collectionData
 		} else {
 			exp.instances = this.#generateReferencedConnectionConfigs(referencedConnectionIds, referencedConnectionLabels, {
@@ -559,7 +578,7 @@ export class ExportController {
 			)
 		}
 
-		if (!config || !isFalsey(config.surfaces)) {
+		if (!config || config.surfaces) {
 			const surfaces = this.#surfacesController.exportAll()
 			const surfaceGroups = this.#surfacesController.exportAllGroups()
 			const findPage = (id: string) => this.#pagesStore.getPageNumber(id)

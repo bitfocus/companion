@@ -194,9 +194,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			}
 
 			// close toast
-			if (notifier.current) {
-				notifier.current.close(TOAST_ID)
-			}
+			notifier.close(TOAST_ID)
 
 			return null
 		})
@@ -206,7 +204,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 	}
 
 	const handleIdle = () => {
-		notifier.current?.show(
+		notifier.show(
 			'Session timeout',
 			'Your session is about to timeout, and Companion will be locked',
 			undefined,
@@ -217,9 +215,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			if (!v) {
 				return setTimeout(() => {
 					// close toast
-					if (notifier.current) {
-						notifier.current.close(TOAST_ID)
-					}
+					notifier.close(TOAST_ID)
 
 					setLocked()
 				}, TOAST_DURATION)
@@ -249,9 +245,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			})
 
 			// close toast
-			if (notifier.current) {
-				notifier.current.close(TOAST_ID)
-			}
+			notifier.close(TOAST_ID)
 		}
 	})
 

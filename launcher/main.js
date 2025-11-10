@@ -160,7 +160,7 @@ if (!lock) {
 	let sentryDsn
 	try {
 		sentryDsn = fs
-			.readFileSync(new URL('/SENTRY', import.meta.url))
+			.readFileSync(new URL('../SENTRY', import.meta.url))
 			.toString()
 			.trim()
 	} catch (_e) {

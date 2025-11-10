@@ -459,8 +459,9 @@ export class InstanceProcessManager {
 				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
-				child.logger.verbose(`stderr: ${data.toString()}`)
-				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'error', data.toString())
+				const str = data.toString()
+				child.logger.verbose(`stderr: ${str}`)
+				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'error', str)
 			})
 
 			child.monitor = monitor

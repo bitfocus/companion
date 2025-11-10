@@ -137,8 +137,18 @@ const builtinFunctionCompletions: Array<{
 	// Variable operations
 	{
 		name: 'parseVariables',
-		detail: 'parseVariables(string)',
+		detail: 'parseVariables(string, ?undefinedValue)',
 		documentation: 'Parses and resolves Companion variables in a string',
+	},
+	{
+		name: 'getVariable',
+		detail: 'getVariable(variableId)',
+		documentation: 'Fetches the value of a Companion variable',
+	},
+	{
+		name: 'getVariable',
+		detail: 'getVariable(label, name)',
+		documentation: 'Fetches the value of a Companion variable',
 	},
 
 	// Object/array operations

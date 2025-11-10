@@ -32,6 +32,7 @@ export const AddEntitiesModal = observer(
 		const recentlyUsed = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
 
 		const [show, setShow] = useState(false)
+		const [filter, setFilter] = useState('')
 
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
@@ -58,7 +59,6 @@ export const AddEntitiesModal = observer(
 				}
 			})
 		}, [])
-		const [filter, setFilter] = useState('')
 
 		const addAndTrackRecentUsage = useCallback(
 			(connectionAndDefinitionId: string) => {

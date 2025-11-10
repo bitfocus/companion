@@ -53,7 +53,7 @@ export const ImportExportPage = observer(function ImportExport() {
 			}
 
 			setLoadError(null)
-			notifier.current?.show('Importing config...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
+			notifier.show('Importing config...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 			console.log(`start import of ${newFile.size} bytes`)
 
 			const hasher = CryptoJS.algo.SHA1.create()
@@ -123,7 +123,7 @@ export const ImportExportPage = observer(function ImportExport() {
 											}
 
 											setLoadError(null)
-											notifier.current?.close(NOTIFICATION_ID_IMPORT)
+											notifier.close(NOTIFICATION_ID_IMPORT)
 											// const mode = config.type === 'page' ? 'import_page' : 'import_full'
 											// modalRef.current.show(mode, config, initialRemap)
 											setImportInfo([config, initialRemap])
@@ -145,7 +145,7 @@ export const ImportExportPage = observer(function ImportExport() {
 				.catch((e) => {
 					console.error('failed', e)
 
-					notifier.current?.show('Importing config...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
+					notifier.show('Importing config...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
 				})
 		},
 		[

@@ -9,7 +9,7 @@ describe('executeExpression', () => {
 
 	test('missing variables', () => {
 		const res = executeExpression("concat($(test:something), '=', $(another:value))", {}, undefined, new Map())
-		expect(res).toMatchObject({ value: '$NA=$NA', variableIds: new Set(['test:something', 'another:value']) })
+		expect(res).toMatchObject({ value: '=', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
 	test('normal variables', () => {
@@ -93,6 +93,18 @@ describe('executeExpression', () => {
 		expect(res).toMatchObject({ value: '1/2/3', variableIds: new Set(['test:something', 'another:value']) })
 	})
 
+	test('undefined variables', () => {
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', '$(another:value)')
+		injectedVariableValues.set('$(another:value)', undefined)
+
+		const res = executeExpression('parseVariables("$(another:value)", "sub")', {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: 'sub', variableIds: new Set(['another:value']) })
+
+		const res2 = executeExpression('parseVariables("$(test:something)", "sub")', {}, undefined, injectedVariableValues)
+		expect(res2).toMatchObject({ value: 'sub', variableIds: new Set(['test:something', 'another:value']) })
+	})
+
 	test('falsey variables', () => {
 		const res = executeExpression(
 			"concat($(test:page), '/', $(test:row), '/', $(test:col))",
@@ -106,6 +118,64 @@ describe('executeExpression', () => {
 			undefined,
 			new Map()
 		)
+		expect(res).toMatchObject({ value: '0//', variableIds: new Set(['test:page', 'test:row', 'test:col']) })
+	})
+
+	test('falsey variables interpolation', () => {
+		const res = executeExpression(
+			'`${$(test:page)}/${$(test:row)}/${$(test:col)}`',
+			{
+				test: {
+					page: 0,
+					row: '',
+					col: undefined,
+				},
+			},
+			undefined,
+			new Map()
+		)
 		expect(res).toMatchObject({ value: '0//$NA', variableIds: new Set(['test:page', 'test:row', 'test:col']) })
+	})
+
+	test('getVariable single-arg form', () => {
+		const res = executeExpression(
+			"getVariable('test:page')",
+			{
+				test: {
+					page: 'abc',
+				},
+			},
+			undefined,
+			new Map()
+		)
+		expect(res).toMatchObject({ value: 'abc', variableIds: new Set(['test:page']) })
+	})
+
+	test('getVariable two-arg form', () => {
+		const res = executeExpression(
+			"getVariable('test','row')",
+			{
+				test: {
+					row: 'def',
+				},
+			},
+			undefined,
+			new Map()
+		)
+		expect(res).toMatchObject({ value: 'def', variableIds: new Set(['test:row']) })
+	})
+
+	test('getVariable missing returns undefined', () => {
+		const res = executeExpression("getVariable('another:missing')", {}, undefined, new Map())
+		expect(res).toMatchObject({ value: undefined, variableIds: new Set(['another:missing']) })
+	})
+
+	test('getVariable chained resolution', () => {
+		const injectedVariableValues: VariableValueCache = new Map()
+		injectedVariableValues.set('$(test:something)', '$(another:value)')
+		injectedVariableValues.set('$(another:value)', 'something')
+
+		const res = executeExpression("getVariable('test:something')", {}, undefined, injectedVariableValues)
+		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })
 	})
 })

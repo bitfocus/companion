@@ -43,7 +43,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	}, [variablesStore, label])
 
 	const onCopied = useCallback(() => {
-		notifier.current?.show(`Copied`, 'Copied to clipboard', 3000)
+		notifier.show(`Copied`, 'Copied to clipboard', 3000)
 	}, [notifier])
 
 	const [candidates, errorMsg] = useMemo(() => {

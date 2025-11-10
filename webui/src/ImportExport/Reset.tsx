@@ -66,17 +66,13 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 				.mutateAsync(config)
 				.then((status) => {
 					if (status !== 'ok') {
-						notifier.current?.show(
-							`Reset failed`,
-							`An unspecified error occurred during the reset.  Please try again.`,
-							10000
-						)
+						notifier.show(`Reset failed`, `An unspecified error occurred during the reset.  Please try again.`, 10000)
 					}
 
 					doClose()
 				})
 				.catch((e) => {
-					notifier.current?.show(`Reset failed`, 'An error occurred:' + e, 10000)
+					notifier.show(`Reset failed`, 'An error occurred:' + e, 10000)
 					doNextStep()
 				})
 
