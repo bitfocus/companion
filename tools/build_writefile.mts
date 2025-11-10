@@ -9,8 +9,8 @@ if (process.platform === 'win32') {
 
 const build = await generateVersionString()
 console.log(`Writing BUILD to ${new URL('../BUILD', import.meta.url)}:`, build)
-console.log( process.cwd())
 await fs.writeFile(new URL('../BUILD', import.meta.url), build)
+// a recent change in webpack.config or Registry.ts breaks the webpack.config rules that would have copied the BUILD file...
 if (fs.existsSync(new URL('../dist', import.meta.url))) {
 	await fs.writeFile(new URL('../dist/BUILD', import.meta.url), build)
 }

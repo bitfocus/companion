@@ -98,7 +98,8 @@ export default {
 		parser: {
 			javascript: {
 				importMeta: false, // don't convert import.meta.url to a hardcoded string
-				url: false, // 'relative', doesn't work or doesn't do what we want
+				// url:false is needed when Registry uses a URL to resolve files (package.json, BUILD,...)
+				url: false, // as a side-benefit, it reduces the number of webpack warnings
 			},
 		},
 	},

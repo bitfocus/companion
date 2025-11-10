@@ -209,7 +209,7 @@ const restart = debounceFn(
 	}
 )
 
-function signalHandler(signal:NodeJS.Signals) {
+function signalHandler(signal: NodeJS.Signals) {
 	process.exit()
 }
 

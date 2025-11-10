@@ -9,7 +9,10 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
 
-const buildFile = fs.readFileSync(path.join(import.meta.dirname, '../BUILD')).toString().trim()
+const buildFile = fs
+	.readFileSync(path.join(import.meta.dirname, '../BUILD'))
+	.toString()
+	.trim()
 
 /**
  * Parse --base argument from command line
