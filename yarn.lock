@@ -1503,7 +1503,6 @@ __metadata:
     udev-generator: "npm:^1.0.2"
     vitest: "npm:^4.0.6"
     vitest-mock-extended: "npm:^3.1.0"
-    webpack: "npm:^5.102.1"
     yaml: "npm:^2.8.1"
     zx: "npm:^8.8.5"
   languageName: unknown

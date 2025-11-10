@@ -81,13 +81,6 @@ await fs.remove('dist/node_modules/usb/libusb')
 await fs.remove('dist/node_modules/usb/node_modules/node-addon-api')
 await fs.remove('dist/node_modules/node-addon-api')
 
-// sadly, manually replacing it with `import.meta.url` has the exact same effect as using `importMeta: false, but this works:
-//  (note, during development only, either with `output.pathinfo: true` or devtool: 'eval-source-map' the quotes are backquoted.)
-// const pattern = new RegExp('((\\\\)?")file:///.*/companion(/node_modules/@sentry/node-core/build/esm/sdk/esmLoader.js(\\\\)?")', 'g')
-// let distMain = fs.readFileSync('dist/main.js', 'utf8')
-// distMain = distMain.replaceAll(pattern, '$1..$3') // this doesn't help either: "/* webpackIgnore: true */ import.meta.url")
-// fs.writeFileSync('dist/main.js', distMain)
-
 if (!process.env.SKIP_LAUNCH_CHECK) {
 	const nodeExePath =
 		platformInfo.runtimePlatform === 'win'
