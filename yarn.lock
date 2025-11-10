@@ -13976,11 +13976,11 @@ asn1@evs-broadcast/node-asn1:
   linkType: hard
 
 "node-abi@npm:^3.3.0, node-abi@npm:^3.45.0":
-  version: 3.71.0
-  resolution: "node-abi@npm:3.71.0"
+  version: 3.80.0
+  resolution: "node-abi@npm:3.80.0"
   dependencies:
     semver: "npm:^7.3.5"
-  checksum: 10c0/dbd0792ea729329cd9d099f28a5681ff9e8a6db48cf64e1437bf6a7fd669009d1e758a784619a1c4cc8bfd1ed17162f042c787654edf19a1f64b5018457c9c1f
+  checksum: 10c0/f98534a2d063e85b6b51c5e6f2abebd1d1d313855e29138d493cf178ce5c2ead18e562c3093a758654fd941c9353b8154a79acd10540d553726c4f690c31c44e
   languageName: node
   linkType: hard
 
