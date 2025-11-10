@@ -196,8 +196,8 @@ export class UIExpress {
 			return webuiServer(req, res, next)
 		}
 
-		// Serve docs folder as static and public
-		this.app.use('/docs', docsServer)
+		// Serve user-guide folder as static and public
+		this.app.use('/user-guide', docsServer)
 
 		// Serve the webui directory
 		this.app.use(compression(), webuiServerWithRewriter)
