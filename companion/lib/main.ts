@@ -99,7 +99,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		process.exit(1)
 	}
 
-	let adminIp = options.adminAddress || '0.0.0.0' // default to admin global
+	let adminIp = options.adminAddress || '::' // default to admin global
 
 	if (options.adminInterface) {
 		adminIp = null
