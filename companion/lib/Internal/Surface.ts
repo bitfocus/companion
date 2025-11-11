@@ -476,7 +476,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 					{
 						type: 'number',
-						label: 'X Offset',
+						label: 'Horizontal Offset',
 						id: 'x_offset',
 						default: 0,
 						min: 0,
@@ -485,7 +485,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					},
 					{
 						type: 'number',
-						label: 'Y Offset',
+						label: 'Vertical Offset',
 						id: 'y_offset',
 						default: 0,
 						min: 0,
@@ -503,20 +503,20 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 					{
 						type: 'number',
-						label: 'X Offset Adjustment',
+						label: 'Horizontal Offset Adjustment',
 						id: 'x_adjustment',
 						default: 0,
-						min: -500,
-						max: 500,
+						min: -100,
+						max: 100,
 						step: 1,
 					},
 					{
 						type: 'number',
-						label: 'Y Offset Adjustment',
+						label: 'Vertical Offset Adjustment',
 						id: 'y_adjustment',
 						default: 0,
-						min: -500,
-						max: 500,
+						min: -100,
+						max: 100,
 						step: 1,
 					},
 				],
