@@ -26,6 +26,7 @@ import { ServiceApi } from './Service/ServiceApi.js'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import path from 'path'
 
 let infoFileName: URL
 // note this could be done in one line, but webpack was having trouble before url processing was disabled.
@@ -44,7 +45,7 @@ try {
 		buildNumber = '0.0.0-VITEST'
 	} else {
 		buildNumber = fs
-			.readFileSync(new URL(isPackaged() ? './BUILD' : '../../BUILD', import.meta.url))
+			.readFileSync(path.join(import.meta.dirname, isPackaged() ? './BUILD' : '../../BUILD'))
 			.toString()
 			.trim()
 			.replace(/^-/, '')

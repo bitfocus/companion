@@ -1,6 +1,5 @@
 import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
-import { fileURLToPath } from 'node:url'
 import path from 'path'
 import type { ModuleManifest } from '@companion-module/base'
 import { doesModuleSupportPermissionsModel } from './ApiVersions.js'
@@ -10,7 +9,7 @@ import { doesModuleSupportPermissionsModel } from './ApiVersions.js'
  */
 export async function getNodeJsPath(runtimeType: string): Promise<string | null> {
 	if (!isPackaged()) {
-		const nodeVersionsStr = fs.readFileSync(new URL('../../../nodejs-versions.json', import.meta.url)).toString()
+		const nodeVersionsStr = fs.readFileSync(path.join(import.meta.dirname, '../../../nodejs-versions.json')).toString()
 		const nodeVersionsJson = JSON.parse(nodeVersionsStr)
 		const versionNumber = nodeVersionsJson[runtimeType]
 		if (!versionNumber) return null
@@ -18,7 +17,7 @@ export async function getNodeJsPath(runtimeType: string): Promise<string | null>
 	}
 	const pathToDir = isPackaged() ? './node-runtimes' : '../../../.cache/node-runtime'
 	const nodePath = path.join(
-		fileURLToPath(new URL(pathToDir, import.meta.url)),
+		path.join(import.meta.dirname, pathToDir),
 		runtimeType,
 		process.platform === 'win32' ? 'node.exe' : 'bin/node'
 	)

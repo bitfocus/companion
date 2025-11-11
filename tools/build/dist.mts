@@ -8,6 +8,7 @@ import path from 'node:path'
 import yaml from 'yaml'
 import { determinePlatformInfo } from './util.mts'
 import webpackConfig from '../../companion/webpack.config.js'
+import type { PackageJson } from 'type-fest'
 
 $.verbose = true
 
@@ -17,7 +18,7 @@ if (process.platform === 'win32') {
 
 const companionPkgJsonPath = new URL('../../package.json', import.meta.url)
 const companionPkgJsonStr = await fs.readFile(companionPkgJsonPath)
-const companionPkgJson = JSON.parse(companionPkgJsonStr.toString())
+const companionPkgJson: PackageJson = JSON.parse(companionPkgJsonStr.toString())
 
 const platformInfo = determinePlatformInfo(argv._[0])
 
@@ -49,16 +50,14 @@ await $`tsx tools/build_writefile.mts`
 
 const buildString = await generateMiniVersionString()
 
-
-
 // generate a package.json for the required native dependencies
 const require = createRequire(import.meta.url)
-const dependencies = {} as Partial<typeof webpackConfig.externals>
+const dependencies: PackageJson.Dependency = {}
 
 const neededDependencies = Object.keys(webpackConfig.externals)
 for (const name of neededDependencies) {
 	const pkgJson = require(`${name}/package.json`)
-	Object.assign(dependencies, { [name]: pkgJson.version })
+	dependencies[name] = pkgJson.version
 }
 
 if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x64') {
@@ -66,16 +65,16 @@ if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x6
 	delete dependencies['bufferutil']
 }
 
-const packageResolutions = {
+const packageResolutions: PackageJson.Dependency = {
 	// Force the same custom `node-gyp-build` version to allow better cross compiling
-	'node-gyp-build': companionPkgJson.resolutions['node-gyp-build'],
+	'node-gyp-build': companionPkgJson.resolutions?.['node-gyp-build'],
 	// Use an empty package for node-gyp, to avoid installing it
 	'node-gyp': 'npm:empty-npm-package@1.0.0',
 }
 // Preserve some resolutions to the dist package.json
-for (const [name, version] of Object.entries(companionPkgJson.resolutions)) {
+for (const [name, version] of Object.entries(companionPkgJson.resolutions ?? {})) {
 	if (name.startsWith('@napi-rs/canvas')) {
-		Object.assign(packageResolutions, { [name]: version })
+		packageResolutions[name] = version
 	}
 }
 
@@ -93,7 +92,7 @@ await fs.writeFile(
 			engines: { node: nodeVersion.toString().trim() },
 			resolutions: packageResolutions,
 			packageManager: companionPkgJson.packageManager,
-		},
+		} satisfies PackageJson.PackageJsonStandard & PackageJson.YarnConfiguration & PackageJson.NodeJsStandard,
 		undefined,
 		2
 	)
