@@ -238,16 +238,7 @@ export const ExportWizardModal = observer(
 										<CButton color="secondary" onClick={doClose} disabled={isSubmitting}>
 											Close
 										</CButton>
-										<CButton
-											color="primary"
-											disabled={!canSubmit || isSubmitting}
-											type="submit"
-											onClick={() => {
-												form.handleSubmit().catch((err) => {
-													console.error('Form submission error', err)
-												})
-											}}
-										>
+										<CButton color="primary" disabled={!canSubmit || isSubmitting} type="submit">
 											Download {isSubmitting ? '...' : ''}
 										</CButton>
 									</>
