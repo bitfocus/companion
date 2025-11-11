@@ -4,7 +4,7 @@ Starting with v4.2, individual surfaces or surface-groups provide the option to 
 
 ---
 
-## ![Restrict Pages Setting](images/restrict_pages.png?raw=true 'Discovery')
+## ![Restrict Pages Setting](images/restrict_pages.png?raw=true 'Restrict Pages Setting')
 
 This allows you to distribute a single site configuration but with access to particular pages defined by a person's role. Each device or group can then be limited to just one or a few pages relevant to their role.
 

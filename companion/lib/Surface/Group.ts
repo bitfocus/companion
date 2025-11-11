@@ -251,32 +251,40 @@ export class SurfaceGroup {
 	}
 
 	/**
+	 * Return `groupConfig.allowed_page_ids` if `groupConfig.restrict_pages`, while ensuring that the pages are valid
+	 * Return an empty list if `groupConfig.restrict_pages` is false
+	 */
+	#getAllowedPagesList(): string[] {
+		if (this.groupConfig.restrict_pages) {
+			const allowedPages = this.groupConfig.allowed_page_ids ?? []
+			return allowedPages.filter((page) => this.#pageStore.isPageIdValid(page))
+		} else {
+			return []
+		}
+	}
+
+	/**
 	 * Get first page ID, taking into account `groupConfig.allowed_page_ids`
 	 */
 	#getFirstPageId(): string {
-		const validPages = this.groupConfig.restrict_pages ? (this.groupConfig.allowed_page_ids ?? []) : []
-		return validPages.length > 0 ? validPages[0] : this.#pageStore.getFirstPageId()
+		const allowedPages = this.#getAllowedPagesList()
+		return allowedPages.length > 0 ? allowedPages[0] : this.#pageStore.getFirstPageId()
 	}
 
 	/**
 	 * Check if a page ID is valid, taking into account `groupConfig.allowed_page_ids`
 	 */
 	#isPageIdValid(pageID: string): boolean {
-		const allowedPages = this.groupConfig.restrict_pages ? (this.groupConfig.allowed_page_ids ?? []) : []
+		// If page doesn't exist, we're done:
 		if (!this.#pageStore.isPageIdValid(pageID)) {
 			return false
-		} else if (allowedPages.length > 0) {
-			const isAllowed = allowedPages.includes(pageID)
-			if (!isAllowed && this.#pageHistory) {
-				const pageHistory = this.#pageHistory
-				// if page is valid but not on the "allowed" list: clean up history
-				if (pageHistory.history.some((p) => !allowedPages.includes(p))) {
-					pageHistory.history = pageHistory.history.filter((p) => allowedPages.includes(p))
-					// not sure what's best here, but this should do...
-					pageHistory.index = pageHistory.history.length - 1
-				}
-			}
-			return isAllowed
+		}
+
+		// Otherwise, the result depends on whether restrictions are in place
+		const allowedPages = this.#getAllowedPagesList()
+		if (allowedPages.length > 0) {
+			// page is valid only if it's in the "restricted" list
+			return allowedPages.includes(pageID)
 		} else {
 			// page is valid and there are no page restrictions
 			return true
@@ -290,9 +298,14 @@ export class SurfaceGroup {
 		const currentPage = this.#currentPageId
 		const pageHistory = this.#pageHistory
 
-		const validPages = this.groupConfig.restrict_pages ? (this.groupConfig.allowed_page_ids ?? []) : []
-
 		if (toPage === 'back' || toPage === 'forward') {
+			// first make sure the history list contains only valid pages...
+			if (pageHistory.history.some((p) => !this.#isPageIdValid(p))) {
+				pageHistory.history = pageHistory.history.filter((p) => this.#isPageIdValid(p))
+				// not sure what's best here, but this should do...
+				pageHistory.index = pageHistory.history.length - 1
+			}
+
 			// determine the 'to' page
 			const pageDirection = toPage === 'back' ? -1 : 1
 			const pageIndex = pageHistory.index + pageDirection
@@ -309,12 +322,13 @@ export class SurfaceGroup {
 				this.#storeNewPage(pageTarget, defer)
 			}
 		} else {
+			const allowedPages = this.#getAllowedPagesList()
 			let newPage: string | null = toPage
 			const getNewPage = (currentPage: string, offset: number) => {
-				if (validPages.length > 0) {
-					let newPage = (validPages.indexOf(currentPage) + offset) % validPages.length
-					if (newPage < 0) newPage = validPages.length - 1
-					return validPages[newPage]
+				if (allowedPages.length > 0) {
+					let newPage = (allowedPages.indexOf(currentPage) + offset) % allowedPages.length
+					if (newPage < 0) newPage = allowedPages.length - 1
+					return allowedPages[newPage]
 				} else {
 					// note: getOffsetPageId() calculates the new page with wrap around
 					return this.#pageStore.getOffsetPageId(currentPage, offset)
