@@ -205,6 +205,11 @@ export class ImportController {
 					groupConfig.startup_page_id = getPageId(groupConfig.startup_page!)
 					delete groupConfig.startup_page
 				}
+				if (groupConfig.allowed_pages !== undefined) {
+					const page_ids = groupConfig.allowed_pages.map((nr) => getPageId(nr))
+					groupConfig.allowed_page_ids = page_ids
+					delete groupConfig.allowed_pages
+				}
 			}
 
 			// Convert external page refs, i.e. page numbers, to internal ids.
