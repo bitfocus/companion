@@ -121,7 +121,7 @@ export class UIExpress {
 			getResourcePath('static'),
 			getResourcePath('webui/build'),
 		])
-		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs/static')])
+		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs/placeholder')])
 
 		const wrapWithRewriter = (server: Express.RequestHandler): Express.RequestHandler => {
 			return async (req, res, next) => {
