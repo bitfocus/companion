@@ -26,7 +26,7 @@ import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStor
 import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
 import { HelpModal, type HelpModalRef } from './Instances/HelpModal.js'
 import { ViewControlStore } from '~/Stores/ViewControlStore.js'
-import { WhatsNewModal, type WhatsNewModalRef } from './WhatsNewModal.js'
+import { WhatsNewModal, type WhatsNewModalRef } from './WhatsNewModal/WhatsNew.js'
 import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { trpc } from './Resources/TRPC.js'
@@ -43,13 +43,25 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const helpModalRef = useRef<HelpModalRef>(null)
 	const whatsNewModalRef = useRef<WhatsNewModalRef>(null)
 
+	const notifierObj = useMemo<NotificationsManagerRef>(
+		() => ({
+			show(title: string, message: string, duration?: number | null, stickyId?: string): string {
+				return notifierRef.current?.show(title, message, duration, stickyId) ?? ''
+			},
+			close(messageId: string): void {
+				notifierRef.current?.close(messageId)
+			},
+		}),
+		[notifierRef]
+	)
+
 	const rootStore = useMemo(() => {
 		const showWizardEvent = new EventTarget()
 
 		const expressionVariablesList = new ExpressionVariablesListStore()
 
 		return {
-			notifier: notifierRef,
+			notifier: notifierObj,
 			helpViewer: helpModalRef,
 			whatsNewModal: whatsNewModalRef,
 
@@ -77,7 +89,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore
-	}, [])
+	}, [notifierObj, helpModalRef, whatsNewModalRef])
 
 	const actionDefinitionsReady = useEntityDefinitionsSubscription(
 		rootStore.entityDefinitions.actions,

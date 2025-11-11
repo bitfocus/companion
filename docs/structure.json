@@ -66,13 +66,7 @@
 			},
 			{
 				"label": "Surfaces",
-				"file": "user-guide/3_config/surfaces.md",
-				"children": [
-					{
-						"label": "Page Permissions",
-						"file": "user-guide/3_config/pagepermissions.md"
-					}
-				]
+				"file": "user-guide/3_config/surfaces.md"
 			},
 			{
 				"label": "Triggers",
@@ -81,11 +75,6 @@
 			{
 				"label": "Settings",
 				"file": "user-guide/3_config/settings.md"
-			},
-			{
-				"label": "Security Considerations",
-				"file": "user-guide/3_config/security.md",
-				"children": []
 			},
 			{
 				"label": "Import / Export",

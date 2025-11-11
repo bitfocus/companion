@@ -84,24 +84,6 @@ body {
 	}
 }
 
-.page-getting-started {
-	background-color: white;
-	padding: 1px;
-
-	min-height: 100vh;
-
-	> div {
-		margin: 1em auto;
-		max-width: 860px;
-		line-height: 1.5rem;
-		tab-size: 4;
-
-		img {
-			max-width: 100%;
-		}
-	}
-}
-
 .modal-body img {
 	// Cap images in modals to be the width of the modal
 	max-width: 100%;

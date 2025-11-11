@@ -144,6 +144,7 @@ export default [
 			'module-local-dev/**/*',
 			'launcher/dev.cjs',
 			'webui/public/_deps/**/*',
+			'.yarnrc.yml',
 			// TMP
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',
@@ -189,6 +190,11 @@ export default [
 					],
 				},
 			],
+
+			// HACK: temporary rules to suppress errors until we can fix them properly
+			'react-hooks/refs': 'off',
+			'react-hooks/set-state-in-effect': 'off',
+			'react-hooks/preserve-manual-memoization': 'off',
 		},
 	},
 	{

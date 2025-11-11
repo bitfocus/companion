@@ -42,14 +42,14 @@ export function ImportFullWizard({
 					connectionIdRemapping,
 				})
 				.then((res) => {
-					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
+					notifier.show(`Import successful`, `Page was imported successfully`, 10000)
 					console.log('remap response', res)
 					if (res) {
 						setConnectionRemap(res)
 					}
 				})
 				.catch((e) => {
-					notifier.current?.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
+					notifier.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
 					console.error('import failed', e)
 				})
 		},
@@ -190,7 +190,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			})
 			.catch((e) => {
 				console.log('import failed', e)
-				notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
+				notifier.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
 			})
 		console.log('do import!')
 	}, [importFullMutation, notifier, config, snapshotKeys, fullReset])

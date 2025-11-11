@@ -24,7 +24,7 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 		if (confirm('Are you sure you want to delete this backup file?')) {
 			deleteBackupFileMutation.mutateAsync({ ruleId, filePath: backup.filePath }).catch((err) => {
 				console.error('Error deleting backup:', err)
-				notifier.current?.show('Error', `Failed to delete backup file: ${err.message || err}`, 5000)
+				notifier.show('Error', `Failed to delete backup file: ${err.message || err}`, 5000)
 			})
 		}
 	}, [deleteBackupFileMutation, notifier, ruleId, backup.filePath])
@@ -97,11 +97,11 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 		runBackupNowMutation
 			.mutateAsync({ ruleId })
 			.then(() => {
-				notifier.current?.show('Success', 'Backup created successfully', 3000)
+				notifier.show('Success', 'Backup created successfully', 3000)
 			})
 			.catch((err) => {
 				console.error('Error running backup now:', err)
-				notifier.current?.show('Error', `${err.message || err || 'Failed to create backup'}`, 5000)
+				notifier.show('Error', `${err.message || err || 'Failed to create backup'}`, 5000)
 			})
 	}, [runBackupNowMutation, notifier, ruleId])
 

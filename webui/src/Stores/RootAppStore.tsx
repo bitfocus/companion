@@ -12,13 +12,13 @@ import type { VariablesStore } from './VariablesStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { HelpModalRef } from '~/Instances/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
-import type { WhatsNewModalRef } from '~/WhatsNewModal.js'
+import type { WhatsNewModalRef } from '~/WhatsNewModal/WhatsNew.js'
 import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
 export interface RootAppStore {
-	readonly notifier: React.RefObject<NotificationsManagerRef> // TODO - this is not good
+	readonly notifier: NotificationsManagerRef
 	readonly helpViewer: React.RefObject<HelpModalRef> // TODO - this is not good
 	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good
 

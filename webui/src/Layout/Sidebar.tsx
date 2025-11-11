@@ -221,7 +221,7 @@ export const MySidebar = memo(function MySidebar() {
 			</div>
 			<CSidebarNav className="nav-secondary border-top">
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_blank" />
+				<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
 					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
 					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
@@ -327,6 +327,38 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 		if (sidebarState.showToggle) setVisibleMobile(false)
 	}, [sidebarState.showToggle])
 
+	const handleOnClick = useCallback(
+		(event: Event) => {
+			const target = event.target as HTMLAnchorElement
+			if (
+				target &&
+				target.classList.contains('nav-link') &&
+				!target.classList.contains('nav-group-toggle') &&
+				sidebarState.showToggle
+			) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle]
+	)
+
+	const handleKeyup = useCallback(
+		(event: Event) => {
+			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle, sidebarRef]
+	)
+	const handleClickOutside = useCallback(
+		(event: Event) => {
+			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle, sidebarRef]
+	)
+
 	useEffect(() => {
 		window.addEventListener('mouseup', handleClickOutside)
 		window.addEventListener('keyup', handleKeyup)
@@ -341,30 +373,7 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 
 			sideBarElement?.removeEventListener('mouseup', handleOnClick)
 		}
-	})
-
-	const handleKeyup = (event: Event) => {
-		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-			setVisibleMobile(false)
-		}
-	}
-	const handleClickOutside = (event: Event) => {
-		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-			setVisibleMobile(false)
-		}
-	}
-
-	const handleOnClick = (event: Event) => {
-		const target = event.target as HTMLAnchorElement
-		if (
-			target &&
-			target.classList.contains('nav-link') &&
-			!target.classList.contains('nav-group-toggle') &&
-			sidebarState.showToggle
-		) {
-			setVisibleMobile(false)
-		}
-	}
+	}, [sidebarRef, handleOnClick, handleKeyup, handleClickOutside])
 
 	return (
 		<>

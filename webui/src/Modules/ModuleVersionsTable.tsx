@@ -264,7 +264,7 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 				if (failureReason) {
 					console.error('Failed to uninstall module', failureReason)
 
-					notifier.current?.show('Failed to uninstall module', failureReason, 5000)
+					notifier.show('Failed to uninstall module', failureReason, 5000)
 				}
 			})
 			.catch((err) => {
@@ -312,7 +312,7 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 				if (failureReason) {
 					console.error('Failed to install module', failureReason)
 
-					notifier.current?.show('Failed to install module', failureReason, 5000)
+					notifier.show('Failed to install module', failureReason, 5000)
 				}
 			})
 			.catch((err) => {

@@ -5,7 +5,7 @@ import type { CompanionOptionValues } from '@companion-module/base'
 import { cloneDeep } from 'lodash-es'
 import { toJS } from 'mobx'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { type GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 
 export function useOptionsVisibility(
@@ -67,15 +67,15 @@ export function parseIsVisibleFn(
 					try {
 						const val = ResolveExpression(
 							expression,
-							(name) => {
-								if (name.startsWith('this:')) {
-									return options[name.slice(5)] as any
-								} else if (name.startsWith('options:')) {
-									return options[name.slice(8)] as any
-								} else if (name.startsWith('data:')) {
-									return userData[name.slice(5)]
+							(props: GetVariableValueProps) => {
+								if (props.label === 'this') {
+									return options[props.name] as any
+								} else if (props.label === 'options') {
+									return options[props.name] as any
+								} else if (props.label === 'data') {
+									return userData[props.name]
 								} else {
-									throw new Error(`Unknown variable "${name}"`)
+									throw new Error(`Unknown variable "${props.variableId}"`)
 								}
 							},
 							ExpressionFunctions

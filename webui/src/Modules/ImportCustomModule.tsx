@@ -24,13 +24,13 @@ export function ImportModules(): React.JSX.Element {
 				enabled: !!importSessionId,
 				onData: (data) => {
 					if (data === null) {
-						notifier.current?.close(NOTIFICATION_ID_IMPORT)
+						notifier.close(NOTIFICATION_ID_IMPORT)
 					} else {
 						const progress = data as number | null
 						if (progress === null) {
-							notifier.current?.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
+							notifier.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
 						} else {
-							notifier.current?.show(
+							notifier.show(
 								'Importing module bundle...',
 								`${Math.round(progress * 100)}% complete`,
 								null,
@@ -44,7 +44,7 @@ export function ImportModules(): React.JSX.Element {
 	)
 	useEffect(() => {
 		if (!importSessionId) {
-			notifier.current?.close(NOTIFICATION_ID_IMPORT)
+			notifier.close(NOTIFICATION_ID_IMPORT)
 		}
 	}, [notifier, importSessionId])
 
@@ -74,7 +74,7 @@ export function ImportModules(): React.JSX.Element {
 							if (failureReason) {
 								console.error('Failed to install module', failureReason)
 
-								notifier.current?.show('Failed to install module', failureReason, 5000)
+								notifier.show('Failed to install module', failureReason, 5000)
 							}
 
 							setImportError(null)
@@ -117,7 +117,7 @@ export function ImportModules(): React.JSX.Element {
 			}
 
 			setImportError(null)
-			notifier.current?.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
+			notifier.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 			console.log(`start import of ${newFile.size} bytes`)
 
 			const hasher = CryptoJS.algo.SHA1.create()
@@ -178,8 +178,8 @@ export function ImportModules(): React.JSX.Element {
 				.catch((e) => {
 					console.error('failed', e)
 
-					notifier.current?.close(NOTIFICATION_ID_IMPORT)
-					notifier.current?.show('Importing module bundle...', 'Failed!', 5000)
+					notifier.close(NOTIFICATION_ID_IMPORT)
+					notifier.show('Importing module bundle...', 'Failed!', 5000)
 				})
 		},
 		[

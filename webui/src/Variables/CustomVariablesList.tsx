@@ -205,7 +205,7 @@ function AddVariablePanel() {
 				.then((res) => {
 					console.log('done with', res)
 					if (res) {
-						notifier.current?.show(`Failed to create variable`, res, 5000)
+						notifier.show(`Failed to create variable`, res, 5000)
 					}
 
 					// clear value
@@ -216,7 +216,7 @@ function AddVariablePanel() {
 				})
 				.catch((e) => {
 					console.error('Failed to create variable')
-					notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
+					notifier.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
 				})
 		},
 		[createMutation, notifier, panelCollapseHelper, newName]

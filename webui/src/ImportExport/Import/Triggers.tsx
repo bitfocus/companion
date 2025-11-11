@@ -66,14 +66,14 @@ export function ImportTriggersTab({
 					replaceExisting: doReplace,
 				})
 				.then((res) => {
-					notifier.current?.show(`Import successful`, `Triggers were imported successfully`, 10000)
+					notifier.show(`Import successful`, `Triggers were imported successfully`, 10000)
 					console.log('remap response', res)
 					if (res) {
 						setConnectionRemap(res)
 					}
 				})
 				.catch((e) => {
-					notifier.current?.show(`Import failed`, `Triggers import failed with: "${e}"`, 10000)
+					notifier.show(`Import failed`, `Triggers import failed with: "${e}"`, 10000)
 					console.error('import failed', e)
 				})
 		},

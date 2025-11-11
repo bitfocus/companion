@@ -246,7 +246,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
 	const onCopied = useCallback(() => {
-		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
+		notifier.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [notifier])
 
 	return (
