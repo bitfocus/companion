@@ -469,8 +469,8 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			},
 
 			surface_set_position: {
-				label: 'Surface: Set position',
-				description: 'Set the absolute position offset of a surface',
+				label: 'Surface: Set offset',
+				description: 'Set the absolute offset of a surface relative to the button grid',
 				options: [
 					...CHOICES_SURFACE_ID_WITH_VARIABLES,
 
@@ -496,8 +496,8 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			},
 
 			surface_adjust_position: {
-				label: 'Surface: Adjust position',
-				description: 'Adjust the position offset of a surface by a relative amount',
+				label: 'Surface: Adjust offset',
+				description: 'Adjust the offset of a surface relative to the button grid by a relative amount',
 				options: [
 					...CHOICES_SURFACE_ID_WITH_VARIABLES,
 
