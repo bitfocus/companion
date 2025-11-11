@@ -64,7 +64,7 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
-			[`${normalizedBase}/docs`]: {
+			[`${normalizedBase}/user-guide`]: {
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},

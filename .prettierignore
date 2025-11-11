@@ -16,3 +16,4 @@ bundled-modules
 
 companion/test/Upgrade/*/*.*.json
 webui/public/_deps
+webui/public/whatsnew
