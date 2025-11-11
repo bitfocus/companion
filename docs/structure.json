@@ -66,11 +66,11 @@
 			},
 			{
 				"label": "Surfaces",
-				"file": "user-guide/3_config/surfaces.md"
+				"file": "user-guide/3_config/surfaces.md",
 				"children": [
 					{
 						"label": "Page Permissions",
-						"file": "3_config/surfaces/pagepermissions.md"
+						"file": "user-guide/3_config/pagepermissions.md"
 					}
 				]
 			},
