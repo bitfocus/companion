@@ -9,7 +9,8 @@ Supported operators include:
 - Ternary operator:
   - Conditional ternary: `a ? b : c`
 - Binary operators:
-  - Addition (numbers); String Append (a or b are non-numeric strings): `a + b`
+  - Addition: `a + b`
+  - String concatenation: `a .. b`
   - Subtraction: `a - b`
   - Multiplication: `a * b`
   - Division: `a / b`
@@ -43,8 +44,7 @@ Supported operators include:
   - Object/array lookup: `$(my:var)['some-prop']`
 - Assignment of temporary variables:
   - Assignment: `a = 1`
-  - Addition assignment (numbers): `a += 1`
-  - String-append assignment (a or b are strings): `a += b`
+  - Addition assignment: `a += 1`
   - Subtraction assignment: `a -= 1`
   - Multiplication assignment: `a *= 1`
   - Division assignment: `a /= 1`
