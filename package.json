@@ -91,6 +91,7 @@
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
-    "@types/express-serve-static-core": "^5.1.0"
+    "@types/express-serve-static-core": "^5.1.0",
+    "jsep@npm:^1.4.0": "patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch"
   }
 }

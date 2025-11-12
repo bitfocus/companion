@@ -20,7 +20,7 @@
     "@jsep-plugin/numbers": "^1.0.2",
     "@jsep-plugin/object": "^1.2.2",
     "@jsep-plugin/template": "^1.0.5",
-    "jsep": "^1.4.0",
+    "jsep": "patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch",
     "jsonpath-plus": "^10.3.0",
     "ps-tree": "^1.2.0",
     "semver": "^7.7.3",

@@ -1,0 +1,15 @@
+diff --git a/dist/jsep.js b/dist/jsep.js
+index ffa8196c6c66a81d4f6e3b3f811789500ad14775..8a39ef155e5c2017b7765385ad79ca9eb433a166 100644
+--- a/dist/jsep.js
++++ b/dist/jsep.js
+@@ -700,6 +700,10 @@ class Jsep {
+ 			else if (ch === Jsep.PERIOD_CODE || optional) {
+ 				if (optional) {
+ 					this.index--;
++				} else if (this.expr.charCodeAt(this.index) === Jsep.PERIOD_CODE) {
++					// allow '..' as an operator (note that we already advanced this.index, above)
++					this.index -= 2;
++					break;
+ 				}
+ 				this.gobbleSpaces();
+ 				node = {

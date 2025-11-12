@@ -2127,7 +2127,7 @@ __metadata:
     "@jsep-plugin/object": "npm:^1.2.2"
     "@jsep-plugin/template": "npm:^1.0.5"
     "@types/semver": "npm:^7.7.1"
-    jsep: "npm:^1.4.0"
+    jsep: "patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch"
     jsonpath-plus: "npm:^10.3.0"
     ps-tree: "npm:^1.2.0"
     semver: "npm:^7.7.3"
@@ -16681,10 +16681,17 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"jsep@npm:^1.4.0":
+"jsep@npm:1.4.0":
   version: 1.4.0
   resolution: "jsep@npm:1.4.0"
   checksum: 10c0/fe60adf47e050e22eadced42514a51a15a3cf0e2d147896584486acd8ee670fc16641101b9aeb81f4aaba382043d29744b7aac41171e8106515b14f27e0c7116
+  languageName: node
+  linkType: hard
+
+"jsep@patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch":
+  version: 1.4.0
+  resolution: "jsep@patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch::version=1.4.0&hash=40380f"
+  checksum: 10c0/983e29ed44d648cf4e7b2cf1cbed06e982f68f28169894e74e649a319084e8665ba2269cf958b4333b58ca7d1c2d0093dc9ecf953aaaa01626c90cca1e39c26f
   languageName: node
   linkType: hard
 
