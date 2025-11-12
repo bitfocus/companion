@@ -1,17 +1,18 @@
 import React, {
 	createContext,
-	CSSProperties,
 	memo,
-	ReactNode,
 	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
+	type CSSProperties,
+	type ReactNode,
 } from 'react'
 import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop } from '@coreui/react'
 import {
+	type IconDefinition,
 	faFileImport,
 	faCog,
 	faClipboardList,
@@ -26,8 +27,8 @@ import {
 	faBug,
 	faUsers,
 	faComments,
-	IconDefinition,
 	faSquareCaretRight,
+	faPuzzlePiece,
 	faInfo,
 	faStar,
 	faHatWizard,
@@ -177,15 +178,12 @@ export const MySidebar = memo(function MySidebar() {
 				</CSidebarBrand>
 			</CSidebarHeader>
 			<CSidebarNav className="nav-main-scroller">
-				<SidebarMenuItemGroup
+				<SidebarMenuItem
 					name="Connections"
 					icon={faPlug}
 					notifications={ConnectionsTabNotifyIcon}
 					path="/connections"
-				>
-					<SidebarMenuItem name="Configured" icon={null} path="/connections/configured" />
-					<SidebarMenuItem name="Modules" icon={null} path="/connections/modules" />
-				</SidebarMenuItemGroup>
+				/>
 				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
 				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
 					<SidebarMenuItem name="Configured" icon={null} path="/surfaces/configured" />
@@ -198,6 +196,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Internal" icon={null} path="/variables/connection/internal" />
 					<SidebarVariablesGroups />
 				</SidebarMenuItemGroup>
+				<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
 				<SidebarMenuItemGroup name="Settings" icon={faCog} path="/settings">
 					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
 					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
@@ -222,7 +221,7 @@ export const MySidebar = memo(function MySidebar() {
 			</div>
 			<CSidebarNav className="nav-secondary border-top">
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_blank" />
+				<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
 					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
 					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
@@ -248,7 +247,7 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 				<SidebarMenuItem
 					key={connectionInfo.id}
 					name={connectionInfo.label}
-					subheading={modules.getModuleFriendlyName(connectionInfo.moduleId)}
+					subheading={modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)}
 					icon={null}
 					path={`/variables/connection/${connectionInfo.label}`}
 				/>
@@ -328,6 +327,38 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 		if (sidebarState.showToggle) setVisibleMobile(false)
 	}, [sidebarState.showToggle])
 
+	const handleOnClick = useCallback(
+		(event: Event) => {
+			const target = event.target as HTMLAnchorElement
+			if (
+				target &&
+				target.classList.contains('nav-link') &&
+				!target.classList.contains('nav-group-toggle') &&
+				sidebarState.showToggle
+			) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle]
+	)
+
+	const handleKeyup = useCallback(
+		(event: Event) => {
+			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle, sidebarRef]
+	)
+	const handleClickOutside = useCallback(
+		(event: Event) => {
+			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle, sidebarRef]
+	)
+
 	useEffect(() => {
 		window.addEventListener('mouseup', handleClickOutside)
 		window.addEventListener('keyup', handleKeyup)
@@ -342,30 +373,7 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 
 			sideBarElement?.removeEventListener('mouseup', handleOnClick)
 		}
-	})
-
-	const handleKeyup = (event: Event) => {
-		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-			setVisibleMobile(false)
-		}
-	}
-	const handleClickOutside = (event: Event) => {
-		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-			setVisibleMobile(false)
-		}
-	}
-
-	const handleOnClick = (event: Event) => {
-		const target = event.target as HTMLAnchorElement
-		if (
-			target &&
-			target.classList.contains('nav-link') &&
-			!target.classList.contains('nav-group-toggle') &&
-			sidebarState.showToggle
-		) {
-			setVisibleMobile(false)
-		}
-	}
+	}, [sidebarRef, handleOnClick, handleKeyup, handleClickOutside])
 
 	return (
 		<>

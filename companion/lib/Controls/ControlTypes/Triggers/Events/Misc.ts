@@ -1,5 +1,5 @@
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
-import LogController, { Logger } from '../../../../Log/Controller.js'
+import LogController, { type Logger } from '../../../../Log/Controller.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
 

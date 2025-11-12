@@ -10,7 +10,7 @@ import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { ExpressionVariableCollections } from './ExpressionVariableCollections.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { validateExpressionVariableControlId } from './Util.js'
-import {
+import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
 	ExpressionVariableUpdateInitOp,

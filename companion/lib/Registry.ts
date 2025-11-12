@@ -2,20 +2,20 @@
 import EventEmitter from 'events'
 import fs from 'fs-extra'
 import express from 'express'
-import LogController, { Logger } from './Log/Controller.js'
+import LogController, { type Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
 import { GraphicsController } from './Graphics/Controller.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
-import { DataUserConfig } from './Data/UserConfig.js'
+import type { DataUserConfig } from './Data/UserConfig.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
 import { PageController } from './Page/Controller.js'
 import { ServiceController } from './Service/Controller.js'
 import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
-import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
+import { isPackaged, sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
 import { DataMetrics } from './Data/Metrics.js'
 import { ImportExportController } from './ImportExport/Controller.js'
@@ -23,12 +23,14 @@ import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
-import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import path from 'path'
 
-const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
+const pkgInfoStr = await fs.readFile(
+	isPackaged() ? path.join(__dirname, './package.json') : new URL('../package.json', import.meta.url)
+)
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
 
 let buildNumber: string
@@ -51,13 +53,6 @@ try {
 if (process.env.COMPANION_IPC_PARENT && !process.send) {
 	console.error('COMPANION_IPC_PARENT is set, but process.send is undefined')
 	process.exit(1)
-}
-
-// Setup support for HTTP_PROXY before anything might use it
-if (process.env.NODE_USE_ENV_PROXY) {
-	// HACK: This is temporary and should be removed once https://github.com/nodejs/node/pull/57165 has been backported to node 22
-	const envHttpProxyAgent = new EnvHttpProxyAgent()
-	setGlobalDispatcher(envHttpProxyAgent)
 }
 
 /**
@@ -228,6 +223,7 @@ export class Registry {
 			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
 			this.internalModule = new InternalController(
+				this.#appInfo,
 				this.controls,
 				pageStore,
 				this.instance,

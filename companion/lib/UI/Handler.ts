@@ -15,7 +15,7 @@ import type { Server as HttpServer } from 'http'
 import type { Server as HttpsServer } from 'https'
 import { applyWSSHandler } from '@trpc/server/adapters/ws'
 import { WebSocketServer } from 'ws'
-import { AppRouter, createTrpcWsContext } from './TRPC.js'
+import { createTrpcWsContext, type AppRouter } from './TRPC.js'
 import { nanoid } from 'nanoid'
 
 export class UIHandler {

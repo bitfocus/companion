@@ -1,15 +1,15 @@
-import { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { CButtonGroup, CButton } from '@coreui/react'
 import { faChevronLeft, faChevronRight, faPlus, faClone, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
-import { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
+import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { EditActionsRelease } from './EditActionsRelease.js'
-import { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
+import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
 export interface ControlActionStepTabProps {
 	service: IControlActionStepsAndSetsService

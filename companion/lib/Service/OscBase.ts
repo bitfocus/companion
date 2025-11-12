@@ -1,5 +1,5 @@
 import { ServiceBase } from './Base.js'
-import OSC, { OscReceivedMessage } from 'osc'
+import OSC, { type OscReceivedMessage } from 'osc'
 
 /**
  * Abstract class providing base functionality for OSC services.

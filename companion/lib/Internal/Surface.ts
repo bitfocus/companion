@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { combineRgb, CompanionVariableValues } from '@companion-module/base'
+import { combineRgb, type CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import debounceFn from 'debounce-fn'
 import type {
@@ -155,14 +155,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		this.#controlsController = controlsController
 		this.#pageStore = pageStore
 
-		setImmediate(() => {
-			this.emit('setVariables', {
-				't-bar': 0,
-				jog: 0,
-				shuttle: 0,
-			})
-		})
-
 		const debounceUpdateVariableDefinitions = debounceFn(() => this.emit('regenerateVariables'), {
 			maxWait: 100,
 			wait: 20,
@@ -256,20 +248,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	}
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {
-		const variables: VariableDefinitionTmp[] = [
-			{
-				label: 'XKeys: T-bar position',
-				name: 't-bar',
-			},
-			{
-				label: 'XKeys/Contour Shuttle: Shuttle position',
-				name: 'shuttle',
-			},
-			{
-				label: 'XKeys/Contour Shuttle: Jog position',
-				name: 'jog',
-			},
-		]
+		const variables: VariableDefinitionTmp[] = []
 
 		const surfaceInfos = this.#surfaceController.getDevicesList()
 		for (const surfaceGroup of surfaceInfos) {
@@ -490,14 +469,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			},
 
 			surface_set_position: {
-				label: 'Surface: Set position',
-				description: 'Set the absolute position offset of a surface',
+				label: 'Surface: Set offset',
+				description: 'Set the absolute offset of a surface relative to the button grid',
 				options: [
 					...CHOICES_SURFACE_ID_WITH_VARIABLES,
 
 					{
 						type: 'number',
-						label: 'X Offset',
+						label: 'Horizontal Offset',
 						id: 'x_offset',
 						default: 0,
 						min: 0,
@@ -506,7 +485,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					},
 					{
 						type: 'number',
-						label: 'Y Offset',
+						label: 'Vertical Offset',
 						id: 'y_offset',
 						default: 0,
 						min: 0,
@@ -517,27 +496,27 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			},
 
 			surface_adjust_position: {
-				label: 'Surface: Adjust position',
-				description: 'Adjust the position offset of a surface by a relative amount',
+				label: 'Surface: Adjust offset',
+				description: 'Adjust the offset of a surface relative to the button grid by a relative amount',
 				options: [
 					...CHOICES_SURFACE_ID_WITH_VARIABLES,
 
 					{
 						type: 'number',
-						label: 'X Offset Adjustment',
+						label: 'Horizontal Offset Adjustment',
 						id: 'x_adjustment',
 						default: 0,
-						min: -500,
-						max: 500,
+						min: -100,
+						max: 100,
 						step: 1,
 					},
 					{
 						type: 'number',
-						label: 'Y Offset Adjustment',
+						label: 'Vertical Offset Adjustment',
 						id: 'y_adjustment',
 						default: 0,
-						min: -500,
-						max: 500,
+						min: -100,
+						max: 100,
 						step: 1,
 					},
 				],

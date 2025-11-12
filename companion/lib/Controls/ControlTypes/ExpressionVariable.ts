@@ -15,14 +15,14 @@ import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesC
 import type { ControlDependencies } from '../ControlDependencies.js'
 import { EntityListPoolExpressionVariable } from '../Entities/EntityListPoolExpressionVariable.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import {
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type {
 	ClientExpressionVariableData,
 	ExpressionVariableModel,
 	ExpressionVariableOptions,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import jsonPatch from 'fast-json-patch'
-import { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
+import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 
 /**
@@ -126,7 +126,7 @@ export class ControlExpressionVariable
 			this.options = storage.options || this.options
 			this.entities.loadStorage(storage, true, isImport)
 
-			if (isImport) this.#postProcessImport()
+			if (isImport) setImmediate(() => this.#postProcessImport())
 			else this.commitChange()
 		}
 	}

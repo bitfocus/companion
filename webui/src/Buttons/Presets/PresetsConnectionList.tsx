@@ -4,7 +4,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { PresetDefinitionsStore } from './PresetDefinitionsStore'
+import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
 
 interface PresetsConnectionListProps {
 	presetsDefinitionsStore: PresetDefinitionsStore
@@ -27,8 +27,12 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 		if (!vals || Object.values(vals).length === 0) return ''
 
 		const connectionInfo = connections.getInfo(id)
-		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.moduleId) : undefined
-		const compactName = connectionInfo ? modules.getModuleFriendlyName(connectionInfo.moduleId) : undefined
+		const moduleInfo = connectionInfo
+			? modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
+			: undefined
+		const compactName = connectionInfo
+			? modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)
+			: undefined
 
 		return (
 			<CButton

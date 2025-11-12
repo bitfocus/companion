@@ -3,7 +3,7 @@ import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
-import { UserConfigProps } from '../Components/Common.js'
+import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
 import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
 

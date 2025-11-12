@@ -24,15 +24,15 @@ import type {
 import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import {
 	FeedbackEntitySubType,
-	SomeSocketEntityLocation,
 	type FeedbackEntityModel,
+	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
 import type { IPageStore } from '../Page/Store.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
-import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 import type { ControlsController } from '../Controls/Controller.js'

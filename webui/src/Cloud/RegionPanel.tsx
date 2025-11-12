@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react'
 import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
-import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
+import type { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 import classNames from 'classnames'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc, useMutationExt } from '~/Resources/TRPC'

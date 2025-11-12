@@ -17,6 +17,7 @@ import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from './Resources/TRPC.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
+import { MonacoLoader } from './Resources/MonacoLoader.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
@@ -80,6 +81,7 @@ export default function App(): React.JSX.Element {
 						</div>
 					</div>
 					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected && !shouldReload} />}>
+						<MonacoLoader />
 						<DndProvider
 							backend={useTouchBackend ? TouchBackend : HTML5Backend}
 							options={useTouchBackend ? { enableMouseEvents: true } : {}}
@@ -192,9 +194,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			}
 
 			// close toast
-			if (notifier.current) {
-				notifier.current.close(TOAST_ID)
-			}
+			notifier.close(TOAST_ID)
 
 			return null
 		})
@@ -204,7 +204,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 	}
 
 	const handleIdle = () => {
-		notifier.current?.show(
+		notifier.show(
 			'Session timeout',
 			'Your session is about to timeout, and Companion will be locked',
 			undefined,
@@ -215,9 +215,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			if (!v) {
 				return setTimeout(() => {
 					// close toast
-					if (notifier.current) {
-						notifier.current.close(TOAST_ID)
-					}
+					notifier.close(TOAST_ID)
 
 					setLocked()
 				}, TOAST_DURATION)
@@ -247,9 +245,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			})
 
 			// close toast
-			if (notifier.current) {
-				notifier.current.close(TOAST_ID)
-			}
+			notifier.close(TOAST_ID)
 		}
 	})
 

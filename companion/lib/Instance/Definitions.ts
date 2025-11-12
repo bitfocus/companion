@@ -26,12 +26,12 @@ import type {
 import LogController from '../Log/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import {
-	ActionEntityModel,
-	EntityModelBase,
 	EntityModelType,
 	FeedbackEntitySubType,
-	SomeEntityModel,
 	type FeedbackEntityModel,
+	type ActionEntityModel,
+	type EntityModelBase,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	ClientEntityDefinition,
@@ -40,8 +40,8 @@ import type {
 import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
-import { InstanceConfigStore } from './ConfigStore.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { InstanceConfigStore } from './ConfigStore.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 type InstanceDefinitionsEvents = {

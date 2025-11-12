@@ -2,9 +2,9 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleUp, faCopy, faFolderOpen, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import classNames from 'classnames'
-import { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
+import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -167,10 +167,7 @@ const ManualGroupRow = observer(function ManualGroupRow({
 						<span className="surface-id" title={group.id}>
 							{group.id}
 						</span>
-						<CopyToClipboard
-							text={group.id}
-							onCopy={() => notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)}
-						>
+						<CopyToClipboard text={group.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
 							<CButton size="sm" title="Copy group id" className="p-0 px-1">
 								<FontAwesomeIcon icon={faCopy} color="#000" />
 							</CButton>
@@ -249,23 +246,22 @@ const SurfaceRow = observer(function SurfaceRow({
 		>
 			<div className="grid-cell">{index !== null ? `#${index}` : ''}</div>
 			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
-				<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
-				{!!surface.hasFirmwareUpdates && (
-					<>
-						{' '}
-						<WindowLinkOpen href={surface.hasFirmwareUpdates.updaterDownloadUrl}>
-							<FontAwesomeIcon icon={faCircleUp} title="Firmware update is available" />
-						</WindowLinkOpen>
-					</>
-				)}
+				<div>
+					<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
+					{!!surface.hasFirmwareUpdates && (
+						<>
+							{' '}
+							<WindowLinkOpen href={surface.hasFirmwareUpdates.updaterDownloadUrl}>
+								<FontAwesomeIcon icon={faCircleUp} title="Firmware update is available" />
+							</WindowLinkOpen>
+						</>
+					)}
+				</div>
 				<div className="surface-id-row">
 					<span className="surface-id" title={surface.id}>
 						{surface.id}
 					</span>
-					<CopyToClipboard
-						text={surface.id}
-						onCopy={() => notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)}
-					>
+					<CopyToClipboard text={surface.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
 						<CButton size="sm" title="Copy surface id" className="p-0 px-1">
 							<FontAwesomeIcon icon={faCopy} color="#000" />
 						</CButton>

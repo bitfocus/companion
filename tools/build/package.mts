@@ -10,7 +10,7 @@ import { createRequire } from 'module'
 
 const require = createRequire(import.meta.url)
 
-// $.verbose = true
+$.verbose = true
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -67,7 +67,7 @@ if (platformInfo.runtimePlatform === 'win') {
 		}
 	}
 
-	const prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true })
+	const prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true, expandDirectories: false })
 	console.log(`Cleaning ${prebuildDirs.length} prebuild directories`)
 	for (const dirname of prebuildDirs) {
 		console.log(`pruning prebuilds from: ${dirname}`)
@@ -104,12 +104,14 @@ if (process.env.ELECTRON !== '0') {
 	const launcherPkgJsonPath = new URL('../../launcher/package.json', import.meta.url)
 	const launcherPkgJsonStr = await fs.readFile(launcherPkgJsonPath)
 
+	// Update the version if not a stable build
 	const versionInfo = await generateVersionString()
+	if (!versionInfo.includes('-stable-')) {
+		const launcherPkgJson = JSON.parse(launcherPkgJsonStr.toString())
+		launcherPkgJson.version = versionInfo
 
-	const launcherPkgJson = JSON.parse(launcherPkgJsonStr.toString())
-	launcherPkgJson.version = versionInfo
-
-	await fs.writeFile(launcherPkgJsonPath, JSON.stringify(launcherPkgJson))
+		await fs.writeFile(launcherPkgJsonPath, JSON.stringify(launcherPkgJson))
+	}
 
 	try {
 		const options: electronBuilder.Configuration = {

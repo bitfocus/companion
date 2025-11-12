@@ -1,23 +1,22 @@
-import { runInAction } from 'mobx'
+import { runInAction, type ObservableMap } from 'mobx'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC'
-import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
 
-export function useModuleStoreRefreshProgressSubscription(store: ModuleInfoStore): boolean {
+export function useModuleStoreRefreshProgressSubscription(
+	moduleStoreRefreshProgress: ObservableMap<string | null, number>
+): boolean {
 	useSubscription(
-		trpc.instances.modulesStore.watchRefreshProgress.subscriptionOptions(
-			{ moduleType: store.moduleType },
-			{
-				onStarted: () => {
-					runInAction(() => store.storeRefreshProgress.clear())
-				},
-				onData: (info) => {
-					runInAction(() => {
-						store.storeRefreshProgress.set(info.moduleId, info.percent)
-					})
-				},
-			}
-		)
+		trpc.instances.modulesStore.watchRefreshProgress.subscriptionOptions(undefined, {
+			onStarted: () => {
+				runInAction(() => moduleStoreRefreshProgress.clear())
+			},
+			onData: (info) => {
+				runInAction(() => {
+					const id = info.moduleInfo ? (`${info.moduleInfo.moduleType}:${info.moduleInfo.moduleId}` as const) : null
+					moduleStoreRefreshProgress.set(id, info.percent)
+				})
+			},
+		})
 	)
 
 	return true // always ready

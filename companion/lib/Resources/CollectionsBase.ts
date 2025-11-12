@@ -49,25 +49,31 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	}
 
 	/**
-	 * Replace all collections with imported collections
+	 * Replace Update all collections with imported collections
+	 * if `merge` is true, preserve existing entries with the same ID. (This could lead to sortOrder clashes, but it shouldn't matter)
+	 * TODO: add merge options? deal with sortOrder clashes?
 	 */
-	replaceCollections(collections: CollectionBase<TCollectionMetadata>[]): void {
+	replaceCollections(collections: CollectionBase<TCollectionMetadata>[], merge = false): void {
 		// Clear existing collections
-		this.#dbTable.clear()
-		this.data = []
+		if (!merge) {
+			this.#dbTable.clear()
+			this.data = []
+		}
 
 		// Import new collections
 		for (const collection of collections) {
-			this.#sortCollectionRecursively(collection)
-			this.data.push(collection)
-			this.#dbTable.set(collection.id, collection)
+			if (!merge || !this.#dbTable.get(collection.id)) {
+				this.#sortCollectionRecursively(collection)
+				this.data.push(collection)
+				this.#dbTable.set(collection.id, collection)
+			}
 		}
 
 		// Sort root level collections
 		this.data.sort((a, b) => a.sortOrder - b.sortOrder)
 
 		this.emitUpdate(this.data)
-
+		// remove collectionId fields from connection objects (i.e. this does not affect collection objects themselves)
 		this.removeUnknownCollectionReferences()
 	}
 
@@ -335,7 +341,6 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		return null
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	protected createTrpcRouterBase() {
 		const self = this
 		return {

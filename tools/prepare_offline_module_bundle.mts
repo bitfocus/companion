@@ -21,7 +21,7 @@ if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
 
-const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 10 // 50MB
+const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 20 // 20MB
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'

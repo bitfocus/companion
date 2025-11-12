@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, RefObject, useContext, useMemo } from 'react'
-import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import React, { createContext, useContext, useMemo, type RefObject } from 'react'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 
 export interface TriggersTableContextType {
 	deleteModalRef: RefObject<GenericConfirmModalRef>

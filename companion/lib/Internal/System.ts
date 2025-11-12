@@ -11,7 +11,7 @@
 
 import os from 'os'
 import { exec } from 'child_process'
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 import type { CompanionVariableValues } from '@companion-module/base'
@@ -31,6 +31,7 @@ import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import debounceFn from 'debounce-fn'
+import type { AppInfo } from '../Registry.js'
 
 const execAsync = promisify(exec)
 
@@ -92,6 +93,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	readonly #logger = LogController.createLogger('Internal/System')
 	readonly #customMessageLogger = LogController.createLogger('Custom')
 
+	readonly #appInfo: AppInfo
 	readonly #internalUtils: InternalModuleUtils
 	readonly #variableController: VariablesController
 	readonly #userConfigController: DataUserConfig
@@ -101,6 +103,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	#interfacesValues: CompanionVariableValues = {}
 
 	constructor(
+		appInfo: AppInfo,
 		internalUtils: InternalModuleUtils,
 		userConfigController: DataUserConfig,
 		variableController: VariablesController,
@@ -108,6 +111,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	) {
 		super()
 
+		this.#appInfo = appInfo
 		this.#internalUtils = internalUtils
 		this.#userConfigController = userConfigController
 		this.#variableController = variableController
@@ -140,6 +144,13 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 
 		debounceUpdateUserConfigVariables()
 		this.#userConfigController.on('keyChanged', debounceUpdateUserConfigVariables)
+
+		setImmediate(() => {
+			this.emit('setVariables', {
+				version: this.#appInfo.appVersion,
+				version_full: this.#appInfo.appBuild,
+			})
+		})
 	}
 
 	async #updateHostnameVariablesAtStartup() {
@@ -220,6 +231,14 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			{
 				label: 'System: IP of all network interfaces',
 				name: 'all_ip',
+			},
+			{
+				label: 'System: Version',
+				name: 'version',
+			},
+			{
+				label: 'System: Version (Full)',
+				name: 'version_full',
 			},
 			...this.#interfacesDefinitions,
 		]

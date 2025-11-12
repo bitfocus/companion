@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import path from 'path'
-import { Database as SQLiteDB, Statement } from 'better-sqlite3'
-import LogController, { Logger } from '../Log/Controller.js'
+import type { Database as SQLiteDB, Statement } from 'better-sqlite3'
+import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
 import { createSqliteDatabase } from './Util.js'
 

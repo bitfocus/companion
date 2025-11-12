@@ -15,7 +15,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
-import { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import type { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
@@ -42,14 +42,14 @@ export function ImportFullWizard({
 					connectionIdRemapping,
 				})
 				.then((res) => {
-					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
+					notifier.show(`Import successful`, `Page was imported successfully`, 10000)
 					console.log('remap response', res)
 					if (res) {
 						setConnectionRemap(res)
 					}
 				})
 				.catch((e) => {
-					notifier.current?.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
+					notifier.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
 					console.error('import failed', e)
 				})
 		},
@@ -91,19 +91,22 @@ export function ImportFullWizard({
 						<FullImportTab snapshot={snapshot} />
 					</MyErrorBoundary>
 				</CTabPane>
-				<CTabPane visible={activeTab === 'buttons'}>
-					<MyErrorBoundary>
-						{snapshot.controls ? (
-							<ImportPageWizard
-								snapshot={snapshot}
-								connectionRemap={connectionRemap}
-								setConnectionRemap={setConnectionRemap}
-								doImport={doSinglePageImport}
-							/>
-						) : (
-							''
-						)}
-					</MyErrorBoundary>
+				<CTabPane visible={activeTab === 'buttons'} style={{ height: '100%' }}>
+					<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+						<h4>Buttons</h4>
+						<MyErrorBoundary>
+							{snapshot.controls ? (
+								<ImportPageWizard
+									snapshot={snapshot}
+									connectionRemap={connectionRemap}
+									setConnectionRemap={setConnectionRemap}
+									doImport={doSinglePageImport}
+								/>
+							) : (
+								''
+							)}
+						</MyErrorBoundary>
+					</div>
 				</CTabPane>
 				<CTabPane visible={activeTab === 'triggers'}>
 					<MyErrorBoundary>
@@ -169,25 +172,28 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 		}))
 	}, [])
 
-	const importFullMutation = useMutationExt(trpc.importExport.importFull.mutationOptions())
-	const doImport = useCallback(
-		(e: React.MouseEvent<HTMLElement>) => {
-			const fullReset = e.currentTarget.getAttribute('data-fullreset') === 'true'
+	const [fullReset, setFullReset] = useState(true)
 
-			importFullMutation // TODO: 60s timeout?
-				.mutateAsync({ config: config, fullReset: fullReset })
-				.then(() => {
-					// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
-					window.location.reload()
-				})
-				.catch((e) => {
-					console.log('import failed', e)
-					notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
-				})
-			console.log('do import!')
-		},
-		[importFullMutation, notifier, config]
-	)
+	const importFullMutation = useMutationExt(trpc.importExport.importFull.mutationOptions())
+	const doImport = useCallback(() => {
+		// Make sure config matches the available data, so set false if data is missing.
+		for (const k in config) {
+			const key = k as keyof typeof config // get around TypeScript errors
+			config[key] &&= snapshotKeys.includes(k) // check-types doesn't like `key` as arg to `includes())`
+		}
+
+		importFullMutation // TODO: 60s timeout?
+			.mutateAsync({ config: config, fullReset: fullReset })
+			.then(() => {
+				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
+				window.location.reload()
+			})
+			.catch((e) => {
+				console.log('import failed', e)
+				notifier.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
+			})
+		console.log('do import!')
+	}, [importFullMutation, notifier, config, snapshotKeys, fullReset])
 
 	return (
 		<>
@@ -310,25 +316,29 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				setValue={setValue}
 				label="Settings"
 			/> */}
-			{/* This partial import is a bit flawed currently, it is resetting things that it shouldn't. Needs more work.
 			<CCallout color="success">
 				<h5>Import Selected Components</h5>
 				<p>
-					This preserves any unselected components in their current state, while resetting and importing the selected
-					components.
+					Full Import always resets the selected components before importing them. <br />
+					Checking{' '}
+					<em>
+						<strong>Perform full reset</strong>
+					</em>{' '}
+					will reset <strong>all</strong> components before importing the selected ones.
+					<br />
+					Full reset is generally the safer option as it reduces the chance of producing an inconsistent setup.
 				</p>
-				<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>
+				<CButton color={fullReset ? 'danger' : 'success'} onClick={doImport} disabled={validConfigKeys.length === 0}>
 					<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
 				</CButton>
-			</CCallout> */}
-			<CCallout color="danger">
-				<h5>Full Reset & Import</h5>
-				<p>
-					This will perform a <strong>full reset</strong> of all components, and then import any selected components.
-				</p>
-				<CButton color="primary" data-fullreset={true} onClick={doImport} disabled={validConfigKeys.length === 0}>
-					<FontAwesomeIcon icon={faFileImport} /> Full Reset & Import
-				</CButton>
+				<CFormCheck
+					id={'check_full_reset'}
+					label={'Perform full reset'}
+					checked={fullReset}
+					onChange={() => setFullReset((fullReset) => !fullReset)}
+					inline
+					style={{ marginLeft: '1em' }}
+				/>
 			</CCallout>
 		</>
 	)

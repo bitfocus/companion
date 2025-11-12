@@ -9,8 +9,8 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import React, { FormEvent, forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
-import { PagesStoreModel } from '~/Stores/PagesStore.js'
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -41,7 +41,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => setPageNumber(null), [])
 		const doAction = useCallback(
-			(e: FormEvent) => {
+			(e: React.FormEvent) => {
 				if (e) e.preventDefault()
 
 				setShow(false)

@@ -1,18 +1,44 @@
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { SomeExpressionNode } from './ExpressionParse.js'
 import type jsep from 'jsep'
+import { VARIABLE_UNKNOWN_VALUE, SplitVariableId } from '../Variables.js'
 
 interface ResolverState {
 	values: Record<string, any>
 	isComplete: boolean
 }
 
+export interface GetVariableValueProps {
+	variableId: string
+	label: string
+	name: string
+}
+
 export function ResolveExpression(
 	node: SomeExpressionNode,
-	getVariableValue: (name: string) => CompanionVariableValue | undefined,
-	functions: Record<string, (...args: any[]) => any> = {}
+	getVariableValueRaw: (props: GetVariableValueProps) => CompanionVariableValue | undefined,
+	functionsRaw: Record<string, (...args: any[]) => any> = {}
 ): CompanionVariableValue | undefined {
 	if (!node) throw new Error('Invalid expression')
+
+	const getVariableValue = (variableIdOrLabel: string, nameOrUndefined?: string) => {
+		if (nameOrUndefined !== undefined) {
+			return getVariableValueRaw({
+				variableId: `${variableIdOrLabel}:${nameOrUndefined}`,
+				label: variableIdOrLabel,
+				name: nameOrUndefined,
+			})
+		} else {
+			const [label, name] = SplitVariableId(variableIdOrLabel)
+
+			return getVariableValueRaw({ variableId: variableIdOrLabel, label, name })
+		}
+	}
+
+	const functions: typeof functionsRaw = {
+		...functionsRaw,
+		getVariable: getVariableValue,
+	}
 
 	const resolverState: ResolverState = {
 		values: {},
@@ -132,7 +158,10 @@ export function ResolveExpression(
 
 							if (!quasi.tail) {
 								const expression = node.expressions[i]
-								result += resolve(expression)
+
+								let value = resolve(expression)
+								if (value === undefined) value = VARIABLE_UNKNOWN_VALUE
+								result += value
 							}
 						}
 

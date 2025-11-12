@@ -12,13 +12,13 @@
 import { EventEmitter } from 'events'
 import {
 	LoupedeckBufferFormat,
-	LoupedeckDevice,
 	LoupedeckDisplayId,
 	LoupedeckModelId,
 	openLoupedeck,
+	type LoupedeckDevice,
 } from '@loupedeck/node'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
 import {
@@ -28,8 +28,8 @@ import {
 	LockConfigFields,
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import { ImageResult } from '../../Graphics/ImageResult.js'
+import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 
 const configFields: CompanionSurfaceConfigField[] = [
 	//
@@ -122,6 +122,24 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 			this.#loupedeck.modelId === LoupedeckModelId.LoupedeckCtV1 ||
 			this.#loupedeck.modelId === LoupedeckModelId.LoupedeckCtV2
 		) {
+			this.info.configFields = [
+				...this.info.configFields,
+				{
+					id: 'leftFaderValueVariable',
+					type: 'custom-variable',
+					label: 'Variable to store Left Fader value to',
+					tooltip:
+						'This will be a value between 0 and 256 representing the position of the last touch on the left strip.',
+				},
+				{
+					id: 'rightFaderValueVariable',
+					type: 'custom-variable',
+					label: 'Variable to store Right Fader value to',
+					tooltip:
+						'This will be a value between 0 and 256 representing the position of the last touch on the right strip.',
+				},
+			]
+
 			/**
 			 * Map the right touch strip to X-Keys T-Bar variable and left to X-Keys Shuttle variable
 			 * this isn't the final thing but at least makes use of the strip while waiting for a better solution
@@ -132,9 +150,9 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				const touch = data.changedTouches.find(
 					(touch) => touch.target.screen == LoupedeckDisplayId.Right || touch.target.screen == LoupedeckDisplayId.Left
 				)
-				if (touch && touch.target.screen == LoupedeckDisplayId.Right) {
+				if (touch && touch.target.screen == LoupedeckDisplayId.Right && this.config.rightFaderValueVariable) {
 					const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
-					this.emit('setVariable', 't-bar', val)
+					this.emit('setCustomVariable', this.config.rightFaderValueVariable, val)
 					this.#loupedeck
 						.drawSolidColour(LoupedeckDisplayId.Right, { red: 0, green: 0, blue: 0 }, 60, val + 7, 0, 0)
 						.catch((e) => {
@@ -145,9 +163,9 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 						.catch((e) => {
 							this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + e)
 						})
-				} else if (touch && touch.target.screen == LoupedeckDisplayId.Left) {
+				} else if (touch && touch.target.screen == LoupedeckDisplayId.Left && this.config.leftFaderValueVariable) {
 					const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
-					this.emit('setVariable', 'shuttle', val)
+					this.emit('setCustomVariable', this.config.leftFaderValueVariable, val)
 					this.#loupedeck
 						.drawSolidColour(LoupedeckDisplayId.Left, { red: 0, green: 0, blue: 0 }, 60, val + 7, 0, 0)
 						.catch((e) => {

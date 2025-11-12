@@ -1,5 +1,5 @@
-import LogController, { Logger } from '../../Log/Controller.js'
-import { IpcEventHandlers, IpcWrapper } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
+import { IpcWrapper, type IpcEventHandlers } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
 import semver from 'semver'
 import type express from 'express'
 import type {
@@ -27,6 +27,7 @@ import type {
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
 } from '@companion-module/base/dist/host-api/api.js'
+import type { ModuleRegisterMessage, ModuleToHostEventsInit } from '@companion-module/base/dist/host-api/versions.js'
 import type { InstanceStatus } from '../Status.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import {
@@ -43,11 +44,11 @@ import type { VariablesController } from '../../Variables/Controller.js'
 import type { ServiceOscSender } from '../../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import {
-	ActionEntityModel,
 	EntityModelType,
-	FeedbackEntityModel,
 	isValidFeedbackEntitySubType,
-	SomeEntityModel,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
@@ -73,7 +74,13 @@ export interface ConnectionChildHandlerDependencies {
 		secrets: unknown | null,
 		newUpgradeIndex: number | null
 	) => void
-	readonly debugLogLine: (connectionId: string, level: string, message: string) => void
+	readonly debugLogLine: (
+		connectionId: string,
+		time: number | null,
+		source: string,
+		level: string,
+		message: string
+	) => void
 }
 
 export class ConnectionChildHandler implements ChildProcessHandlerBase {
@@ -109,7 +116,8 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		deps: ConnectionChildHandlerDependencies,
 		monitor: RespawnMonitor,
 		connectionId: string,
-		apiVersion0: string
+		apiVersion0: string,
+		onRegister: (verificationToken: string) => Promise<void>
 	) {
 		this.logger = LogController.createLogger(`Instance/Connection/${connectionId}`)
 
@@ -122,7 +130,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		this.#label = connectionId // Give a default label until init is called
 		this.#expectsLabelUpdates = doesModuleExpectLabelUpdates(apiVersion)
 
-		const funcs: IpcEventHandlers<ModuleToHostEventsV0> = {
+		const funcs: IpcEventHandlers<ModuleToHostEventsV0 & ModuleToHostEventsInit> = {
+			register: async (msg: ModuleRegisterMessage) => {
+				// Call back to ProcessManager to handle registration
+				await onRegister(msg.verificationToken)
+			},
 			'log-message': this.#handleLogMessage.bind(this),
 			'set-status': this.#handleSetStatus.bind(this),
 			setActionDefinitions: this.#handleSetActionDefinitions.bind(this),
@@ -161,10 +173,10 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		const messageHandler = (msg: any) => {
 			this.#ipcWrapper.receivedMessage(msg)
 		}
-		monitor.child?.on('message', messageHandler)
+		monitor.on('message', messageHandler)
 
 		this.#unsubListeners = () => {
-			monitor.child?.off('message', messageHandler)
+			monitor.off('message', messageHandler)
 		}
 	}
 
@@ -685,7 +697,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 * Send a message to the module 'debug' log page
 	 */
 	#sendToModuleLog(level: LogLevel | 'system', message: string): void {
-		this.#deps.debugLogLine(this.connectionId, level, message)
+		this.#deps.debugLogLine(this.connectionId, Date.now(), 'Module', level, message)
 	}
 
 	/**

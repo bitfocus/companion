@@ -1,12 +1,13 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { DropdownChoice } from '@companion-module/base'
-import {
+import type {
 	CompanionInputFieldCheckboxExtended,
 	CompanionInputFieldCustomVariableExtended,
 	CompanionInputFieldDropdownExtended,
 	CompanionInputFieldNumberExtended,
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
+import type { CollectionBase } from './Collections.js'
 
 export type GridSize = { columns: number; rows: number }
 export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0' | 0 | -90 | 90 | 180
@@ -65,11 +66,15 @@ export interface SurfaceGroupConfig {
 	last_page_id: string
 	startup_page_id: string
 	use_last_page: boolean
+	restrict_pages?: boolean
+	allowed_page_ids?: string[]
 
-	/** @deprecated. replaced by last_page_id */
+	/** @deprecated. replaced by last_page_id but still used for export */
 	last_page?: number
-	/** @deprecated. replaced by startup_page_id */
+	/** @deprecated. replaced by startup_page_id but still used for export */
 	startup_page?: number
+	/** @deprecated.  used for export */
+	allowed_pages?: number[]
 }
 
 export interface SurfacePanelConfig {
@@ -121,7 +126,16 @@ export interface OutboundSurfaceInfo {
 	enabled: boolean
 	address: string
 	port: number
+
+	collectionId: string | null
+	sortOrder: number
 }
+
+export interface OutboundSurfaceCollectionData {
+	enabled: boolean
+}
+
+export type OutboundSurfaceCollection = CollectionBase<OutboundSurfaceCollectionData>
 
 export type OutboundSurfacesUpdate =
 	| OutboundSurfacesUpdateInitOp

@@ -7,7 +7,7 @@ import './Resources/FixImports.js'
 import '@julusian/segfault-raub'
 
 // Setup logging before anything else runs
-import './Log/Controller.js'
+import logger from './Log/Controller.js'
 
 // Now we can think about startup
 import { Command } from 'commander'
@@ -17,7 +17,6 @@ import path from 'path'
 import fs from 'fs-extra'
 import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
-import logger from './Log/Controller.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
 import net from 'net'
@@ -100,7 +99,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		process.exit(1)
 	}
 
-	let adminIp = options.adminAddress || '0.0.0.0' // default to admin global
+	let adminIp = options.adminAddress || '::' // default to admin global
 
 	if (options.adminInterface) {
 		adminIp = null

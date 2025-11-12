@@ -11,7 +11,7 @@ import type { AppInfo } from '../Registry.js'
 import { promisify } from 'util'
 import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import { InstanceConfigStore } from './ConfigStore.js'
+import type { InstanceConfigStore } from './ConfigStore.js'
 import crypto from 'node:crypto'
 import semver from 'semver'
 import { publicProcedure, router } from '../UI/TRPC.js'
@@ -22,7 +22,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
-const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 10 // 50MB
+const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 20 // 20MB
 const MAX_MODULE_BUNDLE_TAR_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
 /**
@@ -279,14 +279,13 @@ export class InstanceInstalledModulesManager {
 			uninstallModule: publicProcedure
 				.input(
 					z.object({
+						moduleType: z.enum(ModuleInstanceType),
 						moduleId: z.string(),
 						versionId: z.string(),
 					})
 				)
 				.mutation(async ({ input }) => {
-					const moduleType = ModuleInstanceType.Connection // TODO - dynamic
-
-					return this.#uninstallModule(moduleType, input.moduleId, input.versionId)
+					return this.#uninstallModule(input.moduleType, input.moduleId, input.versionId)
 				}),
 		})
 	}
@@ -339,7 +338,7 @@ export class InstanceInstalledModulesManager {
 		for await (const chunk of response.body as ReadableStream<Uint8Array>) {
 			bytesReceived += chunk.byteLength
 			if (bytesReceived > MAX_MODULE_TAR_SIZE) {
-				abortControl.abort()
+				setImmediate(() => abortControl.abort()) // Defer the abort, until the trpc call is finished
 				this.#logger.error(`Module too large to download safely`)
 				return 'Module is too large to download safely'
 			}

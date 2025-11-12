@@ -1,19 +1,19 @@
 import React, { useMemo, useRef } from 'react'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import {
-	EntityModelType,
-	SomeEntityModel,
-	SomeSocketEntityLocation,
 	stringifySocketEntityLocation,
+	type EntityModelType,
+	type SomeEntityModel,
+	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { findAllEntityIdsDeep } from './Util.js'
 import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEntitiesService.js'
 import { EditableEntityList } from './Components/EntityList.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { LocalVariablesStore } from './LocalVariablesStore.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { EntityEditorContextProvider } from './Components/EntityEditorContext.js'
 
 interface ControlEntitiesEditorProps {

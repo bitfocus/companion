@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import { EventEmitter } from 'events'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 
 interface PageStoreEvents {

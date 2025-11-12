@@ -1,5 +1,5 @@
 import z from 'zod'
-import type { ExportFormat } from './ExportFormat.js'
+import { zodExportFormat } from './ExportFormat.js'
 import type { UserConfigGridSize } from './UserConfigModel.js'
 
 export const zodClientResetSelection = z.object({
@@ -14,17 +14,26 @@ export const zodClientResetSelection = z.object({
 
 export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
 
-export interface ClientExportSelection {
-	buttons: boolean
-	triggers: boolean
-	customVariables: boolean
-	expressionVariables: boolean
-	connections: boolean
-	surfaces: boolean
-	includeSecrets: boolean
-	format: ExportFormat
-	filename?: string
-}
+const zodQueryBoolean = z.preprocess((val) => {
+	if (typeof val === 'string') {
+		return val === 'true' || val === '1'
+	}
+	return val
+}, z.boolean())
+
+export const zodClientExportSelection = z.object({
+	buttons: zodQueryBoolean,
+	connections: zodQueryBoolean,
+	surfaces: zodQueryBoolean,
+	triggers: zodQueryBoolean,
+	customVariables: zodQueryBoolean,
+	expressionVariables: zodQueryBoolean,
+	includeSecrets: zodQueryBoolean,
+	format: zodExportFormat,
+	filename: z.string().optional(),
+})
+
+export type ClientExportSelection = z.infer<typeof zodClientExportSelection>
 
 export const zodClientImportSelection = z.object({
 	buttons: z.boolean(),
@@ -50,10 +59,10 @@ export interface ClientImportObject {
 	type: 'page' | 'full'
 	instances: Record<string, ClientImportObjectInstance>
 	controls: boolean
-	customVariables: boolean
-	expressionVariables: boolean
 	surfaces: boolean
 	triggers: boolean | Record<string, { name: string }>
+	customVariables: boolean
+	expressionVariables: boolean
 	oldPageNumber?: number
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>

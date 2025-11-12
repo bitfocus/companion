@@ -27,15 +27,15 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
 import LogController from '../Log/Controller.js'
 import {
-	ActionEntityModel,
 	EntityModelType,
-	FeedbackEntityModel,
-	SomeEntityModel,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -53,6 +53,7 @@ import { InternalVariables } from './Variables.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type EventEmitter from 'node:events'
+import type { AppInfo } from '../Registry.js'
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -70,6 +71,7 @@ export class InternalController {
 	#initialized = false
 
 	constructor(
+		appInfo: AppInfo,
 		controlsController: ControlsController,
 		pageStore: IPageStore,
 		instanceController: InstanceController,
@@ -97,7 +99,7 @@ export class InternalController {
 			new InternalCustomVariables(internalUtils, variablesController),
 			new InternalPage(internalUtils, pageStore),
 			new InternalSurface(internalUtils, surfaceController, controlsController, pageStore),
-			new InternalSystem(internalUtils, userConfigController, variablesController, requestExit),
+			new InternalSystem(appInfo, internalUtils, userConfigController, variablesController, requestExit),
 			new InternalTriggers(internalUtils, controlsController),
 			new InternalVariables(internalUtils, controlsController, pageStore),
 		]

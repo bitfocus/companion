@@ -1,8 +1,7 @@
 import { CButton } from '@coreui/react'
 import classNames from 'classnames'
 import { cloneDeep } from 'lodash-es'
-import React from 'react'
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 export interface TableVisibilityHelper<T extends Record<string, any>> {
 	visibility: T

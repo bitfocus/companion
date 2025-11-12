@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { SplitVariableId } from '../Resources/Util.js'
+import { SplitVariableId } from '@companion-app/shared/Variables.js'
 import LogController from '../Log/Controller.js'
 import type {
 	FeedbackForVisitor,

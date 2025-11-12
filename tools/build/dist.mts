@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-import { generateVersionString } from '../lib.mts'
+import { generateMiniVersionString, generateVersionString } from '../lib.mts'
 import archiver from 'archiver'
 import { $, fs, usePowerShell, argv } from 'zx'
 import { createRequire } from 'node:module'
@@ -8,7 +8,7 @@ import path from 'node:path'
 import yaml from 'yaml'
 import { determinePlatformInfo } from './util.mts'
 
-// $.verbose = true
+$.verbose = true
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -42,7 +42,7 @@ async function zipDirectory(sourceDir: string, outPath: string): Promise<void> {
 
 await $`tsx tools/build_writefile.mts`
 
-const buildString = await generateVersionString()
+const buildString = await generateMiniVersionString()
 
 // Trash old
 await fs.remove('dist')
@@ -54,10 +54,11 @@ await $`yarn workspace companion build`
 // Build webui
 await $`yarn workspace @companion-app/webui build`
 await $`yarn workspace @companion-app/launcher-ui build`
+await $`yarn workspace @companion-app/docs build`
 
 // generate the 'static' zip files to serve
 await zipDirectory('./webui/build', 'dist/webui.zip')
-await zipDirectory('./docs', 'dist/docs.zip')
+await zipDirectory('./docs/build', 'dist/docs.zip')
 
 // generate a package.json for the required native dependencies
 const require = createRequire(import.meta.url)

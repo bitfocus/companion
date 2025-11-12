@@ -14,29 +14,34 @@ import {
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ModuleStoreModuleInfoStore, ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
+import type {
+	ModuleStoreModuleInfoStore,
+	ModuleStoreModuleInfoVersion,
+} from '@companion-app/shared/Model/ModulesStore.js'
 import semver from 'semver'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 dayjs.extend(relativeTime)
 
 interface ModuleVersionsTableProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleStoreInfo: ModuleStoreModuleInfoStore | null
 }
 
 export const ModuleVersionsTable = observer(function ModuleVersionsTable({
+	moduleType,
 	moduleId,
 	moduleStoreInfo,
 }: ModuleVersionsTableProps) {
 	const { modules } = useContext(RootAppStoreContext)
-	const moduleInstalledInfo = modules.modules.get(moduleId)
+	const moduleInstalledInfo = modules.getModuleInfo(moduleType, moduleId)
 
 	const allVersionsSet = new Set<string>()
 	const installedModuleVersions = new Map<string, ClientModuleVersionInfo>()
@@ -82,7 +87,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 			return (
 				<ModuleVersionRow
 					key={versionId}
-					moduleType={modules.moduleType}
+					moduleType={moduleType}
 					moduleId={moduleId}
 					versionId={versionId}
 					storeInfo={storeInfo}
@@ -176,9 +181,15 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 		<tr>
 			<td>
 				{installedInfo ? (
-					<ModuleUninstallButton moduleId={moduleId} versionId={versionId} disabled={matchingConnections > 0} />
+					<ModuleUninstallButton
+						moduleType={moduleType}
+						moduleId={moduleId}
+						versionId={versionId}
+						disabled={matchingConnections > 0}
+					/>
 				) : (
 					<ModuleInstallButton
+						moduleType={moduleType}
 						moduleId={moduleId}
 						versionId={versionId}
 						apiVersion={storeInfo!.apiVersion}
@@ -188,8 +199,16 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				{versionId}
-				{storeInfo?.releaseChannel === 'beta' && <FontAwesomeIcon className="pad-left" icon={faFlask} title="Beta" />}
-				{storeInfo?.deprecationReason && <FontAwesomeIcon className="pad-left" icon={faWarning} title="Deprecated" />}
+				{storeInfo?.releaseChannel === 'beta' && (
+					<span title="Beta">
+						<FontAwesomeIcon className="pad-left" icon={faFlask} />
+					</span>
+				)}
+				{storeInfo?.deprecationReason && (
+					<span title="Deprecated">
+						<FontAwesomeIcon className="pad-left" icon={faWarning} />
+					</span>
+				)}
 			</td>
 			<td>
 				{!!storeInfo && (
@@ -225,12 +244,13 @@ function LastUpdatedTimestamp({ releasedAt }: { releasedAt: number | undefined }
 }
 
 interface ModuleUninstallButtonProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	versionId: string
 	disabled: boolean
 }
 
-function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstallButtonProps) {
+function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: ModuleUninstallButtonProps) {
 	const { notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
@@ -239,15 +259,12 @@ function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstal
 	const doRemove = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
 		uninstallModuleMutation
-			.mutateAsync({
-				moduleId,
-				versionId,
-			})
+			.mutateAsync({ moduleType, moduleId, versionId })
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to uninstall module', failureReason)
 
-					notifier.current?.show('Failed to uninstall module', failureReason, 5000)
+					notifier.show('Failed to uninstall module', failureReason, 5000)
 				}
 			})
 			.catch((err) => {
@@ -256,30 +273,32 @@ function ModuleUninstallButton({ moduleId, versionId, disabled }: ModuleUninstal
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [uninstallModuleMutation, notifier, moduleId, versionId])
+	}, [uninstallModuleMutation, notifier, moduleType, moduleId, versionId])
 
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
 			{isRunningInstallOrUninstall ? (
-				<FontAwesomeIcon icon={faSync} spin title="Removing" />
+				<span title="Removing">
+					<FontAwesomeIcon icon={faSync} spin />
+				</span>
 			) : (
-				<FontAwesomeIcon
-					icon={faTrash}
-					title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}
-				/>
+				<span title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}>
+					<FontAwesomeIcon icon={faTrash} />
+				</span>
 			)}
 		</CButton>
 	)
 }
 
 interface ModuleInstallButtonProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	versionId: string
 	apiVersion: string
 	hasTarUrl: boolean
 }
 
-function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: ModuleInstallButtonProps) {
+function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasTarUrl }: ModuleInstallButtonProps) {
 	const { notifier } = useContext(RootAppStoreContext)
 
 	const [isRunningInstallOrUninstall, setIsRunningInstallOrUninstall] = useState(false)
@@ -288,16 +307,12 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 	const doInstall = useCallback(() => {
 		setIsRunningInstallOrUninstall(true)
 		installStoreModuleMutation // TODO: 30s timeout?
-			.mutateAsync({
-				moduleType: ModuleInstanceType.Connection,
-				moduleId,
-				versionId,
-			})
+			.mutateAsync({ moduleType, moduleId, versionId })
 			.then((failureReason) => {
 				if (failureReason) {
 					console.error('Failed to install module', failureReason)
 
-					notifier.current?.show('Failed to install module', failureReason, 5000)
+					notifier.show('Failed to install module', failureReason, 5000)
 				}
 			})
 			.catch((err) => {
@@ -306,30 +321,34 @@ function ModuleInstallButton({ moduleId, versionId, apiVersion, hasTarUrl }: Mod
 			.finally(() => {
 				setIsRunningInstallOrUninstall(false)
 			})
-	}, [installStoreModuleMutation, notifier, moduleId, versionId])
+	}, [installStoreModuleMutation, notifier, moduleType, moduleId, versionId])
 
 	if (!hasTarUrl) {
 		return (
-			<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" title="Module is no longer available" />
+			<span title="Module is no longer available">
+				<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" />
+			</span>
 		)
 	}
 
-	if (!isModuleApiVersionCompatible(apiVersion)) {
+	if (!isSomeModuleApiVersionCompatible(moduleType, apiVersion)) {
 		return (
-			<FontAwesomeIcon
-				icon={faWarning}
-				className="disabled button-size"
-				title="Module is not compatible with this version of Companion"
-			/>
+			<span title="Module is not compatible with this version of Companion">
+				<FontAwesomeIcon icon={faWarning} className="disabled button-size" />
+			</span>
 		)
 	}
 
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall} onClick={doInstall}>
 			{isRunningInstallOrUninstall ? (
-				<FontAwesomeIcon icon={faSync} spin title="Installing" />
+				<span title="Installing">
+					<FontAwesomeIcon icon={faSync} />
+				</span>
 			) : (
-				<FontAwesomeIcon icon={faPlus} title="Install version" />
+				<span title="Install version">
+					<FontAwesomeIcon icon={faPlus} />
+				</span>
 			)}
 		</CButton>
 	)

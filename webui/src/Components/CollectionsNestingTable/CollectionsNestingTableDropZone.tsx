@@ -1,5 +1,5 @@
 import React from 'react'
-import { ConnectDropTarget } from 'react-dnd'
+import type { ConnectDropTarget } from 'react-dnd'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
 
 export function CollectionsNestingTableDropZone({

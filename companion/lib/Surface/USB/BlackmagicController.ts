@@ -10,13 +10,13 @@
  */
 
 import { EventEmitter } from 'events'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { colorToRgb } from './Util.js'
 import {
-	BlackmagicController,
 	openBlackmagicController,
-	BlackmagicControllerSetButtonSomeValue,
-	BlackmagicControllerButtonControlDefinition,
+	type BlackmagicController,
+	type BlackmagicControllerSetButtonSomeValue,
+	type BlackmagicControllerButtonControlDefinition,
 } from '@blackmagic-controller/node'
 import debounceFn from 'debounce-fn'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'

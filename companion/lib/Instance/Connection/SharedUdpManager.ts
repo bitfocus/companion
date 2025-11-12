@@ -1,6 +1,6 @@
-import { Socket, createSocket } from 'dgram'
+import { createSocket, type RemoteInfo, type Socket } from 'dgram'
 import { nanoid } from 'nanoid'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 
 /**
  * Class providing 'shared' udp sockets for modules.
@@ -186,6 +186,6 @@ class InstanceSharedUdpPort {
 interface InstanceSharedUdpMember {
 	ownerId: string
 	handleId: string
-	messageHandler: (message: Buffer, rInfo: import('dgram').RemoteInfo) => void
+	messageHandler: (message: Buffer, rInfo: RemoteInfo) => void
 	errorHandler: (error: Error) => void
 }

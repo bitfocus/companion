@@ -15,7 +15,7 @@ import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type {
 	SurfaceGroupConfig,
 	GridSize,
@@ -262,7 +262,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.panel.on('pincodeKey', this.#onDevicePincodeKey.bind(this))
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
-		this.panel.on('setVariable', this.#onSetVariable.bind(this))
 		this.panel.on('setCustomVariable', this.#onSetCustomVariable.bind(this))
 
 		setImmediate(() => {
@@ -583,7 +582,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		}
 	}
 
-	#onDeviceRotate(x: number, y: number, direction: boolean, pageOffset?: number): void {
+	#onDeviceRotate(x: number, y: number, rightward: boolean, pageOffset?: number): void {
 		if (!this.panel) return
 
 		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
@@ -612,9 +611,9 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					row: y2 + yOffset,
 				})
 				if (controlId) {
-					this.#controls.rotateControl(controlId, direction, this.surfaceId)
+					this.#controls.rotateControl(controlId, rightward, this.surfaceId)
 				}
-				this.#logger.debug(`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${direction ? 'right' : 'left'}`)
+				this.#logger.debug(`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${rightward ? 'right' : 'left'}`)
 			} else {
 				// Ignore when locked out
 			}
@@ -654,13 +653,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				},
 			])
 		}
-	}
-
-	/**
-	 * Set the value of a variable
-	 */
-	#onSetVariable(name: string, value: CompanionVariableValue): void {
-		this.#variables.values.setVariableValues('internal', [{ id: name, value: value }])
 	}
 
 	/**
@@ -733,6 +725,15 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (newconfig.never_lock && newconfig.never_lock != this.#surfaceConfig.config.never_lock) {
 			this.setLocked(false, true)
 			redraw = true
+		}
+
+		// if this is an import, the config file may have been missing fields:
+		//  (note: import does not call `createOrSanitizeSurfaceHandlerConfig`, which might be a better option?)
+		for (const cfield of this.panel.info.configFields) {
+			if (!(cfield.id in newconfig)) {
+				Object.assign(newconfig, { [cfield.id]: cfield.default })
+				redraw = true
+			}
 		}
 
 		this.#surfaceConfig.config = newconfig

@@ -1,10 +1,10 @@
-import React, { FormEvent, useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { CAlert, CButton, CCallout } from '@coreui/react'
-import { ResetWizardModal, ResetWizardModalRef } from './Reset.js'
-import { ExportWizardModal, ExportWizardModalRef } from './Export.js'
+import { ResetWizardModal, type ResetWizardModalRef } from './Reset.js'
+import { ExportWizardModal, type ExportWizardModalRef } from './Export.js'
 import { ImportWizard } from './Import/index.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { observer } from 'mobx-react-lite'
@@ -43,7 +43,7 @@ export const ImportExportPage = observer(function ImportExport() {
 	const completePrepareImportMutation = useMutationExt(trpc.importExport.prepareImport.complete.mutationOptions())
 
 	const loadSnapshot = useCallback(
-		(e: FormEvent<HTMLInputElement>) => {
+		(e: React.FormEvent<HTMLInputElement>) => {
 			const newFile = e.currentTarget.files?.[0]
 			e.currentTarget.value = null as any
 
@@ -53,7 +53,7 @@ export const ImportExportPage = observer(function ImportExport() {
 			}
 
 			setLoadError(null)
-			notifier.current?.show('Importing config...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
+			notifier.show('Importing config...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 			console.log(`start import of ${newFile.size} bytes`)
 
 			const hasher = CryptoJS.algo.SHA1.create()
@@ -123,7 +123,7 @@ export const ImportExportPage = observer(function ImportExport() {
 											}
 
 											setLoadError(null)
-											notifier.current?.close(NOTIFICATION_ID_IMPORT)
+											notifier.close(NOTIFICATION_ID_IMPORT)
 											// const mode = config.type === 'page' ? 'import_page' : 'import_full'
 											// modalRef.current.show(mode, config, initialRemap)
 											setImportInfo([config, initialRemap])
@@ -145,7 +145,7 @@ export const ImportExportPage = observer(function ImportExport() {
 				.catch((e) => {
 					console.error('failed', e)
 
-					notifier.current?.show('Importing config...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
+					notifier.show('Importing config...', 'Failed!', 5000, NOTIFICATION_ID_IMPORT)
 				})
 		},
 		[
@@ -161,6 +161,9 @@ export const ImportExportPage = observer(function ImportExport() {
 	if (importInfo) {
 		return <ImportWizard importInfo={importInfo} clearImport={clearImport} />
 	}
+
+	// As of October 2025, this is only available on iOS Safari and iPadOS Safari
+	const isMobileSafari = 'ongesturechange' in window
 
 	return (
 		<div>
@@ -202,7 +205,7 @@ export const ImportExportPage = observer(function ImportExport() {
 									type="file"
 									onChange={loadSnapshot}
 									style={{ display: 'none' }}
-									accept=".companionconfig,.yaml"
+									accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
 								/>
 							</label>
 						</div>

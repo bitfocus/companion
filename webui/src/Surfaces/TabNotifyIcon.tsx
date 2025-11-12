@@ -1,3 +1,4 @@
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { observer } from 'mobx-react-lite'
 import React, { useContext } from 'react'
 import { useMissingVersionsCount } from '~/Instances/MissingVersionsWarning'
@@ -17,9 +18,9 @@ export const SurfacesTabNotifyIcon = observer(function SurfacesTabNotifyIcon(): 
 })
 
 export const ConnectionsTabNotifyIcon = observer(function ConnectionsTabNotifyIcon(): JSX.Element | null {
-	const { modules, connections } = useContext(RootAppStoreContext)
+	const { connections } = useContext(RootAppStoreContext)
 
-	const missingCount = useMissingVersionsCount(modules, connections.connections)
+	const missingCount = useMissingVersionsCount(ModuleInstanceType.Connection, connections.connections)
 	if (missingCount === 0) return null
 
 	return (

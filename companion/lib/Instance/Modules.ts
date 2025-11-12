@@ -16,12 +16,13 @@ import type express from 'express'
 import type {
 	ClientModuleInfo,
 	ModuleInfoUpdate,
+	ModuleInfoUpdateId,
 	ModuleUpgradeToOtherVersion,
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import LogController from '../Log/Controller.js'
 import type { InstanceController } from './Controller.js'
 import jsonPatch from 'fast-json-patch'
-import { ModuleStoreService } from './ModuleStore.js'
+import type { ModuleStoreService } from './ModuleStore.js'
 import { router, publicProcedure, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
 import z from 'zod'
@@ -29,10 +30,10 @@ import { InstanceModuleInfo } from './ModuleInfo.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 import type { AppInfo } from '../Registry.js'
-import { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 
 type InstanceModulesEvents = {
-	modulesUpdate: [moduleType: ModuleInstanceType, change: ModuleInfoUpdate]
+	modulesUpdate: [change: ModuleInfoUpdate]
 	[id: `upgradeToOther:${string}:${string}`]: [data: ModuleUpgradeToOtherVersion[]]
 }
 
@@ -47,9 +48,7 @@ export class InstanceModules {
 	/**
 	 * Last module info sent to clients
 	 */
-	#lastModulesJson: Record<ModuleInstanceType, Record<string, ClientModuleInfo> | null> = {
-		[ModuleInstanceType.Connection]: null,
-	}
+	#lastModulesJson: Record<string, ClientModuleInfo> = {}
 
 	/**
 	 * Known module info
@@ -77,7 +76,7 @@ export class InstanceModules {
 
 		this.#events.setMaxListeners(0)
 
-		apiRouter.get('/help/module/:moduleId/:versionId/*path', this.#getHelpAsset)
+		apiRouter.get('/help/module/:moduleType/:moduleId/:versionId/*path', this.#getHelpAsset)
 	}
 
 	#getModuleMapForType(type: ModuleInstanceType): Map<string, InstanceModuleInfo> {
@@ -200,6 +199,8 @@ export class InstanceModules {
 			this.#logger.info(`Found ${candidates.length} extra modules`)
 		}
 
+		this.#lastModulesJson = this.#compileClientModulesJson()
+
 		// Log the loaded modules
 		this.#logLoadedModules(this.#knownConnectionModules, 'Connection:')
 	}
@@ -276,42 +277,39 @@ export class InstanceModules {
 	}
 
 	#emitModuleUpdate = (moduleType: ModuleInstanceType, changedModuleId: string): void => {
-		if (!this.#lastModulesJson[moduleType]) {
-			this.#lastModulesJson[moduleType] = this.#getModulesJson(moduleType)
-		}
-
 		// Fetch the old and new module json
-		const oldModuleJson = this.#lastModulesJson[moduleType][changedModuleId]
+		const changedModuleIdFull = `${moduleType}:${changedModuleId}` as const
+		const oldModuleJson = this.#lastModulesJson[changedModuleIdFull]
 		const newModuleJson = this.#getModuleMapForType(moduleType).get(changedModuleId)?.toClientJson() ?? null
 
 		// Update stored
 		if (newModuleJson) {
-			this.#lastModulesJson[moduleType][changedModuleId] = cloneDeep(newModuleJson)
+			this.#lastModulesJson[changedModuleIdFull] = cloneDeep(newModuleJson)
 		} else {
-			delete this.#lastModulesJson[moduleType][changedModuleId]
+			delete this.#lastModulesJson[changedModuleIdFull]
 		}
 
 		if (this.#events.listenerCount('modulesUpdate') == 0) return
 
 		// Now broadcast to any interested clients
 		if (!newModuleJson) {
-			this.#events.emit('modulesUpdate', moduleType, {
+			this.#events.emit('modulesUpdate', {
 				type: 'remove',
-				id: changedModuleId,
+				id: changedModuleIdFull,
 			})
 		} else if (oldModuleJson) {
 			const patch = jsonPatch.compare(oldModuleJson, newModuleJson)
 			if (patch.length > 0) {
-				this.#events.emit('modulesUpdate', moduleType, {
+				this.#events.emit('modulesUpdate', {
 					type: 'update',
-					id: changedModuleId,
+					id: changedModuleIdFull,
 					patch,
 				})
 			}
 		} else {
-			this.#events.emit('modulesUpdate', moduleType, {
+			this.#events.emit('modulesUpdate', {
 				type: 'add',
-				id: changedModuleId,
+				id: changedModuleIdFull,
 				info: newModuleJson,
 			})
 		}
@@ -329,24 +327,18 @@ export class InstanceModules {
 	createTrpcRouter() {
 		const self = this
 		return router({
-			watch: publicProcedure
-				.input(
-					z.object({
-						moduleType: z.enum(ModuleInstanceType),
-					})
-				)
-				.subscription(async function* ({ input, signal }) {
-					const changes = toIterable(self.#events, 'modulesUpdate', signal)
+			watch: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'modulesUpdate', signal)
 
-					yield {
-						type: 'init',
-						info: self.#lastModulesJson[input.moduleType] || self.#getModulesJson(input.moduleType),
-					} satisfies ModuleInfoUpdate
+				yield {
+					type: 'init',
+					info: self.#lastModulesJson,
+				} satisfies ModuleInfoUpdate
 
-					for await (const [moduleType, change] of changes) {
-						if (moduleType === input.moduleType) yield change
-					}
-				}),
+				for await (const [change] of changes) {
+					yield change
+				}
+			}),
 
 			watchUpgradeToOther: publicProcedure
 				.input(
@@ -378,10 +370,10 @@ export class InstanceModules {
 	}
 
 	listenToStoreEvents(modulesStore: ModuleStoreService): void {
-		modulesStore.on('storeListUpdated', (moduleType) => {
+		modulesStore.on('storeListUpdated', () => {
 			// Invalidate any module upgrade data
 			for (const moduleId of this.#activeModuleUpgradeConnectionRooms) {
-				this.#invalidateModuleUpgradeRoom(moduleType, moduleId)
+				this.#invalidateModuleUpgradeRoom(ModuleInstanceType.Connection, moduleId)
 			}
 		})
 	}
@@ -441,15 +433,20 @@ export class InstanceModules {
 	/**
 	 * Get display version of module infos
 	 */
-	#getModulesJson(moduleType: ModuleInstanceType): Record<string, ClientModuleInfo> {
-		const result: Record<string, ClientModuleInfo> = {}
+	#compileClientModulesJson(): Record<ModuleInfoUpdateId, ClientModuleInfo> {
+		const result: Record<ModuleInfoUpdateId, ClientModuleInfo> = {}
 
-		for (const [id, moduleInfo] of this.#getModuleMapForType(moduleType).entries()) {
-			const clientModuleInfo = moduleInfo.toClientJson()
-			if (!clientModuleInfo) continue
+		const processMap = (moduleType: ModuleInstanceType, map: Map<string, InstanceModuleInfo>) => {
+			for (const [id, moduleInfo] of map.entries()) {
+				const clientModuleInfo = moduleInfo.toClientJson()
+				if (!clientModuleInfo) continue
 
-			result[id] = clientModuleInfo
+				result[`${moduleType}:${id}`] = clientModuleInfo
+			}
 		}
+
+		processMap(ModuleInstanceType.Connection, this.#knownConnectionModules)
+		// Future: include more here!
 
 		return result
 	}
@@ -476,16 +473,14 @@ export class InstanceModules {
 	 * Return a module help asset over http
 	 */
 	#getHelpAsset = (
-		req: express.Request<{ moduleId: string; versionId: string; path: string[] }>,
+		req: express.Request<{ moduleType: string; moduleId: string; versionId: string; path: string[] }>,
 		res: express.Response,
 		next: express.NextFunction
 	): void => {
+		const moduleType = req.params.moduleType as ModuleInstanceType
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
 		const versionId = req.params.versionId
 		const file = req.params.path?.join('/')?.replace(/\.\.+/g, '')
-
-		// TODO - handle surface modules
-		const moduleType = ModuleInstanceType.Connection
 
 		const moduleInfo = this.#getModuleMapForType(moduleType).get(moduleId)?.getVersion(versionId)
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {

@@ -7,9 +7,8 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import semver from 'semver'
-import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
-import { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface HelpModalRef {
 	showFromUrl(moduleType: ModuleInstanceType, moduleId: string, versionDisplayName: string, url: string): void
@@ -89,19 +88,7 @@ export const HelpModal = observer(
 				}
 			: undefined
 
-		let moduleStore: ModuleInfoStore | undefined
-		if (content) {
-			switch (content?.moduleType) {
-				case ModuleInstanceType.Connection:
-					moduleStore = modules
-					break
-				default:
-					assertNever(content.moduleType)
-					break
-			}
-		}
-
-		const moduleInfo = content && moduleStore?.modules.get(content.moduleId)
+		const moduleInfo = content && modules.getModuleInfo(content.moduleType, content.moduleId)
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">

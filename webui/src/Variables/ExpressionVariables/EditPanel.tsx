@@ -1,6 +1,6 @@
 import { CAlert, CCol, CForm, CFormLabel } from '@coreui/react'
 import React, { useCallback, useContext, useMemo, useRef } from 'react'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PreventDefaultHandler } from '~/Resources/util'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { LoadingBar, LoadingRetryOrError } from '~/Resources/Loading'
@@ -9,7 +9,7 @@ import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	isInternalUserValueFeedback,
-	SomeEntityModel,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { observer } from 'mobx-react-lite'
@@ -30,7 +30,7 @@ import { VariableValueDisplay } from '~/Components/VariableValueDisplay'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { EditableEntityList } from '~/Controls/Components/EntityList'
 import { InlineHelp } from '~/Components/InlineHelp'
-import { LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore'
+import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 
 interface EditExpressionVariablePanelProps {
@@ -307,7 +307,7 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 function ExpressionVariableCurrentValue({ name }: { controlId: string; name: string }) {
 	const { notifier } = useContext(RootAppStoreContext)
 
-	const onCopied = useCallback(() => notifier.current?.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
+	const onCopied = useCallback(() => notifier.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
 
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(

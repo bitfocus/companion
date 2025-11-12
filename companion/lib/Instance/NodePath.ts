@@ -40,6 +40,7 @@ export function getNodeJsPermissionArguments(
 		return []
 
 	const args = [
+		'--no-warnings=SecurityWarning',
 		'--permission',
 		// Always allow read access to the module source directory
 		`--allow-fs-read=${moduleDir}`,

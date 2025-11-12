@@ -3,10 +3,10 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { useResizeObserver } from 'usehooks-ts'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { IconProp } from '@fortawesome/fontawesome-svg-core'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface ButtonGridActionsRef {

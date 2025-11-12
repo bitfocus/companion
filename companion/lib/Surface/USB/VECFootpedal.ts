@@ -10,11 +10,11 @@
  */
 
 import EventEmitter from 'events'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import { Device, HIDAsync } from 'node-hid'
+import { HIDAsync, type Device } from 'node-hid'
 import crypto from 'crypto'
 
 const configFields: CompanionSurfaceConfigField[] = [

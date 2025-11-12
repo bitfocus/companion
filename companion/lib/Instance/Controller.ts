@@ -13,20 +13,20 @@ import { InstanceDefinitions } from './Definitions.js'
 import { InstanceProcessManager } from './ProcessManager.js'
 import { InstanceStatus } from './Status.js'
 import { cloneDeep } from 'lodash-es'
-import { makeLabelSafe } from '@companion-app/shared/Label.js'
+import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import {
-	InstanceConfig,
-	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
+	type InstanceConfig,
+	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
-import { AddInstanceProps, InstanceConfigStore } from './ConfigStore.js'
+import { InstanceConfigStore, type AddInstanceProps } from './ConfigStore.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
@@ -39,7 +39,7 @@ import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
 import { InstanceCollections } from './Collections.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
@@ -56,7 +56,7 @@ export interface InstanceControllerEvents {
 	connection_collections_enabled: []
 
 	uiConnectionsUpdate: [changes: ClientConnectionsUpdate[]]
-	[id: `debugLog:${string}`]: [level: string, message: string]
+	[id: `debugLog:${string}`]: [time: number | null, source: string, level: string, message: string]
 }
 
 export class InstanceController extends EventEmitter<InstanceControllerEvents> {
@@ -138,6 +138,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						connectionId,
 						{
 							label: null,
+							enabled: null,
 							config,
 							secrets,
 							updatePolicy: null,
@@ -148,8 +149,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						}
 					)
 				},
-				debugLogLine: (connectionId: string, level: string, message: string) => {
-					this.emit(`debugLog:${connectionId}`, level, message)
+				debugLogLine: (connectionId: string, time: number | null, source: string, level: string, message: string) => {
+					this.emit(`debugLog:${connectionId}`, time, source, level, message)
 				},
 			},
 			this.modules,
@@ -248,6 +249,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		id: string,
 		values: {
 			label: string | null
+			enabled: boolean | null
 			config: unknown | null
 			secrets: unknown | null
 			updatePolicy: InstanceVersionUpdatePolicy | null
@@ -257,11 +259,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			skipNotifyConnection?: boolean
 			patchSecrets?: boolean // If true, only secrets defined in the object are updated
 		}
-	): void {
+	): { ok: true } | { ok: false; message: string } {
 		const connectionConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
-		if (!connectionConfig) {
-			this.#logger.warn(`setInstanceLabelAndConfig id "${id}" does not exist!`)
-			return
+		if (!connectionConfig) return { ok: false, message: 'no connection instance' }
+
+		if (values.label !== null) {
+			const idUsingLabel = this.getIdForLabel(values.label)
+			if (idUsingLabel && idUsingLabel !== id) {
+				return { ok: false, message: 'duplicate label' }
+			}
+
+			if (!isLabelValid(values.label)) {
+				return { ok: false, message: 'invalid label' }
+			}
 		}
 
 		if (values.config) {
@@ -302,10 +312,22 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (values.upgradeIndex !== null) {
 			connectionConfig.lastUpgradeIndex = values.upgradeIndex
 		}
+		if (values.enabled !== null) {
+			connectionConfig.enabled = values.enabled
+		}
 
 		this.emit('connection_updated', id)
 
 		this.#configStore.commitChanges([id], false)
+
+		// If enabled has changed, start/stop the connection
+		if (values.enabled !== null) {
+			this.#queueUpdateInstanceState(id, false, false)
+			if (!connectionConfig.enabled) {
+				// If new state is disabled, stop processing here
+				return { ok: true }
+			}
+		}
 
 		const instance = this.processManager.getConnectionChild(id, true)
 		if (values.label) {
@@ -320,6 +342,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		this.#logger.debug(`instance "${connectionConfig.label}" configuration updated`)
+
+		return { ok: true }
 	}
 
 	/**
@@ -447,6 +471,47 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	 */
 	getConnectionsMetrics(): Record<string, Record<string, number>> {
 		return this.#configStore.getModuleVersionsMetrics(ModuleInstanceType.Connection)
+	}
+
+	setModuleVersionAndActivate(
+		instanceId: string,
+		newVersionId: string | null,
+		newUpdatePolicy: InstanceVersionUpdatePolicy | null
+	): boolean {
+		const config = this.#configStore.getConfigOfTypeForId(instanceId, null)
+		if (!config) return false
+
+		// Don't validate the version, as it might not yet be installed
+		// const moduleInfo = instanceController.modules.getModuleManifest(config.instance_type, versionId)
+		// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
+
+		if (newVersionId?.includes('@')) {
+			// Its a moduleId and version
+			const [moduleId, version] = newVersionId.split('@')
+			config.instance_type = moduleId
+			config.moduleVersionId = version || null
+		} else {
+			// Its a simple version
+			config.moduleVersionId = newVersionId
+		}
+
+		// Update the config
+		if (newUpdatePolicy) config.updatePolicy = newUpdatePolicy
+		this.#configStore.commitChanges([instanceId], false)
+
+		// Install the module if needed
+		this.userModulesManager.ensureModuleIsInstalled(
+			config.moduleInstanceType,
+			config.instance_type,
+			config.moduleVersionId
+		)
+
+		// Trigger a restart (or as much as possible)
+		if (config.enabled) {
+			this.#queueUpdateInstanceState(instanceId, false, true)
+		}
+
+		return true
 	}
 
 	/**
@@ -578,6 +643,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					id,
 					{
 						label: safeLabel,
+						enabled: null,
 						config: null,
 						secrets: null,
 						updatePolicy: null,
@@ -627,13 +693,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			modulesStore: this.modulesStore.createTrpcRouter(),
 			statuses: this.status.createTrpcRouter(),
 
-			connections: createConnectionsTrpcRouter(
-				this.#logger,
-				this,
-				this,
-				this.#configStore,
-				this.#queueUpdateInstanceState.bind(this)
-			),
+			connections: createConnectionsTrpcRouter(this.#logger, this, this, this.#configStore),
 
 			debugLog: publicProcedure
 				.input(
@@ -647,8 +707,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 					const lines = toIterable(selfEvents, `debugLog:${input.instanceId}`, signal)
 
-					for await (const [level, message] of lines) {
-						yield { level, message }
+					for await (const [time, source, level, message] of lines) {
+						yield { time, source, level, message }
 					}
 				}),
 		})

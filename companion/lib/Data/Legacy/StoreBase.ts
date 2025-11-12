@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import path from 'path'
 import { cloneDeep } from 'lodash-es'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 
 /**
  * Abstract class to be extended by the flat file DB classes.

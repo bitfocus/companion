@@ -1,4 +1,4 @@
-import React, { FormEvent, forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
 import { makeAbsolutePath, PreventDefaultHandler } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -59,24 +59,20 @@ export const ResetWizardModal = forwardRef<ResetWizardModalRef>(function WizardM
 
 	const resetConfigMutation = useMutationExt(trpc.importExport.resetConfiguration.mutationOptions())
 	const doSave = useCallback(
-		(e: FormEvent) => {
+		(e: React.FormEvent) => {
 			e.preventDefault()
 
 			resetConfigMutation // TODO: 30s timeout?
 				.mutateAsync(config)
 				.then((status) => {
 					if (status !== 'ok') {
-						notifier.current?.show(
-							`Reset failed`,
-							`An unspecified error occurred during the reset.  Please try again.`,
-							10000
-						)
+						notifier.show(`Reset failed`, `An unspecified error occurred during the reset.  Please try again.`, 10000)
 					}
 
 					doClose()
 				})
 				.catch((e) => {
-					notifier.current?.show(`Reset failed`, 'An error occurred:' + e, 10000)
+					notifier.show(`Reset failed`, 'An error occurred:' + e, 10000)
 					doNextStep()
 				})
 

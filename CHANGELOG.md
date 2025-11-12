@@ -1,5 +1,21 @@
 # Bitfocus Companion
 
+## Companion v4.1.4 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Expression variables not getting value immediately following import
+- Import page not scrolling correctly
+- Import single page unable to create new page
+- Unable to select any file to import on iOs #3676
+- Surfaces not remembering state when using lockout all
+- Failures when installing modules not being displayed
+- Missing tooltips in module versions table
+- Surfaces table upgrade icon position
+- Allow larger module archives
+- Fix some links within the getting started docs #3720
+- Performance improvements for module entity events
+
 ## Companion v4.1.3 - Release Notes
 
 ### 🐞 BUG FIXES

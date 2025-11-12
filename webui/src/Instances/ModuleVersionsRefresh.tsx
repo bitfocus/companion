@@ -1,27 +1,30 @@
-import React, { useCallback } from 'react'
+import React, { useContext, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ModuleVersionsRefreshProps {
-	modules: ModuleInfoStore
+	moduleType: ModuleInstanceType
 	moduleId: string | null
 }
 export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
-	modules,
+	moduleType,
 	moduleId,
 }: ModuleVersionsRefreshProps) {
-	const refreshProgress = (moduleId ? modules.storeRefreshProgress.get(moduleId) : null) ?? 1
+	const { moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
+
+	const refreshProgress = (moduleId ? moduleStoreRefreshProgress.get(moduleId) : null) ?? 1
 
 	const refreshInfoMutation = useMutationExt(trpc.instances.modulesStore.refreshModuleInfo.mutationOptions())
 	const doRefreshModules = useCallback(() => {
 		if (!moduleId) return
-		refreshInfoMutation.mutateAsync({ moduleType: modules.moduleType, moduleId }).catch((err) => {
+		refreshInfoMutation.mutateAsync({ moduleType, moduleId }).catch((err) => {
 			console.error('Failed to refresh module versions', err)
 		})
-	}, [refreshInfoMutation, modules, moduleId])
+	}, [refreshInfoMutation, moduleType, moduleId])
 
 	if (refreshProgress === 1) {
 		return (

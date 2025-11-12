@@ -1,4 +1,4 @@
-import { DropdownChoice } from '@companion-module/base'
+import type { DropdownChoice } from '@companion-module/base'
 import { Buffer } from 'buffer'
 
 // Hack for csv library which needs a global 'Buffer'

@@ -11,14 +11,15 @@ import {
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
-import { LocalVariablesStore } from './LocalVariablesStore.js'
+import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { validateInputValue } from '~/Helpers/validateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -79,13 +80,14 @@ export const OptionsInputField = observer(function OptionsInputField({
 				? localVariablesStore?.getOptions(entityType, isInternal, isLocatedInGrid)
 				: undefined
 
-			control = (
+			control = option.isExpression ? (
+				<ExpressionInputField value={value} localVariables={localVariables} disabled={readonly} setValue={setValue2} />
+			) : (
 				<TextInputField
 					value={value}
 					placeholder={option.placeholder}
 					useVariables={features.variables}
 					localVariables={localVariables}
-					isExpression={option.isExpression}
 					disabled={readonly}
 					setValue={setValue2}
 					checkValid={checkValid}

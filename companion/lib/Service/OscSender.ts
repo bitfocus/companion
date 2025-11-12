@@ -1,6 +1,6 @@
 import OSC from 'osc'
 import { ServiceOscBase } from './OscBase.js'
-import { OSCSomeArguments } from '@companion-module/base'
+import type { OSCSomeArguments } from '@companion-module/base'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**

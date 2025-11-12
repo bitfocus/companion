@@ -1,6 +1,6 @@
-import { ConnectDropTarget, useDrop } from 'react-dnd'
-import { checkDragState, DragState } from '~/Resources/DragAndDrop.js'
-import { NestingCollectionsApi } from './Types.js'
+import { useDrop, type ConnectDropTarget } from 'react-dnd'
+import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
+import type { NestingCollectionsApi } from './Types.js'
 
 export interface CollectionsNestingTableCollectionDragItem {
 	collectionId: string

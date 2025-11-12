@@ -3,8 +3,8 @@ import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
-import { AddInstanceService } from '~/Instances/AddInstanceService'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { AddInstanceService } from '~/Instances/AddInstanceService'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
@@ -28,11 +28,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 						<div>
 							<span className="text-muted">
 								Can't find your device?{' '}
-								<a
-									target="_blank"
-									href={makeAbsolutePath('/getting-started#6_modules.md')}
-									className="text-decoration-none"
-								>
+								<a target="_blank" href={makeAbsolutePath('/user-guide/modules')} className="text-decoration-none">
 									Check our guidance for getting device support
 								</a>
 							</span>
@@ -53,26 +49,25 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 })
 
 function useAddConnectionService(): AddInstanceService {
-	const { modules, connections } = useContext(RootAppStoreContext)
-	const navigate = useNavigate({ from: '/connections/configured' })
+	const { connections } = useContext(RootAppStoreContext)
+	const navigate = useNavigate({ from: '/connections' })
 	const addMutation = useMutationExt(trpc.instances.connections.add.mutationOptions())
 
 	return useMemo(
 		() => ({
 			moduleType: ModuleInstanceType.Connection,
-			modules: modules,
 
 			closeAddInstance: () => {
-				void navigate({ to: '/connections/configured' })
+				void navigate({ to: '/connections' })
 			},
 			openConfigureInstance: (connectionId) => {
-				void navigate({ to: '/connections/configured/$connectionId', params: { connectionId } })
+				void navigate({ to: '/connections/$connectionId', params: { connectionId } })
 			},
 
 			performAddInstance: async (moduleInfo, label, versionId) => {
 				return addMutation.mutateAsync({
 					module: {
-						type: moduleInfo.id,
+						type: moduleInfo.moduleId,
 						product: moduleInfo.product,
 					},
 					label: label,
@@ -84,7 +79,7 @@ function useAddConnectionService(): AddInstanceService {
 				return findNextConnectionLabel(connections.connections, moduleInfo.shortname)
 			},
 		}),
-		[navigate, modules, connections, addMutation]
+		[navigate, connections, addMutation]
 	)
 }
 

@@ -7,12 +7,13 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { useAllModuleProducts, filterProducts, FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
+import { useAllModuleProducts, filterProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -21,11 +22,16 @@ interface VisibleModulesState {
 }
 
 interface ModulesListProps {
-	doManageModule: (connectionId: string | null) => void
-	selectedModuleId: string | null
+	doManageModule: (moduleInfo: ModuleTypeAndIdPair | null) => void
+	selectedModuleInfo: ModuleTypeAndIdPair | null
 }
 
-export const ModulesList = observer(function ModulesList({ doManageModule, selectedModuleId }: ModulesListProps) {
+export interface ModuleTypeAndIdPair {
+	moduleType: ModuleInstanceType
+	moduleId: string
+}
+
+export const ModulesList = observer(function ModulesList({ doManageModule, selectedModuleInfo }: ModulesListProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
@@ -36,7 +42,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	const [filter, setFilter] = useState('')
 
-	const allProducts = useAllModuleProducts(modules, true, true)
+	const allProducts = useAllModuleProducts(null, true, true)
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {
@@ -70,13 +76,16 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
-			candidatesObj[moduleInfo.id] = (
+			candidatesObj[moduleInfo.moduleId] = (
 				<ModulesListRow
-					key={moduleInfo.id}
-					id={moduleInfo.id}
+					key={moduleInfo.moduleId}
 					moduleInfo={moduleInfo}
 					doManageModule={doManageModule}
-					isSelected={moduleInfo.id === selectedModuleId}
+					isSelected={
+						!!selectedModuleInfo &&
+						moduleInfo.moduleId === selectedModuleInfo.moduleId &&
+						moduleInfo.moduleType === selectedModuleInfo.moduleType
+					}
 				/>
 			)
 		}
@@ -107,7 +116,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		)
 	}
 
-	const hiddenCount = new Set(allProducts.map((p) => p.id)).size - new Set(typeProducts.map((p) => p.id)).size
+	const hiddenCount =
+		new Set(allProducts.map((p) => p.moduleId)).size - new Set(typeProducts.map((p) => p.moduleId)).size
 
 	return (
 		<div className="flex-column-layout">
@@ -117,7 +127,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/getting-started#6_modules.md')} className="text-decoration-none">
+					<a target="_blank" href={makeAbsolutePath('/user-guide/modules')} className="text-decoration-none">
 						Check our guidance for getting device support
 					</a>
 					.<br />
@@ -131,7 +141,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<ImportModules />
 
 				<div className="refresh-and-last-updated">
-					<RefreshModulesList modules={modules} />
+					<RefreshModulesList />
 					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 				</div>
 
@@ -168,7 +178,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							</tr>
 						)}
 
-						{modules.modules.size === 0 && !visibleModules.visibility.available && (
+						{modules.count === 0 && !visibleModules.visibility.available && (
 							<tr>
 								<td colSpan={4}>
 									<NonIdealState icon={faPlug}>
@@ -203,14 +213,12 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 })
 
 interface ModulesListRowProps {
-	id: string
 	moduleInfo: FuzzyProduct
-	doManageModule: (moduleId: string | null) => void
+	doManageModule: (moduleInfo: ModuleTypeAndIdPair | null) => void
 	isSelected: boolean
 }
 
 const ModulesListRow = observer(function ModulesListRow({
-	id,
 	moduleInfo,
 	doManageModule,
 	isSelected,
@@ -221,15 +229,15 @@ const ModulesListRow = observer(function ModulesListRow({
 		if (!moduleInfo.helpUrl) return
 		const latestVersionName =
 			moduleInfo.installedInfo?.stableVersion?.versionId ?? moduleInfo.installedInfo?.betaVersion?.versionId ?? ''
-		helpViewer.current?.showFromUrl(moduleInfo.moduleType, id, latestVersionName, moduleInfo.helpUrl)
-	}, [helpViewer, id, moduleInfo])
+		helpViewer.current?.showFromUrl(moduleInfo.moduleType, moduleInfo.moduleId, latestVersionName, moduleInfo.helpUrl)
+	}, [helpViewer, moduleInfo])
 
 	const doEdit = () => {
 		if (!moduleInfo) {
 			return
 		}
 
-		doManageModule(id)
+		doManageModule({ moduleId: moduleInfo.moduleId, moduleType: moduleInfo.moduleType })
 	}
 
 	// const openBugUrl = useCallback(() => {

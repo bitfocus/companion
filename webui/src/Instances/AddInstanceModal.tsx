@@ -20,7 +20,7 @@ import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { AddInstanceService } from './AddInstanceService.js'
+import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface AddInstanceModalRef {
@@ -37,14 +37,14 @@ export const AddInstanceModal = observer(
 		{ service, openConfigureInstance },
 		ref
 	) {
-		const { helpViewer, notifier } = useContext(RootAppStoreContext)
+		const { helpViewer, notifier, modules } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
 		const [moduleInfo, setModuleInfo] = useState<FuzzyProduct | null>(null)
 		const [selectedVersion, setSelectedVersion] = useState<string | null>(null)
 		const [instanceLabel, setInstanceLabel] = useState<string>('')
 
-		const isModuleOnStore = !!moduleInfo && !!service.modules.storeList.get(moduleInfo?.id)
+		const isModuleOnStore = !!moduleInfo && !!modules.getStoreInfo(moduleInfo.moduleType, moduleInfo.moduleId)
 
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
@@ -67,7 +67,7 @@ export const AddInstanceModal = observer(
 					}, 1000)
 				})
 				.catch((e) => {
-					notifier.current?.show(`Failed to create instance`, `Failed: ${e}`)
+					notifier.show(`Failed to create instance`, `Failed: ${e}`)
 					console.error('Failed to create instance:', e)
 				})
 		}
@@ -91,7 +91,7 @@ export const AddInstanceModal = observer(
 			choices: versionChoices,
 			loaded: choicesLoaded,
 			hasIncompatibleNewerVersion,
-		} = useModuleVersionSelectOptions(service.modules, moduleInfo?.id, moduleInfo?.installedInfo, false)
+		} = useModuleVersionSelectOptions(service.moduleType, moduleInfo?.moduleId, moduleInfo?.installedInfo, false)
 
 		console.log('Version choices', versionChoices, choicesLoaded)
 
@@ -122,23 +122,21 @@ export const AddInstanceModal = observer(
 		const selectedVersionIsLegacy = selectedVersionInfo?.isLegacy ?? false
 
 		const showHelpClick = useCallback(() => {
-			if (!moduleInfo?.id || !selectedVersionInfo) return
+			if (!moduleInfo?.moduleId || !selectedVersionInfo) return
 			helpViewer.current?.showFromUrl(
 				moduleInfo.moduleType,
-				moduleInfo.id,
+				moduleInfo.moduleId,
 				selectedVersionInfo.versionId,
 				selectedVersionInfo.helpPath
 			)
-		}, [helpViewer, moduleInfo?.moduleType, moduleInfo?.id, selectedVersionInfo])
+		}, [helpViewer, moduleInfo?.moduleType, moduleInfo?.moduleId, selectedVersionInfo])
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
 				{moduleInfo && (
 					<>
 						<CModalHeader closeButton>
-							<h5>
-								Add {moduleInfo.manufacturer} {moduleInfo.product}
-							</h5>
+							<h5>Add {moduleInfo.product}</h5>
 						</CModalHeader>
 						<CModalBody>
 							{service.moduleType === ModuleInstanceType.Connection && (
@@ -168,7 +166,9 @@ export const AddInstanceModal = observer(
 												<FontAwesomeIcon icon={faQuestionCircle} />
 											</div>
 										)}
-										{isModuleOnStore && <ModuleVersionsRefresh modules={service.modules} moduleId={moduleInfo.id} />}
+										{isModuleOnStore && (
+											<ModuleVersionsRefresh moduleType={moduleInfo.moduleType} moduleId={moduleInfo.moduleId} />
+										)}
 									</div>
 								</CFormLabel>
 								<CCol sm={8}>

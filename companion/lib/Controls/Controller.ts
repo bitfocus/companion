@@ -17,7 +17,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlChangeEvents, ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import LogController from '../Log/Controller.js'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
@@ -29,8 +29,8 @@ import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
-import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
-import { CompanionVariableValues } from '@companion-module/base'
+import type { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import type { CompanionVariableValues } from '@companion-module/base'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type {
@@ -560,13 +560,13 @@ export class ControlsController {
 	/**
 	 * Execute rotation of a control
 	 * @param controlId Id of the control
-	 * @param direction Whether the control is rotated to the right
+	 * @param rightward Whether the control is rotated to the right
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(controlId: string, direction: boolean, surfaceId: string | undefined): boolean {
+	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
 		const control = this.getControl(controlId)
 		if (control && control.supportsActionSets) {
-			control.rotateControl(direction, surfaceId)
+			control.rotateControl(rightward, surfaceId)
 			return true
 		}
 

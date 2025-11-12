@@ -1,4 +1,4 @@
-import React, { FormEvent, useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { BeginStep } from './BeginStep.js'
 import { SurfacesStep } from './SurfacesStep.js'
@@ -7,7 +7,7 @@ import { ServicesStep } from './ServicesStep.js'
 import { PasswordStep } from './PasswordStep.js'
 import { ApplyStep } from './ApplyStep.js'
 import { FinishStep } from './FinishStep.js'
-import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { WIZARD_CURRENT_VERSION } from './Constants.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -85,7 +85,7 @@ export function WizardModal(): React.JSX.Element {
 	}, [])
 
 	const doSave = useCallback(
-		(e: FormEvent) => {
+		(e: React.FormEvent) => {
 			e.preventDefault()
 
 			if (!oldConfig || !newConfig) return

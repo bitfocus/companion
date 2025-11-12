@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
-import { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import type { DropdownChoiceId } from '@companion-module/base'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 

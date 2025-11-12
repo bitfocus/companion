@@ -15,7 +15,7 @@ import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import EventEmitter from 'events'
-import { ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
+import type { ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 
 /**
  * Class providing an abstract api for consumption by services.

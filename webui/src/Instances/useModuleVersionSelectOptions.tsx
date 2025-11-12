@@ -1,14 +1,14 @@
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
-import { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
+import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { useComputed } from '~/Resources/util.js'
-import { getLatestVersion } from '../Connections/ConnectionEdit/VersionUtil.js'
-import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
+import { getLatestVersion } from './VersionUtil.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export function useModuleVersionSelectOptions(
-	modules: ModuleInfoStore,
+	moduleType: ModuleInstanceType,
 	moduleId: string | undefined,
 	installedInfo: ClientModuleInfo | null | undefined,
 	includeBeta: boolean
@@ -17,8 +17,8 @@ export function useModuleVersionSelectOptions(
 	hasIncompatibleNewerVersion: boolean
 	choices: DropdownChoiceInt[]
 } {
-	const moduleStoreInfo = useModuleStoreInfo(modules, moduleId)
-	const upgradeToVersions = useModuleUpgradeToVersions(modules, moduleId)
+	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
+	const upgradeToVersions = useModuleUpgradeToVersions(moduleType, moduleId)
 
 	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
 	const latestIncompatibleStableVersion = getLatestVersion(moduleStoreInfo?.versions, false, true)

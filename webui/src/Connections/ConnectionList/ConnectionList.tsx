@@ -2,18 +2,18 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
-import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { ConnectionVariablesModal, type ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from '../../Instances/MissingVersionsWarning.js'
-import { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { useConnectionCollectionsApi } from './ConnectionListApi.js'
 import { useInstanceStatuses } from '../../Instances/useInstanceStatuses.js'
-import { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
 import { useComputed } from '~/Resources/util.js'
@@ -21,6 +21,7 @@ import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -34,17 +35,17 @@ interface ConnectionsListProps {
 }
 
 export const ConnectionsList = observer(function ConnectionsList({ selectedConnectionId }: ConnectionsListProps) {
-	const { modules, connections } = useContext(RootAppStoreContext)
+	const { connections } = useContext(RootAppStoreContext)
 
 	const connectionStatuses = useInstanceStatuses()
 
-	const navigate = useNavigate({ from: '/connections/configured' })
+	const navigate = useNavigate({ from: '/connections' })
 	const doConfigureConnection = useCallback(
 		(connectionId: string | null) => {
 			if (!connectionId) {
-				void navigate({ to: '/connections/configured' })
+				void navigate({ to: '/connections' })
 			} else {
-				void navigate({ to: '/connections/configured/$connectionId', params: { connectionId } })
+				void navigate({ to: `/connections/$connectionId`, params: { connectionId } })
 			}
 		},
 		[navigate]
@@ -94,7 +95,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 					know how to communicate with whatever you want to control.
 				</p>
 
-				<MissingVersionsWarning modules={modules} instances={connections.connections} />
+				<MissingVersionsWarning moduleType={ModuleInstanceType.Connection} instances={connections.connections} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
@@ -105,7 +106,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 							color="primary"
 							size="sm"
 							className="d-xl-none"
-							onClick={() => void navigate({ to: '/connections/configured/add' })}
+							onClick={() => void navigate({ to: '/connections/add' })}
 						>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
 							Add Connection

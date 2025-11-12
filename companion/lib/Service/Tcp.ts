@@ -1,6 +1,6 @@
 import { decimalToRgb } from '../Resources/Util.js'
 import { ApiMessageError, ServiceTcpUdpApi } from './TcpUdpApi.js'
-import { ServiceTcpBase, TcpClientInfo } from './TcpBase.js'
+import { ServiceTcpBase, type TcpClientInfo } from './TcpBase.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'

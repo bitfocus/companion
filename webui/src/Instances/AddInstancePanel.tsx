@@ -12,16 +12,16 @@ import {
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { AddInstanceModal, AddInstanceModalRef } from './AddInstanceModal.js'
+import { AddInstanceModal, type AddInstanceModalRef } from './AddInstanceModal.js'
 import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
 import { LastUpdatedTimestamp } from '~/Modules/LastUpdatedTimestamp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
-import { filterProducts, FuzzyProduct, useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
+import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { Link } from '@tanstack/react-router'
-import { AddInstanceService } from './AddInstanceService.js'
+import type { AddInstanceService } from './AddInstanceService.js'
 
 interface AddInstancePanelProps {
 	service: AddInstanceService
@@ -35,6 +35,8 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 	title,
 	description,
 }: AddInstancePanelProps) {
+	const { modules } = useContext(RootAppStoreContext)
+
 	const [filter, setFilter] = useState('')
 
 	const addRef = useRef<AddInstanceModalRef>(null)
@@ -46,9 +48,11 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 		available: true,
 	})
 
-	const allProducts = useAllModuleProducts(service.modules)
+	const storeModulesOfTypeCount = modules.countStoreModulesOfType(service.moduleType)
+
+	const allProducts = useAllModuleProducts(service.moduleType)
 	const typeProducts = allProducts.filter(
-		(p) => service.modules.storeList.size === 0 || !!p.installedInfo || typeFilter.visibility.available
+		(p) => storeModulesOfTypeCount === 0 || !!p.installedInfo || typeFilter.visibility.available
 	)
 
 	let candidates: JSX.Element[] = []
@@ -111,9 +115,9 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 				<AddInstanceModal ref={addRef} service={service} openConfigureInstance={service.openConfigureInstance} />
 				<div style={{ clear: 'both' }} className="row-heading">
 					<div className="add-connection-intro-section mb-3">
-						{service.modules.storeList.size > 0 ? (
+						{storeModulesOfTypeCount > 0 ? (
 							<div className="intro-grid">
-								{description(service.modules.storeList.size)}
+								{description(storeModulesOfTypeCount)}
 								<div className="intro-filter">
 									<CButtonGroup role="group" aria-label="Module visibility filter">
 										<CButton
@@ -147,8 +151,8 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 
 					<div>
 						<div className="refresh-and-last-updated mb-3">
-							<RefreshModulesList modules={service.modules} btnSize="sm" />
-							<LastUpdatedTimestamp timestamp={service.modules.storeUpdateInfo.lastUpdated} />
+							<RefreshModulesList btnSize="sm" />
+							<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 						</div>
 
 						<SearchBox filter={filter} setFilter={setFilter} />
@@ -204,11 +208,17 @@ function AddInstanceEntry({ moduleInfo, addInstance }: AddInstanceEntryProps) {
 			showHelpForVersion?.helpPath &&
 			helpViewer.current?.showFromUrl(
 				moduleInfo.moduleType,
-				moduleInfo.id,
+				moduleInfo.moduleId,
 				showHelpForVersion.versionId,
 				showHelpForVersion.helpPath
 			),
-		[helpViewer, moduleInfo.moduleType, moduleInfo.id, showHelpForVersion?.helpPath, showHelpForVersion?.versionId]
+		[
+			helpViewer,
+			moduleInfo.moduleType,
+			moduleInfo.moduleId,
+			showHelpForVersion?.helpPath,
+			showHelpForVersion?.versionId,
+		]
 	)
 
 	return (
@@ -233,8 +243,8 @@ function AddInstanceEntry({ moduleInfo, addInstance }: AddInstanceEntryProps) {
 			</div>
 			<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
 				<Link
-					to={`/connections/modules/$moduleId`}
-					params={{ moduleId: moduleInfo.id }}
+					to={`/modules/$moduleType/$moduleId`}
+					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
 					className="text-decoration-none"
 				>
 					<div

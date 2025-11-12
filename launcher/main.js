@@ -160,7 +160,7 @@ if (!lock) {
 	let sentryDsn
 	try {
 		sentryDsn = fs
-			.readFileSync(new URL('/SENTRY', import.meta.url))
+			.readFileSync(new URL('../SENTRY', import.meta.url))
 			.toString()
 			.trim()
 	} catch (_e) {
@@ -518,7 +518,8 @@ if (!lock) {
 		ipcMain.on('network-interfaces:get', () => {
 			systeminformation.networkInterfaces().then((list) => {
 				const interfaces = [
-					{ id: '0.0.0.0', label: 'All Interfaces: 0.0.0.0' },
+					{ id: '0.0.0.0', label: 'All Interfaces: IPv4 Only' },
+					{ id: '::', label: 'All Interfaces: IPv4 & IPv6' },
 					{ id: '127.0.0.1', label: 'localhost: 127.0.0.1' },
 				]
 

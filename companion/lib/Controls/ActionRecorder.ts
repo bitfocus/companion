@@ -12,7 +12,7 @@ import type {
 	RecordSessionUpdate,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { EntityModelType, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'

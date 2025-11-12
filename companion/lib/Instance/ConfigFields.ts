@@ -15,7 +15,7 @@ import type {
 	SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import {
+import type {
 	CompanionFieldVariablesSupport,
 	CompanionInputFieldBase,
 	CompanionInputFieldCheckbox,
@@ -31,7 +31,7 @@ import {
 	SomeCompanionFeedbackInputField,
 } from '@companion-module/base'
 import type { EncodeIsVisible, SomeEncodedCompanionConfigField } from '@companion-module/base/dist/host-api/api.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 
 export function translateConnectionConfigFields(fields: SomeEncodedCompanionConfigField[]): SomeCompanionInputField[] {
 	return fields.map((raw) => {
@@ -245,6 +245,7 @@ function translateCustomVariableField(
 		...translateCommonFields(field),
 		type: 'custom-variable',
 		width: width,
+		default: undefined, // type-check complains otherwise
 	}
 }
 

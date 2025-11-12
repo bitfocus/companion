@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CFormInput, CFormTextarea } from '@coreui/react'
 import Select, {
-	ControlProps,
-	OptionProps,
 	components as SelectComponents,
-	ValueContainerProps,
 	createFilter,
+	type ControlProps,
+	type OptionProps,
+	type ValueContainerProps,
 } from 'react-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
@@ -23,7 +23,6 @@ interface TextInputFieldProps {
 	disabled?: boolean
 	useVariables?: boolean
 	localVariables?: DropdownChoiceInt[]
-	isExpression?: boolean
 	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
@@ -39,7 +38,6 @@ export const TextInputField = observer(function TextInputField({
 	disabled,
 	useVariables,
 	localVariables,
-	isExpression,
 	multiline,
 	autoFocus,
 	onBlur,
@@ -77,7 +75,7 @@ export const TextInputField = observer(function TextInputField({
 	// Render the input
 	return (
 		<>
-			{useVariables || isExpression ? (
+			{useVariables ? (
 				<>
 					<VariablesSelect
 						showValue={showValue}
@@ -89,7 +87,7 @@ export const TextInputField = observer(function TextInputField({
 						placeholder={placeholder}
 						title={tooltip}
 						disabled={disabled}
-						multiline={isExpression || multiline}
+						multiline={multiline}
 						autoFocus={autoFocus}
 					/>
 				</>
@@ -401,9 +399,7 @@ const CustomValueContainerTextInput = React.memo((props: ValueContainerProps<Dro
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CFormInput
-				ref={(elm) => {
-					context.inputRef.current = elm
-				}}
+				ref={context.inputRef as React.RefObject<HTMLInputElement>}
 				type="text"
 				style={context.extraStyle}
 				title={context.title}
@@ -431,9 +427,7 @@ const CustomValueContainerTextarea = React.memo((props: ValueContainerProps<Drop
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CFormTextarea
-				ref={(elm) => {
-					context.inputRef.current = elm
-				}}
+				ref={context.inputRef as React.RefObject<HTMLTextAreaElement>}
 				style={context.extraStyle}
 				title={context.title}
 				value={context.value}

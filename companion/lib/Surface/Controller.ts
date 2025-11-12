@@ -23,21 +23,21 @@ import { listLoupedecks } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
-import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
+import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
 import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
 import { SurfaceUSBXKeys } from './USB/XKeys.js'
 import { SurfaceUSBLoupedeck } from './USB/Loupedeck.js'
 import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
 import { isVecFootpedal, SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
-import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
+import { SurfaceIPVideohubPanel, type VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
 import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
-import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
@@ -61,7 +61,7 @@ import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { getMXCreativeConsoleDeviceInfo } from '@logitech-mx-creative-console/node'
 import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -1408,6 +1408,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				if (key === 'name') continue
 				group.setGroupConfigValue(key, value)
 			}
+			group.clearPageHistory()
 		}
 
 		for (const [surfaceId, surfaceConfig] of Object.entries(surfaces)) {
@@ -1440,6 +1441,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						if (key === 'name') continue
 						group.setGroupConfigValue(key, value)
 					}
+					group.clearPageHistory()
 				}
 			} else {
 				// Device is not loaded
@@ -1452,6 +1454,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						// need the following to put the emulator on the "current" page, to match its export state
 						const group = this.#surfaceGroups.get(surfaceId)
 						group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+						group?.clearPageHistory()
 					}
 				}
 			}
@@ -1633,6 +1636,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param forceUnlock Force all surfaces to be unlocked
 	 */
 	setAllLocked(locked: boolean, forceUnlock = false): void {
+		this.#logger.debug(`Setting lock state of all surfaces to ${locked} (forceUnlock=${forceUnlock})`)
+
 		if (forceUnlock) {
 			locked = false
 		} else {
@@ -1642,7 +1647,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#surfacesAllLocked = !!locked
 
 		for (const surfaceGroup of this.#surfaceGroups.values()) {
-			this.#surfacesLastInteraction.set(surfaceGroup.groupId, Date.now())
+			if (locked) {
+				this.#surfacesLastInteraction.delete(surfaceGroup.groupId)
+			} else {
+				this.#surfacesLastInteraction.set(surfaceGroup.groupId, Date.now())
+			}
 
 			surfaceGroup.setLocked(!!locked)
 		}
@@ -1658,17 +1667,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			this.setAllLocked(locked)
 		} else {
 			this.#surfacesAllLocked = false
+			this.#logger.debug(`Setting lock state of ${surfaceOrGroupId} to ${locked}`)
+
+			let resolvedGroupId = surfaceOrGroupId
+
+			// Perform the lock/unlock if connected
+			const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
+			if (surfaceGroup) {
+				resolvedGroupId = surfaceGroup.groupId
+				surfaceGroup.setLocked(!!locked)
+			}
 
 			// Track the lock/unlock state, even if the device isn't online
 			if (locked) {
-				this.#surfacesLastInteraction.delete(surfaceOrGroupId)
+				this.#surfacesLastInteraction.delete(resolvedGroupId)
 			} else {
-				this.#surfacesLastInteraction.set(surfaceOrGroupId, Date.now())
-			}
-
-			const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
-			if (surfaceGroup) {
-				surfaceGroup.setLocked(!!locked)
+				this.#surfacesLastInteraction.set(resolvedGroupId, Date.now())
 			}
 		}
 	}

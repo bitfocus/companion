@@ -32,4 +32,6 @@ export interface ClientInstanceConfigBase {
 	moduleVersionId: string | null
 	updatePolicy: InstanceVersionUpdatePolicy
 	enabled: boolean
+	sortOrder: number
+	collectionId: string | null
 }

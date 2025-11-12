@@ -10,10 +10,10 @@
  */
 
 import { EventEmitter } from 'events'
-import { Device, HIDAsync } from 'node-hid'
+import { HIDAsync, type Device } from 'node-hid'
 import util from 'util'
 import jpg from '@julusian/jpeg-turbo'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { offsetRotation, transformButtonImage } from '../../Resources/Util.js'
 import {

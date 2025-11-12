@@ -1,5 +1,5 @@
 import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CFormLabel } from '@coreui/react'
-import React, { MutableRefObject, useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState, type MutableRefObject } from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import {
 	AlignmentInputField,
@@ -11,13 +11,14 @@ import {
 import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '~/Resources/Constants.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { InputFeatureIcons, InputFeatureIconsProps } from './OptionsInputField.js'
+import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { InputFeatureIcons, type InputFeatureIconsProps } from './OptionsInputField.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import { LocalVariablesStore } from './LocalVariablesStore.js'
+import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -169,15 +170,22 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 						)}
 					</label>
 					<CInputGroup>
-						<TextInputField
-							tooltip={'Button text'}
-							setValue={setTextValue}
-							value={values.text ?? ''}
-							useVariables
-							localVariables={textLocalVariables}
-							isExpression={values.textExpression}
-							style={{ fontWeight: 'bold', fontSize: 18 }}
-						/>
+						{values.textExpression ? (
+							<ExpressionInputField
+								setValue={setTextValue}
+								value={values.text ?? ''}
+								localVariables={textLocalVariables}
+							/>
+						) : (
+							<TextInputField
+								tooltip={'Button text'}
+								setValue={setTextValue}
+								value={values.text ?? ''}
+								useVariables
+								localVariables={textLocalVariables}
+								style={{ fontWeight: 'bold', fontSize: 18 }}
+							/>
+						)}
 						<CButton
 							color="info"
 							variant="outline"
