@@ -578,7 +578,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 				).parsedOptions
 			}
 
-			await this.#ipcWrapper.sendWithCb('executeAction', {
+			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
 					id: action.id,
 					controlId: extras?.controlId,
@@ -591,9 +591,14 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 
 				surfaceId: extras?.surfaceId,
 			})
+			if (result && !result.success) {
+				const message = result.errorMessage || 'Unknown error'
+				this.logger.warn(`Error executing action: ${message}`)
+				this.#sendToModuleLog('error', `Error executing action: ${message}`)
+			}
 		} catch (e: any) {
 			this.logger.warn(`Error executing action: ${e.message ?? e}`)
-			this.#sendToModuleLog('error', 'Error executing action: ' + e?.message)
+			this.#sendToModuleLog('error', `Error executing action: ${e?.message}`)
 
 			throw e
 		}
