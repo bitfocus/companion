@@ -53,7 +53,11 @@ import {
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from '../ApiVersions.js'
+import {
+	doesModuleExpectLabelUpdates,
+	doesModuleUseSeparateUpgradeMethod,
+	doesModuleUseNewConfigLayout,
+} from '../ApiVersions.js'
 import { ConnectionEntityManager } from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import { translateEntityInputFields } from '../ConfigFields.js'
@@ -95,6 +99,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	#hasHttpHandler = false
 
 	hasRecordActionsHandler: boolean = false
+	usesNewConfigLayout: boolean = false
 
 	#expectsLabelUpdates: boolean = false
 
@@ -166,6 +171,8 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			5000
 		)
 
+		this.usesNewConfigLayout = doesModuleUseNewConfigLayout(apiVersion0)
+
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
 			? new ConnectionEntityManager(this.#ipcWrapper, this.#deps.controls, this.connectionId)
 			: null
@@ -224,6 +231,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		// Save the resulting values
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
+		this.usesNewConfigLayout = this.usesNewConfigLayout && !msg.disableNewConfigLayout
 		this.#currentUpgradeIndex = config.lastUpgradeIndex = msg.newUpgradeIndex
 		this.#deps.setInstanceConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 

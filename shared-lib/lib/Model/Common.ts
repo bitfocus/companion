@@ -71,6 +71,7 @@ export interface WrappedImage {
 
 export interface ClientEditInstanceConfig {
 	fields: Array<SomeCompanionInputField>
+	useNewLayout: boolean
 	config: unknown
 	secrets: unknown
 }

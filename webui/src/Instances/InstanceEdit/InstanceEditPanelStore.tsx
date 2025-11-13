@@ -102,7 +102,7 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 						this.#configAndSecrets.set({
 							fields: data.fields,
 
-							useNewLayout: true, // nocommit me!
+							useNewLayout: data.useNewLayout,
 
 							config: data.config as CompanionOptionValues,
 							configDirty: false,

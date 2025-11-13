@@ -1889,9 +1889,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base@npm:^1.13.4":
-  version: 1.13.4
-  resolution: "@companion-module/base@npm:1.13.4"
+"@companion-module/base@npm:1.14.0-0-nightly-main-20251113-203236-30c5c0c":
+  version: 1.14.0-0-nightly-main-20251113-203236-30c5c0c
+  resolution: "@companion-module/base@npm:1.14.0-0-nightly-main-20251113-203236-30c5c0c"
   dependencies:
     ajv: "npm:^8.17.1"
     colord: "npm:^2.9.3"
@@ -1902,7 +1902,7 @@ __metadata:
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/1d57fc67d10cef7cda1d627daac8c79b03be1059a18ff5476f0427a35909fa8d53cd29c1bb0c8d37a65c59e15b0ee561b8faeb318f2511efae6974e4c3d9a9e5
+  checksum: 10c0/fc4a4f614be5ba9b0acd0edf80d26e7dbd35ae7d88ca029c438105ad76d97e8cce91bee4fdf0b6d17a999846be1e1607546d43ec320d55b86500202fd248ed7a
   languageName: node
   linkType: hard
 
@@ -10970,7 +10970,7 @@ asn1@evs-broadcast/node-asn1:
   dependencies:
     "@blackmagic-controller/node": "npm:^1.0.2"
     "@companion-app/shared": "npm:*"
-    "@companion-module/base": "npm:^1.13.4"
+    "@companion-module/base": "npm:1.14.0-0-nightly-main-20251113-203236-30c5c0c"
     "@elgato-stream-deck/node": "npm:^7.3.4"
     "@elgato-stream-deck/tcp": "npm:^7.3.4"
     "@julusian/bonjour-service": "npm:^1.4.2"
