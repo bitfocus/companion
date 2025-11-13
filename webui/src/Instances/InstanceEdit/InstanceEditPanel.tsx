@@ -281,15 +281,18 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 
 				const isSecret = isConfigFieldSecret(fieldInfo)
 				return (
-					<InstanceFormRow fieldInfo={fieldInfo} isVisible={isVisible} useNewLayout={configData.useNewLayout}>
+					<InstanceFormRow
+						key={fieldInfo.id}
+						fieldInfo={fieldInfo}
+						isVisible={isVisible}
+						useNewLayout={configData.useNewLayout}
+					>
 						{isSecret ? (
-							<>
-								<InstanceSecretField
-									definition={fieldInfo}
-									value={configData.secrets[fieldInfo.id]}
-									setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
-								/>
-							</>
+							<InstanceSecretField
+								definition={fieldInfo}
+								value={configData.secrets[fieldInfo.id]}
+								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
+							/>
 						) : (
 							<InstanceEditField
 								definition={fieldInfo}
@@ -366,7 +369,6 @@ const InstanceFormRow = observer(function InstanceFormRow({
 	children,
 }: React.PropsWithChildren<InstanceFormRowProps>): React.JSX.Element | null {
 	if (useNewLayout) {
-		fieldInfo.width = 12
 		if (fieldInfo.type === 'static-text') {
 			if (!fieldInfo.label && !fieldInfo.value) return null // Skip rendering the fields used to force alignment
 
@@ -377,7 +379,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				return (
 					<CCol sm={12}>
 						{fieldInfo.label ? <CFormLabel>{fieldInfo.label}</CFormLabel> : ''}
-						{<StaticTextFieldText {...fieldInfo} allowImages />}
+						<StaticTextFieldText {...fieldInfo} allowImages />
 					</CCol>
 				)
 			}
