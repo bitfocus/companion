@@ -27,6 +27,7 @@ import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
 import path from 'path'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 let infoFileName: URL
 // note this could be done in one line, but webpack was having trouble before url processing was disabled.
@@ -224,6 +225,7 @@ export class Registry {
 				this.controls,
 				this.graphics,
 				this.variables,
+				this.surfaces,
 				oscSender
 			)
 			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
@@ -470,9 +472,7 @@ export interface AppInfo {
 	/** The current config directory */
 	configDir: string
 	/** The base directory for storing installed modules */
-	modulesDirs: {
-		connection: string
-	}
+	modulesDirs: Record<ModuleInstanceType, string>
 	machineId: string
 	appVersion: string
 	appBuild: string

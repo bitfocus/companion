@@ -14,6 +14,7 @@ import type { HelpModalRef } from '~/Instances/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
 import type { WhatsNewModalRef } from '~/WhatsNewModal/WhatsNew.js'
 import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
+import type { SurfaceInstancesStore } from './SurfaceInstancesStore.js'
 
 export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -23,7 +24,9 @@ export interface RootAppStore {
 	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good
 
 	readonly modules: ModuleInfoStore
+
 	readonly connections: ConnectionsStore
+	readonly surfaceInstances: SurfaceInstancesStore
 
 	/** Currently running 'learn' callbacks */
 	readonly activeLearns: ObservableSet<string>

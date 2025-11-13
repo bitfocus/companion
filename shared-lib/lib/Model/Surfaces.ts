@@ -5,6 +5,7 @@ import type {
 	CompanionInputFieldCustomVariableExtended,
 	CompanionInputFieldDropdownExtended,
 	CompanionInputFieldNumberExtended,
+	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
 import type { CollectionBase } from './Collections.js'
@@ -119,16 +120,31 @@ export interface SurfacesUpdateUpdateOp {
 	patch: JsonPatchOperation<ClientDevicesListItem>[]
 }
 
-export interface OutboundSurfaceInfo {
+export interface OutboundSurfaceInfoBase {
 	id: string
+	type: 'elgato' | 'plugin'
+	enabled: boolean
+
+	// TODO - ensure defined in existing configs!
+	collectionId: string | null
+	sortOrder: number
+}
+
+export type OutboundSurfaceInfo = LegacyOutboundSurfaceInfo | ModernOutboundSurfaceInfo
+export interface LegacyOutboundSurfaceInfo extends OutboundSurfaceInfoBase {
 	displayName: string
 	type: 'elgato'
-	enabled: boolean
 	address: string
 	port: number
 
 	collectionId: string | null
 	sortOrder: number
+}
+export interface ModernOutboundSurfaceInfo extends OutboundSurfaceInfoBase {
+	displayName: string
+	type: 'plugin'
+	instanceId: string
+	config: Record<string, any>
 }
 
 export interface OutboundSurfaceCollectionData {
@@ -157,7 +173,10 @@ export interface OutboundSurfacesUpdateAddOp {
 	info: OutboundSurfaceInfo
 }
 
-export type ClientDiscoveredSurfaceInfo = ClientDiscoveredSurfaceInfoSatellite | ClientDiscoveredSurfaceInfoStreamDeck
+export type ClientDiscoveredSurfaceInfo =
+	| ClientDiscoveredSurfaceInfoSatellite
+	| ClientDiscoveredSurfaceInfoStreamDeck
+	| ClientDiscoveredSurfaceInfoPlugin
 
 export interface ClientDiscoveredSurfaceInfoSatellite {
 	id: string
@@ -181,7 +200,18 @@ export interface ClientDiscoveredSurfaceInfoStreamDeck {
 	port: number
 
 	modelName: string
-	serialnumber: string | undefined
+}
+
+export interface ClientDiscoveredSurfaceInfoPlugin {
+	id: string
+
+	surfaceType: 'plugin'
+	instanceId: string
+
+	name: string
+	description: string
+
+	config: Record<string, any>
 }
 
 export type SurfacesDiscoveryUpdate =
@@ -211,6 +241,7 @@ export interface CompanionExternalAddresses {
 export type CompanionSurfaceInputFieldTextInput = Omit<CompanionInputFieldTextInputExtended, 'useVariables'>
 
 export type CompanionSurfaceConfigField =
+	| CompanionInputFieldStaticTextExtended
 	| CompanionSurfaceInputFieldTextInput
 	| CompanionInputFieldDropdownExtended
 	| CompanionInputFieldNumberExtended

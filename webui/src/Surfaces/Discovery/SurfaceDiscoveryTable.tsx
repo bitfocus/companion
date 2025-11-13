@@ -1,11 +1,12 @@
 import type {
+	ClientDiscoveredSurfaceInfoPlugin,
 	ClientDiscoveredSurfaceInfoSatellite,
 	ClientDiscoveredSurfaceInfoStreamDeck,
 } from '@companion-app/shared/Model/Surfaces.js'
 import React, { useCallback, useContext, useRef } from 'react'
-import { assertNever } from '~/Resources/util.js'
+import { assertNever, useComputed } from '~/Resources/util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { faBan, faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SetupSatelliteModal, type SetupSatelliteModalRef } from './SetupSatelliteModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -13,10 +14,17 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useSurfaceDiscoveryContext } from './SurfaceDiscoveryContext.js'
+import { useNavigate } from '@tanstack/react-router'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { toJS } from 'mobx'
 
 export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
+	const { notifier } = useContext(RootAppStoreContext)
+	const navigate = useNavigate()
+
 	const { discoveredSurfaces } = useSurfaceDiscoveryContext()
-	const { userConfig } = useContext(RootAppStoreContext)
 
 	const setupSatelliteRef = useRef<SetupSatelliteModalRef>(null)
 
@@ -44,6 +52,29 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 		[addRemoteStreamDeckMutation]
 	)
 
+	const addRemotePluginSurfaceMutation = useMutationExt(trpc.surfaces.outbound.add2.mutationOptions())
+	const addConnection = useCallback(
+		(surfaceInfo: ClientDiscoveredSurfaceInfoPlugin) => {
+			addRemotePluginSurfaceMutation
+				.mutateAsync({
+					instanceId: surfaceInfo.instanceId,
+					connectionId: surfaceInfo.id,
+				})
+				.then((res) => {
+					if (!res.ok) {
+						notifier.show('Failed to setup connection', res.error ?? 'Unknown error')
+					} else {
+						void navigate({ to: '/surfaces/remote/$connectionId', params: { connectionId: res.id } })
+					}
+					console.log('added plugin surface', surfaceInfo)
+				})
+				.catch((e) => {
+					console.error('Failed to add plugin surface: ', e)
+				})
+		},
+		[addRemotePluginSurfaceMutation, navigate, notifier]
+	)
+
 	return (
 		<>
 			<SetupSatelliteModal ref={setupSatelliteRef} />
@@ -52,39 +83,30 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 				<thead>
 					<tr>
 						<th>Name</th>
-						<th>Type</th>
 						<th>Address</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
 				<tbody>
-					{userConfig.properties?.discoveryEnabled ? (
-						<>
-							{Object.entries(discoveredSurfaces).map(([id, svc]) => {
-								switch (svc?.surfaceType) {
-									case 'satellite':
-										return <SatelliteRow key={id} surfaceInfo={svc} showSetupSatellite={showSetupSatellite} />
-									case 'streamdeck':
-										return <DiscoveredSurfaceRow key={id} surfaceInfo={svc} addRemoteStreamDeck={addRemoteStreamDeck} />
-									case undefined:
-										return null
-									default:
-										assertNever(svc)
-										return null
-								}
-							})}
-							{Object.values(discoveredSurfaces).length === 0 && (
-								<tr>
-									<td colSpan={7}>
-										<NonIdealState icon={faSearch} text="Searching for remote surfaces" />
-									</td>
-								</tr>
-							)}
-						</>
-					) : (
+					{Object.entries(discoveredSurfaces).map(([id, svc]) => {
+						switch (svc?.surfaceType) {
+							case 'satellite':
+								return <SatelliteRow key={id} surfaceInfo={svc} showSetupSatellite={showSetupSatellite} />
+							case 'streamdeck':
+								return <DiscoveredSurfaceRow key={id} surfaceInfo={svc} addRemoteStreamDeck={addRemoteStreamDeck} />
+							case 'plugin':
+								return <DiscoveredSurfaceRow2 key={id} surfaceInfo={svc} addConnection={addConnection} />
+							case undefined:
+								return null
+							default:
+								assertNever(svc)
+								return null
+						}
+					})}
+					{Object.values(discoveredSurfaces).length === 0 && (
 						<tr>
 							<td colSpan={7}>
-								<NonIdealState icon={faBan} text="Discovery of Remote surfaces is disabled" />
+								<NonIdealState icon={faSearch} text="Searching for remote surfaces" />
 							</td>
 						</tr>
 					)}
@@ -112,8 +134,15 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 
 	return (
 		<tr>
-			<td>{surfaceInfo.name}</td>
-			<td>Companion Satellite</td>
+			<td>
+				<div className="flex flex-column">
+					<b>{surfaceInfo.name}</b>
+					<span className="auto-ellipsis" title="Companion Satellite">
+						Companion Satellite
+					</span>
+				</div>
+			</td>
+
 			<td>
 				{addresses.map((address) => {
 					// Ensure ipv6 is formatted correctly for links
@@ -158,8 +187,14 @@ const DiscoveredSurfaceRow = observer(function DiscoveredSurfaceRow({
 
 	return (
 		<tr>
-			<td>{surfaceInfo.name}</td>
-			<td>{surfaceInfo.modelName}</td>
+			<td>
+				<div className="flex flex-column">
+					<b>{surfaceInfo.name}</b>
+					<span className="auto-ellipsis" title={surfaceInfo.modelName}>
+						{surfaceInfo.modelName}
+					</span>
+				</div>
+			</td>
 			<td>
 				<p className="p-no-margin">{surfaceInfo.address}</p>
 			</td>
@@ -172,6 +207,92 @@ const DiscoveredSurfaceRow = observer(function DiscoveredSurfaceRow({
 					) : (
 						<CButton onClick={() => addRemoteStreamDeck(surfaceInfo)} title="Add Stream Deck" className="btn-undefined">
 							<FontAwesomeIcon icon={faPlus} /> Add Stream Deck
+						</CButton>
+					)}
+				</CButtonGroup>
+			</td>
+		</tr>
+	)
+})
+
+interface StreamDeckRow2Props {
+	surfaceInfo: ClientDiscoveredSurfaceInfoPlugin
+	addConnection: (surfaceInfo: ClientDiscoveredSurfaceInfoPlugin) => void
+}
+
+const DiscoveredSurfaceRow2 = observer(function DiscoveredSurfaceRow2({
+	surfaceInfo,
+	addConnection,
+}: StreamDeckRow2Props) {
+	const { surfaceInstances, surfaces } = useContext(RootAppStoreContext)
+
+	const instanceInfo = surfaceInstances.instances.get(surfaceInfo.instanceId)
+	const surfaceInstanceDisplayName = instanceInfo?.label ?? 'Unknown Surface Instance'
+
+	const isAlreadyAdded = useComputed(() => {
+		// If no expression, can't match
+		if (!instanceInfo?.remoteConfigMatches) return false
+
+		try {
+			const expression = ParseExpression(instanceInfo.remoteConfigMatches)
+			const doesMatch = (otherConfig: Record<string, any>) => {
+				try {
+					const val = ResolveExpression(
+						expression,
+						(props) => {
+							if (props.label === 'objA') {
+								return toJS(surfaceInfo.config[props.name])
+							} else if (props.label === 'objB') {
+								return toJS(otherConfig[props.name])
+							} else {
+								throw new Error(`Unknown variable "${props.variableId}"`)
+							}
+						},
+						ExpressionFunctions
+					)
+					return !!val && val !== 'false' && val !== '0'
+				} catch (e) {
+					console.error('Failed to resolve expression', e)
+					return false
+				}
+			}
+
+			// Find a surface which matches
+			for (const surface of surfaces.outboundSurfaces.values()) {
+				if (surface.type === 'plugin' && surface.instanceId === surfaceInfo.instanceId && doesMatch(surface.config)) {
+					return true
+				}
+			}
+
+			return false
+		} catch (e) {
+			console.error('Failed to process remoteConfigMatches expression', e)
+			return false
+		}
+	}, [instanceInfo, surfaceInfo, surfaces])
+
+	return (
+		<tr>
+			<td>
+				<div className="flex flex-column">
+					<b>{surfaceInfo.name}</b>
+					<span className="auto-ellipsis" title={surfaceInfo.description}>
+						{surfaceInfo.description}
+					</span>
+				</div>
+			</td>
+			<td>
+				<p className="p-no-margin">{surfaceInstanceDisplayName}</p>
+			</td>
+			<td>
+				<CButtonGroup>
+					{isAlreadyAdded ? (
+						<CButton title={'Already added'} className="btn-undefined" disabled>
+							<FontAwesomeIcon icon={faCheck} /> Already added
+						</CButton>
+					) : (
+						<CButton onClick={() => addConnection(surfaceInfo)} title="Add Connection" className="btn-undefined">
+							<FontAwesomeIcon icon={faPlus} /> Add Connection
 						</CButton>
 					)}
 				</CButtonGroup>
