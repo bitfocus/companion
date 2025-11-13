@@ -6,7 +6,11 @@ import type {
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientImportSelection, ConnectionRemappings } from '@companion-app/shared/Model/ImportExport.js'
+import type {
+	ClientImportOrResetSelection,
+	ConnectionRemappings,
+	ImportOrResetType,
+} from '@companion-app/shared/Model/ImportExport.js'
 import {
 	fixupControl,
 	fixupExpressionVariableControl,
@@ -130,7 +134,11 @@ export class ImportController {
 		return instanceRemap2
 	}
 
-	importFull(data: ExportFullv6, config: ClientImportSelection, mergeConnections: boolean): void {
+	importFull(data: ExportFullv6, config: ClientImportOrResetSelection): void {
+		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
+
+		const mergeConnections = config.connections === 'unchanged'
+
 		// Always Import instances
 		// Import connection collections if provided
 		if (data.connectionCollections && data.connectionCollections.length > 0) {
@@ -147,13 +155,13 @@ export class ImportController {
 		const instanceIdMap = this.#importInstances(data.instances, preserveRemap)
 
 		// import custom variables
-		if (config.customVariables) {
+		if (isImporting(config.customVariables)) {
 			this.#variablesController.custom.replaceCollections(data.customVariablesCollections || [])
 			this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
 		}
 
 		// Import expression variables
-		if (config.expressionVariables) {
+		if (isImporting(config.expressionVariables)) {
 			this.#controlsController.replaceExpressionVariableCollections(data.expressionVariablesCollections || [])
 
 			for (const [id, variableDefinition] of Object.entries(data.expressionVariables || {})) {
@@ -165,7 +173,7 @@ export class ImportController {
 		}
 
 		// note data.pages is needed only to satisfy TypeScript, since config.buttons is false if pages is missing.
-		if (config.buttons) {
+		if (isImporting(config.buttons)) {
 			// Import pages
 			for (const [pageNumber0, pageInfo] of Object.entries(data.pages ?? {})) {
 				if (!pageInfo) continue
@@ -189,7 +197,7 @@ export class ImportController {
 			}
 		}
 
-		if (config.surfaces) {
+		if (isImporting(config.surfaces.known)) {
 			const surfaces = data.surfaces || ({} as Record<number, SurfaceConfig>)
 			const surfaceGroups = data.surfaceGroups || ({} as Record<number, SurfaceGroupConfig>)
 			const getPageId = (val: number) =>
@@ -222,7 +230,7 @@ export class ImportController {
 			this.#surfacesController.importSurfaces(surfaceGroups, surfaces)
 		}
 
-		if (config.triggers) {
+		if (isImporting(config.triggers)) {
 			// Import trigger collections if provided
 			if (data.triggerCollections) {
 				this.#controlsController.replaceTriggerCollections(data.triggerCollections)
