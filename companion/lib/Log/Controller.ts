@@ -15,6 +15,7 @@ import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
+import { isPackaged } from '../Resources/Util.js'
 
 export interface Logger {
 	readonly source: string
@@ -309,7 +310,7 @@ class LogController {
 		if (!sentryDsn) {
 			try {
 				sentryDsn = fs
-					.readFileSync(new URL('../../../SENTRY', import.meta.url))
+					.readFileSync(new URL(isPackaged() ? './SENTRY' : '../../../SENTRY', import.meta.url))
 					.toString()
 					.trim()
 			} catch (_e) {

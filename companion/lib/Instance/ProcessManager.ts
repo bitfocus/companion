@@ -18,8 +18,6 @@ import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/M
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 
-const require = createRequire(import.meta.url)
-
 /**
  * A backoff sleep strategy
  * @returns ms to sleep
@@ -647,6 +645,8 @@ export class InstanceProcessManager {
 				if (!moduleInfo.isPackaged) {
 					// When not packaged, lookup the version from the library itself
 					try {
+						const require = createRequire(moduleInfo.basePath)
+
 						const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
 							paths: [moduleInfo.basePath],
 						})

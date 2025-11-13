@@ -99,11 +99,10 @@ export class UIExpress {
 		this.app.use(async (r, s, n) => this.#legacyApiRouter(r, s, n))
 
 		function getResourcePath(subpath: string): string {
-			if (isPackaged()) {
-				return path.join(__dirname, subpath)
-			} else {
-				return fileURLToPath(new URL(path.join('../../..', subpath), import.meta.url))
+			if (!isPackaged()) {
+				subpath = path.join('../../..', subpath)
 			}
+			return fileURLToPath(new URL(subpath, import.meta.url))
 		}
 
 		const getCustomPrefixHeader = (req: Express.Request): string => {

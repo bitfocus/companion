@@ -47,11 +47,9 @@ export interface GraphicsOptions {
  * Generate full path to a font file, handling both packaged and non-packaged environments
  */
 function generateFontUrl(fontFilename: string): string {
-	if (isPackaged()) {
-		return path.join(__dirname, 'assets/Fonts', fontFilename)
-	} else {
-		return fileURLToPath(new URL(path.join('../../../assets/Fonts', fontFilename), import.meta.url))
-	}
+	const fontPath = isPackaged() ? 'assets/Fonts' : '../../../assets/Fonts'
+	// we could simplify by using import.meta.dirname
+	return fileURLToPath(new URL(path.join(fontPath, fontFilename), import.meta.url))
 }
 
 interface GraphicsControllerEvents {
@@ -96,7 +94,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #renderQueue: ImageWriteQueue<string, [RenderArguments, boolean]>
 
 	#pool = workerPool.pool(
-		isPackaged() ? path.join(__dirname, './RenderThread.js') : fileURLToPath(new URL('./Thread.js', import.meta.url)),
+		// note: import.meta.url can be replaced with import.meta.directory as long as we use node v22.16 and later
+		fileURLToPath(new URL(isPackaged() ? './RenderThread.js' : './Thread.js', import.meta.url)),
 		{
 			minWorkers: 2,
 			maxWorkers: 6,
