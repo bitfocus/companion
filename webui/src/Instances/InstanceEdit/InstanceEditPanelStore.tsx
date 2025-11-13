@@ -18,6 +18,8 @@ export interface InstanceBasicInfoChanges {
 export interface InstanceConfigAndSecrets {
 	fields: Array<SomeCompanionInputField>
 
+	useNewLayout: boolean
+
 	config: CompanionOptionValues
 	configDirty: boolean
 	secrets: CompanionOptionValues
@@ -99,6 +101,8 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 						this.#isLoading.set(null)
 						this.#configAndSecrets.set({
 							fields: data.fields,
+
+							useNewLayout: data.useNewLayout,
 
 							config: data.config as CompanionOptionValues,
 							configDirty: false,
