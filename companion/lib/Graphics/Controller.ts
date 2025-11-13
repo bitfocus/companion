@@ -50,11 +50,6 @@ function generateFontUrl(fontFilename: string): string {
 	const fontPath = isPackaged() ? 'assets/Fonts' : '../../../assets/Fonts'
 	// we could simplify by using import.meta.dirname
 	return fileURLToPath(new URL(path.join(fontPath, fontFilename), import.meta.url))
-	// if (isPackaged()) {
-	// 	return path.join(__dirname, 'assets/Fonts', fontFilename)
-	// } else {
-	// 	return fileURLToPath(new URL(path.join('../../../assets/Fonts', fontFilename), import.meta.url))
-	// }
 }
 
 interface GraphicsControllerEvents {

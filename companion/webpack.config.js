@@ -64,7 +64,7 @@ export default {
 	},
 	externalsPresets: { node: true },
 	externals: {
-		// Native libs that are needed (note: the commonjs2 modifier is incompatible with `output.module: true` )
+		// Native libs that are needed
 		usb: 'usb',
 		bufferutil: 'bufferutil',
 		'@serialport/bindings-cpp': '@serialport/bindings-cpp',
