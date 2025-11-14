@@ -1,5 +1,5 @@
 import jsep from 'jsep'
-import jsepNumbers from '@jsep-plugin/numbers'
+import jsepNumbers from './Plugins/numberPlugin-ari.js' // '@jsep-plugin/numbers'
 import jsepObject, { type ObjectExpression } from '@jsep-plugin/object'
 import jsepTemplateLiteral, { type TemplateLiteral } from '@jsep-plugin/template'
 import jsepComments from '@jsep-plugin/comment'

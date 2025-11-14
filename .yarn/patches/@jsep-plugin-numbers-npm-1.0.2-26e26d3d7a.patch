@@ -1,0 +1,43 @@
+diff --git a/dist/index.js b/dist/index.js
+index cc62966201bf318104463454d0c31f502d63095f..1eaa30264681490c56e2e149d8156049841acf3f 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -41,7 +41,9 @@ var index = {
+ 					raw: this.expr.substring(startIndex, this.index),
+ 				};
+ 			}
+-			else if (Jsep.isDecimalDigit(this.code) || this.code === Jsep.PERIOD_CODE) {
++			else if (Jsep.isDecimalDigit(this.code) || (
++					 this.code === Jsep.PERIOD_CODE &&  this.expr.charCodeAt(this.index +1) !== Jsep.PERIOD_CODE
++				 )) {
+ 				gobbleBase10.call(this, env);
+ 			}
+ 		});
+@@ -141,19 +143,20 @@ var index = {
+ 			}
+ 
+ 			const chCode = this.code;
++			const prevCode = this.expr.charCodeAt(this.index - 1)
+ 
+ 			// Check to make sure this isn't a variable name that start with a number (123abc)
+ 			if (Jsep.isIdentifierStart(chCode)) {
+ 				this.throwError('Variable names cannot start with a number (' +
+ 					number + this.char + ')');
+ 			}
+-			else if (chCode === Jsep.PERIOD_CODE) {
+-				if (number.length > 1) {
+-					this.throwError(`Unexpected period ${JSON.stringify({ chCode, number }, null, 2)}`);
+-				}
+-				// leave other error-handling to jsep core. Also allows spread operator.
+-				this.index = startIndex;
+-				return;
++			else if (chCode === Jsep.PERIOD_CODE && prevCode ===  Jsep.PERIOD_CODE) {
++				// two `..` with at least one digit already processed (otherwise gobbleBase10 wouldn't have been called)
++				// rollback index and let Jsep see if it's an operator...
++				this.index --;
++			}
++			else if (number.length === 1 && number.charCodeAt(0) === Jsep.PERIOD_CODE) {
++				this.throwError('Unexpected period');
+ 			}
+ 
+ 			env.node = {

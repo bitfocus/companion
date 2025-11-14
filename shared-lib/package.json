@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@jsep-plugin/comment": "^1.0.4",
-    "@jsep-plugin/numbers": "^1.0.2",
+    "@jsep-plugin/numbers": "patch:@jsep-plugin/numbers@npm%3A1.0.2#~/.yarn/patches/@jsep-plugin-numbers-npm-1.0.2-26e26d3d7a.patch",
     "@jsep-plugin/object": "^1.2.2",
     "@jsep-plugin/template": "^1.0.5",
     "jsep": "patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch",

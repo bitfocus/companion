@@ -1,15 +1,59 @@
 diff --git a/dist/jsep.js b/dist/jsep.js
-index ffa8196c6c66a81d4f6e3b3f811789500ad14775..8a39ef155e5c2017b7765385ad79ca9eb433a166 100644
+index ffa8196c6c66a81d4f6e3b3f811789500ad14775..636f08ccfa9a7c7b329808ed4763e4f59047f144 100644
 --- a/dist/jsep.js
 +++ b/dist/jsep.js
-@@ -700,6 +700,10 @@ class Jsep {
- 			else if (ch === Jsep.PERIOD_CODE || optional) {
+@@ -571,7 +571,7 @@ class Jsep {
+ 	 * @returns {boolean|jsep.Expression}
+ 	 */
+ 	gobbleToken() {
+-		let ch, to_check, tc_len, node;
++		let ch, ch_next, to_check, tc_len, node;
+ 
+ 		this.gobbleSpaces();
+ 		node = this.searchHook('gobble-token');
+@@ -580,9 +580,10 @@ class Jsep {
+ 		}
+ 
+ 		ch = this.code;
++		ch_next = this.expr.charCodeAt(this.index +1);
+ 
+-		if (Jsep.isDecimalDigit(ch) || ch === Jsep.PERIOD_CODE) {
+-			// Char code 46 is a dot `.` which can start off a numeric literal
++		if (Jsep.isDecimalDigit(ch) || (ch === Jsep.PERIOD_CODE && ch_next !== Jsep.PERIOD_CODE)) {
++			// A PERIOD `.` can start off a numeric literal, but not if it's `..` (which can be an operator)
+ 			return this.gobbleNumericLiteral();
+ 		}
+ 
+@@ -701,6 +702,11 @@ class Jsep {
  				if (optional) {
  					this.index--;
-+				} else if (this.expr.charCodeAt(this.index) === Jsep.PERIOD_CODE) {
-+					// allow '..' as an operator (note that we already advanced this.index, above)
-+					this.index -= 2;
-+					break;
  				}
++				else if (this.expr.charCodeAt(this.index) === Jsep.PERIOD_CODE) {
++					// if '..' it's not a property extractor, so exit after reverting this.index, which we advanced, above
++					this.index--;
++					break;
++				}
  				this.gobbleSpaces();
  				node = {
+ 					type: Jsep.MEMBER_EXP,
+@@ -761,13 +767,19 @@ class Jsep {
+ 		}
+ 
+ 		chCode = this.code;
++		const prevCode = this.expr.charCodeAt(this.index - 1)
+ 
+ 		// Check to make sure this isn't a variable name that start with a number (123abc)
+ 		if (Jsep.isIdentifierStart(chCode)) {
+ 			this.throwError('Variable names cannot start with a number (' +
+ 				number + this.char + ')');
+ 		}
+-		else if (chCode === Jsep.PERIOD_CODE || (number.length === 1 && number.charCodeAt(0) === Jsep.PERIOD_CODE)) {
++		else if (chCode === Jsep.PERIOD_CODE && prevCode ===  Jsep.PERIOD_CODE) {
++			// number "ends" with '..', treat it as the start of a new operator, and roll back the index.
++			// note that the call to gobbleNumbericLiteral() prevents the possibility of "number" starting with `..`
++			this.index--;
++		}
++		else if (number.length === 1 && number.charCodeAt(0) === Jsep.PERIOD_CODE) {
+ 			this.throwError('Unexpected period');
+ 		}
+ 

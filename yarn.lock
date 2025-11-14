@@ -2123,7 +2123,7 @@ __metadata:
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
     "@jsep-plugin/comment": "npm:^1.0.4"
-    "@jsep-plugin/numbers": "npm:^1.0.2"
+    "@jsep-plugin/numbers": "patch:@jsep-plugin/numbers@npm%3A1.0.2#~/.yarn/patches/@jsep-plugin-numbers-npm-1.0.2-26e26d3d7a.patch"
     "@jsep-plugin/object": "npm:^1.2.2"
     "@jsep-plugin/template": "npm:^1.0.5"
     "@types/semver": "npm:^7.7.1"
@@ -4454,12 +4454,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jsep-plugin/numbers@npm:^1.0.2":
+"@jsep-plugin/numbers@npm:1.0.2":
   version: 1.0.2
   resolution: "@jsep-plugin/numbers@npm:1.0.2"
   peerDependencies:
     jsep: ^0.4.0||^1.0.0
   checksum: 10c0/04ec2e38dedadef98762e009e3f694a5cb8647615cb64c8d3525c916af667d75a599e67f671e3fedf7e3cf07afeb3ef715531ba2af97b6e95f5504dcc9f00804
+  languageName: node
+  linkType: hard
+
+"@jsep-plugin/numbers@patch:@jsep-plugin/numbers@npm%3A1.0.2#~/.yarn/patches/@jsep-plugin-numbers-npm-1.0.2-26e26d3d7a.patch":
+  version: 1.0.2
+  resolution: "@jsep-plugin/numbers@patch:@jsep-plugin/numbers@npm%3A1.0.2#~/.yarn/patches/@jsep-plugin-numbers-npm-1.0.2-26e26d3d7a.patch::version=1.0.2&hash=6979c6"
+  peerDependencies:
+    jsep: ^0.4.0||^1.0.0
+  checksum: 10c0/6591706a6099359026c8364e72b85b36b972259bc60011d3979f29da6ed558eb24f16bacb6e47aafa554f1cfcad081e2519e544bf2e7dacc9e0eb4a083bc6aa3
   languageName: node
   linkType: hard
 
@@ -16690,8 +16699,8 @@ asn1@evs-broadcast/node-asn1:
 
 "jsep@patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch":
   version: 1.4.0
-  resolution: "jsep@patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch::version=1.4.0&hash=40380f"
-  checksum: 10c0/983e29ed44d648cf4e7b2cf1cbed06e982f68f28169894e74e649a319084e8665ba2269cf958b4333b58ca7d1c2d0093dc9ecf953aaaa01626c90cca1e39c26f
+  resolution: "jsep@patch:jsep@npm%3A1.4.0#~/.yarn/patches/jsep-npm-1.4.0-ef20d4922d.patch::version=1.4.0&hash=4164a8"
+  checksum: 10c0/a4de733dd86be20340edc39104bc09048c0ab6b9df57a5e4387b706fd0d99a99cf45f8c5e102901898f29175aa8cca7f975879f081b911e15880b93d31bc1730
   languageName: node
   linkType: hard
 
