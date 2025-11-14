@@ -1,23 +1,35 @@
 diff --git a/dist/index.js b/dist/index.js
-index cc62966201bf318104463454d0c31f502d63095f..1eaa30264681490c56e2e149d8156049841acf3f 100644
+index cc62966201bf318104463454d0c31f502d63095f..8afc57fd3d15e6330e727d20f21c8393d2ef5b5d 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -41,7 +41,9 @@ var index = {
+@@ -41,7 +41,8 @@ var index = {
  					raw: this.expr.substring(startIndex, this.index),
  				};
  			}
 -			else if (Jsep.isDecimalDigit(this.code) || this.code === Jsep.PERIOD_CODE) {
-+			else if (Jsep.isDecimalDigit(this.code) || (
-+					 this.code === Jsep.PERIOD_CODE &&  this.expr.charCodeAt(this.index +1) !== Jsep.PERIOD_CODE
-+				 )) {
++			else {
++				// this will return `undefined` if it's not a number
  				gobbleBase10.call(this, env);
  			}
  		});
-@@ -141,19 +143,20 @@ var index = {
+@@ -106,6 +107,12 @@ var index = {
+ 			const startIndex = this.index;
+ 			let number = '';
+ 
++			if (!Jsep.isDecimalDigit(this.code) && !(
++				this.code === Jsep.PERIOD_CODE &&  this.expr.charCodeAt(this.index +1) !== Jsep.PERIOD_CODE
++			)) {
++				return;
++			}
++
+ 			const gobbleDigits = () => {
+ 				while (Jsep.isDecimalDigit(this.code) || this.code === UNDERSCORE) {
+ 					if (this.code === UNDERSCORE) {
+@@ -141,19 +148,20 @@ var index = {
  			}
  
  			const chCode = this.code;
-+			const prevCode = this.expr.charCodeAt(this.index - 1)
++			const prevCode = this.expr.charCodeAt(this.index - 1);
  
  			// Check to make sure this isn't a variable name that start with a number (123abc)
  			if (Jsep.isIdentifierStart(chCode)) {
@@ -32,8 +44,8 @@ index cc62966201bf318104463454d0c31f502d63095f..1eaa30264681490c56e2e149d8156049
 -				this.index = startIndex;
 -				return;
 +			else if (chCode === Jsep.PERIOD_CODE && prevCode ===  Jsep.PERIOD_CODE) {
-+				// two `..` with at least one digit already processed (otherwise gobbleBase10 wouldn't have been called)
-+				// rollback index and let Jsep see if it's an operator...
++				// number "ends" with '..', treat it as the start of a new operator, and roll back the index.
++				// note that the possibility of `..` as the first two chars is eliminated above
 +				this.index --;
 +			}
 +			else if (number.length === 1 && number.charCodeAt(0) === Jsep.PERIOD_CODE) {
@@ -41,3 +53,32 @@ index cc62966201bf318104463454d0c31f502d63095f..1eaa30264681490c56e2e149d8156049
  			}
  
  			env.node = {
+diff --git a/dist/index.min.js b/dist/index.min.js
+deleted file mode 100644
+index d2d8960d6e9815164a9ac822f26edde0d3000f9a..0000000000000000000000000000000000000000
+--- a/dist/index.min.js
++++ /dev/null
+@@ -1,2 +0,0 @@
+-var i={name:"numbers",init(i){function t(i){return"x"===i||"X"===i?(this.index+=2,[[48,57],[65,70],[97,102]]):"b"===i||"B"===i?(this.index+=2,[[48,49]]):"o"===i||"O"===i||i>="0"&&i<="7"?(this.index+=i<="7"?1:2,[[48,55]]):null}function e(i){return"x"===i||"X"===i?16:"b"===i||"B"===i?2:8}function s(i,t){return 95===i||t.some((([t,e])=>i>=t&&i<=e))}function h(t){const e=this.index;let s="";const h=()=>{for(;i.isDecimalDigit(this.code)||95===this.code;)95===this.code?this.index++:s+=this.expr.charAt(this.index++)};h(),this.code===i.PERIOD_CODE&&(s+=this.expr.charAt(this.index++),h());let r=this.char;"e"!==r&&"E"!==r||(s+=this.expr.charAt(this.index++),r=this.char,"+"!==r&&"-"!==r||(s+=this.expr.charAt(this.index++)),h(),i.isDecimalDigit(this.expr.charCodeAt(this.index-1))||this.throwError("Expected exponent ("+s+this.char+")"));const n=this.code;if(i.isIdentifierStart(n))this.throwError("Variable names cannot start with a number ("+s+this.char+")");else if(n===i.PERIOD_CODE)return s.length>1&&this.throwError(`Unexpected period ${JSON.stringify({chCode:n,number:s},null,2)}`),void(this.index=e);t.node={type:i.LITERAL,value:parseFloat(s),raw:this.expr.substring(e,this.index)}}i.hooks.add("gobble-token",(function(r){if(48===this.code){const n=this.index,o=this.expr.charAt(this.index+1),c=t.call(this,o);if(!c)return;let d="";for(;s(this.code,c);)95===this.code?this.index++:d+=this.expr.charAt(this.index++);if(i.isIdentifierPart(this.code)){if(i.isDecimalDigit(this.code)&&i.isDecimalDigit(o.charCodeAt(0)))return this.index=n+1,void h.call(this,r);this.throwError("unexpected char within number")}r.node={type:i.LITERAL,value:parseInt(d,e(o)),raw:this.expr.substring(n,this.index)}}else(i.isDecimalDigit(this.code)||this.code===i.PERIOD_CODE)&&h.call(this,r)}))}};export{i as default};
+-//# sourceMappingURL=index.min.js.map
+diff --git a/dist/index.min.js.map b/dist/index.min.js.map
+deleted file mode 100644
+index f9ae20443902d7c73c3fff4b17d6f4a9f65c8693..0000000000000000000000000000000000000000
+--- a/dist/index.min.js.map
++++ /dev/null
+@@ -1 +0,0 @@
+-{"version":3,"file":"index.min.js","sources":["../src/index.js"],"sourcesContent":["const NUM_0_CODE = 48;\nconst UNDERSCORE = 95;\n\nexport default {\n\tname: 'numbers',\n\n\tinit(Jsep) {\n\t\tJsep.hooks.add('gobble-token', function gobbleNumber(env) {\n\t\t\tif (this.code === NUM_0_CODE) {\n\t\t\t\tconst startIndex = this.index;\n\t\t\t\tconst numType = this.expr.charAt(this.index + 1);\n\t\t\t\tconst ranges = getNumberCodeRanges.call(this, numType);\n\t\t\t\tif (!ranges) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\n\t\t\t\tlet number = '';\n\t\t\t\twhile (isUnderscoreOrWithinRange(this.code, ranges)) {\n\t\t\t\t\tif (this.code === UNDERSCORE) {\n\t\t\t\t\t\tthis.index ++;\n\t\t\t\t\t}\n\t\t\t\t\telse {\n\t\t\t\t\t\tnumber += this.expr.charAt(this.index++);\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\t// confirm valid syntax after building number string within ranges\n\t\t\t\tif (Jsep.isIdentifierPart(this.code)) {\n\t\t\t\t\tif (Jsep.isDecimalDigit(this.code) && Jsep.isDecimalDigit(numType.charCodeAt(0))) {\n\t\t\t\t\t\t// abort octal processing and reset to ignore the leading 0\n\t\t\t\t\t\tthis.index = startIndex + 1;\n\t\t\t\t\t\tgobbleBase10.call(this, env);\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tthis.throwError('unexpected char within number');\n\t\t\t\t}\n\n\t\t\t\tenv.node = {\n\t\t\t\t\ttype: Jsep.LITERAL,\n\t\t\t\t\tvalue: parseInt(number, getNumberBase(numType)),\n\t\t\t\t\traw: this.expr.substring(startIndex, this.index),\n\t\t\t\t};\n\t\t\t}\n\t\t\telse if (Jsep.isDecimalDigit(this.code) || this.code === Jsep.PERIOD_CODE) {\n\t\t\t\tgobbleBase10.call(this, env);\n\t\t\t}\n\t\t});\n\n\t\t/**\n\t\t * Gets the range of allowable number codes (decimal) and updates index\n\t\t * @param {string} numType\n\t\t * @returns {number[][]|null}\n\t\t */\n\t\tfunction getNumberCodeRanges(numType) {\n\t\t\tif (numType === 'x' || numType === 'X') {\n\t\t\t\tthis.index += 2;\n\t\t\t\treturn [\n\t\t\t\t\t[48, 57], // 0-9\n\t\t\t\t\t[65, 70], // A-F\n\t\t\t\t\t[97, 102], // a-f\n\t\t\t\t];\n\t\t\t}\n\t\t\telse if (numType === 'b' || numType === 'B') {\n\t\t\t\tthis.index += 2;\n\t\t\t\treturn [[48, 49]]; // 0-1\n\t\t\t}\n\t\t\telse if (numType === 'o' || numType === 'O' ||\n\t\t\t\t(numType >= '0' && numType <= '7')) { // 0-7 allows non-standard 0644 = 420\n\t\t\t\tthis.index += numType <= '7' ? 1 : 2;\n\t\t\t\treturn [[48, 55]]; // 0-7\n\t\t\t}\n\t\t\treturn null;\n\t\t}\n\n\t\t/**\n\t\t * Supports Hex, Octal and Binary only\n\t\t * @param {string} numType\n\t\t * @returns {16|8|2}\n\t\t */\n\t\tfunction getNumberBase(numType) {\n\t\t\tif (numType === 'x' || numType === 'X') {\n\t\t\t\treturn 16;\n\t\t\t}\n\t\t\telse if (numType === 'b' || numType === 'B') {\n\t\t\t\treturn 2;\n\t\t\t}\n\t\t\t// default (includes non-stand 044)\n\t\t\treturn 8;\n\t\t}\n\n\t\t/**\n\t\t * Verifies number code is within given ranges\n\t\t * @param {number} code\n\t\t * @param {number[][]} ranges\n\t\t */\n\t\tfunction isUnderscoreOrWithinRange(code, ranges) {\n\t\t\treturn code === UNDERSCORE ||\n\t\t\t\tranges.some(([min, max]) => code >= min && code <= max);\n\t\t}\n\n\t\t/**\n\t\t * Same as core gobbleNumericLiteral, but allows for _ char\n\t\t * @param {{ context?: typeof Jsep, node?: Expression }} env\n\t\t */\n\t\tfunction gobbleBase10(env) {\n\t\t\tconst startIndex = this.index;\n\t\t\tlet number = '';\n\n\t\t\tconst gobbleDigits = () => {\n\t\t\t\twhile (Jsep.isDecimalDigit(this.code) || this.code === UNDERSCORE) {\n\t\t\t\t\tif (this.code === UNDERSCORE) {\n\t\t\t\t\t\tthis.index++;\n\t\t\t\t\t}\n\t\t\t\t\telse {\n\t\t\t\t\t\tnumber += this.expr.charAt(this.index++);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t};\n\n\t\t\tgobbleDigits();\n\t\t\tif (this.code === Jsep.PERIOD_CODE) { // can start with a decimal marker\n\t\t\t\tnumber += this.expr.charAt(this.index++);\n\n\t\t\t\tgobbleDigits();\n\t\t\t}\n\n\t\t\tlet ch = this.char;\n\t\t\tif (ch === 'e' || ch === 'E') { // exponent marker\n\t\t\t\tnumber += this.expr.charAt(this.index++);\n\t\t\t\tch = this.char;\n\n\t\t\t\tif (ch === '+' || ch === '-') { // exponent sign\n\t\t\t\t\tnumber += this.expr.charAt(this.index++);\n\t\t\t\t}\n\n\t\t\t\tgobbleDigits(); // exponent itself\n\n\t\t\t\tif (!Jsep.isDecimalDigit(this.expr.charCodeAt(this.index - 1)) ) {\n\t\t\t\t\tthis.throwError('Expected exponent (' + number + this.char + ')');\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tconst chCode = this.code;\n\n\t\t\t// Check to make sure this isn't a variable name that start with a number (123abc)\n\t\t\tif (Jsep.isIdentifierStart(chCode)) {\n\t\t\t\tthis.throwError('Variable names cannot start with a number (' +\n\t\t\t\t\tnumber + this.char + ')');\n\t\t\t}\n\t\t\telse if (chCode === Jsep.PERIOD_CODE) {\n\t\t\t\tif (number.length > 1) {\n\t\t\t\t\tthis.throwError(`Unexpected period ${JSON.stringify({ chCode, number }, null, 2)}`);\n\t\t\t\t}\n\t\t\t\t// leave other error-handling to jsep core. Also allows spread operator.\n\t\t\t\tthis.index = startIndex;\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\tenv.node = {\n\t\t\t\ttype: Jsep.LITERAL,\n\t\t\t\tvalue: parseFloat(number),\n\t\t\t\traw: this.expr.substring(startIndex, this.index),\n\t\t\t};\n\t\t}\n\t}\n};\n"],"names":["name","init","Jsep","getNumberCodeRanges","numType","this","index","getNumberBase","isUnderscoreOrWithinRange","code","ranges","some","min","max","gobbleBase10","env","startIndex","number","gobbleDigits","isDecimalDigit","expr","charAt","PERIOD_CODE","ch","char","charCodeAt","throwError","chCode","isIdentifierStart","length","JSON","stringify","node","type","LITERAL","value","parseFloat","raw","substring","hooks","add","call","isIdentifierPart","parseInt"],"mappings":"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"}
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index e025917e453aae33295750d740b8d8f404d8389d..28b9974c69f57a1f466dbf29cda72e36a33a8669 100644
+--- a/package.json
++++ b/package.json
+@@ -18,7 +18,7 @@
+ 		"directory": "packages/numbers"
+ 	},
+ 	"type": "module",
+-	"main": "./dist/cjs/index.cjs.js",
++	"main": "./dist/index.js",
+ 	"module": "./dist/index.js",
+ 	"types": "types/tsd.d.ts",
+ 	"peerDependencies": {

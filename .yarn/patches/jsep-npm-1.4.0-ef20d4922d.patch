@@ -1,30 +1,29 @@
 diff --git a/dist/jsep.js b/dist/jsep.js
-index ffa8196c6c66a81d4f6e3b3f811789500ad14775..636f08ccfa9a7c7b329808ed4763e4f59047f144 100644
+index ffa8196c6c66a81d4f6e3b3f811789500ad14775..50da3b0f3eac537c1264a7a12643bf63fb6f0a00 100644
 --- a/dist/jsep.js
 +++ b/dist/jsep.js
-@@ -571,7 +571,7 @@ class Jsep {
- 	 * @returns {boolean|jsep.Expression}
- 	 */
- 	gobbleToken() {
--		let ch, to_check, tc_len, node;
-+		let ch, ch_next, to_check, tc_len, node;
+@@ -575,17 +575,14 @@ class Jsep {
  
  		this.gobbleSpaces();
  		node = this.searchHook('gobble-token');
-@@ -580,9 +580,10 @@ class Jsep {
++		if (!node) {
++			node = this.gobbleNumericLiteral();
++		}
+ 		if (node) {
+ 			return this.runHook('after-token', node);
  		}
  
  		ch = this.code;
-+		ch_next = this.expr.charCodeAt(this.index +1);
- 
+-
 -		if (Jsep.isDecimalDigit(ch) || ch === Jsep.PERIOD_CODE) {
 -			// Char code 46 is a dot `.` which can start off a numeric literal
-+		if (Jsep.isDecimalDigit(ch) || (ch === Jsep.PERIOD_CODE && ch_next !== Jsep.PERIOD_CODE)) {
-+			// A PERIOD `.` can start off a numeric literal, but not if it's `..` (which can be an operator)
- 			return this.gobbleNumericLiteral();
- 		}
- 
-@@ -701,6 +702,11 @@ class Jsep {
+-			return this.gobbleNumericLiteral();
+-		}
+-
+ 		if (ch === Jsep.SQUOTE_CODE || ch === Jsep.DQUOTE_CODE) {
+ 			// Single or double quotes
+ 			node = this.gobbleStringLiteral();
+@@ -701,6 +698,11 @@ class Jsep {
  				if (optional) {
  					this.index--;
  				}
@@ -36,11 +35,34 @@ index ffa8196c6c66a81d4f6e3b3f811789500ad14775..636f08ccfa9a7c7b329808ed4763e4f5
  				this.gobbleSpaces();
  				node = {
  					type: Jsep.MEMBER_EXP,
-@@ -761,13 +767,19 @@ class Jsep {
+@@ -722,12 +724,19 @@ class Jsep {
+ 	}
+ 
+ 	/**
+-	 * Parse simple numeric literals: `12`, `3.4`, `.5`. Do this by using a string to
++	 * Check for and parse simple numeric literals: `12`, `3.4`, `.5`. Do this by using a string to
+ 	 * keep track of everything in the numeric literal and then calling `parseFloat` on that string
+-	 * @returns {jsep.Literal}
++	 * @returns {jsep.Literal|undefined}
+ 	 */
+ 	gobbleNumericLiteral() {
+-		let number = '', ch, chCode;
++		let number = '', ch, ch_next, chCode;
++		chCode = this.code;
++		ch_next = this.expr.charCodeAt(this.index +1);
++
++		if (!Jsep.isDecimalDigit(chCode) && !(chCode === Jsep.PERIOD_CODE && ch_next !== Jsep.PERIOD_CODE)) {
++			// A PERIOD `.` can start off a numeric literal, but not if it's `..` (which can be an operator)
++			return;
++		}
+ 
+ 		while (Jsep.isDecimalDigit(this.code)) {
+ 			number += this.expr.charAt(this.index++);
+@@ -761,13 +770,19 @@ class Jsep {
  		}
  
  		chCode = this.code;
-+		const prevCode = this.expr.charCodeAt(this.index - 1)
++		const prevCode = this.expr.charCodeAt(this.index - 1);
  
  		// Check to make sure this isn't a variable name that start with a number (123abc)
  		if (Jsep.isIdentifierStart(chCode)) {
@@ -50,10 +72,29 @@ index ffa8196c6c66a81d4f6e3b3f811789500ad14775..636f08ccfa9a7c7b329808ed4763e4f5
 -		else if (chCode === Jsep.PERIOD_CODE || (number.length === 1 && number.charCodeAt(0) === Jsep.PERIOD_CODE)) {
 +		else if (chCode === Jsep.PERIOD_CODE && prevCode ===  Jsep.PERIOD_CODE) {
 +			// number "ends" with '..', treat it as the start of a new operator, and roll back the index.
-+			// note that the call to gobbleNumbericLiteral() prevents the possibility of "number" starting with `..`
++			// note that the possibility of `..` as the first two chars is eliminated above
 +			this.index--;
 +		}
 +		else if (number.length === 1 && number.charCodeAt(0) === Jsep.PERIOD_CODE) {
  			this.throwError('Unexpected period');
  		}
  
+diff --git a/package.json b/package.json
+index 29d00db9740486c943d27bbc3f4e6ebb8470901f..d7c6e551596250942efcedcdd7b8bcf624c20f34 100644
+--- a/package.json
++++ b/package.json
+@@ -14,12 +14,12 @@
+ 		"url": "https://github.com/EricSmekens/jsep.git"
+ 	},
+ 	"type": "module",
+-	"main": "./dist/cjs/jsep.cjs.js",
++	"main": "./dist/jsep.js",
+ 	"module": "./dist/jsep.js",
+ 	"exports": {
+ 		".": {
+ 			"types": "./typings/tsd.d.ts",
+-			"require": "./dist/cjs/jsep.cjs.js",
++			"require": "./dist/jsep.js",
+ 			"default": "./dist/jsep.js"
+ 		}
+ 	},
