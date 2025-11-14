@@ -14,7 +14,11 @@ describe('resolver', function () {
 			if (op) {
 				it(`should handle "${op}" operator`, function () {
 					const result = resolve(parse(`a = 1 ; a ${op} 2`), defaultGetValue)
-					expect(typeof result).toMatch(/^(number|boolean)$/)
+					if (op === '..') {
+						expect(typeof result).toMatch('string')
+					} else {
+						expect(typeof result).toMatch(/^(number|boolean)$/)
+					}
 				})
 			}
 		}
