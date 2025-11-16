@@ -37,7 +37,7 @@ export const AddRemoteSurfaceButton = observer(function AddRemoteSurfaceButton()
 			style={{ backgroundColor: 'white' }}
 		>
 			<CButton color="primary" size="sm" title="Add Remote Surface Connection" disabled={sortedInstances.length === 0}>
-				<FontAwesomeIcon icon={faPlus} /> Add Remote Surface Connection (v2)
+				<FontAwesomeIcon icon={faPlus} /> Add Remote Surface Connection
 			</CButton>
 		</CPopover>
 	)
@@ -47,7 +47,7 @@ function AddRemoteSurfacePopoverButton({ instanceId, label }: { instanceId: stri
 	const { notifier } = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 
-	const addOutboundMutation = useMutationExt(trpc.surfaces.outbound.add2.mutationOptions())
+	const addOutboundMutation = useMutationExt(trpc.surfaces.outbound.add.mutationOptions())
 
 	const addCallback = useCallback(() => {
 		addOutboundMutation

@@ -137,60 +137,39 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						)}
 					/>
 
-					{remoteInfo.type === 'elgato' ? (
-						<>
-							<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Type</CFormLabel>
-							<CCol sm={8}>
-								<CFormText>IP Stream Deck</CFormText>
-							</CCol>
+					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Surface Instance</CFormLabel>
+					<CCol sm={8}>
+						<CFormText>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
+					</CCol>
 
-							<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Address</CFormLabel>
-							<CCol sm={8}>
-								<CFormText>{remoteInfo.address}</CFormText>
-							</CCol>
-
-							<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Port</CFormLabel>
-							<CCol sm={8}>
-								<CFormText>{remoteInfo.port}</CFormText>
-							</CCol>
-						</>
-					) : (
-						<>
-							<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Surface Instance</CFormLabel>
-							<CCol sm={8}>
-								<CFormText>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
-							</CCol>
-
-							{instanceInfo?.remoteConfigFields?.map((fieldDef) => {
-								return (
-									<React.Fragment key={fieldDef.id}>
-										<form.Field
-											name={`config.${fieldDef.id}`}
-											validators={{
-												onChange: ({ value }) => validateInputValue(fieldDef, value),
-											}}
-											children={(field) => (
-												<>
-													<EditPanelConfigField
-														definition={fieldDef}
-														setValue={(_k, v) => field.handleChange(v)}
-														value={field.state.value}
-													/>
-													{field.state.meta.errors.length > 0 && (
-														<CCol sm={{ offset: 4, span: 8 }}>
-															<CAlert color="warning" className="mt-2">
-																{field.state.meta.errors}
-															</CAlert>
-														</CCol>
-													)}
-												</>
+					{instanceInfo?.remoteConfigFields?.map((fieldDef) => {
+						return (
+							<React.Fragment key={fieldDef.id}>
+								<form.Field
+									name={`config.${fieldDef.id}`}
+									validators={{
+										onChange: ({ value }) => validateInputValue(fieldDef, value),
+									}}
+									children={(field) => (
+										<>
+											<EditPanelConfigField
+												definition={fieldDef}
+												setValue={(_k, v) => field.handleChange(v)}
+												value={field.state.value}
+											/>
+											{field.state.meta.errors.length > 0 && (
+												<CCol sm={{ offset: 4, span: 8 }}>
+													<CAlert color="warning" className="mt-2">
+														{field.state.meta.errors}
+													</CAlert>
+												</CCol>
 											)}
-										/>
-									</React.Fragment>
-								)
-							})}
-						</>
-					)}
+										</>
+									)}
+								/>
+							</React.Fragment>
+						)
+					})}
 				</div>
 			</div>
 

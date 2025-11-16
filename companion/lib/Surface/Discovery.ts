@@ -1,7 +1,6 @@
 import isEqual from 'fast-deep-equal'
 import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
-import { StreamDeckTcpDiscoveryService, type StreamDeckTcpDefinition } from '@elgato-stream-deck/tcp'
 import type {
 	ClientDiscoveredSurfaceInfo,
 	ClientDiscoveredSurfaceInfoPlugin,
@@ -35,7 +34,6 @@ export class ServiceSurfaceDiscovery {
 	readonly #bonjour = new Bonjour()
 
 	#satelliteBrowser: Browser | undefined
-	#streamDeckDiscovery: StreamDeckTcpDiscoveryService | undefined
 
 	#satelliteExpireInterval: NodeJS.Timeout | undefined
 
@@ -66,43 +64,9 @@ export class ServiceSurfaceDiscovery {
 		} catch (_e) {
 			this.#logger.debug(`ERROR failed to start searching for companion satellite devices`)
 		}
-
-		try {
-			this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
-
-			this.#streamDeckDiscovery.on('up', (streamdeck) => {
-				const uiService = this.#convertStreamDeckForUi(streamdeck)
-				if (!uiService) return
-
-				this.#logger.debug(`Found streamdeck tcp device ${streamdeck.name} at ${streamdeck.address}:${streamdeck.port}`)
-
-				this.#surfaceEvents.emit('event', {
-					type: 'update',
-					info: uiService,
-				})
-			})
-			this.#streamDeckDiscovery.on('down', (streamdeck) => {
-				const uiService = this.#convertStreamDeckForUi(streamdeck)
-				if (!uiService) return
-
-				this.#surfaceEvents.emit('event', {
-					type: 'remove',
-					itemId: uiService.id,
-				})
-			})
-
-			setImmediate(() => {
-				this.#streamDeckDiscovery?.query()
-			})
-		} catch (_e) {
-			this.#logger.debug(`ERROR failed to start searching for streamdeck tcp devices`)
-		}
 	}
 
 	quit(): void {
-		this.#streamDeckDiscovery?.destroy()
-		this.#streamDeckDiscovery = undefined
-
 		this.#bonjour.destroy()
 
 		if (this.#satelliteExpireInterval) clearInterval(this.#satelliteExpireInterval)
@@ -195,22 +159,6 @@ export class ServiceSurfaceDiscovery {
 		}
 	}
 
-	#convertStreamDeckForUi(streamdeck: StreamDeckTcpDefinition): ClientDiscoveredSurfaceInfo | null {
-		if (!streamdeck.isPrimary) return null
-
-		return {
-			id: `streamdeck:${streamdeck.serialNumber ?? streamdeck.name}`,
-
-			surfaceType: 'streamdeck',
-
-			name: streamdeck.name,
-			address: streamdeck.address,
-			port: streamdeck.port,
-
-			modelName: streamdeck.modelName,
-		}
-	}
-
 	getInfoForConnectionId(instanceId: string, connectionId: string): DiscoveredRemoteSurfaceInfo | undefined {
 		const connections = this.#knownSurfaces.get(instanceId)
 		if (!connections) return undefined
@@ -292,13 +240,6 @@ export class ServiceSurfaceDiscovery {
 					for (const service of self.#satelliteBrowser.services) {
 						const uiService = self.#convertSatelliteServiceForUi(service)
 						initialServices.push(uiService)
-					}
-				}
-
-				if (self.#streamDeckDiscovery) {
-					for (const service of self.#streamDeckDiscovery.knownStreamDecks) {
-						const uiService = self.#convertStreamDeckForUi(service)
-						if (uiService) initialServices.push(uiService)
 					}
 				}
 

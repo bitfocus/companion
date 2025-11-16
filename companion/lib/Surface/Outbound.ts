@@ -1,12 +1,8 @@
 import { nanoid } from 'nanoid'
 import LogController from '../Log/Controller.js'
-import { DEFAULT_TCP_PORT, StreamDeckTcpConnectionManager } from '@elgato-stream-deck/tcp'
-import { StreamDeckJpegOptions } from './USB/ElgatoStreamDeck.js'
-import type { SurfaceController } from './Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type {
 	CompanionSurfaceConfigField,
-	ModernOutboundSurfaceInfo,
 	OutboundSurfaceInfo,
 	OutboundSurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
@@ -14,7 +10,6 @@ import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import { EventEmitter } from 'node:events'
-import { assertNever } from '@companion-app/shared/Util.js'
 import { OutboundSurfaceCollections } from './OutboundCollections.js'
 import { isEqual } from 'lodash-es'
 import { ServiceSurfaceDiscovery } from './Discovery.js'
@@ -24,7 +19,7 @@ import { ExpressionFunctions } from '@companion-app/shared/Expression/Expression
 
 export interface SurfaceOutboundControllerEvents {
 	clientInfo: [update: OutboundSurfacesUpdate]
-	[id: `startStop:${string}`]: [info: ModernOutboundSurfaceInfo]
+	[id: `startStop:${string}`]: [info: OutboundSurfaceInfo]
 }
 export class SurfaceOutboundController {
 	/**
@@ -32,7 +27,6 @@ export class SurfaceOutboundController {
 	 */
 	readonly #logger = LogController.createLogger('SurfaceOutboundController')
 
-	readonly #controller: SurfaceController
 	readonly #collections: OutboundSurfaceCollections
 
 	readonly #discoveryController = new ServiceSurfaceDiscovery()
@@ -55,17 +49,11 @@ export class SurfaceOutboundController {
 	readonly events = new EventEmitter<SurfaceOutboundControllerEvents>()
 	readonly #enabledConnectionIds = new Set<string>()
 
-	#streamdeckTcpConnectionManager = new StreamDeckTcpConnectionManager({
-		jpegOptions: StreamDeckJpegOptions,
-		autoConnectToSecondaries: true,
-	})
-
 	get discovery(): ServiceSurfaceDiscovery {
 		return this.#discoveryController
 	}
 
-	constructor(controller: SurfaceController, db: DataDatabase) {
-		this.#controller = controller
+	constructor(db: DataDatabase) {
 		this.#dbTable = db.getTableView('surfaces_remote')
 
 		this.events.setMaxListeners(0)
@@ -87,21 +75,6 @@ export class SurfaceOutboundController {
 			(validCollectionIds) => this.#cleanUnknownCollectionIds(validCollectionIds),
 			() => this.#startStopAllConnections()
 		)
-
-		this.#streamdeckTcpConnectionManager.on('connected', (streamdeck) => {
-			this.#logger.info(
-				`Connected to TCP Streamdeck ${streamdeck.remoteAddress}:${streamdeck.remotePort} (${streamdeck.PRODUCT_NAME})`
-			)
-
-			this.#controller.addStreamdeckTcpDevice(streamdeck).catch((e) => {
-				this.#logger.error(`Failed to add TCP Streamdeck: ${e}`)
-				// TODO - how to handle?
-				// streamdeck.close()
-			})
-		})
-		this.#streamdeckTcpConnectionManager.on('error', (error) => {
-			this.#logger.error(`Error from TCP Streamdeck: ${error}`)
-		})
 	}
 
 	#cleanUnknownCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -208,23 +181,7 @@ export class SurfaceOutboundController {
 			this.#enabledConnectionIds.delete(connectionInfo.id)
 		}
 
-		const surfaceInfoType = connectionInfo.type
-		switch (connectionInfo.type) {
-			case 'elgato':
-				if (connectionInfo.enabled) {
-					this.#streamdeckTcpConnectionManager.connectTo(connectionInfo.address, connectionInfo.port)
-				} else {
-					this.#streamdeckTcpConnectionManager.disconnectFrom(connectionInfo.address, connectionInfo.port)
-				}
-				break
-			case 'plugin':
-				this.events.emit(`startStop:${connectionInfo.instanceId}`, connectionInfo)
-				break
-			default:
-				assertNever(connectionInfo)
-				this.#logger.error(`Remote surface type "${surfaceInfoType}" is not supported`)
-				return
-		}
+		this.events.emit(`startStop:${connectionInfo.instanceId}`, connectionInfo)
 	}
 
 	createTrpcRouter() {
@@ -246,66 +203,6 @@ export class SurfaceOutboundController {
 			}),
 
 			add: publicProcedure
-				.input(
-					z.object({
-						type: z.enum(['elgato']),
-						address: z.string(),
-						port: z.number().optional(),
-						name: z.string().optional(),
-					})
-				)
-				.mutation(async ({ input }) => {
-					const { type, address, name } = input
-
-					if (type !== 'elgato') throw new Error(`Surface type "${type}" is not supported`)
-
-					// Ensure port number is defined
-					const port = input.port || DEFAULT_TCP_PORT
-
-					// check for duplicate
-					const existingAddressAndPort = Array.from(this.#storage.values()).find(
-						(surfaceInfo) =>
-							surfaceInfo.type === 'elgato' && surfaceInfo.address === address && surfaceInfo.port === port
-					)
-					if (existingAddressAndPort) throw new Error('Specified address and port is already defined')
-
-					this.#logger.info(`Adding new Remote Streamdeck at ${address}:${port} (${name})`)
-
-					const highestRank =
-						Math.max(
-							0,
-							...Array.from(this.#storage.values())
-								.map((c) => (c?.collectionId ? c.sortOrder : null))
-								.filter((n) => typeof n === 'number')
-						) || 0
-
-					const id = nanoid()
-					const newInfo: OutboundSurfaceInfo = {
-						id,
-						type: 'elgato',
-						address,
-						enabled: true,
-						port,
-						displayName: name ?? '',
-						sortOrder: highestRank + 1,
-						collectionId: null,
-					}
-					this.#storage.set(id, newInfo)
-					this.#dbTable.set(id, newInfo)
-
-					this.events.emit('clientInfo', {
-						type: 'add',
-						itemId: id,
-
-						info: newInfo,
-					})
-
-					this.#startStopConnection(newInfo)
-
-					return id
-				}),
-
-			add2: publicProcedure
 				.input(
 					z.object({
 						instanceId: z.string(),
@@ -429,26 +326,20 @@ export class SurfaceOutboundController {
 					const existing = this.#storage.get(input.id)
 					if (!existing) throw new Error('Remote Surface not found')
 
-					if (existing.type === 'elgato') {
-						existing.displayName = input.name
+					// Stop the connection with the old config
+					const shouldRestart = existing.enabled && !isEqual(existing.config, input.config)
+					if (shouldRestart) {
+						this.#startStopConnection({ ...existing, enabled: false })
+					}
 
-						this.#dbTable.set(input.id, existing)
-					} else {
-						// Stop the connection with the old config
-						const shouldRestart = existing.enabled && !isEqual(existing.config, input.config)
-						if (shouldRestart) {
-							this.#startStopConnection({ ...existing, enabled: false })
-						}
+					existing.displayName = input.name
+					existing.config = input.config
 
-						existing.displayName = input.name
-						existing.config = input.config
+					this.#dbTable.set(input.id, existing)
 
-						this.#dbTable.set(input.id, existing)
-
-						// Start with the new config
-						if (shouldRestart) {
-							this.#startStopConnection(existing)
-						}
+					// Start with the new config
+					if (shouldRestart) {
+						this.#startStopConnection(existing)
 					}
 
 					this.events.emit('clientInfo', {
@@ -523,12 +414,12 @@ export class SurfaceOutboundController {
 		})
 	}
 
-	getAllEnabledConnectionsForInstance(instanceId: string): ModernOutboundSurfaceInfo[] {
+	getAllEnabledConnectionsForInstance(instanceId: string): OutboundSurfaceInfo[] {
 		return Object.values(this.#storage).filter((surfaceInfo) => {
 			return (
 				surfaceInfo && surfaceInfo.type === 'plugin' && surfaceInfo.instanceId === instanceId && surfaceInfo.enabled
 			)
-		}) as ModernOutboundSurfaceInfo[]
+		})
 	}
 
 	removeAllForSurfaceInstance(instanceId: string): void {
@@ -550,8 +441,6 @@ export class SurfaceOutboundController {
 	}
 
 	reset(): void {
-		this.#streamdeckTcpConnectionManager.disconnectFromAll()
-
 		this.events.emit('clientInfo', {
 			type: 'init',
 			items: {},
@@ -563,8 +452,6 @@ export class SurfaceOutboundController {
 
 	quit(): void {
 		this.#discoveryController.quit()
-
-		this.#streamdeckTcpConnectionManager.disconnectFromAll()
 	}
 
 	#doesExistingSurfaceMatchNewConfig(instanceId: string, config: Record<string, any>): boolean {

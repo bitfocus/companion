@@ -1,7 +1,6 @@
 import type {
 	ClientDiscoveredSurfaceInfoPlugin,
 	ClientDiscoveredSurfaceInfoSatellite,
-	ClientDiscoveredSurfaceInfoStreamDeck,
 } from '@companion-app/shared/Model/Surfaces.js'
 import React, { useCallback, useContext, useRef } from 'react'
 import { assertNever, useComputed } from '~/Resources/util.js'
@@ -32,27 +31,7 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 		setupSatelliteRef.current?.show(surfaceInfo)
 	}, [])
 
-	const addRemoteStreamDeckMutation = useMutationExt(trpc.surfaces.outbound.add.mutationOptions())
-	const addRemoteStreamDeck = useCallback(
-		(surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck) => {
-			addRemoteStreamDeckMutation
-				.mutateAsync({
-					type: 'elgato',
-					address: surfaceInfo.address,
-					port: surfaceInfo.port,
-					name: surfaceInfo.name,
-				})
-				.then(() => {
-					console.log('added streamdeck', surfaceInfo)
-				})
-				.catch((e) => {
-					console.error('Failed to add streamdeck: ', e)
-				})
-		},
-		[addRemoteStreamDeckMutation]
-	)
-
-	const addRemotePluginSurfaceMutation = useMutationExt(trpc.surfaces.outbound.add2.mutationOptions())
+	const addRemotePluginSurfaceMutation = useMutationExt(trpc.surfaces.outbound.add.mutationOptions())
 	const addConnection = useCallback(
 		(surfaceInfo: ClientDiscoveredSurfaceInfoPlugin) => {
 			addRemotePluginSurfaceMutation
@@ -92,10 +71,8 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 						switch (svc?.surfaceType) {
 							case 'satellite':
 								return <SatelliteRow key={id} surfaceInfo={svc} showSetupSatellite={showSetupSatellite} />
-							case 'streamdeck':
-								return <DiscoveredSurfaceRow key={id} surfaceInfo={svc} addRemoteStreamDeck={addRemoteStreamDeck} />
 							case 'plugin':
-								return <DiscoveredSurfaceRow2 key={id} surfaceInfo={svc} addConnection={addConnection} />
+								return <PluginSurfaceRow key={id} surfaceInfo={svc} addConnection={addConnection} />
 							case undefined:
 								return null
 							default:
@@ -172,58 +149,12 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 	)
 }
 
-interface StreamDeckRowProps {
-	surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck
-	addRemoteStreamDeck: (surfaceInfo: ClientDiscoveredSurfaceInfoStreamDeck) => void
-}
-
-const DiscoveredSurfaceRow = observer(function DiscoveredSurfaceRow({
-	surfaceInfo,
-	addRemoteStreamDeck,
-}: StreamDeckRowProps) {
-	const { surfaces } = useContext(RootAppStoreContext)
-
-	const isAlreadyAdded = !!surfaces.getOutboundStreamDeckSurface(surfaceInfo.address, surfaceInfo.port)
-
-	return (
-		<tr>
-			<td>
-				<div className="flex flex-column">
-					<b>{surfaceInfo.name}</b>
-					<span className="auto-ellipsis" title={surfaceInfo.modelName}>
-						{surfaceInfo.modelName}
-					</span>
-				</div>
-			</td>
-			<td>
-				<p className="p-no-margin">{surfaceInfo.address}</p>
-			</td>
-			<td>
-				<CButtonGroup>
-					{isAlreadyAdded ? (
-						<CButton title={'Already added'} className="btn-undefined" disabled>
-							<FontAwesomeIcon icon={faCheck} /> Already added
-						</CButton>
-					) : (
-						<CButton onClick={() => addRemoteStreamDeck(surfaceInfo)} title="Add Stream Deck" className="btn-undefined">
-							<FontAwesomeIcon icon={faPlus} /> Add Stream Deck
-						</CButton>
-					)}
-				</CButtonGroup>
-			</td>
-		</tr>
-	)
-})
-
-interface StreamDeckRow2Props {
+interface PluginSurfaceRowProps {
 	surfaceInfo: ClientDiscoveredSurfaceInfoPlugin
 	addConnection: (surfaceInfo: ClientDiscoveredSurfaceInfoPlugin) => void
 }
 
-const DiscoveredSurfaceRow2 = observer(function DiscoveredSurfaceRow2({
-	surfaceInfo,
-	addConnection,
-}: StreamDeckRow2Props) {
+const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addConnection }: PluginSurfaceRowProps) {
 	const { surfaceInstances, surfaces } = useContext(RootAppStoreContext)
 
 	const instanceInfo = surfaceInstances.instances.get(surfaceInfo.instanceId)

@@ -23,7 +23,7 @@ import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from './IpcWrapper.js'
-import type { CompanionSurfaceConfigField, ModernOutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
 
 export interface SurfaceChildHandlerDependencies {
@@ -173,7 +173,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		}
 	}
 
-	#startStopConnections = (connectionInfo: ModernOutboundSurfaceInfo) => {
+	#startStopConnections = (connectionInfo: OutboundSurfaceInfo) => {
 		if (connectionInfo.enabled) {
 			this.#ipcWrapper
 				.sendWithCb('setupRemoteConnections', {
