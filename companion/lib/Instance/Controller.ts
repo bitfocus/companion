@@ -432,7 +432,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const moduleManifest = this.modules.getModuleManifest(
 			ModuleInstanceType.Connection,
-			config.instance_type,
+			config.moduleId,
 			config.moduleVersionId
 		)
 
@@ -653,7 +653,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			result[id] = {
 				id: id,
 				moduleType: config.moduleInstanceType,
-				moduleId: config.instance_type,
+				moduleId: config.moduleId,
 				moduleVersionId: config.moduleVersionId,
 				updatePolicy: config.updatePolicy,
 				label: config.label,
@@ -707,13 +707,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (!config) return false
 
 		// Don't validate the version, as it might not yet be installed
-		// const moduleInfo = instanceController.modules.getModuleManifest(config.instance_type, versionId)
-		// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.instance_type} (${versionId})`)
+		// const moduleInfo = instanceController.modules.getModuleManifest(config.moduleId, versionId)
+		// if (!moduleInfo) throw new Error(`Unknown module type or version ${config.moduleId} (${versionId})`)
 
 		if (newVersionId?.includes('@')) {
 			// Its a moduleId and version
 			const [moduleId, version] = newVersionId.split('@')
-			config.instance_type = moduleId
+			config.moduleId = moduleId
 			config.moduleVersionId = version || null
 		} else {
 			// Its a simple version
@@ -725,11 +725,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#configStore.commitChanges([instanceId], false)
 
 		// Install the module if needed
-		this.userModulesManager.ensureModuleIsInstalled(
-			config.moduleInstanceType,
-			config.instance_type,
-			config.moduleVersionId
-		)
+		this.userModulesManager.ensureModuleIsInstalled(config.moduleInstanceType, config.moduleId, config.moduleVersionId)
 
 		// Trigger a restart (or as much as possible)
 		if (config.enabled) {
@@ -794,7 +790,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const obj = minimal
 			? ({
-					instance_type: rawObj.instance_type,
+					instance_type: rawObj.moduleId,
 					label: rawObj.label,
 					lastUpgradeIndex: rawObj.lastUpgradeIndex,
 					moduleVersionId: rawObj.moduleVersionId ?? undefined,
@@ -804,9 +800,13 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				} satisfies Complete<ExportInstanceMinimalv6>)
 			: ({
 					...rawObj,
+					instance_type: rawObj.moduleId, // Rename for export
 					moduleVersionId: rawObj.moduleVersionId ?? undefined,
 					secrets: includeSecrets ? rawObj.secrets : undefined,
 				} satisfies ExportInstanceFullv6)
+
+		// Remove the moduleId property
+		delete (obj as Partial<typeof rawObj>).moduleId
 
 		return clone ? structuredClone(obj) : obj
 	}
@@ -855,11 +855,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		// Seamless fixup old configs
 		if (!config.moduleVersionId) {
-			config.moduleVersionId = this.modules.getLatestVersionOfModule(
-				config.moduleInstanceType,
-				config.instance_type,
-				true
-			)
+			config.moduleVersionId = this.modules.getLatestVersionOfModule(config.moduleInstanceType, config.moduleId, true)
 			changed = !!config.moduleVersionId
 		}
 
@@ -907,7 +903,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				? {
 						label: config.label,
 						moduleType: config.moduleInstanceType,
-						moduleId: config.instance_type,
+						moduleId: config.moduleId,
 						moduleVersionId: config.moduleVersionId,
 					}
 				: null,

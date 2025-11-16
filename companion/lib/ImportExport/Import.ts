@@ -384,7 +384,7 @@ export class ImportController {
 			const existingId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, obj.label)
 			if (
 				existingId &&
-				this.#instancesController.getInstanceConfigOfType(existingId, ModuleInstanceType.Connection)?.instance_type ===
+				this.#instancesController.getInstanceConfigOfType(existingId, ModuleInstanceType.Connection)?.moduleId ===
 					obj.instance_type
 			) {
 				remap[oldId] = existingId
