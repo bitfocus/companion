@@ -53,7 +53,6 @@ export default {
 		// Native libs that are needed
 		usb: 'usb',
 		bufferutil: 'bufferutil',
-		'@serialport/bindings-cpp': '@serialport/bindings-cpp',
 		'@napi-rs/canvas': '@napi-rs/canvas',
 	},
 	experiments: {
