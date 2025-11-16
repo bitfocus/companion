@@ -47,7 +47,7 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	 * If the surface will handle locking display of the locking state itself, this method should be implemented.
 	 * If defined, it will be called when the lock state changes.
 	 */
-	setLocked?: (locked: boolean, characterCount: number) => void
+	setLocked: (locked: boolean, characterCount: number) => void
 }
 
 export interface DrawButtonItem {

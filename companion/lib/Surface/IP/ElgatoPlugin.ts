@@ -42,7 +42,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 	constructor(
 		controlsController: ControlsController,
 		pageStore: IPageStore,
-		devicePath: string,
+		deviceId: string,
 		socket: ServiceElgatoPluginSocket
 	) {
 		super()
@@ -65,7 +65,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 		this.info = {
 			description: 'Elgato Streamdeck Plugin',
 			configFields: [],
-			surfaceId: devicePath,
+			surfaceId: deviceId,
 			location: this.socket.remoteAddress ?? null,
 		}
 
@@ -208,5 +208,9 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 		// ensure rotation is disabled
 		this._config.rotation = 0
 		this._config.never_lock = true
+	}
+
+	setLocked(_locked: boolean, _characterCount: number): void {
+		// Locking is not supported
 	}
 }

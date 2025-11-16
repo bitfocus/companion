@@ -33,55 +33,6 @@ import type { CompanionVariableValue } from '@companion-module/base'
 import { PanelDefaults } from './Config.js'
 import debounceFn from 'debounce-fn'
 
-const PINCODE_NUMBER_POSITIONS: [number, number][] = [
-	// 0
-	[4, 1],
-	// 1 2 3
-	[1, 2],
-	[2, 2],
-	[3, 2],
-	// 4 5 6
-	[1, 1],
-	[2, 1],
-	[3, 1],
-	// 7 8 9
-	[1, 0],
-	[2, 0],
-	[3, 0],
-]
-
-const PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL: [number, number][] = [
-	// 0
-	[5, 1],
-	// 1 2 3
-	[2, 2],
-	[3, 2],
-	[4, 2],
-	// 4 5 6
-	[2, 1],
-	[3, 1],
-	[4, 1],
-	// 7 8 9
-	[2, 0],
-	[3, 0],
-	[4, 0],
-]
-
-const PINCODE_NUMBER_POSITIONS_SDS: [number, number][] = [
-	// 0 1 2 3 4
-	[2, 1],
-	[3, 1],
-	[4, 1],
-	[5, 1],
-	[6, 1],
-	// 5 6 7 8 9
-	[2, 0],
-	[3, 0],
-	[4, 0],
-	[5, 0],
-	[6, 0],
-]
-
 /**
  * Get the display name of a surface
  */
@@ -115,16 +66,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Whether the surface is currently locked
 	 */
 	#isSurfaceLocked: boolean = false
-
-	/**
-	 * Positions of pincode numbers
-	 */
-	readonly #pincodeNumberPositions: [number, number][]
-
-	/**
-	 * Position of pincode 'button'
-	 */
-	readonly #pincodeCodePosition: [number, number]
 
 	/**
 	 * Config for this surface
@@ -215,42 +156,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		// Setup logger to use the name
 		this.#recreateLogger()
 
-		this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS
-		this.#pincodeCodePosition = [0, 1]
-
-		// some surfaces need different positions for the pincode numbers
-		if (
-			this.panel.info.description === 'Loupedeck Live' ||
-			this.panel.info.description === 'Loupedeck Live S' ||
-			this.panel.info.description === 'Razer Stream Controller'
-		) {
-			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
-			this.#pincodeCodePosition = [5, 2]
-		} else if (this.panel.info.description === 'Loupedeck CT') {
-			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
-			this.#pincodeCodePosition = [3, 4]
-		} else if (
-			this.panel.info.description === 'Stream Deck Studio' ||
-			this.panel.info.description === 'Elgato Stream Deck Studio'
-		) {
-			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SDS
-			this.#pincodeCodePosition = [1, 0]
-		} else if (this.panel.info.description === 'Mirabox Stream Dock N4') {
-			this.#pincodeNumberPositions = [
-				[4, 1],
-				[0, 0],
-				[1, 0],
-				[2, 0],
-				[3, 0],
-				[4, 0],
-				[0, 1],
-				[1, 1],
-				[2, 1],
-				[3, 1],
-			]
-			this.#pincodeCodePosition = [4, 2]
-		}
-
 		if (this.#surfaceConfig.config.never_lock) {
 			// if device can't be locked, then make sure it isnt already locked
 			this.#isSurfaceLocked = false
@@ -325,29 +230,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
-				if (this.panel.setLocked !== undefined) {
-					this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
-					return
-				}
-
-				const buffers = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
-				this.panel.clearDeck()
-
-				const rawEntries: DrawButtonItem[] = [
-					{
-						x: this.#pincodeCodePosition[0],
-						y: this.#pincodeCodePosition[1],
-						image: buffers.code,
-					},
-				]
-
-				this.#pincodeNumberPositions.forEach(([x, y], i) => {
-					if (buffers[i]) {
-						rawEntries.push({ x, y, image: buffers[i] })
-					}
-				})
-
-				this.#drawButtons(rawEntries)
+				this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
 			} else {
 				const { xOffset, yOffset } = this.#getCurrentOffset()
 
@@ -426,7 +309,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
 
-		if (!this.#isSurfaceLocked && !!this.panel.setLocked) {
+		if (!this.#isSurfaceLocked) {
 			this.panel.setLocked(false, this.#currentPincodeEntry.length)
 		}
 
@@ -569,13 +452,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				this.#logger.debug(
 					`Button ${location.pageNumber}/${location.row}/${location.column} ${pressed ? 'pressed' : 'released'}`
 				)
-			} else if (!this.panel.setLocked) {
-				if (pressed) {
-					const pressCode = this.#pincodeNumberPositions.findIndex((pos) => pos[0] == x && pos[1] == y)
-					if (pressCode !== -1) {
-						this.#onDevicePincodeKey(pressCode)
-					}
-				}
 			}
 		} catch (e) {
 			this.#logger.error(`Click failed: ${e}`)
@@ -655,19 +531,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		if (!this.#isSurfaceLocked) return
 
-		if (this.panel.setLocked !== undefined) {
-			this.panel.setLocked(true, this.#currentPincodeEntry.length)
-		} else {
-			const datap = this.#graphics.getImagesForPincode(this.#currentPincodeEntry)
-
-			this.#drawButtons([
-				{
-					x: this.#pincodeCodePosition[0],
-					y: this.#pincodeCodePosition[1],
-					image: datap.code,
-				},
-			])
-		}
+		this.panel.setLocked(true, this.#currentPincodeEntry.length)
 	}
 
 	/**

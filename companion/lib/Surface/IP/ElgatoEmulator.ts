@@ -215,7 +215,8 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 			this.#lastLockedState = false
 		}
 
-		console.log('Emulator setLocked', this.#emulatorId, this.#lastLockedState)
+		// Clear the deck when locking
+		this.clearDeck()
 
 		if (this.#events.listenerCount('emulatorLocked') > 0) {
 			this.#events.emit('emulatorLocked', this.#emulatorId, this.#lastLockedState)
