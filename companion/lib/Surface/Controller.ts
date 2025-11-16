@@ -19,7 +19,6 @@ import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
-import { SurfaceIPVideohubPanel, type VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
@@ -1189,21 +1188,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#createSurfaceHandler(panel.info.deviceId, moduleId, panel)
 
 		this.triggerUpdateDevicesList()
-	}
-
-	/**
-	 * Add a new videohub panel
-	 */
-	addVideohubPanelDevice(deviceInfo: VideohubPanelDeviceInfo): SurfaceIPVideohubPanel {
-		this.removeDevice(deviceInfo.path)
-
-		const device = new SurfaceIPVideohubPanel(deviceInfo)
-
-		this.#createSurfaceHandler(deviceInfo.path, 'videohub-panel', device)
-
-		this.triggerUpdateDevicesList()
-
-		return device
 	}
 
 	/**

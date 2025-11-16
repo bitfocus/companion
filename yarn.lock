@@ -10980,7 +10980,6 @@ asn1@evs-broadcast/node-asn1:
     typescript: "npm:~5.9.3"
     usb: "npm:^2.16.0"
     uuid: "npm:^13.0.0"
-    videohub-server: "npm:^0.3.0"
     webpack: "npm:^5.103.0"
     webpack-cli: "npm:^6.0.1"
     winston: "npm:^3.19.0"
@@ -25269,13 +25268,6 @@ asn1@evs-broadcast/node-asn1:
     "@types/unist": "npm:^3.0.0"
     vfile-message: "npm:^4.0.0"
   checksum: 10c0/e5d9eb4810623f23758cfc2205323e33552fb5972e5c2e6587babe08fe4d24859866277404fb9e2a20afb71013860d96ec806cb257536ae463c87d70022ab9ef
-  languageName: node
-  linkType: hard
-
-"videohub-server@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "videohub-server@npm:0.3.0"
-  checksum: 10c0/655a6e24af526b320a91f18b864a4cd8ef668b99984c11f18b90a8254865f3d0b2ce32752b03b2fac6fe929e52c318aa91631a570b17ff200634868189cfa9df
   languageName: node
   linkType: hard
 
