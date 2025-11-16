@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlug, faLayerGroup, faAdd } from '@fortawesome/free-solid-svg-icons'
+import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -16,7 +16,6 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { OutboundSurfaceInfo, OutboundSurfaceCollection } from '@companion-app/shared/Model/Surfaces.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
-import { AddOutboundSurfaceModal, type AddOutboundSurfaceModalRef } from '~/Surfaces/Remote/AddOutboundSurfaceModal.js'
 import { AddRemoteSurfaceButton } from './AddRemoteSurfaceButton.js'
 
 interface RemoteSurfacesListProps {
@@ -54,10 +53,6 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 		[selectedRemoteConnectionId]
 	)
 
-	const addModalRef = useRef<AddOutboundSurfaceModalRef>(null)
-
-	const addSurface = useCallback(() => addModalRef?.current?.show(), [])
-
 	return (
 		<div className="connections-list-container flex-column-layout">
 			<div className="connections-list-header fixed-header">
@@ -71,15 +66,10 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 					itself.
 				</p>
 
-				<AddOutboundSurfaceModal ref={addModalRef} />
-
 				<GenericConfirmModal ref={confirmModalRef} />
 
 				<div className="connection-group-actions mb-2">
 					<CButtonGroup size="sm">
-						<CButton color="primary" onClick={addSurface}>
-							<FontAwesomeIcon icon={faAdd} /> Add Remote Surface
-						</CButton>
 						<AddRemoteSurfaceButton />
 						<CButton
 							color="info"
