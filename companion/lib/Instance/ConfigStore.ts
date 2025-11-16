@@ -28,7 +28,7 @@ export class InstanceConfigStore {
 	#store: Map<string, InstanceConfig>
 
 	constructor(db: DataDatabase, afterSave: (instanceIds: string[], updateProcessManager: boolean) => void) {
-		this.#dbTable = db.getTableView('connections') // TODO - rename?
+		this.#dbTable = db.getTableView('instances')
 		this.#afterSave = afterSave
 
 		this.#store = new Map(Object.entries(this.#dbTable.all()))
@@ -36,12 +36,6 @@ export class InstanceConfigStore {
 		// Ensure all entries are defined
 		for (const [id, config] of this.#store) {
 			if (!config) this.#store.delete(id)
-		}
-
-		// Ensure all entries have the moduleInstanceType set
-		// TODO - do properly?
-		for (const instance of this.#store.values()) {
-			if (!instance.moduleInstanceType) instance.moduleInstanceType = ModuleInstanceType.Connection
 		}
 	}
 
@@ -119,7 +113,7 @@ export class InstanceConfigStore {
 
 		const newConfig: InstanceConfig = {
 			moduleInstanceType: ModuleInstanceType.Connection,
-			instance_type: moduleId,
+			moduleId: moduleId,
 			moduleVersionId: props.versionId,
 			updatePolicy: props.updatePolicy,
 			sortOrder: props.sortOrder ?? highestRank + 1,
@@ -157,7 +151,7 @@ export class InstanceConfigStore {
 
 		const newConfig: InstanceConfig = {
 			moduleInstanceType: ModuleInstanceType.Surface,
-			instance_type: moduleId,
+			moduleId: moduleId,
 			moduleVersionId: props.versionId,
 			updatePolicy: props.updatePolicy,
 			sortOrder: props.sortOrder ?? highestRank + 1,
@@ -226,7 +220,7 @@ export class InstanceConfigStore {
 
 			result[id] = {
 				moduleType: config.moduleInstanceType,
-				moduleId: config.instance_type,
+				moduleId: config.moduleId,
 				moduleVersionId: config.moduleVersionId,
 				updatePolicy: config.updatePolicy,
 				label: config.label,
@@ -248,10 +242,10 @@ export class InstanceConfigStore {
 		for (const moduleConfig of this.#store.values()) {
 			if (
 				moduleConfig.moduleInstanceType === moduleType &&
-				moduleConfig.instance_type !== 'bitfocus-companion' &&
+				moduleConfig.moduleId !== 'bitfocus-companion' &&
 				!!moduleConfig.enabled
 			) {
-				const moduleId = moduleConfig.instance_type
+				const moduleId = moduleConfig.moduleId
 				const versionId = moduleConfig.moduleVersionId ?? ''
 
 				if (moduleVersionCounts[moduleId]?.[versionId]) {
@@ -389,7 +383,7 @@ export class InstanceConfigStore {
 			if (
 				config &&
 				config.moduleInstanceType === moduleType &&
-				config.instance_type === moduleId &&
+				config.moduleId === moduleId &&
 				config.enabled &&
 				(versionId === undefined || config.moduleVersionId === versionId)
 			) {
