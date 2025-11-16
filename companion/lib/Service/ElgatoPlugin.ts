@@ -47,7 +47,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 				if (surfaceId === client.id) {
 					client.currentPageId = newPageId
 
-					this.#redrawAllDynamicButtons()
+					this.#redrawAllDynamicButtons(client)
 				}
 			}
 		})
@@ -131,31 +131,29 @@ export class ServiceElgatoPlugin extends ServiceBase {
 		}
 	}
 
-	#redrawAllDynamicButtons(): void {
-		for (const client of this.#clients) {
-			if (!client.supportsCoordinates) continue
+	#redrawAllDynamicButtons(client: ServiceElgatoPluginSocket): void {
+		if (!client.supportsCoordinates) return
 
-			const currentPageNumber = this.#serviceApi.getPageNumberForId(client.currentPageId)
+		const currentPageNumber = this.#serviceApi.getPageNumberForId(client.currentPageId)
 
-			for (const listenerId of client.buttonListeners) {
-				if (!listenerId.startsWith('null_')) continue
+		for (const listenerId of client.buttonListeners) {
+			if (!listenerId.startsWith('null_')) continue
 
-				const [_page, column, row] = listenerId.split('_').map((i) => Number(i))
-				if (isNaN(column) || isNaN(row)) continue
+			const [_page, column, row] = listenerId.split('_').map((i) => Number(i))
+			if (isNaN(column) || isNaN(row)) continue
 
-				this.#handleButtonDrawn(
-					{
-						pageNumber: null,
-						column: column,
-						row: row,
-					},
-					this.#serviceApi.getCachedRenderOrGeneratePlaceholder({
-						pageNumber: currentPageNumber ?? 0,
-						column: column,
-						row: row,
-					})
-				)
-			}
+			this.#handleButtonDrawn(
+				{
+					pageNumber: null,
+					column: column,
+					row: row,
+				},
+				this.#serviceApi.getCachedRenderOrGeneratePlaceholder({
+					pageNumber: currentPageNumber ?? 0,
+					column: column,
+					row: row,
+				})
+			)
 		}
 	}
 
@@ -199,7 +197,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 
 				this.#clients.push(socket)
 
-				socket.on('close', () => {
+				socket.socket.on('close', () => {
 					this.#surfaceController.removeDevice(id)
 					socket.removeAllListeners('keyup')
 					socket.removeAllListeners('keydown')
