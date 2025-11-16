@@ -31,7 +31,6 @@ import type {
 	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
 import type {
 	SatelliteControlStylePreset,
@@ -42,7 +41,6 @@ import type { ReadonlyDeep } from 'type-fest'
 export interface SatelliteDeviceInfo {
 	deviceId: string
 	productName: string
-	path: string
 	socket: SatelliteSocketWrapper
 	gridSize: GridSize
 	supportsBrightness: boolean
@@ -201,11 +199,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		)
 
 		this.info = {
-			type: deviceInfo.productName,
-			devicePath: deviceInfo.path,
+			description: deviceInfo.productName,
 			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
-			deviceId: deviceInfo.path,
-			location: deviceInfo.socket.remoteAddress,
+			surfaceId: deviceInfo.deviceId,
+			location: deviceInfo.socket.remoteAddress ?? null,
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
@@ -349,12 +346,12 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, image: ImageResult): void {
-		const definitions = this.#controlDefinitions.get(formatSurfaceXy(x, y))
+	draw(item: DrawButtonItem): void {
+		const definitions = this.#controlDefinitions.get(formatSurfaceXy(item.x, item.y))
 		if (!definitions) return
 
 		for (const definition of definitions) {
-			this.#writeQueue.queue(definition.id, definition, { x, y, image })
+			this.#writeQueue.queue(definition.id, definition, item)
 		}
 	}
 
@@ -439,7 +436,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					let expressionResult: CompanionVariableValue | undefined = VARIABLE_UNKNOWN_VALUE
 
 					const expressionText = this.#config[outputVariable.id]
-					const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+					const parseResult = this.#executeExpression(expressionText ?? '', this.info.surfaceId, undefined)
 					if (parseResult.ok) {
 						expressionResult = parseResult.value
 					} else {
