@@ -176,7 +176,7 @@ export class InstanceInstalledModulesManager {
 						const config = this.#configStore.getConfigOfTypeForId(instanceIds, moduleType)
 						if (!config) continue
 
-						if (config.instance_type !== moduleId) continue
+						if (config.moduleId !== moduleId) continue
 						if (config.moduleVersionId !== null) continue
 
 						config.moduleVersionId = versionInfo.id
@@ -213,7 +213,7 @@ export class InstanceInstalledModulesManager {
 						const config = this.#configStore.getConfigOfTypeForId(connectionId, input.moduleType)
 						if (!config) continue
 
-						this.ensureModuleIsInstalled(config.moduleInstanceType, config.instance_type, config.moduleVersionId)
+						this.ensureModuleIsInstalled(config.moduleInstanceType, config.moduleId, config.moduleVersionId)
 					}
 				}),
 

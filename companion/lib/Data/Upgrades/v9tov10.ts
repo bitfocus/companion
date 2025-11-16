@@ -32,9 +32,13 @@ interface LegacyOutboundSurfaceInfo {
 function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
+	// Rename the connections table to instances
+	db.renameTable('connections', 'instances')
+
+	const instances = db.getTableView('instances')
+
 	// Find all the known surface module ids
 	const allSurfaceInstanceModuleIds = new Map<string, string>()
-	const instances = db.getTableView('connections')
 	for (const [instanceId, instance] of Object.entries(instances.all())) {
 		if (instance.moduleInstanceType === ModuleInstanceType.Surface) {
 			const moduleId = instance.moduleId || instance.instance_type
@@ -42,22 +46,21 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 		}
 	}
 
-	// TODO - rename table from connections to instances
+	// update all instances to use moduleId instead of instance_type
+	const allInstanceModuleIds = new Set<string>()
+	for (const [instanceId, instance] of Object.entries(instances.all())) {
+		const moduleId = instance.moduleId || instance.instance_type
+		allInstanceModuleIds.add(moduleId)
 
-	// TODO - update all instances to use moduleId instead of instance_type
-	// const allInstanceModuleIds = new Set<string>()
-	// const instances = db.getTableView('connections')
-	// for (const [instanceId, instance] of Object.entries(instances.all())) {
-	// 	const moduleId = instance.moduleId || instance.instance_type
-	// 	allInstanceModuleIds.add(moduleId)
-
-	// 	// Rename instance_type to moduleId
-	// 	instances.set(instanceId, {
-	// 		...instance,
-	// 		moduleId: moduleId,
-	// 		instance_type: undefined,
-	// 	})
-	// }
+		// Rename instance_type to moduleId
+		instances.set(instanceId, {
+			...instance,
+			moduleInstanceType: instance.moduleInstanceType || ModuleInstanceType.Connection,
+			moduleId: moduleId,
+			instance_type: undefined,
+			updatePolicy: instance.updatePolicy || InstanceVersionUpdatePolicy.Stable,
+		})
+	}
 
 	const remoteSurfaces = db.getTableView('surfaces_remote')
 	const anyRemoteSurfacesAreLegacyElgato = Object.values(remoteSurfaces.all()).some((surface) => {
@@ -78,7 +81,7 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 			elgatoSurfaceInstanceId = nanoid()
 			instances.set(elgatoSurfaceInstanceId, {
 				moduleInstanceType: ModuleInstanceType.Surface,
-				instance_type: 'elgato-stream-deck',
+				moduleId: 'elgato-stream-deck',
 				moduleVersionId: 'builtin',
 				label: 'elgato-stream-deck',
 				config: {},
