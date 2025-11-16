@@ -162,7 +162,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#updateEvents.setMaxListeners(0)
 
-		this.#outboundController = new SurfaceOutboundController(this, db)
+		this.#outboundController = new SurfaceOutboundController(db)
 		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.triggerUpdateDevicesList())
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')

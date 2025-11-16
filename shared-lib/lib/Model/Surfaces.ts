@@ -120,31 +120,17 @@ export interface SurfacesUpdateUpdateOp {
 	patch: JsonPatchOperation<ClientDevicesListItem>[]
 }
 
-export interface OutboundSurfaceInfoBase {
+export interface OutboundSurfaceInfo {
 	id: string
-	type: 'elgato' | 'plugin'
 	enabled: boolean
 
-	// TODO - ensure defined in existing configs!
-	collectionId: string | null
-	sortOrder: number
-}
-
-export type OutboundSurfaceInfo = LegacyOutboundSurfaceInfo | ModernOutboundSurfaceInfo
-export interface LegacyOutboundSurfaceInfo extends OutboundSurfaceInfoBase {
-	displayName: string
-	type: 'elgato'
-	address: string
-	port: number
-
-	collectionId: string | null
-	sortOrder: number
-}
-export interface ModernOutboundSurfaceInfo extends OutboundSurfaceInfoBase {
 	displayName: string
 	type: 'plugin'
 	instanceId: string
 	config: Record<string, any>
+
+	collectionId: string | null
+	sortOrder: number
 }
 
 export interface OutboundSurfaceCollectionData {
@@ -173,10 +159,7 @@ export interface OutboundSurfacesUpdateAddOp {
 	info: OutboundSurfaceInfo
 }
 
-export type ClientDiscoveredSurfaceInfo =
-	| ClientDiscoveredSurfaceInfoSatellite
-	| ClientDiscoveredSurfaceInfoStreamDeck
-	| ClientDiscoveredSurfaceInfoPlugin
+export type ClientDiscoveredSurfaceInfo = ClientDiscoveredSurfaceInfoSatellite | ClientDiscoveredSurfaceInfoPlugin
 
 export interface ClientDiscoveredSurfaceInfoSatellite {
 	id: string
@@ -188,18 +171,6 @@ export interface ClientDiscoveredSurfaceInfoSatellite {
 	port: number
 
 	apiEnabled: boolean
-}
-
-export interface ClientDiscoveredSurfaceInfoStreamDeck {
-	id: string
-
-	surfaceType: 'streamdeck'
-
-	name: string
-	address: string
-	port: number
-
-	modelName: string
 }
 
 export interface ClientDiscoveredSurfaceInfoPlugin {
