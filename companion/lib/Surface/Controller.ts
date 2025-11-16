@@ -39,7 +39,6 @@ import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
-import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
@@ -123,8 +122,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	readonly #outboundController: SurfaceOutboundController
 
-	readonly #firmwareUpdates: SurfaceFirmwareUpdateCheck
-
 	get outbound(): SurfaceOutboundController {
 		return this.#outboundController
 	}
@@ -139,7 +136,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#updateEvents.setMaxListeners(0)
 
 		this.#outboundController = new SurfaceOutboundController(db)
-		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.triggerUpdateDevicesList())
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
 
@@ -372,9 +368,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		// Update the group to have the new surface
 		this.#attachSurfaceToGroup(handler)
-
-		// Perform an update check in the background
-		this.#firmwareUpdates.triggerCheckSurfaceForUpdates(handler)
 
 		return handler
 	}
