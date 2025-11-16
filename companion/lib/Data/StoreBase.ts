@@ -370,6 +370,108 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 		return newTable
 	}
+
+	/**
+	 * Check if a table exists in the database
+	 * @param tableName - the name of the table to check
+	 * @returns true if the table exists, false otherwise
+	 */
+	public tableExists(tableName: string): boolean {
+		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
+
+		try {
+			const result = this.store
+				.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`)
+				.get(tableName) as { name: string } | undefined
+
+			return !!result
+		} catch (e: any) {
+			this.logger.warn(`Error checking if table ${tableName} exists: ${e.message}`)
+			return false
+		}
+	}
+
+	/**
+	 * Rename a table in the database with proper edge case handling.
+	 *
+	 * **IMPORTANT**: This method should only be called during database upgrades (before any controllers
+	 * are initialized). DataStoreTableView objects contain prepared SQL statements with baked-in table names.
+	 * If any code has cached references to DataStoreTableView objects for the old table name, those
+	 * references will break after the rename. During startup upgrades this is safe because the cache is
+	 * empty and no external code has obtained table views yet.
+	 *
+	 * Edge cases handled:
+	 * - If both tables exist and have rows, their contents are merged (old table takes precedence on conflicts)
+	 * - If the new table does not exist or is empty, it is replaced by the old table
+	 * - If the old table doesn't exist, the operation is skipped
+	 *
+	 * @param oldTableName - the current name of the table
+	 * @param newTableName - the new name for the table
+	 */
+	public renameTable(oldTableName: string, newTableName: string): void {
+		if (!oldTableName || typeof oldTableName !== 'string') throw new Error('Invalid old table name')
+		if (!newTableName || typeof newTableName !== 'string') throw new Error('Invalid new table name')
+
+		// Clear the old table from cache since it is no longer usable
+		this.tableCache.delete(oldTableName)
+
+		const oldTableExists = this.tableExists(oldTableName)
+		const newTableExists = this.tableExists(newTableName)
+
+		// If old table doesn't exist, nothing to do
+		if (!oldTableExists) {
+			this.logger.info(`Skipping table rename from "${oldTableName}" to "${newTableName}": old table does not exist`)
+			return
+		}
+
+		// If new table doesn't exist, simple rename
+		if (!newTableExists) {
+			this.logger.info(`Renaming table "${oldTableName}" to "${newTableName}"`)
+			this.store.prepare(`ALTER TABLE ${oldTableName} RENAME TO ${newTableName}`).run()
+			this.setDirty()
+			return
+		}
+
+		// Both tables exist - need to merge them
+		this.logger.info(`Merging table "${oldTableName}" into existing table "${newTableName}"`)
+
+		try {
+			// Get all rows from the old table
+			const oldRows = this.store.prepare(`SELECT id, value FROM ${oldTableName}`).all() as ITableRow[]
+
+			// Get existing IDs from the new table to avoid conflicts
+			const newTableIds = new Set<string>(
+				(this.store.prepare(`SELECT id FROM ${newTableName}`).all() as { id: string }[]).map((row) => row.id)
+			)
+
+			// Prepare insert statement for new table
+			const insertStmt = this.store.prepare(
+				`INSERT INTO ${newTableName} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
+			)
+
+			// Copy rows from old table to new table
+			// Using transaction for better performance and atomicity
+			const transaction = this.store.transaction((rows: ITableRow[]) => {
+				for (const row of rows) {
+					insertStmt.run(row)
+				}
+			})
+
+			transaction(oldRows)
+
+			// Drop the old table
+			this.store.prepare(`DROP TABLE ${oldTableName}`).run()
+
+			this.logger.info(
+				`Successfully merged ${oldRows.length} rows from "${oldTableName}" into "${newTableName}" (${newTableIds.size} existing rows, ${oldRows.length - newTableIds.size} new rows added)`
+			)
+
+			this.setDirty()
+		} catch (e: any) {
+			this.logger.error(`Error merging tables "${oldTableName}" and "${newTableName}": ${e.message}`)
+			throw e
+		}
+	}
 }
 
 type ValueIfJsonEncodable<T> = T extends number | { [key: string]: any } ? T : never
