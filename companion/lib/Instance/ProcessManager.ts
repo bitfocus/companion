@@ -23,6 +23,7 @@ import type { SomeModuleVersionInfo } from './Types.js'
 import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
+import type { SurfaceModuleManifest } from '@companion-surface/host'
 
 /**
  * A backoff sleep strategy
@@ -485,7 +486,7 @@ export class InstanceProcessManager {
 
 			// Create handler and wait for registration + initialization
 			try {
-				await this.#createHandlerAndWaitForInit(child, monitor, runtimeInfo)
+				await this.#createHandlerAndWaitForInit(child, monitor, runtimeInfo, moduleInfo)
 			} catch (error) {
 				this.#logger.error(`Failed to initialize instance "${child.lastLabel}": ${error}`)
 				throw error
@@ -499,7 +500,8 @@ export class InstanceProcessManager {
 	async #createHandlerAndWaitForInit(
 		child: ModuleChild,
 		monitor: RespawnMonitor,
-		runtimeInfo: RuntimeInfo
+		runtimeInfo: RuntimeInfo,
+		moduleInfo: SomeModuleVersionInfo
 	): Promise<void> {
 		if (!child.targetState) {
 			throw new Error('No target state')
@@ -635,6 +637,7 @@ export class InstanceProcessManager {
 					monitor,
 					child.targetState.moduleId,
 					child.instanceId,
+					moduleInfo.manifest as SurfaceModuleManifest,
 					onRegisterReceived
 				)
 				break

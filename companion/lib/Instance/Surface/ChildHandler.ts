@@ -24,7 +24,7 @@ import type { InstanceStatus } from '../Status.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from './IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import type { HIDDevice, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
+import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -77,11 +77,14 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 	 */
 	#unsubListeners: () => void
 
+	#relevantHidDevices = new Map<number, Set<number>>()
+
 	constructor(
 		deps: SurfaceChildHandlerDependencies,
 		monitor: RespawnMonitor,
 		moduleId: string,
 		instanceId: string,
+		manifest: SurfaceModuleManifest,
 		onRegister: (verificationToken: string) => Promise<void>
 	) {
 		this.logger = LogController.createLogger(`Surface/Wrapper/${instanceId}`)
@@ -148,6 +151,18 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		}
 		monitor.on('message', messageHandler)
 		this.#unsubListeners = () => monitor.off('message', messageHandler)
+
+		// Build relevant HID devices map for quick lookup
+		for (const usbIds of manifest.usbIds || []) {
+			let productIds = this.#relevantHidDevices.get(usbIds.vendorId)
+			if (!productIds) {
+				productIds = new Set()
+				this.#relevantHidDevices.set(usbIds.vendorId, productIds)
+			}
+			for (const id of usbIds.productIds) {
+				productIds.add(id)
+			}
+		}
 	}
 
 	#completeRegistration(registerProps: RegisterMessage): void {
@@ -297,6 +312,10 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 
 		if (this.features.supportsHid) {
 			for (const device of hidDevices) {
+				// Check if this device is relevant
+				const hidVendorEntry = this.#relevantHidDevices.get(device.vendorId)
+				if (!hidVendorEntry || !hidVendorEntry.has(device.productId)) continue
+
 				this.#ipcWrapper
 					.sendWithCb('checkHidDevice', { device })
 					.then(async (msg) => {

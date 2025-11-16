@@ -46,6 +46,7 @@ import type { SurfacePluginPanel } from './PluginPanel.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import type { HIDDevice } from '@companion-surface/host'
+import type { Complete } from '@companion-module/base/dist/util.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -1132,16 +1133,24 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			try {
 				await Promise.allSettled([
 					HID.devicesAsync().then(async (deviceInfos) => {
-						const sanitisedDevics: HIDDevice[] = []
+						const sanitisedDevices: HIDDevice[] = []
 						for (const deviceInfo of deviceInfos) {
 							if (!deviceInfo.path) continue
-							sanitisedDevics.push({
-								...deviceInfo,
+							sanitisedDevices.push({
+								vendorId: deviceInfo.vendorId,
+								productId: deviceInfo.productId,
 								path: deviceInfo.path,
-							})
+								serialNumber: deviceInfo.serialNumber,
+								manufacturer: deviceInfo.manufacturer,
+								product: deviceInfo.product,
+								release: deviceInfo.release,
+								interface: deviceInfo.interface,
+								usagePage: deviceInfo.usagePage,
+								usage: deviceInfo.usage,
+							} satisfies Complete<HIDDevice>)
 						}
 						// emit to plugins
-						this.emit('scanDevices', sanitisedDevics)
+						this.emit('scanDevices', sanitisedDevices)
 					}),
 				])
 

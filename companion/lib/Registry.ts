@@ -160,19 +160,19 @@ export class Registry {
 	 * @param modulesDirs - the paths for storing modules
 	 * @param machineId - the machine uuid
 	 */
-	constructor(configDir: string, modulesDirs: AppInfo['modulesDirs'], machineId: string) {
-		if (!configDir) throw new Error(`Missing configDir`)
-		if (!machineId) throw new Error(`Missing machineId`)
+	constructor(baseAppInfo: Pick<AppInfo, 'configDir' | 'modulesDirs' | 'udevRulesDir' | 'machineId'>) {
+		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
+		if (!baseAppInfo.machineId) throw new Error(`Missing machineId`)
+		if (!baseAppInfo.modulesDirs) throw new Error(`Missing modulesDirs`)
+		if (!baseAppInfo.udevRulesDir) throw new Error(`Missing udevRulesDir`)
 
 		this.#logger = LogController.createLogger('Registry')
 
 		this.#logger.info(`Build ${buildNumber}`)
-		this.#logger.info(`configuration directory: ${configDir}`)
+		this.#logger.info(`configuration directory: ${baseAppInfo.configDir}`)
 
 		this.#appInfo = {
-			configDir: configDir,
-			modulesDirs: modulesDirs,
-			machineId: machineId,
+			...baseAppInfo,
 			appVersion: pkgInfo.version!,
 			appBuild: buildNumber,
 			pkgInfo: pkgInfo,
@@ -485,6 +485,8 @@ export interface AppInfo {
 	configDir: string
 	/** The base directory for storing installed modules */
 	modulesDirs: Record<ModuleInstanceType, string>
+	/** The path to store generated udev rules */
+	udevRulesDir: string
 	machineId: string
 	appVersion: string
 	appBuild: string

@@ -215,14 +215,15 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 	}
 
-	const registry = new Registry(
+	const registry = new Registry({
 		configDir,
-		{
+		modulesDirs: {
 			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // Naming for backwards compatibility
 			[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
 		},
-		machineId
-	)
+		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
+		machineId,
+	})
 
 	registry
 		.ready(options.extraModulePath, adminIp, Number(options.adminPort))

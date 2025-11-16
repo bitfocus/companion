@@ -1893,23 +1893,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:~0.4.0":
-  version: 0.4.2
-  resolution: "@companion-surface/base@npm:0.4.2"
+"@companion-surface/base@npm:~0.5.0":
+  version: 0.5.0
+  resolution: "@companion-surface/base@npm:0.5.0"
   dependencies:
     tslib: "npm:^2.8.1"
-  checksum: 10c0/3e62ffbd160951c47bdbcb7ae4f65b8f48e20d5e2b8e2a2584bfb548c13f90637b6e6229fc59e8732e058f3b6c152a7892fe4eded7f4972430467a1efba8ff96
+  checksum: 10c0/b6aeda8326b0900dd6ee2d3f1a5d331780f1cdce20adb484a377799bcedfb18d024eb46173f600bddeba456e59bd1f42d56a75a1f1d9def386b3b8defb429cfe
   languageName: node
   linkType: hard
 
-"@companion-surface/host@npm:~0.4.0":
-  version: 0.4.0
-  resolution: "@companion-surface/host@npm:0.4.0"
+"@companion-surface/host@npm:~0.4.1":
+  version: 0.4.1
+  resolution: "@companion-surface/host@npm:0.4.1"
   dependencies:
-    "@companion-surface/base": "npm:~0.4.0"
+    "@companion-surface/base": "npm:~0.5.0"
     fast-deep-equal: "npm:^3.1.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/48b556031018f16729d8ebe8e8a284fc0b328f4ed295cf187af2967e311804d262655fa86d815a7081c4a3baf865805282700f446bb7bc4e4e7e16086364f7fd
+  checksum: 10c0/9ecf70cb843020c1cc09897acc711384e1ca6c730beba9fbebeaeb4761a75463fc95d2c2b6ad71fb675dd71ebdf36f037c42d26f29020be3f0f122825c4d0abc
   languageName: node
   linkType: hard
 
@@ -10923,7 +10923,7 @@ asn1@evs-broadcast/node-asn1:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:^1.14.0"
-    "@companion-surface/host": "npm:~0.4.0"
+    "@companion-surface/host": "npm:~0.4.1"
     "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^2.0.2"
     "@julusian/segfault-raub": "npm:^2.3.2"
@@ -10984,6 +10984,7 @@ asn1@evs-broadcast/node-asn1:
     tar-stream: "npm:^3.1.7"
     type-fest: "npm:^5.3.1"
     typescript: "npm:~5.9.3"
+    udev-generator: "npm:^1.0.2"
     usb: "npm:^2.16.0"
     uuid: "npm:^13.0.0"
     webpack: "npm:^5.103.0"
@@ -24651,6 +24652,13 @@ asn1@evs-broadcast/node-asn1:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10c0/ad09fdf7a756814dce65bc60c1657b40d44451346858eea230e10f2e95a289d9183b6e32e5c11e95acc0ccc214b4f36289dcad4bf1886b0adb84d711d336a430
+  languageName: node
+  linkType: hard
+
+"udev-generator@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "udev-generator@npm:1.0.2"
+  checksum: 10c0/459bb86f738ac1a7c0659628e61c933d14440ca2e2a98f671d8675a45d69e63e26f212bfab3c2206aeb5bb4ac8f55a9793b188cc34fa37a9f75124b34b2f0a17
   languageName: node
   linkType: hard
 
