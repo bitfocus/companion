@@ -261,7 +261,6 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			type: surfaceInfo.description,
 			configFields: configFields,
 			location: surfaceInfo.location ?? undefined,
-			// firmwareUpdateVersionsUrl?: string
 			// hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 		}
 
@@ -383,8 +382,6 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	quit(): void {
 		// TODO - forward to plugin
 	}
-
-	checkForFirmwareUpdates?: ((latestVersions?: unknown) => Promise<void>) | undefined
 
 	setLocked(locked: boolean, characterCount: number): void {
 		this.#ipcWrapper
