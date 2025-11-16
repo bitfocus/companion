@@ -7,7 +7,6 @@ import { UdpConfig } from './Sections/UdpConfig.js'
 import { OscConfig } from './Sections/OscConfig.js'
 import { RosstalkConfig } from './Sections/RosstalkConfig.js'
 import { ArtnetConfig } from './Sections/ArtnetConfig.js'
-import { VideohubServerConfig } from './Sections/VideohubServerConfig.js'
 import { HttpConfig } from './Sections/HttpConfig.js'
 import { observer } from 'mobx-react-lite'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -64,7 +63,6 @@ const UserConfigTable = observer(function UserConfigTable() {
 				<OscConfig {...userConfigProps} />
 				<RosstalkConfig {...userConfigProps} />
 				<EmberPlusConfig {...userConfigProps} />
-				<VideohubServerConfig {...userConfigProps} />
 				<ArtnetConfig {...userConfigProps} />
 			</tbody>
 		</table>
