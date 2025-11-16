@@ -10,33 +10,18 @@
  *
  */
 
-import findProcess from 'find-process'
 import HID from 'node-hid'
 import jsonPatch from 'fast-json-patch'
 import pDebounce from 'p-debounce'
 import debounceFn from 'debounce-fn'
-import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
-import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
 import { usb } from 'usb'
-import { isAShuttleDevice } from 'shuttle-node'
-import { listLoupedecks } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
-import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
-import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
-import { SurfaceUSBXKeys } from './USB/XKeys.js'
-import { SurfaceUSBLoupedeck } from './USB/Loupedeck.js'
-import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
-import { isVecFootpedal, SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
 import { SurfaceIPVideohubPanel, type VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
-import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
-import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
-import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
-import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type {
 	ClientDevicesListItem,
@@ -47,24 +32,15 @@ import type {
 	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type {
-	LocalUSBDeviceOptions,
-	SurfaceHandlerDependencies,
-	SurfacePanel,
-	SurfacePanelFactory,
-	UpdateEvents,
-} from './Types.js'
+import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
-import { getMXCreativeConsoleDeviceInfo } from '@logitech-mx-creative-console/node'
-import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
@@ -1158,27 +1134,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		try {
 			this.#runningRefreshDevices = true
 
-			let streamDeckSoftwareRunning = false
-			const streamdeckDisabled = !!this.#handlerDependencies.userconfig.getKey('elgato_plugin_enable')
-
-			try {
-				// Make sure we don't try to take over stream deck devices when the stream deck application
-				// is running on windows.
-				if (!streamdeckDisabled && process.platform === 'win32') {
-					const list = await findProcess.default('name', '\\StreamDeck.exe')
-					if (typeof list === 'object' && list.length > 0) {
-						streamDeckSoftwareRunning = true
-						this.#logger.silly('Elgato software detected, ignoring stream decks')
-					}
-				}
-			} catch (_e) {
-				// scan for all usb devices anyways
-			}
-
 			// Now do the scan
-			const scanForLoupedeck = !!this.#handlerDependencies.userconfig.getKey('loupedeck_enable')
-			this.#logger.silly('scanForLoupedeck', scanForLoupedeck)
-			const ignoreStreamDeck = streamDeckSoftwareRunning || streamdeckDisabled
 			this.#logger.silly('USB: checking devices')
 
 			try {
@@ -1194,109 +1150,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						}
 						// emit to plugins
 						this.emit('scanDevices', sanitisedDevics)
-
-						await Promise.allSettled(
-							deviceInfos.map(async (deviceInfo) => {
-								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
-								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
-									if (!ignoreStreamDeck && getStreamDeckDeviceInfo(deviceInfo)) {
-										await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
-										return
-									} else if (
-										getMXCreativeConsoleDeviceInfo(deviceInfo) &&
-										this.#handlerDependencies.userconfig.getKey('logitech_mx_console_enable')
-									) {
-										await this.#addDevice(deviceInfo.path, {}, 'logi-mx-console', SurfaceUSBLogiMXConsole)
-										return
-									} else if (
-										deviceInfo.vendorId === 0xffff &&
-										(deviceInfo.productId === 0x1f40 || deviceInfo.productId === 0x1f41)
-									) {
-										await this.#addDevice(deviceInfo.path, {}, 'infinitton', SurfaceUSBInfinitton)
-									} else if (isAShuttleDevice(deviceInfo)) {
-										// Note: this must be before the xkeys, as the pid can clash
-										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
-										}
-									} else if (
-										// More specific match has to be above xkeys
-										isVecFootpedal(deviceInfo)
-									) {
-										if (this.#handlerDependencies.userconfig.getKey('vec_footpedal_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'vec-footpedal', SurfaceUSBVECFootpedal)
-										}
-									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
-										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'xkeys', SurfaceUSBXKeys)
-										}
-									} else if (
-										deviceInfo.vendorId === 0x32ac && // frame.work
-										deviceInfo.productId === 0x0013 && // macropod
-										deviceInfo.usagePage === 0xffdd && // rawhid interface
-										deviceInfo.usage === 0x61
-									) {
-										await this.#addDevice(deviceInfo.path, {}, 'framework-macropad', SurfaceUSBFrameworkMacropad)
-									} else if (
-										this.#handlerDependencies.userconfig.getKey('blackmagic_controller_enable') &&
-										getBlackmagicControllerDeviceInfo(deviceInfo)
-									) {
-										await this.#addDevice(deviceInfo.path, {}, 'blackmagic-controller', SurfaceUSBBlackmagicController)
-									} else if (
-										deviceInfo.vendorId === 0x0203 && // 203 Systems
-										(deviceInfo.productId & 0xffc0) == 0x1040 && // Mystrix
-										deviceInfo.usagePage === 0xff00 && // rawhid interface
-										deviceInfo.usage === 0x01
-									) {
-										if (this.#handlerDependencies.userconfig.getKey('mystrix_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
-										}
-									} else if (
-										(((deviceInfo.vendorId === 0x6602 || deviceInfo.vendorId === 0x6603) && // Mirabox
-											(deviceInfo.productId === 0x1001 ||
-												deviceInfo.productId === 0x1003 ||
-												deviceInfo.productId === 0x1007 ||
-												deviceInfo.productId === 0x1005 ||
-												deviceInfo.productId === 0x1012 || // Stream Dock M18V3
-												deviceInfo.productId === 0x1014 || // Stream Dock HSV 293S
-												deviceInfo.productId === 0x1006)) || // Stream Dock N4 or 293V3
-											(deviceInfo.vendorId === 0x5548 && deviceInfo.productId === 0x6674) ||
-											(deviceInfo.vendorId === 0x0300 && deviceInfo.productId === 0x1010) ||
-											// Mirabox variants (OEM branded)
-											(deviceInfo.vendorId === 0x5548 && deviceInfo.productId === 0x6670) || // Mirabox HSV 293S (XF-CN001 firmware V2)
-											(deviceInfo.vendorId === 0x1500 && deviceInfo.productId === 0x3003)) && // Mirabox HSV 293S (XF-CN001 firmware V3)
-										deviceInfo.interface === 0
-									) {
-										if (this.#handlerDependencies.userconfig.getKey('mirabox_streamdock_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'mirabox-streamdock', SurfaceUSBMiraboxStreamDock)
-										}
-									}
-								}
-							})
-						)
 					}),
-					scanForLoupedeck
-						? listLoupedecks().then(async (deviceInfos) =>
-								Promise.allSettled(
-									deviceInfos.map(async (deviceInfo) => {
-										this.#logger.info('found loupedeck', deviceInfo)
-										if (!this.#surfaceHandlers.has(deviceInfo.path)) {
-											await this.#addDevice(deviceInfo.path, {}, 'loupedeck', SurfaceUSBLoupedeck, true)
-										}
-									})
-								)
-							)
-						: Promise.resolve(),
 				])
 
 				this.#logger.silly('USB: done')
 
-				if (streamdeckDisabled) {
-					return 'Ignoring Stream Decks devices as the plugin has been enabled'
-				} else if (ignoreStreamDeck) {
-					return 'Ignoring Stream Decks devices as the stream deck app is running'
-				} else {
-					return undefined
-				}
+				return undefined
 			} catch (e) {
 				this.#logger.silly('USB: scan failed ' + e)
 				return 'Scan failed'
@@ -1304,20 +1163,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		} finally {
 			this.#runningRefreshDevices = false
 		}
-	}
-
-	async addStreamdeckTcpDevice(streamdeck: StreamDeckTcp): Promise<SurfaceUSBElgatoStreamDeck> {
-		const fakePath = `tcp://${streamdeck.remoteAddress}:${streamdeck.remotePort}`
-
-		this.removeDevice(fakePath)
-
-		const device = await SurfaceUSBElgatoStreamDeck.fromTcp(fakePath, streamdeck)
-
-		this.#createSurfaceHandler(fakePath, 'elgato-streamdeck-tcp', device)
-
-		this.triggerUpdateDevicesList()
-
-		return device
 	}
 
 	/**
@@ -1379,49 +1224,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.triggerUpdateDevicesList()
 
 		return device
-	}
-
-	async #addDevice(
-		devicePath: string,
-		deviceOptions: Omit<LocalUSBDeviceOptions, 'executeExpression'>,
-		type: string,
-		factory: SurfacePanelFactory,
-		skipHidAccessCheck = false
-	) {
-		this.removeDevice(devicePath)
-
-		this.#logger.silly('add device ' + devicePath)
-
-		if (!skipHidAccessCheck) {
-			// Check if we have access to the device
-			try {
-				const devicetest = new HID.HID(devicePath)
-				devicetest.close()
-			} catch (_e) {
-				this.#logger.error(
-					`Found "${type}" device, but no access. Please quit any other applications using the device, and try again.`
-				)
-				return
-			}
-		}
-
-		// Define something, so that it is known it is loading
-		this.#surfaceHandlers.set(devicePath, null)
-
-		try {
-			const dev = await factory.create(devicePath, {
-				...deviceOptions,
-				executeExpression: this.surfaceExecuteExpression.bind(this),
-			})
-			this.#createSurfaceHandler(devicePath, type, dev)
-
-			this.triggerUpdateDevicesList()
-		} catch (e) {
-			this.#logger.error(`Failed to add "${type}" device: ${e}`)
-
-			// Failed, remove the placeholder
-			this.#surfaceHandlers.delete(devicePath)
-		}
 	}
 
 	surfaceExecuteExpression(
