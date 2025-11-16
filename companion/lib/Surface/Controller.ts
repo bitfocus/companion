@@ -563,6 +563,25 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				}
 			}),
 
+			emulatorLocked: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
+				signal,
+				input,
+			}) {
+				const changes = toIterable(self.#updateEvents, 'emulatorLocked', signal)
+
+				// Emit the current config if it exists
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					yield null
+				} else {
+					yield surface.panel.lockedState()
+				}
+
+				for await (const [changeId, changeData] of changes) {
+					if (changeId === input.id) yield changeData
+				}
+			}),
+
 			emulatorImages: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
 				signal,
 				input,
@@ -597,6 +616,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					}
 
 					surface.panel.emit('click', input.column, input.row, input.pressed)
+				}),
+
+			emulatorPinEntry: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+						digit: z.number().min(0).max(9),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const surface = this.#surfaceHandlers.get(EmulatorRoom(input.id))
+					if (!surface) {
+						throw new Error(`Emulator "${input.id}" does not exist!`)
+					}
+
+					surface.panel.emit('pincodeKey', input.digit)
 				}),
 
 			groupAdd: publicProcedure

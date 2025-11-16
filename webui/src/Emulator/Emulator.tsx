@@ -13,11 +13,13 @@ import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useEmulatorImageCache } from './ImageCache.js'
 import { EmulatorButtons } from './Buttons.js'
+import { EmulatorLockedPage } from './LockedState.js'
 
 export const Emulator = observer(function Emulator() {
 	const { emulatorId } = useParams({ from: '/emulator/$emulatorId' })
 
 	const config = useSubscription(trpc.surfaces.emulatorConfig.subscriptionOptions({ id: emulatorId }))
+	const lockedState = useSubscription(trpc.surfaces.emulatorLocked.subscriptionOptions({ id: emulatorId }))
 
 	const doRetryLoad = useCallback(() => config.reset(), [config])
 
@@ -27,17 +29,21 @@ export const Emulator = observer(function Emulator() {
 
 	return (
 		<div className="page-tablet page-emulator">
-			{config.data && imagesSub.data ? (
+			{config.data && imagesSub.data && lockedState.data !== null ? (
 				<>
 					<ConfigurePanel config={config.data} />
 
-					<EmulatorButtons
-						emulatorId={emulatorId}
-						getImage={getImage}
-						columns={config.data.emulator_columns}
-						rows={config.data.emulator_rows}
-						enableExtendedKeymap={!!config.data.emulator_control_enable}
-					/>
+					{lockedState.data ? (
+						<EmulatorLockedPage emulatorId={emulatorId} lockedState={lockedState.data} />
+					) : (
+						<EmulatorButtons
+							emulatorId={emulatorId}
+							getImage={getImage}
+							columns={config.data.emulator_columns}
+							rows={config.data.emulator_rows}
+							enableExtendedKeymap={!!config.data.emulator_control_enable}
+						/>
+					)}
 				</>
 			) : config.data === null ? (
 				<CRow className={'loading'}>
@@ -47,7 +53,7 @@ export const Emulator = observer(function Emulator() {
 				<CRow className={'loading'}>
 					<LoadingRetryOrError
 						dataReady={false}
-						error={config.error || imagesSub.error}
+						error={config.error || imagesSub.error || lockedState.error}
 						doRetry={doRetryLoad}
 						design="pulse-xl"
 					/>
