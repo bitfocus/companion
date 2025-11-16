@@ -1,6 +1,5 @@
 import EventEmitter from 'node:events'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { ImageResult } from '../Graphics/ImageResult.js'
 import type {
 	DrawButtonItem,
 	SurfaceExecuteExpressionFn,
@@ -256,11 +255,10 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		const configFields = generateConfigFields(surfaceInfo, this.gridSize, this.#inputVariables, this.#outputVariables)
 
 		this.info = {
-			deviceId: surfaceInfo.surfaceId,
-			devicePath: surfaceInfo.surfaceId, // Future: this will be deprecated
-			type: surfaceInfo.description,
+			surfaceId: surfaceInfo.surfaceId,
+			description: surfaceInfo.description,
 			configFields: configFields,
-			location: surfaceInfo.location ?? undefined,
+			location: surfaceInfo.location ?? null,
 			// hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 		}
 
@@ -276,16 +274,14 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		})
 	}
 
-	draw(x: number, y: number, image: ImageResult): void {
-		const definitions = this.#controlDefinitions.get(formatSurfaceXy(x, y))
+	draw(item: DrawButtonItem): void {
+		const definitions = this.#controlDefinitions.get(formatSurfaceXy(item.x, item.y))
 		if (!definitions) return
 
 		for (const definition of definitions) {
-			this.#writeQueue.queue(definition.id, definition, { x, y, image })
+			this.#writeQueue.queue(definition.id, definition, item)
 		}
 	}
-
-	drawMany?: ((entries: DrawButtonItem[]) => void) | undefined
 
 	setConfig(config: Record<string, any>, force?: boolean): void {
 		if ((force || this.#config.brightness != config.brightness) && config.brightness !== undefined) {
@@ -344,7 +340,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					let expressionResult: CompanionVariableValue | undefined = VARIABLE_UNKNOWN_VALUE
 
 					const expressionText = this.#config[outputVariable.id]
-					const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+					const parseResult = this.#executeExpression(expressionText ?? '', this.info.surfaceId, undefined)
 					if (parseResult.ok) {
 						expressionResult = parseResult.value
 					} else {

@@ -24,11 +24,10 @@ export type SurfaceExecuteExpressionFn = (
 ) => ExecuteExpressionResult
 
 export interface SurfacePanelInfo {
-	deviceId: string
-	devicePath: string
-	type: string
+	surfaceId: string
+	description: string
 	configFields: CompanionSurfaceConfigField[]
-	location?: string
+	location: string | null
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 }
 
@@ -38,8 +37,7 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	clearDeck(): void
-	draw(x: number, y: number, render: ImageResult): void
-	drawMany?: (entries: DrawButtonItem[]) => void
+	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void
 	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void

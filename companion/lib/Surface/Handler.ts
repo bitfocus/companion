@@ -196,8 +196,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	) {
 		super()
 
-		this.#logger = LogController.createLogger(`Surface/Handler/${panel.info.deviceId}`)
-		this.#logger.silly('loading for ' + panel.info.devicePath)
+		this.#logger = LogController.createLogger(`Surface/Handler/${panel.info.surfaceId}`)
+		this.#logger.silly('loading for ' + panel.info.surfaceId)
 
 		this.#surfaces = surfaceController
 		this.#controls = deps.controls
@@ -220,19 +220,22 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		// some surfaces need different positions for the pincode numbers
 		if (
-			this.panel.info.type === 'Loupedeck Live' ||
-			this.panel.info.type === 'Loupedeck Live S' ||
-			this.panel.info.type === 'Razer Stream Controller'
+			this.panel.info.description === 'Loupedeck Live' ||
+			this.panel.info.description === 'Loupedeck Live S' ||
+			this.panel.info.description === 'Razer Stream Controller'
 		) {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [5, 2]
-		} else if (this.panel.info.type === 'Loupedeck CT') {
+		} else if (this.panel.info.description === 'Loupedeck CT') {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [3, 4]
-		} else if (this.panel.info.type === 'Stream Deck Studio' || this.panel.info.type === 'Elgato Stream Deck Studio') {
+		} else if (
+			this.panel.info.description === 'Stream Deck Studio' ||
+			this.panel.info.description === 'Elgato Stream Deck Studio'
+		) {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SDS
 			this.#pincodeCodePosition = [1, 0]
-		} else if (this.panel.info.type === 'Mirabox Stream Dock N4') {
+		} else if (this.panel.info.description === 'Mirabox Stream Dock N4') {
 			this.#pincodeNumberPositions = [
 				[4, 1],
 				[0, 0],
@@ -278,7 +281,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 	#recreateLogger() {
 		const suffix = this.#surfaceConfig?.name ? ` (${this.#surfaceConfig.name})` : ''
-		this.#logger = LogController.createLogger(`Surface/Handler/${this.panel.info.deviceId}${suffix}`)
+		this.#logger = LogController.createLogger(`Surface/Handler/${this.panel.info.surfaceId}${suffix}`)
 	}
 
 	/**
@@ -303,7 +306,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	}
 
 	get surfaceId(): string {
-		return this.panel.info.deviceId
+		return this.panel.info.surfaceId
 	}
 
 	get displayName(): string {
@@ -396,12 +399,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Draw multiple images to a surface
 	 */
 	#drawButtons(entries: DrawButtonItem[]) {
-		if (this.panel.drawMany) {
-			this.panel.drawMany(entries)
-		} else {
-			for (const entry of entries) {
-				this.panel.draw(entry.x, entry.y, entry.image)
-			}
+		for (const entry of entries) {
+			this.panel.draw(entry)
 		}
 	}
 
@@ -508,7 +507,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (!this.panel) return
 
 		try {
-			this.#surfaces.removeDevice(this.panel.info.devicePath)
+			this.#surfaces.removeDevice(this.panel.info.surfaceId)
 		} catch (e) {
 			this.#logger.error(`Remove failed: ${e}`)
 		}
@@ -812,8 +811,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * @param purge Purge the configuration
 	 */
 	unload(purge = false): void {
-		this.#logger.error(this.panel.info.type + ' disconnected')
-		this.#logger.silly('unloading for ' + this.panel.info.devicePath)
+		this.#logger.error(this.panel.info.description + ' disconnected')
+		this.#logger.silly('unloading for ' + this.panel.info.surfaceId)
 		this.#graphics.off('button_drawn', this.#onButtonDrawn)
 
 		try {

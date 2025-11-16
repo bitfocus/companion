@@ -329,11 +329,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Create a `SurfaceHandler` for a `SurfacePanel`
 	 */
 	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): SurfaceHandler {
-		const existingSurfaceConfig = this.getDeviceConfig(panel.info.deviceId)
+		const existingSurfaceConfig = this.getDeviceConfig(panel.info.surfaceId)
 		if (!existingSurfaceConfig) {
-			this.#logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
+			this.#logger.silly(`Creating config for newly discovered device ${panel.info.surfaceId}`)
 		} else {
-			this.#logger.silly(`Reusing config for device ${panel.info.deviceId}`)
+			this.#logger.silly(`Reusing config for device ${panel.info.surfaceId}`)
 		}
 
 		const surfaceConfig = createOrSanitizeSurfaceHandlerConfig(
@@ -1161,11 +1161,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Add a satellite device
 	 */
 	addSatelliteDevice(deviceInfo: SatelliteDeviceInfo): SurfaceIPSatellite {
-		this.removeDevice(deviceInfo.path)
+		this.removeDevice(deviceInfo.deviceId)
 
 		const device = new SurfaceIPSatellite(deviceInfo, this.surfaceExecuteExpression.bind(this))
 
-		this.#createSurfaceHandler(deviceInfo.path, 'satellite', device)
+		this.#createSurfaceHandler(deviceInfo.deviceId, 'satellite', device)
 
 		this.triggerUpdateDevicesList()
 
@@ -1176,9 +1176,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Add a new plugin panel
 	 */
 	addPluginPanel(moduleId: string, panel: SurfacePluginPanel): void {
-		this.removeDevice(panel.info.deviceId)
+		this.removeDevice(panel.info.surfaceId)
 
-		this.#createSurfaceHandler(panel.info.deviceId, moduleId, panel)
+		this.#createSurfaceHandler(panel.info.surfaceId, moduleId, panel)
 
 		this.triggerUpdateDevicesList()
 	}
@@ -1186,17 +1186,17 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Add the elgato plugin connection
 	 */
-	addElgatoPluginDevice(devicePath: string, socket: ServiceElgatoPluginSocket): SurfaceIPElgatoPlugin {
-		this.removeDevice(devicePath)
+	addElgatoPluginDevice(surfaceId: string, socket: ServiceElgatoPluginSocket): SurfaceIPElgatoPlugin {
+		this.removeDevice(surfaceId)
 
 		const device = new SurfaceIPElgatoPlugin(
 			this.#handlerDependencies.controls,
 			this.#handlerDependencies.pageStore,
-			devicePath,
+			surfaceId,
 			socket
 		)
 
-		this.#createSurfaceHandler(devicePath, 'elgato-plugin', device)
+		this.#createSurfaceHandler(surfaceId, 'elgato-plugin', device)
 
 		this.triggerUpdateDevicesList()
 
@@ -1357,12 +1357,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Remove a surface
 	 */
-	removeDevice(devicePath: string, purge = false): void {
-		const surfaceHandler = this.#surfaceHandlers.get(devicePath)
+	removeDevice(surfaceId: string, purge = false): void {
+		const surfaceHandler = this.#surfaceHandlers.get(surfaceId)
 		if (surfaceHandler) {
-			this.#logger.silly('remove device ' + devicePath)
-
-			const surfaceId = surfaceHandler.surfaceId
+			this.#logger.silly('remove device ' + surfaceId)
 
 			// Detach surface from any group
 			this.#detachSurfaceFromGroup(surfaceHandler)
@@ -1375,7 +1373,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			surfaceHandler.removeAllListeners()
 
-			this.#surfaceHandlers.delete(devicePath)
+			this.#surfaceHandlers.delete(surfaceId)
 			this.emit('surface-delete', surfaceId)
 		}
 
