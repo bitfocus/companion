@@ -17,14 +17,6 @@ import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/E
 import type { EmulatorPageConfig, EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
 import type { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
 
-export type SurfacePanelFactory = {
-	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
-}
-
-export interface LocalUSBDeviceOptions {
-	executeExpression: SurfaceExecuteExpressionFn
-}
-
 export type SurfaceExecuteExpressionFn = (
 	str: string,
 	surfaceId: string,
@@ -37,7 +29,6 @@ export interface SurfacePanelInfo {
 	type: string
 	configFields: CompanionSurfaceConfigField[]
 	location?: string
-	firmwareUpdateVersionsUrl?: string
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 }
 
@@ -53,7 +44,6 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void
 	quit(): void
-	checkForFirmwareUpdates?: (latestVersions?: unknown) => Promise<void>
 
 	/**
 	 * If the surface will handle locking display of the locking state itself, this method should be implemented.
