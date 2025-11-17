@@ -200,6 +200,7 @@ function AddInstanceEntry({ moduleInfo, addInstance }: AddInstanceEntryProps) {
 		moduleInfo.installedInfo?.devVersion ??
 		moduleInfo.installedInfo?.stableVersion ??
 		moduleInfo.installedInfo?.betaVersion ??
+		moduleInfo.installedInfo?.builtinVersion ??
 		moduleInfo.installedInfo?.installedVersions?.[0] ??
 		(moduleInfo.storeInfo ? { helpPath: moduleInfo.storeInfo.helpUrl, versionId: '' } : undefined)
 

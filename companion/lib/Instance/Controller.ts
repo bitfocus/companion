@@ -161,7 +161,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(this.#configStore)
 		this.status = new InstanceStatus()
-		this.modules = new InstanceModules(this, apiRouter, appInfo.modulesDirs)
+		this.modules = new InstanceModules(this, apiRouter, appInfo)
 		this.processManager = new InstanceProcessManager(
 			{
 				controls: controls,

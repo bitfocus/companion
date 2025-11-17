@@ -160,7 +160,9 @@ export class Registry {
 	 * @param modulesDirs - the paths for storing modules
 	 * @param machineId - the machine uuid
 	 */
-	constructor(baseAppInfo: Pick<AppInfo, 'configDir' | 'modulesDirs' | 'udevRulesDir' | 'machineId'>) {
+	constructor(
+		baseAppInfo: Pick<AppInfo, 'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId'>
+	) {
 		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
 		if (!baseAppInfo.machineId) throw new Error(`Missing machineId`)
 		if (!baseAppInfo.modulesDirs) throw new Error(`Missing modulesDirs`)
@@ -485,6 +487,8 @@ export interface AppInfo {
 	configDir: string
 	/** The base directory for storing installed modules */
 	modulesDirs: Record<ModuleInstanceType, string>
+	/** The builtin module directories */
+	builtinModuleDirs: Record<ModuleInstanceType, string | null>
 	/** The path to store generated udev rules */
 	udevRulesDir: string
 	machineId: string

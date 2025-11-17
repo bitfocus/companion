@@ -21,6 +21,7 @@ import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
 import net from 'net'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { isPackaged } from './Resources/Util.js'
 
 const program = new Command()
 
@@ -220,6 +221,12 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		modulesDirs: {
 			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // Naming for backwards compatibility
 			[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
+		},
+		builtinModuleDirs: {
+			[ModuleInstanceType.Connection]: null,
+			[ModuleInstanceType.Surface]: isPackaged()
+				? path.join(import.meta.dirname, 'builtin-surfaces')
+				: path.join(import.meta.dirname, '../../.cache/builtin-surfaces'),
 		},
 		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
 		machineId,
