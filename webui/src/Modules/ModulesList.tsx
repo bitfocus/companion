@@ -48,7 +48,9 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		let isVisible = false
 		if (p.installedInfo) {
 			if (
-				(p.installedInfo.installedVersions.length > 0 || p.installedInfo.devVersion) &&
+				(p.installedInfo.installedVersions.length > 0 ||
+					p.installedInfo.devVersion ||
+					p.installedInfo.builtinVersion) &&
 				visibleModules.visibility.installed
 			)
 				isVisible = true
