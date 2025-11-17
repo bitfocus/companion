@@ -22,6 +22,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 
 export interface AddInstanceModalRef {
 	show(info: FuzzyProduct): void
@@ -96,9 +97,13 @@ export const AddInstanceModal = observer(
 		console.log('Version choices', versionChoices, choicesLoaded)
 
 		// Ensure the currently selection version is a valid option
-		const defaultVersionId = moduleInfo?.installedInfo?.devVersion
-			? 'dev'
-			: moduleInfo?.installedInfo?.stableVersion?.versionId
+		let defaultVersionId = moduleInfo?.installedInfo?.stableVersion?.versionId
+		if (moduleInfo?.installedInfo?.devVersion) {
+			defaultVersionId = 'dev'
+		} else if (!defaultVersionId && moduleInfo?.installedInfo?.builtinVersion) {
+			defaultVersionId = 'builtin'
+		}
+
 		useEffect(() => {
 			if (!versionChoices || versionChoices.length === 0) return
 
@@ -115,10 +120,14 @@ export const AddInstanceModal = observer(
 			})
 		}, [versionChoices, defaultVersionId])
 
-		const selectedVersionInfo =
-			selectedVersion === 'dev'
-				? moduleInfo?.installedInfo?.devVersion
-				: moduleInfo?.installedInfo?.installedVersions.find((v) => v.versionId === selectedVersion)
+		let selectedVersionInfo: ClientModuleVersionInfo | undefined
+		if (selectedVersion === 'dev') {
+			selectedVersionInfo = moduleInfo?.installedInfo?.devVersion ?? undefined
+		} else if (selectedVersion === 'builtin') {
+			selectedVersionInfo = moduleInfo?.installedInfo?.builtinVersion ?? undefined
+		} else {
+			selectedVersionInfo = moduleInfo?.installedInfo?.installedVersions.find((v) => v.versionId === selectedVersion)
+		}
 		const selectedVersionIsLegacy = selectedVersionInfo?.isLegacy ?? false
 
 		const showHelpClick = useCallback(() => {

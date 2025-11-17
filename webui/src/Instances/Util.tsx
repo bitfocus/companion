@@ -6,6 +6,7 @@ export function getModuleVersionInfo(
 ): ClientModuleVersionInfo | null | undefined {
 	if (moduleVersionId === null) return null
 	if (moduleVersionId === 'dev') return moduleInfo?.devVersion
+	if (moduleVersionId === 'builtin') return moduleInfo?.builtinVersion
 
 	return moduleInfo?.installedVersions.find((v) => v.versionId === moduleVersionId)
 }
