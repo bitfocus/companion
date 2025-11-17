@@ -21,7 +21,8 @@ export function useAllModuleProducts(
 		for (const moduleInfo of modules.allModules.values()) {
 			if (onlyModuleType && moduleInfo.moduleType !== onlyModuleType) continue
 
-			const latestVersion = moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.devVersion
+			const latestVersion =
+				moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.builtinVersion ?? moduleInfo.devVersion
 			if (!latestVersion) continue // shouldn't happen, but just in case
 
 			for (const product of moduleInfo.display.products) {

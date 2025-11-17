@@ -6,7 +6,7 @@ import type { SurfaceModuleManifest } from '@companion-surface/host'
 export type SomeModuleVersionInfo = ConnectionModuleVersionInfo | SurfaceModuleVersionInfo
 
 export interface ModuleVersionInfoBase {
-	versionId: string // 'dev' or a semver version
+	versionId: string // 'dev', 'builtin', or a semver version
 	basePath: string
 	helpPath: string | null
 	isPackaged: boolean
@@ -18,6 +18,7 @@ export interface SurfaceModuleVersionInfo extends ModuleVersionInfoBase {
 	type: ModuleInstanceType.Surface
 	manifest: SurfaceModuleManifest
 	isLegacy: false
+	isBuiltin: boolean
 }
 
 export interface ConnectionModuleVersionInfo extends ModuleVersionInfoBase {

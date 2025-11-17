@@ -24,6 +24,7 @@ export interface ClientModuleInfo {
 	display: ModuleDisplayInfo
 
 	devVersion: ClientModuleVersionInfo | null
+	builtinVersion: ClientModuleVersionInfo | null
 
 	stableVersion: ClientModuleVersionInfo | null
 	betaVersion: ClientModuleVersionInfo | null

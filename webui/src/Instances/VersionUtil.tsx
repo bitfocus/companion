@@ -6,6 +6,7 @@ import semver from 'semver'
 export function doesInstanceVersionExist(moduleInfo: ClientModuleInfo | undefined, versionId: string | null): boolean {
 	if (versionId === null) return false
 	if (versionId === 'dev') return !!moduleInfo?.devVersion
+	if (versionId === 'builtin') return !!moduleInfo?.builtinVersion
 
 	return !!moduleInfo?.installedVersions.find((v) => v.versionId === versionId)
 }

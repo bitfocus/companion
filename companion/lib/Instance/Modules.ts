@@ -68,12 +68,14 @@ export class InstanceModules {
 	readonly #activeModuleUpgradeConnectionRooms = new Set<string>()
 
 	readonly #modulesDirs: AppInfo['modulesDirs']
+	readonly #builtinModuleDirs: AppInfo['builtinModuleDirs']
 
 	readonly #events = new EventEmitter<InstanceModulesEvents>()
 
-	constructor(instance: InstanceController, apiRouter: express.Router, modulesDirs: AppInfo['modulesDirs']) {
+	constructor(instance: InstanceController, apiRouter: express.Router, appInfo: AppInfo) {
 		this.#instanceController = instance
-		this.#modulesDirs = modulesDirs
+		this.#modulesDirs = appInfo.modulesDirs
+		this.#builtinModuleDirs = appInfo.builtinModuleDirs
 
 		this.#events.setMaxListeners(0)
 
@@ -179,6 +181,27 @@ export class InstanceModules {
 				isPackaged: true,
 			}
 		}
+
+		// If supported, also find any 'builtin' modules. These are one which are shipped with companion and can't be uninstalled
+		const builtinModuleDir = this.#builtinModuleDirs[moduleType]
+		if (builtinModuleDir) {
+			const builtinModules = await this.#moduleScanner.loadInfoForModulesInDir(builtinModuleDir, true)
+			for (const candidate of builtinModules) {
+				if (candidate.type !== moduleType) {
+					this.#logger.warn(
+						`Skipping module ${candidate.manifest.id} in builtin modules dir, as it is not a ${moduleType} module`
+					)
+					continue
+				}
+
+				const moduleInfo = this.#getOrCreateModuleEntry(candidate.type, candidate.manifest.id)
+				moduleInfo.builtinModule = {
+					...candidate,
+					versionId: 'builtin',
+					isPackaged: true,
+				}
+			}
+		}
 	}
 
 	/**
@@ -220,6 +243,12 @@ export class InstanceModules {
 					`${prefix} ${moduleInfo.devModule.display.id}: ${moduleInfo.devModule.display.name} (Dev${
 						moduleInfo.devModule.isPackaged ? ' & Packaged' : ''
 					})`
+				)
+			}
+
+			if (moduleInfo.builtinModule) {
+				this.#logger.info(
+					`${prefix} Builtin: ${moduleInfo.builtinModule.display.id}@${moduleInfo.builtinModule.versionId}: ${moduleInfo.builtinModule.display.name}`
 				)
 			}
 
@@ -329,7 +358,13 @@ export class InstanceModules {
 
 		if (moduleInfo.devModule && allowDev) return 'dev'
 
-		return moduleInfo.getLatestVersion(false)?.versionId ?? null
+		const latest = moduleInfo.getLatestVersion(false)?.versionId
+		if (latest) return latest
+
+		// For surface modules, builtin is also an option
+		if (moduleType === ModuleInstanceType.Surface && moduleInfo.builtinModule) return 'builtin'
+
+		return null
 	}
 
 	createTrpcRouter() {
