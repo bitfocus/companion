@@ -161,6 +161,16 @@ export function ResolveExpression(
 							}
 						}
 
+						// // resolve embedded Companion variables
+						// let startIdx;
+						// while ((startIdx = result.search(/\$\(/)) >= 0) {
+						// 	const endIdx = result.indexOf(')', startIdx + 2)
+						// 	if (endIdx < 0 ) break  // or throw error?
+						// 	const varname = result.substring(startIdx+2, endIdx)
+						// 	const value = getVariableValue(varname)?.toString() ?? ''
+						// 	result = result.replaceAll(`$(${varname})`, value)
+						// }
+
 						return result
 					}
 					case 'Compound': {

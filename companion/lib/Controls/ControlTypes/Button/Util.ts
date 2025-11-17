@@ -36,7 +36,17 @@ export function parseVariablesInButtonStyle(
 				logger.error(`Expression parse error: ${parseResult.error}`)
 				style.text = 'ERR'
 			}
-			return parseResult.variableIds.size > 0 ? parseResult.variableIds : null
+			if (parseResult.variableIds.size > 0) {
+				// some variables were processed, assume they all were
+				return parseResult.variableIds
+			} else if (style.text.includes('$(')) {
+				// reparse for variables, since the jsep output doesn't resolve Companion variables
+				const parseResult = parser.parseVariables(style.text)
+				style.text = parseResult.text
+				return parseResult.variableIds.size > 0 ? parseResult.variableIds : null
+			} else {
+				return null
+			}
 		} else {
 			const parseResult = parser.parseVariables(style.text)
 			style.text = parseResult.text
