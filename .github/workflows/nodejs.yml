@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: linux-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: linux-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: build & package
         run: |
@@ -136,7 +136,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: linux-arm64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: linux-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: build & package
         run: |
@@ -215,7 +215,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: macos-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: macos-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: build & package
         run: |
@@ -294,7 +294,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: macos-arm64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: macos-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: prepare
         run: |
@@ -377,7 +377,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: windows-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: windows-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: build & package
         shell: bash

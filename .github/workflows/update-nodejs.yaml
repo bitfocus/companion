@@ -55,6 +55,6 @@ jobs:
           add-paths: |
             package.json
             */package.json
-            nodejs-versions.json
+            assets/nodejs-versions.json
             .node-version
           token: ${{ secrets.SYNC_MODULES_PAT }}

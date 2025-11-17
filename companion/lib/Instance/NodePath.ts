@@ -9,7 +9,9 @@ import { doesModuleSupportPermissionsModel } from './ApiVersions.js'
  */
 export async function getNodeJsPath(runtimeType: string): Promise<string | null> {
 	if (!isPackaged()) {
-		const nodeVersionsStr = fs.readFileSync(path.join(import.meta.dirname, '../../../nodejs-versions.json')).toString()
+		const nodeVersionsStr = fs
+			.readFileSync(path.join(import.meta.dirname, '../../../assets/nodejs-versions.json'))
+			.toString()
 		const nodeVersionsJson = JSON.parse(nodeVersionsStr)
 		const versionNumber = nodeVersionsJson[runtimeType]
 		if (!versionNumber) return null

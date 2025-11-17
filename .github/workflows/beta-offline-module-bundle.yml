@@ -32,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: linux-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: linux-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: prepare source
         run: |
