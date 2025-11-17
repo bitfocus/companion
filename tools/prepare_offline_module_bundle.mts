@@ -16,14 +16,13 @@ import { gunzip } from 'zlib'
 import { promisify } from 'util'
 import { Readable } from 'stream'
 import * as tarfs from 'tar-fs'
+import { MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
 
 const gunzipP = promisify(gunzip)
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
-
-const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 20 // 20MB
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
