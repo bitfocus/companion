@@ -1,7 +1,7 @@
 #!/usr/bin/env zx
 
 import { generateMiniVersionString, generateVersionString } from '../lib.mts'
-import archiver from 'archiver'
+import yazl from 'yazl'
 import { $, fs, usePowerShell, argv } from 'zx'
 import { createRequire } from 'node:module'
 import path from 'node:path'
@@ -28,17 +28,36 @@ const platformInfo = determinePlatformInfo(argv._[0])
  * @returns {Promise}
  */
 async function zipDirectory(sourceDir: string, outPath: string): Promise<void> {
-	const archive = archiver('zip', { zlib: { level: 9 } })
+	const zipfile = new yazl.ZipFile()
 	const stream = fs.createWriteStream(outPath)
 
-	return new Promise<void>((resolve, reject) => {
-		archive
-			.directory(sourceDir, false)
-			.on('error', (err) => reject(err))
-			.pipe(stream)
+	return new Promise<void>(async (resolve, reject) => {
+		zipfile.outputStream.pipe(stream).on('close', () => resolve())
 
-		stream.on('close', () => resolve())
-		archive.finalize()
+		try {
+			async function addDirectory(dirPath: string, zipPath: string) {
+				const entries = await fs.readdir(dirPath, { withFileTypes: true })
+				if (entries.length === 0) {
+					// Empty directory
+					zipfile.addEmptyDirectory(zipPath)
+				}
+				for (const entry of entries) {
+					const fullPath = path.join(dirPath, entry.name)
+					const zipEntryPath = zipPath ? path.join(zipPath, entry.name) : entry.name
+
+					if (entry.isDirectory()) {
+						await addDirectory(fullPath, zipEntryPath)
+					} else if (entry.isFile()) {
+						zipfile.addFile(fullPath, zipEntryPath)
+					}
+				}
+			}
+
+			await addDirectory(sourceDir, '')
+			zipfile.end()
+		} catch (err) {
+			reject(err)
+		}
 	})
 }
 
