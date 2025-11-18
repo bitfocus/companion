@@ -27,7 +27,7 @@
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
 		"electron": "39.2.1",
-		"electron-builder": "26.0.20",
+		"electron-builder": "26.1.0",
 		"electron-reloader": "^1.2.3"
 	}
 }
