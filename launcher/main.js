@@ -946,6 +946,7 @@ if (!lock) {
 				{
 					name: `Companion process`,
 					env: {
+						...process.env,
 						COMPANION_IPC_PARENT: 1,
 					},
 					maxRestarts: -1,
