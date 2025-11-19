@@ -13,7 +13,6 @@
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.0",
-    "@hello-pangea/color-picker": "https://github.com/Julusian/color-picker/releases/download/v3.3.0-julusian.0/hello-pangea-color-picker-v3.3.0-julusian.0.tgz",
     "@monaco-editor/react": "^4.7.0",
     "@popperjs/core": "^2.11.8",
     "@sentry/react": "^10.25.0",
