@@ -230,12 +230,7 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 									<InlineHelp help="Background color">
 										<CFormLabel>BG</CFormLabel>
 									</InlineHelp>
-									<ColorInputField
-										setValue={setBackgroundColorValue}
-										value={values.bgcolor ?? 0}
-										returnType="number"
-										enableAlpha
-									/>
+									<ColorInputField setValue={setBackgroundColorValue} value={values.bgcolor ?? 0} returnType="number" />
 								</div>
 							)}
 						</div>
