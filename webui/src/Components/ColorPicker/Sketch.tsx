@@ -1,4 +1,5 @@
 // Based on https://www.npmjs.com/package/react-color & https://github.com/hello-pangea/color-picker
+// typos:disable-line
 // MIT Copyright (c) 2022 Reece Carolan Copyright (c) 2015 Case Sandberg
 
 import React from 'react'

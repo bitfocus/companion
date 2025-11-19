@@ -1,7 +1,7 @@
 .dragDivXy {
-    cursor: ew-resize;
+	cursor: ew-resize;
 }
 
 .dragDiv {
-    cursor: all-scroll;
+	cursor: all-scroll;
 }
