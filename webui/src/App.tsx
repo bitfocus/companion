@@ -167,7 +167,7 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
 					<div className="body flex-grow-1">
 						{connected && loadingComplete ? (
-							unlocked ? (
+							!canLock || unlocked ? (
 								<AppContent />
 							) : (
 								<AppAuthWrapper setUnlocked={setUnlockedInner} />
