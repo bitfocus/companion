@@ -68,7 +68,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "husky": "^9.1.7",
     "json-schema-to-typescript": "^15.0.4",
-    "lint-staged": "^16.2.6",
+    "lint-staged": "^16.2.7",
     "openapi-typescript": "^7.10.1",
     "p-retry": "^7.1.0",
     "prettier": "^3.6.2",
