@@ -62,6 +62,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 			// Send dynamic page
 			if (location.pageNumber === currentPageNumber) {
 				this.#handleButtonDrawn(
+					client,
 					{
 						...location,
 						pageNumber: null,
@@ -71,7 +72,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 			}
 
 			// Send specific page
-			this.#handleButtonDrawn(location, render)
+			this.#handleButtonDrawn(client, location, render)
 		}
 	}
 
@@ -91,42 +92,44 @@ export class ServiceElgatoPlugin extends ServiceBase {
 		}
 	}
 
-	#handleButtonDrawn(location: { pageNumber: number | null; row: number; column: number }, render: ImageResult): void {
+	#handleButtonDrawn(
+		client: ServiceElgatoPluginSocket,
+		location: { pageNumber: number | null; row: number; column: number },
+		render: ImageResult
+	): void {
+		if (!client.buttonListeners) return
+
 		if (location.pageNumber !== null) location.pageNumber = Number(location.pageNumber)
 
-		for (const client of this.#clients) {
-			if (!client.buttonListeners) continue
+		const id = `${location.pageNumber}_${location.column}_${location.row}`
+		if (client.buttonListeners.has(id)) {
+			client.fillImage(
+				id,
+				{
+					page: location.pageNumber,
+					column: location.column,
+					row: location.row,
+				},
+				render
+			)
+		}
 
-			const id = `${location.pageNumber}_${location.column}_${location.row}`
+		// Backwards compatible mode
+		const cols = 8
+		const rows = 4
+		if (location.column >= 0 && location.row >= 0 && location.column < cols && location.row < rows) {
+			const bank = location.column + location.row * cols
+			const id = `${location.pageNumber}_${bank}`
 			if (client.buttonListeners.has(id)) {
 				client.fillImage(
 					id,
 					{
 						page: location.pageNumber,
-						column: location.column,
-						row: location.row,
+						bank: bank,
+						keyIndex: bank,
 					},
 					render
 				)
-			}
-
-			// Backwards compatible mode
-			const cols = 8
-			const rows = 4
-			if (location.column >= 0 && location.row >= 0 && location.column < cols && location.row < rows) {
-				const bank = location.column + location.row * cols
-				const id = `${location.pageNumber}_${bank}`
-				if (client.buttonListeners.has(id)) {
-					client.fillImage(
-						id,
-						{
-							page: location.pageNumber,
-							bank: bank,
-							keyIndex: bank,
-						},
-						render
-					)
-				}
 			}
 		}
 	}
@@ -143,6 +146,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 			if (isNaN(column) || isNaN(row)) continue
 
 			this.#handleButtonDrawn(
+				client,
 				{
 					pageNumber: null,
 					column: column,
@@ -232,7 +236,11 @@ export class ServiceElgatoPlugin extends ServiceBase {
 					row: Number(args.row),
 				}
 
-				this.#handleButtonDrawn(displayLocation, this.#serviceApi.getCachedRenderOrGeneratePlaceholder(fromLocation))
+				this.#handleButtonDrawn(
+					socket,
+					displayLocation,
+					this.#serviceApi.getCachedRenderOrGeneratePlaceholder(fromLocation)
+				)
 			} else {
 				socket.buttonListeners.add(`${args.page}_${args.bank}`)
 
@@ -246,7 +254,7 @@ export class ServiceElgatoPlugin extends ServiceBase {
 						row: xy[1],
 					}
 
-					this.#handleButtonDrawn(location, this.#serviceApi.getCachedRenderOrGeneratePlaceholder(location))
+					this.#handleButtonDrawn(socket, location, this.#serviceApi.getCachedRenderOrGeneratePlaceholder(location))
 				}
 			}
 		})
