@@ -2,8 +2,6 @@
 
 import { fs } from 'zx'
 
-//  rm -Rf public/_deps; mkdir public/_deps && cp -R ../node_modules/monaco-editor/min/vs public/_deps/monaco
-
 // Trash an old folder and/or create a new one
 fs.emptyDirSync('public/_deps')
 
