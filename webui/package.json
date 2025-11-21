@@ -83,7 +83,7 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "scripts": {
-    "postinstall": "rm -Rf public/_deps; mkdir public/_deps && cp -R ../node_modules/monaco-editor/min/vs public/_deps/monaco",
+    "postinstall": "run -T tsx src/post-install.ts",
     "start": "vite",
     "dev": "run start",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --base=/ROOT_URL_HERE",
