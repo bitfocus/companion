@@ -15,15 +15,20 @@ import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
 import { compileUpdatePayload } from './UpdatePayload.js'
 import { publicProcedure, router, toIterable } from './TRPC.js'
 import { EventEmitter } from 'events'
+import type { paths as CompanionUpdatesApiPaths } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import createClient, { type Client } from 'openapi-fetch'
 
 type UpdateEvents = {
 	info: [info: AppUpdateInfo]
 }
 
+const baseUrl = 'https://updates.companion.free'
+
 export class UIUpdate {
 	readonly #logger = LogController.createLogger('UI/Update')
 
 	readonly #appInfo: AppInfo
+	readonly #openApiClient: Client<CompanionUpdatesApiPaths>
 
 	readonly #updateEvents = new EventEmitter<UpdateEvents>()
 
@@ -35,6 +40,13 @@ export class UIUpdate {
 	constructor(appInfo: AppInfo) {
 		this.#logger.silly('loading update')
 		this.#appInfo = appInfo
+
+		this.#openApiClient = createClient<CompanionUpdatesApiPaths>({
+			baseUrl,
+			headers: {
+				'User-Agent': `Companion ${appInfo.appVersion}`,
+			},
+		})
 	}
 
 	startCycle(): void {
@@ -53,19 +65,19 @@ export class UIUpdate {
 	 * Perform the update request
 	 */
 	#requestUpdate(): void {
-		fetch('https://updates.bitfocus.io/updates', {
-			method: 'POST',
-			body: JSON.stringify(compileUpdatePayload(this.#appInfo)),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then(async (response) => response.json())
-			.then((body) => {
-				this.#logger.debug(`fresh update data received ${JSON.stringify(body)}`)
-				this.#latestUpdateData = body as AppUpdateInfo
+		this.#openApiClient
+			.POST('/updates', {
+				body: compileUpdatePayload(this.#appInfo),
+			})
+			.then((res) => {
+				if (res.error) {
+					this.#logger.warn(`update server said something unexpected!: ${res.error.message}`)
+				} else {
+					this.#logger.debug(`fresh update data received ${JSON.stringify(res.data)}`)
+					this.#latestUpdateData = res.data as AppUpdateInfo
 
-				this.#updateEvents.emit('info', this.#latestUpdateData)
+					this.#updateEvents.emit('info', this.#latestUpdateData)
+				}
 			})
 			.catch((e) => {
 				this.#logger.verbose('update server said something unexpected!', e)
