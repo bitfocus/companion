@@ -30,18 +30,25 @@ jobs:
 
       - name: Sync user-guide folder
         run: |
-          # Remove existing user-guide folder in website
+          # Remove existing docs in website
           rm -rf website/user-guide
+          rm -rf website/whats-new
 
-          # Copy user-guide from companion to website
+          # Copy new docs from companion to website
           cp -r companion/docs/user-guide website/user-guide
+          cp -r companion/docs/user-guide/9_whatsnew website/whats-new
 
           # Create the marker file
           touch website/user-guide/__DO_NOT_EDIT__
+          touch website/whats-new/__DO_NOT_EDIT__
+
+          # Restore index.md to avoid overwriting customizations
+          cd website
+          git checkout -f user-guide/index.md
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           repository: website
           commit_message: 'Sync user-guide from companion'
-          file_pattern: 'user-guide/**'
+          file_pattern: 'user-guide/** whats-new/**'
