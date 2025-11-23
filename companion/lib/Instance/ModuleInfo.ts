@@ -76,6 +76,10 @@ function translateStableVersion(
 	version: SomeModuleVersionInfo | null
 ): ClientModuleVersionInfo | null {
 	if (!version) return null
+
+	const allowMultipleInstances =
+		version.manifest.type === 'surface' ? (version.manifest.allowMultipleInstances ?? false) : false
+
 	if (version.versionId === 'builtin') {
 		return {
 			displayName: 'Builtin',
@@ -83,6 +87,7 @@ function translateStableVersion(
 			isBeta: false,
 			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			versionId: 'builtin',
+			allowMultipleInstances,
 		}
 	} else if (version.versionId === 'dev') {
 		return {
@@ -91,6 +96,7 @@ function translateStableVersion(
 			isBeta: false,
 			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			versionId: 'dev',
+			allowMultipleInstances,
 		}
 	} else {
 		return {
@@ -99,6 +105,7 @@ function translateStableVersion(
 			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			isBeta: version.isBeta,
 			versionId: version.versionId,
+			allowMultipleInstances,
 		}
 	}
 }
@@ -113,5 +120,7 @@ function translateReleaseVersion(
 		isBeta: version.isBeta,
 		helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 		versionId: version.versionId,
+		allowMultipleInstances:
+			version.manifest.type === 'surface' ? (version.manifest.allowMultipleInstances ?? false) : false,
 	}
 }

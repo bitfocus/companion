@@ -162,6 +162,7 @@ export class InstanceModuleScanner {
 			isPackaged: isPackaged,
 			isBeta: !!manifestJson.isPrerelease,
 			isLegacy: false,
+			isBuiltin: false, // Overridden later if needed
 		}
 
 		// Make sure the versionId is valid semver
