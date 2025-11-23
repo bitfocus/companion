@@ -73,6 +73,11 @@ export default defineConfig({
 				ws: true,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
+			[`${normalizedBase}/_deps`]: {
+				target: `ws://${upstreamUrl}`,
+				ws: true,
+				rewrite: (path) => path.slice(normalizedBase.length),
+			},
 		},
 	},
 	plugins: [
