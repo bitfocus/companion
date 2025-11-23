@@ -1,10 +1,10 @@
 import type { languages, IRange } from 'monaco-editor'
-import { type Monaco } from '@monaco-editor/react'
 import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
+import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.d.ts' // In theory importable with import type { Monaco } from '@monaco-editor/react'
 
 export const COMPANION_EXPRESSION_LANGUAGE_ID = 'companionExpression'
 
-export function registerCompanionExpressionLanguage(monaco: Monaco): void {
+export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void {
 	if (!monaco.languages.getLanguages().some((l) => l.id === COMPANION_EXPRESSION_LANGUAGE_ID)) {
 		monaco.languages.register({ id: COMPANION_EXPRESSION_LANGUAGE_ID })
 	}
