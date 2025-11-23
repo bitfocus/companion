@@ -77,7 +77,6 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			try {
 				this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
 
-				// @ts-expect-error why is this failing?
 				this.#streamDeckDiscovery.on('up', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
@@ -91,7 +90,6 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 						info: uiService,
 					})
 				})
-				// @ts-expect-error why is this failing?
 				this.#streamDeckDiscovery.on('down', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
