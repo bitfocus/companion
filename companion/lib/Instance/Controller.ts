@@ -265,6 +265,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		await this.modules.initModules(extraModulePath)
 
+		// Validate and fix surface instance states before initializing
+		this.#validateAndFixSurfaceInstanceStates()
+
 		const instanceIds = this.#configStore.getAllInstanceIdsOfType(null)
 		this.#logger.silly('instance_init', instanceIds)
 		for (const id of instanceIds) {
@@ -279,11 +282,74 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		// restart usages of this module
 		const { instanceIds, labels } = this.#configStore.findActiveUsagesOfModule(moduleType, moduleId, versionId)
 		for (const id of instanceIds) {
+			if (moduleType === ModuleInstanceType.Surface) {
+				const config = this.#configStore.getConfigOfTypeForId(id, moduleType)
+				if (!config) continue
+
+				// If this can no longer be enabled, disable it
+				if (config.enabled && !this.#canEnableSurfaceInstance(id)) {
+					config.enabled = false
+					this.#configStore.commitChanges([id], false)
+				}
+			}
+
 			// Restart it
 			this.#queueUpdateInstanceState(id, false, true)
 		}
 
 		this.#logger.info(`Reloading ${labels.length} instances: ${labels.join(', ')}`)
+	}
+
+	#validateAndFixSurfaceInstanceStates(): void {
+		// Group enabled surface instances by module ID
+		const instancesByModule = new Map<string, Array<{ instanceId: string; config: InstanceConfig }>>()
+		for (const [instanceId, config] of this.#configStore.getAllInstanceConfigs()) {
+			if (config.moduleInstanceType !== ModuleInstanceType.Surface) continue
+			if (!config.enabled) continue
+
+			if (!instancesByModule.has(config.moduleId)) {
+				instancesByModule.set(config.moduleId, [])
+			}
+			instancesByModule.get(config.moduleId)!.push({ instanceId, config })
+		}
+
+		// Check each module to see if multiple instances are allowed
+		for (const instances of instancesByModule.values()) {
+			// If only one instance exists, there is nothing to check
+			if (instances.length <= 1) continue
+
+			// Check if ALL versions in use allow multiple instances
+			let allVersionsAllowMultiple = true
+			for (const { config } of instances) {
+				const moduleInfo = this.modules.getModuleManifest(
+					ModuleInstanceType.Surface,
+					config.moduleId,
+					config.moduleVersionId
+				)
+				// If no loaded module, skip this instance
+				if (!moduleInfo || moduleInfo.manifest.type !== 'surface') continue
+
+				if (!moduleInfo.manifest.allowMultipleInstances) {
+					allVersionsAllowMultiple = false
+					break
+				}
+			}
+
+			// If not all versions allow multiple instances, disable all but the first
+			if (!allVersionsAllowMultiple) {
+				for (let i = 1; i < instances.length; i++) {
+					const { instanceId, config } = instances[i]
+					this.#logger.warn(
+						`Disabling surface instance "${config.label}" (${instanceId}) because not all versions of this module allow multiple instances`
+					)
+					config.enabled = false
+				}
+				this.#configStore.commitChanges(
+					instances.slice(1).map((i) => i.instanceId),
+					false
+				)
+			}
+		}
 	}
 
 	findActiveUsagesOfModule(
@@ -525,6 +591,44 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.getModuleVersionsMetrics(ModuleInstanceType.Connection)
 	}
 
+	#canEnableSurfaceInstance(instanceId: string): boolean {
+		const thisConfig = this.#configStore.getConfigOfTypeForId(instanceId, ModuleInstanceType.Surface)
+		if (!thisConfig) return false
+
+		// Collect all enabled instances of this module
+		const allInstancesOfModule = Array.from(this.#configStore.getAllInstanceConfigs().entries()).filter(
+			([_id, config]) =>
+				config.moduleInstanceType === ModuleInstanceType.Surface &&
+				config.moduleId === thisConfig.moduleId &&
+				config.enabled
+		)
+
+		// If there is only one instance, then enabling is always allowed
+		if (allInstancesOfModule.length <= 1) {
+			return true
+		}
+
+		// Check if ALL versions in use allow multiple instances
+		let allVersionsAllowMultiple = true
+		for (const [_id, config] of allInstancesOfModule) {
+			const moduleInfo = this.modules.getModuleManifest(
+				ModuleInstanceType.Surface,
+				config.moduleId,
+				config.moduleVersionId
+			)
+			// If no loaded module, skip this instance
+			if (!moduleInfo || moduleInfo.manifest.type !== 'surface') continue
+
+			if (!moduleInfo.manifest.allowMultipleInstances) {
+				allVersionsAllowMultiple = false
+				break
+			}
+		}
+
+		// If all versions allow multiple instances, enabling is allowed
+		return allVersionsAllowMultiple
+	}
+
 	/**
 	 * Add a new surface instance with a predetermined label
 	 */
@@ -567,6 +671,12 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			if (surfaceConfig.enabled !== state) {
 				this.#logger.info((state ? 'Enable' : 'Disable') + ' surface ' + label)
 				surfaceConfig.enabled = state
+
+				// If enabling, check if it would violate allowMultipleInstances rule and auto-disable if so
+				if (surfaceConfig.enabled && !this.#canEnableSurfaceInstance(id)) {
+					this.#logger.warn(`Disabling surface "${label}" because enabling would violate allowMultipleInstances rule`)
+					surfaceConfig.enabled = false
+				}
 
 				this.#configStore.commitChanges([id], false)
 
@@ -644,12 +754,22 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			surfaceConfig.enabled = data.enabled
 		}
 
+		// If enabling, check if it would violate allowMultipleInstances rule and auto-disable if so
+		let enabledChanged = false
+		if (surfaceConfig.enabled && !this.#canEnableSurfaceInstance(instanceId)) {
+			this.#logger.warn(
+				`Disabling surface "${surfaceConfig.label}" because enabling would violate allowMultipleInstances rule`
+			)
+			surfaceConfig.enabled = false
+			enabledChanged = true
+		}
+
 		this.#configStore.commitChanges([instanceId], false)
 
 		this.#logger.debug(`surface instance "${surfaceConfig?.label}" configuration updated`)
 
 		// If enabled has changed, start/stop the connection
-		if (data.enabled !== null) {
+		if (data.enabled !== null || enabledChanged) {
 			this.#queueUpdateInstanceState(instanceId, false, false)
 			if (!surfaceConfig.enabled) {
 				// If new state is disabled, stop processing here
@@ -736,6 +856,18 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		} else {
 			// Its a simple version
 			config.moduleVersionId = newVersionId
+		}
+
+		// If this is an enabled surface instance, check if the new version would violate allowMultipleInstances
+		if (
+			config.enabled &&
+			config.moduleInstanceType === ModuleInstanceType.Surface &&
+			!this.#canEnableSurfaceInstance(instanceId)
+		) {
+			this.#logger.warn(
+				`Disabling surface "${config.label}" because changing to version ${config.moduleVersionId} would violate allowMultipleInstances rule`
+			)
+			config.enabled = false
 		}
 
 		// Update the config
