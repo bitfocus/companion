@@ -5,6 +5,7 @@ import type { ClientSurfaceInstanceConfigWithId } from './SurfaceInstanceList.js
 import { useSurfaceInstancesListContext } from './SurfaceInstancesListContext.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { InstancesListTableRow } from '~/Instances/List/InstancesListTableRow.js'
+import { getSurfaceInstanceCannotEnableReason } from '../SurfaceInstanceValidation.js'
 
 interface SurfaceInstanceTableRowProps {
 	instance: ClientSurfaceInstanceConfigWithId
@@ -14,7 +15,7 @@ export const SurfaceInstanceTableRow = observer(function SurfaceInstanceTableRow
 	instance,
 	isSelected,
 }: SurfaceInstanceTableRowProps) {
-	const { surfaceInstances } = useContext(RootAppStoreContext)
+	const { surfaceInstances, modules } = useContext(RootAppStoreContext)
 	const { deleteModalRef, configureInstance } = useSurfaceInstancesListContext()
 
 	const id = instance.id
@@ -49,6 +50,8 @@ export const SurfaceInstanceTableRow = observer(function SurfaceInstanceTableRow
 	const editClickId = isSelected ? null : id // If this row is selected, don't allow editing on click, as it will close the selection
 	const doEdit = useCallback(() => configureInstance(editClickId), [configureInstance, editClickId])
 
+	const cannotEnableReason = getSurfaceInstanceCannotEnableReason(id, surfaceInstances.instances, modules)
+
 	return (
 		<InstancesListTableRow
 			collectionsStore={surfaceInstances}
@@ -59,6 +62,7 @@ export const SurfaceInstanceTableRow = observer(function SurfaceInstanceTableRow
 			doEdit={doEdit}
 			doToggleEnabled={doToggleEnabled}
 			debugLogUrl={`/surfaces/debug/${id}`}
+			cannotEnableReason={cannotEnableReason}
 		/>
 	)
 })
