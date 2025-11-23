@@ -48,6 +48,7 @@ import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { formatAttachmentFilename, stringifyExport, type StringifiedExportData } from './Util.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Export')
@@ -443,7 +444,7 @@ export class ExportController {
 
 		referencedConnectionLabels.delete('internal') // Ignore the internal module
 		for (const label of referencedConnectionLabels) {
-			const connectionId = this.#instancesController.getIdForLabel(label)
+			const connectionId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, label)
 			if (connectionId) {
 				instancesExport[connectionId] = this.#instancesController.exportConnection(
 					connectionId,
@@ -579,7 +580,7 @@ export class ExportController {
 			)
 		}
 
-		if (!config || config.surfaces) {
+		if (!config || config.surfaces?.known) {
 			const surfaces = this.#surfacesController.exportAll()
 			const surfaceGroups = this.#surfacesController.exportAllGroups()
 			const findPage = (id: string) => this.#pagesStore.getPageNumber(id)
@@ -604,6 +605,13 @@ export class ExportController {
 
 			exp.surfaces = surfaces
 			exp.surfaceGroups = surfaceGroups
+		}
+		if (!config || config.surfaces?.remote) {
+			exp.surfacesRemote = this.#surfacesController.exportAllRemote()
+		}
+		if (!config || config.surfaces?.instances) {
+			exp.surfaceInstances = this.#instancesController.exportAllSurfaceInstances()
+			exp.surfaceInstanceCollections = this.#instancesController.surfaceInstanceCollections.collectionData
 		}
 
 		return exp

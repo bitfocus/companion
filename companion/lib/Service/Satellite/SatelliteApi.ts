@@ -231,7 +231,6 @@ export class ServiceSatelliteApi {
 		}
 
 		const device = this.#surfaceController.addSatelliteDevice({
-			path: id,
 			gridSize,
 			socket,
 			deviceId: id,

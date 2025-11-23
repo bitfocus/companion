@@ -6,6 +6,7 @@ import { determinePlatformInfo } from './util.mts'
 import { generateVersionString } from '../lib.mts'
 import { fetchNodejs } from '../fetch_nodejs.mts'
 import electronBuilder from 'electron-builder'
+import { fetchBuiltinSurfaceModules } from '../fetch_builtin_modules.mts'
 
 $.verbose = true
 
@@ -37,6 +38,16 @@ for (const [name, extractedPath] of nodeVersions) {
 if (platformInfo.runtimePlatform === 'linux') {
 	// Create a symlink for the 'main' runtime, to make script maintenance easier
 	await fs.createSymlink(latestRuntimeDir, path.join(runtimesDir, 'main'), 'dir')
+}
+
+// Download builtin surface modules
+{
+	const builtinSurfaceCacheDir = await fetchBuiltinSurfaceModules()
+	const builtinSurfacesDir = 'dist/builtin-surfaces/'
+
+	await fs.remove(builtinSurfacesDir)
+	await fs.mkdirp(builtinSurfacesDir)
+	await fs.copy(builtinSurfaceCacheDir, builtinSurfacesDir)
 }
 
 // Install dependencies

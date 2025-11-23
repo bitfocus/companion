@@ -106,6 +106,7 @@ export interface CompanionInputFieldStaticTextExtended extends CompanionInputFie
 	type: 'static-text'
 
 	value: string
+	default?: never
 }
 export interface CompanionInputFieldColorExtended extends CompanionInputFieldBaseExtended {
 	type: 'colorpicker'

@@ -17,6 +17,8 @@ export interface ClientModuleVersionInfo {
 	isBeta: boolean
 	helpPath: string
 	versionId: string
+	/** Only applicable for surface modules. Whether multiple instances are allowed */
+	allowMultipleInstances: boolean
 }
 
 export interface ClientModuleInfo {
@@ -24,6 +26,7 @@ export interface ClientModuleInfo {
 	display: ModuleDisplayInfo
 
 	devVersion: ClientModuleVersionInfo | null
+	builtinVersion: ClientModuleVersionInfo | null
 
 	stableVersion: ClientModuleVersionInfo | null
 	betaVersion: ClientModuleVersionInfo | null

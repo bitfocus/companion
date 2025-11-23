@@ -2,6 +2,8 @@ import path from 'path'
 import fs from 'fs'
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin'
 import { fileURLToPath } from 'url'
+// eslint-disable-next-line n/no-extraneous-import
+import TerserPlugin from 'terser-webpack-plugin'
 
 // Allow user to set mode at run time. Default is 'development' mode.
 const devMode = process.env.WEBPACK_IN_DEV_MODE ? 'development' : 'production'
@@ -19,6 +21,7 @@ export default {
 		main: './dist/main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
 		RenderThread: './dist/Graphics/Thread.js',
+		SurfaceThread: './dist/Instance/Surface/Thread/Entrypoint.js',
 	},
 	mode: devMode,
 	// note: `undefined` defaults to 'eval' in dev mode, which is not compatible with `output.module: true` (particularly when `importMeta: false`)
@@ -50,7 +53,6 @@ export default {
 		// Native libs that are needed
 		usb: 'usb',
 		bufferutil: 'bufferutil',
-		'@serialport/bindings-cpp': '@serialport/bindings-cpp',
 		'@napi-rs/canvas': '@napi-rs/canvas',
 	},
 	experiments: {
@@ -98,7 +100,14 @@ export default {
 		// 	emitOnErrors: !optimizeUseProduction,
 		// 	checkWasmTypes: optimizeUseProduction,
 		// 	realContentHash: optimizeUseProduction,
-		// 	minimize: optimizeUseProduction,
+		minimize: true,
+		minimizer: [
+			new TerserPlugin({
+				terserOptions: {
+					module: true,
+				},
+			}),
+		],
 		// 	//nodeEnv: devMode// probably best never to alther this one.
 	},
 }

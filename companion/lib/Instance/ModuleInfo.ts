@@ -15,6 +15,8 @@ export class InstanceModuleInfo {
 
 	devModule: SomeModuleVersionInfo | null = null
 
+	builtinModule: SomeModuleVersionInfo | null = null
+
 	installedVersions: Record<string, SomeModuleVersionInfo | undefined> = {}
 
 	constructor(moduleType: ModuleInstanceType, id: string) {
@@ -24,6 +26,7 @@ export class InstanceModuleInfo {
 
 	getVersion(versionId: string | null): SomeModuleVersionInfo | null {
 		if (versionId === 'dev') return this.devModule
+		if (versionId === 'builtin') return this.builtinModule
 
 		if (versionId === null) return null // TODO - is this correct?
 
@@ -47,7 +50,8 @@ export class InstanceModuleInfo {
 		const stableVersion = this.getLatestVersion(false)
 		const betaVersion = this.getLatestVersion(true)
 
-		const baseVersion = stableVersion ?? betaVersion ?? Object.values(this.installedVersions)[0] ?? this.devModule
+		const baseVersion =
+			stableVersion ?? betaVersion ?? Object.values(this.installedVersions)[0] ?? this.builtinModule ?? this.devModule
 		if (!baseVersion) return null
 
 		return {
@@ -56,6 +60,7 @@ export class InstanceModuleInfo {
 			display: baseVersion.display,
 
 			devVersion: translateStableVersion(this.moduleType, this.devModule),
+			builtinVersion: translateStableVersion(this.moduleType, this.builtinModule),
 
 			stableVersion: translateStableVersion(this.moduleType, stableVersion),
 			betaVersion: translateStableVersion(this.moduleType, betaVersion),
@@ -72,13 +77,27 @@ function translateStableVersion(
 	version: SomeModuleVersionInfo | null
 ): ClientModuleVersionInfo | null {
 	if (!version) return null
-	if (version.versionId === 'dev') {
+
+	const allowMultipleInstances =
+		version.manifest.type === 'surface' ? (version.manifest.allowMultipleInstances ?? false) : false
+
+	if (version.versionId === 'builtin') {
+		return {
+			displayName: 'Builtin',
+			isLegacy: false,
+			isBeta: false,
+			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
+			versionId: 'builtin',
+			allowMultipleInstances,
+		}
+	} else if (version.versionId === 'dev') {
 		return {
 			displayName: 'Dev',
 			isLegacy: false,
 			isBeta: false,
 			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			versionId: 'dev',
+			allowMultipleInstances,
 		}
 	} else {
 		return {
@@ -87,6 +106,7 @@ function translateStableVersion(
 			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			isBeta: version.isBeta,
 			versionId: version.versionId,
+			allowMultipleInstances,
 		}
 	}
 }
@@ -101,5 +121,7 @@ function translateReleaseVersion(
 		isBeta: version.isBeta,
 		helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 		versionId: version.versionId,
+		allowMultipleInstances:
+			version.manifest.type === 'surface' ? (version.manifest.allowMultipleInstances ?? false) : false,
 	}
 }

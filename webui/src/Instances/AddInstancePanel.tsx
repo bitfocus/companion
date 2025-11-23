@@ -57,7 +57,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 
 	let candidates: JSX.Element[] = []
 	try {
-		const searchResults = filterProducts(typeProducts, filter)
+		const searchResults = filterProducts(typeProducts, filter, false)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
@@ -200,6 +200,7 @@ function AddInstanceEntry({ moduleInfo, addInstance }: AddInstanceEntryProps) {
 		moduleInfo.installedInfo?.devVersion ??
 		moduleInfo.installedInfo?.stableVersion ??
 		moduleInfo.installedInfo?.betaVersion ??
+		moduleInfo.installedInfo?.builtinVersion ??
 		moduleInfo.installedInfo?.installedVersions?.[0] ??
 		(moduleInfo.storeInfo ? { helpPath: moduleInfo.storeInfo.helpUrl, versionId: '' } : undefined)
 

@@ -8,6 +8,9 @@ export interface ModuleStoreListCacheStore {
 	// The version of the module API that the check was made with. Note: this may not exist for older cache data
 	connectionModuleApiVersion: string | null
 	connectionModules: Record<string, ModuleStoreListCacheEntry> | null
+
+	surfaceModuleApiVersion: string | null
+	surfaceModules: Record<string, ModuleStoreListCacheEntry> | null
 }
 
 export interface ModuleStoreListCacheEntry {
