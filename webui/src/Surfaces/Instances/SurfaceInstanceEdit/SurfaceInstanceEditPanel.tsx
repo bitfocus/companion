@@ -13,6 +13,7 @@ import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/Instance
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
 import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
 import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
+import { getSurfaceInstanceCannotEnableReason } from '../SurfaceInstanceValidation.js'
 
 interface SurfaceInstanceEditPanelProps {
 	instanceId: string
@@ -21,7 +22,7 @@ interface SurfaceInstanceEditPanelProps {
 export const SurfaceInstanceEditPanel = observer(function SurfaceInstanceEditPanel({
 	instanceId,
 }: SurfaceInstanceEditPanelProps) {
-	const { surfaceInstances } = useContext(RootAppStoreContext)
+	const { surfaceInstances, modules } = useContext(RootAppStoreContext)
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const service = useInstanceEditPanelService(confirmModalRef, instanceId)
@@ -38,6 +39,8 @@ export const SurfaceInstanceEditPanel = observer(function SurfaceInstanceEditPan
 		)
 	}
 
+	const cannotEnableReason = getSurfaceInstanceCannotEnableReason(instanceId, surfaceInstances.instances, modules)
+
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModalRef} />
@@ -52,6 +55,7 @@ export const SurfaceInstanceEditPanel = observer(function SurfaceInstanceEditPan
 						Changing the module type can break the linked surfaces. Only use this if you are sure of what you are doing.
 					</>
 				}
+				cannotEnableReason={cannotEnableReason}
 			/>
 		</>
 	)
