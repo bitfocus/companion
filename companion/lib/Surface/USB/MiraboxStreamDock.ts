@@ -2302,9 +2302,9 @@ class StreamDock extends EventEmitter {
 			this.model = StreamDock.models['293N3']
 		} else if (this.info.productId === 0x1014) {
 			this.model = StreamDock.models['HSV 293S']
-		} else if (this.info.productId === 0x3003) {
+		} else if (this.info.vendorId === 0x1500 && this.info.productId === 0x3003) {
 			this.model = StreamDock.models['HSV 293S-3']
-		} else if (this.info.productId === 0x6670) {
+		} else if (this.info.vendorId === 0x5548 && this.info.productId === 0x6670) {
 			this.model = StreamDock.models['HSV 293S-2']
 			this.packetSize = 512
 		} else {
