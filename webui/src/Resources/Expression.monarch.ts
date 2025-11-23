@@ -20,7 +20,7 @@ export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void
 		base: 'vs',
 		inherit: true,
 		rules: [
-			{ token: 'variable.companion', foreground: 'E07020', fontStyle: 'bold' }, // Companion variables - orange (like template strings)
+			{ token: 'variable.companion', foreground: '001080', fontStyle: 'bold' }, // Companion variables - same color as identifiers, but bold
 			{ token: 'predefined', foreground: '795E26' }, // Built-in functions - brownish (like JS functions)
 			{ token: 'keyword', foreground: '0000FF' }, // Keywords - blue (classic JS keywords)
 			{ token: 'string', foreground: 'A31515' }, // Strings - red (JS string color)
