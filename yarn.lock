@@ -8308,7 +8308,7 @@ asn1@evs-broadcast/node-asn1:
     dayjs: "npm:^1.11.18"
     debounce-fn: "npm:^6.0.0"
     ejson: "npm:^2.2.3"
-    emberplus-connection: "npm:^0.3.0"
+    emberplus-connection: "npm:^0.3.1"
     env-paths: "npm:^3.0.0"
     express: "npm:^5.1.0"
     express-serve-zip: "npm:^1.1.0"
@@ -8325,7 +8325,7 @@ asn1@evs-broadcast/node-asn1:
     openapi-fetch: "npm:^0.14.0"
     osc: "npm:2.4.5"
     p-debounce: "npm:^4.0.0"
-    p-queue: "npm:^8.1.1"
+    p-queue: "npm:^9.0.1"
     path-to-regexp: "npm:^8.3.0"
     selfsigned: "npm:^3.0.1"
     semver: "npm:^7.7.2"
@@ -9292,9 +9292,9 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"emberplus-connection@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "emberplus-connection@npm:0.3.0"
+"emberplus-connection@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "emberplus-connection@npm:0.3.1"
   dependencies:
     asn1: evs-broadcast/node-asn1
     debug: "npm:^4.3.4"
@@ -9302,7 +9302,7 @@ asn1@evs-broadcast/node-asn1:
     long: "npm:^3.2.0"
     smart-buffer: "npm:^3.0.3"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/643f19c30511c4f5a4397cb3470c91e2402ae6454c01898da6f72bcc4a16e16ca9e9c121cd223a7e0e6478a68ffd1b66fd7f49b8122b9458a36b07df93f65673
+  checksum: 10c0/11f0b17b4f1e626ab644f9f85393827d4c40b0f389ea6b5742b15bd8767260b883a77b0e021767f57180989defb376ce42bff150d748f73b3cab9da4d3d7148d
   languageName: node
   linkType: hard
 
@@ -14258,13 +14258,13 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"p-queue@npm:^8.1.1":
-  version: 8.1.1
-  resolution: "p-queue@npm:8.1.1"
+"p-queue@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "p-queue@npm:9.0.1"
   dependencies:
     eventemitter3: "npm:^5.0.1"
-    p-timeout: "npm:^6.1.2"
-  checksum: 10c0/7732a6a0fbb67b388ae71a3f4a114c79291f2f466fe31929749aaa237c6ca13b7c3075785b4a16812ec3ed65107944421e6dd7c02a8dceefb69f8c5cc3c7652d
+    p-timeout: "npm:^7.0.0"
+  checksum: 10c0/912bd0c09ec910e6851973757afd23b80e12210948b4e235ebaa752e32e782d7664438c948cd343e2620cf26340665ccdaa2715e4e3c52cf02fe11c5152c225f
   languageName: node
   linkType: hard
 
@@ -14293,10 +14293,10 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"p-timeout@npm:^6.1.2":
-  version: 6.1.4
-  resolution: "p-timeout@npm:6.1.4"
-  checksum: 10c0/019edad1c649ab07552aa456e40ce7575c4b8ae863191477f02ac8d283ac8c66cedef0ca93422735130477a051dfe952ba717641673fd3599befdd13f63bcc33
+"p-timeout@npm:^7.0.0":
+  version: 7.0.1
+  resolution: "p-timeout@npm:7.0.1"
+  checksum: 10c0/87d96529d1096d506607218dba6f9ec077c6dbedd0c2e2788c748e33bcd05faae8a81009fd9d22ec0b3c95fc83f4717306baba223f6e464737d8b99294c3e863
   languageName: node
   linkType: hard
 
