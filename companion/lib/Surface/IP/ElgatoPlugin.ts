@@ -68,6 +68,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 			devicePath: devicePath,
 			configFields: [],
 			deviceId: devicePath,
+			location: this.socket.remoteAddress,
 		}
 
 		const triggerKeyPress = (data: Record<string, any>, pressed: boolean) => {
