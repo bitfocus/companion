@@ -1894,11 +1894,11 @@ __metadata:
   linkType: hard
 
 "@companion-surface/base@npm:~0.6.0":
-  version: 0.6.0
-  resolution: "@companion-surface/base@npm:0.6.0"
+  version: 0.6.1
+  resolution: "@companion-surface/base@npm:0.6.1"
   dependencies:
     tslib: "npm:^2.8.1"
-  checksum: 10c0/ffda10a4ce7882c7f32e06654a28300b0827e8ebcfec6e2d5d788ce7c2427e0a5e4becdd52eef4c6191df41f5e6c7772cb7aa1f8f1683c594793d02cb0f423b5
+  checksum: 10c0/5dcc936c8148703e6dfd456a720d948ddbed534eb28683fb39e99756573532ce92e924fbf3bee51afdef6e28ff53eb6ed59caa6e69066e151eaec7c4b2176633
   languageName: node
   linkType: hard
 

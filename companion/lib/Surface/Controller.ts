@@ -1140,7 +1140,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								vendorId: deviceInfo.vendorId,
 								productId: deviceInfo.productId,
 								path: deviceInfo.path,
-								serialNumber: deviceInfo.serialNumber,
+								serialNumber: deviceInfo.serialNumber || '', // Filled in later
 								manufacturer: deviceInfo.manufacturer,
 								product: deviceInfo.product,
 								release: deviceInfo.release,

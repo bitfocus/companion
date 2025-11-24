@@ -24,7 +24,12 @@ import type { InstanceStatus } from '../Status.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from './IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
+import {
+	StableDeviceIdGenerator,
+	type HIDDevice,
+	type RemoteSurfaceConnectionInfo,
+	type SurfaceModuleManifest,
+} from '@companion-surface/base'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -311,10 +316,22 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		}
 
 		if (this.features.supportsHid) {
-			for (const device of hidDevices) {
+			// Create a fresh generator instance for this batch
+			const idGenerator = new StableDeviceIdGenerator()
+
+			for (let device of hidDevices) {
 				// Check if this device is relevant
 				const hidVendorEntry = this.#relevantHidDevices.get(device.vendorId)
 				if (!hidVendorEntry || !hidVendorEntry.has(device.productId)) continue
+
+				// Ensure we have a predictable serial number
+				if (!device.serialNumber) {
+					const uniquenessKey = `${device.vendorId}:${device.productId}`
+					device = {
+						...device,
+						serialNumber: idGenerator.generateId(uniquenessKey, device.path),
+					}
+				}
 
 				this.#ipcWrapper
 					.sendWithCb('checkHidDevice', { device })
