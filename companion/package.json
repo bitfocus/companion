@@ -57,7 +57,7 @@
     "@logitech-mx-creative-console/node": "^0.2.3",
     "@loupedeck/node": "^2.2.0",
     "@napi-rs/canvas": "0.1.82",
-    "@sentry/node": "^10.26.0",
+    "@sentry/node": "^10.27.0",
     "@trpc/server": "^11.7.2",
     "better-sqlite3": "^12.4.6",
     "bufferutil": "^4.0.9",
