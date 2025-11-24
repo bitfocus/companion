@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout companion repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: companion
 
       - name: Checkout website repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: bitfocus/website
           token: ${{ secrets.SYNC_DOCS_PAT }}
