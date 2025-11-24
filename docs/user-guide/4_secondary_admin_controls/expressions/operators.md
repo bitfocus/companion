@@ -10,6 +10,7 @@ Supported operators include:
   - Conditional ternary: `a ? b : c`
 - Binary operators:
   - Addition: `a + b`
+  - String concatenation: `a .. b`
   - Subtraction: `a - b`
   - Multiplication: `a * b`
   - Division: `a / b`

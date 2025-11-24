@@ -18,6 +18,9 @@ jsep.plugins.register(CompanionVariablesPlugin)
 jsep.removeBinaryOp('<<<')
 jsep.removeBinaryOp('>>>')
 
+// add string-concatenate operator with precedence lower than math ops but higher than relational operators...
+jsep.addBinaryOp('..', 7.5)
+
 /**
  * Parse an expression into executable nodes
  */
