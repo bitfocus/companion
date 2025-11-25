@@ -84,6 +84,12 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 
 	#relevantHidDevices = new Map<number, Set<number>>()
 
+	/**
+	 * Stable device ID generator for assigning fake serials to HID devices.
+	 * Persists across scans to prevent duplicate serial assignments when devices are re-enumerated.
+	 */
+	#stableDeviceIdGenerator = new StableDeviceIdGenerator()
+
 	constructor(
 		deps: SurfaceChildHandlerDependencies,
 		monitor: RespawnMonitor,
@@ -316,9 +322,6 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		}
 
 		if (this.features.supportsHid) {
-			// Create a fresh generator instance for this batch
-			const idGenerator = new StableDeviceIdGenerator()
-
 			for (let device of hidDevices) {
 				// Check if this device is relevant
 				const hidVendorEntry = this.#relevantHidDevices.get(device.vendorId)
@@ -329,7 +332,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 					const uniquenessKey = `${device.vendorId}:${device.productId}`
 					device = {
 						...device,
-						serialNumber: idGenerator.generateId(uniquenessKey, device.path),
+						serialNumber: this.#stableDeviceIdGenerator.generateId(uniquenessKey, device.path),
 					}
 				}
 
@@ -363,6 +366,9 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 						this.logger.warn(`Error performing checkHidDevice: ${e.message}`)
 					})
 			}
+
+			// Prune cache entries for devices that weren't seen in this scan
+			this.#stableDeviceIdGenerator.pruneNotSeen()
 		}
 	}
 
