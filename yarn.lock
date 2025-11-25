@@ -1885,6 +1885,15 @@ __metadata:
     vitest-mock-extended: "npm:^3.1.0"
     yaml: "npm:^2.8.1"
     zx: "npm:^8.8.5"
+  dependenciesMeta:
+    "@sentry/cli":
+      built: true
+    better-sqlite3:
+      built: true
+    electron:
+      built: true
+    esbuild:
+      built: true
   languageName: unknown
   linkType: soft
 
