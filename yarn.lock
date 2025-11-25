@@ -1776,7 +1776,7 @@ __metadata:
     "@fortawesome/free-brands-svg-icons": "npm:^7.1.0"
     "@fortawesome/free-solid-svg-icons": "npm:^7.1.0"
     "@fortawesome/react-fontawesome": "npm:^3.1.0"
-    "@monaco-editor/react": "npm:^4.7.0"
+    "@monaco-editor/react": "npm:^4.8.0-rc.3"
     "@popperjs/core": "npm:^2.11.8"
     "@sentry/react": "npm:^10.26.0"
     "@sentry/vite-plugin": "npm:^4.6.1"
@@ -4310,25 +4310,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@monaco-editor/loader@npm:^1.5.0":
-  version: 1.6.1
-  resolution: "@monaco-editor/loader@npm:1.6.1"
+"@monaco-editor/loader@npm:^1.7.0":
+  version: 1.7.0
+  resolution: "@monaco-editor/loader@npm:1.7.0"
   dependencies:
     state-local: "npm:^1.0.6"
-  checksum: 10c0/88fed11f7e5892c2221b649328490512591b3eca432c9613c5a0b737d624b741fcc774197b119e681360454931a19de26b271ede567ddb226ab63f0d1ec67c89
+  checksum: 10c0/1fd3579cb09b669493cf553dfc0723a93483140a44353ce9a739827edfa7b2c6541b254024d15c48176ece749ef666b6d16cce6cf0e4396c7fa1c5a48012d08a
   languageName: node
   linkType: hard
 
-"@monaco-editor/react@npm:^4.7.0":
-  version: 4.7.0
-  resolution: "@monaco-editor/react@npm:4.7.0"
+"@monaco-editor/react@npm:^4.8.0-rc.3":
+  version: 4.8.0-rc.3
+  resolution: "@monaco-editor/react@npm:4.8.0-rc.3"
   dependencies:
-    "@monaco-editor/loader": "npm:^1.5.0"
+    "@monaco-editor/loader": "npm:^1.7.0"
   peerDependencies:
     monaco-editor: ">= 0.25.0 < 1"
     react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/a4e91c6eda1a71f5fd23871bd801de435490ccbc43934d23cba65cefe2be7e9d02c9a57c4ef80fc9fe99e4d4deea51e5db19cb4e0ecf3f51818dda0eb9cdbf12
+  checksum: 10c0/4af93cf42a91b8ddd1275c175c4841570cc519d6b9c8ae3bfb066669979ead897b453be5edca3a1e0e76eea053d8899dc99624fbffcd693baf28b8a68f4f682c
   languageName: node
   linkType: hard
 

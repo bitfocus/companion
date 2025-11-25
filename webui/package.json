@@ -13,7 +13,7 @@
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.0",
-    "@monaco-editor/react": "^4.7.0",
+    "@monaco-editor/react": "^4.8.0-rc.3",
     "@popperjs/core": "^2.11.8",
     "@sentry/react": "^10.26.0",
     "@sentry/vite-plugin": "^4.6.1",
