@@ -10,7 +10,6 @@
  */
 
 import type Express from 'express'
-// @ts-expect-error no types for this package
 import onHeaders from 'on-headers'
 import LogController from '../../Log/Controller.js'
 
