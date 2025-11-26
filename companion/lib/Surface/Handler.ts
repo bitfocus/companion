@@ -10,7 +10,6 @@
  *
  */
 
-import { cloneDeep } from 'lodash-es'
 import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
@@ -667,12 +666,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	resetConfig(): void {
 		this.#surfaceConfig.groupConfig = {
-			...cloneDeep(SurfaceGroup.DefaultOptions),
+			...structuredClone(SurfaceGroup.DefaultOptions),
 			last_page_id: this.#pageStore.getFirstPageId(),
 			startup_page_id: this.#pageStore.getFirstPageId(),
 		}
 		this.#surfaceConfig.groupId = null
-		this.setPanelConfig(cloneDeep(PanelDefaults))
+		this.setPanelConfig(structuredClone(PanelDefaults))
 	}
 
 	/**

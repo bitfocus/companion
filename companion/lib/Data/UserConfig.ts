@@ -1,5 +1,4 @@
 import selfsigned from 'selfsigned'
-import { cloneDeep } from 'lodash-es'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import { EventEmitter } from 'events'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
@@ -145,7 +144,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		this.#db = db
 		this.#dbTable = db.defaultTableView
 
-		this.#data = this.#dbTable.getOrDefault('userconfig', cloneDeep(DataUserConfig.Defaults))
+		this.#data = this.#dbTable.getOrDefault('userconfig', structuredClone(DataUserConfig.Defaults))
 
 		this.#populateMissingForExistingDb()
 
@@ -355,7 +354,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		let out = this.#data[key]
 
 		if (clone === true) {
-			out = cloneDeep(out)
+			out = structuredClone(out)
 		}
 
 		return out

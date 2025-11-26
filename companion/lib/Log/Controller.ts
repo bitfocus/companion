@@ -1,7 +1,6 @@
 /**
  * Warning: this file needs to not reference any 'real' code in the codebase, or we end up with import cycle issues
  */
-import { cloneDeep } from 'lodash-es'
 import stripAnsi from 'strip-ansi'
 import fs from 'fs-extra'
 import winston, { type LeveledLogMethod, type LogMethod } from 'winston'
@@ -281,7 +280,7 @@ class LogController {
 		this.#logger.silly(`get all`)
 
 		if (clone) {
-			return cloneDeep(this.#history)
+			return structuredClone(this.#history)
 		} else {
 			return this.#history
 		}

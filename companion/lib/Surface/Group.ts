@@ -9,7 +9,6 @@
  * this program.
  */
 
-import { cloneDeep } from 'lodash-es'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { SurfaceHandler } from './Handler.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
@@ -123,7 +122,7 @@ export class SurfaceGroup {
 		}
 		// Apply missing defaults
 		this.groupConfig = {
-			...cloneDeep(SurfaceGroup.DefaultOptions),
+			...structuredClone(SurfaceGroup.DefaultOptions),
 			...this.groupConfig,
 		}
 

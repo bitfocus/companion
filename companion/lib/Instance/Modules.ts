@@ -10,7 +10,6 @@
  */
 
 import path from 'path'
-import { cloneDeep } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import type express from 'express'
 import type {
@@ -284,7 +283,7 @@ export class InstanceModules {
 
 		// Update stored
 		if (newModuleJson) {
-			this.#lastModulesJson[changedModuleIdFull] = cloneDeep(newModuleJson)
+			this.#lastModulesJson[changedModuleIdFull] = structuredClone(newModuleJson)
 		} else {
 			delete this.#lastModulesJson[changedModuleIdFull]
 		}

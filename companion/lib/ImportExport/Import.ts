@@ -23,7 +23,6 @@ import type { InstanceController } from '../Instance/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { cloneDeep } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -291,7 +290,7 @@ export class ImportController {
 			for (const [column, control] of Object.entries(rowObj)) {
 				if (control) {
 					// Import the control
-					const fixedControlObj = fixupControl(this.#logger, cloneDeep(control), referencesUpdater, instanceIdMap)
+					const fixedControlObj = fixupControl(this.#logger, structuredClone(control), referencesUpdater, instanceIdMap)
 					if (!fixedControlObj) continue
 
 					const location: ControlLocation = {

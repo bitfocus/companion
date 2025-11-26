@@ -11,7 +11,6 @@
  */
 
 import { EventEmitter } from 'events'
-import { cloneDeep } from 'lodash-es'
 import isEqual from 'fast-deep-equal'
 import LogController from '../../Log/Controller.js'
 import debounceFn from 'debounce-fn'
@@ -86,7 +85,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 
 	readonly #events: Pick<EventEmitter<EmulatorUpdateEvents>, 'emit' | 'listenerCount'>
 
-	#lastSentConfigJson: EmulatorConfig = cloneDeep(DefaultConfig)
+	#lastSentConfigJson: EmulatorConfig = structuredClone(DefaultConfig)
 
 	#lastLockedState: EmulatorLockedState | false = false
 
@@ -171,7 +170,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 	}
 
 	getDefaultConfig(): EmulatorConfig {
-		return cloneDeep(DefaultConfig)
+		return structuredClone(DefaultConfig)
 	}
 
 	/**
@@ -207,7 +206,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 			})
 		}
 
-		this.#lastSentConfigJson = cloneDeep(config)
+		this.#lastSentConfigJson = structuredClone(config)
 	}
 
 	setLocked(locked: boolean, characterCount: number): void {

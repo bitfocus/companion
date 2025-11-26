@@ -10,7 +10,6 @@
  */
 
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
-import { cloneDeep } from 'lodash-es'
 import { InternalModuleUtils } from './Util.js'
 import type {
 	ActionForVisitor,
@@ -245,7 +244,7 @@ export class InternalController {
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 
 		const cloned: FeedbackEntityModelExt = {
-			...cloneDeep(feedback),
+			...structuredClone(feedback),
 			controlId,
 			location,
 			referencedVariables: null,

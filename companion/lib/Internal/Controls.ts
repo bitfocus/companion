@@ -9,7 +9,6 @@
  * this program.
  */
 
-import { cloneDeep } from 'lodash-es'
 import { formatLocation, oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
@@ -589,7 +588,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				if (!feedback.options.properties) {
 					// TODO populate these properties instead
 					return {
-						value: cloneDeep(render.style as any),
+						value: structuredClone(render.style as any),
 						referencedVariables,
 					}
 				} else {
@@ -602,7 +601,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 					// Return cloned resolved style
 					return {
-						value: cloneDeep(newStyle),
+						value: structuredClone(newStyle),
 						referencedVariables,
 					}
 				}

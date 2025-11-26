@@ -13,7 +13,6 @@
 import findProcess from 'find-process'
 import HID from 'node-hid'
 import jsonPatch from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
 import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
@@ -1064,7 +1063,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	updateDevicesList(): void {
-		const newJsonArr = cloneDeep(this.getDevicesList())
+		const newJsonArr = structuredClone(this.getDevicesList())
 
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
 			this.#updateEvents.emit('emulatorList', this.#compileEmulatorList())

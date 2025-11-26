@@ -8,7 +8,6 @@ import {
 	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { cloneDeep } from 'lodash-es'
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import { ControlEntityList } from './EntityList.js'
@@ -144,7 +143,7 @@ export class ControlEntityInstance {
 		this.#controlId = controlId
 
 		{
-			const newData = cloneDeep(data)
+			const newData = structuredClone(data)
 			delete newData.children
 			if (!newData.options) newData.options = {}
 			this.#data = newData

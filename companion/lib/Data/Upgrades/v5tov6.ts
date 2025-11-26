@@ -1,7 +1,6 @@
 import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 import { nanoid } from 'nanoid'
-import { cloneDeep } from 'lodash-es'
 import type { ExportPageContentv4, SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 import type {
 	ExportFullv6,
@@ -46,7 +45,7 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 6,
 		}
 
@@ -65,7 +64,7 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 		const newObj: ExportPageModelv6 = {
 			connectionCollections: undefined,
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 6,
 		}
 
@@ -77,7 +76,7 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 			connectionCollections: undefined,
 			triggerCollections: undefined,
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 6,
 		}
 
