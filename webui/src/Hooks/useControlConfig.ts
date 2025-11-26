@@ -5,7 +5,6 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { assertNever } from '~/Resources/util'
 import type { SomeControlModel, UIControlUpdateInit } from '@companion-app/shared/Model/Controls.js'
 import jsonPatch from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
 
 interface ControlConfig {
 	config: SomeControlModel
@@ -45,7 +44,7 @@ export function useControlConfig(controlId: string | null | undefined): {
 
 									return {
 										...oldConfig,
-										config: jsonPatch.applyPatch(cloneDeep(oldConfig.config), data.patch).newDocument,
+										config: jsonPatch.applyPatch(structuredClone(oldConfig.config), data.patch).newDocument,
 									}
 								})
 								break
@@ -55,7 +54,7 @@ export function useControlConfig(controlId: string | null | undefined): {
 
 									return {
 										...oldConfig,
-										runtime: jsonPatch.applyPatch(cloneDeep(oldConfig.runtime), data.patch).newDocument,
+										runtime: jsonPatch.applyPatch(structuredClone(oldConfig.runtime), data.patch).newDocument,
 									}
 								})
 								break
