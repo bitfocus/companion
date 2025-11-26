@@ -7789,6 +7789,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/on-headers@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@types/on-headers@npm:1.0.4"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/6e1b50fc71c0b3358bb70a6f98a1eba5c18d6ed53a3d8c70c2d7f88055fcb034859621018b4ce3c9393ceca63529912930c9d162e6e0c256ce28fd50f0394c03
+  languageName: node
+  linkType: hard
+
 "@types/parse-json@npm:^4.0.0":
   version: 4.0.2
   resolution: "@types/parse-json@npm:4.0.2"
@@ -10728,6 +10737,7 @@ asn1@evs-broadcast/node-asn1:
     "@types/ejson": "npm:^2.2.2"
     "@types/express": "npm:^5.0.5"
     "@types/lodash-es": "npm:^4.17.12"
+    "@types/on-headers": "npm:^1.0.4"
     "@types/semver": "npm:^7.7.1"
     "@types/socketcluster-client": "npm:^19.1.1"
     "@types/supertest": "npm:^6.0.3"
@@ -10761,6 +10771,7 @@ asn1@evs-broadcast/node-asn1:
     nanoid: "npm:^5.1.6"
     node-cron: "npm:^4.2.1"
     node-machine-id: "npm:^1.1.12"
+    on-headers: "npm:^1.1.0"
     openapi-fetch: "npm:^0.15.0"
     osc: "npm:2.4.5"
     p-debounce: "npm:^5.1.0"
@@ -18435,7 +18446,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"on-headers@npm:~1.1.0":
+"on-headers@npm:^1.1.0, on-headers@npm:~1.1.0":
   version: 1.1.0
   resolution: "on-headers@npm:1.1.0"
   checksum: 10c0/2c3b6b0d68ec9adbd561dc2d61c9b14da8ac03d8a2f0fd9e97bdf0600c887d5d97f664ff3be6876cf40cda6e3c587d73a4745e10b426ac50c7664fc5a0dfc0a1
