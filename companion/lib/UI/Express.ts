@@ -128,8 +128,14 @@ export class UIExpress {
 
 		// Handle all unknown urls as accessing index.html
 		this.app.get('*all', compression(), rewriteMiddleware, async (req, res, next) => {
-			req.url = '/index.html'
-			return webuiServer(req, res, next)
+			if (req.url.startsWith('/user-guide/')) {
+				req.url = '/404.html'
+				res.status(404)
+				return docsServer(req, res, next)
+			} else {
+				req.url = '/index.html'
+				return webuiServer(req, res, next)
+			}
 		})
 	}
 
