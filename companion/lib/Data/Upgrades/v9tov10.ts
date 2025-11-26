@@ -181,7 +181,7 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 	createInstanceIfNeeded('elgato_plugin_enable', 'elgato-stream-deck', true, true, true)
 	createInstanceIfNeeded('xkeys_enable', 'xkeys', false)
 	createInstanceIfNeeded('loupedeck_enable', 'loupedeck', false)
-	createInstanceIfNeeded('mirabox_streamdock_enable', 'mirabox-streamdock', false)
+	createInstanceIfNeeded('mirabox_streamdock_enable', 'mirabox-stream-dock', false)
 	createInstanceIfNeeded('contour_shuttle_enable', 'contour-shuttle', false)
 	createInstanceIfNeeded('vec_footpedal_enable', 'vec-footpedal', false)
 	createInstanceIfNeeded('blackmagic_controller_enable', 'blackmagic-controller', false)
