@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState } from 'react'
-import { CAlert, CButton, CButtonGroup } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CNav, CNavItem, CNavLink } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faEyeSlash,
@@ -47,9 +47,10 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		availableDeprecated: false,
 	})
 
+	const [filterType, setFilterType] = useState<ModuleInstanceType | null>(null)
 	const [filter, setFilter] = useState('')
 
-	const allProducts = useAllModuleProducts(null, true, true)
+	const allProducts = useAllModuleProducts(null, true, true).filter((p) => !filterType || filterType === p.moduleType)
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {
@@ -156,6 +157,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 				<SearchBox filter={filter} setFilter={setFilter} />
 			</div>
+
+			<FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
 
 			<div className="scrollable-content">
 				<table className="table-tight table-responsive-sm">
@@ -303,3 +306,38 @@ const ModulesListRow = observer(function ModulesListRow({
 		</tr>
 	)
 })
+
+interface FilterTypeTabsProps {
+	filterType: ModuleInstanceType | null
+	setFilterType: (type: ModuleInstanceType | null) => void
+}
+
+function FilterTypeTabs({ filterType, setFilterType }: FilterTypeTabsProps) {
+	return (
+		<CNav variant="tabs" role="tablist" className="remote-control-tabs">
+			<CNavItem>
+				<CNavLink active={filterType === null} onClick={() => setFilterType(null)} title="Show all module types">
+					All Modules
+				</CNavLink>
+			</CNavItem>
+			<CNavItem>
+				<CNavLink
+					active={filterType === ModuleInstanceType.Connection}
+					onClick={() => setFilterType(ModuleInstanceType.Connection)}
+					title="Show only connection modules"
+				>
+					Connection Modules
+				</CNavLink>
+			</CNavItem>
+			<CNavItem>
+				<CNavLink
+					active={filterType === ModuleInstanceType.Surface}
+					onClick={() => setFilterType(ModuleInstanceType.Surface)}
+					title="Show only surface modules"
+				>
+					Surface Modules
+				</CNavLink>
+			</CNavItem>
+		</CNav>
+	)
+}
