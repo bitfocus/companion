@@ -1,5 +1,4 @@
 import { ButtonControlBase } from './Base.js'
-import { omit } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
@@ -139,12 +138,12 @@ export class ControlButtonNormal
 		)
 
 		return {
-			cloud: false,
-			cloud_error: false,
-
 			...structuredClone(style),
 
-			...omit(this.getDrawStyleButtonStateProps(), ['cloud', 'cloud_error']),
+			...this.getDrawStyleButtonStateProps(),
+
+			cloud: false,
+			cloud_error: false,
 
 			style: 'button',
 		}

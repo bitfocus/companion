@@ -1,6 +1,5 @@
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
-import { compact } from 'lodash-es'
 import type { SomeModuleVersionInfo } from './Types.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { getHelpPathForInstalledModule } from './ModuleScanner.js'
@@ -60,9 +59,9 @@ export class InstanceModuleInfo {
 			stableVersion: translateStableVersion(this.moduleType, stableVersion),
 			betaVersion: translateStableVersion(this.moduleType, betaVersion),
 
-			installedVersions: compact(Object.values(this.installedVersions)).map((v) =>
-				translateReleaseVersion(this.moduleType, v)
-			),
+			installedVersions: Object.values(this.installedVersions)
+				.filter((v): v is SomeModuleVersionInfo => v !== undefined)
+				.map((v) => translateReleaseVersion(this.moduleType, v)),
 		}
 	}
 }

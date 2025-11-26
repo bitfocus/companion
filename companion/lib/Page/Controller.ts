@@ -11,7 +11,6 @@ import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
-import { compact } from 'lodash-es'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -378,7 +377,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				],
 			})
 
-			this.emit('controlIdsMoved', compact([oldControlId, controlId]))
+			const changedControlIds = [oldControlId, controlId].filter((id): id is string => !!id)
+			this.emit('controlIdsMoved', changedControlIds)
 		}
 
 		return success
