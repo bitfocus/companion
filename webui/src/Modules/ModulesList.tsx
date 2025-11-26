@@ -1,7 +1,14 @@
 import React, { useCallback, useContext, useState } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEyeSlash, faPlug, faQuestionCircle, faWarning } from '@fortawesome/free-solid-svg-icons'
+import {
+	faEyeSlash,
+	faGamepad,
+	faPlug,
+	faQuestionCircle,
+	faWarning,
+	type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -12,9 +19,8 @@ import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
-import { makeAbsolutePath } from '~/Resources/util.js'
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { capitalize } from 'lodash-es'
+import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -155,7 +161,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<table className="table-tight table-responsive-sm">
 					<thead>
 						<tr>
-							<th colSpan={2}>
+							<th colSpan={3}>
 								Module
 								<CButtonGroup className="table-header-buttons">
 									<VisibilityButton {...visibleModules} keyId="installed" color="success" label="Installed" />
@@ -250,6 +256,22 @@ const ModulesListRow = observer(function ModulesListRow({
 
 	// const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection)
 
+	let icon: IconDefinition | null = null
+	let iconTitle: string | null = null
+	switch (moduleInfo.moduleType) {
+		case ModuleInstanceType.Connection:
+			icon = faPlug
+			iconTitle = 'Connection Module'
+			break
+		case ModuleInstanceType.Surface:
+			icon = faGamepad
+			iconTitle = 'Surface Module'
+			break
+		default:
+			assertNever(moduleInfo.moduleType)
+			break
+	}
+
 	return (
 		<tr
 			className={classNames({
@@ -257,18 +279,15 @@ const ModulesListRow = observer(function ModulesListRow({
 			})}
 		>
 			<td onClick={doEdit} className="hand">
-				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
-				{moduleInfo.name} ({capitalize(moduleInfo.moduleType)})
-				{/* {moduleInfo.installedVersions.?.isLegacy && (
-					<>
-						<FontAwesomeIcon
-							icon={faExclamationTriangle}
-							color="#f80"
-							title="This module has not been updated for Companion 3.0, and may not work fully"
-						/>{' '}
-					</>
+				{icon && (
+					<span title={iconTitle ?? ''}>
+						<FontAwesomeIcon icon={icon} />
+					</span>
 				)}
-				{moduleVersion?.displayName} */}
+			</td>
+			<td onClick={doEdit} className="hand">
+				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
+				{moduleInfo.name}
 			</td>
 			<td className="compact">
 				<CButton
