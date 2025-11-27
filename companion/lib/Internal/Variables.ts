@@ -27,13 +27,12 @@ import {
 	SomeSocketEntityLocation,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RunActionExtras } from '../Instance/Wrapper.js'
 import type { IPageStore } from '../Page/Store.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 import { VARIABLE_UNKNOWN_VALUE } from '../Variables/Util.js'
-import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
+import { CHOICES_DYNAMIC_LOCATION_OR_TRIGGER, type InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 import type { ControlsController } from '../Controls/Controller.js'
 
@@ -227,7 +226,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				label: 'Local Variable: Set raw value',
 				description: undefined,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
+					...CHOICES_DYNAMIC_LOCATION_OR_TRIGGER,
 
 					{
 						type: 'textinput',
@@ -246,7 +245,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				label: 'Local Variable: Set with expression',
 				description: undefined,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
+					...CHOICES_DYNAMIC_LOCATION_OR_TRIGGER,
 
 					{
 						type: 'textinput',
@@ -270,7 +269,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				label: 'Local Variable: Reset to startup value',
 				description: undefined,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
+					...CHOICES_DYNAMIC_LOCATION_OR_TRIGGER,
 
 					{
 						type: 'textinput',
@@ -283,7 +282,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				label: 'Local Variable: Write current value to startup value',
 				description: undefined,
 				options: [
-					...CHOICES_DYNAMIC_LOCATION,
+					...CHOICES_DYNAMIC_LOCATION_OR_TRIGGER,
 
 					{
 						type: 'textinput',
@@ -366,30 +365,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		this.#variableSubscriptions.delete(feedback.id)
 	}
 
-	#fetchLocationAndControlId(
-		options: Record<string, any>,
-		extras: RunActionExtras | FeedbackEntityModelExt,
-		useVariableFields = false
-	): {
-		theControlId: string | null
-		theLocation: ControlLocation | null
-		referencedVariables: string[]
-	} {
-		const result = this.#internalUtils.parseInternalControlReferenceForActionOrFeedback(
-			extras,
-			options,
-			useVariableFields
-		)
-
-		const theControlId = result.location ? this.#pageStore.getControlIdAt(result.location) : null
-
-		return {
-			theControlId,
-			theLocation: result.location,
-			referencedVariables: Array.from(result.referencedVariables),
-		}
-	}
-
 	#updateLocalVariableValue(
 		action: ControlEntityInstance,
 		extras: RunActionExtras,
@@ -401,7 +376,15 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	) {
 		if (!action.rawOptions.name) return
 
-		const { theControlId } = this.#fetchLocationAndControlId(action.rawOptions, extras, true)
+		let theControlId: string | null = null
+		if (action.rawOptions.location_target === 'this') {
+			// This could be any type of control (button, trigger, etc)
+			theControlId = extras.controlId
+		} else {
+			// Parse the location of a button
+			const result = this.#internalUtils.parseInternalControlReferenceForActionOrFeedback(extras, extras, true)
+			theControlId = result.location ? this.#pageStore.getControlIdAt(result.location) : null
+		}
 		if (!theControlId) return
 
 		const control = this.#controlsController.getControl(theControlId)

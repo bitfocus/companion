@@ -168,6 +168,49 @@ export const CHOICES_DYNAMIC_LOCATION: SomeCompanionInputField[] = [
 	},
 ]
 
+export const CHOICES_DYNAMIC_LOCATION_OR_TRIGGER: SomeCompanionInputField[] = [
+	{
+		type: 'dropdown',
+		label: 'Target',
+		id: 'location_target',
+		default: 'this',
+		choices: [
+			{ id: 'this', label: 'This button/trigger' },
+			{ id: 'text', label: 'Button from text' },
+			{ id: 'expression', label: 'Button from expression' },
+		],
+	},
+	{
+		type: 'textinput',
+		label: 'Button location (text with variables)',
+		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
+		id: 'location_text',
+		default: '$(this:page)/$(this:row)/$(this:column)',
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) == "text"',
+		},
+		useVariables: {
+			local: true,
+		},
+	},
+	{
+		type: 'textinput',
+		label: 'Button location (expression)',
+		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
+		id: 'location_expression',
+		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) == "expression"',
+		},
+		useVariables: {
+			local: true,
+		},
+		isExpression: true,
+	},
+]
+
 export class InternalModuleUtils {
 	readonly #logger = LogController.createLogger('Internal/InternalModuleUtils')
 
