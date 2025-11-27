@@ -23,6 +23,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 
 import { makeAbsolutePath } from '~/Resources/util.js'
+import './Resources/TRPC.js' // Ensure TRPC is loaded ASAP
 
 // import i18n from 'i18next'
 // import Backend from 'i18next-http-backend'
