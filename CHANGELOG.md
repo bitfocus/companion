@@ -1,5 +1,16 @@
 # Bitfocus Companion
 
+## Companion v4.1.5 - Release Notes
+
+### 🐞 BUG FIXES
+
+- reordering pages not persisting #3727
+- Local variable actions not working on triggers #3788
+- support stream deck mini (discord edition) #3778
+- elgato plugin not handling multiple clients correctly #3775
+- elgato plugin not cleaning up on connection close #3767
+- suppress module SecurityWarnings in a better way
+
 ## Companion v4.1.4 - Release Notes
 
 ### 🐞 BUG FIXES
