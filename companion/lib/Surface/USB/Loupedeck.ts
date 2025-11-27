@@ -86,8 +86,8 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 		this.DisplayColors = {
 			LeftColor: {red: 0, green: 100, blue: 0},
 			RightColor: {red: 0, green: 0, blue: 50},
-			LeftValue: 259,
-			RightValue: 259,
+			LeftValue: 0,
+			RightValue: 0,
 		}
 
 		this.#loupedeck.on('error', (error) => {
@@ -172,7 +172,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 					this.DisplayColors.RightValue = val
 					if (this.config.invertFaderValues) { // Draw from bottom → up
 						this.#loupedeck
-							.drawSolidColour(LoupedeckDisplayId.Right, { r: 0, g: 0, b: 0 }, 60, val + 7, 0, 0)
+							.drawSolidColour(LoupedeckDisplayId.Right, { red: 0, green: 0, blue: 0 }, 60, val + 7, 0, 0)
 							.catch((e) => {
 								this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + e)
 							})
@@ -183,7 +183,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 							})
 					} else { // Draw from top → down
 						this.#loupedeck
-							.drawSolidColour(LoupedeckDisplayId.Right, { r: 0, g: 0, b: 0 }, 60, 262 - val, 0, val)
+							.drawSolidColour(LoupedeckDisplayId.Right, { red: 0, green: 0, blue: 0 }, 60, 270 - val, 0, val)
 							.catch((e) => {
 								this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + e)
 							})
@@ -199,7 +199,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 					this.DisplayColors.LeftValue = val
 					if (this.config.invertFaderValues) { // Draw from bottom → up
 						this.#loupedeck
-							.drawSolidColour(LoupedeckDisplayId.Left, { r: 0, g: 0, b: 0 }, 60, val + 7, 0, 0)
+							.drawSolidColour(LoupedeckDisplayId.Left, { red: 0, green: 0, blue: 0 }, 60, val + 7, 0, 0)
 							.catch((e) => {
 								this.#logger.error('Drawing left fader value ' + touch.y + ' to loupedeck failed: ' + e)
 							})
@@ -210,7 +210,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 							})
 					} else {
 						this.#loupedeck
-							.drawSolidColour(LoupedeckDisplayId.Left, { r: 0, g: 0, b: 0 }, 60, 262 - val, 0, val)
+							.drawSolidColour(LoupedeckDisplayId.Left, { red: 0, green: 0, blue: 0 }, 60, 270 - val, 0, val)
 							.catch((e) => {
 								this.#logger.error('Drawing left fader value ' + touch.y + ' to loupedeck failed: ' + e)
 							})
@@ -371,25 +371,20 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				const side = control.id == "left" ? LoupedeckDisplayId.Left : LoupedeckDisplayId.Right
 				const color = control.id == "left" ? this.DisplayColors.LeftColor : this.DisplayColors.RightColor
 				const val = side == "left" ? this.DisplayColors.LeftValue : this.DisplayColors.RightValue
+				this.#loupedeck
+					.drawSolidColour(side, { red: 0, green: 0, blue: 0 }, 60, 270, 0, 0)
+					.catch((e) => {
+							this.#logger.error('Re-drawing ' + side + ' fader value to loupedeck failed: ' + e)
+						})				
 				if (this.config.invertFaderValues) {
 					this.#loupedeck
-						.drawSolidColour(side, { r: 0, g: 0, b: 0 }, 60, 262, 0, 0)
-						.catch((e) => {
-								this.#logger.error('Re-drawing ' + side + ' fader value to loupedeck failed: ' + e)
-							})
-					this.#loupedeck
-						.drawSolidColour(side, color, 60, 262 - val, 0, val + 7)
+						.drawSolidColour(side, color, 60, val == 0 ? -3 : 262 - val, 0, val + 7)
 						.catch((e) => {
 							this.#logger.error('Re-drawing ' + side + ' fader value to loupedeck failed: ' + e)
 						})
 				} else {
 					this.#loupedeck
-						.drawSolidColour(side, { r: 0, g: 0, b: 0 }, 60, 262, 0, 0)
-						.catch((e) => {
-							this.#logger.error('Re-drawing ' + side + ' fader value to loupedeck failed: ' + e)
-						})
-					this.#loupedeck
-						.drawSolidColour(side, color, 60, val == 259 ? 3 : val, 0, 0)
+						.drawSolidColour(side, color, 60, val == 0 ? -3 : val, 0, 0)
 						.catch((e) => {
 							this.#logger.error('Re-drawing ' + side + ' fader value to loupedeck failed: ' + e)
 						})
