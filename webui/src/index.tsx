@@ -25,24 +25,6 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import './Resources/TRPC.js' // Ensure TRPC is loaded ASAP
 
-// import i18n from 'i18next'
-// import Backend from 'i18next-http-backend'
-// import LanguageDetector from 'i18next-browser-languagedetector'
-// import { initReactI18next } from 'react-i18next'
-
-// i18n
-// 	.use(Backend)
-// 	.use(LanguageDetector)
-// 	.use(initReactI18next) // passes i18n down to react-i18next
-// 	.init({
-// 		lng: 'en',
-// 		fallbackLng: 'en',
-
-// 		interpolation: {
-// 			escapeValue: false,
-// 		},
-// 	})
-
 // Import the generated route tree
 import { routeTree } from './routeTree.gen.js'
 
