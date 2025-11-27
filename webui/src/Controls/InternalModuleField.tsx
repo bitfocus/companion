@@ -257,7 +257,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		for (const [id, info] of customVariablesSorted) {
 			choices.push({
 				id,
-				label: `${info.description} (custom:${id})`,
+				label: `$(custom:${id})\n${info.description}`,
 			})
 		}
 
@@ -303,7 +303,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			const id = `${variable.connectionLabel}:${variable.name}`
 			choices.push({
 				id,
-				label: `${variable.label} (${id})`,
+				label: `$(${id})\n${variable.label}`,
 			})
 		}
 

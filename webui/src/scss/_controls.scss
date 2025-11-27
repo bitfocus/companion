@@ -152,6 +152,17 @@ label.disabled {
 	}
 }
 
+/* adapted from https://stackoverflow.com/a/64162603 . See it for additional options and details */
+.select-control__option {
+	white-space: pre-wrap !important;
+	line-height: 1;
+}
+
+.select-control__single-value {
+	white-space: pre !important;
+	line-height: 1;
+}
+
 .static-text-content {
 	& > :last-child {
 		margin-bottom: 0;
