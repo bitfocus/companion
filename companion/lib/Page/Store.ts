@@ -510,6 +510,14 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 		const pageId = this.#pageIds[fromIndex]
 		this.#pageIds.splice(fromIndex, 1)
 		this.#pageIds.splice(toIndex, 0, pageId)
+
+		// Build an array of all page numbers that changed
+		const minIndex = Math.min(fromIndex, toIndex)
+		const maxIndex = Math.max(fromIndex, toIndex)
+		const affectedPageNumbers = new Array(maxIndex - minIndex + 1).fill(0).map((_, i) => i + minIndex + 1)
+
+		// Save changes to the pages
+		this.#commitChanges(affectedPageNumbers)
 	}
 
 	/**
