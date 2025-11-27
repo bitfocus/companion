@@ -295,6 +295,14 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 		const serialNumber = await this.#streamDeck.getSerialNumber()
 		this.info.deviceId = `streamdeck:${serialNumber}`
 
+		// Log firmware version
+		try {
+			const firmware = await this.#streamDeck.getFirmwareVersion()
+			this.#logger.info(`StreamDeck firmware version: ${firmware}`)
+		} catch (e) {
+			this.#logger.warn(`Failed to get StreamDeck firmware version: ${e}`)
+		}
+
 		// Make sure the first clear happens properly
 		await this.#streamDeck.clearPanel()
 	}
