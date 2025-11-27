@@ -1323,7 +1323,7 @@ __metadata:
     "@types/plist": "npm:^3.0.5"
     chokidar: "npm:^3.6.0"
     debounce-fn: "npm:^6.0.0"
-    electron: "npm:37.7.1"
+    electron: "npm:37.10.3"
     electron-builder: "npm:26.0.20"
     electron-reloader: "npm:^1.2.3"
     electron-store: "npm:^10.1.0"
@@ -9279,16 +9279,16 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"electron@npm:37.7.1":
-  version: 37.7.1
-  resolution: "electron@npm:37.7.1"
+"electron@npm:37.10.3":
+  version: 37.10.3
+  resolution: "electron@npm:37.10.3"
   dependencies:
     "@electron/get": "npm:^2.0.0"
     "@types/node": "npm:^22.7.7"
     extract-zip: "npm:^2.0.1"
   bin:
     electron: cli.js
-  checksum: 10c0/de7a734af5ee7e027890774a3ce275504930b0435754e04d4c8ff9ae95acb1931a6b74bd99e65bb2e5b2f567e6d3c6285e77a2a49e1be731349d00c84f2e7eb0
+  checksum: 10c0/a09c10d76be021a94f6c8b251ef990553fe530a6a1271c22026f06a502e977fac116a88b78e73abf50177386a76d69b1c9a52f62d6de60006cc50ed4cb969f0f
   languageName: node
   linkType: hard
 
