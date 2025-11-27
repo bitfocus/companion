@@ -373,21 +373,15 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				const val = side == "left" ? this.DisplayColors.LeftValue : this.DisplayColors.RightValue
 				this.#loupedeck
 					.drawSolidColour(side, { red: 0, green: 0, blue: 0 }, 60, 270, 0, 0)
-					.catch((e) => {
-							this.#logger.error('Re-drawing ' + side + ' fader value to loupedeck failed: ' + e)
-						})				
+					.catch(() => {})				
 				if (this.config.invertFaderValues) {
 					this.#loupedeck
 						.drawSolidColour(side, color, 60, val == 0 ? -3 : 262 - val, 0, val + 7)
-						.catch((e) => {
-							this.#logger.error('Re-drawing ' + side + ' fader value to loupedeck failed: ' + e)
-						})
+						.catch(() => {})
 				} else {
 					this.#loupedeck
 						.drawSolidColour(side, color, 60, val == 0 ? -3 : val, 0, 0)
-						.catch((e) => {
-							this.#logger.error('Re-drawing ' + side + ' fader value to loupedeck failed: ' + e)
-						})
+						.catch(() => {})
 				}
 			}
 	}
