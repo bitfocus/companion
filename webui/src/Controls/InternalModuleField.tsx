@@ -10,6 +10,14 @@ import { observer } from 'mobx-react-lite'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import type { LocalVariablesStore } from './LocalVariablesStore'
+import {
+	/* Select,*/ components as SelectComponents,
+	//createFilter,
+	//type ControlProps,
+	type OptionProps,
+	//type ValueContainerProps,
+} from 'react-select'
+import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
 export function InternalModuleField(
 	option: InternalInputField,
@@ -225,6 +233,16 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 	}
 })
 
+const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
+	const { data } = props
+	return (
+		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-suggestion-option'}>
+			<span className="var-name">{data.value}</span>
+			<span className="var-label">{data.label}</span>
+		</SelectComponents.Option>
+	)
+})
+
 interface InternalCustomVariableDropdownProps {
 	value: any
 	setValue: (value: any) => void
@@ -264,7 +282,15 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		return choices
 	}, [customVariables, includeNone])
 
-	return <DropdownInputField disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
+	return (
+		<DropdownInputField
+			disabled={disabled}
+			value={value ?? ''}
+			choices={choices}
+			setValue={setValue}
+			selectComponents={{ Option: CustomOption }}
+		/>
+	)
 })
 
 interface InternalVariableDropdownProps {
@@ -334,6 +360,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
 			onPasteIntercept={onPasteIntercept}
+			selectComponents={{ Option: CustomOption }}
 		/>
 	)
 })
