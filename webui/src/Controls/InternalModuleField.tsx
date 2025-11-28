@@ -236,9 +236,9 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
 	const { data } = props
 	return (
-		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-suggestion-option'}>
-			<span className="var-name">{data.value}</span>
-			<span className="var-label">{data.label}</span>
+		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-dropdown-option'}>
+			<div className="var-name">{data.value}</div>
+			<div className="var-label">{data.label}</div>
 		</SelectComponents.Option>
 	)
 })

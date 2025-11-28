@@ -54,6 +54,20 @@ label.disabled {
 	}
 }
 
+.variable-dropdown-option div {
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		overflow: hidden;
+		font-weight: inherit;
+		text-overflow: ellipsis;
+		white-space: wrap;
+		font-weight: normal;
+	}
+}
+
 .variable-select-root {
 	display: flex;
 	flex-grow: 1;
