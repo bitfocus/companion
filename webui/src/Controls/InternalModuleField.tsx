@@ -275,7 +275,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		for (const [id, info] of customVariablesSorted) {
 			choices.push({
 				id,
-				label: `$(custom:${id})\n${info.description}`,
+				label: `${info.description}`,
 			})
 		}
 
@@ -288,7 +288,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			value={value ?? ''}
 			choices={choices}
 			setValue={setValue}
-			selectComponents={{ Option: CustomOption }}
+			selectComponents={{ Option: CustomOption, SingleValue: CustomOption }}
 		/>
 	)
 })
@@ -329,7 +329,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			const id = `${variable.connectionLabel}:${variable.name}`
 			choices.push({
 				id,
-				label: `$(${id})\n${variable.label}`,
+				label: `${variable.label}`,
 			})
 		}
 
@@ -360,7 +360,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
 			onPasteIntercept={onPasteIntercept}
-			selectComponents={{ Option: CustomOption }}
+			selectComponents={{ Option: CustomOption, SingleValue: CustomOption }}
 		/>
 	)
 })
