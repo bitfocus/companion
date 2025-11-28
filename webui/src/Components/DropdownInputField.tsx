@@ -140,9 +140,9 @@ export const DropdownInputField = observer(function DropdownInputField({
 		onChange: onChange,
 		filterOption: createFilter({ ignoreAccents: false }),
 		components: {
-			...selectComponents,
 			MenuList: WindowedMenuList,
 			Input: inputComponent,
+			...selectComponents,
 		},
 		onBlur: onBlur,
 	}

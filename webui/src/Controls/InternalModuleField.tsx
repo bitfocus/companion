@@ -248,10 +248,10 @@ const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
 const CustomSingleValue = React.memo((props: OptionProps<DropdownChoiceInt>) => {
 	const { data } = props
 	return (
-		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-dropdown-single'}>
+		<SelectComponents.SingleValue {...props} className={(props.className ?? '') + 'variable-dropdown-single'}>
 			<div className="var-name">{data.value}</div>
 			<div className="var-label">{data.label}</div>
-		</SelectComponents.Option>
+		</SelectComponents.SingleValue>
 	)
 })
 

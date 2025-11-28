@@ -52,11 +52,6 @@ label.disabled {
 	}
 }
 
-.variable-dropdown-single {
-	display: flex;
-	position: absolute;
-}
-
 /* note that using `span` instead of `div` doesn't format correctly for the ellipsis */
 .variable-dropdown-single div {
 	&.var-name {
@@ -69,6 +64,7 @@ label.disabled {
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		font-weight: normal;
+		padding-bottom: 0.2em;
 	}
 }
 
