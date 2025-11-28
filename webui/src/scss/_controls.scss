@@ -37,10 +37,28 @@ label.disabled {
 	}
 }
 
-/* Style for autocomplete of variable */
-.variable-suggestion-option span {
+/* Style for variable-name autocomplete in text inputs as well as regular dropdowns */
+.variable-dropdown-option span {
 	display: block;
 
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		font-weight: inherit;
+		white-space: wrap;
+		font-weight: normal;
+	}
+}
+
+.variable-dropdown-single {
+	display: flex;
+	position: absolute;
+}
+
+/* note that using `span` instead of `div` doesn't format correctly for the ellipsis */
+.variable-dropdown-single div {
 	&.var-name {
 		font-weight: bold;
 	}
@@ -50,20 +68,6 @@ label.disabled {
 		font-weight: inherit;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		font-weight: normal;
-	}
-}
-
-.variable-dropdown-option div {
-	&.var-name {
-		font-weight: bold;
-	}
-
-	&.var-label {
-		overflow: hidden;
-		font-weight: inherit;
-		text-overflow: ellipsis;
-		white-space: wrap;
 		font-weight: normal;
 	}
 }
@@ -170,7 +174,7 @@ label.disabled {
 /* adapted from https://stackoverflow.com/a/64162603 . See it for additional options and details */
 .select-control__option {
 	white-space: pre-wrap !important;
-	line-height: 1;
+	line-height: 1.1;
 }
 
 .select-control__single-value {

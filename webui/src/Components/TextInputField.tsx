@@ -305,7 +305,7 @@ const VariablesSelectContext = React.createContext({
 const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
 	const { data } = props
 	return (
-		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-suggestion-option'}>
+		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-dropdown-option'}>
 			<span className="var-name">{data.value}</span>
 			<span className="var-label">{data.label}</span>
 		</SelectComponents.Option>

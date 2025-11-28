@@ -233,10 +233,22 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 	}
 })
 
+// Formatting for variable pulldown options:
 const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
 	const { data } = props
 	return (
 		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-dropdown-option'}>
+			<span className="var-name">{data.value}</span>
+			<span className="var-label">{data.label}</span>
+		</SelectComponents.Option>
+	)
+})
+
+// Formatting for variable "single value" (shown when dropdown is closed) -- uses a different CSS class
+const CustomSingleValue = React.memo((props: OptionProps<DropdownChoiceInt>) => {
+	const { data } = props
+	return (
+		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-dropdown-single'}>
 			<div className="var-name">{data.value}</div>
 			<div className="var-label">{data.label}</div>
 		</SelectComponents.Option>
@@ -288,7 +300,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			value={value ?? ''}
 			choices={choices}
 			setValue={setValue}
-			selectComponents={{ Option: CustomOption, SingleValue: CustomOption }}
+			selectComponents={{ Option: CustomOption, SingleValue: CustomSingleValue }}
 		/>
 	)
 })
@@ -360,7 +372,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
 			onPasteIntercept={onPasteIntercept}
-			selectComponents={{ Option: CustomOption, SingleValue: CustomOption }}
+			selectComponents={{ Option: CustomOption, SingleValue: CustomSingleValue }}
 		/>
 	)
 })
