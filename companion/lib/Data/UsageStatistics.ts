@@ -231,7 +231,15 @@ export class DataUsageStatistics {
 	/**
 	 * Start the reporting cycle
 	 */
-	startCycle(): void {
+	startStopCycle(): void {
+		const shouldRun = this.#userConfigController.getKey('detailed_data_collection')
+		if (!shouldRun) {
+			this.#logger.info('Stopping usage statistics cycle')
+
+			this.#cycleStop?.()
+			return
+		}
+
 		this.#logger.info('Starting usage statistics cycle')
 
 		// If already running, stop first
@@ -250,19 +258,9 @@ export class DataUsageStatistics {
 		}
 	}
 
-	stopCycle(): void {
-		this.#logger.info('Stopping usage statistics cycle')
-
-		this.#cycleStop?.()
-	}
-
-	updateUserConfig(key: keyof UserConfigModel, value: boolean | number | string): void {
+	updateUserConfig(key: keyof UserConfigModel, _value: boolean | number | string): void {
 		if (key === 'detailed_data_collection') {
-			if (!value) {
-				this.stopCycle()
-			} else {
-				this.startCycle()
-			}
+			this.startStopCycle()
 		}
 	}
 

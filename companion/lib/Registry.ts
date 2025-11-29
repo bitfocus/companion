@@ -347,7 +347,7 @@ export class Registry {
 			})
 
 			// old 'modules_loaded' events
-			this.usageStatistics.startCycle()
+			this.usageStatistics.startStopCycle()
 			this.ui.update.startCycle()
 
 			this.controls.init()
