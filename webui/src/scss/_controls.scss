@@ -167,15 +167,17 @@ label.disabled {
 	}
 }
 
-/* adapted from https://stackoverflow.com/a/64162603 . See it for additional options and details */
+/* Allow \n line-breaks and remove "excess" line spacing between pulldown options. */
 .select-control__option {
 	white-space: pre-wrap !important;
 	line-height: 1.1;
 }
 
+/* Allow \n line-breaks and remove "excess" line spacing. 
+	Note: this maintains the current behavior of no-wrap in single-value fields. */
 .select-control__single-value {
 	white-space: pre !important;
-	line-height: 1;
+	line-height: 1.1;
 }
 
 .static-text-content {
