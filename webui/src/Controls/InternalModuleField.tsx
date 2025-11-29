@@ -300,7 +300,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			value={value ?? ''}
 			choices={choices}
 			setValue={setValue}
-			selectComponents={{ Option: CustomOption, SingleValue: CustomSingleValue }}
+			customComponents={{ Option: CustomOption, SingleValue: CustomSingleValue }}
 		/>
 	)
 })
@@ -372,7 +372,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
 			onPasteIntercept={onPasteIntercept}
-			selectComponents={{ Option: CustomOption, SingleValue: CustomSingleValue }}
+			customComponents={{ Option: CustomOption, SingleValue: CustomSingleValue }}
 		/>
 	)
 })

@@ -23,7 +23,7 @@ interface DropdownInputFieldProps {
 	onBlur?: () => void
 	onPasteIntercept?: (value: string) => string
 	checkValid?: (value: DropdownChoiceId) => boolean
-	selectComponents?: any
+	customComponents?: object
 }
 
 interface DropdownChoiceInt {
@@ -46,7 +46,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 	onBlur,
 	onPasteIntercept,
 	checkValid,
-	selectComponents = {},
+	customComponents = {},
 }: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -142,7 +142,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 		components: {
 			MenuList: WindowedMenuList,
 			Input: inputComponent,
-			...selectComponents,
+			...customComponents,
 		},
 		onBlur: onBlur,
 	}
