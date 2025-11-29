@@ -1763,6 +1763,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
+	 * Get the number of surface groups, excluding the auto groups
+	 */
+	getGroupCount(): number {
+		let count = 0
+		for (const group of this.#surfaceGroups.values()) {
+			if (!group.isAutoGroup) {
+				count++
+			}
+		}
+		return count
+	}
+
+	/**
 	 * Get the `SurfaceGroup` for a surfaceId or groupId
 	 */
 	#getGroupForId(surfaceOrGroupId: string, looseIdMatching = false): SurfaceGroup | undefined {

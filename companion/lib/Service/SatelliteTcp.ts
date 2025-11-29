@@ -28,6 +28,10 @@ export class ServiceSatelliteTcp extends ServiceBase {
 
 	readonly #clients = new Set<Socket>()
 
+	get clientCount(): number {
+		return this.#clients.size
+	}
+
 	constructor(appInfo: AppInfo, surfaceController: SurfaceController, userconfig: DataUserConfig) {
 		super(userconfig, 'Service/SatelliteTcp', null, null)
 

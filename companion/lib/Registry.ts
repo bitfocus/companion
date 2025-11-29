@@ -17,7 +17,7 @@ import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
 import { isPackaged, sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
-import { DataMetrics } from './Data/Metrics.js'
+import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
@@ -130,7 +130,7 @@ export class Registry {
 
 	importExport!: ImportExportController
 
-	#metrics!: DataMetrics
+	usageStatistics!: DataUsageStatistics
 
 	/**
 	 * The 'data' controller
@@ -266,7 +266,6 @@ export class Registry {
 				controlEvents
 			)
 
-			this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
 			this.services = new ServiceController(
 				serviceApi,
 				this.userconfig,
@@ -285,6 +284,17 @@ export class Registry {
 				this.graphics,
 				pageStore
 			)
+			this.usageStatistics = new DataUsageStatistics(
+				this.#appInfo,
+				this.surfaces,
+				this.instance,
+				this.page,
+				this.controls,
+				this.variables,
+				this.cloud,
+				this.services,
+				this.userconfig
+			)
 
 			this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
 
@@ -301,6 +311,7 @@ export class Registry {
 					this.graphics.updateUserConfig(key, value)
 					this.services.updateUserConfig(key, value)
 					this.surfaces.updateUserConfig(key, value)
+					this.usageStatistics.updateUserConfig(key, value)
 				})
 
 				if (checkControlsInBounds) {
@@ -336,7 +347,7 @@ export class Registry {
 			})
 
 			// old 'modules_loaded' events
-			this.#metrics.startCycle()
+			this.usageStatistics.startCycle()
 			this.ui.update.startCycle()
 
 			this.controls.init()
@@ -463,6 +474,7 @@ export class Registry {
 		this.userconfig.updateBindIp(bindIp)
 		this.services.https.updateBindIp(bindIp)
 		this.internalModule.updateBindIp(bindIp)
+		this.usageStatistics.updateBindIp(bindIp)
 	}
 }
 

@@ -37,6 +37,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	static Defaults: UserConfigModel = {
 		setup_wizard: 0,
+		detailed_data_collection: true,
 
 		page_direction_flipped: false,
 		page_plusminus: false,
@@ -234,6 +235,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		if (!this.#db.getIsFirstRun()) {
 			// This is an existing db, so setup the ports to match how it used to be
 			const legacy_config: Partial<UserConfigModel> = {
+				detailed_data_collection: true,
+
 				tcp_enabled: true,
 				tcp_listen_port: 51234,
 
