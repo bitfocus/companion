@@ -10,13 +10,7 @@ import { observer } from 'mobx-react-lite'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import type { LocalVariablesStore } from './LocalVariablesStore'
-import {
-	/* Select,*/ components as SelectComponents,
-	//createFilter,
-	//type ControlProps,
-	type OptionProps,
-	//type ValueContainerProps,
-} from 'react-select'
+import { components as SelectComponents, type OptionProps } from 'react-select'
 import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
 export function InternalModuleField(
@@ -287,7 +281,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		for (const [id, info] of customVariablesSorted) {
 			choices.push({
 				id,
-				label: `${info.description}`,
+				label: info.description,
 			})
 		}
 
@@ -341,7 +335,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			const id = `${variable.connectionLabel}:${variable.name}`
 			choices.push({
 				id,
-				label: `${variable.label}`,
+				label: variable.label,
 			})
 		}
 

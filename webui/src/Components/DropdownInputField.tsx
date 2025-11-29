@@ -23,7 +23,9 @@ interface DropdownInputFieldProps {
 	onBlur?: () => void
 	onPasteIntercept?: (value: string) => string
 	checkValid?: (value: DropdownChoiceId) => boolean
-	customComponents?: object
+	// The following is a compromise since if we just use typeof components,
+	// Typescript objects to `OptionProps<DropdownChoiceInt>` in the custom property functions in InternalModuleField.tsx
+	customComponents?: Partial<Record<keyof typeof components, any>>
 }
 
 interface DropdownChoiceInt {
