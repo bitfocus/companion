@@ -61,8 +61,8 @@ export class ServiceTcpUdpApi {
 		this.#serviceApi = serviceApi
 		this.#userconfig = userconfig
 
-		this.#router = new RegexRouter(() => {
-			throw new ApiMessageError('Syntax error')
+		this.#router = new RegexRouter((path: string) => {
+			throw new ApiMessageError(`Syntax error in: "${path}"`)
 		})
 		this.#protocolName = protocolName
 		this.#legacyRoutesEnableKey = legacyRoutesEnableKey
@@ -235,7 +235,7 @@ export class ServiceTcpUdpApi {
 			try {
 				await this.#serviceApi.triggerRescanForSurfaces()
 			} catch (_e) {
-				throw new ApiMessageError('Scan failed')
+				throw new ApiMessageError('Rescan USB failed')
 			}
 		})
 	}
@@ -464,7 +464,7 @@ export class ServiceTcpUdpApi {
 		try {
 			await this.#serviceApi.triggerRescanForSurfaces()
 		} catch (_e) {
-			throw new ApiMessageError('Scan failed')
+			throw new ApiMessageError('Rescan USB failed')
 		}
 	}
 
@@ -490,7 +490,7 @@ export class ServiceTcpUdpApi {
 
 		if (isNaN(location.pageNumber) || isNaN(location.row) || isNaN(location.column))
 			// Match previous behaviour
-			throw new ApiMessageError('Syntax error')
+			throw new ApiMessageError(`Syntax error in location: ${match.page}/${match.row}/${match.column}`)
 
 		const controlId = this.#serviceApi.getControlIdAt(location)
 

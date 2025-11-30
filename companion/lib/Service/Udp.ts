@@ -39,6 +39,7 @@ export class ServiceUdp extends ServiceUdpBase {
 	 */
 	protected override processIncoming(data: Buffer, remote: DgramRemoteInfo): void {
 		this.logger.silly(`${remote.address}:${remote.port} received packet: "${data.toString().trim()}"`)
+		this.logger.debug(`UDP packet received from ${remote.address}:${remote.port} - ${JSON.stringify(data.toString())}`)
 
 		this.#api
 			.parseApiCommand(data.toString())
@@ -47,6 +48,7 @@ export class ServiceUdp extends ServiceUdpBase {
 			})
 			.catch((e) => {
 				this.logger.silly(`UDP command failed: ${e}`)
+				this.logger.info(`UDP command failed: ${e}`)
 			})
 	}
 }

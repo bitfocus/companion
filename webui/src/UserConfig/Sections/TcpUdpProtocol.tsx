@@ -18,7 +18,7 @@ export const TcpUdpProtocol = observer(function TcpUdpProtocol() {
 		<>
 			<p>
 				Remote triggering can be done by sending TCP (port <code>{tcpPort}</code>) or UDP (port <code>{udpPort}</code>)
-				commands.
+				commands. TCP commands must be terminated with a newline character, i.e. \n (0x0A) or \r\n (0x0D, 0x0A).
 			</p>
 			<p>
 				<strong>Commands:</strong>
