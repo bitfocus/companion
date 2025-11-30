@@ -1678,7 +1678,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			if (!this.isPinLockEnabled()) return
 		}
 
-		if (this.#surfacesAllLocked === locked) {
+		if (!forceUnlock && this.#surfacesAllLocked === locked) {
 			// No change
 			return
 		}
