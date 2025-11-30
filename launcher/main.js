@@ -296,10 +296,24 @@ if (!lock) {
 				if (newPath0 && (await fs.pathExists(newPath0))) {
 					// Watch for changes in the modules
 					const devModulesPath = path.resolve(newPath0)
-					watcher = chokidar.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
-						cwd: devModulesPath,
+					watcher = chokidar.watch('.', {
 						ignoreInitial: true,
-						ignored: ['**/node_modules/**'],
+						cwd: devModulesPath,
+						ignored: (path, stats) => {
+							if (
+								stats?.isFile() &&
+								!path.endsWith('.mjs') &&
+								!path.endsWith('.js') &&
+								!path.endsWith('.cjs') &&
+								!path.endsWith('.json')
+							) {
+								return true
+							}
+							if (path.includes('node_modules')) {
+								return true
+							}
+							return false
+						},
 					})
 
 					watcher.on('error', (error) => {
