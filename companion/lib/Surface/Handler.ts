@@ -222,11 +222,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (
 			this.panel.info.type === 'Loupedeck Live' ||
 			this.panel.info.type === 'Loupedeck Live S' ||
-			this.panel.info.type === 'Razer Stream Controller' ||
-			this.panel.info.type === 'Razer Stream Controller X'
+			this.panel.info.type === 'Razer Stream Controller'
 		) {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
-			this.#pincodeCodePosition = [4, 2]
+			this.#pincodeCodePosition = [5, 2]
 		} else if (this.panel.info.type === 'Loupedeck CT') {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [3, 4]
