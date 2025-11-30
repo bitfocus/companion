@@ -5,6 +5,7 @@ description: Control Companion remotely via TCP or UDP commands.
 ---
 
 Remote triggering can be done by sending TCP (port `51234`) or UDP (port `51235`) commands.
+TCP commands must be terminated with a newline character, i.e., \n (0x0A) or \r\n (0x0D, 0x0A).
 
 ## Commands
 
