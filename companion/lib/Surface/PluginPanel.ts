@@ -28,6 +28,7 @@ import type {
 	IpcDrawProps,
 	SurfaceModuleToHostEvents,
 } from '../Instance/Surface/IpcTypes.js'
+import type * as imageRs from '@julusian/image-rs'
 
 interface SatelliteInputVariableInfo {
 	id: string
@@ -192,12 +193,18 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				const style = drawItem.image.style
 
 				if (controlDefinition.style.bitmap) {
+					// TODO - support more pixel formats, for now this is all we can handle
+					let format: imageRs.PixelFormat = 'rgb'
+					if (controlDefinition.style.bitmap.format === 'rgba') {
+						format = controlDefinition.style.bitmap.format
+					}
+
 					const buffer = await transformButtonImage(
 						drawItem.image,
 						this.#config.rotation,
 						controlDefinition.style.bitmap.w,
 						controlDefinition.style.bitmap.h,
-						'rgb'
+						format
 					)
 
 					if (buffer === undefined || buffer.length == 0) {
