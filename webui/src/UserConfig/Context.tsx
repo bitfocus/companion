@@ -1,7 +1,7 @@
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { useCallback, useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { UserConfigProps } from './Components/Common.js'
+import type { UserConfigProps } from './Components/Common.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export function useUserConfigProps(): UserConfigProps | null {

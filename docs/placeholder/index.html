@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Documentation - Development Mode</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+				background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+				color: #e0e0e0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 100vh;
+				padding: 2rem;
+			}
+
+			.container {
+				max-width: 600px;
+				background: #2a2a2a;
+				border-radius: 12px;
+				padding: 3rem;
+				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+				border: 1px solid #3a3a3a;
+			}
+
+			h1 {
+				color: #d50215;
+				font-size: 2rem;
+				margin-bottom: 1.5rem;
+				font-weight: 600;
+			}
+
+			p {
+				line-height: 1.6;
+				margin-bottom: 1rem;
+				color: #c0c0c0;
+			}
+
+			.code {
+				background: #1a1a1a;
+				border: 1px solid #3a3a3a;
+				border-radius: 6px;
+				padding: 1rem;
+				margin: 1.5rem 0;
+				font-family: 'Monaco', 'Courier New', monospace;
+				font-size: 0.9rem;
+				color: #4ec9b0;
+				overflow-x: auto;
+			}
+
+			.note {
+				background: rgba(213, 2, 21, 0.1);
+				border-left: 3px solid #d50215;
+				padding: 1rem;
+				margin-top: 1.5rem;
+				border-radius: 4px;
+			}
+
+			.note strong {
+				color: #d50215;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>📚 Documentation</h1>
+			<p>This view is not supported during development.</p>
+			<p>To work on the documentation, please run Docusaurus directly:</p>
+			<div class="code">yarn dev:docs</div>
+			<p>The documentation will be available at <strong>http://localhost:4000</strong></p>
+		</div>
+	</body>
+</html>

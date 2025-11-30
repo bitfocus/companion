@@ -9,7 +9,7 @@ import type {
 } from '@companion-app/shared/Model/Presets.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
-import { PresetDragItem } from './PresetDragItem.js'
+import type { PresetDragItem } from './PresetDragItem.js'
 import { observer } from 'mobx-react-lite'
 import { trpc } from '~/Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'

@@ -1,16 +1,16 @@
-import LogController, { Logger } from '../../Log/Controller.js'
-import {
+import LogController, { type Logger } from '../../Log/Controller.js'
+import type {
 	EntityModelType,
 	EntityOwner,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
-	type SomeSocketEntityLocation,
+	SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
-import { ControlEntityList, ControlEntityListDefinition } from './EntityList.js'
+import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import type { InstanceDefinitionsForEntity } from './Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionVariableValues } from '@companion-module/base'

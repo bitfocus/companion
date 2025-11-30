@@ -1,4 +1,4 @@
-import { IObservableArray, action, observable } from 'mobx'
+import { action, observable, type IObservableArray } from 'mobx'
 
 export class RecentlyUsedIdsStore {
 	readonly #localStorageKey: string

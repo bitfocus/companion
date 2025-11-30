@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -32,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: linux-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: linux-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: prepare source
         run: |
@@ -70,8 +70,8 @@ jobs:
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
-          s3-host: ${{ secrets.S3_HOST }}
-          s3-bucket: ${{ secrets.S3_BUCKET }}/companion-offline-module-bundle
+          s3-host: ${{ vars.S3_HOST }}
+          s3-bucket: ${{ vars.S3_BUCKET_OFFLINE_MODULES }}
           s3-access-key: ${{ secrets.S3_KEY }}
           s3-secret-key: ${{ secrets.S3_SECRET }}
 

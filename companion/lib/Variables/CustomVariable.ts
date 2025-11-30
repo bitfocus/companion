@@ -21,7 +21,7 @@ import type {
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { CompanionVariableValue } from '@companion-module/base'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { CustomVariableCollections } from './CustomVariableCollections.js'
 import EventEmitter from 'events'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'

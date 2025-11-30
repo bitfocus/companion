@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { EventDefinitionsStore } from '~/Stores/EventDefinitionsStore'
+import type { EventDefinitionsStore } from '~/Stores/EventDefinitionsStore'
 import { trpc } from '~/Resources/TRPC'
 
 export function useEventDefinitions(store: EventDefinitionsStore): boolean {

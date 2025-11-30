@@ -8,14 +8,14 @@ import type {
 import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import semver from 'semver'
 import { isSomeModuleApiVersionCompatible, MODULE_BASE_VERSION } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import createClient, { Client } from 'openapi-fetch'
+import createClient, { type Client } from 'openapi-fetch'
 import type {
 	paths as ModuleStoreOpenApiPaths,
 	components as ModuleStoreOpenApiComponents,
 } from '@companion-app/shared/OpenApi/ModuleStore.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 import EventEmitter from 'node:events'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -414,13 +414,17 @@ function getLatestModuleVersionInfo(
 function transformApiModuleToCache(
 	data: ModuleStoreOpenApiComponents['schemas']['CompanionModuleInfo']
 ): Complete<ModuleStoreListCacheEntry> {
+	let products = data.products
+	if (data.manufacturer) products = products.map((p) => `${data.manufacturer}: ${p}`)
+
+	if (products.length === 0) products = [data.manufacturer ?? data.name]
+
 	// Match what the on disk scanner generates
 	return {
 		id: data.id,
-		name: data.manufacturer + ': ' + data.products.join('; '),
-		manufacturer: data.manufacturer,
+		name: products.join('; '),
 		shortname: data.shortname,
-		products: data.products,
+		products: products,
 		keywords: data.keywords,
 
 		storeUrl: data.storeUrl,

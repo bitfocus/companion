@@ -9,7 +9,7 @@ import {
 	CModalFooter,
 	CButton,
 } from '@coreui/react'
-import React, { forwardRef, useState, useRef, useCallback, FormEvent, useImperativeHandle } from 'react'
+import React, { forwardRef, useState, useRef, useCallback, useImperativeHandle } from 'react'
 import { CModalExt } from '~/Components/CModalExt.js'
 
 type EditDurationCompleteCallback = (duration: number, whileHeld: boolean) => void
@@ -35,7 +35,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => setData(null), [])
 		const doAction = useCallback(
-			(e: FormEvent) => {
+			(e: React.FormEvent) => {
 				if (e) e.preventDefault()
 
 				setData(null)

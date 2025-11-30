@@ -1,15 +1,18 @@
 import React, { useCallback, useEffect, useState, memo, useRef, useMemo } from 'react'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { nanoid } from 'nanoid'
-import { VariableSizeList as List, ListOnScrollProps } from 'react-window'
+import { VariableSizeList as List, type ListOnScrollProps } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { useResizeObserver } from 'usehooks-ts'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { trpc } from '~/Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
+import dayjs from 'dayjs'
 
 interface DebugLogLine {
+	time: number | null
+	source: string | null
 	level: string
 	message: string
 }
@@ -23,6 +26,8 @@ interface DebugConfig {
 }
 
 const LogsOnDiskInfoLine: DebugLogLine = {
+	time: null,
+	source: 'System',
 	level: 'system',
 	message: 'Starting log. Only lines generated since opening the page are shown here',
 }
@@ -71,7 +76,7 @@ export function InstanceDebugLog({
 					console.error('Error in connection debug log subscription', err)
 					setLinesBuffer((oldLines) => [
 						...oldLines,
-						{ level: 'system', message: `Log subscription failed: ${err.message}` },
+						{ time: null, source: 'System', level: 'system', message: `Log subscription failed: ${err.message}` },
 					])
 				},
 			}
@@ -81,7 +86,7 @@ export function InstanceDebugLog({
 	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
 
 	const doClearLog = useCallback(() => {
-		setLinesBuffer([{ level: 'system', message: '** Log cleared **' }])
+		setLinesBuffer([{ time: null, source: 'System', level: 'system', message: '** Log cleared **' }])
 		setListChunkClearedToken(nanoid())
 	}, [])
 
@@ -324,14 +329,11 @@ interface LogLineInnerProps {
 	innerRef: React.RefObject<HTMLDivElement>
 }
 const LogLineInner = memo(({ h, innerRef }: LogLineInnerProps) => {
+	const time_format = !h.time ? '                 ' : dayjs(h.time).format('YY.MM.DD HH:mm:ss')
+
 	return (
 		<div ref={innerRef} className={`log-line log-type-${h.level}`}>
-			{h.level !== 'console' && (
-				<>
-					<strong>{h.level}</strong>:{' '}
-				</>
-			)}
-			<span className="log-message">{h.message}</span>
+			{time_format} <strong>{h.source}</strong>: <span className="log-message">{h.message}</span>
 		</div>
 	)
 })

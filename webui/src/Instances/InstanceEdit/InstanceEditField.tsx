@@ -8,7 +8,7 @@ import {
 	TextInputField,
 } from '~/Components/index.js'
 import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
-import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -98,7 +98,6 @@ export function InstanceEditField({
 					presetColors={definition.presetColors}
 				/>
 			)
-			break
 		}
 		case 'bonjour-device':
 			return moduleType === ModuleInstanceType.Connection ? (

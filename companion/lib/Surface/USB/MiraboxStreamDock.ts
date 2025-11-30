@@ -10,10 +10,10 @@
  */
 
 import { EventEmitter } from 'events'
-import { Device, HIDAsync } from 'node-hid'
+import { HIDAsync, type Device } from 'node-hid'
 import util from 'util'
 import jpg from '@julusian/jpeg-turbo'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { offsetRotation, transformButtonImage } from '../../Resources/Util.js'
 import {
@@ -1968,6 +1968,304 @@ class StreamDock extends EventEmitter {
 				},
 			],
 		},
+		'HSV 293S-3': {
+			productName: 'Stream Dock HSV 293S',
+			iconRotation: 90,
+			pid: 0x3003,
+
+			inputs: [
+				{
+					type: 'button',
+					id: 0x0d,
+					row: 0,
+					column: 0,
+					name: 'Button 1',
+				},
+				{
+					type: 'button',
+					id: 0x0a,
+					row: 0,
+					column: 1,
+					name: 'Button 2',
+				},
+				{
+					type: 'button',
+					id: 0x07,
+					row: 0,
+					column: 2,
+					name: 'Button 3',
+				},
+				{
+					type: 'button',
+					id: 0x04,
+					row: 0,
+					column: 3,
+					name: 'Button 4',
+				},
+				{
+					type: 'button',
+					id: 0x01,
+					row: 0,
+					column: 4,
+					name: 'Button 5',
+				},
+				{
+					type: 'button',
+					id: 0x0e,
+					row: 1,
+					column: 0,
+					name: 'Button 6',
+				},
+				{
+					type: 'button',
+					id: 0x0b,
+					row: 1,
+					column: 1,
+					name: 'Button 7',
+				},
+				{
+					type: 'button',
+					id: 0x08,
+					row: 1,
+					column: 2,
+					name: 'Button 8',
+				},
+				{
+					type: 'button',
+					id: 0x05,
+					row: 1,
+					column: 3,
+					name: 'Button 9',
+				},
+				{
+					type: 'button',
+					id: 0x02,
+					row: 1,
+					column: 4,
+					name: 'Button 10',
+				},
+				{
+					type: 'button',
+					id: 0x0f,
+					row: 2,
+					column: 0,
+					name: 'Button 11',
+				},
+				{
+					type: 'button',
+					id: 0x0c,
+					row: 2,
+					column: 1,
+					name: 'Button 12',
+				},
+				{
+					type: 'button',
+					id: 0x09,
+					row: 2,
+					column: 2,
+					name: 'Button 13',
+				},
+				{
+					type: 'button',
+					id: 0x06,
+					row: 2,
+					column: 3,
+					name: 'Button 14',
+				},
+				{
+					type: 'button',
+					id: 0x03,
+					row: 2,
+					column: 4,
+					name: 'Button 15',
+				},
+				{
+					type: 'button',
+					id: 0x10,
+					row: 0,
+					column: 5,
+					name: 'Softbutton 1',
+				},
+				{
+					type: 'button',
+					id: 0x11,
+					row: 1,
+					column: 5,
+					name: 'Softbutton 2',
+				},
+				{
+					type: 'button',
+					id: 0x12,
+					row: 2,
+					column: 5,
+					name: 'Softbutton 3',
+				},
+			],
+			outputs: [
+				{
+					type: 'lcd',
+					id: 0x0d,
+					row: 0,
+					column: 0,
+					name: 'LCD 1',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x0a,
+					row: 0,
+					column: 1,
+					name: 'LCD 2',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x07,
+					row: 0,
+					column: 2,
+					name: 'LCD 3',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x04,
+					row: 0,
+					column: 3,
+					name: 'LCD 4',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x01,
+					row: 0,
+					column: 4,
+					name: 'LCD 5',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x0e,
+					row: 1,
+					column: 0,
+					name: 'LCD 6',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x0b,
+					row: 1,
+					column: 1,
+					name: 'LCD 7',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x08,
+					row: 1,
+					column: 2,
+					name: 'LCD 8',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x05,
+					row: 1,
+					column: 3,
+					name: 'LCD 9',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x02,
+					row: 1,
+					column: 4,
+					name: 'LCD 10',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x0f,
+					row: 2,
+					column: 0,
+					name: 'LCD 11',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x0c,
+					row: 2,
+					column: 1,
+					name: 'LCD 12',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x09,
+					row: 2,
+					column: 2,
+					name: 'LCD 13',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x06,
+					row: 2,
+					column: 3,
+					name: 'LCD 14',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x03,
+					row: 2,
+					column: 4,
+					name: 'LCD 15',
+					resolutionx: 96,
+					resolutiony: 96,
+				},
+				{
+					type: 'lcd',
+					id: 0x10,
+					row: 0,
+					column: 5,
+					name: 'Strip 1',
+					resolutionx: 80,
+					resolutiony: 80,
+				},
+				{
+					type: 'lcd',
+					id: 0x11,
+					row: 1,
+					column: 5,
+					name: 'Strip 2',
+					resolutionx: 80,
+					resolutiony: 80,
+				},
+				{
+					type: 'lcd',
+					id: 0x12,
+					row: 2,
+					column: 5,
+					name: 'Strip 3',
+					resolutionx: 80,
+					resolutiony: 80,
+				},
+			],
+		},
 	}
 
 	private static cmdPrefix = [0x43, 0x52, 0x54, 0, 0]
@@ -1993,7 +2291,9 @@ class StreamDock extends EventEmitter {
 			this.emit('error', error)
 		})
 
-		if (this.info.productId === 0x1005 || this.info.productId === 0x1006) {
+		if (this.info.vendorId === 0x5548 && this.info.productId === 0x1001) {
+			this.model = StreamDock.models['293N3']
+		} else if (this.info.productId === 0x1005 || this.info.productId === 0x1006) {
 			// modelType = '293V3'
 			this.model = StreamDock.models['293V3']
 		} else if (this.info.productId === 0x1001 || this.info.productId === 0x1007) {
@@ -2004,7 +2304,9 @@ class StreamDock extends EventEmitter {
 			this.model = StreamDock.models['293N3']
 		} else if (this.info.productId === 0x1014) {
 			this.model = StreamDock.models['HSV 293S']
-		} else if (this.info.productId === 0x6670) {
+		} else if (this.info.vendorId === 0x1500 && this.info.productId === 0x3003) {
+			this.model = StreamDock.models['HSV 293S-3']
+		} else if (this.info.vendorId === 0x5548 && this.info.productId === 0x6670) {
 			this.model = StreamDock.models['HSV 293S-2']
 			this.packetSize = 512
 		} else {

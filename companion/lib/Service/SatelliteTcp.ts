@@ -1,5 +1,5 @@
 import { ServiceBase } from './Base.js'
-import net, { Socket } from 'net'
+import net, { type Socket } from 'net'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { SatelliteSocketWrapper, ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
@@ -27,6 +27,10 @@ export class ServiceSatelliteTcp extends ServiceBase {
 	#server: net.Server | undefined = undefined
 
 	readonly #clients = new Set<Socket>()
+
+	get clientCount(): number {
+		return this.#clients.size
+	}
 
 	constructor(appInfo: AppInfo, surfaceController: SurfaceController, userconfig: DataUserConfig) {
 		super(userconfig, 'Service/SatelliteTcp', null, null)

@@ -1,12 +1,11 @@
 /**
  * Warning: this file needs to not reference any 'real' code in the codebase, or we end up with import cycle issues
  */
-import { cloneDeep } from 'lodash-es'
 import stripAnsi from 'strip-ansi'
 import fs from 'fs-extra'
-import winston from 'winston'
+import winston, { type LeveledLogMethod, type LogMethod } from 'winston'
 import Transport from 'winston-transport'
-import { Syslog, SyslogTransportOptions } from 'winston-syslog'
+import { Syslog, type SyslogTransportOptions } from 'winston-syslog'
 import supportsColor from 'supports-color'
 import { LogColors } from './Colors.js'
 import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
@@ -15,8 +14,24 @@ import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
+import { isPackaged } from '../Resources/Util.js'
 
-export type Logger = winston.Logger
+export interface Logger {
+	readonly source: string
+
+	child(options: { source: string }): Logger
+
+	log: LogMethod
+	error: LeveledLogMethod
+	warn: LeveledLogMethod
+	info: LeveledLogMethod
+	debug: LeveledLogMethod
+	verbose: LeveledLogMethod
+	silly: LeveledLogMethod
+
+	isDebugEnabled(): boolean
+	isSillyEnabled(): boolean
+}
 
 const SentrySeverity = {
 	debug: 'debug',
@@ -66,7 +81,7 @@ class LogController {
 	#history: ClientLogLine[] = []
 
 	#winston: winston.Logger
-	#logger: winston.Logger
+	#logger: Logger
 
 	readonly #events = new EventEmitter<{ update: [ClientLogUpdate] }>()
 
@@ -151,7 +166,27 @@ class LogController {
 	 * Create a child logger
 	 */
 	createLogger(source: string): Logger {
-		return this.#winston.child({ source })
+		const winstonLogger = this.#winston.child({ source })
+
+		return {
+			source,
+
+			child: (options: { source: string }) => {
+				return this.createLogger(`${source}/${options.source}`)
+			},
+
+			log: winstonLogger.log.bind(winstonLogger),
+
+			error: winstonLogger.error.bind(winstonLogger),
+			warn: winstonLogger.warn.bind(winstonLogger),
+			info: winstonLogger.info.bind(winstonLogger),
+			debug: winstonLogger.debug.bind(winstonLogger),
+			verbose: winstonLogger.verbose.bind(winstonLogger),
+			silly: winstonLogger.silly.bind(winstonLogger),
+
+			isDebugEnabled: () => winstonLogger.isDebugEnabled(),
+			isSillyEnabled: () => winstonLogger.isSillyEnabled(),
+		}
 	}
 
 	createTrpcRouter() {
@@ -245,7 +280,7 @@ class LogController {
 		this.#logger.silly(`get all`)
 
 		if (clone) {
-			return cloneDeep(this.#history)
+			return structuredClone(this.#history)
 		} else {
 			return this.#history
 		}
@@ -258,7 +293,7 @@ class LogController {
 	addSyslogHost(options: SyslogTransportOptions): void {
 		try {
 			options.app_name = 'Companion'
-			this.#logger.add(new Syslog(options))
+			this.#winston.add(new Syslog(options))
 			this.#logger.debug(`Syslog transport initialized. Options: ${JSON.stringify(options)}`)
 		} catch (e) {
 			this.#logger.error(`Failed to initialise syslog transport ${e}`)
@@ -274,7 +309,7 @@ class LogController {
 		if (!sentryDsn) {
 			try {
 				sentryDsn = fs
-					.readFileSync(new URL('../../../SENTRY', import.meta.url))
+					.readFileSync(new URL(isPackaged() ? './SENTRY' : '../../../SENTRY', import.meta.url))
 					.toString()
 					.trim()
 			} catch (_e) {

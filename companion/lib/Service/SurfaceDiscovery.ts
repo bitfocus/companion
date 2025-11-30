@@ -1,8 +1,8 @@
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import { ServiceBase } from './Base.js'
 import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import systeminformation from 'systeminformation'
-import { StreamDeckTcpDefinition, StreamDeckTcpDiscoveryService } from '@elgato-stream-deck/tcp'
+import { StreamDeckTcpDiscoveryService, type StreamDeckTcpDefinition } from '@elgato-stream-deck/tcp'
 import type {
 	ClientDiscoveredSurfaceInfo,
 	CompanionExternalAddresses,
@@ -77,7 +77,6 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 			try {
 				this.#streamDeckDiscovery = new StreamDeckTcpDiscoveryService()
 
-				// @ts-expect-error why is this failing?
 				this.#streamDeckDiscovery.on('up', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return
@@ -91,7 +90,6 @@ export class ServiceSurfaceDiscovery extends ServiceBase {
 						info: uiService,
 					})
 				})
-				// @ts-expect-error why is this failing?
 				this.#streamDeckDiscovery.on('down', (streamdeck) => {
 					const uiService = this.#convertStreamDeckForUi(streamdeck)
 					if (!uiService) return

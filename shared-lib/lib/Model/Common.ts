@@ -35,6 +35,10 @@ export interface EmulatorImage {
 	buffer: string | false
 }
 
+export interface EmulatorLockedState {
+	characterCount: number
+}
+
 export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
 
 export interface ClientBonjourService {
@@ -71,6 +75,7 @@ export interface WrappedImage {
 
 export interface ClientEditInstanceConfig {
 	fields: Array<SomeCompanionInputField>
+	useNewLayout: boolean
 	config: unknown
 	secrets: unknown
 }

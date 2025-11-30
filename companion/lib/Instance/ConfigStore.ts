@@ -1,15 +1,14 @@
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
-	InstanceConfig,
-	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
+	type InstanceConfig,
+	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
-import { DataDatabase } from '../Data/Database.js'
+import type { DataDatabase } from '../Data/Database.js'
 // import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
-import { DataStoreTableView } from '../Data/StoreBase.js'
-import { cloneDeep } from 'lodash-es'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 
 export interface AddInstanceProps {
 	versionId: string | null
@@ -160,7 +159,7 @@ export class InstanceConfigStore {
 				if (includeSecrets) {
 					result[id] = config
 				} else {
-					const newConfig = cloneDeep(config)
+					const newConfig = structuredClone(config)
 					delete newConfig.secrets
 					result[id] = newConfig
 				}

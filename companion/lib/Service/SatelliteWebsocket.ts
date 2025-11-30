@@ -2,7 +2,7 @@ import { ServiceBase } from './Base.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { SatelliteSocketWrapper, ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
-import { WebSocketServer, WebSocket } from 'ws'
+import { WebSocketServer, type WebSocket } from 'ws'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 
@@ -25,6 +25,10 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 	readonly #api: ServiceSatelliteApi
 
 	#server: WebSocketServer | undefined = undefined
+
+	get clientCount(): number {
+		return this.#server?.clients.size ?? 0
+	}
 
 	constructor(appInfo: AppInfo, surfaceController: SurfaceController, userconfig: DataUserConfig) {
 		super(userconfig, 'Service/SatelliteWebsocket', null, null)

@@ -16,6 +16,7 @@ import { Route as RedirectsTablet2HtmlRouteImport } from './routes/-redirects/ta
 import { Route as RedirectsTabletHtmlRouteImport } from './routes/-redirects/tablet-html.tsx'
 import { Route as RedirectsIpadHtmlRouteImport } from './routes/-redirects/ipad-html.tsx'
 import { Route as RedirectsHelpHtmlRouteImport } from './routes/-redirects/help-html.tsx'
+import { Route as RedirectsGettingStartedRouteImport } from './routes/-redirects/getting-started.tsx'
 import { Route as RedirectsEmulatorsRouteImport } from './routes/-redirects/emulators.tsx'
 import { Route as RedirectsEmulator2RouteImport } from './routes/-redirects/emulator2.tsx'
 import { Route as RedirectsEmulatorHtmlRouteImport } from './routes/-redirects/emulator-html.tsx'
@@ -56,16 +57,18 @@ import { Route as ConnectionsAddRouteImport } from './routes/app/connections/add
 import { Route as ConnectionsConnectionIdRouteImport } from './routes/app/connections/$connectionId.tsx'
 import { Route as ButtonsPageRouteImport } from './routes/app/buttons/$page.tsx'
 import { Route as VariablesExpressionIndexRouteImport } from './routes/app/variables/expression/index.tsx'
+import { Route as SurfacesRemoteIndexRouteImport } from './routes/app/surfaces/remote/index.tsx'
 import { Route as SurfacesConfiguredIndexRouteImport } from './routes/app/surfaces/configured/index.tsx'
 import { Route as SettingsBackupsIndexRouteImport } from './routes/app/settings/backups/index.tsx'
 import { Route as VariablesExpressionControlIdRouteImport } from './routes/app/variables/expression/$controlId.tsx'
 import { Route as VariablesConnectionDotlabelRouteImport } from './routes/app/variables/connection.$label.tsx'
+import { Route as SurfacesRemoteDiscoverRouteImport } from './routes/app/surfaces/remote/discover.tsx'
+import { Route as SurfacesRemoteConnectionIdRouteImport } from './routes/app/surfaces/remote/$connectionId.tsx'
 import { Route as SurfacesConfiguredItemIdRouteImport } from './routes/app/surfaces/configured/$itemId.tsx'
 import { Route as SettingsBackupsRuleIdRouteImport } from './routes/app/settings/backups/$ruleId.tsx'
 import { Route as ModulesModuleTypeDotmoduleIdRouteImport } from './routes/app/modules/$moduleType.$moduleId.tsx'
 
 const TabletDotlazyRouteImport = createFileRoute('/tablet')()
-const GettingStartedDotlazyRouteImport = createFileRoute('/getting-started')()
 const EmulatorEmulatorIdDotlazyRouteImport = createFileRoute(
   '/emulator/$emulatorId',
 )()
@@ -76,15 +79,6 @@ const TabletDotlazyRoute = TabletDotlazyRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() =>
   import('./routes/self-contained/tablet.lazy.tsx').then((d) => d.Route),
-)
-const GettingStartedDotlazyRoute = GettingStartedDotlazyRouteImport.update({
-  id: '/getting-started',
-  path: '/getting-started',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() =>
-  import('./routes/self-contained/getting-started.lazy.tsx').then(
-    (d) => d.Route,
-  ),
 )
 const RedirectsTablet3Route = RedirectsTablet3RouteImport.update({
   id: '/tablet3',
@@ -109,6 +103,11 @@ const RedirectsIpadHtmlRoute = RedirectsIpadHtmlRouteImport.update({
 const RedirectsHelpHtmlRoute = RedirectsHelpHtmlRouteImport.update({
   id: '/help.html',
   path: '/help.html',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedirectsGettingStartedRoute = RedirectsGettingStartedRouteImport.update({
+  id: '/getting-started',
+  path: '/getting-started',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RedirectsEmulatorsRoute = RedirectsEmulatorsRouteImport.update({
@@ -322,6 +321,11 @@ const VariablesExpressionIndexRoute =
     path: '/',
     getParentRoute: () => VariablesExpressionRoute,
   } as any)
+const SurfacesRemoteIndexRoute = SurfacesRemoteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SurfacesRemoteRoute,
+} as any)
 const SurfacesConfiguredIndexRoute = SurfacesConfiguredIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -343,6 +347,17 @@ const VariablesConnectionDotlabelRoute =
     id: '/variables/connection/$label',
     path: '/variables/connection/$label',
     getParentRoute: () => appRoute,
+  } as any)
+const SurfacesRemoteDiscoverRoute = SurfacesRemoteDiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => SurfacesRemoteRoute,
+} as any)
+const SurfacesRemoteConnectionIdRoute =
+  SurfacesRemoteConnectionIdRouteImport.update({
+    id: '/$connectionId',
+    path: '/$connectionId',
+    getParentRoute: () => SurfacesRemoteRoute,
   } as any)
 const SurfacesConfiguredItemIdRoute =
   SurfacesConfiguredItemIdRouteImport.update({
@@ -367,12 +382,12 @@ export interface FileRoutesByFullPath {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
+  '/getting-started': typeof RedirectsGettingStartedRoute
   '/help.html': typeof RedirectsHelpHtmlRoute
   '/ipad.html': typeof RedirectsIpadHtmlRoute
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedDotlazyRoute
   '/tablet': typeof TabletDotlazyRoute
   '/$': typeof SplatRoute
   '/buttons': typeof ButtonsRouteWithChildren
@@ -399,7 +414,7 @@ export interface FileRoutesByFullPath {
   '/surfaces/configured': typeof SurfacesConfiguredRouteWithChildren
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
-  '/surfaces/remote': typeof SurfacesRemoteRoute
+  '/surfaces/remote': typeof SurfacesRemoteRouteWithChildren
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
@@ -412,22 +427,25 @@ export interface FileRoutesByFullPath {
   '/modules/$moduleType/$moduleId': typeof ModulesModuleTypeDotmoduleIdRoute
   '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/surfaces/remote/$connectionId': typeof SurfacesRemoteConnectionIdRoute
+  '/surfaces/remote/discover': typeof SurfacesRemoteDiscoverRoute
   '/variables/connection/$label': typeof VariablesConnectionDotlabelRoute
   '/variables/expression/$controlId': typeof VariablesExpressionControlIdRoute
   '/settings/backups/': typeof SettingsBackupsIndexRoute
   '/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
+  '/surfaces/remote/': typeof SurfacesRemoteIndexRoute
   '/variables/expression/': typeof VariablesExpressionIndexRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
+  '/getting-started': typeof RedirectsGettingStartedRoute
   '/help.html': typeof RedirectsHelpHtmlRoute
   '/ipad.html': typeof RedirectsIpadHtmlRoute
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedDotlazyRoute
   '/tablet': typeof TabletDotlazyRoute
   '/$': typeof SplatRoute
   '/buttons': typeof ButtonsRouteWithChildren
@@ -449,7 +467,6 @@ export interface FileRoutesByTo {
   '/surfaces/$': typeof SurfacesSplatRoute
   '/surfaces/discover': typeof SurfacesDiscoverRoute
   '/surfaces/outbound': typeof SurfacesOutboundRoute
-  '/surfaces/remote': typeof SurfacesRemoteRoute
   '/triggers/$controlId': typeof TriggersControlIdRoute
   '/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/variables/custom': typeof VariablesCustomRoute
@@ -461,10 +478,13 @@ export interface FileRoutesByTo {
   '/modules/$moduleType/$moduleId': typeof ModulesModuleTypeDotmoduleIdRoute
   '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/surfaces/remote/$connectionId': typeof SurfacesRemoteConnectionIdRoute
+  '/surfaces/remote/discover': typeof SurfacesRemoteDiscoverRoute
   '/variables/connection/$label': typeof VariablesConnectionDotlabelRoute
   '/variables/expression/$controlId': typeof VariablesExpressionControlIdRoute
   '/settings/backups': typeof SettingsBackupsIndexRoute
   '/surfaces/configured': typeof SurfacesConfiguredIndexRoute
+  '/surfaces/remote': typeof SurfacesRemoteIndexRoute
   '/variables/expression': typeof VariablesExpressionIndexRoute
 }
 export interface FileRoutesById {
@@ -474,12 +494,12 @@ export interface FileRoutesById {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
   '/emulators': typeof RedirectsEmulatorsRoute
+  '/getting-started': typeof RedirectsGettingStartedRoute
   '/help.html': typeof RedirectsHelpHtmlRoute
   '/ipad.html': typeof RedirectsIpadHtmlRoute
   '/tablet.html': typeof RedirectsTabletHtmlRoute
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
-  '/getting-started': typeof GettingStartedDotlazyRoute
   '/tablet': typeof TabletDotlazyRoute
   '/_app/$': typeof SplatRoute
   '/_app/buttons': typeof ButtonsRouteWithChildren
@@ -506,7 +526,7 @@ export interface FileRoutesById {
   '/_app/surfaces/configured': typeof SurfacesConfiguredRouteWithChildren
   '/_app/surfaces/discover': typeof SurfacesDiscoverRoute
   '/_app/surfaces/outbound': typeof SurfacesOutboundRoute
-  '/_app/surfaces/remote': typeof SurfacesRemoteRoute
+  '/_app/surfaces/remote': typeof SurfacesRemoteRouteWithChildren
   '/_app/triggers/$controlId': typeof TriggersControlIdRoute
   '/_app/variables/$oldLabel': typeof VariablesOldLabelRoute
   '/_app/variables/custom': typeof VariablesCustomRoute
@@ -519,10 +539,13 @@ export interface FileRoutesById {
   '/_app/modules/$moduleType/$moduleId': typeof ModulesModuleTypeDotmoduleIdRoute
   '/_app/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/_app/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
+  '/_app/surfaces/remote/$connectionId': typeof SurfacesRemoteConnectionIdRoute
+  '/_app/surfaces/remote/discover': typeof SurfacesRemoteDiscoverRoute
   '/_app/variables/connection/$label': typeof VariablesConnectionDotlabelRoute
   '/_app/variables/expression/$controlId': typeof VariablesExpressionControlIdRoute
   '/_app/settings/backups/': typeof SettingsBackupsIndexRoute
   '/_app/surfaces/configured/': typeof SurfacesConfiguredIndexRoute
+  '/_app/surfaces/remote/': typeof SurfacesRemoteIndexRoute
   '/_app/variables/expression/': typeof VariablesExpressionIndexRoute
 }
 export interface FileRouteTypes {
@@ -532,12 +555,12 @@ export interface FileRouteTypes {
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
+    | '/getting-started'
     | '/help.html'
     | '/ipad.html'
     | '/tablet.html'
     | '/tablet2.html'
     | '/tablet3'
-    | '/getting-started'
     | '/tablet'
     | '/$'
     | '/buttons'
@@ -577,22 +600,25 @@ export interface FileRouteTypes {
     | '/modules/$moduleType/$moduleId'
     | '/settings/backups/$ruleId'
     | '/surfaces/configured/$itemId'
+    | '/surfaces/remote/$connectionId'
+    | '/surfaces/remote/discover'
     | '/variables/connection/$label'
     | '/variables/expression/$controlId'
     | '/settings/backups/'
     | '/surfaces/configured/'
+    | '/surfaces/remote/'
     | '/variables/expression/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
+    | '/getting-started'
     | '/help.html'
     | '/ipad.html'
     | '/tablet.html'
     | '/tablet2.html'
     | '/tablet3'
-    | '/getting-started'
     | '/tablet'
     | '/$'
     | '/buttons'
@@ -614,7 +640,6 @@ export interface FileRouteTypes {
     | '/surfaces/$'
     | '/surfaces/discover'
     | '/surfaces/outbound'
-    | '/surfaces/remote'
     | '/triggers/$controlId'
     | '/variables/$oldLabel'
     | '/variables/custom'
@@ -626,10 +651,13 @@ export interface FileRouteTypes {
     | '/modules/$moduleType/$moduleId'
     | '/settings/backups/$ruleId'
     | '/surfaces/configured/$itemId'
+    | '/surfaces/remote/$connectionId'
+    | '/surfaces/remote/discover'
     | '/variables/connection/$label'
     | '/variables/expression/$controlId'
     | '/settings/backups'
     | '/surfaces/configured'
+    | '/surfaces/remote'
     | '/variables/expression'
   id:
     | '__root__'
@@ -638,12 +666,12 @@ export interface FileRouteTypes {
     | '/emulator.html'
     | '/emulator2'
     | '/emulators'
+    | '/getting-started'
     | '/help.html'
     | '/ipad.html'
     | '/tablet.html'
     | '/tablet2.html'
     | '/tablet3'
-    | '/getting-started'
     | '/tablet'
     | '/_app/$'
     | '/_app/buttons'
@@ -683,10 +711,13 @@ export interface FileRouteTypes {
     | '/_app/modules/$moduleType/$moduleId'
     | '/_app/settings/backups/$ruleId'
     | '/_app/surfaces/configured/$itemId'
+    | '/_app/surfaces/remote/$connectionId'
+    | '/_app/surfaces/remote/discover'
     | '/_app/variables/connection/$label'
     | '/_app/variables/expression/$controlId'
     | '/_app/settings/backups/'
     | '/_app/surfaces/configured/'
+    | '/_app/surfaces/remote/'
     | '/_app/variables/expression/'
   fileRoutesById: FileRoutesById
 }
@@ -696,12 +727,12 @@ export interface RootRouteChildren {
   RedirectsEmulatorHtmlRoute: typeof RedirectsEmulatorHtmlRoute
   RedirectsEmulator2Route: typeof RedirectsEmulator2Route
   RedirectsEmulatorsRoute: typeof RedirectsEmulatorsRoute
+  RedirectsGettingStartedRoute: typeof RedirectsGettingStartedRoute
   RedirectsHelpHtmlRoute: typeof RedirectsHelpHtmlRoute
   RedirectsIpadHtmlRoute: typeof RedirectsIpadHtmlRoute
   RedirectsTabletHtmlRoute: typeof RedirectsTabletHtmlRoute
   RedirectsTablet2HtmlRoute: typeof RedirectsTablet2HtmlRoute
   RedirectsTablet3Route: typeof RedirectsTablet3Route
-  GettingStartedDotlazyRoute: typeof GettingStartedDotlazyRoute
   TabletDotlazyRoute: typeof TabletDotlazyRoute
   ConnectionDebugDotconnectionIdRoute: typeof ConnectionDebugDotconnectionIdRoute
 }
@@ -713,13 +744,6 @@ declare module '@tanstack/react-router' {
       path: '/tablet'
       fullPath: '/tablet'
       preLoaderRoute: typeof TabletDotlazyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/getting-started': {
-      id: '/getting-started'
-      path: '/getting-started'
-      fullPath: '/getting-started'
-      preLoaderRoute: typeof GettingStartedDotlazyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tablet3': {
@@ -755,6 +779,13 @@ declare module '@tanstack/react-router' {
       path: '/help.html'
       fullPath: '/help.html'
       preLoaderRoute: typeof RedirectsHelpHtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/getting-started': {
+      id: '/getting-started'
+      path: '/getting-started'
+      fullPath: '/getting-started'
+      preLoaderRoute: typeof RedirectsGettingStartedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/emulators': {
@@ -1044,6 +1075,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VariablesExpressionIndexRouteImport
       parentRoute: typeof VariablesExpressionRoute
     }
+    '/_app/surfaces/remote/': {
+      id: '/_app/surfaces/remote/'
+      path: '/'
+      fullPath: '/surfaces/remote/'
+      preLoaderRoute: typeof SurfacesRemoteIndexRouteImport
+      parentRoute: typeof SurfacesRemoteRoute
+    }
     '/_app/surfaces/configured/': {
       id: '/_app/surfaces/configured/'
       path: '/'
@@ -1071,6 +1109,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/variables/connection/$label'
       preLoaderRoute: typeof VariablesConnectionDotlabelRouteImport
       parentRoute: typeof appRoute
+    }
+    '/_app/surfaces/remote/discover': {
+      id: '/_app/surfaces/remote/discover'
+      path: '/discover'
+      fullPath: '/surfaces/remote/discover'
+      preLoaderRoute: typeof SurfacesRemoteDiscoverRouteImport
+      parentRoute: typeof SurfacesRemoteRoute
+    }
+    '/_app/surfaces/remote/$connectionId': {
+      id: '/_app/surfaces/remote/$connectionId'
+      path: '/$connectionId'
+      fullPath: '/surfaces/remote/$connectionId'
+      preLoaderRoute: typeof SurfacesRemoteConnectionIdRouteImport
+      parentRoute: typeof SurfacesRemoteRoute
     }
     '/_app/surfaces/configured/$itemId': {
       id: '/_app/surfaces/configured/$itemId'
@@ -1177,6 +1229,22 @@ const SurfacesConfiguredRouteChildren: SurfacesConfiguredRouteChildren = {
 const SurfacesConfiguredRouteWithChildren =
   SurfacesConfiguredRoute._addFileChildren(SurfacesConfiguredRouteChildren)
 
+interface SurfacesRemoteRouteChildren {
+  SurfacesRemoteConnectionIdRoute: typeof SurfacesRemoteConnectionIdRoute
+  SurfacesRemoteDiscoverRoute: typeof SurfacesRemoteDiscoverRoute
+  SurfacesRemoteIndexRoute: typeof SurfacesRemoteIndexRoute
+}
+
+const SurfacesRemoteRouteChildren: SurfacesRemoteRouteChildren = {
+  SurfacesRemoteConnectionIdRoute: SurfacesRemoteConnectionIdRoute,
+  SurfacesRemoteDiscoverRoute: SurfacesRemoteDiscoverRoute,
+  SurfacesRemoteIndexRoute: SurfacesRemoteIndexRoute,
+}
+
+const SurfacesRemoteRouteWithChildren = SurfacesRemoteRoute._addFileChildren(
+  SurfacesRemoteRouteChildren,
+)
+
 interface VariablesExpressionRouteChildren {
   VariablesExpressionControlIdRoute: typeof VariablesExpressionControlIdRoute
   VariablesExpressionIndexRoute: typeof VariablesExpressionIndexRoute
@@ -1210,7 +1278,7 @@ interface appRouteChildren {
   SurfacesConfiguredRoute: typeof SurfacesConfiguredRouteWithChildren
   SurfacesDiscoverRoute: typeof SurfacesDiscoverRoute
   SurfacesOutboundRoute: typeof SurfacesOutboundRoute
-  SurfacesRemoteRoute: typeof SurfacesRemoteRoute
+  SurfacesRemoteRoute: typeof SurfacesRemoteRouteWithChildren
   VariablesOldLabelRoute: typeof VariablesOldLabelRoute
   VariablesCustomRoute: typeof VariablesCustomRoute
   VariablesExpressionRoute: typeof VariablesExpressionRouteWithChildren
@@ -1239,7 +1307,7 @@ const appRouteChildren: appRouteChildren = {
   SurfacesConfiguredRoute: SurfacesConfiguredRouteWithChildren,
   SurfacesDiscoverRoute: SurfacesDiscoverRoute,
   SurfacesOutboundRoute: SurfacesOutboundRoute,
-  SurfacesRemoteRoute: SurfacesRemoteRoute,
+  SurfacesRemoteRoute: SurfacesRemoteRouteWithChildren,
   VariablesOldLabelRoute: VariablesOldLabelRoute,
   VariablesCustomRoute: VariablesCustomRoute,
   VariablesExpressionRoute: VariablesExpressionRouteWithChildren,
@@ -1270,12 +1338,12 @@ const rootRouteChildren: RootRouteChildren = {
   RedirectsEmulatorHtmlRoute: RedirectsEmulatorHtmlRoute,
   RedirectsEmulator2Route: RedirectsEmulator2Route,
   RedirectsEmulatorsRoute: RedirectsEmulatorsRoute,
+  RedirectsGettingStartedRoute: RedirectsGettingStartedRoute,
   RedirectsHelpHtmlRoute: RedirectsHelpHtmlRoute,
   RedirectsIpadHtmlRoute: RedirectsIpadHtmlRoute,
   RedirectsTabletHtmlRoute: RedirectsTabletHtmlRoute,
   RedirectsTablet2HtmlRoute: RedirectsTablet2HtmlRoute,
   RedirectsTablet3Route: RedirectsTablet3Route,
-  GettingStartedDotlazyRoute: GettingStartedDotlazyRoute,
   TabletDotlazyRoute: TabletDotlazyRoute,
   ConnectionDebugDotconnectionIdRoute: ConnectionDebugDotconnectionIdRoute,
 }

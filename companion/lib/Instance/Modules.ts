@@ -10,7 +10,6 @@
  */
 
 import path from 'path'
-import { cloneDeep } from 'lodash-es'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import type express from 'express'
 import type {
@@ -22,7 +21,7 @@ import type {
 import LogController from '../Log/Controller.js'
 import type { InstanceController } from './Controller.js'
 import jsonPatch from 'fast-json-patch'
-import { ModuleStoreService } from './ModuleStore.js'
+import type { ModuleStoreService } from './ModuleStore.js'
 import { router, publicProcedure, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
 import z from 'zod'
@@ -30,7 +29,7 @@ import { InstanceModuleInfo } from './ModuleInfo.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 import type { AppInfo } from '../Registry.js'
-import { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 
 type InstanceModulesEvents = {
 	modulesUpdate: [change: ModuleInfoUpdate]
@@ -76,7 +75,7 @@ export class InstanceModules {
 
 		this.#events.setMaxListeners(0)
 
-		apiRouter.get('/help/module/:moduleId/:versionId/*path', this.#getHelpAsset)
+		apiRouter.get('/help/module/:moduleType/:moduleId/:versionId/*path', this.#getHelpAsset)
 	}
 
 	#getModuleMapForType(type: ModuleInstanceType): Map<string, InstanceModuleInfo> {
@@ -284,7 +283,7 @@ export class InstanceModules {
 
 		// Update stored
 		if (newModuleJson) {
-			this.#lastModulesJson[changedModuleIdFull] = cloneDeep(newModuleJson)
+			this.#lastModulesJson[changedModuleIdFull] = structuredClone(newModuleJson)
 		} else {
 			delete this.#lastModulesJson[changedModuleIdFull]
 		}
@@ -473,16 +472,14 @@ export class InstanceModules {
 	 * Return a module help asset over http
 	 */
 	#getHelpAsset = (
-		req: express.Request<{ moduleId: string; versionId: string; path: string[] }>,
+		req: express.Request<{ moduleType: string; moduleId: string; versionId: string; path: string[] }>,
 		res: express.Response,
 		next: express.NextFunction
 	): void => {
+		const moduleType = req.params.moduleType as ModuleInstanceType
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
 		const versionId = req.params.versionId
 		const file = req.params.path?.join('/')?.replace(/\.\.+/g, '')
-
-		// TODO - handle surface modules
-		const moduleType = ModuleInstanceType.Connection
 
 		const moduleInfo = this.#getModuleMapForType(moduleType).get(moduleId)?.getVersion(versionId)
 		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {

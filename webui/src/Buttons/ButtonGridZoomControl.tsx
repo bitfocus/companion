@@ -12,7 +12,7 @@ import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { NumberInputField } from '~/Components/NumberInputField.js'
-import { GridZoomController, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from './GridZoom.js'
+import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, type GridZoomController } from './GridZoom.js'
 
 export interface ButtonGridZoomControlProps {
 	useCompactButtons: boolean

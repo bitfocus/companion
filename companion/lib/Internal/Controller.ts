@@ -10,7 +10,6 @@
  */
 
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
-import { cloneDeep } from 'lodash-es'
 import { InternalModuleUtils } from './Util.js'
 import type {
 	ActionForVisitor,
@@ -27,15 +26,15 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
 import LogController from '../Log/Controller.js'
 import {
-	ActionEntityModel,
 	EntityModelType,
-	FeedbackEntityModel,
-	SomeEntityModel,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -245,7 +244,7 @@ export class InternalController {
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 
 		const cloned: FeedbackEntityModelExt = {
-			...cloneDeep(feedback),
+			...structuredClone(feedback),
 			controlId,
 			location,
 			referencedVariables: null,

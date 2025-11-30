@@ -1,6 +1,6 @@
 import type { UIPresetDefinition, UIPresetDefinitionUpdate } from '@companion-app/shared/Model/Presets.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { observable, action, ObservableMap } from 'mobx'
+import { observable, action, type ObservableMap } from 'mobx'
 import { useState } from 'react'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever } from '~/Resources/util'

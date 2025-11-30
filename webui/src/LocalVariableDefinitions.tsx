@@ -1,4 +1,4 @@
-import { DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoiceId } from '@companion-module/base'
 
 export interface DropdownChoiceInt {
 	value: DropdownChoiceId

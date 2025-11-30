@@ -15,7 +15,7 @@ import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
 import debounceFn from 'debounce-fn'
-import { CompanionVariableValue } from '@companion-module/base'
+import type { CompanionVariableValue } from '@companion-module/base'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1

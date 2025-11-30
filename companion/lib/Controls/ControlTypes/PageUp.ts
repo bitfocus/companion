@@ -1,4 +1,4 @@
-import { PageUpButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { PageUpButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ControlBase } from '../ControlBase.js'
 import type {
 	ControlWithoutActionSets,

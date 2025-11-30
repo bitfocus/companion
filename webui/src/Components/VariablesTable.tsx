@@ -7,8 +7,8 @@ import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { type CompanionVariableValue } from '@companion-module/base'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
-import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
+import type { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
+import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
 import { useVariablesValuesForLabel } from '~/Variables/useVariablesValuesForLabel.js'
 import { toJS } from 'mobx'
@@ -43,7 +43,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	}, [variablesStore, label])
 
 	const onCopied = useCallback(() => {
-		notifier.current?.show(`Copied`, 'Copied to clipboard', 3000)
+		notifier.show(`Copied`, 'Copied to clipboard', 3000)
 	}, [notifier])
 
 	const [candidates, errorMsg] = useMemo(() => {

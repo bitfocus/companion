@@ -6,7 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faList } from '@fortawesome/free-solid-svg-icons'
-import { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
 interface TriggerPickerRowProps {
 	id: string

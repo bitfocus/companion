@@ -10,10 +10,19 @@
 	}
 
 	input[type='checkbox']:checked {
-		background: 0 0 var(--companion-img-check) no-repeat;
+		background: 0 0 var(--companion-img-check);
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
 	}
 	input[type='checkbox']:disabled {
 		background: #eee;
+	}
+	input[type='checkbox']:indeterminate {
+		background: 0 0 var(--companion-img-indeterminate);
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
 	}
 }
 
@@ -144,7 +153,7 @@ label.disabled {
 }
 
 .static-text-content {
-	:last-child {
+	& > :last-child {
 		margin-bottom: 0;
 	}
 }

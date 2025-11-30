@@ -1,6 +1,6 @@
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { ObjectsDiff } from './Common.js'
-import { NormalButtonModel } from './ButtonModel.js'
+import type { NormalButtonModel } from './ButtonModel.js'
 
 export type PresetDefinition = PresetDefinitionButton | PresetDefinitionText
 

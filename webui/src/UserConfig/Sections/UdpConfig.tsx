@@ -2,7 +2,7 @@ import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
-import { UserConfigProps } from '../Components/Common.js'
+import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
 
 export const UdpConfig = observer(function UdpConfig(props: UserConfigProps) {

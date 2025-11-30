@@ -19,13 +19,13 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import { DropdownChoice } from '@companion-module/base'
+import type { DropdownChoice } from '@companion-module/base'
 import { useComputed } from '~/Resources/util.js'
 import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { InstanceEditPanelService } from './InstanceEditPanelService'
+import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { InstanceEditPanelService } from './InstanceEditPanelService'
 
 interface InstanceVersionChangeButtonProps<TConfig extends ClientInstanceConfigBase> {
 	service: InstanceEditPanelService<TConfig>

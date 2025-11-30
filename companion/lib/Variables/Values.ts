@@ -11,7 +11,7 @@
 
 import LogController from '../Log/Controller.js'
 import EventEmitter from 'events'
-import { VariableValueData, VariablesCache } from './Util.js'
+import type { VariableValueData, VariablesCache } from './Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import { router, publicProcedure } from '../UI/TRPC.js'

@@ -1,4 +1,4 @@
-import jsep from 'jsep'
+import type jsep from 'jsep'
 
 export interface CompanionVariableExpression extends jsep.Expression {
 	type: 'CompanionVariable'

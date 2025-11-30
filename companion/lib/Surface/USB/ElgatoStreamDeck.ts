@@ -10,9 +10,9 @@
  */
 
 import { EventEmitter } from 'events'
-import { DeviceModelId, JPEGEncodeOptions, openStreamDeck, StreamDeck } from '@elgato-stream-deck/node'
+import { DeviceModelId, openStreamDeck, type JPEGEncodeOptions, type StreamDeck } from '@elgato-stream-deck/node'
 import util from 'util'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { transformButtonImage } from '../../Resources/Util.js'
 import { colorToRgb } from './Util.js'
@@ -334,6 +334,14 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 	async #init() {
 		const serialNumber = await this.#streamDeck.getSerialNumber()
 		this.info.deviceId = `streamdeck:${serialNumber}`
+
+		// Log firmware version
+		try {
+			const firmware = await this.#streamDeck.getFirmwareVersion()
+			this.#logger.info(`StreamDeck firmware version: ${firmware}`)
+		} catch (e) {
+			this.#logger.warn(`Failed to get StreamDeck firmware version: ${e}`)
+		}
 
 		// Make sure the first clear happens properly
 		await this.#streamDeck.clearPanel()

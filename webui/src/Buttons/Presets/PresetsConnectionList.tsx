@@ -4,7 +4,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { PresetDefinitionsStore } from './PresetDefinitionsStore'
+import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
 
 interface PresetsConnectionListProps {
 	presetsDefinitionsStore: PresetDefinitionsStore

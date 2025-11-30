@@ -1,11 +1,11 @@
 import {
 	EntityModelType,
-	FeedbackEntityModel,
 	FeedbackEntitySubType,
-	SomeEntityModel,
+	type FeedbackEntityModel,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import React, { useContext } from 'react'
-import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
+import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
@@ -14,9 +14,9 @@ import { OptionsInputField } from '../OptionsInputField.js'
 import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
-import { LocalVariablesStore } from '../LocalVariablesStore.js'
+import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { TextInputField } from '../../Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 import { useEntityEditorContext } from './EntityEditorContext.js'

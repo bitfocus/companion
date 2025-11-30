@@ -5,7 +5,7 @@ import type {
 	ModuleUpgradeToOtherVersion,
 } from '@companion-app/shared/Model/ModuleInfo.js'
 import { assertNever } from '~/Resources/util.js'
-import {
+import type {
 	ModuleStoreListCacheEntry,
 	ModuleStoreListCacheStore,
 	ModuleStoreModuleInfoStore,

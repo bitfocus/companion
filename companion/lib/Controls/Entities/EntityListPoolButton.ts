@@ -6,16 +6,15 @@ import type {
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
-	SomeEntityModel,
 	type SomeSocketEntityLocation,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
-import { ControlEntityList } from './EntityList.js'
-import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlEntityList } from './EntityList.js'
+import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
-import { cloneDeep } from 'lodash-es'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -338,7 +337,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		existingActions: ActionSetsModel | null,
 		existingOptions: ActionStepOptions | null
 	): ControlEntityListActionStep {
-		const options = existingOptions || cloneDeep(ControlEntityListPoolButton.DefaultStepOptions)
+		const options = existingOptions || structuredClone(ControlEntityListPoolButton.DefaultStepOptions)
 
 		const downList = this.#createActionEntityList(existingActions?.down || [], false, !!existingActions)
 		const upList = this.#createActionEntityList(existingActions?.up || [], false, !!existingActions)
@@ -528,8 +527,8 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		if (!stepToCopy) return false
 
 		const newStep = this.#getNewStepValue(
-			cloneDeep(this.#stepAsActionSetsModel(stepToCopy)),
-			cloneDeep(stepToCopy.options)
+			structuredClone(this.#stepAsActionSetsModel(stepToCopy)),
+			structuredClone(stepToCopy.options)
 		)
 
 		// add one after the last

@@ -37,7 +37,7 @@ import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import { ReadonlyDeep } from 'type-fest'
+import type { ReadonlyDeep } from 'type-fest'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string

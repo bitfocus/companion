@@ -10,8 +10,8 @@
  */
 
 import { EventEmitter } from 'events'
-import { XKeys, setupXkeysPanel, Color as XKeysColor } from 'xkeys'
-import LogController, { Logger } from '../../Log/Controller.js'
+import { setupXkeysPanel, type XKeys, type Color as XKeysColor } from 'xkeys'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import {
 	OffsetConfigFields,
 	BrightnessConfigField,

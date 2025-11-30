@@ -10,8 +10,8 @@
  */
 
 import { EventEmitter } from 'events'
-import LogController, { Logger } from '../../Log/Controller.js'
-import { colorToRgb, RgbColor } from './Util.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
+import { colorToRgb, type RgbColor } from './Util.js'
 import HID from 'node-hid'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'

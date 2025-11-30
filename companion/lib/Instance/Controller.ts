@@ -12,21 +12,20 @@
 import { InstanceDefinitions } from './Definitions.js'
 import { InstanceProcessManager } from './ProcessManager.js'
 import { InstanceStatus } from './Status.js'
-import { cloneDeep } from 'lodash-es'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import {
-	InstanceConfig,
-	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
+	type InstanceConfig,
+	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleManifest } from '@companion-module/base'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
-import { AddInstanceProps, InstanceConfigStore } from './ConfigStore.js'
+import { InstanceConfigStore, type AddInstanceProps } from './ConfigStore.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
@@ -39,7 +38,7 @@ import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
 import { InstanceCollections } from './Collections.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
@@ -56,7 +55,7 @@ export interface InstanceControllerEvents {
 	connection_collections_enabled: []
 
 	uiConnectionsUpdate: [changes: ClientConnectionsUpdate[]]
-	[id: `debugLog:${string}`]: [level: string, message: string]
+	[id: `debugLog:${string}`]: [time: number | null, source: string, level: string, message: string]
 }
 
 export class InstanceController extends EventEmitter<InstanceControllerEvents> {
@@ -149,8 +148,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						}
 					)
 				},
-				debugLogLine: (connectionId: string, level: string, message: string) => {
-					this.emit(`debugLog:${connectionId}`, level, message)
+				debugLogLine: (connectionId: string, time: number | null, source: string, level: string, message: string) => {
+					this.emit(`debugLog:${connectionId}`, time, source, level, message)
 				},
 			},
 			this.modules,
@@ -530,7 +529,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const changes: ClientConnectionsUpdate[] = []
 
 		if (!this.#lastClientJson) {
-			this.#lastClientJson = cloneDeep(newJson)
+			this.#lastClientJson = structuredClone(newJson)
 
 			for (const connectionId of Object.keys(newJson)) {
 				changes.push({ type: 'update', id: connectionId, info: newJson[connectionId] })
@@ -542,7 +541,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 					changes.push({ type: 'remove', id: connectionId })
 				} else {
-					this.#lastClientJson[connectionId] = cloneDeep(newJson[connectionId])
+					this.#lastClientJson[connectionId] = structuredClone(newJson[connectionId])
 
 					changes.push({ type: 'update', id: connectionId, info: newJson[connectionId] })
 				}
@@ -583,7 +582,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					secrets: includeSecrets ? rawObj.secrets : undefined,
 				} satisfies ExportInstanceFullv6)
 
-		return clone ? cloneDeep(obj) : obj
+		return clone ? structuredClone(obj) : obj
 	}
 
 	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
@@ -707,8 +706,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 					const lines = toIterable(selfEvents, `debugLog:${input.instanceId}`, signal)
 
-					for await (const [level, message] of lines) {
-						yield { level, message }
+					for await (const [time, source, level, message] of lines) {
+						yield { time, source, level, message }
 					}
 				}),
 		})
@@ -727,7 +726,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		// Cache it for next time
-		if (!this.#lastClientJson) this.#lastClientJson = cloneDeep(result)
+		if (!this.#lastClientJson) this.#lastClientJson = structuredClone(result)
 
 		return result
 	}

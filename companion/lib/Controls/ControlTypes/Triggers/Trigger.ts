@@ -1,5 +1,4 @@
 import { ControlBase } from '../../ControlBase.js'
-import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
 import { TriggersEventTimer } from './Events/Timer.js'
@@ -165,7 +164,7 @@ export class ControlTrigger
 		this.#miscEvents = new TriggersEventMisc(eventBus, controlId, this.executeActions.bind(this))
 		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this))
 
-		this.options = cloneDeep(ControlTrigger.DefaultOptions)
+		this.options = structuredClone(ControlTrigger.DefaultOptions)
 		this.events = []
 
 		if (!storage) {
@@ -289,7 +288,7 @@ export class ControlTrigger
 			events: this.events,
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
-		return clone ? cloneDeep(obj) : obj
+		return clone ? structuredClone(obj) : obj
 	}
 
 	toTriggerJSON(): ClientTriggerData {
@@ -519,7 +518,7 @@ export class ControlTrigger
 	 * This is done via this.toRuntimeJSON()
 	 */
 	#sendTriggerJsonChange(): void {
-		const newJson = cloneDeep(this.toTriggerJSON())
+		const newJson = structuredClone(this.toTriggerJSON())
 
 		if (this.deps.changeEvents.listenerCount('triggerChange') > 0) {
 			if (this.#lastSentTriggerJson) {
@@ -635,7 +634,7 @@ export class ControlTrigger
 	eventDuplicate(id: string): boolean {
 		const index = this.events.findIndex((fb) => fb.id === id)
 		if (index !== -1) {
-			const eventItem = cloneDeep(this.events[index])
+			const eventItem = structuredClone(this.events[index])
 			eventItem.id = nanoid()
 
 			this.events.splice(index + 1, 0, eventItem)

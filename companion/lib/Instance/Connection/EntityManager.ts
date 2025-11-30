@@ -15,7 +15,7 @@ import { nanoid } from 'nanoid'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { OptionsObject } from '@companion-module/base/dist/util.js'
-import LogController, { Logger } from '../../Log/Controller.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 

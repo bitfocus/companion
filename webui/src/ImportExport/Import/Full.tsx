@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { CAlert, CButton, CCallout, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
@@ -15,9 +15,17 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
-import { ClientImportObject, ClientImportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import type {
+	ClientImportObject,
+	ClientImportOrResetSelection,
+	ImportOrResetType,
+} from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
+
+// These can't be imported currently
+type ClientImportSelection = Omit<ClientImportOrResetSelection, 'connections' | 'userconfig'>
 
 interface ImportFullWizardProps {
 	snapshot: ClientImportObject
@@ -42,14 +50,14 @@ export function ImportFullWizard({
 					connectionIdRemapping,
 				})
 				.then((res) => {
-					notifier.current?.show(`Import successful`, `Page was imported successfully`, 10000)
+					notifier.show(`Import successful`, `Page was imported successfully`, 10000)
 					console.log('remap response', res)
 					if (res) {
 						setConnectionRemap(res)
 					}
 				})
 				.catch((e) => {
-					notifier.current?.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
+					notifier.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
 					console.error('import failed', e)
 				})
 		},
@@ -70,7 +78,7 @@ export function ImportFullWizard({
 					<CNavLink
 						active={activeTab === 'buttons'}
 						onClick={() => setActiveTab('buttons')}
-						disabled={!snapshot.controls}
+						disabled={!snapshot.buttons}
 					>
 						<FontAwesomeIcon icon={faTh} /> Buttons
 					</CNavLink>
@@ -95,7 +103,7 @@ export function ImportFullWizard({
 					<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 						<h4>Buttons</h4>
 						<MyErrorBoundary>
-							{snapshot.controls ? (
+							{snapshot.buttons ? (
 								<ImportPageWizard
 									snapshot={snapshot}
 									connectionRemap={connectionRemap}
@@ -126,6 +134,33 @@ export function ImportFullWizard({
 	)
 }
 
+const defaultFullImportConfig: ClientImportSelection = {
+	buttons: 'reset-and-import',
+	surfaces: {
+		known: 'reset-and-import',
+	},
+	triggers: 'reset-and-import',
+	customVariables: 'reset-and-import',
+	expressionVariables: 'reset-and-import',
+}
+
+const { fieldContext, useFieldContext, formContext } = createFormHookContexts()
+
+const importFormOpts = formOptions({
+	defaultValues: defaultFullImportConfig,
+})
+
+const { useAppForm } = createFormHook({
+	fieldComponents: {
+		ImportToggleField,
+	},
+	formComponents: {
+		// 	FormSubmitButton,
+	},
+	fieldContext,
+	formContext,
+})
+
 interface FullImportTabProps {
 	snapshot: ClientImportObject
 }
@@ -133,64 +168,29 @@ interface FullImportTabProps {
 function FullImportTab({ snapshot }: FullImportTabProps) {
 	const { notifier } = useContext(RootAppStoreContext)
 
-	const snapshotKeys = useMemo(() => {
-		const keys: string[] = []
-
-		for (const [key, val] of Object.entries(snapshot)) {
-			if (val) keys.push(key)
-		}
-
-		{
-			const i = keys.indexOf('instances')
-			if (i !== -1) keys[i] = 'connections'
-		}
-		{
-			const i = keys.indexOf('controls')
-			if (i !== -1) keys[i] = 'buttons'
-		}
-
-		return keys
-	}, [snapshot])
-
-	const [config, setConfig] = useState<ClientImportSelection>(() => ({
-		// connections: true,
-		buttons: true,
-		surfaces: true,
-		triggers: true,
-		customVariables: true,
-		expressionVariables: true,
-		// userconfig: true,
-	}))
-
-	const validConfigKeys = Object.entries(config).filter(([k, v]) => v && snapshotKeys.includes(k))
-	// console.log('validkeys', validConfigKeys)
-
-	const setValue = useCallback((key: keyof ClientImportSelection, value: boolean) => {
-		setConfig((oldConfig: ClientImportSelection) => ({
-			...oldConfig,
-			[key]: value,
-		}))
-	}, [])
-
 	const importFullMutation = useMutationExt(trpc.importExport.importFull.mutationOptions())
-	const doImport = useCallback(
-		(e: React.MouseEvent<HTMLElement>) => {
-			const fullReset = e.currentTarget.getAttribute('data-fullreset') === 'true'
 
-			importFullMutation // TODO: 60s timeout?
-				.mutateAsync({ config: config, fullReset: fullReset })
-				.then(() => {
-					// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
-					window.location.reload()
-				})
-				.catch((e) => {
-					console.log('import failed', e)
-					notifier.current?.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
-				})
-			console.log('do import!')
+	const form = useAppForm({
+		...importFormOpts,
+		onSubmit: async ({ value }) => {
+			const submitConfig = sanitiseSelection(value, snapshot, fullReset)
+
+			try {
+				await importFullMutation // TODO: 60s timeout?
+					.mutateAsync({
+						config: submitConfig,
+					})
+
+				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
+				window.location.reload()
+			} catch (e: any) {
+				console.log('import failed', e)
+				notifier.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
+			}
 		},
-		[importFullMutation, notifier, config]
-	)
+	})
+
+	const [fullReset, setFullReset] = useState(true)
 
 	return (
 		<>
@@ -221,147 +221,187 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				<strong>completely reset their existing configuration</strong>, and replace it with the imported state.
 			</p>
 
-			{/* <InputCheckbox
-				config={config}
-				allowKeys={snapshotKeys}
-				keyName="connections"
-				setValue={() => null}
-				label="Connections"
-			/> */}
-			{/* {!config.connections && (config.buttons || config.triggers) ? (
-				<CAlert color="warning">
-					Any 'Connections' referenced by an action or feedback will still be imported, but it  will remove all actions, feedbacks, and triggers associated with the connections even
-					if 'Buttons' and/or 'Triggers' are not also reset.
-				</CAlert>
-			) : (
-				''
-			)} */}
+			<form.AppForm>
+				<form
+					className={'flex-form'}
+					onSubmit={(e) => {
+						e.preventDefault()
+						e.stopPropagation()
+						form.handleSubmit().catch((err) => {
+							console.error('Form submission error', err)
+						})
+					}}
+				>
+					<table className="table table-responsive-sm mb-3">
+						<thead>
+							<tr>
+								<th>Import</th>
+							</tr>
+						</thead>
+						<tbody>
+							{/* <tr>
+								<td className="compact">
+									<form.AppField name="connections">
+										{(field) => <field.ImportToggleField label="Connections" disabled={!snapshot.connections} />}
+									</form.AppField>
+									{!config.connections && (config.buttons || config.triggers) && (
+										<CAlert color="warning">
+											Any 'Connections' referenced by an action or feedback will still be imported, but it  will remove all actions, feedbacks, and triggers associated with the connections even
+											if 'Buttons' and/or 'Triggers' are not also reset.
+										</CAlert>
+									)}
+								</td>
+							</tr> */}
 
-			<table className="table table-responsive-sm mb-3">
-				<thead>
-					<tr>
-						<th>Import</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td className="compact">
-							<InputCheckbox
-								config={config}
-								allowKeys={snapshotKeys}
-								keyName="buttons"
-								setValue={setValue}
-								label="Buttons"
-							/>
-						</td>
-					</tr>
-					<tr>
-						<td className="compact">
-							<InputCheckbox
-								config={config}
-								allowKeys={snapshotKeys}
-								keyName="triggers"
-								setValue={setValue}
-								label="Triggers"
-							/>
-						</td>
-					</tr>
-					<tr>
-						<td className="compact">
-							<InputCheckbox
-								config={config}
-								allowKeys={snapshotKeys}
-								keyName="customVariables"
-								setValue={setValue}
-								label="Custom Variables"
-							/>
-						</td>
-					</tr>
-					<tr>
-						<td className="compact">
-							<InputCheckbox
-								config={config}
-								allowKeys={snapshotKeys}
-								keyName="expressionVariables"
-								setValue={setValue}
-								label="Expression Variables"
-							/>
-						</td>
-					</tr>
-					<tr>
-						<td className="compact">
-							<InputCheckbox
-								config={config}
-								allowKeys={snapshotKeys}
-								keyName="surfaces"
-								setValue={setValue}
-								label="Surfaces"
-							/>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<CAlert color="info" className="margin-top">
-				<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to import
-				any actions and feedbacks.
-			</CAlert>
+							<tr>
+								<td className="compact">
+									<form.AppField name="buttons">
+										{(field) => <field.ImportToggleField label="Buttons" disabled={!snapshot.buttons} />}
+									</form.AppField>
+								</td>
+							</tr>
+							<tr>
+								<td className="compact">
+									<form.AppField name="triggers">
+										{(field) => <field.ImportToggleField label="Triggers" disabled={!snapshot.triggers} />}
+									</form.AppField>
+								</td>
+							</tr>
+							<tr>
+								<td className="compact">
+									<form.AppField name="customVariables">
+										{(field) => (
+											<field.ImportToggleField label="Custom Variables" disabled={!snapshot.customVariables} />
+										)}
+									</form.AppField>
+								</td>
+							</tr>
+							<tr>
+								<td className="compact">
+									<form.AppField name="expressionVariables">
+										{(field) => (
+											<field.ImportToggleField label="Expression Variables" disabled={!snapshot.expressionVariables} />
+										)}
+									</form.AppField>
+								</td>
+							</tr>
+							<tr>
+								<td className="compact">
+									<form.AppField name="surfaces.known">
+										{(field) => <field.ImportToggleField label="Surfaces" disabled={!snapshot.surfaces} />}
+									</form.AppField>
+								</td>
+							</tr>
 
-			{/* <InputCheckbox
-				config={config}
-				allowKeys={snapshotKeys}
-				keyName="userconfig"
-				setValue={setValue}
-				label="Settings"
-			/> */}
-			{/* This partial import is a bit flawed currently, it is resetting things that it shouldn't. Needs more work.
-			<CCallout color="success">
-				<h5>Import Selected Components</h5>
-				<p>
-					This preserves any unselected components in their current state, while resetting and importing the selected
-					components.
-				</p>
-				<CButton color="success" data-fullreset={false} onClick={doImport} disabled={validConfigKeys.length === 0}>
-					<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
-				</CButton>
-			</CCallout> */}
-			<CCallout color="danger">
-				<h5>Full Reset & Import</h5>
-				<p>
-					This will perform a <strong>full reset</strong> of all components, and then import any selected components.
-				</p>
-				<CButton color="primary" data-fullreset={true} onClick={doImport} disabled={validConfigKeys.length === 0}>
-					<FontAwesomeIcon icon={faFileImport} /> Full Reset & Import
-				</CButton>
-			</CCallout>
+							{/* <tr>
+								<td className="compact">
+									<form.AppField name="userconfig">
+										{(field) => <field.ImportToggleField label="Settings" disabled={!snapshot.userconfig} />}
+									</form.AppField>
+								</td>
+							</tr> */}
+						</tbody>
+					</table>
+					<CAlert color="info" className="margin-top">
+						<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to
+						import any actions and feedbacks.
+					</CAlert>
+
+					<CCallout color="success">
+						<h5>Import Selected Components</h5>
+						<p>
+							Full Import always resets the selected components before importing them. <br />
+							Checking{' '}
+							<em>
+								<strong>Perform full reset</strong>
+							</em>{' '}
+							will reset <strong>all</strong> components before importing the selected ones.
+							<br />
+							Full reset is generally the safer option as it reduces the chance of producing an inconsistent setup.
+						</p>
+						<form.Subscribe selector={(form) => [form.values]}>
+							{([values]) => {
+								const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
+								return (
+									<CButton color={fullReset ? 'danger' : 'success'} type="submit" disabled={!anythingEnabled}>
+										<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
+									</CButton>
+								)
+							}}
+						</form.Subscribe>
+						<CFormCheck
+							id={'check_full_reset'}
+							label={'Perform full reset'}
+							checked={fullReset}
+							onChange={() => setFullReset((fullReset) => !fullReset)}
+							inline
+							style={{ marginLeft: '1em' }}
+						/>
+					</CCallout>
+				</form>
+			</form.AppForm>
 		</>
 	)
 }
 
-interface InputCheckboxProps {
-	config: ClientImportSelection
-	allowKeys: string[]
-	keyName: keyof ClientImportSelection
-	setValue: (key: keyof ClientImportSelection, value: boolean) => void
+interface ImportToggleFieldProps {
 	label: string
+	disabled: boolean
 }
-
-function InputCheckbox({ config, allowKeys, keyName, setValue, label }: InputCheckboxProps) {
-	const disabled = allowKeys && !allowKeys.includes(String(keyName))
-
-	const setValue2 = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => setValue(keyName, !!e.currentTarget.checked),
-		[setValue, keyName]
-	)
+function ImportToggleField({ label, disabled }: ImportToggleFieldProps) {
+	const field = useFieldContext<ImportOrResetType>()
 
 	return (
-		<div className="indent3">
-			<CFormCheck
-				id={`check-${String(keyName)}`}
-				label={label}
-				checked={!disabled && !!config[keyName]}
-				onChange={setValue2}
-				disabled={disabled}
-			/>
-		</div>
+		<CFormCheck
+			disabled={disabled}
+			checked={field.state.value !== 'unchanged'}
+			onChange={(e) => field.handleChange(e.currentTarget.checked ? 'reset-and-import' : 'unchanged')}
+			onBlur={field.handleBlur}
+			label={label}
+		/>
 	)
+}
+
+function isAnythingEnabled(values: ClientImportSelection): boolean {
+	for (const key in values) {
+		const v = values[key as keyof ClientImportSelection]
+		if (typeof v === 'string') {
+			if (v !== 'unchanged') {
+				return true
+			}
+		} else if (typeof v === 'object' && v !== null) {
+			// Nested object (e.g., surfaces)
+			for (const subKey in v) {
+				if (v[subKey as keyof typeof v] !== 'unchanged') {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+function sanitiseSelection(
+	values: ClientImportSelection,
+	snapshot: ClientImportObject,
+	fullReset: boolean
+): ClientImportOrResetSelection {
+	const defaultBehaviour: ImportOrResetType = fullReset ? 'reset' : 'unchanged'
+
+	const processValue = (snapshotIncluded: boolean, value: ImportOrResetType): ImportOrResetType =>
+		snapshotIncluded && value === 'reset-and-import' ? value : defaultBehaviour
+
+	return {
+		buttons: processValue(snapshot.buttons, values.buttons),
+		surfaces: {
+			known: processValue(snapshot.surfaces, values.surfaces.known),
+		},
+		triggers: processValue(!!snapshot.triggers, values.triggers),
+		customVariables: processValue(snapshot.customVariables, values.customVariables),
+		expressionVariables: processValue(snapshot.expressionVariables, values.expressionVariables),
+
+		// These are not user selectable, so simply vary depending on whether this is a full reset or not
+		connections: defaultBehaviour,
+		userconfig: defaultBehaviour,
+	}
 }

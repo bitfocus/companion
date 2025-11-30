@@ -13,7 +13,6 @@
 import findProcess from 'find-process'
 import HID from 'node-hid'
 import jsonPatch from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
 import pDebounce from 'p-debounce'
 import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
 import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
@@ -23,14 +22,14 @@ import { listLoupedecks } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
-import { SurfaceIPSatellite, SatelliteDeviceInfo } from './IP/Satellite.js'
+import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
 import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
 import { SurfaceUSBXKeys } from './USB/XKeys.js'
 import { SurfaceUSBLoupedeck } from './USB/Loupedeck.js'
 import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
 import { isVecFootpedal, SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
-import { SurfaceIPVideohubPanel, VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
+import { SurfaceIPVideohubPanel, type VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
 import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
 import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
 import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
@@ -61,7 +60,7 @@ import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { getMXCreativeConsoleDeviceInfo } from '@logitech-mx-creative-console/node'
 import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -563,6 +562,25 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				}
 			}),
 
+			emulatorLocked: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
+				signal,
+				input,
+			}) {
+				const changes = toIterable(self.#updateEvents, 'emulatorLocked', signal)
+
+				// Emit the current config if it exists
+				const surface = self.#surfaceHandlers.get(EmulatorRoom(input.id))
+				if (!surface || !(surface.panel instanceof SurfaceIPElgatoEmulator)) {
+					yield null
+				} else {
+					yield surface.panel.lockedState()
+				}
+
+				for await (const [changeId, changeData] of changes) {
+					if (changeId === input.id) yield changeData
+				}
+			}),
+
 			emulatorImages: publicProcedure.input(z.object({ id: z.string() })).subscription(async function* ({
 				signal,
 				input,
@@ -597,6 +615,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					}
 
 					surface.panel.emit('click', input.column, input.row, input.pressed)
+				}),
+
+			emulatorPinEntry: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+						digit: z.number().min(0).max(9),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const surface = this.#surfaceHandlers.get(EmulatorRoom(input.id))
+					if (!surface) {
+						throw new Error(`Emulator "${input.id}" does not exist!`)
+					}
+
+					surface.panel.emit('pincodeKey', input.digit)
 				}),
 
 			groupAdd: publicProcedure
@@ -1029,7 +1063,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	updateDevicesList(): void {
-		const newJsonArr = cloneDeep(this.getDevicesList())
+		const newJsonArr = structuredClone(this.getDevicesList())
 
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
 			this.#updateEvents.emit('emulatorList', this.#compileEmulatorList())
@@ -1178,16 +1212,16 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
 										}
 									} else if (
-										(deviceInfo.vendorId === 0x6602 ||
-											deviceInfo.vendorId === 0x6603 ||
-											deviceInfo.vendorId === 0x5548) && // Mirabox
-										(deviceInfo.productId === 0x1001 ||
-											deviceInfo.productId === 0x1003 ||
-											deviceInfo.productId === 0x1007 ||
-											deviceInfo.productId === 0x1005 ||
-											deviceInfo.productId === 0x1014 || // Stream Dock HSV 293S
-											deviceInfo.productId == 0x6670 || // Mirabox 293S
-											deviceInfo.productId === 0x1006) && // Stream Dock N4 or 293V3
+										(((deviceInfo.vendorId === 0x6602 || deviceInfo.vendorId === 0x6603) && // Mirabox
+											(deviceInfo.productId === 0x1001 ||
+												deviceInfo.productId === 0x1003 ||
+												deviceInfo.productId === 0x1007 ||
+												deviceInfo.productId === 0x1005 ||
+												deviceInfo.productId === 0x1014 || // Stream Dock HSV 293S
+												deviceInfo.productId === 0x1006)) || // Stream Dock N4 or 293V3
+											// Mirabox variants (OEM branded)
+											(deviceInfo.vendorId === 0x5548 && deviceInfo.productId === 0x6670) || // Mirabox HSV 293S (XF-CN001 firmware V2)
+											(deviceInfo.vendorId === 0x1500 && deviceInfo.productId === 0x3003)) && // Mirabox HSV 293S (XF-CN001 firmware V3)
 										deviceInfo.interface === 0
 									) {
 										if (this.#handlerDependencies.userconfig.getKey('mirabox_streamdock_enable')) {
@@ -1408,6 +1442,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				if (key === 'name') continue
 				group.setGroupConfigValue(key, value)
 			}
+			group.clearPageHistory()
 		}
 
 		for (const [surfaceId, surfaceConfig] of Object.entries(surfaces)) {
@@ -1440,6 +1475,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						if (key === 'name') continue
 						group.setGroupConfigValue(key, value)
 					}
+					group.clearPageHistory()
 				}
 			} else {
 				// Device is not loaded
@@ -1452,6 +1488,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						// need the following to put the emulator on the "current" page, to match its export state
 						const group = this.#surfaceGroups.get(surfaceId)
 						group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+						group?.clearPageHistory()
 					}
 				}
 			}
@@ -1633,7 +1670,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param forceUnlock Force all surfaces to be unlocked
 	 */
 	setAllLocked(locked: boolean, forceUnlock = false): void {
-		this.#logger.debug(`Setting lock state of all surfaces to ${locked} (forceUnlock=${forceUnlock})`)
+		locked = !!locked
 
 		if (forceUnlock) {
 			locked = false
@@ -1641,7 +1678,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			if (!this.isPinLockEnabled()) return
 		}
 
-		this.#surfacesAllLocked = !!locked
+		if (!forceUnlock && this.#surfacesAllLocked === locked) {
+			// No change
+			return
+		}
+
+		this.#logger.debug(`Setting lock state of all surfaces to ${locked} (forceUnlock=${forceUnlock})`)
+		this.#surfacesAllLocked = locked
 
 		for (const surfaceGroup of this.#surfaceGroups.values()) {
 			if (locked) {
@@ -1664,7 +1707,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			this.setAllLocked(locked)
 		} else {
 			this.#surfacesAllLocked = false
-			this.#logger.debug(`Setting lock state of ${surfaceOrGroupId} to ${locked}`)
 
 			let resolvedGroupId = surfaceOrGroupId
 
@@ -1672,7 +1714,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 			if (surfaceGroup) {
 				resolvedGroupId = surfaceGroup.groupId
-				surfaceGroup.setLocked(!!locked)
+
+				const changed = surfaceGroup.setLocked(!!locked)
+				if (changed) {
+					this.#logger.debug(`Setting lock state of ${surfaceOrGroupId} to ${locked}`)
+				}
 			}
 
 			// Track the lock/unlock state, even if the device isn't online
@@ -1723,6 +1769,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		if (device) {
 			device.adjustPosition(xAdjustment, yAdjustment)
 		}
+	}
+
+	/**
+	 * Get the number of surface groups, excluding the auto groups
+	 */
+	getGroupCount(): number {
+		let count = 0
+		for (const group of this.#surfaceGroups.values()) {
+			if (!group.isAutoGroup) {
+				count++
+			}
+		}
+		return count
 	}
 
 	/**

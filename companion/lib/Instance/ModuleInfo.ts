@@ -1,10 +1,9 @@
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
-import { compact } from 'lodash-es'
 import type { SomeModuleVersionInfo } from './Types.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { getHelpPathForInstalledModule } from './ModuleScanner.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 /**
  * Information about a module
@@ -55,43 +54,51 @@ export class InstanceModuleInfo {
 
 			display: baseVersion.display,
 
-			devVersion: translateStableVersion(this.devModule),
+			devVersion: translateStableVersion(this.moduleType, this.devModule),
 
-			stableVersion: translateStableVersion(stableVersion),
-			betaVersion: translateStableVersion(betaVersion),
+			stableVersion: translateStableVersion(this.moduleType, stableVersion),
+			betaVersion: translateStableVersion(this.moduleType, betaVersion),
 
-			installedVersions: compact(Object.values(this.installedVersions)).map(translateReleaseVersion),
+			installedVersions: Object.values(this.installedVersions)
+				.filter((v): v is SomeModuleVersionInfo => v !== undefined)
+				.map((v) => translateReleaseVersion(this.moduleType, v)),
 		}
 	}
 }
 
-function translateStableVersion(version: SomeModuleVersionInfo | null): ClientModuleVersionInfo | null {
+function translateStableVersion(
+	moduleType: ModuleInstanceType,
+	version: SomeModuleVersionInfo | null
+): ClientModuleVersionInfo | null {
 	if (!version) return null
 	if (version.versionId === 'dev') {
 		return {
 			displayName: 'Dev',
 			isLegacy: false,
 			isBeta: false,
-			helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
+			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			versionId: 'dev',
 		}
 	} else {
 		return {
 			displayName: `Latest ${version.isBeta ? 'Beta' : 'Stable'} (v${version.versionId})`,
 			isLegacy: version.isLegacy,
-			helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
+			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			isBeta: version.isBeta,
 			versionId: version.versionId,
 		}
 	}
 }
 
-function translateReleaseVersion(version: SomeModuleVersionInfo): ClientModuleVersionInfo {
+function translateReleaseVersion(
+	moduleType: ModuleInstanceType,
+	version: SomeModuleVersionInfo
+): ClientModuleVersionInfo {
 	return {
 		displayName: `v${version.versionId}`,
 		isLegacy: version.isLegacy,
 		isBeta: version.isBeta,
-		helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
+		helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 		versionId: version.versionId,
 	}
 }

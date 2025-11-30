@@ -1,10 +1,9 @@
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import PQueue from 'p-queue'
 import { nanoid } from 'nanoid'
 import path from 'path'
-import { ConnectionChildHandlerDependencies, ConnectionChildHandler } from './Connection/ChildHandler.js'
+import { ConnectionChildHandler, type ConnectionChildHandlerDependencies } from './Connection/ChildHandler.js'
 import fs from 'fs-extra'
-import ejson from 'ejson'
 import os from 'os'
 import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
@@ -12,14 +11,12 @@ import type { InstanceModules } from './Modules.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { CompanionOptionValues } from '@companion-module/base'
-import { Serializable } from 'child_process'
+import type { CompanionOptionValues } from '@companion-module/base'
 import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import { InstanceConfig, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-
-const require = createRequire(import.meta.url)
+import type { SomeModuleVersionInfo } from './Types.js'
 
 /**
  * A backoff sleep strategy
@@ -61,9 +58,23 @@ interface ModuleChildTargetState {
 }
 
 export interface ChildProcessHandlerBase {
+	/**
+	 * Initialise the child process handler with configuration
+	 */
 	init(config: InstanceConfig): Promise<void>
+	/**
+	 * Initialisation is complete, and the child is marked as ready.
+	 * In here you can emit events that will cause other classes to call into the child
+	 */
+	ready?(): Promise<void>
 
+	/**
+	 * Destroy the child process handler, cleaning up resources
+	 */
 	destroy(): Promise<void>
+	/**
+	 * Cleanup any resources after the child is already stopped
+	 */
 	cleanup(): void
 }
 
@@ -72,7 +83,7 @@ export class InstanceProcessManager {
 
 	readonly #deps: ConnectionChildHandlerDependencies
 	readonly #modules: InstanceModules
-	readonly #InstanceConfigStore: InstanceConfigStore
+	readonly #instanceConfigStore: InstanceConfigStore
 
 	/**
 	 * Queue for starting instances, to limit how many can be starting concurrently
@@ -84,141 +95,16 @@ export class InstanceProcessManager {
 	constructor(
 		deps: ConnectionChildHandlerDependencies,
 		modules: InstanceModules,
-		InstanceConfigStore: InstanceConfigStore
+		instanceConfigStore: InstanceConfigStore
 	) {
 		this.#deps = deps
 		this.#modules = modules
-		this.#InstanceConfigStore = InstanceConfigStore
+		this.#instanceConfigStore = instanceConfigStore
 
 		const cpuCount = os.cpus().length // An approximation
 		this.#startQueue = new PQueue({ concurrency: Math.max(cpuCount - 1, 1) })
 
 		this.#children = new Map()
-	}
-
-	/**
-	 * Bind events/initialise a connected child process
-	 */
-	#listenToModuleSocket(
-		child: ModuleChild,
-		apiVersion: string,
-		startupCompleted: () => void,
-		startupFailed: (err: Error) => void
-	): void {
-		const forceRestart = () => {
-			// Force restart the instance, as it failed to initialise and will be broken
-			child.restartCount++
-
-			child.monitor?.off('exit', forceRestart)
-			child.monitor?.off('message', initHandler)
-
-			// Report the failure
-			startupFailed(new Error('Restart forced'))
-
-			const sleepDuration = sleepStrategy(child.restartCount)
-			if (!child.crashed && child.targetState) {
-				child.crashed = setTimeout(() => {
-					// Restart after a short sleep
-					this.queueUpdateInstanceState(child.instanceId, child.targetState, true)
-				}, sleepDuration)
-			}
-
-			// Stop it now
-			child.monitor?.stop()
-			child.handler?.cleanup()
-			delete child.handler
-		}
-
-		const initHandler = (msg0: Serializable): void => {
-			const msg = msg0 as Record<string, any>
-			if (msg.direction === 'call' && msg.name === 'register' && msg.callbackId && msg.payload) {
-				const { verificationToken } = ejson.parse(msg.payload)
-
-				if (child.authToken !== verificationToken) {
-					this.#logger.debug(`Got register with bad auth token for instance: "${child.lastLabel}"`)
-					forceRestart()
-					return
-				}
-
-				if (child.crashed) {
-					// Clear existing restart timer
-					clearTimeout(child.crashed)
-					delete child.crashed
-				}
-
-				if (!child.monitor || !child.monitor.child) {
-					this.#logger.debug(`Got register with child not initialised: "${child.lastLabel}"`)
-					forceRestart()
-					return
-				}
-
-				if (!child.targetState) {
-					this.#logger.debug(`Got register with no target state: "${child.lastLabel}"`)
-					forceRestart()
-					return
-				}
-
-				// Bind the event listeners
-				switch (child.targetState.moduleType) {
-					case ModuleInstanceType.Connection:
-						child.handler = new ConnectionChildHandler(this.#deps, child.monitor, child.instanceId, apiVersion)
-						break
-					default:
-						assertNever(child.targetState.moduleType)
-						this.#logger.debug(
-							`Got register with unknown module type "${child.targetState.moduleType}" for "${child.lastLabel}"`
-						)
-						forceRestart()
-						return
-				}
-
-				// Register successful
-				// child.doWorkTask = registerResult.doWorkTask
-				this.#logger.debug(`Registered module client "${child.lastLabel}"`)
-
-				// TODO module-lib - can we get this in a cleaner way?
-				const config = this.#InstanceConfigStore.getConfigOfTypeForId(child.instanceId, child.moduleType)
-				if (!config) {
-					this.#logger.verbose(`Missing config for instance "${child.lastLabel}"`)
-					forceRestart()
-					return
-				}
-
-				// report success
-				child.monitor.child.send({
-					direction: 'response',
-					callbackId: msg.callbackId,
-					success: true,
-					payload: ejson.stringify({}),
-				})
-
-				// TODO module-lib - start pings
-
-				// Init module
-				this.#deps.instanceStatus.updateInstanceStatus(child.instanceId, 'initializing', null)
-
-				child.handler
-					.init(config)
-					.then(() => {
-						child.restartCount = 0
-
-						child.monitor?.off('message', initHandler)
-
-						startupCompleted()
-
-						// mark child as ready to receive
-						child.isReady = true
-					})
-					.catch((e) => {
-						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${e} ${e?.stack}`)
-						this.#deps.debugLogLine(child.instanceId, 'error', `Failed to init: ${e} ${e?.stack}`)
-
-						forceRestart()
-					})
-			}
-		}
-		child.monitor?.on('message', initHandler)
-		child.monitor?.on('exit', forceRestart)
 	}
 
 	/**
@@ -318,12 +204,14 @@ export class InstanceProcessManager {
 				} catch (e) {
 					console.error(`Destroy failed: ${e}`)
 				}
+				delete child.handler
 			}
 
 			if (child.monitor) {
 				// Stop the child process
 				const monitor = child.monitor
 				await new Promise<void>((resolve) => monitor.stop(resolve))
+				delete child.monitor
 			}
 
 			if (allowDeleteIfEmpty && child.lifeCycleQueue.size === 0) {
@@ -450,10 +338,8 @@ export class InstanceProcessManager {
 				return
 			}
 
-			if (moduleInfo.type === ModuleInstanceType.Connection && moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
-				this.#logger.error(`Only nodejs-ipc api is supported currently: "${baseChild.lastLabel}"`)
-				return
-			}
+			const runtimeInfo = await this.#findAndValidateModuleInfo(moduleInfo, instanceId, baseChild.lastLabel)
+			if (!runtimeInfo) return
 
 			const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
 			if (!nodePath) {
@@ -463,41 +349,19 @@ export class InstanceProcessManager {
 				return
 			}
 
-			// Determine the module api version
-			let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
-			if (!moduleInfo.isPackaged) {
-				// When not packaged, lookup the version from the library itself
-				try {
-					const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
-						paths: [moduleInfo.basePath],
-					})
-					const moduleLibPackage = require(moduleLibPackagePath)
-					moduleApiVersion = moduleLibPackage.version
-				} catch (e) {
-					this.#logger.error(`Failed to get module api version: "${baseChild.lastLabel}" ${e}`)
-					return
-				}
-			}
-
-			if (!isModuleApiVersionCompatible(moduleApiVersion)) {
-				this.#logger.error(`Module Api version is too new/old: "${baseChild.lastLabel}" ${moduleApiVersion}`)
-				return
-			}
-
 			const child = this.#children.get(instanceId)
 			if (!child) {
 				this.#logger.verbose(`Lost tracking object for instance: "${baseChild.lastLabel}"`)
 				return
 			}
 
-			child.authToken = nanoid()
-
-			const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
-			const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
-			if (!(await fs.pathExists(jsFullPath))) {
-				this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
+			// Create the handler early, before the child process starts, to capture all messages
+			if (!child.targetState) {
+				this.#logger.error(`No target state for handler creation: "${child.lastLabel}"`)
 				return
 			}
+
+			child.authToken = nanoid()
 
 			// Allow running node with `--inspect`
 			let inspectPort = undefined
@@ -516,6 +380,8 @@ export class InstanceProcessManager {
 			if (enableInspect) {
 				this.#deps.debugLogLine(
 					instanceId,
+					Date.now(),
+					'System',
 					'error',
 					`** Disabling permissions model to enable inspector **\nMake sure to re-test the module without the inspector enabled before releasing`
 				)
@@ -523,23 +389,31 @@ export class InstanceProcessManager {
 
 			const cmd: string[] = [
 				nodePath,
-				...getNodeJsPermissionArguments(moduleInfo.manifest, moduleApiVersion, moduleInfo.basePath, enableInspect),
+				...getNodeJsPermissionArguments(
+					moduleInfo.manifest,
+					runtimeInfo.apiVersion,
+					moduleInfo.basePath,
+					enableInspect
+				),
 				enableInspect ? `--inspect=${inspectPort}` : undefined,
-				jsPath,
+				runtimeInfo.entrypoint,
 			].filter((v): v is string => !!v)
 			this.#logger.debug(`Instance "${baseChild.targetState.label}" command: ${JSON.stringify(cmd)}`)
 
 			this.#deps.debugLogLine(
 				instanceId,
+				Date.now(),
+				'System',
 				'system',
-				`** Starting Instance from "${path.join(moduleInfo.basePath, jsPath)}" **`
+				`** Starting Instance from "${runtimeInfo.entrypoint}" **`
 			)
 
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
-					CONNECTION_ID: instanceId,
+					...preserveEnvVars(),
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
+					...runtimeInfo.env,
 				},
 				maxRestarts: -1,
 				kill: 5000,
@@ -553,7 +427,7 @@ export class InstanceProcessManager {
 				child.handler?.cleanup()
 
 				child.logger.info(`Process started process ${monitor.child?.pid}`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process started **')
+				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process started **')
 			})
 			monitor.on('stop', () => {
 				child.isReady = false
@@ -565,7 +439,7 @@ export class InstanceProcessManager {
 					child.crashed ? '' : 'Stopped'
 				)
 				child.logger.debug(`Process stopped`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process stopped **')
+				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process stopped **')
 			})
 			monitor.on('crash', () => {
 				child.isReady = false
@@ -573,7 +447,7 @@ export class InstanceProcessManager {
 
 				this.#deps.instanceStatus.updateInstanceStatus(instanceId, null, 'Crashed')
 				child.logger.debug(`Process crashed`)
-				this.#deps.debugLogLine(instanceId, 'system', '** Process crashed **')
+				this.#deps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process crashed **')
 			})
 			monitor.on('stdout', (data) => {
 				if (moduleInfo.versionId === 'dev') {
@@ -581,29 +455,228 @@ export class InstanceProcessManager {
 					child.logger.verbose(`stdout: ${data.toString()}`)
 				}
 
-				this.#deps.debugLogLine(instanceId, 'console', data.toString())
+				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
-				child.logger.verbose(`stderr: ${data.toString()}`)
-				this.#deps.debugLogLine(instanceId, 'error', data.toString())
+				const str = data.toString()
+				child.logger.verbose(`stderr: ${str}`)
+				this.#deps.debugLogLine(instanceId, Date.now(), 'Console', 'error', str)
 			})
 
 			child.monitor = monitor
 
-			const initialisedPromise = new Promise<void>((resolve, reject) => {
-				this.#listenToModuleSocket(child, moduleApiVersion, resolve, reject)
-			})
+			// Create handler and wait for registration + initialization
+			try {
+				await this.#createHandlerAndWaitForInit(child, monitor, runtimeInfo)
+			} catch (error) {
+				this.#logger.error(`Failed to initialize instance "${child.lastLabel}": ${error}`)
+				throw error
+			}
 
-			// Start the child
-			child.monitor.start()
-
-			// Wait for init to complete, or fail
-			await initialisedPromise
 			// Sleep for a tick
 			await new Promise((resolve) => setImmediate(resolve))
-
-			// TODO module-lib - timeout for first contact
 		})
+	}
+
+	async #createHandlerAndWaitForInit(
+		child: ModuleChild,
+		monitor: RespawnMonitor,
+		runtimeInfo: RuntimeInfo
+	): Promise<void> {
+		if (!child.targetState) {
+			throw new Error('No target state')
+		}
+
+		// Create a promise that will be resolved when registration completes
+		const { promise: initPromise, resolve: resolveInit, reject: rejectInit } = Promise.withResolvers<void>()
+
+		const forceRestart = () => {
+			// Force restart the instance, as it failed to initialise and will be broken
+			child.restartCount++
+
+			monitor.off('exit', forceRestart)
+
+			// Report the failure
+			rejectInit(new Error('Restart forced'))
+
+			const sleepDuration = sleepStrategy(child.restartCount)
+			if (!child.crashed && child.targetState) {
+				child.crashed = setTimeout(() => {
+					// Restart after a short sleep
+					this.queueUpdateInstanceState(child.instanceId, child.targetState, true)
+				}, sleepDuration)
+			}
+
+			// Stop it now
+			monitor.stop()
+			child.handler?.cleanup()
+			delete child.handler
+		}
+		monitor.on('exit', forceRestart)
+
+		// Registration callback - called by handler when child process registers
+		let hasRegistered = false
+		const onRegisterReceived = async (verificationToken: string): Promise<void> => {
+			if (hasRegistered) {
+				this.#logger.debug(`Duplicate register received for instance: "${child.lastLabel}"`)
+				return
+			}
+			hasRegistered = true
+
+			if (child.authToken !== verificationToken) {
+				this.#logger.debug(`Got register with bad auth token for instance: "${child.lastLabel}"`)
+				forceRestart()
+				return
+			}
+
+			if (child.crashed) {
+				// Clear existing restart timer
+				clearTimeout(child.crashed)
+				delete child.crashed
+			}
+
+			if (!child.monitor || !child.monitor.child) {
+				this.#logger.debug(`Got register with child not initialised: "${child.lastLabel}"`)
+				forceRestart()
+				return
+			}
+
+			if (!child.targetState) {
+				this.#logger.debug(`Got register with no target state: "${child.lastLabel}"`)
+				forceRestart()
+				return
+			}
+
+			// Register successful
+			this.#logger.debug(`Registered module client "${child.lastLabel}"`)
+
+			// TODO module-lib - can we get this in a cleaner way?
+			const config = this.#instanceConfigStore.getConfigOfTypeForId(child.instanceId, child.moduleType)
+			if (!config) {
+				this.#logger.verbose(`Missing config for instance "${child.lastLabel}"`)
+				forceRestart()
+				return
+			}
+
+			// Defer to allow the message to respond
+			const handler = child.handler
+			setImmediate(() => {
+				// Verify still the same handler
+				if (child.handler !== handler) return
+				if (!child.handler) {
+					this.#logger.debug(`Handler disappeared for instance "${child.lastLabel}"`)
+					forceRestart()
+					return
+				}
+
+				// Init module
+				this.#deps.instanceStatus.updateInstanceStatus(child.instanceId, 'initializing', null)
+
+				child.handler
+					.init(config)
+					.then(async () => {
+						child.restartCount = 0
+
+						// mark child as ready to receive
+						child.isReady = true
+
+						// Call ready hook
+						await child.handler?.ready?.()
+
+						resolveInit()
+					})
+					.catch((e) => {
+						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${e} ${e?.stack}`)
+						this.#deps.debugLogLine(child.instanceId, Date.now(), 'System', 'error', `Failed to init: ${e} ${e?.stack}`)
+
+						forceRestart()
+					})
+			})
+		}
+
+		// Bind the event listeners
+		switch (child.targetState.moduleType) {
+			case ModuleInstanceType.Connection:
+				child.handler = new ConnectionChildHandler(
+					this.#deps,
+					monitor,
+					child.instanceId,
+					runtimeInfo.apiVersion,
+					onRegisterReceived
+				)
+				break
+			default:
+				assertNever(child.targetState.moduleType)
+				this.#logger.debug(
+					`Got register with unknown module type "${child.targetState.moduleType}" for "${child.lastLabel}"`
+				)
+				forceRestart()
+				return
+		}
+
+		// Start the child
+		monitor.start()
+
+		// Wait for registration and initialization to complete
+		await initPromise
+	}
+
+	async #findAndValidateModuleInfo(
+		moduleInfo: SomeModuleVersionInfo,
+		instanceId: string,
+		lastLabel: string
+	): Promise<RuntimeInfo | null> {
+		const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
+		const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
+		if (!(await fs.pathExists(jsFullPath))) {
+			this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
+			return null
+		}
+
+		const moduleType = moduleInfo.type
+		switch (moduleInfo.type) {
+			case ModuleInstanceType.Connection: {
+				if (moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
+					this.#logger.error(`Only nodejs-ipc api is supported currently: "${lastLabel}"`)
+					return null
+				}
+
+				// Determine the module api version
+				let moduleApiVersion = moduleInfo.manifest.runtime.apiVersion
+				if (!moduleInfo.isPackaged) {
+					// When not packaged, lookup the version from the library itself
+					try {
+						const require = createRequire(moduleInfo.basePath)
+
+						const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
+							paths: [moduleInfo.basePath],
+						})
+						const moduleLibPackage = require(moduleLibPackagePath)
+						moduleApiVersion = moduleLibPackage.version
+					} catch (e) {
+						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
+						return null
+					}
+				}
+
+				if (!isModuleApiVersionCompatible(moduleApiVersion)) {
+					this.#logger.error(`Module Api version is too new/old: "${lastLabel}" ${moduleApiVersion}`)
+					return null
+				}
+
+				return {
+					apiVersion: moduleApiVersion,
+					entrypoint: jsFullPath,
+					env: {
+						CONNECTION_ID: instanceId,
+					},
+				}
+			}
+			default:
+				assertNever(moduleInfo.type)
+				this.#logger.error(`Unknown module type "${moduleType}" for api version check: "${lastLabel}"`)
+				return null
+		}
 	}
 
 	async connectionEntityUpdate(entity: ControlEntityInstance, controlId: string): Promise<boolean> {
@@ -631,4 +704,27 @@ export class InstanceProcessManager {
 
 		return connection.entityLearnValues(entityModel, controlId)
 	}
+}
+
+interface RuntimeInfo {
+	entrypoint: string
+	apiVersion: string
+	env: Record<string, string>
+}
+
+/**
+ * Only some env vars should be forwarded to child processes
+ */
+function preserveEnvVars(): Record<string, string> {
+	const preserveNames = ['HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'http_proxy', 'https_proxy', 'no_proxy']
+
+	const preservedEnvVars: Record<string, string> = {}
+	for (const name of preserveNames) {
+		const value = process.env[name]
+		if (value !== undefined) {
+			preservedEnvVars[name] = value
+		}
+	}
+
+	return preservedEnvVars
 }

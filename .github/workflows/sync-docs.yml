@@ -1,0 +1,54 @@
+name: Sync Docs to Website
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/user-guide/**'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-docs
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout companion repository
+        uses: actions/checkout@v6
+        with:
+          path: companion
+
+      - name: Checkout website repository
+        uses: actions/checkout@v6
+        with:
+          repository: bitfocus/website
+          token: ${{ secrets.SYNC_DOCS_PAT }}
+          path: website
+
+      - name: Sync user-guide folder
+        run: |
+          # Remove existing docs in website
+          rm -rf website/user-guide
+          rm -rf website/whats-new
+
+          # Copy new docs from companion to website
+          cp -r companion/docs/user-guide website/user-guide
+          cp -r companion/docs/user-guide/9_whatsnew website/whats-new
+
+          # Create the marker file
+          touch website/user-guide/__DO_NOT_EDIT__
+          touch website/whats-new/__DO_NOT_EDIT__
+
+          # Restore index.md to avoid overwriting customizations
+          cd website
+          git checkout -f whats-new/index.md
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          repository: website
+          commit_message: 'Sync user-guide from companion'
+          file_pattern: 'user-guide/** whats-new/**'

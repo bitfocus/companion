@@ -3,8 +3,8 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CCol, CButton, CFormSelect, CAlert, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCircleExclamation, faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
-import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { InstanceEditField } from '~/Instances/InstanceEdit/InstanceEditField.js'
@@ -19,8 +19,9 @@ import { TextInputField } from '~/Components/TextInputField.js'
 import classNames from 'classnames'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
-import { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
+import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import { capitalize } from 'lodash-es'
+import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 
 interface InstanceGenericEditPanelProps<TConfig extends ClientInstanceConfigBase> {
 	instanceInfo: TConfig
@@ -279,37 +280,20 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 				if (!isVisible) return null
 
 				const isSecret = isConfigFieldSecret(fieldInfo)
-				if (isSecret) {
-					return (
-						<CCol
-							className={`fieldtype-${fieldInfo.type}`}
-							sm={fieldInfo.width}
-							style={{ display: !isVisible ? 'none' : undefined }}
-						>
-							<CFormLabel>
-								<InstanceFieldLabel fieldInfo={fieldInfo} />
-							</CFormLabel>
+				return (
+					<InstanceFormRow
+						key={fieldInfo.id}
+						fieldInfo={fieldInfo}
+						isVisible={isVisible}
+						useNewLayout={configData.useNewLayout}
+					>
+						{isSecret ? (
 							<InstanceSecretField
 								definition={fieldInfo}
 								value={configData.secrets[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
 							/>
-							{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
-						</CCol>
-					)
-				} else {
-					// Hide certain fields when in 'xs' column size, to avoid unexpected padding
-					const hideInXs = fieldInfo.type === 'static-text' && !fieldInfo.label && !fieldInfo.value
-
-					return (
-						<CCol
-							className={classNames(`fieldtype-${fieldInfo.type}`, { 'd-none': hideInXs, 'd-sm-block': hideInXs })}
-							sm={fieldInfo.width}
-							style={{ display: !isVisible ? 'none' : undefined }}
-						>
-							<CFormLabel>
-								<InstanceFieldLabel fieldInfo={fieldInfo} />
-							</CFormLabel>
+						) : (
 							<InstanceEditField
 								definition={fieldInfo}
 								value={configData.config[fieldInfo.id]}
@@ -317,10 +301,10 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 								moduleType={panelStore.instanceInfo.moduleType}
 								instanceId={panelStore.service.instanceId}
 							/>
-							{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
-						</CCol>
-					)
-				}
+						)}
+						{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
+					</InstanceFormRow>
+				)
 			})}
 		</>
 	)
@@ -370,4 +354,66 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 			</CCol>
 		</div>
 	)
+})
+
+interface InstanceFormRowProps {
+	fieldInfo: SomeCompanionInputField
+	isVisible: boolean
+	useNewLayout: boolean
+}
+
+const InstanceFormRow = observer(function InstanceFormRow({
+	fieldInfo,
+	isVisible,
+	useNewLayout,
+	children,
+}: React.PropsWithChildren<InstanceFormRowProps>): React.JSX.Element | null {
+	if (useNewLayout) {
+		if (fieldInfo.type === 'static-text') {
+			if (!fieldInfo.label && !fieldInfo.value) return null // Skip rendering the fields used to force alignment
+
+			const fieldValueStr = fieldInfo.value?.toString() ?? ''
+			const isLong = fieldValueStr.includes('\n') || fieldValueStr.length > 100 // Arbitrary length to consider text "long"
+
+			if (isLong && (!fieldInfo.width || fieldInfo.width > 6)) {
+				return (
+					<CCol sm={12}>
+						{fieldInfo.label ? <CFormLabel>{fieldInfo.label}</CFormLabel> : ''}
+						<StaticTextFieldText {...fieldInfo} allowImages />
+					</CCol>
+				)
+			}
+		}
+
+		return (
+			<React.Fragment>
+				<CFormLabel
+					className="col-sm-4 col-form-label col-form-label-sm"
+					style={{ display: !isVisible ? 'none' : undefined }}
+				>
+					<InstanceFieldLabel fieldInfo={fieldInfo} />
+				</CFormLabel>
+				<CCol sm={8} style={{ display: !isVisible ? 'none' : undefined }}>
+					{children}
+				</CCol>
+			</React.Fragment>
+		)
+	} else {
+		// Hide certain fields when in 'xs' column size, to avoid unexpected padding
+		const hideInXs = fieldInfo.type === 'static-text' && !fieldInfo.label && !fieldInfo.value
+
+		return (
+			<CCol
+				className={classNames(`fieldtype-${fieldInfo.type}`, { 'd-none': hideInXs, 'd-sm-block': hideInXs })}
+				sm={fieldInfo.width}
+				style={{ display: !isVisible ? 'none' : undefined }}
+			>
+				<CFormLabel>
+					<InstanceFieldLabel fieldInfo={fieldInfo} />
+				</CFormLabel>
+
+				{children}
+			</CCol>
+		)
+	}
 })

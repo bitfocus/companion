@@ -25,5 +25,5 @@ if [ -d /app/module-local-dev ]; then
 fi
 
 cd /app
-# Bind to 0.0.0.0, as access should be scoped down by how the port is exposed from docker
-exec ./node-runtimes/main/bin/node ./main.js --admin-address 0.0.0.0 --admin-port 8000 --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev $@
+# Bind to everything, as access should be scoped down by how the port is exposed from docker
+exec ./node-runtimes/main/bin/node ./main.js --admin-address :: --admin-port 8000 --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev $@

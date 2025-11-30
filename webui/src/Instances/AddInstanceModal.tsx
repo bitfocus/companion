@@ -20,7 +20,7 @@ import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { AddInstanceService } from './AddInstanceService.js'
+import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface AddInstanceModalRef {
@@ -67,7 +67,7 @@ export const AddInstanceModal = observer(
 					}, 1000)
 				})
 				.catch((e) => {
-					notifier.current?.show(`Failed to create instance`, `Failed: ${e}`)
+					notifier.show(`Failed to create instance`, `Failed: ${e}`)
 					console.error('Failed to create instance:', e)
 				})
 		}
@@ -136,9 +136,7 @@ export const AddInstanceModal = observer(
 				{moduleInfo && (
 					<>
 						<CModalHeader closeButton>
-							<h5>
-								Add {moduleInfo.manufacturer} {moduleInfo.product}
-							</h5>
+							<h5>Add {moduleInfo.product}</h5>
 						</CModalHeader>
 						<CModalBody>
 							{service.moduleType === ModuleInstanceType.Connection && (

@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { SemVer } from 'semver'
 
-const nodejsVersionsPath = fileURLToPath(new URL('../nodejs-versions.json', import.meta.url))
+const nodejsVersionsPath = fileURLToPath(new URL('../assets/nodejs-versions.json', import.meta.url))
 
 const existingVersionsStr = await fs.readFile(nodejsVersionsPath, 'utf8')
 const existingVersions = JSON.parse(existingVersionsStr)

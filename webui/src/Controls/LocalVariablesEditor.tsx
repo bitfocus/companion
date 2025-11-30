@@ -1,9 +1,13 @@
 import React from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlEntitiesEditor } from './EntitiesEditor.js'
-import { EntityModelType, FeedbackEntitySubType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	FeedbackEntitySubType,
+	type SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { CAlert } from '@coreui/react'
-import { LocalVariablesStore } from './LocalVariablesStore.js'
+import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 

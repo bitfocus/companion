@@ -7,13 +7,13 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { useAllModuleProducts, filterProducts, FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
+import { useAllModuleProducts, filterProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -127,7 +127,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/getting-started#6_modules.md')} className="text-decoration-none">
+					<a target="_blank" href={makeAbsolutePath('/user-guide/modules')} className="text-decoration-none">
 						Check our guidance for getting device support
 					</a>
 					.<br />

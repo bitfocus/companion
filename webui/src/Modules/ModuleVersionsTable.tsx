@@ -14,15 +14,18 @@ import {
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ModuleStoreModuleInfoStore, ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
+import type {
+	ModuleStoreModuleInfoStore,
+	ModuleStoreModuleInfoVersion,
+} from '@companion-app/shared/Model/ModulesStore.js'
 import semver from 'semver'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 dayjs.extend(relativeTime)
 
@@ -196,8 +199,16 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			</td>
 			<td>
 				{versionId}
-				{storeInfo?.releaseChannel === 'beta' && <FontAwesomeIcon className="pad-left" icon={faFlask} title="Beta" />}
-				{storeInfo?.deprecationReason && <FontAwesomeIcon className="pad-left" icon={faWarning} title="Deprecated" />}
+				{storeInfo?.releaseChannel === 'beta' && (
+					<span title="Beta">
+						<FontAwesomeIcon className="pad-left" icon={faFlask} />
+					</span>
+				)}
+				{storeInfo?.deprecationReason && (
+					<span title="Deprecated">
+						<FontAwesomeIcon className="pad-left" icon={faWarning} />
+					</span>
+				)}
 			</td>
 			<td>
 				{!!storeInfo && (
@@ -253,7 +264,7 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 				if (failureReason) {
 					console.error('Failed to uninstall module', failureReason)
 
-					notifier.current?.show('Failed to uninstall module', failureReason, 5000)
+					notifier.show('Failed to uninstall module', failureReason, 5000)
 				}
 			})
 			.catch((err) => {
@@ -267,12 +278,13 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
 			{isRunningInstallOrUninstall ? (
-				<FontAwesomeIcon icon={faSync} spin title="Removing" />
+				<span title="Removing">
+					<FontAwesomeIcon icon={faSync} spin />
+				</span>
 			) : (
-				<FontAwesomeIcon
-					icon={faTrash}
-					title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}
-				/>
+				<span title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}>
+					<FontAwesomeIcon icon={faTrash} />
+				</span>
 			)}
 		</CButton>
 	)
@@ -300,7 +312,7 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 				if (failureReason) {
 					console.error('Failed to install module', failureReason)
 
-					notifier.current?.show('Failed to install module', failureReason, 5000)
+					notifier.show('Failed to install module', failureReason, 5000)
 				}
 			})
 			.catch((err) => {
@@ -313,26 +325,30 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 
 	if (!hasTarUrl) {
 		return (
-			<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" title="Module is no longer available" />
+			<span title="Module is no longer available">
+				<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" />
+			</span>
 		)
 	}
 
-	if (!isModuleApiVersionCompatible(apiVersion)) {
+	if (!isSomeModuleApiVersionCompatible(moduleType, apiVersion)) {
 		return (
-			<FontAwesomeIcon
-				icon={faWarning}
-				className="disabled button-size"
-				title="Module is not compatible with this version of Companion"
-			/>
+			<span title="Module is not compatible with this version of Companion">
+				<FontAwesomeIcon icon={faWarning} className="disabled button-size" />
+			</span>
 		)
 	}
 
 	return (
 		<CButton color="white" disabled={isRunningInstallOrUninstall} onClick={doInstall}>
 			{isRunningInstallOrUninstall ? (
-				<FontAwesomeIcon icon={faSync} spin title="Installing" />
+				<span title="Installing">
+					<FontAwesomeIcon icon={faSync} />
+				</span>
 			) : (
-				<FontAwesomeIcon icon={faPlus} title="Install version" />
+				<span title="Install version">
+					<FontAwesomeIcon icon={faPlus} />
+				</span>
 			)}
 		</CButton>
 	)

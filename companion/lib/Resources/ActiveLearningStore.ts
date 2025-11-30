@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { ActiveLearnUpdate } from '@companion-app/shared/Model/ActiveLearn.js'
+import type { ActiveLearnUpdate } from '@companion-app/shared/Model/ActiveLearn.js'
 
 /**
  * Store for managing active learning requests

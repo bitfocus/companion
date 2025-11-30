@@ -1,5 +1,5 @@
 import { ServiceBase } from './Base.js'
-import net, { Socket } from 'net'
+import net, { type Socket } from 'net'
 
 /**
  * Abstract class providing base functionality for TCP services.
@@ -88,7 +88,7 @@ export abstract class ServiceTcpBase extends ServiceBase {
 	/**
 	 * Process an incoming message from a client
 	 */
-	protected abstract processIncoming(client: TcpClientInfo, chunk: string): void
+	protected abstract processIncoming(client: TcpClientInfo, chunk: string | Buffer): void
 }
 
 export interface TcpClientInfo {

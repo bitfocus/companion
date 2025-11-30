@@ -1,8 +1,6 @@
 import { CButton } from '@coreui/react'
 import classNames from 'classnames'
-import { cloneDeep } from 'lodash-es'
-import React from 'react'
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 export interface TableVisibilityHelper<T extends Record<string, any>> {
 	visibility: T
@@ -27,7 +25,7 @@ export function useTableVisibilityHelper<T extends Record<string, any>>(
 		// setup defaults
 		window.localStorage.setItem(localStorageKey, JSON.stringify(defaultValue))
 
-		return cloneDeep(defaultValue)
+		return structuredClone(defaultValue)
 	})
 
 	const toggleVisibility = useCallback(

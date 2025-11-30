@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -43,7 +43,7 @@ jobs:
       version: ${{ steps.filenames.outputs.longversion }}
       do-docker: ${{ steps.upload.outputs.branch }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: linux-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: linux-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: build & package
         run: |
@@ -76,8 +76,8 @@ jobs:
           tar -cvzf companion-x64.tar.gz companion-x64
         env:
           CI: 1
-          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           USE_HARD_LINKS: false
 
@@ -92,7 +92,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -107,8 +107,8 @@ jobs:
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
-          s3-host: ${{ secrets.S3_HOST }}
-          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-host: ${{ vars.S3_HOST }}
+          s3-bucket: ${{ vars.S3_BUCKET }}
           s3-access-key: ${{ secrets.S3_KEY }}
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
@@ -122,7 +122,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -136,7 +136,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: linux-arm64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: linux-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: build & package
         run: |
@@ -155,8 +155,8 @@ jobs:
           tar -cvzf companion-arm64.tar.gz companion-arm64
         env:
           CI: 1
-          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           SKIP_LAUNCH_CHECK: true
           USE_HARD_LINKS: false
@@ -172,7 +172,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -186,8 +186,8 @@ jobs:
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
-          s3-host: ${{ secrets.S3_HOST }}
-          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-host: ${{ vars.S3_HOST }}
+          s3-bucket: ${{ vars.S3_BUCKET }}
           s3-access-key: ${{ secrets.S3_KEY }}
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
@@ -201,7 +201,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -215,7 +215,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: macos-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: macos-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: build & package
         run: |
@@ -234,8 +234,8 @@ jobs:
           APPLE_ID: ${{ secrets.APPLEID }}
           APPLE_TEAM_ID: ${{ secrets.APPLETEAMID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
-          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           USE_HARD_LINKS: false
           NODE_OPTIONS: --max-old-space-size=4096
@@ -251,7 +251,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -265,8 +265,8 @@ jobs:
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
-          s3-host: ${{ secrets.S3_HOST }}
-          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-host: ${{ vars.S3_HOST }}
+          s3-bucket: ${{ vars.S3_BUCKET }}
           s3-access-key: ${{ secrets.S3_KEY }}
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
@@ -280,7 +280,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -294,7 +294,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: macos-arm64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: macos-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: prepare
         run: |
@@ -316,8 +316,8 @@ jobs:
           APPLE_ID: ${{ secrets.APPLEID }}
           APPLE_TEAM_ID: ${{ secrets.APPLETEAMID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
-          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           USE_HARD_LINKS: false
           SKIP_LAUNCH_CHECK: true
@@ -334,7 +334,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -348,8 +348,8 @@ jobs:
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
-          s3-host: ${{ secrets.S3_HOST }}
-          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-host: ${{ vars.S3_HOST }}
+          s3-bucket: ${{ vars.S3_BUCKET }}
           s3-access-key: ${{ secrets.S3_KEY }}
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
@@ -363,7 +363,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -377,7 +377,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: windows-x64-build-cache-${{ hashFiles('nodejs-versions.json') }}
+          key: windows-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
 
       - name: build & package
         shell: bash
@@ -397,8 +397,8 @@ jobs:
           yarn tsx tools/build/complete.mts win32-x64
         env:
           CI: 1
-          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
 
       - name: build & package (signed)
@@ -407,8 +407,8 @@ jobs:
           yarn tsx tools/build/complete.mts win32-x64
         env:
           CI: 1
-          SENTRY_DSN: ${{ secrets.SENTRY2_DSN }}
-          VITE_SENTRY_DSN: ${{ secrets.SENTRY2_UI_DSN }}
+          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
           CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
           BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
@@ -427,7 +427,7 @@ jobs:
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
@@ -441,8 +441,8 @@ jobs:
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
-          s3-host: ${{ secrets.S3_HOST }}
-          s3-bucket: ${{ secrets.S3_BUCKET }}/companion
+          s3-host: ${{ vars.S3_HOST }}
+          s3-bucket: ${{ vars.S3_BUCKET }}
           s3-access-key: ${{ secrets.S3_KEY }}
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
@@ -494,7 +494,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         if: ${{ steps.meta.outputs.tags }}
         with:
           persist-credentials: false

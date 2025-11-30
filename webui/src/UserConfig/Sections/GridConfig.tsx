@@ -1,11 +1,11 @@
-import React, { FormEvent, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { CAlert, CButton, CCol, CForm, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
-import { UserConfigProps } from '../Components/Common.js'
+import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
@@ -87,7 +87,7 @@ const GridSizeModal = observer<object, GridSizeModalRef>(
 		}, [])
 		const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 		const doAction = useCallback(
-			(e: FormEvent) => {
+			(e: React.FormEvent) => {
 				if (e) e.preventDefault()
 
 				setShow(false)

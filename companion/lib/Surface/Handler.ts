@@ -10,12 +10,11 @@
  *
  */
 
-import { cloneDeep } from 'lodash-es'
 import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type {
 	SurfaceGroupConfig,
 	GridSize,
@@ -223,11 +222,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (
 			this.panel.info.type === 'Loupedeck Live' ||
 			this.panel.info.type === 'Loupedeck Live S' ||
-			this.panel.info.type === 'Razer Stream Controller' ||
-			this.panel.info.type === 'Razer Stream Controller X'
+			this.panel.info.type === 'Razer Stream Controller'
 		) {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
-			this.#pincodeCodePosition = [4, 2]
+			this.#pincodeCodePosition = [5, 2]
 		} else if (this.panel.info.type === 'Loupedeck CT') {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [3, 4]
@@ -683,12 +681,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	resetConfig(): void {
 		this.#surfaceConfig.groupConfig = {
-			...cloneDeep(SurfaceGroup.DefaultOptions),
+			...structuredClone(SurfaceGroup.DefaultOptions),
 			last_page_id: this.#pageStore.getFirstPageId(),
 			startup_page_id: this.#pageStore.getFirstPageId(),
 		}
 		this.#surfaceConfig.groupId = null
-		this.setPanelConfig(cloneDeep(PanelDefaults))
+		this.setPanelConfig(structuredClone(PanelDefaults))
 	}
 
 	/**

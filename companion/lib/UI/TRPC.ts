@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
-import { EventEmitter, on } from 'events'
+import { on, type EventEmitter } from 'node:events'
 import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
 import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
@@ -108,6 +108,7 @@ export function createTrpcRouter(registry: Registry) {
 		userConfig: registry.userconfig.createTrpcRouter(),
 		instances: registry.instance.createTrpcRouter(),
 		cloud: registry.cloud.createTrpcRouter(),
+		usageStatistics: registry.usageStatistics.createTrpcRouter(),
 
 		preview: registry.preview.createTrpcRouter(),
 	})

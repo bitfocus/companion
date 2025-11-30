@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, RefObject, useContext, useMemo } from 'react'
+import React, { createContext, useContext, useMemo, type RefObject } from 'react'
 import type { TableVisibilityHelper } from '~/Components/TableVisibility.js'
 import type { VisibleConnectionsState } from './ConnectionList.js'
-import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 
 export interface ConnectionListContextType {
 	visibleConnections: TableVisibilityHelper<VisibleConnectionsState>

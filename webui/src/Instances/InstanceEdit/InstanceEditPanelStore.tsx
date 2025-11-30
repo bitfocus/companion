@@ -1,5 +1,5 @@
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { action, observable, runInAction } from 'mobx'
@@ -7,7 +7,7 @@ import { computedFn } from 'mobx-utils'
 import { nanoid } from 'nanoid'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 import { parseIsVisibleFn } from '~/Hooks/useOptionsAndIsVisible'
-import { InstanceEditPanelService } from './InstanceEditPanelService'
+import type { InstanceEditPanelService } from './InstanceEditPanelService'
 
 export interface InstanceBasicInfoChanges {
 	label?: string
@@ -17,6 +17,8 @@ export interface InstanceBasicInfoChanges {
 }
 export interface InstanceConfigAndSecrets {
 	fields: Array<SomeCompanionInputField>
+
+	useNewLayout: boolean
 
 	config: CompanionOptionValues
 	configDirty: boolean
@@ -99,6 +101,8 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 						this.#isLoading.set(null)
 						this.#configAndSecrets.set({
 							fields: data.fields,
+
+							useNewLayout: data.useNewLayout,
 
 							config: data.config as CompanionOptionValues,
 							configDirty: false,

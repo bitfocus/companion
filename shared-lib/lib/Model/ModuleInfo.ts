@@ -1,5 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import { ModuleInstanceType } from './Instance.js'
+import type { ModuleInstanceType } from './Instance.js'
 
 export interface ModuleDisplayInfo {
 	id: string
@@ -7,7 +7,6 @@ export interface ModuleDisplayInfo {
 	helpPath: string
 	bugUrl: string
 	shortname: string
-	manufacturer: string
 	products: string[]
 	keywords: string[]
 }

@@ -1,6 +1,6 @@
 import React from 'react'
-import { UserConfigProps } from './Common.js'
-import { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigProps } from './Common.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { UserConfigNumberInputRow } from './UserConfigNumberInputRow.js'
 
 interface UserConfigPortNumberRowProps {

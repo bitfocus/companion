@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import { DeveloperSection } from './sections/Developer'
 import { GeneralSection } from './sections/General'
 import { SyslogSection } from './sections/Syslog'

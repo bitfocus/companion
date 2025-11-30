@@ -1,5 +1,5 @@
 import type { InternalVisitor } from '../../Internal/Types.js'
-import { EntityModelType, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
  * Visits an entity instance.

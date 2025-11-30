@@ -1,4 +1,4 @@
-import React, { FormEvent, useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
 import { useComputed } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -10,16 +10,16 @@ import {
 	faList,
 	faTimes,
 } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
-import { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
+import type { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Link } from '@tanstack/react-router'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
-import {
+import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types'
@@ -196,7 +196,7 @@ function AddVariablePanel() {
 	const createMutation = useMutationExt(trpc.customVariables.create.mutationOptions())
 
 	const doCreateNew = useCallback(
-		(e: FormEvent) => {
+		(e: React.FormEvent) => {
 			e?.preventDefault()
 
 			if (!isCustomVariableValid(newName)) return
@@ -205,7 +205,7 @@ function AddVariablePanel() {
 				.then((res) => {
 					console.log('done with', res)
 					if (res) {
-						notifier.current?.show(`Failed to create variable`, res, 5000)
+						notifier.show(`Failed to create variable`, res, 5000)
 					}
 
 					// clear value
@@ -216,7 +216,7 @@ function AddVariablePanel() {
 				})
 				.catch((e) => {
 					console.error('Failed to create variable')
-					notifier.current?.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
+					notifier.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
 				})
 		},
 		[createMutation, notifier, panelCollapseHelper, newName]

@@ -1,4 +1,4 @@
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleUpgradeToOtherVersion } from '@companion-app/shared/Model/ModuleInfo.js'
 import { useContext, useEffect } from 'react'
 import { useComputed } from '~/Resources/util'

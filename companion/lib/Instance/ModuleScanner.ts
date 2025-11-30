@@ -1,7 +1,7 @@
 import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
-import { ModuleManifest, validateManifest } from '@companion-module/base'
+import { validateManifest, type ModuleManifest } from '@companion-module/base'
 import type { ConnectionModuleVersionInfo, SomeModuleVersionInfo } from './Types.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
@@ -88,15 +88,19 @@ export class InstanceModuleScanner {
 		const helpPath = path.join(fullpath, 'companion/HELP.md')
 		const hasHelp = await fs.pathExists(helpPath)
 
+		let products = manifestJson.products.map((p) => `${manifestJson.manufacturer}: ${p}`)
+		if (products.length === 0) {
+			products = [manifestJson.manufacturer]
+		}
+
 		const moduleDisplay: ModuleDisplayInfo = {
 			id: manifestJson.id,
-			name: manifestJson.manufacturer + ': ' + manifestJson.products.join('; '),
+			name: products.join('; '),
 			// version: manifestJson.version,
-			helpPath: getHelpPathForInstalledModule(manifestJson.id, manifestJson.version),
+			helpPath: getHelpPathForInstalledModule(ModuleInstanceType.Connection, manifestJson.id, manifestJson.version),
 			bugUrl: manifestJson.bugs || manifestJson.repository,
 			shortname: manifestJson.shortname,
-			manufacturer: manifestJson.manufacturer,
-			products: manifestJson.products,
+			products: products,
 			keywords: manifestJson.keywords,
 		}
 
@@ -125,6 +129,10 @@ export class InstanceModuleScanner {
 	}
 }
 
-export function getHelpPathForInstalledModule(moduleId: string, versionId: string): string {
-	return `/int/help/module/${moduleId}/${versionId}/HELP.md`
+export function getHelpPathForInstalledModule(
+	moduleType: ModuleInstanceType,
+	moduleId: string,
+	versionId: string
+): string {
+	return `/int/help/module/${moduleType}/${moduleId}/${versionId}/HELP.md`
 }

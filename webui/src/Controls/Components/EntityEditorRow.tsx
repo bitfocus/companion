@@ -1,8 +1,8 @@
 import {
-	EntityOwner,
-	EntityModelType,
-	SomeEntityModel,
 	stringifySocketEntityLocation,
+	type EntityOwner,
+	type EntityModelType,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useState, useCallback, useRef } from 'react'
@@ -17,8 +17,8 @@ import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useDrop, useDrag } from 'react-dnd'
 import { checkDragStateWithThresholds, DragPlacement } from '~/Resources/DragAndDrop.js'
-import { EntityListDragItem } from './EntityListDropZone.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { EntityListDragItem } from './EntityListDropZone.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
 import { LearnButton } from '~/Components/LearnButton.js'
 

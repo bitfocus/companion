@@ -3,13 +3,13 @@ import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.
 import { useComputed } from '~/Resources/util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
-import { InternalInputField } from '@companion-app/shared/Model/Options.js'
-import { DropdownChoice } from '@companion-module/base'
+import type { InternalInputField } from '@companion-app/shared/Model/Options.js'
+import type { DropdownChoice } from '@companion-module/base'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
-import { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
-import { LocalVariablesStore } from './LocalVariablesStore'
+import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import type { LocalVariablesStore } from './LocalVariablesStore'
 
 export function InternalModuleField(
 	option: InternalInputField,
@@ -185,6 +185,7 @@ interface InternalPageIdDropdownProps {
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
+	multiple?: boolean
 }
 
 export const InternalPageIdDropdown = observer(function InternalPageDropdown({
@@ -194,6 +195,7 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 	value,
 	setValue,
 	disabled,
+	multiple,
 }: InternalPageIdDropdownProps) {
 	const { pages } = useContext(RootAppStoreContext)
 
@@ -216,7 +218,11 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 		return choices
 	}, [pages, /*isLocatedInGrid,*/ includeStartup, includeDirection])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	if (multiple === undefined || !multiple) {
+		return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	} else {
+		return <MultiDropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	}
 })
 
 interface InternalCustomVariableDropdownProps {

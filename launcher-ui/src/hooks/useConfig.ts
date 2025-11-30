@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { ConfigContext, ConfigContextType } from '~/contexts/ConfigContext'
+import { ConfigContext, type ConfigContextType } from '~/contexts/ConfigContext'
 
 export function useConfig(): ConfigContextType {
 	const context = useContext(ConfigContext)

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import type { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export type ConnectionCollectionsApi = NestingCollectionsApi

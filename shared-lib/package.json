@@ -25,7 +25,7 @@
     "ps-tree": "^1.2.0",
     "semver": "^7.7.3",
     "unicode-segmenter": "^0.14.0",
-    "zod": "^4.1.12"
+    "zod": "^4.1.13"
   },
   "scripts": {
     "build": "run build:ts",

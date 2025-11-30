@@ -1,8 +1,7 @@
-import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
-import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import LogController, { Logger } from '../Log/Controller.js'
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
 import { EventEmitter } from 'node:events'
 import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
@@ -135,7 +134,7 @@ export abstract class ControlBase<TJson> {
 	 * This is done via this.toRuntimeJSON()
 	 */
 	protected sendRuntimePropsChange(): void {
-		const newJson = cloneDeep(this.toRuntimeJSON())
+		const newJson = structuredClone(this.toRuntimeJSON())
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {

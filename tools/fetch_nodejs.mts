@@ -8,7 +8,7 @@ import { toPosix } from './build/util.mts'
 import { fileURLToPath } from 'node:url'
 const streamPipeline = promisify(pipeline)
 
-const nodeVersionsJsonPath = new URL('../nodejs-versions.json', import.meta.url)
+const nodeVersionsJsonPath = new URL('../assets/nodejs-versions.json', import.meta.url)
 const nodeVersionsStr = await fs.readFile(nodeVersionsJsonPath)
 const nodeVersionsJson = JSON.parse(nodeVersionsStr.toString())
 

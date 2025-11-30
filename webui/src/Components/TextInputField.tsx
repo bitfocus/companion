@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CFormInput, CFormTextarea } from '@coreui/react'
 import Select, {
-	ControlProps,
-	OptionProps,
 	components as SelectComponents,
-	ValueContainerProps,
 	createFilter,
+	type ControlProps,
+	type OptionProps,
+	type ValueContainerProps,
 } from 'react-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
@@ -399,9 +399,7 @@ const CustomValueContainerTextInput = React.memo((props: ValueContainerProps<Dro
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CFormInput
-				ref={(elm) => {
-					context.inputRef.current = elm
-				}}
+				ref={context.inputRef as React.RefObject<HTMLInputElement>}
 				type="text"
 				style={context.extraStyle}
 				title={context.title}
@@ -429,9 +427,7 @@ const CustomValueContainerTextarea = React.memo((props: ValueContainerProps<Drop
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CFormTextarea
-				ref={(elm) => {
-					context.inputRef.current = elm
-				}}
+				ref={context.inputRef as React.RefObject<HTMLTextAreaElement>}
 				style={context.extraStyle}
 				title={context.title}
 				value={context.value}

@@ -15,6 +15,7 @@ export function BeginStep({ allowGrid }: BeginStepProps): React.JSX.Element {
 				<li>Surface Detection Configuration</li>
 				{allowGrid === 1 && <li>Button Grid Size</li>}
 				<li>Remote Control Services</li>
+				<li>Usage Statistics</li>
 				<li>Admin GUI Password</li>
 			</ol>
 		</div>

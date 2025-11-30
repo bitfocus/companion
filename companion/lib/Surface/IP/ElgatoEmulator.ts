@@ -11,12 +11,12 @@
  */
 
 import { EventEmitter } from 'events'
-import { cloneDeep, isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import LogController from '../../Log/Controller.js'
 import debounceFn from 'debounce-fn'
 import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { EmulatorConfig, EmulatorImage } from '@companion-app/shared/Model/Common.js'
+import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 
@@ -71,6 +71,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 export type EmulatorUpdateEvents = {
 	emulatorConfig: [id: string, diff: EmulatorConfig | null]
 	emulatorImages: [id: string, images: EmulatorImage[], clearCache: boolean]
+	emulatorLocked: [id: string, lockedState: EmulatorLockedState | false]
 }
 
 function getCacheKey(x: number, y: number): string {
@@ -84,7 +85,9 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 
 	readonly #events: Pick<EventEmitter<EmulatorUpdateEvents>, 'emit' | 'listenerCount'>
 
-	#lastSentConfigJson: EmulatorConfig = cloneDeep(DefaultConfig)
+	#lastSentConfigJson: EmulatorConfig = structuredClone(DefaultConfig)
+
+	#lastLockedState: EmulatorLockedState | false = false
 
 	readonly #pendingBufferUpdates = new Map<string, [number, number]>()
 
@@ -162,8 +165,12 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		return images
 	}
 
+	lockedState(): EmulatorLockedState | false {
+		return this.#lastLockedState
+	}
+
 	getDefaultConfig(): EmulatorConfig {
-		return cloneDeep(DefaultConfig)
+		return structuredClone(DefaultConfig)
 	}
 
 	/**
@@ -199,7 +206,21 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 			})
 		}
 
-		this.#lastSentConfigJson = cloneDeep(config)
+		this.#lastSentConfigJson = structuredClone(config)
+	}
+
+	setLocked(locked: boolean, characterCount: number): void {
+		if (locked) {
+			this.#lastLockedState = { characterCount }
+		} else {
+			this.#lastLockedState = false
+		}
+
+		console.log('Emulator setLocked', this.#emulatorId, this.#lastLockedState)
+
+		if (this.#events.listenerCount('emulatorLocked') > 0) {
+			this.#events.emit('emulatorLocked', this.#emulatorId, this.#lastLockedState)
+		}
 	}
 
 	quit(): void {}

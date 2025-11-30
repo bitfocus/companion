@@ -5,7 +5,7 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
-import {
+import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
 	SurfaceGroupConfig,
@@ -87,7 +87,7 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 	)
 })
 
-interface SurfaceEditPanelOldProps {
+interface SurfaceEditPanelContentProps {
 	surfaceInfo: SurfaceInfo | null
 	groupInfo: ClientDevicesListItem | null
 }
@@ -160,7 +160,7 @@ function useGroupConfig(groupId: string | null) {
 	}
 }
 
-const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function SurfaceEditPanelContent({
+const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function SurfaceEditPanelContent({
 	surfaceInfo,
 	groupInfo,
 }) {
@@ -355,10 +355,10 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 							/>
 						</CCol>
 
-						{(surfaceId === null || !!surfaceInfo?.isConnected || !!groupConfig.config.use_last_page) && (
+						{(surfaceInfo === null || !!surfaceInfo.isConnected || !!groupConfig.config.use_last_page) && (
 							<>
 								<CFormLabel htmlFor="colFormCurrentPage" className="col-sm-4 col-form-label col-form-label-sm">
-									{surfaceId === null || surfaceInfo?.isConnected ? 'Current Page' : 'Last Page'}
+									{surfaceInfo === null || surfaceInfo?.isConnected ? 'Current Page' : 'Last Page'}
 								</CFormLabel>
 								<CCol sm={8}>
 									<InternalPageIdDropdown
@@ -367,6 +367,37 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelOldProps>(function Surf
 										includeStartup={false}
 										value={groupConfig.config.last_page_id}
 										setValue={(val) => setGroupConfigValue('last_page_id', val)}
+									/>
+								</CCol>
+							</>
+						)}
+
+						<CFormLabel htmlFor="colFormRestrictPages" className="col-sm-4 col-form-label col-form-label-sm">
+							Restrict pages accessible to this {surfaceId === null ? 'group' : 'surface'}
+						</CFormLabel>
+						<CCol sm={8}>
+							<CFormSwitch
+								name="colFormRestrictPages"
+								className="mx-2"
+								size="xl"
+								checked={!!groupConfig.config.restrict_pages}
+								onChange={(e) => setGroupConfigValue('restrict_pages', !!e.currentTarget.checked)}
+							/>
+						</CCol>
+
+						{!!groupConfig.config.restrict_pages && (
+							<>
+								<CFormLabel htmlFor="colFormAllowedPages" className="col-sm-4 col-form-label col-form-label-sm">
+									Allowed pages:
+								</CFormLabel>
+								<CCol sm={8}>
+									<InternalPageIdDropdown
+										disabled={false}
+										includeDirection={false}
+										includeStartup={false}
+										multiple={true}
+										value={groupConfig.config.allowed_page_ids}
+										setValue={(val) => setGroupConfigValue('allowed_page_ids', val)}
 									/>
 								</CCol>
 							</>

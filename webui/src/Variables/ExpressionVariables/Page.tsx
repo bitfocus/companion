@@ -12,7 +12,7 @@ import {
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { CreateExpressionVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -20,7 +20,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Link, Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
-import {
+import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
@@ -246,7 +246,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
 	const onCopied = useCallback(() => {
-		notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
+		notifier.show(`Copied`, 'Copied to clipboard', 5000)
 	}, [notifier])
 
 	return (

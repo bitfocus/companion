@@ -1,4 +1,4 @@
-import { ActionSetId } from './Model/ActionModel.js'
+import type { ActionSetId } from './Model/ActionModel.js'
 import type { ControlLocation } from './Model/Common.js'
 import { assertNever } from './Util.js'
 

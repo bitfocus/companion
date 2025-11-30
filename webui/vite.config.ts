@@ -9,7 +9,10 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
 
-const buildFile = fs.readFileSync(path.join(__dirname, '../BUILD')).toString().trim()
+const buildFile = fs
+	.readFileSync(path.join(import.meta.dirname, '../BUILD'))
+	.toString()
+	.trim()
 
 /**
  * Parse --base argument from command line
@@ -61,11 +64,16 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
-			[`${normalizedBase}/docs`]: {
+			[`${normalizedBase}/user-guide`]: {
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 			[`${normalizedBase}/trpc`]: {
+				target: `ws://${upstreamUrl}`,
+				ws: true,
+				rewrite: (path) => path.slice(normalizedBase.length),
+			},
+			[`${normalizedBase}/_deps`]: {
 				target: `ws://${upstreamUrl}`,
 				ws: true,
 				rewrite: (path) => path.slice(normalizedBase.length),

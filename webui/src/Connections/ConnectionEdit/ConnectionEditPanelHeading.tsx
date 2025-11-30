@@ -1,4 +1,4 @@
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'

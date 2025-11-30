@@ -1,9 +1,9 @@
 import {
 	EntityModelType,
-	EntityOwner,
-	EntitySupportedChildGroupDefinition,
 	FeedbackEntitySubType,
-	SomeEntityModel,
+	type EntityOwner,
+	type EntitySupportedChildGroupDefinition,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from './EntityInstance.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'

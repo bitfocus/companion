@@ -3,8 +3,8 @@ import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
-import { AddInstanceService } from '~/Instances/AddInstanceService'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { AddInstanceService } from '~/Instances/AddInstanceService'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
@@ -28,11 +28,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 						<div>
 							<span className="text-muted">
 								Can't find your device?{' '}
-								<a
-									target="_blank"
-									href={makeAbsolutePath('/getting-started#6_modules.md')}
-									className="text-decoration-none"
-								>
+								<a target="_blank" href={makeAbsolutePath('/user-guide/modules')} className="text-decoration-none">
 									Check our guidance for getting device support
 								</a>
 							</span>

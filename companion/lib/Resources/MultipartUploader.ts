@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import crypto from 'crypto'
-import { publicProcedure, router, toIterable, TrpcContext } from '../UI/TRPC.js'
+import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
 import z from 'zod'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { EventEmitter } from 'node:events'

@@ -1,40 +1,47 @@
 import z from 'zod'
-import type { ExportFormat } from './ExportFormat.js'
+import { zodExportFormat } from './ExportFormat.js'
 import type { UserConfigGridSize } from './UserConfigModel.js'
 
-export const zodClientResetSelection = z.object({
-	buttons: z.boolean(),
-	connections: z.boolean(),
-	surfaces: z.boolean(),
-	triggers: z.boolean(),
-	customVariables: z.boolean(),
-	expressionVariables: z.boolean(),
-	userconfig: z.boolean(),
+export const zodImportOrResetType = z.enum(['unchanged', 'reset-and-import', 'reset'])
+export type ImportOrResetType = z.infer<typeof zodImportOrResetType>
+
+export const zodResetType = z.enum(['unchanged', 'reset'])
+export type ResetType = z.infer<typeof zodResetType>
+
+export const zodClientImportOrResetSelection = z.object({
+	buttons: zodImportOrResetType,
+	surfaces: z.object({
+		known: zodImportOrResetType,
+	}),
+	triggers: zodImportOrResetType,
+	customVariables: zodImportOrResetType,
+	expressionVariables: zodImportOrResetType,
+	connections: zodResetType, // Future: This should become zodImportOrResetType, once there is a plan for how that should work
+	userconfig: zodResetType, // Future: This should become zodImportOrResetType, or more likely an object describing subsections
 })
 
-export type ClientResetSelection = z.infer<typeof zodClientResetSelection>
+export type ClientImportOrResetSelection = z.infer<typeof zodClientImportOrResetSelection>
 
-export interface ClientExportSelection {
-	buttons: boolean
-	triggers: boolean
-	customVariables: boolean
-	expressionVariables: boolean
-	connections: boolean
-	surfaces: boolean
-	includeSecrets: boolean
-	format: ExportFormat
-	filename?: string
-}
+const zodQueryBoolean = z.preprocess((val) => {
+	if (typeof val === 'string') {
+		return val === 'true' || val === '1'
+	}
+	return val
+}, z.boolean())
 
-export const zodClientImportSelection = z.object({
-	buttons: z.boolean(),
-	surfaces: z.boolean(),
-	triggers: z.boolean(),
-	customVariables: z.boolean(),
-	expressionVariables: z.boolean(),
+export const zodClientExportSelection = z.object({
+	buttons: zodQueryBoolean,
+	connections: zodQueryBoolean,
+	surfaces: zodQueryBoolean,
+	triggers: zodQueryBoolean,
+	customVariables: zodQueryBoolean,
+	expressionVariables: zodQueryBoolean,
+	includeSecrets: zodQueryBoolean,
+	format: zodExportFormat,
+	filename: z.string().optional(),
 })
 
-export type ClientImportSelection = z.infer<typeof zodClientImportSelection>
+export type ClientExportSelection = z.infer<typeof zodClientExportSelection>
 
 export interface ClientPageInfo {
 	name: string
@@ -42,18 +49,18 @@ export interface ClientPageInfo {
 }
 export interface ClientImportObjectInstance {
 	label: string
-	instance_type: string
+	moduleId: string
 	moduleVersionId: string | null
 	sortOrder?: number
 }
 export interface ClientImportObject {
 	type: 'page' | 'full'
-	instances: Record<string, ClientImportObjectInstance>
-	controls: boolean
+	connections: Record<string, ClientImportObjectInstance>
+	buttons: boolean
+	surfaces: boolean
+	triggers: Record<string, { name: string }> | null
 	customVariables: boolean
 	expressionVariables: boolean
-	surfaces: boolean
-	triggers: boolean | Record<string, { name: string }>
 	oldPageNumber?: number
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>

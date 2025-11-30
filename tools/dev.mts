@@ -101,13 +101,33 @@ concurrently([
 	process.exit(1)
 })
 
-const cachedDebounces = {}
+const cachedDebounces = {} as Record<string, any>
 
 chokidar
-	.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
+	.watch('..', {
 		ignoreInitial: true,
-		cwd: '..',
-		ignored: ['**/node_modules/**', 'webui', 'launcher', 'module-local-dev', 'tools', 'test'],
+		ignored: (path, stats) => {
+			if (
+				stats?.isFile() &&
+				!path.endsWith('.mjs') &&
+				!path.endsWith('.js') &&
+				!path.endsWith('.cjs') &&
+				!path.endsWith('.json')
+			) {
+				return true
+			}
+			if (
+				path.includes('node_modules') ||
+				path.includes('webui') ||
+				path.includes('launcher') ||
+				path.includes('module-local-dev') ||
+				path.includes('tools') ||
+				path.includes('test')
+			) {
+				return true
+			}
+			return false
+		},
 	})
 	.on('all', (event, filename) => {
 		if (filename.endsWith('shared-lib/lib/Paths.mts')) {
@@ -124,10 +144,24 @@ chokidar
 
 if (devModulesPath) {
 	chokidar
-		.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
-			ignoreInitial: true,
+		.watch('.', {
 			cwd: devModulesPath,
-			ignored: ['**/node_modules/**'],
+			ignoreInitial: true,
+			ignored: (path, stats) => {
+				if (
+					stats?.isFile() &&
+					!path.endsWith('.mjs') &&
+					!path.endsWith('.js') &&
+					!path.endsWith('.cjs') &&
+					!path.endsWith('.json')
+				) {
+					return true
+				}
+				if (path.includes('node_modules')) {
+					return true
+				}
+				return false
+			},
 		})
 		.on('all', (event, filename) => {
 			const moduleDirName = filename.split(path.sep)[0]
@@ -209,7 +243,7 @@ const restart = debounceFn(
 	}
 )
 
-function signalHandler(signal) {
+function signalHandler(signal: NodeJS.Signals) {
 	process.exit()
 }
 

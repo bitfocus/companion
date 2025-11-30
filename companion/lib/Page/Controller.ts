@@ -1,5 +1,5 @@
 import { default_nav_buttons_definitions } from './Defaults.js'
-import { IPageStore, PageStore } from './Store.js'
+import type { IPageStore, PageStore } from './Store.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	PageModel,
@@ -11,7 +11,6 @@ import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
-import { compact } from 'lodash-es'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -378,7 +377,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				],
 			})
 
-			this.emit('controlIdsMoved', compact([oldControlId, controlId]))
+			const changedControlIds = [oldControlId, controlId].filter((id): id is string => !!id)
+			this.emit('controlIdsMoved', changedControlIds)
 		}
 
 		return success

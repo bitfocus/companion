@@ -1,9 +1,9 @@
 import React, { useMemo, useRef } from 'react'
-import { NotificationsManager, NotificationsManagerRef } from '~/Components/Notifications.js'
+import { NotificationsManager, type NotificationsManagerRef } from '~/Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'
 import { useActiveLearnRequests } from './Hooks/useActiveLearnRequests.js'
-import { RootAppStore, RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { RootAppStoreContext, type RootAppStore } from '~/Stores/RootAppStore.js'
 import { observable } from 'mobx'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { EventDefinitionsStore } from '~/Stores/EventDefinitionsStore.js'
@@ -24,9 +24,9 @@ import { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
 import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStoreRefreshProgress.js'
 import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
-import { HelpModal, HelpModalRef } from './Instances/HelpModal.js'
+import { HelpModal, type HelpModalRef } from './Instances/HelpModal.js'
 import { ViewControlStore } from '~/Stores/ViewControlStore.js'
-import { WhatsNewModal, WhatsNewModalRef } from './WhatsNewModal.js'
+import { WhatsNewModal, type WhatsNewModalRef } from './WhatsNewModal/WhatsNew.js'
 import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { trpc } from './Resources/TRPC.js'
@@ -43,13 +43,25 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const helpModalRef = useRef<HelpModalRef>(null)
 	const whatsNewModalRef = useRef<WhatsNewModalRef>(null)
 
+	const notifierObj = useMemo<NotificationsManagerRef>(
+		() => ({
+			show(title: string, message: string, duration?: number | null, stickyId?: string): string {
+				return notifierRef.current?.show(title, message, duration, stickyId) ?? ''
+			},
+			close(messageId: string): void {
+				notifierRef.current?.close(messageId)
+			},
+		}),
+		[notifierRef]
+	)
+
 	const rootStore = useMemo(() => {
 		const showWizardEvent = new EventTarget()
 
 		const expressionVariablesList = new ExpressionVariablesListStore()
 
 		return {
-			notifier: notifierRef,
+			notifier: notifierObj,
 			helpViewer: helpModalRef,
 			whatsNewModal: whatsNewModalRef,
 
@@ -77,7 +89,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore
-	}, [])
+	}, [notifierObj, helpModalRef, whatsNewModalRef])
 
 	const actionDefinitionsReady = useEntityDefinitionsSubscription(
 		rootStore.entityDefinitions.actions,
@@ -105,6 +117,14 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const { ready: userConfigReady } = useUserConfigSubscription(rootStore.userConfig)
 	const surfacesReady = useSurfacesSubscription(rootStore.surfaces)
 	const outboundSurfacesReady = useOutboundSurfacesSubscription(rootStore.surfaces)
+	const outboundSurfacesCollectionsReady = useGenericCollectionsSubscription(
+		{
+			resetCollections: rootStore.surfaces.resetOutboundSurfaceCollections.bind(rootStore.surfaces),
+			rootCollections: rootStore.surfaces.outboundSurfaceRootCollections.bind(rootStore.surfaces),
+		},
+		trpc.surfaces.outbound.collections.watchQuery,
+		undefined
+	)
 	const variablesReady = useVariablesSubscription(rootStore.variablesStore)
 	const customVariablesReady = useCustomVariablesSubscription(rootStore.variablesStore)
 	const customVariableCollectionsReady = useCustomVariableCollectionsSubscription(rootStore.variablesStore)
@@ -133,6 +153,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		userConfigReady,
 		surfacesReady,
 		outboundSurfacesReady,
+		outboundSurfacesCollectionsReady,
 		pagesReady,
 		triggersListReady,
 		triggerGroupsReady,
