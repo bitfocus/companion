@@ -363,7 +363,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 						}
 					})
 					.catch((e) => {
-						this.logger.warn(`Error performing checkHidDevice: ${e.message}`)
+						this.logger.warn(`Error performing checkHidDevice: ${e.message ?? e}`)
 					})
 			}
 
