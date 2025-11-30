@@ -1670,7 +1670,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param forceUnlock Force all surfaces to be unlocked
 	 */
 	setAllLocked(locked: boolean, forceUnlock = false): void {
-		this.#logger.debug(`Setting lock state of all surfaces to ${locked} (forceUnlock=${forceUnlock})`)
+		locked = !!locked
 
 		if (forceUnlock) {
 			locked = false
@@ -1678,7 +1678,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			if (!this.isPinLockEnabled()) return
 		}
 
-		this.#surfacesAllLocked = !!locked
+		if (this.#surfacesAllLocked === locked) {
+			// No change
+			return
+		}
+
+		this.#logger.debug(`Setting lock state of all surfaces to ${locked} (forceUnlock=${forceUnlock})`)
+		this.#surfacesAllLocked = locked
 
 		for (const surfaceGroup of this.#surfaceGroups.values()) {
 			if (locked) {
@@ -1701,7 +1707,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			this.setAllLocked(locked)
 		} else {
 			this.#surfacesAllLocked = false
-			this.#logger.debug(`Setting lock state of ${surfaceOrGroupId} to ${locked}`)
 
 			let resolvedGroupId = surfaceOrGroupId
 
@@ -1709,7 +1714,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 			if (surfaceGroup) {
 				resolvedGroupId = surfaceGroup.groupId
-				surfaceGroup.setLocked(!!locked)
+
+				const changed = surfaceGroup.setLocked(!!locked)
+				if (changed) {
+					this.#logger.debug(`Setting lock state of ${surfaceOrGroupId} to ${locked}`)
+				}
 			}
 
 			// Track the lock/unlock state, even if the device isn't online
