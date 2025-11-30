@@ -92,8 +92,8 @@ export default {
 		// 	usedExports: optimizeUseProduction,
 		// 	innerGraph: optimizeUseProduction,
 		// 	mangleExports: optimizeUseProduction,
-		// avoid error in webpack 5.102.1
-		concatenateModules: false, // default: optimizeUseProduction,
+		// avoid error in webpack 5.102.1 (fixed in 5.103.0)
+		// concatenateModules: false, // default: optimizeUseProduction,
 		// 	avoidEntryIife: optimizeUseProduction,
 		// 	emitOnErrors: !optimizeUseProduction,
 		// 	checkWasmTypes: optimizeUseProduction,
