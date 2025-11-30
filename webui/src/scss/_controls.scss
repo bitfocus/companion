@@ -37,10 +37,23 @@ label.disabled {
 	}
 }
 
-/* Style for autocomplete of variable */
-.variable-suggestion-option span {
+/* Style for variable-name autocomplete in text inputs as well as regular dropdowns */
+.variable-dropdown-option span {
 	display: block;
 
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		font-weight: inherit;
+		white-space: wrap;
+		font-weight: normal;
+	}
+}
+
+/* note that using `span` instead of `div` doesn't format correctly for the ellipsis */
+.variable-dropdown-single div {
 	&.var-name {
 		font-weight: bold;
 	}
@@ -50,6 +63,8 @@ label.disabled {
 		font-weight: inherit;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-weight: normal;
+		padding-bottom: 0.2em;
 	}
 }
 
@@ -150,6 +165,19 @@ label.disabled {
 			}
 		}
 	}
+}
+
+/* Allow \n line-breaks and remove "excess" line spacing between pulldown options. */
+.select-control__option {
+	white-space: pre-wrap !important;
+	line-height: 1.1;
+}
+
+/* Allow \n line-breaks and remove "excess" line spacing. 
+	Note: this maintains the current behavior of no-wrap in single-value fields. */
+.select-control__single-value {
+	white-space: pre !important;
+	line-height: 1.1;
 }
 
 .static-text-content {
