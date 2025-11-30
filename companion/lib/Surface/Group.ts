@@ -432,10 +432,15 @@ export class SurfaceGroup {
 
 	/**
 	 * Set the surface as locked
+	 * @returns whether the locked state changed
 	 */
-	setLocked(locked: boolean): void {
+	setLocked(locked: boolean): boolean {
 		// // skip if surface can't be locked
 		// if (this.#surfaceConfig.config.never_lock) return
+
+		if (this.#isLocked === !!locked) {
+			return false
+		}
 
 		// Track the locked status
 		this.#isLocked = !!locked
@@ -444,6 +449,8 @@ export class SurfaceGroup {
 		for (const surface of this.surfaceHandlers) {
 			surface.setLocked(locked)
 		}
+
+		return true
 	}
 
 	/**
