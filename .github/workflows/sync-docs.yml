@@ -44,7 +44,7 @@ jobs:
 
           # Restore index.md to avoid overwriting customizations
           cd website
-          git checkout -f user-guide/index.md
+          git checkout -f whats-new/index.md
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v7
