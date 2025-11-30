@@ -10963,10 +10963,10 @@ asn1@evs-broadcast/node-asn1:
     fast-json-patch: "patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch"
     fs-extra: "npm:^11.3.2"
     get-port: "npm:^7.1.0"
-    infinitton-idisplay: "npm:^1.2.0"
     lru-cache: "npm:^11.2.4"
     nanoid: "npm:^5.1.6"
     node-cron: "npm:^4.2.1"
+    node-hid: "npm:^3.2.0"
     node-machine-id: "npm:^1.1.12"
     on-headers: "npm:^1.1.0"
     openapi-fetch: "npm:^0.15.0"
@@ -15408,15 +15408,6 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"infinitton-idisplay@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "infinitton-idisplay@npm:1.2.0"
-  dependencies:
-    node-hid: "npm:^3.1.0"
-  checksum: 10c0/5d73afa25812a0ff7339f67161ab2eb33c0bc1c6070749a8cfd6a8c4606ab198a9c5a1ef3cb48a7ddbb7e172f9b7efb7c219d8783e4380ec27776a7fe212e536
-  languageName: node
-  linkType: hard
-
 "inflight@npm:^1.0.4":
   version: 1.0.6
   resolution: "inflight@npm:1.0.6"
@@ -18766,7 +18757,7 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"node-hid@npm:^3.1.0":
+"node-hid@npm:^3.2.0":
   version: 3.2.0
   resolution: "node-hid@npm:3.2.0"
   dependencies:
