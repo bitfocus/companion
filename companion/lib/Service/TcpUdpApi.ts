@@ -62,7 +62,7 @@ export class ServiceTcpUdpApi {
 		this.#userconfig = userconfig
 
 		this.#router = new RegexRouter((path: string) => {
-			throw new ApiMessageError(`Syntax error in: "${path}"`)
+			throw new ApiMessageError('Syntax error', `in: "${path}"`)
 		})
 		this.#protocolName = protocolName
 		this.#legacyRoutesEnableKey = legacyRoutesEnableKey
@@ -490,7 +490,7 @@ export class ServiceTcpUdpApi {
 
 		if (isNaN(location.pageNumber) || isNaN(location.row) || isNaN(location.column))
 			// Match previous behaviour
-			throw new ApiMessageError(`Syntax error in location: ${match.page}/${match.row}/${match.column}`)
+			throw new ApiMessageError('Syntax error', `in location: ${match.page}/${match.row}/${match.column}`)
 
 		const controlId = this.#serviceApi.getControlIdAt(location)
 
@@ -512,7 +512,9 @@ export class ServiceTcpUdpApi {
 }
 
 export class ApiMessageError extends Error {
-	constructor(message: string) {
+	context: string = ''
+	constructor(message: string, context: string = '') {
 		super(message)
+		this.context = context
 	}
 }

@@ -88,11 +88,12 @@ export class ServiceTcp extends ServiceTcpBase {
 				})
 				.catch((e) => {
 					this.logger.silly(`TCP command failed: ${e}`)
-					this.logger.info(`TCP command failed. ${e}`)
 
 					if (e instanceof ApiMessageError) {
+						this.logger.info(`TCP command failed. ${e} ${e.context}`)
 						client.socket.write(`-ERR ${e?.message ?? ''}\n`)
 					} else {
+						this.logger.info(`TCP command failed. ${e}`)
 						client.socket.write(`-ERR Internal Error\n`)
 					}
 				})
