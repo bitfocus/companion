@@ -2291,7 +2291,9 @@ class StreamDock extends EventEmitter {
 			this.emit('error', error)
 		})
 
-		if (this.info.productId === 0x1005 || this.info.productId === 0x1006) {
+		if (this.info.vendorId === 0x5548 && this.info.productId === 0x1001) {
+			this.model = StreamDock.models['293N3']
+		} else if (this.info.productId === 0x1005 || this.info.productId === 0x1006) {
 			// modelType = '293V3'
 			this.model = StreamDock.models['293V3']
 		} else if (this.info.productId === 0x1001 || this.info.productId === 0x1007) {
