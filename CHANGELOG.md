@@ -33,6 +33,8 @@
   - Add repeating button-presses to contour-shuttle shuttle ring (#3492)
   - Improve vec-footpedal surface implementation
   - Support complex surface layouts over satellite api (#3611)
+  - Support swipe to change page on Stream Deck + (#3721)
+  - Support touch strip variables for Loupedeck Live (#3790)
 - Draw button 'error' state as a red warning triangle (#3675)
 - Remove deprecated bank field from tcp bank_bg_change message #2779
 - Include timestamps and source in module debug logs
@@ -50,6 +52,8 @@
 - preserve original types of custom variable values from osc and ember+ apis
 - improve version number handling for release vs beta builds
 - Page up button/Page down button don't set page-history (#3683)
+- Reduce frequency of pincode lock state logging (#3792)
+- Loupedeck Live pincode lock layout
 
 ## Companion v4.1.5 - Release Notes
 
