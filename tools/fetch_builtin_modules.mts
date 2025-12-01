@@ -1,6 +1,6 @@
 // @ts-check
 
-import { fetch, fs, path, $, usePowerShell } from 'zx'
+import { fetch, fs, path, usePowerShell } from 'zx'
 import { Readable } from 'node:stream'
 import { promisify } from 'node:util'
 import crypto from 'crypto'
@@ -40,7 +40,7 @@ export async function fetchBuiltinSurfaceModules() {
 
 	// Fetch each builtin surface module
 	await Promise.all(
-		Object.entries(builtinSurfacesManifestJson).map(async ([moduleId, moduleInfo]) => {
+		Object.entries<Record<string, any>>(builtinSurfacesManifestJson).map(async ([moduleId, moduleInfo]) => {
 			await fetchSinglePackage(moduleId, moduleInfo)
 		})
 	)
@@ -53,7 +53,7 @@ export async function fetchBuiltinSurfaceModules() {
 
 const userAgent = `Companion dev ${await generateVersionString()}`
 
-async function fetchSinglePackage(moduleId, moduleInfo) {
+async function fetchSinglePackage(moduleId: string, moduleInfo: Record<string, any>) {
 	const moduleDir = path.join(cacheDir, moduleId)
 
 	const abortControl = new AbortController()
