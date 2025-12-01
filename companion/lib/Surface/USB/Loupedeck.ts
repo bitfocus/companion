@@ -51,8 +51,8 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 
 	config: Record<string, any>
 	DisplayColors = {
-		LeftColor: {red: 0, green: 100, blue: 0},
-		RightColor: {red: 0, green: 0, blue: 50},
+		LeftColor: { red: 0, green: 100, blue: 0 },
+		RightColor: { red: 0, green: 0, blue: 50 },
 		LeftValue: 0,
 		RightValue: 0,
 	}
@@ -151,7 +151,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 					default: false,
 					label: 'Invert Fader Values',
 					tooltip: 'If set, the fader values will be inverted, with the value being between 256 and 0.',
-				}
+				},
 			]
 
 			/**
@@ -166,9 +166,14 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				)
 				if (touch && touch.target.screen == LoupedeckDisplayId.Right && this.config.rightFaderValueVariable) {
 					const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
-					this.emit('setCustomVariable', this.config.rightFaderValueVariable, (this.config.invertFaderValues ? 256 - val : val))
+					this.emit(
+						'setCustomVariable',
+						this.config.rightFaderValueVariable,
+						this.config.invertFaderValues ? 256 - val : val
+					)
 					this.DisplayColors.RightValue = val
-					if (this.config.invertFaderValues) { // Draw from bottom → up
+					if (this.config.invertFaderValues) {
+						// Draw from bottom → up
 						this.#loupedeck
 							.drawSolidColour(LoupedeckDisplayId.Right, { red: 0, green: 0, blue: 0 }, 60, val + 7, 0, 0)
 							.catch((e) => {
@@ -179,7 +184,8 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 							.catch((e) => {
 								this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + e)
 							})
-					} else { // Draw from top → down
+					} else {
+						// Draw from top → down
 						this.#loupedeck
 							.drawSolidColour(LoupedeckDisplayId.Right, { red: 0, green: 0, blue: 0 }, 60, 270 - val, 0, val)
 							.catch((e) => {
@@ -193,9 +199,14 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 					}
 				} else if (touch && touch.target.screen == LoupedeckDisplayId.Left && this.config.leftFaderValueVariable) {
 					const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
-					this.emit('setCustomVariable', this.config.leftFaderValueVariable, (this.config.invertFaderValues ? 256 - val : val))
+					this.emit(
+						'setCustomVariable',
+						this.config.leftFaderValueVariable,
+						this.config.invertFaderValues ? 256 - val : val
+					)
 					this.DisplayColors.LeftValue = val
-					if (this.config.invertFaderValues) { // Draw from bottom → up
+					if (this.config.invertFaderValues) {
+						// Draw from bottom → up
 						this.#loupedeck
 							.drawSolidColour(LoupedeckDisplayId.Left, { red: 0, green: 0, blue: 0 }, 60, val + 7, 0, 0)
 							.catch((e) => {
@@ -330,7 +341,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 	draw(x: number, y: number, render: ImageResult): void {
 		const control = this.#loupedeck.controls.find((c) => c.row === y && c.column === x)
 		if (!control) return
-		
+
 		if (control.type === 'wheel') {
 			this.#writeQueue.queue(control.id, render)
 		} else if (control.type === 'encoder') {
@@ -354,33 +365,28 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 					})
 			} else if (control.feedbackType === 'lcd') {
 				this.#writeQueue.queue(control.id, render)
-			} 
-		} else if (control.type === 'lcd-segment') { // Update the slider display on render call to change color
-				const styleBg = render.style?.bgcolor
-
-				if (control.id == "left") {
-					const col = colorToRgb(styleBg)
-					this.DisplayColors.LeftColor = { red: col.r, green: col.g, blue: col.b }
-				} else if (control.id == "right") {
-					const col = colorToRgb(styleBg)
-					this.DisplayColors.RightColor = { red: col.r, green: col.g, blue: col.b }
-				}
-				const side = control.id == "left" ? LoupedeckDisplayId.Left : LoupedeckDisplayId.Right
-				const color = control.id == "left" ? this.DisplayColors.LeftColor : this.DisplayColors.RightColor
-				const val = side == "left" ? this.DisplayColors.LeftValue : this.DisplayColors.RightValue
-				this.#loupedeck
-					.drawSolidColour(side, { red: 0, green: 0, blue: 0 }, 60, 270, 0, 0)
-					.catch(() => {})				
-				if (this.config.invertFaderValues) {
-					this.#loupedeck
-						.drawSolidColour(side, color, 60, val == 0 ? -3 : 262 - val, 0, val + 7)
-						.catch(() => {})
-				} else {
-					this.#loupedeck
-						.drawSolidColour(side, color, 60, val == 0 ? -3 : val, 0, 0)
-						.catch(() => {})
-				}
 			}
+		} else if (control.type === 'lcd-segment') {
+			// Update the slider display on render call to change color
+			const styleBg = typeof render.style === 'object' ? (render.style?.bgcolor ?? 0) : 0
+
+			if (control.id == 'left') {
+				const col = colorToRgb(styleBg)
+				this.DisplayColors.LeftColor = { red: col.r, green: col.g, blue: col.b }
+			} else if (control.id == 'right') {
+				const col = colorToRgb(styleBg)
+				this.DisplayColors.RightColor = { red: col.r, green: col.g, blue: col.b }
+			}
+			const side = control.id == 'left' ? LoupedeckDisplayId.Left : LoupedeckDisplayId.Right
+			const color = control.id == 'left' ? this.DisplayColors.LeftColor : this.DisplayColors.RightColor
+			const val = side == LoupedeckDisplayId.Left ? this.DisplayColors.LeftValue : this.DisplayColors.RightValue
+			this.#loupedeck.drawSolidColour(side, { red: 0, green: 0, blue: 0 }, 60, 270, 0, 0).catch(() => {})
+			if (this.config.invertFaderValues) {
+				this.#loupedeck.drawSolidColour(side, color, 60, val == 0 ? -3 : 262 - val, 0, val + 7).catch(() => {})
+			} else {
+				this.#loupedeck.drawSolidColour(side, color, 60, val == 0 ? -3 : val, 0, 0).catch(() => {})
+			}
+		}
 	}
 
 	clearDeck(): void {
