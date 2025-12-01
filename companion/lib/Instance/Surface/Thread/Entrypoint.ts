@@ -148,13 +148,22 @@ registerLoggingSink((source, level, message) => {
 	}
 })
 
+const ensureFileUrl = (url:string) => {
+	if (process.platform === 'win32' && !url.startsWith('file://')) {
+		// Windows is picky about import paths, this is a crude hack to 'fix' it
+		return `file://${url}`
+	} else {
+		return url
+	}
+}
+
 // Now load the plugin
 plugin = new PluginWrapper(
 	new HostContext(ipcWrapper),
 	// Future: Once webpacked, the dynamic import() doesn't work, so fallback to require()
 	typeof __non_webpack_require__ === 'function'
 		? __non_webpack_require__(moduleEntrypoint)
-		: (await import(moduleEntrypoint)).default
+		: (await import(ensureFileUrl(moduleEntrypoint))).default
 )
 
 const pluginFeatures = plugin.getPluginFeatures()

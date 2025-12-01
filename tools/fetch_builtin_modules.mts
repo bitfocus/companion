@@ -1,6 +1,6 @@
 // @ts-check
 
-import { fetch, fs, path, $ } from 'zx'
+import { fetch, fs, path, $, usePowerShell } from 'zx'
 import { Readable } from 'node:stream'
 import { promisify } from 'node:util'
 import crypto from 'crypto'
@@ -9,6 +9,10 @@ import { AbortError } from 'p-retry'
 import { gunzip } from 'zlib'
 import * as tarfs from 'tar-fs'
 import { MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
+
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
 
 const gunzipP = promisify(gunzip)
 
