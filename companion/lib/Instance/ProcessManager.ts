@@ -737,7 +737,10 @@ export class InstanceProcessManager {
 
 				return {
 					apiVersion: moduleApiVersion,
-					entrypoint: path.join(import.meta.dirname, isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'),
+					entrypoint: path.join(
+						import.meta.dirname,
+						isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'
+					),
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,
 					},
