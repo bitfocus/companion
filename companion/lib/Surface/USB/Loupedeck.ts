@@ -50,7 +50,12 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 	readonly #writeQueue: ImageWriteQueue<string, [ImageResult]>
 
 	config: Record<string, any>
-	DisplayColors: Record<string, any>
+	DisplayColors = {
+		LeftColor: {red: 0, green: 100, blue: 0},
+		RightColor: {red: 0, green: 0, blue: 50},
+		LeftValue: 0,
+		RightValue: 0,
+	}
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
@@ -81,13 +86,6 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 		this.gridSize = {
 			columns: Math.max(...allColumnValues) + 1,
 			rows: Math.max(...allRowValues) + 1,
-		}
-
-		this.DisplayColors = {
-			LeftColor: {red: 0, green: 100, blue: 0},
-			RightColor: {red: 0, green: 0, blue: 50},
-			LeftValue: 0,
-			RightValue: 0,
 		}
 
 		this.#loupedeck.on('error', (error) => {
