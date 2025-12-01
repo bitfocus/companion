@@ -16,7 +16,6 @@ import cors from 'cors'
 import fs from 'fs'
 // @ts-expect-error no types for this package
 import serveZip from 'express-serve-zip'
-import { fileURLToPath } from 'url'
 import compression from 'compression'
 import { createRewriteMiddleware, getCustomPrefixHeader } from './middleware/rewriteRootUrl.js'
 
@@ -101,7 +100,7 @@ export class UIExpress {
 			if (!isPackaged()) {
 				subpath = path.join('../../..', subpath)
 			}
-			return fileURLToPath(new URL(subpath, import.meta.url))
+			return path.join(import.meta.dirname, subpath)
 		}
 
 		/**

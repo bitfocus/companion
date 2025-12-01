@@ -5,7 +5,6 @@ import { $, usePowerShell, argv } from 'zx'
 import path from 'path'
 import fs from 'fs'
 import debounceFn from 'debounce-fn'
-import { fileURLToPath } from 'url'
 import concurrently from 'concurrently'
 import dotenv from 'dotenv'
 import { fetchNodejs } from './fetch_nodejs.mts'
@@ -198,7 +197,7 @@ if (devModulesPath) {
 async function start() {
 	node = $.spawn('node', [...nodeArgs, 'dist/main.js', ...process.argv.slice(3)], {
 		stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-		cwd: fileURLToPath(new URL('../companion', import.meta.url)),
+		cwd: path.join(import.meta.dirname, '../companion'),
 		env: {
 			...process.env,
 

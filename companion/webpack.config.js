@@ -1,7 +1,6 @@
 import path from 'path'
 import fs from 'fs'
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin'
-import { fileURLToPath } from 'url'
 
 // Allow user to set mode at run time. Default is 'development' mode.
 const devMode = process.env.WEBPACK_IN_DEV_MODE ? 'development' : 'production'
@@ -9,10 +8,9 @@ const devMode = process.env.WEBPACK_IN_DEV_MODE ? 'development' : 'production'
 console.log(`Running webpack in ${devMode} mode.`)
 
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
-const modulePath = path.dirname(fileURLToPath(import.meta.url))
 
-const distPath = path.resolve(modulePath, '../dist')
-const buildFile = fs.readFileSync(path.resolve(modulePath, '../BUILD')).toString().trim()
+const distPath = path.resolve(import.meta.dirname, '../dist')
+const buildFile = fs.readFileSync(path.resolve(import.meta.dirname, '../BUILD'), 'utf8').trim()
 
 export default {
 	entry: {
@@ -32,7 +30,7 @@ export default {
 		// },
 		module: true,
 	},
-	context: path.resolve(modulePath, '.'),
+	context: path.resolve(import.meta.dirname, '.'),
 	target: 'node',
 	// node: { // don't use!  for the node target it is eval-only by default (i.e. tells webpack to defer the resolution to runtime)
 	// 	__dirname: true,
