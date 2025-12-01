@@ -257,6 +257,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		this.panel.on('click', this.#onDeviceClick.bind(this))
 		this.panel.on('rotate', this.#onDeviceRotate.bind(this))
+		this.panel.on('changePage', this.#onDeviceChangePage.bind(this))
 		this.panel.on('pincodeKey', this.#onDevicePincodeKey.bind(this))
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
@@ -577,6 +578,21 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			}
 		} catch (e) {
 			this.#logger.error(`Click failed: ${e}`)
+		}
+	}
+
+	#onDeviceChangePage(forward: boolean): void {
+		if (this.#isSurfaceLocked || !this.panel) return
+
+		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
+		if (!pageNumber) return
+		const name = this.displayName
+
+		try {
+			this.#surfaces.devicePageSet(this.surfaceId, forward ? '+1' : '-1', true)
+			this.#logger.debug(`Change page ${pageNumber}: "${forward ? '+1' : '-1'}" initiated by ${name}`)
+		} catch (e) {
+			this.#logger.error(`Change page failed for ${name}: ${e}`)
 		}
 	}
 
