@@ -358,10 +358,7 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				this.#writeQueue.queue(control.id, render)
 			} 
 		} else if (control.type === 'lcd-segment') { // Update the slider display on render call to change color
-				const styleBg =
-					typeof render.style === 'object' && render.style !== null && 'bgcolor' in render.style
-						? (render.style as any).bgcolor
-						: undefined
+				const styleBg = render.style?.bgcolor
 
 				if (control.id == "left") {
 					this.DisplayColors.LeftColor = (({ r, g, b }) => ({ red: r, green: g, blue: b }))(colorToRgb(styleBg));
