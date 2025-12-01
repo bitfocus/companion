@@ -52,9 +52,9 @@ function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] 
 			id: 'swipe_can_change_page',
 			label: 'Horizontal Swipe Changes Page',
 			type: 'checkbox',
-			default: true,
+			default: false,
 			tooltip: 'Swiping horizontally on the Stream Deck+ LCD-strip will change pages, if enabled.',
-		} as CompanionSurfaceConfigField)
+		})
 	}
 
 	fields.push(...LockConfigFields)
