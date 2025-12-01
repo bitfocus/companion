@@ -361,9 +361,11 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				const styleBg = render.style?.bgcolor
 
 				if (control.id == "left") {
-					this.DisplayColors.LeftColor = (({ r, g, b }) => ({ red: r, green: g, blue: b }))(colorToRgb(styleBg));
+					const col = colorToRgb(styleBg)
+					this.DisplayColors.LeftColor = { red: col.r, green: col.g, blue: col.b }
 				} else if (control.id == "right") {
-					this.DisplayColors.RightColor = (({ r, g, b }) => ({ red: r, green: g, blue: b }))(colorToRgb(styleBg));
+					const col = colorToRgb(styleBg)
+					this.DisplayColors.RightColor = { red: col.r, green: col.g, blue: col.b }
 				}
 				const side = control.id == "left" ? LoupedeckDisplayId.Left : LoupedeckDisplayId.Right
 				const color = control.id == "left" ? this.DisplayColors.LeftColor : this.DisplayColors.RightColor
