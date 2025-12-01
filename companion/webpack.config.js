@@ -81,22 +81,4 @@ export default {
 				})
 			: '',
 	].filter(Boolean),
-	optimization: {
-		// The following optimizations are enabled only in 'production' mode
-		// 	flagIncludedChunks: optimizeUseProduction,
-		// 	moduleIds: 'named', // optimizeUseProduction ? "deterministic" : 'named'
-		// 	chunkIds: 'named', // optimizeUseProduction ? "deterministic" : 'named'
-		// 	sideEffects: 'flag', // () => (production ? true : "flag"),
-		// 	usedExports: optimizeUseProduction,
-		// 	innerGraph: optimizeUseProduction,
-		// 	mangleExports: optimizeUseProduction,
-		// avoid error in webpack 5.102.1
-		concatenateModules: false, // default: optimizeUseProduction,
-		// 	avoidEntryIife: optimizeUseProduction,
-		// 	emitOnErrors: !optimizeUseProduction,
-		// 	checkWasmTypes: optimizeUseProduction,
-		// 	realContentHash: optimizeUseProduction,
-		// 	minimize: optimizeUseProduction,
-		// 	//nodeEnv: devMode// probably best never to alther this one.
-	},
 }
