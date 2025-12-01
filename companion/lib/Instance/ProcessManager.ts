@@ -22,7 +22,6 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
 import { isPackaged } from '../Resources/Util.js'
-import { fileURLToPath } from 'url'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 
 /**
@@ -738,9 +737,7 @@ export class InstanceProcessManager {
 
 				return {
 					apiVersion: moduleApiVersion,
-					entrypoint: isPackaged()
-						? path.join(__dirname, './SurfaceThread.js') // TODO - test this in production
-						: fileURLToPath(new URL('./Surface/Thread/Entrypoint.js', import.meta.url)),
+					entrypoint: path.join(import.meta.dirname, isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'),
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,
 					},
