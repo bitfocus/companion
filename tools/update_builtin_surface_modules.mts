@@ -1,12 +1,10 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { SemVer } from 'semver'
 import { generateVersionString } from './lib.mts'
-import type { components, paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
+import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import createClient from 'openapi-fetch'
 import pQueue from 'p-queue'
-import pRetry, { AbortError } from 'p-retry'
+import pRetry from 'p-retry'
 import { isSurfaceApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 
 const builtinSurfaceModulesPath = path.join(import.meta.dirname, '../assets/builtin-surface-modules.json')
