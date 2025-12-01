@@ -148,7 +148,7 @@ registerLoggingSink((source, level, message) => {
 	}
 })
 
-const ensureFileUrl = (url:string) => {
+const ensureFileUrl = (url: string) => {
 	if (process.platform === 'win32' && !url.startsWith('file://')) {
 		// Windows is picky about import paths, this is a crude hack to 'fix' it
 		return `file://${url}`
