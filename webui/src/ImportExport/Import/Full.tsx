@@ -146,8 +146,13 @@ const defaultFullImportConfig: ClientImportSelection = {
 
 const { fieldContext, useFieldContext, formContext } = createFormHookContexts()
 
+type FormMetaData = { fullReset: boolean }
+
+const defaultMeta: FormMetaData = { fullReset: true }
+
 const importFormOpts = formOptions({
 	defaultValues: defaultFullImportConfig,
+	onSubmitMeta: defaultMeta,
 })
 
 const { useAppForm } = createFormHook({
@@ -172,7 +177,8 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 	const form = useAppForm({
 		...importFormOpts,
-		onSubmit: async ({ value }) => {
+		onSubmit: async ({ value, meta }) => {
+			const fullReset = meta.fullReset
 			const submitConfig = sanitiseSelection(value, snapshot, fullReset)
 
 			try {
@@ -189,8 +195,6 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			}
 		},
 	})
-
-	const [fullReset, setFullReset] = useState(true)
 
 	return (
 		<>
@@ -227,9 +231,6 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 					onSubmit={(e) => {
 						e.preventDefault()
 						e.stopPropagation()
-						form.handleSubmit().catch((err) => {
-							console.error('Form submission error', err)
-						})
 					}}
 				>
 					<table className="table table-responsive-sm mb-3">
@@ -308,35 +309,62 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 					</CAlert>
 
 					<CCallout color="success">
-						<h5>Import Selected Components</h5>
+						<h5>Import, Resetting only Selected Components</h5>
 						<p>
-							Full Import always resets the selected components before importing them. <br />
-							Checking{' '}
-							<em>
-								<strong>Perform full reset</strong>
-							</em>{' '}
-							will reset <strong>all</strong> components before importing the selected ones.
-							<br />
-							Full reset is generally the safer option as it reduces the chance of producing an inconsistent setup.
+							This option resets <strong>only</strong> the selected components before importing them.
+							<br /> Choosing this option will preserve your <a href="settings">Settings</a> page configurations.
 						</p>
 						<form.Subscribe selector={(form) => [form.values]}>
 							{([values]) => {
 								const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
 								return (
-									<CButton color={fullReset ? 'danger' : 'success'} type="submit" disabled={!anythingEnabled}>
-										<FontAwesomeIcon icon={faFileImport} /> Import Selected Components
+									<>
+										<CButton
+											color="success"
+											type="submit"
+											disabled={!anythingEnabled}
+											onClick={() => {
+												form.handleSubmit({ fullReset: false }).catch((err) => {
+													console.error('Form submission error', err)
+												})
+											}}
+										>
+											<FontAwesomeIcon icon={faFileImport} /> Import Preserving Unselected
+										</CButton>
+									</>
+								)
+							}}
+						</form.Subscribe>
+					</CCallout>
+					<CCallout color="danger">
+						<h5>Full Reset & Import</h5>
+						<p>
+							This option will reset <strong>all</strong> components, including <a href="settings">Settings</a>, before
+							importing the selected ones.
+							<br />
+							Full reset is generally the safer option when some items are deselected, as it reduces the chance of
+							producing an inconsistent setup.
+						</p>
+						<form.Subscribe selector={(form) => [form.values]}>
+							{([values]) => {
+								const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
+								return (
+									<CButton
+										color="primary"
+										type="submit"
+										disabled={!anythingEnabled}
+										onClick={() => {
+											// override default specified in onSubmitMeta
+											form.handleSubmit({ fullReset: true }).catch((err) => {
+												console.error('Form submission error', err)
+											})
+										}}
+									>
+										<FontAwesomeIcon icon={faFileImport} /> Full Reset & Import
 									</CButton>
 								)
 							}}
 						</form.Subscribe>
-						<CFormCheck
-							id={'check_full_reset'}
-							label={'Perform full reset'}
-							checked={fullReset}
-							onChange={() => setFullReset((fullReset) => !fullReset)}
-							inline
-							style={{ marginLeft: '1em' }}
-						/>
 					</CCallout>
 				</form>
 			</form.AppForm>
