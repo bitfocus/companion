@@ -38,6 +38,9 @@ export class HostContext implements SurfaceHostContext {
 			inputRotate: (surfaceId: string, controlId: string, delta: number) => {
 				this.#ipcWrapper.sendWithNoCb('input-rotate', { surfaceId, controlId, delta })
 			},
+			changePage: (surfaceId: string, forward: boolean) => {
+				this.#ipcWrapper.sendWithNoCb('change-page', { surfaceId, forward })
+			},
 			setVariableValue: (surfaceId: string, name: string, value: any) => {
 				this.#ipcWrapper.sendWithNoCb('set-variable-value', { surfaceId, name, value })
 			},

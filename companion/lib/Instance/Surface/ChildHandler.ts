@@ -1,6 +1,7 @@
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import type {
+	ChangePageMessage,
 	DisconnectMessage,
 	FirmwareUpdateInfoMessage,
 	HostOpenDeviceResult,
@@ -136,6 +137,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 
 			'input-press': this.#handleInputPress.bind(this),
 			'input-rotate': this.#handleInputRotate.bind(this),
+			'change-page': this.#handleChangePage.bind(this),
 
 			'pincode-entry': this.#handlePincodeEntry.bind(this),
 
@@ -518,6 +520,14 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 			surface.inputRotate(msg.controlId, msg.delta)
 		} else {
 			this.logger.warn(`Received input rotate for unknown surface: ${msg.surfaceId}`)
+		}
+	}
+	async #handleChangePage(msg: ChangePageMessage): Promise<void> {
+		const surface = this.#panels.get(msg.surfaceId)
+		if (surface) {
+			surface.changePage(msg.forward)
+		} else {
+			this.logger.warn(`Received change page for unknown surface: ${msg.surfaceId}`)
 		}
 	}
 	async #handlePincodeEntry(msg: PincodeEntryMessage): Promise<void> {
