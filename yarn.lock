@@ -1893,23 +1893,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:~0.6.2":
-  version: 0.6.2
-  resolution: "@companion-surface/base@npm:0.6.2"
+"@companion-surface/base@npm:~0.7.0":
+  version: 0.7.0
+  resolution: "@companion-surface/base@npm:0.7.0"
   dependencies:
     tslib: "npm:^2.8.1"
-  checksum: 10c0/7af2149ab769799915dd7c49207040c912be2d544725d973c18918e30eab4fa037ae01995d0f6551400c1c580959e44b26fce89a8a7cb36b1051e40b8d4eca5f
+  checksum: 10c0/eee67c2093e6481699e597bbc2f7b613570498ff8c262e02f0a2488b49eb63875735b77abe72365eaff315c37b65cd9ea473b20cd7ef984f98a8ee6043068234
   languageName: node
   linkType: hard
 
-"@companion-surface/host@npm:~0.4.3":
-  version: 0.4.3
-  resolution: "@companion-surface/host@npm:0.4.3"
+"@companion-surface/host@npm:~0.5.0":
+  version: 0.5.0
+  resolution: "@companion-surface/host@npm:0.5.0"
   dependencies:
-    "@companion-surface/base": "npm:~0.6.2"
+    "@companion-surface/base": "npm:~0.7.0"
     fast-deep-equal: "npm:^3.1.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/874d8217934661c7c98036a6a70a4c94b0bdf50069422e5fd2929057e3618929904e9754d0e630d38a10fd4d64cb3c1862ab03ab4f90ba4bdd1f792e77af10d4
+  checksum: 10c0/8a5069763f938d9c2cc9d5fab0694cd3a2a0ae6b1a9fae2301aef070e1af3db7322ae324f66f382cdd5c2aa559fa01bf1dd984c853214d9d34d8a405f1440bfd
   languageName: node
   linkType: hard
 
@@ -10923,7 +10923,7 @@ asn1@evs-broadcast/node-asn1:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:^1.14.0"
-    "@companion-surface/host": "npm:~0.4.3"
+    "@companion-surface/host": "npm:~0.5.0"
     "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^2.0.2"
     "@julusian/segfault-raub": "npm:^2.3.2"

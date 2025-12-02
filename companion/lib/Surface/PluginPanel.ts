@@ -419,6 +419,10 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		this.emit('rotate', control.column, control.row, delta > 0)
 	}
 
+	changePage(forward: boolean): void {
+		this.emit('changePage', forward)
+	}
+
 	inputPincode(char: number): void {
 		this.emit('pincodeKey', char)
 	}

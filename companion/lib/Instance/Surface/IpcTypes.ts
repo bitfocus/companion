@@ -28,6 +28,7 @@ export interface SurfaceModuleToHostEvents {
 
 	'input-press': (msg: InputPressMessage) => never
 	'input-rotate': (msg: InputRotateMessage) => never
+	'change-page': (msg: ChangePageMessage) => never
 
 	'pincode-entry': (msg: PincodeEntryMessage) => never
 
@@ -141,6 +142,10 @@ export interface InputRotateMessage {
 	delta: number // should be -1 or 1, but others should be handled sensibly
 }
 
+export interface ChangePageMessage {
+	surfaceId: string
+	forward: boolean
+}
 export interface PincodeEntryMessage {
 	surfaceId: string
 	keycode: number
