@@ -2,7 +2,7 @@ import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Mod
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import { action, makeObservable, observable } from 'mobx'
 import { useEffect, useMemo } from 'react'
-import type { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
+import type { DropdownChoiceInt } from '../DropDownInputFancy.js'
 import { computedFn } from 'mobx-utils'
 import { useQuery } from '@tanstack/react-query'
 import { trpc } from '~/Resources/TRPC.js'

@@ -10,8 +10,6 @@ import { observer } from 'mobx-react-lite'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import type { LocalVariablesStore } from './LocalVariablesStore'
-import { components as SelectComponents, type OptionProps } from 'react-select'
-import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
 
 export function InternalModuleField(
 	option: InternalInputField,
@@ -227,28 +225,6 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 	}
 })
 
-// Formatting for variable pulldown options:
-const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
-	const { data } = props
-	return (
-		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-dropdown-option'}>
-			<span className="var-name">{data.value}</span>
-			<span className="var-label">{data.label}</span>
-		</SelectComponents.Option>
-	)
-})
-
-// Formatting for variable "single value" (shown when dropdown is closed) -- uses a different CSS class
-const CustomSingleValue = React.memo((props: OptionProps<DropdownChoiceInt>) => {
-	const { data } = props
-	return (
-		<SelectComponents.SingleValue {...props} className={(props.className ?? '') + 'variable-dropdown-single'}>
-			<div className="var-name">{data.value}</div>
-			<div className="var-label">{data.label}</div>
-		</SelectComponents.SingleValue>
-	)
-})
-
 interface InternalCustomVariableDropdownProps {
 	value: any
 	setValue: (value: any) => void
@@ -294,7 +270,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 			value={value ?? ''}
 			choices={choices}
 			setValue={setValue}
-			customComponents={{ Option: CustomOption, SingleValue: CustomSingleValue }}
+			fancyFormat={true}
 		/>
 	)
 })
@@ -366,7 +342,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
 			onPasteIntercept={onPasteIntercept}
-			customComponents={{ Option: CustomOption, SingleValue: CustomSingleValue }}
+			fancyFormat={true}
 		/>
 	)
 })

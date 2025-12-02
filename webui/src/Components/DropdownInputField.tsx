@@ -7,6 +7,7 @@ import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { useComputed } from '~/Resources/util.js'
 import { observer } from 'mobx-react-lite'
+import { CustomOption, CustomSingleValue } from '~/DropDownInputFancy.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -23,9 +24,7 @@ interface DropdownInputFieldProps {
 	onBlur?: () => void
 	onPasteIntercept?: (value: string) => string
 	checkValid?: (value: DropdownChoiceId) => boolean
-	// The following is a compromise since if we just use typeof components,
-	// Typescript objects to `OptionProps<DropdownChoiceInt>` in the custom property functions in InternalModuleField.tsx
-	customComponents?: Partial<Record<keyof typeof components, any>>
+	fancyFormat?: boolean
 }
 
 interface DropdownChoiceInt {
@@ -48,7 +47,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 	onBlur,
 	onPasteIntercept,
 	checkValid,
-	customComponents = {},
+	fancyFormat = false,
 }: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -144,7 +143,10 @@ export const DropdownInputField = observer(function DropdownInputField({
 		components: {
 			MenuList: WindowedMenuList,
 			Input: inputComponent,
-			...customComponents,
+			// couldn't find a cleaner way to do this: otherwise TypeScript complains about Singlevalue...
+			...((fancyFormat ? { Option: CustomOption, SingleValue: CustomSingleValue } : {}) as Partial<
+				CreatableProps<any, any, any>
+			>),
 		},
 		onBlur: onBlur,
 	}

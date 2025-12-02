@@ -150,6 +150,7 @@ export default [
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',
 			'webui/test/**/*',
+			'.cache/*',
 		],
 	},
 	{

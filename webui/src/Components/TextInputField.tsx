@@ -4,14 +4,13 @@ import Select, {
 	components as SelectComponents,
 	createFilter,
 	type ControlProps,
-	type OptionProps,
 	type ValueContainerProps,
 } from 'react-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
+import { CustomOption, type DropdownChoiceInt } from '~/DropDownInputFancy.js'
 
 interface TextInputFieldProps {
 	tooltip?: string
@@ -267,6 +266,7 @@ const VariablesSelect = observer(function VariablesSelect({
 		<VariablesSelectContext.Provider value={selectContext}>
 			<Select
 				className="variable-select-root"
+				classNamePrefix="variable-select-root"
 				menuPortalTarget={menuPortal || document.body}
 				menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
 				menuPosition="fixed"
@@ -300,16 +300,6 @@ const VariablesSelectContext = React.createContext({
 	title: undefined as string | undefined,
 	placeholder: undefined as string | undefined,
 	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>,
-})
-
-const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
-	const { data } = props
-	return (
-		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-dropdown-option'}>
-			<span className="var-name">{data.value}</span>
-			<span className="var-label">{data.label}</span>
-		</SelectComponents.Option>
-	)
 })
 
 const EmptyComponent = () => null

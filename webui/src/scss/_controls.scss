@@ -167,8 +167,16 @@ label.disabled {
 	}
 }
 
-/* Allow \n line-breaks and remove "excess" line spacing between pulldown options. */
-.select-control__option {
+/* Allow \n line-breaks and remove "excess" line spacing between pulldown options.
+   
+  Typical default line-height is 1.2, so this is a bit tighter. It also helps clarity for multiline entries.
+  Other props such as padding affect spacing between options, so even at line-height=1 the options are separated.
+
+  .select-control: Regular pulldown menu (actions and feedbacks)
+  .variable-select-root: For expression-suggestions in the button-text (not expression-editor) pull-down
+   */
+.select-control__option,
+.variable-select-root__option {
 	white-space: pre-wrap !important;
 	line-height: 1.1;
 }
@@ -178,6 +186,12 @@ label.disabled {
 .select-control__single-value {
 	white-space: pre !important;
 	line-height: 1.1;
+}
+
+.select-control__value-container {
+	--vert-padding: 4px;
+	padding-top: var(--vert-padding) !important;
+	padding-bottom: var(--vert-padding) !important;
 }
 
 .static-text-content {
