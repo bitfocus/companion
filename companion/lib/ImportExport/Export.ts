@@ -12,9 +12,9 @@
 import os from 'os'
 import { getTimestamp } from '../Resources/Util.js'
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
-import archiver from 'archiver'
+import yazl from 'yazl'
 import path from 'path'
-import fs from 'fs'
+import fs from 'fs-extra'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type express from 'express'
@@ -231,77 +231,78 @@ export class ExportController {
 		})
 	}
 
-	#exportSupportBundleHandler: RequestHandler = async (_req, res, _next) => {
-		// Export support zip
-		const archive = archiver('zip', { zlib: { level: 9 } })
-
-		archive.on('error', (err) => {
-			console.log(err)
-		})
-
-		//on stream closed we can end the request
-		archive.on('end', () => {
-			this.#logger.debug(`Support export wrote ${+archive.pointer()} bytes`)
-		})
-
-		//set the archive name
-		const filename = this.#generateFilename(
-			String(this.#userConfigController.getKey('default_export_filename')),
-			'companion-config',
-			'zip'
-		)
-		res.attachment(filename)
-
-		//this is the streaming magic
-		archive.pipe(res)
-
-		archive.glob(
-			'*',
-			{
-				cwd: this.#appInfo.configDir,
-				nodir: true,
-				ignore: [
-					'cloud', // Ignore companion-cloud credentials
-				],
-			},
-			{}
-		)
-
-		// Add the logs if found
-		const logsDir = path.join(this.#appInfo.configDir, '../logs')
-		if (fs.existsSync(logsDir)) {
-			archive.glob(
-				'*',
-				{
-					cwd: logsDir,
-					nodir: true,
-				},
-				{
-					prefix: 'logs',
-				}
+	#exportSupportBundleHandler: RequestHandler = async (_req, res, next) => {
+		try {
+			const filename = this.#generateFilename(
+				String(this.#userConfigController.getKey('default_export_filename')),
+				'companion-config',
+				'zip'
 			)
-		}
+			res.attachment(filename)
 
-		{
-			const logs = LogController.getAllLines()
+			const zipfile = new yazl.ZipFile()
+			zipfile.outputStream.pipe(res)
 
-			let out = `"Date","Module","Type","Log"\r\n`
-			for (const line of logs) {
-				out += `${new Date(line.time).toISOString()},"${line.source}","${line.level}","${line.message}"\r\n`
+			zipfile.outputStream.on('error', (err) => {
+				this.#logger.error(`Support bundle zip stream error: ${err}`)
+				next(err)
+			})
+
+			// Recursively add files from a directory
+			async function addDirectory(dirPath: string, zipPath: string, ignore?: string[]) {
+				const entries = await fs.readdir(dirPath, { withFileTypes: true })
+				for (const entry of entries) {
+					if (ignore?.includes(entry.name)) continue
+
+					const fullPath = path.join(dirPath, entry.name)
+					const zipEntryPath = zipPath ? path.join(zipPath, entry.name) : entry.name
+
+					if (entry.isDirectory()) {
+						await addDirectory(fullPath, zipEntryPath)
+					} else if (entry.isFile()) {
+						zipfile.addFile(fullPath, zipEntryPath)
+					}
+				}
 			}
 
-			archive.append(out, { name: 'log.csv' })
-		}
+			// Add config files
+			await addDirectory(this.#appInfo.configDir, '', ['cloud'])
 
-		try {
-			const payload = compileUpdatePayload(this.#appInfo)
-			const out = JSON.stringify(payload)
-			archive.append(out, { name: 'user.json' })
-		} catch (e) {
-			this.#logger.debug(`Support bundle append user: ${e}`)
-		}
+			// Add the logs if found
+			const logsDir = path.join(this.#appInfo.configDir, '../logs')
+			try {
+				await fs.access(logsDir)
+				await addDirectory(logsDir, 'logs')
+			} catch {
+				// Logs directory doesn't exist, skip it
+			}
 
-		await archive.finalize()
+			// Add log.csv
+			{
+				const logs = LogController.getAllLines()
+
+				let out = `"Date","Module","Type","Log"\r\n`
+				for (const line of logs) {
+					out += `${new Date(line.time).toISOString()},"${line.source}","${line.level}","${line.message}"\r\n`
+				}
+
+				zipfile.addBuffer(Buffer.from(out), 'log.csv')
+			}
+
+			// Add user.json
+			try {
+				const payload = compileUpdatePayload(this.#appInfo)
+				const out = JSON.stringify(payload)
+				zipfile.addBuffer(Buffer.from(out), 'user.json')
+			} catch (e) {
+				this.#logger.debug(`Support bundle append user: ${e}`)
+			}
+
+			zipfile.end()
+		} catch (err) {
+			this.#logger.error(`Support bundle creation error: ${err}`)
+			next(err)
+		}
 	}
 
 	//Parse variables and generate filename based on export type

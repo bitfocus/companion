@@ -108,3 +108,162 @@
 		opacity: 0.95;
 	}
 }
+
+.emulator-locked {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #181818;
+	padding: 2vh 2vw;
+	overflow: hidden;
+	grid-row: 2;
+
+	-webkit-touch-callout: none !important;
+	-webkit-user-select: none !important;
+	user-select: none !important;
+
+	.emulator-locked-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: clamp(0.5rem, 2vh, 4rem);
+		max-width: 600px;
+		width: 100%;
+		max-height: 100%;
+
+		// On short screens, reduce spacing further
+		@media (max-height: 500px) {
+			gap: clamp(0.25rem, 1vh, 1rem);
+		}
+	}
+
+	.emulator-locked-header {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: clamp(0.5rem, 1.5vh, 2rem);
+		color: #f7f7f7;
+		flex-shrink: 0;
+
+		svg {
+			opacity: 0.9;
+			font-size: clamp(1.5rem, 6vh, 3rem);
+		}
+
+		h2 {
+			margin: 0;
+			font-size: clamp(1rem, 3vh, 2rem);
+			font-weight: 600;
+			color: #f7f7f7;
+		}
+
+		// On short screens, make header more compact
+		@media (max-height: 500px) {
+			gap: clamp(0.25rem, 1vh, 0.75rem);
+		}
+	}
+
+	.emulator-locked-dots {
+		display: flex;
+		gap: clamp(0.5rem, 1.5vw, 1rem);
+		min-height: clamp(1rem, 3vh, 1.5rem);
+		flex-shrink: 0;
+
+		.dot {
+			width: clamp(0.5rem, 1.5vw, 1rem);
+			height: clamp(0.5rem, 1.5vw, 1rem);
+			border-radius: 50%;
+			background-color: rgba(255, 255, 255, 0.15);
+			border: 2px solid rgba(255, 255, 255, 0.3);
+
+			&.filled {
+				background-color: #d69e2e;
+				border-color: #d69e2e;
+			}
+		}
+	}
+
+	.emulator-keypad {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: clamp(0.5rem, 2vw, 1.5rem);
+		width: 100%;
+		max-width: min(70vw, 500px);
+		flex-shrink: 1;
+		min-height: 0;
+
+		// Portrait: 3 columns, 4 rows (1-9, then 0 centered)
+		@media (orientation: portrait) {
+			grid-template-rows: repeat(4, 1fr);
+			aspect-ratio: 3 / 4;
+			max-width: min(60vw, 400px);
+
+			// Make 0 span all columns and center it
+			.keypad-button:last-child {
+				grid-column: 1 / -1;
+				width: 33.333%;
+				margin: 0 auto;
+			}
+		}
+
+		// Landscape: arrange in 2 rows if there's enough width
+		@media (orientation: landscape) {
+			grid-template-columns: repeat(5, 1fr);
+			grid-template-rows: repeat(2, 1fr);
+			max-width: min(80vw, 800px);
+			aspect-ratio: 5 / 2;
+		}
+
+		// On very short screens, reduce gap and make keypad more compact
+		@media (max-height: 500px) {
+			gap: clamp(0.25rem, 1vw, 0.75rem);
+
+			&[orientation='landscape'] {
+				max-width: min(70vw, 600px);
+			}
+		}
+	}
+
+	.keypad-button {
+		position: relative;
+		aspect-ratio: 1;
+		cursor: pointer;
+		border-radius: clamp(0.5rem, 2vw, 1rem);
+		background: rgba(255, 255, 255, 0.05);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		transition: all 0.15s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 0;
+		min-width: 0;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.1);
+			border-color: rgba(255, 255, 255, 0.3);
+		}
+
+		&:active {
+			background: rgba(214, 158, 46, 0.2);
+			border-color: #d69e2e;
+			transform: scale(0.95);
+		}
+
+		.keypad-button-content {
+			font-size: clamp(1.5rem, 5vw, 3rem);
+			font-weight: 600;
+			color: #f7f7f7;
+			line-height: 1;
+		}
+
+		// On very short screens, reduce font size
+		@media (max-height: 500px) {
+			.keypad-button-content {
+				font-size: clamp(1.25rem, 4vw, 2.5rem);
+			}
+		}
+	}
+}

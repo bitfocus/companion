@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
@@ -135,7 +134,7 @@ export abstract class ControlBase<TJson> {
 	 * This is done via this.toRuntimeJSON()
 	 */
 	protected sendRuntimePropsChange(): void {
-		const newJson = cloneDeep(this.toRuntimeJSON())
+		const newJson = structuredClone(this.toRuntimeJSON())
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {

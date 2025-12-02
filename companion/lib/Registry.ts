@@ -17,7 +17,7 @@ import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
 import { isPackaged, sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
-import { DataMetrics } from './Data/Metrics.js'
+import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
@@ -28,9 +28,15 @@ import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
 import path from 'path'
 
-const pkgInfoStr = await fs.readFile(
-	isPackaged() ? path.join(__dirname, './package.json') : new URL('../package.json', import.meta.url)
-)
+let infoFileName: URL
+// note this could be done in one line, but webpack was having trouble before url processing was disabled.
+if (isPackaged()) {
+	infoFileName = new URL('./package.json', import.meta.url)
+} else {
+	infoFileName = new URL('../package.json', import.meta.url)
+}
+//console.log(`infoFileName: ${infoFileName}; `)
+const pkgInfoStr = await fs.readFile(infoFileName)
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
 
 let buildNumber: string
@@ -39,7 +45,7 @@ try {
 		buildNumber = '0.0.0-VITEST'
 	} else {
 		buildNumber = fs
-			.readFileSync(new URL('../../BUILD', import.meta.url))
+			.readFileSync(path.join(import.meta.dirname, isPackaged() ? './BUILD' : '../../BUILD'))
 			.toString()
 			.trim()
 			.replace(/^-/, '')
@@ -124,7 +130,7 @@ export class Registry {
 
 	importExport!: ImportExportController
 
-	#metrics!: DataMetrics
+	usageStatistics!: DataUsageStatistics
 
 	/**
 	 * The 'data' controller
@@ -260,7 +266,6 @@ export class Registry {
 				controlEvents
 			)
 
-			this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
 			this.services = new ServiceController(
 				serviceApi,
 				this.userconfig,
@@ -279,6 +284,17 @@ export class Registry {
 				this.graphics,
 				pageStore
 			)
+			this.usageStatistics = new DataUsageStatistics(
+				this.#appInfo,
+				this.surfaces,
+				this.instance,
+				this.page,
+				this.controls,
+				this.variables,
+				this.cloud,
+				this.services,
+				this.userconfig
+			)
 
 			this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
 
@@ -295,6 +311,7 @@ export class Registry {
 					this.graphics.updateUserConfig(key, value)
 					this.services.updateUserConfig(key, value)
 					this.surfaces.updateUserConfig(key, value)
+					this.usageStatistics.updateUserConfig(key, value)
 				})
 
 				if (checkControlsInBounds) {
@@ -330,7 +347,7 @@ export class Registry {
 			})
 
 			// old 'modules_loaded' events
-			this.#metrics.startCycle()
+			this.usageStatistics.startStopCycle()
 			this.ui.update.startCycle()
 
 			this.controls.init()
@@ -457,6 +474,7 @@ export class Registry {
 		this.userconfig.updateBindIp(bindIp)
 		this.services.https.updateBindIp(bindIp)
 		this.internalModule.updateBindIp(bindIp)
+		this.usageStatistics.updateBindIp(bindIp)
 	}
 }
 

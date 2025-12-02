@@ -15,17 +15,26 @@ import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
 import { compileUpdatePayload } from './UpdatePayload.js'
 import { publicProcedure, router, toIterable } from './TRPC.js'
 import { EventEmitter } from 'events'
+import type { paths as CompanionUpdatesApiPaths } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import createClient, { type Client } from 'openapi-fetch'
+import pRetry, { AbortError } from 'p-retry'
 
 type UpdateEvents = {
 	info: [info: AppUpdateInfo]
 }
 
+const baseUrl = 'https://updates.companion.free'
+const REQUEST_TIMEOUT_MS = 10_000
+
 export class UIUpdate {
 	readonly #logger = LogController.createLogger('UI/Update')
 
 	readonly #appInfo: AppInfo
+	readonly #openApiClient: Client<CompanionUpdatesApiPaths>
 
 	readonly #updateEvents = new EventEmitter<UpdateEvents>()
+
+	// no global retry timers anymore; retries are performed sequentially by #requestUpdate
 
 	/**
 	 * Latest update information
@@ -35,6 +44,13 @@ export class UIUpdate {
 	constructor(appInfo: AppInfo) {
 		this.#logger.silly('loading update')
 		this.#appInfo = appInfo
+
+		this.#openApiClient = createClient<CompanionUpdatesApiPaths>({
+			baseUrl,
+			headers: {
+				'User-Agent': `Companion ${appInfo.appVersion}`,
+			},
+		})
 	}
 
 	startCycle(): void {
@@ -53,23 +69,37 @@ export class UIUpdate {
 	 * Perform the update request
 	 */
 	#requestUpdate(): void {
-		fetch('https://updates.bitfocus.io/updates', {
-			method: 'POST',
-			body: JSON.stringify(compileUpdatePayload(this.#appInfo)),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then(async (response) => response.json())
-			.then((body) => {
-				this.#logger.debug(`fresh update data received ${JSON.stringify(body)}`)
-				this.#latestUpdateData = body as AppUpdateInfo
+		pRetry(
+			async () => {
+				const res = await this.#openApiClient.POST('/updates', {
+					body: compileUpdatePayload(this.#appInfo),
+					signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+				})
 
+				if (res.error) {
+					// Throwing an error here will trigger a retry
+					throw new Error(res.error.message)
+				}
+
+				this.#logger.debug(`fresh update data received ${JSON.stringify(res.data)}`)
+				this.#latestUpdateData = res.data as AppUpdateInfo
 				this.#updateEvents.emit('info', this.#latestUpdateData)
-			})
-			.catch((e) => {
-				this.#logger.verbose('update server said something unexpected!', e)
-			})
+			},
+			{
+				retries: 2,
+				minTimeout: 5 * 60 * 1000,
+				maxRetryTime: REQUEST_TIMEOUT_MS * 2,
+				onFailedAttempt: (error) => {
+					if ((error instanceof Error && error.name === 'AbortError') || error instanceof AbortError) {
+						this.#logger.verbose(`update request aborted after ${REQUEST_TIMEOUT_MS}ms`)
+					} else {
+						this.#logger.verbose('update server said something unexpected!', error)
+					}
+				},
+			}
+		).catch(() => {
+			this.#logger.warn('All update request attempts failed')
+		})
 	}
 
 	createTrpcRouter() {

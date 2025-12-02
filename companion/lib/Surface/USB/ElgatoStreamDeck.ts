@@ -38,13 +38,26 @@ export const StreamDeckJpegOptions: JPEGEncodeOptions = {
 function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] {
 	const fields: CompanionSurfaceConfigField[] = [...OffsetConfigFields]
 
+	fields.push(LegacyRotationConfigField)
+
 	// Hide brightness for the pedal
 	const hasBrightness = !!streamDeck.CONTROLS.find(
 		(c) => c.type === 'lcd-segment' || (c.type === 'button' && c.feedbackType !== 'none')
 	)
 	if (hasBrightness) fields.push(BrightnessConfigField)
 
-	fields.push(LegacyRotationConfigField, ...LockConfigFields)
+	if (streamDeck.MODEL === DeviceModelId.PLUS) {
+		// place it above offset, etc.
+		fields.push({
+			id: 'swipe_can_change_page',
+			label: 'Horizontal Swipe Changes Page',
+			type: 'checkbox',
+			default: false,
+			tooltip: 'Swiping horizontally on the Stream Deck+ LCD-strip will change pages, if enabled.',
+		})
+	}
+
+	fields.push(...LockConfigFields)
 
 	if (streamDeck.HAS_NFC_READER)
 		fields.push({
@@ -97,6 +110,10 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
+
+	readonly sdPlusLcdButtonOffset = 25
+	readonly sdPlusLcdButtonSpacing = 216.666
+	// readonly sdPlusLcdButtonWidth = 100  // not currently used, but could, if we wanted to be more precise about button locations
 
 	constructor(devicePath: string, streamDeck: StreamDeck | StreamDeckTcp) {
 		super()
@@ -203,7 +220,7 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 				let drawX = drawColumn * columnWidth
 				if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
 					// Position aligned with the buttons/encoders
-					drawX = drawColumn * 216.666 + 25
+					drawX = drawColumn * this.sdPlusLcdButtonSpacing + this.sdPlusLcdButtonOffset
 				}
 
 				const targetSize = control.pixelSize.height
@@ -278,22 +295,53 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			this.emit('setCustomVariable', variableId, tag)
 		})
 
+		const getLCDButton = (control: StreamDeckLcdSegmentControlDefinition, x: number) => {
+			// Button assignment is very permissive, but maybe more compatible with the graphics overhaul?
+			// note: this doesn't take into account the SD Plus button offset, but that gives a little margin to the left, so maybe OK.
+			// TODO: reexamine when double-width buttons are implemented?
+			//   if using the margin, add Math.max(0, Math.min(control.columnSpan-1, ... ))
+			const columnOffset = Math.floor((x / control.pixelSize.width) * control.columnSpan)
+			return control.column + columnOffset
+		}
 		const lcdPress = (control: StreamDeckLcdSegmentControlDefinition, position: LcdPosition) => {
-			const columnOffset = Math.floor((position.x / control.pixelSize.width) * control.columnSpan)
-
-			this.emit('click', control.column + columnOffset, control.row, true)
+			const buttonCol = getLCDButton(control, position.x)
+			this.emit('click', buttonCol, control.row, true)
 
 			setTimeout(() => {
-				this.emit('click', control.column + columnOffset, control.row, false)
+				this.emit('click', buttonCol, control.row, false)
 			}, 20)
 		}
 		this.#streamDeck.on('lcdShortPress', lcdPress)
 		this.#streamDeck.on('lcdLongPress', lcdPress)
+		this.#streamDeck.on('lcdSwipe', (control, from, to) => {
+			const angle = Math.atan(Math.abs((from.y - to.y) / (from.x - to.x))) * (180 / Math.PI)
+			const fromButton = getLCDButton(control, from.x)
+			const toButton = getLCDButton(control, to.x)
+			this.#logger.debug(
+				`LCD #${control.id} swipe: (${from.x}, ${from.y}; button:${fromButton})->(${to.x}, ${to.y}; button: ${toButton}): Angle: ${angle.toFixed(1)}`
+			)
+			// avoid ambiguous swipes, so vertical has to be "clearly vertical", so make it a bit more than 45
+			if (angle >= 50 && toButton === fromButton) {
+				//vertical swipe. note that y=0 is the top of the screen so for swipe up `from.y` is the higher
+				this.emit('rotate', fromButton, control.row, from.y > to.y)
+			} else if (angle <= 22.5 && this.config.swipe_can_change_page) {
+				// horizontal swipe, change pages: (note that the angle of the SD+ screen diagonal is 7 degrees, i.e. atan 1/8)
+				this.emit('changePage', from.x > to.x) //swipe left moves to next page, as if your finger is moving a piece of paper under the screen
+			}
+		})
 	}
 
 	async #init() {
 		const serialNumber = await this.#streamDeck.getSerialNumber()
 		this.info.deviceId = `streamdeck:${serialNumber}`
+
+		// Log firmware version
+		try {
+			const firmware = await this.#streamDeck.getFirmwareVersion()
+			this.#logger.info(`StreamDeck firmware version: ${firmware}`)
+		} catch (e) {
+			this.#logger.warn(`Failed to get StreamDeck firmware version: ${e}`)
+		}
 
 		// Make sure the first clear happens properly
 		await this.#streamDeck.clearPanel()

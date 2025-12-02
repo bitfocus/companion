@@ -2,7 +2,6 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import { assertNever, deepFreeze, useComputed } from '~/Resources/util.js'
 import { sandbox } from '~/Resources/sandbox.js'
 import type { CompanionOptionValues } from '@companion-module/base'
-import { cloneDeep } from 'lodash-es'
 import { toJS } from 'mobx'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { type GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
@@ -21,7 +20,7 @@ export function useOptionsVisibility(
 			for (const [id, entry] of Object.entries(isVisibleFns)) {
 				try {
 					if (entry && typeof entry === 'function') {
-						visibility[id] = entry(cloneDeep(toJS(optionValues)))
+						visibility[id] = entry(structuredClone(toJS(optionValues)))
 					}
 				} catch (e) {
 					console.error('Failed to check visibility', e)

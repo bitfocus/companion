@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises'
-import { fileURLToPath } from 'node:url'
 import { SemVer } from 'semver'
+import path from 'node:path'
 
-const nodejsVersionsPath = fileURLToPath(new URL('../nodejs-versions.json', import.meta.url))
+const nodejsVersionsPath = path.join(import.meta.filename, '../assets/nodejs-versions.json')
 
 const existingVersionsStr = await fs.readFile(nodejsVersionsPath, 'utf8')
 const existingVersions = JSON.parse(existingVersionsStr)
@@ -32,7 +32,7 @@ for (const [versionName, currentVersion] of Object.entries(existingVersions)) {
 await fs.writeFile(nodejsVersionsPath, JSON.stringify(newVersions, null, '\t') + '\n')
 
 // Update the .node-version file
-const nodeVersionFilePath = fileURLToPath(new URL('../.node-version', import.meta.url))
+const nodeVersionFilePath = path.join(import.meta.dirname, '../.node-version')
 const existingNodeVersion = await fs.readFile(nodeVersionFilePath, 'utf8')
 const existingNodeMajor = Number(existingNodeVersion.trim().split('.')[0])
 if (isNaN(existingNodeMajor)) throw new Error(`Invalid node version in .node-version: ${existingNodeVersion}`)
@@ -55,5 +55,5 @@ async function updatePackageJsonEngines(packageJsonPath) {
 	console.log(`Updated engines.node in ${packageJsonPath} to >=${newVersion}`)
 }
 
-await updatePackageJsonEngines(fileURLToPath(new URL('../package.json', import.meta.url)))
-await updatePackageJsonEngines(fileURLToPath(new URL('../companion/package.json', import.meta.url)))
+await updatePackageJsonEngines(path.join(import.meta.dirname, '../package.json'))
+await updatePackageJsonEngines(path.join(import.meta.dirname, '../companion/package.json'))

@@ -1,4 +1,4 @@
-import { ServiceTcpUdpApi } from './TcpUdpApi.js'
+import { ApiMessageError, ServiceTcpUdpApi } from './TcpUdpApi.js'
 import { ServiceUdpBase, type DgramRemoteInfo } from './UdpBase.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ServiceApi } from './ServiceApi.js'
@@ -39,6 +39,7 @@ export class ServiceUdp extends ServiceUdpBase {
 	 */
 	protected override processIncoming(data: Buffer, remote: DgramRemoteInfo): void {
 		this.logger.silly(`${remote.address}:${remote.port} received packet: "${data.toString().trim()}"`)
+		this.logger.debug(`UDP packet received from ${remote.address}:${remote.port} - ${JSON.stringify(data.toString())}`)
 
 		this.#api
 			.parseApiCommand(data.toString())
@@ -47,6 +48,11 @@ export class ServiceUdp extends ServiceUdpBase {
 			})
 			.catch((e) => {
 				this.logger.silly(`UDP command failed: ${e}`)
+				if (e instanceof ApiMessageError) {
+					this.logger.info(`UDP command failed: ${e} ${e.context}`)
+				} else {
+					this.logger.info(`UDP command failed: ${e}`)
+				}
 			})
 	}
 }

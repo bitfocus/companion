@@ -9,7 +9,6 @@ import type { DataDatabase } from '../Data/Database.js'
 import { nanoid } from 'nanoid'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
-import { cloneDeep } from 'lodash-es'
 
 export interface AddInstanceProps {
 	versionId: string | null
@@ -160,7 +159,7 @@ export class InstanceConfigStore {
 				if (includeSecrets) {
 					result[id] = config
 				} else {
-					const newConfig = cloneDeep(config)
+					const newConfig = structuredClone(config)
 					delete newConfig.secrets
 					result[id] = newConfig
 				}

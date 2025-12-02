@@ -221,12 +221,12 @@ interface ImportRemapProps {
 
 export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: ImportRemapProps): React.JSX.Element {
 	const sortedConnections = useMemo(() => {
-		if (!snapshot.instances) return []
+		if (!snapshot.connections) return []
 
-		return Object.entries(snapshot.instances)
+		return Object.entries(snapshot.connections)
 			.filter((ent) => !!ent[1])
 			.sort(compareExportedInstances)
-	}, [snapshot.instances])
+	}, [snapshot.connections])
 
 	return (
 		<div id="import_resolve">
@@ -280,12 +280,12 @@ const ImportRemapRow = observer(function ImportRemapRow({
 }: ImportRemapRowProps) {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const storeInfo = modules.getStoreInfo(ModuleInstanceType.Connection, connection.instance_type)
-	const moduleInfo = modules.getModuleInfo(ModuleInstanceType.Connection, connection.instance_type)
+	const storeInfo = modules.getStoreInfo(ModuleInstanceType.Connection, connection.moduleId)
+	const moduleInfo = modules.getModuleInfo(ModuleInstanceType.Connection, connection.moduleId)
 
 	const moduleManifest = moduleInfo?.display ?? storeInfo
 
-	const currentConnections = connections.getAllOfModuleId(connection.instance_type)
+	const currentConnections = connections.getAllOfModuleId(connection.moduleId)
 
 	const onChange = useCallback(
 		(e: React.ChangeEvent<HTMLSelectElement>) => setConnectionRemap(id, e.currentTarget.value),
@@ -305,7 +305,7 @@ const ImportRemapRow = observer(function ImportRemapRow({
 					))}
 				</CFormSelect>
 			</td>
-			<td>{moduleManifest?.name ?? `Unknown module (${connection.instance_type})`}</td>
+			<td>{moduleManifest?.name ?? `Unknown module (${connection.moduleId})`}</td>
 			<td>{connection.label}</td>
 		</tr>
 	)

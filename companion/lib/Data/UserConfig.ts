@@ -1,5 +1,4 @@
 import selfsigned from 'selfsigned'
-import { cloneDeep } from 'lodash-es'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import { EventEmitter } from 'events'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
@@ -38,6 +37,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	static Defaults: UserConfigModel = {
 		setup_wizard: 0,
+		detailed_data_collection: true,
 
 		page_direction_flipped: false,
 		page_plusminus: false,
@@ -145,7 +145,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		this.#db = db
 		this.#dbTable = db.defaultTableView
 
-		this.#data = this.#dbTable.getOrDefault('userconfig', cloneDeep(DataUserConfig.Defaults))
+		this.#data = this.#dbTable.getOrDefault('userconfig', structuredClone(DataUserConfig.Defaults))
 
 		this.#populateMissingForExistingDb()
 
@@ -235,6 +235,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		if (!this.#db.getIsFirstRun()) {
 			// This is an existing db, so setup the ports to match how it used to be
 			const legacy_config: Partial<UserConfigModel> = {
+				detailed_data_collection: true,
+
 				tcp_enabled: true,
 				tcp_listen_port: 51234,
 
@@ -355,7 +357,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		let out = this.#data[key]
 
 		if (clone === true) {
-			out = cloneDeep(out)
+			out = structuredClone(out)
 		}
 
 		return out

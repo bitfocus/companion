@@ -136,7 +136,7 @@ export interface components {
 			 * @description The type of module being submitted
 			 * @enum {string}
 			 */
-			moduleType: 'companion-connection'
+			moduleType: 'companion-connection' | 'companion-surface'
 			/** @description Name of the module */
 			moduleName: string
 			/** @description Url of build logs */
@@ -336,7 +336,7 @@ export interface operations {
 			header?: never
 			path: {
 				/** @description Type of module to get */
-				moduleType: 'connection'
+				moduleType: 'connection' | 'surface'
 			}
 			cookie?: never
 		}

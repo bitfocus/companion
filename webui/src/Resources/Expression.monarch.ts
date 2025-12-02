@@ -1,10 +1,10 @@
 import type { languages, IRange } from 'monaco-editor'
-import { type Monaco } from '@monaco-editor/react'
 import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
+import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.d.ts' // In theory importable with import type { Monaco } from '@monaco-editor/react'
 
 export const COMPANION_EXPRESSION_LANGUAGE_ID = 'companionExpression'
 
-export function registerCompanionExpressionLanguage(monaco: Monaco): void {
+export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void {
 	if (!monaco.languages.getLanguages().some((l) => l.id === COMPANION_EXPRESSION_LANGUAGE_ID)) {
 		monaco.languages.register({ id: COMPANION_EXPRESSION_LANGUAGE_ID })
 	}
@@ -20,7 +20,7 @@ export function registerCompanionExpressionLanguage(monaco: Monaco): void {
 		base: 'vs',
 		inherit: true,
 		rules: [
-			{ token: 'variable.companion', foreground: 'E07020', fontStyle: 'bold' }, // Companion variables - orange (like template strings)
+			{ token: 'variable.companion', foreground: '001080', fontStyle: 'bold' }, // Companion variables - same color as identifiers, but bold
 			{ token: 'predefined', foreground: '795E26' }, // Built-in functions - brownish (like JS functions)
 			{ token: 'keyword', foreground: '0000FF' }, // Keywords - blue (classic JS keywords)
 			{ token: 'string', foreground: 'A31515' }, // Strings - red (JS string color)
@@ -419,6 +419,21 @@ const companionExpressionCompletionItemProvider: languages.CompletionItemProvide
 		const lineContent = model.getLineContent(position.lineNumber)
 		const textBeforeCursor = lineContent.substring(0, position.column - 1)
 		const textAfterCursor = lineContent.substring(position.column - 1)
+
+		// Check if we're inside a string or comment using Monaco's internal tokenization API.
+		// Note: This is not a public API, but it's the only way to reliably detect multiline
+		// string/comment contexts without reimplementing a full parser. If Monaco changes this
+		// API, this will throw and we'll know immediately rather than silently breaking.
+		const tokens = (model as any).tokenization.getLineTokens(position.lineNumber)
+		const tokenIndex: number = tokens.findTokenIndexAtOffset(position.column - 1)
+		const tokenType: number = tokens.getStandardTokenType(tokenIndex)
+
+		// Don't provide suggestions inside comments or strings (1=Comment, 2=String)
+		// https://github.com/microsoft/vscode/blob/main/src/vs/editor/common/encodedTokenAttributes.ts
+		if (tokenType === 1 || tokenType === 2) {
+			return { suggestions: [] }
+		}
+
 		const companionVarMatch = textBeforeCursor.match(/\$\([a-zA-Z0-9_\-:]*$/)
 
 		if (companionVarMatch) {

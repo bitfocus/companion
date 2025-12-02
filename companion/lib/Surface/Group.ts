@@ -9,7 +9,6 @@
  * this program.
  */
 
-import { cloneDeep } from 'lodash-es'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { SurfaceHandler } from './Handler.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
@@ -123,7 +122,7 @@ export class SurfaceGroup {
 		}
 		// Apply missing defaults
 		this.groupConfig = {
-			...cloneDeep(SurfaceGroup.DefaultOptions),
+			...structuredClone(SurfaceGroup.DefaultOptions),
 			...this.groupConfig,
 		}
 
@@ -433,10 +432,15 @@ export class SurfaceGroup {
 
 	/**
 	 * Set the surface as locked
+	 * @returns whether the locked state changed
 	 */
-	setLocked(locked: boolean): void {
+	setLocked(locked: boolean): boolean {
 		// // skip if surface can't be locked
 		// if (this.#surfaceConfig.config.never_lock) return
+
+		if (this.#isLocked === !!locked) {
+			return false
+		}
 
 		// Track the locked status
 		this.#isLocked = !!locked
@@ -445,6 +449,8 @@ export class SurfaceGroup {
 		for (const surface of this.surfaceHandlers) {
 			surface.setLocked(locked)
 		}
+
+		return true
 	}
 
 	/**

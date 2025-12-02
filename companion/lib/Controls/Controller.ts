@@ -358,6 +358,25 @@ export class ControlsController {
 	/**
 	 * Get all of the trigger controls
 	 */
+	getAllButtons(): Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> {
+		const buttons: Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> =
+			[]
+		for (const control of this.#controls.values()) {
+			if (
+				control instanceof ControlButtonNormal ||
+				control instanceof ControlButtonPageDown ||
+				control instanceof ControlButtonPageNumber ||
+				control instanceof ControlButtonPageUp
+			) {
+				buttons.push(control)
+			}
+		}
+		return buttons
+	}
+
+	/**
+	 * Get all of the trigger controls
+	 */
 	getAllTriggers(): ControlTrigger[] {
 		const triggers: ControlTrigger[] = []
 		for (const control of this.#controls.values()) {

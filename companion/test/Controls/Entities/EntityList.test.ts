@@ -8,7 +8,6 @@ import {
 	FeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { cloneDeep } from 'lodash-es'
 import {
 	ActionTree,
 	ActionTreeEntityDefinitions,
@@ -109,12 +108,12 @@ describe('loadStorage', () => {
 
 		const inputModels = ActionTree
 
-		list.loadStorage(cloneDeep(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), true, false)
 
 		const compiled = list.getDirectEntities().map((e) => e.asEntityModel())
 
 		// Prune out the children which will have been discarded
-		const expected = cloneDeep(inputModels)
+		const expected = structuredClone(inputModels)
 		for (const entity of expected) {
 			if (entity.connectionId === 'internal') {
 				entity.children = {}
@@ -133,7 +132,7 @@ describe('loadStorage', () => {
 
 		const inputModels = ActionTree
 
-		list.loadStorage(cloneDeep(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), true, false)
 
 		const compiled = list.getDirectEntities().map((e) => e.asEntityModel())
 		delete inputModels[2].children?.group2?.[0]?.children
@@ -175,12 +174,12 @@ describe('loadStorage', () => {
 
 		const inputModels = ActionTree
 
-		list.loadStorage(cloneDeep(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), true, false)
 
 		const compiled = list.getDirectEntities().map((e) => e.asEntityModel())
 
 		// Prune out the children which will have been discarded
-		const expected = cloneDeep(inputModels)
+		const expected = structuredClone(inputModels)
 		for (const entity of expected) {
 			if (entity.connectionId === 'internal') {
 				delete entity.children?.group2
@@ -199,19 +198,19 @@ describe('loadStorage', () => {
 	test('actions tree with children on non-internal', () => {
 		const { list, getEntityDefinition } = createList('test01')
 
-		const inputModels = cloneDeep(ActionTree)
+		const inputModels = structuredClone(ActionTree)
 		for (const entity of inputModels) {
 			if (entity.connectionId === 'internal') {
 				entity.connectionId = 'fake'
 			}
 		}
 
-		list.loadStorage(cloneDeep(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), true, false)
 
 		const compiled = list.getDirectEntities().map((e) => e.asEntityModel())
 
 		// Prune out the children which will have been discarded
-		const expected = cloneDeep(inputModels)
+		const expected = structuredClone(inputModels)
 		for (const entity of expected) {
 			if (entity.connectionId === 'fake') {
 				delete entity.children
@@ -231,7 +230,7 @@ describe('loadStorage', () => {
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
-		list.loadStorage(cloneDeep(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), true, false)
 
 		const inputIds = getAllModelsInTree(inputModels).map((e) => e.id)
 		const compiledIds = list.getAllEntities().map((e) => e.id)
@@ -246,7 +245,7 @@ describe('loadStorage', () => {
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
-		list.loadStorage(cloneDeep(inputModels), true, true)
+		list.loadStorage(structuredClone(inputModels), true, true)
 
 		const inputIds = getAllModelsInTree(inputModels).map((e) => e.id)
 		const inputIdsSet = new Set(inputIds)
@@ -266,7 +265,7 @@ describe('loadStorage', () => {
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
-		list.loadStorage(cloneDeep(inputModels), false, false)
+		list.loadStorage(structuredClone(inputModels), false, false)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(4)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
@@ -280,7 +279,7 @@ test('cleanup entities', () => {
 
 	const inputModels = ActionTree
 
-	list.loadStorage(cloneDeep(inputModels), true, false)
+	list.loadStorage(structuredClone(inputModels), true, false)
 
 	list.cleanup()
 
@@ -297,7 +296,7 @@ describe('subscribe entities', () => {
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-	list.loadStorage(cloneDeep(ActionTree), true, false)
+	list.loadStorage(structuredClone(ActionTree), true, false)
 
 	beforeEach(() => {
 		connectionEntityUpdate.mockClear()
@@ -364,7 +363,7 @@ describe('findById', () => {
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-	list.loadStorage(cloneDeep(ActionTree), true, false)
+	list.loadStorage(structuredClone(ActionTree), true, false)
 
 	test('find missing id', () => {
 		const entity = list.findById('missing-id')
@@ -389,7 +388,7 @@ describe('findParentAndIndex', () => {
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-	list.loadStorage(cloneDeep(ActionTree), true, false)
+	list.loadStorage(structuredClone(ActionTree), true, false)
 
 	test('find missing id', () => {
 		const entity = list.findParentAndIndex('missing-id')
@@ -442,7 +441,7 @@ describe('addEntity', () => {
 			upgradeIndex: undefined,
 		}
 
-		const newInstance = list.addEntity(cloneDeep(newAction))
+		const newInstance = list.addEntity(structuredClone(newAction))
 		expect(newInstance).not.toBeUndefined()
 		expectEntityToMatchModel(newAction, newInstance)
 	})
@@ -461,7 +460,9 @@ describe('addEntity', () => {
 			upgradeIndex: undefined,
 		}
 
-		expect(() => list.addEntity(cloneDeep(newAction))).toThrowError('EntityList cannot accept this type of entity')
+		expect(() => list.addEntity(structuredClone(newAction))).toThrowError(
+			'EntityList cannot accept this type of entity'
+		)
 		expect(list.getAllEntities()).toHaveLength(0)
 	})
 
@@ -479,7 +480,9 @@ describe('addEntity', () => {
 			upgradeIndex: undefined,
 		}
 
-		expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
+		expect(() => list.addEntity(structuredClone(newFeedback))).toThrowError(
+			'EntityList cannot accept this type of entity'
+		)
 		expect(list.getAllEntities()).toHaveLength(0)
 	})
 
@@ -502,7 +505,7 @@ describe('addEntity', () => {
 			upgradeIndex: undefined,
 		}
 
-		const newInstance = list.addEntity(cloneDeep(newFeedback))
+		const newInstance = list.addEntity(structuredClone(newFeedback))
 		expect(newInstance).not.toBeUndefined()
 		expectEntityToMatchModel(newFeedback, newInstance)
 	})
@@ -524,7 +527,9 @@ describe('addEntity', () => {
 			upgradeIndex: undefined,
 		}
 
-		expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
+		expect(() => list.addEntity(structuredClone(newFeedback))).toThrowError(
+			'EntityList cannot accept this type of entity'
+		)
 		expect(list.getAllEntities()).toHaveLength(0)
 	})
 
@@ -550,7 +555,9 @@ describe('addEntity', () => {
 			upgradeIndex: undefined,
 		}
 
-		expect(() => list.addEntity(cloneDeep(newFeedback))).toThrowError('EntityList cannot accept this type of entity')
+		expect(() => list.addEntity(structuredClone(newFeedback))).toThrowError(
+			'EntityList cannot accept this type of entity'
+		)
 		expect(list.getAllEntities()).toHaveLength(0)
 
 		expect(getEntityDefinition).toHaveBeenCalledTimes(1)
@@ -579,7 +586,7 @@ describe('addEntity', () => {
 			feedbackType: FeedbackEntitySubType.Boolean,
 		} as Partial<ClientEntityDefinition> as any)
 
-		const newInstance = list.addEntity(cloneDeep(newFeedback))
+		const newInstance = list.addEntity(structuredClone(newFeedback))
 		expect(newInstance).not.toBeUndefined()
 		expectEntityToMatchModel(newFeedback, newInstance)
 
@@ -622,7 +629,7 @@ describe('addEntity', () => {
 			},
 		}
 
-		const newInstance = list.addEntity(cloneDeep(newFeedback))
+		const newInstance = list.addEntity(structuredClone(newFeedback))
 		expect(newInstance).not.toBeUndefined()
 
 		// Prune out the children which will have been discarded
@@ -686,7 +693,7 @@ describe('addEntity', () => {
 			},
 		}
 
-		const newInstance = list.addEntity(cloneDeep(newFeedback))
+		const newInstance = list.addEntity(structuredClone(newFeedback))
 		expect(newInstance).not.toBeUndefined()
 
 		// Prune out the children which will have been discarded
@@ -721,7 +728,7 @@ describe('addEntity', () => {
 			upgradeIndex: undefined,
 		}
 
-		const newInstance = list.addEntity(cloneDeep(newFeedback), true)
+		const newInstance = list.addEntity(structuredClone(newFeedback), true)
 		expect(newInstance).not.toBeUndefined()
 		expect(newInstance.id).not.toBe(newFeedback.id)
 
@@ -772,7 +779,7 @@ describe('addEntity', () => {
 			},
 		}
 
-		const newInstance = list.addEntity(cloneDeep(newFeedback), true)
+		const newInstance = list.addEntity(structuredClone(newFeedback), true)
 		expect(newInstance).not.toBeUndefined()
 
 		expect(newInstance.id).not.toBe(newFeedback.id)
@@ -789,7 +796,7 @@ describe('removeEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -813,7 +820,7 @@ describe('removeEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -836,7 +843,7 @@ describe('removeEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -868,7 +875,7 @@ describe('popEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -898,7 +905,7 @@ describe('popEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -921,7 +928,7 @@ describe('popEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -944,7 +951,7 @@ describe('popEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -989,7 +996,7 @@ describe('pushEntity', () => {
 	test('push front', () => {
 		const { list, newAction } = createList('test01')
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1005,7 +1012,7 @@ describe('pushEntity', () => {
 	test('push front - negative', () => {
 		const { list, newAction } = createList('test01')
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1021,7 +1028,7 @@ describe('pushEntity', () => {
 	test('push front - beyond end', () => {
 		const { list, newAction } = createList('test01')
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1037,7 +1044,7 @@ describe('pushEntity', () => {
 	test('push front - middle', () => {
 		const { list, newAction } = createList('test01')
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1057,7 +1064,7 @@ describe('duplicateEntity', () => {
 	test('duplicate missing', () => {
 		const { list, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1076,7 +1083,7 @@ describe('duplicateEntity', () => {
 	test('duplicate at root ', () => {
 		const { list, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1100,7 +1107,7 @@ describe('duplicateEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1131,7 +1138,7 @@ describe('forgetForConnection', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1147,7 +1154,7 @@ describe('forgetForConnection', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1164,7 +1171,7 @@ describe('forgetForConnection', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1183,7 +1190,7 @@ describe('verifyConnectionIds', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1200,7 +1207,7 @@ describe('verifyConnectionIds', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1219,7 +1226,7 @@ describe('verifyConnectionIds', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1254,7 +1261,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('all disabled', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', { '02': true })
 
@@ -1267,7 +1274,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('basic boolean values', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', { '02': true })
 
@@ -1281,7 +1288,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('advanced value values', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('internal', { int0: 'abc' })
 
@@ -1322,7 +1329,7 @@ describe('getBooleanFeedbackValue', () => {
 	})
 
 	test('all disabled', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', { '02': true })
 
@@ -1336,7 +1343,7 @@ describe('getBooleanFeedbackValue', () => {
 	})
 
 	test('boolean values values', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 
 		// disable the one set to non-boolean
 		list.findById('int0')?.setEnabled(false)
@@ -1373,7 +1380,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('all disabled', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', { '02': true })
 
@@ -1386,7 +1393,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('basic feedback values', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', { '02': true })
 		list.updateFeedbackValues('internal', { int0: 'abcd' })
@@ -1427,7 +1434,7 @@ describe('buildFeedbackStyle', () => {
 	})
 
 	test('disabled', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', { '02': true })
 
@@ -1444,7 +1451,7 @@ describe('buildFeedbackStyle', () => {
 	})
 
 	test('basic feedback values', () => {
-		list.loadStorage(cloneDeep(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', { '02': true })
 		list.updateFeedbackValues('internal', { int0: 'abcd' })
@@ -1469,7 +1476,7 @@ describe('updateFeedbackValues', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1482,7 +1489,7 @@ describe('updateFeedbackValues', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1504,7 +1511,7 @@ describe('updateFeedbackValues', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1527,7 +1534,7 @@ describe('updateFeedbackValues', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1557,7 +1564,7 @@ describe('getAllEnabledConnectionIds', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(cloneDeep(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), true, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1574,7 +1581,7 @@ describe('getAllEnabledConnectionIds', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		const actions = cloneDeep(ActionTree)
+		const actions = structuredClone(ActionTree)
 		for (const entity of actions) {
 			entity.disabled = true
 		}

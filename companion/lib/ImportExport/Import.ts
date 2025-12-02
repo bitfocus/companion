@@ -6,7 +6,11 @@ import type {
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientImportSelection, ConnectionRemappings } from '@companion-app/shared/Model/ImportExport.js'
+import type {
+	ClientImportOrResetSelection,
+	ConnectionRemappings,
+	ImportOrResetType,
+} from '@companion-app/shared/Model/ImportExport.js'
 import {
 	fixupControl,
 	fixupExpressionVariableControl,
@@ -19,7 +23,6 @@ import type { InstanceController } from '../Instance/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { cloneDeep } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -130,7 +133,11 @@ export class ImportController {
 		return instanceRemap2
 	}
 
-	importFull(data: ExportFullv6, config: ClientImportSelection, mergeConnections: boolean): void {
+	importFull(data: ExportFullv6, config: ClientImportOrResetSelection): void {
+		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
+
+		const mergeConnections = config.connections === 'unchanged'
+
 		// Always Import instances
 		// Import connection collections if provided
 		if (data.connectionCollections && data.connectionCollections.length > 0) {
@@ -147,13 +154,13 @@ export class ImportController {
 		const instanceIdMap = this.#importInstances(data.instances, preserveRemap)
 
 		// import custom variables
-		if (config.customVariables) {
+		if (isImporting(config.customVariables)) {
 			this.#variablesController.custom.replaceCollections(data.customVariablesCollections || [])
 			this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
 		}
 
 		// Import expression variables
-		if (config.expressionVariables) {
+		if (isImporting(config.expressionVariables)) {
 			this.#controlsController.replaceExpressionVariableCollections(data.expressionVariablesCollections || [])
 
 			for (const [id, variableDefinition] of Object.entries(data.expressionVariables || {})) {
@@ -165,7 +172,7 @@ export class ImportController {
 		}
 
 		// note data.pages is needed only to satisfy TypeScript, since config.buttons is false if pages is missing.
-		if (config.buttons) {
+		if (isImporting(config.buttons)) {
 			// Import pages
 			for (const [pageNumber0, pageInfo] of Object.entries(data.pages ?? {})) {
 				if (!pageInfo) continue
@@ -189,7 +196,7 @@ export class ImportController {
 			}
 		}
 
-		if (config.surfaces) {
+		if (isImporting(config.surfaces.known)) {
 			const surfaces = data.surfaces || ({} as Record<number, SurfaceConfig>)
 			const surfaceGroups = data.surfaceGroups || ({} as Record<number, SurfaceGroupConfig>)
 			const getPageId = (val: number) =>
@@ -222,7 +229,7 @@ export class ImportController {
 			this.#surfacesController.importSurfaces(surfaceGroups, surfaces)
 		}
 
-		if (config.triggers) {
+		if (isImporting(config.triggers)) {
 			// Import trigger collections if provided
 			if (data.triggerCollections) {
 				this.#controlsController.replaceTriggerCollections(data.triggerCollections)
@@ -283,7 +290,7 @@ export class ImportController {
 			for (const [column, control] of Object.entries(rowObj)) {
 				if (control) {
 					// Import the control
-					const fixedControlObj = fixupControl(this.#logger, cloneDeep(control), referencesUpdater, instanceIdMap)
+					const fixedControlObj = fixupControl(this.#logger, structuredClone(control), referencesUpdater, instanceIdMap)
 					if (!fixedControlObj) continue
 
 					const location: ControlLocation = {

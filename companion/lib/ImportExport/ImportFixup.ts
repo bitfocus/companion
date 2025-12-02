@@ -8,7 +8,6 @@ import type { ExpressionVariableModel } from '@companion-app/shared/Model/Expres
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { Logger } from '../Log/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
-import { cloneDeep } from 'lodash-es'
 
 export type InstanceAppliedRemappings = Record<
 	string,
@@ -35,7 +34,7 @@ export function fixupTriggerControl(
 
 	const result: TriggerModel = {
 		type: 'trigger',
-		options: cloneDeep(control.options),
+		options: structuredClone(control.options),
 		actions: [],
 		condition: [],
 		events: control.events,
@@ -43,15 +42,15 @@ export function fixupTriggerControl(
 	}
 
 	if (control.condition) {
-		result.condition = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.condition))
+		result.condition = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.condition))
 	}
 
 	if (control.actions) {
-		result.actions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.actions))
+		result.actions = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.actions))
 	}
 
 	if (control.localVariables) {
-		result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
+		result.localVariables = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
 	}
 
 	new VisitorReferencesUpdater(internalModule, connectionLabelRemap, connectionIdRemap)
@@ -81,17 +80,17 @@ export function fixupExpressionVariableControl(
 
 	const result: ExpressionVariableModel = {
 		type: 'expression-variable',
-		options: cloneDeep(control.options),
+		options: structuredClone(control.options),
 		entity: null,
 		localVariables: [],
 	}
 
 	if (control.entity) {
-		result.entity = fixupEntitiesRecursive(instanceIdMap, [cloneDeep(control.entity)])[0]
+		result.entity = fixupEntitiesRecursive(instanceIdMap, [structuredClone(control.entity)])[0]
 	}
 
 	if (control.localVariables) {
-		result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
+		result.localVariables = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
 	}
 
 	const visitor = new VisitorReferencesUpdater(internalModule, connectionLabelRemap, connectionIdRemap).visitEntities(
@@ -119,19 +118,19 @@ export function fixupControl(
 
 	const result: NormalButtonModel = {
 		type: 'button',
-		options: cloneDeep(control.options),
-		style: cloneDeep(control.style),
+		options: structuredClone(control.options),
+		style: structuredClone(control.style),
 		feedbacks: [],
 		steps: {},
 		localVariables: [],
 	}
 
 	if (control.feedbacks) {
-		result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
+		result.feedbacks = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.feedbacks))
 	}
 
 	if (control.localVariables) {
-		result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
+		result.localVariables = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
 	}
 
 	const allEntities: SomeEntityModel[] = [...result.feedbacks, ...result.localVariables]
@@ -145,7 +144,7 @@ export function fixupControl(
 			}
 			result.steps[stepId] = {
 				action_sets: newStepSets,
-				options: cloneDeep(step.options),
+				options: structuredClone(step.options),
 			}
 
 			for (const [setId, action_set] of Object.entries<any>(step.action_sets)) {
@@ -155,7 +154,7 @@ export function fixupControl(
 					continue
 				}
 
-				const newActions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(action_set))
+				const newActions = fixupEntitiesRecursive(instanceIdMap, structuredClone(action_set))
 
 				newStepSets[setIdSafe] = newActions
 				allEntities.push(...newActions)

@@ -1,5 +1,4 @@
 import { action, makeObservable, observable } from 'mobx'
-import { cloneDeep } from 'lodash-es'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import { assertNever } from '~/Resources/util'
 
@@ -30,7 +29,7 @@ export class UserConfigStore {
 		switch (change.type) {
 			case 'init':
 				this.hasProperties_ = true
-				this.properties_ = cloneDeep(change.config)
+				this.properties_ = structuredClone(change.config)
 				break
 			case 'key':
 				;(this.properties_ as any)[change.key] = change.value

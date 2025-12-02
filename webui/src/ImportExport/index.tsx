@@ -100,14 +100,14 @@ export const ImportExportPage = observer(function ImportExport() {
 											const initialRemap: Record<string, string | undefined> = {}
 
 											// Figure out some initial mappings. Look for matching type and hopefully label
-											for (const [id, obj] of Object.entries(config.instances ?? {})) {
+											for (const [id, obj] of Object.entries(config.connections ?? {})) {
 												if (!obj) continue
 
 												const candidateIds = []
 												let matchingLabelId = ''
 
 												for (const [otherId, otherObj] of connections.connections.entries()) {
-													if (otherObj.moduleId === obj.instance_type) {
+													if (otherObj.moduleId === obj.moduleId) {
 														candidateIds.push(otherId)
 														if (otherObj.label === obj.label) {
 															matchingLabelId = otherId

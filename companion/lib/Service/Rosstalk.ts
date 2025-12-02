@@ -45,7 +45,7 @@ export class ServiceRosstalk extends ServiceTcpBase {
 	 * @param data - the incoming message part
 	 * @access protected
 	 */
-	processIncoming(_client: TcpClientInfo, data: string): void {
+	processIncoming(_client: TcpClientInfo, data: string | Buffer): void {
 		data = data.toString()
 
 		const matchCC = data.match(/CC ([0-9]+):([0-9]+)/)

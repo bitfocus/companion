@@ -21,4 +21,5 @@ extend-exclude = [
   "companion/test/Upgrade/*/*.json",
   "**/*.companionconfig",
   "assets/linux/*.rules",
+  "shared-lib/lib/OpenApi/",
 ]

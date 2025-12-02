@@ -153,7 +153,7 @@ label.disabled {
 }
 
 .static-text-content {
-	:last-child {
+	& > :last-child {
 		margin-bottom: 0;
 	}
 }
