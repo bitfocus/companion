@@ -5,29 +5,11 @@
 		"children": [
 			{
 				"label": "Before you open Companion",
-				"file": "user-guide/1_gettingstarted/before_you_open.md"
+				"file": "user-guide/1_getting-started/before-you-open.md"
 			},
 			{
 				"label": "Start the server",
-				"file": "user-guide/1_gettingstarted/start_the_server.md"
-			},
-			{
-				"label": "The user interface",
-				"file": "user-guide/1_gettingstarted/the_user_interface.md"
-			}
-		]
-	},
-	{
-		"label": "Sidebar",
-		"file": "user-guide/2_sidebar/index.md",
-		"children": [
-			{
-				"label": "Emulator",
-				"file": "user-guide/2_sidebar/emulator.md"
-			},
-			{
-				"label": "Web buttons",
-				"file": "user-guide/2_sidebar/web_buttons.md"
+				"file": "user-guide/1_getting-started/start-the-server.md"
 			}
 		]
 	},
@@ -35,12 +17,16 @@
 		"label": "Configuration GUI",
 		"children": [
 			{
+				"label": "The user interface",
+				"file": "user-guide/3_config/the-user-interface.md"
+			},
+			{
 				"label": "Connections",
 				"file": "user-guide/3_config/connections.md"
 			},
 			{
 				"label": "Buttons",
-				"file": "user-guide/3_config/buttons.md",
+				"file": "user-guide/3_config/buttons/index.md",
 				"children": [
 					{
 						"label": "Creating buttons",
@@ -83,6 +69,20 @@
 			{
 				"label": "Log",
 				"file": "user-guide/3_config/log.md"
+			},
+			{
+				"label": "Sidebar",
+				"file": "user-guide/3_config/sidebar/index.md",
+				"children": [
+					{
+						"label": "Emulator",
+						"file": "user-guide/3_config/sidebar/emulator.md"
+					},
+					{
+						"label": "Web buttons",
+						"file": "user-guide/3_config/sidebar/web_buttons.md"
+					}
+				]
 			}
 		]
 	},
@@ -165,6 +165,10 @@
 			{
 				"label": "Elgato Stream Deck",
 				"file": "user-guide/7_surfaces/elgato_streamdeck.md"
+			},
+			{
+				"label": "Elgato Plugin",
+				"file": "user-guide/7_surfaces/elgato_plugin.md"
 			},
 			{
 				"label": "Satellite",
