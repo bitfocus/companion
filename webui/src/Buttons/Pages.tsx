@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTrash, faSort, faShareFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
-import { AddPagesModal, type AddPagesModalRef } from './PagesAddModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
@@ -19,7 +18,6 @@ interface PagesListProps {
 export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
 	const { pages } = useContext(RootAppStoreContext)
 
-	const addRef = useRef<AddPagesModalRef>(null)
 	const deleteRef = useRef<GenericConfirmModalRef>(null)
 	const editRef = useRef<EditPagePropertiesModalRef>(null)
 
@@ -42,12 +40,24 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 		}
 	}, [])
 
-	const doInsertPage = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-		const pageNumber = Number(e.currentTarget.getAttribute('data-page'))
-		if (!isNaN(pageNumber)) {
-			addRef.current?.show?.(pageNumber)
-		}
-	}, [])
+	const insertMutation = useMutationExt(trpc.pages.insert.mutationOptions())
+	const doInsertPage = useCallback(
+		(e: React.MouseEvent<HTMLButtonElement>) => {
+			const pageNumber = Number(e.currentTarget.getAttribute('data-page'))
+			if (!isNaN(pageNumber)) {
+				// addRef.current?.show?.(pageNumber)
+				insertMutation
+					.mutateAsync({
+						asPageNumber: pageNumber,
+						pageNames: [''],
+					})
+					.catch((e) => {
+						console.error('Page insert failed', e)
+					})
+			}
+		},
+		[insertMutation]
+	)
 
 	const removeMutation = useMutationExt(trpc.pages.remove.mutationOptions())
 	const doDeletePage = useCallback(
@@ -84,7 +94,6 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 			<CRow>
 				<CCol xs={12}>
 					<GenericConfirmModal ref={deleteRef} />
-					<AddPagesModal ref={addRef} />
 					<EditPagePropertiesModal ref={editRef} includeName={false} />
 
 					<table className="table table-responsive-sm pages-list-table">
@@ -93,7 +102,19 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 								<th></th>
 								<th style={{ textAlign: 'center' }}>Number</th>
 								<th>Name</th>
-								<th>&nbsp;</th>
+								<th>
+									<CButtonGroup style={{ width: '100%' }}>
+										<CButton
+											color="warning"
+											size="sm"
+											onClick={doInsertPage}
+											title="Insert page at start"
+											data-page={1}
+										>
+											<FontAwesomeIcon icon={faPlus} />
+										</CButton>
+									</CButtonGroup>
+								</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -109,24 +130,6 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 									doDeletePage={doDeletePage}
 								/>
 							))}
-							<tr>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td style={{ textAlign: 'right' }}>
-									<CButtonGroup style={{ width: '100%' }}>
-										<CButton
-											color="warning"
-											size="sm"
-											onClick={doInsertPage}
-											title="Insert page at end"
-											data-page={pages.data.length + 1}
-										>
-											<FontAwesomeIcon icon={faPlus} />
-										</CButton>
-									</CButtonGroup>
-								</td>
-							</tr>
 						</tbody>
 					</table>
 				</CCol>
@@ -252,7 +255,13 @@ const PageListRow = observer(function PageListRow({
 					>
 						<FontAwesomeIcon icon={faPencil} />
 					</CButton> */}
-					<CButton color="warning" size="sm" onClick={doInsertPage} title="Insert page above" data-page={pageNumber}>
+					<CButton
+						color="warning"
+						size="sm"
+						onClick={doInsertPage}
+						title="Insert page after"
+						data-page={pageNumber + 1}
+					>
 						<FontAwesomeIcon icon={faPlus} />
 					</CButton>
 
