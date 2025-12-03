@@ -101,7 +101,11 @@ The object will be stored in the variable value and will not be converted to a s
 
 ## Deprecated Commands
 
-The following commands are deprecated and have replacements listed above. They will be removed in a future version of Companion.
+:::warning
+These commands will be removed in a future release of Companion. There is equivalent functionality in the list above.
+:::
+
+The following commands are deprecated and have replacements listed above. Support for this must be enabled in the settings for it to work
 
 - `/press/bank/<page>/<bank>`  
   _Press and release a button (run both down and up actions)_

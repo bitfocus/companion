@@ -4,7 +4,12 @@ sidebar_position: 2
 description: Configure buttons, layout, pages, and button management.
 ---
 
-In the Buttons tab, you can configure the buttons for your Stream Deck. The number of buttons in the grid can be changed in the settings, it can be grown in all 4 directions.
+In the Buttons tab, you can configure the buttons for your Stream Deck.
+
+:::tip
+You can change the size of the grid to any size you wish, in the [Buttons settings page](../settings.md).
+It can grow in all 4 directions.
+:::
 
 ![Buttons Page](../images/buttons.png?raw=true 'Buttons Page')
 

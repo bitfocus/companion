@@ -16,7 +16,7 @@ When updating Companion, your modules are no longer automatically updated for yo
 Similarly, when importing a config, you should make sure appropriate versions of the module are selected and are installed using this page.
 :::
 
-If you are on an offline system, the list of the right will likely be empty and you will need to download and import the offline module bundle from the website. You can read more about this in the [Modules section](../6_modules.md)
+If you are on an offline system, the list of the right will likely be empty and you will need to download and import the offline module bundle from the website. You can read more about this in the [Modules section](./modules.md)
 
 ## Adding a connection
 
@@ -44,17 +44,30 @@ Once you have added your connections, you can reorder or filter them in the tabl
 - **Variables** will show a list of all the variables that a connection provides. These can be used in various places either explained later on.
 - **View Logs** is a debug log for the module. When reporting a bug, module developers may want extra information from here to help figure out the bug. To most users this will not be interesting.
 
-A full list of supported devices can also be found on the website. [Companion Module Support List](https://bitfocus.io/connections)
+A full list of supported devices can also be found on the website. [Companion Module Support List](https://bfoc.us/m6idfk19cm)
 
 ## Configuring a connection
 
 Once you have added a connection, you can click on it in the connection list to open its configuration in the right panel.
 
-When the connection is disabled, you will be able to configure the version of the module, and some other basic properties.
-![Connection config when disabled](images/connections/configure-disabled.png)
-
-In case you need it, you are able to force a connection to use a different module. This should not be needed for normal use, it is an escape hatch for edge cases we haven't thought of.
-
 When the connection is enabled, you will be able to configure the module defined configuration.
 
-![Connection config when enabled](images/connections/configure-enabled.png)
+![Connection config panel](images/connections/configure-panel.png)
+
+Make sure to click Save when you are done, for your changes to be saved.
+
+## Updating a connection
+
+From the connection configuration panel, you can also update the version of the module being used.
+
+Click the pencil icon next to the module version number to open the editor
+
+![Connection update module version](images/connections/update-module-version.png)
+
+This panel will offer the latest available version and any installed versions. Clicking save will restart the connection to apply the change
+
+:::tip
+You can install more versions of a module or uninstall versions from the [Modules page](./modules.md)
+:::
+
+In case you need it, you are able to force a connection to use a different module. This should not be needed for normal use, it is an escape hatch for edge cases that we haven't thought of.

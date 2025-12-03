@@ -15,11 +15,11 @@ To use a Stream Dock with Companion, the Mirabox creator software must not be ru
 
 Some Stream Dock models do not provide separate press and release events for all controls — this is a hardware limitation.
 
-**293V3**
+### 293V3
 
 The layout is straightforward: all keys map directly to the Companion grid.
 
-**N3**
+### N3
 
 The N3 has two rows of 3 LCD keys that map to the Companion grid. There are three non-LCD buttons underneath.
 
@@ -27,7 +27,7 @@ There's a large rotary encoder, shown as Rotary 1 and two smaller encoders shown
 
 ![Stream Dock N3 mapping](images/mirabox-streamdock-n3.png?raw=true 'Stream Dock N3 mapping')
 
-**N4**
+### N4
 
 The N4 has two rows of five LCD keys that map to the Companion grid. The LCD strip provides four soft keys and four rotary encoders. For compatibility with Stream Deck-style layouts, these four controls are left-aligned in Companion. Although the controls are evenly spaced across the width of the five LCD keys on the device, Companion places them in the first four columns.
 

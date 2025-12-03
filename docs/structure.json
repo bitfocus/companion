@@ -30,23 +30,33 @@
 				"children": [
 					{
 						"label": "Creating buttons",
-						"file": "user-guide/3_config/buttons/creating.md"
+						"file": "user-guide/3_config/buttons/creating/index.md",
+						"children": [
+							{
+								"label": "Actions",
+								"file": "user-guide/3_config/buttons/creating/actions.md"
+							},
+							{
+								"label": "Feedbacks",
+								"file": "user-guide/3_config/buttons/creating/feedbacks.md"
+							},
+							{
+								"label": "Steps",
+								"file": "user-guide/3_config/buttons/creating/steps.md"
+							},
+							{
+								"label": "Button indicators",
+								"file": "user-guide/3_config/buttons/creating/button-indicators.md"
+							}
+						]
 					},
 					{
-						"label": "Actions",
-						"file": "user-guide/3_config/buttons/actions.md"
+						"label": "Pages",
+						"file": "user-guide/3_config/buttons/pages.md"
 					},
 					{
-						"label": "Feedbacks",
-						"file": "user-guide/3_config/buttons/feedbacks.md"
-					},
-					{
-						"label": "Steps",
-						"file": "user-guide/3_config/buttons/steps.md"
-					},
-					{
-						"label": "Button indicators",
-						"file": "user-guide/3_config/buttons/button_indicators.md"
+						"label": "Action Recorder",
+						"file": "user-guide/3_config/buttons/action-recorder.md"
 					}
 				]
 			},
@@ -59,6 +69,14 @@
 				"file": "user-guide/3_config/triggers.md"
 			},
 			{
+				"label": "Variables",
+				"file": "user-guide/3_config/variables.md"
+			},
+			{
+				"label": "Modules",
+				"file": "user-guide/3_config/modules.md"
+			},
+			{
 				"label": "Settings",
 				"file": "user-guide/3_config/settings.md"
 			},
@@ -69,55 +87,20 @@
 			{
 				"label": "Log",
 				"file": "user-guide/3_config/log.md"
-			},
-			{
-				"label": "Sidebar",
-				"file": "user-guide/3_config/sidebar/index.md",
-				"children": [
-					{
-						"label": "Emulator",
-						"file": "user-guide/3_config/sidebar/emulator.md"
-					},
-					{
-						"label": "Web buttons",
-						"file": "user-guide/3_config/sidebar/web_buttons.md"
-					}
-				]
 			}
 		]
 	},
 	{
-		"label": "Secondary admin controls",
+		"label": "Expressions",
+		"file": "user-guide/4_expressions/index.md",
 		"children": [
 			{
-				"label": "Module variables",
-				"file": "user-guide/4_secondary_admin_controls/module_variables.md"
+				"label": "Operators",
+				"file": "user-guide/4_expressions/operators.md"
 			},
 			{
-				"label": "Internal variables",
-				"file": "user-guide/4_secondary_admin_controls/internal_variables.md"
-			},
-			{
-				"label": "Custom variables",
-				"file": "user-guide/4_secondary_admin_controls/custom_variables.md"
-			},
-			{
-				"label": "Local variables",
-				"file": "user-guide/4_secondary_admin_controls/local_variables.md"
-			},
-			{
-				"label": "Expressions",
-				"file": "user-guide/4_secondary_admin_controls/expressions/index.md",
-				"children": [
-					{
-						"label": "Operators",
-						"file": "user-guide/4_secondary_admin_controls/expressions/operators.md"
-					},
-					{
-						"label": "Functions",
-						"file": "user-guide/4_secondary_admin_controls/expressions/functions.md"
-					}
-				]
+				"label": "Functions",
+				"file": "user-guide/4_expressions/functions.md"
 			}
 		]
 	},
@@ -155,8 +138,17 @@
 		]
 	},
 	{
-		"label": "Modules",
-		"file": "user-guide/6_modules.md"
+		"label": "Interactive Buttons",
+		"children": [
+			{
+				"label": "Emulator",
+				"file": "user-guide/6_interactive-buttons/emulator.md"
+			},
+			{
+				"label": "Web buttons",
+				"file": "user-guide/6_interactive-buttons/web_buttons.md"
+			}
+		]
 	},
 	{
 		"label": "Surfaces",

@@ -6,11 +6,11 @@ description: Setup guide for Contour ShuttleXpress and ShuttlePro.
 
 Bitfocus Companion supports using the Contour ShuttleXpress and ShuttlePro v1 and v2, since Companion v3.1.0. (Note: support for very old versions of ShuttlePro v1 was added in v4.1.3)
 
-## Enable USB Detection
+### Enable USB Detection
 
 You must enable scanning for Contour Shuttle products in Companion's _Settings > Surfaces_ section and rescan for USB devices.
 
-## Setting button/jog wheel/shuttle ring actions
+### Setting button/jog wheel/shuttle ring actions
 
 The button layout closely matches the device, with the following addition. For the shuttle ring you have the choice of two different buttons:
 
@@ -25,7 +25,7 @@ In either case, **_rotate-left_** is emitted when the jog is to the left of zero
 
 **Download a [Contour Shuttle template](assets/contour-shuttle-template.companionconfig) here.** (The template includes the variables described in the next section.)
 
-## Setting Variables
+### Setting Variables
 
 The contour shuttle can set the values of two custom variables of your choosing to indicate shuttle position and jog motion. To enable this feature you must first define custom variables. For example, got to the Custom Variables tab and add the following two variables: `$(custom:contourShuttleJog)` and `$(custom:contourShuttleRing)`...
 

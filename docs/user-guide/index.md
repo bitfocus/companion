@@ -4,12 +4,16 @@ title: Welcome
 description: Introduction to Companion and getting started.
 ---
 
-Remember that Companion is **open source and free**.
+# Welcome to Companion
 
-If you find something wrong here, please let us know on **[Slack](https://bfoc.us/ke7e9dqgaz)**, via a **[bug report](https://bfoc.us/ead30tx91c)**, or — even better — send a pull request on **[GitHub](https://github.com/bitfocus/companion)** if you can fix it yourself.
+Companion is free and open-source software.
 
-Bitfocus initially launched the project, but it's now 100% community driven.
+Companion can control over 700 different types of devices — mixers, switchers, lighting, streaming gear, and more. See the full list of supported modules and drivers on the [Bitfocus website](https://bfoc.us/m6idfk19cm)
 
-If Companion helps your business, consider **[donating](https://bfoc.us/ccfbf8wm2x)**.
+If you find an issue, please let us know on [Slack](https://bfoc.us/ke7e9dqgaz), file a [bug report](https://bfoc.us/ead30tx91c), or — even better — send a pull request on [GitHub](https://github.com/bitfocus/companion).
 
-Ok, let's get started!
+Bitfocus initially launched the project; it is now 100% community driven.
+
+If Companion helps your business, consider [donating](https://bfoc.us/ccfbf8wm2x).
+
+Let's get started!

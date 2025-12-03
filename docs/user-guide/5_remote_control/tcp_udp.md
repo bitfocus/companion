@@ -4,8 +4,11 @@ sidebar_position: 1
 description: Control Companion remotely via TCP or UDP commands.
 ---
 
-Remote triggering can be done by sending TCP (port `51234`) or UDP (port `51235`) commands.
+Remote triggering can be done by sending TCP or UDP commands. The port numbers must be setup in the [Settings](../3_config/settings.md#tcp) before they can be used.
+
+:::warning
 TCP commands must be terminated with a newline character, i.e., \n (0x0A) or \r\n (0x0D, 0x0A).
+:::
 
 ## Commands
 
@@ -54,7 +57,11 @@ Change custom variable "cue" to value "intro":
 
 ## Deprecated Commands
 
-The following commands are deprecated and have replacements listed above. They will be removed in a future version of Companion.
+:::warning
+These commands will be removed in a future release of Companion. There is equivalent functionality in the list above.
+:::
+
+The following commands are deprecated and have replacements listed above. Support for this must be enabled in the settings for it to work
 
 - `PAGE-SET <page number> <surface id>`  
   _Make device go to a specific page_

@@ -1,6 +1,6 @@
 ---
 title: Log
-sidebar_position: 7
+sidebar_position: 9
 description: View and filter log messages for debugging.
 ---
 
