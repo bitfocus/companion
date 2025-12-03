@@ -1,52 +1,52 @@
-import React, { useCallback } from 'react'
-import { CAlert, CButton, CButtonGroup } from '@coreui/react'
+import React, { useMemo } from 'react'
+import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
+import { PresetButtonsCollapse } from './PresetButtonsCollapse'
+import { observable } from 'mobx'
 
 interface PresetsCategoryListProps {
 	presets: Map<string, UIPresetDefinition> | undefined
 	connectionInfo: ClientConnectionConfig | undefined
 	moduleInfo: ClientModuleInfo | undefined
 	selectedConnectionId: string
-	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
+	clearSelectedConnectionId: () => void
 }
 export const PresetsCategoryList = observer(function PresetsCategoryList({
 	presets,
 	connectionInfo,
 	selectedConnectionId,
-	setConnectionAndCategory,
+	clearSelectedConnectionId,
 }: Readonly<PresetsCategoryListProps>): React.JSX.Element {
 	const categories = new Set<string>()
 	for (const preset of presets?.values() || []) {
 		categories.add(preset.category)
 	}
 
-	const doBack = useCallback(() => setConnectionAndCategory([null, null]), [setConnectionAndCategory])
+	const expandedCategory = useMemo(() => observable.box<string | null>(null), [])
 
 	const buttons = Array.from(categories)
 		.sort((a, b) => a.localeCompare(b))
-		.map((category) => {
-			return (
-				<CButton
-					key={category}
-					color="primary"
-					onClick={() => setConnectionAndCategory([selectedConnectionId, category])}
-				>
-					{category}
-				</CButton>
-			)
-		})
+		.map((category) => (
+			<PresetButtonsCollapse
+				key={category}
+				presets={presets}
+				category={category}
+				connectionId={selectedConnectionId}
+				expandedCategory={expandedCategory}
+			/>
+		))
 
 	return (
 		<div>
 			<h5>Presets</h5>
 			<div style={{ marginBottom: 10 }}>
 				<CButtonGroup size="sm">
-					<CButton color="primary" onClick={doBack}>
+					<CButton color="primary" onClick={clearSelectedConnectionId}>
 						<FontAwesomeIcon icon={faArrowLeft} />
 						&nbsp; Go back
 					</CButton>
@@ -58,7 +58,12 @@ export const PresetsCategoryList = observer(function PresetsCategoryList({
 			{buttons.length === 0 ? (
 				<CAlert color="primary">Connection has no presets.</CAlert>
 			) : (
-				<div className="preset-category-grid">{buttons}</div>
+				<>
+					<CCallout color="info" className="my-2">
+						<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
+					</CCallout>
+					<div>{buttons}</div>
+				</>
 			)}
 		</div>
 	)
