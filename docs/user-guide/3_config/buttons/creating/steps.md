@@ -4,7 +4,7 @@ sidebar_position: 4
 description: Create multi-step buttons that cycle through actions.
 ---
 
-Steps have been supported in Comapnion since 3.0, to allow for creating powerful and complex buttons. This replaces the **Latch** functionality that was possible in previous versions.
+Steps have been supported in Companion since 3.0, to allow for creating powerful and complex buttons. This replaces the **Latch** functionality that was possible in previous versions.
 
 ## Defining Steps
 

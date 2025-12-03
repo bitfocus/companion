@@ -7,7 +7,7 @@ The **Emulator** provides a simple grid of buttons in your browser. It interacts
 
 ![Emulator](images/emulator.png?raw=true 'Emulator')
 
-By default no emulators are created on new installs of Comapnion. Since Companion 3.0 it's possible to have multiple emulators. An emulator can be viewed from multiple locations at once, but they all share the same Companion page. Using multiple emulators allows different people to view different pages simultaneously.
+By default no emulators are created on new installs of Companion. Since Companion 3.0 it's possible to have multiple emulators. An emulator can be viewed from multiple locations at once, but they all share the same Companion page. Using multiple emulators allows different people to view different pages simultaneously.
 
 You can use keyboard hotkeys to control the emulator and trigger button presses. Instructions are at the top of the emulator selection page.
 

@@ -73,7 +73,7 @@ async function discoverVersions(): Promise<WhatsNewFile[]> {
 			const { data } = parseFrontmatter(content)
 
 			const fileBaseName = entry.name.replace('.md', '')
-			const title = data.title || fileBaseName
+			const title = (data.title || fileBaseName).replace('Companion ', '')
 
 			// Convert title to version number (e.g., "v4.1.0" -> "4.1.0")
 			const versionMatch = title.match(/v?(\d+\.\d+\.\d+)/)
