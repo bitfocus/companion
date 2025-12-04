@@ -1,11 +1,19 @@
 ---
-title: Setting up a Reverse Proxy
-sidebar_label: Setting a Proxy
+title: Advanced setup options
+sidebar_label: Advanced setup options
 sidebar_position: 10
 description: Prepare hardware and software before launching Companion.
 ---
 
-Sometimes it can be desirable to serve companion through a reverse proxy.
+:::tip
+
+This page discusses advanced options that are rarely needed. If you're not sure, it should be safe to ignore this page!
+
+:::
+
+## Setting up a Reverse Proxy
+
+In rare instances, you may need to serve companion through a reverse proxy.
 
 > If you have an example for another reverse proxy, feel free to open a github issue to get it added here.
 

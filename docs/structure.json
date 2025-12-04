@@ -16,11 +16,7 @@
 				"file": "user-guide/1_getting-started/Installation.md"
 			},
 			{
-				"label": "Local Modules",
-				"file": "user-guide/1_getting-started/local-modules.md"
-			},
-			{
-				"label": "Setting a Proxy",
+				"label": "Advanced setup options",
 				"file": "user-guide/1_getting-started/Using-a-reverse-proxy.md"
 			}
 		]
