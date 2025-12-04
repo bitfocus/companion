@@ -10,6 +10,18 @@
 			{
 				"label": "Start the server",
 				"file": "user-guide/1_getting-started/start-the-server.md"
+			},
+			{
+				"label": "Installation options",
+				"file": "user-guide/1_getting-started/Installation.md"
+			},
+			{
+				"label": "Local Modules",
+				"file": "user-guide/1_getting-started/local-modules.md"
+			},
+			{
+				"label": "Setting a Proxy",
+				"file": "user-guide/1_getting-started/Using-a-reverse-proxy.md"
 			}
 		]
 	},
