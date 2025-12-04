@@ -45,7 +45,9 @@ Download, install and run!
 
 ### Raspberry Pi
 
-> **Please note:** Companion is only supported on the Raspberry Pi 4 (2, 4, or 8 GB). Companion can be installed on a Raspberry Pi 3B, or 3B+, **but it is not recommended or supported**. Should you choose to do so, you do so at your own risk and with the understanding that the community will not be able to help you if something goes wrong.
+:::tip
+**Please note:** Companion only supports the Raspberry Pi 4 (2, 4, or 8 GB). Companion can be installed on a Raspberry Pi 3B, or 3B+, **but it is not recommended or supported**. Should you choose to do so, you do so at your own risk and with the understanding that the community will not be able to help you if something goes wrong.
+:::
 
 We recommend using the CompanionPi images available with [our CompanionPi setup guide](https://user.bitfocus.io/docs/companion-pi), also found in the [CompanionPi GitHub](https://github.com/bitfocus/companion-pi/tree/main/docs)
 
