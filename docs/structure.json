@@ -82,7 +82,7 @@
 			},
 			{
 				"label": "Import / Export",
-				"file": "user-guide/3_config/import_export.md"
+				"file": "user-guide/3_config/import-export.md"
 			},
 			{
 				"label": "Log",
@@ -109,31 +109,31 @@
 		"children": [
 			{
 				"label": "TCP / UDP Control",
-				"file": "user-guide/5_remote_control/tcp_udp.md"
+				"file": "user-guide/5_remote-control/tcp-udp.md"
 			},
 			{
 				"label": "HTTP Remote Control",
-				"file": "user-guide/5_remote_control/http_remote_control.md"
+				"file": "user-guide/5_remote-control/http-remote-control.md"
 			},
 			{
 				"label": "OSC Control",
-				"file": "user-guide/5_remote_control/osc_control.md"
+				"file": "user-guide/5_remote-control/osc-control.md"
 			},
 			{
 				"label": "Artnet / DMX Control",
-				"file": "user-guide/5_remote_control/artnet_dmx_control.md"
+				"file": "user-guide/5_remote-control/artnet-dmx-control.md"
 			},
 			{
 				"label": "RossTalk Control",
-				"file": "user-guide/5_remote_control/rosstalk_control.md"
+				"file": "user-guide/5_remote-control/rosstalk-control.md"
 			},
 			{
 				"label": "EmberPlus Control",
-				"file": "user-guide/5_remote_control/emberplus_control.md"
+				"file": "user-guide/5_remote-control/emberplus-control.md"
 			},
 			{
 				"label": "Satellite Protocol",
-				"file": "user-guide/5_remote_control/satellite.md"
+				"file": "user-guide/5_remote-control/satellite.md"
 			}
 		]
 	},
@@ -146,7 +146,7 @@
 			},
 			{
 				"label": "Web buttons",
-				"file": "user-guide/6_interactive-buttons/web_buttons.md"
+				"file": "user-guide/6_interactive-buttons/web-buttons.md"
 			}
 		]
 	},
@@ -156,11 +156,11 @@
 		"children": [
 			{
 				"label": "Elgato Stream Deck",
-				"file": "user-guide/7_surfaces/elgato_streamdeck.md"
+				"file": "user-guide/7_surfaces/elgato-streamdeck.md"
 			},
 			{
 				"label": "Elgato Plugin",
-				"file": "user-guide/7_surfaces/elgato_plugin.md"
+				"file": "user-guide/7_surfaces/elgato-plugin.md"
 			},
 			{
 				"label": "Satellite",
@@ -176,19 +176,19 @@
 			},
 			{
 				"label": "Mirabox Stream Dock",
-				"file": "user-guide/7_surfaces/mirabox_streamdock.md"
+				"file": "user-guide/7_surfaces/mirabox-streamdock.md"
 			},
 			{
 				"label": "Contour Shuttle",
-				"file": "user-guide/7_surfaces/contour_shuttle.md"
+				"file": "user-guide/7_surfaces/contour-shuttle.md"
 			},
 			{
 				"label": "VEC Footpedal",
-				"file": "user-guide/7_surfaces/vec_footpedal.md"
+				"file": "user-guide/7_surfaces/vec-footpedal.md"
 			},
 			{
 				"label": "Blackmagic ATEM Micro Panel",
-				"file": "user-guide/7_surfaces/blackmagic_controllers.md"
+				"file": "user-guide/7_surfaces/blackmagic-controllers.md"
 			},
 			{
 				"label": "203 Systems Mystrix",
