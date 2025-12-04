@@ -149,7 +149,7 @@ Optional parameters:
 - `COLOR` hex or css encoded 8bit RGB color for the key background. This is only sent for devices which were added where `COLORS` was true
 - `TEXTCOLOR` hex or css encoded 8bit RGB color for the key text. This is only sent for devices which were added where `COLORS` was true (added in v1.6)
 - `TEXT` base64 encoded text as should be displayed on the key. This is only sent for devices which were added where `TEXT` was true
-- `FONT_SIZE` numeric size that should be used when displaying the text on the key. This is only sent for devices which were added where `TEXT_SYLE` was true (added in v1.4.0)
+- `FONT_SIZE` numeric size that should be used when displaying the text on the key. This is only sent for devices which were added where `TEXT_STYLE` was true (added in v1.4.0)
 
 Note: expect more parameters to be added to this message over time. Some could increase the frequency of the message being received.
 
@@ -178,7 +178,7 @@ This can be received when output variables are defined as part of `ADD-DEVICE`.
 
 #### Locked state update (Since v1.8.0)
 
-This can be received when `PINCODE_LOCK` was specified when addign the device
+This can be received when `PINCODE_LOCK` was specified when adding the device
 
 `LOCKED-STATE DEVICEID=00000 LOCKED=true CHARACTER_COUNT=0`
 

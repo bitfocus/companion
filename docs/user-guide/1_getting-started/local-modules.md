@@ -11,7 +11,7 @@ Since Companion 3.0 you can use your own connection code without the need for a 
 ## Get the developer module
 
 You will be provided with a developer module by mail or by download.
-A developer module is a folder with some code files and maybe subfolders in it. At any case there will be a subfolder with the name `companion` and within that subfolder a file named `manifest.json`. The module folder is the parent folder of the folder named companion. You may get it uncompressed as a bunch of files or in a compressed/archived version. The archive usually has a TAR-GnuZip format with the file extension `.tgz` and usually, but not necesarrily the filename `pkg.tgz`.  
+A developer module is a folder with some code files and maybe subfolders in it. At any case there will be a subfolder with the name `companion` and within that subfolder a file named `manifest.json`. The module folder is the parent folder of the folder named companion. You may get it uncompressed as a bunch of files or in a compressed/archived version. The archive usually has a TAR-GnuZip format with the file extension `.tgz` and usually, but not necessarily the filename `pkg.tgz`.  
 If you have a different archive format like zip or 7z, the developer may have compressed the package again. You have to uncompress it until you are left with either some .tgz or with the uncompressed module folder.
 
 ## Module folder structure
