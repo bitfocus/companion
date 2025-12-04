@@ -33,6 +33,7 @@ export interface InstancesListTableRowProps<TMetaData extends { enabled?: boolea
 	doEdit: () => void
 	doToggleEnabled: () => void
 	debugLogUrl: string | null
+	cannotEnableReason?: string | null
 }
 
 export const InstancesListTableRow = observer(function InstancesListTableRow<TMetaData extends { enabled?: boolean }>({
@@ -45,6 +46,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 	doEdit,
 	doToggleEnabled,
 	debugLogUrl,
+	cannotEnableReason,
 }: InstancesListTableRowProps<TMetaData>) {
 	const { helpViewer, modules } = useContext(RootAppStoreContext)
 
@@ -74,6 +76,13 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 	)
 
 	const moduleDisplayName = moduleInfo ? moduleInfo.display.name : instance.moduleId
+
+	const canToggleEnabled = !cannotEnableReason || isEnabled
+	const toggleEnabledTitle = cannotEnableReason
+		? cannotEnableReason
+		: isEnabled
+			? `Disable ${labelStr}`
+			: `Enable ${labelStr}`
 
 	return (
 		<div className="flex flex-row align-items-center gap-2 hand">
@@ -109,15 +118,15 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 				<InstanceTableStatusCell isEnabled={showAsEnabled} status={instanceStatus} />
 			</div>
 			<div className="flex">
-				<CFormSwitch
-					className="ms-2"
-					disabled={!moduleInfo || !moduleVersion}
-					color="success"
-					checked={isEnabled}
-					onChange={doToggleEnabled}
-					size="xl"
-					title={isEnabled ? `Disable ${labelStr}` : `Enable ${labelStr}`}
-				/>
+				<div className="ms-2" title={toggleEnabledTitle}>
+					<CFormSwitch
+						disabled={!moduleInfo || !moduleVersion || !canToggleEnabled}
+						color="success"
+						checked={isEnabled}
+						onChange={doToggleEnabled}
+						size="xl"
+					/>
+				</div>
 				<CPopover
 					trigger="focus"
 					placement="right"

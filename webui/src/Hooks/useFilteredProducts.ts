@@ -21,7 +21,8 @@ export function useAllModuleProducts(
 		for (const moduleInfo of modules.allModules.values()) {
 			if (onlyModuleType && moduleInfo.moduleType !== onlyModuleType) continue
 
-			const latestVersion = moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.devVersion
+			const latestVersion =
+				moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.builtinVersion ?? moduleInfo.devVersion
 			if (!latestVersion) continue // shouldn't happen, but just in case
 
 			for (const product of moduleInfo.display.products) {
@@ -83,11 +84,14 @@ export function useAllModuleProducts(
 	}, [modules, includeUnreleased])
 }
 
-export function filterProducts(allProducts: FuzzyProduct[], filter: string): FuzzyProduct[] {
+export function filterProducts(allProducts: FuzzyProduct[], filter: string, includeType: boolean): FuzzyProduct[] {
 	if (!filter) return allProducts //.map((p) => p.info)
 
+	const keys: Array<keyof FuzzyProduct> = ['product', 'name', 'keywords']
+	if (includeType) keys.push('moduleType')
+
 	return fuzzySearch(filter, allProducts, {
-		keys: ['product', 'name', 'keywords'] satisfies Array<keyof FuzzyProduct>,
+		keys,
 		threshold: -10_000,
 	}).map((x) => x.obj)
 }

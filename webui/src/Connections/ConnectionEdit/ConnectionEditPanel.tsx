@@ -108,16 +108,16 @@ function useInstanceEditPanelService(
 				if (panelStore.isLoading) throw new Error('Connection is still loading, cannot save changes')
 
 				const configAndSecrets = panelStore.configAndSecrets
-				if (!configAndSecrets) throw new Error('No config and secrets loaded, cannot save changes')
-
-				saveConfigProps.config = configAndSecrets.config
-				saveConfigProps.secrets = configAndSecrets.secrets
+				if (configAndSecrets) {
+					saveConfigProps.config = configAndSecrets.config
+					saveConfigProps.secrets = configAndSecrets.secrets
+				}
 			}
 
 			const err: string | null = await setConfigMutation.mutateAsync(saveConfigProps)
 
 			if (err === 'invalid label') {
-				return `The label "${saveLabel}" in not valid`
+				return `The label "${saveLabel}" is not valid`
 			} else if (err === 'duplicate label') {
 				return `The label "${saveLabel}" is already in use. Please use a unique label for this connection`
 			} else if (err) {

@@ -25,7 +25,7 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 		}
 	}
 
-	const saveMutation = useMutation(trpc.surfaceDiscovery.setupSatellite.mutationOptions())
+	const saveMutation = useMutation(trpc.surfaces.outbound.discovery.setupSatellite.mutationOptions())
 	const saveMutationAsync = saveMutation.mutateAsync
 
 	const doClose = useCallback(() => setShow(false), [])
@@ -52,7 +52,7 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 	}, [saveMutationAsync, data, selectedAddress])
 
 	const externalAddressesQuery = useQuery(
-		trpc.surfaceDiscovery.externalAddresses.queryOptions(undefined, {
+		trpc.surfaces.outbound.discovery.externalAddresses.queryOptions(undefined, {
 			enabled: show,
 		})
 	)

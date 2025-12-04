@@ -150,11 +150,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		})
 	}
 
-	/**
-	 * Generated pincode bitmaps
-	 */
-	#pincodeBuffersCache: Omit<PincodeBitmaps, 'code'> | null = null
-
 	#pendingVariables: CompanionVariableValues | null = null
 	/**
 	 * Debounce updating the variables, as buttons are often drawn in floods
@@ -530,24 +525,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}
 
 	/**
-	 * Generate pincode images
-	 */
-	getImagesForPincode(pincode: string): PincodeBitmaps {
-		if (!this.#pincodeBuffersCache) {
-			this.#pincodeBuffersCache = {}
-
-			for (let i = 0; i < 10; i++) {
-				this.#pincodeBuffersCache[i] = GraphicsRenderer.drawPincodeNumber(i)
-			}
-		}
-
-		return {
-			...this.#pincodeBuffersCache,
-			code: GraphicsRenderer.drawPincodeEntry(pincode),
-		}
-	}
-
-	/**
 	 * Get the cached render of a button
 	 */
 	getCachedRender(location: ControlLocation): ImageResult | undefined {
@@ -582,9 +559,4 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}> {
 		return this.#poolExec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename], remainingAttempts)
 	}
-}
-
-type PincodeBitmaps = {
-	code: ImageResult
-	[index: number]: ImageResult
 }

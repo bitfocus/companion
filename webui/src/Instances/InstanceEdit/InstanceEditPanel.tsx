@@ -27,11 +27,12 @@ interface InstanceGenericEditPanelProps<TConfig extends ClientInstanceConfigBase
 	instanceInfo: TConfig
 	service: InstanceEditPanelService<TConfig>
 	changeModuleDangerMessage: React.ReactNode
+	cannotEnableReason?: string | null
 }
 
 export const InstanceGenericEditPanel = observer(function InstanceGenericEditPanel<
 	TConfig extends ClientInstanceConfigBase,
->({ instanceInfo, service, changeModuleDangerMessage }: InstanceGenericEditPanelProps<TConfig>) {
+>({ instanceInfo, service, changeModuleDangerMessage, cannotEnableReason }: InstanceGenericEditPanelProps<TConfig>) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const panelStore = useMemo(() => new InstanceEditPanelStore(service, instanceInfo), [service, instanceInfo])
@@ -102,7 +103,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 						)}
 
 						<InstanceLabelInputField panelStore={panelStore} />
-						<InstanceEnabledInputField panelStore={panelStore} />
+						<InstanceEnabledInputField panelStore={panelStore} cannotEnableReason={cannotEnableReason} />
 
 						<InstanceModuleVersionInputField
 							panelStore={panelStore}
@@ -214,12 +215,32 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 
 const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	TConfig extends ClientInstanceConfigBase,
->({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
+>({
+	panelStore,
+	cannotEnableReason,
+}: {
+	panelStore: InstanceEditPanelStore<TConfig>
+	cannotEnableReason?: string | null
+}): React.JSX.Element {
+	const isEnabled = panelStore.enabled
+	const canToggle = !cannotEnableReason || isEnabled
+
 	return (
 		<>
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Enabled</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<CFormSwitch checked={panelStore.enabled} onChange={(e) => panelStore.setEnabled(e.target.checked)} size="xl" />
+				<CFormSwitch
+					checked={isEnabled}
+					onChange={(e) => panelStore.setEnabled(e.target.checked)}
+					size="xl"
+					disabled={!canToggle}
+					title={cannotEnableReason || undefined}
+				/>
+				{cannotEnableReason && !isEnabled && (
+					<div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
+						{cannotEnableReason}
+					</div>
+				)}
 			</CCol>
 		</>
 	)
