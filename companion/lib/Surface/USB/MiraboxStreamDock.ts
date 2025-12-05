@@ -2574,7 +2574,7 @@ class StreamDock extends EventEmitter {
 		} else if (this.info.productId === 0x1003) {
 			// modelType = 'N3'
 			this.model = StreamDock.models['293N3']
-		} else if (this.info.productId === 0x1012) {
+		} else if (this.info.vendorId === 0x6603 && this.info.productId === 0x1012) {
 			this.model = StreamDock.models['M18V3']
 		} else if (this.info.productId === 0x1014) {
 			this.model = StreamDock.models['HSV 293S']
