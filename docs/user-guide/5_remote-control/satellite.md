@@ -7,4 +7,4 @@ In some environments, it can be useful to connect a remote Streamdeck into Compa
 
 We have developed [Companion Satellite](https://user.bitfocus.io/product/companion-satellite) for this purpose.
 
-The satellite protocol follows SemVer and is documented on [the wiki](https://github.com/bitfocus/companion/wiki/Satellite-API)
+The satellite protocol is documented in [the developers' documentation](https://companion.free/for-developers/Satellite-API).

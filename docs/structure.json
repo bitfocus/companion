@@ -10,6 +10,14 @@
 			{
 				"label": "Start the server",
 				"file": "user-guide/1_getting-started/start-the-server.md"
+			},
+			{
+				"label": "Installation options",
+				"file": "user-guide/1_getting-started/Installation.md"
+			},
+			{
+				"label": "Advanced setup options",
+				"file": "user-guide/1_getting-started/Using-a-reverse-proxy.md"
 			}
 		]
 	},
