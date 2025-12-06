@@ -75,7 +75,7 @@ export const AddEntitiesModal = observer(
 				<CModalHeader closeButton>
 					<h5>Browse {capitalize(entityTypeLabel)}s</h5>
 				</CModalHeader>
-				<CModalHeader>
+				<CModalHeader closeButton={false}>
 					<CFormInput
 						type="text"
 						placeholder="Search ..."
