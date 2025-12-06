@@ -171,13 +171,13 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		const selfEvents: EventEmitter<DataUserConfigEvents> = self
 		const zodUserConfigKey = z.enum(Object.keys(DataUserConfig.Defaults) as [keyof UserConfigModel])
 		return router({
-			sslCertificateCreate: publicProcedure.mutation(() => {
+			sslCertificateCreate: publicProcedure.mutation(async () => {
 				return this.createSslCertificate()
 			}),
-			sslCertificateDelete: publicProcedure.mutation(() => {
+			sslCertificateDelete: publicProcedure.mutation(async () => {
 				return this.deleteSslCertificate()
 			}),
-			sslCertificateRenew: publicProcedure.mutation(() => {
+			sslCertificateRenew: publicProcedure.mutation(async () => {
 				return this.renewSslCertificate()
 			}),
 
@@ -306,11 +306,13 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	/**
 	 * Generate a self-signed SSL certificate
 	 */
-	private createSslCertificate(): void {
+	private async createSslCertificate(): Promise<void> {
 		try {
 			const attrs: selfsigned.CertificateField[] = [{ name: 'commonName', value: String(this.#data.https_self_cn) }]
-			const pems = selfsigned.generate(attrs, {
-				days: Number(this.#data.https_self_expiry) || undefined,
+
+			const days = Number(this.#data.https_self_expiry) || undefined
+			const pems = await selfsigned.generate(attrs, {
+				notAfterDate: days ? new Date(Date.now() + days * 24 * 60 * 60 * 1000) : undefined,
 				algorithm: 'sha256',
 				keySize: 2048,
 			})
@@ -367,13 +369,14 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * Try to renew a stored self-signed SSL certificate
 	 * @access protected
 	 */
-	private renewSslCertificate(): void {
+	private async renewSslCertificate(): Promise<void> {
 		try {
 			const attrs: selfsigned.CertificateField[] = [
 				{ name: 'commonName', value: String(this.#data.https_self_cert_cn) },
 			]
-			const pems = selfsigned.generate(attrs, {
-				days: Number(this.#data.https_self_expiry) || undefined,
+			const days = Number(this.#data.https_self_expiry) || undefined
+			const pems = await selfsigned.generate(attrs, {
+				notAfterDate: days ? new Date(Date.now() + days * 24 * 60 * 60 * 1000) : undefined,
 				algorithm: 'sha256',
 				keySize: 2048,
 				// keyPair: {
