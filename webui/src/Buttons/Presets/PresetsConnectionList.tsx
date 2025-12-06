@@ -8,11 +8,11 @@ import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
 
 interface PresetsConnectionListProps {
 	presetsDefinitionsStore: PresetDefinitionsStore
-	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
+	setConnectionId: (connectionId: string) => void
 }
 export const PresetsConnectionList = observer(function PresetsConnectionList({
 	presetsDefinitionsStore,
-	setConnectionAndCategory,
+	setConnectionId,
 }: PresetsConnectionListProps) {
 	const { modules, connections } = useContext(RootAppStoreContext)
 
@@ -35,12 +35,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 			: undefined
 
 		return (
-			<CButton
-				title={moduleInfo?.display?.name}
-				key={id}
-				color="primary"
-				onClick={() => setConnectionAndCategory([id, null])}
-			>
+			<CButton title={moduleInfo?.display?.name} key={id} color="primary" onClick={() => setConnectionId(id)}>
 				<h6>{connectionInfo?.label ?? id}</h6> <small>{compactName ?? '?'}</small>
 			</CButton>
 		)
