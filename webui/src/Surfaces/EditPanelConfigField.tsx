@@ -10,13 +10,29 @@ import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
 import { validateInputValue } from '~/Helpers/validateInputValue'
-import { SurfaceLocalVariables } from '~/LocalVariableDefinitions'
+import { type DropdownChoiceInt } from '~/DropDownInputFancy'
 
 interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: any) => void
 	definition: CompanionSurfaceConfigField
 	value: any
 }
+
+const SurfaceLocalVariables: DropdownChoiceInt[] = [
+	{
+		value: 'this:page',
+		label: 'This page',
+	},
+	{
+		value: 'this:surface_id',
+		label: 'The id of this surface',
+	},
+	{
+		value: 'this:page_name',
+		label: 'This page name',
+	},
+]
+
 export const EditPanelConfigField = observer(function EditPanelConfigField({
 	setValue,
 	definition,

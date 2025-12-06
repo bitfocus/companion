@@ -37,10 +37,23 @@ label.disabled {
 	}
 }
 
-/* Style for autocomplete of variable */
-.variable-suggestion-option span {
+/* Style for variable-name autocomplete in text inputs as well as regular dropdowns */
+.variable-dropdown-option span {
 	display: block;
 
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		font-weight: inherit;
+		white-space: wrap;
+		font-weight: normal;
+	}
+}
+
+/* note that using `span` instead of `div` doesn't format correctly for the ellipsis */
+.variable-dropdown-single div {
 	&.var-name {
 		font-weight: bold;
 	}
@@ -50,6 +63,8 @@ label.disabled {
 		font-weight: inherit;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-weight: normal;
+		padding-bottom: 0.2em;
 	}
 }
 
@@ -150,6 +165,33 @@ label.disabled {
 			}
 		}
 	}
+}
+
+/* Allow \n line-breaks in pulldown options.
+   
+  Companion's default line-height for button-text suggestions is 1.5,
+  (Other props such as padding affect spacing between options, so even at line-height=1 the options are separated.)
+
+  .select-control: Regular pulldown menu (actions and feedbacks)
+  .variable-select-root: For expression-suggestions in the button-text (not expression-editor) pull-down
+   */
+.select-control__option,
+.variable-select-root__option {
+	white-space: pre-wrap !important;
+	line-height: 1.5;
+}
+
+/* Allow \n line-breaks and remove "excess" line spacing. 
+	Note: this maintains the current behavior of no-wrap in single-value fields. */
+.select-control__single-value {
+	white-space: pre !important;
+	line-height: 1.3;
+}
+
+.select-control__value-container {
+	--vert-padding: 4px;
+	padding-top: var(--vert-padding) !important;
+	padding-bottom: var(--vert-padding) !important;
 }
 
 .static-text-content {
