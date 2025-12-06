@@ -17,26 +17,21 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	const { modules, connections } = useContext(RootAppStoreContext)
 
 	// Sort the connections by the same order as the connections list
-	const sortedPresets = Array.from(presetsDefinitionsStore.presets).sort(
-		([a], [b]) =>
-			(connections.getInfo(a)?.sortOrder ?? Number.POSITIVE_INFINITY) -
-			(connections.getInfo(b)?.sortOrder ?? Number.POSITIVE_INFINITY)
-	)
+	const options = connections.sortedConnections().map((connectionInfo) => {
+		const presets = presetsDefinitionsStore.presets.get(connectionInfo.id)
+		if (!presets || presets.size === 0) return null
 
-	const options = sortedPresets.map(([id, vals]) => {
-		if (!vals || Object.values(vals).length === 0) return ''
-
-		const connectionInfo = connections.getInfo(id)
-		const moduleInfo = connectionInfo
-			? modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
-			: undefined
-		const compactName = connectionInfo
-			? modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)
-			: undefined
+		const moduleInfo = modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
+		const compactName = modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)
 
 		return (
-			<CButton title={moduleInfo?.display?.name} key={id} color="primary" onClick={() => setConnectionId(id)}>
-				<h6>{connectionInfo?.label ?? id}</h6> <small>{compactName ?? '?'}</small>
+			<CButton
+				title={moduleInfo?.display?.name}
+				key={connectionInfo.id}
+				color="primary"
+				onClick={() => setConnectionId(connectionInfo.id)}
+			>
+				<h6>{connectionInfo.label || connectionInfo.id}</h6> <small>{compactName ?? '?'}</small>
 			</CButton>
 		)
 	})
