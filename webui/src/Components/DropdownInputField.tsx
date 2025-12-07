@@ -117,8 +117,14 @@ export const DropdownInputField = observer(function DropdownInputField({
 			target.dispatchEvent(new Event('input', { bubbles: true }))
 		}
 
-		return (props: any) => <components.Input {...props} onPaste={onPaste} />
-	}, [onPasteIntercept])
+		return (props: any) => (
+			<components.Input
+				{...props}
+				onPaste={onPaste}
+				className={fancyFormat && (props.className ?? '') + 'variable-dropdown-edit'}
+			/>
+		)
+	}, [onPasteIntercept, fancyFormat])
 
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 

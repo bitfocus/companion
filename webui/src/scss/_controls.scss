@@ -37,7 +37,7 @@ label.disabled {
 	}
 }
 
-/* Style for variable-name autocomplete in text inputs as well as regular dropdowns */
+/* Style for variable-name autocomplete in text inputs as well as options in regular dropdowns */
 .variable-dropdown-option span {
 	display: block;
 
@@ -178,16 +178,26 @@ label.disabled {
 .select-control__option,
 .variable-select-root__option {
 	white-space: pre-wrap !important;
-	line-height: 1.5;
+	line-height: 1.3;
 }
+
+$single_value_line_height: 1.3;
 
 /* Allow \n line-breaks and remove "excess" line spacing. 
 	Note: this maintains the current behavior of no-wrap in single-value fields. */
 .select-control__single-value {
 	white-space: pre !important;
-	line-height: 1.3;
+	line-height: $single_value_line_height;
 }
 
+/* For two-line dropdowns, react-select ignores the CustomSingle formatting when using custom input, so instead
+   we introduce a new CSS class that is twice the .select-control__single-value line-height. */
+.variable-dropdown-edit {
+	min-height: (2 * $single_value_line_height) * 1em;
+}
+
+/* For two-line dropdowns the single-value container looks a bit tight, so add some padding.
+   As long as vert-padding is not too large this has no effect on single-line values */
 .select-control__value-container {
 	--vert-padding: 4px;
 	padding-top: var(--vert-padding) !important;
