@@ -504,7 +504,8 @@ export abstract class ControlEntityListPoolBase {
 
 		// Make sure the new name is valid
 		if (!isLabelValid(name)) {
-			throw new Error(`Invalid local variable name "${name}"`)
+			// throw new Error(`Invalid local variable name "${name}"`)
+			return false
 		}
 
 		const oldLocalVariableName = entity.localVariableName
