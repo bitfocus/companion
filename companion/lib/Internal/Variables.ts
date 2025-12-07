@@ -382,7 +382,11 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			theControlId = extras.controlId
 		} else {
 			// Parse the location of a button
-			const result = this.#internalUtils.parseInternalControlReferenceForActionOrFeedback(extras, extras, true)
+			const result = this.#internalUtils.parseInternalControlReferenceForActionOrFeedback(
+				extras,
+				action.rawOptions,
+				true
+			)
 			theControlId = result.location ? this.#pageStore.getControlIdAt(result.location) : null
 		}
 		if (!theControlId) return
