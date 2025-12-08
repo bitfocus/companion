@@ -2,7 +2,7 @@
 
 **Documentation**
 
-- https://github.com/bitfocus/companion/wiki/Installation
+- https://companion.free/user-guide/beta/getting-started/Installation
 
 **Slack / Chat**
 
