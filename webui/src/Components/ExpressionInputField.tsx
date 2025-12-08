@@ -122,7 +122,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 					// Make suggest widget rows tall enough for two lines (name + description)
 					// and make menu font and row height more like the other variable suggestion menus.
 					suggestFontSize: 16,
-					suggestLineHeight: 60,
+					suggestLineHeight: 53,
 				}}
 			/>
 		</div>
