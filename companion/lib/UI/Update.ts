@@ -82,7 +82,11 @@ export class UIUpdate {
 				}
 
 				this.#logger.debug(`fresh update data received ${JSON.stringify(res.data)}`)
-				this.#latestUpdateData = res.data as AppUpdateInfo
+				this.#latestUpdateData = {
+					link: res.data.link,
+					message2: undefined,
+					...res.data,
+				}
 				this.#updateEvents.emit('info', this.#latestUpdateData)
 			},
 			{

@@ -13,6 +13,7 @@ export interface AppVersionInfo {
 }
 export interface AppUpdateInfo {
 	message: string
+	message2: string | undefined
 	link: string | undefined
 }
 
