@@ -1,6 +1,6 @@
 {
   "name": "@companion-app/workspace",
-  "version": "4.1.5",
+  "version": "4.1.6",
   "packageManager": "yarn@4.12.0",
   "workspaces": [
     "companion",
