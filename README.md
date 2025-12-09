@@ -1,4 +1,4 @@
-# [Bitfocus Companion](https://bitfocus.io/companion)
+# [Bitfocus Companion](https://companion.free)
 
 **Documentation**
 
@@ -10,6 +10,7 @@
 
 **Our website**
 
+- https://companion.free/
 - https://bitfocus.io/companion/
 
 **Bleeding edge builds**
@@ -24,7 +25,7 @@ For checking known bugs or reporting of potential bugs, please use the [issue sy
 
 ## Modules (Supported devices/software)
 
-- https://bitfocus.io/connections (600+!)
+- https://bitfocus.io/connections (700+!)
 
 ## Contributors
 
