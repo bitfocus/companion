@@ -167,9 +167,11 @@ label.disabled {
 	}
 }
 
-/* Allow \n line-breaks in pulldown options.
-   
-  Companion's default line-height for button-text suggestions is 1.5,
+/* Styling for the dropdown options list, so they can accomodate two-line entries
+
+  Companion's default line-height (`--cui-body-line-height`) is 1.5,
+  Here line-height the value but is specified explicitly to allow it to be replaced in a way that affects 
+  all pulldown menus, in case a shorter line-height may be more suitable for long lists...
   (Other props such as padding affect spacing between options, so even at line-height=1 the options are separated.)
 
   .select-control: Regular pulldown menu (actions and feedbacks)
@@ -177,31 +179,32 @@ label.disabled {
    */
 .select-control__option,
 .variable-select-root__option {
-	white-space: pre-wrap !important;
-	line-height: 1.3;
+	white-space: pre-wrap !important; /* Honor \n line-breaks in the text. */
+	line-height: var(--cui-body-line-height);
 }
 
-$single_value_line_height: 1.3;
-
-/* Allow \n line-breaks and remove "excess" line spacing. 
-	Note: this maintains the current behavior of no-wrap in single-value fields. */
-.select-control__single-value {
-	white-space: pre !important;
-	line-height: $single_value_line_height;
-}
-
-/* For two-line dropdowns, react-select ignores the CustomSingle formatting when using custom input, so instead
-   we introduce a new CSS class that is twice the .select-control__single-value line-height. */
-.variable-dropdown-edit {
-	min-height: (2 * $single_value_line_height) * 1em;
-}
-
-/* For two-line dropdowns the single-value container looks a bit tight, so add some padding.
-   As long as vert-padding is not too large this has no effect on single-line values */
+/* Styling for the dropdown value container, "single-value", so they can accomodate two-line entries */
 .select-control__value-container {
+	--value-line-height: var(--cui-body-line-height);
+
+	/* For two-line dropdowns the container looks a bit tight, so add some padding.
+		Note: as long as vert-padding is not too large this has no effect on single-line values */
 	--vert-padding: 4px;
 	padding-top: var(--vert-padding) !important;
 	padding-bottom: var(--vert-padding) !important;
+
+	/* Allow \n line-breaks and remove "excess" line spacing. 
+		Note: this maintains the current behavior of no-wrap in single-value fields. */
+	.select-control__single-value {
+		white-space: pre !important; /* Honor \n line-breaks in the text. */
+		line-height: var(--value-line-height);
+	}
+
+	/* For two-line, editable dropdowns, the __single-value element is hidden, above, on gaining focus
+	 so to preserve the box size we introduce a new CSS class that is twice the .select-control__single-value line-height. */
+	.variable-dropdown-edit {
+		min-height: calc(2 * var(--value-line-height) * 1em);
+	}
 }
 
 .static-text-content {
