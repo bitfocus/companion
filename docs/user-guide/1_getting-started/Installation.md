@@ -35,11 +35,17 @@ These versions are often behind beta in module updates.
 
 ### Mac
 
+:::note
+As of 4.2 we only support macOS 12 and newer.
+:::
+
 Unzip the download, drag Companion.app into your Applications folder
 
 ### Windows (x64)
 
-Note: As of 3.0 we only support Windows 10 and newer.
+:::note
+As of 3.0 we only support Windows 10 and newer.
+:::
 
 Download, install and run!
 
