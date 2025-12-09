@@ -63,17 +63,17 @@ jobs:
           VERSION=${GITHUB_REF#refs/heads/stable-}
 
           # Remove existing docs in website
-          rm -rf website/versioned_docs/version-${VERSION} || true
+          rm -rf website/versioned_docs/version-v${VERSION} || true
 
           # Copy new docs from companion to website
-          cp -r companion/docs/user-guide website/versioned_docs/version-${VERSION}
+          cp -r companion/docs/user-guide website/versioned_docs/version-v${VERSION}
 
           # Create the marker file
-          touch website/versioned_docs/version-${VERSION}/__DO_NOT_EDIT__
+          touch website/versioned_docs/version-v${VERSION}/__DO_NOT_EDIT__
 
           # Make sure versioned_sidebars has been created
-          if [ ! -f website/versioned_sidebars/version-${VERSION}-sidebars.json ]; then
-            cp website/versioned_sidebars/version-beta-sidebars.json website/versioned_sidebars/version-${VERSION}-sidebars.json
+          if [ ! -f website/versioned_sidebars/version-v${VERSION}-sidebars.json ]; then
+            cp website/versioned_sidebars/version-beta-sidebars.json website/versioned_sidebars/version-v${VERSION}-sidebars.json
 
             # Add to the versions.json file. Assume this was needed if the sidebar did not exist
             jq --arg ver "v${VERSION}" '. |= [$ver] + .' website/versions.json > website/versions_tmp.json
