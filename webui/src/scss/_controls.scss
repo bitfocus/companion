@@ -167,7 +167,7 @@ label.disabled {
 	}
 }
 
-/* Styling for the dropdown options list, so they can accomodate two-line entries
+/* Styling for the dropdown options list, so they can accommodate two-line entries
 
   Companion's default line-height (`--cui-body-line-height`) is 1.5,
   Here line-height the value but is specified explicitly to allow it to be replaced in a way that affects 
@@ -183,7 +183,7 @@ label.disabled {
 	line-height: var(--cui-body-line-height);
 }
 
-/* Styling for the dropdown value container, "single-value", so they can accomodate two-line entries */
+/* Styling for the dropdown value container, "single-value", so they can accommodate two-line entries */
 .select-control__value-container {
 	--value-line-height: var(--cui-body-line-height);
 
