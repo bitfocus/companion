@@ -261,7 +261,7 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 	const { choices: moduleVersionChoices, loaded: choicesLoaded } = useConnectionVersionSelectOptions(
 		moduleId,
 		moduleInfo,
-		false
+		true
 	)
 
 	return (

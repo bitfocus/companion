@@ -97,7 +97,7 @@ export const AddConnectionModal = observer(
 			choices: versionChoices,
 			loaded: choicesLoaded,
 			hasIncompatibleNewerVersion,
-		} = useConnectionVersionSelectOptions(moduleInfo?.id, moduleInfo?.installedInfo, false)
+		} = useConnectionVersionSelectOptions(moduleInfo?.id, moduleInfo?.installedInfo, true)
 
 		// Ensure the currently selection version is a valid option
 		const defaultVersionId = moduleInfo?.installedInfo?.devVersion
