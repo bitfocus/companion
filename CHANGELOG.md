@@ -55,6 +55,15 @@
 - Reduce frequency of pincode lock state logging (#3792)
 - Loupedeck Live pincode lock layout
 
+## Companion v4.1.6 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Setting local variables for another control failing #3813
+- Unable to select module beta version for connection #3815
+- Suppress some logged errors about local variable names
+- Avoid spamming log with surface lock state messages #3792
+
 ## Companion v4.1.5 - Release Notes
 
 ### 🐞 BUG FIXES
