@@ -257,14 +257,22 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		for (const [id, info] of customVariablesSorted) {
 			choices.push({
 				id,
-				label: `${info.description} (custom:${id})`,
+				label: info.description,
 			})
 		}
 
 		return choices
 	}, [customVariables, includeNone])
 
-	return <DropdownInputField disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
+	return (
+		<DropdownInputField
+			disabled={disabled}
+			value={value ?? ''}
+			choices={choices}
+			setValue={setValue}
+			fancyFormat={true}
+		/>
+	)
 })
 
 interface InternalVariableDropdownProps {
@@ -303,7 +311,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			const id = `${variable.connectionLabel}:${variable.name}`
 			choices.push({
 				id,
-				label: `${variable.label} (${id})`,
+				label: variable.label,
 			})
 		}
 
@@ -334,6 +342,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
 			onPasteIntercept={onPasteIntercept}
+			fancyFormat={true}
 		/>
 	)
 })

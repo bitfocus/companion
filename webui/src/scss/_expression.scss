@@ -17,6 +17,8 @@
 
 	/* Override Monaco suggest widget to show details below name */
 	.monaco-editor .suggest-widget {
+		z-index: 10000 !important; /* otherwise the top goes under the top banner in action/feedback expression suggestions */
+
 		.monaco-list .monaco-list-row {
 			align-items: center;
 			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -26,7 +28,7 @@
 				display: grid !important;
 				grid-template-columns: auto 1fr;
 				grid-template-rows: auto auto;
-				line-height: 16px !important;
+				line-height: 21px !important;
 
 				.suggest-icon {
 					grid-row: span 2;
@@ -37,6 +39,10 @@
 				.left {
 					grid-column: 2;
 					grid-row: 1;
+					font-weight: bold;
+					text-decoration: none !important; /* this doesn't work */
+					padding-top: 5px;
+					white-space: pre-wrap !important; /* this doesn't work */
 				}
 
 				/* Right (details/description) moves below name */
