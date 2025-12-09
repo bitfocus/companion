@@ -43,16 +43,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		page_plusminus: false,
 		remove_topbar: false,
 
-		xkeys_enable: true,
-		elgato_plugin_enable: false, // Also disables local streamdeck
+		elgato_plugin_enable: false,
 		usb_hotplug: true,
-		loupedeck_enable: false,
-		mirabox_streamdock_enable: true,
-		contour_shuttle_enable: false,
-		vec_footpedal_enable: false,
-		blackmagic_controller_enable: false,
-		mystrix_enable: false,
-		logitech_mx_console_enable: false,
 
 		pin_enable: false,
 		link_lockouts: false,
@@ -77,8 +69,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		rosstalk_enabled: false,
 
 		emberplus_enabled: false,
-
-		videohub_panel_enabled: false,
 
 		artnet_enabled: false,
 		artnet_universe: 1,
@@ -130,8 +120,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				lastRan: 0,
 			},
 		],
-
-		discoveryEnabled: true,
 	}
 	/**
 	 * The user configuration settings
@@ -247,10 +235,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				osc_listen_port: 12321,
 
 				emberplus_enabled: true,
-
-				xkeys_enable: false,
-
-				discoveryEnabled: true,
 			}
 
 			// check if these fields have already been defined

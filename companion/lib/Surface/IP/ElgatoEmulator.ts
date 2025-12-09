@@ -17,8 +17,7 @@ import debounceFn from 'debounce-fn'
 import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 export function EmulatorRoom(id: string): string {
 	return `emulator:${id}`
@@ -129,10 +128,10 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		this.#emulatorId = emulatorId
 
 		this.info = {
-			type: 'Emulator',
-			devicePath: `emulator:${emulatorId}`,
+			description: 'Emulator',
 			configFields: configFields,
-			deviceId: `emulator:${emulatorId}`,
+			surfaceId: `emulator:${emulatorId}`,
+			location: null,
 		}
 
 		this.#logger.debug('Adding Elgato Streamdeck Emulator')
@@ -216,7 +215,8 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 			this.#lastLockedState = false
 		}
 
-		console.log('Emulator setLocked', this.#emulatorId, this.#lastLockedState)
+		// Clear the deck when locking
+		this.clearDeck()
 
 		if (this.#events.listenerCount('emulatorLocked') > 0) {
 			this.#events.emit('emulatorLocked', this.#emulatorId, this.#lastLockedState)
@@ -228,11 +228,13 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
+	draw(item: DrawButtonItem): void {
+		const { x, y } = item
+
 		const size = this.gridSize
 		if (x < 0 || y < 0 || x >= size.columns || y >= size.rows) return
 
-		const dataUrl = render.asDataUrl
+		const dataUrl = item.image.asDataUrl
 		if (!dataUrl) {
 			this.#logger.verbose('draw call had no data-url')
 			return

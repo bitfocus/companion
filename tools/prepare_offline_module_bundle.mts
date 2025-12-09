@@ -1,26 +1,28 @@
 #!/usr/bin/env zx
 
 import { $, fs, usePowerShell } from 'zx'
-import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
+import type { components, paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import createClient from 'openapi-fetch'
 import pQueue from 'p-queue'
 import pRetry, { AbortError } from 'p-retry'
 import path from 'path'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import {
+	isModuleApiVersionCompatible,
+	isSurfaceApiVersionCompatible,
+} from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { generateVersionString } from './lib.mjs'
 import crypto from 'crypto'
 import { gunzip } from 'zlib'
 import { promisify } from 'util'
 import { Readable } from 'stream'
 import * as tarfs from 'tar-fs'
+import { MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
 
 const gunzipP = promisify(gunzip)
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
-
-const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 20 // 20MB
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
@@ -46,27 +48,42 @@ const { data, error } = await ModuleOpenApiClient.GET('/v1/companion/modules/{mo
 		},
 	},
 })
+const { data: dataSurfaces, error: errorSurfaces } = await ModuleOpenApiClient.GET(
+	'/v1/companion/modules/{moduleType}',
+	{
+		params: {
+			path: {
+				moduleType: 'surface',
+			},
+		},
+	}
+)
 
-if (error) {
-	console.error('Error fetching modules:', error)
+if (error || errorSurfaces) {
+	console.error('Error fetching modules:', error || errorSurfaces)
 	process.exit(1)
 }
 
-console.log(`Module API reported ${data.modules.length} modules`)
+console.log(`Module API reported ${data.modules.length + dataSurfaces.modules.length} modules`)
 
 const moduleQueue = new pQueue({
 	concurrency: 10,
 })
-for (const moduleInfo of data.modules) {
+const processModule = async (
+	moduleInfo: components['schemas']['CompanionModuleInfo'],
+	moduleType: 'connection' | 'surface',
+	isCompatible: (version: string) => boolean,
+	dirPrefix?: string
+) => {
 	if (moduleInfo.deprecationReason) {
 		console.log(`Skipping ${moduleInfo.id} (${moduleInfo.deprecationReason})`)
-		continue
+		return
 	}
 
 	moduleQueue.add(async () => {
 		await pRetry(
 			async () => {
-				const moduleDir = path.join(offlinePath, moduleInfo.id)
+				const moduleDir = path.join(offlinePath, (dirPrefix ?? '') + moduleInfo.id)
 
 				// Purge previous attempt
 				await fs.rm(moduleDir, { recursive: true, force: true })
@@ -76,7 +93,7 @@ for (const moduleInfo of data.modules) {
 					`/v1/companion/modules/{moduleType}/{moduleName}`,
 					{
 						params: {
-							path: { moduleType: 'connection', moduleName: moduleInfo.id },
+							path: { moduleType: moduleType, moduleName: moduleInfo.id },
 						},
 					}
 				)
@@ -88,9 +105,15 @@ for (const moduleInfo of data.modules) {
 				}
 
 				// This assumes the modules are ordered with newest first
-				const latestCompatibleVersion = moduleInfoData.versions.find(
-					(version) => isModuleApiVersionCompatible(version.apiVersion) && version.tarUrl
-				)
+				const latestCompatibleVersion =
+					moduleInfoData.versions.find(
+						// Find latest release version
+						(version) => isCompatible(version.apiVersion) && version.tarUrl && !version.isPrerelease
+					) ||
+					moduleInfoData.versions.find(
+						// Find latest prerelease version
+						(version) => isCompatible(version.apiVersion) && version.tarUrl
+					)
 				if (!latestCompatibleVersion) {
 					console.log('No compatible version found for', moduleInfo.id)
 					return
@@ -149,6 +172,12 @@ for (const moduleInfo of data.modules) {
 			throw new Error(`Failed to fetch ${moduleInfo.id}: ${err}`)
 		})
 	})
+}
+for (const moduleInfo of data.modules) {
+	processModule(moduleInfo, 'connection', isModuleApiVersionCompatible)
+}
+for (const moduleInfo of dataSurfaces.modules) {
+	processModule(moduleInfo, 'surface', isSurfaceApiVersionCompatible, 'surface-')
 }
 
 // Wait for all modules to be processed
