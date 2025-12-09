@@ -17,7 +17,6 @@
 
 	/* Override Monaco suggest widget to show details below name */
 	.monaco-editor .suggest-widget {
-		width: 25em !important;
 		z-index: 10000 !important; /* otherwise the top goes under the top banner in action/feedback expression suggestions */
 
 		.monaco-list .monaco-list-row {

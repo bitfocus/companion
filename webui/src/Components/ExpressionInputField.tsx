@@ -119,9 +119,9 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 					folding: false,
 					fixedOverflowWidgets: true,
 					fontSize: 15,
+					// set suggestFontSize to 16 to make menu font and row height more like the other variable suggestion menus.
+					suggestFontSize: 14,
 					// Make suggest widget rows tall enough for two lines (name + description)
-					// and make menu font and row height more like the other variable suggestion menus.
-					suggestFontSize: 16,
 					suggestLineHeight: 53,
 				}}
 			/>
