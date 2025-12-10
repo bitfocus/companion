@@ -25,6 +25,8 @@ export function MonacoLoader(): null {
 			monacoPromise = loader
 				.init()
 				.then((monaco) => {
+					if (!monaco) throw new Error('Monaco Editor failed to load')
+
 					registerCompanionExpressionLanguage(monaco)
 					monacoInitialized = true
 				})

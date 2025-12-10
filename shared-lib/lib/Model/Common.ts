@@ -13,6 +13,7 @@ export interface AppVersionInfo {
 }
 export interface AppUpdateInfo {
 	message: string
+	message2: string | undefined
 	link: string | undefined
 }
 
@@ -33,6 +34,10 @@ export interface EmulatorImage {
 	x: number
 	y: number
 	buffer: string | false
+}
+
+export interface EmulatorLockedState {
+	characterCount: number
 }
 
 export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
@@ -71,6 +76,7 @@ export interface WrappedImage {
 
 export interface ClientEditInstanceConfig {
 	fields: Array<SomeCompanionInputField>
+	useNewLayout: boolean
 	config: unknown
 	secrets: unknown
 }

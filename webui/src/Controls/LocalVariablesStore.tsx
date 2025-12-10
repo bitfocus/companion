@@ -2,7 +2,7 @@ import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Mod
 import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
 import { action, makeObservable, observable } from 'mobx'
 import { useEffect, useMemo } from 'react'
-import type { DropdownChoiceInt } from '../LocalVariableDefinitions.js'
+import type { DropdownChoiceInt } from '../DropDownInputFancy.js'
 import { computedFn } from 'mobx-utils'
 import { useQuery } from '@tanstack/react-query'
 import { trpc } from '~/Resources/TRPC.js'
@@ -103,10 +103,10 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:row',
 		label: 'This row',
 	},
-	{
-		value: 'this:pushed',
-		label: 'Whether the button is in the pushed state',
-	},
+	// {
+	// 	value: 'this:pushed',
+	// 	label: 'Whether the button is in the pushed state',
+	// },
 	{
 		value: 'this:step',
 		label: 'The current step of this button',
@@ -115,14 +115,14 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:step_count',
 		label: 'The number of step of this button',
 	},
-	{
-		value: 'this:button_status',
-		label: 'The status of this button',
-	},
-	{
-		value: 'this:actions_running',
-		label: 'Whether actions are running from this button',
-	},
+	// {
+	// 	value: 'this:button_status',
+	// 	label: 'The status of this button',
+	// },
+	// {
+	// 	value: 'this:actions_running',
+	// 	label: 'Whether actions are running from this button',
+	// },
 	{
 		value: 'this:page_name',
 		label: 'This page name',

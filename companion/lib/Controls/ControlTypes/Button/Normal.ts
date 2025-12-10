@@ -1,5 +1,4 @@
 import { ButtonControlBase } from './Base.js'
-import { cloneDeep, omit } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
@@ -70,7 +69,7 @@ export class ControlButtonNormal
 	/**
 	 * The base style without feedbacks applied
 	 */
-	#baseStyle: ButtonStyleProperties = cloneDeep(ControlButtonNormal.DefaultStyle)
+	#baseStyle: ButtonStyleProperties = structuredClone(ControlButtonNormal.DefaultStyle)
 
 	get baseStyle(): ButtonStyleProperties {
 		return this.#baseStyle
@@ -84,7 +83,7 @@ export class ControlButtonNormal
 		super(deps, controlId, `Controls/Button/Normal/${controlId}`)
 
 		this.options = {
-			...cloneDeep(ButtonControlBase.DefaultOptions),
+			...structuredClone(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
 			stepProgression: 'auto',
 		}
@@ -139,12 +138,12 @@ export class ControlButtonNormal
 		)
 
 		return {
+			...structuredClone(style),
+
+			...this.getDrawStyleButtonStateProps(),
+
 			cloud: false,
 			cloud_error: false,
-
-			...cloneDeep(style),
-
-			...omit(this.getDrawStyleButtonStateProps(), ['cloud', 'cloud_error']),
 
 			style: 'button',
 		}
@@ -267,7 +266,7 @@ export class ControlButtonNormal
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
-		return clone ? cloneDeep(obj) : obj
+		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

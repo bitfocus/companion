@@ -1,5 +1,6 @@
 export interface UserConfigModel {
 	setup_wizard: number
+	detailed_data_collection: boolean
 
 	page_direction_flipped: boolean
 	page_plusminus: boolean

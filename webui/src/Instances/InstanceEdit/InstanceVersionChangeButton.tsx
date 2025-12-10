@@ -301,7 +301,7 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 		moduleType,
 		moduleId,
 		moduleInfo,
-		false
+		true
 	)
 
 	return (

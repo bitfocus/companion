@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import jsonPatch from 'fast-json-patch'
 import { clamp } from '../Resources/Util.js'
@@ -205,7 +204,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 							// Filter out the action
 							const index = this.#currentSession.actions.findIndex((a) => a.id === input.actionId)
 							if (index !== -1) {
-								const newAction = cloneDeep(this.#currentSession.actions[index])
+								const newAction = structuredClone(this.#currentSession.actions[index])
 								newAction.id = nanoid()
 								this.#currentSession.actions.splice(index + 1, 0, newAction)
 
@@ -277,7 +276,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			for (const sessionId of sessionIds) {
 				const sessionInfo = this.#currentSession && this.#currentSession.id === sessionId ? this.#currentSession : null
 
-				const newSessionBlob = sessionInfo ? cloneDeep(sessionInfo) : null
+				const newSessionBlob = sessionInfo ? structuredClone(sessionInfo) : null
 
 				const eventName = `patchSession:${sessionId}` as const
 
@@ -321,7 +320,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 		if (this.#currentSession) {
 			newSessionListJson[this.#currentSession.id] = {
-				connectionIds: cloneDeep(this.#currentSession.connectionIds),
+				connectionIds: structuredClone(this.#currentSession.connectionIds),
 			}
 		}
 

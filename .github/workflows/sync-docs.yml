@@ -1,0 +1,91 @@
+name: Sync Docs to Website
+
+on:
+  push:
+    branches:
+      - main
+      - stable-*
+    paths:
+      - 'docs/user-guide/**'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-docs
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout companion repository
+        uses: actions/checkout@v6
+        with:
+          path: companion
+
+      - name: Checkout website repository
+        uses: actions/checkout@v6
+        with:
+          repository: bitfocus/website
+          token: ${{ secrets.SYNC_DOCS_PAT }}
+          path: website
+
+      - name: Sync user-guide folder (beta)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Remove existing docs in website
+          rm -rf website/user-guide
+          rm -rf website/whats-new
+
+          # Copy new docs from companion to website
+          cp -r companion/docs/user-guide website/user-guide
+          cp -r companion/docs/user-guide/9_whatsnew website/whats-new
+
+          # Create the marker file
+          touch website/user-guide/__DO_NOT_EDIT__
+          touch website/whats-new/__DO_NOT_EDIT__
+
+          # Restore index.md to avoid overwriting customizations
+          cd website
+          git checkout -f whats-new/index.md
+
+      - name: Commit and push changes (beta)
+        if: github.ref != 'refs/heads/main'
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          repository: website
+          commit_message: 'Sync user-guide from companion'
+          file_pattern: 'user-guide/** whats-new/**'
+
+      - name: Sync user-guide folder (release)
+        if: github.ref != 'refs/heads/main'
+        id: sync_release
+        run: |
+          VERSION=${GITHUB_REF#refs/heads/stable-}
+
+          # Remove existing docs in website
+          rm -rf website/versioned_docs/version-v${VERSION} || true
+
+          # Copy new docs from companion to website
+          cp -r companion/docs/user-guide website/versioned_docs/version-v${VERSION}
+
+          # Create the marker file
+          touch website/versioned_docs/version-v${VERSION}/__DO_NOT_EDIT__
+
+          # Make sure versioned_sidebars has been created
+          if [ ! -f website/versioned_sidebars/version-v${VERSION}-sidebars.json ]; then
+            cp website/versioned_sidebars/version-beta-sidebars.json website/versioned_sidebars/version-v${VERSION}-sidebars.json
+
+            # Add to the versions.json file. Assume this was needed if the sidebar did not exist
+            jq --arg ver "v${VERSION}" '. |= [$ver] + .' website/versions.json > website/versions_tmp.json
+            mv website/versions_tmp.json website/versions.json
+          fi
+
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes (release)
+        if: github.ref != 'refs/heads/main'
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          repository: website
+          commit_message: 'Sync user-guide (v${{ steps.sync_release.outputs.version }}) from companion'
+          file_pattern: 'versioned_docs/** versioned_sidebars/** versions.json'

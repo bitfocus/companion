@@ -106,6 +106,7 @@ export function createConnectionsTrpcRouter(
 
 					const result: ClientEditInstanceConfig = {
 						fields: translateConnectionConfigFields(fields),
+						useNewLayout: instance.usesNewConfigLayout,
 						config: instanceConf.config,
 						secrets: instanceConf.secrets || {},
 					}

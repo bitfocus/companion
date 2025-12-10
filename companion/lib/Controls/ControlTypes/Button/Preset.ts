@@ -1,5 +1,4 @@
 import { ButtonControlBase } from './Base.js'
-import { cloneDeep } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
@@ -81,7 +80,7 @@ export class ControlButtonPreset
 	/**
 	 * The base style without feedbacks applied
 	 */
-	#baseStyle: ButtonStyleProperties = cloneDeep(ControlButtonNormal.DefaultStyle)
+	#baseStyle: ButtonStyleProperties = structuredClone(ControlButtonNormal.DefaultStyle)
 
 	readonly #connectionId: string
 	readonly #presetId: string
@@ -125,7 +124,7 @@ export class ControlButtonPreset
 		)
 
 		this.options = {
-			...cloneDeep(ButtonControlBase.DefaultOptions),
+			...structuredClone(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
 			stepProgression: 'auto',
 		}
@@ -213,7 +212,7 @@ export class ControlButtonPreset
 			cloud: false,
 			cloud_error: false,
 
-			...cloneDeep(style),
+			...structuredClone(style),
 
 			stepCurrent: this.entities.getActiveStepIndex() + 1,
 			stepCount: this.entities.getStepIds().length,
@@ -304,7 +303,7 @@ export class ControlButtonPreset
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
-		return clone ? cloneDeep(obj) : obj
+		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

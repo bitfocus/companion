@@ -1,6 +1,5 @@
 import fs from 'fs-extra'
 import path from 'path'
-import { cloneDeep } from 'lodash-es'
 import LogController, { type Logger } from '../../Log/Controller.js'
 
 /**
@@ -71,7 +70,7 @@ export class DataLegacyStoreBase {
 		this.logger.silly(`${this.name}_all`)
 
 		if (clone === true) {
-			out = cloneDeep(this.store)
+			out = structuredClone(this.store)
 		} else {
 			out = this.store
 		}
@@ -95,7 +94,7 @@ export class DataLegacyStoreBase {
 		}
 
 		if (clone === true) {
-			out = cloneDeep(this.store[key])
+			out = structuredClone(this.store[key])
 		} else {
 			out = this.store[key]
 		}

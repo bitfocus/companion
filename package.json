@@ -1,23 +1,26 @@
 {
   "name": "@companion-app/workspace",
-  "version": "4.2.0",
-  "packageManager": "yarn@4.10.3",
+  "version": "4.3.0",
+  "packageManager": "yarn@4.12.0",
   "workspaces": [
     "companion",
     "shared-lib",
     "webui",
     "launcher",
-    "launcher-ui"
+    "launcher-ui",
+    "docs"
   ],
   "type": "module",
   "scripts": {
-    "postinstall": "husky && run build:writefile",
+    "postinstall": "husky && run build:writefile && run build:whatsnew",
     "dev": "yarn workspace companion dev",
     "dev:inner": "yarn workspace companion dev:inner",
     "dev:debug": "yarn workspace companion dev:debug",
     "dev:webui": "yarn workspace @companion-app/webui dev",
+    "dev:docs": "yarn workspace @companion-app/docs start",
     "build:ts": "yarn workspaces foreach --all run build:ts",
-    "dist:webui": "run build:ts && yarn workspace @companion-app/webui build",
+    "build:whatsnew": "tsx ./tools/build_whatsnew.mts",
+    "dist:webui": "run build:ts && run build:whatsnew && yarn workspace @companion-app/webui build",
     "dist": "tsx ./tools/build/complete.mts",
     "macdist": "run dist mac-x64",
     "macarmdist": "run dist mac-arm64",
@@ -27,7 +30,7 @@
     "format": "prettier --write .",
     "test": "vitest",
     "build:writefile": "tsx ./tools/build_writefile.mts",
-    "build:module-openapi": "zx ./tools/generate_module_openapi.mjs",
+    "build:openapi": "zx ./tools/generate_openapi.mjs",
     "build:satellite-schema": "tsx ./tools/satellite_schema_compile.mts",
     "build:udev-rules": "tsx ./tools/generate_udev.mts",
     "module:bulk": "zx ./tools/module_bulk.mjs",
@@ -46,16 +49,17 @@
     "*.{json,css,scss,md,yaml,yml}": "prettier --check"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.0",
+    "@eslint/js": "^9.39.1",
     "@tanstack/eslint-plugin-query": "^5.91.2",
-    "@types/node": "^22.18.13",
+    "@types/express-serve-static-core": "^5.1.0",
+    "@types/node": "^22.19.2",
     "@types/ps-tree": "^1.1.6",
-    "@vitest/coverage-v8": "^4.0.6",
-    "@vitest/ui": "^4.0.6",
+    "@vitest/coverage-v8": "^4.0.15",
+    "@vitest/ui": "^4.0.15",
     "ajv": "^8.17.1",
-    "chokidar": "^3.6.0",
+    "chokidar": "^5.0.0",
     "concurrently": "^9.2.1",
-    "eslint": "^9.39.0",
+    "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
@@ -64,28 +68,43 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "husky": "^9.1.7",
     "json-schema-to-typescript": "^15.0.4",
-    "lint-staged": "^16.2.6",
+    "lint-staged": "^16.2.7",
     "openapi-typescript": "^7.10.1",
     "p-retry": "^7.1.0",
-    "prettier": "^3.6.2",
-    "socket": "^2.0.10",
-    "tsx": "^4.20.6",
+    "prettier": "^3.7.4",
+    "socket": "^1.1.44",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.2",
+    "typescript-eslint": "^8.49.0",
     "udev-generator": "^1.0.2",
-    "vitest": "^4.0.6",
+    "vitest": "^4.0.15",
     "vitest-mock-extended": "^3.1.0",
-    "yaml": "^2.8.1",
+    "yaml": "^2.8.2",
     "zx": "^8.8.5"
   },
   "resolutions": {
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
     "osc/serialport": "npm:empty-npm-package@1.0.0",
     "react-select": "npm:@julusian/react-select@^5.8.1-3",
-    "app-builder-lib@npm:26.0.20": "patch:app-builder-lib@npm%3A26.0.20#~/.yarn/patches/app-builder-lib-npm-26.0.20-3490051175.patch",
+    "app-builder-lib@npm:26.1.0": "patch:app-builder-lib@npm%3A26.1.0#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch",
     "@xkeys-lib/core@npm:3.3.0": "patch:@xkeys-lib/core@npm%3A3.3.0#~/.yarn/patches/@xkeys-lib-core-npm-3.3.0-1a65b6423b.patch",
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",
-    "bare-path": "npm:empty-npm-package@1.0.0"
+    "bare-path": "npm:empty-npm-package@1.0.0",
+    "@types/express-serve-static-core": "^5.1.0"
+  },
+  "dependenciesMeta": {
+    "@sentry/cli": {
+      "built": true
+    },
+    "better-sqlite3": {
+      "built": true
+    },
+    "electron": {
+      "built": true
+    },
+    "esbuild": {
+      "built": true
+    }
   }
 }

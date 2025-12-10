@@ -98,7 +98,6 @@ export function InstanceEditField({
 					presetColors={definition.presetColors}
 				/>
 			)
-			break
 		}
 		case 'bonjour-device':
 			return moduleType === ModuleInstanceType.Connection ? (

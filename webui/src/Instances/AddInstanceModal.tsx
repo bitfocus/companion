@@ -91,7 +91,7 @@ export const AddInstanceModal = observer(
 			choices: versionChoices,
 			loaded: choicesLoaded,
 			hasIncompatibleNewerVersion,
-		} = useModuleVersionSelectOptions(service.moduleType, moduleInfo?.moduleId, moduleInfo?.installedInfo, false)
+		} = useModuleVersionSelectOptions(service.moduleType, moduleInfo?.moduleId, moduleInfo?.installedInfo, true)
 
 		console.log('Version choices', versionChoices, choicesLoaded)
 

@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -55,6 +55,6 @@ jobs:
           add-paths: |
             package.json
             */package.json
-            nodejs-versions.json
+            assets/nodejs-versions.json
             .node-version
           token: ${{ secrets.SYNC_MODULES_PAT }}

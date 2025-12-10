@@ -1,7 +1,6 @@
 import type { SurfaceConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel } from './Types.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import { cloneDeep } from 'lodash-es'
 
 export const PanelDefaults: SurfacePanelConfig = {
 	// defaults from the panel - TODO properly
@@ -24,7 +23,7 @@ export function createOrSanitizeSurfaceHandlerConfig(
 	// Retrieve or create the panel config
 	let panelConfig = existingConfig?.config
 	if (!panelConfig) {
-		panelConfig = cloneDeep(PanelDefaults)
+		panelConfig = structuredClone(PanelDefaults)
 		// add properties & defaults from their UI definitions (so a redundant `getDefaultConfig()` is not needed)
 		for (const cfield of panel.info.configFields) {
 			if (!(cfield.id in panelConfig) || 'default' in cfield) {

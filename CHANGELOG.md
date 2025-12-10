@@ -1,5 +1,80 @@
 # Bitfocus Companion
 
+## Companion v4.2.0 - Release Notes
+
+### IMPORTANT CHANGES
+
+- This version of Companion requires macOS 12 or later
+- The old xkeys $(internal:tbar) and similar variables have been removed, and they should now be bound to custom variables in the config of each surface (#3716)
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Require macos 12
+- Convert docs to docusaurus (#3741)
+- Rebuild emulator pincode locking
+- Add options to to restrict page access (#3736)
+- Enhanced expressions:
+  - Improved expression editor (#3713)
+  - More formatting for timestamp (#3668)
+  - Handle negative value in msToTimestamp (#3651)
+  - Support local variables in step expressions #3762
+  - Expressions better handle undefined. add `getVariable` method #3451 (#3715)
+- Refined connection management:
+  - Reworked connection config layout #3559 (#3569)
+  - Rework changing connection versions, to remove need to disable module first
+  - Add delete button to connection edit panel
+  - Allow changing connection enabled state from config panel
+  - Indicate connections missing modules in sidebar
+- Surface improvements:
+  - Merge surface remote and discover pages (#3677)
+  - Support resolve speed editor #3525
+  - Support more variants of Mirabox 293S
+  - Support for Mirabox Streamdock N3 (#3686)
+  - Add repeating button-presses to contour-shuttle shuttle ring (#3492)
+  - Improve vec-footpedal surface implementation
+  - Support complex surface layouts over satellite api (#3611)
+  - Support swipe to change page on Stream Deck + (#3721)
+  - Support touch strip variables for Loupedeck Live (#3790)
+- Draw button 'error' state as a red warning triangle (#3675)
+- Remove deprecated bank field from tcp bank_bg_change message #2779
+- Include timestamps and source in module debug logs
+- Add version number variables #3714
+- Rework update check api, improving reliability
+
+### 🐞 BUG FIXES
+
+- ember+ api issues with some clients
+- limit env vars passed to modules
+- improve error handling for module executeAction
+- "Sentry DSN not located" error in launcher (#3758)
+- Align the display name of `surface_set_position` with the UI terminology (#3761)
+- Avoid flooding modules with large objects, batch entity updates to resolve issues with large configs
+- preserve original types of custom variable values from osc and ember+ apis
+- improve version number handling for release vs beta builds
+- Page up button/Page down button don't set page-history (#3683)
+- Reduce frequency of pincode lock state logging (#3792)
+- Loupedeck Live pincode lock layout
+
+## Companion v4.1.6 - Release Notes
+
+### 🐞 BUG FIXES
+
+- Setting local variables for another control failing #3813
+- Unable to select module beta version for connection #3815
+- Suppress some logged errors about local variable names
+- Avoid spamming log with surface lock state messages #3792
+
+## Companion v4.1.5 - Release Notes
+
+### 🐞 BUG FIXES
+
+- reordering pages not persisting #3727
+- Local variable actions not working on triggers #3788
+- support stream deck mini (discord edition) #3778
+- elgato plugin not handling multiple clients correctly #3775
+- elgato plugin not cleaning up on connection close #3767
+- suppress module SecurityWarnings in a better way
+
 ## Companion v4.1.4 - Release Notes
 
 ### 🐞 BUG FIXES

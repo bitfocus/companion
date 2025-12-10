@@ -10,7 +10,6 @@
  *
  */
 
-import { cloneDeep } from 'lodash-es'
 import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 import { SurfaceGroup } from './Group.js'
 import { EventEmitter } from 'events'
@@ -223,11 +222,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (
 			this.panel.info.type === 'Loupedeck Live' ||
 			this.panel.info.type === 'Loupedeck Live S' ||
-			this.panel.info.type === 'Razer Stream Controller' ||
-			this.panel.info.type === 'Razer Stream Controller X'
+			this.panel.info.type === 'Razer Stream Controller'
 		) {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
-			this.#pincodeCodePosition = [4, 2]
+			this.#pincodeCodePosition = [5, 2]
 		} else if (this.panel.info.type === 'Loupedeck CT') {
 			this.#pincodeNumberPositions = PINCODE_NUMBER_POSITIONS_SKIP_FIRST_COL
 			this.#pincodeCodePosition = [3, 4]
@@ -259,6 +257,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		this.panel.on('click', this.#onDeviceClick.bind(this))
 		this.panel.on('rotate', this.#onDeviceRotate.bind(this))
+		this.panel.on('changePage', this.#onDeviceChangePage.bind(this))
 		this.panel.on('pincodeKey', this.#onDevicePincodeKey.bind(this))
 		this.panel.on('remove', this.#onDeviceRemove.bind(this))
 		this.panel.on('resized', this.#onDeviceResized.bind(this))
@@ -582,6 +581,21 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		}
 	}
 
+	#onDeviceChangePage(forward: boolean): void {
+		if (this.#isSurfaceLocked || !this.panel) return
+
+		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
+		if (!pageNumber) return
+		const name = this.displayName
+
+		try {
+			this.#surfaces.devicePageSet(this.surfaceId, forward ? '+1' : '-1', true)
+			this.#logger.debug(`Change page ${pageNumber}: "${forward ? '+1' : '-1'}" initiated by ${name}`)
+		} catch (e) {
+			this.#logger.error(`Change page failed for ${name}: ${e}`)
+		}
+	}
+
 	#onDeviceRotate(x: number, y: number, rightward: boolean, pageOffset?: number): void {
 		if (!this.panel) return
 
@@ -667,12 +681,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	resetConfig(): void {
 		this.#surfaceConfig.groupConfig = {
-			...cloneDeep(SurfaceGroup.DefaultOptions),
+			...structuredClone(SurfaceGroup.DefaultOptions),
 			last_page_id: this.#pageStore.getFirstPageId(),
 			startup_page_id: this.#pageStore.getFirstPageId(),
 		}
 		this.#surfaceConfig.groupId = null
-		this.setPanelConfig(cloneDeep(PanelDefaults))
+		this.setPanelConfig(structuredClone(PanelDefaults))
 	}
 
 	/**

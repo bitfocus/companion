@@ -1,7 +1,6 @@
 /**
  * Warning: this file needs to not reference any 'real' code in the codebase, or we end up with import cycle issues
  */
-import { cloneDeep } from 'lodash-es'
 import stripAnsi from 'strip-ansi'
 import fs from 'fs-extra'
 import winston, { type LeveledLogMethod, type LogMethod } from 'winston'
@@ -15,6 +14,7 @@ import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
+import { isPackaged } from '../Resources/Util.js'
 
 export interface Logger {
 	readonly source: string
@@ -280,7 +280,7 @@ class LogController {
 		this.#logger.silly(`get all`)
 
 		if (clone) {
-			return cloneDeep(this.#history)
+			return structuredClone(this.#history)
 		} else {
 			return this.#history
 		}
@@ -309,7 +309,7 @@ class LogController {
 		if (!sentryDsn) {
 			try {
 				sentryDsn = fs
-					.readFileSync(new URL('../../../SENTRY', import.meta.url))
+					.readFileSync(new URL(isPackaged() ? './SENTRY' : '../../../SENTRY', import.meta.url))
 					.toString()
 					.trim()
 			} catch (_e) {

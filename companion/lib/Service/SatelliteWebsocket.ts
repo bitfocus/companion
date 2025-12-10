@@ -26,6 +26,10 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 
 	#server: WebSocketServer | undefined = undefined
 
+	get clientCount(): number {
+		return this.#server?.clients.size ?? 0
+	}
+
 	constructor(appInfo: AppInfo, surfaceController: SurfaceController, userconfig: DataUserConfig) {
 		super(userconfig, 'Service/SatelliteWebsocket', null, null)
 

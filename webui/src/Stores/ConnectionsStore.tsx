@@ -96,4 +96,43 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 			}
 		}
 	})
+
+	public sortedConnections(): ClientConnectionConfig[] {
+		const sortedConnections = Array.from(this.connections.values())
+
+		// Build an ordered list of collection ids following collection sortOrder
+		const orderedCollectionIds: string[] = []
+		const pushCollection = (col: any) => {
+			orderedCollectionIds.push(col.id)
+			if (col.children && col.children.length > 0) {
+				const children = Array.from(col.children).sort((a: any, b: any) => a.sortOrder - b.sortOrder)
+				for (const c of children) pushCollection(c)
+			}
+		}
+
+		for (const root of this.rootCollections()) pushCollection(root)
+
+		const collectionIndex = new Map(orderedCollectionIds.map((id, i) => [id, i]))
+
+		// Sort by collection ordering, then by connection sortOrder, then by label/id
+		sortedConnections.sort((aInfo, bInfo) => {
+			const aColIdx = aInfo.collectionId
+				? (collectionIndex.get(aInfo.collectionId) ?? Number.POSITIVE_INFINITY)
+				: Number.POSITIVE_INFINITY
+			const bColIdx = bInfo.collectionId
+				? (collectionIndex.get(bInfo.collectionId) ?? Number.POSITIVE_INFINITY)
+				: Number.POSITIVE_INFINITY
+			if (aColIdx !== bColIdx) return aColIdx - bColIdx
+
+			const aOrder = aInfo.sortOrder
+			const bOrder = bInfo.sortOrder
+			if (aOrder !== bOrder) return aOrder - bOrder
+
+			const aLabel = aInfo.label || aInfo.id
+			const bLabel = bInfo.label || bInfo.id
+			return String(aLabel).localeCompare(String(bLabel))
+		})
+
+		return sortedConnections
+	}
 }

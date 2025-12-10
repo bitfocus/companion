@@ -8,6 +8,7 @@ import type { DropdownChoice } from '@companion-module/base'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ControlLocalVariables } from './LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { InputFeatureIcons } from './OptionsInputField.js'
 
 interface ControlOptionsEditorProps {
 	controlId: string
@@ -94,7 +95,9 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 			{options.stepProgression === 'expression' && (
 				<div className="flex w-full gap-2rem flex-form">
 					<div style={{ width: '100%' }}>
-						<CFormLabel>Step Progression Expression</CFormLabel>
+						<CFormLabel>
+							Step Progression Expression <InputFeatureIcons variables local />
+						</CFormLabel>
 						<ExpressionInputField
 							setValue={setStepExpressionValue}
 							value={options.stepExpression ?? ''}

@@ -83,7 +83,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				deps.variables.values
 					.createVariablesAndExpressionParser(
 						deps.pageStore.getLocationOfControlId(this.controlId),
-						null, // This doesn't support local variables
+						this.entities.getLocalVariableEntities(),
 						injectedVariableValues ?? null
 					)
 					.executeExpression(expression, requiredType)

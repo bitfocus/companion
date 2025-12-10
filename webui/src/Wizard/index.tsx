@@ -4,6 +4,7 @@ import { BeginStep } from './BeginStep.js'
 import { SurfacesStep } from './SurfacesStep.js'
 import { GridStep } from './GridStep.js'
 import { ServicesStep } from './ServicesStep.js'
+import { DataCollectionStep } from './DataCollectionStep.js'
 import { PasswordStep } from './PasswordStep.js'
 import { ApplyStep } from './ApplyStep.js'
 import { FinishStep } from './FinishStep.js'
@@ -18,14 +19,16 @@ export function WizardModal(): React.JSX.Element {
 	const { showWizardEvent, userConfig } = useContext(RootAppStoreContext)
 
 	const [currentStep, setCurrentStep] = useState(1)
-	const [maxSteps, setMaxSteps] = useState(7)
-	const [applyStep, setApplyStep] = useState(6)
-	const [allowGridStep, setAllowGridStep] = useState(1)
 	const [startConfig, setStartConfig] = useState<UserConfigModel | null>(null)
 	const [oldConfig, setOldConfig] = useState<UserConfigModel | null>(null)
 	const [newConfig, setNewConfig] = useState<UserConfigModel | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const [clear, setClear] = useState(true)
+
+	const defaultGridStart = !!startConfig && startConfig.gridSize.minColumn === 0 && startConfig.gridSize.minRow === 0
+	const allowGridStep = defaultGridStart ? 1 : 0
+	const maxSteps = 7 + allowGridStep
+	const applyStep = maxSteps - 1
 
 	const getConfig = useCallback(() => {
 		if (!userConfig.properties) {
@@ -40,16 +43,6 @@ export function WizardModal(): React.JSX.Element {
 		setStartConfig(config)
 		setOldConfig(config)
 		setNewConfig(config)
-
-		if (config.gridSize.minColumn === 0 && config.gridSize.minRow === 0) {
-			setMaxSteps(7)
-			setApplyStep(6)
-			setAllowGridStep(1)
-		} else {
-			setMaxSteps(6)
-			setApplyStep(5)
-			setAllowGridStep(0)
-		}
 	}, [userConfig])
 
 	const [show, setShow] = useState(false)
@@ -186,6 +179,11 @@ export function WizardModal(): React.JSX.Element {
 						''
 					)}
 					{currentStep === 4 + allowGridStep && newConfig && !error ? (
+						<DataCollectionStep config={newConfig} setValue={setValue} />
+					) : (
+						''
+					)}
+					{currentStep === 5 + allowGridStep && newConfig && !error ? (
 						<PasswordStep config={newConfig} setValue={setValue} />
 					) : (
 						''

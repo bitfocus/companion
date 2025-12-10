@@ -12,7 +12,6 @@
 import { InstanceDefinitions } from './Definitions.js'
 import { InstanceProcessManager } from './ProcessManager.js'
 import { InstanceStatus } from './Status.js'
-import { cloneDeep } from 'lodash-es'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -530,7 +529,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		const changes: ClientConnectionsUpdate[] = []
 
 		if (!this.#lastClientJson) {
-			this.#lastClientJson = cloneDeep(newJson)
+			this.#lastClientJson = structuredClone(newJson)
 
 			for (const connectionId of Object.keys(newJson)) {
 				changes.push({ type: 'update', id: connectionId, info: newJson[connectionId] })
@@ -542,7 +541,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 					changes.push({ type: 'remove', id: connectionId })
 				} else {
-					this.#lastClientJson[connectionId] = cloneDeep(newJson[connectionId])
+					this.#lastClientJson[connectionId] = structuredClone(newJson[connectionId])
 
 					changes.push({ type: 'update', id: connectionId, info: newJson[connectionId] })
 				}
@@ -583,7 +582,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					secrets: includeSecrets ? rawObj.secrets : undefined,
 				} satisfies ExportInstanceFullv6)
 
-		return clone ? cloneDeep(obj) : obj
+		return clone ? structuredClone(obj) : obj
 	}
 
 	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
@@ -727,7 +726,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 
 		// Cache it for next time
-		if (!this.#lastClientJson) this.#lastClientJson = cloneDeep(result)
+		if (!this.#lastClientJson) this.#lastClientJson = structuredClone(result)
 
 		return result
 	}

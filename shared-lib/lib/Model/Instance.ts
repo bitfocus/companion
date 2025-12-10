@@ -26,6 +26,7 @@ export interface InstanceConfig {
 }
 
 export interface ClientInstanceConfigBase {
+	id: string
 	label: string
 	moduleType: ModuleInstanceType
 	moduleId: string

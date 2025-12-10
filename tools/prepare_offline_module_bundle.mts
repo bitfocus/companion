@@ -1,6 +1,5 @@
 #!/usr/bin/env zx
 
-import { fileURLToPath } from 'url'
 import { $, fs, usePowerShell } from 'zx'
 import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import createClient from 'openapi-fetch'
@@ -36,7 +35,7 @@ const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({
 })
 
 // prepare a new folder
-const offlinePath = fileURLToPath(new URL('../offline-bundle', import.meta.url))
+const offlinePath = path.join(import.meta.dirname, '../offline-bundle')
 await fs.rm(offlinePath, { recursive: true, force: true })
 await fs.mkdir(offlinePath, { recursive: true })
 

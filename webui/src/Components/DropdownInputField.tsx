@@ -7,6 +7,7 @@ import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { useComputed } from '~/Resources/util.js'
 import { observer } from 'mobx-react-lite'
+import { CustomOption, CustomSingleValue } from '~/DropDownInputFancy.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -23,6 +24,7 @@ interface DropdownInputFieldProps {
 	onBlur?: () => void
 	onPasteIntercept?: (value: string) => string
 	checkValid?: (value: DropdownChoiceId) => boolean
+	fancyFormat?: boolean
 }
 
 interface DropdownChoiceInt {
@@ -45,6 +47,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 	onBlur,
 	onPasteIntercept,
 	checkValid,
+	fancyFormat = false,
 }: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
@@ -114,8 +117,14 @@ export const DropdownInputField = observer(function DropdownInputField({
 			target.dispatchEvent(new Event('input', { bubbles: true }))
 		}
 
-		return (props: any) => <components.Input {...props} onPaste={onPaste} />
-	}, [onPasteIntercept])
+		return (props: any) => (
+			<components.Input
+				{...props}
+				onPaste={onPaste}
+				className={fancyFormat && (props.className ?? '') + 'variable-dropdown-edit'}
+			/>
+		)
+	}, [onPasteIntercept, fancyFormat])
 
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 
@@ -140,6 +149,10 @@ export const DropdownInputField = observer(function DropdownInputField({
 		components: {
 			MenuList: WindowedMenuList,
 			Input: inputComponent,
+			// couldn't find a cleaner way to do this: otherwise TypeScript complains about Singlevalue...
+			...((fancyFormat ? { Option: CustomOption, SingleValue: CustomSingleValue } : {}) as Partial<
+				CreatableProps<any, any, any>
+			>),
 		},
 		onBlur: onBlur,
 	}

@@ -18,8 +18,6 @@ import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/M
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 
-const require = createRequire(import.meta.url)
-
 /**
  * A backoff sleep strategy
  * @returns ms to sleep
@@ -412,6 +410,7 @@ export class InstanceProcessManager {
 
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
+					...preserveEnvVars(),
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
 					...runtimeInfo.env,
@@ -647,6 +646,8 @@ export class InstanceProcessManager {
 				if (!moduleInfo.isPackaged) {
 					// When not packaged, lookup the version from the library itself
 					try {
+						const require = createRequire(moduleInfo.basePath)
+
 						const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
 							paths: [moduleInfo.basePath],
 						})
@@ -709,4 +710,21 @@ interface RuntimeInfo {
 	entrypoint: string
 	apiVersion: string
 	env: Record<string, string>
+}
+
+/**
+ * Only some env vars should be forwarded to child processes
+ */
+function preserveEnvVars(): Record<string, string> {
+	const preserveNames = ['HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'http_proxy', 'https_proxy', 'no_proxy']
+
+	const preservedEnvVars: Record<string, string> = {}
+	for (const name of preserveNames) {
+		const value = process.env[name]
+		if (value !== undefined) {
+			preservedEnvVars[name] = value
+		}
+	}
+
+	return preservedEnvVars
 }
