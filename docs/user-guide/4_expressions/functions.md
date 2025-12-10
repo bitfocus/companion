@@ -165,6 +165,13 @@ Decode a string from the requested format ('hex','base64'). If `enc` is missing,
 
 eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
+**blink(number)**
+
+Generate a pulsing boolean value that alternates between on/off.  
+The provided number specifies the duration of each on/off state
+
+eg `blink(500)` to flash once a second
+
 **parseVariables(string, ?undefinedValue)**
 
 In some cases you may need nested variable evaluation (for example `$(custom:$(custom:b))`). The expression parser does not support that nested variable syntax directly. To evaluate nested variables inside an expression, pass the string to `parseVariables`, which will interpret string-variable and template syntax.
