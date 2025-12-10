@@ -7,6 +7,8 @@ import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
 interface IntervalEvent {
 	id: string
 	period: number
+	minperiod?: number
+	maxperiod?: number
 	lastExecute: number
 }
 interface TimeOfDayEvent {
@@ -118,20 +120,33 @@ export class TriggersEventTimer {
 		this.#eventBus.off('tick', this.#onTick)
 	}
 
-	/**
-	 * Get a description for an interval event
-	 */
-	getIntervalDescription(event: EventInstance): string {
-		const seconds = Number(event.options.seconds)
-
+	formatSeconds(seconds: number): string {
 		let time = `${seconds} seconds`
 		if (seconds >= 3600) {
 			time = `${Math.floor(seconds / 3600)} hours`
 		} else if (seconds >= 60) {
 			time = `${Math.floor(seconds / 60)} minutes`
 		}
+		return time
+	}
+
+	/**
+	 * Get a description for an interval event
+	 */
+	getIntervalDescription(event: EventInstance): string {
+		const time = this.formatSeconds(Number(event.options.seconds))
 
 		return `Every <strong>${time}</strong>`
+	}
+
+	/**
+	 * Get a description for an interval event
+	 */
+	getRandomIntervalDescription(event: EventInstance): string {
+		const iMin = this.formatSeconds(Number(event.options.min))
+		const iMax = this.formatSeconds(Number(event.options.min))
+
+		return `Every <strong>${iMin} - ${iMax}</strong>`
 	}
 
 	/**
@@ -364,6 +379,21 @@ export class TriggersEventTimer {
 	}
 
 	/**
+	 * Calculate a new random interval if both min & max period were specified.
+	 * Otherwise, do nothing.
+	 * For now, limit intervals to integers. Note that the endpoints are inclusive, but strict (if not integers)
+	 * @param interval The interval object to update
+	 */
+	#calcRandomPeriod(interval: IntervalEvent) {
+		if ('maxperiod' in interval && 'minperiod' in interval) {
+			const iMin = Math.ceil(interval.minperiod!)
+			const iMax = Math.floor(interval.maxperiod!)
+			const newPeriod = iMin + Math.floor(Math.random() * (iMax - iMin + 1))
+			interval.period = newPeriod
+		}
+	}
+
+	/**
 	 * Handler for the timer tick event
 	 * @param tickSeconds Number of ticks since application startup
 	 * @param nowTime Current wall time of the event
@@ -376,6 +406,8 @@ export class TriggersEventTimer {
 			if (interval.lastExecute + interval.period <= tickSeconds) {
 				execute = true
 				interval.lastExecute = tickSeconds
+				// calculate next period if this is a random interval
+				this.#calcRandomPeriod(interval)
 			}
 		}
 
@@ -424,6 +456,8 @@ export class TriggersEventTimer {
 			// Reset all the intervals, to be based from the next tick
 			for (const interval of this.#intervalEvents) {
 				interval.lastExecute = this.#lastTick + 1
+				// calculate next period if this is a random interval
+				this.#calcRandomPeriod(interval)
 			}
 		}
 
@@ -433,17 +467,22 @@ export class TriggersEventTimer {
 	/**
 	 * Add an interval event listener
 	 * @param id Id of the event
-	 * @param period Time interval of the trigger (in seconds)
+	 * @param period Time interval of the trigger (in seconds). This is the minimum period.
+	 * @param maxperiod for the time interval, if using random intervals (in seconds)
 	 */
-	setInterval(id: string, period: number): void {
+	setInterval(id: string, period: number, maxperiod?: number): void {
 		this.clearInterval(id)
 
 		if (period && period > 0) {
-			this.#intervalEvents.push({
+			const idx = this.#intervalEvents.push({
 				id,
 				period,
+				minperiod: period,
+				maxperiod,
 				lastExecute: this.#lastTick + 1,
 			})
+			// update the period if this is a random interval:
+			this.#calcRandomPeriod(this.#intervalEvents[idx - 1])
 		}
 	}
 
