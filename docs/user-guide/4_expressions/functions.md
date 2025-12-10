@@ -189,6 +189,13 @@ Gets the unencoded version of an encoded component of a Uniform Resource Identif
 
 eg `decodeURIComponent('test%20123%261')` gives `"hello world&1"`
 
+**blink(number)**
+
+Generate a pulsing boolean value that alternates between on/off.  
+The provided number specifies the duration of each on/off state
+
+eg `blink(500)` to flash once a second
+
 **parseVariables(string, ?undefinedValue)**
 
 In some cases you may need nested variable evaluation (for example `$(custom:$(custom:b))`). The expression parser does not support that nested variable syntax directly. To evaluate nested variables inside an expression, pass the string to `parseVariables`, which will interpret string-variable and template syntax.
