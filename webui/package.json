@@ -25,7 +25,7 @@
     "@tanstack/router-plugin": "^1.140.0",
     "@tanstack/virtual-file-routes": "^1.140.0",
     "@trpc/client": "^11.7.2",
-    "@trpc/tanstack-react-query": "^11.7.2",
+    "@trpc/tanstack-react-query": "patch:@trpc/tanstack-react-query@npm%3A11.7.2#~/.yarn/patches/@trpc-tanstack-react-query-npm-11.7.2-319ea5774b.patch",
     "@types/crypto-js": "^4.2.2",
     "@types/lodash-es": "^4.17.12",
     "@types/react": "^18.3.27",
