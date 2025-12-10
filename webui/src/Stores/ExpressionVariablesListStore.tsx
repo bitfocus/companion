@@ -31,7 +31,7 @@ export class ExpressionVariablesListStore {
 			case 'update': {
 				const oldObj = this.expressionVariables.get(change.controlId)
 				if (!oldObj) throw new Error(`Got update for unknown ExpressionVariable: ${change.controlId}`)
-				const newObj = applyPatch(structuredClone(oldObj), change.patch)
+				const newObj = applyPatch(oldObj, change.patch, false, true)
 				this.expressionVariables.set(change.controlId, newObj.newDocument)
 				break
 			}
