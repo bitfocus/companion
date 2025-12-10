@@ -42,7 +42,6 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 		this.#blinker = new VariablesBlinker((values) => {
 			this.setVariableValues('internal', values)
-			// this.emit('variables_changed', variableNames, new Set(['internal']))
 		})
 	}
 

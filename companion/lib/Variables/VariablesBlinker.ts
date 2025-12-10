@@ -88,6 +88,7 @@ export class VariablesBlinker {
 				if (newEntry.aborted) return
 				newEntry.value = !newEntry.value
 
+				// TODO - could/should these be batched? to make it cheaper when timers align
 				this.#emitChange([
 					{
 						id: newEntry.name.name,
