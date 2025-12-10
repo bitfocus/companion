@@ -39,6 +39,7 @@ const DEFAULT_CONTENT_TYPES = [
 	'application/javascript',
 	'application/x-javascript',
 	'text/javascript',
+	'application/json',
 ]
 
 /**
