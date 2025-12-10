@@ -835,6 +835,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								[input.key]: input.value,
 							})
 
+							// Ensure the surface has the correct locked state
+							const groupId = surface.getGroupId()
+							const group = groupId ? this.#surfaceGroups.get(groupId) : null
+							if (group) {
+								group.syncLocked()
+							}
+
 							setImmediate(() => this.updateDevicesList())
 						}
 					}

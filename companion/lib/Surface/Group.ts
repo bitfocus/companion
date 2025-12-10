@@ -435,6 +435,11 @@ export class SurfaceGroup {
 	 * @returns whether the locked state changed
 	 */
 	setLocked(locked: boolean): boolean {
+		// If an auto-group, just pass to the sole surface
+		if (this.isAutoGroup) {
+			return this.surfaceHandlers[0].setLocked(locked)
+		}
+
 		// // skip if surface can't be locked
 		// if (this.#surfaceConfig.config.never_lock) return
 
@@ -451,6 +456,17 @@ export class SurfaceGroup {
 		}
 
 		return true
+	}
+
+	/**
+	 * Ensure all surfaces in this group have the correct locked state
+	 */
+	syncLocked(): void {
+		if (this.isAutoGroup) return
+
+		for (const surface of this.surfaceHandlers) {
+			surface.setLocked(this.#isLocked)
+		}
 	}
 
 	/**
