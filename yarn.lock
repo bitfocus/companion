@@ -1789,7 +1789,7 @@ __metadata:
     "@tanstack/router-plugin": "npm:^1.140.0"
     "@tanstack/virtual-file-routes": "npm:^1.140.0"
     "@trpc/client": "npm:^11.7.2"
-    "@trpc/tanstack-react-query": "npm:^11.7.2"
+    "@trpc/tanstack-react-query": "patch:@trpc/tanstack-react-query@npm%3A11.7.2#~/.yarn/patches/@trpc-tanstack-react-query-npm-11.7.2-319ea5774b.patch"
     "@types/crypto-js": "npm:^4.2.2"
     "@types/lodash-es": "npm:^4.17.12"
     "@types/react": "npm:^18.3.27"
@@ -7590,7 +7590,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@trpc/tanstack-react-query@npm:^11.7.2":
+"@trpc/tanstack-react-query@npm:11.7.2":
   version: 11.7.2
   resolution: "@trpc/tanstack-react-query@npm:11.7.2"
   peerDependencies:
@@ -7601,6 +7601,20 @@ __metadata:
     react-dom: ">=18.2.0"
     typescript: ">=5.7.2"
   checksum: 10c0/d143a660a81008ff86a7fb81b6025494b4fa2d3508443a5ad52d00e0380c79b5c1677e04f6ec5ae4f02085b5e8f334dcf2126092b630e3976569aad1f85cfb63
+  languageName: node
+  linkType: hard
+
+"@trpc/tanstack-react-query@patch:@trpc/tanstack-react-query@npm%3A11.7.2#~/.yarn/patches/@trpc-tanstack-react-query-npm-11.7.2-319ea5774b.patch":
+  version: 11.7.2
+  resolution: "@trpc/tanstack-react-query@patch:@trpc/tanstack-react-query@npm%3A11.7.2#~/.yarn/patches/@trpc-tanstack-react-query-npm-11.7.2-319ea5774b.patch::version=11.7.2&hash=68fdb3"
+  peerDependencies:
+    "@tanstack/react-query": ^5.80.3
+    "@trpc/client": 11.7.2
+    "@trpc/server": 11.7.2
+    react: ">=18.2.0"
+    react-dom: ">=18.2.0"
+    typescript: ">=5.7.2"
+  checksum: 10c0/efb1bb97373ab78f4d5213d1ef065992577adb0b1f3037287f4bc4b6c887f68d4279e4fddd9091b7807e1afbe3a22b733b486b044d02a8bf0b4aac3668148b71
   languageName: node
   linkType: hard
 

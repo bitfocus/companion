@@ -1,0 +1,109 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 6e4a42a470e11a8393bd2a94ddd29fc2d2145268..9a7b65b788ee50802116c9822775d0e7fa4b35f5 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -497,7 +497,7 @@ function useSubscription(opts) {
+ 		};
+ 	}, [opts.enabled, reset]);
+ 	const resultRef = react.useRef(getInitialState());
+-	const [state, setState] = react.useState(trackResult(resultRef.current, addTrackedProp));
++	const [state, setState] = react.useState(trackResult(resultRef, addTrackedProp));
+ 	state.reset = reset;
+ 	const updateState = react.useCallback((callback) => {
+ 		const prev = resultRef.current;
+@@ -507,7 +507,7 @@ function useSubscription(opts) {
+ 			shouldUpdate = true;
+ 			break;
+ 		}
+-		if (shouldUpdate) setState(trackResult(next, addTrackedProp));
++		if (shouldUpdate) setState(trackResult(resultRef, addTrackedProp));
+ 	}, [addTrackedProp]);
+ 	react.useEffect(() => {
+ 		if (!opts.enabled) return;
+@@ -520,9 +520,9 @@ function useSubscription(opts) {
+ 	return state;
+ }
+ function trackResult(result, onTrackResult) {
+-	const trackedResult = new Proxy(result, { get(target, prop) {
++	const trackedResult = new Proxy(result.current, { get(_target, prop) {
+ 		onTrackResult(prop);
+-		return target[prop];
++		return result.current[prop];
+ 	} });
+ 	return trackedResult;
+ }
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 8cab453b6ade402aba25fe596c209df893afc64d..c383852d7783931fc3c3d3848bf112d3bbc5ec9c 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -498,7 +498,7 @@ function useSubscription(opts) {
+ 		};
+ 	}, [opts.enabled, reset]);
+ 	const resultRef = React$1.useRef(getInitialState());
+-	const [state, setState] = React$1.useState(trackResult(resultRef.current, addTrackedProp));
++	const [state, setState] = React$1.useState(trackResult(resultRef, addTrackedProp));
+ 	state.reset = reset;
+ 	const updateState = React$1.useCallback((callback) => {
+ 		const prev = resultRef.current;
+@@ -508,7 +508,7 @@ function useSubscription(opts) {
+ 			shouldUpdate = true;
+ 			break;
+ 		}
+-		if (shouldUpdate) setState(trackResult(next, addTrackedProp));
++		if (shouldUpdate) setState(trackResult(resultRef, addTrackedProp));
+ 	}, [addTrackedProp]);
+ 	React$1.useEffect(() => {
+ 		if (!opts.enabled) return;
+@@ -521,9 +521,9 @@ function useSubscription(opts) {
+ 	return state;
+ }
+ function trackResult(result, onTrackResult) {
+-	const trackedResult = new Proxy(result, { get(target, prop) {
++	const trackedResult = new Proxy(result.current, { get(_target, prop) {
+ 		onTrackResult(prop);
+-		return target[prop];
++		return result.current[prop];
+ 	} });
+ 	return trackedResult;
+ }
+diff --git a/src/internals/subscriptionOptions.ts b/src/internals/subscriptionOptions.ts
+index 3849ae2059dc695c2b4cc3546c8e7b6e4e70c472..29321d1ef06381fbc54b16b949217f41bf333aae 100644
+--- a/src/internals/subscriptionOptions.ts
++++ b/src/internals/subscriptionOptions.ts
+@@ -260,7 +260,7 @@ export function useSubscription<TOutput, TError>(
+   const resultRef = React.useRef<$Result>(getInitialState());
+ 
+   const [state, setState] = React.useState<$Result>(
+-    trackResult(resultRef.current, addTrackedProp),
++    trackResult(resultRef, addTrackedProp),
+   );
+ 
+   state.reset = reset;
+@@ -278,7 +278,7 @@ export function useSubscription<TOutput, TError>(
+         }
+       }
+       if (shouldUpdate) {
+-        setState(trackResult(next, addTrackedProp));
++        setState(trackResult(resultRef, addTrackedProp));
+       }
+     },
+     [addTrackedProp],
+@@ -299,13 +299,14 @@ export function useSubscription<TOutput, TError>(
+ }
+ 
+ function trackResult<T extends object>(
+-  result: T,
++  result: React.RefObject<T>,
+   onTrackResult: (key: keyof T) => void,
+ ): T {
+-  const trackedResult = new Proxy(result, {
+-    get(target, prop) {
++  const trackedResult = new Proxy(result.current, {
++    get(_target, prop) {
+       onTrackResult(prop as keyof T);
+-      return target[prop as keyof T];
++      // Bypass target, so that we always get the latest value
++      return result.current[prop as keyof T];
+     },
+   });
+ 
