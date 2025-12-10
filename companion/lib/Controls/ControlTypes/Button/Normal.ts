@@ -53,6 +53,7 @@ export class ControlButtonNormal
 		color: 0xffffff,
 		bgcolor: 0x000000,
 		show_topbar: 'default',
+		blink: null,
 	}
 
 	readonly supportsActions = true

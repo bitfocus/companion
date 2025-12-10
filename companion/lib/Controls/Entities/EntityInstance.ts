@@ -478,6 +478,9 @@ export class ControlEntityInstance {
 				if (key === 'png64' && !newStyle[key]) {
 					newStyle[key] = null
 				}
+				if (key === 'blink' && !newStyle[key]) {
+					newStyle[key] = null
+				}
 			}
 
 			if (key === 'text') {

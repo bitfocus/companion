@@ -714,6 +714,7 @@ function convertPresetStyleToDrawStyle(rawStyle: CompanionButtonStyleProps): But
 		alignment: rawStyle.alignment ?? 'center:center',
 		pngalignment: rawStyle.pngalignment ?? 'center:center',
 		png64: rawStyle.png64 ?? null,
+		blink: rawStyle.blink ?? null,
 		show_topbar: rawStyle.show_topbar ?? 'default',
 	}
 }

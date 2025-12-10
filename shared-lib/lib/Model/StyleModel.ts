@@ -50,5 +50,7 @@ export interface ButtonStyleProperties {
 	bgcolor: number
 	show_topbar: boolean | 'default' | undefined
 
+	blink: number | null
+
 	png64: string | null
 }
