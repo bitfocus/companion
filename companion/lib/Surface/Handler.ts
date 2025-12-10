@@ -414,26 +414,27 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Set the surface as locked
 	 */
-	setLocked(locked: boolean, skipDraw = false): void {
+	setLocked(locked: boolean, skipDraw = false): boolean {
 		// skip if surface can't be locked
-		if (this.#surfaceConfig.config.never_lock && locked) return
+		if (this.#surfaceConfig.config.never_lock && locked) return false
 
-		// If it changed, redraw
-		if (this.#isSurfaceLocked != locked) {
-			this.#isSurfaceLocked = !!locked
+		if (this.#isSurfaceLocked === !!locked) return false
 
-			this.#surfaces.emit('surface_locked', this.surfaceId, this.#isSurfaceLocked)
+		this.#isSurfaceLocked = !!locked
 
-			if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
+		this.#surfaces.emit('surface_locked', this.surfaceId, this.#isSurfaceLocked)
 
-			if (!skipDraw) {
-				if (!this.#isSurfaceLocked && !!this.panel.setLocked) {
-					this.panel.setLocked(false, this.#currentPincodeEntry.length)
-				}
+		if (!this.#isSurfaceLocked) this.#currentPincodeEntry = ''
 
-				this.#drawPageDebounced()
-			}
+		if (!this.#isSurfaceLocked && !!this.panel.setLocked) {
+			this.panel.setLocked(false, this.#currentPincodeEntry.length)
 		}
+
+		if (!skipDraw) {
+			this.#drawPageDebounced()
+		}
+
+		return true
 	}
 
 	#onButtonDrawn = (location: ControlLocation, render: ImageResult): void => {
