@@ -47,7 +47,7 @@ export default {
 	externals: {
 		// Native libs that are needed
 		usb: 'usb',
-		bufferutil: 'bufferutil',
+		bufferutil: 'commonjs2 bufferutil',
 		'@serialport/bindings-cpp': '@serialport/bindings-cpp',
 		'@napi-rs/canvas': '@napi-rs/canvas',
 	},
