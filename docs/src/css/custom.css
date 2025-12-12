@@ -18,6 +18,7 @@
 
 	--ifm-navbar-background-color: #d50215;
 	--ifm-navbar-link-color: #ffffff;
+	--ifm-navbar-link-hover-color: #ffffff;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -31,4 +32,37 @@
 	--ifm-color-primary-lightest: #f89aa7;
 
 	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Navbar active link styles */
+.navbar__link--active {
+	color: #ffffff !important;
+	background-color: rgba(255, 255, 255, 0.1);
+	border-radius: 0.25rem;
+}
+
+.navbar__link--active:hover {
+	color: #ffffff !important;
+	background-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme='dark'] .navbar__link--active {
+	color: #ffffff !important;
+	background-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='dark'] .navbar__link--active:hover {
+	color: #ffffff !important;
+	background-color: rgba(255, 255, 255, 0.25);
+}
+
+.text-gray-50 {
+	color: #f9fafb;
+}
+.text-gray-500 {
+	color: #6b7280;
+}
+
+h2 ~ :not(h1, h2) {
+	margin-left: 2rem;
 }
