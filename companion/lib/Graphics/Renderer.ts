@@ -195,11 +195,7 @@ export class GraphicsRenderer {
 		}
 
 		// Draw background color first
-		if (!showTopbar) {
-			img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
-		} else {
-			img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
-		}
+		img.box(0, showTopbar ? 14 : 0, 72, 72, parseColor(drawStyle.bgcolor))
 
 		// Draw background PNG if exists
 		if (drawStyle.png64 !== undefined && drawStyle.png64 !== null) {

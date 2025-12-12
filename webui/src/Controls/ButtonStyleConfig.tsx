@@ -132,6 +132,7 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 	const setColorValue = useCallback((val: any) => setValueInner('color', val), [setValueInner])
 	const setBackgroundColorValue = useCallback((val: any) => setValueInner('bgcolor', val), [setValueInner])
 	const setShowTopBar = useCallback((val: any) => setValueInner('show_topbar', val), [setValueInner])
+	const setBlink = useCallback((val: any) => setValueInner('blink', val), [setValueInner])
 	const toggleExpression = useCallback(
 		() => setValueInner('textExpression', !values.textExpression),
 		[setValueInner, values.textExpression]
@@ -290,6 +291,21 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 									</CButton>
 								)}
 							</CButtonGroup>
+						</div>
+					)}
+					{showField2('blink') && (
+						<div>
+							<label>
+								<InlineHelp help="Set the blink rate (ms)">Blink Rate</InlineHelp>
+							</label>
+							<NumberInputField
+								tooltip={'Blink rate in milliseconds'}
+								setValue={setBlink}
+								min={500}
+								max={2000}
+								step={10}
+								value={values.blink ?? 500}
+							/>
 						</div>
 					)}
 				</div>

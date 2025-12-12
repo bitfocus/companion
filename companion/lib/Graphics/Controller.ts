@@ -76,6 +76,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #userConfigController: DataUserConfig
 	readonly #variableValuesController: VariablesValues
 
+	private blinkTimeout = new Map<string, { timeout: NodeJS.Timeout; state: boolean }>()
+
 	/**
 	 * Cached UserConfig values that affect button rendering
 	 */
@@ -203,7 +205,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		this.#renderQueue = new ImageWriteQueue(
 			this.#logger,
-			async (_id: string, args: RenderArguments, skipInvalidation: boolean) => {
+			async (id: string, args: RenderArguments, skipInvalidation: boolean) => {
 				try {
 					if (args.type === 'preset') {
 						const control = this.#controlsController.getControl(args.controlId)
@@ -280,6 +282,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
 						const pagename = this.#pageStore.getPageName(location.pageNumber)
+						if (!buttonStyle.pushed && buttonStyle.blink) {
+							const { state, timeout } = this.blinkTimeout.get(id) ?? { state: true, timeout: null }
+							if (timeout) timeout.close()
+							this.blinkTimeout.set(id, {
+								timeout: setTimeout(() => this.#renderQueue.queue(id, args, skipInvalidation), buttonStyle.blink),
+								state: !state,
+							})
+							if (!state) buttonStyle.bgcolor = 0
+						}
 
 						// Check if the image is already present in the render cache and if so, return it
 						let keyLocation: ControlLocation | undefined
@@ -415,6 +426,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			alignment: buttonStyle.alignment ?? 'center:center',
 			pngalignment: buttonStyle.pngalignment ?? 'center:center',
 			png64: buttonStyle.png64 ?? null,
+			blink: buttonStyle.blink ?? null,
 			size: buttonStyle.size === 'auto' ? 'auto' : Number(buttonStyle.size),
 		}
 
