@@ -373,7 +373,7 @@ export class Registry {
 				process.on('message', (msg: any): void => {
 					try {
 						if (msg.messageType === 'http-rebind') {
-							this.rebindHttp(msg.ip, msg.port)
+							this.rebindHttp(msg.ip, Number(msg.port))
 						} else if (msg.messageType === 'exit') {
 							this.exit(false, false)
 						} else if (msg.messageType === 'scan-usb') {
@@ -473,7 +473,7 @@ export class Registry {
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
 		this.services.https.updateBindIp(bindIp)
-		this.internalModule.updateBindIp(bindIp)
+		this.internalModule.updateBindIp(bindIp, bindPort)
 		this.usageStatistics.updateBindIp(bindIp)
 	}
 }

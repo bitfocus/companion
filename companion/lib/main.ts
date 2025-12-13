@@ -223,7 +223,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	)
 
 	registry
-		.ready(options.extraModulePath, adminIp, options.adminPort)
+		.ready(options.extraModulePath, adminIp, Number(options.adminPort))
 		.then(() => {
 			console.log('Started')
 
