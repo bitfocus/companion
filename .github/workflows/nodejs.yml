@@ -17,7 +17,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Prepare
         run: |
@@ -51,7 +51,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Cache build sources
         uses: actions/cache@v4
@@ -113,7 +113,7 @@ jobs:
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
           api-product: companion
-          api-target: 'linux-tgz'
+          api-target: "linux-tgz"
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   linux-arm64:
@@ -130,7 +130,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Cache build sources
         uses: actions/cache@v4
@@ -191,7 +191,7 @@ jobs:
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
           api-product: companion
-          api-target: 'linux-arm64-tgz'
+          api-target: "linux-arm64-tgz"
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-x64:
@@ -208,7 +208,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Cache build sources
         uses: actions/cache@v4
@@ -271,7 +271,7 @@ jobs:
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
           api-product: companion
-          api-target: 'mac-intel'
+          api-target: "mac-intel"
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-arm64:
@@ -288,7 +288,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Cache build sources
         uses: actions/cache@v4
@@ -353,7 +353,7 @@ jobs:
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
           api-product: companion
-          api-target: 'mac-arm'
+          api-target: "mac-arm"
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win32-x64:
@@ -370,7 +370,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Cache build sources
         uses: actions/cache@v4
@@ -446,7 +446,7 @@ jobs:
           s3-secret-key: ${{ secrets.S3_SECRET }}
 
           api-product: companion
-          api-target: 'win-x64'
+          api-target: "win-x64"
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   docker-image:
@@ -517,6 +517,6 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           push: true
           labels: ${{ steps.meta.outputs.labels }}
-          tags: '${{ steps.meta.outputs.tags }}'
+          tags: "${{ steps.meta.outputs.tags }}"
           build-args: |
             build_name=${{ needs.linux-x64.outputs.version }}

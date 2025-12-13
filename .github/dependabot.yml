@@ -1,36 +1,36 @@
 version: 2
 updates:
-  - package-ecosystem: 'github-actions'
-    directory: '/'
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
-      interval: 'weekly'
+      interval: "weekly"
 
-  - package-ecosystem: 'npm'
-    directory: '/'
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: 'daily'
+      interval: "daily"
     # Labels on pull requests for security and version updates
     labels:
-      - 'type/dependencies'
+      - "type/dependencies"
     # Disable version updates for npm dependencies (we only want security updates)
     open-pull-requests-limit: 0
 
-  - package-ecosystem: 'npm'
-    directory: '/webui'
+  - package-ecosystem: "npm"
+    directory: "/webui"
     schedule:
-      interval: 'daily'
+      interval: "daily"
     # Labels on pull requests for security and version updates
     labels:
-      - 'type/dependencies'
+      - "type/dependencies"
     # Disable version updates for npm dependencies (we only want security updates)
     open-pull-requests-limit: 0
 
-  - package-ecosystem: 'npm'
-    directory: '/launcher'
+  - package-ecosystem: "npm"
+    directory: "/launcher"
     schedule:
-      interval: 'daily'
+      interval: "daily"
     # Labels on pull requests for security and version updates
     labels:
-      - 'type/dependencies'
+      - "type/dependencies"
     # Disable version updates for npm dependencies (we only want security updates)
     open-pull-requests-limit: 0
