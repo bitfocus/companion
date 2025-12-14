@@ -1,0 +1,18 @@
+diff --git a/dist/Ember/Server/index.js b/dist/Ember/Server/index.js
+index 209729f1858218bab9a6d733d4b6674abe981982..7b16ed5fb89580a6623e71046d97079e71b894ba 100644
+--- a/dist/Ember/Server/index.js
++++ b/dist/Ember/Server/index.js
+@@ -74,7 +74,12 @@ class EmberServer extends eventemitter3_1.EventEmitter {
+         const data = (0, ber_1.berEncode)([el], types_1.RootType.Elements);
+         let elPath = el.path;
+         if (el.contents.type !== model_1.ElementType.Node && !('targets' in update || 'sources' in update)) {
+-            elPath = elPath.slice(0, -2); // remove the last element number
++            const lastDotIndex = elPath.lastIndexOf('.')
++			if (lastDotIndex > -1) {
++				elPath = elPath.slice(0, lastDotIndex)
++			} else {
++				elPath = ''
++			}
+         }
+         for (const [path, clients] of Object.entries(this._subscriptions)) {
+             if (elPath === path) {
