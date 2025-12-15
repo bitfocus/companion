@@ -229,6 +229,43 @@ export class ImportController {
 			this.#surfacesController.importSurfaces(surfaceGroups, surfaces)
 		}
 
+		if (isImporting(config.surfaces.instances)) {
+			this.#instancesController.surfaceInstanceCollections.replaceCollections(data.surfaceInstanceCollections || [])
+
+			for (const instanceConfig of Object.values(data.surfaceInstances || {})) {
+				// Create a new instance
+				const [newId, newConfig] = this.#instancesController.addSurfaceInstanceWithLabel(
+					instanceConfig.moduleId,
+					instanceConfig.label,
+					{
+						versionId: instanceConfig.moduleVersionId ?? null,
+						updatePolicy: instanceConfig.updatePolicy,
+						disabled: true,
+						collectionId: instanceConfig.collectionId,
+						sortOrder: instanceConfig.sortOrder ?? 0,
+					}
+				)
+
+				if (newId && newConfig) {
+					this.#instancesController.setSurfaceInstanceLabelAndConfig(newId, {
+						label: null,
+						enabled: instanceConfig.enabled !== false,
+						config: 'config' in instanceConfig ? instanceConfig.config : null,
+						// secrets: 'secrets' in instanceConfig ? instanceConfig.secrets : null,
+						updatePolicy: null,
+						// upgradeIndex: instanceConfig.lastUpgradeIndex,
+					})
+				}
+			}
+		}
+
+		if (isImporting(config.surfaces.remote)) {
+			for (const remoteInfo of Object.values(data.surfacesRemote || {})) {
+				// Future: validation
+				this.#surfacesController.outbound.addOutboundConnection(remoteInfo)
+			}
+		}
+
 		if (isImporting(config.triggers)) {
 			// Import trigger collections if provided
 			if (data.triggerCollections) {

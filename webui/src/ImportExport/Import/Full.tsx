@@ -9,6 +9,7 @@ import {
 	faFileImport,
 	faGlobe,
 	faPlug,
+	faQuestionCircle,
 	faTh,
 	faWarning,
 } from '@fortawesome/free-solid-svg-icons'
@@ -23,6 +24,7 @@ import type {
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 // These can't be imported currently
 type ClientImportSelection = Omit<ClientImportOrResetSelection, 'connections' | 'userconfig'>
@@ -298,21 +300,58 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						</form.AppField>
 					</div>
 
-					<div className="ms-4">
+					<div className="ms-2">
 						<form.AppField name="surfaces.known">
-							{(field) => <field.ImportToggleField label="Known Surfaces" disabled={!snapshot.surfacesKnown} />}
-						</form.AppField>
-					</div>
-					<div className="ms-4">
-						<form.AppField name="surfaces.instances">
 							{(field) => (
-								<field.ImportToggleField label="Surface Integrations" disabled={!snapshot.surfacesInstances} />
+								<field.ImportToggleField
+									className="ms-4"
+									disabled={!snapshot.surfacesKnown}
+									label={
+										<>
+											Known Surfaces
+											<InlineHelp help="The list of known surfaces, and their settings">
+												<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+											</InlineHelp>
+										</>
+									}
+								/>
 							)}
 						</form.AppField>
 					</div>
-					<div className="ms-4">
+					<div className="ms-2">
+						<form.AppField name="surfaces.instances">
+							{(field) => (
+								<field.ImportToggleField
+									className="ms-4"
+									disabled={!snapshot.surfacesInstances}
+									label={
+										<>
+											Surface Integrations
+											<InlineHelp help="The configured surface integrations">
+												<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+											</InlineHelp>
+										</>
+									}
+								/>
+							)}
+						</form.AppField>
+					</div>
+					<div className="ms-2">
 						<form.AppField name="surfaces.remote">
-							{(field) => <field.ImportToggleField label="Remote Surfaces" disabled={!snapshot.surfacesRemote} />}
+							{(field) => (
+								<field.ImportToggleField
+									className="ms-4"
+									disabled={!snapshot.surfacesRemote}
+									label={
+										<>
+											Remote Surfaces
+											<InlineHelp help="Connections for surfaces that are connected remotely">
+												<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+											</InlineHelp>
+										</>
+									}
+								/>
+							)}
 						</form.AppField>
 					</div>
 
@@ -392,14 +431,16 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 }
 
 interface ImportToggleFieldProps {
-	label: string
+	label: string | React.ReactNode
 	disabled: boolean
+	className?: string
 }
-function ImportToggleField({ label, disabled }: ImportToggleFieldProps) {
+function ImportToggleField({ label, disabled, className }: ImportToggleFieldProps) {
 	const field = useFieldContext<ImportOrResetType>()
 
 	return (
 		<CFormCheck
+			className={className}
 			disabled={disabled}
 			checked={field.state.value !== 'unchanged'}
 			onChange={(e) => field.handleChange(e.currentTarget.checked ? 'reset-and-import' : 'unchanged')}

@@ -249,17 +249,8 @@ export class SurfaceOutboundController {
 						sortOrder: highestRank + 1,
 						collectionId: null,
 					}
-					this.#storage.set(id, newInfo)
-					this.#dbTable.set(id, newInfo)
 
-					this.events.emit('clientInfo', {
-						type: 'add',
-						itemId: id,
-
-						info: newInfo,
-					})
-
-					this.#startStopConnection(newInfo)
+					this.addOutboundConnection(newInfo)
 
 					return { ok: true, id } as const
 				}),
@@ -412,6 +403,22 @@ export class SurfaceOutboundController {
 					return true
 				}),
 		})
+	}
+
+	addOutboundConnection(newInfo: OutboundSurfaceInfo): void {
+		if (this.#storage.has(newInfo.id)) throw new Error(`Outbound surface with ID ${newInfo.id} already exists`)
+
+		this.#storage.set(newInfo.id, newInfo)
+		this.#dbTable.set(newInfo.id, newInfo)
+
+		this.events.emit('clientInfo', {
+			type: 'add',
+			itemId: newInfo.id,
+
+			info: newInfo,
+		})
+
+		this.#startStopConnection(newInfo)
 	}
 
 	getAllEnabledConnectionsForInstance(instanceId: string): OutboundSurfaceInfo[] {
