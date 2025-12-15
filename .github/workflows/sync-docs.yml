@@ -6,7 +6,7 @@ on:
       - main
       - stable-*
     paths:
-      - 'docs/user-guide/**'
+      - "docs/user-guide/**"
   workflow_dispatch:
 
 concurrency:
@@ -53,8 +53,8 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           repository: website
-          commit_message: 'Sync user-guide from companion'
-          file_pattern: 'user-guide/** whats-new/**'
+          commit_message: "Sync user-guide from companion"
+          file_pattern: "user-guide/** whats-new/**"
 
       - name: Sync user-guide folder (release)
         if: github.ref != 'refs/heads/main'
@@ -87,5 +87,5 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           repository: website
-          commit_message: 'Sync user-guide (v${{ steps.sync_release.outputs.version }}) from companion'
-          file_pattern: 'versioned_docs/** versioned_sidebars/** versions.json'
+          commit_message: "Sync user-guide (v${{ steps.sync_release.outputs.version }}) from companion"
+          file_pattern: "versioned_docs/** versioned_sidebars/** versions.json"

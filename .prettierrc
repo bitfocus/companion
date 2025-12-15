@@ -6,5 +6,13 @@
 	"singleQuote": true,
 	"useTabs": true,
 	"endOfLine": "lf",
-	"trailingComma": "es5"
+	"trailingComma": "es5",
+	"overrides": [
+		{
+			"files": ["*.yml", "*.yaml"],
+			"options": {
+				"singleQuote": false
+			}
+		}
+	]
 }
