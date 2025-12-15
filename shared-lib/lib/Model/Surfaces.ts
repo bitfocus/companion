@@ -126,6 +126,7 @@ export interface OutboundSurfaceInfo {
 
 	displayName: string
 	type: 'plugin'
+	moduleId: string
 	instanceId: string
 	config: Record<string, any>
 

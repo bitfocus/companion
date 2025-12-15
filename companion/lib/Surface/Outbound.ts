@@ -41,6 +41,7 @@ export class SurfaceOutboundController {
 	readonly #surfaceInstancesInfo = new Map<
 		string,
 		{
+			moduleId: string
 			defaultConfig: Record<string, any>
 			configMatchExpression: string | null
 		}
@@ -138,6 +139,7 @@ export class SurfaceOutboundController {
 
 	updateDefaultConfigForSurfaceInstance(
 		instanceId: string,
+		moduleId: string,
 		info: {
 			configFields: CompanionSurfaceConfigField[]
 			configMatchesExpression: string | null
@@ -154,6 +156,7 @@ export class SurfaceOutboundController {
 			}
 
 			this.#surfaceInstancesInfo.set(instanceId, {
+				moduleId: moduleId,
 				defaultConfig: config,
 				configMatchExpression: info.configMatchesExpression,
 			})
@@ -212,8 +215,12 @@ export class SurfaceOutboundController {
 				.mutation(async ({ input }) => {
 					this.#logger.info(`Adding new Remote Surface Connection for ${input.instanceId} (${input.connectionId})`)
 
+					const instanceInfo = this.#surfaceInstancesInfo.get(input.instanceId)
+					if (!instanceInfo)
+						return { ok: false, error: 'Surface integration does not support remote connections' } as const
+
 					let displayName = 'New Remote Surface'
-					let config = this.#surfaceInstancesInfo.get(input.instanceId)?.defaultConfig
+					let config = instanceInfo.defaultConfig
 					if (input.connectionId) {
 						const connectionInfo = this.discovery.getInfoForConnectionId(input.instanceId, input.connectionId)
 						if (!connectionInfo) {
@@ -244,6 +251,7 @@ export class SurfaceOutboundController {
 						type: 'plugin',
 						enabled: true,
 						displayName: displayName,
+						moduleId: instanceInfo.moduleId,
 						instanceId: input.instanceId,
 						config: structuredClone(config ?? {}),
 						sortOrder: highestRank + 1,

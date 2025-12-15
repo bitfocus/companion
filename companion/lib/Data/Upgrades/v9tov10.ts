@@ -231,6 +231,7 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 					type: 'plugin',
 					enabled: legacySurface.enabled ?? true,
 					instanceId: elgatoSurfaceInstanceId,
+					moduleId: 'elgato-stream-deck',
 					config: {
 						address: legacySurface.address,
 						port: legacySurface.port || 5343,

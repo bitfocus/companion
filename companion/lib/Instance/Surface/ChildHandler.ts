@@ -196,6 +196,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 
 			this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(
 				this.instanceId,
+				this.moduleId,
 				this.features.supportsRemote
 			)
 		}
@@ -271,7 +272,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 
 	cleanup(): void {
 		this.#deps.invalidateClientJson(this.instanceId)
-		this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, null)
+		this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, this.moduleId, null)
 		this.#deps.surfaceController.outbound.events.off(`startStop:${this.instanceId}`, this.#startStopConnections)
 
 		// Unsubscribe any remaining surface config listeners
