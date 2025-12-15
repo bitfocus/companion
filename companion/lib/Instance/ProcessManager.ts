@@ -26,6 +26,7 @@ import { isPackaged } from '../Resources/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
 import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
+import { PreserveEnvVars } from './Environment.js'
 
 /**
  * A backoff sleep strategy
@@ -434,7 +435,7 @@ export class InstanceProcessManager {
 
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
-					...preserveEnvVars(),
+					...PreserveEnvVars(),
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
 					...runtimeInfo.env,
@@ -817,31 +818,6 @@ interface RuntimeInfo {
 	entrypoint: string
 	apiVersion: string
 	env: Record<string, string>
-}
-
-/**
- * Only some env vars should be forwarded to child processes
- */
-function preserveEnvVars(): Record<string, string> {
-	const preserveNames = [
-		'HTTP_PROXY',
-		'HTTPS_PROXY',
-		'NO_PROXY',
-		'http_proxy',
-		'https_proxy',
-		'no_proxy',
-		'DISABLE_IPV6',
-	]
-
-	const preservedEnvVars: Record<string, string> = {}
-	for (const name of preserveNames) {
-		const value = process.env[name]
-		if (value !== undefined) {
-			preservedEnvVars[name] = value
-		}
-	}
-
-	return preservedEnvVars
 }
 
 function isConnectionChild(handler: ChildProcessHandlerBase): handler is ConnectionChildHandlerApi {
