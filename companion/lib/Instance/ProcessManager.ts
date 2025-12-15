@@ -17,6 +17,7 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { SomeModuleVersionInfo } from './Types.js'
+import { PreserveEnvVars } from './Environment.js'
 
 /**
  * A backoff sleep strategy
@@ -410,7 +411,7 @@ export class InstanceProcessManager {
 
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
-					...preserveEnvVars(),
+					...PreserveEnvVars(),
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
 					...runtimeInfo.env,
@@ -710,21 +711,4 @@ interface RuntimeInfo {
 	entrypoint: string
 	apiVersion: string
 	env: Record<string, string>
-}
-
-/**
- * Only some env vars should be forwarded to child processes
- */
-function preserveEnvVars(): Record<string, string> {
-	const preserveNames = ['HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'http_proxy', 'https_proxy', 'no_proxy']
-
-	const preservedEnvVars: Record<string, string> = {}
-	for (const name of preserveNames) {
-		const value = process.env[name]
-		if (value !== undefined) {
-			preservedEnvVars[name] = value
-		}
-	}
-
-	return preservedEnvVars
 }
