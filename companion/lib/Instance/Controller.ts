@@ -584,6 +584,19 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		await Promise.all(ps)
 	}
 
+	async deleteAllSurfaceInstances(deleteCollections: boolean): Promise<void> {
+		const ps: Promise<void>[] = []
+		for (const surfaceId of this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface)) {
+			ps.push(this.removeSurfaceInstance(surfaceId))
+		}
+
+		if (deleteCollections) {
+			this.#surfaceInstanceCollectionsController.discardAllCollections()
+		}
+
+		await Promise.all(ps)
+	}
+
 	/**
 	 * Get information for the metrics system about the current connections
 	 */

@@ -474,6 +474,14 @@ export class ImportExportController {
 			await this.#surfacesController.reset()
 		}
 
+		if (shouldReset(config.surfaces.instances)) {
+			await this.#instancesController.deleteAllSurfaceInstances(true)
+		}
+
+		if (shouldReset(config.surfaces.remote)) {
+			this.#surfacesController.outbound.reset()
+		}
+
 		if (shouldReset(config.triggers)) {
 			for (const [controlId, control] of controls.entries()) {
 				if (control.type === 'trigger') {
