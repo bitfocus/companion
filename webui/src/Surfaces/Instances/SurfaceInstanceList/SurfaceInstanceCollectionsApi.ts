@@ -25,7 +25,7 @@ export function useSurfaceInstanceCollectionsApi(
 				deleteCollection: (collectionId: string) => {
 					confirmModalRef.current?.show(
 						'Delete Collection',
-						'Are you sure you want to delete this collection? All surface instances in this collection will be moved to Ungrouped Surface Instances.',
+						'Are you sure you want to delete this collection? All surface integrations in this collection will be moved to Ungrouped Surface Integrations.',
 						'Delete',
 						() => {
 							deleteMutation.mutateAsync({ collectionId }).catch((e) => {

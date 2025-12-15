@@ -35,7 +35,7 @@ export const SurfaceInstanceEditPanelHeading = observer(function SurfaceInstance
 
 	return (
 		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Surface Instance: {moduleInfo?.display?.name ?? instanceInfo.moduleId}</h4>
+			<h4 className="panel-title">Edit Surface Integration: {moduleInfo?.display?.name ?? instanceInfo.moduleId}</h4>
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
 					<div className="float_right" onClick={doShowHelp} title="Show help for this module">

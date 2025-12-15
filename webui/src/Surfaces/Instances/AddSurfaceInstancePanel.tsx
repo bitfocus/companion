@@ -13,7 +13,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 	return (
 		<AddInstancePanel
 			service={service}
-			title="Add Surface Instance"
+			title="Add Surface Integration"
 			description={(storeCount) =>
 				storeCount > 0 ? (
 					<>
@@ -50,7 +50,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 })
 
 function useAddSurfaceInstanceService(): AddInstanceService {
-	const navigate = useNavigate({ from: '/surfaces/instances' })
+	const navigate = useNavigate({ from: '/surfaces/integrations' })
 	const addMutation = useMutationExt(trpc.instances.surfaces.add.mutationOptions())
 
 	return useMemo(
@@ -58,10 +58,10 @@ function useAddSurfaceInstanceService(): AddInstanceService {
 			moduleType: ModuleInstanceType.Surface,
 
 			closeAddInstance: () => {
-				void navigate({ to: '/surfaces/instances' })
+				void navigate({ to: '/surfaces/integrations' })
 			},
 			openConfigureInstance: (instanceId) => {
-				void navigate({ to: '/surfaces/instances/$instanceId', params: { instanceId } })
+				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
 			},
 
 			performAddInstance: async (moduleInfo, label, versionId) => {

@@ -25,7 +25,7 @@ export const SurfaceInstanceTableRow = observer(function SurfaceInstanceTableRow
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current?.show(
-			'Delete surface instance',
+			'Delete surface integration',
 			[
 				`Are you sure you want to delete "${instance.label}"?`,
 				'This will disconnect all surfaces associated with this instance.',
@@ -57,7 +57,7 @@ export const SurfaceInstanceTableRow = observer(function SurfaceInstanceTableRow
 			collectionsStore={surfaceInstances}
 			instance={instance}
 			instanceStatus={instance.status}
-			labelStr="surface instance"
+			labelStr="surface integration"
 			doDelete={doDelete}
 			doEdit={doEdit}
 			doToggleEnabled={doToggleEnabled}

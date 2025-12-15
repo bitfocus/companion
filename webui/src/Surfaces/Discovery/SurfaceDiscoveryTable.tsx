@@ -158,7 +158,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 	const { surfaceInstances, surfaces } = useContext(RootAppStoreContext)
 
 	const instanceInfo = surfaceInstances.instances.get(surfaceInfo.instanceId)
-	const surfaceInstanceDisplayName = instanceInfo?.label ?? 'Unknown Surface Instance'
+	const surfaceInstanceDisplayName = instanceInfo?.label ?? 'Unknown Surface Integration'
 
 	const isAlreadyAdded = useComputed(() => {
 		// If no expression, can't match

@@ -237,7 +237,7 @@ export const ExportWizardModal = observer(
 												label={
 													<>
 														Known Surfaces
-														<InlineHelp help="The list of known connections, and their settings">
+														<InlineHelp help="The list of known surfaces, and their settings">
 															<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
 														</InlineHelp>
 													</>
@@ -257,8 +257,8 @@ export const ExportWizardModal = observer(
 												onBlur={field.handleBlur}
 												label={
 													<>
-														Surface Instances
-														<InlineHelp help="The configured surface instances">
+														Surface Integrations
+														<InlineHelp help="The configured surface integrations">
 															<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
 														</InlineHelp>
 													</>

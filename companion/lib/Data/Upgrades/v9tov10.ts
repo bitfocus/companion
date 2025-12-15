@@ -140,7 +140,7 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 		})
 	}
 
-	// Create surface instances based on old userconfig settings
+	// Create surface integrations based on old userconfig settings
 	const userconfig: Partial<OldUserConfigModel> = db.defaultTableView.getOrDefault('userconfig', {})
 
 	const createInstanceIfNeeded = (
@@ -199,7 +199,7 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 	if (anyRemoteSurfacesAreLegacyElgato) {
 		let elgatoSurfaceInstanceId = allSurfaceInstanceModuleIds.get('elgato-stream-deck')
 		if (!elgatoSurfaceInstanceId) {
-			// Create new elgato surface instance
+			// Create new elgato surface integration
 
 			// TODO - setup config to disable usb?
 

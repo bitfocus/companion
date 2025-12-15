@@ -18,7 +18,7 @@ export function useSurfaceInstancesSubscription(store: SurfaceInstancesStore): b
 			},
 			onError: (error) => {
 				store.updateInstances(null)
-				console.error('Failed to load surface instances list', error)
+				console.error('Failed to load surface integrations list', error)
 			},
 		})
 	)

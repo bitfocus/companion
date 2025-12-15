@@ -301,7 +301,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	#validateAndFixSurfaceInstanceStates(): void {
-		// Group enabled surface instances by module ID
+		// Group enabled surface integrations by module ID
 		const instancesByModule = new Map<string, Array<{ instanceId: string; config: InstanceConfig }>>()
 		for (const [instanceId, config] of this.#configStore.getAllInstanceConfigs()) {
 			if (config.moduleInstanceType !== ModuleInstanceType.Surface) continue
@@ -340,7 +340,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				for (let i = 1; i < instances.length; i++) {
 					const { instanceId, config } = instances[i]
 					this.#logger.warn(
-						`Disabling surface instance "${config.label}" (${instanceId}) because not all versions of this module allow multiple instances`
+						`Disabling surface integration "${config.label}" (${instanceId}) because not all versions of this module allow multiple instances`
 					)
 					config.enabled = false
 				}
@@ -694,17 +694,17 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	async removeSurfaceInstance(instanceId: string): Promise<void> {
 		const config = this.#configStore.getConfigOfTypeForId(instanceId, ModuleInstanceType.Surface)
 		if (!config) {
-			this.#logger.warn(`Can't delete surface instance "${instanceId}" which does not exist!`)
+			this.#logger.warn(`Can't delete surface integration "${instanceId}" which does not exist!`)
 			return
 		}
 
 		const label = config.label
-		this.#logger.info(`Deleting surface instance: ${label ?? instanceId}`)
+		this.#logger.info(`Deleting surface integration: ${label ?? instanceId}`)
 
 		try {
 			this.processManager.queueUpdateInstanceState(instanceId, null, true)
 		} catch (e) {
-			this.#logger.debug(`Error while deleting surface instance "${label ?? instanceId}": `, e)
+			this.#logger.debug(`Error while deleting surface integration "${label ?? instanceId}": `, e)
 		}
 
 		this.status.forgetInstanceStatus(instanceId)
@@ -728,7 +728,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 	): { ok: true } | { ok: false; message: string } {
 		const surfaceConfig = this.#configStore.getConfigOfTypeForId(instanceId, ModuleInstanceType.Surface)
-		if (!surfaceConfig) return { ok: false, message: 'no surface instance' }
+		if (!surfaceConfig) return { ok: false, message: 'no surface integration' }
 
 		if (data.label !== null) {
 			const idUsingLabel = this.getIdForLabel(ModuleInstanceType.Surface, data.label)
@@ -766,7 +766,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.#configStore.commitChanges([instanceId], false)
 
-		this.#logger.debug(`surface instance "${surfaceConfig?.label}" configuration updated`)
+		this.#logger.debug(`surface integration "${surfaceConfig?.label}" configuration updated`)
 
 		// If enabled has changed, start/stop the connection
 		if (data.enabled !== null || enabledChanged) {

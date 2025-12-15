@@ -18,5 +18,5 @@ export function SurfaceInstanceDebug(): React.JSX.Element {
 		[setEnabledMutation, instanceId]
 	)
 
-	return <InstanceDebugLog instanceId={instanceId} instanceTypeStr="surface instance" setEnabled={setEnabled} />
+	return <InstanceDebugLog instanceId={instanceId} instanceTypeStr="surface integration" setEnabled={setEnabled} />
 }

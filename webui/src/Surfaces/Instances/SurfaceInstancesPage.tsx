@@ -7,7 +7,7 @@ import { SurfaceInstancesList } from './SurfaceInstanceList/SurfaceInstanceList'
 
 export const SurfaceInstancesPage = observer(function SurfaceInstancesPage(): React.JSX.Element {
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/surfaces/instances/$instanceId' })
+	const routeMatch = matchRoute({ to: '/surfaces/integrations/$instanceId' })
 	const selectedInstanceId = routeMatch ? routeMatch.instanceId : null
 
 	// On narrow screens, show only one panel at a time

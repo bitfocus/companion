@@ -25,7 +25,7 @@
    Since Companion 4.2 surfaces are integrated through modules. This means we can't provide a statically generated udev rules file.
 
    Instead, Companion will generate one on the fly as modules get installed and uninstalled in the config folder.  
-   Our headless tooling will handle loading that for you, but if setting up manually, whenever changing the surface instances will
+   Our headless tooling will handle loading that for you, but if setting up manually, whenever changing the surface integrations will
    want to copy that file into /etc/udev/rules.d/ and run
    $ udevadm control --reload-rules
    And replugging any usb devices that Companion should be able to use.

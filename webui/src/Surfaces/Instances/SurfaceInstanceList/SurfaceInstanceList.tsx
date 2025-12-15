@@ -43,13 +43,13 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 	const instanceStatuses = useInstanceStatuses()
 
-	const navigate = useNavigate({ from: '/surfaces/instances' })
+	const navigate = useNavigate({ from: '/surfaces/integrations' })
 	const doConfigureInstance = useCallback(
 		(instanceId: string | null) => {
 			if (!instanceId) {
-				void navigate({ to: '/surfaces/instances' })
+				void navigate({ to: '/surfaces/integrations' })
 			} else {
-				void navigate({ to: '/surfaces/instances/$instanceId', params: { instanceId } })
+				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
 			}
 		},
 		[navigate]
@@ -86,11 +86,11 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	return (
 		<div className="connections-list-container flex-column-layout">
 			<div className="connections-list-header fixed-header">
-				<h4>Surface Instances</h4>
+				<h4>Surface Integrations</h4>
 
 				<p>
-					Similar to connections, surface instances represent the ability to use different hardware or virtual surfaces
-					to trigger buttons in Companion. Here you enable and configure the types of surfaces you want to use.
+					Similar to connections, surface integrations represent the ability to use different hardware or virtual
+					surfaces to trigger buttons in Companion. Here you enable and configure the types of surfaces you want to use.
 				</p>
 
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
@@ -103,10 +103,10 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 							color="primary"
 							size="sm"
 							className="d-xl-none"
-							onClick={() => void navigate({ to: '/surfaces/instances/add' })}
+							onClick={() => void navigate({ to: '/surfaces/integrations/add' })}
 						>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
-							Add Surface Instance
+							Add Surface Integration
 						</CButton>
 						<CreateCollectionButton />
 					</CButtonGroup>
@@ -129,7 +129,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 							NoContent={SurfaceInstancesListNoInstances}
 							ItemRow={SurfaceInstanceItemRow}
 							GroupHeaderContent={SurfaceInstancesGroupHeaderContent}
-							itemName="surface instance"
+							itemName="surface integration"
 							dragId="surface-instance"
 							collectionsApi={surfaceInstanceListApi}
 							collections={surfaceInstances.rootCollections()}

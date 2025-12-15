@@ -198,10 +198,10 @@ export const MySidebar = memo(function MySidebar() {
 						path="/surfaces/configured"
 					/>
 					<SidebarMenuItem
-						name="Instances"
+						name="Integrations"
 						notifications={SurfacesInstancesTabNotifyIcon}
 						icon={null}
-						path="/surfaces/instances"
+						path="/surfaces/integrations"
 					/>
 					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/remote" />
 				</SidebarMenuItemGroup>

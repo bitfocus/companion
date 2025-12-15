@@ -29,7 +29,7 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 			<div>
 				<p>
 					Since Companion 4.2, support for different USB devices is done via surface modules. You will want to install
-					and configure the ones you wish to use in the Surface Instances page after completing this wizard.
+					and configure the ones you wish to use in the Surface Integrations page after completing this wizard.
 				</p>
 			</div>
 		</div>

@@ -137,7 +137,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						)}
 					/>
 
-					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Surface Instance</CFormLabel>
+					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Surface Integration</CFormLabel>
 					<CCol sm={8}>
 						<CFormText>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
 					</CCol>

@@ -52,7 +52,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 	const editClickId = isSelected ? null : id // If this row is selected, don't allow editing on click, as it will close the selection
 	const doEdit = useCallback(() => configureRemoteConnection(editClickId), [configureRemoteConnection, editClickId])
 
-	let surfaceInstanceDisplayName = 'Unknown Surface Instance'
+	let surfaceInstanceDisplayName = 'Unknown Surface Integration'
 	if (remoteConnection.type === 'plugin') {
 		const instanceInfo = surfaceInstances.instances.get(remoteConnection.instanceId)
 

@@ -16,8 +16,8 @@ function RouteComponent() {
 				</p>
 				<p className="mb-0">
 					You can enable support for them on the{' '}
-					<Link to="/surfaces/instances" className="text-decoration-none">
-						surface instances page
+					<Link to="/surfaces/integrations" className="text-decoration-none">
+						surface integrations page
 					</Link>
 					.
 				</p>

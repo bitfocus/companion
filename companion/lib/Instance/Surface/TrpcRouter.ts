@@ -21,7 +21,7 @@ export function createSurfacesTrpcRouter(
 		watch: publicProcedure.subscription(async function* ({ signal }) {
 			const changes = toIterable(instanceEvents, 'uiSurfaceInstancesUpdate', signal)
 
-			// Get surface instances using the proper method
+			// Get surface integrations using the proper method
 			const surfaceClientJson = instanceController.getSurfaceInstanceClientJson()
 
 			yield [{ type: 'init', info: surfaceClientJson }] satisfies ClientSurfaceInstancesUpdate[]
@@ -152,7 +152,7 @@ export function createSurfacesTrpcRouter(
 					null
 				)
 
-				if (!res) return 'no surface instance' // Update the config
+				if (!res) return 'no surface integration' // Update the config
 
 				return null
 			}),

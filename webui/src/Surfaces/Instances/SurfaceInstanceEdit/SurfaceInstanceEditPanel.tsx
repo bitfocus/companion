@@ -67,9 +67,9 @@ function useInstanceEditPanelService(
 ): InstanceEditPanelService<ClientSurfaceInstanceConfig> {
 	const { surfaceInstances } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: `/surfaces/instances/$instanceId` })
+	const navigate = useNavigate({ from: `/surfaces/integrations/$instanceId` })
 	const closePanel = useCallback(() => {
-		void navigate({ to: `/surfaces/instances` })
+		void navigate({ to: `/surfaces/integrations` })
 	}, [navigate])
 
 	const setConfigMutation = useMutationExt(trpc.instances.surfaces.setConfig.mutationOptions())
@@ -78,10 +78,10 @@ function useInstanceEditPanelService(
 	const deleteInstance = useCallback(
 		(currentLabel: string) => {
 			confirmModalRef.current?.show(
-				'Delete surface instance',
+				'Delete surface integration',
 				[
 					`Are you sure you want to delete "${currentLabel}"?`,
-					'This will disable all surfaces associated with this instance.',
+					'This will disable all surfaces associated with this integration.',
 				],
 				'Delete',
 				() => {
@@ -110,7 +110,7 @@ function useInstanceEditPanelService(
 			}
 
 			if (instanceShouldBeRunning) {
-				if (panelStore.isLoading) throw new Error('Surface instance is still loading, cannot save changes')
+				if (panelStore.isLoading) throw new Error('Surface integration is still loading, cannot save changes')
 
 				const configAndSecrets = panelStore.configAndSecrets
 				if (configAndSecrets) {
@@ -124,9 +124,9 @@ function useInstanceEditPanelService(
 			if (err === 'invalid label') {
 				return `The label "${saveLabel}" is not valid`
 			} else if (err === 'duplicate label') {
-				return `The label "${saveLabel}" is already in use. Please use a unique label for this surface instance`
+				return `The label "${saveLabel}" is already in use. Please use a unique label for this surface integration`
 			} else if (err) {
-				return `Unable to save surface instance config: "${err}"`
+				return `Unable to save surface integration config: "${err}"`
 			} else {
 				if (instanceShouldBeRunning) {
 					// Perform a reload of the surface instance config and secrets
@@ -144,7 +144,7 @@ function useInstanceEditPanelService(
 			moduleType: ModuleInstanceType.Surface,
 			instanceId,
 
-			moduleTypeDisplayName: 'surface instance',
+			moduleTypeDisplayName: 'surface integration',
 
 			fetchConfig: async () =>
 				trpcClient.instances.surfaces.edit.query({

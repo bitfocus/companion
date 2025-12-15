@@ -38,7 +38,7 @@ export class SurfaceInstanceCollections extends CollectionsBaseController<Surfac
 	}
 
 	/**
-	 * Ensure that all collectionIds in surface instances are valid collections
+	 * Ensure that all collectionIds in surface integrations are valid collections
 	 */
 	override removeUnknownCollectionReferences(): void {
 		this.#configStore.cleanUnknownCollectionIds(this.collectAllCollectionIds())
