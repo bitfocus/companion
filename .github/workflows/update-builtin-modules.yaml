@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Run every week
   schedule:
-    - cron: '43 5 * * 0'
+    - cron: "43 5 * * 0"
 
 env:
   COMPANION_BRANCH: main
@@ -31,7 +31,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Setup environment
         run: |
@@ -45,13 +45,13 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: 'chore: update builtin surface modules'
-          title: 'chore: update builtin surface modules'
-          body: 'This PR updates the builtin surface modules in the Companion.'
+          commit-message: "chore: update builtin surface modules"
+          title: "chore: update builtin surface modules"
+          body: "This PR updates the builtin surface modules in the Companion."
           delete-branch: true
-          branch: 'chore/update-builtin-surface-modules'
-          committer: 'Companion Bot <companion-module-bot@users.noreply.github.com>'
-          author: 'Companion Bot <companion-module-bot@users.noreply.github.com>'
+          branch: "chore/update-builtin-surface-modules"
+          committer: "Companion Bot <companion-module-bot@users.noreply.github.com>"
+          author: "Companion Bot <companion-module-bot@users.noreply.github.com>"
           add-paths: |
             assets/builtin-surface-modules.json
           token: ${{ secrets.SYNC_MODULES_PAT }}

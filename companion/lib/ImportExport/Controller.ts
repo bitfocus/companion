@@ -131,7 +131,9 @@ export class ImportExportController {
 				buttons: 'pages' in importObject,
 				customVariables: importContainsKey('custom_variables'),
 				expressionVariables: importContainsKey('expressionVariables'),
-				surfaces: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
+				surfacesKnown: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
+				surfacesInstances: importContainsKey('surfaceInstances'),
+				surfacesRemote: importContainsKey('surfacesRemote'),
 				triggers: null,
 			}
 

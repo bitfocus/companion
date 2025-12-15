@@ -12,6 +12,8 @@ export const zodClientImportOrResetSelection = z.object({
 	buttons: zodImportOrResetType,
 	surfaces: z.object({
 		known: zodImportOrResetType,
+		instances: zodImportOrResetType,
+		remote: zodImportOrResetType,
 	}),
 	triggers: zodImportOrResetType,
 	customVariables: zodImportOrResetType,
@@ -69,7 +71,9 @@ export interface ClientImportObject {
 	type: 'page' | 'full'
 	connections: Record<string, ClientImportObjectInstance>
 	buttons: boolean
-	surfaces: boolean
+	surfacesKnown: boolean
+	surfacesInstances: boolean
+	surfacesRemote: boolean
 	triggers: Record<string, { name: string }> | null
 	customVariables: boolean
 	expressionVariables: boolean

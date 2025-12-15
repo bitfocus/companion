@@ -138,6 +138,8 @@ const defaultFullImportConfig: ClientImportSelection = {
 	buttons: 'reset-and-import',
 	surfaces: {
 		known: 'reset-and-import',
+		instances: 'reset-and-import',
+		remote: 'reset-and-import',
 	},
 	triggers: 'reset-and-import',
 	customVariables: 'reset-and-import',
@@ -158,6 +160,7 @@ const importFormOpts = formOptions({
 const { useAppForm } = createFormHook({
 	fieldComponents: {
 		ImportToggleField,
+		ImportToggleGroup,
 	},
 	formComponents: {
 		// 	FormSubmitButton,
@@ -233,76 +236,92 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						e.stopPropagation()
 					}}
 				>
-					<table className="table table-responsive-sm mb-3">
-						<thead>
-							<tr>
-								<th>Import</th>
-							</tr>
-						</thead>
-						<tbody>
-							{/* <tr>
-								<td className="compact">
-									<form.AppField name="connections">
-										{(field) => <field.ImportToggleField label="Connections" disabled={!snapshot.connections} />}
-									</form.AppField>
-									{!config.connections && (config.buttons || config.triggers) && (
-										<CAlert color="warning">
-											Any 'Connections' referenced by an action or feedback will still be imported, but it  will remove all actions, feedbacks, and triggers associated with the connections even
-											if 'Buttons' and/or 'Triggers' are not also reset.
-										</CAlert>
-									)}
-								</td>
-							</tr> */}
+					{/* <div className="ms-2">
+						<CFormCheck
+							checked={true}
+							disabled
+							label={
+								<>
+									Connections
+									<InlineHelp help="Connections are always imported, as they are referenced by the buttons and triggers.">
+										<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+									</InlineHelp>
+								</>
+							}
+						/>
+					</div> */}
 
-							<tr>
-								<td className="compact">
-									<form.AppField name="buttons">
-										{(field) => <field.ImportToggleField label="Buttons" disabled={!snapshot.buttons} />}
-									</form.AppField>
-								</td>
-							</tr>
-							<tr>
-								<td className="compact">
-									<form.AppField name="triggers">
-										{(field) => <field.ImportToggleField label="Triggers" disabled={!snapshot.triggers} />}
-									</form.AppField>
-								</td>
-							</tr>
-							<tr>
-								<td className="compact">
-									<form.AppField name="customVariables">
-										{(field) => (
-											<field.ImportToggleField label="Custom Variables" disabled={!snapshot.customVariables} />
-										)}
-									</form.AppField>
-								</td>
-							</tr>
-							<tr>
-								<td className="compact">
-									<form.AppField name="expressionVariables">
-										{(field) => (
-											<field.ImportToggleField label="Expression Variables" disabled={!snapshot.expressionVariables} />
-										)}
-									</form.AppField>
-								</td>
-							</tr>
-							<tr>
-								<td className="compact">
-									<form.AppField name="surfaces.known">
-										{(field) => <field.ImportToggleField label="Surfaces" disabled={!snapshot.surfaces} />}
-									</form.AppField>
-								</td>
-							</tr>
+					<div className="ms-2">
+						<form.AppField name="buttons">
+							{(field) => <field.ImportToggleField label="Buttons" disabled={!snapshot.buttons} />}
+						</form.AppField>
+					</div>
+					<div className="ms-2">
+						<form.AppField name="triggers">
+							{(field) => <field.ImportToggleField label="Triggers" disabled={!snapshot.triggers} />}
+						</form.AppField>
+					</div>
+					<div className="ms-2">
+						<form.AppField name="customVariables">
+							{(field) => <field.ImportToggleField label="Custom Variables" disabled={!snapshot.customVariables} />}
+						</form.AppField>
+					</div>
+					<div className="ms-2">
+						<form.AppField name="expressionVariables">
+							{(field) => (
+								<field.ImportToggleField label="Expression Variables" disabled={!snapshot.expressionVariables} />
+							)}
+						</form.AppField>
+					</div>
+					<div className="ms-2">
+						<form.AppField name="surfaces">
+							{(field) => (
+								<field.ImportToggleGroup
+									label="Surfaces"
+									disabled={!snapshot.surfacesInstances && !snapshot.surfacesKnown && !snapshot.surfacesRemote}
+									defaultChecked={
+										{
+											known: 'reset-and-import',
+											instances: 'reset-and-import',
+											remote: 'reset-and-import',
+										} satisfies ClientImportSelection['surfaces']
+									}
+									defaultUnchecked={
+										{
+											known: 'unchanged',
+											instances: 'unchanged',
+											remote: 'unchanged',
+										} satisfies ClientImportSelection['surfaces']
+									}
+								/>
+							)}
+						</form.AppField>
+					</div>
 
-							{/* <tr>
-								<td className="compact">
-									<form.AppField name="userconfig">
-										{(field) => <field.ImportToggleField label="Settings" disabled={!snapshot.userconfig} />}
-									</form.AppField>
-								</td>
-							</tr> */}
-						</tbody>
-					</table>
+					<div className="ms-4">
+						<form.AppField name="surfaces.known">
+							{(field) => <field.ImportToggleField label="Known Surfaces" disabled={!snapshot.surfacesKnown} />}
+						</form.AppField>
+					</div>
+					<div className="ms-4">
+						<form.AppField name="surfaces.instances">
+							{(field) => (
+								<field.ImportToggleField label="Surface Integrations" disabled={!snapshot.surfacesInstances} />
+							)}
+						</form.AppField>
+					</div>
+					<div className="ms-4">
+						<form.AppField name="surfaces.remote">
+							{(field) => <field.ImportToggleField label="Remote Surfaces" disabled={!snapshot.surfacesRemote} />}
+						</form.AppField>
+					</div>
+
+					{/* <div className="ms-2">
+								<form.AppField name="userconfig">
+									{(field) => <field.ImportToggleField label="Settings" disabled={!snapshot.userconfig} />}
+								</form.AppField>
+							</div> */}
+
 					<CAlert color="info" className="margin-top">
 						<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to
 						import any actions and feedbacks.
@@ -389,6 +408,29 @@ function ImportToggleField({ label, disabled }: ImportToggleFieldProps) {
 		/>
 	)
 }
+interface ImportToggleGroupProps {
+	label: string
+	disabled: boolean
+	defaultChecked: Record<string, ImportOrResetType>
+	defaultUnchecked: Record<string, ImportOrResetType>
+}
+function ImportToggleGroup({ label, disabled, defaultChecked, defaultUnchecked }: ImportToggleGroupProps) {
+	const field = useFieldContext<Record<string, ImportOrResetType>>()
+
+	const isAChildChecked = !!field.state.value && Object.values(field.state.value).some((v) => v !== 'unchanged')
+	const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => v === 'unchanged')
+
+	return (
+		<CFormCheck
+			disabled={disabled}
+			indeterminate={isAChildChecked && isAChildUnchecked}
+			checked={isAChildChecked}
+			onChange={(e) => field.handleChange(e.currentTarget.checked ? defaultChecked : defaultUnchecked)}
+			onBlur={field.handleBlur}
+			label={label}
+		/>
+	)
+}
 
 function isAnythingEnabled(values: ClientImportSelection): boolean {
 	for (const key in values) {
@@ -422,7 +464,9 @@ function sanitiseSelection(
 	return {
 		buttons: processValue(snapshot.buttons, values.buttons),
 		surfaces: {
-			known: processValue(snapshot.surfaces, values.surfaces.known),
+			known: processValue(snapshot.surfacesKnown, values.surfaces.known),
+			instances: processValue(snapshot.surfacesInstances, values.surfaces.instances),
+			remote: processValue(snapshot.surfacesRemote, values.surfaces.remote),
 		},
 		triggers: processValue(!!snapshot.triggers, values.triggers),
 		customVariables: processValue(snapshot.customVariables, values.customVariables),
