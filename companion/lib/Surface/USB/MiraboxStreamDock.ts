@@ -2583,6 +2583,15 @@ class StreamDock extends EventEmitter {
 		} else if (this.info.vendorId === 0x5548 && this.info.productId === 0x6670) {
 			this.model = StreamDock.models['HSV 293S-2']
 			this.packetSize = 512
+		} else if (
+			(this.info.vendorId === 0x5548 && this.info.productId === 0x6674) ||
+			(this.info.vendorId === 0x0300 && this.info.productId === 0x1010)
+		) {
+			this.model = this.model = {
+				...StreamDock.models['HSV 293S-2'],
+				productName: 'Ajazz AKP153',
+			}
+			this.packetSize = 512
 		} else {
 			// this.modelType = 'Unknown'
 			this.emit('remove')
@@ -2808,7 +2817,7 @@ class StreamDock extends EventEmitter {
 			}
 
 			try {
-				imgData = jpg.compressSync(imageBuffer, options)
+				imgData = await jpg.compress(imageBuffer, options)
 			} catch (error) {
 				console.error(`compressing jpg at position ${row}/${column} failed`, error)
 			}
