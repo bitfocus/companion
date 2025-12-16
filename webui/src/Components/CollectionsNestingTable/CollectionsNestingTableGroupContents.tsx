@@ -9,7 +9,7 @@ import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNest
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionsListItemDrop } from './useItemDrop.js'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
-import { ConnectDropTarget } from 'react-dnd'
+import type { ConnectDropTarget } from 'react-dnd'
 import useElementclientSize from '~/Hooks/useElementInnerSize.js'
 
 interface CollectionsNestingTableCollectionContentsProps<TItem extends CollectionsNestingTableItem> {

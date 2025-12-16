@@ -23,8 +23,8 @@ import {
 } from '../CommonConfigFields.js'
 import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import { GraphicsRenderer, LOCK_ICON_STYLE } from '../../Graphics/Renderer.js'
-import { ImageResult } from '../../Graphics/ImageResult.js'
+import { GraphicsRenderer } from '../../Graphics/Renderer.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type {
@@ -184,7 +184,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly socket: SatelliteSocketWrapper
 
 	// Cache for generated lock images by dimension
-	readonly #lockImageCache = new Map<string, ImageResult>()
+	#lockImage: ImageResult | null = null
 
 	constructor(deviceInfo: SatelliteDeviceInfo, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
@@ -258,7 +258,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					this.#writeQueue.queue(definition.id, definition, {
 						x: definition.column,
 						y: definition.row,
-						image: this.#getLockImage(definition.style),
+						defaultRender: this.#getLockImage(),
 					})
 				}
 			}
@@ -268,22 +268,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Get or generate a lock icon image for a given size
 	 */
-	#getLockImage(stylePreset: SatelliteControlStylePreset): ImageResult {
-		const cacheKey =
-			stylePreset.bitmap && stylePreset.bitmap.w > 0 && stylePreset.bitmap.h > 0
-				? `${stylePreset.bitmap.w}x${stylePreset.bitmap.h}`
-				: null
+	#getLockImage(): ImageResult {
+		if (!this.#lockImage) this.#lockImage = GraphicsRenderer.drawLockIcon()
 
-		if (!stylePreset.bitmap || !cacheKey) {
-			return new ImageResult(Buffer.alloc(0), 0, 0, '', LOCK_ICON_STYLE)
-		}
-
-		const cached = this.#lockImageCache.get(cacheKey)
-		if (cached) return cached
-
-		const result = GraphicsRenderer.drawLockIcon(stylePreset.bitmap.w, stylePreset.bitmap.h)
-		this.#lockImageCache.set(cacheKey, result)
-		return result
+		return this.#lockImage
 	}
 
 	quit(): void {}

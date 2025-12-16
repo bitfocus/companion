@@ -3,14 +3,14 @@ import type { ControlLocation } from '../Model/Common.js'
 import type { DrawStyleLayeredButtonModel } from '../Model/StyleModel.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
 import {
-	ButtonGraphicsBoxDrawElement,
+	type ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsDecorationType,
-	ButtonGraphicsGroupDrawElement,
-	SomeButtonGraphicsDrawElement,
+	type ButtonGraphicsGroupDrawElement,
+	type SomeButtonGraphicsDrawElement,
 	type ButtonGraphicsCanvasDrawElement,
 	type ButtonGraphicsImageDrawElement,
 	type ButtonGraphicsTextDrawElement,
-	ButtonGraphicsLineDrawElement,
+	type ButtonGraphicsLineDrawElement,
 } from '../Model/StyleLayersModel.js'
 import { DrawBounds, parseColor, rgbRev, type GraphicsOptions } from './Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'

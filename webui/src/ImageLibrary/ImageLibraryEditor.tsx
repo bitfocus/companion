@@ -9,7 +9,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 import { ImageDescriptionEditor } from './imageDescriptionEditor.js'
 import { ImageNameEditModal } from './ImageNameEditModal.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import CryptoJS from 'crypto-js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
@@ -158,10 +158,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	)
 
 	const handleCopyVariableValue = useCallback(() => {
-		if (notifier.current && selectedImageName) {
-			notifier.current.show('Copied', 'Copied to clipboard', 5000)
-		}
-	}, [notifier, selectedImageName])
+		notifier.show('Copied', 'Copied to clipboard', 5000)
+	}, [notifier])
 
 	const formatDate = (timestamp: number) => {
 		return new Date(timestamp).toLocaleString()

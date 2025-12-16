@@ -1,5 +1,5 @@
 import React, { createContext } from 'react'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 export type IsPropertyOverridden = (elementId: string, elementProperty: string) => boolean
 

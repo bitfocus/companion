@@ -11,18 +11,18 @@ import {
 	type ExpressionOrValue,
 	type SomeButtonGraphicsDrawElement,
 	type SomeButtonGraphicsElement,
-	MakeExpressionable,
-	ButtonGraphicsBoxDrawElement,
-	ButtonGraphicsBoxElement,
-	ButtonGraphicsGroupElement,
-	ButtonGraphicsGroupDrawElement,
-	ButtonGraphicsBorderProperties,
-	ButtonGraphicsLineElement,
-	ButtonGraphicsLineDrawElement,
-	ButtonGraphicsElementBase,
+	type MakeExpressionable,
+	type ButtonGraphicsBoxDrawElement,
+	type ButtonGraphicsBoxElement,
+	type ButtonGraphicsGroupElement,
+	type ButtonGraphicsGroupDrawElement,
+	type ButtonGraphicsBorderProperties,
+	type ButtonGraphicsLineElement,
+	type ButtonGraphicsLineDrawElement,
+	type ButtonGraphicsElementBase,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 
 type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
 type ParseVariablesFn = (str: string) => Promise<ExecuteExpressionResult>

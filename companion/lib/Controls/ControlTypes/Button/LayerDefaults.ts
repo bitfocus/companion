@@ -1,4 +1,7 @@
-import { ButtonGraphicsElementUsage, SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsElementUsage,
+	type SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { nanoid } from 'nanoid'
 

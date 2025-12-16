@@ -1,14 +1,15 @@
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
-import React, { MutableRefObject, useCallback, useRef } from 'react'
+import React, { type MutableRefObject, useCallback, useRef } from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import { DropdownChoice } from '@companion-module/base'
+import type { DropdownChoice } from '@companion-module/base'
 import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
-import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField'
+import { InputFeatureIcons } from '~/Controls/OptionsInputField'
 
 interface ControlOptionsEditorProps {
 	controlId: string
@@ -75,16 +76,14 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 
 				{options.stepProgression === 'expression' && (
 					<>
-						<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Step Progression Expression</CFormLabel>
+						<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+							Step Progression Expression <InputFeatureIcons variables local />
+						</CFormLabel>
 						<CCol sm={8}>
-							<TextInputField
-								tooltip={'Current step of button'}
+							<ExpressionInputField
 								setValue={setStepExpressionValue}
 								value={options.stepExpression ?? ''}
-								useVariables
 								localVariables={ControlLocalVariables}
-								isExpression
-								style={{ fontWeight: 'bold', fontSize: 18 }}
 							/>
 						</CCol>
 					</>

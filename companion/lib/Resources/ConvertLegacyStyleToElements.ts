@@ -6,15 +6,15 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import {
-	ButtonGraphicsBoxElement,
-	ButtonGraphicsCanvasElement,
+	type ButtonGraphicsBoxElement,
+	type ButtonGraphicsCanvasElement,
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
-	ButtonGraphicsImageElement,
-	ButtonGraphicsTextElement,
-	ExpressionOrValue,
-	HorizontalAlignment,
-	VerticalAlignment,
+	type ButtonGraphicsImageElement,
+	type ButtonGraphicsTextElement,
+	type ExpressionOrValue,
+	type HorizontalAlignment,
+	type VerticalAlignment,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { nanoid } from 'nanoid'

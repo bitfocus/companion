@@ -1,17 +1,17 @@
-import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CForm } from '@coreui/react'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { elementSchemas } from './ElementPropertiesSchemas.js'
 import { OptionsInputControl, getInputFeatures } from '~/Controls/OptionsInputField.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { FormPropertyField } from './ElementPropertiesUtil.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
-import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { ElementPropertiesProvider, IsPropertyOverridden } from './ElementPropertiesContext.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { ElementPropertiesProvider, type IsPropertyOverridden } from './ElementPropertiesContext.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string

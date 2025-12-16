@@ -13,9 +13,9 @@ import {
 	faMinus,
 } from '@fortawesome/free-solid-svg-icons'
 import { Tuck } from '~/Components/Tuck.js'
-import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { IconProp } from '@fortawesome/fontawesome-svg-core'
-import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { useMutationExt, trpc } from '~/Resources/TRPC.js'
 

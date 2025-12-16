@@ -18,7 +18,7 @@ import type { CompanionVariableValue } from '@companion-module/base'
 import type { ReadonlyDeep } from 'type-fest'
 import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { parseColor, parseColorToNumber, transformButtonImage } from '../Resources/Util.js'
+import { parseColorToNumber } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { IpcWrapper } from '../Instance/Surface/IpcWrapper.js'
@@ -29,6 +29,7 @@ import type {
 	SurfaceModuleToHostEvents,
 } from '../Instance/Surface/IpcTypes.js'
 import type * as imageRs from '@julusian/image-rs'
+import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 
 interface SatelliteInputVariableInfo {
 	id: string
@@ -190,7 +191,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					controlId: controlDefinition.id,
 				}
 
-				const style = drawItem.image.style
+				const style = drawItem.defaultRender.style
 
 				if (controlDefinition.style.bitmap) {
 					// TODO - support more pixel formats, for now this is all we can handle
@@ -199,24 +200,22 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 						format = controlDefinition.style.bitmap.format
 					}
 
-					const buffer = await transformButtonImage(
-						drawItem.image,
-						this.#config.rotation,
+					const buffer = await drawItem.defaultRender.drawNative(
 						controlDefinition.style.bitmap.w,
 						controlDefinition.style.bitmap.h,
+						this.#config.rotation,
 						format
 					)
 
 					if (buffer === undefined || buffer.length == 0) {
 						this.#logger.warn('buffer has invalid size')
 					} else {
-						drawProps.image = buffer.toString('base64')
+						drawProps.image = Buffer.from(buffer).toString('base64') // TODO - avoid buffer wrap
 					}
 				}
 
 				if (controlDefinition.style.colors) {
-					let bgcolor =
-						typeof style !== 'string' && style ? parseColor(style.bgcolor).replaceAll(' ', '') : 'rgb(0,0,0)'
+					let bgcolor = parseColor(drawItem.defaultRender.bgcolor).replaceAll(' ', '')
 					// let fgcolor = typeof style !== 'string' && style ? parseColor(style.color).replaceAll(' ', '') : 'rgb(0,0,0)'
 
 					if (controlDefinition.style.colors !== 'rgb') {
@@ -229,7 +228,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				}
 
 				if (controlDefinition.style.text) {
-					drawProps.text = (typeof style !== 'string' && style?.text) || ''
+					drawProps.text = style.text?.text || ''
 				}
 				// if (controlDefinition.style.textStyle) {
 				// 	params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'

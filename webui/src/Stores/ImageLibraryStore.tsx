@@ -5,8 +5,9 @@ import type {
 	ImageLibraryUpdate,
 } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { assertNever } from '~/Resources/util'
+import type { GenericCollectionsStore } from './GenericCollectionsStore'
 
-export class ImageLibraryStore {
+export class ImageLibraryStore implements GenericCollectionsStore<null> {
 	readonly store = observable.map<string, ImageLibraryInfo>()
 	readonly collections = observable.map<string, ImageLibraryCollection>()
 
@@ -58,7 +59,7 @@ export class ImageLibraryStore {
 		return this.store.size
 	}
 
-	public rootImageCollections(): ImageLibraryCollection[] {
+	public rootCollections(): ImageLibraryCollection[] {
 		return Array.from(this.collections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}
 }

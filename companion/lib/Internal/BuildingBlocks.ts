@@ -28,7 +28,6 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { InternalModuleUtils } from './Util.js'
-import { booleanAnd } from '../Resources/Util.js'
 import { EventEmitter } from 'events'
 import { setTimeout } from 'node:timers/promises'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
@@ -368,4 +367,10 @@ export class InternalBuildingBlocks
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
 		// Nothing to do
 	}
+}
+
+function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean {
+	if (childValues.length === 0) return isInverted
+
+	return childValues.reduce((acc, val) => acc && val, true) === !isInverted
 }

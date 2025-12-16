@@ -1,4 +1,4 @@
-import { Image } from './Image.js'
+import type { Image } from './Image.js'
 
 /**
  * A simple generator for the lockout graphics.

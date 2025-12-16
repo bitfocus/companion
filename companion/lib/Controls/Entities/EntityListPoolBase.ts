@@ -1,11 +1,11 @@
 import LogController, { type Logger } from '../../Log/Controller.js'
-import type {
+import {
 	EntityModelType,
-	EntityOwner,
-	FeedbackEntityStyleOverride,
-	SomeEntityModel,
-	SomeReplaceableEntityModel,
-	SomeSocketEntityLocation,
+	type EntityOwner,
+	type FeedbackEntityStyleOverride,
+	type SomeEntityModel,
+	type SomeReplaceableEntityModel,
+	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
@@ -18,7 +18,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 
 export interface ControlEntityListPoolProps {

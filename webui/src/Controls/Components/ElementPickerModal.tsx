@@ -1,4 +1,4 @@
-import { FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
+import type { FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

@@ -1,4 +1,4 @@
-import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CFormLabel, CCol } from '@coreui/react'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -7,7 +7,7 @@ import React, { useCallback } from 'react'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
-import { InputFeatureIcons, InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
+import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { ExpressionFieldControl } from '~/Controls/Components/ExpressionFieldControl.js'
 
 type SetValueFn = (value: any) => void

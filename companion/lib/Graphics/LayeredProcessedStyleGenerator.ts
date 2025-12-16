@@ -1,15 +1,15 @@
 import {
-	ButtonGraphicsTextDrawElement,
+	type ButtonGraphicsTextDrawElement,
 	ButtonGraphicsElementUsage,
-	ButtonGraphicsBoxDrawElement,
-	ButtonGraphicsDrawBase,
-	SomeButtonGraphicsDrawElement,
-	ButtonGraphicsImageDrawElement,
+	type ButtonGraphicsBoxDrawElement,
+	type ButtonGraphicsDrawBase,
+	type SomeButtonGraphicsDrawElement,
+	type ButtonGraphicsImageDrawElement,
 	ButtonGraphicsDecorationType,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
-import { ImageResultProcessedStyle } from './ImageResult.js'
+import type { ImageResultProcessedStyle } from './ImageResult.js'
 
 export class GraphicsLayeredProcessedStyleGenerator {
 	static Generate(drawStyle: DrawStyleLayeredButtonModel): ImageResultProcessedStyle {

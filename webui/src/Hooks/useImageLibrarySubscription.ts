@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
+import type { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC'
 

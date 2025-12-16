@@ -20,7 +20,7 @@ import type { ControlEntityInstance } from './EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 
 interface CurrentStepFromExpression {

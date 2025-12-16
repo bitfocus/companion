@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { ElementPropertiesContext, ElementPropertiesContextValue } from './ElementPropertiesContext.js'
+import { ElementPropertiesContext, type ElementPropertiesContextValue } from './ElementPropertiesContext.js'
 
 export function useElementPropertiesContext(): ElementPropertiesContextValue {
 	const context = useContext(ElementPropertiesContext)

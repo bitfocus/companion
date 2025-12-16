@@ -2,7 +2,7 @@ import { formatLocation } from '../ControlId.js'
 import type { ControlLocation } from '../Model/Common.js'
 import type { DrawStyleButtonStateProps } from '../Model/StyleModel.js'
 import type { ImageBase } from './ImageBase.js'
-import { DrawBounds } from './Util.js'
+import type { DrawBounds } from './Util.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorBlack = 'black'

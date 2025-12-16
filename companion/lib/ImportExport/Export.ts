@@ -646,7 +646,7 @@ export class ExportController {
 		}
 
 		// Handle image library export
-		if (!config || !isFalsey(config.imageLibrary)) {
+		if (!config || config.imageLibrary) {
 			exp.imageLibrary = this.#graphicsController.imageLibrary.exportImageLibraryData()
 			exp.imageLibraryCollections = this.#graphicsController.imageLibrary.exportCollections()
 		}

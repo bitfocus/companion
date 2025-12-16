@@ -4,7 +4,7 @@ import React, { useCallback } from 'react'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 import { elementSchemas } from '../../Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
 import classNames from 'classnames'
-import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 
 interface PropertyListItemProps {
 	option: SomeCompanionInputField

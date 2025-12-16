@@ -20,7 +20,6 @@ import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonD
 import { isPromise } from 'util/types'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
-import { GraphicsLockingGenerator } from './Locking.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type * as imageRs from '@julusian/image-rs'
@@ -33,25 +32,18 @@ const colorDarkGrey = 'rgba(15, 15, 15, 1)'
 /**
  * Shared style for lock icon display
  */
-export const LOCK_ICON_STYLE: DrawStyleButtonModel = {
-	text: '🔒',
-	textExpression: false,
-	size: 'auto',
-	alignment: 'center:center',
-	pngalignment: 'center:center',
-	color: 0xc8c8c8, // rgb(200, 200, 200) as number
-	bgcolor: 0x000000, // rgb(0, 0, 0) as number
-	show_topbar: false,
-	png64: null,
-	style: 'button',
-	imageBuffers: [],
-	pushed: false,
-	stepCurrent: 0,
-	stepCount: 1,
-	cloud: undefined,
-	cloud_error: undefined,
-	button_status: undefined,
-	action_running: undefined,
+const LOCK_ICON_STYLE: ImageResultProcessedStyle = {
+	type: 'button',
+	color: {
+		color: 0x000000,
+	},
+	text: {
+		text: '🔒',
+		color: 0xc8c8c8,
+		size: 'auto',
+		halign: 'center',
+		valign: 'center',
+	},
 }
 
 const emptySet: ReadonlySet<string> = new Set()
@@ -559,15 +551,28 @@ export class GraphicsRenderer {
 	 * @param width Width of the image
 	 * @param height Height of the image
 	 */
-	static drawLockIcon(width: number, height: number): ImageResult {
-		const img = new Image(width, height, 2)
+	static drawLockIcon(): ImageResult {
+		return new ImageResult('', LOCK_ICON_STYLE, async (width, height, rotation, format) => {
+			const dimensions = rotateResolution(width, height, rotation)
+			return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
+				// Fill with black background
+				img.fillColor('rgb(0, 0, 0)')
 
-		// Fill with black background
-		img.fillColor('rgb(0, 0, 0)')
+				// Draw a centered padlock unicode character in light grey
+				img.drawAlignedText(
+					0,
+					0,
+					width,
+					height,
+					'🔒',
+					'rgb(200, 200, 200)',
+					Math.floor(height * 0.6),
+					'center',
+					'center'
+				)
 
-		// Draw a centered padlock unicode character in light grey
-		img.drawAlignedText(0, 0, width, height, '🔒', 'rgb(200, 200, 200)', Math.floor(height * 0.6), 'center', 'center')
-
-		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), LOCK_ICON_STYLE)
+				return this.#RotateAndConvertImage(img, width, height, rotation, format)
+			})
+		})
 	}
 }

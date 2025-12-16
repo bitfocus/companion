@@ -22,7 +22,7 @@ import type {
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { GraphicsController, PincodeBitmaps } from '../Graphics/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from './Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -217,9 +217,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	get displayName(): string {
 		return getSurfaceName(this.#surfaceConfig, this.surfaceId)
 	}
-
-	// Draw and cache the pincode numbers per-surface, to ensure we don't keep around native sizes longer than necessary
-	#pincodeNumberImagesCache: PincodeBitmaps | undefined
 
 	#drawPageDebounced = debounceFn(() => this.#drawPage(), {
 		after: true,

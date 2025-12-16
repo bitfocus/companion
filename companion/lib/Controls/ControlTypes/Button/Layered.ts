@@ -17,20 +17,20 @@ import type {
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import {
-	ButtonGraphicsBoxElement,
 	ButtonGraphicsDecorationType,
-	ButtonGraphicsElementBase,
 	ButtonGraphicsElementUsage,
-	ButtonGraphicsGroupElement,
-	ButtonGraphicsImageElement,
-	ButtonGraphicsTextElement,
-	ExpressionOrValue,
-	SomeButtonGraphicsElement,
+	type ButtonGraphicsBoxElement,
+	type ButtonGraphicsElementBase,
+	type ButtonGraphicsGroupElement,
+	type ButtonGraphicsImageElement,
+	type ButtonGraphicsTextElement,
+	type ExpressionOrValue,
+	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
-import { CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValues } from '@companion-module/base'
 import { lazy } from '../../../Resources/Util.js'
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 

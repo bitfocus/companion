@@ -15,7 +15,7 @@ import type {
 } from '~/Components/CollectionsNestingTable/Types.js'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -61,7 +61,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 		[images]
 	)
 
-	const collections: ImageCollection[] = imageLibrary.rootImageCollections()
+	const collections: ImageCollection[] = imageLibrary.rootCollections()
 
 	const collectionsApi = useImageLibraryCollectionsApi(confirmModalRef)
 

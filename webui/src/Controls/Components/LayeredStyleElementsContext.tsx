@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react'
-import { LayeredStyleStore } from '~/Buttons/EditButton/LayeredButtonEditor/StyleStore.js'
+import type { LayeredStyleStore } from '~/Buttons/EditButton/LayeredButtonEditor/StyleStore.js'
 
 export interface LayeredStyleElementsContextValue {
 	styleStore: LayeredStyleStore

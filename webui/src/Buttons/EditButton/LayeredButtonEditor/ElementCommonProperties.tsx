@@ -2,9 +2,9 @@ import { CFormLabel, CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback } from 'react'
 import {
-	ButtonGraphicsElementBase,
+	type ButtonGraphicsElementBase,
 	ButtonGraphicsElementUsage,
-	SomeButtonGraphicsElement,
+	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'

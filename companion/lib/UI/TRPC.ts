@@ -1,4 +1,4 @@
-import { inferRouterInputs, inferRouterOutputs, initTRPC, TRPCError } from '@trpc/server'
+import { type inferRouterInputs, type inferRouterOutputs, initTRPC, TRPCError } from '@trpc/server'
 import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'

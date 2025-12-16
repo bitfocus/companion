@@ -1,11 +1,11 @@
-import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CButton } from '@coreui/react'
 import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback } from 'react'
-import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
-import { LocalVariablesStore } from '../LocalVariablesStore.js'
+import type { LocalVariablesStore } from '../LocalVariablesStore.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 
 interface ExpressionFieldControlProps {
 	value: ExpressionOrValue<any>
@@ -30,12 +30,10 @@ export const ExpressionFieldControl = observer(function ExpressionFieldControl({
 		<div className="field-with-expression">
 			<div className="expression-field">
 				{value.isExpression ? (
-					<TextInputField
+					<ExpressionInputField
 						setValue={setValue as (value: string) => void}
 						value={value.value ?? ''}
-						useVariables
 						localVariables={localVariablesStore?.getOptions(null, false, true)}
-						isExpression
 					/>
 				) : (
 					children(value.value, setValue)

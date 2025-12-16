@@ -7,7 +7,7 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
-import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList

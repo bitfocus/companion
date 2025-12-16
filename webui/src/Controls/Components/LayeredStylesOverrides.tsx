@@ -1,7 +1,7 @@
 import {
 	EntityModelType,
-	FeedbackEntityModel,
-	FeedbackEntityStyleOverride,
+	type FeedbackEntityModel,
+	type FeedbackEntityStyleOverride,
 	FeedbackEntitySubType,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
 import React, { useCallback, useState } from 'react'
-import { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
+import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 import { ElementPickerModal } from './ElementPickerModal.js'
 import { AddElementPickerModal } from './AddElementPickerModal.js'
@@ -20,7 +20,7 @@ import { elementSchemas } from '~/Buttons/EditButton/LayeredButtonEditor/Element
 import { OptionsInputControl } from '../OptionsInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionFieldControl } from './ExpressionFieldControl.js'
-import { LocalVariablesStore } from '../LocalVariablesStore.js'
+import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { useComputed } from '~/Resources/util.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 

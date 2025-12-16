@@ -33,7 +33,7 @@ import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Mo
 import type { SurfaceController } from '../Surface/Controller.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 
 export class ImportController {
 	readonly #logger = LogController.createLogger('ImportExport/Import')

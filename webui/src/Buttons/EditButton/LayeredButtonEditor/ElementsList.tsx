@@ -1,13 +1,13 @@
 import { observer } from 'mobx-react-lite'
 import React, { useRef } from 'react'
 import { AddElementDropdownButton, RemoveElementButton, ToggleVisibilityButton } from './Buttons.js'
-import { LayeredStyleStore } from './StyleStore.js'
-import { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { LayeredStyleStore } from './StyleStore.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { useDrop, useDrag } from 'react-dnd'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const ElementsList = observer(function ElementsList({
