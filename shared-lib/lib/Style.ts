@@ -7,3 +7,8 @@ export const ButtonStyleProperties: { id: string; label: string }[] = [
 	{ id: 'color', label: 'Color' },
 	{ id: 'bgcolor', label: 'Background' },
 ]
+
+export const ButtonStylePropertiesWithBuffer: typeof ButtonStyleProperties = [
+	...ButtonStyleProperties,
+	{ id: 'imageBuffers', label: 'Image Buffers (Deprecated)' },
+]

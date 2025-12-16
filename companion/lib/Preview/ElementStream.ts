@@ -6,6 +6,7 @@ import EventEmitter from 'node:events'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 
 export interface ElementStreamResult {
 	ok: true
@@ -20,12 +21,18 @@ export interface ElementStreamResult {
 export class PreviewElementStream {
 	readonly #logger = LogController.createLogger('Preview/ElementStream')
 
+	readonly #graphicsController: GraphicsController
 	readonly #controlsController: ControlsController
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
 	readonly #sessions = new Map<string, ElementStreamSession>()
 
-	constructor(controlsController: ControlsController, controlEvents: EventEmitter<ControlCommonEvents>) {
+	constructor(
+		graphicsController: GraphicsController,
+		controlsController: ControlsController,
+		controlEvents: EventEmitter<ControlCommonEvents>
+	) {
+		this.#graphicsController = graphicsController
 		this.#controlsController = controlsController
 		this.#controlEvents = controlEvents
 
@@ -223,6 +230,7 @@ export class PreviewElementStream {
 			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
 			const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
 				parser,
+				this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
 				[elementDefToProcess],
 				feedbackOverrides,
 				false // onlyEnabled

@@ -13,7 +13,7 @@ import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
 import { DrawBounds, type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
-import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawImageBuffer, DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
@@ -571,5 +571,30 @@ export class GraphicsRenderer {
 				return this.#RotateAndConvertImage(img, width, height, rotation, format)
 			})
 		})
+	}
+
+	/**
+	 * Draw the image for a btuton
+	 */
+	static async drawImageBuffers(showTopBar: boolean, imageBuffers: DrawImageBuffer[]): Promise<string> {
+		return GraphicsRenderer.#getCachedImage(
+			72,
+			showTopBar ? 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT : 72,
+			4,
+			async (img) => {
+				for (const imageBuffer of imageBuffers) {
+					if (imageBuffer.buffer) {
+						const x = imageBuffer.x ?? 0
+						const y = imageBuffer.y ?? 0
+						const width = imageBuffer.width || 72
+						const height = imageBuffer.height || 72
+
+						img.drawPixelBuffer(x, y, width, height, imageBuffer.buffer, imageBuffer.pixelFormat, imageBuffer.drawScale)
+					}
+				}
+
+				return img.toDataURLSync()
+			}
+		)
 	}
 }

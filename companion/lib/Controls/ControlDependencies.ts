@@ -15,6 +15,7 @@ import type {
 	ExpressionVariableUpdate,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 
 export interface ControlDependencies {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
@@ -26,6 +27,7 @@ export interface ControlDependencies {
 	readonly instance: InstanceController
 	readonly variables: VariablesController
 	readonly userconfig: DataUserConfig
+	readonly graphics: GraphicsController
 
 	readonly actionRunner: ActionRunner
 

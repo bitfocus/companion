@@ -25,9 +25,11 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 
 class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 	readonly #parser: VariablesAndExpressionParser
+	readonly drawPixelBuffers: DrawPixelBuffers
 	readonly #usedVariables = new Set<string>()
 
 	readonly #element: T
@@ -37,12 +39,14 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 
 	constructor(
 		parser: VariablesAndExpressionParser,
+		drawPixelBuffers: DrawPixelBuffers,
 		usedVariables: Set<string>,
 		element: T,
 		elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined,
 		onlyEnabled: boolean
 	) {
 		this.#parser = parser
+		this.drawPixelBuffers = drawPixelBuffers
 		this.#usedVariables = usedVariables
 
 		this.#element = element
@@ -214,8 +218,11 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 }
 type ElementExpressionHelperFactory = <T extends ButtonGraphicsElementBase>(element: T) => ElementExpressionHelper<T>
 
+type DrawPixelBuffers = (imageBuffers: DrawImageBuffer[]) => Promise<string | undefined>
+
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	parser: VariablesAndExpressionParser,
+	drawPixelBuffers: DrawPixelBuffers,
 	elements: SomeButtonGraphicsElement[],
 	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>,
 	onlyEnabled: boolean
@@ -226,7 +233,14 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	const usedVariables = new Set<string>()
 
 	const helperFactory: ElementExpressionHelperFactory = (element) =>
-		new ElementExpressionHelper(parser, usedVariables, element, feedbackOverrides.get(element.id), onlyEnabled)
+		new ElementExpressionHelper(
+			parser,
+			drawPixelBuffers,
+			usedVariables,
+			element,
+			feedbackOverrides.get(element.id),
+			onlyEnabled
+		)
 
 	const newElements = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(helperFactory, elements)
 
@@ -317,7 +331,14 @@ async function convertImageElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const base64Image = helper.getString<string | null>('base64Image', null)
+	let base64Image = helper.getString<string | null>('base64Image', null)
+	if (base64Image) {
+		const imageObj = base64Image as unknown as DrawImageBuffer
+		if (typeof imageObj === 'object' && imageObj.buffer) {
+			// This is not very efficient, as it is not cached, but as this is a deprected feature, it is acceptable for now
+			base64Image = (await helper.drawPixelBuffers([imageObj])) || null
+		}
+	}
 
 	return {
 		id: element.id,

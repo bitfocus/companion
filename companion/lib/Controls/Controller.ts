@@ -64,7 +64,7 @@ export class ControlsController {
 
 	readonly #registry: Pick<
 		Registry,
-		'db' | 'page' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
+		'db' | 'page' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig' | 'graphics'
 	>
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
@@ -181,6 +181,7 @@ export class ControlsController {
 			instance: this.#registry.instance,
 			variables: this.#registry.variables,
 			userconfig: this.#registry.userconfig,
+			graphics: this.#registry.graphics,
 			actionRunner: this.actionRunner,
 			events: this.#controlEvents,
 			changeEvents: this.#controlChangeEvents,

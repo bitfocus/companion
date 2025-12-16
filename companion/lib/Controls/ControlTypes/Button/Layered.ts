@@ -230,6 +230,7 @@ export class ControlButtonLayered
 		// Compute the new drawing
 		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
 			parser,
+			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
 			this.#drawElements,
 			feedbackOverrides,
 			true

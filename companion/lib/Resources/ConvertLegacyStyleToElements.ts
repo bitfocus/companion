@@ -16,7 +16,7 @@ import {
 	type VerticalAlignment,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties, DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import { nanoid } from 'nanoid'
 
 interface ParsedLegacyStyle {
@@ -32,6 +32,7 @@ interface ParsedLegacyStyle {
 		valign: VerticalAlignment | undefined
 		image: string | undefined
 	}
+	imageBuffer: DrawImageBuffer | undefined
 	background: {
 		color: number | undefined
 	}
@@ -56,6 +57,8 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>): ParsedL
 	const textAlign = style.alignment !== undefined ? ParseAlignment(style.alignment, false) : undefined
 	const imageAlign = style.pngalignment !== undefined ? ParseAlignment(style.pngalignment, false) : undefined
 
+	const styleHack = style as any
+
 	return {
 		text: {
 			text: style.text !== undefined ? { isExpression: !!style.textExpression, value: style.text } : undefined,
@@ -69,6 +72,13 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>): ParsedL
 			valign: imageAlign ? imageAlign[1] : undefined,
 			image: style.png64 ? ensurePng64IsDataUrl(style.png64) : undefined,
 		},
+		imageBuffer: styleHack.imageBuffer
+			? ({
+					...styleHack.imageBufferPosition,
+					...styleHack.imageBufferEncoding,
+					buffer: styleHack.imageBuffer,
+				} as DrawImageBuffer)
+			: undefined,
 		background: {
 			color: style.bgcolor,
 		},
@@ -152,6 +162,14 @@ export function GetLegacyStyleProperty(
 				return {
 					isExpression: false,
 					value: parsedStyle.image.image,
+				}
+			}
+			break
+		case 'imageBuffers':
+			if (parsedStyle.imageBuffer) {
+				return {
+					isExpression: false,
+					value: parsedStyle.imageBuffer,
 				}
 			}
 			break
