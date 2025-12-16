@@ -179,6 +179,14 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 			if (fs.existsSync(previousDbPath + '.sqlite')) {
 				// Found the one to copy
 				fs.copyFileSync(previousDbPath + '.sqlite', path.join(configDir, 'db.sqlite'))
+
+				// Also copy over the journal if it exists
+				if (fs.existsSync(previousDbPath + '.sqlite-shm')) {
+					fs.copyFileSync(previousDbPath + '.sqlite-shm', path.join(configDir, 'db.sqlite-shm'))
+				}
+				if (fs.existsSync(previousDbPath + '.sqlite-wal')) {
+					fs.copyFileSync(previousDbPath + '.sqlite-wal', path.join(configDir, 'db.sqlite-wal'))
+				}
 				break
 			} else if (fs.existsSync(previousDbPath)) {
 				// Found the one to copy
