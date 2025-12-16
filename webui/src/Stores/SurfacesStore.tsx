@@ -82,15 +82,6 @@ export class SurfacesStore {
 		}
 	})
 
-	public getOutboundStreamDeckSurface = (address: string, port: number): OutboundSurfaceInfo | undefined => {
-		for (const surface of this.outboundSurfaces.values()) {
-			if (surface.type === 'elgato' && surface.address === address && (surface.port ?? 5343) === port) {
-				return surface
-			}
-		}
-		return undefined
-	}
-
 	public getSurfacesOverflowingBounds = (
 		bounds: UserConfigGridSize
 	): { neededBounds: UserConfigGridSize; surfaces: ClientSurfaceItem[] } => {

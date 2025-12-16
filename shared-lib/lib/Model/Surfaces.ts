@@ -5,6 +5,7 @@ import type {
 	CompanionInputFieldCustomVariableExtended,
 	CompanionInputFieldDropdownExtended,
 	CompanionInputFieldNumberExtended,
+	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
 import type { CollectionBase } from './Collections.js'
@@ -121,11 +122,13 @@ export interface SurfacesUpdateUpdateOp {
 
 export interface OutboundSurfaceInfo {
 	id: string
-	displayName: string
-	type: 'elgato'
 	enabled: boolean
-	address: string
-	port: number
+
+	displayName: string
+	type: 'plugin'
+	moduleId: string
+	instanceId: string
+	config: Record<string, any>
 
 	collectionId: string | null
 	sortOrder: number
@@ -157,7 +160,7 @@ export interface OutboundSurfacesUpdateAddOp {
 	info: OutboundSurfaceInfo
 }
 
-export type ClientDiscoveredSurfaceInfo = ClientDiscoveredSurfaceInfoSatellite | ClientDiscoveredSurfaceInfoStreamDeck
+export type ClientDiscoveredSurfaceInfo = ClientDiscoveredSurfaceInfoSatellite | ClientDiscoveredSurfaceInfoPlugin
 
 export interface ClientDiscoveredSurfaceInfoSatellite {
 	id: string
@@ -171,17 +174,16 @@ export interface ClientDiscoveredSurfaceInfoSatellite {
 	apiEnabled: boolean
 }
 
-export interface ClientDiscoveredSurfaceInfoStreamDeck {
+export interface ClientDiscoveredSurfaceInfoPlugin {
 	id: string
 
-	surfaceType: 'streamdeck'
+	surfaceType: 'plugin'
+	instanceId: string
 
 	name: string
-	address: string
-	port: number
+	description: string
 
-	modelName: string
-	serialnumber: string | undefined
+	config: Record<string, any>
 }
 
 export type SurfacesDiscoveryUpdate =
@@ -211,6 +213,7 @@ export interface CompanionExternalAddresses {
 export type CompanionSurfaceInputFieldTextInput = Omit<CompanionInputFieldTextInputExtended, 'useVariables'>
 
 export type CompanionSurfaceConfigField =
+	| CompanionInputFieldStaticTextExtended
 	| CompanionSurfaceInputFieldTextInput
 	| CompanionInputFieldDropdownExtended
 	| CompanionInputFieldNumberExtended

@@ -69,7 +69,7 @@ export function createOrSanitizeSurfaceHandlerConfig(
 		config: panelConfig,
 
 		// Persist some values in the db for use when it is disconnected
-		type: panel.info.type || 'Unknown',
+		type: panel.info.description || 'Unknown',
 		integrationType,
 		gridSize: panel.gridSize,
 	}

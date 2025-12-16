@@ -10,62 +10,43 @@
  *
  */
 
-import findProcess from 'find-process'
 import HID from 'node-hid'
 import jsonPatch from 'fast-json-patch'
 import pDebounce from 'p-debounce'
-import { getStreamDeckDeviceInfo } from '@elgato-stream-deck/node'
-import { getBlackmagicControllerDeviceInfo } from '@blackmagic-controller/node'
+import debounceFn from 'debounce-fn'
 import { usb } from 'usb'
-import { isAShuttleDevice } from 'shuttle-node'
-import { listLoupedecks } from '@loupedeck/node'
 import { SurfaceHandler, getSurfaceName } from './Handler.js'
 import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
 import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
-import { SurfaceUSBElgatoStreamDeck } from './USB/ElgatoStreamDeck.js'
-import { SurfaceUSBInfinitton } from './USB/Infinitton.js'
-import { SurfaceUSBXKeys } from './USB/XKeys.js'
-import { SurfaceUSBLoupedeck } from './USB/Loupedeck.js'
-import { SurfaceUSBContourShuttle } from './USB/ContourShuttle.js'
-import { isVecFootpedal, SurfaceUSBVECFootpedal } from './USB/VECFootpedal.js'
-import { SurfaceIPVideohubPanel, type VideohubPanelDeviceInfo } from './IP/VideohubPanel.js'
-import { SurfaceUSBFrameworkMacropad } from './USB/FrameworkMacropad.js'
-import { SurfaceUSB203SystemsMystrix } from './USB/203SystemsMystrix.js'
-import { SurfaceUSBMiraboxStreamDock } from './USB/MiraboxStreamDock.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { SurfaceOutboundController } from './Outbound.js'
-import { SurfaceUSBBlackmagicController } from './USB/BlackmagicController.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
+	OutboundSurfaceInfo,
 	SurfaceConfig,
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { StreamDeckTcp } from '@elgato-stream-deck/tcp'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type {
-	LocalUSBDeviceOptions,
-	SurfaceHandlerDependencies,
-	SurfacePanel,
-	SurfacePanelFactory,
-	UpdateEvents,
-} from './Types.js'
+import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
-import { SurfaceFirmwareUpdateCheck } from './FirmwareUpdateCheck.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
-import { getMXCreativeConsoleDeviceInfo } from '@logitech-mx-creative-console/node'
-import { SurfaceUSBLogiMXConsole } from './USB/LogiMXCreativeConsole.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
+import type { SurfacePluginPanel } from './PluginPanel.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
+import type { HIDDevice } from '@companion-surface/host'
+import type { Complete } from '@companion-module/base/dist/util.js'
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -79,11 +60,14 @@ export interface SurfaceControllerEvents {
 	'surface-delete': [surfaceId: string]
 
 	'surface-in-group': [surfaceId: string, groupId: string | null]
+	'surface-config': [surfaceId: string, config: SurfacePanelConfig | null]
 
 	group_name: [groupId: string, name: string]
 	group_page: [groupId: string, pageId: string]
 	'group-add': [groupId: string]
 	'group-delete': [surfaceId: string]
+
+	scanDevices: [hidDevices: HIDDevice[]]
 }
 
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
@@ -138,7 +122,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	readonly #outboundController: SurfaceOutboundController
 
-	readonly #firmwareUpdates: SurfaceFirmwareUpdateCheck
+	get outbound(): SurfaceOutboundController {
+		return this.#outboundController
+	}
 
 	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies) {
 		super()
@@ -149,8 +135,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#updateEvents.setMaxListeners(0)
 
-		this.#outboundController = new SurfaceOutboundController(this, db)
-		this.#firmwareUpdates = new SurfaceFirmwareUpdateCheck(this.#surfaceHandlers, () => this.updateDevicesList())
+		this.#outboundController = new SurfaceOutboundController(db)
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
 
@@ -176,7 +161,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			for (const id of Object.keys(instances)) {
 				// If the id starts with 'emulator:' then re-add it
 				if (id.startsWith('emulator:')) {
-					this.addEmulator(id.substring(9), undefined, true)
+					this.addEmulator(id.substring(9), undefined)
 				}
 			}
 
@@ -186,7 +171,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			})
 			this.#outboundController.init()
 
-			this.updateDevicesList()
+			this.triggerUpdateDevicesList()
 
 			this.#startStopLockoutTimer()
 		})
@@ -326,9 +311,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Add an emulator
 	 * @param id base id of the emulator
 	 * @param name Name of the emulator, or undefined to use the default
-	 * @param skipUpdate Skip emitting an update to the devices list
 	 */
-	addEmulator(id: string, name: string | undefined, skipUpdate = false): SurfaceHandler {
+	addEmulator(id: string, name: string | undefined): SurfaceHandler {
 		const fullId = EmulatorRoom(id)
 		if (this.#surfaceHandlers.has(fullId)) {
 			throw new Error(`Emulator "${id}" already exists!`)
@@ -337,7 +321,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const handler = this.#createSurfaceHandler(fullId, 'emulator', new SurfaceIPElgatoEmulator(this.#updateEvents, id))
 		if (name !== undefined) handler.setPanelName(name)
 
-		if (!skipUpdate) this.updateDevicesList()
+		this.triggerUpdateDevicesList()
 
 		return handler
 	}
@@ -346,11 +330,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Create a `SurfaceHandler` for a `SurfacePanel`
 	 */
 	#createSurfaceHandler(surfaceId: string, integrationType: string, panel: SurfacePanel): SurfaceHandler {
-		const existingSurfaceConfig = this.getDeviceConfig(panel.info.deviceId)
+		const existingSurfaceConfig = this.getDeviceConfig(panel.info.surfaceId)
 		if (!existingSurfaceConfig) {
-			this.#logger.silly(`Creating config for newly discovered device ${panel.info.deviceId}`)
+			this.#logger.silly(`Creating config for newly discovered device ${panel.info.surfaceId}`)
 		} else {
-			this.#logger.silly(`Reusing config for device ${panel.info.deviceId}`)
+			this.#logger.silly(`Reusing config for device ${panel.info.surfaceId}`)
 		}
 
 		const surfaceConfig = createOrSanitizeSurfaceHandlerConfig(
@@ -385,14 +369,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		// Update the group to have the new surface
 		this.#attachSurfaceToGroup(handler)
 
-		// Perform an update check in the background
-		this.#firmwareUpdates.triggerCheckSurfaceForUpdates(handler)
-
 		return handler
 	}
 
 	createTrpcRouter() {
 		const self = this
+		const selfEvents = this as EventEmitter<SurfaceControllerEvents>
+
 		return router({
 			outbound: this.#outboundController.createTrpcRouter(),
 
@@ -440,7 +423,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					})
 				)
 				.subscription(async function* ({ input, signal }) {
-					const changes = toIterable(self.#updateEvents, `surfaceConfig:${input.surfaceId}`, signal)
+					const changes = toIterable(selfEvents, 'surface-config', signal)
 
 					let initialData: SurfacePanelConfig | null = null
 					for (const surface of self.#surfaceHandlers.values()) {
@@ -458,8 +441,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					}
 					yield initialData
 
-					for await (const [change] of changes) {
-						yield change
+					for await (const [surfaceId, change] of changes) {
+						if (surfaceId === input.surfaceId) yield change
 					}
 				}),
 
@@ -656,7 +639,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					newGroup.setName(input.name)
 					this.#surfaceGroups.set(groupId, newGroup)
 
-					this.updateDevicesList()
+					this.triggerUpdateDevicesList()
 
 					return groupId
 				}),
@@ -681,7 +664,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					group.forgetConfig()
 					this.#surfaceGroups.delete(input.groupId)
 
-					this.updateDevicesList()
+					this.triggerUpdateDevicesList()
 				}),
 
 			groupSetConfigKey: publicProcedure
@@ -741,7 +724,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 						this.#attachSurfaceToGroup(surfaceHandler)
 
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 						return
 					}
 
@@ -751,7 +734,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						surfaceConfig.groupId = input.groupId
 						this.#dbTableSurfaces.set(input.surfaceId, surfaceConfig)
 
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 						return
 					}
 
@@ -774,7 +757,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					}
 
 					if (this.setDeviceConfig(input.surfaceId, undefined)) {
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 
 						return true
 					}
@@ -794,7 +777,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					const group = this.#surfaceGroups.get(input.surfaceOrGroupId)
 					if (group && !group.isAutoGroup) {
 						group.setName(input.name)
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 						return
 					}
 
@@ -802,7 +785,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					for (const surface of this.#surfaceHandlers.values()) {
 						if (surface && surface.surfaceId == input.surfaceOrGroupId) {
 							surface.setPanelName(input.name)
-							this.updateDevicesList()
+							this.triggerUpdateDevicesList()
 							return
 						}
 					}
@@ -812,7 +795,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					if (surfaceConfig) {
 						surfaceConfig.name = input.name
 						this.#dbTableSurfaces.set(input.surfaceOrGroupId, surfaceConfig)
-						this.updateDevicesList()
+						this.triggerUpdateDevicesList()
 						return
 					}
 
@@ -842,7 +825,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								group.syncLocked()
 							}
 
-							setImmediate(() => this.updateDevicesList())
+							this.triggerUpdateDevicesList()
 						}
 					}
 					return 'device not found'
@@ -929,10 +912,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		if (surfaceConfig) {
 			this.#dbTableSurfaces.set(surfaceId, surfaceConfig)
-			this.#updateEvents.emit(`surfaceConfig:${surfaceId}`, surfaceConfig.config)
+			this.emit('surface-config', surfaceId, surfaceConfig.config)
 		} else {
 			this.#dbTableSurfaces.delete(surfaceId)
-			this.#updateEvents.emit(`surfaceConfig:${surfaceId}`, null)
+			this.emit('surface-config', surfaceId, null)
 		}
 
 		return exists
@@ -1066,10 +1049,17 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		await new Promise((resolve) => setTimeout(resolve, 500))
 
 		this.#resetAllDevices()
-		this.updateDevicesList()
+		this.triggerUpdateDevicesList()
 	}
 
-	updateDevicesList(): void {
+	triggerUpdateDevicesList = debounceFn(() => this.#updateDevicesList(), {
+		before: false,
+		after: true,
+		wait: 50,
+		maxWait: 200,
+	})
+
+	#updateDevicesList(): void {
 		const newJsonArr = structuredClone(this.getDevicesList())
 
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
@@ -1137,134 +1127,36 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		try {
 			this.#runningRefreshDevices = true
 
-			let streamDeckSoftwareRunning = false
-			const streamdeckDisabled = !!this.#handlerDependencies.userconfig.getKey('elgato_plugin_enable')
-
-			try {
-				// Make sure we don't try to take over stream deck devices when the stream deck application
-				// is running on windows.
-				if (!streamdeckDisabled && process.platform === 'win32') {
-					const list = await findProcess.default('name', '\\StreamDeck.exe')
-					if (typeof list === 'object' && list.length > 0) {
-						streamDeckSoftwareRunning = true
-						this.#logger.silly('Elgato software detected, ignoring stream decks')
-					}
-				}
-			} catch (_e) {
-				// scan for all usb devices anyways
-			}
-
 			// Now do the scan
-			const scanForLoupedeck = !!this.#handlerDependencies.userconfig.getKey('loupedeck_enable')
-			this.#logger.silly('scanForLoupedeck', scanForLoupedeck)
-			const ignoreStreamDeck = streamDeckSoftwareRunning || streamdeckDisabled
 			this.#logger.silly('USB: checking devices')
 
 			try {
 				await Promise.allSettled([
-					HID.devicesAsync().then(async (deviceInfos) =>
-						Promise.allSettled(
-							deviceInfos.map(async (deviceInfo) => {
-								this.#logger.silly('found device ' + JSON.stringify(deviceInfo))
-								if (deviceInfo.path && !this.#surfaceHandlers.has(deviceInfo.path)) {
-									if (!ignoreStreamDeck && getStreamDeckDeviceInfo(deviceInfo)) {
-										await this.#addDevice(deviceInfo.path, {}, 'elgato-streamdeck', SurfaceUSBElgatoStreamDeck)
-										return
-									} else if (
-										getMXCreativeConsoleDeviceInfo(deviceInfo) &&
-										this.#handlerDependencies.userconfig.getKey('logitech_mx_console_enable')
-									) {
-										await this.#addDevice(deviceInfo.path, {}, 'logi-mx-console', SurfaceUSBLogiMXConsole)
-										return
-									} else if (
-										deviceInfo.vendorId === 0xffff &&
-										(deviceInfo.productId === 0x1f40 || deviceInfo.productId === 0x1f41)
-									) {
-										await this.#addDevice(deviceInfo.path, {}, 'infinitton', SurfaceUSBInfinitton)
-									} else if (isAShuttleDevice(deviceInfo)) {
-										// Note: this must be before the xkeys, as the pid can clash
-										if (this.#handlerDependencies.userconfig.getKey('contour_shuttle_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'contour-shuttle', SurfaceUSBContourShuttle)
-										}
-									} else if (
-										// More specific match has to be above xkeys
-										isVecFootpedal(deviceInfo)
-									) {
-										if (this.#handlerDependencies.userconfig.getKey('vec_footpedal_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'vec-footpedal', SurfaceUSBVECFootpedal)
-										}
-									} else if (deviceInfo.vendorId === 1523 && deviceInfo.interface === 0) {
-										if (this.#handlerDependencies.userconfig.getKey('xkeys_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'xkeys', SurfaceUSBXKeys)
-										}
-									} else if (
-										deviceInfo.vendorId === 0x32ac && // frame.work
-										deviceInfo.productId === 0x0013 && // macropod
-										deviceInfo.usagePage === 0xffdd && // rawhid interface
-										deviceInfo.usage === 0x61
-									) {
-										await this.#addDevice(deviceInfo.path, {}, 'framework-macropad', SurfaceUSBFrameworkMacropad)
-									} else if (
-										this.#handlerDependencies.userconfig.getKey('blackmagic_controller_enable') &&
-										getBlackmagicControllerDeviceInfo(deviceInfo)
-									) {
-										await this.#addDevice(deviceInfo.path, {}, 'blackmagic-controller', SurfaceUSBBlackmagicController)
-									} else if (
-										deviceInfo.vendorId === 0x0203 && // 203 Systems
-										(deviceInfo.productId & 0xffc0) == 0x1040 && // Mystrix
-										deviceInfo.usagePage === 0xff00 && // rawhid interface
-										deviceInfo.usage === 0x01
-									) {
-										if (this.#handlerDependencies.userconfig.getKey('mystrix_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, '203-mystrix', SurfaceUSB203SystemsMystrix)
-										}
-									} else if (
-										(((deviceInfo.vendorId === 0x6602 || deviceInfo.vendorId === 0x6603) && // Mirabox
-											(deviceInfo.productId === 0x1001 ||
-												deviceInfo.productId === 0x1003 ||
-												deviceInfo.productId === 0x1007 ||
-												deviceInfo.productId === 0x1005 ||
-												deviceInfo.productId === 0x1012 || // Stream Dock M18V3
-												deviceInfo.productId === 0x1014 || // Stream Dock HSV 293S
-												deviceInfo.productId === 0x1006)) || // Stream Dock N4 or 293V3
-											(deviceInfo.vendorId === 0x5548 && deviceInfo.productId === 0x6674) ||
-											(deviceInfo.vendorId === 0x0300 && deviceInfo.productId === 0x1010) ||
-											// Mirabox variants (OEM branded)
-											(deviceInfo.vendorId === 0x5548 && deviceInfo.productId === 0x6670) || // Mirabox HSV 293S (XF-CN001 firmware V2)
-											(deviceInfo.vendorId === 0x1500 && deviceInfo.productId === 0x3003)) && // Mirabox HSV 293S (XF-CN001 firmware V3)
-										deviceInfo.interface === 0
-									) {
-										if (this.#handlerDependencies.userconfig.getKey('mirabox_streamdock_enable')) {
-											await this.#addDevice(deviceInfo.path, {}, 'mirabox-streamdock', SurfaceUSBMiraboxStreamDock)
-										}
-									}
-								}
-							})
-						)
-					),
-					scanForLoupedeck
-						? listLoupedecks().then(async (deviceInfos) =>
-								Promise.allSettled(
-									deviceInfos.map(async (deviceInfo) => {
-										this.#logger.info('found loupedeck', deviceInfo)
-										if (!this.#surfaceHandlers.has(deviceInfo.path)) {
-											await this.#addDevice(deviceInfo.path, {}, 'loupedeck', SurfaceUSBLoupedeck, true)
-										}
-									})
-								)
-							)
-						: Promise.resolve(),
+					HID.devicesAsync().then(async (deviceInfos) => {
+						const sanitisedDevices: HIDDevice[] = []
+						for (const deviceInfo of deviceInfos) {
+							if (!deviceInfo.path) continue
+							sanitisedDevices.push({
+								vendorId: deviceInfo.vendorId,
+								productId: deviceInfo.productId,
+								path: deviceInfo.path,
+								serialNumber: deviceInfo.serialNumber || '', // Filled in later
+								manufacturer: deviceInfo.manufacturer,
+								product: deviceInfo.product,
+								release: deviceInfo.release,
+								interface: deviceInfo.interface,
+								usagePage: deviceInfo.usagePage,
+								usage: deviceInfo.usage,
+							} satisfies Complete<HIDDevice>)
+						}
+						// emit to plugins
+						this.emit('scanDevices', sanitisedDevices)
+					}),
 				])
 
 				this.#logger.silly('USB: done')
 
-				if (streamdeckDisabled) {
-					return 'Ignoring Stream Decks devices as the plugin has been enabled'
-				} else if (ignoreStreamDeck) {
-					return 'Ignoring Stream Decks devices as the stream deck app is running'
-				} else {
-					return undefined
-				}
+				return undefined
 			} catch (e) {
 				this.#logger.silly('USB: scan failed ' + e)
 				return 'Scan failed'
@@ -1274,126 +1166,57 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	async addStreamdeckTcpDevice(streamdeck: StreamDeckTcp): Promise<SurfaceUSBElgatoStreamDeck> {
-		const fakePath = `tcp://${streamdeck.remoteAddress}:${streamdeck.remotePort}`
-
-		this.removeDevice(fakePath)
-
-		const device = await SurfaceUSBElgatoStreamDeck.fromTcp(fakePath, streamdeck)
-
-		this.#createSurfaceHandler(fakePath, 'elgato-streamdeck-tcp', device)
-
-		setImmediate(() => this.updateDevicesList())
-
-		return device
-	}
-
 	/**
 	 * Add a satellite device
 	 */
 	addSatelliteDevice(deviceInfo: SatelliteDeviceInfo): SurfaceIPSatellite {
-		this.removeDevice(deviceInfo.path)
+		this.removeDevice(deviceInfo.deviceId)
 
-		const device = new SurfaceIPSatellite(deviceInfo, this.#surfaceExecuteExpression.bind(this))
+		const device = new SurfaceIPSatellite(deviceInfo, this.surfaceExecuteExpression.bind(this))
 
-		this.#createSurfaceHandler(deviceInfo.path, 'satellite', device)
+		this.#createSurfaceHandler(deviceInfo.deviceId, 'satellite', device)
 
-		setImmediate(() => {
-			this.updateDevicesList()
-		})
+		this.triggerUpdateDevicesList()
 
 		return device
 	}
 
 	/**
-	 * Add a new videohub panel
+	 * Add a new plugin panel
 	 */
-	addVideohubPanelDevice(deviceInfo: VideohubPanelDeviceInfo): SurfaceIPVideohubPanel {
-		this.removeDevice(deviceInfo.path)
+	addPluginPanel(moduleId: string, panel: SurfacePluginPanel): void {
+		this.removeDevice(panel.info.surfaceId)
 
-		const device = new SurfaceIPVideohubPanel(deviceInfo)
+		this.#createSurfaceHandler(panel.info.surfaceId, moduleId, panel)
 
-		this.#createSurfaceHandler(deviceInfo.path, 'videohub-panel', device)
-
-		setImmediate(() => {
-			this.updateDevicesList()
-		})
-
-		return device
+		this.triggerUpdateDevicesList()
 	}
 
 	/**
 	 * Add the elgato plugin connection
 	 */
-	addElgatoPluginDevice(devicePath: string, socket: ServiceElgatoPluginSocket): SurfaceIPElgatoPlugin {
-		this.removeDevice(devicePath)
+	addElgatoPluginDevice(surfaceId: string, socket: ServiceElgatoPluginSocket): SurfaceIPElgatoPlugin {
+		this.removeDevice(surfaceId)
 
 		const device = new SurfaceIPElgatoPlugin(
 			this.#handlerDependencies.controls,
 			this.#handlerDependencies.pageStore,
-			devicePath,
+			surfaceId,
 			socket
 		)
 
-		this.#createSurfaceHandler(devicePath, 'elgato-plugin', device)
+		this.#createSurfaceHandler(surfaceId, 'elgato-plugin', device)
 
-		setImmediate(() => {
-			this.updateDevicesList()
-		})
+		this.triggerUpdateDevicesList()
 
 		return device
 	}
 
-	async #addDevice(
-		devicePath: string,
-		deviceOptions: Omit<LocalUSBDeviceOptions, 'executeExpression'>,
-		type: string,
-		factory: SurfacePanelFactory,
-		skipHidAccessCheck = false
-	) {
-		this.removeDevice(devicePath)
-
-		this.#logger.silly('add device ' + devicePath)
-
-		if (!skipHidAccessCheck) {
-			// Check if we have access to the device
-			try {
-				const devicetest = new HID.HID(devicePath)
-				devicetest.close()
-			} catch (_e) {
-				this.#logger.error(
-					`Found "${type}" device, but no access. Please quit any other applications using the device, and try again.`
-				)
-				return
-			}
-		}
-
-		// Define something, so that it is known it is loading
-		this.#surfaceHandlers.set(devicePath, null)
-
-		try {
-			const dev = await factory.create(devicePath, {
-				...deviceOptions,
-				executeExpression: this.#surfaceExecuteExpression.bind(this),
-			})
-			this.#createSurfaceHandler(devicePath, type, dev)
-
-			setImmediate(() => {
-				this.updateDevicesList()
-			})
-		} catch (e) {
-			this.#logger.error(`Failed to add "${type}" device: ${e}`)
-
-			// Failed, remove the placeholder
-			this.#surfaceHandlers.delete(devicePath)
-		}
-	}
-
-	#surfaceExecuteExpression(
+	surfaceExecuteExpression(
 		str: string,
 		surfaceId: string,
 		injectedVariableValues: CompanionVariableValues | undefined
-	) {
+	): ExecuteExpressionResult {
 		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
 			...injectedVariableValues,
 			...this.#getInjectedVariablesForSurfaceId(surfaceId),
@@ -1423,6 +1246,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	exportAllGroups(): Record<number, SurfaceGroupConfig> {
 		return this.#dbTableGroups.all()
+	}
+
+	exportAllRemote(): Record<string, OutboundSurfaceInfo> {
+		return this.#outboundController.exportAll()
 	}
 
 	/**
@@ -1492,7 +1319,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				this.setDeviceConfig(surfaceId, surfaceConfig)
 
 				if (surfaceId.startsWith('emulator:')) {
-					this.addEmulator(surfaceId.substring(9), undefined, true)
+					this.addEmulator(surfaceId.substring(9), undefined)
 
 					if (surfaceConfig.groupConfig) {
 						// need the following to put the emulator on the "current" page, to match its export state
@@ -1504,18 +1331,45 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 		}
 
-		this.updateDevicesList()
+		this.triggerUpdateDevicesList()
+	}
+
+	/**
+	 * Reserve a surface ID for opening.
+	 * This prevents race conditions if two instances try to open the same surface at once.
+	 * If the surface is already open, or already reserved, this will return null.
+	 * @returns A function to clear the reservation, or null if it could not be reserved
+	 */
+	reserveSurfaceForOpening(surfaceId: string): (() => void) | null {
+		// Ensure it isnt already open
+		if (this.#surfaceHandlers.has(surfaceId)) return null
+
+		// Future: check if the config of the surface/global config allows it to be opened
+
+		// Reserve it
+		this.#surfaceHandlers.set(surfaceId, null)
+
+		return () => {
+			// Clear the reservation
+			if (this.#surfaceHandlers.get(surfaceId) === null) {
+				this.#surfaceHandlers.delete(surfaceId)
+			}
+		}
+	}
+
+	initInstance(_instanceId: string, features: SurfaceChildFeatures): void {
+		if (this.#runningUsbHotplug && (features.supportsHid || features.supportsDetection || features.supportsScan)) {
+			this.triggerRefreshDevicesEvent()
+		}
 	}
 
 	/**
 	 * Remove a surface
 	 */
-	removeDevice(devicePath: string, purge = false): void {
-		const surfaceHandler = this.#surfaceHandlers.get(devicePath)
+	removeDevice(surfaceId: string, purge = false): void {
+		const surfaceHandler = this.#surfaceHandlers.get(surfaceId)
 		if (surfaceHandler) {
-			this.#logger.silly('remove device ' + devicePath)
-
-			const surfaceId = surfaceHandler.surfaceId
+			this.#logger.silly('remove device ' + surfaceId)
 
 			// Detach surface from any group
 			this.#detachSurfaceFromGroup(surfaceHandler)
@@ -1528,11 +1382,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			surfaceHandler.removeAllListeners()
 
-			this.#surfaceHandlers.delete(devicePath)
+			this.#surfaceHandlers.delete(surfaceId)
 			this.emit('surface-delete', surfaceId)
 		}
 
-		this.updateDevicesList()
+		this.triggerUpdateDevicesList()
+	}
+
+	/**
+	 * Remove all surfaces belonging to an instance
+	 */
+	unloadSurfacesForInstance(instanceId: string): void {
+		for (const [id, surface] of this.#surfaceHandlers.entries()) {
+			if (surface?.panel.instanceId === instanceId) {
+				this.removeDevice(id)
+			}
+		}
 	}
 
 	quit(): void {
@@ -1548,7 +1413,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#outboundController.quit()
 
 		this.#surfaceHandlers.clear()
-		this.updateDevicesList()
+		this.triggerUpdateDevicesList()
 	}
 
 	/**

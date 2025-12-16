@@ -6,12 +6,11 @@ import path from 'path'
 import fs from 'fs'
 import debounceFn from 'debounce-fn'
 import concurrently from 'concurrently'
-import dotenv from 'dotenv'
 import { fetchNodejs } from './fetch_nodejs.mts'
 import { determinePlatformInfo } from './build/util.mts'
 import { ChildProcess } from 'child_process'
 import semver from 'semver'
-import { parseEnv } from 'util'
+import { fetchBuiltinSurfaceModules } from './fetch_builtin_modules.mts'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -55,6 +54,10 @@ console.log('Ensuring nodejs binaries are available')
 
 const platformInfo = determinePlatformInfo(undefined)
 await fetchNodejs(platformInfo)
+
+console.log('Ensuring builtin modules are installed')
+
+await fetchBuiltinSurfaceModules()
 
 console.log('Ensuring bundled modules are synced')
 

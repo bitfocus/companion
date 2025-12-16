@@ -131,7 +131,9 @@ export class ImportExportController {
 				buttons: 'pages' in importObject,
 				customVariables: importContainsKey('custom_variables'),
 				expressionVariables: importContainsKey('expressionVariables'),
-				surfaces: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
+				surfacesKnown: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
+				surfacesInstances: importContainsKey('surfaceInstances'),
+				surfacesRemote: importContainsKey('surfacesRemote'),
 				triggers: null,
 			}
 
@@ -470,6 +472,14 @@ export class ImportExportController {
 
 		if (shouldReset(config.surfaces.known)) {
 			await this.#surfacesController.reset()
+		}
+
+		if (shouldReset(config.surfaces.instances)) {
+			await this.#instancesController.deleteAllSurfaceInstances(true)
+		}
+
+		if (shouldReset(config.surfaces.remote)) {
+			this.#surfacesController.outbound.reset()
 		}
 
 		if (shouldReset(config.triggers)) {

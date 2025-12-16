@@ -6,12 +6,12 @@ export enum InstanceVersionUpdatePolicy {
 
 export enum ModuleInstanceType {
 	Connection = 'connection',
-	// Surface = 'surface', // Future
+	Surface = 'surface',
 }
 
 export interface InstanceConfig {
 	moduleInstanceType: ModuleInstanceType
-	instance_type: string // TODO - rename to moduleId
+	moduleId: string
 	moduleVersionId: string | null
 
 	label: string
@@ -21,7 +21,7 @@ export interface InstanceConfig {
 	lastUpgradeIndex: number
 	enabled: boolean
 	sortOrder: number
-	updatePolicy: InstanceVersionUpdatePolicy // TODO - upgrade script
+	updatePolicy: InstanceVersionUpdatePolicy
 	collectionId?: string
 }
 

@@ -22,16 +22,13 @@
 
    For Companion to be able to access your Streamdecks, Loupedecks, xkeys or other supported USB devices, some udev rules must be setup.
 
-   If you are running headless, run as root:
-   $ cp 50-companion-headless.rules /etc/udev/rules.d/50-companion.rules
-   Or for desktop Companion, run as root:
-   $ cp 50-companion-desktop.rules /etc/udev/rules.d/50-companion.rules
+   Since Companion 4.2 surfaces are integrated through modules. This means we can't provide a statically generated udev rules file.
 
-   Apply the new rules:
+   Instead, Companion will generate one on the fly as modules get installed and uninstalled in the config folder.  
+   Our headless tooling will handle loading that for you, but if setting up manually, whenever changing the surface integrations will
+   want to copy that file into /etc/udev/rules.d/ and run
    $ udevadm control --reload-rules
    And replugging any usb devices that Companion should be able to use.
-
-   Sometimes this file can change, when adding support for new devices, so it can be a good idea to update it when updating Companion.
 
    The headless rules expect companion to be run as a member of a group called `companion`. This is necessary to assign usb permissions correctly, unless you modify the rules file.
 

@@ -14,6 +14,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { useNavigate } from '@tanstack/react-router'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { capitalize } from 'lodash-es'
 
 interface ModuleManagePanelProps {
 	moduleType: ModuleInstanceType
@@ -71,7 +72,9 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	return (
 		<>
 			<div className="secondary-panel-simple-header">
-				<h4 className="panel-title">Manage {baseInfo?.name ?? moduleId}</h4>
+				<h4 className="panel-title">
+					Manage {baseInfo?.name ?? moduleId} ({capitalize(moduleType)})
+				</h4>
 				<div className="header-buttons">
 					{!!moduleStoreBaseInfo?.githubUrl && (
 						<WindowLinkOpen title="Open GitHub Page" href={moduleStoreBaseInfo.githubUrl}>
