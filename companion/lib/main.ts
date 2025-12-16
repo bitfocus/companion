@@ -7,7 +7,7 @@ import './Resources/FixImports.js'
 import '@julusian/segfault-raub'
 
 // Setup logging before anything else runs
-import './Log/Controller.js'
+import logger from './Log/Controller.js'
 
 // Now we can think about startup
 import { Command } from 'commander'
@@ -17,10 +17,11 @@ import path from 'path'
 import fs from 'fs-extra'
 import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
-import logger from './Log/Controller.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
 import net from 'net'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { isPackaged } from './Resources/Util.js'
 
 const program = new Command()
 
@@ -100,7 +101,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		process.exit(1)
 	}
 
-	let adminIp = options.adminAddress || '0.0.0.0' // default to admin global
+	let adminIp = options.adminAddress || '::' // default to admin global
 
 	if (options.adminInterface) {
 		adminIp = null
@@ -215,12 +216,24 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 	}
 
-	const modulesDir = path.join(rootConfigDir, 'modules')
-
-	const registry = new Registry(configDir, modulesDir, machineId)
+	const registry = new Registry({
+		configDir,
+		modulesDirs: {
+			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // Naming for backwards compatibility
+			[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
+		},
+		builtinModuleDirs: {
+			[ModuleInstanceType.Connection]: null,
+			[ModuleInstanceType.Surface]: isPackaged()
+				? path.join(import.meta.dirname, 'builtin-surfaces')
+				: path.join(import.meta.dirname, '../../.cache/builtin-surfaces'),
+		},
+		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
+		machineId,
+	})
 
 	registry
-		.ready(options.extraModulePath, adminIp, options.adminPort)
+		.ready(options.extraModulePath, adminIp, Number(options.adminPort))
 		.then(() => {
 			console.log('Started')
 

@@ -16,7 +16,7 @@ export function ImportModules(): React.JSX.Element {
 	const [importSessionId, setImportSessionId] = useState<string | null>(null)
 
 	useSubscription(
-		trpc.connections.modulesManager.bundleUpload.watchProgress.subscriptionOptions(
+		trpc.instances.modulesManager.bundleUpload.watchProgress.subscriptionOptions(
 			{
 				sessionId: importSessionId ?? '',
 			},
@@ -24,13 +24,13 @@ export function ImportModules(): React.JSX.Element {
 				enabled: !!importSessionId,
 				onData: (data) => {
 					if (data === null) {
-						notifier.current?.close(NOTIFICATION_ID_IMPORT)
+						notifier.close(NOTIFICATION_ID_IMPORT)
 					} else {
 						const progress = data as number | null
 						if (progress === null) {
-							notifier.current?.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
+							notifier.show('Importing module bundle...', 'Completed', 5000, NOTIFICATION_ID_IMPORT)
 						} else {
-							notifier.current?.show(
+							notifier.show(
 								'Importing module bundle...',
 								`${Math.round(progress * 100)}% complete`,
 								null,
@@ -44,13 +44,13 @@ export function ImportModules(): React.JSX.Element {
 	)
 	useEffect(() => {
 		if (!importSessionId) {
-			notifier.current?.close(NOTIFICATION_ID_IMPORT)
+			notifier.close(NOTIFICATION_ID_IMPORT)
 		}
 	}, [notifier, importSessionId])
 
 	const [importError, setImportError] = useState<string | null>(null)
 
-	const installTarMutation = useMutationExt(trpc.connections.modulesManager.installModuleTar.mutationOptions())
+	const installTarMutation = useMutationExt(trpc.instances.modulesManager.installModuleTar.mutationOptions())
 	const loadModuleFile = useCallback(
 		(e: React.FormEvent<HTMLInputElement>) => {
 			const newFile = e.currentTarget.files?.[0]
@@ -74,7 +74,7 @@ export function ImportModules(): React.JSX.Element {
 							if (failureReason) {
 								console.error('Failed to install module', failureReason)
 
-								notifier.current?.show('Failed to install module', failureReason, 5000)
+								notifier.show('Failed to install module', failureReason, 5000)
 							}
 
 							setImportError(null)
@@ -95,15 +95,13 @@ export function ImportModules(): React.JSX.Element {
 		[installTarMutation, notifier]
 	)
 
-	const startBundleImportMutation = useMutationExt(trpc.connections.modulesManager.bundleUpload.start.mutationOptions())
-	const cancelBundleImportMutation = useMutationExt(
-		trpc.connections.modulesManager.bundleUpload.cancel.mutationOptions()
-	)
+	const startBundleImportMutation = useMutationExt(trpc.instances.modulesManager.bundleUpload.start.mutationOptions())
+	const cancelBundleImportMutation = useMutationExt(trpc.instances.modulesManager.bundleUpload.cancel.mutationOptions())
 	const uploadBundleChunkMutation = useMutationExt(
-		trpc.connections.modulesManager.bundleUpload.uploadChunk.mutationOptions()
+		trpc.instances.modulesManager.bundleUpload.uploadChunk.mutationOptions()
 	)
 	const completeBundleImportMutation = useMutationExt(
-		trpc.connections.modulesManager.bundleUpload.complete.mutationOptions()
+		trpc.instances.modulesManager.bundleUpload.complete.mutationOptions()
 	)
 
 	const loadModuleBundle = useCallback(
@@ -119,7 +117,7 @@ export function ImportModules(): React.JSX.Element {
 			}
 
 			setImportError(null)
-			notifier.current?.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
+			notifier.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 			console.log(`start import of ${newFile.size} bytes`)
 
 			const hasher = CryptoJS.algo.SHA1.create()
@@ -181,8 +179,8 @@ export function ImportModules(): React.JSX.Element {
 				.catch((e) => {
 					console.error('failed', e)
 
-					notifier.current?.close(NOTIFICATION_ID_IMPORT)
-					notifier.current?.show('Importing module bundle...', 'Failed!', 5000)
+					notifier.close(NOTIFICATION_ID_IMPORT)
+					notifier.show('Importing module bundle...', 'Failed!', 5000)
 				})
 		},
 		[

@@ -4,7 +4,7 @@ import type { SomeControl } from './IControlFragments.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import {
 	EntityModelType,
-	EntityOwner,
+	type EntityOwner,
 	schemaFeedbackEntityStyleOverride,
 	zodEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'

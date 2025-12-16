@@ -1,5 +1,5 @@
 import { ServiceBase } from './Base.js'
-import { Bonjour, Browser } from '@julusian/bonjour-service'
+import { Bonjour, type Browser } from '@julusian/bonjour-service'
 import { isIPv4 } from 'net'
 import type { ClientBonjourEvent, ClientBonjourService } from '@companion-app/shared/Model/Common.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -140,7 +140,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 			return existingSession
 		}
 
-		const manifest = this.#instanceController.getManifestForInstance(connectionId)
+		const manifest = this.#instanceController.getManifestForConnection(connectionId)
 		let bonjourQueries = manifest?.bonjourQueries?.[queryId]
 		if (!bonjourQueries) throw new Error('Missing bonjour query')
 

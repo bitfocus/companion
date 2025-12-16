@@ -18,21 +18,21 @@ import { EventEmitter } from 'events'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import type { ControlChangeEvents, ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import LogController from '../Log/Controller.js'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
 import { validateBankControlId, validateExpressionVariableControlId, validateTriggerControlId } from './Util.js'
 import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
-import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
+import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
-import { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import type { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
-import { CompanionVariableValues } from '@companion-module/base'
+import type { CompanionVariableValues } from '@companion-module/base'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type {
@@ -368,6 +368,25 @@ export class ControlsController {
 	/**
 	 * Get all of the trigger controls
 	 */
+	getAllButtons(): Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> {
+		const buttons: Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> =
+			[]
+		for (const control of this.#controls.values()) {
+			if (
+				control instanceof ControlButtonNormal ||
+				control instanceof ControlButtonPageDown ||
+				control instanceof ControlButtonPageNumber ||
+				control instanceof ControlButtonPageUp
+			) {
+				buttons.push(control)
+			}
+		}
+		return buttons
+	}
+
+	/**
+	 * Get all of the trigger controls
+	 */
 	getAllTriggers(): ControlTrigger[] {
 		const triggers: ControlTrigger[] = []
 		for (const control of this.#controls.values()) {
@@ -570,13 +589,13 @@ export class ControlsController {
 	/**
 	 * Execute rotation of a control
 	 * @param controlId Id of the control
-	 * @param direction Whether the control is rotated to the right
+	 * @param rightward Whether the control is rotated to the right
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(controlId: string, direction: boolean, surfaceId: string | undefined): boolean {
+	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
 		const control = this.getControl(controlId)
 		if (control && control.supportsActionSets) {
-			control.rotateControl(direction, surfaceId)
+			control.rotateControl(rightward, surfaceId)
 			return true
 		}
 
@@ -722,7 +741,7 @@ export class ControlsController {
 	 * @access public
 	 */
 	verifyConnectionIds(): void {
-		const knownConnectionIds = new Set(this.#registry.instance.getAllInstanceIds())
+		const knownConnectionIds = new Set(this.#registry.instance.getAllConnectionIds())
 		knownConnectionIds.add('internal')
 
 		for (const control of this.#controls.values()) {

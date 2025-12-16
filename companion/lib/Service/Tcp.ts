@@ -1,6 +1,6 @@
 import { decimalToRgb } from '../Resources/Util.js'
 import { ApiMessageError, ServiceTcpUdpApi } from './TcpUdpApi.js'
-import { ServiceTcpBase, TcpClientInfo } from './TcpBase.js'
+import { ServiceTcpBase, type TcpClientInfo } from './TcpBase.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -64,12 +64,15 @@ export class ServiceTcp extends ServiceTcpBase {
 	 * @param client - the client's tcp socket
 	 * @param chunk - the incoming message part
 	 */
-	protected processIncoming(client: TcpClientInfo, chunk: string): void {
+	protected processIncoming(client: TcpClientInfo, chunk: string | Buffer): void {
 		let i = 0,
 			line = '',
 			offset = 0
 
 		client.receiveBuffer += chunk
+		// note that chunk is actually a Buffer, not a string. (It could be any of 'string', 'Buffer', 'TypedArray', 'DataView'.)
+		// There may be a way to setEncoding() on the TCP stream.. But for now, it's simpler to just be more explicit about the type.
+		this.logger.debug(`TCP message received from ${client.name} - ${JSON.stringify(chunk.toString())}`)
 
 		while ((i = client.receiveBuffer.indexOf('\n', offset)) !== -1) {
 			line = client.receiveBuffer.substr(offset, i - offset)
@@ -85,11 +88,12 @@ export class ServiceTcp extends ServiceTcpBase {
 				})
 				.catch((e) => {
 					this.logger.silly(`TCP command failed: ${e}`)
-					this.logger.info(`TCP command failed: ${e}`)
 
 					if (e instanceof ApiMessageError) {
+						this.logger.info(`TCP command failed. ${e} ${e.context}`)
 						client.socket.write(`-ERR ${e?.message ?? ''}\n`)
 					} else {
+						this.logger.info(`TCP command failed. ${e}`)
 						client.socket.write(`-ERR Internal Error\n`)
 					}
 				})

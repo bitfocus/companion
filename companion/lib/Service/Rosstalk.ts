@@ -1,5 +1,5 @@
 import { formatLocation, oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
-import { ServiceTcpBase, TcpClientInfo } from './TcpBase.js'
+import { ServiceTcpBase, type TcpClientInfo } from './TcpBase.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -45,7 +45,7 @@ export class ServiceRosstalk extends ServiceTcpBase {
 	 * @param data - the incoming message part
 	 * @access protected
 	 */
-	processIncoming(_client: TcpClientInfo, data: string): void {
+	processIncoming(_client: TcpClientInfo, data: string | Buffer): void {
 		data = data.toString()
 
 		const matchCC = data.match(/CC ([0-9]+):([0-9]+)/)

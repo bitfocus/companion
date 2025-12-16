@@ -1,10 +1,11 @@
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { getModuleVersionInfoForConnection } from '../Util.js'
+import { getModuleVersionInfo } from '../../Instances/Util.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface ConnectionEditPanelHeadingProps {
 	connectionInfo: ClientConnectionConfig
@@ -17,19 +18,24 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 }: ConnectionEditPanelHeadingProps) {
 	const { helpViewer, modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(connectionInfo.instance_type)
-	const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connectionInfo.moduleVersionId)
+	const moduleInfo = modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
+	const moduleVersion = getModuleVersionInfo(moduleInfo, connectionInfo.moduleVersionId)
 
 	const doShowHelp = useCallback(
 		() =>
 			moduleVersion?.helpPath &&
-			helpViewer.current?.showFromUrl(connectionInfo.instance_type, moduleVersion.versionId, moduleVersion.helpPath),
-		[helpViewer, connectionInfo.instance_type, moduleVersion]
+			helpViewer.current?.showFromUrl(
+				ModuleInstanceType.Connection,
+				connectionInfo.moduleId,
+				moduleVersion.versionId,
+				moduleVersion.helpPath
+			),
+		[helpViewer, connectionInfo.moduleId, moduleVersion]
 	)
 
 	return (
 		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Connection: {moduleInfo?.display?.name ?? connectionInfo.instance_type}</h4>
+			<h4 className="panel-title">Edit Connection: {moduleInfo?.display?.name ?? connectionInfo.moduleId}</h4>
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
 					<div className="float_right" onClick={doShowHelp} title="Show help for this connection">

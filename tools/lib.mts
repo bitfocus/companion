@@ -3,6 +3,16 @@ import { $, fs } from 'zx'
 // suppress fnm reporting node version
 process.env.FNM_LOGLEVEL = 'quiet'
 
+async function parseGitRef() {
+	const gitRefRaw = await $`git rev-parse --abbrev-ref HEAD`
+	const gitRef = gitRefRaw.stdout.trim()
+	if (!gitRef || gitRef === 'HEAD') {
+		return process.env.GITHUB_REF_NAME || 'unknown'
+	} else {
+		return gitRef
+	}
+}
+
 export async function generateVersionString() {
 	return goSilent(async () => {
 		const headHashRaw = await $`git rev-parse --short=10 HEAD`
@@ -12,11 +22,7 @@ export async function generateVersionString() {
 		const packageJson = JSON.parse(packageJsonStr.toString())
 		const packageVersion = packageJson.version
 
-		const gitRefRaw = await $`git rev-parse --abbrev-ref HEAD`
-		let gitRef = gitRefRaw.stdout.trim()
-		if (!gitRef || gitRef === 'HEAD') {
-			gitRef = process.env.GITHUB_REF_NAME || 'unknown'
-		}
+		let gitRef = await parseGitRef()
 		if (gitRef === 'v' + packageVersion) {
 			gitRef = 'stable'
 		} else {
@@ -36,15 +42,20 @@ export async function generateMiniVersionString() {
 		const packageJson = JSON.parse(packageJsonStr.toString())
 		const packageVersion = packageJson.version
 
-		const commitCountRaw = await $`git rev-list --count HEAD`
-		const commitCount = commitCountRaw.stdout.trim()
+		const gitRef = await parseGitRef()
+		if (gitRef === 'v' + packageVersion) {
+			return packageVersion
+		} else {
+			const commitCountRaw = await $`git rev-list --count HEAD`
+			const commitCount = commitCountRaw.stdout.trim()
 
-		return `${packageVersion}.${commitCount}`
+			return `${packageVersion}+${commitCount}`
+		}
 	})
 }
 
 /** Run some code with the $.verbose set to false */
-export async function goSilent(fcn) {
+export async function goSilent<T>(fcn: () => Promise<T>): Promise<T> {
 	const verboseBefore = $.verbose
 	$.verbose = false
 

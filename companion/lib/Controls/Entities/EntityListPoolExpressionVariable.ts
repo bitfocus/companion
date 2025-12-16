@@ -3,8 +3,8 @@ import {
 	FeedbackEntitySubType,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { ControlEntityList } from './EntityList.js'
-import { ControlEntityListPoolBase, ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import type { ControlEntityList } from './EntityList.js'
+import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { ExpressionOrValue } from '@companion-app/shared/Model/StyleLayersModel.js'

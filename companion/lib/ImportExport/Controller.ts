@@ -10,44 +10,18 @@
  */
 
 import { upgradeImport } from '../Data/Upgrade.js'
-import { cloneDeep } from 'lodash-es'
-import {
-	CreateExpressionVariableControlId,
-	CreateTriggerControlId,
-	validateActionSetId,
-} from '@companion-app/shared/ControlId.js'
 import yaml from 'yaml'
 import zlib from 'node:zlib'
-import LogController from '../Log/Controller.js'
-import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
-import { nanoid } from 'nanoid'
 import type express from 'express'
-import type {
-	ExportControlv6,
-	ExportFullv6,
-	ExportInstancesv6,
-	ExportPageContentv6,
-	ExportTriggerContentv6,
-} from '@companion-app/shared/Model/ExportModel.js'
-import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { AppInfo } from '../Registry.js'
 import {
-	zodClientImportSelection,
-	zodClientResetSelection,
+	type ImportOrResetType,
+	zodClientImportOrResetSelection,
 	type ClientImportObject,
 	type ClientPageInfo,
-	type ClientResetSelection,
-	type ConnectionRemappings,
+	type ClientImportOrResetSelection,
 } from '@companion-app/shared/Model/ImportExport.js'
-import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type {
-	ButtonModelBase,
-	LayeredButtonModel,
-	NormalButtonModel,
-	SomeButtonModel,
-} from '@companion-app/shared/Model/ButtonModel.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -56,7 +30,6 @@ import type { PageController } from '../Page/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
-import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ExportController } from './Export.js'
 import { FILE_VERSION } from './Constants.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
@@ -66,50 +39,17 @@ import z from 'zod'
 import { EventEmitter } from 'node:events'
 import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
-import { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
-import { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { ImportController } from './Import.js'
+import { find_smallest_grid_for_page } from './Util.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
-const find_smallest_grid_for_page = (pageInfo: ExportPageContentv6): UserConfigGridSize => {
-	const gridSize: UserConfigGridSize = {
-		minColumn: 0,
-		maxColumn: 7,
-		minRow: 0,
-		maxRow: 3,
-	}
-
-	// Scan through the data in the export, to find the minimum possible grid size
-	for (const [row0, rowObj] of Object.entries(pageInfo.controls || {})) {
-		const row = Number(row0)
-		let foundControl = false
-
-		for (const column0 of Object.keys(rowObj)) {
-			const column = Number(column0)
-
-			if (!rowObj[column]) continue
-			foundControl = true
-
-			if (column < gridSize.minColumn) gridSize.minColumn = column
-			if (column > gridSize.maxColumn) gridSize.maxColumn = column
-		}
-
-		if (foundControl) {
-			if (row < gridSize.minRow) gridSize.minRow = row
-			if (row > gridSize.maxRow) gridSize.maxRow = row
-		}
-	}
-
-	return gridSize
-}
-
 export class ImportExportController {
-	readonly #logger = LogController.createLogger('ImportExport/Controller')
+	// readonly #logger = LogController.createLogger('ImportExport/Controller')
 
 	readonly #controlsController: ControlsController
 	readonly #graphicsController: GraphicsController
 	readonly #instancesController: InstanceController
-	readonly #internalModule: InternalController
 	readonly #pagesController: PageController
 	readonly #surfacesController: SurfaceController
 	readonly #userConfigController: DataUserConfig
@@ -117,6 +57,7 @@ export class ImportExportController {
 	readonly #backupController: BackupController
 
 	readonly #exportController: ExportController
+	readonly #importController: ImportController
 
 	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null], null>(
 		'ImportExport/Controller',
@@ -151,52 +92,57 @@ export class ImportExportController {
 				return ['Unknown import type', null]
 			}
 
-			let object = upgradeImport(rawObject)
+			let importObject = upgradeImport(rawObject)
 
 			// fix any db instances missing the upgradeIndex property
-			if (object.instances) {
-				for (const connectionConfig of Object.values(object.instances)) {
+			if (importObject.instances) {
+				for (const connectionConfig of Object.values(importObject.instances)) {
 					if (connectionConfig) {
 						connectionConfig.lastUpgradeIndex = connectionConfig.lastUpgradeIndex ?? -1
 					}
 				}
 			}
 
-			if (object.type === 'trigger_list') {
-				object = {
+			if (importObject.type === 'trigger_list') {
+				importObject = {
 					type: 'full',
 					version: FILE_VERSION,
-					companionBuild: object.companionBuild,
-					triggers: object.triggers,
-					triggerCollections: object.triggerCollections,
-					instances: object.instances,
-					connectionCollections: object.connectionCollections,
+					companionBuild: importObject.companionBuild,
+					triggers: importObject.triggers,
+					triggerCollections: importObject.triggerCollections,
+					instances: importObject.instances,
+					connectionCollections: importObject.connectionCollections,
 				} satisfies ExportFullv6
 			}
 
 			// Store the object on the client
 			sessionCtx.pendingImport = {
-				object,
+				object: importObject,
 				timeout: null, // TODO
 			}
 
+			const importContainsKey = (key: keyof (ExportFullv6 & ExportPageContentv6)): boolean =>
+				key in importObject && Object.keys(importObject[key as keyof typeof importObject] || {}).length > 0
+
 			// Build a minimal object to send back to the client
 			const clientObject: ClientImportObject = {
-				type: object.type,
-				instances: {},
-				controls: 'pages' in object,
-				customVariables: 'custom_variables' in object,
-				expressionVariables: 'expressionVariables' in object,
-				surfaces: 'surfaces' in object,
-				triggers: 'triggers' in object,
-				imageLibrary: 'imageLibrary' in object,
+				type: importObject.type,
+				connections: {},
+				buttons: 'pages' in importObject,
+				customVariables: importContainsKey('custom_variables'),
+				expressionVariables: importContainsKey('expressionVariables'),
+				surfacesKnown: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
+				surfacesInstances: importContainsKey('surfaceInstances'),
+				surfacesRemote: importContainsKey('surfacesRemote'),
+				triggers: null,
+				imageLibrary: importContainsKey('imageLibrary'),
 			}
 
-			for (const [connectionId, connectionConfig] of Object.entries(object.instances || {})) {
+			for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
 				if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
 
-				clientObject.instances[connectionId] = {
-					instance_type: connectionConfig.instance_type,
+				clientObject.connections[connectionId] = {
+					moduleId: connectionConfig.instance_type,
 					moduleVersionId: connectionConfig.moduleVersionId ?? null,
 					label: connectionConfig.label,
 					sortOrder: connectionConfig.sortOrder,
@@ -210,21 +156,21 @@ export class ImportExportController {
 				}
 			}
 
-			if (object.type === 'page') {
-				clientObject.page = simplifyPageForClient(object.page)
-				clientObject.oldPageNumber = object.oldPageNumber || 1
+			if (importObject.type === 'page') {
+				clientObject.page = simplifyPageForClient(importObject.page)
+				clientObject.oldPageNumber = importObject.oldPageNumber || 1
 			} else {
-				if (object.pages) {
+				if (importObject.pages) {
 					clientObject.pages = Object.fromEntries(
-						Object.entries(object.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
+						Object.entries(importObject.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
 					)
 				}
 
 				// Simplify triggers
-				if (object.triggers) {
+				if (importObject.triggers && Object.keys(importObject.triggers).length > 0) {
 					clientObject.triggers = {}
 
-					for (const [id, trigger] of Object.entries(object.triggers)) {
+					for (const [id, trigger] of Object.entries(importObject.triggers)) {
 						clientObject.triggers[id] = {
 							name: trigger.options.name,
 						}
@@ -260,7 +206,6 @@ export class ImportExportController {
 		this.#controlsController = controls
 		this.#graphicsController = graphics
 		this.#instancesController = instance
-		this.#internalModule = internalModule
 		this.#pagesController = page
 		this.#surfacesController = surfaces
 		this.#userConfigController = userconfig
@@ -275,6 +220,16 @@ export class ImportExportController {
 			graphics,
 			instance,
 			page.store,
+			surfaces,
+			userconfig,
+			variablesController
+		)
+		this.#importController = new ImportController(
+			controls,
+			graphics,
+			instance,
+			internalModule,
+			page,
 			surfaces,
 			userconfig,
 			variablesController
@@ -329,14 +284,16 @@ export class ImportExportController {
 				delete ctx.pendingImport
 			}),
 
-			resetConfiguration: publicProcedure.input(zodClientResetSelection).mutation(async ({ input, ctx }) => {
-				// Make sure no import is pending
-				delete ctx.pendingImport
+			resetConfiguration: publicProcedure
+				.input(z.object({ config: zodClientImportOrResetSelection }))
+				.mutation(async ({ input, ctx }) => {
+					// Make sure no import is pending
+					delete ctx.pendingImport
 
-				return this.#checkOrRunImportTask('reset', async () => {
-					return this.#reset(input)
-				})
-			}),
+					return this.#checkOrRunImportTask('reset', async () => {
+						return this.#reset(input.config)
+					})
+				}),
 
 			controlPreview: publicProcedure
 				.input(
@@ -369,7 +326,7 @@ export class ImportExportController {
 			importSinglePage: publicProcedure
 				.input(
 					z.object({
-						targetPage: z.number().int().min(1),
+						targetPage: z.number().int().min(1).or(z.literal(-1)), // -1 means add a new page at the end
 						sourcePage: z.number().int().min(1),
 						connectionIdRemapping: z.record(z.string(), z.string().optional()),
 					})
@@ -392,7 +349,7 @@ export class ImportExportController {
 							if (!oldPageInfo) throw new Error('Invalid target page')
 						}
 
-						let pageInfo: ExportPageContentv6 | undefined
+						let pageInfo: ExportPageContentv6
 
 						if (data.type === 'full' && data.pages) {
 							pageInfo = data.pages[frompage]
@@ -410,25 +367,12 @@ export class ImportExportController {
 
 						if (!pageInfo) throw new Error(`No matching page to import`)
 
-						// Setup the new instances
-						const instanceIdMap = this.#importInstances(data.instances, input.connectionIdRemapping)
-
-						// Cleanup the old page
-						const discardedControlIds = this.#pagesController.resetPage(topage)
-						for (const controlId of discardedControlIds) {
-							this.#controlsController.deleteControl(controlId)
-						}
-						this.#graphicsController.clearAllForPage(topage)
-
-						this.#performPageImport(pageInfo, topage, instanceIdMap)
-
-						// Report the used remap to the ui, for future imports
-						const instanceRemap2: ConnectionRemappings = {}
-						for (const [id, obj] of Object.entries(instanceIdMap)) {
-							instanceRemap2[id] = obj.id
-						}
-
-						return instanceRemap2
+						return this.#importController.importSinglePage(
+							data.instances,
+							input.connectionIdRemapping,
+							pageInfo,
+							topage
+						)
 					})
 				}),
 
@@ -447,243 +391,59 @@ export class ImportExportController {
 
 						if (data.type === 'page' || !data.triggers) throw new Error('No triggers in import')
 
-						// Remove existing triggers
-						if (input.replaceExisting) {
-							const controls = this.#controlsController.getAllControls()
-							for (const [controlId, control] of controls.entries()) {
-								if (control.type === 'trigger') {
-									this.#controlsController.deleteControl(controlId)
-								}
-							}
-						}
-
-						// Setup the new instances
-						const instanceIdMap = this.#importInstances(data.instances, input.connectionIdRemapping)
-
-						const idsToImport = new Set(input.selectedTriggerIds)
-						for (const id of idsToImport) {
-							const trigger = data.triggers[id]
-
-							let controlId = CreateTriggerControlId(id)
-							// If trigger already exists, generate a new id
-							if (this.#controlsController.getControl(controlId)) controlId = CreateTriggerControlId(nanoid())
-
-							const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-							this.#controlsController.importTrigger(controlId, fixedControlObj)
-						}
-
-						// Report the used remap to the ui, for future imports
-						const instanceRemap2: ConnectionRemappings = {}
-						for (const [id, obj] of Object.entries(instanceIdMap)) {
-							instanceRemap2[id] = obj.id
-						}
-
-						return instanceRemap2
+						return this.#importController.importTriggers(
+							data.instances,
+							input.connectionIdRemapping,
+							data.triggers,
+							input.selectedTriggerIds,
+							input.replaceExisting
+						)
 					})
 				}),
 
 			importFull: publicProcedure
-				.input(z.object({ config: zodClientImportSelection.nullable(), fullReset: z.boolean() }))
-				.mutation(async ({ input: { config, fullReset }, ctx }) => {
+				.input(z.object({ config: zodClientImportOrResetSelection }))
+				.mutation(async ({ input: { config }, ctx }) => {
 					return this.#checkOrRunImportTask('import', async () => {
+						const isPartialReset =
+							Object.values(config).some((val) => val === 'unchanged') ||
+							Object.values(config.surfaces).some((val) => val === 'unchanged')
+
 						console.log(
-							`Performing full import: ${fullReset ? 'Full Reset' : 'Partial Reset'} Config: ${JSON.stringify(config)}`
+							`Performing full import: ${isPartialReset ? 'Partial Reset' : 'Full Reset'} Config: ${JSON.stringify(config)}`
 						)
 						const data = ctx.pendingImport?.object
 						if (!data) throw new Error('No in-progress import object')
 
 						if (data.type !== 'full') throw new Error('Invalid import object')
 
-						const resetArg: ClientResetSelection | null =
-							fullReset || !config ? null : { ...config, connections: true, userconfig: false }
-						if (resetArg && !fullReset) {
-							// Dont ever reset connections during partial import
-							resetArg.connections = false
-
-							// If a partial import, don't reset disabled items
-							if (!data.pages) resetArg.buttons = false
-							if (!data.custom_variables) resetArg.customVariables = false
-							if (!data.expressionVariables) resetArg.expressionVariables = false
-							if (!data.surfaces) resetArg.surfaces = false
-							if (!data.triggers) resetArg.triggers = false
-						}
-
 						// Destroy old stuff
-						await this.#reset(resetArg, !config || config.buttons)
+						await this.#reset(config)
 
-						// Import connection collections if provided
-						this.#instancesController.collections.replaceCollections(data.connectionCollections || [])
-
-						// Always Import instances
-						const preserveRemap: ConnectionRemappings =
-							resetArg && !resetArg.connections ? this.#createDefaultConnectionRemap(data.instances) : {}
-						const instanceIdMap = this.#importInstances(data.instances, preserveRemap)
-
-						// import custom variables
-						if (!config || config.customVariables) {
-							this.#variablesController.custom.replaceCollections(data.customVariablesCollections || [])
-							this.#variablesController.custom.replaceDefinitions(data.custom_variables || {})
-						}
-
-						// Import expression variables
-						if (!config || config.expressionVariables) {
-							this.#controlsController.replaceExpressionVariableCollections(data.expressionVariablesCollections || [])
-
-							for (const [id, variableDefinition] of Object.entries(data.expressionVariables || {})) {
-								const controlId = CreateExpressionVariableControlId(id)
-								const fixedControlObj = this.#fixupExpressionVariableControl(variableDefinition, instanceIdMap)
-
-								this.#controlsController.importExpressionVariable(controlId, fixedControlObj)
-							}
-						}
-
-						if (data.pages && (!config || config.buttons)) {
-							// Import pages
-							for (const [pageNumber0, pageInfo] of Object.entries(data.pages)) {
-								if (!pageInfo) continue
-
-								const pageNumber = Number(pageNumber0)
-								if (isNaN(pageNumber)) {
-									this.#logger.warn(`Invalid page number: ${pageNumber0}`)
-									continue
-								}
-
-								// Ensure the page exists
-								const insertPageCount = pageNumber - this.#pagesController.store.getPageCount()
-								if (insertPageCount > 0) {
-									this.#pagesController.insertPages(
-										this.#pagesController.store.getPageCount() + 1,
-										new Array(insertPageCount).fill('Page')
-									)
-								}
-
-								this.#performPageImport(pageInfo, pageNumber, instanceIdMap)
-							}
-						}
-
-						if (!config || config.surfaces) {
-							const surfaces = data.surfaces || ({} as Record<number, SurfaceConfig>)
-							const surfaceGroups = data.surfaceGroups || ({} as Record<number, SurfaceGroupConfig>)
-							const getPageId = (val: number) =>
-								this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
-							const fixPageId = (groupConfig: SurfaceGroupConfig) => {
-								if (!groupConfig) return
-
-								if ('last_page' in groupConfig) {
-									groupConfig.last_page_id = getPageId(groupConfig.last_page!)
-									delete groupConfig.last_page
-								}
-								if ('startup_page' in groupConfig) {
-									groupConfig.startup_page_id = getPageId(groupConfig.startup_page!)
-									delete groupConfig.startup_page
-								}
-							}
-
-							// Convert external page refs, i.e. page numbers, to internal ids.
-							for (const surface of Object.values(surfaces)) {
-								fixPageId(surface.groupConfig)
-							}
-							for (const groupConfig of Object.values(surfaceGroups)) {
-								fixPageId(groupConfig)
-							}
-							this.#surfacesController.importSurfaces(surfaceGroups, surfaces)
-						}
-
-						if (!config || config.triggers) {
-							// Import trigger collections if provided
-							if (data.triggerCollections) {
-								this.#controlsController.replaceTriggerCollections(data.triggerCollections)
-							}
-
-							for (const [id, trigger] of Object.entries(data.triggers || {})) {
-								const controlId = CreateTriggerControlId(id)
-								const fixedControlObj = this.#fixupTriggerControl(trigger, instanceIdMap)
-								this.#controlsController.importTrigger(controlId, fixedControlObj)
-							}
-						}
+						// Perform the import
+						this.#importController.importFull(data, config)
 
 						// trigger startup triggers to run
 						setImmediate(() => {
 							this.#controlsController.triggers.emit('startup')
 						})
-
-						// Import image library data if present
-						if (!config || config.imageLibrary) {
-							this.#graphicsController.imageLibrary.importImageLibrary(
-								data.imageLibraryCollections || [],
-								data.imageLibrary || []
-							)
-						}
 					})
 				}),
 		})
 	}
 
-	#performPageImport = (
-		pageInfo: ExportPageContentv6,
-		topage: number,
-		instanceIdMap: InstanceAppliedRemappings
-	): void => {
-		{
-			// Ensure the configured grid size is large enough for the import
-			const requiredSize = pageInfo.gridSize || find_smallest_grid_for_page(pageInfo)
-			const currentSize = this.#userConfigController.getKey('gridSize')
-			const updatedSize: Partial<UserConfigGridSize> = {}
-			if (currentSize.minColumn > requiredSize.minColumn) updatedSize.minColumn = Number(requiredSize.minColumn)
-			if (currentSize.maxColumn < requiredSize.maxColumn) updatedSize.maxColumn = Number(requiredSize.maxColumn)
-			if (currentSize.minRow > requiredSize.minRow) updatedSize.minRow = Number(requiredSize.minRow)
-			if (currentSize.maxRow < requiredSize.maxRow) updatedSize.maxRow = Number(requiredSize.maxRow)
+	/**
+	 * Perform a reset according to the given configuration
+	 * Note: sections are reset if the corresponding value in the config is not 'unchanged'.
+	 * As this function does not do any importing, `reset-and-import` is treated the same as `reset`
+	 */
+	async #reset(config: ClientImportOrResetSelection): Promise<'ok'> {
+		const shouldReset = (value: ImportOrResetType): boolean => value !== 'unchanged'
+		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
 
-			if (Object.keys(updatedSize).length > 0) {
-				this.#userConfigController.setKey('gridSize', {
-					...currentSize,
-					...updatedSize,
-				})
-			}
-		}
-
-		// Import the new page
-		this.#pagesController.setPageName(topage, pageInfo.name)
-
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
-			}
-		}
-		const referencesUpdater = new VisitorReferencesUpdater(
-			this.#internalModule,
-			connectionLabelRemap,
-			connectionIdRemap
-		)
-
-		// Import the controls
-		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
-			for (const [column, control] of Object.entries(rowObj)) {
-				if (control) {
-					// Import the control
-					const fixedControlObj = this.#fixupControl(cloneDeep(control), referencesUpdater, instanceIdMap)
-					if (!fixedControlObj) continue
-
-					const location: ControlLocation = {
-						pageNumber: Number(topage),
-						column: Number(column),
-						row: Number(row),
-					}
-					this.#controlsController.importControl(location, fixedControlObj)
-				}
-			}
-		}
-	}
-
-	async #reset(config: ClientResetSelection | null, skipNavButtons = false): Promise<'ok'> {
 		const controls = this.#controlsController.getAllControls()
 
-		if (!config || config.buttons) {
+		if (shouldReset(config.buttons)) {
 			for (const [controlId, control] of controls.entries()) {
 				if (control.type !== 'trigger') {
 					this.#controlsController.deleteControl(controlId)
@@ -692,7 +452,8 @@ export class ImportExportController {
 
 			// Reset page 1
 			this.#pagesController.resetPage(1) // Note: controls were already deleted above
-			if (!skipNavButtons) {
+			if (!isImporting(config.buttons)) {
+				// If not importing buttons, recreate the nav buttons
 				this.#pagesController.createPageDefaultNavButtons(1)
 			}
 			this.#graphicsController.clearAllForPage(1)
@@ -707,15 +468,23 @@ export class ImportExportController {
 			this.#userConfigController.resetKey('gridSize')
 		}
 
-		if (!config || config.connections) {
-			await this.#instancesController.deleteAllInstances(true)
+		if (shouldReset(config.connections)) {
+			await this.#instancesController.deleteAllConnections(true)
 		}
 
-		if (!config || config.surfaces) {
+		if (shouldReset(config.surfaces.known)) {
 			await this.#surfacesController.reset()
 		}
 
-		if (!config || config.triggers) {
+		if (shouldReset(config.surfaces.instances)) {
+			await this.#instancesController.deleteAllSurfaceInstances(true)
+		}
+
+		if (shouldReset(config.surfaces.remote)) {
+			this.#surfacesController.outbound.reset()
+		}
+
+		if (shouldReset(config.triggers)) {
 			for (const [controlId, control] of controls.entries()) {
 				if (control.type === 'trigger') {
 					this.#controlsController.deleteControl(controlId)
@@ -724,11 +493,11 @@ export class ImportExportController {
 			this.#controlsController.replaceTriggerCollections([])
 		}
 
-		if (!config || config.customVariables) {
+		if (shouldReset(config.customVariables)) {
 			this.#variablesController.custom.reset()
 		}
 
-		if (!config || config.expressionVariables) {
+		if (shouldReset(config.expressionVariables)) {
 			this.#controlsController.replaceExpressionVariableCollections([])
 
 			// Delete existing expression variables
@@ -738,337 +507,15 @@ export class ImportExportController {
 			}
 		}
 
-		if (!config || config.userconfig) {
+		if (shouldReset(config.userconfig)) {
 			this.#userConfigController.reset()
 		}
 
-		if (!config || config.imageLibrary) {
+		if (shouldReset(config.imageLibrary)) {
 			// Reset image library
 			this.#graphicsController.imageLibrary.resetImageLibrary()
 		}
 
 		return 'ok'
 	}
-
-	#createDefaultConnectionRemap(instances: ExportInstancesv6 | undefined): ConnectionRemappings {
-		const remap: ConnectionRemappings = {}
-		if (!instances) return remap
-
-		for (const [oldId, obj] of Object.entries(instances)) {
-			if (!obj || !obj.label) continue
-
-			// See if there is an existing instance with the same label and type
-			const existingId = this.#instancesController.getIdForLabel(obj.label)
-			if (existingId && this.#instancesController.getInstanceConfig(existingId)?.instance_type === obj.instance_type) {
-				remap[oldId] = existingId
-			} else {
-				remap[oldId] = undefined // Create a new instance
-			}
-		}
-
-		return remap
-	}
-
-	#importInstances(
-		instances: ExportInstancesv6 | undefined,
-		instanceRemapping: ConnectionRemappings
-	): InstanceAppliedRemappings {
-		const instanceIdMap: InstanceAppliedRemappings = {}
-
-		if (instances) {
-			const instanceEntries = Object.entries(instances).filter((ent) => !!ent[1])
-
-			for (const [oldId, obj] of instanceEntries) {
-				if (!obj || !obj.label) continue
-
-				const remapId = instanceRemapping[oldId]
-				const remapLabel = remapId ? this.#instancesController.getLabelForInstance(remapId) : undefined
-				if (remapId === '_ignore') {
-					// Ignore
-					instanceIdMap[oldId] = { id: '_ignore', label: 'Ignore' }
-				} else if (remapId && remapLabel) {
-					// Reuse an existing instance
-					instanceIdMap[oldId] = {
-						id: remapId,
-						label: remapLabel,
-						lastUpgradeIndex: obj.lastUpgradeIndex,
-						oldLabel: obj.label,
-					}
-				} else {
-					// Create a new instance
-					const [newId, newConfig] = this.#instancesController.addInstanceWithLabel(
-						{ type: obj.instance_type },
-						obj.label,
-						{
-							versionId: obj.moduleVersionId ?? null,
-							updatePolicy: obj.updatePolicy,
-							disabled: true,
-							collectionId: obj.collectionId,
-							sortOrder: obj.sortOrder ?? 0,
-						}
-					)
-					if (newId && newConfig) {
-						this.#instancesController.setInstanceLabelAndConfig(newId, {
-							label: null,
-							config: 'config' in obj ? obj.config : null,
-							secrets: 'secrets' in obj ? obj.secrets : null,
-							updatePolicy: null,
-							upgradeIndex: obj.lastUpgradeIndex,
-						})
-
-						if (!('enabled' in obj) || obj.enabled !== false) {
-							this.#instancesController.enableDisableInstance(newId, true)
-						}
-
-						instanceIdMap[oldId] = {
-							id: newId,
-							label: newConfig.label,
-							lastUpgradeIndex: obj.lastUpgradeIndex,
-							oldLabel: obj.label,
-						}
-					}
-				}
-			}
-		}
-
-		// Force the internal module mapping
-		instanceIdMap['internal'] = { id: 'internal', label: 'internal' }
-		instanceIdMap['bitfocus-companion'] = { id: 'internal', label: 'internal' }
-
-		// Ensure any group references are valid
-		this.#instancesController.collections.removeUnknownCollectionReferences()
-
-		return instanceIdMap
-	}
-
-	#fixupTriggerControl(control: ExportTriggerContentv6, instanceIdMap: InstanceAppliedRemappings): TriggerModel {
-		// Future: this does not feel durable
-
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
-			}
-		}
-
-		const result: TriggerModel = {
-			type: 'trigger',
-			options: cloneDeep(control.options),
-			actions: [],
-			condition: [],
-			events: control.events,
-			localVariables: [],
-		}
-
-		if (control.condition) {
-			result.condition = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.condition))
-		}
-
-		if (control.actions) {
-			result.actions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.actions))
-		}
-
-		if (control.localVariables) {
-			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
-		}
-
-		new VisitorReferencesUpdater(this.#internalModule, connectionLabelRemap, connectionIdRemap)
-			.visitEntities([], result.condition.concat(result.actions))
-			.visitEvents(result.events || [])
-
-		return result
-	}
-
-	#fixupExpressionVariableControl(
-		control: ExpressionVariableModel,
-		instanceIdMap: InstanceAppliedRemappings
-	): ExpressionVariableModel {
-		// Future: this does not feel durable
-
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
-			}
-		}
-
-		const result: ExpressionVariableModel = {
-			type: 'expression-variable',
-			options: cloneDeep(control.options),
-			entity: null,
-			localVariables: [],
-		}
-
-		if (control.entity) {
-			result.entity = fixupEntitiesRecursive(instanceIdMap, [cloneDeep(control.entity)])[0]
-		}
-
-		if (control.localVariables) {
-			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
-		}
-
-		const visitor = new VisitorReferencesUpdater(
-			this.#internalModule,
-			connectionLabelRemap,
-			connectionIdRemap
-		).visitEntities([], result.localVariables)
-		if (result.entity) visitor.visitEntities([], [result.entity])
-
-		return result
-	}
-
-	#fixupControl(
-		control: ExportControlv6,
-		referencesUpdater: VisitorReferencesUpdater,
-		instanceIdMap: InstanceAppliedRemappings
-	): SomeButtonModel | null {
-		// Future: this does not feel durable
-
-		if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
-			return {
-				type: control.type,
-			}
-		}
-
-		if (control.type === 'button') {
-			return this.#fixupButtonControl(control, referencesUpdater, instanceIdMap)
-		} else if (control.type === 'button-layered') {
-			return this.#fixupLayeredButtonControl(control, referencesUpdater, instanceIdMap)
-		} else {
-			console.warn(`Unknown control type: ${control.type}`)
-			return null
-		}
-	}
-
-	#fixupButtonControl(
-		control: ExportControlv6,
-		referencesUpdater: VisitorReferencesUpdater,
-		instanceIdMap: InstanceAppliedRemappings
-	): NormalButtonModel {
-		const result: NormalButtonModel = {
-			type: 'button',
-			options: cloneDeep(control.options),
-			style: cloneDeep(control.style),
-			feedbacks: [],
-			steps: {},
-			localVariables: [],
-		}
-
-		this.#fixupButtonControlBase(result, control, referencesUpdater, instanceIdMap)
-
-		referencesUpdater.visitButtonDrawStyle(result.style)
-
-		return result
-	}
-
-	#fixupLayeredButtonControl(
-		control: ExportControlv6,
-		referencesUpdater: VisitorReferencesUpdater,
-		instanceIdMap: InstanceAppliedRemappings
-	): LayeredButtonModel {
-		const result: LayeredButtonModel = {
-			type: 'button-layered',
-			options: cloneDeep(control.options),
-			style: cloneDeep(control.style),
-			feedbacks: [],
-			steps: {},
-			localVariables: [],
-		}
-
-		this.#fixupButtonControlBase(result, control, referencesUpdater, instanceIdMap)
-
-		referencesUpdater.visitDrawElements(result.style.layers)
-
-		return result
-	}
-
-	#fixupButtonControlBase(
-		result: ButtonModelBase,
-		control: ExportControlv6,
-		referencesUpdater: VisitorReferencesUpdater,
-		instanceIdMap: InstanceAppliedRemappings
-	) {
-		if (control.feedbacks) {
-			result.feedbacks = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.feedbacks))
-		}
-
-		if (control.localVariables) {
-			result.localVariables = fixupEntitiesRecursive(instanceIdMap, cloneDeep(control.localVariables))
-		}
-
-		const allEntities: SomeEntityModel[] = [...result.feedbacks, ...result.localVariables]
-		if (control.steps) {
-			for (const [stepId, step] of Object.entries<any>(control.steps)) {
-				const newStepSets: ActionSetsModel = {
-					down: [],
-					up: [],
-					rotate_left: undefined,
-					rotate_right: undefined,
-				}
-				result.steps[stepId] = {
-					action_sets: newStepSets,
-					options: cloneDeep(step.options),
-				}
-
-				for (const [setId, action_set] of Object.entries<any>(step.action_sets)) {
-					const setIdSafe = validateActionSetId(setId as any)
-					if (setIdSafe === undefined) {
-						this.#logger.warn(`Invalid set id: ${setId}`)
-						continue
-					}
-
-					const newActions = fixupEntitiesRecursive(instanceIdMap, cloneDeep(action_set))
-
-					newStepSets[setIdSafe] = newActions
-					allEntities.push(...newActions)
-				}
-			}
-		}
-
-		referencesUpdater.visitEntities([], allEntities)
-	}
-}
-
-type InstanceAppliedRemappings = Record<
-	string,
-	{ id: string; label: string; lastUpgradeIndex?: number; oldLabel?: string }
->
-
-function fixupEntitiesRecursive(
-	instanceIdMap: InstanceAppliedRemappings,
-	entities: SomeEntityModel[]
-): SomeEntityModel[] {
-	const newEntities: SomeEntityModel[] = []
-	for (const entity of entities) {
-		if (!entity) continue
-
-		const instanceInfo = instanceIdMap[entity.connectionId]
-		if (!instanceInfo) continue
-
-		let newChildren: Record<string, SomeEntityModel[]> | undefined
-		if (entity.connectionId === 'internal' && entity.children) {
-			newChildren = {}
-			for (const [group, childEntities] of Object.entries(entity.children)) {
-				if (!childEntities) continue
-
-				newChildren[group] = fixupEntitiesRecursive(instanceIdMap, childEntities)
-			}
-		}
-
-		newEntities.push({
-			...entity,
-			connectionId: instanceInfo.id,
-			upgradeIndex: instanceInfo.lastUpgradeIndex,
-			children: newChildren,
-		})
-	}
-	return newEntities
 }

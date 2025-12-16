@@ -1,5 +1,4 @@
 import { ControlBase } from '../ControlBase.js'
-import { cloneDeep } from 'lodash-es'
 import debounceFn from 'debounce-fn'
 import type {
 	ControlWithoutActions,
@@ -16,14 +15,14 @@ import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesC
 import type { ControlDependencies } from '../ControlDependencies.js'
 import { EntityListPoolExpressionVariable } from '../Entities/EntityListPoolExpressionVariable.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import {
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type {
 	ClientExpressionVariableData,
 	ExpressionVariableModel,
 	ExpressionVariableOptions,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import jsonPatch from 'fast-json-patch'
-import { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
+import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 
 /**
@@ -108,11 +107,11 @@ export class ControlExpressionVariable
 			invalidateControl: this.triggerRedraw.bind(this),
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
-			moduleHost: deps.instance.moduleHost,
+			processManager: deps.instance.processManager,
 			variableValues: deps.variables.values,
 		})
 
-		this.options = cloneDeep(ControlExpressionVariable.DefaultOptions)
+		this.options = structuredClone(ControlExpressionVariable.DefaultOptions)
 
 		if (!storage) {
 			// New control
@@ -128,7 +127,7 @@ export class ControlExpressionVariable
 			this.options = storage.options || this.options
 			this.entities.loadStorage(storage, true, isImport)
 
-			if (isImport) this.#postProcessImport()
+			if (isImport) setImmediate(() => this.#postProcessImport())
 			else this.commitChange()
 		}
 	}
@@ -184,7 +183,7 @@ export class ControlExpressionVariable
 			entity: this.entities.getRootEntity()?.asEntityModel(true) || null,
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
-		return clone ? cloneDeep(obj) : obj
+		return clone ? structuredClone(obj) : obj
 	}
 
 	toClientJSON(): ClientExpressionVariableData {
@@ -258,7 +257,7 @@ export class ControlExpressionVariable
 	 * Emit a change to the client json of this control.
 	 */
 	#sendClientJsonChange(): void {
-		const newJson = cloneDeep(this.toClientJSON())
+		const newJson = structuredClone(this.toClientJSON())
 
 		if (this.deps.changeEvents.listenerCount('expressionVariableChange') > 0) {
 			if (this.#lastSentDefinitionJson) {

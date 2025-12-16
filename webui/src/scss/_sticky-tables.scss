@@ -1,3 +1,5 @@
+@use '@coreui/coreui/scss/coreui'; // not strictly necessary, but it allows us to clarify the origin of mixins
+
 // Scrollable container with sticky header styles
 .scrollable-container {
 	// Scrollable area styles
@@ -48,5 +50,11 @@
 	// Scrollable content
 	.scrollable-content {
 		@extend .scrollable-container;
+	}
+}
+
+@include coreui.media-breakpoint-down('xl') {
+	.flex-column-layout.collapse-under-xl {
+		height: unset;
 	}
 }

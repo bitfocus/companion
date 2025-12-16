@@ -1,15 +1,15 @@
 import {
-	EntitySupportedChildGroupDefinition,
-	SomeEntityModel,
-	EntityOwner,
 	EntityModelType,
+	type EntitySupportedChildGroupDefinition,
+	type SomeEntityModel,
+	type EntityOwner,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { CForm } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
 import { EditableEntityList } from './EntityList.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'

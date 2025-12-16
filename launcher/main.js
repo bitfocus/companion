@@ -160,7 +160,7 @@ if (!lock) {
 	let sentryDsn
 	try {
 		sentryDsn = fs
-			.readFileSync(new URL('/SENTRY', import.meta.url))
+			.readFileSync(new URL('../SENTRY', import.meta.url))
 			.toString()
 			.trim()
 	} catch (_e) {
@@ -296,10 +296,24 @@ if (!lock) {
 				if (newPath0 && (await fs.pathExists(newPath0))) {
 					// Watch for changes in the modules
 					const devModulesPath = path.resolve(newPath0)
-					watcher = chokidar.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
-						cwd: devModulesPath,
+					watcher = chokidar.watch('.', {
 						ignoreInitial: true,
-						ignored: ['**/node_modules/**'],
+						cwd: devModulesPath,
+						ignored: (path, stats) => {
+							if (
+								stats?.isFile() &&
+								!path.endsWith('.mjs') &&
+								!path.endsWith('.js') &&
+								!path.endsWith('.cjs') &&
+								!path.endsWith('.json')
+							) {
+								return true
+							}
+							if (path.includes('node_modules')) {
+								return true
+							}
+							return false
+						},
 					})
 
 					watcher.on('error', (error) => {
@@ -518,7 +532,8 @@ if (!lock) {
 		ipcMain.on('network-interfaces:get', () => {
 			systeminformation.networkInterfaces().then((list) => {
 				const interfaces = [
-					{ id: '0.0.0.0', label: 'All Interfaces: 0.0.0.0' },
+					{ id: '0.0.0.0', label: 'All Interfaces: IPv4 Only' },
+					{ id: '::', label: 'All Interfaces: IPv4 & IPv6' },
 					{ id: '127.0.0.1', label: 'localhost: 127.0.0.1' },
 				]
 
@@ -945,6 +960,7 @@ if (!lock) {
 				{
 					name: `Companion process`,
 					env: {
+						...process.env,
 						COMPANION_IPC_PARENT: 1,
 					},
 					maxRestarts: -1,

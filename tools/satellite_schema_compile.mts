@@ -1,13 +1,12 @@
-import { $ } from 'zx'
+import { $, path } from 'zx'
 import fs from 'fs'
 import Ajv2020 from 'ajv/dist/2020'
 import standaloneCode from 'ajv/dist/standalone/index.js'
 import { compileFromFile } from 'json-schema-to-typescript'
-import { fileURLToPath } from 'url'
 
 // Once we drop node18, we can use an import statement instead of a fs readFileSync
 // import schema from '../assets/manifest.schema.json' with { type: 'json' }
-const schemaPath = fileURLToPath(new URL('../assets/satellite-surface.schema.json', import.meta.url))
+const schemaPath = path.join(import.meta.dirname, '../assets/satellite-surface.schema.json')
 const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'))
 
 // The generated code will have a default export:
@@ -20,9 +19,7 @@ const validate = ajv.compile(schema)
 let moduleCode = standaloneCode(ajv, validate)
 
 // Now you can write the module code to file
-const validatorPath = fileURLToPath(
-	new URL('../companion/generated/SatelliteSurfaceSchemaValidator.js', import.meta.url)
-)
+const validatorPath = path.join(import.meta.dirname, '../companion/generated/SatelliteSurfaceSchemaValidator.js')
 fs.writeFileSync(validatorPath, '/* eslint-disable */\n' + moduleCode)
 
 // Format with prettier so that it doesnt bloat git

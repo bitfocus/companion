@@ -1,6 +1,11 @@
-import { pad } from '../Util.js'
+import { msToStamp, pad } from '../Util.js'
 import { JSONPath } from 'jsonpath-plus'
 import { countGraphemes } from 'unicode-segmenter/grapheme'
+
+function toString(v: any): string {
+	if (v === undefined) return ''
+	return v + ''
+}
 
 // Note: when adding new functions, make sure to update the docs!
 export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
@@ -50,35 +55,38 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	log10: (v) => Math.log10(v),
 
 	// String operations
-	trim: (v) => (v + '').trim(),
-	strlen: (v) => (v + '').length,
+	trim: (v) => toString(v).trim(),
+	strlen: (v) => toString(v).length,
 	substr: (str, start, end) => {
-		return (str + '').slice(start, end)
+		return toString(str).slice(start, end)
 	},
 	split: (str, separator) => {
-		return (str + '').split(separator)
+		if (separator === undefined) {
+			return [toString(str)]
+		}
+		return toString(str).split(toString(separator))
 	},
 	join: (arr = [], separator = ',') => {
-		return (Array.isArray(arr) ? arr : [arr]).join(separator)
+		return (Array.isArray(arr) ? arr.map(toString) : [toString(arr)]).join(toString(separator))
 	},
-	concat: (...strs) => ''.concat(...strs),
+	concat: (...strs) => ''.concat(...strs.map(toString)),
 	includes: (str, arg) => {
-		return (str + '').includes(arg)
+		return toString(str).includes(toString(arg))
 	},
 	indexOf: (str, arg, offset) => {
-		return (str + '').indexOf(arg, offset)
+		return toString(str).indexOf(toString(arg), offset)
 	},
 	lastIndexOf: (str, arg, offset) => {
-		return (str + '').lastIndexOf(arg, offset)
+		return toString(str).lastIndexOf(toString(arg), offset)
 	},
 	toUpperCase: (str) => {
-		return (str + '').toUpperCase()
+		return toString(str).toUpperCase()
 	},
 	toLowerCase: (str) => {
-		return (str + '').toLowerCase()
+		return toString(str).toLowerCase()
 	},
 	replaceAll: (str, find, replace) => {
-		return (str + '').replaceAll(find, replace)
+		return toString(str).replaceAll(toString(find), toString(replace))
 	},
 	decode: (str, enc) => {
 		if (enc === undefined) {
@@ -86,7 +94,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		} else {
 			enc = '' + enc
 		}
-		return Buffer.from('' + str, enc).toString('latin1')
+		return Buffer.from(toString(str), enc).toString('latin1')
 	},
 	encode: (str, enc) => {
 		if (enc === undefined) {
@@ -94,7 +102,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		} else {
 			enc = '' + enc
 		}
-		return Buffer.from('' + str).toString(enc)
+		return Buffer.from(toString(str)).toString(enc)
 	},
 
 	// Bool operations
@@ -113,7 +121,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 
 		const value = JSONPath({
 			wrap: false,
-			path: path,
+			path: toString(path),
 			json: obj,
 		})
 
@@ -129,7 +137,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	},
 	jsonparse: (str) => {
 		try {
-			return JSON.parse(str + '')
+			return JSON.parse(toString(str))
 		} catch (_e) {
 			return null
 		}
@@ -165,45 +173,13 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		}
 	},
 	secondsToTimestamp: (v, type) => {
-		const negative = v < 0
-		v = Math.abs(v)
-		type = type ? type : 'hh:mm:ss'
-
-		const seconds = pad(Math.floor(v) % 60, '0', 2)
-		const minutes = pad(Math.floor(v / 60) % 60, '0', 2)
-		const hours = pad(Math.floor(v / 3600), '0', 2)
-
-		const timestamp = []
-		if (type.includes('HH') || type.includes('hh')) timestamp.push(hours)
-		if (type.includes('mm')) timestamp.push(minutes)
-		if (type.includes('ss')) timestamp.push(seconds)
-
-		return (negative ? '-' : '') + timestamp.join(':')
+		type = type ? type : 'nHH:mm:ss'
+		v = v * 1000
+		return msToStamp(v, type)
 	},
 	msToTimestamp: (v, type) => {
-		const negative = v < 0
-		v = Math.abs(v)
-		type = type ? type : 'mm:ss.ms'
-
-		const ms = v % 1000
-		const seconds = pad(Math.floor(v / 1000) % 60, '0', 2)
-		const minutes = pad(Math.floor(v / 60000) % 60, '0', 2)
-		const hours = pad(Math.floor(v / 3600000), '0', 2)
-
-		const timestamp = []
-		if (type.includes('HH') || type.includes('hh')) timestamp.push(hours)
-		if (type.includes('mm')) timestamp.push(minutes)
-		if (type.includes('ss')) timestamp.push(seconds)
-
-		let timestampStr = timestamp.join(':')
-		if (type.endsWith('.ms') || type.endsWith('.S')) {
-			timestampStr += `.${Math.floor(ms / 100)}`
-		} else if (type.endsWith('.SS')) {
-			timestampStr += `.${pad(Math.floor(ms / 10), '0', 2)}`
-		} else if (type.endsWith('.SSS')) {
-			timestampStr += `.${pad(ms, '0', 3)}`
-		}
-		return (negative ? '-' : '') + timestampStr
+		type = type ? type : 'nmm:ss.S'
+		return msToStamp(v, type)
 	},
 	timeOffset: (time, offset, hr12 = false) => {
 		const date = new Date()

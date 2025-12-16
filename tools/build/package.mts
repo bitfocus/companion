@@ -6,11 +6,9 @@ import { determinePlatformInfo } from './util.mts'
 import { generateVersionString } from '../lib.mts'
 import { fetchNodejs } from '../fetch_nodejs.mts'
 import electronBuilder from 'electron-builder'
-import { createRequire } from 'module'
+import { fetchBuiltinSurfaceModules } from '../fetch_builtin_modules.mts'
 
-const require = createRequire(import.meta.url)
-
-// $.verbose = true
+$.verbose = true
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -39,7 +37,17 @@ for (const [name, extractedPath] of nodeVersions) {
 
 if (platformInfo.runtimePlatform === 'linux') {
 	// Create a symlink for the 'main' runtime, to make script maintenance easier
-	await fs.createSymlink(latestRuntimeDir, path.join(runtimesDir, 'main'))
+	await fs.createSymlink(latestRuntimeDir, path.join(runtimesDir, 'main'), 'dir')
+}
+
+// Download builtin surface modules
+{
+	const builtinSurfaceCacheDir = await fetchBuiltinSurfaceModules()
+	const builtinSurfacesDir = 'dist/builtin-surfaces/'
+
+	await fs.remove(builtinSurfacesDir)
+	await fs.mkdirp(builtinSurfacesDir)
+	await fs.copy(builtinSurfaceCacheDir, builtinSurfacesDir)
 }
 
 // Install dependencies
@@ -67,7 +75,10 @@ if (platformInfo.runtimePlatform === 'win') {
 		}
 	}
 
-	const prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true })
+	let prebuildDirs = await glob('dist/**/prebuilds', { onlyDirectories: true, expandDirectories: false })
+	// Note: "dist/node_modules/@napi-rs" will usually have only the relevant prebuild folder (canvas-osname)
+	// so this only does anything when `os:` in 'dist/.yarnrc.yml' is a list (see dist.mts)
+	prebuildDirs.push('dist/node_modules/@napi-rs')
 	console.log(`Cleaning ${prebuildDirs.length} prebuild directories`)
 	for (const dirname of prebuildDirs) {
 		console.log(`pruning prebuilds from: ${dirname}`)
@@ -88,6 +99,11 @@ if (!process.env.SKIP_LAUNCH_CHECK) {
 			: path.join(latestRuntimeDir, 'bin/node')
 
 	// Note: the ./${nodeExePath} syntax is a workaround for windows
+	if (platformInfo.runtimePlatform === 'win' && process.platform === 'linux') {
+		// Assume we're in WSL: exe files are not executable by default. Alt test: add is-wsl package... (but this code is harmless)
+		fs.chmodSync(nodeExePath, 0o755)
+	}
+	// (Note that Windows "loses" the current directory since UNC paths are not supported, but that's OK here.)
 	const launchCheck = await $`./${nodeExePath} dist/main.js check-launches`.exitCode
 	if (launchCheck !== 89) throw new Error("Launch check failed. Build looks like it won't launch!")
 }
@@ -104,12 +120,14 @@ if (process.env.ELECTRON !== '0') {
 	const launcherPkgJsonPath = new URL('../../launcher/package.json', import.meta.url)
 	const launcherPkgJsonStr = await fs.readFile(launcherPkgJsonPath)
 
+	// Update the version if not a stable build
 	const versionInfo = await generateVersionString()
+	if (!versionInfo.includes('-stable-')) {
+		const launcherPkgJson = JSON.parse(launcherPkgJsonStr.toString())
+		launcherPkgJson.version = versionInfo
 
-	const launcherPkgJson = JSON.parse(launcherPkgJsonStr.toString())
-	launcherPkgJson.version = versionInfo
-
-	await fs.writeFile(launcherPkgJsonPath, JSON.stringify(launcherPkgJson))
+		await fs.writeFile(launcherPkgJsonPath, JSON.stringify(launcherPkgJson))
+	}
 
 	try {
 		const options: electronBuilder.Configuration = {

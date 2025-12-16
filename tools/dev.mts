@@ -5,14 +5,12 @@ import { $, usePowerShell, argv } from 'zx'
 import path from 'path'
 import fs from 'fs'
 import debounceFn from 'debounce-fn'
-import { fileURLToPath } from 'url'
 import concurrently from 'concurrently'
-import dotenv from 'dotenv'
 import { fetchNodejs } from './fetch_nodejs.mts'
 import { determinePlatformInfo } from './build/util.mts'
 import { ChildProcess } from 'child_process'
 import semver from 'semver'
-import { parseEnv } from 'util'
+import { fetchBuiltinSurfaceModules } from './fetch_builtin_modules.mts'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -56,6 +54,10 @@ console.log('Ensuring nodejs binaries are available')
 
 const platformInfo = determinePlatformInfo(undefined)
 await fetchNodejs(platformInfo)
+
+console.log('Ensuring builtin modules are installed')
+
+await fetchBuiltinSurfaceModules()
 
 console.log('Ensuring bundled modules are synced')
 
@@ -101,13 +103,33 @@ concurrently([
 	process.exit(1)
 })
 
-const cachedDebounces = {}
+const cachedDebounces = {} as Record<string, any>
 
 chokidar
-	.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
+	.watch('..', {
 		ignoreInitial: true,
-		cwd: '..',
-		ignored: ['**/node_modules/**', 'webui', 'launcher', 'module-local-dev', 'tools', 'test'],
+		ignored: (path, stats) => {
+			if (
+				stats?.isFile() &&
+				!path.endsWith('.mjs') &&
+				!path.endsWith('.js') &&
+				!path.endsWith('.cjs') &&
+				!path.endsWith('.json')
+			) {
+				return true
+			}
+			if (
+				path.includes('node_modules') ||
+				path.includes('webui') ||
+				path.includes('launcher') ||
+				path.includes('module-local-dev') ||
+				path.includes('tools') ||
+				path.includes('test')
+			) {
+				return true
+			}
+			return false
+		},
 	})
 	.on('all', (event, filename) => {
 		if (filename.endsWith('shared-lib/lib/Paths.mts')) {
@@ -124,10 +146,24 @@ chokidar
 
 if (devModulesPath) {
 	chokidar
-		.watch(['**/*.mjs', '**/*.js', '**/*.cjs', '**/*.json'], {
-			ignoreInitial: true,
+		.watch('.', {
 			cwd: devModulesPath,
-			ignored: ['**/node_modules/**'],
+			ignoreInitial: true,
+			ignored: (path, stats) => {
+				if (
+					stats?.isFile() &&
+					!path.endsWith('.mjs') &&
+					!path.endsWith('.js') &&
+					!path.endsWith('.cjs') &&
+					!path.endsWith('.json')
+				) {
+					return true
+				}
+				if (path.includes('node_modules')) {
+					return true
+				}
+				return false
+			},
 		})
 		.on('all', (event, filename) => {
 			const moduleDirName = filename.split(path.sep)[0]
@@ -164,7 +200,7 @@ if (devModulesPath) {
 async function start() {
 	node = $.spawn('node', [...nodeArgs, 'dist/main.js', ...process.argv.slice(3)], {
 		stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-		cwd: fileURLToPath(new URL('../companion', import.meta.url)),
+		cwd: path.join(import.meta.dirname, '../companion'),
 		env: {
 			...process.env,
 
@@ -209,7 +245,7 @@ const restart = debounceFn(
 	}
 )
 
-function signalHandler(signal) {
+function signalHandler(signal: NodeJS.Signals) {
 	process.exit()
 }
 

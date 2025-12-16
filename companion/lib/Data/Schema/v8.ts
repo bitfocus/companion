@@ -1,5 +1,5 @@
-import { Database as SQLiteDB } from 'better-sqlite3'
-import { Logger } from '../../Log/Controller.js'
+import type { Database as SQLiteDB } from 'better-sqlite3'
+import type { Logger } from '../../Log/Controller.js'
 
 export function createTables(store: SQLiteDB | undefined, defaultTable: string, logger: Logger): void {
 	if (store) {

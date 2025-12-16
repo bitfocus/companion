@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { SplitVariableId } from '../Resources/Util.js'
+import { SplitVariableId } from '@companion-app/shared/Variables.js'
 import LogController from '../Log/Controller.js'
 import type {
 	FeedbackForVisitor,
@@ -20,7 +20,7 @@ import type {
 	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { InternalModuleUtils } from './Util.js'

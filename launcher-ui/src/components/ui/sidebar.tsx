@@ -1,13 +1,12 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
-import { cva, VariantProps } from 'class-variance-authority'
+import { cva, type VariantProps } from 'class-variance-authority'
 import { PanelLeftIcon } from 'lucide-react'
 
 import { cn } from '~/lib/utils'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Separator } from '~/components/ui/separator'
-import { Skeleton } from '~/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state'
@@ -519,6 +518,7 @@ function SidebarMenuBadge({ className, ...props }: React.ComponentProps<'div'>):
 	)
 }
 
+/*
 function SidebarMenuSkeleton({
 	className,
 	showIcon = false,
@@ -551,6 +551,7 @@ function SidebarMenuSkeleton({
 		</div>
 	)
 }
+*/
 
 function SidebarMenuSub({ className, ...props }: React.ComponentProps<'ul'>): JSX.Element {
 	return (
@@ -626,7 +627,7 @@ export {
 	SidebarMenuBadge,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	SidebarMenuSkeleton,
+	// SidebarMenuSkeleton,
 	SidebarMenuSub,
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,

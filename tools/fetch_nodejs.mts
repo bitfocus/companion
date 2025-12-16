@@ -5,14 +5,13 @@ import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
 import { toPosix } from './build/util.mts'
-import { fileURLToPath } from 'node:url'
 const streamPipeline = promisify(pipeline)
 
-const nodeVersionsJsonPath = new URL('../nodejs-versions.json', import.meta.url)
+const nodeVersionsJsonPath = new URL('../assets/nodejs-versions.json', import.meta.url)
 const nodeVersionsStr = await fs.readFile(nodeVersionsJsonPath)
 const nodeVersionsJson = JSON.parse(nodeVersionsStr.toString())
 
-const cacheRoot = fileURLToPath(new URL('../.cache', import.meta.url))
+const cacheRoot = path.join(import.meta.dirname, '../.cache')
 const cacheDir = path.join(cacheRoot, 'node')
 const cacheRuntimeDir = path.join(cacheRoot, 'node-runtime')
 

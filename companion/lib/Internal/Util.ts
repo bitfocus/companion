@@ -1,11 +1,11 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
-import { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type { RunActionExtras } from '../Instance/Wrapper.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
 import type { FeedbackEntityModelExt } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
@@ -154,6 +154,49 @@ export const CHOICES_DYNAMIC_LOCATION: SomeCompanionInputField[] = [
 	{
 		type: 'textinput',
 		label: 'Location (expression)',
+		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
+		id: 'location_expression',
+		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) == "expression"',
+		},
+		useVariables: {
+			local: true,
+		},
+		isExpression: true,
+	},
+]
+
+export const CHOICES_DYNAMIC_LOCATION_OR_TRIGGER: SomeCompanionInputField[] = [
+	{
+		type: 'dropdown',
+		label: 'Target',
+		id: 'location_target',
+		default: 'this',
+		choices: [
+			{ id: 'this', label: 'This button/trigger' },
+			{ id: 'text', label: 'Button from text' },
+			{ id: 'expression', label: 'Button from expression' },
+		],
+	},
+	{
+		type: 'textinput',
+		label: 'Button location (text with variables)',
+		tooltip: 'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column)',
+		id: 'location_text',
+		default: '$(this:page)/$(this:row)/$(this:column)',
+		isVisibleUi: {
+			type: 'expression',
+			fn: '$(options:location_target) == "text"',
+		},
+		useVariables: {
+			local: true,
+		},
+	},
+	{
+		type: 'textinput',
+		label: 'Button location (expression)',
 		tooltip: 'eg `1/0/0` or `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`',
 		id: 'location_expression',
 		default: `concat($(this:page), '/', $(this:row), '/', $(this:column))`,

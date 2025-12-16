@@ -18,7 +18,6 @@ import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
-import path from 'path'
 import debounceFn from 'debounce-fn'
 import type { CompanionButtonStyleProps, CompanionVariableValues } from '@companion-module/base'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
@@ -94,7 +93,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly imageLibrary: ImageLibrary
 
 	#pool = workerPool.pool(
-		isPackaged() ? path.join(__dirname, './RenderThread.js') : fileURLToPath(new URL('./Thread.js', import.meta.url)),
+		// note: import.meta.url can be replaced with import.meta.directory as long as we use node v22.16 and later
+		fileURLToPath(new URL(isPackaged() ? './RenderThread.js' : './Thread.js', import.meta.url)),
 		{
 			minWorkers: 2,
 			maxWorkers: 6,
@@ -586,23 +586,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}
 
 	/**
-	 * Generate pincode images
-	 */
-	getPincodeNumberImages(width: number, height: number): PincodeBitmaps {
-		const pincodeBuffersCache: PincodeBitmaps = {}
-
-		for (let i = 0; i <= 9; i++) {
-			pincodeBuffersCache[i] = GraphicsRenderer.drawPincodeNumber(width, height, i)
-		}
-
-		return pincodeBuffersCache
-	}
-
-	getPincodeCodeImage(width: number, height: number, pincode: string): ImageResult {
-		return GraphicsRenderer.drawPincodeEntry(width, height, pincode)
-	}
-
-	/**
 	 * Get the cached render of a button
 	 */
 	getCachedRender(location: ControlLocation): ImageResult | undefined {
@@ -664,8 +647,4 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	): Promise<{ width: number; height: number; previewDataUrl: string }> {
 		return this.#poolExec('createImagePreview', [originalDataUrl], remainingAttempts)
 	}
-}
-
-export type PincodeBitmaps = {
-	[index: number]: ImageResult
 }

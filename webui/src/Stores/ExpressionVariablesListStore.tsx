@@ -1,7 +1,6 @@
 import { action, observable } from 'mobx'
 import { assertNever } from '~/Resources/util'
 import { applyPatch } from 'fast-json-patch'
-import { cloneDeep } from 'lodash-es'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
@@ -32,7 +31,7 @@ export class ExpressionVariablesListStore {
 			case 'update': {
 				const oldObj = this.expressionVariables.get(change.controlId)
 				if (!oldObj) throw new Error(`Got update for unknown ExpressionVariable: ${change.controlId}`)
-				const newObj = applyPatch(cloneDeep(oldObj), change.patch)
+				const newObj = applyPatch(oldObj, change.patch, false, true)
 				this.expressionVariables.set(change.controlId, newObj.newDocument)
 				break
 			}

@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { combineRgb, CompanionVariableValues } from '@companion-module/base'
+import { combineRgb, type CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import debounceFn from 'debounce-fn'
 import type {
@@ -25,7 +25,7 @@ import type {
 import type { ControlsController } from '../Controls/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
@@ -142,11 +142,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	readonly #surfaceController: SurfaceController
 	readonly #pageStore: IPageStore
 
-	/**
-	 * Page history for surfaces
-	 */
-	readonly #pageHistory = new Map<string, { history: string[]; index: number }>()
-
 	constructor(
 		internalUtils: InternalModuleUtils,
 		surfaceController: SurfaceController,
@@ -159,14 +154,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		this.#surfaceController = surfaceController
 		this.#controlsController = controlsController
 		this.#pageStore = pageStore
-
-		setImmediate(() => {
-			this.emit('setVariables', {
-				't-bar': 0,
-				jog: 0,
-				shuttle: 0,
-			})
-		})
 
 		const debounceUpdateVariableDefinitions = debounceFn(() => this.emit('regenerateVariables'), {
 			maxWait: 100,
@@ -261,20 +248,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	}
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {
-		const variables: VariableDefinitionTmp[] = [
-			{
-				label: 'XKeys: T-bar position',
-				name: 't-bar',
-			},
-			{
-				label: 'XKeys/Contour Shuttle: Shuttle position',
-				name: 'shuttle',
-			},
-			{
-				label: 'XKeys/Contour Shuttle: Jog position',
-				name: 'jog',
-			},
-		]
+		const variables: VariableDefinitionTmp[] = []
 
 		const surfaceInfos = this.#surfaceController.getDevicesList()
 		for (const surfaceGroup of surfaceInfos) {
@@ -495,14 +469,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			},
 
 			surface_set_position: {
-				label: 'Surface: Set position',
-				description: 'Set the absolute position offset of a surface',
+				label: 'Surface: Set offset',
+				description: 'Set the absolute offset of a surface relative to the button grid',
 				options: [
 					...CHOICES_SURFACE_ID_WITH_VARIABLES,
 
 					{
 						type: 'number',
-						label: 'X Offset',
+						label: 'Horizontal Offset',
 						id: 'x_offset',
 						default: 0,
 						min: 0,
@@ -511,7 +485,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					},
 					{
 						type: 'number',
-						label: 'Y Offset',
+						label: 'Vertical Offset',
 						id: 'y_offset',
 						default: 0,
 						min: 0,
@@ -522,27 +496,27 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			},
 
 			surface_adjust_position: {
-				label: 'Surface: Adjust position',
-				description: 'Adjust the position offset of a surface by a relative amount',
+				label: 'Surface: Adjust offset',
+				description: 'Adjust the offset of a surface relative to the button grid by a relative amount',
 				options: [
 					...CHOICES_SURFACE_ID_WITH_VARIABLES,
 
 					{
 						type: 'number',
-						label: 'X Offset Adjustment',
+						label: 'Horizontal Offset Adjustment',
 						id: 'x_adjustment',
 						default: 0,
-						min: -500,
-						max: 500,
+						min: -100,
+						max: 100,
 						step: 1,
 					},
 					{
 						type: 'number',
-						label: 'Y Offset Adjustment',
+						label: 'Vertical Offset Adjustment',
 						id: 'y_adjustment',
 						default: 0,
-						min: -500,
-						max: 500,
+						min: -100,
+						max: 100,
 						step: 1,
 					},
 				],
@@ -692,65 +666,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	/**
 	 * Change the page of a surface
 	 */
-	#changeSurfacePage(surfaceId: string, toPage: string | 'back' | 'forward' | '+1' | '-1'): void {
+	#changeSurfacePage(
+		surfaceId: string,
+		toPage: string | 'back' | 'forward' | '+1' | '-1',
+		defer = !(surfaceId in ['back', 'forward'])
+	): void {
 		const groupId = this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
 		if (!groupId) return
-
-		const currentPage = this.#surfaceController.devicePageGet(groupId, true)
-		if (currentPage === undefined) {
-			// Bad groupId
-		} else {
-			// no history yet
-			// start with the current (from) page
-			let pageHistory = this.#pageHistory.get(groupId)
-			if (!pageHistory) {
-				pageHistory = {
-					history: [currentPage],
-					index: 0,
-				}
-				this.#pageHistory.set(groupId, pageHistory)
-			}
-
-			if (toPage === 'back' || toPage === 'forward') {
-				// determine the 'to' page
-				const pageDirection = toPage === 'back' ? -1 : 1
-				const pageIndex = pageHistory.index + pageDirection
-				const pageTarget = pageHistory.history[pageIndex]
-
-				// change only if pageIndex points to a real page
-				if (pageTarget !== undefined) {
-					pageHistory.index = pageIndex
-
-					this.#surfaceController.devicePageSet(groupId, pageTarget, true)
-				}
-			} else {
-				let newPage: string | null = toPage
-				if (newPage === '+1') {
-					newPage = this.#pageStore.getOffsetPageId(currentPage, 1)
-				} else if (newPage === '-1') {
-					newPage = this.#pageStore.getOffsetPageId(currentPage, -1)
-				} else {
-					newPage = String(newPage)
-				}
-				if (!newPage || !this.#pageStore.isPageIdValid(newPage)) newPage = this.#pageStore.getFirstPageId()
-
-				// Change page
-				this.#surfaceController.devicePageSet(groupId, newPage, true, true)
-
-				// Clear forward page history beyond current index, add new history entry, increment index;
-				pageHistory.history = pageHistory.history.slice(0, pageHistory.index + 1)
-				pageHistory.history.push(newPage)
-				pageHistory.index += 1
-
-				// Limit the max history
-				const maxPageHistory = 100
-				if (pageHistory.history.length > maxPageHistory) {
-					const startIndex = pageHistory.history.length - maxPageHistory
-					pageHistory.history = pageHistory.history.slice(startIndex)
-					pageHistory.index = pageHistory.history.length - 1
-				}
-			}
-		}
+		this.#surfaceController.devicePageSet(groupId, toPage, true, defer)
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {

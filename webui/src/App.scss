@@ -30,6 +30,7 @@
 @use 'scss/import-export';
 @use 'scss/collections-nesting-table';
 @use 'scss/sticky-tables';
+@use 'scss/expression';
 @use 'scss/image-library';
 
 //@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
@@ -81,24 +82,6 @@ body {
 
 	.text-muted {
 		color: #ccc !important;
-	}
-}
-
-.page-getting-started {
-	background-color: white;
-	padding: 1px;
-
-	min-height: 100vh;
-
-	> div {
-		margin: 1em auto;
-		max-width: 860px;
-		line-height: 1.5rem;
-		tab-size: 4;
-
-		img {
-			max-width: 100%;
-		}
 	}
 }
 

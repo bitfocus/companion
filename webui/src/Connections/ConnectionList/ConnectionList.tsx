@@ -2,24 +2,26 @@ import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
-import { ConnectionVariablesModal, ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { ConnectionVariablesModal, type ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
-import { MissingVersionsWarning } from './MissingVersionsWarning.js'
-import { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import { MissingVersionsWarning } from '../../Instances/MissingVersionsWarning.js'
+import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { useConnectionCollectionsApi } from './ConnectionListApi.js'
-import { useConnectionStatuses } from './useConnectionStatuses.js'
-import { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
+import { useInstanceStatuses } from '../../Instances/useInstanceStatuses.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
 import { useComputed } from '~/Resources/util.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 import { useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -35,7 +37,7 @@ interface ConnectionsListProps {
 export const ConnectionsList = observer(function ConnectionsList({ selectedConnectionId }: ConnectionsListProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const connectionStatuses = useConnectionStatuses()
+	const connectionStatuses = useInstanceStatuses()
 
 	const navigate = useNavigate({ from: '/connections' })
 	const doConfigureConnection = useCallback(
@@ -93,7 +95,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 					know how to communicate with whatever you want to control.
 				</p>
 
-				<MissingVersionsWarning />
+				<MissingVersionsWarning moduleType={ModuleInstanceType.Connection} instances={connections.connections} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
@@ -147,7 +149,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 
 export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 	id: string
-	status: ConnectionStatusEntry | undefined
+	status: InstanceStatusEntry | undefined
 }
 
 function ConnectionListTableHeading() {
@@ -179,7 +181,7 @@ function ConnectionListNoConnections() {
 }
 
 function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCollection }) {
-	const setEnabledMutation = useMutationExt(trpc.connections.collections.setEnabled.mutationOptions())
+	const setEnabledMutation = useMutationExt(trpc.instances.connections.collections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -222,11 +224,15 @@ function ConnectionListItemWrapper(
 		}
 	}
 
-	return <ConnectionsTableRow connection={item} isSelected={selectedItemId === item.id} />
+	return (
+		<MyErrorBoundary>
+			<ConnectionsTableRow connection={item} isSelected={selectedItemId === item.id} />
+		</MyErrorBoundary>
+	)
 }
 
 function CreateCollectionButton() {
-	const createMutation = useMutationExt(trpc.connections.collections.add.mutationOptions())
+	const createMutation = useMutationExt(trpc.instances.connections.collections.add.mutationOptions())
 
 	const doCreateCollection = useCallback(() => {
 		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {

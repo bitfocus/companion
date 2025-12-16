@@ -1,21 +1,38 @@
-import { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import { CFormSwitch, CFormLabel, CCol } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback } from 'react'
 import { TextInputField, NumberInputField, DropdownInputField } from '~/Components'
+import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
-import { InputFeatureIconsProps, InputFeatureIcons } from '~/Controls/OptionsInputField'
+import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
 import { validateInputValue } from '~/Helpers/validateInputValue'
-import { SurfaceLocalVariables } from '~/LocalVariableDefinitions'
+import { type DropdownChoiceInt } from '~/DropDownInputFancy'
 
 interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: any) => void
 	definition: CompanionSurfaceConfigField
 	value: any
 }
+
+const SurfaceLocalVariables: DropdownChoiceInt[] = [
+	{
+		value: 'this:page',
+		label: 'This page',
+	},
+	{
+		value: 'this:surface_id',
+		label: 'The id of this surface',
+	},
+	{
+		value: 'this:page_name',
+		label: 'This page name',
+	},
+]
+
 export const EditPanelConfigField = observer(function EditPanelConfigField({
 	setValue,
 	definition,
@@ -38,13 +55,18 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					}
 				: {}
 
-			control = (
+			control = definition.isExpression ? (
+				<ExpressionInputField
+					value={value}
+					localVariables={features.local ? SurfaceLocalVariables : undefined}
+					setValue={setValue2}
+				/>
+			) : (
 				<TextInputField
 					value={value}
 					placeholder={definition.placeholder}
 					useVariables={features.variables}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
-					isExpression={definition.isExpression}
 					multiline={definition.multiline}
 					setValue={setValue2}
 					checkValid={checkValid}

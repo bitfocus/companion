@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Run every week
   schedule:
-    - cron: '43 5 * * 0'
+    - cron: "43 5 * * 0"
 
 env:
   COMPANION_BRANCH: main
@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -29,9 +29,9 @@ jobs:
           token: ${{ secrets.SYNC_MODULES_PAT }}
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version-file: '.node-version'
+          node-version-file: ".node-version"
 
       - name: Setup environment
         run: |
@@ -43,18 +43,18 @@ jobs:
           node tools/update_nodejs_versions.mjs
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
-          commit-message: 'chore: update Node.js versions'
-          title: 'chore: update Node.js versions'
-          body: 'This PR updates the Node.js versions in the Companion.'
+          commit-message: "chore: update Node.js versions"
+          title: "chore: update Node.js versions"
+          body: "This PR updates the Node.js versions in the Companion."
           delete-branch: true
-          branch: 'chore/update-nodejs'
-          committer: 'Companion Bot <companion-module-bot@users.noreply.github.com>'
-          author: 'Companion Bot <companion-module-bot@users.noreply.github.com>'
+          branch: "chore/update-nodejs"
+          committer: "Companion Bot <companion-module-bot@users.noreply.github.com>"
+          author: "Companion Bot <companion-module-bot@users.noreply.github.com>"
           add-paths: |
             package.json
             */package.json
-            nodejs-versions.json
+            assets/nodejs-versions.json
             .node-version
           token: ${{ secrets.SYNC_MODULES_PAT }}

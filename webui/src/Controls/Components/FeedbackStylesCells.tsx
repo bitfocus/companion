@@ -1,13 +1,13 @@
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { FeedbackEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { CAlert, CFormLabel, CCol } from '@coreui/react'
 import React, { useState, useCallback, useMemo } from 'react'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ButtonStyleConfigFields } from '../ButtonStyleConfig.js'
-import { DropdownChoiceId } from '@companion-module/base'
-import { LocalVariablesStore } from '../LocalVariablesStore.js'
+import type { DropdownChoiceId } from '@companion-module/base'
+import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface FeedbackManageStylesProps {
 	feedbackSpec: ClientEntityDefinition | undefined

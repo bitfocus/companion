@@ -1,0 +1,64 @@
+.expression-editor-container {
+	height: 90px;
+	min-height: 90px; // ~5 lines at default font size (18px per line)
+	resize: vertical;
+	overflow: auto;
+
+	flex-grow: 1;
+
+	border: var(--cui-border-width) solid var(--cui-border-color);
+	transition:
+		border-color 0.15s ease-in-out,
+		box-shadow 0.15s ease-in-out;
+
+	&.syntax-error {
+		border-color: rgb(255, 12, 138);
+	}
+
+	/* Override Monaco suggest widget to show details below name */
+	.monaco-editor .suggest-widget {
+		z-index: 10000 !important; /* otherwise the top goes under the top banner in action/feedback expression suggestions */
+
+		.monaco-list .monaco-list-row {
+			align-items: center;
+			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+			/* Reflow the inner layout into two rows */
+			.main {
+				display: grid !important;
+				grid-template-columns: auto 1fr;
+				grid-template-rows: auto auto;
+				line-height: 21px !important;
+
+				.suggest-icon {
+					grid-row: span 2;
+					grid-column: 1;
+				}
+
+				/* Left (name) takes full width on first row */
+				.left {
+					grid-column: 2;
+					grid-row: 1;
+					font-weight: bold;
+					text-decoration: none !important; /* this doesn't work */
+					padding-top: 5px;
+					white-space: pre-wrap !important; /* this doesn't work */
+				}
+
+				/* Right (details/description) moves below name */
+				.right {
+					grid-column: 2;
+					grid-row: 2;
+
+					max-width: inherit !important;
+
+					.details-label {
+						margin-left: 0 !important;
+						// color: #000;
+						display: block !important;
+					}
+				}
+			}
+		}
+	}
+}

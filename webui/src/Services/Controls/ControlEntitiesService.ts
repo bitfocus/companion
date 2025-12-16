@@ -1,13 +1,13 @@
 import {
-	EntityModelType,
-	EntityOwner,
-	FeedbackEntityStyleOverride,
-	SomeEntityModel,
 	stringifySocketEntityLocation,
+	type FeedbackEntityStyleOverride,
 	type SomeSocketEntityLocation,
+	type EntityModelType,
+	type EntityOwner,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { useMemo, useRef } from 'react'
-import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface IEntityEditorService {

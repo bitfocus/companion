@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { Canvas, ImageData, Image as CanvasImage, loadImage, SKRSContext2D } from '@napi-rs/canvas'
+import { Canvas, ImageData, loadImage, type Image as CanvasImage, type SKRSContext2D } from '@napi-rs/canvas'
 import LogController from '../Log/Controller.js'
 import { ImageBase, ImagePoolBase, LineStyle } from '@companion-app/shared/Graphics/ImageBase.js'
 

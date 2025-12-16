@@ -1,18 +1,26 @@
 import React, { useCallback, useContext, useState } from 'react'
-import { CAlert, CButton, CButtonGroup } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CNav, CNavItem, CNavLink } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEyeSlash, faPlug, faQuestionCircle, faWarning } from '@fortawesome/free-solid-svg-icons'
+import {
+	faEyeSlash,
+	faGamepad,
+	faPlug,
+	faQuestionCircle,
+	faWarning,
+	type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { useAllConnectionProducts, filterProducts, FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
+import { useAllModuleProducts, filterProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
-import { makeAbsolutePath } from '~/Resources/util.js'
+import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -21,11 +29,16 @@ interface VisibleModulesState {
 }
 
 interface ModulesListProps {
-	doManageModule: (connectionId: string | null) => void
-	selectedModuleId: string | null
+	doManageModule: (moduleInfo: ModuleTypeAndIdPair | null) => void
+	selectedModuleInfo: ModuleTypeAndIdPair | null
 }
 
-export const ModulesList = observer(function ModulesList({ doManageModule, selectedModuleId }: ModulesListProps) {
+export interface ModuleTypeAndIdPair {
+	moduleType: ModuleInstanceType
+	moduleId: string
+}
+
+export const ModulesList = observer(function ModulesList({ doManageModule, selectedModuleInfo }: ModulesListProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
@@ -34,14 +47,17 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		availableDeprecated: false,
 	})
 
+	const [filterType, setFilterType] = useState<ModuleInstanceType | null>(null)
 	const [filter, setFilter] = useState('')
 
-	const allProducts = useAllConnectionProducts(modules, true)
+	const allProducts = useAllModuleProducts(null, true, true).filter((p) => !filterType || filterType === p.moduleType)
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {
 			if (
-				(p.installedInfo.installedVersions.length > 0 || p.installedInfo.devVersion) &&
+				(p.installedInfo.installedVersions.length > 0 ||
+					p.installedInfo.devVersion ||
+					p.installedInfo.builtinVersion) &&
 				visibleModules.visibility.installed
 			)
 				isVisible = true
@@ -66,17 +82,20 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	let components: JSX.Element[] = []
 	try {
-		const searchResults = filterProducts(typeProducts, filter)
+		const searchResults = filterProducts(typeProducts, filter, true)
 
 		const candidatesObj: Record<string, JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
-			candidatesObj[moduleInfo.id] = (
+			candidatesObj[moduleInfo.moduleId] = (
 				<ModulesListRow
-					key={moduleInfo.id}
-					id={moduleInfo.id}
+					key={moduleInfo.moduleId}
 					moduleInfo={moduleInfo}
 					doManageModule={doManageModule}
-					isSelected={moduleInfo.id === selectedModuleId}
+					isSelected={
+						!!selectedModuleInfo &&
+						moduleInfo.moduleId === selectedModuleInfo.moduleId &&
+						moduleInfo.moduleType === selectedModuleInfo.moduleType
+					}
 				/>
 			)
 		}
@@ -107,7 +126,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		)
 	}
 
-	const hiddenCount = new Set(allProducts.map((p) => p.id)).size - new Set(typeProducts.map((p) => p.id)).size
+	const hiddenCount =
+		new Set(allProducts.map((p) => p.moduleId)).size - new Set(typeProducts.map((p) => p.moduleId)).size
 
 	return (
 		<div className="flex-column-layout">
@@ -117,7 +137,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/getting-started#6_modules.md')} className="text-decoration-none">
+					<a target="_blank" href={makeAbsolutePath('/user-guide/modules')} className="text-decoration-none">
 						Check our guidance for getting device support
 					</a>
 					.<br />
@@ -138,11 +158,13 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<SearchBox filter={filter} setFilter={setFilter} />
 			</div>
 
+			<FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
+
 			<div className="scrollable-content">
 				<table className="table-tight table-responsive-sm">
 					<thead>
 						<tr>
-							<th colSpan={2}>
+							<th colSpan={3}>
 								Module
 								<CButtonGroup className="table-header-buttons">
 									<VisibilityButton {...visibleModules} keyId="installed" color="success" label="Installed" />
@@ -168,7 +190,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							</tr>
 						)}
 
-						{modules.modules.size === 0 && !visibleModules.visibility.available && (
+						{modules.count === 0 && !visibleModules.visibility.available && (
 							<tr>
 								<td colSpan={4}>
 									<NonIdealState icon={faPlug}>
@@ -203,14 +225,12 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 })
 
 interface ModulesListRowProps {
-	id: string
 	moduleInfo: FuzzyProduct
-	doManageModule: (moduleId: string | null) => void
+	doManageModule: (moduleInfo: ModuleTypeAndIdPair | null) => void
 	isSelected: boolean
 }
 
 const ModulesListRow = observer(function ModulesListRow({
-	id,
 	moduleInfo,
 	doManageModule,
 	isSelected,
@@ -221,15 +241,15 @@ const ModulesListRow = observer(function ModulesListRow({
 		if (!moduleInfo.helpUrl) return
 		const latestVersionName =
 			moduleInfo.installedInfo?.stableVersion?.versionId ?? moduleInfo.installedInfo?.betaVersion?.versionId ?? ''
-		helpViewer.current?.showFromUrl(id, latestVersionName, moduleInfo.helpUrl)
-	}, [helpViewer, id, moduleInfo])
+		helpViewer.current?.showFromUrl(moduleInfo.moduleType, moduleInfo.moduleId, latestVersionName, moduleInfo.helpUrl)
+	}, [helpViewer, moduleInfo])
 
 	const doEdit = () => {
 		if (!moduleInfo) {
 			return
 		}
 
-		doManageModule(id)
+		doManageModule({ moduleId: moduleInfo.moduleId, moduleType: moduleInfo.moduleType })
 	}
 
 	// const openBugUrl = useCallback(() => {
@@ -239,6 +259,22 @@ const ModulesListRow = observer(function ModulesListRow({
 
 	// const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection)
 
+	let icon: IconDefinition | null = null
+	let iconTitle: string | null = null
+	switch (moduleInfo.moduleType) {
+		case ModuleInstanceType.Connection:
+			icon = faPlug
+			iconTitle = 'Connection Module'
+			break
+		case ModuleInstanceType.Surface:
+			icon = faGamepad
+			iconTitle = 'Surface Module'
+			break
+		default:
+			assertNever(moduleInfo.moduleType)
+			break
+	}
+
 	return (
 		<tr
 			className={classNames({
@@ -246,20 +282,15 @@ const ModulesListRow = observer(function ModulesListRow({
 			})}
 		>
 			<td onClick={doEdit} className="hand">
-				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
-
-				{moduleInfo.name}
-
-				{/* {moduleInfo.installedVersions.?.isLegacy && (
-					<>
-						<FontAwesomeIcon
-							icon={faExclamationTriangle}
-							color="#f80"
-							title="This module has not been updated for Companion 3.0, and may not work fully"
-						/>{' '}
-					</>
+				{icon && (
+					<span title={iconTitle ?? ''}>
+						<FontAwesomeIcon icon={icon} />
+					</span>
 				)}
-				{moduleVersion?.displayName} */}
+			</td>
+			<td onClick={doEdit} className="hand">
+				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
+				{moduleInfo.name}
 			</td>
 			<td className="compact">
 				<CButton
@@ -275,3 +306,38 @@ const ModulesListRow = observer(function ModulesListRow({
 		</tr>
 	)
 })
+
+interface FilterTypeTabsProps {
+	filterType: ModuleInstanceType | null
+	setFilterType: (type: ModuleInstanceType | null) => void
+}
+
+function FilterTypeTabs({ filterType, setFilterType }: FilterTypeTabsProps) {
+	return (
+		<CNav variant="tabs" role="tablist" className="remote-control-tabs">
+			<CNavItem>
+				<CNavLink active={filterType === null} onClick={() => setFilterType(null)} title="Show all module types">
+					All Modules
+				</CNavLink>
+			</CNavItem>
+			<CNavItem>
+				<CNavLink
+					active={filterType === ModuleInstanceType.Connection}
+					onClick={() => setFilterType(ModuleInstanceType.Connection)}
+					title="Show only connection modules"
+				>
+					Connection Modules
+				</CNavLink>
+			</CNavItem>
+			<CNavItem>
+				<CNavLink
+					active={filterType === ModuleInstanceType.Surface}
+					onClick={() => setFilterType(ModuleInstanceType.Surface)}
+					title="Show only surface modules"
+				>
+					Surface Modules
+				</CNavLink>
+			</CNavItem>
+		</CNav>
+	)
+}

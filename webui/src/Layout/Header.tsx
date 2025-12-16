@@ -40,8 +40,20 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 					{updateData.data?.message ? (
 						<CNavItem className="header-update-warn">
 							<CNavLink target="_blank" href={updateData.data.link || 'https://bitfocus.io/companion/'}>
-								<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
-								{updateData.data.message}
+								<div className="flex">
+									<div className="align-self-center">
+										<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
+									</div>
+									<div>
+										{updateData.data.message}
+										{!!updateData.data.message2 && (
+											<>
+												<br />
+												{updateData.data.message2}
+											</>
+										)}
+									</div>
+								</div>
 							</CNavLink>
 						</CNavItem>
 					) : (

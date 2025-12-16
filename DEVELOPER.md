@@ -2,7 +2,7 @@
 
 For documentation on developing modules, please see [the Wiki](https://github.com/bitfocus/companion-module-base/wiki)
 
-To develop Companion itself, [start here](https://github.com/bitfocus/companion/wiki/Setting-up-Developer-Environment)
+To develop Companion itself, [start here](https://companion.free/for-developers/core-development/setting-up-developer-environment)
 
 ## TL;DR
 

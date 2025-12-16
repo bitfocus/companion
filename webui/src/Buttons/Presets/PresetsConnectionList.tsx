@@ -4,40 +4,34 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { PresetDefinitionsStore } from './PresetDefinitionsStore'
+import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
 
 interface PresetsConnectionListProps {
 	presetsDefinitionsStore: PresetDefinitionsStore
-	setConnectionAndCategory: (info: [connectionId: string | null, category: string | null]) => void
+	setConnectionId: (connectionId: string) => void
 }
 export const PresetsConnectionList = observer(function PresetsConnectionList({
 	presetsDefinitionsStore,
-	setConnectionAndCategory,
+	setConnectionId,
 }: PresetsConnectionListProps) {
 	const { modules, connections } = useContext(RootAppStoreContext)
 
 	// Sort the connections by the same order as the connections list
-	const sortedPresets = Array.from(presetsDefinitionsStore.presets).sort(
-		([a], [b]) =>
-			(connections.getInfo(a)?.sortOrder ?? Number.POSITIVE_INFINITY) -
-			(connections.getInfo(b)?.sortOrder ?? Number.POSITIVE_INFINITY)
-	)
+	const options = connections.sortedConnections().map((connectionInfo) => {
+		const presets = presetsDefinitionsStore.presets.get(connectionInfo.id)
+		if (!presets || presets.size === 0) return null
 
-	const options = sortedPresets.map(([id, vals]) => {
-		if (!vals || Object.values(vals).length === 0) return ''
-
-		const connectionInfo = connections.getInfo(id)
-		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
-		const compactName = connectionInfo ? modules.getModuleFriendlyName(connectionInfo.instance_type) : undefined
+		const moduleInfo = modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
+		const compactName = modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)
 
 		return (
 			<CButton
 				title={moduleInfo?.display?.name}
-				key={id}
+				key={connectionInfo.id}
 				color="primary"
-				onClick={() => setConnectionAndCategory([id, null])}
+				onClick={() => setConnectionId(connectionInfo.id)}
 			>
-				<h6>{connectionInfo?.label ?? id}</h6> <small>{compactName ?? '?'}</small>
+				<h6>{connectionInfo.label || connectionInfo.id}</h6> <small>{compactName ?? '?'}</small>
 			</CButton>
 		)
 	})

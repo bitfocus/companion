@@ -26,11 +26,11 @@ import {
 	spawn,
 	fork,
 	exec,
-	ChildProcessByStdio,
-	SpawnOptionsWithoutStdio,
-	ForkOptions,
-	Serializable,
-	StdioOptions,
+	type ChildProcessByStdio,
+	type SpawnOptionsWithoutStdio,
+	type ForkOptions,
+	type Serializable,
+	type StdioOptions,
 } from 'child_process'
 import type { Writable, Readable } from 'stream'
 import ps from 'ps-tree'
@@ -207,7 +207,7 @@ export class RespawnMonitor extends EventEmitter<RespawnEvents> {
 			const cmd = typeof this.command === 'function' ? this.command() : this.command
 			const child = this.spawnFn(cmd[0], cmd.slice(1), {
 				cwd: this.cwd,
-				env: { ...process.env, ...(this.env || {}) },
+				env: this.env || {},
 				uid: this.uid,
 				gid: this.gid,
 				stdio: this.stdio,

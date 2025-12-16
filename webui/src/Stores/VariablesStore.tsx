@@ -3,11 +3,11 @@ import type {
 	CustomVariableDefinition,
 	CustomVariableUpdate,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
-import { ObservableMap, action, computed, observable } from 'mobx'
+import { action, computed, observable, type ObservableMap } from 'mobx'
 import { assertNever } from '~/Resources/util.js'
 import type { VariableDefinition, VariableDefinitionUpdate } from '@companion-app/shared/Model/Variables.js'
 import { ApplyDiffToStore, updateObjectInPlace } from './ApplyDiffToMap'
-import { ExpressionVariablesListStore } from './ExpressionVariablesListStore'
+import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore'
 
 export class VariablesStore {
 	readonly #expressionVariables: ExpressionVariablesListStore

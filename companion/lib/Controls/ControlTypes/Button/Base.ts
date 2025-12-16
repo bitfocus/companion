@@ -75,7 +75,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				invalidateControl: this.triggerRedraw.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
-				moduleHost: deps.instance.moduleHost,
+				processManager: deps.instance.processManager,
 				variableValues: deps.variables.values,
 			},
 			this.sendRuntimePropsChange.bind(this),
@@ -83,7 +83,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				deps.variables.values
 					.createVariablesAndExpressionParser(
 						deps.pageStore.getLocationOfControlId(this.controlId),
-						null, // This doesn't support local variables
+						this.entities.getLocalVariableEntities(),
 						injectedVariableValues ?? null
 					)
 					.executeExpression(expression, requiredType),
@@ -149,7 +149,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		// Figure out the combined status
 		let status: ButtonStatus = 'good'
 		for (const connectionId of connectionIds) {
-			const connectionStatus = this.deps.instance.getConnectionStatus(connectionId)
+			const connectionStatus = this.deps.instance.getInstanceStatus(connectionId)
 			if (connectionStatus) {
 				// TODO - can this be made simpler
 				switch (connectionStatus.category) {
@@ -342,11 +342,11 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 	/**
 	 * Execute a rotate of this control
-	 * @param direction Whether the control was rotated to the right
+	 * @param rightward Whether the control was rotated to the right
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(direction: boolean, surfaceId: string | undefined): void {
-		const actions = this.entities.getActionsToExecuteForSet(direction ? 'rotate_right' : 'rotate_left')
+	rotateControl(rightward: boolean, surfaceId: string | undefined): void {
+		const actions = this.entities.getActionsToExecuteForSet(rightward ? 'rotate_right' : 'rotate_left')
 
 		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 

@@ -3,7 +3,6 @@ import type {
 	GridSize,
 	SurfaceFirmwareUpdateInfo,
 	SurfaceGroupConfig,
-	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
@@ -15,16 +14,8 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import { EmulatorPageConfig, EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
-import { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
-
-export type SurfacePanelFactory = {
-	create: (path: string, options: LocalUSBDeviceOptions) => Promise<SurfacePanel>
-}
-
-export interface LocalUSBDeviceOptions {
-	executeExpression: SurfaceExecuteExpressionFn
-}
+import type { EmulatorPageConfig, EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
+import type { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
 
 export type SurfaceExecuteExpressionFn = (
 	str: string,
@@ -33,32 +24,30 @@ export type SurfaceExecuteExpressionFn = (
 ) => ExecuteExpressionResult
 
 export interface SurfacePanelInfo {
-	deviceId: string
-	devicePath: string
-	type: string
+	surfaceId: string
+	description: string
 	configFields: CompanionSurfaceConfigField[]
-	location?: string
-	firmwareUpdateVersionsUrl?: string
+	location: string | null
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 }
 
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
+	readonly instanceId?: string // Future: make required
+
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
-	drawMany?: (entries: DrawButtonItem[]) => void
 	setConfig(config: any, force?: boolean): void
 	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: Set<string>) => void
 	quit(): void
-	checkForFirmwareUpdates?: (latestVersions?: unknown) => Promise<void>
 
 	/**
 	 * If the surface will handle locking display of the locking state itself, this method should be implemented.
 	 * If defined, it will be called when the lock state changes.
 	 */
-	setLocked?: (locked: boolean, characterCount: number) => void
+	setLocked: (locked: boolean, characterCount: number) => void
 }
 
 export interface DrawButtonItem {
@@ -73,11 +62,13 @@ export interface SurfacePanelEvents {
 	error: [error: Error]
 
 	click: [x: number, y: number, pressed: boolean, pageOffset?: number]
-	rotate: [x: number, y: number, direction: boolean, pageOffset?: number]
+	rotate: [x: number, y: number, rightward: boolean, pageOffset?: number]
+	changePage: [forward: boolean]
 	pincodeKey: [key: number]
 
-	setVariable: [variableId: string, value: CompanionVariableValue]
 	setCustomVariable: [variableId: string, value: CompanionVariableValue]
+
+	firmwareUpdateInfo: []
 
 	resized: []
 }
@@ -112,5 +103,4 @@ export type UpdateEvents = EmulatorUpdateEvents & {
 	surfaces: [changes: SurfacesUpdate[]]
 
 	[id: `groupConfig:${string}`]: [config: SurfaceGroupConfig | null]
-	[id: `surfaceConfig:${string}`]: [config: SurfacePanelConfig | null]
 }

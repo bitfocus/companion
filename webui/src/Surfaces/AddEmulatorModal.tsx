@@ -19,7 +19,7 @@ import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
-import { trpc, useMutationExt, RouterInputs } from '~/Resources/TRPC'
+import { trpc, useMutationExt, type RouterInputs } from '~/Resources/TRPC'
 
 type EmulatorAddInput = RouterInputs['surfaces']['emulatorAdd']
 

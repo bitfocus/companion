@@ -1,19 +1,19 @@
 import {
 	isFalsey,
 	isTruthy,
-	ParsedParams,
 	parseLineParameters,
 	parseStringParamWithBooleanFallback,
+	type ParsedParams,
 } from '../../Resources/Util.js'
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
-import { Logger } from '../../Log/Controller.js'
+import type { Logger } from '../../Log/Controller.js'
 import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surface/IP/Satellite.js'
 import type { AppInfo } from '../../Registry.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
-import { SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
+import type { SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
 // eslint-disable-next-line n/no-missing-import
 import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
-import { GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -231,7 +231,6 @@ export class ServiceSatelliteApi {
 		}
 
 		const device = this.#surfaceController.addSatelliteDevice({
-			path: id,
 			gridSize,
 			socket,
 			deviceId: id,

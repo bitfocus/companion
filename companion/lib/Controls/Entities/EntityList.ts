@@ -1,14 +1,14 @@
 import {
 	EntityModelType,
-	EntityOwner,
-	EntitySupportedChildGroupDefinition,
 	FeedbackEntitySubType,
-	SomeEntityModel,
+	type EntityOwner,
+	type EntitySupportedChildGroupDefinition,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from './EntityInstance.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { clamp } from '../../Resources/Util.js'
-import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ModuleHostForEntity } from './Types.js'
+import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ProcessManagerForEntity } from './Types.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
 export type ControlEntityListDefinition = Pick<
@@ -19,7 +19,7 @@ export type ControlEntityListDefinition = Pick<
 export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
-	readonly #moduleHost: ModuleHostForEntity
+	readonly #processManager: ProcessManagerForEntity
 
 	/**
 	 * Id of the control this belongs to
@@ -43,14 +43,14 @@ export class ControlEntityList {
 	constructor(
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
-		moduleHost: ModuleHostForEntity,
+		processManager: ProcessManagerForEntity,
 		controlId: string,
 		ownerId: EntityOwner | null,
 		listDefinition: ControlEntityListDefinition
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
-		this.#moduleHost = moduleHost
+		this.#processManager = processManager
 		this.#controlId = controlId
 		this.#ownerId = ownerId
 		this.#listDefinition = listDefinition
@@ -95,7 +95,7 @@ export class ControlEntityList {
 					new ControlEntityInstance(
 						this.#instanceDefinitions,
 						this.#internalModule,
-						this.#moduleHost,
+						this.#processManager,
 						this.#controlId,
 						entity,
 						!!isCloned
@@ -171,7 +171,7 @@ export class ControlEntityList {
 		const newEntity = new ControlEntityInstance(
 			this.#instanceDefinitions,
 			this.#internalModule,
-			this.#moduleHost,
+			this.#processManager,
 			this.#controlId,
 			entityModel,
 			!!isCloned
@@ -286,7 +286,7 @@ export class ControlEntityList {
 			const newEntity = new ControlEntityInstance(
 				this.#instanceDefinitions,
 				this.#internalModule,
-				this.#moduleHost,
+				this.#processManager,
 				this.#controlId,
 				entityModel,
 				true

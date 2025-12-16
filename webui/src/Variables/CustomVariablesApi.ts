@@ -25,7 +25,7 @@ export function useCustomVariablesApi(confirmModalRef: React.RefObject<GenericCo
 		() =>
 			({
 				onCopied: () => {
-					notifier.current?.show(`Copied`, 'Copied to clipboard', 5000)
+					notifier.show(`Copied`, 'Copied to clipboard', 5000)
 				},
 
 				setStartupValue: (name: string, value: any) => {

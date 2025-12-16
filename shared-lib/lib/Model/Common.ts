@@ -13,6 +13,7 @@ export interface AppVersionInfo {
 }
 export interface AppUpdateInfo {
 	message: string
+	message2: string | undefined
 	link: string | undefined
 }
 
@@ -35,33 +36,11 @@ export interface EmulatorImage {
 	buffer: string | false
 }
 
+export interface EmulatorLockedState {
+	characterCount: number
+}
+
 export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
-
-export interface ConnectionStatusEntry {
-	category: string | null
-	level: string | null
-	message: string | null
-}
-
-export type ConnectionStatusUpdate =
-	| ConnectionStatusUpdateInitOp
-	| ConnectionStatusUpdateRemoveOp
-	| ConnectionStatusUpdateUpdateOp
-
-export interface ConnectionStatusUpdateInitOp {
-	type: 'init'
-	statuses: Record<string, ConnectionStatusEntry>
-}
-export interface ConnectionStatusUpdateRemoveOp {
-	type: 'remove'
-	connectionId: string
-}
-export interface ConnectionStatusUpdateUpdateOp {
-	type: 'update'
-	connectionId: string
-
-	status: ConnectionStatusEntry
-}
 
 export interface ClientBonjourService {
 	subId: string
@@ -95,8 +74,9 @@ export interface WrappedImage {
 	isUsed: boolean
 }
 
-export interface ClientEditConnectionConfig {
+export interface ClientEditInstanceConfig {
 	fields: Array<SomeCompanionInputField>
+	useNewLayout: boolean
 	config: unknown
 	secrets: unknown
 }

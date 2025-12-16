@@ -1,0 +1,21 @@
+.inputWrap {
+	position: relative;
+}
+
+.inputElement {
+	width: 100%;
+	padding: 4px 10% 3px;
+	border: none;
+	box-shadow: inset 0 0 0 1px #ccc;
+	font-size: 11px;
+}
+.inputLabel {
+	display: block;
+	text-align: center;
+	font-size: 11px;
+	color: #222;
+	padding-top: 3px;
+	padding-bottom: 4px;
+	text-transform: capitalize;
+	cursor: inherit;
+}

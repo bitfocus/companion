@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { DependencyList, FormEvent, useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, type DependencyList } from 'react'
 import { useEventListener } from 'usehooks-ts'
 import type { ReadonlyDeep } from 'type-fest'
-import { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import { joinPaths } from '@tanstack/react-router'
 import { computedFn } from 'mobx-utils'
 
@@ -71,7 +71,7 @@ export function useOnClickOutsideExt(
 	})
 }
 
-export const PreventDefaultHandler = (e: FormEvent): void => {
+export const PreventDefaultHandler = (e: React.FormEvent): void => {
 	e.preventDefault()
 }
 

@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import { ControlEntityListPoolButton } from '../Controls/Entities/EntityListPoolButton.js'
@@ -26,12 +25,12 @@ import type {
 import LogController from '../Log/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import {
-	ActionEntityModel,
-	EntityModelBase,
 	EntityModelType,
 	FeedbackEntitySubType,
-	SomeEntityModel,
 	type FeedbackEntityModel,
+	type ActionEntityModel,
+	type EntityModelBase,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	ClientEntityDefinition,
@@ -40,9 +39,10 @@ import type {
 import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
-import { ConnectionConfigStore } from './ConnectionConfigStore.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { ConvertLegacyStyleToElements } from '../Resources/ConvertLegacyStyleToElements.js'
+import type { InstanceConfigStore } from './ConfigStore.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -76,7 +76,7 @@ type RawPresetDefinition = (CompanionButtonPresetDefinition | CompanionTextPrese
 export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents> {
 	readonly #logger = LogController.createLogger('Instance/Definitions')
 
-	readonly #configStore: ConnectionConfigStore
+	readonly #configStore: InstanceConfigStore
 
 	/**
 	 * The action definitions
@@ -93,7 +93,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 	#events = new EventEmitter<DefinitionsEvents>()
 
-	constructor(configStore: ConnectionConfigStore) {
+	constructor(configStore: InstanceConfigStore) {
 		super()
 
 		this.setMaxListeners(0)
@@ -158,7 +158,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const definition = this.getEntityDefinition(entityType, connectionId, definitionId)
 		if (!definition) return null
 
-		const connectionConfig = this.#configStore.getConfigForId(connectionId)
+		const connectionConfig = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 
 		const entity: Omit<EntityModelBase, 'type'> = {
 			id: nanoid(),
@@ -170,7 +170,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		if (definition.options !== undefined && definition.options.length > 0) {
 			for (const opt of definition.options) {
-				entity.options[opt.id] = cloneDeep((opt as any).default)
+				entity.options[opt.id] = structuredClone((opt as any).default)
 			}
 		}
 
@@ -190,7 +190,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				}
 
 				if (/*!booleanOnly &&*/ definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
-					feedback.style = cloneDeep(definition.feedbackStyle)
+					feedback.style = structuredClone(definition.feedbackStyle)
 				}
 
 				return feedback
@@ -214,7 +214,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 			for (const opt of definition.options) {
 				// @ts-expect-error mismatch in key type
-				event.options[opt.id] = cloneDeep(opt.default)
+				event.options[opt.id] = structuredClone(opt.default)
 			}
 
 			return event
@@ -282,9 +282,30 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			type: 'preset:button',
 			steps: {},
 			...ConvertLegacyStyleToElements(
-				definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
+				definition.previewStyle
+					? convertPresetStyleToDrawStyle(Object.assign({}, definition.model.style, definition.previewStyle))
+					: definition.model.style,
 				definition.model.feedbacks
 			),
+		}
+
+		// make sure that feedbacks don't override previewStyle:
+		if ('previewStyle' in definition && definition.previewStyle !== undefined) {
+			const newExpressionFeedback: FeedbackEntityModel = {
+				type: EntityModelType.Feedback,
+				id: nanoid(),
+				connectionId: 'internal',
+				definitionId: 'check_expression',
+				options: {
+					expression: 'true',
+				},
+				isInverted: false,
+				style: definition.previewStyle,
+				upgradeIndex: undefined,
+			}
+
+			// copy all objects so they don't alter the regular button def. (Shallow should be enough.)
+			result.feedbacks = [...result.feedbacks, newExpressionFeedback]
 		}
 
 		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
@@ -318,7 +339,9 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			},
 			type: 'button-layered',
 			...ConvertLegacyStyleToElements(
-				definition.previewStyle ? convertPresetStyleToDrawStyle(definition.previewStyle) : definition.model.style,
+				definition.previewStyle
+					? convertPresetStyleToDrawStyle(Object.assign({}, definition.model.style, definition.previewStyle))
+					: definition.model.style,
 				definition.model.feedbacks
 			),
 		}
@@ -329,7 +352,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastActionDefinitions = this.#actionDefinitions[connectionId]
-		this.#actionDefinitions[connectionId] = cloneDeep(actionDefinitions)
+		this.#actionDefinitions[connectionId] = structuredClone(actionDefinitions)
 
 		if (this.#events.listenerCount('actions') > 0) {
 			if (!lastActionDefinitions) {
@@ -358,7 +381,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastFeedbackDefinitions = this.#feedbackDefinitions[connectionId]
-		this.#feedbackDefinitions[connectionId] = cloneDeep(feedbackDefinitions)
+		this.#feedbackDefinitions[connectionId] = structuredClone(feedbackDefinitions)
 
 		if (this.#events.listenerCount('feedbacks') > 0) {
 			if (!lastFeedbackDefinitions) {
@@ -388,7 +411,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	setPresetDefinitions(connectionId: string, label: string, rawPresets: RawPresetDefinition[]): void {
 		const newPresets: Record<string, PresetDefinition> = {}
 
-		const connectionUpgradeIndex = this.#configStore.getConfigForId(connectionId)?.lastUpgradeIndex
+		const connectionUpgradeIndex = this.#configStore.getConfigOfTypeForId(
+			connectionId,
+			ModuleInstanceType.Connection
+		)?.lastUpgradeIndex
 
 		for (const rawPreset of rawPresets) {
 			try {
@@ -421,7 +447,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 									rotate_left: undefined,
 									rotate_right: undefined,
 								},
-								options: cloneDeep(ControlEntityListPoolButton.DefaultStepOptions),
+								options: structuredClone(ControlEntityListPoolButton.DefaultStepOptions),
 							}
 							presetDefinition.model.steps[i] = newStep
 
@@ -458,7 +484,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					if (Object.keys(presetDefinition.model.steps).length === 0) {
 						presetDefinition.model.steps[0] = {
 							action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
-							options: cloneDeep(ControlEntityListPoolButton.DefaultStepOptions),
+							options: structuredClone(ControlEntityListPoolButton.DefaultStepOptions),
 						}
 					}
 
@@ -552,7 +578,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		}
 
 		const lastPresetDefinitions = this.#presetDefinitions[connectionId]
-		this.#presetDefinitions[connectionId] = cloneDeep(presets)
+		this.#presetDefinitions[connectionId] = structuredClone(presets)
 
 		this.emit('updatePresets', connectionId)
 
@@ -585,7 +611,7 @@ function toActionInstance(
 		id: nanoid(),
 		connectionId: connectionId,
 		definitionId: action.actionId,
-		options: cloneDeep(action.options ?? {}),
+		options: structuredClone(action.options ?? {}),
 		headline: action.headline,
 		upgradeIndex: connectionUpgradeIndex,
 	}
@@ -689,9 +715,9 @@ function convertPresetFeedbacksToEntities(
 		id: nanoid(),
 		connectionId: connectionId,
 		definitionId: feedback.feedbackId,
-		options: cloneDeep(feedback.options ?? {}),
+		options: structuredClone(feedback.options ?? {}),
 		isInverted: !!feedback.isInverted,
-		style: cloneDeep(feedback.style),
+		style: structuredClone(feedback.style),
 		headline: feedback.headline,
 		upgradeIndex: connectionUpgradeIndex,
 	}))
@@ -700,7 +726,7 @@ function convertPresetFeedbacksToEntities(
 function convertPresetStyleToDrawStyle(rawStyle: CompanionButtonStyleProps): ButtonStyleProperties {
 	return {
 		textExpression: false,
-		...cloneDeep(rawStyle),
+		...structuredClone(rawStyle),
 		// TODO - avoid defaults..
 		alignment: rawStyle.alignment ?? 'center:center',
 		pngalignment: rawStyle.pngalignment ?? 'center:center',

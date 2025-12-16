@@ -1,4 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { ModuleInstanceType } from './Instance.js'
 
 export interface ModuleDisplayInfo {
 	id: string
@@ -6,7 +7,6 @@ export interface ModuleDisplayInfo {
 	helpPath: string
 	bugUrl: string
 	shortname: string
-	manufacturer: string
 	products: string[]
 	keywords: string[]
 }
@@ -17,12 +17,16 @@ export interface ClientModuleVersionInfo {
 	isBeta: boolean
 	helpPath: string
 	versionId: string
+	/** Only applicable for surface modules. Whether multiple instances are allowed */
+	allowMultipleInstances: boolean
 }
 
 export interface ClientModuleInfo {
+	moduleType: ModuleInstanceType
 	display: ModuleDisplayInfo
 
 	devVersion: ClientModuleVersionInfo | null
+	builtinVersion: ClientModuleVersionInfo | null
 
 	stableVersion: ClientModuleVersionInfo | null
 	betaVersion: ClientModuleVersionInfo | null
@@ -30,6 +34,7 @@ export interface ClientModuleInfo {
 	installedVersions: ClientModuleVersionInfo[]
 }
 
+export type ModuleInfoUpdateId = `${ModuleInstanceType}:${string}`
 export type ModuleInfoUpdate =
 	| ModuleInfoUpdateInitOp
 	| ModuleInfoUpdateAddOp
@@ -37,21 +42,21 @@ export type ModuleInfoUpdate =
 	| ModuleInfoUpdateRemoveOp
 export interface ModuleInfoUpdateInitOp {
 	type: 'init'
-	info: Record<string, ClientModuleInfo>
+	info: Record<ModuleInfoUpdateId, ClientModuleInfo>
 }
 export interface ModuleInfoUpdateRemoveOp {
 	type: 'remove'
-	id: string
+	id: ModuleInfoUpdateId
 }
 export interface ModuleInfoUpdateAddOp {
 	type: 'add'
-	id: string
+	id: ModuleInfoUpdateId
 
 	info: ClientModuleInfo
 }
 export interface ModuleInfoUpdateUpdateOp {
 	type: 'update'
-	id: string
+	id: ModuleInfoUpdateId
 
 	patch: JsonPatchOperation<ClientModuleInfo>[]
 }

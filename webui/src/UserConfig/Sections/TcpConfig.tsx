@@ -1,7 +1,7 @@
 import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
-import { UserConfigProps } from '../Components/Common.js'
+import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
 

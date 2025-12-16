@@ -499,14 +499,16 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		color: string,
 		fontsize: number,
 		halignment: HorizontalAlignment = 'center',
-		valignment: VerticalAlignment = 'center'
+		valignment: VerticalAlignment = 'center',
+		weight: 'normal' | 'bold' = 'normal'
 	): number {
 		text = this.#sanitiseText(text)
 
 		if (text === undefined || text.length == 0) return 0
 		if (halignment != 'left' && halignment != 'center' && halignment != 'right') halignment = 'left'
+		if (weight != 'normal' && weight != 'bold') weight = 'normal'
 
-		this.context2d.font = `${fontsize}px ${DEFAULT_FONTS_STR}`
+		this.context2d.font = `${weight} ${fontsize}px ${DEFAULT_FONTS_STR}`
 		this.context2d.fillStyle = color
 		this.context2d.textAlign = halignment
 

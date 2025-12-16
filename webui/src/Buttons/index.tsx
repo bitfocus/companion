@@ -8,15 +8,15 @@ import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton/EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import classNames from 'classnames'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
-import { useMatchRoute, useNavigate, UseNavigateResult } from '@tanstack/react-router'
+import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
@@ -107,6 +107,16 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			// e.target is the actual element where the event happened, e.currentTarget is the element where the event listener is attached
 			const targetElement = e.target as HTMLElement
 
+			// TODO - this feels messy, perhaps this can be done cleaner?
+			if (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA') {
+				// Don't interfere with typing in inputs
+				return
+			}
+			if (targetElement.classList.contains('native-edit-context')) {
+				// Don't interfere with typing in the expression editor
+				return
+			}
+
 			if (isControlOrCommandCombo && e.key === '=') {
 				e.preventDefault()
 				gridZoomController.zoomIn(true)
@@ -116,7 +126,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			} else if (isControlOrCommandCombo && e.key === '0') {
 				e.preventDefault()
 				gridZoomController.zoomReset()
-			} else if (targetElement.tagName !== 'INPUT' && targetElement.tagName !== 'TEXTAREA') {
+			} else {
 				switch (e.key) {
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {

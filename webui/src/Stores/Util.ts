@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { RootAppStoreContext } from './RootAppStore.js'
 import { useComputed } from '~/Resources/util.js'
-import { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 	id: string

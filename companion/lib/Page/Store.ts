@@ -1,9 +1,8 @@
-import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import { EventEmitter } from 'events'
-import { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 
 interface PageStoreEvents {
@@ -304,7 +303,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 
 		const pageInfo = this.#pagesById[pageId]
 		if (clone) {
-			return cloneDeep(pageInfo)
+			return structuredClone(pageInfo)
 		} else {
 			return pageInfo
 		}
@@ -365,8 +364,8 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 
 			if (controlId) {
 				page.controls[location.row][location.column] = controlId
-				this.#locationCache.set(controlId, cloneDeep(location))
-				this.emit('controlLocationChanged', controlId, cloneDeep(location))
+				this.#locationCache.set(controlId, structuredClone(location))
+				this.emit('controlLocationChanged', controlId, structuredClone(location))
 			} else {
 				delete page.controls[location.row][location.column]
 			}
@@ -493,7 +492,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 						row: Number(row),
 					}
 					this.#locationCache.set(controlId, location)
-					this.emit('controlLocationChanged', controlId, cloneDeep(location))
+					this.emit('controlLocationChanged', controlId, structuredClone(location))
 				}
 			}
 		})
@@ -510,6 +509,14 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 		const pageId = this.#pageIds[fromIndex]
 		this.#pageIds.splice(fromIndex, 1)
 		this.#pageIds.splice(toIndex, 0, pageId)
+
+		// Build an array of all page numbers that changed
+		const minIndex = Math.min(fromIndex, toIndex)
+		const maxIndex = Math.max(fromIndex, toIndex)
+		const affectedPageNumbers = new Array(maxIndex - minIndex + 1).fill(0).map((_, i) => i + minIndex + 1)
+
+		// Save changes to the pages
+		this.#commitChanges(affectedPageNumbers)
 	}
 
 	/**

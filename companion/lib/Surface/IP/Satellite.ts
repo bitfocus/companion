@@ -22,7 +22,9 @@ import {
 	RotationConfigField,
 } from '../CommonConfigFields.js'
 import debounceFn from 'debounce-fn'
-import { VARIABLE_UNKNOWN_VALUE } from '../../Variables/Util.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { GraphicsRenderer, LOCK_ICON_STYLE } from '../../Graphics/Renderer.js'
+import { ImageResult } from '../../Graphics/ImageResult.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type {
@@ -37,12 +39,11 @@ import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import { ReadonlyDeep } from 'type-fest'
+import type { ReadonlyDeep } from 'type-fest'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
 	productName: string
-	path: string
 	socket: SatelliteSocketWrapper
 	gridSize: GridSize
 	supportsBrightness: boolean
@@ -172,6 +173,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly surfaceManifestFromClient: boolean
 	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
 	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
+	readonly #supportsLockedState: boolean
 
 	readonly #inputVariables: Record<string, SatelliteInputVariableInfo> = {}
 	readonly #outputVariables: Record<string, SatelliteOutputVariableInfo> = {}
@@ -180,6 +182,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly gridSize: GridSize
 	readonly deviceId: string
 	readonly socket: SatelliteSocketWrapper
+
+	// Cache for generated lock images by dimension
+	readonly #lockImageCache = new Map<string, ImageResult>()
 
 	constructor(deviceInfo: SatelliteDeviceInfo, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
@@ -195,17 +200,17 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.surfaceManifestFromClient = deviceInfo.surfaceManifestFromClient
 		this.#surfaceManifest = deviceInfo.surfaceManifest
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
+		this.#supportsLockedState = deviceInfo.supportsLockedState
 
 		const anyControlHasBitmap = !!Array.from(this.#controlDefinitions.values()).find(
 			(controls) => !!controls.find((control) => !!control.style.bitmap)
 		)
 
 		this.info = {
-			type: deviceInfo.productName,
-			devicePath: deviceInfo.path,
+			description: deviceInfo.productName,
 			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
-			deviceId: deviceInfo.path,
-			location: deviceInfo.socket.remoteAddress,
+			surfaceId: deviceInfo.deviceId,
+			location: deviceInfo.socket.remoteAddress ?? null,
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
@@ -229,22 +234,57 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			this.#triggerOutputVariable(name, outputVariable)
 		}
+	}
 
-		if (deviceInfo.supportsLockedState) {
-			this.setLocked = (locked: boolean, characterCount: number): void => {
-				this.#logger.silly(`locked: ${locked} - ${characterCount}`)
-				if (this.socket !== undefined) {
-					this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {
-						LOCKED: locked,
-						CHARACTER_COUNT: characterCount,
+	setLocked(locked: boolean, characterCount: number): void {
+		if (this.#supportsLockedState) {
+			this.#logger.silly(`locked: ${locked} - ${characterCount}`)
+			if (this.socket !== undefined) {
+				this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {
+					LOCKED: locked,
+					CHARACTER_COUNT: characterCount,
+				})
+			}
+		} else {
+			// Clear the deck to blank anything we won't be drawing to
+			this.clearDeck()
+
+			if (!locked) return
+
+			// Iterate through all controls and draw lock icons/text
+			for (const definitions of this.#controlDefinitions.values()) {
+				for (const definition of definitions) {
+					// Queue the draw
+					this.#writeQueue.queue(definition.id, definition, {
+						x: definition.column,
+						y: definition.row,
+						image: this.#getLockImage(definition.style),
 					})
 				}
 			}
 		}
 	}
 
-	// Override the base type, it may be defined by the constructor
-	setLocked: SurfacePanel['setLocked']
+	/**
+	 * Get or generate a lock icon image for a given size
+	 */
+	#getLockImage(stylePreset: SatelliteControlStylePreset): ImageResult {
+		const cacheKey =
+			stylePreset.bitmap && stylePreset.bitmap.w > 0 && stylePreset.bitmap.h > 0
+				? `${stylePreset.bitmap.w}x${stylePreset.bitmap.h}`
+				: null
+
+		if (!stylePreset.bitmap || !cacheKey) {
+			return new ImageResult(Buffer.alloc(0), 0, 0, '', LOCK_ICON_STYLE)
+		}
+
+		const cached = this.#lockImageCache.get(cacheKey)
+		if (cached) return cached
+
+		const result = GraphicsRenderer.drawLockIcon(stylePreset.bitmap.w, stylePreset.bitmap.h)
+		this.#lockImageCache.set(cacheKey, result)
+		return result
+	}
 
 	quit(): void {}
 
@@ -438,7 +478,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					let expressionResult: CompanionVariableValue | undefined = VARIABLE_UNKNOWN_VALUE
 
 					const expressionText = this.#config[outputVariable.id]
-					const parseResult = this.#executeExpression(expressionText ?? '', this.info.deviceId, undefined)
+					const parseResult = this.#executeExpression(expressionText ?? '', this.info.surfaceId, undefined)
 					if (parseResult.ok) {
 						expressionResult = parseResult.value
 					} else {

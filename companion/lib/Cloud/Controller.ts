@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import { CloudRegion, RegionInfo } from './Region.js'
 import { v4 } from 'uuid'
 import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'

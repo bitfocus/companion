@@ -1,4 +1,4 @@
-import Database, { Database as SQLiteDB } from 'better-sqlite3'
+import Database, { type Database as SQLiteDB } from 'better-sqlite3'
 
 // Manual path to the prebuilt binary, to strip down the
 const nativeBinding =

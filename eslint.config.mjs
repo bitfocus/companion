@@ -76,6 +76,8 @@ export default [
 			'@typescript-eslint/no-floating-promises': 'error',
 			'@typescript-eslint/promise-function-async': 'error',
 			'@typescript-eslint/require-await': 'off', // conflicts with 'promise-function-async'
+			'@typescript-eslint/consistent-type-imports': 'error',
+			'no-duplicate-imports': 'error',
 
 			/** Disable some annoyingly strict rules from the 'recommended-requiring-type-checking' pack */
 			'@typescript-eslint/no-unsafe-assignment': 0,
@@ -94,6 +96,7 @@ export default [
 				{
 					allowedNames: [
 						'createTrpcRouter', // The router wants to be inferred
+						'createTrpcRouterBase', // The router wants to be inferred
 					],
 				},
 			],
@@ -140,10 +143,14 @@ export default [
 			'tools/**/*',
 			'module-local-dev/**/*',
 			'launcher/dev.cjs',
+			'webui/public/_deps/**/*',
+			'webui/post-install.ts',
+			'.yarnrc.yml',
 			// TMP
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',
 			'webui/test/**/*',
+			'.cache/*',
 		],
 	},
 	{
@@ -185,6 +192,11 @@ export default [
 					],
 				},
 			],
+
+			// HACK: temporary rules to suppress errors until we can fix them properly
+			'react-hooks/refs': 'off',
+			'react-hooks/set-state-in-effect': 'off',
+			'react-hooks/preserve-manual-memoization': 'off',
 		},
 	},
 	{

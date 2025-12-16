@@ -9,7 +9,6 @@
  * this program.
  */
 
-import { cloneDeep } from 'lodash-es'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { SurfaceHandler } from './Handler.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
@@ -17,7 +16,7 @@ import type { SurfaceController } from './Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
-import EventEmitter from 'node:events'
+import type EventEmitter from 'node:events'
 import type { UpdateEvents } from './Types.js'
 
 export class SurfaceGroup {
@@ -29,6 +28,8 @@ export class SurfaceGroup {
 		last_page_id: '',
 		startup_page_id: '',
 		use_last_page: true,
+		restrict_pages: false,
+		allowed_page_ids: [],
 	}
 
 	/**
@@ -40,6 +41,11 @@ export class SurfaceGroup {
 	 * The current page of this surface group
 	 */
 	#currentPageId: string
+
+	/**
+	 * Page history for surfaces
+	 */
+	readonly #pageHistory: { history: string[]; index: number }
 
 	/**
 	 * The surfaces belonging to this group
@@ -116,7 +122,7 @@ export class SurfaceGroup {
 		}
 		// Apply missing defaults
 		this.groupConfig = {
-			...cloneDeep(SurfaceGroup.DefaultOptions),
+			...structuredClone(SurfaceGroup.DefaultOptions),
 			...this.groupConfig,
 		}
 
@@ -141,13 +147,15 @@ export class SurfaceGroup {
 		}
 
 		// validate the current page id
-		if (!this.#pageStore.isPageIdValid(this.#currentPageId)) {
-			this.#currentPageId = this.#pageStore.getFirstPageId()
+		if (!this.#isPageIdValid(this.#currentPageId)) {
+			this.#currentPageId = this.#getFirstPageId()
 
 			// Update the config to match
 			this.groupConfig.last_page_id = this.#currentPageId
 			this.groupConfig.startup_page_id = this.#currentPageId
 		}
+
+		this.#pageHistory = { history: [this.#currentPageId], index: 0 }
 
 		// Now attach and setup the surface
 		if (soleHandler) this.attachSurface(soleHandler)
@@ -214,26 +222,6 @@ export class SurfaceGroup {
 	}
 
 	/**
-	 * Perform page-down for this surface group
-	 */
-	doPageDown(): void {
-		if (this.#userconfig.getKey('page_direction_flipped') === true) {
-			this.#increasePage()
-		} else {
-			this.#decreasePage()
-		}
-	}
-
-	/**
-	 * Set the current page of this surface group
-	 */
-	setCurrentPage(newPageId: string, defer = false): void {
-		if (!this.#pageStore.isPageIdValid(newPageId)) return
-
-		this.#storeNewPage(newPageId, defer)
-	}
-
-	/**
 	 * Get the current page of this surface group
 	 */
 	getCurrentPageId(): string {
@@ -241,35 +229,145 @@ export class SurfaceGroup {
 	}
 
 	/**
+	 * Perform page-down for this surface group
+	 */
+	doPageDown(): void {
+		const increase = this.#userconfig.getKey('page_direction_flipped') === true
+		this.setCurrentPage(increase ? '+1' : '-1')
+	}
+
+	/**
 	 * Perform page-up for this surface group
 	 */
 	doPageUp(): void {
-		if (this.#userconfig.getKey('page_direction_flipped') === true) {
-			this.#decreasePage()
+		const decrease = this.#userconfig.getKey('page_direction_flipped') === true
+		this.setCurrentPage(decrease ? '-1' : '+1')
+	}
+
+	clearPageHistory(): void {
+		this.#pageHistory.history = [this.#currentPageId]
+		this.#pageHistory.index = 0
+	}
+
+	/**
+	 * Return `groupConfig.allowed_page_ids` if `groupConfig.restrict_pages`, while ensuring that the pages are valid
+	 * Return an empty list if `groupConfig.restrict_pages` is false
+	 */
+	#getAllowedPagesList(): string[] {
+		if (this.groupConfig.restrict_pages) {
+			const allowedPages = this.groupConfig.allowed_page_ids ?? []
+			return allowedPages.filter((page) => this.#pageStore.isPageIdValid(page))
 		} else {
-			this.#increasePage()
+			return []
 		}
 	}
 
-	#increasePage() {
-		const newPageId = this.#pageStore.getOffsetPageId(this.#currentPageId, 1)
-		if (!newPageId) return
-		this.setCurrentPage(newPageId)
+	/**
+	 * Get first page ID, taking into account `groupConfig.allowed_page_ids`
+	 */
+	#getFirstPageId(): string {
+		const allowedPages = this.#getAllowedPagesList()
+		return allowedPages.length > 0 ? allowedPages[0] : this.#pageStore.getFirstPageId()
 	}
 
-	#decreasePage() {
-		const newPageId = this.#pageStore.getOffsetPageId(this.#currentPageId, -1)
-		if (!newPageId) return
-		this.setCurrentPage(newPageId)
+	/**
+	 * Check if a page ID is valid, taking into account `groupConfig.allowed_page_ids`
+	 */
+	#isPageIdValid(pageID: string): boolean {
+		// If page doesn't exist, we're done:
+		if (!this.#pageStore.isPageIdValid(pageID)) {
+			return false
+		}
+
+		// Otherwise, the result depends on whether restrictions are in place
+		const allowedPages = this.#getAllowedPagesList()
+		if (allowedPages.length > 0) {
+			// page is valid only if it's in the "restricted" list
+			return allowedPages.includes(pageID)
+		} else {
+			// page is valid and there are no page restrictions
+			return true
+		}
+	}
+
+	/**
+	 * Change the page of a surface, keeping a history of previous pages
+	 */
+	setCurrentPage(toPage: string | 'back' | 'forward' | '+1' | '-1', defer = false): void {
+		const currentPage = this.#currentPageId
+		const pageHistory = this.#pageHistory
+
+		if (toPage === 'back' || toPage === 'forward') {
+			// first make sure the history list contains only valid pages...
+			if (pageHistory.history.some((p) => !this.#isPageIdValid(p))) {
+				pageHistory.history = pageHistory.history.filter((p) => this.#isPageIdValid(p))
+				// not sure what's best here, but this should do...
+				pageHistory.index = pageHistory.history.length - 1
+			}
+
+			// determine the 'to' page
+			const pageDirection = toPage === 'back' ? -1 : 1
+			const pageIndex = pageHistory.index + pageDirection
+			const pageTarget = pageHistory.history[pageIndex]
+
+			// change only if pageIndex points to a real page
+			// note that in all common situations, the only way pageTarget is undefined
+			// is when we're trying to go beyond the beginning or end of history,
+			// in which case, doing nothing is the correct action.
+			if (pageTarget !== undefined) {
+				pageHistory.index = pageIndex
+				if (!this.#isPageIdValid(pageTarget)) return
+
+				this.#storeNewPage(pageTarget, defer)
+			}
+		} else {
+			const allowedPages = this.#getAllowedPagesList()
+			let newPage: string | null = toPage
+			const getNewPage = (currentPage: string, offset: number) => {
+				if (allowedPages.length > 0) {
+					let newPage = (allowedPages.indexOf(currentPage) + offset) % allowedPages.length
+					if (newPage < 0) newPage = allowedPages.length - 1
+					return allowedPages[newPage]
+				} else {
+					// note: getOffsetPageId() calculates the new page with wrap around
+					return this.#pageStore.getOffsetPageId(currentPage, offset)
+				}
+			}
+			// note: getNewPage() calculates the new page with wrap around
+			if (newPage === '+1') {
+				newPage = getNewPage(currentPage, 1)
+			} else if (newPage === '-1') {
+				newPage = getNewPage(currentPage, -1)
+			} else {
+				newPage = String(newPage)
+			}
+			if (!newPage || !this.#isPageIdValid(newPage)) newPage = this.#getFirstPageId()
+
+			// Change page
+			this.#storeNewPage(newPage, defer)
+
+			// Clear forward page history beyond current index, add new history entry, increment index;
+			pageHistory.history = pageHistory.history.slice(0, pageHistory.index + 1)
+			pageHistory.history.push(newPage)
+			pageHistory.index += 1
+
+			// Limit the max history
+			const maxPageHistory = 100
+			if (pageHistory.history.length > maxPageHistory) {
+				const startIndex = pageHistory.history.length - maxPageHistory
+				pageHistory.history = pageHistory.history.slice(startIndex)
+				pageHistory.index = pageHistory.history.length - 1
+			}
+		}
 	}
 
 	/**
 	 * Update the current page if the total number of pages change
 	 */
 	#pageCountChange = (_pageCount: number): void => {
-		if (!this.#pageStore.isPageIdValid(this.#currentPageId)) {
+		if (!this.#isPageIdValid(this.#currentPageId)) {
 			// TODO - choose a better value?
-			this.#storeNewPage(this.#pageStore.getFirstPageId(), true)
+			this.#storeNewPage(this.#getFirstPageId(), true)
 		}
 	}
 
@@ -334,10 +432,20 @@ export class SurfaceGroup {
 
 	/**
 	 * Set the surface as locked
+	 * @returns whether the locked state changed
 	 */
-	setLocked(locked: boolean): void {
+	setLocked(locked: boolean): boolean {
+		// If an auto-group, just pass to the sole surface
+		if (this.isAutoGroup) {
+			return this.surfaceHandlers[0].setLocked(locked)
+		}
+
 		// // skip if surface can't be locked
 		// if (this.#surfaceConfig.config.never_lock) return
+
+		if (this.#isLocked === !!locked) {
+			return false
+		}
 
 		// Track the locked status
 		this.#isLocked = !!locked
@@ -345,6 +453,19 @@ export class SurfaceGroup {
 		// If it changed, redraw
 		for (const surface of this.surfaceHandlers) {
 			surface.setLocked(locked)
+		}
+
+		return true
+	}
+
+	/**
+	 * Ensure all surfaces in this group have the correct locked state
+	 */
+	syncLocked(): void {
+		if (this.isAutoGroup) return
+
+		for (const surface of this.surfaceHandlers) {
+			surface.setLocked(this.#isLocked)
 		}
 	}
 
@@ -394,6 +515,18 @@ export function validateGroupConfigValue(pageStore: IPageStore, key: string, val
 			}
 
 			return value
+		}
+		case 'restrict_pages':
+			return Boolean(value)
+
+		case 'allowed_page_ids': {
+			const values = value as string[]
+			const errors = values.filter((page) => !pageStore.isPageIdValid(page))
+			if (errors.length > 0) {
+				throw new Error(`Invalid allowed_page_ids values: [${errors.join(',')}]`)
+			}
+
+			return values
 		}
 		default:
 			throw new Error(`Invalid SurfaceGroup config key: "${key}"`)

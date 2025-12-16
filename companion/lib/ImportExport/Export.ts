@@ -10,15 +10,17 @@
  */
 
 import os from 'os'
-import { getTimestamp, isFalsey } from '../Resources/Util.js'
+import { getTimestamp } from '../Resources/Util.js'
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
-import archiver from 'archiver'
+import yazl from 'yazl'
 import path from 'path'
-import fs from 'fs'
+import fs from 'fs-extra'
 import { stringify as csvStringify } from 'csv-stringify/sync'
-import LogController, { Logger } from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type express from 'express'
 import type { ParsedQs } from 'qs'
+import { unflattenQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
+import { ZodError } from 'zod'
 import type {
 	ExportFullv6,
 	ExportInstancesv6,
@@ -31,7 +33,7 @@ import type {
 import type { ImageLibraryExportData } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import type { AppInfo } from '../Registry.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import { zodClientExportSelection, type ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -46,11 +48,12 @@ import type { RequestHandler } from 'express'
 import { FILE_VERSION } from './Constants.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
-import { formatAttachmentFilename, StringifiedExportData, stringifyExport } from './Util.js'
+import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import { formatAttachmentFilename, stringifyExport, type StringifiedExportData } from './Util.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class ExportController {
-	readonly #logger = LogController.createLogger('ImportExport/Controller')
+	readonly #logger = LogController.createLogger('ImportExport/Export')
 
 	readonly #appInfo: AppInfo
 	readonly #controlsController: ControlsController
@@ -156,7 +159,7 @@ export class ExportController {
 			)
 			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 			const filteredConnectionCollections = this.#filterReferencedCollections(
-				this.#instancesController.collections.collectionData,
+				this.#instancesController.connectionCollections.collectionData,
 				referencedConnectionCollectionIds
 			)
 
@@ -190,11 +193,28 @@ export class ExportController {
 	}
 
 	#exportCustomHandler: RequestHandler = (req, res, next) => {
-		const exp = this.generateCustomExport(req.query as any)
+		try {
+			// Convert flat dot-notation query params back to nested object
+			const unflattened = unflattenQueryParams(req.query)
 
-		const filename = this.#generateFilename(String(req.query.filename as any), '', 'companionconfig')
+			// Validate with Zod schema - it handles type coercion!
+			const config = zodClientExportSelection.parse(unflattened)
 
-		downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+			const exp = this.generateCustomExport(config)
+
+			const filename = this.#generateFilename(config.filename ?? '', 'custom_config', 'companionconfig')
+
+			downloadBlob(this.#logger, res, next, exp, filename, config.format)
+		} catch (error) {
+			if (error instanceof ZodError) {
+				res.status(400).json({
+					error: 'Invalid query parameters',
+					details: error.issues,
+				})
+			} else {
+				next(error)
+			}
+		}
 	}
 
 	#exportFullHandler: RequestHandler = (req, res, next) => {
@@ -225,82 +245,82 @@ export class ExportController {
 
 		sendExportData(res, {
 			data: csvOut,
-			contentType: 'text/csv',
 			...formatAttachmentFilename(filename),
 		})
 	}
 
-	#exportSupportBundleHandler: RequestHandler = async (_req, res, _next) => {
-		// Export support zip
-		const archive = archiver('zip', { zlib: { level: 9 } })
-
-		archive.on('error', (err) => {
-			console.log(err)
-		})
-
-		//on stream closed we can end the request
-		archive.on('end', () => {
-			this.#logger.debug(`Support export wrote ${+archive.pointer()} bytes`)
-		})
-
-		//set the archive name
-		const filename = this.#generateFilename(
-			String(this.#userConfigController.getKey('default_export_filename')),
-			'companion-config',
-			'zip'
-		)
-		res.attachment(filename)
-
-		//this is the streaming magic
-		archive.pipe(res)
-
-		archive.glob(
-			'*',
-			{
-				cwd: this.#appInfo.configDir,
-				nodir: true,
-				ignore: [
-					'cloud', // Ignore companion-cloud credentials
-				],
-			},
-			{}
-		)
-
-		// Add the logs if found
-		const logsDir = path.join(this.#appInfo.configDir, '../logs')
-		if (fs.existsSync(logsDir)) {
-			archive.glob(
-				'*',
-				{
-					cwd: logsDir,
-					nodir: true,
-				},
-				{
-					prefix: 'logs',
-				}
+	#exportSupportBundleHandler: RequestHandler = async (_req, res, next) => {
+		try {
+			const filename = this.#generateFilename(
+				String(this.#userConfigController.getKey('default_export_filename')),
+				'companion-config',
+				'zip'
 			)
-		}
+			res.attachment(filename)
 
-		{
-			const logs = LogController.getAllLines()
+			const zipfile = new yazl.ZipFile()
+			zipfile.outputStream.pipe(res)
 
-			let out = `"Date","Module","Type","Log"\r\n`
-			for (const line of logs) {
-				out += `${new Date(line.time).toISOString()},"${line.source}","${line.level}","${line.message}"\r\n`
+			zipfile.outputStream.on('error', (err) => {
+				this.#logger.error(`Support bundle zip stream error: ${err}`)
+				next(err)
+			})
+
+			// Recursively add files from a directory
+			async function addDirectory(dirPath: string, zipPath: string, ignore?: string[]) {
+				const entries = await fs.readdir(dirPath, { withFileTypes: true })
+				for (const entry of entries) {
+					if (ignore?.includes(entry.name)) continue
+
+					const fullPath = path.join(dirPath, entry.name)
+					const zipEntryPath = zipPath ? path.join(zipPath, entry.name) : entry.name
+
+					if (entry.isDirectory()) {
+						await addDirectory(fullPath, zipEntryPath)
+					} else if (entry.isFile()) {
+						zipfile.addFile(fullPath, zipEntryPath)
+					}
+				}
 			}
 
-			archive.append(out, { name: 'log.csv' })
-		}
+			// Add config files
+			await addDirectory(this.#appInfo.configDir, '', ['cloud'])
 
-		try {
-			const payload = compileUpdatePayload(this.#appInfo)
-			const out = JSON.stringify(payload)
-			archive.append(out, { name: 'user.json' })
-		} catch (e) {
-			this.#logger.debug(`Support bundle append user: ${e}`)
-		}
+			// Add the logs if found
+			const logsDir = path.join(this.#appInfo.configDir, '../logs')
+			try {
+				await fs.access(logsDir)
+				await addDirectory(logsDir, 'logs')
+			} catch {
+				// Logs directory doesn't exist, skip it
+			}
 
-		await archive.finalize()
+			// Add log.csv
+			{
+				const logs = LogController.getAllLines()
+
+				let out = `"Date","Module","Type","Log"\r\n`
+				for (const line of logs) {
+					out += `${new Date(line.time).toISOString()},"${line.source}","${line.level}","${line.message}"\r\n`
+				}
+
+				zipfile.addBuffer(Buffer.from(out), 'log.csv')
+			}
+
+			// Add user.json
+			try {
+				const payload = compileUpdatePayload(this.#appInfo)
+				const out = JSON.stringify(payload)
+				zipfile.addBuffer(Buffer.from(out), 'user.json')
+			} catch (e) {
+				this.#logger.debug(`Support bundle append user: ${e}`)
+			}
+
+			zipfile.end()
+		} catch (err) {
+			this.#logger.error(`Support bundle creation error: ${err}`)
+			next(err)
+		}
 	}
 
 	//Parse variables and generate filename based on export type
@@ -365,7 +385,7 @@ export class ExportController {
 		)
 		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
 		const filteredConnectionCollections = this.#filterReferencedCollections(
-			this.#instancesController.collections.collectionData,
+			this.#instancesController.connectionCollections.collectionData,
 			referencedConnectionCollectionIds
 		)
 
@@ -445,7 +465,7 @@ export class ExportController {
 
 		referencedConnectionIds.delete('internal') // Ignore the internal module
 		for (const connectionId of referencedConnectionIds) {
-			instancesExport[connectionId] = this.#instancesController.exportInstance(
+			instancesExport[connectionId] = this.#instancesController.exportConnection(
 				connectionId,
 				options.minimalExport,
 				true,
@@ -455,9 +475,9 @@ export class ExportController {
 
 		referencedConnectionLabels.delete('internal') // Ignore the internal module
 		for (const label of referencedConnectionLabels) {
-			const connectionId = this.#instancesController.getIdForLabel(label)
+			const connectionId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, label)
 			if (connectionId) {
-				instancesExport[connectionId] = this.#instancesController.exportInstance(
+				instancesExport[connectionId] = this.#instancesController.exportConnection(
 					connectionId,
 					options.minimalExport,
 					true,
@@ -513,7 +533,7 @@ export class ExportController {
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
 
-		if (!config || !isFalsey(config.buttons)) {
+		if (!config || config.buttons) {
 			exp.pages = {}
 
 			const pageInfos = this.#pagesStore.getAll()
@@ -527,7 +547,7 @@ export class ExportController {
 			}
 		}
 
-		if (!config || !isFalsey(config.triggers)) {
+		if (!config || config.triggers) {
 			const triggersExport: ExportTriggerContentv6 = {}
 			const triggerControls = this.#controlsController.getAllTriggers()
 			for (const control of triggerControls) {
@@ -549,12 +569,12 @@ export class ExportController {
 			exp.triggerCollections = this.#controlsController.exportTriggerCollections()
 		}
 
-		if (!config || !isFalsey(config.customVariables)) {
+		if (!config || config.customVariables) {
 			exp.custom_variables = this.#variablesController.custom.getDefinitions()
 			exp.customVariablesCollections = this.#variablesController.custom.exportCollections()
 		}
 
-		if (!config || !isFalsey(config.expressionVariables)) {
+		if (!config || config.expressionVariables) {
 			exp.expressionVariables = {}
 			exp.expressionVariablesCollections = this.#controlsController.exportExpressionVariableCollections()
 
@@ -575,9 +595,9 @@ export class ExportController {
 			}
 		}
 
-		if (!config || !isFalsey(config.connections)) {
-			exp.instances = this.#instancesController.exportAll(!config || !isFalsey(config.includeSecrets))
-			exp.connectionCollections = this.#instancesController.collections.collectionData
+		if (!config || config.connections) {
+			exp.instances = this.#instancesController.exportAllConnections(!config || config.includeSecrets)
+			exp.connectionCollections = this.#instancesController.connectionCollections.collectionData
 		} else {
 			exp.instances = this.#generateReferencedConnectionConfigs(referencedConnectionIds, referencedConnectionLabels, {
 				minimalExport: true,
@@ -586,12 +606,12 @@ export class ExportController {
 
 			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(exp.instances))
 			exp.connectionCollections = this.#filterReferencedCollections(
-				this.#instancesController.collections.collectionData,
+				this.#instancesController.connectionCollections.collectionData,
 				referencedConnectionCollectionIds
 			)
 		}
 
-		if (!config || !isFalsey(config.surfaces)) {
+		if (!config || config.surfaces?.known) {
 			const surfaces = this.#surfacesController.exportAll()
 			const surfaceGroups = this.#surfacesController.exportAllGroups()
 			const findPage = (id: string) => this.#pagesStore.getPageNumber(id)
@@ -602,6 +622,9 @@ export class ExportController {
 
 				groupConfig.last_page = findPage(groupConfig.last_page_id) ?? 1
 				groupConfig.startup_page = findPage(groupConfig.startup_page_id) ?? 1
+				if (groupConfig.allowed_page_ids !== undefined) {
+					groupConfig.allowed_pages = groupConfig.allowed_page_ids.map((id) => findPage(id) ?? 1)
+				}
 			}
 
 			for (const surface of Object.values(surfaces)) {
@@ -613,6 +636,13 @@ export class ExportController {
 
 			exp.surfaces = surfaces
 			exp.surfaceGroups = surfaceGroups
+		}
+		if (!config || config.surfaces?.remote) {
+			exp.surfacesRemote = this.#surfacesController.exportAllRemote()
+		}
+		if (!config || config.surfaces?.instances) {
+			exp.surfaceInstances = this.#instancesController.exportAllSurfaceInstances()
+			exp.surfaceInstanceCollections = this.#instancesController.surfaceInstanceCollections.collectionData
 		}
 
 		// Handle image library export
@@ -672,7 +702,7 @@ function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 function sendExportData(res: express.Response, data: StringifiedExportData) {
 	res.status(200)
 	res.set({
-		'Content-Type': data.contentType,
+		'Content-Type': 'application/octet-stream', // Force it to have a 'download' mime, to avoid safari changing the extension
 		'Content-Disposition': `attachment; filename=${data.asciiFilename}; filename*=UTF-8''${data.utf8Filename}`,
 	})
 	res.end(data.data)

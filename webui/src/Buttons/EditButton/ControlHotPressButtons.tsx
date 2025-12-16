@@ -1,4 +1,4 @@
-import { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CButtonGroup, CButton } from '@coreui/react'
 import { faPlay, faUndo, faRedo, faStop } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

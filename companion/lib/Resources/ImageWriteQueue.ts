@@ -9,7 +9,7 @@
  * this program.
  */
 
-import type winston from 'winston'
+import type { Logger } from '../Log/Controller.js'
 
 export class ImageWriteQueue<TKey extends string | number, TArgs extends any[]> {
 	/**
@@ -27,14 +27,10 @@ export class ImageWriteQueue<TKey extends string | number, TArgs extends any[]> 
 	 */
 	readonly #pendingImages: Array<{ key: TKey; args: TArgs }> = []
 
-	readonly #logger: winston.Logger
+	readonly #logger: Logger
 	readonly #callback: (key: TKey, ...args: TArgs) => Promise<void>
 
-	constructor(
-		logger: winston.Logger,
-		callback: (key: TKey, ...args: NoInfer<TArgs>) => Promise<void>,
-		maxConcurrent?: number
-	) {
+	constructor(logger: Logger, callback: (key: TKey, ...args: NoInfer<TArgs>) => Promise<void>, maxConcurrent?: number) {
 		this.#logger = logger
 		this.#callback = callback
 

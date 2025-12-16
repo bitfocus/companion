@@ -7,6 +7,7 @@ import type { VariablesValuesEvents } from '../Variables/Values.js'
 import type { VariablesCustomVariableEvents } from '../Variables/CustomVariable.js'
 import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
@@ -14,7 +15,7 @@ import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import EventEmitter from 'events'
-import { ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
+import type { ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -146,8 +147,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * Get the a defined custom variable names
 	 * @returns Array of defined variable names
 	 */
-	getCustomVariableDefinitions(): ModuleVariableDefinitions {
-		return this.#variablesController.definitions.getVariableDefinitions('custom')
+	getCustomVariableDefinitions(): CustomVariablesModel {
+		return this.#variablesController.custom.getDefinitions()
 	}
 
 	async triggerRescanForSurfaces(): Promise<void> {

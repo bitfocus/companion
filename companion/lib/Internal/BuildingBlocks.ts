@@ -20,8 +20,12 @@ import type {
 	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
-import type { RunActionExtras } from '../Instance/Wrapper.js'
-import { EntityModelType, FeedbackEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
+import {
+	EntityModelType,
+	FeedbackEntitySubType,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { InternalModuleUtils } from './Util.js'
 import { booleanAnd } from '../Resources/Util.js'

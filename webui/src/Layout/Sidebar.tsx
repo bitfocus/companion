@@ -1,17 +1,18 @@
 import React, {
 	createContext,
-	CSSProperties,
 	memo,
-	ReactNode,
 	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
+	type CSSProperties,
+	type ReactNode,
 } from 'react'
 import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop } from '@coreui/react'
 import {
+	type IconDefinition,
 	faFileImport,
 	faCog,
 	faClipboardList,
@@ -26,7 +27,6 @@ import {
 	faBug,
 	faUsers,
 	faComments,
-	IconDefinition,
 	faSquareCaretRight,
 	faPuzzlePiece,
 	faInfo,
@@ -36,7 +36,12 @@ import {
 	faSquareRootVariable,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
+import {
+	SurfacesConfiguredTabNotifyIcon,
+	ConnectionsTabNotifyIcon,
+	SurfacesTabNotifyIcon,
+	SurfacesInstancesTabNotifyIcon,
+} from '~/Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
@@ -179,13 +184,28 @@ export const MySidebar = memo(function MySidebar() {
 				</CSidebarBrand>
 			</CSidebarHeader>
 			<CSidebarNav className="nav-main-scroller">
-				<SidebarMenuItem name="Connections" icon={faPlug} path="/connections" />
+				<SidebarMenuItem
+					name="Connections"
+					icon={faPlug}
+					notifications={ConnectionsTabNotifyIcon}
+					path="/connections"
+				/>
 				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
 				<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
 				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
-					<SidebarMenuItem name="Configured" icon={null} path="/surfaces/configured" />
-					<SidebarMenuItem name="Discover" icon={null} path="/surfaces/discover" />
-					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/outbound" />
+					<SidebarMenuItem
+						name="Configured"
+						icon={null}
+						notifications={SurfacesConfiguredTabNotifyIcon}
+						path="/surfaces/configured"
+					/>
+					<SidebarMenuItem
+						name="Integrations"
+						notifications={SurfacesInstancesTabNotifyIcon}
+						icon={null}
+						path="/surfaces/integrations"
+					/>
+					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/remote" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
 				<SidebarMenuItemGroup name="Variables" icon={faDollarSign} path="/variables">
@@ -219,7 +239,7 @@ export const MySidebar = memo(function MySidebar() {
 			</div>
 			<CSidebarNav className="nav-secondary border-top">
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-				<SidebarMenuItem name="Getting Started" icon={faInfo} path="/getting-started" target="_blank" />
+				<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
 					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
 					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
@@ -245,7 +265,7 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 				<SidebarMenuItem
 					key={connectionInfo.id}
 					name={connectionInfo.label}
-					subheading={modules.getModuleFriendlyName(connectionInfo.instance_type)}
+					subheading={modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)}
 					icon={null}
 					path={`/variables/connection/${connectionInfo.label}`}
 				/>
@@ -325,6 +345,38 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 		if (sidebarState.showToggle) setVisibleMobile(false)
 	}, [sidebarState.showToggle])
 
+	const handleOnClick = useCallback(
+		(event: Event) => {
+			const target = event.target as HTMLAnchorElement
+			if (
+				target &&
+				target.classList.contains('nav-link') &&
+				!target.classList.contains('nav-group-toggle') &&
+				sidebarState.showToggle
+			) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle]
+	)
+
+	const handleKeyup = useCallback(
+		(event: Event) => {
+			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle, sidebarRef]
+	)
+	const handleClickOutside = useCallback(
+		(event: Event) => {
+			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+				setVisibleMobile(false)
+			}
+		},
+		[sidebarState.showToggle, sidebarRef]
+	)
+
 	useEffect(() => {
 		window.addEventListener('mouseup', handleClickOutside)
 		window.addEventListener('keyup', handleKeyup)
@@ -339,30 +391,7 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 
 			sideBarElement?.removeEventListener('mouseup', handleOnClick)
 		}
-	})
-
-	const handleKeyup = (event: Event) => {
-		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-			setVisibleMobile(false)
-		}
-	}
-	const handleClickOutside = (event: Event) => {
-		if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-			setVisibleMobile(false)
-		}
-	}
-
-	const handleOnClick = (event: Event) => {
-		const target = event.target as HTMLAnchorElement
-		if (
-			target &&
-			target.classList.contains('nav-link') &&
-			!target.classList.contains('nav-group-toggle') &&
-			sidebarState.showToggle
-		) {
-			setVisibleMobile(false)
-		}
-	}
+	}, [sidebarRef, handleOnClick, handleKeyup, handleClickOutside])
 
 	return (
 		<>

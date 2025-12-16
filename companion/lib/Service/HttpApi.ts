@@ -1,5 +1,4 @@
 import { parseColorToNumber, rgb } from '../Resources/Util.js'
-import express from 'express'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import Express from 'express'
 import type { UIExpress } from '../UI/Express.js'
@@ -38,12 +37,12 @@ export class ServiceHttpApi {
 	/**
 	 * new Api express router
 	 */
-	readonly #apiRouter: express.Router
+	readonly #apiRouter: Express.Router
 
 	/**
 	 * new legacy Api express router
 	 */
-	readonly #legacyApiRouter: express.Router
+	readonly #legacyApiRouter: Express.Router
 
 	/**
 	 * The web application framework
@@ -331,7 +330,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform surfaces rescan
 	 */
-	#surfacesRescan = (_req: express.Request, res: express.Response): void => {
+	#surfacesRescan = (_req: Express.Request, res: Express.Response): void => {
 		this.logger.info('Got HTTP surface rescan')
 		this.#serviceApi.triggerRescanForSurfaces().then(
 			() => {
@@ -346,7 +345,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform surfaces rescan
 	 */
-	#locationParse = (req: express.Request): { location: ControlLocation; controlId: string | null } => {
+	#locationParse = (req: Express.Request): { location: ControlLocation; controlId: string | null } => {
 		const location = {
 			pageNumber: Number(req.params.page),
 			row: Number(req.params.row),
@@ -364,7 +363,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform control press
 	 */
-	#locationPress = (req: express.Request, res: express.Response): void => {
+	#locationPress = (req: Express.Request, res: Express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control press ${formatLocation(location)} - ${controlId}`)
 
@@ -387,7 +386,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform control down
 	 */
-	#locationDown = (req: express.Request, res: express.Response): void => {
+	#locationDown = (req: Express.Request, res: Express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control down ${formatLocation(location)} - ${controlId}`)
 
@@ -404,7 +403,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform control up
 	 */
-	#locationUp = (req: express.Request, res: express.Response): void => {
+	#locationUp = (req: Express.Request, res: Express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control up ${formatLocation(location)} - ${controlId}`)
 
@@ -421,7 +420,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform control rotate left
 	 */
-	#locationRotateLeft = (req: express.Request, res: express.Response): void => {
+	#locationRotateLeft = (req: Express.Request, res: Express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control rotate left ${formatLocation(location)} - ${controlId}`)
 
@@ -438,7 +437,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform control rotate right
 	 */
-	#locationRotateRight = (req: express.Request, res: express.Response): void => {
+	#locationRotateRight = (req: Express.Request, res: Express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control rotate right ${formatLocation(location)} - ${controlId}`)
 
@@ -455,7 +454,7 @@ export class ServiceHttpApi {
 	/**
 	 * Set control step
 	 */
-	#locationStep = (req: express.Request, res: express.Response): void => {
+	#locationStep = (req: Express.Request, res: Express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		const step = Number(req.query.step)
 
@@ -482,7 +481,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform control style change
 	 */
-	#locationStyle = (req: express.Request, res: express.Response): void => {
+	#locationStyle = (req: Express.Request, res: Express.Response): void => {
 		const { location, controlId } = this.#locationParse(req)
 		this.logger.info(`Got HTTP control style ${formatLocation(location)} - ${controlId}`)
 
@@ -559,7 +558,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform custom variable set value
 	 */
-	#customVariableSetValue = (req: express.Request, res: express.Response): void => {
+	#customVariableSetValue = (req: Express.Request, res: Express.Response): void => {
 		const variableName = req.params.name
 		let variableValue = null
 		let variableError = true
@@ -607,7 +606,7 @@ export class ServiceHttpApi {
 	/**
 	 * Retrieve a custom variable current value
 	 */
-	#customVariableGetValue = (req: express.Request, res: express.Response): void => {
+	#customVariableGetValue = (req: Express.Request, res: Express.Response): void => {
 		const variableName = req.params.name
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
@@ -626,7 +625,7 @@ export class ServiceHttpApi {
 	/**
 	 * Retrieve any module variable value
 	 */
-	#moduleVariableGetValue = (req: express.Request, res: express.Response): void => {
+	#moduleVariableGetValue = (req: Express.Request, res: Express.Response): void => {
 		const connectionLabel = req.params.label
 		const variableName = req.params.name
 

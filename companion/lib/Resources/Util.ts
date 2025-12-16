@@ -1,7 +1,7 @@
 import * as imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
@@ -386,28 +386,8 @@ export function GetButtonBitmapSize(
 	}
 }
 
-export function SplitVariableId(variableId: string): [string, string] {
-	const res = TrySplitVariableId(variableId)
-	if (res === null) throw new Error(`"${variableId}" is not a valid variable id`)
-	return res
-}
-
-export function TrySplitVariableId(variableId: string): [string, string] | null {
-	if (!variableId) return null
-	const splitIndex = variableId.indexOf(':')
-	if (splitIndex === -1) return null
-
-	const label = variableId.substring(0, splitIndex)
-	const variable = variableId.substring(splitIndex + 1)
-
-	return [label, variable]
-}
-
-export function booleanAnd(isInverted: boolean, childValues: boolean[]): boolean {
-	if (childValues.length === 0) return isInverted
-
-	return childValues.reduce((acc, val) => acc && val, true) === !isInverted
-}
+export type HorizontalAlignment = 'left' | 'right' | 'center'
+export type VerticalAlignment = 'top' | 'bottom' | 'center'
 
 /**
  * Lazy compute a value

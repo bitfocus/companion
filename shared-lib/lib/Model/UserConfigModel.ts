@@ -1,20 +1,13 @@
 export interface UserConfigModel {
 	setup_wizard: number
+	detailed_data_collection: boolean
 
 	page_direction_flipped: boolean
 	page_plusminus: boolean
 	remove_topbar: boolean
 
-	xkeys_enable: boolean
-	elgato_plugin_enable: boolean // Also disables local streamdeck
+	elgato_plugin_enable: boolean
 	usb_hotplug: boolean
-	loupedeck_enable: boolean
-	mirabox_streamdock_enable: boolean
-	contour_shuttle_enable: boolean
-	vec_footpedal_enable: boolean
-	blackmagic_controller_enable: boolean
-	mystrix_enable: boolean
-	logitech_mx_console_enable: boolean
 
 	pin_enable: boolean
 	link_lockouts: boolean
@@ -39,8 +32,6 @@ export interface UserConfigModel {
 	rosstalk_enabled: boolean
 
 	emberplus_enabled: boolean
-
-	videohub_panel_enabled: boolean
 
 	artnet_enabled: boolean
 	artnet_universe: number
@@ -71,9 +62,6 @@ export interface UserConfigModel {
 
 	installName: string
 	default_export_filename: string
-
-	/** Whether to run the mdns  */
-	discoveryEnabled: boolean
 
 	backups: BackupRulesConfig[]
 }

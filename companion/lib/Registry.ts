@@ -2,34 +2,43 @@
 import EventEmitter from 'events'
 import fs from 'fs-extra'
 import express from 'express'
-import LogController, { Logger } from './Log/Controller.js'
+import LogController, { type Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
 import { GraphicsController } from './Graphics/Controller.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
-import { DataUserConfig } from './Data/UserConfig.js'
+import type { DataUserConfig } from './Data/UserConfig.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
 import { PageController } from './Page/Controller.js'
 import { ServiceController } from './Service/Controller.js'
 import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
-import { sendOverIpc, showErrorMessage } from './Resources/Util.js'
+import { isPackaged, sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { VariablesController } from './Variables/Controller.js'
-import { DataMetrics } from './Data/Metrics.js'
+import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
 import { ServiceApi } from './Service/ServiceApi.js'
-import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 import { ActiveLearningStore } from './Resources/ActiveLearningStore.js'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import path from 'path'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
-const pkgInfoStr = await fs.readFile(new URL('../package.json', import.meta.url))
+let infoFileName: URL
+// note this could be done in one line, but webpack was having trouble before url processing was disabled.
+if (isPackaged()) {
+	infoFileName = new URL('./package.json', import.meta.url)
+} else {
+	infoFileName = new URL('../package.json', import.meta.url)
+}
+//console.log(`infoFileName: ${infoFileName}; `)
+const pkgInfoStr = await fs.readFile(infoFileName)
 const pkgInfo: PackageJson = JSON.parse(pkgInfoStr.toString())
 
 let buildNumber: string
@@ -38,7 +47,7 @@ try {
 		buildNumber = '0.0.0-VITEST'
 	} else {
 		buildNumber = fs
-			.readFileSync(new URL('../../BUILD', import.meta.url))
+			.readFileSync(path.join(import.meta.dirname, isPackaged() ? './BUILD' : '../../BUILD'))
 			.toString()
 			.trim()
 			.replace(/^-/, '')
@@ -52,13 +61,6 @@ try {
 if (process.env.COMPANION_IPC_PARENT && !process.send) {
 	console.error('COMPANION_IPC_PARENT is set, but process.send is undefined')
 	process.exit(1)
-}
-
-// Setup support for HTTP_PROXY before anything might use it
-if (process.env.NODE_USE_ENV_PROXY) {
-	// HACK: This is temporary and should be removed once https://github.com/nodejs/node/pull/57165 has been backported to node 22
-	const envHttpProxyAgent = new EnvHttpProxyAgent()
-	setGlobalDispatcher(envHttpProxyAgent)
 }
 
 /**
@@ -130,7 +132,7 @@ export class Registry {
 
 	importExport!: ImportExportController
 
-	#metrics!: DataMetrics
+	usageStatistics!: DataUsageStatistics
 
 	/**
 	 * The 'data' controller
@@ -156,22 +158,24 @@ export class Registry {
 	/**
 	 * Create a new application <code>Registry</code>
 	 * @param configDir - the configuration path
-	 * @param modulesDir - the path for storing modules
+	 * @param modulesDirs - the paths for storing modules
 	 * @param machineId - the machine uuid
 	 */
-	constructor(configDir: string, modulesDir: string, machineId: string) {
-		if (!configDir) throw new Error(`Missing configDir`)
-		if (!machineId) throw new Error(`Missing machineId`)
+	constructor(
+		baseAppInfo: Pick<AppInfo, 'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId'>
+	) {
+		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
+		if (!baseAppInfo.machineId) throw new Error(`Missing machineId`)
+		if (!baseAppInfo.modulesDirs) throw new Error(`Missing modulesDirs`)
+		if (!baseAppInfo.udevRulesDir) throw new Error(`Missing udevRulesDir`)
 
 		this.#logger = LogController.createLogger('Registry')
 
 		this.#logger.info(`Build ${buildNumber}`)
-		this.#logger.info(`configuration directory: ${configDir}`)
+		this.#logger.info(`configuration directory: ${baseAppInfo.configDir}`)
 
 		this.#appInfo = {
-			configDir: configDir,
-			modulesDir: modulesDir,
-			machineId: machineId,
+			...baseAppInfo,
 			appVersion: pkgInfo.version!,
 			appBuild: buildNumber,
 			pkgInfo: pkgInfo,
@@ -230,11 +234,13 @@ export class Registry {
 				this.#internalApiRouter,
 				this.controls,
 				this.variables,
+				this.surfaces,
 				oscSender
 			)
 			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
 			this.internalModule = new InternalController(
+				this.#appInfo,
 				this.controls,
 				pageStore,
 				this.instance,
@@ -271,7 +277,6 @@ export class Registry {
 				controlEvents
 			)
 
-			this.#metrics = new DataMetrics(this.#appInfo, this.surfaces, this.instance)
 			this.services = new ServiceController(
 				serviceApi,
 				this.userconfig,
@@ -290,6 +295,17 @@ export class Registry {
 				this.graphics,
 				pageStore
 			)
+			this.usageStatistics = new DataUsageStatistics(
+				this.#appInfo,
+				this.surfaces,
+				this.instance,
+				this.page,
+				this.controls,
+				this.variables,
+				this.cloud,
+				this.services,
+				this.userconfig
+			)
 
 			this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
 
@@ -297,7 +313,7 @@ export class Registry {
 			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
 			controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
 
-			this.graphics.on('resubscribeFeedbacks', () => this.instance.moduleHost.resubscribeAllFeedbacks())
+			this.graphics.on('resubscribeFeedbacks', () => this.instance.processManager.resubscribeAllFeedbacks())
 			this.graphics.on('presetDrawn', (controlId, render) => controlEvents.emit('presetDrawn', controlId, render))
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
@@ -306,6 +322,7 @@ export class Registry {
 					this.graphics.updateUserConfig(key, value)
 					this.services.updateUserConfig(key, value)
 					this.surfaces.updateUserConfig(key, value)
+					this.usageStatistics.updateUserConfig(key, value)
 				})
 
 				if (checkControlsInBounds) {
@@ -322,7 +339,7 @@ export class Registry {
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
 				this.internalModule.onVariablesChanged(all_changed_variables_set, null)
 				this.controls.onVariablesChanged(all_changed_variables_set, null)
-				this.instance.moduleHost.onVariablesChanged(all_changed_variables_set)
+				this.instance.processManager.onVariablesChanged(all_changed_variables_set)
 				this.preview.onVariablesChanged(all_changed_variables_set, null)
 				this.surfaces.onVariablesChanged(all_changed_variables_set)
 			})
@@ -341,7 +358,7 @@ export class Registry {
 			})
 
 			// old 'modules_loaded' events
-			this.#metrics.startCycle()
+			this.usageStatistics.startStopCycle()
 			this.ui.update.startCycle()
 
 			this.controls.init()
@@ -367,7 +384,7 @@ export class Registry {
 				process.on('message', (msg: any): void => {
 					try {
 						if (msg.messageType === 'http-rebind') {
-							this.rebindHttp(msg.ip, msg.port)
+							this.rebindHttp(msg.ip, Number(msg.port))
 						} else if (msg.messageType === 'exit') {
 							this.exit(false, false)
 						} else if (msg.messageType === 'scan-usb') {
@@ -436,7 +453,7 @@ export class Registry {
 			}
 
 			try {
-				await this.instance.destroyAllInstances()
+				await this.instance.shutdownAllInstances()
 			} catch (_e) {
 				//do nothing
 			}
@@ -467,7 +484,8 @@ export class Registry {
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
 		this.services.https.updateBindIp(bindIp)
-		this.internalModule.updateBindIp(bindIp)
+		this.internalModule.updateBindIp(bindIp, bindPort)
+		this.usageStatistics.updateBindIp(bindIp)
 	}
 }
 
@@ -475,7 +493,11 @@ export interface AppInfo {
 	/** The current config directory */
 	configDir: string
 	/** The base directory for storing installed modules */
-	modulesDir: string
+	modulesDirs: Record<ModuleInstanceType, string>
+	/** The builtin module directories */
+	builtinModuleDirs: Record<ModuleInstanceType, string | null>
+	/** The path to store generated udev rules */
+	udevRulesDir: string
 	machineId: string
 	appVersion: string
 	appBuild: string

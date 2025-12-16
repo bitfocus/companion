@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import jsonPatch from 'fast-json-patch'
 import { clamp } from '../Resources/Util.js'
@@ -12,9 +11,10 @@ import type {
 	RecordSessionUpdate,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { EntityModelType, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface ActionRecorderEvents {
 	sessions_changed: [sessionIds: string[]]
@@ -204,7 +204,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 							// Filter out the action
 							const index = this.#currentSession.actions.findIndex((a) => a.id === input.actionId)
 							if (index !== -1) {
-								const newAction = cloneDeep(this.#currentSession.actions[index])
+								const newAction = structuredClone(this.#currentSession.actions[index])
 								newAction.id = nanoid()
 								this.#currentSession.actions.splice(index + 1, 0, newAction)
 
@@ -276,7 +276,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			for (const sessionId of sessionIds) {
 				const sessionInfo = this.#currentSession && this.#currentSession.id === sessionId ? this.#currentSession : null
 
-				const newSessionBlob = sessionInfo ? cloneDeep(sessionInfo) : null
+				const newSessionBlob = sessionInfo ? structuredClone(sessionInfo) : null
 
 				const eventName = `patchSession:${sessionId}` as const
 
@@ -320,7 +320,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 		if (this.#currentSession) {
 			newSessionListJson[this.#currentSession.id] = {
-				connectionIds: cloneDeep(this.#currentSession.connectionIds),
+				connectionIds: structuredClone(this.#currentSession.connectionIds),
 			}
 		}
 
@@ -402,7 +402,10 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			const session = this.#currentSession
 
 			if (session.connectionIds.includes(connectionId)) {
-				const currentUpgradeIndex = this.#registry.instance.getInstanceConfig(connectionId)?.lastUpgradeIndex
+				const currentUpgradeIndex = this.#registry.instance.getInstanceConfigOfType(
+					connectionId,
+					ModuleInstanceType.Connection
+				)?.lastUpgradeIndex
 
 				const newAction: RecordActionEntityModel = {
 					type: EntityModelType.Action,
@@ -502,7 +505,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	 */
 	setSelectedConnectionIds(connectionIds0: string[]): void {
 		if (!Array.isArray(connectionIds0)) throw new Error('Expected array of connection ids')
-		const allValidIds = new Set(this.#registry.instance.getAllInstanceIds())
+		const allValidIds = new Set(this.#registry.instance.getAllConnectionIds())
 		const connectionIds = connectionIds0.filter((id) => allValidIds.has(id))
 
 		this.#currentSession.connectionIds = connectionIds
@@ -528,7 +531,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		// Find ones to start recording
 		for (const connectionId of targetRecordingConnectionIds.values()) {
 			// Future: skip checking if they already know, to make sure they dont get stuck
-			const connection = this.#registry.instance.moduleHost.getChild(connectionId)
+			const connection = this.#registry.instance.processManager.getConnectionChild(connectionId)
 			if (connection) {
 				ps.push(
 					connection.startStopRecordingActions(true).catch((e) => {
@@ -541,7 +544,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		// Find ones to stop recording
 		for (const connectionId of this.#currentlyRecordingConnectionIds.values()) {
 			if (!targetRecordingConnectionIds.has(connectionId)) {
-				const connection = this.#registry.instance.moduleHost.getChild(connectionId)
+				const connection = this.#registry.instance.processManager.getConnectionChild(connectionId)
 				if (connection) {
 					ps.push(
 						connection.startStopRecordingActions(false).catch((e) => {

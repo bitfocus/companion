@@ -1,0 +1,111 @@
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
+import { CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
+import sanitizeHtml from 'sanitize-html'
+import { Marked } from 'marked'
+import { baseUrl } from 'marked-base-url'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { CModalExt } from '~/Components/CModalExt.js'
+import semver from 'semver'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+
+export interface HelpModalRef {
+	showFromUrl(moduleType: ModuleInstanceType, moduleId: string, versionDisplayName: string, url: string): void
+}
+
+interface HelpDisplayInfo {
+	moduleType: ModuleInstanceType
+	moduleId: string
+	versionDisplayName: string
+	markdown: string
+	baseUrl: string
+}
+
+export const HelpModal = observer(
+	forwardRef<HelpModalRef>(function HelpModal(_props, ref) {
+		const { modules } = useContext(RootAppStoreContext)
+
+		const [show, setShow] = useState(false)
+		const [content, setContent] = useState<HelpDisplayInfo | null>(null)
+
+		const doClose = useCallback(() => setShow(false), [])
+		const onClosed = useCallback(() => setContent(null), [])
+
+		useImperativeHandle(
+			ref,
+			() => ({
+				showFromUrl(moduleType, moduleId, versionId, url) {
+					let versionDisplayName = versionId
+					if (versionId) {
+						const parsed = semver.parse(versionId)
+						if (parsed) versionDisplayName = `v${parsed.toString()}`
+					}
+
+					const fixedUrl = url.startsWith('http') ? url : makeAbsolutePath(url)
+
+					fetch(fixedUrl)
+						.then(async (response) => {
+							const text = await response.text()
+
+							setContent({
+								moduleType,
+								moduleId,
+								versionDisplayName: versionDisplayName,
+								markdown: text,
+								baseUrl: fixedUrl,
+							})
+							setShow(true)
+						})
+						.catch((e) => {
+							setContent({
+								moduleType,
+								moduleId,
+								versionDisplayName: versionDisplayName,
+								markdown: `Failed to load help text: ${e}`,
+								baseUrl: '/null',
+							})
+							setShow(true)
+						})
+				},
+			}),
+			[]
+		)
+
+		const contentBaseUrl = content?.baseUrl
+		const marked = useMemo(() => {
+			const marked = new Marked()
+			if (contentBaseUrl) marked.use(baseUrl(contentBaseUrl))
+			return marked
+		}, [contentBaseUrl])
+
+		const html = content
+			? {
+					__html: sanitizeHtml(marked.parse(content.markdown) as string, {
+						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+						disallowedTagsMode: 'escape',
+					}),
+				}
+			: undefined
+
+		const moduleInfo = content && modules.getModuleInfo(content.moduleType, content.moduleId)
+
+		return (
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
+				<CModalHeader closeButton>
+					<h5>
+						Help for {moduleInfo?.display?.name || content?.moduleId} {content?.versionDisplayName ?? ''}
+					</h5>
+				</CModalHeader>
+				<CModalBody>
+					<div dangerouslySetInnerHTML={html} />
+				</CModalBody>
+				<CModalFooter>
+					<CButton color="secondary" onClick={doClose}>
+						Close
+					</CButton>
+				</CModalFooter>
+			</CModalExt>
+		)
+	})
+)

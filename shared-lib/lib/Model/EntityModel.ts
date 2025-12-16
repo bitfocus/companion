@@ -1,5 +1,5 @@
 import z from 'zod'
-import { ActionSetId } from './ActionModel.js'
+import type { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
 import { ExpressionOrValue, schemaExpressionOrValue } from './StyleLayersModel.js'
 

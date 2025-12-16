@@ -1,4 +1,4 @@
-import { EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
+import type { EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
 import { CButtonGroup, CButton } from '@coreui/react'
 import { faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

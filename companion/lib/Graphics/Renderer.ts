@@ -11,7 +11,7 @@
 
 import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { ImageResult, ImageResultProcessedStyle } from './ImageResult.js'
+import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
 import { DrawBounds, type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -22,13 +22,37 @@ import type { Complete } from '@companion-module/base/dist/util.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { GraphicsLockingGenerator } from './Locking.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
-import { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type * as imageRs from '@julusian/image-rs'
 import { Canvas, loadImage } from '@napi-rs/canvas'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
 const colorDarkGrey = 'rgba(15, 15, 15, 1)'
+
+/**
+ * Shared style for lock icon display
+ */
+export const LOCK_ICON_STYLE: DrawStyleButtonModel = {
+	text: '🔒',
+	textExpression: false,
+	size: 'auto',
+	alignment: 'center:center',
+	pngalignment: 'center:center',
+	color: 0xc8c8c8, // rgb(200, 200, 200) as number
+	bgcolor: 0x000000, // rgb(0, 0, 0) as number
+	show_topbar: false,
+	png64: null,
+	style: 'button',
+	imageBuffers: [],
+	pushed: false,
+	stepCurrent: 0,
+	stepCount: 1,
+	cloud: undefined,
+	cloud_error: undefined,
+	button_status: undefined,
+	action_running: undefined,
+}
 
 const emptySet: ReadonlySet<string> = new Set()
 
@@ -462,39 +486,6 @@ export class GraphicsRenderer {
 	}
 
 	/**
-	 * Draw pincode entry button for given number
-	 * @param num Display number
-	 */
-	static drawPincodeNumber(width: number, height: number, num: number): ImageResult {
-		return GraphicsRenderer.#getCachedImage(width, height, 3, (img) => {
-			GraphicsLockingGenerator.generatePincodeChar(img, num)
-			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
-				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
-					GraphicsLockingGenerator.generatePincodeChar(img, num)
-					return this.#RotateAndConvertImage(img, width, height, rotation, format)
-				})
-			})
-		})
-	}
-
-	/**
-	 * Draw pincode entry button
-	 */
-	static drawPincodeEntry(width: number, height: number, code: string | undefined): ImageResult {
-		return GraphicsRenderer.#getCachedImage(width, height, 4, (img) => {
-			GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
-			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
-				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
-					GraphicsLockingGenerator.generatePincodeValue(img, code?.length ?? 0)
-					return this.#RotateAndConvertImage(img, width, height, rotation, format)
-				})
-			})
-		})
-	}
-
-	/**
 	 * Create a 200px preview WebP from the original image
 	 */
 	static async createImagePreview(
@@ -561,5 +552,22 @@ export class GraphicsRenderer {
 		// Future: once we support rotation within Image, we can avoid this final transform
 
 		return transformButtonImage(img.buffer(), img.realwidth, img.realheight, rotation, width, height, format)
+	}
+
+	/**
+	 * Draw a lock icon for a given size
+	 * @param width Width of the image
+	 * @param height Height of the image
+	 */
+	static drawLockIcon(width: number, height: number): ImageResult {
+		const img = new Image(width, height, 2)
+
+		// Fill with black background
+		img.fillColor('rgb(0, 0, 0)')
+
+		// Draw a centered padlock unicode character in light grey
+		img.drawAlignedText(0, 0, width, height, '🔒', 'rgb(200, 200, 200)', Math.floor(height * 0.6), 'center', 'center')
+
+		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), LOCK_ICON_STYLE)
 	}
 }

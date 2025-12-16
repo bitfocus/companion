@@ -7,7 +7,7 @@ export function useConnectionsConfigSubscription(store: ConnectionsStore): boole
 	const [ready, setReady] = useState(false)
 
 	useSubscription(
-		trpc.connections.watch.subscriptionOptions(undefined, {
+		trpc.instances.connections.watch.subscriptionOptions(undefined, {
 			onStarted: () => {
 				store.updateConnections(null)
 				setReady(false)

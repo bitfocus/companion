@@ -6,9 +6,9 @@ import { observer } from 'mobx-react-lite'
 import { capitalize } from 'lodash-es'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
-import { ObservableMap } from 'mobx'
-import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ObservableMap } from 'mobx'
+import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 
 interface AddEntitiesModalProps {
@@ -26,12 +26,13 @@ export const AddEntitiesModal = observer(
 		{ addEntity, feedbackListType, entityType, entityTypeLabel },
 		ref
 	) {
-		const { entityDefinitions } = useContext(RootAppStoreContext)
+		const { connections, entityDefinitions } = useContext(RootAppStoreContext)
 
 		const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
 		const recentlyUsed = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
 
 		const [show, setShow] = useState(false)
+		const [filter, setFilter] = useState('')
 
 		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
@@ -58,7 +59,6 @@ export const AddEntitiesModal = observer(
 				}
 			})
 		}, [])
-		const [filter, setFilter] = useState('')
 
 		const addAndTrackRecentUsage = useCallback(
 			(connectionAndDefinitionId: string) => {
@@ -75,7 +75,7 @@ export const AddEntitiesModal = observer(
 				<CModalHeader closeButton>
 					<h5>Browse {capitalize(entityTypeLabel)}s</h5>
 				</CModalHeader>
-				<CModalHeader>
+				<CModalHeader closeButton={false}>
 					<CFormInput
 						type="text"
 						placeholder="Search ..."
@@ -85,13 +85,23 @@ export const AddEntitiesModal = observer(
 					/>
 				</CModalHeader>
 				<CModalBody>
-					{Array.from(definitions.connections.entries()).map(([connectionId, items]) => (
+					<ConnectionCollapse
+						connectionId="internal"
+						items={definitions.connections.get('internal')}
+						itemName={`${entityTypeLabel}s`}
+						expanded={!!filter || expanded['internal']}
+						filter={filter}
+						feedbackListType={feedbackListType}
+						doToggle={toggleExpanded}
+						doAdd={addAndTrackRecentUsage}
+					/>
+					{connections.sortedConnections().map((connectionInfo) => (
 						<ConnectionCollapse
-							key={connectionId}
-							connectionId={connectionId}
-							items={items}
+							key={connectionInfo.id}
+							connectionId={connectionInfo.id}
+							items={definitions.connections.get(connectionInfo.id)}
 							itemName={`${entityTypeLabel}s`}
-							expanded={!!filter || expanded[connectionId]}
+							expanded={!!filter || expanded[connectionInfo.id]}
 							filter={filter}
 							feedbackListType={feedbackListType}
 							doToggle={toggleExpanded}

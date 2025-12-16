@@ -5,7 +5,7 @@ import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } f
 import { useCollectionsListItemDrop } from './useItemDrop.js'
 import {
 	CollectionsNestingTableContextProvider,
-	CollectionsNestingTableContextType,
+	type CollectionsNestingTableContextType,
 } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
 import { observer } from 'mobx-react-lite'

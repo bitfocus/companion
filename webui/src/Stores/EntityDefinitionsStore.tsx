@@ -2,7 +2,7 @@ import type {
 	ClientEntityDefinition,
 	EntityDefinitionUpdate,
 } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { ObservableMap, action, observable } from 'mobx'
+import { action, observable, type ObservableMap } from 'mobx'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'
 import { assertNever } from '~/Resources/util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'

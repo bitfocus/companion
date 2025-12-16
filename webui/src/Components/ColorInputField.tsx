@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useContext } from 'react'
-import { ColorResult, SketchPicker } from '@hello-pangea/color-picker'
+import { SketchPicker } from './ColorPicker/Sketch.js'
+import type { ColorResult } from './ColorPicker/colors.js'
 import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '~/Resources/util.js'
 import { usePopper } from 'react-popper'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { colord } from 'colord'
-import { CompanionColorPresetValue } from '@companion-module/base'
+import type { CompanionColorPresetValue } from '@companion-module/base'
 
 function splitColor(color: number | string, enableAlpha: boolean) {
 	if (typeof color === 'number' || !isNaN(Number(color))) {
@@ -52,7 +53,7 @@ const toReturnType = <T extends 'string' | 'number'>(
 	if (returnType === 'string') {
 		return `rgba(${value.rgb.r}, ${value.rgb.g}, ${value.rgb.b}, ${value.rgb.a})` as any // TODO - typings
 	} else {
-		let colorNumber = parseInt(value.hex.substr(1), 16)
+		let colorNumber = parseInt(value.hex.slice(1, 7), 16)
 		if (enableAlpha && value.rgb.a !== undefined && value.rgb.a !== 1) {
 			colorNumber += 0x1000000 * Math.round(255 * (1 - value.rgb.a)) // add possible transparency to number
 		}

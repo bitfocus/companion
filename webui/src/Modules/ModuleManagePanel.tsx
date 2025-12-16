@@ -3,7 +3,7 @@ import { CRow, CCol, CAlert } from '@coreui/react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
+import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
@@ -13,16 +13,19 @@ import { faExternalLink, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { useNavigate } from '@tanstack/react-router'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { capitalize } from 'lodash-es'
 
 interface ModuleManagePanelProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 }
 
-export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleId }: ModuleManagePanelProps) {
+export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleType, moduleId }: ModuleManagePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
-	const moduleInfo = modules.modules.get(moduleId)?.display
-	const moduleStoreInfo = modules.storeList.get(moduleId)
+	const moduleInfo = modules.getModuleInfo(moduleType, moduleId)?.display
+	const moduleStoreInfo = modules.getStoreInfo(moduleType, moduleId)
 
 	if (!moduleInfo && !moduleStoreInfo) {
 		return (
@@ -34,21 +37,30 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleId 
 		)
 	}
 
-	return <ModuleManagePanelInner moduleId={moduleId} moduleInfo={moduleInfo} moduleStoreBaseInfo={moduleStoreInfo} />
+	return (
+		<ModuleManagePanelInner
+			moduleType={moduleType}
+			moduleId={moduleId}
+			moduleInfo={moduleInfo}
+			moduleStoreBaseInfo={moduleStoreInfo}
+		/>
+	)
 })
 
 interface ModuleManagePanelInnerProps {
+	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleInfo: ModuleDisplayInfo | undefined
 	moduleStoreBaseInfo: ModuleStoreListCacheEntry | undefined
 }
 
 const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
+	moduleType,
 	moduleId,
 	moduleInfo,
 	moduleStoreBaseInfo,
 }: ModuleManagePanelInnerProps) {
-	const moduleStoreInfo = useModuleStoreInfo(moduleId)
+	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
 	const navigate = useNavigate()
 
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
@@ -60,7 +72,9 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	return (
 		<>
 			<div className="secondary-panel-simple-header">
-				<h4 className="panel-title">Manage {baseInfo?.name ?? moduleId}</h4>
+				<h4 className="panel-title">
+					Manage {baseInfo?.name ?? moduleId} ({capitalize(moduleType)})
+				</h4>
 				<div className="header-buttons">
 					{!!moduleStoreBaseInfo?.githubUrl && (
 						<WindowLinkOpen title="Open GitHub Page" href={moduleStoreBaseInfo.githubUrl}>
@@ -79,12 +93,12 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 			</div>
 			<div className="secondary-panel-simple-body">
 				<div className="refresh-and-last-updated">
-					<RefreshModuleInfo moduleId={moduleId} />
+					<RefreshModuleInfo moduleType={moduleType} moduleId={moduleId} />
 					<LastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
 				</div>
 				{moduleStoreInfo?.updateWarning && <CAlert color="danger">{moduleStoreInfo.updateWarning}</CAlert>}
 
-				<ModuleVersionsTable moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
+				<ModuleVersionsTable moduleType={moduleType} moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
 			</div>
 		</>
 	)

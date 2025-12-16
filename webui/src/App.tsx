@@ -17,6 +17,9 @@ import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from './Resources/TRPC.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
+import { MonacoLoader } from './Resources/MonacoLoader.js'
+import { PuffLoader } from 'react-spinners'
+import { PRIMARY_COLOR } from './Resources/Constants.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
@@ -79,7 +82,16 @@ export default function App(): React.JSX.Element {
 							</div>
 						</div>
 					</div>
-					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected && !shouldReload} />}>
+					<Suspense
+						fallback={
+							<CRow className={'loading'}>
+								<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+									<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
+								</div>
+							</CRow>
+						}
+					>
+						<MonacoLoader />
 						<DndProvider
 							backend={useTouchBackend ? TouchBackend : HTML5Backend}
 							options={useTouchBackend ? { enableMouseEvents: true } : {}}
@@ -155,7 +167,7 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
 					<div className="body flex-grow-1">
 						{connected && loadingComplete ? (
-							unlocked ? (
+							!canLock || unlocked ? (
 								<AppContent />
 							) : (
 								<AppAuthWrapper setUnlocked={setUnlockedInner} />
@@ -192,9 +204,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			}
 
 			// close toast
-			if (notifier.current) {
-				notifier.current.close(TOAST_ID)
-			}
+			notifier.close(TOAST_ID)
 
 			return null
 		})
@@ -204,7 +214,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 	}
 
 	const handleIdle = () => {
-		notifier.current?.show(
+		notifier.show(
 			'Session timeout',
 			'Your session is about to timeout, and Companion will be locked',
 			undefined,
@@ -215,9 +225,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			if (!v) {
 				return setTimeout(() => {
 					// close toast
-					if (notifier.current) {
-						notifier.current.close(TOAST_ID)
-					}
+					notifier.close(TOAST_ID)
 
 					setLocked()
 				}, TOAST_DURATION)
@@ -247,9 +255,7 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 			})
 
 			// close toast
-			if (notifier.current) {
-				notifier.current.close(TOAST_ID)
-			}
+			notifier.close(TOAST_ID)
 		}
 	})
 
@@ -269,7 +275,13 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 				<CCol xxl={4} md={3} sm={2} xs={1}></CCol>
 				<CCol xxl={4} md={6} sm={8} xs={10}>
 					<h3>{message}</h3>
-					<CProgress value={connected ? progress : 0} />
+					{connected ? (
+						<CProgress className="mt-4" value={connected ? progress : 0} />
+					) : (
+						<div className="mt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
+						</div>
+					)}
 				</CCol>
 			</CRow>
 		</CContainer>

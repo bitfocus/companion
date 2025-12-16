@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import type { NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export type ConnectionCollectionsApi = NestingCollectionsApi
@@ -8,10 +8,10 @@ export type ConnectionCollectionsApi = NestingCollectionsApi
 export function useConnectionCollectionsApi(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 ): ConnectionCollectionsApi {
-	const renameMutation = useMutationExt(trpc.connections.collections.setName.mutationOptions())
-	const deleteMutation = useMutationExt(trpc.connections.collections.remove.mutationOptions())
-	const reorderMutation = useMutationExt(trpc.connections.collections.reorder.mutationOptions())
-	const reorderItemsMutation = useMutationExt(trpc.connections.reorder.mutationOptions())
+	const renameMutation = useMutationExt(trpc.instances.connections.collections.setName.mutationOptions())
+	const deleteMutation = useMutationExt(trpc.instances.connections.collections.remove.mutationOptions())
+	const reorderMutation = useMutationExt(trpc.instances.connections.collections.reorder.mutationOptions())
+	const reorderItemsMutation = useMutationExt(trpc.instances.connections.reorder.mutationOptions())
 
 	return useMemo(
 		() =>

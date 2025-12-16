@@ -8,27 +8,27 @@ import {
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { FormEvent, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
-import { DragState, checkDragState } from '~/Resources/DragAndDrop.js'
+import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
 import { OptionsInputField } from '~/Controls/OptionsInputField.js'
 import { useDrag, useDrop } from 'react-dnd'
-import { GenericConfirmModal, GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { PanelCollapseHelperLite, usePanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { AddEventDropdown } from './AddEventDropdown.js'
 import {
-	IEventEditorEventService,
-	IEventEditorService,
 	useControlEventService,
 	useControlEventsEditorService,
+	type IEventEditorEventService,
+	type IEventEditorService,
 } from '~/Services/Controls/ControlEventsService.js'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -218,7 +218,7 @@ const EventEditor = observer(function EventEditor({
 	const optionVisibility = useOptionsVisibility(eventSpec?.options, event?.options)
 
 	const innerSetEnabled = useCallback(
-		(e: FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
+		(e: React.FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
 		[service]
 	)
 

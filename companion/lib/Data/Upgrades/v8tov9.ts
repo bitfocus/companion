@@ -1,6 +1,5 @@
 import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
-import { cloneDeep } from 'lodash-es'
 import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 import type {
 	ExportControlv6,
@@ -31,7 +30,7 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 9,
 		}
 		if (newObj.pages) {
@@ -44,7 +43,7 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 		const newObj: ExportPageModelv6 = {
 			connectionCollections: undefined,
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 9,
 		}
 		convertPageControls(newObj.page)
@@ -54,7 +53,7 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 			triggerCollections: undefined,
 			connectionCollections: undefined,
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 9,
 		}
 		return newObj

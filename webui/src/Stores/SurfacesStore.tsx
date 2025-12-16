@@ -4,16 +4,18 @@ import type {
 	SurfacesUpdate,
 	OutboundSurfacesUpdate,
 	ClientSurfaceItem,
+	OutboundSurfaceCollection,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { action, observable } from 'mobx'
 import { assertNever } from '~/Resources/util.js'
-import { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
 
 export class SurfacesStore {
 	readonly store = observable.map<string, ClientDevicesListItem>()
 
 	readonly outboundSurfaces = observable.map<string, OutboundSurfaceInfo>()
+	readonly outboundSurfaceCollections = observable.map<string, OutboundSurfaceCollection>()
 
 	public updateSurfaces = action((changes: SurfacesUpdate[] | null) => {
 		if (!changes) {
@@ -80,15 +82,6 @@ export class SurfacesStore {
 		}
 	})
 
-	public getOutboundStreamDeckSurface = (address: string, port: number): OutboundSurfaceInfo | undefined => {
-		for (const surface of this.outboundSurfaces.values()) {
-			if (surface.type === 'elgato' && surface.address === address && (surface.port ?? 5343) === port) {
-				return surface
-			}
-		}
-		return undefined
-	}
-
 	public getSurfacesOverflowingBounds = (
 		bounds: UserConfigGridSize
 	): { neededBounds: UserConfigGridSize; surfaces: ClientSurfaceItem[] } => {
@@ -142,4 +135,40 @@ export class SurfacesStore {
 
 		return count
 	}
+
+	public get allOutboundSurfaceCollectionIds(): string[] {
+		const collectionIds: string[] = []
+
+		const collectCollectionIDs = (collections: Iterable<OutboundSurfaceCollection>): void => {
+			for (const collection of collections || []) {
+				collectionIds.push(collection.id)
+				collectCollectionIDs(collection.children)
+			}
+		}
+
+		collectCollectionIDs(this.outboundSurfaceCollections.values())
+
+		return collectionIds
+	}
+
+	public outboundSurfaceRootCollections(): OutboundSurfaceCollection[] {
+		return Array.from(this.outboundSurfaceCollections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
+	}
+
+	public resetOutboundSurfaceCollections = action((newData: OutboundSurfaceCollection[] | null) => {
+		this.outboundSurfaceCollections.clear()
+
+		if (newData) {
+			for (const collection of newData) {
+				if (!collection) continue
+
+				const existing = this.outboundSurfaceCollections.get(collection.id)
+				if (existing) {
+					updateObjectInPlace(existing, collection)
+				} else {
+					this.outboundSurfaceCollections.set(collection.id, collection)
+				}
+			}
+		}
+	})
 }

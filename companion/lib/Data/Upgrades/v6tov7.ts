@@ -1,6 +1,5 @@
 import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
-import { cloneDeep } from 'lodash-es'
 import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 import type {
 	ExportControlv6,
@@ -10,9 +9,13 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import { ActionEntityModel, EntityModelType, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { Complete } from '@companion-module/base/dist/util.js'
+import {
+	EntityModelType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 
 /**
  * do the database upgrades to convert from the v6 to the v7 format
@@ -34,7 +37,7 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 7,
 		}
 		if (newObj.pages) {
@@ -52,7 +55,7 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 		const newObj: ExportPageModelv6 = {
 			connectionCollections: undefined,
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 7,
 		}
 		convertPageControls(newObj.page)
@@ -62,7 +65,7 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 			triggerCollections: undefined,
 			connectionCollections: undefined,
 			companionBuild: undefined,
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 7,
 		}
 		for (const trigger of Object.values<any>(newObj.triggers)) {

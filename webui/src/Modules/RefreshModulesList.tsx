@@ -1,6 +1,5 @@
-import { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import React from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -14,7 +13,7 @@ export const RefreshModulesList = observer(function RefreshModulesList({ btnSize
 
 	const [refreshError, setLoadError] = useState<string | null>(null)
 
-	const refreshListMutation = useMutationExt(trpc.connections.modulesStore.refreshList.mutationOptions())
+	const refreshListMutation = useMutationExt(trpc.instances.modulesStore.refreshList.mutationOptions())
 
 	const doRefreshModules = useCallback(() => {
 		refreshListMutation.mutateAsync().catch((err) => {

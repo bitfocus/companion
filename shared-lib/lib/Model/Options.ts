@@ -133,6 +133,7 @@ export interface CompanionInputFieldStaticTextExtended extends CompanionInputFie
 	type: 'static-text'
 
 	value: string
+	default?: never
 }
 export interface CompanionInputFieldColorExtended extends CompanionInputFieldBaseExtended {
 	type: 'colorpicker'
@@ -217,6 +218,7 @@ export interface CompanionInputFieldCheckboxExtended extends CompanionInputField
 }
 export interface CompanionInputFieldCustomVariableExtended extends CompanionInputFieldBaseExtended {
 	type: 'custom-variable'
+	default?: never // needed to avoid TypeScript errors (all other input fields have default props)
 }
 
 export type ExtendedInputField =

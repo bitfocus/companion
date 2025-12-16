@@ -1,10 +1,9 @@
 import selfsigned from 'selfsigned'
-import { cloneDeep } from 'lodash-es'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import { EventEmitter } from 'events'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
 import LogController from '../Log/Controller.js'
-import { DataStoreTableView } from './StoreBase.js'
+import type { DataStoreTableView } from './StoreBase.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 
@@ -38,21 +37,14 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	static Defaults: UserConfigModel = {
 		setup_wizard: 0,
+		detailed_data_collection: true,
 
 		page_direction_flipped: false,
 		page_plusminus: false,
 		remove_topbar: false,
 
-		xkeys_enable: true,
-		elgato_plugin_enable: false, // Also disables local streamdeck
+		elgato_plugin_enable: false,
 		usb_hotplug: true,
-		loupedeck_enable: false,
-		mirabox_streamdock_enable: true,
-		contour_shuttle_enable: false,
-		vec_footpedal_enable: false,
-		blackmagic_controller_enable: false,
-		mystrix_enable: false,
-		logitech_mx_console_enable: false,
 
 		pin_enable: false,
 		link_lockouts: false,
@@ -77,8 +69,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		rosstalk_enabled: false,
 
 		emberplus_enabled: false,
-
-		videohub_panel_enabled: false,
 
 		artnet_enabled: false,
 		artnet_universe: 1,
@@ -130,8 +120,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				lastRan: 0,
 			},
 		],
-
-		discoveryEnabled: true,
 	}
 	/**
 	 * The user configuration settings
@@ -145,7 +133,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		this.#db = db
 		this.#dbTable = db.defaultTableView
 
-		this.#data = this.#dbTable.getOrDefault('userconfig', cloneDeep(DataUserConfig.Defaults))
+		this.#data = this.#dbTable.getOrDefault('userconfig', structuredClone(DataUserConfig.Defaults))
 
 		this.#populateMissingForExistingDb()
 
@@ -171,13 +159,13 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		const selfEvents: EventEmitter<DataUserConfigEvents> = self
 		const zodUserConfigKey = z.enum(Object.keys(DataUserConfig.Defaults) as [keyof UserConfigModel])
 		return router({
-			sslCertificateCreate: publicProcedure.mutation(() => {
+			sslCertificateCreate: publicProcedure.mutation(async () => {
 				return this.createSslCertificate()
 			}),
-			sslCertificateDelete: publicProcedure.mutation(() => {
+			sslCertificateDelete: publicProcedure.mutation(async () => {
 				return this.deleteSslCertificate()
 			}),
-			sslCertificateRenew: publicProcedure.mutation(() => {
+			sslCertificateRenew: publicProcedure.mutation(async () => {
 				return this.renewSslCertificate()
 			}),
 
@@ -235,6 +223,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		if (!this.#db.getIsFirstRun()) {
 			// This is an existing db, so setup the ports to match how it used to be
 			const legacy_config: Partial<UserConfigModel> = {
+				detailed_data_collection: true,
+
 				tcp_enabled: true,
 				tcp_listen_port: 51234,
 
@@ -245,10 +235,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				osc_listen_port: 12321,
 
 				emberplus_enabled: true,
-
-				xkeys_enable: false,
-
-				discoveryEnabled: true,
 			}
 
 			// check if these fields have already been defined
@@ -304,11 +290,13 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	/**
 	 * Generate a self-signed SSL certificate
 	 */
-	private createSslCertificate(): void {
+	private async createSslCertificate(): Promise<void> {
 		try {
 			const attrs: selfsigned.CertificateField[] = [{ name: 'commonName', value: String(this.#data.https_self_cn) }]
-			const pems = selfsigned.generate(attrs, {
-				days: Number(this.#data.https_self_expiry) || undefined,
+
+			const days = Number(this.#data.https_self_expiry) || undefined
+			const pems = await selfsigned.generate(attrs, {
+				notAfterDate: days ? new Date(Date.now() + days * 24 * 60 * 60 * 1000) : undefined,
 				algorithm: 'sha256',
 				keySize: 2048,
 			})
@@ -355,7 +343,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		let out = this.#data[key]
 
 		if (clone === true) {
-			out = cloneDeep(out)
+			out = structuredClone(out)
 		}
 
 		return out
@@ -365,13 +353,14 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * Try to renew a stored self-signed SSL certificate
 	 * @access protected
 	 */
-	private renewSslCertificate(): void {
+	private async renewSslCertificate(): Promise<void> {
 		try {
 			const attrs: selfsigned.CertificateField[] = [
 				{ name: 'commonName', value: String(this.#data.https_self_cert_cn) },
 			]
-			const pems = selfsigned.generate(attrs, {
-				days: Number(this.#data.https_self_expiry) || undefined,
+			const days = Number(this.#data.https_self_expiry) || undefined
+			const pems = await selfsigned.generate(attrs, {
+				notAfterDate: days ? new Date(Date.now() + days * 24 * 60 * 60 * 1000) : undefined,
 				algorithm: 'sha256',
 				keySize: 2048,
 				// keyPair: {

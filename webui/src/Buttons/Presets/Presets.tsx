@@ -1,9 +1,8 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CRow } from '@coreui/react'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import { PresetsButtonList } from './PresetsButtonList.js'
 import { PresetsConnectionList } from './PresetsConnectionList.js'
 import { PresetsCategoryList } from './PresetsCategoryList.js'
 import { PresetDefinitionsStore, usePresetsDefinitions } from './PresetDefinitionsStore.js'
@@ -15,9 +14,10 @@ interface ConnectionPresetsProps {
 export const ConnectionPresets = observer(function ConnectionPresets({ resetToken }: ConnectionPresetsProps) {
 	const { modules, connections } = useContext(RootAppStoreContext)
 
-	const [connectionAndCategory, setConnectionAndCategory] = useState<
-		[connectionId: string | null, category: string | null]
-	>([null, null])
+	const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null)
+	const clearSelectedConnectionId = useCallback(() => {
+		setSelectedConnectionId(null)
+	}, [])
 
 	const presetsDefinitionsStore = useMemo(() => new PresetDefinitionsStore(), [])
 
@@ -25,7 +25,7 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 
 	// Reset selection on resetToken change
 	useEffect(() => {
-		setConnectionAndCategory([null, null])
+		setSelectedConnectionId(null)
 	}, [resetToken])
 
 	if (!isReady) {
@@ -37,38 +37,29 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 		)
 	}
 
-	if (connectionAndCategory[0]) {
-		const connectionInfo = connections.getInfo(connectionAndCategory[0])
-		const moduleInfo = connectionInfo ? modules.modules.get(connectionInfo.instance_type) : undefined
+	if (selectedConnectionId) {
+		const connectionInfo = connections.getInfo(selectedConnectionId)
+		const moduleInfo = connectionInfo
+			? modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
+			: undefined
 
-		const presets = presetsDefinitionsStore.presets.get(connectionAndCategory[0])
+		const presets = presetsDefinitionsStore.presets.get(selectedConnectionId)
 
-		if (connectionAndCategory[1]) {
-			return (
-				<PresetsButtonList
-					presets={presets}
-					selectedConnectionId={connectionAndCategory[0]}
-					selectedConnectionLabel={connectionInfo?.label || connectionAndCategory[0]}
-					selectedCategory={connectionAndCategory[1]}
-					setConnectionAndCategory={setConnectionAndCategory}
-				/>
-			)
-		} else {
-			return (
-				<PresetsCategoryList
-					presets={presets}
-					connectionInfo={connectionInfo}
-					moduleInfo={moduleInfo}
-					selectedConnectionId={connectionAndCategory[0]}
-					setConnectionAndCategory={setConnectionAndCategory}
-				/>
-			)
-		}
+		return (
+			<PresetsCategoryList
+				key={selectedConnectionId}
+				presets={presets}
+				connectionInfo={connectionInfo}
+				moduleInfo={moduleInfo}
+				selectedConnectionId={selectedConnectionId}
+				clearSelectedConnectionId={clearSelectedConnectionId}
+			/>
+		)
 	} else {
 		return (
 			<PresetsConnectionList
 				presetsDefinitionsStore={presetsDefinitionsStore}
-				setConnectionAndCategory={setConnectionAndCategory}
+				setConnectionId={setSelectedConnectionId}
 			/>
 		)
 	}

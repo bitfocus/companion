@@ -3,6 +3,7 @@ import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useUserConfigProps } from './Context.js'
 import { CompanionConfig } from './Sections/CompanionConfig.js'
+import { DataCollectionConfig } from './Sections/DataCollection.js'
 
 export const SettingsGeneralPage = memo(function UserConfig() {
 	return (
@@ -22,14 +23,6 @@ export const SettingsGeneralPage = memo(function UserConfig() {
 					</div>
 				</div>
 			</CCol>
-			{/* <CCol xs={12} xl={6} className="secondary-panel">
-				<div className="secondary-panel-header">
-					<h4>Remote control</h4>
-					<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
-				</div>
-				<div className="secondary-panel-inner">
-				</div>
-			</CCol> */}
 		</CRow>
 	)
 })
@@ -42,6 +35,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 		<table className="table table-responsive-sm table-settings">
 			<tbody>
 				<CompanionConfig {...userConfigProps} />
+				<DataCollectionConfig {...userConfigProps} />
 			</tbody>
 		</table>
 	)

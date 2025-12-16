@@ -1,5 +1,4 @@
 import { ButtonControlBase } from './Base.js'
-import { cloneDeep } from 'lodash-es'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import type {
@@ -24,7 +23,10 @@ import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
 import { ControlBase } from '../../ControlBase.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
-import { ButtonGraphicsElementUsage, SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type {
+	ButtonGraphicsElementUsage,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 
 /**
@@ -107,7 +109,7 @@ export class ControlButtonPreset
 				invalidateControl: this.triggerRedraw.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
-				moduleHost: deps.instance.moduleHost,
+				processManager: deps.instance.processManager,
 				variableValues: deps.variables.values,
 			},
 			this.sendRuntimePropsChange.bind(this),
@@ -123,7 +125,7 @@ export class ControlButtonPreset
 		)
 
 		this.options = {
-			...cloneDeep(ButtonControlBase.DefaultOptions),
+			...structuredClone(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
 			stepProgression: 'auto',
 		}
@@ -410,7 +412,7 @@ export class ControlButtonPreset
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
-		return clone ? cloneDeep(obj) : obj
+		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

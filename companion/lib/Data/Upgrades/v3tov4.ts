@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
 import type { DataStoreBase, DataStoreTableView } from '../StoreBase.js'
@@ -91,7 +90,7 @@ function ensureTriggersAreObject(obj: { triggers?: TriggerModel[] | Record<strin
 function convertImportToV4(obj: any): any {
 	if (obj.type == 'full') {
 		const newObj = { ...obj }
-		newObj.pages = cloneDeep(newObj.pages)
+		newObj.pages = structuredClone(newObj.pages)
 		delete newObj.controls
 
 		for (const page of Object.values<any>(newObj.pages)) {
@@ -115,7 +114,7 @@ function convertImportToV4(obj: any): any {
 		return newObj
 	} else if (obj.type == 'page') {
 		const newObj = { ...obj }
-		newObj.page = cloneDeep(newObj.page)
+		newObj.page = structuredClone(newObj.page)
 		delete newObj.controls
 
 		newObj.page.controls = {}

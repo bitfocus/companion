@@ -11,8 +11,8 @@
 
 import debounceFn from 'debounce-fn'
 import type { InstanceController } from '../Instance/Controller.js'
-import type { ConnectionStatusEntry } from '@companion-app/shared/Model/Common.js'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Wrapper.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -28,11 +28,14 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
+import LogController from '../Log/Controller.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('InternalInstance')
 	readonly #instanceController: InstanceController
 
-	#instanceStatuses: Record<string, ConnectionStatusEntry> = {}
+	#instanceStatuses: Record<string, InstanceStatusEntry | undefined> = {}
 	#instancesTotal: number = 0
 	#instancesDisabled: number = 0
 	#instancesError: number = 0
@@ -112,9 +115,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			},
 		]
 
-		const connectionIds = this.#instanceController.getAllInstanceIds()
+		const connectionIds = this.#instanceController.getAllConnectionIds()
 		for (const connectionId of connectionIds) {
-			const label = this.#instanceController.getLabelForInstance(connectionId)
+			const label = this.#instanceController.getLabelForConnection(connectionId)
 			if (label) {
 				variables.push({
 					label: `Connection Status: ${label}`,
@@ -308,18 +311,18 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		if (action.definitionId === 'instance_control') {
 			let newState = action.rawOptions.enable == 'true'
 			if (action.rawOptions.enable == 'toggle') {
-				const curState = this.#instanceController.getConnectionStatus(action.rawOptions.instance_id)
+				const curState = this.#instanceController.getInstanceStatus(action.rawOptions.instance_id)
 
 				newState = !curState?.category
 			}
 
-			this.#instanceController.enableDisableInstance(action.rawOptions.instance_id, newState)
+			this.#instanceController.enableDisableConnection(action.rawOptions.instance_id, newState)
 			return true
 		} else if (action.definitionId === 'connection_collection_enabled') {
 			let newState: boolean | 'toggle' = action.rawOptions.enable == 'true'
 			if (action.rawOptions.enable == 'toggle') newState = 'toggle'
 
-			this.#instanceController.collections.setCollectionEnabled(action.rawOptions.collection_id, newState)
+			this.#instanceController.connectionCollections.setCollectionEnabled(action.rawOptions.collection_id, newState)
 			return true
 		} else {
 			return false
@@ -349,7 +352,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				}
 			}
 
-			const cur_instance = this.#instanceController.getConnectionStatus(feedback.options.instance_id)
+			const cur_instance = this.#instanceController.getInstanceStatus(feedback.options.instance_id)
 			if (cur_instance !== undefined) {
 				switch (cur_instance.category) {
 					case 'error':
@@ -384,7 +387,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 
 			return selected_status == feedback.options.state
 		} else if (feedback.definitionId === 'connection_collection_enabled') {
-			const state = this.#instanceController.collections.isCollectionEnabled(feedback.options.collection_id)
+			const state = this.#instanceController.connectionCollections.isCollectionEnabled(feedback.options.collection_id)
 			const target = feedback.options.enable == 'true'
 			return state == target
 		}
@@ -399,9 +402,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			instance_oks: this.#instancesOk,
 		}
 
-		const connectionIds = this.#instanceController.getAllInstanceIds()
+		const connectionIds = this.#instanceController.getAllConnectionIds()
 		for (const connectionId of connectionIds) {
-			const config = this.#instanceController.getInstanceConfig(connectionId)
+			const config = this.#instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
 			if (config) {
 				const status = this.#instanceStatuses[connectionId]
 
@@ -415,36 +418,46 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		this.emit('setVariables', values)
 	}
 
-	#calculateInstanceErrors(instanceStatuses: Record<string, ConnectionStatusEntry>): void {
-		let numTotal = 0
-		let numDisabled = 0
-		let numError = 0
-		let numWarn = 0
-		let numOk = 0
+	#calculateInstanceErrors(instanceStatuses: Record<string, InstanceStatusEntry | undefined>): void {
+		try {
+			let numTotal = 0
+			let numDisabled = 0
+			let numError = 0
+			let numWarn = 0
+			let numOk = 0
 
-		for (const status of Object.values(instanceStatuses)) {
-			numTotal++
+			const connectionIds = this.#instanceController.getAllConnectionIds()
+			for (const connectionId of connectionIds) {
+				const status = instanceStatuses[connectionId]
 
-			if (status.category === null) {
-				numDisabled++
-			} else if (status.category === 'good') {
-				numOk++
-			} else if (status.category === 'warning') {
-				numWarn++
-			} else if (status.category === 'error') {
-				numError++
+				const config = this.#instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
+				if (!config) continue
+
+				numTotal++
+
+				if (!config.enabled || !status || status.category === null) {
+					numDisabled++
+				} else if (status.category === 'good') {
+					numOk++
+				} else if (status.category === 'warning') {
+					numWarn++
+				} else if (status.category === 'error') {
+					numError++
+				}
 			}
+
+			this.#instanceStatuses = instanceStatuses
+			this.#instancesTotal = numTotal
+			this.#instancesDisabled = numDisabled
+			this.#instancesError = numError
+			this.#instancesWarning = numWarn
+			this.#instancesOk = numOk
+
+			this.updateVariables()
+			this.#debounceCheckFeedbacks()
+		} catch (e) {
+			this.#logger.error('Error calculating instance counts', e)
 		}
-
-		this.#instanceStatuses = instanceStatuses
-		this.#instancesTotal = numTotal
-		this.#instancesDisabled = numDisabled
-		this.#instancesError = numError
-		this.#instancesWarning = numWarn
-		this.#instancesOk = numOk
-
-		this.updateVariables()
-		this.#debounceCheckFeedbacks()
 	}
 
 	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {

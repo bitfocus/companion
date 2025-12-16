@@ -1,34 +1,39 @@
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import type { ModuleVersionInfo } from './Types.js'
 import semver from 'semver'
-import { compact } from 'lodash-es'
+import type { SomeModuleVersionInfo } from './Types.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { getHelpPathForInstalledModule } from './ModuleScanner.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 /**
  * Information about a module
  */
 export class InstanceModuleInfo {
-	id: string
+	readonly moduleType: ModuleInstanceType
+	readonly id: string
 
-	devModule: ModuleVersionInfo | null = null
+	devModule: SomeModuleVersionInfo | null = null
 
-	installedVersions: Record<string, ModuleVersionInfo | undefined> = {}
+	builtinModule: SomeModuleVersionInfo | null = null
 
-	constructor(id: string) {
+	installedVersions: Record<string, SomeModuleVersionInfo | undefined> = {}
+
+	constructor(moduleType: ModuleInstanceType, id: string) {
+		this.moduleType = moduleType
 		this.id = id
 	}
 
-	getVersion(versionId: string | null): ModuleVersionInfo | null {
+	getVersion(versionId: string | null): SomeModuleVersionInfo | null {
 		if (versionId === 'dev') return this.devModule
+		if (versionId === 'builtin') return this.builtinModule
 
 		if (versionId === null) return null // TODO - is this correct?
 
 		return this.installedVersions[versionId] ?? null
 	}
 
-	getLatestVersion(isBeta: boolean): ModuleVersionInfo | null {
-		let latest: ModuleVersionInfo | null = null
+	getLatestVersion(isBeta: boolean): SomeModuleVersionInfo | null {
+		let latest: SomeModuleVersionInfo | null = null
 		for (const version of Object.values(this.installedVersions)) {
 			if (!version || version.isBeta !== isBeta) continue
 			if (!isModuleApiVersionCompatible(version.manifest.runtime.apiVersion)) continue
@@ -44,49 +49,78 @@ export class InstanceModuleInfo {
 		const stableVersion = this.getLatestVersion(false)
 		const betaVersion = this.getLatestVersion(true)
 
-		const baseVersion = stableVersion ?? betaVersion ?? Object.values(this.installedVersions)[0] ?? this.devModule
+		const baseVersion =
+			stableVersion ?? betaVersion ?? Object.values(this.installedVersions)[0] ?? this.builtinModule ?? this.devModule
 		if (!baseVersion) return null
 
 		return {
+			moduleType: this.moduleType,
+
 			display: baseVersion.display,
 
-			devVersion: translateStableVersion(this.devModule),
+			devVersion: translateStableVersion(this.moduleType, this.devModule),
+			builtinVersion: translateStableVersion(this.moduleType, this.builtinModule),
 
-			stableVersion: translateStableVersion(stableVersion),
-			betaVersion: translateStableVersion(betaVersion),
+			stableVersion: translateStableVersion(this.moduleType, stableVersion),
+			betaVersion: translateStableVersion(this.moduleType, betaVersion),
 
-			installedVersions: compact(Object.values(this.installedVersions)).map(translateReleaseVersion),
+			installedVersions: Object.values(this.installedVersions)
+				.filter((v): v is SomeModuleVersionInfo => v !== undefined)
+				.map((v) => translateReleaseVersion(this.moduleType, v)),
 		}
 	}
 }
 
-function translateStableVersion(version: ModuleVersionInfo | null): ClientModuleVersionInfo | null {
+function translateStableVersion(
+	moduleType: ModuleInstanceType,
+	version: SomeModuleVersionInfo | null
+): ClientModuleVersionInfo | null {
 	if (!version) return null
-	if (version.versionId === 'dev') {
+
+	const allowMultipleInstances =
+		version.manifest.type === 'surface' ? (version.manifest.allowMultipleInstances ?? false) : false
+
+	if (version.versionId === 'builtin') {
+		return {
+			displayName: 'Builtin',
+			isLegacy: false,
+			isBeta: false,
+			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
+			versionId: 'builtin',
+			allowMultipleInstances,
+		}
+	} else if (version.versionId === 'dev') {
 		return {
 			displayName: 'Dev',
 			isLegacy: false,
 			isBeta: false,
-			helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
+			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			versionId: 'dev',
+			allowMultipleInstances,
 		}
 	} else {
 		return {
 			displayName: `Latest ${version.isBeta ? 'Beta' : 'Stable'} (v${version.versionId})`,
 			isLegacy: version.isLegacy,
-			helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
+			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			isBeta: version.isBeta,
 			versionId: version.versionId,
+			allowMultipleInstances,
 		}
 	}
 }
 
-function translateReleaseVersion(version: ModuleVersionInfo): ClientModuleVersionInfo {
+function translateReleaseVersion(
+	moduleType: ModuleInstanceType,
+	version: SomeModuleVersionInfo
+): ClientModuleVersionInfo {
 	return {
 		displayName: `v${version.versionId}`,
 		isLegacy: version.isLegacy,
 		isBeta: version.isBeta,
-		helpPath: getHelpPathForInstalledModule(version.manifest.id, version.versionId),
+		helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 		versionId: version.versionId,
+		allowMultipleInstances:
+			version.manifest.type === 'surface' ? (version.manifest.allowMultipleInstances ?? false) : false,
 	}
 }

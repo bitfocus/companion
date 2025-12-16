@@ -10,10 +10,19 @@
 	}
 
 	input[type='checkbox']:checked {
-		background: 0 0 var(--companion-img-check) no-repeat;
+		background: 0 0 var(--companion-img-check);
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
 	}
 	input[type='checkbox']:disabled {
 		background: #eee;
+	}
+	input[type='checkbox']:indeterminate {
+		background: 0 0 var(--companion-img-indeterminate);
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
 	}
 }
 
@@ -28,10 +37,23 @@ label.disabled {
 	}
 }
 
-/* Style for autocomplete of variable */
-.variable-suggestion-option span {
+/* Style for variable-name autocomplete in text inputs as well as options in regular dropdowns */
+.variable-dropdown-option span {
 	display: block;
 
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		font-weight: inherit;
+		white-space: wrap;
+		font-weight: normal;
+	}
+}
+
+/* note that using `span` instead of `div` doesn't format correctly for the ellipsis */
+.variable-dropdown-single div {
 	&.var-name {
 		font-weight: bold;
 	}
@@ -41,6 +63,8 @@ label.disabled {
 		font-weight: inherit;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-weight: normal;
+		padding-bottom: 0.2em;
 	}
 }
 
@@ -143,8 +167,48 @@ label.disabled {
 	}
 }
 
+/* Styling for the dropdown options list, so they can accommodate two-line entries
+
+  Companion's default line-height (`--cui-body-line-height`) is 1.5,
+  Here line-height the value but is specified explicitly to allow it to be replaced in a way that affects 
+  all pulldown menus, in case a shorter line-height may be more suitable for long lists...
+  (Other props such as padding affect spacing between options, so even at line-height=1 the options are separated.)
+
+  .select-control: Regular pulldown menu (actions and feedbacks)
+  .variable-select-root: For expression-suggestions in the button-text (not expression-editor) pull-down
+   */
+.select-control__option,
+.variable-select-root__option {
+	white-space: pre-wrap !important; /* Honor \n line-breaks in the text. */
+	line-height: var(--cui-body-line-height);
+}
+
+/* Styling for the dropdown value container, "single-value", so they can accommodate two-line entries */
+.select-control__value-container {
+	--value-line-height: var(--cui-body-line-height);
+
+	/* For two-line dropdowns the container looks a bit tight, so add some padding.
+		Note: as long as vert-padding is not too large this has no effect on single-line values */
+	--vert-padding: 4px;
+	padding-top: var(--vert-padding) !important;
+	padding-bottom: var(--vert-padding) !important;
+
+	/* Allow \n line-breaks and remove "excess" line spacing. 
+		Note: this maintains the current behavior of no-wrap in single-value fields. */
+	.select-control__single-value {
+		white-space: pre !important; /* Honor \n line-breaks in the text. */
+		line-height: var(--value-line-height);
+	}
+
+	/* For two-line, editable dropdowns, the __single-value element is hidden, above, on gaining focus
+	 so to preserve the box size we introduce a new CSS class that is twice the .select-control__single-value line-height. */
+	.variable-dropdown-edit {
+		min-height: calc(2 * var(--value-line-height) * 1em);
+	}
+}
+
 .static-text-content {
-	:last-child {
+	& > :last-child {
 		margin-bottom: 0;
 	}
 }

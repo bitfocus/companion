@@ -1,17 +1,16 @@
 import React, { useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CFormInput, CFormTextarea } from '@coreui/react'
 import Select, {
-	ControlProps,
-	OptionProps,
 	components as SelectComponents,
-	ValueContainerProps,
 	createFilter,
+	type ControlProps,
+	type ValueContainerProps,
 } from 'react-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import type { DropdownChoiceInt } from '~/LocalVariableDefinitions.js'
+import { CustomOption, type DropdownChoiceInt } from '~/DropDownInputFancy.js'
 
 interface TextInputFieldProps {
 	tooltip?: string
@@ -23,7 +22,6 @@ interface TextInputFieldProps {
 	disabled?: boolean
 	useVariables?: boolean
 	localVariables?: DropdownChoiceInt[]
-	isExpression?: boolean
 	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
@@ -39,7 +37,6 @@ export const TextInputField = observer(function TextInputField({
 	disabled,
 	useVariables,
 	localVariables,
-	isExpression,
 	multiline,
 	autoFocus,
 	onBlur,
@@ -77,7 +74,7 @@ export const TextInputField = observer(function TextInputField({
 	// Render the input
 	return (
 		<>
-			{useVariables || isExpression ? (
+			{useVariables ? (
 				<>
 					<VariablesSelect
 						showValue={showValue}
@@ -89,7 +86,7 @@ export const TextInputField = observer(function TextInputField({
 						placeholder={placeholder}
 						title={tooltip}
 						disabled={disabled}
-						multiline={isExpression || multiline}
+						multiline={multiline}
 						autoFocus={autoFocus}
 					/>
 				</>
@@ -269,6 +266,7 @@ const VariablesSelect = observer(function VariablesSelect({
 		<VariablesSelectContext.Provider value={selectContext}>
 			<Select
 				className="variable-select-root"
+				classNamePrefix="variable-select-root"
 				menuPortalTarget={menuPortal || document.body}
 				menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
 				menuPosition="fixed"
@@ -302,16 +300,6 @@ const VariablesSelectContext = React.createContext({
 	title: undefined as string | undefined,
 	placeholder: undefined as string | undefined,
 	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>,
-})
-
-const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
-	const { data } = props
-	return (
-		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-suggestion-option'}>
-			<span className="var-name">{data.value}</span>
-			<span className="var-label">{data.label}</span>
-		</SelectComponents.Option>
-	)
 })
 
 const EmptyComponent = () => null
@@ -401,9 +389,7 @@ const CustomValueContainerTextInput = React.memo((props: ValueContainerProps<Dro
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CFormInput
-				ref={(elm) => {
-					context.inputRef.current = elm
-				}}
+				ref={context.inputRef as React.RefObject<HTMLInputElement>}
 				type="text"
 				style={context.extraStyle}
 				title={context.title}
@@ -431,9 +417,7 @@ const CustomValueContainerTextarea = React.memo((props: ValueContainerProps<Drop
 	return (
 		<SelectComponents.ValueContainer {...props} isDisabled>
 			<CFormTextarea
-				ref={(elm) => {
-					context.inputRef.current = elm
-				}}
+				ref={context.inputRef as React.RefObject<HTMLTextAreaElement>}
 				style={context.extraStyle}
 				title={context.title}
 				value={context.value}

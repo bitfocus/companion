@@ -132,29 +132,27 @@ export class ButtonDecorationRenderer {
 		const iconSize = Math.floor(topBarBounds.height * 0.65)
 		const iconPadding = Math.floor(topBarBounds.height * 0.175)
 		if (location) {
+			let statusColor: string | undefined
 			switch (drawStyle.button_status) {
 				case 'error':
-					img.box(
-						rightMax - iconSize - iconPadding,
-						topBarBounds.y + iconPadding,
-						rightMax - iconPadding,
-						topBarBounds.y + iconPadding + iconSize,
-						'red'
-					)
-					rightMax -= iconSize + iconPadding
+					statusColor = 'red'
 					break
 				case 'warning':
-					img.drawTextLineAligned(
-						rightMax - iconSize + iconPadding,
-						topBarBounds.y + iconPadding + iconSize,
-						'⚠️',
-						colorBlack,
-						Math.floor(iconSize * 0.8),
-						'center',
-						'bottom'
-					)
-					rightMax -= iconSize + iconPadding
+					statusColor = 'rgb(255, 127, 0)'
 					break
+			}
+
+			if (statusColor) {
+				img.drawFilledPath(
+					[
+						[rightMax - 11, 11],
+						[rightMax - 2, 11],
+						[rightMax - 6.5, 2],
+					],
+					statusColor
+				)
+				img.drawTextLineAligned(rightMax - 6.5, 11, '!', colorBlack, 7, 'center', 'bottom', 'bold')
+				rightMax -= 11
 			}
 
 			// last running icon
