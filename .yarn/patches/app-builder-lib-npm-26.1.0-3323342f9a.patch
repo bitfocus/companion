@@ -13,24 +13,3 @@ index 369783eff5c64c342831dd3544c3f51e490b0e93..7c62723531bc671ee1ae2cd0be36d529
          }
          else if (relative.endsWith("/node_modules")) {
              relative += "/";
-diff --git a/out/node-module-collector/packageManager.js b/out/node-module-collector/packageManager.js
-index 9628006f4d22f53ab438a8e9c79e7a3d049f4ae2..9a5d10158424acaaeff9df40c3b9c8d64ed81477 100644
---- a/out/node-module-collector/packageManager.js
-+++ b/out/node-module-collector/packageManager.js
-@@ -47,6 +47,8 @@ function getPackageManagerCommand(pm) {
-     return resolved;
- }
- function detectPackageManagerByEnv() {
-+    return PM.YARN_BERRY;
-+    /*
-     var _a;
-     const packageJsonPath = path.join(process.cwd(), "package.json");
-     const packageManager = fs.existsSync(packageJsonPath) ? (_a = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"))) === null || _a === void 0 ? void 0 : _a.packageManager : undefined;
-@@ -64,6 +66,7 @@ function detectPackageManagerByEnv() {
-         }
-     }
-     return null;
-+    */
- }
- function detectPackageManagerByLockfile(cwd) {
-     const has = (file) => fs.existsSync(path.join(cwd, file));
