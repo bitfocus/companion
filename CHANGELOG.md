@@ -11,7 +11,7 @@
 - toggling never lock for surface not applying
 - support ajaz akp153 #3840
 - preserve additional environment variables for modules
-- limit environmnet variables exposed to internal actions
+- limit environment variables exposed to internal actions
 - preserve sqlite wal when upgrading config #3835
 
 ## Companion v4.2.0 - Release Notes
