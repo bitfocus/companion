@@ -145,14 +145,23 @@ export class ButtonDecorationRenderer {
 			if (statusColor) {
 				img.drawFilledPath(
 					[
-						[rightMax - 11, 11],
-						[rightMax - 2, 11],
-						[rightMax - 6.5, 2],
+						[rightMax - (iconSize + iconPadding), topBarBounds.y + iconSize + iconPadding],
+						[rightMax - iconPadding, topBarBounds.y + iconSize + iconPadding],
+						[rightMax - (iconSize / 2 + iconPadding), topBarBounds.y + iconPadding],
 					],
 					statusColor
 				)
-				img.drawTextLineAligned(rightMax - 6.5, 11, '!', colorBlack, 7, 'center', 'bottom', 'bold')
-				rightMax -= 11
+				img.drawTextLineAligned(
+					rightMax - (iconSize / 2 + iconPadding),
+					topBarBounds.y + iconSize + iconPadding,
+					'!',
+					colorBlack,
+					Math.floor(iconSize * 0.7),
+					'center',
+					'bottom',
+					'bold'
+				)
+				rightMax -= iconSize + iconPadding
 			}
 
 			// last running icon
