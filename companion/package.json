@@ -41,7 +41,7 @@
     "@types/yazl": "^3.3.0",
     "supertest": "^7.1.4",
     "typescript": "~5.9.3",
-    "webpack": "^5.103.0",
+    "webpack": "^5.104.0",
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
@@ -52,8 +52,8 @@
     "@julusian/image-rs": "^2.1.1",
     "@julusian/segfault-raub": "^2.3.2",
     "@napi-rs/canvas": "0.1.84",
-    "@sentry/node": "^10.29.0",
-    "@trpc/server": "^11.7.2",
+    "@sentry/node": "^10.31.0",
+    "@trpc/server": "^11.8.0",
     "better-sqlite3": "^12.5.0",
     "bufferutil": "^4.0.9",
     "colord": "^2.9.3",
@@ -87,7 +87,7 @@
     "semver": "^7.7.3",
     "socketcluster-client": "^20.0.1",
     "supports-color": "^10.2.2",
-    "systeminformation": "^5.27.13",
+    "systeminformation": "^5.27.14",
     "tar-fs": "^3.1.1",
     "tar-stream": "^3.1.7",
     "type-fest": "^5.3.1",
@@ -100,6 +100,6 @@
     "ws": "^8.18.3",
     "yaml": "^2.8.2",
     "yazl": "^3.3.1",
-    "zod": "^4.1.13"
+    "zod": "^4.2.1"
   }
 }
