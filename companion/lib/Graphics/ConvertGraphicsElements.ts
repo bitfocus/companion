@@ -337,10 +337,10 @@ async function convertImageElementForDrawing(
 
 	let base64Image = helper.getString<string | null>('base64Image', null)
 	if (base64Image) {
-		const imageObj = base64Image as unknown as DrawImageBuffer
-		if (typeof imageObj === 'object' && imageObj.buffer) {
+		const imageObjs = base64Image as unknown as DrawImageBuffer[]
+		if (Array.isArray(imageObjs)) {
 			// This is not very efficient, as it is not cached, but as this is a deprected feature, it is acceptable for now
-			base64Image = (await helper.drawPixelBuffers([imageObj])) || null
+			base64Image = (await helper.drawPixelBuffers(imageObjs)) || null
 		}
 	}
 

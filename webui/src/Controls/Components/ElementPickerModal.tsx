@@ -1,4 +1,4 @@
-import { type FeedbackEntityStyleOverride, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import type { FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -12,7 +12,6 @@ interface ElementPickerModalProps {
 	onClose: () => void
 	onSave: (override: FeedbackEntityStyleOverride) => void
 	currentOverride: FeedbackEntityStyleOverride
-	feedbackType: FeedbackEntitySubType | null | undefined
 }
 
 export function ElementPickerModal({
@@ -20,7 +19,6 @@ export function ElementPickerModal({
 	onClose,
 	onSave,
 	currentOverride,
-	feedbackType,
 }: ElementPickerModalProps): React.JSX.Element {
 	const { styleStore } = useLayeredStyleElementsContext()
 	const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
@@ -30,19 +28,7 @@ export function ElementPickerModal({
 	const selectedProperty2 = selectedProperty ?? currentOverride.elementProperty
 
 	const selectedElement = selectedElementId2 ? styleStore.findElementById(selectedElementId2) : null
-	let selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
-
-	if (selectedSchema && selectedElement?.type === 'image' && feedbackType === FeedbackEntitySubType.Advanced) {
-		selectedSchema = [
-			...selectedSchema,
-			{
-				type: 'checkbox',
-				default: false,
-				id: 'imageBuffers',
-				label: 'Image Buffers (Deprecated)',
-			},
-		]
-	}
+	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
 
 	const handleSave = useCallback(() => {
 		if (selectedElementId2 && selectedProperty2) {

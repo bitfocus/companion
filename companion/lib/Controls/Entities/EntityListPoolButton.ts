@@ -197,7 +197,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			const targetMap = result.get(elementId) ?? new Map<string, ExpressionOrValue<any>>()
 
 			// Hack: merge imageBuffers so that they stack insted of replacing
-			if (elementProperty === 'imageBuffers') {
+			if (elementProperty === 'base64Image') {
 				const existing = targetMap.get(elementProperty)
 				if (
 					existing &&

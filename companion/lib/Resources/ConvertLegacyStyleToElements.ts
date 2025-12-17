@@ -32,7 +32,7 @@ interface ParsedLegacyStyle {
 		valign: VerticalAlignment | undefined
 		image: string | undefined
 	}
-	imageBuffer: DrawImageBuffer | undefined
+	imageBuffers: DrawImageBuffer[] | undefined
 	background: {
 		color: number | undefined
 	}
@@ -72,12 +72,14 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>): ParsedL
 			valign: imageAlign ? imageAlign[1] : undefined,
 			image: style.png64 ? ensurePng64IsDataUrl(style.png64) : undefined,
 		},
-		imageBuffer: styleHack.imageBuffer
-			? ({
-					...styleHack.imageBufferPosition,
-					...styleHack.imageBufferEncoding,
-					buffer: styleHack.imageBuffer,
-				} as DrawImageBuffer)
+		imageBuffers: styleHack.imageBuffer
+			? [
+					{
+						...styleHack.imageBufferPosition,
+						...styleHack.imageBufferEncoding,
+						buffer: styleHack.imageBuffer,
+					} as DrawImageBuffer,
+				]
 			: undefined,
 		background: {
 			color: style.bgcolor,
@@ -166,10 +168,10 @@ export function GetLegacyStyleProperty(
 			}
 			break
 		case 'imageBuffers':
-			if (parsedStyle.imageBuffer) {
+			if (parsedStyle.imageBuffers && parsedStyle.imageBuffers.length > 0) {
 				return {
 					isExpression: false,
-					value: parsedStyle.imageBuffer,
+					value: parsedStyle.imageBuffers,
 				}
 			}
 			break
