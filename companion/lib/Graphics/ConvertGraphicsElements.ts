@@ -336,6 +336,7 @@ async function convertImageElementForDrawing(
 	if (!enabled && helper.onlyEnabled) return null
 
 	let base64Image = helper.getString<string | null>('base64Image', null)
+	// Hack: composite deprecated imageBuffers into a single base64 image
 	if (base64Image) {
 		const imageObjs = base64Image as unknown as DrawImageBuffer[]
 		if (Array.isArray(imageObjs)) {
