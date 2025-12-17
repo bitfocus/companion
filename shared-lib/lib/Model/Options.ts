@@ -139,8 +139,8 @@ export interface CompanionInputFieldColorExtended extends CompanionInputFieldBas
 	type: 'colorpicker'
 
 	default: string | number
-	enableAlpha?: boolean
-	returnType?: 'string' | 'number'
+	enableAlpha: boolean
+	returnType: 'string' | 'number'
 
 	presetColors?: CompanionColorPresetValue[]
 }

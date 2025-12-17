@@ -127,6 +127,7 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		label: 'Color',
 		default: 0xffffff,
 		returnType: 'number',
+		enableAlpha: false,
 	},
 	{
 		type: 'colorpicker',
