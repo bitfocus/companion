@@ -64,7 +64,7 @@
     "dayjs": "^1.11.19",
     "debounce-fn": "^6.0.0",
     "ejson": "^2.2.3",
-    "emberplus-connection": "^0.2.2",
+    "emberplus-connection": "^0.2.4",
     "env-paths": "^3.0.0",
     "express": "^5.2.1",
     "express-serve-zip": "^1.1.0",

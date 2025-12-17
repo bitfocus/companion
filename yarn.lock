@@ -9391,7 +9391,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-asn1@evs-broadcast/node-asn1:
+"asn1@github:evs-broadcast/node-asn1":
   version: 0.5.4
   resolution: "asn1@https://github.com/evs-broadcast/node-asn1.git#commit=0146823069e479e90595480dc90c72cafa161ba1"
   dependencies:
@@ -10762,7 +10762,7 @@ asn1@evs-broadcast/node-asn1:
     dayjs: "npm:^1.11.19"
     debounce-fn: "npm:^6.0.0"
     ejson: "npm:^2.2.3"
-    emberplus-connection: "npm:^0.2.2"
+    emberplus-connection: "npm:^0.2.4"
     env-paths: "npm:^3.0.0"
     express: "npm:^5.2.1"
     express-serve-zip: "npm:^1.1.0"
@@ -12218,17 +12218,17 @@ asn1@evs-broadcast/node-asn1:
   languageName: node
   linkType: hard
 
-"emberplus-connection@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "emberplus-connection@npm:0.2.2"
+"emberplus-connection@npm:^0.2.4":
+  version: 0.2.4
+  resolution: "emberplus-connection@npm:0.2.4"
   dependencies:
-    asn1: evs-broadcast/node-asn1
+    asn1: "github:evs-broadcast/node-asn1"
     debug: "npm:^4.3.4"
     eventemitter3: "npm:^4.0.7"
     long: "npm:^3.2.0"
     smart-buffer: "npm:^3.0.3"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/e7674b2990733800f3838f8ec4d9679b26336bc6c2e83b78dce2c10e9552c26f8fc3f08fbaa0ce8f089812c26ef7d4c3057b20cb90527a5e34e53cc6b4203430
+  checksum: 10c0/0aa6a51c062e437bdb9e8782f322e5bcff0c9762162c4317f1525e876fda3f96ef1864fdc1a6e3b276c752102edf2498af03a66ac10f745649d01d3f20699633
   languageName: node
   linkType: hard
 
