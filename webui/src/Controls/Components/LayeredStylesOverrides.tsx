@@ -120,12 +120,6 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 				<strong>Layered Styles Overrides</strong>
 				<div></div>
 			</div>
-			{/* {feedbackType === FeedbackEntitySubType.Advanced && (
-				<CAlert color="info" className="mx-2 px-2 py-1">
-					Not all of the Values offered in the overrides will be set by this feedback, as these feedbacks do not report
-					which values they produce
-				</CAlert>
-			)} */}
 
 			<table className="table table-responsive-sm width-100 layered-overrides-table">
 				<thead>
