@@ -145,7 +145,7 @@ export class GraphicsRenderer {
 	}
 
 	/**
-	 * Draw the image for a btuton
+	 * Draw the image for a button
 	 */
 	static async drawButtonBareImageUnwrapped(
 		options: GraphicsOptions,
@@ -182,7 +182,7 @@ export class GraphicsRenderer {
 	}
 
 	/**
-	 * Draw the image for a btuton
+	 * Draw the image for a button
 	 */
 	static async drawButtonImageUnwrapped(
 		options: GraphicsOptions,
@@ -213,9 +213,6 @@ export class GraphicsRenderer {
 		})
 	}
 
-	/**
-	 * Draw the image for a btuton
-	 */
 	static async #drawButtonImageInternal(
 		img: Image,
 		options: GraphicsOptions,
