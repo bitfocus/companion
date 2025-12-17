@@ -50,10 +50,7 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		this.onlyEnabled = onlyEnabled
 	}
 
-	async #executeExpressionAndTrackVariables(
-		str: string,
-		requiredType: string | undefined
-	): Promise<ExecuteExpressionResult> {
+	#executeExpressionAndTrackVariables(str: string, requiredType: string | undefined): ExecuteExpressionResult {
 		const result = this.#parser.executeExpression(str, requiredType)
 
 		// Track the variables used in the expression, even when it failed
@@ -64,15 +61,20 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return result
 	}
 
-	async #parseVariablesInString(str: string): Promise<string> {
-		const result = this.#parser.parseVariables(str)
+	#parseVariablesInString(str: string, defaultValue: string): string {
+		try {
+			const result = this.#parser.parseVariables(str)
 
-		// Track the variables used in the expression, even when it failed
-		for (const variable of result.variableIds) {
-			this.#usedVariables.add(variable)
+			// Track the variables used in the expression, even when it failed
+			for (const variable of result.variableIds) {
+				this.#usedVariables.add(variable)
+			}
+
+			return String(result.text)
+		} catch (_e) {
+			// Ignore errors
+			return defaultValue
 		}
-
-		return String(result.text)
 	}
 
 	#getValue(propertyName: keyof T): ExpressionOrValue<any> {
@@ -80,15 +82,15 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return override ? override : (this.#element as any)[propertyName]
 	}
 
-	async getUnknown(
+	getUnknown(
 		propertyName: keyof T,
 		defaultValue: boolean | number | string | undefined
-	): Promise<boolean | number | string | undefined> {
+	): boolean | number | string | undefined {
 		const value = this.#getValue(propertyName)
 
 		if (!value.isExpression) return value.value
 
-		const result = await this.#executeExpressionAndTrackVariables(value.value, undefined)
+		const result = this.#executeExpressionAndTrackVariables(value.value, undefined)
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -96,21 +98,21 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return result.value
 	}
 
-	async getDrawText(propertyName: keyof T): Promise<boolean | number | string | undefined> {
+	getDrawText(propertyName: keyof T): boolean | number | string | undefined {
 		const value = this.#getValue(propertyName)
 		if (value.isExpression) {
 			return this.getUnknown(propertyName, 'ERR')
 		} else {
-			return this.#parseVariablesInString(value.value)
+			return this.#parseVariablesInString(value.value, 'ERR')
 		}
 	}
 
-	async getNumber(propertyName: keyof T, defaultValue: number, scale = 1): Promise<number> {
+	getNumber(propertyName: keyof T, defaultValue: number, scale = 1): number {
 		const value = this.#getValue(propertyName)
 
 		if (!value.isExpression) return value.value * scale
 
-		const result = await this.#executeExpressionAndTrackVariables(value.value, 'number')
+		const result = this.#executeExpressionAndTrackVariables(value.value, 'number')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -118,12 +120,12 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return (result.value as number) * scale
 	}
 
-	async getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): Promise<TVal> {
+	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {
 		const value = this.#getValue(propertyName)
 
 		if (!value.isExpression) return value.value
 
-		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -131,12 +133,12 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return result.value as TVal
 	}
 
-	async getEnum<TVal extends string>(propertyName: keyof T, values: TVal[], defaultValue: TVal): Promise<TVal> {
+	getEnum<TVal extends string>(propertyName: keyof T, values: TVal[], defaultValue: TVal): TVal {
 		const value = this.#getValue(propertyName)
 
 		let actualValue: TVal = value.value
 		if (value.isExpression) {
-			const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
+			const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
 			if (!result.ok) {
 				return defaultValue
 			}
@@ -150,12 +152,12 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return actualValue
 	}
 
-	async getBoolean(propertyName: keyof T, defaultValue: boolean): Promise<boolean> {
+	getBoolean(propertyName: keyof T, defaultValue: boolean): boolean {
 		const value = this.#getValue(propertyName)
 
 		if (!value.isExpression) return value.value
 
-		const result = await this.#executeExpressionAndTrackVariables(value.value, 'boolean')
+		const result = this.#executeExpressionAndTrackVariables(value.value, 'boolean')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -163,14 +165,14 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return result.value as boolean
 	}
 
-	async getHorizontalAlignment(propertyName: keyof T): Promise<HorizontalAlignment> {
+	getHorizontalAlignment(propertyName: keyof T): HorizontalAlignment {
 		const value = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
 			return this.getEnum<HorizontalAlignment>(propertyName, ['left', 'center', 'right'], 'center')
 		}
 
-		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) return 'center'
 
 		const firstChar = String(result.value).trim().toLowerCase()[0]
@@ -187,14 +189,14 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 				return 'center'
 		}
 	}
-	async getVerticalAlignment(propertyName: keyof T): Promise<VerticalAlignment> {
+	getVerticalAlignment(propertyName: keyof T): VerticalAlignment {
 		const value = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
 			return this.getEnum<VerticalAlignment>(propertyName, ['top', 'center', 'bottom'], 'center')
 		}
 
-		const result = await this.#executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) return 'center'
 
 		const firstChar = String(result.value).trim().toLowerCase()[0]
@@ -265,27 +267,22 @@ async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
 	return newElements.filter((element) => element !== null)
 }
 
-async function convertCanvasElementForDrawing(
+function convertCanvasElementForDrawing(
 	helperFactory: ElementExpressionHelperFactory,
 	element: ButtonGraphicsCanvasElement
-): Promise<ButtonGraphicsCanvasDrawElement> {
+): ButtonGraphicsCanvasDrawElement {
 	const helper = helperFactory(element)
-
-	const [decoration] = await Promise.all([
-		// helper.getNumber(element.color, 0),
-		helper.getEnum(
-			'decoration',
-			Object.values(ButtonGraphicsDecorationType),
-			ButtonGraphicsDecorationType.FollowDefault
-		),
-	])
 
 	return {
 		id: element.id,
 		type: 'canvas',
 		usage: element.usage,
 		// color,
-		decoration,
+		decoration: helper.getEnum(
+			'decoration',
+			Object.values(ButtonGraphicsDecorationType),
+			ButtonGraphicsDecorationType.FollowDefault
+		),
 	}
 }
 
@@ -296,22 +293,18 @@ async function convertGroupElementForDrawing(
 	const helper = helperFactory(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
-	const enabled = await helper.getBoolean('enabled', true)
+	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [opacity, bounds, children] = await Promise.all([
-		helper.getNumber('opacity', 1, 0.01),
-		convertDrawBounds(helper),
-		ConvertSomeButtonGraphicsElementForDrawingWithHelper(helperFactory, element.children),
-	])
+	const children = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(helperFactory, element.children)
 
 	return {
 		id: element.id,
 		type: 'group',
 		usage: element.usage,
 		enabled,
-		opacity,
-		...bounds,
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		...convertDrawBounds(helper),
 		children,
 	}
 }
@@ -323,53 +316,36 @@ async function convertImageElementForDrawing(
 	const helper = helperFactory(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
-	const enabled = await helper.getBoolean('enabled', true)
+	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [opacity, bounds, base64Image, halign, valign, fillMode] = await Promise.all([
-		helper.getNumber('opacity', 1, 0.01),
-		convertDrawBounds(helper),
-		helper.getString<string | null>('base64Image', null),
-		helper.getHorizontalAlignment('halign'),
-		helper.getVerticalAlignment('valign'),
-		helper.getEnum('fillMode', ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
-	])
+	const base64Image = helper.getString<string | null>('base64Image', null)
 
 	return {
 		id: element.id,
 		type: 'image',
 		usage: element.usage,
 		enabled,
-		opacity,
-		...bounds,
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		...convertDrawBounds(helper),
 		base64Image,
-		halign,
-		valign,
-		fillMode,
+		halign: helper.getHorizontalAlignment('halign'),
+		valign: helper.getVerticalAlignment('valign'),
+		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
 	}
 }
 
-async function convertTextElementForDrawing(
+function convertTextElementForDrawing(
 	helperFactory: ElementExpressionHelperFactory,
 	element: ButtonGraphicsTextElement
-): Promise<ButtonGraphicsTextDrawElement | null> {
+): ButtonGraphicsTextDrawElement | null {
 	const helper = helperFactory(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
-	const enabled = await helper.getBoolean('enabled', true)
+	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const [opacity, bounds, fontsizeRaw, text, color, halign, valign, outlineColor] = await Promise.all([
-		helper.getNumber('opacity', 1, 0.01),
-		convertDrawBounds(helper),
-		helper.getUnknown('fontsize', 'auto'),
-		helper.getDrawText('text'),
-		helper.getNumber('color', 0),
-		helper.getHorizontalAlignment('halign'),
-		helper.getVerticalAlignment('valign'),
-		helper.getNumber('outlineColor', 0),
-	])
-
+	const fontsizeRaw = helper.getUnknown('fontsize', 'auto')
 	const fontsize = Number(fontsizeRaw) || fontsizeRaw
 
 	return {
@@ -377,104 +353,84 @@ async function convertTextElementForDrawing(
 		type: 'text',
 		usage: element.usage,
 		enabled,
-		opacity,
-		...bounds,
-		text: text + '',
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		...convertDrawBounds(helper),
+		text: helper.getDrawText('text') + '',
 		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
-		color,
-		halign,
-		valign,
-		outlineColor,
+		color: helper.getNumber('color', 0),
+		halign: helper.getHorizontalAlignment('halign'),
+		valign: helper.getVerticalAlignment('valign'),
+		outlineColor: helper.getNumber('outlineColor', 0),
 	}
 }
 
-async function convertBoxElementForDrawing(
+function convertBoxElementForDrawing(
 	helperFactory: ElementExpressionHelperFactory,
 	element: ButtonGraphicsBoxElement
-): Promise<ButtonGraphicsBoxDrawElement | null> {
+): ButtonGraphicsBoxDrawElement | null {
 	const helper = helperFactory(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
-	const enabled = await helper.getBoolean('enabled', true)
+	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && helper.onlyEnabled) return null
-
-	const [opacity, bounds, color, borderProps] = await Promise.all([
-		helper.getNumber('opacity', 1, 0.01),
-		convertDrawBounds(helper),
-		helper.getNumber('color', 0),
-		convertBorderProperties(helper),
-	])
 
 	return {
 		id: element.id,
 		type: 'box',
 		usage: element.usage,
 		enabled,
-		opacity,
-		...bounds,
-		color,
-		...borderProps,
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		...convertDrawBounds(helper),
+		color: helper.getNumber('color', 0),
+		...convertBorderProperties(helper),
 	}
 }
 
-async function convertLineElementForDrawing(
+function convertLineElementForDrawing(
 	helperFactory: ElementExpressionHelperFactory,
 	element: ButtonGraphicsLineElement
-): Promise<ButtonGraphicsLineDrawElement | null> {
+): ButtonGraphicsLineDrawElement | null {
 	const helper = helperFactory(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
-	const enabled = await helper.getBoolean('enabled', true)
+	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && helper.onlyEnabled) return null
-
-	const [opacity, fromX, fromY, toX, toY, borderProps] = await Promise.all([
-		helper.getNumber('opacity', 1, 0.01),
-		helper.getNumber('fromX', 0),
-		helper.getNumber('fromY', 0),
-		helper.getNumber('toX', 100),
-		helper.getNumber('toY', 100),
-		convertBorderProperties(helper),
-	])
 
 	return {
 		id: element.id,
 		type: 'line',
 		usage: element.usage,
 		enabled,
-		opacity,
-		fromX,
-		fromY,
-		toX,
-		toY,
-		...borderProps,
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		fromX: helper.getNumber('fromX', 0),
+		fromY: helper.getNumber('fromY', 0),
+		toX: helper.getNumber('toX', 100),
+		toY: helper.getNumber('toY', 100),
+		...convertBorderProperties(helper),
 	}
 }
 
-async function convertDrawBounds(
+function convertDrawBounds(
 	helper: ElementExpressionHelper<
 		MakeExpressionable<ButtonGraphicsDrawBounds & { type: string }> & ButtonGraphicsElementBase
 	>
-): Promise<ButtonGraphicsDrawBounds> {
-	const [x, y, width, height] = await Promise.all([
-		helper.getNumber('x', 0, 0.01),
-		helper.getNumber('y', 0, 0.01),
-		helper.getNumber('width', 1, 0.01),
-		helper.getNumber('height', 1, 0.01),
-	])
-
-	return { x, y, width, height }
+): ButtonGraphicsDrawBounds {
+	return {
+		x: helper.getNumber('x', 0, 0.01),
+		y: helper.getNumber('y', 0, 0.01),
+		width: helper.getNumber('width', 1, 0.01),
+		height: helper.getNumber('height', 1, 0.01),
+	}
 }
 
-async function convertBorderProperties(
+function convertBorderProperties(
 	helper: ElementExpressionHelper<
 		MakeExpressionable<ButtonGraphicsBorderProperties & { type: string }> & ButtonGraphicsElementBase
 	>
-): Promise<ButtonGraphicsBorderProperties> {
-	const [borderWidth, borderColor, borderPosition] = await Promise.all([
-		helper.getNumber('borderWidth', 0, 0.01),
-		helper.getNumber('borderColor', 0),
-		helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
-	])
-
-	return { borderWidth, borderColor, borderPosition }
+): ButtonGraphicsBorderProperties {
+	return {
+		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
+		borderColor: helper.getNumber('borderColor', 0),
+		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
+	}
 }
