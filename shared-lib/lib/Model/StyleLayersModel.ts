@@ -1,4 +1,4 @@
-import z from 'zod'
+import type { ExpressionOrValue } from './Expression.js'
 
 /**
  * The type of a button graphics element as stored in places where it can be edited
@@ -54,15 +54,9 @@ export interface ButtonGraphicsDrawBounds {
 	height: number
 }
 
-export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 export type MakeExpressionable<T extends { type: string } /*TSkip extends keyof T = 'type'*/> = {
 	[P in keyof Omit<T, 'id'>]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
 }
-
-export const schemaExpressionOrValue: z.ZodType<ExpressionOrValue<any>> = z.object({
-	value: z.any(),
-	isExpression: z.boolean(),
-})
 
 export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled' | 'opacity'> {
 	// Note: this is the background element and can only be at the bottom of the stack
@@ -98,6 +92,8 @@ export type VerticalAlignment = 'top' | 'center' | 'bottom'
 
 export type LineOrientation = 'inside' | 'center' | 'outside'
 
+export type ImageFillMode = 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
+
 export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'text'
 
@@ -126,7 +122,7 @@ export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, 
 	halign: HorizontalAlignment
 	valign: VerticalAlignment
 
-	fillMode: 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
+	fillMode: ImageFillMode
 
 	// Future ideas:
 	// rotation: number

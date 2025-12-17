@@ -12,10 +12,10 @@ import {
 	ButtonGraphicsElementUsage,
 	type ButtonGraphicsImageElement,
 	type ButtonGraphicsTextElement,
-	type ExpressionOrValue,
 	type HorizontalAlignment,
 	type VerticalAlignment,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { nanoid } from 'nanoid'
 

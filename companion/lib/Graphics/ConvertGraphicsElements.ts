@@ -8,7 +8,6 @@ import {
 	type ButtonGraphicsTextElement,
 	type ButtonGraphicsCanvasDrawElement,
 	type ButtonGraphicsCanvasElement,
-	type ExpressionOrValue,
 	type SomeButtonGraphicsDrawElement,
 	type SomeButtonGraphicsElement,
 	type MakeExpressionable,
@@ -21,6 +20,7 @@ import {
 	type ButtonGraphicsLineDrawElement,
 	type ButtonGraphicsElementBase,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'

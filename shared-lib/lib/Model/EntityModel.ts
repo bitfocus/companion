@@ -1,7 +1,7 @@
 import z from 'zod'
 import type { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
-import { type ExpressionOrValue, schemaExpressionOrValue } from './StyleLayersModel.js'
+import { type ExpressionOrValue, schemaExpressionOrValue } from './Expression.js'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel =
