@@ -5,7 +5,6 @@ import z from 'zod'
 import EventEmitter from 'node:events'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
 export interface ElementStreamResult {
@@ -195,52 +194,23 @@ export class PreviewElementStream {
 		element: SomeButtonGraphicsDrawElement | null
 		referencedVariableIds: Set<string>
 	}> {
-		const referencedVariableIds = new Set<string>()
-
 		const control = this.#controlsController.getControl(controlId)
 		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) {
-			return { element: null, referencedVariableIds }
+			return { element: null, referencedVariableIds: new Set() }
 		}
 
 		const elementDef = control.layeredStyleGetElementById(elementId)
 		if (!elementDef) {
-			return { element: null, referencedVariableIds }
+			return { element: null, referencedVariableIds: new Set() }
 		}
 
 		const feedbackOverrides = control.entities.getFeedbackStyleOverrides()
 
 		if (!elementDef) {
-			return { element: null, referencedVariableIds }
+			return { element: null, referencedVariableIds: new Set() }
 		}
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
-
-		// Create the expression execution functions that track variable usage
-		const parseExpression = async (str: string, requiredType?: string): Promise<ExecuteExpressionResult> => {
-			const result = parser.executeExpression(str, requiredType)
-
-			// Track all variables used in this expression
-			for (const variableId of result.variableIds) {
-				referencedVariableIds.add(variableId)
-			}
-
-			return result
-		}
-
-		const parseVariablesInString = async (str: string): Promise<ExecuteExpressionResult> => {
-			const result = parser.parseVariables(str)
-
-			// Track all variables used
-			for (const variableId of result.variableIds) {
-				referencedVariableIds.add(variableId)
-			}
-
-			return {
-				ok: true,
-				value: result.text,
-				variableIds: result.variableIds,
-			}
-		}
 
 		try {
 			// For group elements, clear children since they should be watched independently
@@ -251,11 +221,10 @@ export class PreviewElementStream {
 
 			// Convert the single element to its draw representation
 			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
-			const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
+			const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
+				parser,
 				[elementDefToProcess],
 				feedbackOverrides,
-				parseExpression,
-				parseVariablesInString,
 				false // onlyEnabled
 			)
 
@@ -267,7 +236,7 @@ export class PreviewElementStream {
 
 			return {
 				element: elements[0],
-				referencedVariableIds,
+				referencedVariableIds: usedVariables,
 			}
 		} catch (error) {
 			this.#logger.error('Error evaluating element:', error)

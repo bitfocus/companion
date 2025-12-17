@@ -215,17 +215,9 @@ export class ControlButtonPreset
 
 		// Compute the new drawing
 		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
+			parser,
 			this.#drawElements,
 			feedbackOverrides,
-			async (str: string, requiredType?: string) => parser.executeExpression(str, requiredType),
-			async (str: string) => {
-				const res = parser.parseVariables(str)
-				return {
-					ok: true,
-					value: res.text,
-					variableIds: res.variableIds,
-				}
-			},
 			true
 		)
 		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null

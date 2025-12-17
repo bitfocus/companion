@@ -23,13 +23,10 @@ import {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
-
-type ExecuteExpressionFn = (str: string, requiredType?: string) => Promise<ExecuteExpressionResult>
-type ParseVariablesFn = (str: string) => Promise<ExecuteExpressionResult>
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
-	readonly #executeExpression: ExecuteExpressionFn
-	readonly #parseVariables: ParseVariablesFn
+	readonly #parser: VariablesAndExpressionParser
 	readonly #usedVariables = new Set<string>()
 
 	readonly #element: T
@@ -38,15 +35,13 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 	readonly onlyEnabled: boolean
 
 	constructor(
-		executeExpression: ExecuteExpressionFn,
-		parseVariables: ParseVariablesFn,
+		parser: VariablesAndExpressionParser,
 		usedVariables: Set<string>,
 		element: T,
 		elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined,
 		onlyEnabled: boolean
 	) {
-		this.#executeExpression = executeExpression
-		this.#parseVariables = parseVariables
+		this.#parser = parser
 		this.#usedVariables = usedVariables
 
 		this.#element = element
@@ -59,7 +54,7 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		str: string,
 		requiredType: string | undefined
 	): Promise<ExecuteExpressionResult> {
-		const result = await this.#executeExpression(str, requiredType)
+		const result = this.#parser.executeExpression(str, requiredType)
 
 		// Track the variables used in the expression, even when it failed
 		for (const variable of result.variableIds) {
@@ -69,19 +64,15 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return result
 	}
 
-	async #parseVariablesInString(str: string, defaultValue: string): Promise<string> {
-		const result = await this.#parseVariables(str)
+	async #parseVariablesInString(str: string): Promise<string> {
+		const result = this.#parser.parseVariables(str)
 
 		// Track the variables used in the expression, even when it failed
 		for (const variable of result.variableIds) {
 			this.#usedVariables.add(variable)
 		}
 
-		if (!result.ok) {
-			return defaultValue
-		}
-
-		return String(result.value)
+		return String(result.text)
 	}
 
 	#getValue(propertyName: keyof T): ExpressionOrValue<any> {
@@ -110,7 +101,7 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		if (value.isExpression) {
 			return this.getUnknown(propertyName, 'ERR')
 		} else {
-			return this.#parseVariablesInString(value.value, 'ERR')
+			return this.#parseVariablesInString(value.value)
 		}
 	}
 
@@ -224,10 +215,9 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 type ElementExpressionHelperFactory = <T extends ButtonGraphicsElementBase>(element: T) => ElementExpressionHelper<T>
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
+	parser: VariablesAndExpressionParser,
 	elements: SomeButtonGraphicsElement[],
 	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>,
-	executeExpression: ExecuteExpressionFn,
-	parseVariables: ParseVariablesFn,
 	onlyEnabled: boolean
 ): Promise<{
 	elements: SomeButtonGraphicsDrawElement[]
@@ -236,14 +226,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	const usedVariables = new Set<string>()
 
 	const helperFactory: ElementExpressionHelperFactory = (element) =>
-		new ElementExpressionHelper(
-			executeExpression,
-			parseVariables,
-			usedVariables,
-			element,
-			feedbackOverrides.get(element.id),
-			onlyEnabled
-		)
+		new ElementExpressionHelper(parser, usedVariables, element, feedbackOverrides.get(element.id), onlyEnabled)
 
 	const newElements = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(helperFactory, elements)
 
