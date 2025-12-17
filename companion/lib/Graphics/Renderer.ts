@@ -574,7 +574,7 @@ export class GraphicsRenderer {
 	}
 
 	/**
-	 * Draw the image for a btuton
+	 * Flatten an array of imagebuffers into a single base64 image
 	 */
 	static async drawImageBuffers(showTopBar: boolean, imageBuffers: DrawImageBuffer[]): Promise<string> {
 		return GraphicsRenderer.#getCachedImage(
