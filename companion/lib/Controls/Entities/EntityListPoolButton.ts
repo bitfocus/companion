@@ -196,7 +196,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const pushOverride = (elementId: string, elementProperty: string, override: ExpressionOrValue<any>) => {
 			const targetMap = result.get(elementId) ?? new Map<string, ExpressionOrValue<any>>()
 
-			// Hack: merge imageBuffers so that they stack insted of replacing
+			// Hack: merge imageBuffers so that they stack instead of replacing
 			if (elementProperty === 'base64Image') {
 				const existing = targetMap.get(elementProperty)
 				if (
