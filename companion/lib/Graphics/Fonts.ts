@@ -11,11 +11,9 @@ export interface FontDefinition {
  * Generate full path to a font file, handling both packaged and non-packaged environments
  */
 function generateFontUrl(fontFilename: string): string {
-	if (isPackaged()) {
-		return path.join(__dirname, 'assets/Fonts', fontFilename)
-	} else {
-		return fileURLToPath(new URL(path.join('../../../assets/Fonts', fontFilename), import.meta.url))
-	}
+	const fontPath = isPackaged() ? 'assets/Fonts' : '../../../assets/Fonts'
+	// we could simplify by using import.meta.dirname
+	return fileURLToPath(new URL(path.join(fontPath, fontFilename), import.meta.url))
 }
 
 /**
