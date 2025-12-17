@@ -188,6 +188,12 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 		],
 		default: 'fit_or_shrink',
 	},
+	// {
+	// 	type: 'secret-text',
+	// 	id: 'imageBuffers',
+	// 	label: 'Image Buffers (Deprecated)',
+	// 	default: '',
+	// },
 ]
 
 export const boxElementSchema: SomeCompanionInputField[] = [

@@ -2,7 +2,6 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback } from 'react'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
-import { elementSchemas } from '../../Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
 import classNames from 'classnames'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 
@@ -75,6 +74,7 @@ function ElementTreeItem({
 
 interface ElementPickerProps {
 	selectedElementId: string | null
+	selectedSchema: SomeCompanionInputField[] | null
 	selectedProperties: string[]
 	onElementSelect: (elementId: string) => void
 	onPropertySelect: (propertyId: string) => void
@@ -83,15 +83,13 @@ interface ElementPickerProps {
 
 export function ElementPicker({
 	selectedElementId,
+	selectedSchema,
 	selectedProperties,
 	onElementSelect,
 	onPropertySelect,
 	allowMultipleProperties = false,
 }: ElementPickerProps): React.JSX.Element {
 	const { styleStore } = useLayeredStyleElementsContext()
-
-	const selectedElement = selectedElementId ? styleStore.findElementById(selectedElementId) : null
-	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
 
 	const isPropertySelected = useCallback(
 		(propertyId: string) => {

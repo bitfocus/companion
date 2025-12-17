@@ -119,7 +119,7 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 			return defaultValue
 		}
 
-		return (result.value as number) * scale
+		return Number(result.value) * scale
 	}
 
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {
@@ -129,6 +129,10 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 
 		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) {
+			return defaultValue
+		}
+
+		if (typeof result.value !== 'string') {
 			return defaultValue
 		}
 

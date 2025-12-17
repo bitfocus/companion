@@ -164,6 +164,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 				isOpen={isAddModalOpen}
 				onClose={() => setIsAddModalOpen(false)}
 				onSave={handleAddModalSave}
+				feedbackType={feedbackType}
 			/>
 		</>
 	)
@@ -226,6 +227,7 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 				onClose={() => setIsModalOpen(false)}
 				onSave={handleModalSave}
 				currentOverride={row}
+				feedbackType={feedbackType}
 			/>
 		</>
 	)

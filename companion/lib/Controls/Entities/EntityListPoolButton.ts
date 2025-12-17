@@ -195,6 +195,24 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		const pushOverride = (elementId: string, elementProperty: string, override: ExpressionOrValue<any>) => {
 			const targetMap = result.get(elementId) ?? new Map<string, ExpressionOrValue<any>>()
+
+			// Hack: merge imageBuffers so that they stack insted of replacing
+			if (elementProperty === 'imageBuffers') {
+				const existing = targetMap.get(elementProperty)
+				if (
+					existing &&
+					!existing.isExpression &&
+					!override.isExpression &&
+					Array.isArray(existing.value) &&
+					Array.isArray(override.value)
+				) {
+					override = {
+						isExpression: false,
+						value: [...existing.value, ...override.value],
+					}
+				}
+			}
+
 			targetMap.set(elementProperty, override)
 			result.set(elementId, targetMap)
 		}
