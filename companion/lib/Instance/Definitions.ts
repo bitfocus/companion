@@ -40,6 +40,7 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { ConvertStepsForPreset } from './Presets/Steps.js'
 import { TranslateRawLayeredButtonPresetToDefinition } from './Presets/Layered.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -488,18 +489,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		for (const preset of Object.values(presets)) {
 			if (preset.type !== 'text') {
 				// Update variable references in style layers
-				// Future: This should be refactored to handle things more generically, based on the schemas
-				for (const element of preset.model.style.layers) {
-					for (const [key, value] of Object.entries(element)) {
-						if (value && isExpressionOrValue(value)) {
-							if (value.isExpression) {
-								value.value = replaceAllVariables(value.value, label)
-							} else if (element.type === 'text' && key === 'text') {
-								value.value = replaceAllVariables(value.value as string, label)
-							}
-						}
-					}
-				}
+				replaceAllVariablesInElements(preset.model.style.layers, label)
 
 				if (preset.model.feedbacks) {
 					for (const feedback of preset.model.feedbacks) {
@@ -623,4 +613,21 @@ function translateRawButtonPresetToDefinition(
 	}
 
 	return presetDefinition
+}
+
+function replaceAllVariablesInElements(elements: SomeButtonGraphicsElement[], label: string): void {
+	for (const element of elements) {
+		if (element.type === 'group') replaceAllVariablesInElements(element.children, label)
+
+		// Future: This should be refactored to handle things more generically, based on the schemas
+		for (const [key, value] of Object.entries(element)) {
+			if (value && isExpressionOrValue(value)) {
+				if (value.isExpression) {
+					value.value = replaceAllVariables(value.value, label)
+				} else if (element.type === 'text' && key === 'text') {
+					value.value = replaceAllVariables(value.value as string, label)
+				}
+			}
+		}
+	}
 }
