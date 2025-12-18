@@ -46,10 +46,10 @@ export class UIServer extends HttpServer {
 				const address0 = this.address()
 				const address = typeof address0 === 'object' ? address0 : undefined
 
-				this.#logger.info(`new url: http://${address?.address}:${address?.port}/`)
-
 				const ip = bindIp == '0.0.0.0' ? '127.0.0.1' : bindIp
 				const url = `http://${ip}:${address?.port}/`
+				this.#logger.info(`new url: ${url}`)
+
 				const info = bindIp == '0.0.0.0' ? `All Interfaces: e.g. ${url}` : url
 				sendOverIpc({
 					messageType: 'http-bind-status',

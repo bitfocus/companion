@@ -474,11 +474,11 @@ export class Registry {
 			bindPort = 8000
 		}
 
-		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
 		this.services.https.updateBindIp(bindIp)
 		this.internalModule.updateBindIp(bindIp, bindPort)
 		this.usageStatistics.updateBindIp(bindIp)
+		setTimeout(() => this.ui.server.rebindHttp(bindIp, bindPort), 2000)
 	}
 }
 
