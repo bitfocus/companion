@@ -48,7 +48,7 @@ export class UIServer extends HttpServer {
 
 				const ip = bindIp == '0.0.0.0' ? '127.0.0.1' : bindIp
 				const url = `http://${ip}:${address?.port}/`
-				this.#logger.info(`new url: ${url}`)
+				setTimeout(() => this.#logger.info(`new url: ${url}`), 2000)
 
 				const info = bindIp == '0.0.0.0' ? `All Interfaces: e.g. ${url}` : url
 				sendOverIpc({
@@ -59,7 +59,7 @@ export class UIServer extends HttpServer {
 				})
 			})
 		} catch (e) {
-			this.#logger.error(`http bind error: ${e}`)
+			setTimeout(() => this.#logger.error(`http bind error: ${e}`), 2000)
 		}
 	}
 }
