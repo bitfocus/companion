@@ -1878,9 +1878,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base@npm:^1.14.0":
-  version: 1.14.0
-  resolution: "@companion-module/base@npm:1.14.0"
+"@companion-module/base@npm:1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42":
+  version: 1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42
+  resolution: "@companion-module/base@npm:1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42"
   dependencies:
     ajv: "npm:^8.17.1"
     colord: "npm:^2.9.3"
@@ -1891,7 +1891,7 @@ __metadata:
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/e9d79d01d024f4cbea2b58ba66d422ed8cd874a5f092a25c7c27220b52c34bfe3e5289758cf5dd40f5f36619bcf7e9f7ad978495d8010270dfd0e85bc9c8bf58
+  checksum: 10c0/c7efdf17eff73a8af60c515791f83fd73ce8b7c56a466f608c1b9b6c8093abf023b65aeb6a55fb240411280dc14afc854ccb8a8b1cf0e93e53342a7b7aec2a23
   languageName: node
   linkType: hard
 
@@ -10740,7 +10740,7 @@ asn1@evs-broadcast/node-asn1:
   resolution: "companion@workspace:companion"
   dependencies:
     "@companion-app/shared": "npm:*"
-    "@companion-module/base": "npm:^1.14.0"
+    "@companion-module/base": "npm:1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42"
     "@companion-surface/host": "npm:~1.0.0"
     "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^2.1.1"

@@ -1,6 +1,6 @@
-import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { ObjectsDiff } from './Common.js'
-import type { NormalButtonModel } from './ButtonModel.js'
+import type { LayeredButtonModel } from './ButtonModel.js'
+import type { SomeEntityModel } from './EntityModel.js'
 
 export type PresetDefinition = PresetDefinitionButton | PresetDefinitionText
 
@@ -9,8 +9,8 @@ export interface PresetDefinitionButton {
 	name: string
 	category: string
 	type: 'button'
-	model: NormalButtonModel
-	previewStyle: Partial<CompanionButtonStyleProps> | undefined
+	model: LayeredButtonModel
+	presetExtraFeedbacks: SomeEntityModel[]
 }
 
 export interface PresetDefinitionText {

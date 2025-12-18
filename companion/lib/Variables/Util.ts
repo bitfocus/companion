@@ -115,7 +115,7 @@ export function parseVariablesInString(
  * Replace all the variables in a string, to reference a new label
  */
 export function replaceAllVariables(string: string, newLabel: string): string {
-	if (string && string.includes('$(')) {
+	if (string && typeof string === 'string' && string.includes('$(')) {
 		let matchCount = 0
 		let matches: RegExpExecArray | null
 		let fromIndex = 0

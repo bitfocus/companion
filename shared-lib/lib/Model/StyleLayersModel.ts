@@ -54,8 +54,8 @@ export interface ButtonGraphicsDrawBounds {
 	height: number
 }
 
-export type MakeExpressionable<T extends { type: string } /*TSkip extends keyof T = 'type'*/> = {
-	[P in keyof Omit<T, 'id'>]: P extends 'type' ? T[P] : ExpressionOrValue<T[P]>
+export type MakeExpressionable<T /*TSkip extends keyof T = 'type'*/> = {
+	[P in keyof Omit<T, 'id'>]: P extends 'type' | 'usage' ? T[P] : ExpressionOrValue<T[P]>
 }
 
 export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled' | 'opacity'> {
@@ -67,7 +67,7 @@ export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDraw
 	decoration: ButtonGraphicsDecorationType // replaces show_topbar
 }
 export interface ButtonGraphicsCanvasElement
-	extends ButtonGraphicsElementBase, MakeExpressionable<Omit<ButtonGraphicsCanvasDrawElement, 'usage'>> {}
+	extends ButtonGraphicsElementBase, MakeExpressionable<ButtonGraphicsCanvasDrawElement> {}
 
 export enum ButtonGraphicsDecorationType {
 	FollowDefault = 'default',
@@ -83,7 +83,7 @@ export interface ButtonGraphicsGroupDrawElement extends ButtonGraphicsDrawBase, 
 	children: SomeButtonGraphicsDrawElement[]
 }
 export interface ButtonGraphicsGroupElement
-	extends ButtonGraphicsElementBase, MakeExpressionable<Omit<ButtonGraphicsGroupDrawElement, 'usage' | 'children'>> {
+	extends ButtonGraphicsElementBase, MakeExpressionable<Omit<ButtonGraphicsGroupDrawElement, 'children'>> {
 	children: SomeButtonGraphicsElement[]
 }
 
@@ -112,7 +112,7 @@ export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, B
 	// rotation: number
 }
 export interface ButtonGraphicsTextElement
-	extends ButtonGraphicsElementBase, MakeExpressionable<Omit<ButtonGraphicsTextDrawElement, 'usage'>> {}
+	extends ButtonGraphicsElementBase, MakeExpressionable<ButtonGraphicsTextDrawElement> {}
 
 export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
 	type: 'image'
@@ -129,7 +129,7 @@ export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, 
 	// crop: { x, y, width, height }
 }
 export interface ButtonGraphicsImageElement
-	extends ButtonGraphicsElementBase, MakeExpressionable<Omit<ButtonGraphicsImageDrawElement, 'usage'>> {}
+	extends ButtonGraphicsElementBase, MakeExpressionable<ButtonGraphicsImageDrawElement> {}
 
 export interface ButtonGraphicsBorderProperties {
 	borderWidth: number // 0 to disable
@@ -144,7 +144,7 @@ export interface ButtonGraphicsBoxDrawElement
 	color: number
 }
 export interface ButtonGraphicsBoxElement
-	extends ButtonGraphicsElementBase, MakeExpressionable<Omit<ButtonGraphicsBoxDrawElement, 'usage'>> {}
+	extends ButtonGraphicsElementBase, MakeExpressionable<ButtonGraphicsBoxDrawElement> {}
 
 export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsBorderProperties {
 	type: 'line'
@@ -159,4 +159,4 @@ export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase, B
 	toY: number
 }
 export interface ButtonGraphicsLineElement
-	extends ButtonGraphicsElementBase, MakeExpressionable<Omit<ButtonGraphicsLineDrawElement, 'usage'>> {}
+	extends ButtonGraphicsElementBase, MakeExpressionable<ButtonGraphicsLineDrawElement> {}
