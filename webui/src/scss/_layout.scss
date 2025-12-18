@@ -93,6 +93,11 @@ form.row > * {
 	color: #ddd;
 }
 
+/* ensure .header-update-warn text doesn't disappear on focus */
+.header .nav-link:focus {
+	color: #ddd;
+}
+
 .login-form {
 	display: grid;
 	grid-auto-flow: column;

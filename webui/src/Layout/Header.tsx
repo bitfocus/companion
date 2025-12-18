@@ -1,12 +1,19 @@
 import React, { useContext } from 'react'
 import { CHeader, CHeaderBrand, CHeaderNav, CNavItem, CNavLink, CHeaderToggler, CContainer } from '@coreui/react'
-import { faBars, faLock, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import {
+	faBars,
+	faQuestion,
+	faExternalLinkSquare,
+	faLock,
+	faTriangleExclamation,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { Link } from '@tanstack/react-router'
 
 interface MyHeaderProps {
 	canLock: boolean
@@ -70,6 +77,19 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 						</CNavItem>
 					</CHeaderNav>
 				)}
+
+				<CHeaderNav className="ml-auto header-right">
+					<CNavItem className="header-update-warn">
+						<div className="flex">
+							<div className="align-self-end nav-icon-wrapper">
+								<CNavLink to="/user-guide/" target="_blank" as={Link}>
+									<FontAwesomeIcon icon={faQuestion} /> {} User Guide {}{' '}
+									<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1" />
+								</CNavLink>
+							</div>
+						</div>
+					</CNavItem>
+				</CHeaderNav>
 			</CContainer>
 		</CHeader>
 	)

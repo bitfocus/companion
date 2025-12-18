@@ -29,7 +29,6 @@ import {
 	faComments,
 	faSquareCaretRight,
 	faPuzzlePiece,
-	faInfo,
 	faStar,
 	faHatWizard,
 	faSquareRootVariable,
@@ -237,7 +236,6 @@ export const MySidebar = memo(function MySidebar() {
 			</div>
 			<CSidebarNav className="nav-secondary border-top">
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-				<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
 				<SidebarMenuItemGroup name="Help & Community" icon={faQuestionCircle}>
 					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
 					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
