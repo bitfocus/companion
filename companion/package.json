@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@companion-app/shared": "*",
-    "@companion-module/base": "^1.14.0",
+    "@companion-module/base": "1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42",
     "@companion-surface/host": "~1.0.0",
     "@julusian/bonjour-service": "^1.4.2",
     "@julusian/image-rs": "^2.1.1",

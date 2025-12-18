@@ -1,6 +1,5 @@
 import { nanoid } from 'nanoid'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
-import { ControlEntityListPoolButton } from '../Controls/Entities/EntityListPoolButton.js'
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import { replaceAllVariables } from '../Variables/Util.js'
 import type {
@@ -10,20 +9,15 @@ import type {
 	UIPresetDefinitionUpdate,
 } from '@companion-app/shared/Model/Presets.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type {
-	LayeredButtonModel,
-	NormalButtonSteps,
-	PresetButtonModel,
-} from '@companion-app/shared/Model/ButtonModel.js'
+import type { LayeredButtonModel, PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type {
 	CompanionButtonPresetDefinition,
 	CompanionButtonStyleProps,
-	CompanionPresetAction,
+	CompanionLayeredButtonPresetDefinition,
 	CompanionPresetFeedback,
 	CompanionTextPresetDefinition,
 } from '@companion-module/base'
-import LogController from '../Log/Controller.js'
-import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -43,6 +37,10 @@ import { ConvertLegacyStyleToElements } from '../Resources/ConvertLegacyStyleToE
 import type { InstanceConfigStore } from './ConfigStore.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { isExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import { ConvertStepsForPreset } from './Presets/Steps.js'
+import { TranslateRawLayeredButtonPresetToDefinition } from './Presets/Layered.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -54,7 +52,11 @@ type DefinitionsEvents = {
 	feedbacks: [update: EntityDefinitionUpdate]
 }
 
-type RawPresetDefinition = (CompanionButtonPresetDefinition | CompanionTextPresetDefinition) & {
+type RawPresetDefinition = (
+	| CompanionButtonPresetDefinition
+	| CompanionLayeredButtonPresetDefinition
+	| CompanionTextPresetDefinition
+) & {
 	id: string
 }
 
@@ -281,31 +283,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			...definition.model,
 			type: 'preset:button',
 			steps: {},
-			...ConvertLegacyStyleToElements(
-				definition.previewStyle
-					? convertPresetStyleToDrawStyle(Object.assign({}, definition.model.style, definition.previewStyle))
-					: definition.model.style,
-				definition.model.feedbacks
-			),
-		}
-
-		// make sure that feedbacks don't override previewStyle:
-		if ('previewStyle' in definition && definition.previewStyle !== undefined) {
-			const newExpressionFeedback: FeedbackEntityModel = {
-				type: EntityModelType.Feedback,
-				id: nanoid(),
-				connectionId: 'internal',
-				definitionId: 'check_expression',
-				options: {
-					expression: 'true',
-				},
-				isInverted: false,
-				style: definition.previewStyle,
-				upgradeIndex: undefined,
-			}
-
-			// copy all objects so they don't alter the regular button def. (Shallow should be enough.)
-			result.feedbacks = [...result.feedbacks, newExpressionFeedback]
+			feedbacks: [...definition.model.feedbacks, ...definition.presetExtraFeedbacks],
 		}
 
 		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
@@ -338,12 +316,6 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				canModifyStyleInApis: false,
 			},
 			type: 'button-layered',
-			...ConvertLegacyStyleToElements(
-				definition.previewStyle
-					? convertPresetStyleToDrawStyle(Object.assign({}, definition.model.style, definition.previewStyle))
-					: definition.model.style,
-				definition.model.feedbacks
-			),
 		}
 	}
 
@@ -417,89 +389,42 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		)?.lastUpgradeIndex
 
 		for (const rawPreset of rawPresets) {
+			const presetId = rawPreset.id
+			const presetType = rawPreset.type
 			try {
-				if (rawPreset.type === 'button') {
-					const presetDefinition: PresetDefinitionButton = {
-						id: rawPreset.id,
-						category: rawPreset.category,
-						name: rawPreset.name,
-						type: rawPreset.type,
-						previewStyle: rawPreset.previewStyle,
-						model: {
-							type: 'button',
-							options: {
-								rotaryActions: rawPreset.options?.rotaryActions ?? false,
-								stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
-							},
-							style: convertPresetStyleToDrawStyle(rawPreset.style),
-							feedbacks: convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
-							steps: {},
-							localVariables: [],
-						},
-					}
-
-					if (rawPreset.steps) {
-						for (let i = 0; i < rawPreset.steps.length; i++) {
-							const newStep: NormalButtonSteps[0] = {
-								action_sets: {
-									down: [],
-									up: [],
-									rotate_left: undefined,
-									rotate_right: undefined,
-								},
-								options: structuredClone(ControlEntityListPoolButton.DefaultStepOptions),
-							}
-							presetDefinition.model.steps[i] = newStep
-
-							const rawStep = rawPreset.steps[i]
-							if (!rawStep) continue
-
-							if (rawStep.name) newStep.options.name = rawStep.name
-
-							for (const [setId, set] of Object.entries(rawStep)) {
-								if (setId === 'name') continue
-
-								const setIdSafe = validateActionSetId(setId as any)
-								if (setIdSafe === undefined) {
-									this.#logger.warn(`Invalid set id: ${setId}`)
-									continue
-								}
-
-								const setActions: CompanionPresetAction[] = Array.isArray(set) ? set : set.actions
-								if (!isNaN(Number(setId)) && set.options?.runWhileHeld) newStep.options.runWhileHeld.push(Number(setId))
-
-								if (setActions) {
-									newStep.action_sets[setIdSafe] = convertActionsDelay(
-										setActions,
-										connectionId,
-										rawPreset.options?.relativeDelay,
-										connectionUpgradeIndex
-									)
-								}
-							}
+				switch (rawPreset.type) {
+					case 'button':
+						newPresets[rawPreset.id] = translateRawButtonPresetToDefinition(
+							this.#logger,
+							connectionId,
+							rawPreset,
+							connectionUpgradeIndex
+						)
+						break
+					case 'layered-button':
+						newPresets[rawPreset.id] = TranslateRawLayeredButtonPresetToDefinition(
+							this.#logger,
+							connectionId,
+							rawPreset,
+							connectionUpgradeIndex
+						)
+						break
+					case 'text':
+						newPresets[rawPreset.id] = {
+							id: rawPreset.id,
+							category: rawPreset.category,
+							name: rawPreset.name,
+							type: rawPreset.type,
+							text: rawPreset.text,
 						}
-					}
-
-					// Ensure that there is at least one step
-					if (Object.keys(presetDefinition.model.steps).length === 0) {
-						presetDefinition.model.steps[0] = {
-							action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
-							options: structuredClone(ControlEntityListPoolButton.DefaultStepOptions),
-						}
-					}
-
-					newPresets[rawPreset.id] = presetDefinition
-				} else if (rawPreset.type === 'text') {
-					newPresets[rawPreset.id] = {
-						id: rawPreset.id,
-						category: rawPreset.category,
-						name: rawPreset.name,
-						type: rawPreset.type,
-						text: rawPreset.text,
-					}
+						break
+					default:
+						assertNever(rawPreset)
+						this.#logger.warn(`${label} gave preset "${presetId}" with unsupported type "${presetType}"`)
+						break
 				}
 			} catch (e) {
-				this.#logger.warn(`${label} gave invalid preset "${rawPreset?.id}": ${e}`)
+				this.#logger.warn(`${label} gave invalid preset "${presetId}": ${e}`)
 			}
 		}
 
@@ -563,9 +488,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		 */
 		for (const preset of Object.values(presets)) {
 			if (preset.type !== 'text') {
-				if (preset.model.style) {
-					preset.model.style.text = replaceAllVariables(preset.model.style.text, label)
-				}
+				// Update variable references in style layers
+				replaceAllVariablesInElements(preset.model.style.layers, label)
 
 				if (preset.model.feedbacks) {
 					for (const feedback of preset.model.feedbacks) {
@@ -601,108 +525,6 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	}
 }
 
-function toActionInstance(
-	action: CompanionPresetAction,
-	connectionId: string,
-	connectionUpgradeIndex: number | undefined
-): ActionEntityModel {
-	return {
-		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: connectionId,
-		definitionId: action.actionId,
-		options: structuredClone(action.options ?? {}),
-		headline: action.headline,
-		upgradeIndex: connectionUpgradeIndex,
-	}
-}
-
-function convertActionsDelay(
-	actions: CompanionPresetAction[],
-	connectionId: string,
-	relativeDelays: boolean | undefined,
-	connectionUpgradeIndex: number | undefined
-): ActionEntityModel[] {
-	if (relativeDelays) {
-		const newActions: ActionEntityModel[] = []
-
-		for (const action of actions) {
-			const delay = Number(action.delay)
-
-			// Add the wait action
-			if (!isNaN(delay) && delay > 0) {
-				newActions.push(createWaitAction(delay))
-			}
-
-			newActions.push(toActionInstance(action, connectionId, connectionUpgradeIndex))
-		}
-
-		return newActions
-	} else {
-		let currentDelay = 0
-		let currentDelayGroupChildren: ActionEntityModel[] = []
-
-		const delayGroups: ActionEntityModel[] = [wrapActionsInGroup(currentDelayGroupChildren)]
-
-		for (const action of actions) {
-			const delay = Number(action.delay)
-
-			if (!isNaN(delay) && delay >= 0 && delay !== currentDelay) {
-				// action has different delay to the last one
-				if (delay > currentDelay) {
-					// delay is greater than the last one, translate it to a relative delay
-					currentDelayGroupChildren.push(createWaitAction(delay - currentDelay))
-				} else {
-					// delay is less than the last one, preserve the weird order
-					currentDelayGroupChildren = []
-					if (delay > 0) currentDelayGroupChildren.push(createWaitAction(delay))
-					delayGroups.push(wrapActionsInGroup(currentDelayGroupChildren))
-				}
-
-				currentDelay = delay
-			}
-
-			currentDelayGroupChildren.push(toActionInstance(action, connectionId, connectionUpgradeIndex))
-		}
-
-		if (delayGroups.length > 1) {
-			// Weird delay ordering was found, preserve it
-			return delayGroups
-		} else {
-			// Order was incrementing, don't add the extra group layer
-			return currentDelayGroupChildren
-		}
-	}
-}
-
-function wrapActionsInGroup(actions: ActionEntityModel[]): ActionEntityModel {
-	return {
-		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: 'internal',
-		definitionId: 'action_group',
-		options: {
-			execution_mode: 'concurrent',
-		},
-		children: {
-			default: actions,
-		},
-		upgradeIndex: undefined,
-	}
-}
-function createWaitAction(delay: number): ActionEntityModel {
-	return {
-		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: 'internal',
-		definitionId: 'wait',
-		options: {
-			time: delay,
-		},
-		upgradeIndex: undefined,
-	}
-}
-
 function convertPresetFeedbacksToEntities(
 	rawFeedbacks: CompanionPresetFeedback[] | undefined,
 	connectionId: string,
@@ -732,5 +554,80 @@ function convertPresetStyleToDrawStyle(rawStyle: CompanionButtonStyleProps): But
 		pngalignment: rawStyle.pngalignment ?? 'center:center',
 		png64: rawStyle.png64 ?? null,
 		show_topbar: rawStyle.show_topbar ?? 'default',
+	}
+}
+
+function translateRawButtonPresetToDefinition(
+	logger: Logger,
+	connectionId: string,
+	rawPreset: CompanionButtonPresetDefinition & { id: string },
+	connectionUpgradeIndex: number | undefined
+): PresetDefinitionButton {
+	const presetDefinition: PresetDefinitionButton = {
+		id: rawPreset.id,
+		category: rawPreset.category,
+		name: rawPreset.name,
+		type: rawPreset.type,
+		model: {
+			type: 'button-layered',
+			options: {
+				rotaryActions: rawPreset.options?.rotaryActions ?? false,
+				stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+				canModifyStyleInApis: false,
+			},
+
+			...ConvertLegacyStyleToElements(
+				convertPresetStyleToDrawStyle(rawPreset.style),
+				convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex)
+			),
+
+			steps: ConvertStepsForPreset(
+				logger,
+				connectionId,
+				connectionUpgradeIndex,
+				rawPreset.steps,
+				rawPreset.options?.relativeDelay
+			),
+			localVariables: [],
+		},
+		presetExtraFeedbacks: [],
+	}
+
+	// make sure that feedbacks don't override previewStyle:
+	if ('previewStyle' in rawPreset && rawPreset.previewStyle !== undefined) {
+		const newExpressionFeedback: FeedbackEntityModel = {
+			type: EntityModelType.Feedback,
+			id: nanoid(),
+			connectionId: 'internal',
+			definitionId: 'check_expression',
+			options: {
+				expression: 'true',
+			},
+			isInverted: false,
+			style: rawPreset.previewStyle,
+			upgradeIndex: undefined,
+		}
+
+		// copy all objects so they don't alter the regular button def. (Shallow should be enough.)
+		presetDefinition.presetExtraFeedbacks.push(newExpressionFeedback)
+	}
+
+	return presetDefinition
+}
+
+function replaceAllVariablesInElements(elements: SomeButtonGraphicsElement[], label: string): void {
+	for (const element of elements) {
+		if (element.type === 'group') replaceAllVariablesInElements(element.children, label)
+
+		// Future: This should be refactored to handle things more generically, based on the schemas
+		for (const [key, value] of Object.entries(element)) {
+			if (value && isExpressionOrValue(value)) {
+				if (value.isExpression) {
+					value.value = replaceAllVariables(value.value, label)
+				} else if (element.type === 'text' && key === 'text') {
+					value.value = replaceAllVariables(value.value as string, label)
+				}
+			}
+		}
 	}
 }
