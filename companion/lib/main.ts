@@ -20,6 +20,8 @@ import { nanoid } from 'nanoid'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
 import net from 'net'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { isPackaged } from './Resources/Util.js'
 
 const program = new Command()
 
@@ -179,6 +181,14 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 			if (fs.existsSync(previousDbPath + '.sqlite')) {
 				// Found the one to copy
 				fs.copyFileSync(previousDbPath + '.sqlite', path.join(configDir, 'db.sqlite'))
+
+				// Also copy over the journal if it exists
+				if (fs.existsSync(previousDbPath + '.sqlite-shm')) {
+					fs.copyFileSync(previousDbPath + '.sqlite-shm', path.join(configDir, 'db.sqlite-shm'))
+				}
+				if (fs.existsSync(previousDbPath + '.sqlite-wal')) {
+					fs.copyFileSync(previousDbPath + '.sqlite-wal', path.join(configDir, 'db.sqlite-wal'))
+				}
 				break
 			} else if (fs.existsSync(previousDbPath)) {
 				// Found the one to copy
@@ -214,16 +224,24 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 	}
 
-	const registry = new Registry(
+	const registry = new Registry({
 		configDir,
-		{
-			connection: path.join(rootConfigDir, 'modules'), // For backwards compatibility
+		modulesDirs: {
+			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // Naming for backwards compatibility
+			[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
 		},
-		machineId
-	)
+		builtinModuleDirs: {
+			[ModuleInstanceType.Connection]: null,
+			[ModuleInstanceType.Surface]: isPackaged()
+				? path.join(import.meta.dirname, 'builtin-surfaces')
+				: path.join(import.meta.dirname, '../../.cache/builtin-surfaces'),
+		},
+		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
+		machineId,
+	})
 
 	registry
-		.ready(options.extraModulePath, adminIp, options.adminPort)
+		.ready(options.extraModulePath, adminIp, Number(options.adminPort))
 		.then(() => {
 			console.log('Started')
 

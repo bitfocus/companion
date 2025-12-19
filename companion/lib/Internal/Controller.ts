@@ -575,10 +575,10 @@ export class InternalController {
 	/**
 	 * The bind address has changed
 	 */
-	updateBindIp(bindIp: string): void {
+	updateBindIp(bindIp: string, bindPort?: number): void {
 		for (const fragment of this.#fragments) {
 			if (fragment instanceof InternalSystem) {
-				fragment.updateBindIp(bindIp)
+				fragment.updateBindIp(bindIp, bindPort)
 			}
 		}
 	}

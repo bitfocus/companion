@@ -27,6 +27,7 @@ import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
 import path from 'path'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 let infoFileName: URL
 // note this could be done in one line, but webpack was having trouble before url processing was disabled.
@@ -159,19 +160,21 @@ export class Registry {
 	 * @param modulesDirs - the paths for storing modules
 	 * @param machineId - the machine uuid
 	 */
-	constructor(configDir: string, modulesDirs: AppInfo['modulesDirs'], machineId: string) {
-		if (!configDir) throw new Error(`Missing configDir`)
-		if (!machineId) throw new Error(`Missing machineId`)
+	constructor(
+		baseAppInfo: Pick<AppInfo, 'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId'>
+	) {
+		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
+		if (!baseAppInfo.machineId) throw new Error(`Missing machineId`)
+		if (!baseAppInfo.modulesDirs) throw new Error(`Missing modulesDirs`)
+		if (!baseAppInfo.udevRulesDir) throw new Error(`Missing udevRulesDir`)
 
 		this.#logger = LogController.createLogger('Registry')
 
 		this.#logger.info(`Build ${buildNumber}`)
-		this.#logger.info(`configuration directory: ${configDir}`)
+		this.#logger.info(`configuration directory: ${baseAppInfo.configDir}`)
 
 		this.#appInfo = {
-			configDir: configDir,
-			modulesDirs: modulesDirs,
-			machineId: machineId,
+			...baseAppInfo,
 			appVersion: pkgInfo.version!,
 			appBuild: buildNumber,
 			pkgInfo: pkgInfo,
@@ -224,6 +227,7 @@ export class Registry {
 				this.controls,
 				this.graphics,
 				this.variables,
+				this.surfaces,
 				oscSender
 			)
 			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
@@ -373,7 +377,7 @@ export class Registry {
 				process.on('message', (msg: any): void => {
 					try {
 						if (msg.messageType === 'http-rebind') {
-							this.rebindHttp(msg.ip, msg.port)
+							this.rebindHttp(msg.ip, Number(msg.port))
 						} else if (msg.messageType === 'exit') {
 							this.exit(false, false)
 						} else if (msg.messageType === 'scan-usb') {
@@ -473,7 +477,7 @@ export class Registry {
 		this.ui.server.rebindHttp(bindIp, bindPort)
 		this.userconfig.updateBindIp(bindIp)
 		this.services.https.updateBindIp(bindIp)
-		this.internalModule.updateBindIp(bindIp)
+		this.internalModule.updateBindIp(bindIp, bindPort)
 		this.usageStatistics.updateBindIp(bindIp)
 	}
 }
@@ -482,9 +486,11 @@ export interface AppInfo {
 	/** The current config directory */
 	configDir: string
 	/** The base directory for storing installed modules */
-	modulesDirs: {
-		connection: string
-	}
+	modulesDirs: Record<ModuleInstanceType, string>
+	/** The builtin module directories */
+	builtinModuleDirs: Record<ModuleInstanceType, string | null>
+	/** The path to store generated udev rules */
+	udevRulesDir: string
 	machineId: string
 	appVersion: string
 	appBuild: string

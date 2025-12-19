@@ -204,10 +204,17 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	 * Update the bind IP address variable
 	 * @param bindIp The IP address being bound to
 	 */
-	updateBindIp(bindIp: string): void {
-		this.emit('setVariables', {
-			bind_ip: bindIp,
-		})
+	updateBindIp(bindIp: string, bindPort?: number): void {
+		if (typeof bindPort === 'number') {
+			this.emit('setVariables', {
+				bind_ip: bindIp,
+				bind_port: bindPort,
+			})
+		} else {
+			this.emit('setVariables', {
+				bind_ip: bindIp,
+			})
+		}
 	}
 
 	getVariableDefinitions(): VariableDefinitionTmp[] {
@@ -227,6 +234,10 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			{
 				label: 'System: IP of admin network interface',
 				name: 'bind_ip',
+			},
+			{
+				label: 'System: Port of admin network interface',
+				name: 'bind_port',
 			},
 			{
 				label: 'System: IP of all network interfaces',

@@ -2,13 +2,14 @@ import React, { forwardRef, useCallback, useContext, useImperativeHandle, useSta
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDownload } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import type { ResetType, ClientImportOrResetSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
+import { InlineHelp } from '~/Components/InlineHelp'
 
 export interface ResetWizardModalRef {
 	show(): void
@@ -19,6 +20,8 @@ const defaultFullResetConfig: ClientImportOrResetSelection = {
 	buttons: 'reset',
 	surfaces: {
 		known: 'reset',
+		instances: 'reset',
+		remote: 'reset',
 	},
 	triggers: 'reset',
 	customVariables: 'reset',
@@ -35,6 +38,7 @@ const resetFormOpts = formOptions({
 const { useAppForm, withForm } = createFormHook({
 	fieldComponents: {
 		ResetToggleField,
+		ResetToggleGroup,
 	},
 	formComponents: {
 		// 	FormSubmitButton,
@@ -275,7 +279,78 @@ const ResetOptionsStep = withForm({
 				</div>
 
 				<div className="indent3">
-					<form.AppField name="surfaces.known">{(field) => <field.ResetToggleField label="Surfaces" />}</form.AppField>
+					<form.AppField name="surfaces">
+						{(field) => (
+							<field.ResetToggleGroup
+								label="Surfaces"
+								defaultChecked={
+									{
+										known: 'reset',
+										instances: 'reset',
+										remote: 'reset',
+									} satisfies ClientImportOrResetSelection['surfaces']
+								}
+								defaultUnchecked={
+									{
+										known: 'unchanged',
+										instances: 'unchanged',
+										remote: 'unchanged',
+									} satisfies ClientImportOrResetSelection['surfaces']
+								}
+							/>
+						)}
+					</form.AppField>
+				</div>
+				<div className="indent3">
+					<form.AppField name="surfaces.known">
+						{(field) => (
+							<field.ResetToggleField
+								className="ms-4"
+								label={
+									<>
+										Known Surfaces
+										<InlineHelp help="The list of known surfaces, and their settings">
+											<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+										</InlineHelp>
+									</>
+								}
+							/>
+						)}
+					</form.AppField>
+				</div>
+				<div className="indent3">
+					<form.AppField name="surfaces.instances">
+						{(field) => (
+							<field.ResetToggleField
+								className="ms-4"
+								label={
+									<>
+										Surface Integrations
+										<InlineHelp help="The configured surface integrations">
+											<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+										</InlineHelp>
+									</>
+								}
+							/>
+						)}
+					</form.AppField>
+				</div>
+				<div className="indent3">
+					<form.AppField name="surfaces.remote">
+						{(field) => (
+							<field.ResetToggleField
+								className="ms-4"
+								label={
+									<>
+										Remote Surfaces
+										<InlineHelp help="Connections for surfaces that are connected remotely">
+											<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+										</InlineHelp>
+									</>
+								}
+							/>
+						)}
+					</form.AppField>
 				</div>
 
 				<div className="indent3">
@@ -287,15 +362,41 @@ const ResetOptionsStep = withForm({
 })
 
 interface ResetToggleFieldProps {
-	label: string
+	label: string | React.ReactNode
+	className?: string
 }
-function ResetToggleField({ label }: ResetToggleFieldProps) {
+function ResetToggleField({ label, className }: ResetToggleFieldProps) {
 	const field = useFieldContext<ResetType>()
 
 	return (
 		<CFormCheck
+			className={className}
 			checked={field.state.value !== 'unchanged'}
 			onChange={(e) => field.handleChange(e.currentTarget.checked ? 'reset' : 'unchanged')}
+			onBlur={field.handleBlur}
+			label={label}
+		/>
+	)
+}
+
+interface ResetToggleGroupProps {
+	label: string | React.ReactNode
+	defaultChecked: Record<string, ResetType>
+	defaultUnchecked: Record<string, ResetType>
+	className?: string
+}
+function ResetToggleGroup({ label, defaultChecked, defaultUnchecked, className }: ResetToggleGroupProps) {
+	const field = useFieldContext<Record<string, ResetType>>()
+
+	const isAChildChecked = !!field.state.value && Object.values(field.state.value).some((v) => v !== 'unchanged')
+	const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => v === 'unchanged')
+
+	return (
+		<CFormCheck
+			className={className}
+			indeterminate={isAChildChecked && isAChildUnchecked}
+			checked={isAChildChecked}
+			onChange={(e) => field.handleChange(e.currentTarget.checked ? defaultChecked : defaultUnchecked)}
 			onBlur={field.handleBlur}
 			label={label}
 		/>

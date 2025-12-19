@@ -24,15 +24,16 @@ export function useMissingVersionsCount(
 				continue
 			}
 
-			const module = modules.getModuleInfo(moduleType, instance.moduleId)
-			if (!module) {
+			const moduleInfo = modules.getModuleInfo(moduleType, instance.moduleId)
+			if (!moduleInfo) {
 				count++
 				continue
 			}
 
 			// check for version
-			if (module.devVersion && instance.moduleVersionId === 'dev') continue
-			if (module.installedVersions.find((v) => v.versionId === instance.moduleVersionId)) continue
+			if (moduleInfo.devVersion && instance.moduleVersionId === 'dev') continue
+			if (moduleInfo.builtinVersion && instance.moduleVersionId === 'builtin') continue
+			if (moduleInfo.installedVersions.find((v) => v.versionId === instance.moduleVersionId)) continue
 
 			// Not found
 			count++

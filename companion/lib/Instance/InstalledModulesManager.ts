@@ -19,11 +19,9 @@ import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { MAX_MODULE_BUNDLE_TAR_SIZE, MAX_MODULE_TAR_SIZE } from './Constants.js'
 
 const gunzipP = promisify(zlib.gunzip)
-
-const MAX_MODULE_TAR_SIZE = 1024 * 1024 * 20 // 20MB
-const MAX_MODULE_BUNDLE_TAR_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
 /**
  * This class manages the installed modules for an instance
@@ -117,6 +115,12 @@ export class InstanceInstalledModulesManager {
 			path.join(this.#appInfo.modulesDirs.connection, 'README'),
 			'This directory contains installed modules\r\nDo not modify unless you know what you are doing\n'
 		)
+
+		await fs.mkdirp(this.#appInfo.modulesDirs.surface)
+		await fs.writeFile(
+			path.join(this.#appInfo.modulesDirs.surface, 'README'),
+			'This directory contains installed modules\r\nDo not modify unless you know what you are doing\n'
+		)
 	}
 
 	#getModulesDirForType(moduleType: SomeModuleManifest['type'] | ModuleInstanceType): string {
@@ -125,6 +129,9 @@ export class InstanceInstalledModulesManager {
 			case 'connection':
 			case undefined:
 				return this.#appInfo.modulesDirs.connection
+			case ModuleInstanceType.Surface:
+			case 'surface':
+				return this.#appInfo.modulesDirs.surface
 			default:
 				assertNever(moduleType)
 				throw new Error(`Unknown module type ${moduleType}`)
@@ -167,7 +174,7 @@ export class InstanceInstalledModulesManager {
 						const config = this.#configStore.getConfigOfTypeForId(instanceIds, moduleType)
 						if (!config) continue
 
-						if (config.instance_type !== moduleId) continue
+						if (config.moduleId !== moduleId) continue
 						if (config.moduleVersionId !== null) continue
 
 						config.moduleVersionId = versionInfo.id
@@ -204,7 +211,7 @@ export class InstanceInstalledModulesManager {
 						const config = this.#configStore.getConfigOfTypeForId(connectionId, input.moduleType)
 						if (!config) continue
 
-						this.ensureModuleIsInstalled(config.moduleInstanceType, config.instance_type, config.moduleVersionId)
+						this.ensureModuleIsInstalled(config.moduleInstanceType, config.moduleId, config.moduleVersionId)
 					}
 				}),
 

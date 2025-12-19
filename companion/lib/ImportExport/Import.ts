@@ -229,6 +229,66 @@ export class ImportController {
 			this.#surfacesController.importSurfaces(surfaceGroups, surfaces)
 		}
 
+		const surfaceInstancesMap = new Map<string, string>()
+
+		if (isImporting(config.surfaces.instances)) {
+			this.#instancesController.surfaceInstanceCollections.replaceCollections(data.surfaceInstanceCollections || [])
+
+			for (const [instanceId, instanceConfig] of Object.entries(data.surfaceInstances || {})) {
+				// Create a new instance
+				const [newId, newConfig] = this.#instancesController.addSurfaceInstanceWithLabel(
+					instanceConfig.moduleId,
+					instanceConfig.label,
+					{
+						versionId: instanceConfig.moduleVersionId ?? null,
+						updatePolicy: instanceConfig.updatePolicy,
+						disabled: true,
+						collectionId: instanceConfig.collectionId,
+						sortOrder: instanceConfig.sortOrder ?? 0,
+					}
+				)
+
+				if (newId && newConfig) {
+					surfaceInstancesMap.set(instanceId, newId)
+
+					this.#instancesController.setSurfaceInstanceLabelAndConfig(newId, {
+						label: null,
+						enabled: instanceConfig.enabled !== false,
+						config: 'config' in instanceConfig ? instanceConfig.config : null,
+						// secrets: 'secrets' in instanceConfig ? instanceConfig.secrets : null,
+						updatePolicy: null,
+						// upgradeIndex: instanceConfig.lastUpgradeIndex,
+					})
+				}
+			}
+		}
+
+		if (isImporting(config.surfaces.remote)) {
+			// Compile a map of fallback instance ids by module type
+			const fallbackSurfaceInstances = new Map<string, string>()
+			const surfaceInstances = this.#instancesController.getSurfaceInstanceClientJson()
+			for (const instance of Object.values(surfaceInstances)) {
+				if (!fallbackSurfaceInstances.has(instance.moduleId))
+					fallbackSurfaceInstances.set(instance.moduleId, instance.id)
+			}
+
+			for (const remoteInfo of Object.values(data.surfacesRemote || {})) {
+				let instanceId = remoteInfo.instanceId
+				if (!surfaceInstances[instanceId]) {
+					// Try and remap the instance id, or fallback to using the module type
+					instanceId =
+						surfaceInstancesMap.get(instanceId) || fallbackSurfaceInstances.get(remoteInfo.moduleId) || instanceId
+				}
+
+				// Future: validation
+				this.#surfacesController.outbound.addOutboundConnection({
+					...remoteInfo,
+					// Translate the instanceId
+					instanceId: instanceId,
+				})
+			}
+		}
+
 		if (isImporting(config.triggers)) {
 			// Import trigger collections if provided
 			if (data.triggerCollections) {
@@ -332,7 +392,7 @@ export class ImportController {
 				} else {
 					// Create a new instance
 					const [newId, newConfig] = this.#instancesController.addConnectionWithLabel(
-						{ type: obj.instance_type },
+						{ type: obj.moduleId },
 						obj.label,
 						{
 							versionId: obj.moduleVersionId ?? null,
@@ -381,11 +441,11 @@ export class ImportController {
 			if (!obj || !obj.label) continue
 
 			// See if there is an existing instance with the same label and type
-			const existingId = this.#instancesController.getIdForLabel(obj.label)
+			const existingId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, obj.label)
 			if (
 				existingId &&
-				this.#instancesController.getInstanceConfigOfType(existingId, ModuleInstanceType.Connection)?.instance_type ===
-					obj.instance_type
+				this.#instancesController.getInstanceConfigOfType(existingId, ModuleInstanceType.Connection)?.moduleId ===
+					obj.moduleId
 			) {
 				remap[oldId] = existingId
 			} else {

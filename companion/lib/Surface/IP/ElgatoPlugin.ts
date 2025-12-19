@@ -14,11 +14,10 @@ import { EventEmitter } from 'events'
 import { oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { convertPanelIndexToXY } from '../Util.js'
 import { LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
-import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { IPageStore } from '../../Page/Store.js'
 import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 
 export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
@@ -43,7 +42,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 	constructor(
 		controlsController: ControlsController,
 		pageStore: IPageStore,
-		devicePath: string,
+		deviceId: string,
 		socket: ServiceElgatoPluginSocket
 	) {
 		super()
@@ -64,11 +63,10 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 		this.#logger.debug(`Adding Elgato Streamdeck Plugin (${this.socket.supportsPng ? 'PNG' : 'Bitmap'})`)
 
 		this.info = {
-			type: 'Elgato Streamdeck Plugin',
-			devicePath: devicePath,
+			description: 'Elgato Streamdeck Plugin',
 			configFields: [],
-			deviceId: devicePath,
-			location: this.socket.remoteAddress,
+			surfaceId: deviceId,
+			location: this.socket.remoteAddress ?? null,
 		}
 
 		const triggerKeyPress = (data: Record<string, any>, pressed: boolean) => {
@@ -82,7 +80,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 						row: Number(data.row),
 					})
 					if (controlId) {
-						this.#controlsController.pressControl(controlId, pressed, this.info.devicePath)
+						this.#controlsController.pressControl(controlId, pressed, this.info.surfaceId)
 
 						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
 					}
@@ -98,7 +96,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 						row: xy[1],
 					})
 					if (controlId) {
-						this.#controlsController.pressControl(controlId, pressed, this.info.devicePath)
+						this.#controlsController.pressControl(controlId, pressed, this.info.surfaceId)
 
 						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
 					}
@@ -122,7 +120,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 						row: Number(data.row),
 					})
 					if (controlId) {
-						this.#controlsController.rotateControl(controlId, right, this.info.devicePath)
+						this.#controlsController.rotateControl(controlId, right, this.info.surfaceId)
 
 						this.#logger.debug(`${controlId} rotated ${right}`)
 					}
@@ -141,7 +139,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 						row: xy[1],
 					})
 					if (controlId) {
-						this.#controlsController.rotateControl(controlId, right, this.info.devicePath)
+						this.#controlsController.rotateControl(controlId, right, this.info.surfaceId)
 
 						this.#logger.debug(`${controlId} rotated ${right}`)
 					}
@@ -169,20 +167,20 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 	/**
 	 * Draw a button
 	 */
-	draw(x: number, y: number, render: ImageResult): void {
+	draw(item: DrawButtonItem): void {
 		if (this.socket.supportsCoordinates) {
 			// Uses manual subscriptions
 			return
 		}
 
-		if (render.buffer === undefined || render.buffer.length === 0) {
-			this.#logger.silly('buffer was not 15552, but ', render.buffer?.length)
+		if (item.image.buffer === undefined || item.image.buffer.length === 0) {
+			this.#logger.silly('buffer was not 15552, but ', item.image.buffer?.length)
 			return
 		}
 
-		const key = xyToOldBankIndex(x, y)
+		const key = xyToOldBankIndex(item.x, item.y)
 		if (key) {
-			this.socket.fillImage(key, { keyIndex: key - 1 }, render)
+			this.socket.fillImage(key, { keyIndex: key - 1 }, item.image)
 		}
 	}
 
@@ -210,5 +208,9 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 		// ensure rotation is disabled
 		this._config.rotation = 0
 		this._config.never_lock = true
+	}
+
+	setLocked(_locked: boolean, _characterCount: number): void {
+		// Locking is not supported
 	}
 }
