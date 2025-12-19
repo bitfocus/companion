@@ -45,7 +45,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 					)}
 
 					{updateData.data?.message ? (
-						<CNavItem className="header-update-warn">
+						<CNavItem className="header-nav-item">
 							<CNavLink target="_blank" href={updateData.data.link || 'https://bitfocus.io/companion/'}>
 								<div className="flex">
 									<div className="align-self-center">
@@ -59,6 +59,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 												{updateData.data.message2}
 											</>
 										)}
+										<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-2" />
 									</div>
 								</div>
 							</CNavLink>
@@ -79,12 +80,12 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 				)}
 
 				<CHeaderNav className="ml-auto header-right">
-					<CNavItem className="header-update-warn">
+					<CNavItem className="header-nav-item">
 						<div className="flex">
 							<div className="align-self-end nav-icon-wrapper">
 								<CNavLink to="/user-guide/" target="_blank" as={Link}>
-									<FontAwesomeIcon icon={faQuestion} /> {} User Guide {}{' '}
-									<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1" />
+									<FontAwesomeIcon icon={faQuestion} /> User Guide
+									<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-2" />
 								</CNavLink>
 							</div>
 						</div>
