@@ -25,6 +25,8 @@ import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
+	UpdateFeedbackInstancesMessage,
+	UpdateActionInstancesMessage,
 } from '@companion-module/base/dist/host-api/api.js'
 import type { ModuleRegisterMessage, ModuleToHostEventsInit } from '@companion-module/base/dist/host-api/versions.js'
 import type { InstanceStatus } from '../Status.js'
@@ -45,6 +47,8 @@ import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import {
 	EntityModelType,
 	isValidFeedbackEntitySubType,
+	type ReplaceableActionEntityModel,
+	type ReplaceableFeedbackEntityModel,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 	type SomeEntityModel,
@@ -57,7 +61,12 @@ import {
 	doesModuleUseSeparateUpgradeMethod,
 	doesModuleUseNewConfigLayout,
 } from '../ApiVersions.js'
-import { ConnectionEntityManager } from './EntityManager.js'
+import {
+	ConnectionEntityManager,
+	type EntityManagerActionEntity,
+	type EntityManagerAdapter,
+	type EntityManagerFeedbackEntity,
+} from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFields.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
@@ -175,7 +184,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		this.usesNewConfigLayout = doesModuleUseNewConfigLayout(apiVersion0)
 
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
-			? new ConnectionEntityManager(this.#ipcWrapper, this.#deps.controls, this.connectionId)
+			? new ConnectionEntityManager(
+					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper),
+					this.#deps.controls,
+					this.connectionId
+				)
 			: null
 
 		const messageHandler = (msg: any) => {
@@ -1044,6 +1057,124 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 */
 	async #handleSharedUdpSocketSend(msg: SharedUdpSocketMessageSend): Promise<void> {
 		this.#deps.sharedUdpManager.sendOnPort(this.connectionId, msg.handleId, msg.address, msg.port, msg.message)
+	}
+}
+
+class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
+	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
+
+	constructor(ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>) {
+		this.#ipcWrapper = ipcWrapper
+	}
+
+	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
+		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
+
+		for (const [id, value] of actions) {
+			if (value) {
+				updateMessage.actions[id] = {
+					id: value.entity.id,
+					controlId: value.controlId,
+					actionId: value.entity.definitionId,
+					options: value.parsedOptions,
+
+					upgradeIndex: value.entity.upgradeIndex ?? null,
+					disabled: !!value.entity.disabled,
+				}
+			} else {
+				updateMessage.actions[id] = null
+			}
+		}
+
+		return this.#ipcWrapper.sendWithCb('updateActions', updateMessage)
+	}
+
+	async updateFeedbacks(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
+		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
+
+		for (const [id, value] of feedbacks) {
+			if (value) {
+				updateMessage.feedbacks[id] = {
+					id: value.entity.id,
+					controlId: value.controlId,
+					feedbackId: value.entity.definitionId,
+					options: value.parsedOptions,
+
+					image: value.imageSize,
+
+					isInverted: !!value.entity.isInverted,
+
+					upgradeIndex: value.entity.upgradeIndex ?? null,
+					disabled: !!value.entity.disabled,
+				}
+			} else {
+				updateMessage.feedbacks[id] = null
+			}
+		}
+
+		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
+	}
+
+	async upgradeActions(actions: EntityManagerActionEntity[], currentUpgradeIndex: number) {
+		return this.#ipcWrapper
+			.sendWithCb('upgradeActionsAndFeedbacks', {
+				actions: actions.map((act) => ({
+					id: act.entity.id,
+					controlId: act.controlId,
+					actionId: act.entity.definitionId,
+					options: act.entity.options,
+
+					upgradeIndex: act.entity.upgradeIndex ?? null,
+					disabled: !!act.entity.disabled,
+				})),
+				feedbacks: [],
+				defaultUpgradeIndex: 0, // Unused
+			})
+			.then((upgraded) => {
+				return upgraded.updatedActions.map(
+					(action) =>
+						({
+							id: action.id,
+							type: EntityModelType.Action,
+							definitionId: action.actionId,
+							options: action.options,
+							upgradeIndex: currentUpgradeIndex,
+						}) satisfies ReplaceableActionEntityModel
+				)
+			})
+	}
+
+	async upgradeFeedbacks(feedbacks: EntityManagerFeedbackEntity[], currentUpgradeIndex: number) {
+		return this.#ipcWrapper
+			.sendWithCb('upgradeActionsAndFeedbacks', {
+				actions: [],
+				feedbacks: feedbacks.map((fb) => ({
+					id: fb.entity.id,
+					controlId: fb.controlId,
+					feedbackId: fb.entity.definitionId,
+					options: fb.entity.options,
+
+					isInverted: !!fb.entity.isInverted,
+
+					upgradeIndex: fb.entity.upgradeIndex ?? null,
+					disabled: !!fb.entity.disabled,
+				})),
+				defaultUpgradeIndex: 0, // Unused
+			})
+			.then((upgraded) => {
+				return upgraded.updatedFeedbacks.map(
+					(feedback) =>
+						({
+							id: feedback.id,
+							type: EntityModelType.Feedback,
+							definitionId: feedback.feedbackId,
+							options: feedback.options,
+							style: feedback.style,
+							isInverted: feedback.isInverted,
+							upgradeIndex: currentUpgradeIndex,
+						}) satisfies ReplaceableFeedbackEntityModel
+				)
+			})
 	}
 }
 
