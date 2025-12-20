@@ -6,7 +6,7 @@ import { useOnClickOutsideExt } from '~/Resources/util.js'
 import { usePopper } from 'react-popper'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { colord } from 'colord'
-import type { CompanionColorPresetValue } from '@companion-module/base'
+import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
 
 function splitColor(color: number | string) {
 	if (typeof color === 'number' || !isNaN(Number(color))) {

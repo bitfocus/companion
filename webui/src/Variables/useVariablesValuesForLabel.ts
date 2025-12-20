@@ -1,6 +1,6 @@
 import { observable, runInAction, type ObservableMap } from 'mobx'
 import { useEffect, useMemo } from 'react'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { CompanionVariableValue } from '@companion-app/shared/Model/Common.js'
 import { useQuery } from '@tanstack/react-query'
 import { trpc } from '~/Resources/TRPC'
 

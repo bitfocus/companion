@@ -4,7 +4,7 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import type { NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import type { DropdownChoice } from '@companion-module/base'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ControlLocalVariables } from './LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'

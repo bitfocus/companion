@@ -21,7 +21,6 @@ import type {
 	ExecuteFeedbackResultWithReferences,
 	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { CompanionInputFieldDropdown } from '@companion-module/base'
 import {
 	FeedbackEntitySubType,
 	type FeedbackEntityModel,
@@ -35,8 +34,9 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { CHOICES_DYNAMIC_LOCATION_OR_TRIGGER, type InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 
-const COMPARISON_OPERATION: CompanionInputFieldDropdown = {
+const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	type: 'dropdown',
 	label: 'Operation',
 	id: 'op',

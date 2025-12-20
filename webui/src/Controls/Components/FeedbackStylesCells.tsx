@@ -6,7 +6,7 @@ import React, { useState, useCallback, useMemo } from 'react'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ButtonStyleConfigFields } from '../ButtonStyleConfig.js'
-import type { DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface FeedbackManageStylesProps {

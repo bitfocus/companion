@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { combineRgb, type CompanionVariableValues } from '@companion-module/base'
+import { type CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import debounceFn from 'debounce-fn'
 import type {
@@ -684,8 +684,8 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				label: 'Surface: When on the selected page',
 				description: 'Change style when a surface is on the selected page',
 				feedbackStyle: {
-					color: combineRgb(255, 255, 255),
-					bgcolor: combineRgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [

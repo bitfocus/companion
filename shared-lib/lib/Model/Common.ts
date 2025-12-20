@@ -80,3 +80,27 @@ export interface ClientEditInstanceConfig {
 	config: unknown
 	secrets: unknown
 }
+
+export type DropdownChoiceId = string | number
+/**
+ * An option for a dropdown input
+ *
+ * Available for actions/feedbacks/config
+ */
+export interface DropdownChoice {
+	/** Value of the option */
+	id: DropdownChoiceId
+	/** Label to show to users */
+	label: string
+}
+
+/**
+ * A set of values of some variables
+ */
+export interface CompanionVariableValues {
+	[variableId: string]: CompanionVariableValue | undefined
+}
+/**
+ * The value of a variable
+ */
+export type CompanionVariableValue = string | number | boolean

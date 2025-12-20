@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import type { DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface IEventEditorService {

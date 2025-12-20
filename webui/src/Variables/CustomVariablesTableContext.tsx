@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useMemo } from 'react'
 import type { CustomVariablesApi } from './CustomVariablesApi'
 import type { ObservableMap } from 'mobx'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { CompanionVariableValue } from '@companion-app/shared/Model/Common.js'
 
 export interface CustomVariablesTableContextType {
 	customVariablesApi: CustomVariablesApi
