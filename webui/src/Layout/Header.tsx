@@ -81,14 +81,10 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 
 				<CHeaderNav className="ml-auto header-right">
 					<CNavItem className="header-nav-item">
-						<div className="flex">
-							<div className="align-self-end nav-icon-wrapper">
-								<CNavLink to="/user-guide/" target="_blank" as={Link}>
-									<FontAwesomeIcon icon={faQuestion} /> User Guide
-									<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-2" />
-								</CNavLink>
-							</div>
-						</div>
+						<CNavLink to="/user-guide/" target="_blank" as={Link} title="Open User Guide in new tab">
+							<FontAwesomeIcon icon={faQuestion} /> User Guide
+							<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-2" />
+						</CNavLink>
 					</CNavItem>
 				</CHeaderNav>
 			</CContainer>
