@@ -7,7 +7,6 @@ import type {
 	FeedbackInstance as ModuleFeedbackInstance,
 	HostToModuleEventsV0,
 	ModuleToHostEventsV0,
-	SomeEncodedCompanionConfigField,
 	LogMessageMessage,
 	SetStatusMessage,
 	SetActionDefinitionsMessage,
@@ -60,9 +59,10 @@ import {
 } from '../ApiVersions.js'
 import { ConnectionEntityManager } from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import { translateEntityInputFields } from './ConfigFields.js'
+import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFields.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 
 export interface ConnectionChildHandlerDependencies {
 	readonly controls: ControlsController
@@ -263,10 +263,10 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	/**
 	 * Fetch the config fields from the instance to show in the ui
 	 */
-	async requestConfigFields(): Promise<SomeEncodedCompanionConfigField[]> {
+	async requestConfigFields(): Promise<SomeCompanionInputField[]> {
 		try {
 			const res = await this.#ipcWrapper.sendWithCb('getConfigFields', {})
-			return res.fields
+			return translateConnectionConfigFields(res.fields)
 		} catch (e: any) {
 			this.logger.warn('Error getting config fields: ' + e?.message)
 			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
