@@ -69,19 +69,23 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 					)}
 				</CHeaderNav>
 
-				{canLock && (
-					<CHeaderNav className="ml-auto header-right">
+				<CHeaderNav className="ml-auto header-right">
+					{canLock && (
 						<CNavItem>
 							<CNavLink onClick={() => setLocked(true)} title="Lock Admin UI">
 								<FontAwesomeIcon icon={faLock} />
 							</CNavLink>
 						</CNavItem>
-					</CHeaderNav>
-				)}
+					)}
 
-				<CHeaderNav className="ml-auto header-right">
 					<CNavItem className="header-nav-item">
-						<CNavLink to="/user-guide/" target="_blank" as={Link} title="Open User Guide in new tab">
+						<CNavLink
+							to="/user-guide/"
+							target="_blank"
+							rel="noopener noreferrer"
+							as={Link}
+							title="Open User Guide in new tab"
+						>
 							<FontAwesomeIcon icon={faQuestion} /> User Guide
 							<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-2" />
 						</CNavLink>
