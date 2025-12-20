@@ -131,7 +131,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 */
 
 	getConnectionVariableDescription(connectionLabel: string, variableName: string): string | undefined {
-		return this.#variablesController.definitions.getVariableLabel(connectionLabel, variableName)
+		return this.#variablesController.definitions.getVariableDescription(connectionLabel, variableName)
 	}
 
 	/**

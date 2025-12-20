@@ -15,7 +15,7 @@ import isEqual from 'fast-deep-equal'
 import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -32,6 +32,7 @@ import { EventEmitter } from 'events'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import debounceFn from 'debounce-fn'
 import type { AppInfo } from '../Registry.js'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 const execAsync = promisify(exec)
 
@@ -53,7 +54,7 @@ async function getHostnameVariables() {
 async function getNetworkVariables() {
 	// TODO - review/refactor this
 
-	const definitions: VariableDefinitionTmp[] = []
+	const definitions: VariableDefinition[] = []
 	const values: CompanionVariableValues = {}
 	let allIps = ''
 
@@ -73,7 +74,7 @@ async function getNetworkVariables() {
 				const name = `${iface.split(' ')[0]}${aNum}`
 
 				definitions.push({
-					label: `${iface}${aNum} IP Address`,
+					description: `${iface}${aNum} IP Address`,
 					name: name,
 				})
 				values[name] = v4Addresses[i]
@@ -99,7 +100,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	readonly #userConfigController: DataUserConfig
 	readonly #requestExit: (fromInternal: boolean, restart: boolean) => void
 
-	#interfacesDefinitions: VariableDefinitionTmp[] = []
+	#interfacesDefinitions: VariableDefinition[] = []
 	#interfacesValues: CompanionVariableValues = {}
 
 	constructor(
@@ -217,38 +218,38 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		}
 	}
 
-	getVariableDefinitions(): VariableDefinitionTmp[] {
+	getVariableDefinitions(): VariableDefinition[] {
 		return [
 			{
-				label: 'System: Installation Name',
+				description: 'System: Installation Name',
 				name: 'installation_name',
 			},
 			{
-				label: 'System: Hostname',
+				description: 'System: Hostname',
 				name: 'hostname',
 			},
 			{
-				label: 'System: Hostname (FQDN)',
+				description: 'System: Hostname (FQDN)',
 				name: 'hostname_fqdn',
 			},
 			{
-				label: 'System: IP of admin network interface',
+				description: 'System: IP of admin network interface',
 				name: 'bind_ip',
 			},
 			{
-				label: 'System: Port of admin network interface',
+				description: 'System: Port of admin network interface',
 				name: 'bind_port',
 			},
 			{
-				label: 'System: IP of all network interfaces',
+				description: 'System: IP of all network interfaces',
 				name: 'all_ip',
 			},
 			{
-				label: 'System: Version',
+				description: 'System: Version',
 				name: 'version',
 			},
 			{
-				label: 'System: Version (Full)',
+				description: 'System: Version (Full)',
 				name: 'version_full',
 			},
 			...this.#interfacesDefinitions,

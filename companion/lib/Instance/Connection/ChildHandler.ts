@@ -62,6 +62,7 @@ import { ConnectionEntityManager } from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import { translateEntityInputFields } from './ConfigFields.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 export interface ConnectionChildHandlerDependencies {
 	readonly controls: ControlsController
@@ -820,14 +821,14 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
 		const invalidIds = []
 
-		const newVariables: VariableDefinitionTmp[] = []
+		const newVariables: VariableDefinition[] = []
 		for (const variable of msg.variables) {
 			// Ensure it is correctly formed
 			if (variable && typeof variable.name === 'string' && typeof variable.id === 'string') {
 				// Ensure the ids are valid
 				if (variable.id.match(idCheckRegex)) {
 					newVariables.push({
-						label: variable.name,
+						description: variable.name,
 						name: variable.id,
 					})
 				} else {
@@ -1064,9 +1065,4 @@ export interface RunActionExtras {
 	location: ControlLocation | undefined
 	abortDelayed: AbortSignal
 	executionMode: 'sequential' | 'concurrent'
-}
-
-export interface VariableDefinitionTmp {
-	label: string
-	name: string
 }

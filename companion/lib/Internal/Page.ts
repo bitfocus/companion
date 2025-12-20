@@ -9,7 +9,6 @@
  * this program.
  */
 
-import type { VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForVisitor,
@@ -22,6 +21,7 @@ import type { CompanionVariableValues } from '@companion-module/base'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	// #logger = LogController.createLogger('Internal/Page')
@@ -43,12 +43,12 @@ export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> imp
 		})
 	}
 
-	getVariableDefinitions(): VariableDefinitionTmp[] {
-		const variables: VariableDefinitionTmp[] = []
+	getVariableDefinitions(): VariableDefinition[] {
+		const variables: VariableDefinition[] = []
 		for (let i = 1; i <= this.#pageStore.getPageCount(); i++) {
 			variables.push({
 				name: `page_number_${i}_name`,
-				label: `Page ${i} name`,
+				description: `Page ${i} name`,
 			})
 		}
 		return variables

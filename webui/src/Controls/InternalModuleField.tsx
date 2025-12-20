@@ -311,7 +311,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			const id = `${variable.connectionLabel}:${variable.name}`
 			choices.push({
 				id,
-				label: variable.label,
+				label: variable.description,
 			})
 		}
 

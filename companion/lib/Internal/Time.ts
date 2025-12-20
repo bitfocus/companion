@@ -16,9 +16,9 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import type { VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #startTime = Math.floor(Date.now() / 1000)
@@ -31,70 +31,70 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 		}, 500) // Do it at 2hz to make sure we dont skip one
 	}
 
-	getVariableDefinitions(): VariableDefinitionTmp[] {
+	getVariableDefinitions(): VariableDefinition[] {
 		return [
 			{
-				label: 'Date ISO (YYYY-MM-DD)',
+				description: 'Date ISO (YYYY-MM-DD)',
 				name: 'date_iso',
 			},
 			{
-				label: 'Date (Year)',
+				description: 'Date (Year)',
 				name: 'date_y',
 			},
 			{
-				label: 'Date (Month)',
+				description: 'Date (Month)',
 				name: 'date_m',
 			},
 			{
-				label: 'Date (Day)',
+				description: 'Date (Day)',
 				name: 'date_d',
 			},
 			{
-				label: 'Day of week (number)',
+				description: 'Day of week (number)',
 				name: 'date_dow',
 			},
 			{
-				label: 'Day of week (name)',
+				description: 'Day of week (name)',
 				name: 'date_weekday',
 			},
 			{
-				label: 'Time of day (HH:MM:SS)',
+				description: 'Time of day (HH:MM:SS)',
 				name: 'time_hms',
 			},
 			{
-				label: 'Time of day (HH:MM)',
+				description: 'Time of day (HH:MM)',
 				name: 'time_hm',
 			},
 			{
-				label: 'Time of day (HH)',
+				description: 'Time of day (HH)',
 				name: 'time_h',
 			},
 			{
-				label: 'Time of day (MM)',
+				description: 'Time of day (MM)',
 				name: 'time_m',
 			},
 			{
-				label: 'Time of day (SS)',
+				description: 'Time of day (SS)',
 				name: 'time_s',
 			},
 			{
-				label: 'Time of day (HH:MM:SS) (12 hour)',
+				description: 'Time of day (HH:MM:SS) (12 hour)',
 				name: 'time_hms_12',
 			},
 			{
-				label: 'Time of day (HH:MM) (12 hour)',
+				description: 'Time of day (HH:MM) (12 hour)',
 				name: 'time_hm_12',
 			},
 			{
-				label: 'Time of day (HH) (12 hour)',
+				description: 'Time of day (HH) (12 hour)',
 				name: 'time_h_12',
 			},
 			{
-				label: 'UNIX timestamp (S)',
+				description: 'UNIX timestamp (S)',
 				name: 'time_unix',
 			},
 			{
-				label: 'Uptime (seconds)',
+				description: 'Uptime (seconds)',
 				name: 'uptime',
 			},
 		]

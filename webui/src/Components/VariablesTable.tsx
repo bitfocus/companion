@@ -55,7 +55,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 				const regexp = new RegExp(filter, 'i')
 
 				candidates = variableDefinitions.filter(
-					(variable) => variable.name.match(regexp) || variable.label.match(regexp)
+					(variable) => variable.name.match(regexp) || variable.description.match(regexp)
 				)
 			}
 			return [candidates, null]
@@ -159,7 +159,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 							</CButton>
 						</CopyToClipboard>
 					</div>
-					<div>{variable.label}</div>
+					<div>{variable.description}</div>
 				</div>
 			</td>
 			<td>

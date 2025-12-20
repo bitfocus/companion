@@ -125,7 +125,7 @@ export class VariablesStore {
 			if (!info.variableName) continue
 
 			definitions.push({
-				label: info.description || 'An expression variable',
+				description: info.description || 'An expression variable',
 				connectionLabel: 'expression',
 				name: info.variableName,
 			})
@@ -138,11 +138,11 @@ export class VariablesStore {
 		const definitions: VariableDefinitionExt[] = []
 
 		// Custom variables
-		for (const [id, info] of this.customVariables) {
+		for (const [name, info] of this.customVariables) {
 			definitions.push({
-				label: info.description,
+				description: info.description,
 				connectionLabel: 'custom',
-				name: id,
+				name,
 			})
 		}
 
@@ -201,5 +201,4 @@ export class VariablesStore {
 
 export interface VariableDefinitionExt extends VariableDefinition {
 	connectionLabel: string
-	name: string
 }

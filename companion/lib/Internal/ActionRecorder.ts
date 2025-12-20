@@ -22,12 +22,13 @@ import type {
 	InternalFeedbackDefinition,
 	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalActionRecorder
 	extends EventEmitter<InternalModuleFragmentEvents>
@@ -358,10 +359,10 @@ export class InternalActionRecorder
 		}
 	}
 
-	getVariableDefinitions(): VariableDefinitionTmp[] {
+	getVariableDefinitions(): VariableDefinition[] {
 		return [
 			{
-				label: 'Actions Recorder: Action count',
+				description: 'Actions Recorder: Action count',
 				name: 'action_recorder_action_count',
 			},
 		]

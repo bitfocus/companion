@@ -1,7 +1,8 @@
 import type { ObjectsDiff } from './Common.js'
 
 export interface VariableDefinition {
-	label: string
+	name: string
+	description: string
 }
 
 export type ModuleVariableDefinitions = Record<string, VariableDefinition>

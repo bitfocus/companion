@@ -6,13 +6,14 @@ import type {
 	CompanionOptionValues,
 	CompanionVariableValue,
 } from '@companion-module/base'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
 import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { EventEmitter } from 'events'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 export interface FeedbackEntityModelExt extends FeedbackEntityModel {
 	controlId: string
@@ -84,7 +85,7 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	 */
 	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void
 
-	getVariableDefinitions?: () => VariableDefinitionTmp[]
+	getVariableDefinitions?: () => VariableDefinition[]
 	updateVariables?: () => void
 
 	onVariablesChanged?: (changedVariablesSet: Set<string>, fromControlId: string | null) => void
