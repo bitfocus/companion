@@ -11,6 +11,7 @@ import {
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { VariablesBlinker } from './VariablesBlinker.js'
 
 /**
  * A class to parse and execute expressions with variables
@@ -18,6 +19,8 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
  */
 export class VariablesAndExpressionParser {
 	// readonly #logger = LogController.createLogger('Variables/VariablesAndExpressionParser')
+
+	readonly #blinker: VariablesBlinker
 
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
 	readonly #thisValues: VariablesCache
@@ -39,11 +42,13 @@ export class VariablesAndExpressionParser {
 	}
 
 	constructor(
+		blinker: VariablesBlinker,
 		rawVariableValues: ReadonlyDeep<VariableValueData>,
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: CompanionVariableValues | null
 	) {
+		this.#blinker = blinker
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues
 		this.#overrideVariableValues = overrideVariableValues || {}
@@ -71,7 +76,7 @@ export class VariablesAndExpressionParser {
 	 * @returns result of the expression
 	 */
 	executeExpression(str: string, requiredType: string | undefined): ExecuteExpressionResult {
-		return executeExpression(str, this.#rawVariableValues, requiredType, this.#valueCacheAccessor)
+		return executeExpression(this.#blinker, str, this.#rawVariableValues, requiredType, this.#valueCacheAccessor)
 	}
 
 	/**

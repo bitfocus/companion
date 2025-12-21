@@ -19,6 +19,7 @@ import z from 'zod'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { VariablesBlinker } from './VariablesBlinker.js'
 
 export interface VariablesValuesEvents {
 	variables_changed: [changed: Set<string>, connection_labels: Set<string>]
@@ -28,7 +29,16 @@ export interface VariablesValuesEvents {
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #logger = LogController.createLogger('Variables/Values')
 
+	readonly #blinker: VariablesBlinker
 	#variableValues: VariableValueData = {}
+
+	constructor() {
+		super()
+
+		this.#blinker = new VariablesBlinker((values) => {
+			this.setVariableValues('internal', values)
+		})
+	}
 
 	getVariableValue(label: string, name: string): CompanionVariableValue | undefined {
 		if (label === 'internal' && name.substring(0, 7) == 'custom_') {
@@ -51,7 +61,13 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		const thisValues: VariablesCache = new Map()
 		this.addInjectedVariablesForLocation(thisValues, controlLocation)
 
-		return new VariablesAndExpressionParser(this.#variableValues, thisValues, localValues, overrideVariableValues)
+		return new VariablesAndExpressionParser(
+			this.#blinker,
+			this.#variableValues,
+			thisValues,
+			localValues,
+			overrideVariableValues
+		)
 	}
 
 	forgetConnection(_id: string, label: string): void {
