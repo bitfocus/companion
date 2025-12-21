@@ -12,6 +12,7 @@ import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/St
 import { type RouterInput, trpcClient } from '~/Resources/TRPC.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ElementStreamResult } from '~/../companion/lib/Preview/ElementStream.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 const DRAW_DEBOUNCE = 50
 const DRAW_DEBOUNCE_MAX = 100
@@ -287,7 +288,7 @@ class LayeredButtonDrawStyleParser {
 				cloud_error: undefined,
 
 				button_status: thisButtonStatus.ok
-					? (String(thisButtonStatus.value) as 'error' | 'warning' | 'good')
+					? (stringifyVariableValue(thisButtonStatus.value) as 'error' | 'warning' | 'good')
 					: undefined,
 				action_running: thisActionsRunning.ok ? Boolean(thisActionsRunning.value) : undefined,
 			})
