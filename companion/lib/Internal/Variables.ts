@@ -27,7 +27,7 @@ import {
 	type FeedbackEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { IPageStore } from '../Page/Store.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'

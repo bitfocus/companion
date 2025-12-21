@@ -5,7 +5,7 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { FeedbackEntityModelExt } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'

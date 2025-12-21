@@ -21,7 +21,7 @@ import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import type { IpcWrapper } from '../Instance/Surface/IpcWrapper.js'
+import type { IpcWrapper } from '../Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
 	HostToSurfaceModuleEvents,

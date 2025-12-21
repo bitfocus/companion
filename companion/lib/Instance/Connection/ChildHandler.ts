@@ -38,7 +38,6 @@ import {
 	type CompanionOptionValues,
 	type LogLevel,
 } from '@companion-module/base'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceDefinitions } from '../Definitions.js'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { VariablesController } from '../../Variables/Controller.js'
@@ -60,7 +59,7 @@ import {
 	doesModuleExpectLabelUpdates,
 	doesModuleUseSeparateUpgradeMethod,
 	doesModuleUseNewConfigLayout,
-} from '../ApiVersions.js'
+} from './ApiVersions.js'
 import {
 	ConnectionEntityManager,
 	type EntityManagerActionEntity,
@@ -72,6 +71,7 @@ import { translateConnectionConfigFields, translateEntityInputFields } from './C
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { RunActionExtras } from './ChildHandlerApi.js'
 
 export interface ConnectionChildHandlerDependencies {
 	readonly controls: ControlsController
@@ -1188,12 +1188,4 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 
 	// Nothing looked to be a user defined invert field
 	return true
-}
-
-export interface RunActionExtras {
-	controlId: string
-	surfaceId: string | undefined
-	location: ControlLocation | undefined
-	abortDelayed: AbortSignal
-	executionMode: 'sequential' | 'concurrent'
 }

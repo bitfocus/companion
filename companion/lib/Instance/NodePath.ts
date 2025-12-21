@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
-import { doesModuleSupportPermissionsModel } from './ApiVersions.js'
+import { doesModuleSupportPermissionsModel } from './Connection/ApiVersions.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 
 /**

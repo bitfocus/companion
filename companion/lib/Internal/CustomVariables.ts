@@ -20,7 +20,7 @@ import type {
 	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { InternalModuleUtils } from './Util.js'

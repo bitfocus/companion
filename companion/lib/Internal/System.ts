@@ -15,7 +15,7 @@ import isEqual from 'fast-deep-equal'
 import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 import type { CompanionVariableValues } from '@companion-module/base'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
