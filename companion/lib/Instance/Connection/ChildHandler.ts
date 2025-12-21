@@ -72,6 +72,8 @@ import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { RunActionExtras } from './ChildHandlerApi.js'
+import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import { ConvertPresetDefinition } from './Presets.js'
 
 export interface ConnectionChildHandlerDependencies {
 	readonly controls: ControlsController
@@ -871,7 +873,20 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, this.#label, msg.presets)
+			const convertedPresets: PresetDefinition[] = []
+
+			for (const rawPreset of msg.presets) {
+				const convertedPreset = ConvertPresetDefinition(
+					this.logger,
+					this.connectionId,
+					this.#currentUpgradeIndex ?? undefined,
+					rawPreset.id,
+					rawPreset
+				)
+				if (convertedPreset) convertedPresets.push(convertedPreset)
+			}
+
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, convertedPresets)
 		} catch (e: any) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
