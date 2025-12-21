@@ -191,6 +191,7 @@ const ensureFileUrl = (url: string) => {
 }
 
 // Load the module code, setting up the global
+// Future: When hitting 2.0 of the module/base API, this should move to be a default+named exports instead
 if (typeof __non_webpack_require__ === 'function') {
 	__non_webpack_require__(moduleEntrypoint)
 } else {
