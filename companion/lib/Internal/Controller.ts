@@ -19,7 +19,7 @@ import type {
 	InternalVisitor,
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
@@ -415,7 +415,7 @@ export class InternalController {
 	/**
 	 * Set internal variable values
 	 */
-	#setVariables(variables: Record<string, CompanionVariableValue | undefined>): void {
+	#setVariables(variables: Record<string, VariableValue | undefined>): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		// This isn't ideal, but it's cheap enough and avoids updating the calling code

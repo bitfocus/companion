@@ -14,7 +14,6 @@ import { exec } from 'child_process'
 import isEqual from 'fast-deep-equal'
 import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
-import type { CompanionVariableValues } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type {
 	ActionForVisitor,
@@ -32,12 +31,12 @@ import { EventEmitter } from 'events'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import debounceFn from 'debounce-fn'
 import type { AppInfo } from '../Registry.js'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 const execAsync = promisify(exec)
 
 async function getHostnameVariables() {
-	const values: CompanionVariableValues = {}
+	const values: VariableValues = {}
 
 	try {
 		values['hostname'] = os.hostname()
@@ -55,7 +54,7 @@ async function getNetworkVariables() {
 	// TODO - review/refactor this
 
 	const definitions: VariableDefinition[] = []
-	const values: CompanionVariableValues = {}
+	const values: VariableValues = {}
 	let allIps = ''
 
 	try {
@@ -101,7 +100,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	readonly #requestExit: (fromInternal: boolean, restart: boolean) => void
 
 	#interfacesDefinitions: VariableDefinition[] = []
-	#interfacesValues: CompanionVariableValues = {}
+	#interfacesValues: VariableValues = {}
 
 	constructor(
 		appInfo: AppInfo,
@@ -130,7 +129,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 
 		const debounceUpdateUserConfigVariables = debounceFn(
 			() => {
-				const values: CompanionVariableValues = {
+				const values: VariableValues = {
 					installation_name: this.#userConfigController.getKey('installName'),
 				}
 

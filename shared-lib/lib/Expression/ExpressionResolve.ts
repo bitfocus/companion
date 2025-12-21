@@ -1,4 +1,4 @@
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue } from '../Model/Variables.js'
 import type { SomeExpressionNode } from './ExpressionParse.js'
 import type jsep from 'jsep'
 import { VARIABLE_UNKNOWN_VALUE, SplitVariableId } from '../Variables.js'
@@ -16,9 +16,9 @@ export interface GetVariableValueProps {
 
 export function ResolveExpression(
 	node: SomeExpressionNode,
-	getVariableValueRaw: (props: GetVariableValueProps) => CompanionVariableValue | undefined,
+	getVariableValueRaw: (props: GetVariableValueProps) => VariableValue | undefined,
 	functionsRaw: Record<string, (...args: any[]) => any> = {}
-): CompanionVariableValue | undefined {
+): VariableValue | undefined {
 	if (!node) throw new Error('Invalid expression')
 
 	const getVariableValue = (variableIdOrLabel: string, nameOrUndefined?: string) => {

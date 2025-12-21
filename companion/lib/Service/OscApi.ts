@@ -6,7 +6,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 
 const OSC_API_SURFACE_ID = 'osc'
 
@@ -367,6 +367,6 @@ export class ServiceOscApi {
 		this.#logger.debug(`Got OSC custom variable set value name "${variableName}" to value "${variableValue}"`)
 		if (variableValue === undefined) return
 
-		this.#serviceApi.setCustomVariableValue(variableName, variableValue as CompanionVariableValue)
+		this.#serviceApi.setCustomVariableValue(variableName, variableValue as VariableValue)
 	}
 }

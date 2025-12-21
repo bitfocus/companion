@@ -4,7 +4,7 @@ import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpr
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ParseVariablesResult } from '../Variables/Util.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { FeedbackEntityModelExt } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -113,7 +113,7 @@ export function ParseInternalControlReference(
 			if (useVariableFields) {
 				const result = parser.executeExpression(options.location_expression, 'string')
 				if (result.ok) {
-					location = parseLocationString(String(result.value))
+					location = parseLocationString(stringifyVariableValue(result.value) ?? '')
 				} else {
 					logger.warn(`${result.error}, in expression: "${options.location_expression}"`)
 				}
@@ -232,7 +232,7 @@ export class InternalModuleUtils {
 		str: string,
 		extras: RunActionExtras | FeedbackEntityModelExt,
 		requiredType?: string
-		// injectedVariableValues?: CompanionVariableValues
+		// injectedVariableValues?: VariableValues
 	): ExecuteExpressionResult {
 		const injectedVariableValuesComplete = {
 			...('id' in extras ? {} : this.#getInjectedVariablesForLocation(extras)),
@@ -299,7 +299,7 @@ export class InternalModuleUtils {
 	/**
 	 * Variables to inject based on an internal action
 	 */
-	#getInjectedVariablesForLocation(extras: RunActionExtras): CompanionVariableValues {
+	#getInjectedVariablesForLocation(extras: RunActionExtras): VariableValues {
 		return {
 			// Doesn't need to be reactive, it's only for an action
 			'$(this:surface_id)': extras.surfaceId,

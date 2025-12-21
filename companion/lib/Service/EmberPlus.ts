@@ -15,7 +15,7 @@ import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
 import debounceFn from 'debounce-fn'
-import type { CompanionVariableValue } from '@companion-module/base'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1
@@ -155,7 +155,7 @@ export class ServiceEmberPlus extends ServiceBase {
 						this.logger.debug(`New custom variable: ${name} restarting server`)
 						this.debounceRestart()
 					} else {
-						const value = this.#serviceApi.getCustomVariableValue(name)?.toString()
+						const value = stringifyVariableValue(this.#serviceApi.getCustomVariableValue(name))
 						if (value === undefined) return
 						this.#updateNodePath(path, value)
 					}
@@ -169,7 +169,7 @@ export class ServiceEmberPlus extends ServiceBase {
 					} else {
 						const value = this.#serviceApi.getConnectionVariableValue('internal', name)
 						if (value === undefined) return
-						this.#updateNodePath(path, value)
+						this.#updateNodePath(path, value as EmberValue)
 					}
 				}
 			})
@@ -428,7 +428,7 @@ export class ServiceEmberPlus extends ServiceBase {
 							id,
 							this.#serviceApi.getConnectionVariableDescription('internal', this.#internalVars[i]) ??
 								`Internal variable: ${this.#internalVars[i]}`,
-							value,
+							value as EmberValue,
 							undefined,
 							undefined,
 							EmberModel.ParameterAccess.Read
@@ -452,7 +452,7 @@ export class ServiceEmberPlus extends ServiceBase {
 							EmberModel.ParameterType.String,
 							'string',
 							this.#serviceApi.getCustomVariableDescription(this.#customVars[i]),
-							value?.toString() ?? '',
+							stringifyVariableValue(value) ?? '',
 							undefined,
 							undefined,
 							EmberModel.ParameterAccess.ReadWrite
@@ -723,7 +723,7 @@ export class ServiceEmberPlus extends ServiceBase {
 		) {
 			const customVar = this.#customVars[parseInt(pathInfo[3])]
 			if (value !== undefined && value !== null) {
-				this.#serviceApi.setCustomVariableValue(customVar, value as CompanionVariableValue)
+				this.#serviceApi.setCustomVariableValue(customVar, value as VariableValue)
 			}
 		} else if (pathInfo[0] === '0' && pathInfo[1] === ACTION_RECORDER_NODE.toString()) {
 			switch (pathInfo[2]) {

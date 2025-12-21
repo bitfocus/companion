@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { ParseExpression as parse } from '../Expression/ExpressionParse.js'
 import { type GetVariableValueProps, ResolveExpression as resolve } from '../Expression/ExpressionResolve.js'
 import jsep from 'jsep'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue } from '../Model/Variables.js'
 
-const defaultGetValue = (_props: GetVariableValueProps): CompanionVariableValue | undefined => {
+const defaultGetValue = (_props: GetVariableValueProps): VariableValue | undefined => {
 	throw new Error('Not implemented')
 }
 
@@ -96,7 +96,7 @@ describe('resolver', function () {
 	describe('expressions with symbol/variable operands', function () {
 		it('should handle symbol and literal operands', function () {
 			const postfix = parse('$(internal:a) + 1')
-			const getVariable = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+			const getVariable = (props: GetVariableValueProps): VariableValue | undefined => {
 				switch (props.variableId) {
 					case 'internal:a':
 						return 2
@@ -108,7 +108,7 @@ describe('resolver', function () {
 
 		it('should handle multiple symbol operands', function () {
 			const postfix = parse('$(internal:a) + $(test:c)')
-			const getVariable = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+			const getVariable = (props: GetVariableValueProps): VariableValue | undefined => {
 				switch (props.variableId) {
 					case 'internal:a':
 						return '3'
@@ -122,7 +122,7 @@ describe('resolver', function () {
 
 		it('handle string variables', function () {
 			const postfix = parse('$(internal:a) ^ 2 + 2 * $(internal:b) + $(test:c)')
-			const getVariable = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+			const getVariable = (props: GetVariableValueProps): VariableValue | undefined => {
 				switch (props.variableId) {
 					case 'internal:a':
 						return 3
@@ -138,7 +138,7 @@ describe('resolver', function () {
 
 		it('should handle duplicate symbol operands', function () {
 			const postfix = parse('$(internal:a) / $(internal:a)')
-			const getVariable = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+			const getVariable = (props: GetVariableValueProps): VariableValue | undefined => {
 				switch (props.variableId) {
 					case 'internal:a':
 						return 10
@@ -218,7 +218,7 @@ describe('resolver', function () {
 		})
 
 		it('handle complex templates', () => {
-			const getVariable = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+			const getVariable = (props: GetVariableValueProps): VariableValue | undefined => {
 				switch (props.variableId) {
 					case 'some:var':
 						return 'var1'
@@ -266,7 +266,7 @@ describe('resolver', function () {
 		})
 
 		it('define object - using companion variable', () => {
-			const getVariable = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+			const getVariable = (props: GetVariableValueProps): VariableValue | undefined => {
 				switch (props.variableId) {
 					case 'my:var':
 						return 'val'
@@ -332,7 +332,7 @@ describe('resolver', function () {
 		})
 
 		it('return variable', () => {
-			const getVariable = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+			const getVariable = (props: GetVariableValueProps): VariableValue | undefined => {
 				switch (props.variableId) {
 					case 'some:var':
 						return 'var1'

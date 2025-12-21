@@ -20,7 +20,7 @@ import type {
 	CustomVariableUpdateRemoveOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { CustomVariableCollections } from './CustomVariableCollections.js'
 import EventEmitter from 'events'
@@ -430,7 +430,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	/**
 	 * Get the value of a custom variable
 	 */
-	getValue(name: string): CompanionVariableValue | undefined {
+	getValue(name: string): VariableValue | undefined {
 		return this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 	}
 
@@ -440,9 +440,9 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 * @param value
 	 * @returns Failure reason, if any
 	 */
-	setValue(name: string, value: CompanionVariableValue | undefined): string | null {
+	setValue(name: string, value: VariableValue | undefined): string | null {
 		if (this.#custom_variables[name]) {
-			this.#logger.silly(`Set value "${name}":${value}`)
+			this.#logger.silly(`Set value "${name}":${stringifyVariableValue(value)}`)
 			this.#setValueInner(name, value)
 			return null
 		} else {
@@ -453,7 +453,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	/**
 	 * Helper for setting the value of a custom variable
 	 */
-	#setValueInner(name: string, value: CompanionVariableValue | undefined): void {
+	#setValueInner(name: string, value: VariableValue | undefined): void {
 		this.#variableValues.setVariableValues(CUSTOM_LABEL, [{ id: name, value: value }])
 
 		this.#persistCustomVariableValue(name, value)
@@ -499,7 +499,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	resetValueToDefault(name: string): void {
 		if (this.#custom_variables[name]) {
 			const value = this.#custom_variables[name].defaultValue
-			this.#logger.silly(`Set value "${name}":${value}`)
+			this.#logger.silly(`Set value "${name}":${stringifyVariableValue(value)}`)
 			this.#setValueInner(name, value)
 		}
 	}
@@ -510,8 +510,8 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	syncValueToDefault(name: string): void {
 		if (this.#custom_variables[name]) {
 			const value = this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
-			this.#logger.silly(`Set default value "${name}":${value}`)
-			this.#custom_variables[name].defaultValue = value === undefined ? '' : value
+			this.#logger.silly(`Set default value "${name}":${stringifyVariableValue(value)}`)
+			this.#custom_variables[name].defaultValue = value
 
 			this.#emitUpdateOneVariable(name)
 		}
@@ -541,7 +541,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	/**
 	 * Update the persisted value of a variable, if required
 	 */
-	#persistCustomVariableValue(name: string, value: CompanionVariableValue | undefined): void {
+	#persistCustomVariableValue(name: string, value: VariableValue | undefined): void {
 		if (this.#custom_variables[name] && this.#custom_variables[name].persistCurrentValue) {
 			this.#custom_variables[name].defaultValue = value === undefined ? '' : value
 

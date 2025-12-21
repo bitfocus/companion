@@ -14,7 +14,7 @@ import { ExpressionFunctions } from '@companion-app/shared/Expression/Expression
 import { type GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ReadonlyDeep } from 'type-fest'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 
@@ -23,26 +23,26 @@ const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
 
 const logger = LogController.createLogger('Variables/Util')
 
-export type VariableValueData = Record<string, Record<string, CompanionVariableValue | undefined> | undefined>
-export type VariablesCache = Map<string, CompanionVariableValue | undefined>
+export type VariableValueData = Record<string, Record<string, VariableValue | undefined> | undefined>
+export type VariablesCache = Map<string, VariableValue | undefined>
 export interface ParseVariablesResult {
 	text: string
 	variableIds: Set<string>
 }
 
 export function parseVariablesInString(
-	string: CompanionVariableValue,
+	string: VariableValue,
 	rawVariableValues: VariableValueData,
 	cachedVariableValues: VariableValueCache,
 	undefinedValue: string
 ): ParseVariablesResult {
+	string = stringifyVariableValue(string)
 	if (string === undefined || string === null || string === '') {
 		return {
-			text: string,
+			text: '',
 			variableIds: new Set(),
 		}
 	}
-	if (typeof string !== 'string') string = `${string}`
 
 	const referencedVariableIds = new Set<string>()
 
@@ -66,7 +66,7 @@ export function parseVariablesInString(
 
 		referencedVariableIds.add(`${connectionLabel}:${variableId}`)
 
-		let value: CompanionVariableValue | undefined
+		let value: VariableValue | undefined
 		if (cachedVariableValues.has(fullId)) {
 			const cachedValue = cachedVariableValues.get(fullId)
 
@@ -101,7 +101,7 @@ export function parseVariablesInString(
 		if (value === undefined) value = undefinedValue
 
 		// Pass a function, to avoid special interpreting of `$$` and other sequences
-		const cachedValueConst = value?.toString()
+		const cachedValueConst = stringifyVariableValue(value) ?? ''
 		string = string.replace(fullId, () => cachedValueConst)
 	}
 
@@ -143,8 +143,8 @@ export function replaceAllVariables(string: string, newLabel: string): string {
  */
 export interface VariableValueCache {
 	has(id: string): boolean
-	get(id: string): CompanionVariableValue | (() => CompanionVariableValue | undefined) | undefined
-	set(id: string, value: CompanionVariableValue | undefined): void
+	get(id: string): VariableValue | (() => VariableValue | undefined) | undefined
+	set(id: string, value: VariableValue | undefined): void
 }
 
 /**
@@ -163,12 +163,12 @@ export function executeExpression(
 	const referencedVariableIds = new Set<string>()
 
 	try {
-		const getVariableValue = (props: GetVariableValueProps): CompanionVariableValue | undefined => {
+		const getVariableValue = (props: GetVariableValueProps): VariableValue | undefined => {
 			referencedVariableIds.add(props.variableId)
 
 			const fullId = `$(${props.variableId})`
 			// First check for an injected value
-			let value: CompanionVariableValue | undefined
+			let value: VariableValue | undefined
 			if (cachedVariableValues.has(fullId)) {
 				const rawValue = cachedVariableValues.get(fullId)!
 
@@ -205,7 +205,7 @@ export function executeExpression(
 					const wrappedCache: VariableValueCache = {
 						has: (id: string) => id === fullId || cachedVariableValues.has(id),
 						get: (id: string) => (id === fullId ? '$RE' : cachedVariableValues.get(id)),
-						set: (id: string, val: CompanionVariableValue | undefined) => {
+						set: (id: string, val: VariableValue | undefined) => {
 							if (id === fullId) return
 
 							cachedVariableValues.set(id, val)
@@ -249,7 +249,7 @@ export function executeExpression(
 		// Fix up the result for some types
 		switch (requiredType) {
 			case 'string':
-				value = `${value}`
+				value = stringifyVariableValue(value) ?? ''
 				break
 			case 'number':
 				value = Number(value)

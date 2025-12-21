@@ -1,5 +1,5 @@
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { CompanionVariableValue, CompanionVariableValues } from '@companion-app/shared/Model/Common.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { action, makeObservable, observable } from 'mobx'
 import { useEffect, useMemo } from 'react'
 import type { DropdownChoiceInt } from '../DropDownInputFancy.js'
@@ -11,7 +11,7 @@ export class LocalVariablesStore {
 	readonly controlId: string
 
 	#variables = observable.map<string, SomeEntityModel>()
-	#values = observable.map<string, CompanionVariableValue | undefined>()
+	#values = observable.map<string, VariableValue | undefined>()
 
 	constructor(controlId: string) {
 		this.controlId = controlId
@@ -25,11 +25,11 @@ export class LocalVariablesStore {
 		this.#variables.replace(localVariables.map((v) => [v.id, v]))
 	}
 
-	setValues(values: CompanionVariableValues): void {
+	setValues(values: VariableValues): void {
 		this.#values.replace(Object.entries(values))
 	}
 
-	getValue = (variableName: string): CompanionVariableValue | undefined => {
+	getValue = (variableName: string): VariableValue | undefined => {
 		return this.#values.get(variableName)
 	}
 

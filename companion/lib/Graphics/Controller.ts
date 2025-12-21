@@ -20,7 +20,8 @@ import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import debounceFn from 'debounce-fn'
-import type { CompanionButtonStyleProps, CompanionVariableValues } from '@companion-module/base'
+import type { CompanionButtonStyleProps } from '@companion-module/base'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
@@ -150,7 +151,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		})
 	}
 
-	#pendingVariables: CompanionVariableValues | null = null
+	#pendingVariables: VariableValues | null = null
 	/**
 	 * Debounce updating the variables, as buttons are often drawn in floods
 	 */
@@ -246,7 +247,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (location && locationIsInBounds) {
 						// Update the internal b_text_1_4 variable
 						setImmediate(() => {
-							const values: CompanionVariableValues = {}
+							const values: VariableValues = {}
 
 							// Update text, if it is present
 							values[`b_text_${location.pageNumber}_${location.row}_${location.column}`] =

@@ -5,7 +5,6 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValuesEvents } from '../Variables/Values.js'
 import type { VariablesCustomVariableEvents } from '../Variables/CustomVariable.js'
-import type { CompanionVariableValue } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
@@ -15,7 +14,7 @@ import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import EventEmitter from 'events'
-import type { ModuleVariableDefinitions } from '@companion-app/shared/Model/Variables.js'
+import type { ModuleVariableDefinitions, VariableValue } from '@companion-app/shared/Model/Variables.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -90,7 +89,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @param value
 	 * @returns Failure reason, if any
 	 */
-	setCustomVariableValue(name: string, value: CompanionVariableValue): string | null {
+	setCustomVariableValue(name: string, value: VariableValue): string | null {
 		return this.#variablesController.custom.setValue(name, value)
 	}
 
@@ -99,7 +98,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @param name
 	 * @returns The value of the variable
 	 */
-	getCustomVariableValue(name: string): CompanionVariableValue | undefined {
+	getCustomVariableValue(name: string): VariableValue | undefined {
 		return this.#variablesController.custom.getValue(name)
 	}
 
@@ -119,7 +118,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	 * @param variableName
 	 * @returns The value of the variable
 	 */
-	getConnectionVariableValue(connectionLabel: string, variableName: string): CompanionVariableValue | undefined {
+	getConnectionVariableValue(connectionLabel: string, variableName: string): VariableValue | undefined {
 		return this.#variablesController.values.getVariableValue(connectionLabel, variableName)
 	}
 

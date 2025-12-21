@@ -93,14 +93,3 @@ export interface DropdownChoice {
 	/** Label to show to users */
 	label: string
 }
-
-/**
- * A set of values of some variables
- */
-export interface CompanionVariableValues {
-	[variableId: string]: CompanionVariableValue | undefined
-}
-/**
- * The value of a variable
- */
-export type CompanionVariableValue = string | number | boolean

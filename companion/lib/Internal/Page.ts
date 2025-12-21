@@ -17,11 +17,10 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import type { CompanionVariableValues } from '@companion-module/base'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	// #logger = LogController.createLogger('Internal/Page')
@@ -55,7 +54,7 @@ export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> imp
 	}
 
 	updateVariables(): void {
-		const variables: CompanionVariableValues = {}
+		const variables: VariableValues = {}
 		for (let i = 1; i <= this.#pageStore.getPageCount(); i++) {
 			variables[`page_number_${i}_name`] = this.#pageStore.getPageName(i)
 		}

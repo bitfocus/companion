@@ -1,9 +1,13 @@
 import type { ObjectsDiff } from './Common.js'
+import type { JsonValue } from './JSON.js'
 
 export interface VariableDefinition {
 	name: string
 	description: string
 }
+
+export type VariableValue = JsonValue | undefined
+export type VariableValues = Record<string, VariableValue | undefined>
 
 export type ModuleVariableDefinitions = Record<string, VariableDefinition>
 
@@ -31,4 +35,14 @@ export interface VariableDefinitionUpdatePatchOp extends ObjectsDiff<VariableDef
 export interface VariableDefinitionUpdateRemoveOp {
 	type: 'remove'
 	label: string
+}
+
+export function stringifyVariableValue(value: VariableValue): string | null | undefined {
+	if (typeof value === 'string') {
+		return value
+	} else if (typeof value === 'number' || typeof value === 'boolean') {
+		return value.toString()
+	} else {
+		return JSON.stringify(value)
+	}
 }

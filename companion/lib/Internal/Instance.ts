@@ -23,14 +23,14 @@ import type {
 	InternalFeedbackDefinition,
 	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
 import LogController from '../Log/Controller.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('InternalInstance')
@@ -395,7 +395,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 	}
 
 	updateVariables(): void {
-		const values: CompanionVariableValues = {
+		const values: VariableValues = {
 			instance_total: this.#instancesTotal,
 			instance_disabled: this.#instancesDisabled,
 			instance_errors: this.#instancesError,

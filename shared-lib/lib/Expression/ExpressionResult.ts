@@ -1,7 +1,9 @@
+import type { VariableValue } from '../Model/Variables.js'
+
 export type ExecuteExpressionResult = ExecuteExpressionResultOk | ExecuteExpressionResultError
 export interface ExecuteExpressionResultOk {
 	ok: true
-	value: boolean | number | string | undefined
+	value: VariableValue | undefined
 	variableIds: ReadonlySet<string>
 }
 export interface ExecuteExpressionResultError {
@@ -13,7 +15,7 @@ export interface ExecuteExpressionResultError {
 export type ExpressionStreamResult = ExpressionStreamResultOk | ExpressionStreamResultError
 export interface ExpressionStreamResultOk {
 	ok: true
-	value: boolean | number | string | undefined
+	value: VariableValue | undefined
 	// variableIds: Set<string>
 }
 export interface ExpressionStreamResultError {

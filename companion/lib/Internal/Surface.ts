@@ -9,7 +9,6 @@
  * this program.
  */
 
-import { type CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import debounceFn from 'debounce-fn'
 import type {
@@ -31,7 +30,7 @@ import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/sh
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: SomeCompanionInputField[] = [
 	{
@@ -302,7 +301,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 	#lastUpdateVariableNames: ReadonlySet<string> = new Set()
 	updateVariables(): void {
-		const values: CompanionVariableValues = {}
+		const values: VariableValues = {}
 
 		const surfaceInfos = this.#surfaceController.getDevicesList()
 		for (const surfaceGroup of surfaceInfos) {
