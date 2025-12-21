@@ -63,6 +63,7 @@ export function ElementPickerModal({
 			<CModalBody>
 				<ElementPicker
 					selectedElementId={selectedElementId2}
+					selectedSchema={selectedSchema}
 					selectedProperties={selectedProperty2 ? [selectedProperty2] : []}
 					onElementSelect={handleElementSelect}
 					onPropertySelect={handlePropertySelect}

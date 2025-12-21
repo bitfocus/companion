@@ -15,4 +15,5 @@ export const GraphicsThreadMethods = Object.freeze({
 	drawButtonImage: GraphicsRenderer.drawButtonImageUnwrapped.bind(GraphicsRenderer),
 	drawButtonBareImage: GraphicsRenderer.drawButtonBareImageUnwrapped.bind(GraphicsRenderer),
 	createImagePreview: GraphicsRenderer.createImagePreview.bind(GraphicsRenderer),
+	drawImageBuffers: GraphicsRenderer.drawImageBuffers.bind(GraphicsRenderer),
 })

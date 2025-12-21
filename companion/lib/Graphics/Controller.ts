@@ -21,7 +21,7 @@ import { fileURLToPath } from 'url'
 import debounceFn from 'debounce-fn'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawImageBuffer, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
@@ -647,5 +647,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
 	): Promise<{ width: number; height: number; previewDataUrl: string }> {
 		return this.#poolExec('createImagePreview', [originalDataUrl], remainingAttempts)
+	}
+
+	async renderPixelBuffers(
+		imageBuffers: DrawImageBuffer[],
+		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
+	): Promise<string | undefined> {
+		if (imageBuffers.length === 0) return undefined
+
+		return this.#poolExec('drawImageBuffers', [true, imageBuffers], remainingAttempts)
 	}
 }

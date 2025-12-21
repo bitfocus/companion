@@ -4,7 +4,7 @@ import {
 	type FeedbackEntityStyleOverride,
 	FeedbackEntitySubType,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
+import { ButtonStylePropertiesWithBuffer } from '@companion-app/shared/Style.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CButton } from '@coreui/react'
 import { faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons'
@@ -282,10 +282,12 @@ const PropertyValueInput = observer(function PropertyValueInput({
 		return null
 	}
 
-	// For advanced feedbacks, show a dropdown with ButtonStyleProperties instead of freeform input
+	// For advanced feedbacks, show a dropdown with ButtonStylePropertiesWithBuffer instead of freeform input
 	switch (feedbackType) {
 		case FeedbackEntitySubType.Advanced:
-			return <DropdownInputField choices={ButtonStyleProperties} value={row.override.value} setValue={setValue} />
+			return (
+				<DropdownInputField choices={ButtonStylePropertiesWithBuffer} value={row.override.value} setValue={setValue} />
+			)
 		case FeedbackEntitySubType.Boolean:
 			// For boolean feedbacks, show a dropdown with "true" and "false"
 			return (

@@ -21,7 +21,7 @@ export class PreviewController {
 	) {
 		this.#graphics = new PreviewGraphics(graphicsController, pageStore, controlsController, controlEvents)
 		this.#expressionStream = new PreviewExpressionStream(controlsController)
-		this.#elementStream = new PreviewElementStream(controlsController, controlEvents)
+		this.#elementStream = new PreviewElementStream(graphicsController, controlsController, controlEvents)
 	}
 
 	createTrpcRouter() {

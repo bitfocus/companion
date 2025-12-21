@@ -13,10 +13,11 @@ import {
 	type ButtonGraphicsImageElement,
 	type ButtonGraphicsTextElement,
 	type HorizontalAlignment,
+	type SomeButtonGraphicsElement,
 	type VerticalAlignment,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties, DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import { nanoid } from 'nanoid'
 
 interface ParsedLegacyStyle {
@@ -32,6 +33,7 @@ interface ParsedLegacyStyle {
 		valign: VerticalAlignment | undefined
 		image: string | undefined
 	}
+	imageBuffers: DrawImageBuffer[] | undefined
 	background: {
 		color: number | undefined
 	}
@@ -56,6 +58,8 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>): ParsedL
 	const textAlign = style.alignment !== undefined ? ParseAlignment(style.alignment, false) : undefined
 	const imageAlign = style.pngalignment !== undefined ? ParseAlignment(style.pngalignment, false) : undefined
 
+	const styleHack = style as any
+
 	return {
 		text: {
 			text: style.text !== undefined ? { isExpression: !!style.textExpression, value: style.text } : undefined,
@@ -69,6 +73,15 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>): ParsedL
 			valign: imageAlign ? imageAlign[1] : undefined,
 			image: style.png64 ? ensurePng64IsDataUrl(style.png64) : undefined,
 		},
+		imageBuffers: styleHack.imageBuffer
+			? [
+					{
+						...styleHack.imageBufferPosition,
+						...styleHack.imageBufferEncoding,
+						buffer: styleHack.imageBuffer,
+					} as DrawImageBuffer,
+				]
+			: undefined,
 		background: {
 			color: style.bgcolor,
 		},
@@ -155,6 +168,14 @@ export function GetLegacyStyleProperty(
 				}
 			}
 			break
+		case 'imageBuffers':
+			if (parsedStyle.imageBuffers && parsedStyle.imageBuffers.length > 0) {
+				return {
+					isExpression: false,
+					value: parsedStyle.imageBuffers,
+				}
+			}
+			break
 		default:
 			// Anything else is not supported
 			break
@@ -224,6 +245,22 @@ export function ConvertLegacyStyleToElements(
 		fontsize: { value: 'auto', isExpression: false },
 		outlineColor: { value: 0xff000000, isExpression: false },
 	}
+	const bufferElement: ButtonGraphicsImageElement = {
+		id: 'imageBuffers',
+		name: 'Image Buffers',
+		usage: ButtonGraphicsElementUsage.Automatic,
+		type: 'image',
+		enabled: { value: true, isExpression: false },
+		opacity: { value: 100, isExpression: false },
+		x: { value: 0, isExpression: false },
+		y: { value: 0, isExpression: false },
+		width: { value: 100, isExpression: false },
+		height: { value: 100, isExpression: false },
+		base64Image: { value: null, isExpression: false },
+		halign: { value: 'center', isExpression: false },
+		valign: { value: 'center', isExpression: false },
+		fillMode: { value: 'fit_or_shrink', isExpression: false },
+	}
 
 	// Apply the old style properties to the new elements
 	const parsedStyle = ParseLegacyStyle(style)
@@ -240,6 +277,8 @@ export function ConvertLegacyStyleToElements(
 
 	if (parsedStyle.background.color !== undefined) backgroundElement.color.value = parsedStyle.background.color
 	if (parsedStyle.canvas.decoration !== undefined) canvasElement.decoration.value = parsedStyle.canvas.decoration
+
+	let hasAnyAdvancedFeedbacks = false
 
 	const updatedFeedbacks = feedbacks.map((fb) => {
 		if (fb.type !== EntityModelType.Feedback) return fb // Not a feedback
@@ -343,6 +382,8 @@ export function ConvertLegacyStyleToElements(
 				})
 			}
 		} else {
+			hasAnyAdvancedFeedbacks = true
+
 			// Should be advanced, translate all properties
 			overrides.push(
 				{
@@ -395,15 +436,15 @@ export function ConvertLegacyStyleToElements(
 				},
 				{
 					overrideId: nanoid(),
-					elementId: canvasElement.id,
-					elementProperty: 'decoration',
-					override: { isExpression: false, value: 'show_topbar' },
-				},
-				{
-					overrideId: nanoid(),
 					elementId: imageElement.id,
 					elementProperty: 'base64Image',
 					override: { isExpression: false, value: 'png64' },
+				},
+				{
+					overrideId: nanoid(),
+					elementId: bufferElement.id,
+					elementProperty: 'base64Image',
+					override: { isExpression: false, value: 'imageBuffers' },
 				}
 			)
 		}
@@ -415,9 +456,12 @@ export function ConvertLegacyStyleToElements(
 		}
 	})
 
+	const layers: SomeButtonGraphicsElement[] = [canvasElement, backgroundElement, imageElement, textElement]
+	if (hasAnyAdvancedFeedbacks) layers.push(bufferElement)
+
 	return {
 		style: {
-			layers: [canvasElement, backgroundElement, imageElement, textElement],
+			layers,
 		},
 		feedbacks: updatedFeedbacks,
 	}

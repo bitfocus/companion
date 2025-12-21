@@ -62,6 +62,7 @@ export function AddElementPickerModal({ isOpen, onClose, onSave }: AddElementPic
 			<CModalBody>
 				<ElementPicker
 					selectedElementId={selectedElementId}
+					selectedSchema={selectedSchema}
 					selectedProperties={selectedProperties}
 					onElementSelect={handleElementSelect}
 					onPropertySelect={handlePropertySelect}
