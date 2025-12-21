@@ -341,7 +341,7 @@ export class ConnectionEntityManager {
 		if (!this.#ready) return
 
 		// We have the upgraded entities, lets patch the tracked entities
-		const upgradedEntites = new Map(rawUpgradedEntities.map((ent) => [ent.id, ent]))
+		const upgradedEntities = new Map(rawUpgradedEntities.map((ent) => [ent.id, ent]))
 
 		// Loop through what we sent, as we don't get a response for all of them
 		for (const [entityId, wrapperId] of entityIdsInThisBatch) {
@@ -373,7 +373,7 @@ export class ConnectionEntityManager {
 						continue
 					}
 
-					const upgradedEntity = upgradedEntites.get(entity.id)
+					const upgradedEntity = upgradedEntities.get(entity.id)
 					if (!upgradedEntity) continue
 
 					if (upgradedEntity.type !== entity.type) {
