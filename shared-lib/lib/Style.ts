@@ -6,4 +6,5 @@ export const ButtonStyleProperties: { id: string; label: string }[] = [
 	{ id: 'pngalignment', label: 'PNG Alignment' },
 	{ id: 'color', label: 'Color' },
 	{ id: 'bgcolor', label: 'Background' },
+	{ id: 'blink', label: 'Blink' },
 ]
