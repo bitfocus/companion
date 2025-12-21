@@ -30,7 +30,7 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.j
 import type { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { lazy } from '../../../Resources/Util.js'
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 
@@ -211,7 +211,7 @@ export class ControlButtonLayered
 	 */
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
 		// Block out the button text
-		const injectedVariableValues: CompanionVariableValues = {}
+		const injectedVariableValues: VariableValues = {}
 		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 		if (location) {
 			// Ensure we don't enter into an infinite loop

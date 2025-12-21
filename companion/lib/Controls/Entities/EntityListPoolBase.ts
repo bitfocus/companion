@@ -14,7 +14,7 @@ import type { InternalController } from '../../Internal/Controller.js'
 import isEqual from 'fast-deep-equal'
 import type { InstanceDefinitionsForEntity } from './Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
@@ -146,10 +146,10 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	abstract getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>
 
-	getLocalVariableValues(): CompanionVariableValues {
+	getLocalVariableValues(): VariableValues {
 		const entities = this.getLocalVariableEntities()
 
-		const values: CompanionVariableValues = {}
+		const values: VariableValues = {}
 
 		for (const entity of entities) {
 			const variableName = entity.localVariableName

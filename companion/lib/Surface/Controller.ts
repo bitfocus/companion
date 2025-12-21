@@ -32,7 +32,7 @@ import type {
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
 import { EventEmitter } from 'events'
@@ -1215,7 +1215,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	surfaceExecuteExpression(
 		str: string,
 		surfaceId: string,
-		injectedVariableValues: CompanionVariableValues | undefined
+		injectedVariableValues: VariableValues | undefined
 	): ExecuteExpressionResult {
 		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
 			...injectedVariableValues,
@@ -1228,7 +1228,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Variables to inject based on location
 	 */
-	#getInjectedVariablesForSurfaceId(surfaceId: string): CompanionVariableValues {
+	#getInjectedVariablesForSurfaceId(surfaceId: string): VariableValues {
 		const pageNumber = this.devicePageGet(surfaceId)
 
 		return {

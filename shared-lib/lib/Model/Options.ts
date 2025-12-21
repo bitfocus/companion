@@ -1,9 +1,15 @@
-import type {
-	CompanionColorPresetValue,
-	CompanionFieldVariablesSupport,
-	DropdownChoice,
-	DropdownChoiceId,
-} from '@companion-module/base'
+import type { DropdownChoice, DropdownChoiceId } from './Common.js'
+
+export type CompanionColorPresetValue =
+	| string
+	| {
+			color: string
+			title: string
+	  }
+export interface CompanionFieldVariablesSupport {
+	/** Whether to include local variables */
+	local?: boolean
+}
 
 export interface CompanionInputFieldBaseExtended {
 	/** The unique id of this input field within the input group */

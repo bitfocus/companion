@@ -7,7 +7,7 @@ import type {
 	CompanionExternalAddresses,
 	SurfacesDiscoveryUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { DropdownChoice } from '@companion-module/base'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import EventEmitter from 'node:events'

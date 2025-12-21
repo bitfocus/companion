@@ -1,5 +1,5 @@
 /* eslint-disable n/no-process-exit */
-import { IpcWrapper } from '../IpcWrapper.js'
+import { IpcWrapper } from '../../Common/IpcWrapper.js'
 import type { SurfaceModuleToHostEvents, HostToSurfaceModuleEvents } from '../IpcTypes.js'
 import {
 	type SurfaceModuleManifest,

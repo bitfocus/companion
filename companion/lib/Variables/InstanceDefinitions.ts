@@ -17,10 +17,10 @@ import type {
 	VariableDefinitionUpdate,
 	VariableDefinitionUpdateInitOp,
 } from '@companion-app/shared/Model/Variables.js'
-import type { VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
 import { diffObjects } from '@companion-app/shared/Diff.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
 
 /**
  * Variable definitions as defined by the instances/connections
@@ -77,14 +77,15 @@ export class VariablesInstanceDefinitions {
 	/**
 	 * Set the variable definitions for a connection
 	 */
-	setVariableDefinitions(connectionLabel: string, variables: VariableDefinitionTmp[]): void {
+	setVariableDefinitions(connectionLabel: string, variables: VariableDefinition[]): void {
 		this.#logger.silly('got connection variable definitions for ' + connectionLabel)
 
 		const variablesObj: ModuleVariableDefinitions = {}
 		for (const variable of variables || []) {
 			// Prune out the name
-			const newVarObj: VariableDefinition = {
-				label: variable.label,
+			const newVarObj: Complete<VariableDefinition> = {
+				name: variable.name,
+				description: variable.description,
 			}
 
 			variablesObj[variable.name] = newVarObj
@@ -114,7 +115,7 @@ export class VariablesInstanceDefinitions {
 		return this.#variableDefinitions[connectionLabel] ?? {}
 	}
 
-	getVariableLabel(connectionLabel: string, variableId: string): string | undefined {
-		return this.#variableDefinitions[connectionLabel]?.[variableId]?.label
+	getVariableDescription(connectionLabel: string, variableId: string): string | undefined {
+		return this.#variableDefinitions[connectionLabel]?.[variableId]?.description
 	}
 }

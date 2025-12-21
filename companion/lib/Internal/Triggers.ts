@@ -22,7 +22,7 @@ import type {
 	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { EventEmitter } from 'events'

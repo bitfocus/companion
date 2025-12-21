@@ -1,4 +1,4 @@
-import { type CompanionVariableValues, type CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ReadonlyDeep } from 'type-fest'
 import {
 	executeExpression,
@@ -22,18 +22,18 @@ export class VariablesAndExpressionParser {
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
 	readonly #thisValues: VariablesCache
 	readonly #localValues: VariablesCache = new Map()
-	readonly #overrideVariableValues: CompanionVariableValues
+	readonly #overrideVariableValues: VariableValues
 
 	readonly #valueCacheAccessor: VariableValueCache = {
 		has: (id: string): boolean => {
 			return this.#thisValues.has(id) || this.#localValues.has(id) || this.#overrideVariableValues[id] !== undefined
 		},
-		get: (id: string): CompanionVariableValue | undefined => {
+		get: (id: string): VariableValue | undefined => {
 			if (this.#thisValues.has(id)) return this.#thisValues.get(id)
 			if (this.#localValues.has(id)) return this.#localValues.get(id)
 			return this.#overrideVariableValues[id]
 		},
-		set: (id: string, value: CompanionVariableValue | undefined): void => {
+		set: (id: string, value: VariableValue | undefined): void => {
 			this.#localValues.set(id, value)
 		},
 	}
@@ -42,7 +42,7 @@ export class VariablesAndExpressionParser {
 		rawVariableValues: ReadonlyDeep<VariableValueData>,
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: CompanionVariableValues | null
+		overrideVariableValues: VariableValues | null
 	) {
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues

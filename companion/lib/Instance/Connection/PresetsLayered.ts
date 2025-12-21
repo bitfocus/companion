@@ -1,7 +1,5 @@
 import { nanoid } from 'nanoid'
-import type { PresetDefinitionButton } from '@companion-app/shared/Model/Presets.js'
 import type {
-	CompanionLayeredButtonPresetDefinition,
 	CompanionPresetLayeredFeedback,
 	ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
 	SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
@@ -33,48 +31,8 @@ import {
 	type MakeExpressionable,
 	type ButtonGraphicsDrawBase,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ConvertStepsForPreset } from './Steps.js'
 
-export function TranslateRawLayeredButtonPresetToDefinition(
-	logger: Logger,
-	connectionId: string,
-	rawPreset: CompanionLayeredButtonPresetDefinition & { id: string },
-	connectionUpgradeIndex: number | undefined
-): PresetDefinitionButton {
-	const presetDefinition: PresetDefinitionButton = {
-		id: rawPreset.id,
-		category: rawPreset.category,
-		name: rawPreset.name,
-		type: 'button',
-		model: {
-			type: 'button-layered',
-			options: {
-				rotaryActions: rawPreset.options?.rotaryActions ?? false,
-				stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
-				canModifyStyleInApis: false,
-			},
-
-			style: {
-				layers: convertLayerPresetElements(logger, rawPreset.canvas, rawPreset.elements),
-			},
-			feedbacks: convertLayeredPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
-
-			steps: ConvertStepsForPreset(
-				logger,
-				connectionId,
-				connectionUpgradeIndex,
-				rawPreset.steps,
-				rawPreset.options?.relativeDelay
-			),
-			localVariables: [],
-		},
-		presetExtraFeedbacks: [], // No preview style for layered-button presets
-	}
-
-	return presetDefinition
-}
-
-function convertLayeredPresetFeedbacksToEntities(
+export function ConvertLayeredPresetFeedbacksToEntities(
 	rawFeedbacks: CompanionPresetLayeredFeedback[] | undefined,
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined
@@ -110,7 +68,7 @@ function convertLayeredPresetFeedbacksToEntities(
 	return feedbacks
 }
 
-function convertLayerPresetElements(
+export function ConvertLayerPresetElements(
 	logger: Logger,
 	canvas: ButtonGraphicsCanvasElementModule | undefined,
 	elements: SomeButtonGraphicsElementModule[]

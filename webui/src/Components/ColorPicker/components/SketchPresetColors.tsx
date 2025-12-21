@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import type { CompanionColorPresetValue } from '@companion-module/base'
+import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
 import cssStyles from './SketchPresetColors.module.css'
 import classNames from 'classnames'
 import { colord } from 'colord'

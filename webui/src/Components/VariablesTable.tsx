@@ -4,7 +4,7 @@ import { useComputed } from '~/Resources/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { type CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
@@ -55,7 +55,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 				const regexp = new RegExp(filter, 'i')
 
 				candidates = variableDefinitions.filter(
-					(variable) => variable.name.match(regexp) || variable.label.match(regexp)
+					(variable) => variable.name.match(regexp) || variable.description.match(regexp)
 				)
 			}
 			return [candidates, null]
@@ -131,7 +131,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 interface VariablesTableRowProps {
 	variable: VariableDefinitionExt
 	label: string
-	value: CompanionVariableValue | undefined
+	value: VariableValue | undefined
 	onCopied: () => void
 	panelCollapseHelper: PanelCollapseHelperLite
 }
@@ -159,7 +159,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 							</CButton>
 						</CopyToClipboard>
 					</div>
-					<div>{variable.label}</div>
+					<div>{variable.description}</div>
 				</div>
 			</td>
 			<td>

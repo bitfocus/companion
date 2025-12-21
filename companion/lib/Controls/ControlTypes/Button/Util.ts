@@ -1,5 +1,5 @@
 import type { UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { Logger } from '../../../Log/Controller.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
@@ -13,7 +13,7 @@ export function parseVariablesInButtonStyle(
 ): ReadonlySet<string> | null {
 	if (style.text) {
 		// Block out the button text
-		const overrideVariableValues: CompanionVariableValues = {}
+		const overrideVariableValues: VariableValues = {}
 
 		const location = deps.pageStore.getLocationOfControlId(controlId)
 		if (location) {
@@ -31,7 +31,7 @@ export function parseVariablesInButtonStyle(
 		if (style.textExpression) {
 			const parseResult = parser.executeExpression(style.text, undefined)
 			if (parseResult.ok) {
-				style.text = parseResult.value + ''
+				style.text = stringifyVariableValue(parseResult.value) ?? ''
 			} else {
 				logger.error(`Expression parse error: ${parseResult.error}`)
 				style.text = 'ERR'

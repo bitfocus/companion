@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { DropdownInputField } from './DropdownInputField.js'
-import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
-import type { ClientBonjourService } from '@companion-app/shared/Model/Common.js'
+import type { DropdownChoice, DropdownChoiceId, ClientBonjourService } from '@companion-app/shared/Model/Common.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC.js'
 

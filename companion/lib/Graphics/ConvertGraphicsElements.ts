@@ -24,6 +24,7 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.j
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 
 class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 	readonly #parser: VariablesAndExpressionParser
@@ -82,10 +83,7 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return override ? override : (this.#element as any)[propertyName]
 	}
 
-	getUnknown(
-		propertyName: keyof T,
-		defaultValue: boolean | number | string | undefined
-	): boolean | number | string | undefined {
+	getUnknown(propertyName: keyof T, defaultValue: VariableValue): VariableValue | undefined {
 		const value = this.#getValue(propertyName)
 
 		if (!value.isExpression) return value.value
@@ -98,10 +96,10 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		return result.value
 	}
 
-	getDrawText(propertyName: keyof T): boolean | number | string | undefined {
+	getDrawText(propertyName: keyof T): string {
 		const value = this.#getValue(propertyName)
 		if (value.isExpression) {
-			return this.getUnknown(propertyName, 'ERR')
+			return stringifyVariableValue(this.getUnknown(propertyName, 'ERR')) ?? ''
 		} else {
 			return this.#parseVariablesInString(value.value, 'ERR')
 		}
@@ -175,7 +173,7 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) return 'center'
 
-		const firstChar = String(result.value).trim().toLowerCase()[0]
+		const firstChar = (stringifyVariableValue(result.value) ?? '').trim().toLowerCase()[0]
 		switch (firstChar) {
 			case 'l':
 			case 's':
@@ -199,7 +197,7 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) return 'center'
 
-		const firstChar = String(result.value).trim().toLowerCase()[0]
+		const firstChar = (stringifyVariableValue(result.value) ?? '').trim().toLowerCase()[0]
 		switch (firstChar) {
 			case 't':
 			case 's':

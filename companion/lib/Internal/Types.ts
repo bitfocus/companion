@@ -1,18 +1,15 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VisitorReferencesCollectorVisitor } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/ReferencesUpdater.js'
-import type {
-	CompanionFeedbackButtonStyleResult,
-	CompanionOptionValues,
-	CompanionVariableValue,
-} from '@companion-module/base'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
+import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { EventEmitter } from 'events'
+import type { VariableDefinition, VariableValue } from '@companion-app/shared/Model/Variables.js'
 
 export interface FeedbackEntityModelExt extends FeedbackEntityModel {
 	controlId: string
@@ -44,7 +41,7 @@ export interface InternalModuleFragmentEvents {
 	checkFeedbacks: [...feedbackType: string[]]
 	checkFeedbacksById: [...feedbackIds: string[]]
 	regenerateVariables: []
-	setVariables: [variables: Record<string, CompanionVariableValue | undefined>]
+	setVariables: [variables: Record<string, VariableValue | undefined>]
 }
 
 export interface InternalModuleFragment extends EventEmitter<InternalModuleFragmentEvents> {
@@ -84,7 +81,7 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	 */
 	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void
 
-	getVariableDefinitions?: () => VariableDefinitionTmp[]
+	getVariableDefinitions?: () => VariableDefinition[]
 	updateVariables?: () => void
 
 	onVariablesChanged?: (changedVariablesSet: Set<string>, fromControlId: string | null) => void
@@ -92,7 +89,7 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 export interface ExecuteFeedbackResultWithReferences {
 	referencedVariables: string[]
-	value: CompanionFeedbackButtonStyleResult | CompanionVariableValue | undefined
+	value: CompanionFeedbackButtonStyleResult | VariableValue | undefined
 }
 
 export type InternalActionDefinition = SetOptional<

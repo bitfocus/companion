@@ -4,12 +4,15 @@ import type { ButtonStyleProperties } from './StyleModel.js'
 import { type ExpressionOrValue, schemaExpressionOrValue } from './Expression.js'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
-export type SomeReplaceableEntityModel =
-	| Pick<ActionEntityModel, 'id' | 'type' | 'definitionId' | 'options' | 'upgradeIndex'>
-	| Pick<
-			FeedbackEntityModel,
-			'id' | 'type' | 'definitionId' | 'style' | 'styleOverrides' | 'options' | 'isInverted' | 'upgradeIndex'
-	  >
+export type SomeReplaceableEntityModel = ReplaceableActionEntityModel | ReplaceableFeedbackEntityModel
+export type ReplaceableActionEntityModel = Pick<
+	ActionEntityModel,
+	'id' | 'type' | 'definitionId' | 'options' | 'upgradeIndex'
+>
+export type ReplaceableFeedbackEntityModel = Pick<
+	FeedbackEntityModel,
+	'id' | 'type' | 'definitionId' | 'style' | 'styleOverrides' | 'options' | 'isInverted' | 'upgradeIndex'
+>
 
 export enum EntityModelType {
 	Action = 'action',

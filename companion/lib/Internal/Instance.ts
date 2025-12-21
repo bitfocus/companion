@@ -12,7 +12,7 @@
 import debounceFn from 'debounce-fn'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -23,13 +23,14 @@ import type {
 	InternalFeedbackDefinition,
 	InternalModuleFragmentEvents,
 } from './Types.js'
-import type { CompanionFeedbackButtonStyleResult, CompanionVariableValues } from '@companion-module/base'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import type { InternalModuleUtils } from './Util.js'
 import LogController from '../Log/Controller.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('InternalInstance')
@@ -91,26 +92,26 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		)
 	}
 
-	getVariableDefinitions(): VariableDefinitionTmp[] {
-		const variables: VariableDefinitionTmp[] = [
+	getVariableDefinitions(): VariableDefinition[] {
+		const variables: VariableDefinition[] = [
 			{
-				label: 'Connection: Count total',
+				description: 'Connection: Count total',
 				name: 'instance_total',
 			},
 			{
-				label: 'Connection: Count disabled',
+				description: 'Connection: Count disabled',
 				name: 'instance_disabled',
 			},
 			{
-				label: 'Connection: Count errors',
+				description: 'Connection: Count errors',
 				name: 'instance_errors',
 			},
 			{
-				label: 'Connection: Count warnings',
+				description: 'Connection: Count warnings',
 				name: 'instance_warns',
 			},
 			{
-				label: 'Connection: Count OK',
+				description: 'Connection: Count OK',
 				name: 'instance_oks',
 			},
 		]
@@ -120,7 +121,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			const label = this.#instanceController.getLabelForConnection(connectionId)
 			if (label) {
 				variables.push({
-					label: `Connection Status: ${label}`,
+					description: `Connection Status: ${label}`,
 					name: `connection_${label}_status`,
 				})
 			}
@@ -410,7 +411,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 	}
 
 	updateVariables(): void {
-		const values: CompanionVariableValues = {
+		const values: VariableValues = {
 			instance_total: this.#instancesTotal,
 			instance_disabled: this.#instancesDisabled,
 			instance_errors: this.#instancesError,

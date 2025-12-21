@@ -24,6 +24,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { LayeredStylesOverrides } from './LayeredStylesOverrides.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -200,7 +201,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 			<CCol sm={8}>
 				<TextInputField
 					disabled={!entity.variableName || readonly}
-					value={value === undefined ? '' : String(value)}
+					value={stringifyVariableValue(value) ?? ''}
 					setValue={service.setVariableValue}
 					// setValid?: (valid: boolean) => void
 				/>

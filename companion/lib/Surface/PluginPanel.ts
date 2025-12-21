@@ -14,14 +14,14 @@ import {
 	OffsetConfigFields,
 	RotationConfigField,
 } from './CommonConfigFields.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ReadonlyDeep } from 'type-fest'
 import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import type { IpcWrapper } from '../Instance/Surface/IpcWrapper.js'
+import type { IpcWrapper } from '../Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
 	HostToSurfaceModuleEvents,
@@ -33,7 +33,7 @@ import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 
 interface SatelliteInputVariableInfo {
 	id: string
-	lastValue: CompanionVariableValue
+	lastValue: VariableValue
 }
 interface SatelliteOutputVariableInfo {
 	id: string
@@ -343,7 +343,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		if (!outputVariable.triggerUpdate)
 			outputVariable.triggerUpdate = debounceFn(
 				() => {
-					let expressionResult: CompanionVariableValue | undefined = VARIABLE_UNKNOWN_VALUE
+					let expressionResult: VariableValue | undefined = VARIABLE_UNKNOWN_VALUE
 
 					const expressionText = this.#config[outputVariable.id]
 					const parseResult = this.#executeExpression(expressionText ?? '', this.info.surfaceId, undefined)
@@ -429,7 +429,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Set the value of a variable from this surface
 	 */
-	inputVariableValue(variableName: string, variableValue: CompanionVariableValue): void {
+	inputVariableValue(variableName: string, variableValue: VariableValue): void {
 		const inputVariableInfo = this.#inputVariables[variableName]
 		if (!inputVariableInfo) return // Not known
 

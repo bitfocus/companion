@@ -20,7 +20,7 @@ import type {
 	InternalModuleFragmentEvents,
 } from './Types.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,

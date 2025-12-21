@@ -1,5 +1,5 @@
 import type { Registry } from '../Registry.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'

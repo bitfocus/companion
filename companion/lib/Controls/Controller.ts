@@ -32,7 +32,7 @@ import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
 import type { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type {
@@ -752,7 +752,7 @@ export class ControlsController {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: CompanionVariableValues | null
+		overrideVariableValues: VariableValues | null
 	): VariablesAndExpressionParser {
 		const control = controlId && this.getControl(controlId)
 

@@ -1,4 +1,4 @@
-import type { DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import React from 'react'
 import { components as SelectComponents, type OptionProps } from 'react-select'
 

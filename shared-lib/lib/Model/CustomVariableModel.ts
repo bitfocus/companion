@@ -1,9 +1,9 @@
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue } from './Variables.js'
 import type { CollectionBase } from './Collections.js'
 
 export interface CustomVariableDefinition {
 	description: string
-	defaultValue: CompanionVariableValue
+	defaultValue: VariableValue
 	persistCurrentValue: boolean
 	sortOrder: number
 	collectionId?: string

@@ -7,7 +7,7 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
-import type { CompanionVariableValue, CompanionVariableValues } from '@companion-module/base'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -20,7 +20,7 @@ import type { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
 export type SurfaceExecuteExpressionFn = (
 	str: string,
 	surfaceId: string,
-	injectedVariableValues?: CompanionVariableValues
+	injectedVariableValues?: VariableValues
 ) => ExecuteExpressionResult
 
 export interface SurfacePanelInfo {
@@ -66,7 +66,7 @@ export interface SurfacePanelEvents {
 	changePage: [forward: boolean]
 	pincodeKey: [key: number]
 
-	setCustomVariable: [variableId: string, value: CompanionVariableValue]
+	setCustomVariable: [variableId: string, value: VariableValue]
 
 	firmwareUpdateInfo: []
 

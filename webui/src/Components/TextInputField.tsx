@@ -188,7 +188,7 @@ const VariablesSelect = observer(function VariablesSelect({
 		for (const variable of baseVariableDefinitions) {
 			suggestions.push({
 				value: `${variable.connectionLabel}:${variable.name}`,
-				label: variable.label,
+				label: variable.description,
 			})
 		}
 

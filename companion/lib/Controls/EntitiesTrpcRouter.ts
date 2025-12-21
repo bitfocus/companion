@@ -10,7 +10,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import LogController from '../Log/Controller.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 const zodEntityOwner: z.ZodSchema<EntityOwner> = z.object({
 	parentId: z.string(),
@@ -371,7 +371,7 @@ export function createEntitiesTrpcRouter(
 					controlId: z.string(),
 				})
 			)
-			.query(({ input }): CompanionVariableValues => {
+			.query(({ input }): VariableValues => {
 				const control = controlsMap.get(input.controlId)
 				if (!control) return {}
 

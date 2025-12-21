@@ -18,7 +18,7 @@ import type { ControlActionSetAndStepsManager } from './ControlActionSetAndSteps
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import type { CompanionVariableValues } from '@companion-module/base'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
@@ -53,7 +53,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	readonly #executeExpressionInControl: (
 		expression: string,
 		requiredType?: string,
-		injectedVariableValues?: CompanionVariableValues
+		injectedVariableValues?: VariableValues
 	) => ExecuteExpressionResult
 	readonly #sendRuntimePropsChange: () => void
 
@@ -82,7 +82,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		executeExpressionInControl: (
 			expression: string,
 			requiredType?: string,
-			injectedVariableValues?: CompanionVariableValues
+			injectedVariableValues?: VariableValues
 		) => ExecuteExpressionResult,
 		isLayeredButton: boolean
 	) {

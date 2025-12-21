@@ -29,7 +29,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { PanelDefaults } from './Config.js'
 import debounceFn from 'debounce-fn'
 
@@ -542,7 +542,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Set the value of a custom variable
 	 */
-	#onSetCustomVariable(name: string, value: CompanionVariableValue): void {
+	#onSetCustomVariable(name: string, value: VariableValue): void {
 		this.#variables.custom.setValue(name, value)
 	}
 

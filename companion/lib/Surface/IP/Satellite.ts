@@ -25,7 +25,7 @@ import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
-import type { CompanionVariableValue } from '@companion-module/base'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type {
 	DrawButtonItem,
@@ -61,7 +61,7 @@ export interface SatelliteTransferableValue {
 }
 interface SatelliteInputVariableInfo {
 	id: string
-	lastValue: CompanionVariableValue
+	lastValue: VariableValue
 }
 interface SatelliteOutputVariableInfo {
 	id: string
@@ -420,7 +420,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Set the value of a variable from this surface
 	 */
-	setVariableValue(variableName: string, variableValue: CompanionVariableValue): void {
+	setVariableValue(variableName: string, variableValue: VariableValue): void {
 		const inputVariableInfo = this.#inputVariables[variableName]
 		if (!inputVariableInfo) return // Not known
 
@@ -463,7 +463,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		if (!outputVariable.triggerUpdate)
 			outputVariable.triggerUpdate = debounceFn(
 				() => {
-					let expressionResult: CompanionVariableValue | undefined = VARIABLE_UNKNOWN_VALUE
+					let expressionResult: VariableValue | undefined = VARIABLE_UNKNOWN_VALUE
 
 					const expressionText = this.#config[outputVariable.id]
 					const parseResult = this.#executeExpression(expressionText ?? '', this.info.surfaceId, undefined)
@@ -481,7 +481,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					outputVariable.lastValue = expressionResult
 
 					if (this.socket !== undefined) {
-						const base64Value = Buffer.from(expressionResult?.toString() ?? '').toString('base64')
+						const base64Value = Buffer.from(stringifyVariableValue(expressionResult) ?? '').toString('base64')
 						this.socket.sendMessage('VARIABLE-VALUE', null, this.deviceId, {
 							VARIABLE: name,
 							VALUE: base64Value,

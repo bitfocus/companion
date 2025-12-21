@@ -1,6 +1,5 @@
 import OSC from 'osc'
 import { ServiceOscBase } from './OscBase.js'
-import type { OSCSomeArguments } from '@companion-module/base'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
@@ -39,7 +38,7 @@ export class ServiceOscSender extends ServiceOscBase {
 	 * @param path - the OSC path
 	 * @param args - arguments to include
 	 */
-	send(host: string, port: number, path: string, args: OSCSomeArguments): void {
+	send(host: string, port: number, path: string, args: OSC.OscMessage['args']): void {
 		if (this.server !== undefined) {
 			this.server.send(
 				{

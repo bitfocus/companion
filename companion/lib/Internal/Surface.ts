@@ -9,7 +9,6 @@
  * this program.
  */
 
-import { combineRgb, type CompanionVariableValues } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import debounceFn from 'debounce-fn'
 import type {
@@ -25,12 +24,13 @@ import type {
 import type { ControlsController } from '../Controls/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
-import type { RunActionExtras, VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { InternalModuleUtils } from './Util.js'
 import { EventEmitter } from 'events'
+import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 const CHOICES_SURFACE_GROUP_WITH_VARIABLES: SomeCompanionInputField[] = [
 	{
@@ -247,8 +247,8 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		return this.#pageStore.getPageInfo(Number(thePageNumber))?.id
 	}
 
-	getVariableDefinitions(): VariableDefinitionTmp[] {
-		const variables: VariableDefinitionTmp[] = []
+	getVariableDefinitions(): VariableDefinition[] {
+		const variables: VariableDefinition[] = []
 
 		const surfaceInfos = this.#surfaceController.getDevicesList()
 		for (const surfaceGroup of surfaceInfos) {
@@ -256,15 +256,15 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				const groupId = surfaceGroup.id.startsWith('group:') ? surfaceGroup.id.slice(6) : surfaceGroup.id
 				variables.push(
 					{
-						label: `Surface Group name: ${surfaceGroup.displayName}`,
+						description: `Surface Group name: ${surfaceGroup.displayName}`,
 						name: `surface_group_${groupId}_name`,
 					},
 					{
-						label: `Surface Group member count: ${surfaceGroup.displayName}`,
+						description: `Surface Group member count: ${surfaceGroup.displayName}`,
 						name: `surface_group_${groupId}_surface_count`,
 					},
 					{
-						label: `Surface Group page: ${surfaceGroup.displayName}`,
+						description: `Surface Group page: ${surfaceGroup.displayName}`,
 						name: `surface_group_${groupId}_page`,
 					}
 				)
@@ -277,19 +277,19 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 				variables.push(
 					{
-						label: `Surface name: ${surface.displayName}`,
+						description: `Surface name: ${surface.displayName}`,
 						name: `surface_${surfaceId}_name`,
 					},
 					{
-						label: `Surface locked: ${surface.displayName}`,
+						description: `Surface locked: ${surface.displayName}`,
 						name: `surface_${surfaceId}_locked`,
 					},
 					{
-						label: `Surface location: ${surface.displayName}`,
+						description: `Surface location: ${surface.displayName}`,
 						name: `surface_${surfaceId}_location`,
 					},
 					{
-						label: `Surface page: ${surfaceGroup.displayName}`,
+						description: `Surface page: ${surfaceGroup.displayName}`,
 						name: `surface_${surfaceId}_page`,
 					}
 				)
@@ -301,7 +301,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 	#lastUpdateVariableNames: ReadonlySet<string> = new Set()
 	updateVariables(): void {
-		const values: CompanionVariableValues = {}
+		const values: VariableValues = {}
 
 		const surfaceInfos = this.#surfaceController.getDevicesList()
 		for (const surfaceGroup of surfaceInfos) {
@@ -683,8 +683,8 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				label: 'Surface: When on the selected page',
 				description: 'Change style when a surface is on the selected page',
 				feedbackStyle: {
-					color: combineRgb(255, 255, 255),
-					bgcolor: combineRgb(255, 0, 0),
+					color: 0xffffff,
+					bgcolor: 0xff0000,
 				},
 				showInvert: true,
 				options: [

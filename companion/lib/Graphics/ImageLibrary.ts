@@ -14,10 +14,10 @@ import { ImageLibraryCollections } from './ImageLibraryCollections.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
-import type { VariableDefinitionTmp } from '../Instance/Connection/ChildHandler.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import EventEmitter from 'node:events'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 10 // 10MB limit, just in case
 
@@ -500,12 +500,12 @@ export class ImageLibrary {
 	 * Update variable definitions for all images
 	 */
 	#updateImageVariableDefinitions(): void {
-		const definitions: VariableDefinitionTmp[] = []
+		const definitions: VariableDefinition[] = []
 
 		for (const [imageName, data] of Object.entries(this.#dbTable.all())) {
 			definitions.push({
 				name: imageName,
-				label: data.info.description || imageName,
+				description: data.info.description || imageName,
 			})
 		}
 
@@ -515,13 +515,13 @@ export class ImageLibrary {
 	/**
 	 * Get variable definitions for all images
 	 */
-	getVariableDefinitions(): VariableDefinitionTmp[] {
-		const definitions: VariableDefinitionTmp[] = []
+	getVariableDefinitions(): VariableDefinition[] {
+		const definitions: VariableDefinition[] = []
 
 		for (const [imageName, data] of Object.entries(this.#dbTable.all())) {
 			definitions.push({
 				name: imageName,
-				label: data.info.description || imageName,
+				description: data.info.description || imageName,
 			})
 		}
 

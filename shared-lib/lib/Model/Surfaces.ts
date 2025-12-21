@@ -1,5 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type { DropdownChoice } from '@companion-module/base'
+import type { DropdownChoice } from './Common.js'
 import type {
 	CompanionInputFieldCheckboxExtended,
 	CompanionInputFieldCustomVariableExtended,

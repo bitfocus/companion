@@ -1,4 +1,4 @@
-import type { IpcWrapper } from './IpcWrapper.js'
+import type { IpcWrapper } from '../Common/IpcWrapper.js'
 import type {
 	HIDDevice,
 	LogLevel,

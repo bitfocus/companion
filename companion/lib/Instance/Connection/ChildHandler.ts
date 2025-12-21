@@ -7,7 +7,6 @@ import type {
 	FeedbackInstance as ModuleFeedbackInstance,
 	HostToModuleEventsV0,
 	ModuleToHostEventsV0,
-	SomeEncodedCompanionConfigField,
 	LogMessageMessage,
 	SetStatusMessage,
 	SetActionDefinitionsMessage,
@@ -26,6 +25,8 @@ import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
+	UpdateFeedbackInstancesMessage,
+	UpdateActionInstancesMessage,
 } from '@companion-module/base/dist/host-api/api.js'
 import type { ModuleRegisterMessage, ModuleToHostEventsInit } from '@companion-module/base/dist/host-api/versions.js'
 import type { InstanceStatus } from '../Status.js'
@@ -37,7 +38,6 @@ import {
 	type CompanionOptionValues,
 	type LogLevel,
 } from '@companion-module/base'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceDefinitions } from '../Definitions.js'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { VariablesController } from '../../Variables/Controller.js'
@@ -46,6 +46,8 @@ import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import {
 	EntityModelType,
 	isValidFeedbackEntitySubType,
+	type ReplaceableActionEntityModel,
+	type ReplaceableFeedbackEntityModel,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 	type SomeEntityModel,
@@ -57,11 +59,21 @@ import {
 	doesModuleExpectLabelUpdates,
 	doesModuleUseSeparateUpgradeMethod,
 	doesModuleUseNewConfigLayout,
-} from '../ApiVersions.js'
-import { ConnectionEntityManager } from './EntityManager.js'
+} from './ApiVersions.js'
+import {
+	ConnectionEntityManager,
+	type EntityManagerActionEntity,
+	type EntityManagerAdapter,
+	type EntityManagerFeedbackEntity,
+} from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import { translateEntityInputFields } from './ConfigFields.js'
+import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFields.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { RunActionExtras } from './ChildHandlerApi.js'
+import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import { ConvertPresetDefinition } from './Presets.js'
 
 export interface ConnectionChildHandlerDependencies {
 	readonly controls: ControlsController
@@ -174,7 +186,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		this.usesNewConfigLayout = doesModuleUseNewConfigLayout(apiVersion0)
 
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
-			? new ConnectionEntityManager(this.#ipcWrapper, this.#deps.controls, this.connectionId)
+			? new ConnectionEntityManager(
+					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper),
+					this.#deps.controls,
+					this.connectionId
+				)
 			: null
 
 		const messageHandler = (msg: any) => {
@@ -262,10 +278,10 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	/**
 	 * Fetch the config fields from the instance to show in the ui
 	 */
-	async requestConfigFields(): Promise<SomeEncodedCompanionConfigField[]> {
+	async requestConfigFields(): Promise<SomeCompanionInputField[]> {
 		try {
 			const res = await this.#ipcWrapper.sendWithCb('getConfigFields', {})
-			return res.fields
+			return translateConnectionConfigFields(res.fields)
 		} catch (e: any) {
 			this.logger.warn('Error getting config fields: ' + e?.message)
 			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
@@ -820,14 +836,14 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
 		const invalidIds = []
 
-		const newVariables: VariableDefinitionTmp[] = []
+		const newVariables: VariableDefinition[] = []
 		for (const variable of msg.variables) {
 			// Ensure it is correctly formed
 			if (variable && typeof variable.name === 'string' && typeof variable.id === 'string') {
 				// Ensure the ids are valid
 				if (variable.id.match(idCheckRegex)) {
 					newVariables.push({
-						label: variable.name,
+						description: variable.name,
 						name: variable.id,
 					})
 				} else {
@@ -857,7 +873,20 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, this.#label, msg.presets)
+			const convertedPresets: PresetDefinition[] = []
+
+			for (const rawPreset of msg.presets) {
+				const convertedPreset = ConvertPresetDefinition(
+					this.logger,
+					this.connectionId,
+					this.#currentUpgradeIndex ?? undefined,
+					rawPreset.id,
+					rawPreset
+				)
+				if (convertedPreset) convertedPresets.push(convertedPreset)
+			}
+
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, convertedPresets)
 		} catch (e: any) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
@@ -1046,6 +1075,124 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	}
 }
 
+class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
+	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
+
+	constructor(ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>) {
+		this.#ipcWrapper = ipcWrapper
+	}
+
+	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
+		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
+
+		for (const [id, value] of actions) {
+			if (value) {
+				updateMessage.actions[id] = {
+					id: value.entity.id,
+					controlId: value.controlId,
+					actionId: value.entity.definitionId,
+					options: value.parsedOptions,
+
+					upgradeIndex: value.entity.upgradeIndex ?? null,
+					disabled: !!value.entity.disabled,
+				}
+			} else {
+				updateMessage.actions[id] = null
+			}
+		}
+
+		return this.#ipcWrapper.sendWithCb('updateActions', updateMessage)
+	}
+
+	async updateFeedbacks(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
+		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
+
+		for (const [id, value] of feedbacks) {
+			if (value) {
+				updateMessage.feedbacks[id] = {
+					id: value.entity.id,
+					controlId: value.controlId,
+					feedbackId: value.entity.definitionId,
+					options: value.parsedOptions,
+
+					image: value.imageSize,
+
+					isInverted: !!value.entity.isInverted,
+
+					upgradeIndex: value.entity.upgradeIndex ?? null,
+					disabled: !!value.entity.disabled,
+				}
+			} else {
+				updateMessage.feedbacks[id] = null
+			}
+		}
+
+		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
+	}
+
+	async upgradeActions(actions: EntityManagerActionEntity[], currentUpgradeIndex: number) {
+		return this.#ipcWrapper
+			.sendWithCb('upgradeActionsAndFeedbacks', {
+				actions: actions.map((act) => ({
+					id: act.entity.id,
+					controlId: act.controlId,
+					actionId: act.entity.definitionId,
+					options: act.entity.options,
+
+					upgradeIndex: act.entity.upgradeIndex ?? null,
+					disabled: !!act.entity.disabled,
+				})),
+				feedbacks: [],
+				defaultUpgradeIndex: 0, // Unused
+			})
+			.then((upgraded) => {
+				return upgraded.updatedActions.map(
+					(action) =>
+						({
+							id: action.id,
+							type: EntityModelType.Action,
+							definitionId: action.actionId,
+							options: action.options,
+							upgradeIndex: currentUpgradeIndex,
+						}) satisfies ReplaceableActionEntityModel
+				)
+			})
+	}
+
+	async upgradeFeedbacks(feedbacks: EntityManagerFeedbackEntity[], currentUpgradeIndex: number) {
+		return this.#ipcWrapper
+			.sendWithCb('upgradeActionsAndFeedbacks', {
+				actions: [],
+				feedbacks: feedbacks.map((fb) => ({
+					id: fb.entity.id,
+					controlId: fb.controlId,
+					feedbackId: fb.entity.definitionId,
+					options: fb.entity.options,
+
+					isInverted: !!fb.entity.isInverted,
+
+					upgradeIndex: fb.entity.upgradeIndex ?? null,
+					disabled: !!fb.entity.disabled,
+				})),
+				defaultUpgradeIndex: 0, // Unused
+			})
+			.then((upgraded) => {
+				return upgraded.updatedFeedbacks.map(
+					(feedback) =>
+						({
+							id: feedback.id,
+							type: EntityModelType.Feedback,
+							definitionId: feedback.feedbackId,
+							options: feedback.options,
+							style: feedback.style,
+							isInverted: feedback.isInverted,
+							upgradeIndex: currentUpgradeIndex,
+						}) satisfies ReplaceableFeedbackEntityModel
+				)
+			})
+	}
+}
+
 function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolean {
 	for (const option of options) {
 		if (option.type === 'checkbox' && (option.id === 'invert' || option.id === 'inverted')) {
@@ -1056,17 +1203,4 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 
 	// Nothing looked to be a user defined invert field
 	return true
-}
-
-export interface RunActionExtras {
-	controlId: string
-	surfaceId: string | undefined
-	location: ControlLocation | undefined
-	abortDelayed: AbortSignal
-	executionMode: 'sequential' | 'concurrent'
-}
-
-export interface VariableDefinitionTmp {
-	label: string
-	name: string
 }

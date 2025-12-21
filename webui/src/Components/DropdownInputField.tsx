@@ -1,4 +1,4 @@
-import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import classNames from 'classnames'
 import React, { useContext, useMemo, useCallback, useState } from 'react'
 import Select, { createFilter, components, type InputActionMeta } from 'react-select'

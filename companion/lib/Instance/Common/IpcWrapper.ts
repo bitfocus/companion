@@ -1,7 +1,7 @@
 import { assertNever } from '@companion-app/shared/Util.js'
 
 /**
- * This is a copy of IpcWrapper from companion-module/base, with ejson removed. This will likely be identical to the version in @companion-module/base@2.0.0
+ * This is based upon the IpcWrapper from companion-module/base, with ejson removed
  */
 
 const MAX_CALLBACK_ID = 1 << 28

@@ -14,7 +14,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  update-nodejs:
+  update-builtin-modules:
     if: ${{ github.repository_owner == 'bitfocus' }}
 
     runs-on: ubuntu-latest

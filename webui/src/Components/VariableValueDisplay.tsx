@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-// import { CompanionVariableValues } from '@companion-module/base'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
