@@ -14,10 +14,10 @@ import type {
 	CompanionPresetAction,
 	CompanionPresetFeedback,
 	CompanionTextPresetDefinition,
+	Complete,
+	ModuleLogger,
 } from '@companion-module/base'
-import type { Logger } from '../../Log/Controller.js'
 import { nanoid } from 'nanoid'
-import type { Complete } from '@companion-module/base/dist/util.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -25,7 +25,7 @@ const DefaultStepOptions: Complete<ActionStepOptions> = {
 }
 
 export function ConvertPresetDefinition(
-	logger: Logger,
+	logger: ModuleLogger,
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined,
 	presetId: string,

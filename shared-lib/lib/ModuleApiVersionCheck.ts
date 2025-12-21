@@ -3,6 +3,7 @@ import { ModuleInstanceType } from './Model/Instance.js'
 import { assertNever } from './Util.js'
 
 export const MODULE_BASE_VERSION = '1.14.0'
+// export const MODULE_BASE_VERSION = '1.99.0-0-nightly-feat-split-api-20251221-153951-fa12995'
 export const SURFACE_BASE_VERSION = '1.1.0'
 
 const moduleVersion = semver.parse(MODULE_BASE_VERSION)
