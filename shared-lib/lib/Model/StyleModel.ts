@@ -25,7 +25,7 @@ export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleBu
 }
 
 export interface DrawImageBuffer {
-	buffer: Buffer | undefined
+	buffer: Buffer | string | undefined // Can be a Buffer or a base64 string
 	x: number | undefined
 	y: number | undefined
 	width: number | undefined
