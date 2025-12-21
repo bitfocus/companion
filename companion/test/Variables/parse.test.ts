@@ -5,7 +5,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 describe('variable parsing', () => {
 	test('undefined string', () => {
 		expect(parseVariablesInString(undefined as any, {}, new Map(), VARIABLE_UNKNOWN_VALUE)).toMatchObject({
-			text: undefined,
+			text: '',
 			variableIds: new Set([]),
 		})
 	})
@@ -18,7 +18,6 @@ describe('variable parsing', () => {
 	})
 
 	test('simple unknown variable', () => {
-		console.log('new Map()', new Map())
 		expect(parseVariablesInString('$(abc:def)', {}, new Map(), VARIABLE_UNKNOWN_VALUE)).toMatchObject({
 			text: VARIABLE_UNKNOWN_VALUE,
 			variableIds: new Set(['abc:def']),
