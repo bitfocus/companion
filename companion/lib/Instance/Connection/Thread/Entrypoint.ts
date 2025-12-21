@@ -212,7 +212,7 @@ ipcWrapper
 		// Now load the plugin
 		instance = new InstanceWrapper(
 			msg.connectionId,
-			new HostContext(ipcWrapper, msg.connectionId),
+			new HostContext(ipcWrapper, msg.connectionId, moduleEntrypointInfo.upgradeScripts.length - 1),
 			moduleEntrypointInfo.factory,
 			moduleEntrypointInfo.upgradeScripts
 		)

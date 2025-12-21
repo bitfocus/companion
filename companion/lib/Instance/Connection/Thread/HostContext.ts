@@ -39,10 +39,12 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 	readonly #ipcWrapper: ModuleChildIpcWrapper
 
 	readonly #connectionId: string
+	readonly #currentUpgradeIndex: number
 
-	constructor(ipcWrapper: ModuleChildIpcWrapper, connectionId: string) {
+	constructor(ipcWrapper: ModuleChildIpcWrapper, connectionId: string, currentUpgradeIndex: number) {
 		this.#ipcWrapper = ipcWrapper
 		this.#connectionId = connectionId
+		this.#currentUpgradeIndex = currentUpgradeIndex
 	}
 
 	/** The connection status has changed */
@@ -127,7 +129,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			const convertedPreset = ConvertPresetDefinition(
 				this.#logger,
 				this.#connectionId,
-				undefined, // TODO
+				this.#currentUpgradeIndex,
 				id,
 				rawPreset
 			)
