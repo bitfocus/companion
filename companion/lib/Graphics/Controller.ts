@@ -19,7 +19,6 @@ import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import debounceFn from 'debounce-fn'
-import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DrawImageBuffer, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -40,6 +39,8 @@ import type * as imageRs from '@julusian/image-rs'
 import type { DataDatabase } from '../Data/Database.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from './ConvertGraphicsElements.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
@@ -442,13 +443,23 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Draw a preview of a button
 	 */
-	async drawPreview(buttonStyle: CompanionButtonStyleProps & { style: 'button' }): Promise<ImageResult> {
+	async drawPreview(rawElements: SomeButtonGraphicsElement[]): Promise<ImageResult> {
+		const parser = this.#variableValuesController.createVariablesAndExpressionParser(null, null, null)
+
+		// Compute the new drawing
+		const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
+			parser,
+			this.renderPixelBuffers.bind(this),
+			rawElements,
+			new Map(),
+			true
+		)
+
 		const drawStyle: DrawStyleModel = {
-			...buttonStyle,
+			style: 'button-layered',
 
-			textExpression: false,
+			elements: elements,
 
-			imageBuffers: [],
 			pushed: false,
 			cloud: false,
 			cloud_error: false,
@@ -457,12 +468,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 			stepCurrent: 1,
 			stepCount: 1,
-
-			show_topbar: buttonStyle.show_topbar,
-			alignment: buttonStyle.alignment ?? 'center:center',
-			pngalignment: buttonStyle.pngalignment ?? 'center:center',
-			png64: buttonStyle.png64 ?? null,
-			size: buttonStyle.size === 'auto' ? 'auto' : Number(buttonStyle.size),
 		}
 
 		const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(

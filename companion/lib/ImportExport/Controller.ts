@@ -41,6 +41,7 @@ import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { ImportController } from './Import.js'
 import { find_smallest_grid_for_page } from './Util.js'
+import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -316,10 +317,8 @@ export class ImportExportController {
 					const controlObj = importPage.controls?.[input.location.row]?.[input.location.column]
 					if (!controlObj) return null
 
-					const res = await this.#graphicsController.drawPreview({
-						...controlObj.style,
-						style: controlObj.type,
-					})
+					const controlObjLayered = controlObj as LayeredButtonModel
+					const res = await this.#graphicsController.drawPreview(controlObjLayered.style.layers)
 					return res?.style ? (res?.asDataUrl ?? null) : null
 				}),
 
