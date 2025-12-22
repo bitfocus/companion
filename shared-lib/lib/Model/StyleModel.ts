@@ -65,3 +65,5 @@ export enum ButtonGraphicsElementUsage {
 
 export type HorizontalAlignment = 'left' | 'center' | 'right'
 export type VerticalAlignment = 'top' | 'center' | 'bottom'
+
+export type CompositeElementOptionKey = `opt:${string}`

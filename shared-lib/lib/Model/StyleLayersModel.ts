@@ -7,6 +7,7 @@ import type {
 	ButtonGraphicsDecorationType,
 	HorizontalAlignment,
 	VerticalAlignment,
+	CompositeElementOptionKey,
 } from './StyleModel.js'
 
 export interface ButtonGraphicsDrawBase {
@@ -176,6 +177,17 @@ export interface ButtonGraphicsCircleElement
 	borderOnlyArc: ExpressionOrValue<boolean>
 }
 
+export interface ButtonGraphicsCompositeElement extends ButtonGraphicsElementBase, ButtonGraphicsBounds {
+	type: 'composite'
+	connectionId: string
+	elementId: string
+
+	/**
+	 * Custom elements have options defined by their composite definition
+	 */
+	[customKey: CompositeElementOptionKey]: ExpressionOrValue<any> | undefined
+}
+
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsTextDrawElement
@@ -193,3 +205,4 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsLineElement
 	| ButtonGraphicsGroupElement
 	| ButtonGraphicsCircleElement
+	| ButtonGraphicsCompositeElement

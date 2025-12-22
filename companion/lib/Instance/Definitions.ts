@@ -21,13 +21,14 @@ import {
 import type {
 	ClientEntityDefinition,
 	EntityDefinitionUpdate,
+	CompositeElementDefinitionUpdate,
+	UICompositeElementDefinition,
 } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { isExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import {
@@ -35,15 +36,30 @@ import {
 	CreateAdvancedFeedbackStyleOverrides,
 	ParseLegacyStyle,
 } from '../Resources/ConvertLegacyStyleToElements.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { Complete } from '@companion-module/base/dist/util.js'
+import { isExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+
+export interface CompositeElementDefinition {
+	id: string
+	name: string
+	description: string | undefined
+	options: SomeCompanionInputField[]
+	elements: SomeButtonGraphicsElement[]
+}
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
+	readonly updateCompositeElements: [elementIds: ReadonlySet<CompositeElementIdString>]
 }
+
+export type CompositeElementIdString = `${string}:${string}`
 
 type DefinitionsEvents = {
 	presets: [update: UIPresetDefinitionUpdate]
 	actions: [update: EntityDefinitionUpdate]
 	feedbacks: [update: EntityDefinitionUpdate]
+	compositeElements: [update: CompositeElementDefinitionUpdate]
 }
 
 /**
@@ -78,6 +94,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * The preset definitions
 	 */
 	#presetDefinitions: Record<string, Record<string, PresetDefinition>> = {}
+	/**
+	 * The composite element definitions
+	 */
+	#compositeElementDefinitions: Record<string, Record<string, CompositeElementDefinition>> = {}
 
 	#events = new EventEmitter<DefinitionsEvents>()
 
@@ -128,6 +148,24 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				const changes = toIterable(self.#events, 'feedbacks', signal)
 
 				yield { type: 'init', definitions: self.#feedbackDefinitions } satisfies EntityDefinitionUpdate
+
+				for await (const [update] of changes) {
+					yield update
+				}
+			}),
+
+			compositeElements: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#events, 'compositeElements', signal)
+
+				const fullDefinitions: Record<string, Record<string, UICompositeElementDefinition>> = {}
+				for (const [connectionId, definitions] of Object.entries(self.#compositeElementDefinitions)) {
+					fullDefinitions[connectionId] = self.#simplifyCompositeElementsForUi(definitions)
+				}
+
+				yield {
+					type: 'init',
+					definitions: fullDefinitions,
+				} satisfies CompositeElementDefinitionUpdate
 
 				for await (const [update] of changes) {
 					yield update
@@ -257,6 +295,14 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				connectionId,
 			})
 		}
+
+		delete this.#compositeElementDefinitions[connectionId]
+		if (this.#events.listenerCount('compositeElements') > 0) {
+			this.#events.emit('compositeElements', {
+				type: 'forget-connection',
+				connectionId,
+			})
+		}
 	}
 
 	/**
@@ -276,6 +322,20 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				assertNever(entityType)
 				return undefined
 		}
+	}
+
+	/**
+	 * Get a composite element definition
+	 */
+	getCompositeElementDefinition(connectionId: string, elementId: string): CompositeElementDefinition | undefined {
+		return this.#compositeElementDefinitions[connectionId]?.[elementId]
+	}
+
+	/**
+	 * Get all composite element definitions
+	 */
+	getAllCompositeElementDefinitions(): Record<string, Record<string, CompositeElementDefinition>> {
+		return this.#compositeElementDefinitions
 	}
 
 	convertPresetToPreviewControlModel(connectionId: string, presetId: string): PresetButtonModel | null {
@@ -395,6 +455,13 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		this.#updateVariablePrefixesAndStoreDefinitions(connectionId, config.label, newPresets)
 	}
 
+	setCompositeElementDefinitions(connectionId: string, definitions: Record<string, CompositeElementDefinition>): void {
+		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
+		if (!config) return
+
+		this.#updateVariablePrefixesAndStoreCompositeElements(connectionId, config.label, definitions)
+	}
+
 	/**
 	 * The ui doesnt need many of the preset properties. Simplify an array of them in preparation for sending to the ui
 	 */
@@ -426,6 +493,25 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	}
 
 	/**
+	 * Simplify composite element definitions for UI by removing the element property
+	 */
+	#simplifyCompositeElementsForUi(
+		definitions: Record<string, CompositeElementDefinition>
+	): Record<string, UICompositeElementDefinition> {
+		const result: Record<string, UICompositeElementDefinition> = {}
+
+		for (const [elementId, definition] of Object.entries(definitions)) {
+			result[elementId] = {
+				name: definition.name,
+				description: definition.description,
+				options: definition.options.map((opt) => ({ ...opt, id: `opt:${opt.id}` })),
+			} satisfies Complete<UICompositeElementDefinition>
+		}
+
+		return result
+	}
+
+	/**
 	 * Update all the variables in the presets to reference the supplied label
 	 * @param connectionId
 	 * @param labelTo
@@ -434,6 +520,14 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		if (this.#presetDefinitions[connectionId] !== undefined) {
 			this.#logger.silly('Updating presets for connection ' + labelTo)
 			this.#updateVariablePrefixesAndStoreDefinitions(connectionId, labelTo, this.#presetDefinitions[connectionId])
+		}
+		if (this.#compositeElementDefinitions[connectionId] !== undefined) {
+			this.#logger.silly('Updating composite elements for connection ' + labelTo)
+			this.#updateVariablePrefixesAndStoreCompositeElements(
+				connectionId,
+				labelTo,
+				this.#compositeElementDefinitions[connectionId]
+			)
 		}
 	}
 
@@ -445,6 +539,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		label: string,
 		presets: Record<string, PresetDefinition>
 	): void {
+		const emptySet = new Set<string>()
 		/*
 		 * Clean up variable references: $(label:variable)
 		 * since the name of the connection is dynamic. We don't want to
@@ -453,20 +548,20 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		for (const preset of Object.values(presets)) {
 			if (preset.type !== 'text') {
 				// Update variable references in style layers
-				replaceAllVariablesInElements(preset.model.style.layers, label)
+				replaceAllVariablesInElements(preset.model.style.layers, label, emptySet)
 
 				for (const feedback of preset.model.feedbacks || []) {
 					if (feedback.type === EntityModelType.Feedback && feedback.styleOverrides) {
 						for (const styleOverride of feedback.styleOverrides) {
 							if (styleOverride.override && isExpressionOrValue(styleOverride.override)) {
 								if (styleOverride.override.isExpression) {
-									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label)
+									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, emptySet)
 								} else if (
 									styleOverride.elementProperty === 'text' &&
 									typeof styleOverride.override.value === 'string'
 								) {
 									// TODO - this may be too strict/loose
-									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label)
+									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, emptySet)
 								}
 							}
 						}
@@ -497,19 +592,72 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			}
 		}
 	}
+
+	/**
+	 * Update all the variables in the composite elements to reference the supplied label, and store them
+	 */
+	#updateVariablePrefixesAndStoreCompositeElements(
+		connectionId: string,
+		label: string,
+		compositeElements: Record<string, CompositeElementDefinition>
+	): void {
+		const replaceSet = new Set(['options'])
+
+		/*
+		 * Clean up variable references: $(label:variable)
+		 * since the name of the connection is dynamic. We don't want to
+		 * demand that your presets MUST be dynamically generated.
+		 */
+		for (const compositeElement of Object.values(compositeElements)) {
+			// Update variable references in style layers
+			replaceAllVariablesInElements(compositeElement.elements, label, replaceSet)
+		}
+
+		const lastCompositeElementDefinitions = this.#compositeElementDefinitions[connectionId]
+		this.#compositeElementDefinitions[connectionId] = structuredClone(compositeElements)
+
+		// Report the changes
+		// Future: This could be better if it performed some diffing and only reported changed element ids
+		const changedElementIds = new Set([
+			...Object.keys(this.#compositeElementDefinitions ?? {}).map((id) => `${connectionId}:${id}` as const),
+			...Object.keys(lastCompositeElementDefinitions ?? {}).map((id) => `${connectionId}:${id}` as const),
+		])
+		if (changedElementIds.size > 0) this.emit('updateCompositeElements', changedElementIds)
+
+		if (this.#events.listenerCount('compositeElements') > 0) {
+			const newSimplifiedElements = this.#simplifyCompositeElementsForUi(compositeElements)
+			if (!lastCompositeElementDefinitions) {
+				this.#events.emit('compositeElements', {
+					type: 'add-connection',
+					connectionId,
+					definitions: newSimplifiedElements,
+				})
+			} else {
+				const lastSimplifiedElements = this.#simplifyCompositeElementsForUi(lastCompositeElementDefinitions)
+				const diff = diffObjects(lastSimplifiedElements, newSimplifiedElements)
+				if (diff) {
+					this.#events.emit('compositeElements', { type: 'update-connection', connectionId, ...diff })
+				}
+			}
+		}
+	}
 }
 
-function replaceAllVariablesInElements(elements: SomeButtonGraphicsElement[], label: string): void {
+function replaceAllVariablesInElements(
+	elements: SomeButtonGraphicsElement[],
+	label: string,
+	preserveLabels: Set<string>
+): void {
 	for (const element of elements) {
-		if (element.type === 'group') replaceAllVariablesInElements(element.children, label)
+		if (element.type === 'group') replaceAllVariablesInElements(element.children, label, preserveLabels)
 
 		// Future: This should be refactored to handle things more generically, based on the schemas
 		for (const [key, value] of Object.entries(element)) {
 			if (value && isExpressionOrValue(value)) {
 				if (value.isExpression) {
-					value.value = replaceAllVariables(value.value, label)
+					value.value = replaceAllVariables(value.value, label, preserveLabels)
 				} else if (element.type === 'text' && key === 'text') {
-					value.value = replaceAllVariables(value.value as string, label)
+					value.value = replaceAllVariables(value.value as string, label, preserveLabels)
 				}
 			}
 		}

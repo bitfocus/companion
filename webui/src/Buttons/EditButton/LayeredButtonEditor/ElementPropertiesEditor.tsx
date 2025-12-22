@@ -1,5 +1,5 @@
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import React from 'react'
+import React, { useContext } from 'react'
 import { observer } from 'mobx-react-lite'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CForm } from '@coreui/react'
@@ -12,6 +12,7 @@ import { FormPropertyField } from './ElementPropertiesUtil.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { ElementPropertiesProvider, type IsPropertyOverridden } from './ElementPropertiesContext.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
@@ -47,8 +48,23 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 	elementProps: SomeButtonGraphicsElement
 }) {
 	const { localVariablesStore } = useElementPropertiesContext()
+	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
 
-	const schema = elementSchemas[elementProps.type]
+	let schema: SomeCompanionInputField[] = elementSchemas[elementProps.type]
+
+	// If this is a composite element, get the full schema
+	if (elementProps.type === 'composite' && elementProps.connectionId && elementProps.elementId) {
+		const compositeDefinition = compositeElementDefinitions.getDefinition(
+			elementProps.connectionId,
+			elementProps.elementId
+		)
+
+		if (compositeDefinition) {
+			// Combine common element fields with the custom schema from the composite definition
+			schema = [...schema, ...compositeDefinition.options]
+		}
+	}
+
 	if (!schema) {
 		return <div>No schema found for element type: {elementProps.type}</div>
 	}

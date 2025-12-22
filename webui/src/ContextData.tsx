@@ -7,6 +7,7 @@ import { RootAppStoreContext, type RootAppStore } from '~/Stores/RootAppStore.js
 import { observable } from 'mobx'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { EventDefinitionsStore } from '~/Stores/EventDefinitionsStore.js'
+import { CompositeElementDefinitionsStore } from '~/Stores/CompositeElementDefinitionsStore.js'
 import { EntityDefinitionsStore } from '~/Stores/EntityDefinitionsStore.js'
 import { useEntityDefinitionsSubscription } from './Hooks/useEntityDefinitionsSubscription.js'
 import { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
@@ -32,6 +33,7 @@ import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVaria
 import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
 import { useImageLibrarySubscription } from './Hooks/useImageLibrarySubscription.js'
 import { trpc } from './Resources/TRPC.js'
+import { useCompositeElementDefinitionsSubscription } from './Hooks/useCompositeElementDefinitionsSubscription.js'
 import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
 import { useExpressionVariablesListSubscription } from './Hooks/useExpressionVariablesListSubscription.js'
 import { ExpressionVariablesListStore } from './Stores/ExpressionVariablesListStore.js'
@@ -81,6 +83,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			entityDefinitions: new EntityDefinitionsStore(),
 			eventDefinitions: new EventDefinitionsStore(),
+			compositeElementDefinitions: new CompositeElementDefinitionsStore(),
 
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
@@ -161,6 +164,9 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		undefined
 	)
 	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)
+	const compositeElementDefinitionsReady = useCompositeElementDefinitionsSubscription(
+		rootStore.compositeElementDefinitions
+	)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
 
 	const steps: boolean[] = [
@@ -187,6 +193,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		triggersListReady,
 		triggerGroupsReady,
 		entityDefinitionsReady,
+		compositeElementDefinitionsReady,
 		activeLearnRequestsReady,
 		imageLibraryReady,
 		imageLibraryCollectionsReady,

@@ -87,7 +87,7 @@ export function ConvertPresetDefinition(
 						},
 
 						style: {
-							layers: ConvertLayerPresetElements(logger, rawPreset.canvas, rawPreset.elements),
+							layers: ConvertLayerPresetElements(logger, connectionId, rawPreset.canvas, rawPreset.elements),
 						},
 						feedbacks: ConvertLayeredPresetFeedbacksToEntities(
 							rawPreset.feedbacks,

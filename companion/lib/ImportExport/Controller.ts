@@ -42,6 +42,7 @@ import type { DataDatabase } from '../Data/Database.js'
 import { ImportController } from './Import.js'
 import { find_smallest_grid_for_page } from './Util.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -318,7 +319,20 @@ export class ImportExportController {
 					if (!controlObj) return null
 
 					const controlObjLayered = controlObj as LayeredButtonModel
-					const res = await this.#graphicsController.drawPreview(controlObjLayered.style.layers)
+
+					const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
+
+					// Compute the new drawing
+					const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
+						this.#instancesController.definitions,
+						parser,
+						this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
+						controlObjLayered.style.layers,
+						new Map(),
+						true
+					)
+
+					const res = await this.#graphicsController.drawPreview(elements)
 					return res?.style ? (res?.asDataUrl ?? null) : null
 				}),
 

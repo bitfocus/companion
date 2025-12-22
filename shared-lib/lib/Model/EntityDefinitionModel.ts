@@ -44,3 +44,36 @@ export interface EntityDefinitionUpdateUpdateConnection extends ObjectsDiff<Clie
 	type: 'update-connection'
 	connectionId: string
 }
+
+export interface UICompositeElementDefinition {
+	name: string
+	description?: string
+	options: SomeCompanionInputField[]
+}
+
+export interface CompositeElementDefinitionInit {
+	type: 'init'
+	definitions: Record<string, Record<string, UICompositeElementDefinition>>
+}
+
+export interface CompositeElementDefinitionForgetConnection {
+	type: 'forget-connection'
+	connectionId: string
+}
+
+export interface CompositeElementDefinitionAddConnection {
+	type: 'add-connection'
+	connectionId: string
+	definitions: Record<string, UICompositeElementDefinition>
+}
+
+export interface CompositeElementDefinitionUpdateConnection extends ObjectsDiff<UICompositeElementDefinition> {
+	type: 'update-connection'
+	connectionId: string
+}
+
+export type CompositeElementDefinitionUpdate =
+	| CompositeElementDefinitionInit
+	| CompositeElementDefinitionForgetConnection
+	| CompositeElementDefinitionAddConnection
+	| CompositeElementDefinitionUpdateConnection
