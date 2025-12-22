@@ -84,6 +84,11 @@ export const HelpModal = observer(
 					__html: sanitizeHtml(marked.parse(content.markdown) as string, {
 						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
 						disallowedTagsMode: 'escape',
+						transformTags: {
+							a: (tagName, attribs) => {
+								return { tagName, attribs: { ...attribs, target: '_blank', rel: 'noopener noreferrer' } }
+							},
+						},
 					}),
 				}
 			: undefined

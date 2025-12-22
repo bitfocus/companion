@@ -38,6 +38,7 @@ function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
 			connectionCollections: undefined,
 			companionBuild: undefined,
 			...obj,
+			instances: obj.instances as any,
 			version: 8,
 		}
 	} else {
@@ -46,6 +47,7 @@ function convertImportToV8(obj: SomeExportv4): SomeExportv6 {
 			connectionCollections: undefined,
 			companionBuild: undefined,
 			...obj,
+			instances: obj.instances as any,
 			version: 8,
 		}
 	}

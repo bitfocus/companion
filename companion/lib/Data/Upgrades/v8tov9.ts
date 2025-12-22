@@ -31,6 +31,7 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 		const newObj: ExportFullv6 = {
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 9,
 		}
 		if (newObj.pages) {
@@ -44,6 +45,7 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 			connectionCollections: undefined,
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 9,
 		}
 		convertPageControls(newObj.page)
@@ -54,6 +56,7 @@ function convertImportToV9(obj: SomeExportv4): SomeExportv6 {
 			connectionCollections: undefined,
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 9,
 		}
 		return newObj

@@ -16,20 +16,6 @@ export interface ExportBase<Type extends string> {
 	readonly companionBuild: string | undefined // The build of the companion that exported this
 }
 
-export interface ExportInstanceConfigv6 {
-	label: string
-	config: unknown
-	secrets: unknown | undefined
-	isFirstInit: boolean
-	lastUpgradeIndex: number
-	instance_type: string
-	enabled: boolean
-	sortOrder: number
-	moduleVersionId: string | null
-	updatePolicy: InstanceVersionUpdatePolicy // TODO - upgrade script
-	collectionId?: string
-}
-
 export interface ExportFullv6 extends ExportBase<'full'> {
 	pages?: Record<number, ExportPageContentv6>
 	triggers?: Record<string, ExportTriggerContentv6>
@@ -91,7 +77,7 @@ export type ExportInstanceFullv6 = {
 	lastUpgradeIndex: number
 	moduleVersionId?: string // Added in v4.0
 	updatePolicy?: InstanceVersionUpdatePolicy // Added in v4.0
-	instance_type: string
+	moduleId: string
 	enabled: boolean
 	sortOrder?: number
 	collectionId?: string
@@ -99,7 +85,7 @@ export type ExportInstanceFullv6 = {
 
 export type ExportInstanceMinimalv6 = {
 	label: string
-	instance_type: string
+	moduleId: string
 	lastUpgradeIndex: number
 	moduleVersionId?: string // Added in v4.0
 	updatePolicy?: InstanceVersionUpdatePolicy // Added in v4.0

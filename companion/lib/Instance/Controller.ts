@@ -951,7 +951,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const obj = minimal
 			? ({
-					instance_type: rawObj.moduleId,
+					moduleId: rawObj.moduleId,
 					label: rawObj.label,
 					lastUpgradeIndex: rawObj.lastUpgradeIndex,
 					moduleVersionId: rawObj.moduleVersionId ?? undefined,
@@ -961,13 +961,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				} satisfies Complete<ExportInstanceMinimalv6>)
 			: ({
 					...rawObj,
-					instance_type: rawObj.moduleId, // Rename for export
+					moduleId: rawObj.moduleId, // Rename for export
 					moduleVersionId: rawObj.moduleVersionId ?? undefined,
 					secrets: includeSecrets ? rawObj.secrets : undefined,
 				} satisfies ExportInstanceFullv6)
-
-		// Remove the moduleId property
-		delete (obj as Partial<typeof rawObj>).moduleId
 
 		return clone ? structuredClone(obj) : obj
 	}

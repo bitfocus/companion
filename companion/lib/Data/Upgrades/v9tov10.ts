@@ -3,6 +3,7 @@ import type { Logger } from '../../Log/Controller.js'
 import { cloneDeep } from 'lodash-es'
 import type {
 	ExportFullv6,
+	ExportInstancesv6,
 	ExportPageModelv6,
 	ExportTriggersListv6,
 	SomeExportv6,
@@ -246,30 +247,42 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 	}
 }
 
+function fixupImportInstances(obj: ExportInstancesv6 | undefined): void {
+	if (!obj) return
+
+	for (const config of Object.values(obj)) {
+		config.moduleId = config.moduleId || config.instance_type
+		delete config.instance_type
+	}
+}
+
 function convertImportToV10(obj: SomeExportv6): SomeExportv6 {
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {
 			...cloneDeep(obj),
 			version: 10,
 		}
-		// if (newObj.pages) {
-		// 	for (const page of Object.values(newObj.pages)) {
-		// 		convertPageControls(page)
-		// 	}
-		// }
+
+		fixupImportInstances(newObj.instances)
+
 		return newObj
 	} else if (obj.type == 'page') {
 		const newObj: ExportPageModelv6 = {
 			...cloneDeep(obj),
 			version: 10,
 		}
-		// convertPageControls(newObj.page)
+
+		fixupImportInstances(newObj.instances)
+
 		return newObj
 	} else if (obj.type == 'trigger_list') {
 		const newObj: ExportTriggersListv6 = {
 			...cloneDeep(obj),
 			version: 10,
 		}
+
+		fixupImportInstances(newObj.instances)
+
 		return newObj
 	} else {
 		// No change

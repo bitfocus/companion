@@ -46,6 +46,7 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 		const newObj: ExportFullv6 = {
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 6,
 		}
 
@@ -65,6 +66,7 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 			connectionCollections: undefined,
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 6,
 		}
 
@@ -77,6 +79,7 @@ function convertImportToV6(obj: SomeExportv4): SomeExportv6 {
 			triggerCollections: undefined,
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 6,
 		}
 
