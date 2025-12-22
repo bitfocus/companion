@@ -1,7 +1,7 @@
 import z from 'zod'
 import type { ActionSetId } from './ActionModel.js'
-import type { ButtonStyleProperties } from './StyleModel.js'
 import { type ExpressionOrValue, schemaExpressionOrValue } from './Expression.js'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel = ReplaceableActionEntityModel | ReplaceableFeedbackEntityModel
@@ -11,8 +11,11 @@ export type ReplaceableActionEntityModel = Pick<
 >
 export type ReplaceableFeedbackEntityModel = Pick<
 	FeedbackEntityModel,
-	'id' | 'type' | 'definitionId' | 'style' | 'styleOverrides' | 'options' | 'isInverted' | 'upgradeIndex'
->
+	'id' | 'type' | 'definitionId' | 'styleOverrides' | 'options' | 'isInverted' | 'upgradeIndex'
+> & {
+	// Backwards compatibility for old modules
+	style?: CompanionFeedbackButtonStyleResult
+}
 
 export enum EntityModelType {
 	Action = 'action',
@@ -49,8 +52,6 @@ export interface FeedbackEntityModel extends EntityModelBase {
 	isInverted?: boolean
 	/** If in a list that produces local-variables, this entity value will be exposed under this name */
 	variableName?: string
-	/** When in a list that supports advanced feedbacks, this style can be set */
-	style?: Partial<ButtonStyleProperties>
 
 	/** When in a style list on a layered button, some overrides to apply */
 	styleOverrides?: FeedbackEntityStyleOverride[]
