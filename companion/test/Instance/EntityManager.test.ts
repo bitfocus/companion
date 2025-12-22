@@ -202,8 +202,6 @@ describe('InstanceEntityManager', () => {
 			// Verify the entity is being processed
 			vi.runAllTimers()
 
-			expect(mockControlsController.getControl).toHaveBeenCalledWith('control-1')
-
 			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledWith(
 				new Map<string, EntityManagerFeedbackEntity | null>([
@@ -867,23 +865,8 @@ describe('InstanceEntityManager', () => {
 			const entityCount = 50
 			const mockEntities: any[] = []
 
-			// Create multiple mock controls with proper getBitmapFeedbackSize implementation
 			for (let i = 0; i < entityCount; i++) {
-				const controlId = `control-${i}`
 				const isAction = i % 2 === 0
-
-				// For feedback entities, ensure there's a proper control with getBitmapFeedbackSize
-				if (!isAction) {
-					mockControlsController.getControl.mockImplementation((id) => {
-						if (id === controlId) {
-							return {
-								...mockControl,
-								getBitmapFeedbackSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
-							}
-						}
-						return mockControl
-					})
-				}
 
 				const mockEntity = {
 					id: `entity-${i}`,

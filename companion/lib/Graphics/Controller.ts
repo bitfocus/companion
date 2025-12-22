@@ -259,43 +259,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					const control = controlId ? this.#controlsController.getControl(controlId) : undefined
 					const buttonStyle = (await control?.getDrawStyle()) ?? undefined
 
-					if (location && locationIsInBounds) {
-						// Update the internal b_text_1_4 variable
-						setImmediate(() => {
-							const values: VariableValues = {}
-
-							// Update text, if it is present
-							values[`b_text_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' ? buttonStyle.text : undefined
-							const bankIndex = xyToOldBankIndex(location.column, location.row)
-							if (bankIndex)
-								values[`b_text_${location.pageNumber}_${bankIndex}`] =
-									buttonStyle?.style === 'button' ? buttonStyle.text : undefined
-
-							values[`b_pushed_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button-layered' ? buttonStyle.pushed : undefined
-
-							// Update step
-							values[`b_step_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button-layered' ? buttonStyle.stepCurrent : undefined
-							values[`b_step_count_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button-layered' ? buttonStyle.stepCount : undefined
-
-							values[`b_actions_running_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button-layered' ? (buttonStyle.action_running ?? false) : undefined
-
-							values[`b_status_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button-layered' ? (buttonStyle.button_status ?? 'good') : undefined
-							// Submit the updated values
-							if (this.#pendingVariables) {
-								Object.assign(this.#pendingVariables, values)
-							} else {
-								this.#pendingVariables = values
-							}
-							this.#debouncePendingVariables()
-						})
-					}
-
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
 						const pagename = this.#pageStore.getPageName(location.pageNumber)
@@ -337,6 +300,43 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						}
 					} else {
 						render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
+					}
+
+					if (location && locationIsInBounds) {
+						// Update the internal b_text_1_4 variable
+						setImmediate(() => {
+							const values: VariableValues = {}
+
+							// Update text, if it is present
+							values[`b_text_${location.pageNumber}_${location.row}_${location.column}`] = render
+								? render.style?.text?.text
+								: undefined
+							const bankIndex = xyToOldBankIndex(location.column, location.row)
+							if (bankIndex)
+								values[`b_text_${location.pageNumber}_${bankIndex}`] = render ? render.style?.text?.text : undefined
+
+							values[`b_pushed_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button-layered' ? buttonStyle.pushed : undefined
+
+							// Update step
+							values[`b_step_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button-layered' ? buttonStyle.stepCurrent : undefined
+							values[`b_step_count_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button-layered' ? buttonStyle.stepCount : undefined
+
+							values[`b_actions_running_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button-layered' ? (buttonStyle.action_running ?? false) : undefined
+
+							values[`b_status_${location.pageNumber}_${location.row}_${location.column}`] =
+								buttonStyle?.style === 'button-layered' ? (buttonStyle.button_status ?? 'good') : undefined
+							// Submit the updated values
+							if (this.#pendingVariables) {
+								Object.assign(this.#pendingVariables, values)
+							} else {
+								this.#pendingVariables = values
+							}
+							this.#debouncePendingVariables()
+						})
 					}
 
 					// Only cache the render, if it is within the valid bounds
