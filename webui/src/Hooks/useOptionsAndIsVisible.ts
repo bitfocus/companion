@@ -62,8 +62,9 @@ export function parseIsVisibleFn(
 			case 'expression': {
 				const expression = ParseExpression(option.isVisibleUi.fn)
 				const userData = deepFreeze(toJS(option.isVisibleUi.data))
-				return (options: CompanionOptionValues) => {
+				return (optionsRaw: CompanionOptionValues) => {
 					try {
+						const options = toJS(optionsRaw)
 						const val = ResolveExpression(
 							expression,
 							(props: GetVariableValueProps) => {
