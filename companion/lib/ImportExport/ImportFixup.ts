@@ -1,6 +1,6 @@
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type { SomeButtonModel, NormalButtonModel, LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { NormalButtonModel, LayeredButtonModel, ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
@@ -112,12 +112,8 @@ export function fixupButtonControl(
 		type: 'button',
 		options: structuredClone(control.options),
 		style: structuredClone(control.style),
-		feedbacks: [],
-		steps: {},
-		localVariables: [],
+		...fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap),
 	}
-
-	fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap)
 
 	referencesUpdater.visitButtonDrawStyle(result.style)
 
@@ -134,12 +130,8 @@ export function fixupLayeredButtonControl(
 		type: 'button-layered',
 		options: structuredClone(control.options),
 		style: structuredClone(control.style),
-		feedbacks: [],
-		steps: {},
-		localVariables: [],
+		...fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap),
 	}
-
-	fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap)
 
 	referencesUpdater.visitDrawElements(result.style.layers)
 
@@ -151,19 +143,10 @@ function fixupButtonControlBase(
 	control: ExportControlv6,
 	referencesUpdater: VisitorReferencesUpdater,
 	instanceIdMap: InstanceAppliedRemappings
-): SomeButtonModel | null {
+): ButtonModelBase {
 	// Future: this does not feel durable
 
-	if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
-		return {
-			type: control.type,
-		}
-	}
-
-	const result: NormalButtonModel = {
-		type: 'button',
-		options: structuredClone(control.options),
-		style: structuredClone(control.style),
+	const result: ButtonModelBase = {
 		feedbacks: [],
 		steps: {},
 		localVariables: [],
@@ -206,7 +189,7 @@ function fixupButtonControlBase(
 		}
 	}
 
-	referencesUpdater.visitEntities([], allEntities).visitButtonDrawStyle(result.style)
+	referencesUpdater.visitEntities([], allEntities)
 
 	return result
 }

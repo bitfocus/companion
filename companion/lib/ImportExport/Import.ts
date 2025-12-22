@@ -361,7 +361,11 @@ export class ImportController {
 				if (control) {
 					// Import the control
 					let fixedControlObj: SomeButtonModel
-					if (control.type === 'button') {
+					if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
+						fixedControlObj = {
+							type: control.type,
+						}
+					} else if (control.type === 'button') {
 						fixedControlObj = fixupButtonControl(this.#logger, control, referencesUpdater, instanceIdMap)
 					} else if (control.type === 'button-layered') {
 						fixedControlObj = fixupLayeredButtonControl(this.#logger, control, referencesUpdater, instanceIdMap)
