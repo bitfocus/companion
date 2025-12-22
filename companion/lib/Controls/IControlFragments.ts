@@ -4,6 +4,7 @@ import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSe
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { CompositeElementIdString } from '../Instance/Definitions.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &
@@ -91,6 +92,12 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * @param allChangedVariables - variables with changes
 	 */
 	onVariablesChanged(allChangedVariables: Set<string>): void
+
+	/**
+	 * Propagate composite element changes
+	 * @param allChangedElementIds - composite element ids with changes
+	 */
+	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void
 
 	/**
 	 * Get an element from the layered style by ID

@@ -1878,9 +1878,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base@npm:1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42":
-  version: 1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42
-  resolution: "@companion-module/base@npm:1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42"
+"@companion-module/base@npm:1.99.0-nightly-feat-graphics-overhaul-20251222-140818-911eb31":
+  version: 1.99.0-nightly-feat-graphics-overhaul-20251222-140818-911eb31
+  resolution: "@companion-module/base@npm:1.99.0-nightly-feat-graphics-overhaul-20251222-140818-911eb31"
   dependencies:
     ajv: "npm:^8.17.1"
     colord: "npm:^2.9.3"
@@ -1891,7 +1891,7 @@ __metadata:
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/c7efdf17eff73a8af60c515791f83fd73ce8b7c56a466f608c1b9b6c8093abf023b65aeb6a55fb240411280dc14afc854ccb8a8b1cf0e93e53342a7b7aec2a23
+  checksum: 10c0/b6f51f1a439be7bd0ddaee045e500e68dd7db1a31cb78d161fb02d7ad12fd442c4546351fbfbbcbf988bbdfa4d5b7356157690a65b71cf3a223af74e680a1c3e
   languageName: node
   linkType: hard
 
@@ -10733,7 +10733,7 @@ __metadata:
   resolution: "companion@workspace:companion"
   dependencies:
     "@companion-app/shared": "npm:*"
-    "@companion-module/base": "npm:1.99.0-nightly-feat-graphics-overhaul-20251218-180353-47b5c42"
+    "@companion-module/base": "npm:1.99.0-nightly-feat-graphics-overhaul-20251222-140818-911eb31"
     "@companion-surface/host": "npm:~1.0.0"
     "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^2.1.1"

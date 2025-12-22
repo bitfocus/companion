@@ -26,8 +26,9 @@ import type {
 	ButtonGraphicsLineElement,
 	ButtonGraphicsBounds,
 	ButtonGraphicsElementBase,
+	ButtonGraphicsCompositeElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsElementUsage, type CompositeElementOptionKey } from '@companion-app/shared/Model/StyleModel.js'
 
 export function ConvertLayeredPresetFeedbacksToEntities(
 	rawFeedbacks: CompanionPresetLayeredFeedback[] | undefined,
@@ -67,6 +68,7 @@ export function ConvertLayeredPresetFeedbacksToEntities(
 
 export function ConvertLayerPresetElements(
 	logger: Logger,
+	connectionId: string,
 	canvas: ButtonGraphicsCanvasElementModule | undefined,
 	elements: SomeButtonGraphicsElementModule[]
 ): SomeButtonGraphicsElement[] {
@@ -84,13 +86,14 @@ export function ConvertLayerPresetElements(
 	return [
 		canvasElement,
 		...elements
-			.map((el) => convertLayeredPresetElement(logger, el))
+			.map((el) => convertLayeredPresetElement(logger, connectionId, el))
 			.filter((el): el is SomeButtonGraphicsElement => el !== null),
 	]
 }
 
 function convertLayeredPresetElement(
 	logger: Logger,
+	connectionId: string,
 	element: SomeButtonGraphicsElementModule
 ): SomeButtonGraphicsElement | null {
 	const elementType = element.type
@@ -119,7 +122,7 @@ function convertLayeredPresetElement(
 				...convertElementSize(element),
 
 				children: element.children
-					.map((child) => convertLayeredPresetElement(logger, child))
+					.map((child) => convertLayeredPresetElement(logger, connectionId, child))
 					.filter((el): el is SomeButtonGraphicsElement => el !== null),
 			} satisfies ButtonGraphicsGroupElement
 		case 'image':
@@ -169,6 +172,24 @@ function convertLayeredPresetElement(
 					isExpression: false,
 				}),
 			} satisfies ButtonGraphicsLineElement
+		case 'composite': {
+			const options: Record<CompositeElementOptionKey, ExpressionOrValue<any>> = {}
+			for (const [key, value] of Object.entries(element.options || {})) {
+				options[`opt:${key}`] = convertModuleExpressionOrValue(value, undefined as any) // Convert, and omit invalid values
+			}
+
+			return {
+				type: 'composite',
+				...convertElementBasicProperties(element, 'Composite'),
+
+				...convertElementSize(element),
+
+				connectionId,
+				elementId: element.elementId,
+
+				...options,
+			} satisfies ButtonGraphicsCompositeElement
+		}
 		default:
 			assertNever(element)
 			logger.info('Unsupported element type in layered-button preset:', elementType)
