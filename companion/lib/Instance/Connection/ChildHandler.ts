@@ -75,7 +75,7 @@ import type { RunActionExtras } from './ChildHandlerApi.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { ConvertPresetDefinition } from './Presets.js'
 
-const moduleFeedbackSize = { width: 72, height: 72 } // Backwards compatibility for modules that expect feedback size
+const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
 
 export interface ConnectionChildHandlerDependencies {
 	readonly controls: ControlsController

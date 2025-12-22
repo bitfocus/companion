@@ -12,7 +12,7 @@
 import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
-import { DrawBounds, type GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
+import { type GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
 import type { DrawImageBuffer, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
@@ -48,8 +48,6 @@ const LOCK_ICON_STYLE: ImageResultProcessedStyle = {
 const emptySet: ReadonlySet<string> = new Set()
 
 export class GraphicsRenderer {
-	static TOPBAR_BOUNDS = new DrawBounds(0, 0, 72, ButtonDecorationRenderer.DEFAULT_HEIGHT)
-
 	static #IMAGE_CACHE = new Map<string, Image[]>()
 
 	private static calculateTransforms(resolution: { width: number; height: number }) {

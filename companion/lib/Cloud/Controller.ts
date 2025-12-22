@@ -315,7 +315,7 @@ export class CloudController {
 			if (!control) {
 				continue
 			}
-			if (control.type !== 'button') {
+			if (control.type !== 'button-layered') {
 				continue
 			}
 			const drawStyle = control.getLastDrawStyle()
@@ -340,7 +340,7 @@ export class CloudController {
 					pushed: control.supportsPushed && control.pushed,
 					actions_running: drawStyle.action_running,
 					bank_status: drawStyle.button_status,
-					style: 'button',
+					style: 'button-layered',
 				},
 			})
 		}
