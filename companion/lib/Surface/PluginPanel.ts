@@ -228,7 +228,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				}
 
 				if (controlDefinition.style.text) {
-					drawProps.text = style.text?.text || ''
+					drawProps.text = style?.text?.text || ''
 				}
 				// if (controlDefinition.style.textStyle) {
 				// 	params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'

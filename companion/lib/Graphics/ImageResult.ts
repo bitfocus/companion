@@ -42,7 +42,7 @@ export class ImageResult {
 	/**
 	 * Image draw style
 	 */
-	readonly style: ImageResultProcessedStyle
+	readonly style: ImageResultProcessedStyle | null
 
 	readonly #drawNativeCache = new Map<string, Promise<Uint8Array>>()
 	readonly #drawNative: ImageResultNativeDrawFn
@@ -52,7 +52,7 @@ export class ImageResult {
 	 */
 	readonly updated: number
 
-	constructor(dataUrl: string, style: ImageResultProcessedStyle, drawNative: ImageResultNativeDrawFn) {
+	constructor(dataUrl: string, style: ImageResultProcessedStyle | null, drawNative: ImageResultNativeDrawFn) {
 		this.#dataUrl = dataUrl
 		this.style = style
 		this.#drawNative = drawNative
@@ -68,7 +68,7 @@ export class ImageResult {
 	}
 
 	get bgcolor(): number {
-		return this.style.color?.color ?? 0
+		return this.style?.color?.color ?? 0
 	}
 
 	/**

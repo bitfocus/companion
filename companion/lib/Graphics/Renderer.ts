@@ -115,7 +115,7 @@ export class GraphicsRenderer {
 			// console.timeEnd('drawBlankImage')
 			GraphicsRenderer.#drawBlankImage(img, options, location)
 
-			return new ImageResult(img.toDataURLSync(), { type: 'button' }, async (width, height, rotation, format) => {
+			return new ImageResult(img.toDataURLSync(), null, async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
 				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
 					GraphicsRenderer.#drawBlankImage(img, options, location)

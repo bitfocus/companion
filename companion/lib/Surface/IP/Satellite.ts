@@ -314,8 +314,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		if (!this.socket) return
 
 		if (controlDefinition.style.colors) {
-			let bgcolor = style.color ? parseColor(style.color.color).replaceAll(' ', '') : 'rgb(0,0,0)'
-			let fgcolor = style.text ? parseColor(style.text.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+			let bgcolor = style?.color ? parseColor(style.color.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+			let fgcolor = style?.text ? parseColor(style.text.color).replaceAll(' ', '') : 'rgb(0,0,0)'
 
 			if (controlDefinition.style.colors !== 'rgb') {
 				bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
@@ -327,23 +327,23 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		}
 
 		if (controlDefinition.style.text) {
-			const text = style.text?.text || ''
+			const text = style?.text?.text || ''
 			params['TEXT'] = Buffer.from(text).toString('base64')
 		}
 		if (controlDefinition.style.textStyle) {
-			params['FONT_SIZE'] = style.text?.size ?? 'auto'
+			params['FONT_SIZE'] = style?.text?.size ?? 'auto'
 		}
 
 		let type = 'BUTTON'
-		if (style.type === 'pageup') {
+		if (style?.type === 'pageup') {
 			type = 'PAGEUP'
-		} else if (style.type === 'pagedown') {
+		} else if (style?.type === 'pagedown') {
 			type = 'PAGEDOWN'
-		} else if (style.type === 'pagenum') {
+		} else if (style?.type === 'pagenum') {
 			type = 'PAGENUM'
 		}
 
-		params['PRESSED'] = typeof style !== 'string' && !!style.state?.pushed
+		params['PRESSED'] = typeof style !== 'string' && !!style?.state?.pushed
 		params['TYPE'] = type
 
 		if (!this.socket) return
