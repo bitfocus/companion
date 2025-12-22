@@ -1,8 +1,4 @@
-import type {
-	ButtonModelBase,
-	NormalButtonOptions,
-	NormalButtonSteps,
-} from '@companion-app/shared/Model/ButtonModel.js'
+import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -536,7 +532,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * Update the step operation mode or expression upon button options change
 	 * @param options
 	 */
-	stepExpressionUpdate(options: NormalButtonOptions): void {
+	stepExpressionUpdate(options: ButtonOptionsBase): void {
 		if (options.stepProgression === 'expression') {
 			// It may have changed, assume it has and purge the existing state
 			this.#currentStep = {

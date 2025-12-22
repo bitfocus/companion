@@ -13,7 +13,7 @@ import type {
 } from '../../IControlFragments.js'
 import type {
 	PresetButtonModel,
-	NormalButtonOptions,
+	LayeredButtonOptions,
 	NormalButtonRuntimeProps,
 	ButtonStatus,
 } from '@companion-app/shared/Model/ButtonModel.js'
@@ -74,7 +74,7 @@ export class ControlButtonPreset
 	/**
 	 * The config of this button
 	 */
-	options!: NormalButtonOptions
+	options!: LayeredButtonOptions
 
 	/**
 	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
@@ -128,6 +128,7 @@ export class ControlButtonPreset
 			...structuredClone(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
 			stepProgression: 'auto',
+			canModifyStyleInApis: false,
 		}
 
 		if (storage.type !== 'preset:button')

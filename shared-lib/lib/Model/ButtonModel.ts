@@ -1,14 +1,8 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import type { SomeButtonGraphicsElement } from './StyleLayersModel.js'
-import type { ButtonStyleProperties } from './StyleModel.js'
 
-export type SomeButtonModel =
-	| PageNumberButtonModel
-	| PageUpButtonModel
-	| PageDownButtonModel
-	| NormalButtonModel
-	| LayeredButtonModel
+export type SomeButtonModel = PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | LayeredButtonModel
 
 export interface PageNumberButtonModel {
 	readonly type: 'pagenum'
@@ -29,18 +23,10 @@ export interface ButtonModelBase {
 	localVariables: SomeEntityModel[]
 }
 
-export interface NormalButtonModel extends ButtonModelBase {
-	readonly type: 'button'
-
-	options: NormalButtonOptions
-
-	style: ButtonStyleProperties
-}
-
 export interface PresetButtonModel extends ButtonModelBase {
 	readonly type: 'preset:button'
 
-	options: NormalButtonOptions
+	options: LayeredButtonOptions
 
 	style: {
 		layers: SomeButtonGraphicsElement[]
@@ -70,10 +56,8 @@ export interface ButtonOptionsBase {
 	stepExpression?: string
 }
 
-export interface NormalButtonOptions extends ButtonOptionsBase {
+export interface LayeredButtonOptions extends ButtonOptionsBase {
 	rotaryActions: boolean
-}
-export interface LayeredButtonOptions extends NormalButtonOptions {
 	canModifyStyleInApis: boolean
 }
 

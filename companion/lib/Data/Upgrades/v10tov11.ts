@@ -7,14 +7,34 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import {
-	type LayeredButtonModel,
-	type LayeredButtonOptions,
-	type NormalButtonModel,
-	type NormalButtonOptions,
+import type {
+	NormalButtonSteps,
+	LayeredButtonModel,
+	LayeredButtonOptions,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import { ConvertLegacyStyleToElements } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+
+interface NormalButtonModel {
+	readonly type: 'button'
+
+	options: NormalButtonOptions
+
+	style: ButtonStyleProperties
+
+	feedbacks: SomeEntityModel[]
+
+	steps: NormalButtonSteps
+
+	localVariables: SomeEntityModel[]
+}
+interface NormalButtonOptions {
+	stepProgression: 'auto' | 'manual' | 'expression'
+	stepExpression?: string
+	rotaryActions: boolean
+}
 
 /**
  * do the database upgrades to convert from the v9 to the v10 format

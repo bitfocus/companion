@@ -1,6 +1,6 @@
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type { NormalButtonModel, LayeredButtonModel, ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
+import type { LayeredButtonModel, ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
@@ -98,24 +98,6 @@ export function fixupExpressionVariableControl(
 		result.localVariables
 	)
 	if (result.entity) visitor.visitEntities([], [result.entity])
-
-	return result
-}
-
-export function fixupButtonControl(
-	logger: Logger,
-	control: ExportControlv6,
-	referencesUpdater: VisitorReferencesUpdater,
-	instanceIdMap: InstanceAppliedRemappings
-): NormalButtonModel {
-	const result: NormalButtonModel = {
-		type: 'button',
-		options: structuredClone(control.options),
-		style: structuredClone(control.style),
-		...fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap),
-	}
-
-	referencesUpdater.visitButtonDrawStyle(result.style)
 
 	return result
 }

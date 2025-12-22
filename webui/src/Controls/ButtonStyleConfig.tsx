@@ -1,6 +1,5 @@
-import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CFormLabel } from '@coreui/react'
-import React, { useCallback, useMemo, useState, type MutableRefObject } from 'react'
-import { PreventDefaultHandler } from '~/Resources/util.js'
+import { CButton, CButtonGroup, CInputGroup, CFormLabel } from '@coreui/react'
+import React, { useCallback, useMemo } from 'react'
 import {
 	AlignmentInputField,
 	ColorInputField,
@@ -11,98 +10,12 @@ import {
 import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '~/Resources/Constants.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faFont, faTrash } from '@fortawesome/free-solid-svg-icons'
-import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { InputFeatureIcons, type InputFeatureIconsProps } from './OptionsInputField.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
-
-interface ButtonStyleConfigProps {
-	controlId: string
-	style: ButtonStyleProperties | undefined
-	configRef: MutableRefObject<SomeButtonModel | undefined>
-	localVariablesStore: LocalVariablesStore | null
-	mainDialog?: boolean
-}
-
-export function ButtonStyleConfig({
-	controlId,
-	style,
-	configRef,
-	localVariablesStore,
-	mainDialog = false,
-}: ButtonStyleConfigProps): React.JSX.Element {
-	const setStyleFieldMutation = useMutationExt(trpc.controls.setStyleFields.mutationOptions())
-
-	const [pngError, setPngError] = useState<string | null>(null)
-	const setPng = useCallback(
-		(data: string | null) => {
-			setPngError(null)
-			setStyleFieldMutation
-				.mutateAsync({
-					controlId,
-					styleFields: {
-						png64: data,
-					},
-				})
-				.catch((e) => {
-					console.error('Failed to upload png', e)
-					setPngError('Failed to set png')
-				})
-		},
-		[setStyleFieldMutation, controlId]
-	)
-
-	const setValueInner = useCallback(
-		(key: string, value: any) => {
-			const currentConfig = configRef.current
-			if (
-				!currentConfig ||
-				(currentConfig.type === 'button' && value !== currentConfig.style[key as keyof ButtonStyleProperties])
-			) {
-				setStyleFieldMutation
-					.mutateAsync({
-						controlId,
-						styleFields: {
-							[key]: value,
-						},
-					})
-					.catch((e) => {
-						console.error(`Set field failed: ${e}`)
-					})
-			}
-		},
-		[setStyleFieldMutation, controlId, configRef]
-	)
-	const clearPng = useCallback(() => setValueInner('png64', null), [setValueInner])
-
-	return (
-		<CCol sm={12} className="p-0 mt-0">
-			{pngError && (
-				<CAlert color="warning" dismissible>
-					{pngError}
-				</CAlert>
-			)}
-
-			<CForm className="flex-form flex-form-row" style={{}} onSubmit={PreventDefaultHandler}>
-				{style && (
-					<ButtonStyleConfigFields
-						values={style}
-						setValueInner={setValueInner}
-						setPng={setPng}
-						setPngError={setPngError}
-						clearPng={clearPng}
-						mainDialog={mainDialog}
-						localVariablesStore={localVariablesStore}
-					/>
-				)}
-			</CForm>
-		</CCol>
-	)
-}
 
 interface ButtonStyleConfigFieldsProps {
 	values: Partial<ButtonStyleProperties>
