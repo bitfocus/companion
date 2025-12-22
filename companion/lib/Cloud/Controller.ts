@@ -319,7 +319,7 @@ export class CloudController {
 				continue
 			}
 			const drawStyle = control.getLastDrawStyle()
-			if (!drawStyle || drawStyle.style !== 'button') {
+			if (!drawStyle || drawStyle.style !== 'button-layered') {
 				continue
 			}
 

@@ -12,13 +12,12 @@
 import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
-import { DrawBounds, type GraphicsOptions, ParseAlignment, parseColor } from '@companion-app/shared/Graphics/Util.js'
-import type { DrawImageBuffer, DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import { DrawBounds, type GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
+import type { DrawImageBuffer, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import { isPromise } from 'util/types'
-import type { Complete } from '@companion-module/base/dist/util.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
@@ -156,9 +155,7 @@ export class GraphicsRenderer {
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat
 	): Promise<Uint8Array> {
-		// Force old 'button' style to be drawn at 72px, and scaled at the end
-		const dimensions =
-			drawStyle.style === 'button' ? [72, 72] : rotateResolution(resolution.width, resolution.height, rotation)
+		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
 
 		const { buffer, width, height } = await GraphicsRenderer.#getCachedImage(
 			dimensions[0],
@@ -319,37 +316,6 @@ export class GraphicsRenderer {
 			} else {
 				img.drawAlignedText(0, 0, img.width, img.height, pagename, colorWhite, 18 * drawScale, 'center', 'center')
 			}
-		} else if (drawStyle.style === 'button') {
-			const textAlign = ParseAlignment(drawStyle.alignment)
-			const pngAlign = ParseAlignment(drawStyle.pngalignment)
-
-			processedStyle = {
-				type: 'button',
-				color: {
-					color: drawStyle.bgcolor,
-				},
-				text: {
-					text: drawStyle.text,
-					color: drawStyle.color,
-					size: Number(drawStyle.size) || 'auto',
-					halign: textAlign[0],
-					valign: textAlign[1],
-				},
-				png64: drawStyle.png64
-					? {
-							dataUrl: drawStyle.png64,
-							halign: pngAlign[0],
-							valign: pngAlign[1],
-						}
-					: undefined,
-				state: {
-					pushed: drawStyle.pushed,
-					showTopBar: drawStyle.show_topbar ?? 'default',
-					cloud: drawStyle.cloud || false,
-				},
-			} satisfies Complete<ImageResultProcessedStyle>
-
-			await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
 		} else if (drawStyle.style === 'button-layered') {
 			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
@@ -366,112 +332,6 @@ export class GraphicsRenderer {
 		// console.timeEnd('drawButtonImage')
 
 		return processedStyle
-	}
-
-	/**
-	 * Draw the main button
-	 */
-	static async #drawButtonMain(
-		img: Image,
-		options: GraphicsOptions,
-		drawStyle: DrawStyleButtonModel,
-		location: ControlLocation | undefined
-	): Promise<void> {
-		let showTopbar = !!drawStyle.show_topbar
-		if (drawStyle.show_topbar === 'default' || drawStyle.show_topbar === undefined) {
-			showTopbar = !options.remove_topbar
-		}
-
-		const outerBounds = new DrawBounds(0, 0, 72, 72)
-
-		// handle upgrade from pre alignment-support configuration
-		if (drawStyle.alignment === undefined) {
-			drawStyle.alignment = 'center:center'
-		}
-		if (drawStyle.pngalignment === undefined) {
-			drawStyle.pngalignment = 'center:center'
-		}
-
-		// Draw background color first
-		if (!showTopbar) {
-			img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
-		} else {
-			img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
-		}
-
-		// Draw background PNG if exists
-		if (drawStyle.png64 !== undefined && drawStyle.png64 !== null) {
-			try {
-				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
-
-				if (!showTopbar) {
-					await img.drawBase64Image(drawStyle.png64, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
-				} else {
-					await img.drawBase64Image(drawStyle.png64, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
-				}
-			} catch (e) {
-				console.error('error drawing image:', e)
-				img.box(0, 14, 71, 57, 'black')
-				if (!showTopbar) {
-					img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
-				} else {
-					img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
-				}
-
-				if (showTopbar)
-					ButtonDecorationRenderer.drawLegacy(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
-				return
-			}
-		}
-
-		// Draw images from feedbacks
-		try {
-			for (const image of drawStyle.imageBuffers || []) {
-				if (image.buffer) {
-					const yOffset = showTopbar ? 14 : 0
-
-					const x = image.x ?? 0
-					const y = yOffset + (image.y ?? 0)
-					const width = image.width || 72
-					const height = image.height || 72 - yOffset
-
-					img.drawPixelBuffer(x, y, width, height, image.buffer, image.pixelFormat, image.drawScale)
-				}
-			}
-		} catch (_e) {
-			img.fillColor('black')
-			if (!showTopbar) {
-				img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
-			} else {
-				img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
-			}
-
-			if (showTopbar)
-				ButtonDecorationRenderer.drawLegacy(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
-			return
-		}
-
-		// Draw button text
-		const [halign, valign] = ParseAlignment(drawStyle.alignment)
-
-		let fontSize: 'auto' | number = 'auto'
-		if ((drawStyle.size as any) == 'small') {
-			fontSize = 7 // compatibility with v1 database
-		} else if ((drawStyle.size as any) == 'large') {
-			fontSize = 14 // compatibility with v1 database
-		} else {
-			fontSize = Number(drawStyle.size) || 'auto'
-		}
-
-		if (!showTopbar) {
-			img.drawAlignedText(2, 1, 68, 70, drawStyle.text, parseColor(drawStyle.color), fontSize, halign, valign)
-		} else {
-			img.drawAlignedText(2, 15, 68, 57, drawStyle.text, parseColor(drawStyle.color), fontSize, halign, valign)
-		}
-
-		// At last draw Topbar on top
-		if (showTopbar)
-			ButtonDecorationRenderer.drawLegacy(img, drawStyle, location, GraphicsRenderer.TOPBAR_BOUNDS, outerBounds)
 	}
 
 	/**

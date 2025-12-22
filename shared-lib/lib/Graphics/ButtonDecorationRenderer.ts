@@ -31,28 +31,6 @@ const internalIcons = {
 export class ButtonDecorationRenderer {
 	static readonly DEFAULT_HEIGHT = 14
 
-	/**
-	 * Draw the topbar onto an image for a button
-	 */
-	static drawLegacy(
-		img: ImageBase<any>,
-		drawStyle: DrawStyleButtonStateProps,
-		location: ControlLocation | undefined,
-		topBarBounds: DrawBounds,
-		outerBounds: DrawBounds
-	): void {
-		const showTopBar = !!topBarBounds && topBarBounds.isValid()
-		if (!showTopBar) {
-			ButtonDecorationRenderer.drawBorderWhenPushed(img, drawStyle, outerBounds)
-		} else {
-			ButtonDecorationRenderer.drawStatusBar(img, drawStyle, location, topBarBounds)
-		}
-
-		// Draw status icons from right to left
-
-		ButtonDecorationRenderer.drawIcons(img, drawStyle, location, topBarBounds, showTopBar)
-	}
-
 	static drawStatusBar(
 		img: ImageBase<any>,
 		drawStyle: DrawStyleButtonStateProps,

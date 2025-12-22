@@ -12,14 +12,12 @@ import {
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import { ControlEntityList } from './EntityList.js'
-import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ProcessManagerForEntity } from './Types.js'
-import { assertNever } from '@companion-app/shared/Util.js'
 
 export class ControlEntityInstance {
 	/**
@@ -797,48 +795,6 @@ export class ControlEntityInstance {
 		} else {
 			// An invalid value is falsey, it probably means that the feedback has no value
 			return false
-		}
-	}
-
-	/**
-	 * Apply the unparsed style for the feedbacks
-	 * Note: Does not clone the style
-	 */
-	buildFeedbackStyle(styleBuilder: FeedbackStyleBuilder): void {
-		if (this.disabled) return
-
-		const feedback = this.#data as FeedbackEntityModel
-		if (feedback.type !== EntityModelType.Feedback) return
-
-		const definition = this.getEntityDefinition()
-		if (!definition || definition.entityType !== EntityModelType.Feedback) return
-
-		switch (definition.feedbackType) {
-			case FeedbackEntitySubType.Boolean:
-				if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
-				break
-			case FeedbackEntitySubType.Advanced:
-				// Special case to handle the internal 'logic' operators, which need to be done differently
-				if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
-					if (this.getBooleanFeedbackValue()) {
-						for (const child of this.#children.get('feedbacks')?.getDirectEntities() || []) {
-							child.buildFeedbackStyle(styleBuilder)
-						}
-					}
-				} else {
-					styleBuilder.applyComplexStyle(this.#cachedFeedbackValue)
-				}
-				break
-			case FeedbackEntitySubType.Value:
-			case FeedbackEntitySubType.StyleOverride:
-				// Not valid for building a style
-				break
-			case null:
-				// Not a valid feedback
-				break
-			default:
-				assertNever(definition.feedbackType)
-				break
 		}
 	}
 

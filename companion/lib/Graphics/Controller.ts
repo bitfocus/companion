@@ -39,7 +39,10 @@ import type * as imageRs from '@julusian/image-rs'
 import type { DataDatabase } from '../Data/Database.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	type SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from './ConvertGraphicsElements.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
@@ -263,7 +266,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 							// Update text, if it is present
 							values[`b_text_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' ? buttonStyle.text : undefined
+								buttonStyle?.style === 'button-layered' ? buttonStyle : undefined
 							const bankIndex = xyToOldBankIndex(location.column, location.row)
 							if (bankIndex)
 								values[`b_text_${location.pageNumber}_${bankIndex}`] =
@@ -309,9 +312,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 						// Check if the image is already present in the render cache and if so, return it
 						let keyLocation: ControlLocation | undefined
-						if (buttonStyle.style === 'button') {
-							const globalShowTopBar = !this.#drawOptions.remove_topbar && buttonStyle.show_topbar === 'default'
-							keyLocation = globalShowTopBar || buttonStyle.show_topbar === true ? location : undefined
+						if (buttonStyle.style === 'button-layered') {
+							const canvasElement = buttonStyle.elements.find((el) => el.type === 'canvas')
+
+							const globalShowTopBar =
+								!this.#drawOptions.remove_topbar &&
+								canvasElement?.decoration === ButtonGraphicsDecorationType.FollowDefault
+							keyLocation =
+								globalShowTopBar || canvasElement?.decoration === ButtonGraphicsDecorationType.TopBar
+									? location
+									: undefined
 						}
 						const key = JSON.stringify({ options: this.#drawOptions, buttonStyle, keyLocation, pagename })
 						render = this.#renderLRUCache.get(key)
