@@ -970,9 +970,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					secrets: includeSecrets ? rawObj.secrets : undefined,
 				} satisfies ExportInstanceFullv6)
 
-		// Remove the moduleId property
-		delete (obj as Partial<typeof rawObj>).moduleId
-
 		return clone ? structuredClone(obj) : obj
 	}
 
