@@ -17,7 +17,6 @@ import type {
 	ControlWithoutActionSets,
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
-	ControlWithoutStyle,
 } from '../../IControlFragments.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
@@ -49,7 +48,6 @@ export class ControlTrigger
 		ControlWithActions,
 		ControlWithEvents,
 		ControlWithEntities,
-		ControlWithoutStyle,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
@@ -756,8 +754,5 @@ export class ControlTrigger
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
-	}
-	getBitmapFeedbackSize(): { width: number; height: number } | null {
-		return null
 	}
 }

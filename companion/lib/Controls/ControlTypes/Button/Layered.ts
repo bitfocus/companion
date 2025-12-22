@@ -5,7 +5,6 @@ import type {
 	ControlWithActions,
 	ControlWithLayeredStyle,
 	ControlWithoutEvents,
-	ControlWithoutStyle,
 } from '../../IControlFragments.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
@@ -53,12 +52,7 @@ import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElement
  */
 export class ControlButtonLayered
 	extends ButtonControlBase<LayeredButtonModel, LayeredButtonOptions>
-	implements
-		ControlWithoutStyle,
-		ControlWithLayeredStyle,
-		ControlWithActions,
-		ControlWithoutEvents,
-		ControlWithActionSets
+	implements ControlWithLayeredStyle, ControlWithActions, ControlWithoutEvents, ControlWithActionSets
 {
 	readonly type = 'button-layered'
 
@@ -112,7 +106,6 @@ export class ControlButtonLayered
 	readonly supportsActions = true
 	readonly supportsEvents = false
 	readonly supportsActionSets = true
-	readonly supportsStyle = false
 	readonly supportsLayeredStyle = true
 
 	/**
@@ -189,15 +182,6 @@ export class ControlButtonLayered
 	 */
 	destroy(): void {
 		super.destroy()
-	}
-
-	/**
-	 * Get the size of the bitmap render of this control
-	 */
-	getBitmapFeedbackSize(): { width: number; height: number } | null {
-		// TODO-layered: implement this
-		return null
-		// return GetButtonBitmapSize(this.deps.userconfig, this.#baseStyle)
 	}
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null

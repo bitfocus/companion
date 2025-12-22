@@ -266,36 +266,26 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 							// Update text, if it is present
 							values[`b_text_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button-layered' ? buttonStyle : undefined
+								buttonStyle?.style === 'button' ? buttonStyle.text : undefined
 							const bankIndex = xyToOldBankIndex(location.column, location.row)
 							if (bankIndex)
 								values[`b_text_${location.pageNumber}_${bankIndex}`] =
 									buttonStyle?.style === 'button' ? buttonStyle.text : undefined
 
 							values[`b_pushed_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
-									? buttonStyle.pushed
-									: undefined
+								buttonStyle?.style === 'button-layered' ? buttonStyle.pushed : undefined
 
 							// Update step
 							values[`b_step_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
-									? buttonStyle.stepCurrent
-									: undefined
+								buttonStyle?.style === 'button-layered' ? buttonStyle.stepCurrent : undefined
 							values[`b_step_count_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
-									? buttonStyle.stepCount
-									: undefined
+								buttonStyle?.style === 'button-layered' ? buttonStyle.stepCount : undefined
 
 							values[`b_actions_running_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
-									? (buttonStyle.action_running ?? false)
-									: undefined
+								buttonStyle?.style === 'button-layered' ? (buttonStyle.action_running ?? false) : undefined
 
 							values[`b_status_${location.pageNumber}_${location.row}_${location.column}`] =
-								buttonStyle?.style === 'button' || buttonStyle?.style === 'button-layered'
-									? (buttonStyle.button_status ?? 'good')
-									: undefined
+								buttonStyle?.style === 'button-layered' ? (buttonStyle.button_status ?? 'good') : undefined
 							// Submit the updated values
 							if (this.#pendingVariables) {
 								Object.assign(this.#pendingVariables, values)

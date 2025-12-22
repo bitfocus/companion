@@ -9,7 +9,6 @@ import type {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
-	(ControlWithStyle | ControlWithoutStyle) &
 	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &
 	(ControlWithEntities | ControlWithoutEntities) &
 	(ControlWithActions | ControlWithoutActions) &
@@ -17,25 +16,6 @@ export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithActionSets | ControlWithoutActionSets) &
 	(ControlWithOptions | ControlWithoutOptions) &
 	(ControlWithPushed | ControlWithoutPushed)
-
-export interface ControlWithStyle extends ControlBase<any> {
-	readonly supportsStyle: true
-
-	readonly baseStyle: ButtonStyleProperties
-
-	/**
-	 * Update the style fields of this control
-	 * @param diff - config diff to apply
-	 * @returns true if any changes were made
-	 */
-	styleSetFields(diff: Record<string, any>): boolean
-
-	/**
-	 * Propagate variable changes
-	 * @param allChangedVariables - variables with changes
-	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void
-}
 
 export interface ControlWithoutLayeredStyle extends ControlBase<any> {
 	readonly supportsLayeredStyle: false
@@ -121,10 +101,6 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * @returns The element if found, undefined otherwise
 	 */
 	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined
-}
-
-export interface ControlWithoutStyle extends ControlBase<any> {
-	readonly supportsStyle: false
 }
 
 export interface ControlWithEntities extends ControlBase<any> {

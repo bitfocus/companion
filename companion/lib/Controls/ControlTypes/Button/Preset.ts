@@ -9,7 +9,6 @@ import type {
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 	ControlWithLayeredStyle,
-	ControlWithoutStyle,
 } from '../../IControlFragments.js'
 import type {
 	PresetButtonModel,
@@ -44,7 +43,6 @@ import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/Co
 export class ControlButtonPreset
 	extends ControlBase<PresetButtonModel>
 	implements
-		ControlWithoutStyle,
 		ControlWithLayeredStyle,
 		ControlWithoutActions,
 		ControlWithoutEvents,
@@ -58,7 +56,6 @@ export class ControlButtonPreset
 	readonly supportsActions = false
 	readonly supportsEvents = false
 	readonly supportsActionSets = false
-	readonly supportsStyle = false
 	readonly supportsLayeredStyle = true
 	readonly supportsEntities = true
 	readonly supportsOptions = false
@@ -186,14 +183,6 @@ export class ControlButtonPreset
 
 		this.commitChange()
 		this.sendRuntimePropsChange()
-	}
-
-	/**
-	 * Get the size of the bitmap render of this control
-	 */
-	getBitmapFeedbackSize(): { width: number; height: number } | null {
-		// TODO-layered: implement this
-		return null
 	}
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null

@@ -32,7 +32,6 @@ describe('InstanceEntityManager', () => {
 			entityReplace: vi.fn(),
 		},
 		supportsEntities: true,
-		getBitmapFeedbackSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
 	}
 
 	const mockVariablesParser = {
@@ -204,7 +203,6 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 
 			expect(mockControlsController.getControl).toHaveBeenCalledWith('control-1')
-			expect(mockControl.getBitmapFeedbackSize).toHaveBeenCalled()
 
 			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledWith(
@@ -221,7 +219,6 @@ describe('InstanceEntityManager', () => {
 								options: {},
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -319,7 +316,6 @@ describe('InstanceEntityManager', () => {
 								options: {},
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -386,7 +382,6 @@ describe('InstanceEntityManager', () => {
 								options: {},
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 					['feedback-2', null],
@@ -402,7 +397,6 @@ describe('InstanceEntityManager', () => {
 								options: {},
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -961,7 +955,6 @@ describe('InstanceEntityManager', () => {
 					upgradeIndex: 5,
 				},
 				parsedOptions: { index: 1 },
-				imageSize: { width: 72, height: 58 },
 			} satisfies EntityManagerFeedbackEntity)
 		})
 	})
@@ -1379,7 +1372,6 @@ describe('InstanceEntityManager', () => {
 								upgradeIndex: 5,
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -1540,7 +1532,6 @@ describe('InstanceEntityManager', () => {
 							upgradeIndex: 3,
 						},
 						parsedOptions: {},
-						imageSize: undefined,
 					},
 				] satisfies EntityManagerFeedbackEntity[],
 				5

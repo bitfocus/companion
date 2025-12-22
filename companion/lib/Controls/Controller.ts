@@ -557,7 +557,7 @@ export class ControlsController {
 				// If the changes are local variables and from another control, ignore them
 				if (fromControlId && fromControlId !== control.controlId) continue
 
-				if (control.supportsStyle || control.supportsLayeredStyle) {
+				if (control.supportsLayeredStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}
 			}

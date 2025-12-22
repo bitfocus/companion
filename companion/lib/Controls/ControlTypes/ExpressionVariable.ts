@@ -6,7 +6,6 @@ import type {
 	ControlWithOptions,
 	ControlWithoutActionSets,
 	ControlWithoutPushed,
-	ControlWithoutStyle,
 	ControlWithEntities,
 	ControlWithoutLayeredStyle,
 } from '../IControlFragments.js'
@@ -43,7 +42,6 @@ export class ControlExpressionVariable
 		ControlWithoutActions,
 		ControlWithoutEvents,
 		ControlWithEntities,
-		ControlWithoutStyle,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
@@ -54,7 +52,6 @@ export class ControlExpressionVariable
 	readonly supportsActions = false
 	readonly supportsEvents = false
 	readonly supportsEntities = true
-	readonly supportsStyle = false
 	readonly supportsLayeredStyle = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
@@ -339,8 +336,5 @@ export class ControlExpressionVariable
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
-	}
-	getBitmapFeedbackSize(): { width: number; height: number } | null {
-		return null
 	}
 }

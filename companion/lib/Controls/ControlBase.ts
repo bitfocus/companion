@@ -116,11 +116,6 @@ export abstract class ControlBase<TJson> {
 	abstract triggerLocationHasChanged(): void
 
 	/**
-	 * Get the size of the bitmap render of this control
-	 */
-	abstract getBitmapFeedbackSize(): { width: number; height: number } | null
-
-	/**
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
