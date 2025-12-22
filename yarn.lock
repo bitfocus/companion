@@ -1624,25 +1624,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@blackmagic-controller/core@npm:1.0.2":
-  version: 1.0.2
-  resolution: "@blackmagic-controller/core@npm:1.0.2"
+"@blackmagic-controller/core@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@blackmagic-controller/core@npm:1.0.3"
   dependencies:
     eventemitter3: "npm:^5.0.1"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/0485c4e2d4926fe42a247584201ed18bb7bc3cfc2ed29ee53162543678fd2a24e861cdeae4c8cbc31d20aa11e4524b501d88e560355fadb15383e39d37118c8e
+  checksum: 10c0/4a9622368d67364eaa01658b3e2c9b9a9712966ecb06fe6dd3ac53afb64161b4e8f3da0a1cb7da404195d5f92d59adbb8beff195812ffd5e0a7c14fd78f22a6d
   languageName: node
   linkType: hard
 
-"@blackmagic-controller/node@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@blackmagic-controller/node@npm:1.0.2"
+"@blackmagic-controller/node@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "@blackmagic-controller/node@npm:1.0.3"
   dependencies:
-    "@blackmagic-controller/core": "npm:1.0.2"
+    "@blackmagic-controller/core": "npm:1.0.3"
     eventemitter3: "npm:^5.0.1"
     node-hid: "npm:^3.2.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/7a7a8fa751034a6dcfb8ba129dd6109aac33f5e51fbffd8b15735a08f25ef770ce3b9d84e33e157281a11eb3a76c5bb3450fd70b2c719f8aa833492a8b79f73d
+  checksum: 10c0/416985bac0665083d11b06fc6ec91d29b33563a716d26e398600cef5d494bc035293d6dcd3a8c9b211095c6da17f29340d65ab17dcd17c8f6d2d9f765ceb9c47
   languageName: node
   linkType: hard
 
@@ -11166,7 +11166,7 @@ asn1@evs-broadcast/node-asn1:
   version: 0.0.0-use.local
   resolution: "companion@workspace:companion"
   dependencies:
-    "@blackmagic-controller/node": "npm:^1.0.2"
+    "@blackmagic-controller/node": "npm:^1.0.3"
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:^1.14.0"
     "@elgato-stream-deck/node": "npm:^7.4.0"
