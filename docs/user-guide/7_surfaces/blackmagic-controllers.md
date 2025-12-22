@@ -4,7 +4,7 @@ sidebar_position: 8
 description: Setup guide for Blackmagic ATEM and Resolve controllers.
 ---
 
-It is possible to use a few of the Blackmagic Design USB/bluetooth controllers with Companion. Currently
+It is possible to use a few of the Blackmagic Design USB/bluetooth controllers with Companion. 
 
 We currently support the following models:
 
@@ -14,7 +14,7 @@ We currently support the following models:
 
 Enable support for it in Companion's settings and rescan for USB devices. This works over both USB and Bluetooth.
 
-Currently bluetooth on MacOS is not operational for Replay Editor and Speed Editor. For ATEM Micro Panel sometimes works, sometimes not. There are similar reports reg. similar issues on Linux. @Julusian is aware and will look into it, but no ETA given. 
+Bluetooth on macOS is not operational for Replay Editor and Speed Editor. There are reports with similar issues on Linux. @Julusian is aware and will look into it, but no ETA given. 
 
 :::danger
 Do not run the ATEM software at the same time when using the ATEM Micro Panel — both programs will listen to presses and update colours.
