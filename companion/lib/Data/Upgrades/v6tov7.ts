@@ -38,6 +38,7 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 		const newObj: ExportFullv6 = {
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 7,
 		}
 		if (newObj.pages) {
@@ -56,6 +57,7 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 			connectionCollections: undefined,
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 7,
 		}
 		convertPageControls(newObj.page)
@@ -66,6 +68,7 @@ function convertImportToV7(obj: SomeExportv4): SomeExportv6 {
 			connectionCollections: undefined,
 			companionBuild: undefined,
 			...structuredClone(obj),
+			instances: structuredClone(obj.instances) as any,
 			version: 7,
 		}
 		for (const trigger of Object.values<any>(newObj.triggers)) {
