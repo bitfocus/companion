@@ -27,7 +27,7 @@ const commonElementFields: SomeCompanionInputField[] = [
 	},
 ]
 
-const boundsFields: SomeCompanionInputField[] = [
+export const boundsFields: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'x',
@@ -63,33 +63,6 @@ const boundsFields: SomeCompanionInputField[] = [
 		min: 0,
 		max: 1000,
 		step: 1,
-	},
-]
-
-const borderFields: SomeCompanionInputField[] = [
-	{
-		type: 'number',
-		id: 'borderWidth',
-		label: 'Border Width',
-		default: 0,
-		min: 0,
-		max: 100,
-		step: 1,
-	},
-	{
-		type: 'colorpicker',
-		id: 'borderColor',
-		label: 'Border Color',
-		default: 0x000000,
-		returnType: 'number',
-		enableAlpha: true,
-	},
-	{
-		type: 'dropdown',
-		id: 'borderPosition',
-		label: 'Border Position',
-		choices: LINE_ORIENTATION_CHOICES,
-		default: 'inside',
 	},
 ]
 
@@ -201,7 +174,30 @@ export const boxElementSchema: SomeCompanionInputField[] = [
 		returnType: 'number',
 		enableAlpha: true,
 	},
-	...borderFields,
+	{
+		type: 'number',
+		id: 'borderWidth',
+		label: 'Border Width',
+		default: 0,
+		min: 0,
+		max: 100,
+		step: 1,
+	},
+	{
+		type: 'colorpicker',
+		id: 'borderColor',
+		label: 'Border Color',
+		default: 0x000000,
+		returnType: 'number',
+		enableAlpha: true,
+	},
+	{
+		type: 'dropdown',
+		id: 'borderPosition',
+		label: 'Border Position',
+		choices: LINE_ORIENTATION_CHOICES,
+		default: 'inside',
+	},
 ]
 
 export const lineElementSchema: SomeCompanionInputField[] = [
