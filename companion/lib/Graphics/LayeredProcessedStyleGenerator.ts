@@ -54,7 +54,7 @@ export class GraphicsLayeredProcessedStyleGenerator {
 				? {
 						text: textLayer.text,
 						color: textLayer.color,
-						size: Number(textLayer.fontsize) || 'auto', // TODO - scale value?
+						size: downConvertFontSize(textLayer.fontsize),
 						halign: textLayer.halign,
 						valign: textLayer.valign,
 					}
@@ -125,4 +125,15 @@ export class GraphicsLayeredProcessedStyleGenerator {
 
 		return undefined
 	}
+}
+
+function downConvertFontSize(size: string): number | 'auto' {
+	if (size === 'auto') return 'auto'
+
+	const parsed = parseFloat(size)
+	if (isNaN(parsed) || parsed <= 0) return 'auto'
+
+	const scaled = parsed * 0.48 // Convert to the old drawing numbers
+
+	return Number(scaled.toFixed(1)) // Round to 1 decimal place
 }

@@ -290,7 +290,8 @@ export function ConvertLegacyStyleToElements(
 
 		const overrides: FeedbackEntityStyleOverride[] = []
 
-		if ('style' in fb && fb.style) {
+		// This is not a great check, but is hopefully reliable enough
+		if ('style' in fb && fb.style && (Object.keys(fb.style).length > 0 || fb.connectionId !== 'internal')) {
 			// Must be boolean, translate the props as such
 
 			const parsedStyle = ParseLegacyStyle(fb.style)

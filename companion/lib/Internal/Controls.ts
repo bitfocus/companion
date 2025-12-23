@@ -10,7 +10,6 @@
  */
 
 import { formatLocation, oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
 import type {
 	FeedbackForVisitor,
@@ -40,7 +39,7 @@ import { nanoid } from 'nanoid'
 import { CHOICES_DYNAMIC_LOCATION, type InternalModuleUtils } from './Util.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import EventEmitter from 'node:events'
-import type { CompanionButtonStyleProps } from '@companion-module/base'
+import type { CompanionAdvancedFeedbackResult } from '@companion-module/base'
 
 const CHOICES_STEP_WITH_VARIABLES: SomeCompanionInputField[] = [
 	{
@@ -76,12 +75,6 @@ const CHOICES_STEP_WITH_VARIABLES: SomeCompanionInputField[] = [
 		},
 		isExpression: true,
 	},
-]
-
-const ButtonStylePropertiesExt = [
-	...ButtonStyleProperties,
-	{ id: 'show_topbar', label: 'Topbar' },
-	{ id: 'imageBuffers', label: 'Image buffers' },
 ]
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
@@ -471,22 +464,13 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		return {
 			bank_style: {
 				feedbackType: FeedbackEntitySubType.Advanced,
-				label: 'Button: Use another buttons style',
-				description: 'Imitate the style of another button',
+				label: 'Button: Use another buttons style (Deprecated)',
+				description:
+					'Imitate the legacy style of another button. This is not capable of preserving the full element stack.',
 				showButtonPreview: true,
 				feedbackStyle: undefined,
 				showInvert: false,
-				options: [
-					...CHOICES_DYNAMIC_LOCATION,
-					{
-						id: 'properties',
-						label: 'Properties',
-						type: 'multidropdown',
-						minSelection: 1,
-						choices: ButtonStylePropertiesExt,
-						default: ButtonStylePropertiesExt.map((p) => p.id),
-					},
-				],
+				options: [...CHOICES_DYNAMIC_LOCATION],
 			},
 			bank_pushed: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -561,6 +545,18 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			}
 		}
 
+		if (feedback.definitionId === 'bank_style' && feedback.styleOverrides) {
+			const oldProperties: string[] = feedback.options.properties
+			if (oldProperties) {
+				delete feedback.options.properties
+
+				// Prune style overrides that were not selected properties
+				feedback.styleOverrides = feedback.styleOverrides.filter((override) =>
+					oldProperties.includes(override.override.value)
+				)
+			}
+		}
+
 		if (changed) return feedback
 	}
 
@@ -590,37 +586,21 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			const render = this.#graphicsController.getCachedRender(theLocation)
 			if (render?.style) {
-				const legacyStyle: CompanionButtonStyleProps = {
+				const legacyStyle: CompanionAdvancedFeedbackResult = {
 					text: render.style.text?.text || '',
-					color: render.style.text?.color || 0xffffff,
-					bgcolor: render.style.color?.color || 0x000000,
+					color: render.style.text?.color ?? 0xffffff,
+					bgcolor: render.style.color?.color ?? 0x000000,
 					size: render.style.text?.size || 'auto',
 					png64: render.style.png64?.dataUrl,
 					alignment: render.style.text ? `${render.style.text.halign}:${render.style.text.valign}` : undefined,
 					pngalignment: render.style.png64 ? `${render.style.png64.halign}:${render.style.png64.valign}` : undefined,
 					show_topbar: (render.style.state?.showTopBar as any) ?? false,
-					// TODO-layered image buffers for old buttons
+					// TODO: can this match the imageBuffers?
 				}
 
-				if (!feedback.options.properties) {
-					// TODO populate these properties instead
-					return {
-						value: structuredClone(legacyStyle),
-						referencedVariables,
-					}
-				} else {
-					const newStyle: Record<string, any> = {}
-
-					for (const prop of feedback.options.properties) {
-						// @ts-expect-error mismatch in prop type
-						newStyle[prop] = legacyStyle[prop]
-					}
-
-					// Return cloned resolved style
-					return {
-						value: structuredClone(newStyle),
-						referencedVariables,
-					}
+				return {
+					value: structuredClone(legacyStyle),
+					referencedVariables,
 				}
 			} else {
 				return {
