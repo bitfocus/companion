@@ -143,7 +143,7 @@ export class ImportExportController {
 				if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
 
 				clientObject.connections[connectionId] = {
-					moduleId: connectionConfig.instance_type,
+					moduleId: connectionConfig.moduleId,
 					moduleVersionId: connectionConfig.moduleVersionId ?? null,
 					label: connectionConfig.label,
 					sortOrder: connectionConfig.sortOrder,
