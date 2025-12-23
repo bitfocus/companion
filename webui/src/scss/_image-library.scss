@@ -16,6 +16,49 @@
 		}
 	}
 
+	.image-library-dropzone {
+		margin: 1rem 0;
+		padding: 1.5rem 2rem;
+		border: 2px dashed #dee2e6;
+		border-radius: 6px;
+		background-color: #f8f9fa;
+		transition: all 0.2s ease;
+
+		&.active {
+			border-color: #0d6efd;
+			background-color: rgba(13, 110, 253, 0.05);
+		}
+
+		&.uploading {
+			border-color: #198754;
+			background-color: rgba(25, 135, 84, 0.05);
+		}
+
+		.dropzone-content {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			gap: 0.75rem;
+			color: #6c757d;
+
+			svg {
+				color: #0d6efd;
+			}
+
+			span {
+				font-weight: 500;
+				color: #495057;
+			}
+		}
+
+		&.uploading .dropzone-content {
+			svg {
+				color: #198754;
+			}
+		}
+	}
+
 	.image-library-grid-content {
 		flex: 1;
 		overflow-y: auto;
@@ -146,12 +189,40 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		position: relative;
+		transition: border-color 0.2s ease;
+
+		&.drag-over {
+			border: 2px dashed #0d6efd;
+		}
 
 		img {
 			max-width: 100%;
 			max-height: 100%;
 			object-fit: contain;
 		}
+	}
+
+	.drag-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(13, 110, 253, 0.1);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+		border-radius: 8px;
+	}
+
+	.drag-overlay-message {
+		background-color: rgba(255, 255, 255, 0.95);
+		padding: 20px;
+		border-radius: 8px;
+		font-weight: bold;
+		color: #0d6efd;
 	}
 
 	.image-properties {

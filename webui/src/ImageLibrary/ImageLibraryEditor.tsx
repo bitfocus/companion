@@ -2,17 +2,15 @@ import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faDownload, faTrashAlt, faUpload, faEdit, faCopy } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useRef, useState } from 'react'
-import { base64EncodeUint8Array } from '~/Resources/util.js'
 import { observer } from 'mobx-react-lite'
-import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 import { ImageDescriptionEditor } from './imageDescriptionEditor.js'
 import { ImageNameEditModal } from './ImageNameEditModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import CryptoJS from 'crypto-js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
+import { useImageLibraryUpload } from './useImageLibraryUpload'
 
 interface ImageLibraryEditorProps {
 	selectedImageName: string | null
@@ -28,6 +26,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
 	const [showNameEditModal, setShowNameEditModal] = useState(false)
+	const [isDragOver, setIsDragOver] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
@@ -35,6 +34,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	const imageInfo = selectedImageName ? imageLibrary.getImage(selectedImageName) : null
 
 	const deleteMutation = useMutationExt(trpc.imageLibrary.delete.mutationOptions())
+	const { uploadImageFile } = useImageLibraryUpload()
 
 	const handleDelete = useCallback(() => {
 		if (!selectedImageName) return
@@ -81,70 +81,33 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			})
 	}, [selectedImageName, imageInfo])
 
-	const startUploadMutation = useMutationExt(trpc.imageLibrary.upload.start.mutationOptions())
-	const uploadChunkMutation = useMutationExt(trpc.imageLibrary.upload.uploadChunk.mutationOptions())
-	const completeUploadMutation = useMutationExt(trpc.imageLibrary.upload.complete.mutationOptions())
+	const uploadFile = useCallback(
+		async (file: File) => {
+			if (!selectedImageName) return
+
+			setUploading(true)
+
+			try {
+				await uploadImageFile(file, selectedImageName)
+			} catch (err) {
+				console.error('Failed to replace image:', err)
+			} finally {
+				setUploading(false)
+			}
+		},
+		[uploadImageFile, selectedImageName]
+	)
 
 	const handleReplaceImage = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.currentTarget.files?.[0]
 			event.currentTarget.value = '' // Reset file input
 
-			if (!file || !selectedImageName) return
+			if (!file) return
 
-			setUploading(true)
-
-			const uploadFile = async () => {
-				try {
-					// Convert file to data URL and upload
-					const dataUrl = await blobToDataURL(file)
-					const data = new TextEncoder().encode(dataUrl)
-
-					const hasher = CryptoJS.algo.SHA1.create()
-					hasher.update(CryptoJS.lib.WordArray.create(data))
-					const checksum = hasher.finalize().toString(CryptoJS.enc.Hex)
-
-					// Start upload
-					const sessionId = await startUploadMutation.mutateAsync({
-						name: file.name,
-						size: data.byteLength,
-					})
-					if (!sessionId) throw new Error('Failed to start upload')
-
-					// Upload the file in 1MB chunks
-					const CHUNK_SIZE = 1024 * 1024 // 1MB
-					const totalChunks = Math.ceil(data.length / CHUNK_SIZE)
-
-					for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-						const start = chunkIndex * CHUNK_SIZE
-						const end = Math.min(start + CHUNK_SIZE, data.length)
-						const chunk = data.slice(start, end)
-
-						await uploadChunkMutation.mutateAsync({
-							sessionId,
-							offset: start,
-							data: base64EncodeUint8Array(chunk),
-						})
-					}
-
-					// Complete upload
-					await completeUploadMutation.mutateAsync({
-						sessionId,
-						expectedChecksum: checksum,
-						userData: { imageName: selectedImageName }, // Pass the image name as user data
-					})
-
-					// The store will be updated automatically via subscription
-				} catch (err) {
-					console.error('Failed to replace image:', err)
-				} finally {
-					setUploading(false)
-				}
-			}
-
-			void uploadFile()
+			void uploadFile(file)
 		},
-		[startUploadMutation, uploadChunkMutation, completeUploadMutation, selectedImageName]
+		[uploadFile]
 	)
 
 	const handleImageNameChanged = useCallback(
@@ -160,6 +123,38 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	const handleCopyVariableValue = useCallback(() => {
 		notifier.show('Copied', 'Copied to clipboard', 5000)
 	}, [notifier])
+
+	const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+		event.preventDefault()
+		event.stopPropagation()
+		setIsDragOver(true)
+	}, [])
+
+	const handleDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+		event.preventDefault()
+		event.stopPropagation()
+		setIsDragOver(false)
+	}, [])
+
+	const handleDrop = useCallback(
+		(event: React.DragEvent<HTMLDivElement>) => {
+			event.preventDefault()
+			event.stopPropagation()
+			setIsDragOver(false)
+
+			const files = event.dataTransfer.files
+			if (files && files.length > 0) {
+				const file = files[0]
+				// Check if it's an image file
+				if (file.type.startsWith('image/')) {
+					void uploadFile(file)
+				} else {
+					notifier.show('Invalid File', 'Please drop an image file', 5000)
+				}
+			}
+		},
+		[uploadFile, notifier]
+	)
 
 	const formatDate = (timestamp: number) => {
 		return new Date(timestamp).toLocaleString()
@@ -245,13 +240,23 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</CCol>
 			</CForm>
 
-			<div className="image-preview-full">
+			<div
+				className={`image-preview-full ${isDragOver ? 'drag-over' : ''}`}
+				onDragOver={handleDragOver}
+				onDragLeave={handleDragLeave}
+				onDrop={handleDrop}
+			>
 				<ImageLibraryImagePreview
 					imageName={selectedImageName}
 					type="original"
 					checksum={imageInfo.checksum}
 					alt={imageInfo.name}
 				/>
+				{isDragOver && (
+					<div className="drag-overlay">
+						<div className="drag-overlay-message">Drop image to replace</div>
+					</div>
+				)}
 			</div>
 
 			<div className="image-properties">

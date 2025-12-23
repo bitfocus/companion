@@ -9,6 +9,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ImageAddModal, type ImageAddModalRef } from './ImageAddModal'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
+import { ImageLibraryDropzone } from './ImageLibraryDropzone'
 import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
@@ -18,6 +19,8 @@ import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { useImageLibraryUpload } from './useImageLibraryUpload'
+import { nanoid } from 'nanoid'
 
 // Adapters for CollectionsNestingTable
 interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'children'> {
@@ -40,10 +43,64 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	selectedImageName,
 	onSelectImage,
 }: ImageLibraryGridProps) {
-	const { imageLibrary } = useContext(RootAppStoreContext)
+	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
 	const [searchQuery, setSearchQuery] = useState('')
 	const addModalRef = useRef<ImageAddModalRef>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
+	const gridContentRef = useRef<HTMLDivElement>(null)
+
+	const createMutation = useMutationExt(trpc.imageLibrary.create.mutationOptions())
+	const { uploadImageFile } = useImageLibraryUpload()
+
+	const handleImportFiles = useCallback(() => {
+		const input = document.createElement('input')
+		input.type = 'file'
+		input.accept = 'image/*'
+		input.multiple = true
+
+		input.onchange = () => {
+			const files = input.files
+			if (!files || files.length === 0) return
+
+			// Filter for image files only
+			const imageFiles = Array.from(files).filter((file) => file.type.startsWith('image/'))
+
+			if (imageFiles.length === 0) {
+				notifier.show('Invalid Files', 'Please select image files only', 5000)
+				return
+			}
+
+			void (async () => {
+				try {
+					for (const file of imageFiles) {
+						// Generate a random ID for the image
+						const imageName = nanoid()
+
+						// Create the image placeholder first
+						const fileName = file.name.replace(/\.[^/.]+$/, '') // Remove extension
+						await createMutation.mutateAsync({
+							name: imageName,
+							description: fileName || imageName,
+						})
+
+						// Then upload the file
+						await uploadImageFile(file, imageName)
+					}
+
+					notifier.show(
+						'Upload Complete',
+						`Successfully uploaded ${imageFiles.length} image${imageFiles.length > 1 ? 's' : ''}`,
+						5000
+					)
+				} catch (err) {
+					console.error('Failed to import images:', err)
+					notifier.show('Upload Failed', 'Failed to upload one or more images', 5000)
+				}
+			})()
+		}
+
+		input.click()
+	}, [createMutation, uploadImageFile, notifier])
 
 	const handleCreateNew = useCallback(() => addModalRef.current?.show(), [])
 
@@ -99,8 +156,11 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 				<div className="image-library-controls">
 					<div className="d-flex gap-2 mb-3">
 						<CButtonGroup>
+							<CButton color="primary" size="sm" onClick={handleImportFiles}>
+								<FontAwesomeIcon icon={faPlus} /> Import Images
+							</CButton>
 							<CButton color="primary" size="sm" onClick={handleCreateNew}>
-								<FontAwesomeIcon icon={faPlus} /> Add Image
+								<FontAwesomeIcon icon={faPlus} /> Add Placeholder
 							</CButton>
 							<CreateCollectionButton />
 						</CButtonGroup>
@@ -115,7 +175,9 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 				</div>
 			</div>
 
-			<div className="image-library-grid-content">
+			<ImageLibraryDropzone />
+
+			<div className="image-library-grid-content" ref={gridContentRef}>
 				<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={allCollectionIds}>
 					<CollectionsNestingTable
 						ItemRow={ItemRow}
