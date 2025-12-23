@@ -240,7 +240,8 @@ export class SurfaceOutboundController {
 					const highestRank =
 						Math.max(
 							0,
-							...Array.from(this.#storage.values())
+							...this.#storage
+								.values()
 								.map((c) => (c?.collectionId ? c.sortOrder : null))
 								.filter((n) => typeof n === 'number')
 						) || 0
@@ -379,12 +380,14 @@ export class SurfaceOutboundController {
 					}
 
 					// find all the other connections with the matching collectionId
-					const sortedConnections = Array.from(this.#storage.values())
+					const sortedConnections = this.#storage
+						.values()
 						.filter(
 							(connection) =>
 								connection.id !== connectionId &&
 								((!connection.collectionId && !collectionId) || connection.collectionId === collectionId)
 						)
+						.toArray()
 						.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 
 					if (dropIndex < 0) {
@@ -430,11 +433,14 @@ export class SurfaceOutboundController {
 	}
 
 	getAllEnabledConnectionsForInstance(instanceId: string): OutboundSurfaceInfo[] {
-		return Array.from(this.#storage.values()).filter((surfaceInfo) => {
-			return (
-				surfaceInfo && surfaceInfo.type === 'plugin' && surfaceInfo.instanceId === instanceId && surfaceInfo.enabled
-			)
-		})
+		return this.#storage
+			.values()
+			.filter((surfaceInfo) => {
+				return (
+					surfaceInfo && surfaceInfo.type === 'plugin' && surfaceInfo.instanceId === instanceId && surfaceInfo.enabled
+				)
+			})
+			.toArray()
 	}
 
 	removeAllForSurfaceInstance(instanceId: string): void {

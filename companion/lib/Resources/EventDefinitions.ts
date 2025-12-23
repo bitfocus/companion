@@ -48,13 +48,16 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 				type: 'multidropdown',
 				minChoicesForSearch: 10,
 				minSelection: 1,
-				choices: Array.from(Array(7).keys()).map((i) => {
-					return {
-						id: i,
-						label: dayjs().day(i).format('ddd'),
-					}
-				}),
-				default: Array.from(Array(7).keys()),
+				choices: Array(7)
+					.keys()
+					.toArray()
+					.map((i) => {
+						return {
+							id: i,
+							label: dayjs().day(i).format('ddd'),
+						}
+					}),
+				default: Array(7).keys().toArray(),
 			},
 		],
 	},

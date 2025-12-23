@@ -186,7 +186,10 @@ export class InstanceProcessManager {
 
 		// This is not efficient, but this is only used for shutdown, so it doesn't matter
 		for (let i = 0; i < 20; i++) {
-			const runningChildren = Array.from(this.#children.values()).filter((c) => !!c.monitor)
+			const runningChildren = this.#children
+				.values()
+				.filter((c) => !!c.monitor)
+				.toArray()
 			if (runningChildren.length === 0) {
 				// No more children running
 				break

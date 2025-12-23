@@ -168,7 +168,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const entityLists: ControlEntityList[] = [this.#feedbacks, this.#localVariables]
 
 		for (const step of this.#steps.values()) {
-			entityLists.push(...Array.from(step.sets.values()))
+			entityLists.push(...step.sets.values())
 		}
 
 		return entityLists
@@ -185,16 +185,21 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	getStepIds(): string[] {
-		return Array.from(this.#steps.keys()).sort((a, b) => Number(a) - Number(b))
+		return this.#steps
+			.keys()
+			.toArray()
+			.sort((a, b) => Number(a) - Number(b))
 	}
 
 	actionSetAdd(stepId: string): boolean {
 		const step = this.#steps.get(stepId)
 		if (!step) return false
 
-		const existingKeys = Array.from(step.sets.keys())
+		const existingKeys = step.sets
+			.keys()
 			.map((k) => Number(k))
 			.filter((k) => !isNaN(k))
+			.toArray()
 		if (existingKeys.length === 0) {
 			// add the default '1000' set
 			step.sets.set(1000, this.#createActionEntityList([], false, false))

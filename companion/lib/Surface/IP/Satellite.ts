@@ -201,9 +201,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
 
-		const anyControlHasBitmap = !!Array.from(this.#controlDefinitions.values()).find(
-			(controls) => !!controls.find((control) => !!control.style.bitmap)
-		)
+		const anyControlHasBitmap = !!this.#controlDefinitions
+			.values()
+			.find((controls) => !!controls.find((control) => !!control.style.bitmap))
 
 		this.info = {
 			description: deviceInfo.productName,

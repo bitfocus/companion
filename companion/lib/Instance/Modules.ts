@@ -236,7 +236,10 @@ export class InstanceModules {
 	}
 
 	#logLoadedModules(knownModules: Map<string, InstanceModuleInfo>, prefix: string): void {
-		const sorted = Array.from(knownModules.entries()).sort(([a], [b]) => a.localeCompare(b))
+		const sorted = knownModules
+			.entries()
+			.toArray()
+			.sort(([a], [b]) => a.localeCompare(b))
 		for (const [_id, moduleInfo] of sorted) {
 			if (moduleInfo.devModule) {
 				this.#logger.info(

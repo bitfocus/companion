@@ -714,9 +714,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					if (group && group.isAutoGroup) throw new Error(`Cannot add to an auto group: ${input.groupId}`)
 
 					// Check for an active surface
-					const surfaceHandler = Array.from(this.#surfaceHandlers.values()).find(
-						(surface) => surface && surface.surfaceId === input.surfaceId
-					)
+					const surfaceHandler = this.#surfaceHandlers
+						.values()
+						.find((surface) => surface && surface.surfaceId === input.surfaceId)
 					if (surfaceHandler) {
 						this.#detachSurfaceFromGroup(surfaceHandler)
 
@@ -960,28 +960,30 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		const result: ClientDevicesListItem[] = []
 
-		const surfaceGroups = Array.from(this.#surfaceGroups.values())
-		surfaceGroups.sort((a, b) => {
-			// manual groups must be first
-			if (!a.isAutoGroup && b.isAutoGroup) {
-				return -1
-			} else if (!b.isAutoGroup && a.isAutoGroup) {
-				return 1
-			}
+		const surfaceGroups = this.#surfaceGroups
+			.values()
+			.toArray()
+			.sort((a, b) => {
+				// manual groups must be first
+				if (!a.isAutoGroup && b.isAutoGroup) {
+					return -1
+				} else if (!b.isAutoGroup && a.isAutoGroup) {
+					return 1
+				}
 
-			const aIsEmulator = a.groupId.startsWith('emulator:')
-			const bIsEmulator = b.groupId.startsWith('emulator:')
+				const aIsEmulator = a.groupId.startsWith('emulator:')
+				const bIsEmulator = b.groupId.startsWith('emulator:')
 
-			// emulator must be first
-			if (aIsEmulator && !bIsEmulator) {
-				return -1
-			} else if (bIsEmulator && !aIsEmulator) {
-				return 1
-			}
+				// emulator must be first
+				if (aIsEmulator && !bIsEmulator) {
+					return -1
+				} else if (bIsEmulator && !aIsEmulator) {
+					return 1
+				}
 
-			// then by id
-			return a.groupId.localeCompare(b.groupId)
-		})
+				// then by id
+				return a.groupId.localeCompare(b.groupId)
+			})
 
 		const groupsMap = new Map<string, ClientDevicesListItem>()
 		let groupIndexSkippedCount = 0
@@ -1683,7 +1685,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	#getSurfaceHandlerForId(surfaceId: string, looseIdMatching: boolean): SurfaceHandler | undefined {
 		if (surfaceId === 'emulator') surfaceId = 'emulator:emulator'
 
-		const surfaces = Array.from(this.#surfaceHandlers.values())
+		const surfaces = this.#surfaceHandlers.values().toArray()
 
 		// try and find exact match
 		let surface = surfaces.find((d) => d && d.surfaceId === surfaceId)

@@ -158,13 +158,15 @@ export function createExpressionVariableTrpcRouter(
 				}
 
 				// find all the other triggers with the matching collectionId
-				const sortedExpressionVariables = Array.from(controlsMap.values())
+				const sortedExpressionVariables = controlsMap
+					.values()
 					.filter(
 						(control): control is ControlExpressionVariable =>
 							control.controlId !== controlId &&
 							control instanceof ControlExpressionVariable &&
 							((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
 					)
+					.toArray()
 					.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
 
 				if (dropIndex < 0) {

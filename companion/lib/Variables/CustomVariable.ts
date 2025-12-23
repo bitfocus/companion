@@ -395,7 +395,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		}
 
 		// find all the other variables with the matching collectionId
-		const sortedVariables = Array.from(Object.entries(this.#custom_variables))
+		const sortedVariables = Object.entries(this.#custom_variables)
 			.filter(
 				([varName, variable]) =>
 					name !== varName && ((!variable.collectionId && !collectionId) || variable.collectionId === collectionId)

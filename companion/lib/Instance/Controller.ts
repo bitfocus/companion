@@ -609,12 +609,16 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (!thisConfig) return false
 
 		// Collect all enabled instances of this module
-		const allInstancesOfModule = Array.from(this.#configStore.getAllInstanceConfigs().entries()).filter(
-			([_id, config]) =>
-				config.moduleInstanceType === ModuleInstanceType.Surface &&
-				config.moduleId === thisConfig.moduleId &&
-				config.enabled
-		)
+		const allInstancesOfModule = this.#configStore
+			.getAllInstanceConfigs()
+			.entries()
+			.filter(
+				([_id, config]) =>
+					config.moduleInstanceType === ModuleInstanceType.Surface &&
+					config.moduleId === thisConfig.moduleId &&
+					config.enabled
+			)
+			.toArray()
 
 		// If there is only one instance, then enabling is always allowed
 		if (allInstancesOfModule.length <= 1) {

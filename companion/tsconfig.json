@@ -20,7 +20,7 @@
 		"listFiles": false,
 		"traceResolution": false,
 		"pretty": true,
-		"lib": ["es2024", "ESNext.Collection"],
+		"lib": ["es2024", "ESNext.Collection", "ESNext.Iterator"],
 		"types": ["node"],
 		"strict": true,
 		"alwaysStrict": false,
