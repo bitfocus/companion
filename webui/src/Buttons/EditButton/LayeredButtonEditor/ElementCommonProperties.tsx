@@ -3,7 +3,6 @@ import { observer } from 'mobx-react-lite'
 import React, { useCallback } from 'react'
 import {
 	type ButtonGraphicsElementBase,
-	ButtonGraphicsElementUsage,
 	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -12,6 +11,7 @@ import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
+import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	elementProps,
@@ -46,7 +46,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 const FieldElementNameInput = observer(function FieldElementNameInput({
 	elementProps,
 }: {
-	elementProps: ButtonGraphicsElementBase
+	elementProps: SomeButtonGraphicsElement
 }) {
 	const { controlId } = useElementPropertiesContext()
 	const setElementNameMutation = useMutationExt(trpc.controls.styles.setElementName.mutationOptions())

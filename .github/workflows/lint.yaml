@@ -34,6 +34,7 @@ jobs:
       - name: run linter
         run: |
           yarn build:ts
+          yarn build:graphics-types
           yarn lint
 
   spelling:

@@ -2,11 +2,8 @@ import type { ControlBase } from './ControlBase.js'
 import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js'
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type {
-	ButtonGraphicsElementUsage,
-	SomeButtonGraphicsElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &

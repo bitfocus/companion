@@ -1,33 +1,31 @@
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import {
-	ButtonGraphicsDecorationType,
-	type ButtonGraphicsDrawBounds,
-	type ButtonGraphicsImageDrawElement,
-	type ButtonGraphicsImageElement,
-	type ButtonGraphicsTextDrawElement,
-	type ButtonGraphicsTextElement,
-	type ButtonGraphicsCanvasDrawElement,
-	type ButtonGraphicsCanvasElement,
-	type SomeButtonGraphicsDrawElement,
-	type SomeButtonGraphicsElement,
-	type MakeExpressionable,
-	type ButtonGraphicsBoxDrawElement,
-	type ButtonGraphicsBoxElement,
-	type ButtonGraphicsGroupElement,
-	type ButtonGraphicsGroupDrawElement,
-	type ButtonGraphicsBorderProperties,
-	type ButtonGraphicsLineElement,
-	type ButtonGraphicsLineDrawElement,
-	type ButtonGraphicsElementBase,
+import type {
+	ButtonGraphicsDrawBounds,
+	ButtonGraphicsImageDrawElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsTextDrawElement,
+	ButtonGraphicsTextElement,
+	ButtonGraphicsCanvasDrawElement,
+	ButtonGraphicsCanvasElement,
+	SomeButtonGraphicsDrawElement,
+	SomeButtonGraphicsElement,
+	ButtonGraphicsBoxDrawElement,
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsGroupDrawElement,
+	ButtonGraphicsLineElement,
+	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsElementBase,
+	ButtonGraphicsBounds,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 
-class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
+class ElementExpressionHelper<T> {
 	readonly #parser: VariablesAndExpressionParser
 	readonly drawPixelBuffers: DrawPixelBuffers
 	readonly #usedVariables = new Set<string>()
@@ -220,7 +218,7 @@ class ElementExpressionHelper<T extends ButtonGraphicsElementBase> {
 		}
 	}
 }
-type ElementExpressionHelperFactory = <T extends ButtonGraphicsElementBase>(element: T) => ElementExpressionHelper<T>
+type ElementExpressionHelperFactory = <T extends { readonly id: string }>(element: T) => ElementExpressionHelper<T>
 
 type DrawPixelBuffers = (imageBuffers: DrawImageBuffer[]) => Promise<string | undefined>
 
@@ -369,9 +367,6 @@ function convertTextElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && helper.onlyEnabled) return null
 
-	const fontsizeRaw = helper.getUnknown('fontsize', 'auto')
-	const fontsize = Number(fontsizeRaw) || fontsizeRaw
-
 	return {
 		id: element.id,
 		type: 'text',
@@ -380,7 +375,7 @@ function convertTextElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		text: helper.getDrawText('text') + '',
-		fontsize: fontsize === 'auto' || typeof fontsize === 'number' ? fontsize : 'auto',
+		fontsize: helper.getUnknown('fontsize', 'auto') as string,
 		color: helper.getNumber('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
@@ -406,7 +401,10 @@ function convertBoxElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		color: helper.getNumber('color', 0),
-		...convertBorderProperties(helper),
+
+		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
+		borderColor: helper.getNumber('borderColor', 0),
+		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
 	}
 }
 
@@ -430,31 +428,20 @@ function convertLineElementForDrawing(
 		fromY: helper.getNumber('fromY', 0),
 		toX: helper.getNumber('toX', 100),
 		toY: helper.getNumber('toY', 100),
-		...convertBorderProperties(helper),
+
+		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
+		borderColor: helper.getNumber('borderColor', 0),
+		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
 	}
 }
 
 function convertDrawBounds(
-	helper: ElementExpressionHelper<
-		MakeExpressionable<ButtonGraphicsDrawBounds & { type: string }> & ButtonGraphicsElementBase
-	>
+	helper: ElementExpressionHelper<ButtonGraphicsBounds & ButtonGraphicsElementBase>
 ): ButtonGraphicsDrawBounds {
 	return {
 		x: helper.getNumber('x', 0, 0.01),
 		y: helper.getNumber('y', 0, 0.01),
 		width: helper.getNumber('width', 1, 0.01),
 		height: helper.getNumber('height', 1, 0.01),
-	}
-}
-
-function convertBorderProperties(
-	helper: ElementExpressionHelper<
-		MakeExpressionable<ButtonGraphicsBorderProperties & { type: string }> & ButtonGraphicsElementBase
-	>
-): ButtonGraphicsBorderProperties {
-	return {
-		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
-		borderColor: helper.getNumber('borderColor', 0),
-		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
 	}
 }

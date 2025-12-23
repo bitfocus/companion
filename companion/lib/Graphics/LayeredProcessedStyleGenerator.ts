@@ -1,13 +1,15 @@
-import {
-	type ButtonGraphicsTextDrawElement,
-	ButtonGraphicsElementUsage,
-	type ButtonGraphicsBoxDrawElement,
-	type ButtonGraphicsDrawBase,
-	type SomeButtonGraphicsDrawElement,
-	type ButtonGraphicsImageDrawElement,
-	ButtonGraphicsDecorationType,
+import type {
+	ButtonGraphicsTextDrawElement,
+	ButtonGraphicsBoxDrawElement,
+	ButtonGraphicsDrawBase,
+	SomeButtonGraphicsDrawElement,
+	ButtonGraphicsImageDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	type DrawStyleLayeredButtonModel,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import type { ImageResultProcessedStyle } from './ImageResult.js'
 

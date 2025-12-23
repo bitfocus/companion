@@ -29,6 +29,7 @@ jobs:
           yarn --immutable
 
           yarn build:ts
+          yarn build:graphics-types
 
       - name: Check types
         run: |

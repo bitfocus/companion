@@ -1,12 +1,12 @@
 import { nanoid } from 'nanoid'
-import type {
-	CompanionPresetLayeredFeedback,
-	ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
-	SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
-	ExpressionOrValue as ExpressionOrValueModule,
-	ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
-	ButtonGraphicsBorderProperties as ButtonGraphicsBorderPropertiesModule,
-	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
+import {
+	type CompanionPresetLayeredFeedback,
+	type ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
+	type SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
+	type ExpressionOrValue as ExpressionOrValueModule,
+	type ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
+	type ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
+	ButtonGraphicsDecorationType,
 } from '@companion-module/base'
 import { type Logger } from '../../Log/Controller.js'
 import {
@@ -16,21 +16,18 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { type ExpressionOrValue, isExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
-import {
-	ButtonGraphicsDecorationType,
-	ButtonGraphicsElementUsage,
-	type SomeButtonGraphicsElement,
-	type ButtonGraphicsCanvasElement,
-	type ButtonGraphicsBoxElement,
-	type ButtonGraphicsGroupElement,
-	type ButtonGraphicsImageElement,
-	type ButtonGraphicsTextElement,
-	type ButtonGraphicsLineElement,
-	type ButtonGraphicsDrawBounds,
-	type ButtonGraphicsBorderProperties,
-	type MakeExpressionable,
-	type ButtonGraphicsDrawBase,
+import type {
+	SomeButtonGraphicsElement,
+	ButtonGraphicsCanvasElement,
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsTextElement,
+	ButtonGraphicsLineElement,
+	ButtonGraphicsBounds,
+	ButtonGraphicsElementBase,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 
 export function ConvertLayeredPresetFeedbacksToEntities(
 	rawFeedbacks: CompanionPresetLayeredFeedback[] | undefined,
@@ -107,7 +104,12 @@ function convertLayeredPresetElement(
 
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
 
-				...convertElementBorderProperties(element),
+				borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0x000000, isExpression: false }),
+				borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 0, isExpression: false }),
+				borderPosition: convertModuleExpressionOrValue(element.borderPosition, {
+					value: 'inside',
+					isExpression: false,
+				}),
 			} satisfies ButtonGraphicsBoxElement
 		case 'group':
 			return {
@@ -140,7 +142,10 @@ function convertLayeredPresetElement(
 				...convertElementSize(element),
 
 				text: convertModuleExpressionOrValue(element.text, { value: '', isExpression: false }),
-				fontsize: convertModuleExpressionOrValue(element.fontsize, { value: 'auto', isExpression: false }),
+				fontsize: convertModuleExpressionOrValue(element.fontsize, {
+					value: 'auto',
+					isExpression: false,
+				}) as ExpressionOrValue<string>,
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
 				halign: convertModuleExpressionOrValue(element.halign, { value: 'center', isExpression: false }),
 				valign: convertModuleExpressionOrValue(element.valign, { value: 'center', isExpression: false }),
@@ -157,7 +162,12 @@ function convertLayeredPresetElement(
 				toX: convertModuleExpressionOrValue(element.toX, { value: 100, isExpression: false }),
 				toY: convertModuleExpressionOrValue(element.toY, { value: 100, isExpression: false }),
 
-				...convertElementBorderProperties(element),
+				borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0x000000, isExpression: false }),
+				borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 0, isExpression: false }),
+				borderPosition: convertModuleExpressionOrValue(element.borderPosition, {
+					value: 'inside',
+					isExpression: false,
+				}),
 			} satisfies ButtonGraphicsLineElement
 		default:
 			assertNever(element)
@@ -166,7 +176,7 @@ function convertLayeredPresetElement(
 	}
 }
 
-function convertElementSize(element: ButtonGraphicsDrawBoundsModule): MakeExpressionable<ButtonGraphicsDrawBounds> {
+function convertElementSize(element: ButtonGraphicsDrawBoundsModule): ButtonGraphicsBounds {
 	return {
 		x: convertModuleExpressionOrValue(element.x, { value: 0, isExpression: false }),
 		y: convertModuleExpressionOrValue(element.y, { value: 0, isExpression: false }),
@@ -175,20 +185,10 @@ function convertElementSize(element: ButtonGraphicsDrawBoundsModule): MakeExpres
 	}
 }
 
-function convertElementBorderProperties(
-	element: ButtonGraphicsBorderPropertiesModule
-): MakeExpressionable<ButtonGraphicsBorderProperties> {
-	return {
-		borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0x000000, isExpression: false }),
-		borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 0, isExpression: false }),
-		borderPosition: convertModuleExpressionOrValue(element.borderPosition, { value: 'inside', isExpression: false }),
-	}
-}
-
 function convertElementBasicProperties(
 	element: ButtonGraphicsElementBaseModule,
 	defaultName: string
-): MakeExpressionable<ButtonGraphicsDrawBase> & { id: string; name: string } {
+): ButtonGraphicsElementBase {
 	return {
 		id: element.id || nanoid(),
 		name: element.name ?? defaultName,

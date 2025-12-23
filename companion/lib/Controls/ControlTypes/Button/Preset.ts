@@ -16,16 +16,17 @@ import type {
 	NormalButtonRuntimeProps,
 	ButtonStatus,
 } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type {
+	ButtonGraphicsElementUsage,
+	ButtonStyleProperties,
+	DrawStyleLayeredButtonModel,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
 import { ControlBase } from '../../ControlBase.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
-import type {
-	ButtonGraphicsElementUsage,
-	SomeButtonGraphicsElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 
 /**

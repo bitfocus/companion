@@ -49,3 +49,21 @@ export interface ButtonStyleProperties {
 
 	png64: string | null
 }
+
+export enum ButtonGraphicsDecorationType {
+	FollowDefault = 'default',
+	TopBar = 'topbar',
+	// BottomBar = 'bottombar', // Future
+	Border = 'border',
+	None = 'none',
+}
+
+export enum ButtonGraphicsElementUsage {
+	Automatic = 'auto',
+	Text = 'text',
+	Color = 'color',
+	Image = 'image',
+}
+
+export type HorizontalAlignment = 'left' | 'center' | 'right'
+export type VerticalAlignment = 'top' | 'center' | 'bottom'

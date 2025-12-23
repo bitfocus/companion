@@ -359,9 +359,6 @@ export function isPackaged(): boolean {
 	return typeof __webpack_require__ === 'function'
 }
 
-export type HorizontalAlignment = 'left' | 'right' | 'center'
-export type VerticalAlignment = 'top' | 'bottom' | 'center'
-
 /**
  * Lazy compute a value
  * @param fn Function to compute the value

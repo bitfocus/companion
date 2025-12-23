@@ -1,7 +1,7 @@
 import z from 'zod'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
-import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>>) {
