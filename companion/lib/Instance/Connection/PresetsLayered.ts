@@ -26,6 +26,7 @@ import type {
 	ButtonGraphicsLineElement,
 	ButtonGraphicsBounds,
 	ButtonGraphicsElementBase,
+	ButtonGraphicsCircleElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 
@@ -101,6 +102,7 @@ function convertLayeredPresetElement(
 				...convertElementBasicProperties(element, 'Box'),
 
 				...convertElementSize(element),
+				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
 
@@ -117,6 +119,7 @@ function convertLayeredPresetElement(
 				...convertElementBasicProperties(element, 'Group'),
 
 				...convertElementSize(element),
+				rotation: { value: 0, isExpression: false }, // TODO - presets
 
 				children: element.children
 					.map((child) => convertLayeredPresetElement(logger, child))
@@ -128,6 +131,7 @@ function convertLayeredPresetElement(
 				...convertElementBasicProperties(element, 'Image'),
 
 				...convertElementSize(element),
+				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				base64Image: convertModuleExpressionOrValue(element.base64Image, { value: null, isExpression: false }),
 				halign: convertModuleExpressionOrValue(element.halign, { value: 'center', isExpression: false }),
@@ -140,6 +144,7 @@ function convertLayeredPresetElement(
 				...convertElementBasicProperties(element, 'Text'),
 
 				...convertElementSize(element),
+				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				text: convertModuleExpressionOrValue(element.text, { value: '', isExpression: false }),
 				fontsize: convertModuleExpressionOrValue(element.fontsize, {
@@ -169,6 +174,30 @@ function convertLayeredPresetElement(
 					isExpression: false,
 				}),
 			} satisfies ButtonGraphicsLineElement
+		case 'circle':
+			return {
+				type: 'circle',
+				...convertElementBasicProperties(element, 'Circle'),
+
+				...convertElementSize(element),
+
+				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
+
+				startAngle: convertModuleExpressionOrValue(element.startAngle, { value: 0, isExpression: false }),
+				endAngle: convertModuleExpressionOrValue(element.endAngle, { value: 360, isExpression: false }),
+				drawSlice: convertModuleExpressionOrValue(element.drawSlice, { value: false, isExpression: false }),
+
+				borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0x000000, isExpression: false }),
+				borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 0, isExpression: false }),
+				borderPosition: convertModuleExpressionOrValue(element.borderPosition, {
+					value: 'inside',
+					isExpression: false,
+				}),
+				borderOnlyArc: convertModuleExpressionOrValue(element.borderOnlyArc, { value: false, isExpression: false }),
+			} satisfies ButtonGraphicsCircleElement
+		case 'composite':
+			// TODO - composite elements PR
+			return null
 		default:
 			assertNever(element)
 			logger.info('Unsupported element type in layered-button preset:', elementType)

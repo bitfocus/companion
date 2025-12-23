@@ -19,6 +19,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				y: { value: 0, isExpression: false },
 				width: { value: 100, isExpression: false },
 				height: { value: 100, isExpression: false },
+				rotation: { value: 0, isExpression: false },
 				text: { value: '', isExpression: false },
 				color: { value: 0xffffff, isExpression: false },
 				halign: { value: 'center', isExpression: false },
@@ -38,6 +39,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				y: { value: 0, isExpression: false },
 				width: { value: 100, isExpression: false },
 				height: { value: 100, isExpression: false },
+				rotation: { value: 0, isExpression: false },
 				base64Image: { value: null, isExpression: false },
 				halign: { value: 'center', isExpression: false },
 				valign: { value: 'center', isExpression: false },
@@ -55,6 +57,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				y: { value: 0, isExpression: false },
 				width: { value: 100, isExpression: false },
 				height: { value: 100, isExpression: false },
+				rotation: { value: 0, isExpression: false },
 				color: { value: 0xff0000, isExpression: false },
 				borderWidth: { value: 0, isExpression: false },
 				borderColor: { value: 0, isExpression: false },
@@ -72,6 +75,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				y: { value: 0, isExpression: false },
 				width: { value: 100, isExpression: false },
 				height: { value: 100, isExpression: false },
+				rotation: { value: 0, isExpression: false },
 				children: [],
 			}
 		case 'line':

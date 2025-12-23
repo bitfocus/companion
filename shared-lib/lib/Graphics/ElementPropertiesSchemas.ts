@@ -66,6 +66,18 @@ export const boundsFields: SomeCompanionInputField[] = [
 	},
 ]
 
+export const rotationFields: SomeCompanionInputField[] = [
+	{
+		type: 'number',
+		id: 'rotation',
+		label: 'Rotation (degrees)',
+		default: 0,
+		min: 0,
+		max: 360,
+		step: 1,
+	},
+]
+
 export const borderFields: SomeCompanionInputField[] = [
 	{
 		type: 'number',
@@ -96,6 +108,7 @@ export const borderFields: SomeCompanionInputField[] = [
 export const textElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	...boundsFields,
+	...rotationFields,
 	{
 		type: 'textinput',
 		id: 'text',
@@ -158,6 +171,7 @@ export const textElementSchema: SomeCompanionInputField[] = [
 export const imageElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	...boundsFields,
+	...rotationFields,
 	{
 		type: 'internal:png-image',
 		id: 'base64Image',
@@ -200,6 +214,7 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 export const boxElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	...boundsFields,
+	...rotationFields,
 	{
 		type: 'colorpicker',
 		id: 'color',
@@ -343,7 +358,11 @@ export const canvasElementSchema: SomeCompanionInputField[] = [
 	},
 ]
 
-export const groupElementSchema: SomeCompanionInputField[] = [...commonElementFields, ...boundsFields]
+export const groupElementSchema: SomeCompanionInputField[] = [
+	...commonElementFields,
+	...boundsFields,
+	...rotationFields,
+]
 
 export const elementSchemas = {
 	text: textElementSchema,

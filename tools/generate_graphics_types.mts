@@ -4,6 +4,7 @@ import {
 	borderFields,
 	canvasElementSchema,
 	elementSchemas,
+	rotationFields,
 } from '../shared-lib/lib/Graphics/ElementPropertiesSchemas.ts'
 import { SomeCompanionInputField } from '../shared-lib/lib/Model/Options.ts'
 // import { assertNever } from '../shared-lib/lib/Util.ts'
@@ -79,6 +80,7 @@ generatedFile += '}\n\n'
 const baseInterfaceTypes = {
 	bounds: boundsFields,
 	border: borderFields,
+	rotation: rotationFields,
 }
 
 function generateBaseInterfaceName(id: string): {

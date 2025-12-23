@@ -50,6 +50,14 @@ export interface ButtonGraphicsBorder {
 	borderPosition: ExpressionOrValue<'inside' | 'center' | 'outside'>
 }
 
+export interface ButtonGraphicsDrawRotation {
+	rotation: number
+}
+
+export interface ButtonGraphicsRotation {
+	rotation: ExpressionOrValue<number>
+}
+
 export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled' | 'opacity'> {
 	// Note: this is the background element and can only be at the bottom of the stack
 	type: 'canvas'
@@ -62,7 +70,8 @@ export interface ButtonGraphicsCanvasElement extends Omit<ButtonGraphicsElementB
 	decoration: ExpressionOrValue<ButtonGraphicsDecorationType> // replaces show_topbar
 }
 
-export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsTextDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
 	type: 'text'
 	text: string
 	fontsize: string
@@ -72,7 +81,8 @@ export interface ButtonGraphicsTextDrawElement extends ButtonGraphicsDrawBase, B
 	valign: VerticalAlignment
 }
 
-export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, ButtonGraphicsBounds {
+export interface ButtonGraphicsTextElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
 	type: 'text'
 	text: ExpressionOrValue<string>
 	fontsize: ExpressionOrValue<string>
@@ -82,7 +92,8 @@ export interface ButtonGraphicsTextElement extends ButtonGraphicsElementBase, Bu
 	valign: ExpressionOrValue<VerticalAlignment>
 }
 
-export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsImageDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
 	type: 'image'
 	base64Image: string | null
 	halign: HorizontalAlignment
@@ -90,7 +101,8 @@ export interface ButtonGraphicsImageDrawElement extends ButtonGraphicsDrawBase, 
 	fillMode: 'fit_or_shrink' | 'fit' | 'fill' | 'crop'
 }
 
-export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase, ButtonGraphicsBounds {
+export interface ButtonGraphicsImageElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
 	type: 'image'
 	base64Image: ExpressionOrValue<string | null>
 	halign: ExpressionOrValue<HorizontalAlignment>
@@ -99,13 +111,13 @@ export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase, B
 }
 
 export interface ButtonGraphicsBoxDrawElement
-	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawBorder {
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawBorder, ButtonGraphicsDrawRotation {
 	type: 'box'
 	color: number
 }
 
 export interface ButtonGraphicsBoxElement
-	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsBorder {
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsBorder, ButtonGraphicsRotation {
 	type: 'box'
 	color: ExpressionOrValue<number>
 }
@@ -132,12 +144,14 @@ export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase {
 	borderPosition: ExpressionOrValue<'inside' | 'center' | 'outside'>
 }
 
-export interface ButtonGraphicsGroupDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsGroupDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
 	type: 'group'
 	children: SomeButtonGraphicsDrawElement[]
 }
 
-export interface ButtonGraphicsGroupElement extends ButtonGraphicsElementBase, ButtonGraphicsBounds {
+export interface ButtonGraphicsGroupElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
 	type: 'group'
 	children: SomeButtonGraphicsElement[]
 }

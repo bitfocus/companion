@@ -171,6 +171,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			sharedUdpSocketJoin: this.#handleSharedUdpSocketJoin.bind(this),
 			sharedUdpSocketLeave: this.#handleSharedUdpSocketLeave.bind(this),
 			sharedUdpSocketSend: this.#handleSharedUdpSocketSend.bind(this),
+			setCompositeElementDefinitions: null as any, // TODO: composite elements PR
 		}
 
 		this.#ipcWrapper = new IpcWrapper(

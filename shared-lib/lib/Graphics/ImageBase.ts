@@ -18,7 +18,7 @@
 /// <reference lib="dom" />
 
 import type { MinimalLogger } from '../Logger.js'
-import type { HorizontalAlignment, LineOrientation, VerticalAlignment } from './Util.js'
+import type { DrawBounds, HorizontalAlignment, LineOrientation, VerticalAlignment } from './Util.js'
 import { DEFAULT_FONTS_STR } from './Fonts.js'
 
 export type PointXY = [x: number, y: number]
@@ -142,6 +142,26 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			await fcn()
 		} finally {
 			this.context2d.globalAlpha = oldAlpha
+		}
+	}
+
+	/**
+	 * Perform some drawing with a given rotation about the midpoint of the drawBounds.
+	 */
+	async usingRotation(drawBounds: DrawBounds, rotation: number, fcn: () => Promise<void>): Promise<void> {
+		this.context2d.save()
+
+		const centerX = drawBounds.x + drawBounds.width / 2
+		const centerY = drawBounds.y + drawBounds.height / 2
+
+		this.context2d.translate(centerX, centerY)
+		this.context2d.rotate((rotation * Math.PI) / 180)
+		this.context2d.translate(-centerX, -centerY)
+
+		try {
+			await fcn()
+		} finally {
+			this.context2d.restore()
 		}
 	}
 

@@ -104,19 +104,21 @@ export class GraphicsLayeredButtonRenderer {
 				switch (element.type) {
 					case 'group': {
 						await img.usingTemporaryLayer(element.opacity, async (img) => {
-							elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
+							await img.usingRotation(drawBounds, element.rotation, async () => {
+								elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
 
-							// Propagate the selected
-							const childElementBounds = await this.#drawElements(
-								img,
-								element.children,
-								elementsToHide,
-								selectedElementId,
-								rootBounds,
-								elementBounds,
-								skipDraw
-							)
-							if (childElementBounds) selectedElementBounds = childElementBounds
+								// Propagate the selected
+								const childElementBounds = await this.#drawElements(
+									img,
+									element.children,
+									elementsToHide,
+									selectedElementId,
+									rootBounds,
+									elementBounds,
+									skipDraw
+								)
+								if (childElementBounds) selectedElementBounds = childElementBounds
+							})
 						})
 						break
 					}
@@ -185,36 +187,40 @@ export class GraphicsLayeredButtonRenderer {
 			const imageData = element.base64Image
 
 			await img.usingAlpha(element.opacity, async () => {
-				await img.drawBase64Image(
-					imageData,
-					drawBounds.x,
-					drawBounds.y,
-					drawBounds.width,
-					drawBounds.height,
-					element.halign,
-					element.valign,
-					element.fillMode
-				)
+				await img.usingRotation(drawBounds, element.rotation, async () => {
+					await img.drawBase64Image(
+						imageData,
+						drawBounds.x,
+						drawBounds.y,
+						drawBounds.width,
+						drawBounds.height,
+						element.halign,
+						element.valign,
+						element.fillMode
+					)
+				})
 			})
 		} catch (e) {
 			console.error('error drawing image:', e)
 
-			await img.usingTemporaryLayer(element.opacity, async (img) => {
-				// Draw a thick red cross
-				img.drawPath(
-					[
-						[parentBounds.x, parentBounds.y],
-						[parentBounds.maxX, parentBounds.maxY],
-					],
-					{ color: 'red', width: 5 }
-				)
-				img.drawPath(
-					[
-						[parentBounds.x, parentBounds.maxY],
-						[parentBounds.maxX, parentBounds.y],
-					],
-					{ color: 'red', width: 5 }
-				)
+			await img.usingRotation(drawBounds, element.rotation, async () => {
+				await img.usingTemporaryLayer(element.opacity, async (img) => {
+					// Draw a thick red cross
+					img.drawPath(
+						[
+							[parentBounds.x, parentBounds.y],
+							[parentBounds.maxX, parentBounds.maxY],
+						],
+						{ color: 'red', width: 5 }
+					)
+					img.drawPath(
+						[
+							[parentBounds.x, parentBounds.maxY],
+							[parentBounds.maxX, parentBounds.y],
+						],
+						{ color: 'red', width: 5 }
+					)
+				})
 			})
 		}
 
@@ -245,23 +251,25 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		await img.usingAlpha(element.opacity, async () => {
-			img.drawAlignedText(
-				drawBounds.x + marginX,
-				drawBounds.y + marginY,
-				drawBounds.width - 2 * marginX,
-				drawBounds.height - 2 * marginY,
-				element.text,
-				parseColor(element.color),
-				fontSize,
-				element.halign,
-				element.valign,
-				rgbRev(element.outlineColor, true).a > 0
-					? {
-							width: 2, // Fixed width for now, maybe should be dynamic
-							color: parseColor(element.outlineColor),
-						}
-					: undefined
-			)
+			await img.usingRotation(drawBounds, element.rotation, async () => {
+				img.drawAlignedText(
+					drawBounds.x + marginX,
+					drawBounds.y + marginY,
+					drawBounds.width - 2 * marginX,
+					drawBounds.height - 2 * marginY,
+					element.text,
+					parseColor(element.color),
+					fontSize,
+					element.halign,
+					element.valign,
+					rgbRev(element.outlineColor, true).a > 0
+						? {
+								width: 2, // Fixed width for now, maybe should be dynamic
+								color: parseColor(element.outlineColor),
+							}
+						: undefined
+				)
+			})
 		})
 
 		return drawBounds
@@ -280,18 +288,20 @@ export class GraphicsLayeredButtonRenderer {
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
 		await img.usingAlpha(element.opacity, async () => {
-			img.box(
-				drawBounds.x,
-				drawBounds.y,
-				drawBounds.maxX,
-				drawBounds.maxY,
-				parseColor(element.color),
-				{
-					color: parseColor(element.borderColor),
-					width: borderWidth,
-				},
-				element.borderPosition
-			)
+			await img.usingRotation(drawBounds, element.rotation, async () => {
+				img.box(
+					drawBounds.x,
+					drawBounds.y,
+					drawBounds.maxX,
+					drawBounds.maxY,
+					parseColor(element.color),
+					{
+						color: parseColor(element.borderColor),
+						width: borderWidth,
+					},
+					element.borderPosition
+				)
+			})
 		})
 
 		return drawBounds

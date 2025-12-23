@@ -325,6 +325,7 @@ async function convertGroupElementForDrawing(
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
+		rotation: helper.getNumber('rotation', 0),
 		children,
 	}
 }
@@ -356,6 +357,7 @@ async function convertImageElementForDrawing(
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
+		rotation: helper.getNumber('rotation', 0),
 		base64Image,
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
@@ -380,6 +382,7 @@ function convertTextElementForDrawing(
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
+		rotation: helper.getNumber('rotation', 0),
 		text: helper.getDrawText('text') + '',
 		fontsize: helper.getUnknown('fontsize', 'auto') as string,
 		color: helper.getNumber('color', 0),
@@ -406,6 +409,7 @@ function convertBoxElementForDrawing(
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
+		rotation: helper.getNumber('rotation', 0),
 		color: helper.getNumber('color', 0),
 
 		...convertBorderProperties(helper),
