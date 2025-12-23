@@ -152,15 +152,16 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 
 	return (
 		<div className="button-layer-style-editor h-100">
-			<div className="button-layer-preview">
-				<LayeredButtonPreviewRenderer controlId={controlId} location={location} styleStore={styleStore} />
-			</div>
-			<div className="button-layer-elementlist">
-				<ElementsList styleStore={styleStore} controlId={controlId} />
+			<div className="button-layer-top">
+				<div className="button-layer-preview">
+					<LayeredButtonPreviewRenderer controlId={controlId} location={location} styleStore={styleStore} />
+				</div>
+				<div className="button-layer-elementlist">
+					<ElementsList styleStore={styleStore} controlId={controlId} />
+				</div>
+				<hr />
 			</div>
 			<div className="button-layer-options">
-				<hr />
-
 				{elementProps ? (
 					<ElementPropertiesEditor
 						controlId={controlId}

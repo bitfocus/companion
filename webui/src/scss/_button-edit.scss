@@ -224,6 +224,35 @@ table.variables-table {
 	grid-template-columns: 1fr 1fr;
 	grid-template-rows: minmax(30vh, 300px) 1fr;
 
+	.button-layer-top {
+		grid-column: 1 / span 2;
+		position: sticky;
+		top: var(--tab-bar-height, 0);
+		background-color: #fff;
+		z-index: 1;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: 1fr auto;
+
+		&::after {
+			content: '';
+			position: absolute;
+			bottom: -1rem;
+			left: 0;
+			right: 0;
+			height: 1rem;
+			background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+			pointer-events: none;
+			z-index: 10;
+		}
+
+		hr {
+			grid-column: 1 / span 2;
+			margin: 1rem 0 0.5rem;
+		}
+	}
+
 	.button-layer-preview {
 		display: flex;
 		flex-direction: column;
@@ -235,6 +264,8 @@ table.variables-table {
 	}
 
 	.button-layer-elementlist {
+		overflow-y: auto;
+
 		.button-layer-elementlist-table {
 			overflow-y: scroll;
 			max-height: 100%;
@@ -319,6 +350,8 @@ table.variables-table {
 
 	.button-layer-options {
 		grid-column: 1 / span 2;
+
+		padding-top: 1rem;
 	}
 }
 

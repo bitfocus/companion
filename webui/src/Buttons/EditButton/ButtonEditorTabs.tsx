@@ -11,6 +11,7 @@ import { useControlActionStepsAndSetsService } from '~/Services/Controls/Control
 import { ControlActionStepTab } from './ControlActionStepTab.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import useElementclientSize from '~/Hooks/useElementInnerSize.js'
 
 export interface ButtonEditorExtraTabs {
 	id: string
@@ -41,6 +42,7 @@ export function ButtonEditorTabs({
 	children,
 }: ButtonEditorTabsProps): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
+	const [tabBarRef, tabBarSize] = useElementclientSize<HTMLDivElement>()
 
 	const stepKeys = useMemo(() => GetStepIds(steps), [steps])
 
@@ -72,7 +74,7 @@ export function ButtonEditorTabs({
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 
-			<div className={'row-heading'}>
+			<div ref={tabBarRef} className={'row-heading'}>
 				<CNav variant="tabs">
 					{extraTabs?.map(
 						(tab) =>
@@ -126,7 +128,7 @@ export function ButtonEditorTabs({
 				</CNav>
 			</div>
 
-			<div className="edit-sticky-body">
+			<div className="edit-sticky-body" style={{ '--tab-bar-height': `${tabBarSize.height}px` } as React.CSSProperties}>
 				{children && children(selectedStep)}
 
 				{selectedKey && selectedStepProps && (
