@@ -318,13 +318,11 @@ export class CloudController {
 			if (control.type !== 'button-layered') {
 				continue
 			}
-			const drawStyle = control.getLastDrawStyle()
-			if (!drawStyle || drawStyle.style !== 'button-layered') {
-				continue
-			}
+
+			const render = this.#graphics.getCachedRender(location)
 
 			// Don't expose a cloud control
-			if (drawStyle.cloud) {
+			if (render?.style?.state?.cloud) {
 				continue
 			}
 
@@ -336,11 +334,8 @@ export class CloudController {
 				page: location.pageNumber, // backwards compatibility, remove in release
 				p: this.protocolVersion,
 				data: {
-					...drawStyle,
-					pushed: control.supportsPushed && control.pushed,
-					actions_running: drawStyle.action_running,
-					bank_status: drawStyle.button_status,
-					style: 'button-layered',
+					// Provide the default render as the best we can do
+					png64: render?.asDataUrl,
 				},
 			})
 		}
@@ -754,7 +749,10 @@ export class CloudController {
 						p: this.protocolVersion,
 						page: location.pageNumber, // backwards compatibility, remove in release
 						bank, // backwards compatibility, remove in release
-						data: render.style,
+						data: {
+							// Provide the default render as the best we can do
+							png64: render.asDataUrl,
+						},
 					})
 				}
 			}
