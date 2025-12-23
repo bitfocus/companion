@@ -6,7 +6,6 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from './EntityInstance.js'
-import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { clamp } from '../../Resources/Util.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ProcessManagerForEntity } from './Types.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
@@ -394,21 +393,6 @@ export class ControlEntityList {
 		}
 
 		return values
-	}
-
-	/**
-	 * Get the unparsed style for the feedbacks
-	 * Note: Does not clone the style
-	 */
-	buildFeedbackStyle(styleBuilder: FeedbackStyleBuilder): void {
-		if (this.#listDefinition.type !== EntityModelType.Feedback || !!this.#listDefinition.feedbackListType)
-			throw new Error('ControlEntityList is not style feedbacks')
-
-		// Note: We don't need to consider children of the feedbacks here, as that can only be from boolean feedbacks which are handled by the `getBooleanValue`
-
-		for (const entity of this.#entities) {
-			entity.buildFeedbackStyle(styleBuilder)
-		}
 	}
 
 	/**

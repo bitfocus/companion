@@ -8,11 +8,6 @@ export function visitEntityModel(visitor: InternalVisitor, entity: SomeEntityMod
 	visitor.visitConnectionId(entity, 'connectionId')
 
 	if (entity.type === EntityModelType.Feedback) {
-		// Fixup any boolean feedbacks
-		if (entity.style?.text) {
-			visitor.visitString(entity.style, 'text')
-		}
-
 		// Fixup style overrides on layered buttons
 		if (entity.styleOverrides) {
 			for (const override of entity.styleOverrides) {

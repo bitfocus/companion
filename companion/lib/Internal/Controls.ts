@@ -914,9 +914,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
-			if (control && control.supportsStyle) {
-				control.styleSetFields({ bgcolor: action.rawOptions.color })
-			} else if (control && control.supportsLayeredStyle) {
+			if (control && control.supportsLayeredStyle) {
 				control.layeredStyleUpdateFromLegacyProperties({ bgcolor: action.rawOptions.color })
 			}
 			return true
@@ -925,9 +923,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
-			if (control && control.supportsStyle) {
-				control.styleSetFields({ color: action.rawOptions.color })
-			} else if (control && control.supportsLayeredStyle) {
+			if (control && control.supportsLayeredStyle) {
 				control.layeredStyleUpdateFromLegacyProperties({ color: action.rawOptions.color })
 			}
 			return true
@@ -936,9 +932,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			if (!theControlId) return true
 
 			const control = this.#controlsController.getControl(theControlId)
-			if (control && control.supportsStyle) {
-				control.styleSetFields({ text: action.rawOptions.label })
-			} else if (control && control.supportsLayeredStyle) {
+			if (control && control.supportsLayeredStyle) {
 				control.layeredStyleUpdateFromLegacyProperties({ text: action.rawOptions.label })
 			}
 

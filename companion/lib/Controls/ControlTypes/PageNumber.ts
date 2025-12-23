@@ -6,7 +6,6 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
-	ControlWithoutStyle,
 } from '../IControlFragments.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -31,7 +30,6 @@ export class ControlButtonPageNumber
 	extends ControlBase<PageNumberButtonModel>
 	implements
 		ControlWithoutActions,
-		ControlWithoutStyle,
 		ControlWithoutLayeredStyle,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
@@ -42,7 +40,6 @@ export class ControlButtonPageNumber
 
 	readonly supportsActions = false
 	readonly supportsEntities = false
-	readonly supportsStyle = false
 	readonly supportsLayeredStyle = false
 	readonly supportsEvents = false
 	readonly supportsActionSets = false
@@ -126,9 +123,6 @@ export class ControlButtonPageNumber
 		}
 	}
 
-	getBitmapFeedbackSize(): { width: number; height: number } | null {
-		return null
-	}
 	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
 	}

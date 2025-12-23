@@ -1,4 +1,3 @@
-import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
@@ -299,9 +298,7 @@ export class ControlsController {
 		const controlType = typeof controlObj === 'object' ? controlObj.type : controlObj
 		const controlObj2 = typeof controlObj === 'object' ? controlObj : null
 		if (category === 'all' || category === 'button') {
-			if (controlObj2?.type === 'button' || (controlType === 'button' && !controlObj2)) {
-				return new ControlButtonNormal(this.#createControlDependencies(), controlId, controlObj2, isImport)
-			} else if (controlObj2?.type === 'button-layered' || (controlType === 'button-layered' && !controlObj2)) {
+			if (controlObj2?.type === 'button-layered' || (controlType === 'button-layered' && !controlObj2)) {
 				return new ControlButtonLayered(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
 				return new ControlButtonPageNumber(this.#createControlDependencies(), controlId, controlObj2, isImport)
@@ -367,14 +364,14 @@ export class ControlsController {
 	}
 
 	/**
-	 * Get all of the trigger controls
+	 * Get all of the button controls
 	 */
-	getAllButtons(): Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> {
-		const buttons: Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> =
+	getAllButtons(): Array<ControlButtonLayered | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> {
+		const buttons: Array<ControlButtonLayered | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> =
 			[]
 		for (const control of this.#controls.values()) {
 			if (
-				control instanceof ControlButtonNormal ||
+				control instanceof ControlButtonLayered ||
 				control instanceof ControlButtonPageDown ||
 				control instanceof ControlButtonPageNumber ||
 				control instanceof ControlButtonPageUp
@@ -560,7 +557,7 @@ export class ControlsController {
 				// If the changes are local variables and from another control, ignore them
 				if (fromControlId && fromControlId !== control.controlId) continue
 
-				if (control.supportsStyle || control.supportsLayeredStyle) {
+				if (control.supportsLayeredStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}
 			}

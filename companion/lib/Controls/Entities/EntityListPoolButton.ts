@@ -1,18 +1,12 @@
-import type {
-	ButtonModelBase,
-	NormalButtonOptions,
-	NormalButtonSteps,
-} from '@companion-app/shared/Model/ButtonModel.js'
+import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	type SomeSocketEntityLocation,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
-import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
@@ -178,16 +172,6 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		}
 
 		return entityLists
-	}
-
-	/**
-	 * Get the unparsed style for the feedbacks
-	 * Note: Does not clone the style
-	 */
-	getUnparsedFeedbackStyle(baseStyle: ButtonStyleProperties): UnparsedButtonStyle {
-		const styleBuilder = new FeedbackStyleBuilder(baseStyle)
-		this.#feedbacks.buildFeedbackStyle(styleBuilder)
-		return styleBuilder.style
 	}
 
 	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>> {
@@ -536,7 +520,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * Update the step operation mode or expression upon button options change
 	 * @param options
 	 */
-	stepExpressionUpdate(options: NormalButtonOptions): void {
+	stepExpressionUpdate(options: ButtonOptionsBase): void {
 		if (options.stepProgression === 'expression') {
 			// It may have changed, assume it has and purge the existing state
 			this.#currentStep = {

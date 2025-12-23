@@ -12,7 +12,6 @@ import type {
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import {
-	fixupButtonControl,
 	fixupLayeredButtonControl,
 	fixupExpressionVariableControl,
 	fixupTriggerControl,
@@ -365,8 +364,6 @@ export class ImportController {
 						fixedControlObj = {
 							type: control.type,
 						}
-					} else if (control.type === 'button') {
-						fixedControlObj = fixupButtonControl(this.#logger, control, referencesUpdater, instanceIdMap)
 					} else if (control.type === 'button-layered') {
 						fixedControlObj = fixupLayeredButtonControl(this.#logger, control, referencesUpdater, instanceIdMap)
 					} else {

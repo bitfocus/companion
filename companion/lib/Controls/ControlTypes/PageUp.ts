@@ -7,7 +7,6 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
-	ControlWithoutStyle,
 } from '../IControlFragments.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
@@ -31,7 +30,6 @@ export class ControlButtonPageUp
 	extends ControlBase<PageUpButtonModel>
 	implements
 		ControlWithoutActions,
-		ControlWithoutStyle,
 		ControlWithoutLayeredStyle,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
@@ -42,7 +40,6 @@ export class ControlButtonPageUp
 
 	readonly supportsActions = false
 	readonly supportsEntities = false
-	readonly supportsStyle = false
 	readonly supportsLayeredStyle = false
 	readonly supportsEvents = false
 	readonly supportsActionSets = false
@@ -125,9 +122,6 @@ export class ControlButtonPageUp
 		}
 	}
 
-	getBitmapFeedbackSize(): { width: number; height: number } | null {
-		return null
-	}
 	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
 	}

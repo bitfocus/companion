@@ -15,7 +15,6 @@ import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { TextInputField } from '../../Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
@@ -141,21 +140,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						service={service}
 					/>
 
-					{!!entity && entity.type === EntityModelType.Feedback && feedbackListType === null && (
-						<>
-							<FeedbackManageStyles
-								feedbackSpec={entityDefinition}
-								feedback={entity}
-								setSelectedStyleProps={service.setSelectedStyleProps}
-							/>
-							<FeedbackStyles
-								feedbackSpec={entityDefinition}
-								feedback={entity}
-								setStylePropsValue={service.setStylePropsValue}
-								localVariablesStore={localVariablesStore}
-							/>
-						</>
-					)}
 					{!!entity &&
 						entity.type === EntityModelType.Feedback &&
 						feedbackListType === FeedbackEntitySubType.StyleOverride && (

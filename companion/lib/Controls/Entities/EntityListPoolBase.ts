@@ -13,7 +13,6 @@ import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import isEqual from 'fast-deep-equal'
 import type { InstanceDefinitionsForEntity } from './Types.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
@@ -591,59 +590,6 @@ export abstract class ControlEntityListPoolBase {
 		this.tryTriggerLocalVariablesChanged(entity)
 
 		return true
-	}
-
-	/**
-	 * Update the selected style properties for a boolean feedback
-	 * @param id the id of the entity
-	 * @param selected the properties to be selected
-	 */
-	entitySetStyleSelection(
-		listId: SomeSocketEntityLocation,
-		baseStyle: ButtonStyleProperties,
-		id: string,
-		selected: string[]
-	): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
-
-		if (entity.setStyleSelection(selected, baseStyle)) {
-			this.commitChange()
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Update an style property for a boolean feedback
-	 * @param id the id of the entity
-	 * @param key the key/name of the property
-	 * @param value the new value
-	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	entitySetStyleValue(listId: SomeSocketEntityLocation, id: string, key: string, value: any): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
-
-		if (entity.setStyleValue(key, value)) {
-			this.commitChange()
-
-			return true
-		}
-
-		return false
 	}
 
 	entityReplaceStyleOverride(

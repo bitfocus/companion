@@ -58,7 +58,7 @@ export function SelectButtonTypeDropdown({
 		<CDropdown className="" style={{ display: 'inline-block', marginRight: -4, position: 'inherit' }}>
 			<CButtonGroup>
 				{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-				<CButton color="danger" onClick={() => setButtonType('button')}>
+				<CButton color="danger" onClick={() => setButtonType('button-layered')}>
 					Create button
 				</CButton>
 				<CDropdownToggle
@@ -71,11 +71,10 @@ export function SelectButtonTypeDropdown({
 				</CDropdownToggle>
 			</CButtonGroup>
 			<CDropdownMenu>
-				<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
+				<CDropdownItem onClick={() => setButtonType('button-layered')}>Regular button</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
-				<CDropdownItem onClick={() => setButtonType('button-layered')}>Layered button (Experimental)</CDropdownItem>
 			</CDropdownMenu>
 		</CDropdown>
 	)

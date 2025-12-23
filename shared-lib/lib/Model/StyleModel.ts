@@ -5,7 +5,6 @@ export type DrawStyleModel =
 	| {
 			style: 'pageup' | 'pagedown' | 'pagenum'
 	  }
-	| DrawStyleButtonModel
 	| DrawStyleLayeredButtonModel
 
 export interface DrawStyleButtonStateProps {
@@ -23,15 +22,7 @@ export interface DrawStyleButtonStateProps {
 export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 	style: 'button-layered'
 
-	// imageBuffers: DrawImageBuffer[]
-
 	elements: SomeButtonGraphicsDrawElement[]
-}
-
-export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleButtonStateProps {
-	style: 'button'
-
-	imageBuffers: DrawImageBuffer[]
 }
 
 export interface DrawImageBuffer {
@@ -42,10 +33,6 @@ export interface DrawImageBuffer {
 	height: number | undefined
 	drawScale: number | undefined
 	pixelFormat: 'RGB' | 'RGBA' | 'ARGB' | undefined
-}
-
-export interface UnparsedButtonStyle extends ButtonStyleProperties {
-	imageBuffers: DrawImageBuffer[]
 }
 
 export interface ButtonStyleProperties {

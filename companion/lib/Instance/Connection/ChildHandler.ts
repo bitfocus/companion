@@ -75,6 +75,8 @@ import type { RunActionExtras } from './ChildHandlerApi.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { ConvertPresetDefinition } from './Presets.js'
 
+const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
+
 export interface ConnectionChildHandlerDependencies {
 	readonly controls: ControlsController
 	readonly variables: VariablesController
@@ -187,7 +189,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
 			? new ConnectionEntityManager(
-					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper),
+					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 					this.#deps.controls,
 					this.connectionId
 				)
@@ -304,7 +306,6 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			const controlEntities = control.entities.getAllEntities()
 			if (!controlEntities || controlEntities.length === 0) continue
 
-			const imageSize = control.getBitmapFeedbackSize()
 			for (const entity of controlEntities) {
 				if (entity.connectionId !== this.connectionId) continue
 				if (entity.type !== EntityModelType.Feedback) continue
@@ -321,7 +322,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 					upgradeIndex: entityModel.upgradeIndex ?? null,
 					disabled: !!entityModel.disabled,
 
-					image: imageSize ?? undefined,
+					image: control.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 				}
 			}
 		}
@@ -430,7 +431,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 
 					isInverted: !!feedback.isInverted,
 
-					image: control?.getBitmapFeedbackSize() ?? undefined,
+					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 
 					upgradeIndex: feedback.upgradeIndex ?? null,
 					disabled: !!feedback.disabled,
@@ -491,7 +492,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 
 								isInverted: !!entity.isInverted,
 
-								image: control?.getBitmapFeedbackSize() ?? undefined,
+								image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,
@@ -1077,9 +1078,14 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 
 class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
+	readonly #controlsController: ControlsController
 
-	constructor(ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>) {
+	constructor(
+		ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>,
+		controlsController: ControlsController
+	) {
 		this.#ipcWrapper = ipcWrapper
+		this.#controlsController = controlsController
 	}
 
 	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
@@ -1109,13 +1115,15 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 
 		for (const [id, value] of feedbacks) {
 			if (value) {
+				const control = this.#controlsController.getControl(value.controlId)
+
 				updateMessage.feedbacks[id] = {
 					id: value.entity.id,
 					controlId: value.controlId,
 					feedbackId: value.entity.definitionId,
 					options: value.parsedOptions,
 
-					image: value.imageSize,
+					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 
 					isInverted: !!value.entity.isInverted,
 

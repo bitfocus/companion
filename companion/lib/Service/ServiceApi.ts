@@ -187,9 +187,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 
 			setStyleFields: control.supportsLayeredStyle
 				? (diff) => control.layeredStyleUpdateFromLegacyProperties(diff)
-				: control.supportsStyle
-					? (diff) => control.styleSetFields(diff)
-					: undefined,
+				: undefined,
 		}
 	}
 

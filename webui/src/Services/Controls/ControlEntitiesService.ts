@@ -38,8 +38,6 @@ export interface IEntityEditorService {
 	setInverted: (entityId: string, inverted: boolean) => void
 	setVariableName: (entityId: string, name: string) => void
 	setVariableValue: (entityId: string, value: any) => void
-	setSelectedStyleProps: (entityId: string, keys: string[]) => void
-	setStylePropsValue: (entityId: string, key: string, value: any) => void
 
 	replaceStyleOverride: (entityId: string, override: FeedbackEntityStyleOverride) => void
 	removeStyleOverride: (entityId: string, overrideId: string) => void
@@ -57,8 +55,6 @@ export interface IEntityEditorActionService {
 	setInverted: (inverted: boolean) => void
 	setVariableName: (name: string) => void
 	setVariableValue: (value: any) => void
-	setSelectedStyleProps: (keys: string[]) => void
-	setStylePropsValue: (key: string, value: any) => void
 
 	replaceStyleOverride: (override: FeedbackEntityStyleOverride) => void
 	removeStyleOverride: (overrideId: string) => void
@@ -79,8 +75,6 @@ export function useControlEntitiesEditorService(
 	const setEnabledMutation = useMutationExt(trpc.controls.entities.setEnabled.mutationOptions())
 	const setHeadlineMutation = useMutationExt(trpc.controls.entities.setHeadline.mutationOptions())
 	const setInvertedMutation = useMutationExt(trpc.controls.entities.setInverted.mutationOptions())
-	const setStyleSelectionMutation = useMutationExt(trpc.controls.entities.setStyleSelection.mutationOptions())
-	const setStyleValueMutation = useMutationExt(trpc.controls.entities.setStyleValue.mutationOptions())
 	const setVariableNameMutation = useMutationExt(trpc.controls.entities.setVariableName.mutationOptions())
 	const setVariableValueMutation = useMutationExt(trpc.controls.entities.setVariableValue.mutationOptions())
 	const replaceStyleOverrideMutation = useMutationExt(trpc.controls.entities.replaceStyleOverride.mutationOptions())
@@ -257,33 +251,6 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
-			setSelectedStyleProps: (entityId: string, selected: string[]) => {
-				setStyleSelectionMutation
-					.mutateAsync({
-						controlId,
-						entityLocation: listId,
-						entityId,
-						selected,
-					})
-					.catch((e) => {
-						console.error('Failed to set entity style selected props', e)
-					})
-			},
-
-			setStylePropsValue: (entityId: string, key: string, value: any) => {
-				setStyleValueMutation
-					.mutateAsync({
-						controlId,
-						entityLocation: listId,
-						entityId,
-						key,
-						value,
-					})
-					.catch((e) => {
-						console.error('Failed to set entity style value', e)
-					})
-			},
-
 			replaceStyleOverride: (entityId: string, override: FeedbackEntityStyleOverride) => {
 				replaceStyleOverrideMutation
 					.mutateAsync({
@@ -321,8 +288,6 @@ export function useControlEntitiesEditorService(
 			setEnabledMutation,
 			setHeadlineMutation,
 			setInvertedMutation,
-			setStyleSelectionMutation,
-			setStyleValueMutation,
 			setVariableNameMutation,
 			setVariableValueMutation,
 			replaceStyleOverrideMutation,
@@ -362,8 +327,6 @@ export function useControlEntityService(
 			setInverted: (inverted: boolean) => serviceFactory.setInverted(entityId, inverted),
 			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),
 			setVariableValue: (value: any) => serviceFactory.setVariableValue(entityId, value),
-			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
-			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 			replaceStyleOverride: (override: FeedbackEntityStyleOverride) =>
 				serviceFactory.replaceStyleOverride(entityId, override),
 			removeStyleOverride: (overrideId: string) => serviceFactory.removeStyleOverride(entityId, overrideId),

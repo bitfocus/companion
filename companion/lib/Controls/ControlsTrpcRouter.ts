@@ -258,24 +258,6 @@ export function createControlsTrpcRouter(
 				controlsController.abortAllDelayedActions(null)
 			}),
 
-		setStyleFields: publicProcedure
-			.input(
-				z.object({
-					controlId: z.string(),
-					styleFields: z.record(z.string(), z.any()),
-				})
-			)
-			.mutation(async ({ input }) => {
-				const control = controlsMap.get(input.controlId)
-				if (!control) return false
-
-				if (control.supportsStyle) {
-					return control.styleSetFields(input.styleFields)
-				} else {
-					throw new Error(`Control "${input.controlId}" does not support config`)
-				}
-			}),
-
 		setOptionsField: publicProcedure
 			.input(
 				z.object({

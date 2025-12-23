@@ -1,8 +1,6 @@
 import * as imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
  * Combine rgba components to a 32bit value
@@ -359,31 +357,6 @@ export function sendOverIpc(data: any): void {
  */
 export function isPackaged(): boolean {
 	return typeof __webpack_require__ === 'function'
-}
-
-/**
- * Get the size of the bitmap for a button
- */
-export function GetButtonBitmapSize(
-	userConfig: DataUserConfig,
-	style: ButtonStyleProperties
-): { width: number; height: number } {
-	let removeTopBar = !style.show_topbar
-	if (style.show_topbar === 'default' || style.show_topbar === undefined) {
-		removeTopBar = userConfig.getKey('remove_topbar') === true
-	}
-
-	if (removeTopBar) {
-		return {
-			width: 72,
-			height: 72,
-		}
-	} else {
-		return {
-			width: 72,
-			height: 58,
-		}
-	}
 }
 
 export type HorizontalAlignment = 'left' | 'right' | 'center'

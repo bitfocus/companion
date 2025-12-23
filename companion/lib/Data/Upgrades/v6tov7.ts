@@ -118,7 +118,12 @@ interface OldFeedbackInstance {
 
 	children?: OldFeedbackInstance[]
 }
-function fixupFeedback(feedback: OldFeedbackInstance): Complete<FeedbackEntityModel> {
+function fixupFeedback(feedback: OldFeedbackInstance): Complete<
+	FeedbackEntityModel & {
+		// Backwards compatibility
+		style?: Partial<ButtonStyleProperties>
+	}
+> {
 	return {
 		type: EntityModelType.Feedback,
 

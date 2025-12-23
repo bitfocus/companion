@@ -12,7 +12,6 @@ import type { LayeredButtonModel, PresetButtonModel } from '@companion-app/share
 import LogController from '../Log/Controller.js'
 import {
 	EntityModelType,
-	FeedbackEntitySubType,
 	type FeedbackEntityModel,
 	type ActionEntityModel,
 	type EntityModelBase,
@@ -167,12 +166,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				const feedback: FeedbackEntityModel = {
 					...entity,
 					type: EntityModelType.Feedback,
-					style: {},
 					isInverted: false,
-				}
-
-				if (/*!booleanOnly &&*/ definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
-					feedback.style = structuredClone(definition.feedbackStyle)
 				}
 
 				return feedback
@@ -432,10 +426,20 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				// Update variable references in style layers
 				replaceAllVariablesInElements(preset.model.style.layers, label)
 
-				if (preset.model.feedbacks) {
-					for (const feedback of preset.model.feedbacks) {
-						if (feedback.type === EntityModelType.Feedback && feedback.style && feedback.style.text) {
-							feedback.style.text = replaceAllVariables(feedback.style.text, label)
+				for (const feedback of preset.model.feedbacks || []) {
+					if (feedback.type === EntityModelType.Feedback && feedback.styleOverrides) {
+						for (const styleOverride of feedback.styleOverrides) {
+							if (styleOverride.override && isExpressionOrValue(styleOverride.override)) {
+								if (styleOverride.override.isExpression) {
+									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label)
+								} else if (
+									styleOverride.elementProperty === 'text' &&
+									typeof styleOverride.override.value === 'string'
+								) {
+									// TODO - this may be too strict/loose
+									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label)
+								}
+							}
 						}
 					}
 				}

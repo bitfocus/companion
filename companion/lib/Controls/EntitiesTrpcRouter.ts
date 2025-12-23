@@ -240,49 +240,6 @@ export function createEntitiesTrpcRouter(
 				return control.entities.entityMoveTo(moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex)
 			}),
 
-		setStyleSelection: publicProcedure
-			.input(
-				z.object({
-					controlId: z.string(),
-					entityLocation: zodEntityLocation,
-					entityId: z.string(),
-					selected: z.array(z.string()),
-				})
-			)
-			.mutation(async ({ input }) => {
-				const { controlId, entityLocation, entityId, selected } = input
-
-				const control = controlsMap.get(controlId)
-				if (!control) return false
-
-				if (!control.supportsEntities || !control.supportsStyle)
-					throw new Error(`Control "${controlId}" does not support entities or styles`)
-
-				return control.entities.entitySetStyleSelection(entityLocation, control.baseStyle, entityId, selected)
-			}),
-
-		setStyleValue: publicProcedure
-			.input(
-				z.object({
-					controlId: z.string(),
-					entityLocation: zodEntityLocation,
-					entityId: z.string(),
-					key: z.string(),
-					value: z.any(),
-				})
-			)
-			.mutation(async ({ input }) => {
-				const { controlId, entityLocation, entityId, key, value } = input
-
-				const control = controlsMap.get(controlId)
-				if (!control) return false
-
-				if (!control.supportsEntities || !control.supportsStyle)
-					throw new Error(`Control "${controlId}" does not support entities or styles`)
-
-				return control.entities.entitySetStyleValue(entityLocation, entityId, key, value)
-			}),
-
 		replaceStyleOverride: publicProcedure
 			.input(
 				z.object({

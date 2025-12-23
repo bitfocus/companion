@@ -9,7 +9,7 @@ import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import { ButtonGridIcon, ButtonInfiniteGrid, type ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import type { DropdownChoice, DropdownChoiceId, ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
@@ -53,12 +53,12 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 	}, [selectedControl, selectedStep, selectedSet, selectButton])
 
 	const { controlConfig: rawControlConfig } = useControlConfig(selectedControl)
-	const controlInfo: NormalButtonModel | null =
-		rawControlConfig?.config.type === 'button' ? rawControlConfig.config : null
+	const controlInfo: LayeredButtonModel | null =
+		rawControlConfig?.config.type === 'button-layered' ? rawControlConfig.config : null
 
 	const actionStepOptions = useMemo(() => {
 		switch (controlInfo?.type) {
-			case 'button':
+			case 'button-layered':
 				return Object.keys(controlInfo.steps || {}).map((stepId) => ({
 					id: stepId,
 					label: `Step ${Number(stepId) + 1}`,
@@ -71,7 +71,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 	const selectedStepInfo = selectedStep ? controlInfo?.steps?.[selectedStep] : null
 	const actionSetOptions = useMemo(() => {
 		switch (controlInfo?.type) {
-			case 'button': {
+			case 'button-layered': {
 				const sets: DropdownChoice[] = [
 					{
 						id: 'down',
