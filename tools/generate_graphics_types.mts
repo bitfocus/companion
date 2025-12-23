@@ -148,7 +148,7 @@ for (const [id, fields] of Object.entries(elementSchemas)) {
 	const elementName = `ButtonGraphics${typeName}Element`
 	allElementTypes.push(elementName)
 
-	// Generate ButtonGraphicsCanvasDrawElement interface
+	// Generate draw element interface
 	generatedFile += `export interface ${drawElementName} extends ${drawInterfaces.join(', ')} {\n`
 	generatedFile += `\ttype: '${id}'\n`
 	for (const field of filteredFields) {
@@ -158,7 +158,7 @@ for (const [id, fields] of Object.entries(elementSchemas)) {
 	if (id === 'group') generatedFile += `\tchildren: SomeButtonGraphicsDrawElement[]\n`
 	generatedFile += '}\n\n'
 
-	// Generate ButtonGraphicsCanvasElement interface
+	// Generate raw element interface
 	generatedFile += `export interface ${elementName} extends ${elementInterfaces.join(', ')} {\n`
 	generatedFile += `\ttype: '${id}'\n`
 	for (const field of filteredFields) {
