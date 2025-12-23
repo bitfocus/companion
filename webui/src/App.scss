@@ -103,9 +103,14 @@ body {
 }
 
 .header-nav-item {
-	border-radius: 6px;
+	border-radius: 2em;
 	margin-left: 1em;
 	background-color: #333;
+}
+
+/* the background of the help icon stack is a filled circle, so we set the color of that item */
+.header-help-bg {
+	color: $sidebar-brand-bg;
 }
 
 .header-update-icon {

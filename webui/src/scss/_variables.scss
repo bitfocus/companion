@@ -50,3 +50,10 @@ $header-border: (
 );
 
 $variable-padding: 1px 3px 0px;
+
+// coreui doesn't define a header-brand-bg, so define it here
+$header-brand-bg: color.adjust($_private-header-bg, $lightness: -10%);
+
+:root {
+	--companion-header-brand-bg: #{$header-brand-bg};
+}
