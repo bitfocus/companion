@@ -215,9 +215,6 @@ export class ControlButtonPreset
 		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
 
 		const result: DrawStyleLayeredButtonModel = {
-			cloud: false,
-			cloud_error: false,
-
 			elements,
 
 			stepCurrent: this.entities.getActiveStepIndex() + 1,

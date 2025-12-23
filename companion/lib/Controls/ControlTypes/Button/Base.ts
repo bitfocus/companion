@@ -188,9 +188,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 	protected getDrawStyleButtonStateProps(): DrawStyleButtonStateProps {
 		const result: DrawStyleButtonStateProps = {
-			cloud: false,
-			cloud_error: false,
-
 			stepCurrent: this.entities.getActiveStepIndex() + 1,
 			stepCount: this.entities.getStepIds().length,
 

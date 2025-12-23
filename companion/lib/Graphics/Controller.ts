@@ -462,8 +462,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			elements: elements,
 
 			pushed: false,
-			cloud: false,
-			cloud_error: false,
 			button_status: undefined,
 			action_running: false,
 

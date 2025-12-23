@@ -20,9 +20,6 @@ export interface ImageResultProcessedStyle {
 	state?: {
 		pushed: boolean
 		showTopBar: boolean | 'default'
-
-		/** @deprecated */
-		cloud: boolean
 	}
 }
 

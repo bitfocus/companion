@@ -321,11 +321,6 @@ export class CloudController {
 
 			const render = this.#graphics.getCachedRender(location)
 
-			// Don't expose a cloud control
-			if (render?.style?.state?.cloud) {
-				continue
-			}
-
 			const bankIndex = xyToOldBankIndex(location.column, location.row)
 
 			retval.push({
@@ -738,23 +733,21 @@ export class CloudController {
 	 */
 	#updateBank(location: ControlLocation, render: ImageResult): void {
 		const bank = xyToOldBankIndex(location.column, location.row)
-		if (render.style?.state && !render.style.state?.cloud && bank) {
-			const updateId = v4()
-			for (let region in this.#regionInstances) {
-				if (!!this.#regionInstances[region]?.socketTransmit) {
-					this.#regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
-						updateId,
-						type: 'single',
-						location,
-						p: this.protocolVersion,
-						page: location.pageNumber, // backwards compatibility, remove in release
-						bank, // backwards compatibility, remove in release
-						data: {
-							// Provide the default render as the best we can do
-							png64: render.asDataUrl,
-						},
-					})
-				}
+		const updateId = v4()
+		for (let region in this.#regionInstances) {
+			if (!!this.#regionInstances[region]?.socketTransmit) {
+				this.#regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
+					updateId,
+					type: 'single',
+					location,
+					p: this.protocolVersion,
+					page: location.pageNumber, // backwards compatibility, remove in release
+					bank, // backwards compatibility, remove in release
+					data: {
+						// Provide the default render as the best we can do
+						png64: render.asDataUrl,
+					},
+				})
 			}
 		}
 	}

@@ -69,7 +69,6 @@ export class GraphicsLayeredProcessedStyleGenerator {
 			state: {
 				pushed: drawStyle.pushed,
 				showTopBar: showTopBar,
-				cloud: drawStyle.cloud || false,
 			},
 		}
 

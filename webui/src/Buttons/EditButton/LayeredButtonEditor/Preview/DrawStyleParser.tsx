@@ -284,9 +284,6 @@ class LayeredButtonDrawStyleParser {
 				stepCount: thisStepCount.ok ? Number(thisStepCount.value) : 1,
 				stepCurrent: thisStep.ok && thisStep.value ? Number(thisStep.value) : 1,
 
-				cloud: undefined,
-				cloud_error: undefined,
-
 				button_status: thisButtonStatus.ok
 					? (stringifyVariableValue(thisButtonStatus.value) as 'error' | 'warning' | 'good')
 					: undefined,
