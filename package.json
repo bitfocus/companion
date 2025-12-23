@@ -31,6 +31,7 @@
     "test": "vitest",
     "build:writefile": "tsx ./tools/build_writefile.mts",
     "build:openapi": "zx ./tools/generate_openapi.mjs",
+    "build:graphics-types": "tsx ./tools/generate_graphics_types.mts",
     "build:satellite-schema": "tsx ./tools/satellite_schema_compile.mts",
     "module:bulk": "zx ./tools/module_bulk.mjs",
     "build:watch": "tsc --build --watch",
