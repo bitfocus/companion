@@ -3,7 +3,7 @@ import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useState } from 'react'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
-import { elementSchemas } from '../../Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
+import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { ElementPicker } from './ElementPicker.js'
 
 interface AddElementPickerModalProps {

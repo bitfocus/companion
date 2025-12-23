@@ -16,7 +16,7 @@ import type { IEntityEditorActionService } from '~/Services/Controls/ControlEnti
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 import { ElementPickerModal } from './ElementPickerModal.js'
 import { AddElementPickerModal } from './AddElementPickerModal.js'
-import { elementSchemas } from '~/Buttons/EditButton/LayeredButtonEditor/ElementPropertiesSchemas.js'
+import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { OptionsInputControl } from '../OptionsInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionFieldControl } from './ExpressionFieldControl.js'

@@ -1,5 +1,5 @@
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { ButtonGraphicsDecorationType, type LineOrientation } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { SomeCompanionInputField } from '../Model/Options.js'
+import { ButtonGraphicsDecorationType, type LineOrientation } from '../Model/StyleLayersModel.js'
 
 // Type-safe constants for border position values
 const LINE_ORIENTATION_CHOICES = [
