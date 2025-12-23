@@ -1,11 +1,11 @@
 import type { SomeCompanionInputField } from '../Model/Options.js'
-import { ButtonGraphicsDecorationType, type LineOrientation } from '../Model/StyleLayersModel.js'
+import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 
 // Type-safe constants for border position values
 const LINE_ORIENTATION_CHOICES = [
-	{ id: 'inside' satisfies LineOrientation, label: 'Inside' },
-	{ id: 'center' satisfies LineOrientation, label: 'Center' },
-	{ id: 'outside' satisfies LineOrientation, label: 'Outside' },
+	{ id: 'inside', label: 'Inside' },
+	{ id: 'center', label: 'Center' },
+	{ id: 'outside', label: 'Outside' },
 ]
 
 const commonElementFields: SomeCompanionInputField[] = [
@@ -122,6 +122,9 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		label: 'Vertical Alignment',
 		default: 'center',
 	},
+
+	// Future ideas:
+	// rotation: number
 ]
 
 // Image element schema (from ImageElementPropertiesEditor)
@@ -161,6 +164,10 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 		],
 		default: 'fit_or_shrink',
 	},
+
+	// Future ideas:
+	// rotation: number
+	// crop: { x, y, width, height }
 ]
 
 export const boxElementSchema: SomeCompanionInputField[] = [

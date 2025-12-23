@@ -59,7 +59,7 @@ function convertFieldType(field: SomeCompanionInputField, isExpressionable: bool
 // Generate ButtonGraphicsDrawBase interface
 generatedFile += 'export interface ButtonGraphicsDrawBase {\n'
 generatedFile += `\treadonly id: string\n`
-generatedFile += `\tname: string\n`
+// generatedFile += `\tname: string\n`
 generatedFile += `\tusage: ButtonGraphicsElementUsage\n`
 generatedFile += `\tenabled: boolean\n`
 generatedFile += `\topacity: number\n`

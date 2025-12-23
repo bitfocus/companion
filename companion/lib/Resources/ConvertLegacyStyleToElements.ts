@@ -8,16 +8,19 @@ import {
 import {
 	type ButtonGraphicsBoxElement,
 	type ButtonGraphicsCanvasElement,
-	ButtonGraphicsDecorationType,
-	ButtonGraphicsElementUsage,
 	type ButtonGraphicsImageElement,
 	type ButtonGraphicsTextElement,
-	type HorizontalAlignment,
 	type SomeButtonGraphicsElement,
-	type VerticalAlignment,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
-import type { ButtonStyleProperties, DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	type ButtonStyleProperties,
+	type DrawImageBuffer,
+	type HorizontalAlignment,
+	type VerticalAlignment,
+} from '@companion-app/shared/Model/StyleModel.js'
 import { nanoid } from 'nanoid'
 
 interface ParsedLegacyStyle {
@@ -267,7 +270,7 @@ export function ConvertLegacyStyleToElements(
 	const parsedStyle = ParseLegacyStyle(style)
 
 	if (parsedStyle.text.text !== undefined) textElement.text = parsedStyle.text.text
-	if (parsedStyle.text.size !== undefined) textElement.fontsize.value = parsedStyle.text.size
+	if (parsedStyle.text.size !== undefined) textElement.fontsize.value = String(parsedStyle.text.size)
 	if (parsedStyle.text.halign !== undefined) textElement.halign.value = parsedStyle.text.halign
 	if (parsedStyle.text.valign !== undefined) textElement.valign.value = parsedStyle.text.valign
 	if (parsedStyle.text.color !== undefined) textElement.color.value = parsedStyle.text.color

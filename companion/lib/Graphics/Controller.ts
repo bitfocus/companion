@@ -20,7 +20,11 @@ import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import debounceFn from 'debounce-fn'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { DrawImageBuffer, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	type DrawImageBuffer,
+	type DrawStyleModel,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
@@ -39,10 +43,7 @@ import type * as imageRs from '@julusian/image-rs'
 import type { DataDatabase } from '../Data/Database.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
-import {
-	ButtonGraphicsDecorationType,
-	type SomeButtonGraphicsElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from './ConvertGraphicsElements.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10

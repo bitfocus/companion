@@ -15,18 +15,21 @@ import type {
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
+import type {
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsElementBase,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsTextElement,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
-	type ButtonGraphicsBoxElement,
-	type ButtonGraphicsElementBase,
-	type ButtonGraphicsGroupElement,
-	type ButtonGraphicsImageElement,
-	type ButtonGraphicsTextElement,
-	type SomeButtonGraphicsElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
-import type { ButtonStyleProperties, DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+	type ButtonStyleProperties,
+	type DrawStyleLayeredButtonModel,
+} from '@companion-app/shared/Model/StyleModel.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -500,7 +503,7 @@ export class ControlButtonLayered
 
 		if (parsedStyle.text.size !== undefined) {
 			const textElement = lazyTextElement()
-			if (textElement) textElement.fontsize = { isExpression: false, value: parsedStyle.text.size }
+			if (textElement) textElement.fontsize = { isExpression: false, value: String(parsedStyle.text.size) }
 		}
 
 		if (parsedStyle.text.color !== undefined) {
