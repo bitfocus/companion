@@ -43,8 +43,7 @@ import type * as imageRs from '@julusian/image-rs'
 import type { DataDatabase } from '../Data/Database.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ConvertSomeButtonGraphicsElementForDrawing } from './ConvertGraphicsElements.js'
+import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
@@ -444,18 +443,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Draw a preview of a button
 	 */
-	async drawPreview(rawElements: SomeButtonGraphicsElement[]): Promise<ImageResult> {
-		const parser = this.#variableValuesController.createVariablesAndExpressionParser(null, null, null)
-
-		// Compute the new drawing
-		const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
-			parser,
-			this.renderPixelBuffers.bind(this),
-			rawElements,
-			new Map(),
-			true
-		)
-
+	async drawPreview(elements: SomeButtonGraphicsDrawElement[]): Promise<ImageResult> {
 		const drawStyle: DrawStyleModel = {
 			style: 'button-layered',
 

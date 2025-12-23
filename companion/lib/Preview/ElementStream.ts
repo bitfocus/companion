@@ -7,6 +7,7 @@ import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/Definitions.js'
 
 export interface ElementStreamResult {
 	ok: true
@@ -21,6 +22,7 @@ export interface ElementStreamResult {
 export class PreviewElementStream {
 	readonly #logger = LogController.createLogger('Preview/ElementStream')
 
+	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #graphicsController: GraphicsController
 	readonly #controlsController: ControlsController
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
@@ -28,10 +30,12 @@ export class PreviewElementStream {
 	readonly #sessions = new Map<string, ElementStreamSession>()
 
 	constructor(
+		instanceDefinitions: InstanceDefinitions,
 		graphicsController: GraphicsController,
 		controlsController: ControlsController,
 		controlEvents: EventEmitter<ControlCommonEvents>
 	) {
+		this.#instanceDefinitions = instanceDefinitions
 		this.#graphicsController = graphicsController
 		this.#controlsController = controlsController
 		this.#controlEvents = controlEvents
@@ -73,6 +77,7 @@ export class PreviewElementStream {
 								controlId: input.controlId,
 								elementId: input.elementId,
 								trackedExpressions: new Set<string>(),
+								trackedCompositeElements: new Set(),
 
 								latestResult: { ok: true, element: null },
 								changes: new EventEmitter(),
@@ -153,6 +158,7 @@ export class PreviewElementStream {
 			// Update session with new value
 			session.latestResult = { ok: true, element: newValue.element }
 			session.trackedExpressions = newValue.referencedVariableIds
+			session.trackedCompositeElements = newValue.referencedCompositeElements
 
 			session.changes.emit('change', { ok: true, element: newValue.element })
 		} catch (err) {
@@ -194,27 +200,41 @@ export class PreviewElementStream {
 		}
 	}
 
+	onConnectionCompositeElementsChanged = (elementIds: ReadonlySet<CompositeElementIdString>): void => {
+		for (const [elementStreamId, session] of this.#sessions) {
+			if (session.trackedCompositeElements.size === 0) continue
+			if (session.trackedCompositeElements.isDisjointFrom(elementIds)) continue
+
+			this.#logger.silly(
+				`Re-evaluating element: ${elementStreamId} for ${session.changes.listenerCount('change')} clients`
+			)
+
+			this.#triggerElementReEvaluation(session)
+		}
+	}
+
 	async #evaluateElement(
 		controlId: string,
 		elementId: string
 	): Promise<{
 		element: SomeButtonGraphicsDrawElement | null
 		referencedVariableIds: Set<string>
+		referencedCompositeElements: Set<CompositeElementIdString>
 	}> {
 		const control = this.#controlsController.getControl(controlId)
 		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) {
-			return { element: null, referencedVariableIds: new Set() }
+			return { element: null, referencedVariableIds: new Set(), referencedCompositeElements: new Set() }
 		}
 
 		const elementDef = control.layeredStyleGetElementById(elementId)
 		if (!elementDef) {
-			return { element: null, referencedVariableIds: new Set() }
+			return { element: null, referencedVariableIds: new Set(), referencedCompositeElements: new Set() }
 		}
 
 		const feedbackOverrides = control.entities.getFeedbackStyleOverrides()
 
 		if (!elementDef) {
-			return { element: null, referencedVariableIds: new Set() }
+			return { element: null, referencedVariableIds: new Set(), referencedCompositeElements: new Set() }
 		}
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
@@ -228,7 +248,12 @@ export class PreviewElementStream {
 
 			// Convert the single element to its draw representation
 			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
-			const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
+			const {
+				elements,
+				usedVariables,
+				usedCompositeElements: connectionCompositeElements,
+			} = await ConvertSomeButtonGraphicsElementForDrawing(
+				this.#instanceDefinitions,
 				parser,
 				this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
 				[elementDefToProcess],
@@ -245,6 +270,7 @@ export class PreviewElementStream {
 			return {
 				element: elements[0],
 				referencedVariableIds: usedVariables,
+				referencedCompositeElements: connectionCompositeElements,
 			}
 		} catch (error) {
 			this.#logger.error('Error evaluating element:', error)
@@ -258,6 +284,7 @@ interface ElementStreamSession {
 	readonly controlId: string
 	readonly elementId: string
 	trackedExpressions: Set<string>
+	trackedCompositeElements: Set<CompositeElementIdString>
 
 	latestResult: ElementStreamResult
 

@@ -146,7 +146,7 @@ const ElementListItem = observer(function ElementListItem({
 			>
 				<div className="td-reorder-placeholder"></div>
 
-				<div className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
+				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
 					{element.name || 'Background'}
 				</div>
 
@@ -170,7 +170,7 @@ const ElementListItem = observer(function ElementListItem({
 					<FontAwesomeIcon icon={faSort} />
 				</div>
 
-				<div className="element-name" onClick={() => styleStore.setSelectedElementId(element.id)}>
+				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
 					{element.name ?? element.type}
 				</div>
 

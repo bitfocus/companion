@@ -296,6 +296,8 @@ export const canvasElementSchema: SomeCompanionInputField[] = [
 
 export const groupElementSchema: SomeCompanionInputField[] = [...commonElementFields, ...boundsFields]
 
+export const compositeElementSchema: SomeCompanionInputField[] = [...commonElementFields, ...boundsFields]
+
 export const elementSchemas = {
 	text: textElementSchema,
 	image: imageElementSchema,
@@ -303,4 +305,5 @@ export const elementSchemas = {
 	line: lineElementSchema,
 	canvas: canvasElementSchema,
 	group: groupElementSchema,
+	composite: compositeElementSchema,
 } as const

@@ -1,5 +1,6 @@
 import { ButtonControlBase } from './Base.js'
 import { cloneDeep } from 'lodash-es'
+import { nanoid } from 'nanoid'
 import type {
 	ControlWithActionSets,
 	ControlWithActions,
@@ -35,6 +36,7 @@ import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/Co
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { lazy } from '../../../Resources/Util.js'
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
+import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -114,7 +116,8 @@ export class ControlButtonLayered
 	/**
 	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
-	#last_draw_variables: Set<string> | null = null
+	#lastDrawVariables: Set<string> | null = null
+	#lastDrawCompositeElements: ReadonlySet<CompositeElementIdString> | null = null
 
 	/**
 	 * The base style without feedbacks applied
@@ -215,14 +218,16 @@ export class ControlButtonLayered
 		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
 
 		// Compute the new drawing
-		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
+		const { elements, usedVariables, usedCompositeElements } = await ConvertSomeButtonGraphicsElementForDrawing(
+			this.deps.instance.definitions,
 			parser,
 			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
 			this.#drawElements,
 			feedbackOverrides,
 			true
 		)
-		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
+		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
+		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
 
 		const result: DrawStyleLayeredButtonModel = {
 			...this.getDrawStyleButtonStateProps(),
@@ -253,7 +258,44 @@ export class ControlButtonLayered
 	}
 
 	layeredStyleAddElement(type: string, index: number | null): string {
-		const newElement = CreateElementOfType(type as SomeButtonGraphicsElement['type'])
+		let newElement: SomeButtonGraphicsElement
+
+		// Check if this is a composite element (contains semicolon)
+		if (type.includes(';')) {
+			const [connectionId, elementId] = type.split(';', 2)
+			const compositeDefinition = this.deps.instance.definitions.getCompositeElementDefinition(connectionId, elementId)
+
+			if (compositeDefinition) {
+				// Create a composite element directly
+				newElement = {
+					id: nanoid(),
+					name: compositeDefinition.name,
+					usage: ButtonGraphicsElementUsage.Automatic,
+					type: 'composite',
+					connectionId,
+					elementId,
+					enabled: { value: true, isExpression: false },
+					opacity: { value: 100, isExpression: false },
+					x: { value: 0, isExpression: false },
+					y: { value: 0, isExpression: false },
+					width: { value: 100, isExpression: false },
+					height: { value: 100, isExpression: false },
+				}
+
+				// Add custom properties from schema with their default values
+				for (const field of compositeDefinition.options) {
+					newElement[`opt:${field.id}`] = {
+						value: 'default' in field ? field.default : undefined,
+						isExpression: false,
+					}
+				}
+			} else {
+				throw new Error(`Composite element not found: ${type}`)
+			}
+		} else {
+			// Standard element type
+			newElement = CreateElementOfType(type as SomeButtonGraphicsElement['type'])
+		}
 
 		if (typeof index === 'number' && index >= 0 && index < this.#drawElements.length) {
 			this.#drawElements.splice(index, 0, newElement)
@@ -581,14 +623,23 @@ export class ControlButtonLayered
 	 * @param allChangedVariables - variables with changes
 	 */
 	onVariablesChanged(allChangedVariables: Set<string>): void {
-		if (!this.#last_draw_variables) return
-		for (const variable of allChangedVariables.values()) {
-			if (!this.#last_draw_variables.has(variable)) continue
-			this.logger.silly('variable changed in button ' + this.controlId)
+		if (!this.#lastDrawVariables) return
+		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 
-			this.triggerRedraw()
-			return
-		}
+		this.logger.silly('variable changed in button ' + this.controlId)
+		this.triggerRedraw()
+	}
+
+	/**
+	 * Propagate composite element changes
+	 * @param allChangedElementIds - composite element ids with changes
+	 */
+	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {
+		if (!this.#lastDrawCompositeElements) return
+		if (this.#lastDrawCompositeElements.isDisjointFrom(allChangedElementIds)) return
+
+		this.logger.silly('composite element changed in button ' + this.controlId)
+		this.triggerRedraw()
 	}
 
 	/**

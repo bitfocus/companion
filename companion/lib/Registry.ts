@@ -307,7 +307,13 @@ export class Registry {
 				this.userconfig
 			)
 
-			this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
+			this.preview = new PreviewController(
+				this.instance.definitions,
+				this.graphics,
+				pageStore,
+				this.controls,
+				controlEvents
+			)
 
 			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
 			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
@@ -347,6 +353,10 @@ export class Registry {
 				this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
 				this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
 				this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+			})
+			this.instance.definitions.on('updateCompositeElements', (elementIds) => {
+				this.controls.onCompositeElementsChanged(elementIds)
+				this.preview.onConnectionCompositeElementsChanged(elementIds)
 			})
 
 			this.page.on('controlIdsMoved', (controlIds) => {
