@@ -261,7 +261,7 @@ table.variables-table {
 
 			.td-reorder,
 			.td-reorder-placeholder {
-				padding: 0 0.5rem;
+				text-align: center;
 
 				// as narrow as possible
 				width: 1.75em;
@@ -308,6 +308,11 @@ table.variables-table {
 			.element-buttons {
 				text-align: right;
 				white-space: nowrap;
+				padding: 0 0.25rem;
+
+				.btn {
+					--cui-btn-padding-x: 0.15rem;
+				}
 			}
 		}
 	}

@@ -31,7 +31,7 @@ const boundsFields: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'x',
-		label: 'X',
+		label: 'X %',
 		default: 0,
 		min: -1000,
 		max: 1000,
@@ -40,7 +40,7 @@ const boundsFields: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'y',
-		label: 'Y',
+		label: 'Y %',
 		default: 0,
 		min: -1000,
 		max: 1000,
@@ -49,7 +49,7 @@ const boundsFields: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'width',
-		label: 'Width',
+		label: 'Width %',
 		default: 100,
 		min: 0,
 		max: 1000,
@@ -58,7 +58,7 @@ const boundsFields: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'height',
-		label: 'Height',
+		label: 'Height %',
 		default: 100,
 		min: 0,
 		max: 1000,
@@ -209,7 +209,7 @@ export const lineElementSchema: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'fromX',
-		label: 'From X',
+		label: 'From X %',
 		default: 0,
 		min: 0,
 		max: 100,
@@ -218,7 +218,7 @@ export const lineElementSchema: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'fromY',
-		label: 'From Y',
+		label: 'From Y %',
 		default: 0,
 		min: 0,
 		max: 100,
@@ -227,7 +227,7 @@ export const lineElementSchema: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'toX',
-		label: 'To X',
+		label: 'To X %',
 		default: 100,
 		min: 0,
 		max: 100,
@@ -236,7 +236,7 @@ export const lineElementSchema: SomeCompanionInputField[] = [
 	{
 		type: 'number',
 		id: 'toY',
-		label: 'To Y',
+		label: 'To Y %',
 		default: 100,
 		min: 0,
 		max: 100,

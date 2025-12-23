@@ -51,7 +51,8 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>): ParsedL
 		if (style.size === 'auto') textSize = 'auto'
 		else {
 			const n = Number(style.size)
-			if (!isNaN(n)) textSize = n * TEXT_SIZE_SCALE
+			// Ensure is a number, and round to 1dp
+			if (!isNaN(n)) textSize = Number((n * TEXT_SIZE_SCALE).toFixed(1))
 		}
 	}
 
