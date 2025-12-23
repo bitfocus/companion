@@ -553,7 +553,7 @@ export class InternalController {
 		const newValues: NewFeedbackValue[] = []
 
 		// Lookup feedbacks
-		for (const [id, feedback] of this.#feedbacks.entries()) {
+		for (const [id, feedback] of this.#feedbacks) {
 			if (!feedback.referencedVariables || !feedback.referencedVariables.length) continue
 
 			// If a specific control is specified, only update feedbacks for that control

@@ -459,12 +459,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			// Skip if the changes are local variables from a different control
 			if (fromControlId && controlId !== fromControlId) continue
 
-			for (const name of variables) {
-				if (changedVariablesSet.has(name)) {
-					affectedFeedbackIds.push(id)
-					break
-				}
-			}
+			if (variables.size === 0) continue
+			if (variables.isDisjointFrom(changedVariablesSet)) continue
+
+			affectedFeedbackIds.push(id)
 		}
 		if (affectedFeedbackIds.length > 0) {
 			this.emit('checkFeedbacksById', ...affectedFeedbackIds)
