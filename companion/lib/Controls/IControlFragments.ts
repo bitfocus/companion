@@ -98,6 +98,11 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * @returns The element if found, undefined otherwise
 	 */
 	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined
+
+	/**
+	 * Get the selected element IDs for each usage in the layered style
+	 */
+	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined }
 }
 
 export interface ControlWithEntities extends ControlBase<any> {

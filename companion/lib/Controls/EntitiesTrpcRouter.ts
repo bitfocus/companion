@@ -45,7 +45,14 @@ export function createEntitiesTrpcRouter(
 
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
-				const newEntity = instanceDefinitions.createEntityItem(connectionId, entityType, entityDefinition)
+				const newEntity = instanceDefinitions.createEntityItem(
+					connectionId,
+					entityType,
+					entityDefinition,
+					control.supportsLayeredStyle && entityLocation === 'feedbacks'
+						? control.layeredStyleSelectedElementIds()
+						: null
+				)
 				if (!newEntity) return null
 
 				const added = control.entities.entityAdd(entityLocation, ownerId, newEntity)

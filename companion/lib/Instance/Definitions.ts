@@ -16,6 +16,7 @@ import {
 	type ActionEntityModel,
 	type EntityModelBase,
 	type SomeEntityModel,
+	FeedbackEntitySubType,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	ClientEntityDefinition,
@@ -28,6 +29,12 @@ import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ConvertBooleanFeedbackStyleToOverrides,
+	CreateAdvancedFeedbackStyleOverrides,
+	ParseLegacyStyle,
+} from '../Resources/ConvertLegacyStyleToElements.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -134,8 +141,14 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * @param connectionId - the id of the instance
 	 * @param entityType - the type of the entity
 	 * @param definitionId - the id of the definition
+	 * @param layeredStyleSelectedElementIds - selected element ids for layered style controls
 	 */
-	createEntityItem(connectionId: string, entityType: EntityModelType, definitionId: string): SomeEntityModel | null {
+	createEntityItem(
+		connectionId: string,
+		entityType: EntityModelType,
+		definitionId: string,
+		layeredStyleSelectedElementIds: { [usage in ButtonGraphicsElementUsage]: string | undefined } | null
+	): SomeEntityModel | null {
 		const definition = this.getEntityDefinition(entityType, connectionId, definitionId)
 		if (!definition) return null
 
@@ -167,6 +180,22 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					...entity,
 					type: EntityModelType.Feedback,
 					isInverted: false,
+					styleOverrides: [],
+				}
+
+				if (layeredStyleSelectedElementIds) {
+					if (definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
+						const parsedStyle = ParseLegacyStyle(definition.feedbackStyle)
+						feedback.styleOverrides = ConvertBooleanFeedbackStyleToOverrides(
+							parsedStyle,
+							layeredStyleSelectedElementIds
+						)
+					} else if (definition.feedbackType === FeedbackEntitySubType.Advanced) {
+						feedback.styleOverrides = CreateAdvancedFeedbackStyleOverrides(
+							layeredStyleSelectedElementIds,
+							layeredStyleSelectedElementIds[ButtonGraphicsElementUsage.Image]
+						)
+					}
 				}
 
 				return feedback

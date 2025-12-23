@@ -288,7 +288,7 @@ export function ConvertLegacyStyleToElements(
 		if (fb.type !== EntityModelType.Feedback) return fb // Not a feedback
 		if (fb.styleOverrides) return fb // Already converted
 
-		const overrides: FeedbackEntityStyleOverride[] = []
+		let overrides: FeedbackEntityStyleOverride[]
 
 		// This is not a great check, but is hopefully reliable enough
 		if ('style' in fb && fb.style && (Object.keys(fb.style).length > 0 || fb.connectionId !== 'internal')) {
@@ -296,75 +296,12 @@ export function ConvertLegacyStyleToElements(
 
 			const parsedStyle = ParseLegacyStyle(fb.style)
 
-			if (parsedStyle.text.text !== undefined) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'text',
-					override: parsedStyle.text.text,
-				})
-			}
-			if (parsedStyle.text.size !== undefined) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'fontsize',
-					override: {
-						isExpression: false,
-						value: parsedStyle.text.size,
-					},
-				})
-			}
-
-			if (parsedStyle.text.halign !== undefined) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'halign',
-					override: { isExpression: false, value: parsedStyle.text.halign },
-				})
-			}
-			if (parsedStyle.text.valign !== undefined) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'valign',
-					override: { isExpression: false, value: parsedStyle.text.valign },
-				})
-			}
-			if (parsedStyle.image.halign !== undefined) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: imageElement.id,
-					elementProperty: 'halign',
-					override: { isExpression: false, value: parsedStyle.image.halign },
-				})
-			}
-			if (parsedStyle.image.valign !== undefined) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: imageElement.id,
-					elementProperty: 'valign',
-					override: { isExpression: false, value: parsedStyle.image.valign },
-				})
-			}
-
-			if (parsedStyle.text.color !== undefined) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'color',
-					override: { isExpression: false, value: parsedStyle.text.color },
-				})
-			}
-			if (parsedStyle.background.color !== undefined) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: backgroundElement.id,
-					elementProperty: 'color',
-					override: { isExpression: false, value: parsedStyle.background.color },
-				})
-			}
+			overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, {
+				[ButtonGraphicsElementUsage.Automatic]: undefined, // Not valid here
+				[ButtonGraphicsElementUsage.Text]: textElement.id,
+				[ButtonGraphicsElementUsage.Image]: imageElement.id,
+				[ButtonGraphicsElementUsage.Color]: backgroundElement.id,
+			})
 
 			if (parsedStyle.canvas.decoration !== undefined) {
 				overrides.push({
@@ -374,83 +311,19 @@ export function ConvertLegacyStyleToElements(
 					override: { isExpression: false, value: parsedStyle.canvas.decoration },
 				})
 			}
-
-			if (parsedStyle.image.image) {
-				overrides.push({
-					overrideId: nanoid(),
-					elementId: imageElement.id,
-					elementProperty: 'base64Image',
-					override: {
-						isExpression: false,
-						value: parsedStyle.image.image,
-					},
-				})
-			}
 		} else {
 			hasAnyAdvancedFeedbacks = true
 
 			// Should be advanced, translate all properties
-			overrides.push(
+
+			overrides = CreateAdvancedFeedbackStyleOverrides(
 				{
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'text',
-					override: { isExpression: false, value: 'text' },
+					[ButtonGraphicsElementUsage.Automatic]: undefined, // Not valid here
+					[ButtonGraphicsElementUsage.Text]: textElement.id,
+					[ButtonGraphicsElementUsage.Image]: imageElement.id,
+					[ButtonGraphicsElementUsage.Color]: backgroundElement.id,
 				},
-				{
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'fontsize',
-					override: { isExpression: false, value: 'size' },
-				},
-				{
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'halign',
-					override: { isExpression: false, value: 'alignment' },
-				},
-				{
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'valign',
-					override: { isExpression: false, value: 'alignment' },
-				},
-				{
-					overrideId: nanoid(),
-					elementId: imageElement.id,
-					elementProperty: 'halign',
-					override: { isExpression: false, value: 'pngalignment' },
-				},
-				{
-					overrideId: nanoid(),
-					elementId: imageElement.id,
-					elementProperty: 'valign',
-					override: { isExpression: false, value: 'pngalignment' },
-				},
-				{
-					overrideId: nanoid(),
-					elementId: textElement.id,
-					elementProperty: 'color',
-					override: { isExpression: false, value: 'color' },
-				},
-				{
-					overrideId: nanoid(),
-					elementId: backgroundElement.id,
-					elementProperty: 'color',
-					override: { isExpression: false, value: 'bgcolor' },
-				},
-				{
-					overrideId: nanoid(),
-					elementId: imageElement.id,
-					elementProperty: 'base64Image',
-					override: { isExpression: false, value: 'png64' },
-				},
-				{
-					overrideId: nanoid(),
-					elementId: bufferElement.id,
-					elementProperty: 'base64Image',
-					override: { isExpression: false, value: 'imageBuffers' },
-				}
+				bufferElement.id
 			)
 		}
 
@@ -470,6 +343,200 @@ export function ConvertLegacyStyleToElements(
 		},
 		feedbacks: updatedFeedbacks,
 	}
+}
+
+export function ConvertBooleanFeedbackStyleToOverrides(
+	parsedStyle: ParsedLegacyStyle,
+	selectedElementIds: { [usage in ButtonGraphicsElementUsage]: string | undefined }
+): FeedbackEntityStyleOverride[] {
+	const overrides: FeedbackEntityStyleOverride[] = []
+
+	const textElementId = selectedElementIds[ButtonGraphicsElementUsage.Text]
+	const imageElementId = selectedElementIds[ButtonGraphicsElementUsage.Image]
+	const backgroundElementId = selectedElementIds[ButtonGraphicsElementUsage.Color]
+
+	if (textElementId) {
+		if (parsedStyle.text.text !== undefined) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'text',
+				override: parsedStyle.text.text,
+			})
+		}
+		if (parsedStyle.text.size !== undefined) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'fontsize',
+				override: {
+					isExpression: false,
+					value: parsedStyle.text.size,
+				},
+			})
+		}
+
+		if (parsedStyle.text.halign !== undefined) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'halign',
+				override: { isExpression: false, value: parsedStyle.text.halign },
+			})
+		}
+		if (parsedStyle.text.valign !== undefined) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'valign',
+				override: { isExpression: false, value: parsedStyle.text.valign },
+			})
+		}
+
+		if (parsedStyle.text.color !== undefined) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'color',
+				override: { isExpression: false, value: parsedStyle.text.color },
+			})
+		}
+	}
+
+	if (imageElementId) {
+		if (parsedStyle.image.halign !== undefined) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: imageElementId,
+				elementProperty: 'halign',
+				override: { isExpression: false, value: parsedStyle.image.halign },
+			})
+		}
+		if (parsedStyle.image.valign !== undefined) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: imageElementId,
+				elementProperty: 'valign',
+				override: { isExpression: false, value: parsedStyle.image.valign },
+			})
+		}
+
+		if (parsedStyle.image.image) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: imageElementId,
+				elementProperty: 'base64Image',
+				override: {
+					isExpression: false,
+					value: parsedStyle.image.image,
+				},
+			})
+		}
+	}
+
+	if (backgroundElementId) {
+		if (parsedStyle.background.color !== undefined) {
+			overrides.push({
+				overrideId: nanoid(),
+				elementId: backgroundElementId,
+				elementProperty: 'color',
+				override: { isExpression: false, value: parsedStyle.background.color },
+			})
+		}
+	}
+
+	return overrides
+}
+
+export function CreateAdvancedFeedbackStyleOverrides(
+	selectedElementIds: {
+		[usage in ButtonGraphicsElementUsage]: string | undefined
+	},
+	bufferElementId: string | undefined
+): FeedbackEntityStyleOverride[] {
+	const overrides: FeedbackEntityStyleOverride[] = []
+
+	const textElementId = selectedElementIds[ButtonGraphicsElementUsage.Text]
+	const imageElementId = selectedElementIds[ButtonGraphicsElementUsage.Image]
+	const backgroundElementId = selectedElementIds[ButtonGraphicsElementUsage.Color]
+
+	if (textElementId) {
+		overrides.push(
+			{
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'text',
+				override: { isExpression: false, value: 'text' },
+			},
+			{
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'fontsize',
+				override: { isExpression: false, value: 'size' },
+			},
+			{
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'halign',
+				override: { isExpression: false, value: 'alignment' },
+			},
+			{
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'valign',
+				override: { isExpression: false, value: 'alignment' },
+			},
+			{
+				overrideId: nanoid(),
+				elementId: textElementId,
+				elementProperty: 'color',
+				override: { isExpression: false, value: 'color' },
+			}
+		)
+	}
+
+	if (imageElementId) {
+		overrides.push(
+			{
+				overrideId: nanoid(),
+				elementId: imageElementId,
+				elementProperty: 'halign',
+				override: { isExpression: false, value: 'pngalignment' },
+			},
+			{
+				overrideId: nanoid(),
+				elementId: imageElementId,
+				elementProperty: 'valign',
+				override: { isExpression: false, value: 'pngalignment' },
+			},
+			{
+				overrideId: nanoid(),
+				elementId: imageElementId,
+				elementProperty: 'base64Image',
+				override: { isExpression: false, value: 'png64' },
+			}
+		)
+	}
+
+	if (backgroundElementId) {
+		overrides.push({
+			overrideId: nanoid(),
+			elementId: backgroundElementId,
+			elementProperty: 'color',
+			override: { isExpression: false, value: 'bgcolor' },
+		})
+	}
+
+	if (bufferElementId) {
+		overrides.push({
+			overrideId: nanoid(),
+			elementId: bufferElementId,
+			elementProperty: 'base64Image',
+			override: { isExpression: false, value: 'imageBuffers' },
+		})
+	}
+
+	return overrides
 }
 
 function ensurePng64IsDataUrl(png64: string): string {

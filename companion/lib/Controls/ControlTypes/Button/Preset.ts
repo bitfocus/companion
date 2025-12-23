@@ -376,6 +376,10 @@ export class ControlButtonPreset
 		throw new Error('ControlButtonPreset does not support mutations')
 	}
 
+	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db

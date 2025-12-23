@@ -363,6 +363,15 @@ export class ControlButtonLayered
 		return result?.element
 	}
 
+	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
+		return {
+			[ButtonGraphicsElementUsage.Automatic]: undefined, // Not valid here
+			[ButtonGraphicsElementUsage.Text]: this.SelectLayerForUsage(ButtonGraphicsElementUsage.Text, 'text')?.id,
+			[ButtonGraphicsElementUsage.Image]: this.SelectLayerForUsage(ButtonGraphicsElementUsage.Image, 'image')?.id,
+			[ButtonGraphicsElementUsage.Color]: this.SelectLayerForUsage(ButtonGraphicsElementUsage.Color, 'box')?.id,
+		}
+	}
+
 	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean {
 		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
 		if (!currentElementLocation) return false
