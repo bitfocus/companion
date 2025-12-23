@@ -10,6 +10,7 @@ import type {
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsTextDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsCircleDrawElement,
 } from '../Model/StyleLayersModel.js'
 import { DrawBounds, parseColor, rgbRev, type GraphicsOptions } from './Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
@@ -131,6 +132,9 @@ export class GraphicsLayeredButtonRenderer {
 						break
 					case 'line':
 						elementBounds = await this.#drawLineElement(img, drawBounds, element, skipDraw)
+						break
+					case 'circle':
+						elementBounds = await this.#drawCircleElement(img, drawBounds, element, skipDraw)
 						break
 					default:
 						assertNever(element)
@@ -327,6 +331,48 @@ export class GraphicsLayeredButtonRenderer {
 		return drawBounds
 	}
 
+	static async #drawCircleElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsCircleDrawElement,
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw) return drawBounds
+
+		// Calculate a pixel width, relative to the parent bounds
+		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
+
+		await img.usingAlpha(element.opacity, async () => {
+			const midX = drawBounds.x + drawBounds.width / 2
+			const midY = drawBounds.y + drawBounds.height / 2
+			const radiusX = drawBounds.width / 2
+			const radiusY = drawBounds.height / 2
+
+			const startAngle = this.#angleToRadians(element.startAngle + 90)
+			const endAngle = this.#angleToRadians(element.endAngle + 90)
+
+			img.circle(
+				midX,
+				midY,
+				radiusX,
+				radiusY,
+				startAngle,
+				endAngle,
+				element.drawSlice,
+				parseColor(element.color),
+				{
+					color: parseColor(element.borderColor),
+					width: borderWidth,
+				},
+				element.borderOnlyArc,
+				element.borderPosition
+			)
+		})
+
+		return drawBounds
+	}
+
 	static #drawBoundsLines(img: ImageBase<any>, bounds: DrawBounds) {
 		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what colour is best?
 
@@ -335,5 +381,10 @@ export class GraphicsLayeredButtonRenderer {
 
 		img.verticalLine(bounds.x, lineStyle)
 		img.verticalLine(bounds.maxX, lineStyle)
+	}
+
+	static #angleToRadians(angle: number): number {
+		const normalizedAngle = (angle + 180) % 360
+		return (normalizedAngle / 180) * Math.PI
 	}
 }

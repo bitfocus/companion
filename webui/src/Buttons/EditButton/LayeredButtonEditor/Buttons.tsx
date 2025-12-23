@@ -11,6 +11,7 @@ import {
 	faT,
 	faTrash,
 	faMinus,
+	faCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { Tuck } from '~/Components/Tuck.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -177,6 +178,13 @@ function AddElementDropdownPopoverContent({
 					elementType="line"
 					label="Line"
 					icon={faMinus}
+				/>
+				<AddElementDropdownPopoverButton
+					styleStore={styleStore}
+					controlId={controlId}
+					elementType="circle"
+					label="Circle"
+					icon={faCircle}
 				/>
 			</CButtonGroup>
 		</>

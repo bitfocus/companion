@@ -17,6 +17,10 @@ import type {
 	ButtonGraphicsLineDrawElement,
 	ButtonGraphicsElementBase,
 	ButtonGraphicsBounds,
+	ButtonGraphicsCircleElement,
+	ButtonGraphicsCircleDrawElement,
+	ButtonGraphicsDrawBorder,
+	ButtonGraphicsBorder,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -271,6 +275,8 @@ async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
 					return convertBoxElementForDrawing(helperFactory, element)
 				case 'line':
 					return convertLineElementForDrawing(helperFactory, element)
+				case 'circle':
+					return convertCircleElementForDrawing(helperFactory, element)
 				default:
 					assertNever(element)
 					return null
@@ -402,9 +408,7 @@ function convertBoxElementForDrawing(
 		...convertDrawBounds(helper),
 		color: helper.getNumber('color', 0),
 
-		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
-		borderColor: helper.getNumber('borderColor', 0),
-		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
+		...convertBorderProperties(helper),
 	}
 }
 
@@ -429,9 +433,7 @@ function convertLineElementForDrawing(
 		toX: helper.getNumber('toX', 100),
 		toY: helper.getNumber('toY', 100),
 
-		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
-		borderColor: helper.getNumber('borderColor', 0),
-		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
+		...convertBorderProperties(helper),
 	}
 }
 
@@ -443,5 +445,41 @@ function convertDrawBounds(
 		y: helper.getNumber('y', 0, 0.01),
 		width: helper.getNumber('width', 1, 0.01),
 		height: helper.getNumber('height', 1, 0.01),
+	}
+}
+
+function convertCircleElementForDrawing(
+	helperFactory: ElementExpressionHelperFactory,
+	element: ButtonGraphicsCircleElement
+): ButtonGraphicsCircleDrawElement | null {
+	const helper = helperFactory(element)
+
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = helper.getBoolean('enabled', true)
+	if (!enabled && helper.onlyEnabled) return null
+
+	return {
+		id: element.id,
+		type: 'circle',
+		usage: element.usage,
+		enabled,
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		...convertDrawBounds(helper),
+		color: helper.getNumber('color', 0),
+		startAngle: helper.getNumber('startAngle', 0),
+		endAngle: helper.getNumber('endAngle', 360),
+		drawSlice: helper.getBoolean('drawSlice', false),
+		...convertBorderProperties(helper),
+		borderOnlyArc: helper.getBoolean('borderOnlyArc', false),
+	}
+}
+
+function convertBorderProperties(
+	helper: ElementExpressionHelper<ButtonGraphicsBorder & ButtonGraphicsElementBase>
+): ButtonGraphicsDrawBorder {
+	return {
+		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
+		borderColor: helper.getNumber('borderColor', 0),
+		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
 	}
 }

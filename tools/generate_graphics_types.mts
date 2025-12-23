@@ -1,6 +1,7 @@
 import { $, fs } from 'zx'
 import {
 	boundsFields,
+	borderFields,
 	canvasElementSchema,
 	elementSchemas,
 } from '../shared-lib/lib/Graphics/ElementPropertiesSchemas.ts'
@@ -75,21 +76,41 @@ generatedFile += `\tenabled: ExpressionOrValue<boolean>\n`
 generatedFile += `\topacity: ExpressionOrValue<number>\n`
 generatedFile += '}\n\n'
 
-// Generate ButtonGraphicsDrawBounds interface
-generatedFile += 'export interface ButtonGraphicsDrawBounds {\n'
-for (const field of boundsFields) {
-	const tsType = convertFieldType(field, false)
-	generatedFile += `\t${field.id}: ${tsType}\n`
+const baseInterfaceTypes = {
+	bounds: boundsFields,
+	border: borderFields,
 }
-generatedFile += '}\n\n'
 
-// Generate ButtonGraphicsBounds interface
-generatedFile += 'export interface ButtonGraphicsBounds {\n'
-for (const field of boundsFields) {
-	const tsType = convertFieldType(field, true)
-	generatedFile += `\t${field.id}: ${tsType}\n`
+function generateBaseInterfaceName(id: string): {
+	drawName: string
+	elementName: string
+} {
+	const capitalized = capitalize(id)
+	return {
+		drawName: `ButtonGraphicsDraw${capitalized}`,
+		elementName: `ButtonGraphics${capitalized}`,
+	}
 }
-generatedFile += '}\n\n'
+
+for (const [id, fields] of Object.entries(baseInterfaceTypes)) {
+	const { drawName, elementName } = generateBaseInterfaceName(id)
+
+	// Generate ButtonGraphicsDrawBounds interface
+	generatedFile += `export interface ${drawName} {\n`
+	for (const field of fields) {
+		const tsType = convertFieldType(field, false)
+		generatedFile += `\t${field.id}: ${tsType}\n`
+	}
+	generatedFile += '}\n\n'
+
+	// Generate ButtonGraphicsBounds interface
+	generatedFile += `export interface ${elementName} {\n`
+	for (const field of fields) {
+		const tsType = convertFieldType(field, true)
+		generatedFile += `\t${field.id}: ${tsType}\n`
+	}
+	generatedFile += '}\n\n'
+}
 
 // Generate the special canvas element
 
@@ -135,10 +156,13 @@ for (const [id, fields] of Object.entries(elementSchemas)) {
 	const elementInterfaces = ['ButtonGraphicsElementBase']
 
 	const ignoreFields = new Set(['enabled', 'opacity'])
-	if (boundsFields.every((boundsField) => fields.find((field) => isEqual(field, boundsField)))) {
-		drawInterfaces.push('ButtonGraphicsDrawBounds')
-		elementInterfaces.push('ButtonGraphicsBounds')
-		for (const field of boundsFields) ignoreFields.add(field.id)
+	for (const [id, interfaceFields] of Object.entries(baseInterfaceTypes)) {
+		if (interfaceFields.every((boundsField) => fields.find((field) => isEqual(field, boundsField)))) {
+			const { drawName, elementName } = generateBaseInterfaceName(id)
+			drawInterfaces.push(drawName)
+			elementInterfaces.push(elementName)
+			for (const field of interfaceFields) ignoreFields.add(field.id)
+		}
 	}
 
 	const filteredFields = fields.filter((field) => !ignoreFields.has(field.id))

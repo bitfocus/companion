@@ -190,6 +190,8 @@ class RendererDrawContext {
 				}
 			}
 
+			console.log('draw', this.#lastDrawStyle)
+
 			await GraphicsLayeredButtonRenderer.draw(
 				this.#image,
 				{

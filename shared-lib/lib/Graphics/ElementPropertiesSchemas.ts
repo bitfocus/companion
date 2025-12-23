@@ -66,6 +66,33 @@ export const boundsFields: SomeCompanionInputField[] = [
 	},
 ]
 
+export const borderFields: SomeCompanionInputField[] = [
+	{
+		type: 'number',
+		id: 'borderWidth',
+		label: 'Border Width',
+		default: 0,
+		min: 0,
+		max: 100,
+		step: 1,
+	},
+	{
+		type: 'colorpicker',
+		id: 'borderColor',
+		label: 'Border Color',
+		default: 0x000000,
+		returnType: 'number',
+		enableAlpha: true,
+	},
+	{
+		type: 'dropdown',
+		id: 'borderPosition',
+		label: 'Border Position',
+		choices: LINE_ORIENTATION_CHOICES,
+		default: 'inside',
+	},
+]
+
 export const textElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	...boundsFields,
@@ -181,30 +208,7 @@ export const boxElementSchema: SomeCompanionInputField[] = [
 		returnType: 'number',
 		enableAlpha: true,
 	},
-	{
-		type: 'number',
-		id: 'borderWidth',
-		label: 'Border Width',
-		default: 0,
-		min: 0,
-		max: 100,
-		step: 1,
-	},
-	{
-		type: 'colorpicker',
-		id: 'borderColor',
-		label: 'Border Color',
-		default: 0x000000,
-		returnType: 'number',
-		enableAlpha: true,
-	},
-	{
-		type: 'dropdown',
-		id: 'borderPosition',
-		label: 'Border Position',
-		choices: LINE_ORIENTATION_CHOICES,
-		default: 'inside',
-	},
+	...borderFields,
 ]
 
 export const lineElementSchema: SomeCompanionInputField[] = [
@@ -271,6 +275,51 @@ export const lineElementSchema: SomeCompanionInputField[] = [
 	},
 ]
 
+export const circleElementSchema: SomeCompanionInputField[] = [
+	...commonElementFields,
+	...boundsFields,
+	{
+		type: 'colorpicker',
+		id: 'color',
+		label: 'Color',
+		default: 0x000000,
+		returnType: 'number',
+		enableAlpha: true,
+	},
+	{
+		type: 'number',
+		id: 'startAngle',
+		label: 'Start Angle',
+		default: 0,
+		min: 0,
+		max: 360,
+		step: 1,
+	},
+	{
+		type: 'number',
+		id: 'endAngle',
+		label: 'End Angle',
+		default: 360,
+		min: 0,
+		max: 360,
+		step: 1,
+	},
+	{
+		type: 'checkbox',
+		id: 'drawSlice',
+		label: 'Draw Slice',
+		tooltip: 'If enabled, draws a pie-slice shape instead of an arc.',
+		default: false,
+	},
+	...borderFields,
+	{
+		type: 'checkbox',
+		id: 'borderOnlyArc',
+		label: 'Border Only Arc segment',
+		default: false,
+	},
+]
+
 export const canvasElementSchema: SomeCompanionInputField[] = [
 	// Note: Canvas elements do not get common properties
 	// {
@@ -303,4 +352,5 @@ export const elementSchemas = {
 	line: lineElementSchema,
 	canvas: canvasElementSchema,
 	group: groupElementSchema,
+	circle: circleElementSchema,
 } as const

@@ -252,6 +252,101 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	}
 
 	/**
+	 * draws a circle with optional fill color and optional outline
+	 * @param x
+	 * @param y
+	 * @param radiusX
+	 * @param radiusY
+	 * @param startAngle in radians
+	 * @param endAngle in radians
+	 * @param color CSS string fill color, unfilled if undefined
+	 * @param strokeColor CSS string line color, no line if undefined
+	 * @param lineWidth line width defaults to 1
+	 * @param lineOrientation defaults to 'inside'
+	 * @returns something has been drawn
+	 */
+	circle(
+		x: number,
+		y: number,
+		radiusX: number,
+		radiusY: number,
+		startAngle: number = 0,
+		endAngle: number = Math.PI * 2,
+		drawSlice?: boolean,
+		fillColor?: string,
+		lineStyle?: LineStyle,
+		borderOnlyArc?: boolean,
+		lineOrientation: LineOrientation = 'inside'
+	): boolean {
+		if (radiusX <= 0 || radiusY <= 0) return false
+
+		// Special case for full circle, it doesn't draw if both points are the same and non-default
+		if (Math.abs(startAngle - endAngle) <= 0.001) {
+			startAngle = 0
+			endAngle = 2 * Math.PI
+			drawSlice = false
+		}
+
+		console.log('drawing circle:', { x, y, radiusX, radiusY, startAngle, endAngle, drawSlice })
+
+		let didDraw = false
+		if (fillColor) {
+			this.context2d.fillStyle = fillColor
+			// this.context2d.fillRect(x1, y1, x2 - x1, y2 - y1)
+			this.context2d.beginPath()
+			this.context2d.ellipse(x, y, radiusX, radiusY, 0, startAngle, endAngle)
+
+			if (drawSlice) {
+				// Draw as a pie slice, connecting to center
+				this.context2d.lineTo(x, y)
+				this.context2d.closePath()
+			}
+
+			this.context2d.fill()
+			didDraw = true
+		}
+		if (lineStyle) {
+			let borderRadiusX = radiusX
+			let borderRadiusY = radiusY
+
+			const lineWidth = lineStyle.width ?? 1
+			if (lineWidth > 0) {
+				// Offset the radius to account for line position
+				const halfline = lineWidth / 2
+				switch (lineOrientation) {
+					case 'inside':
+						borderRadiusX -= halfline
+						borderRadiusY -= halfline
+						break
+					case 'outside':
+						borderRadiusX += halfline
+						borderRadiusY += halfline
+						break
+				}
+
+				this.context2d.lineWidth = lineWidth
+				this.context2d.strokeStyle = lineStyle.color
+
+				this.context2d.beginPath()
+				this.context2d.ellipse(x, y, borderRadiusX, borderRadiusY, 0, startAngle, endAngle)
+
+				if (!borderOnlyArc) {
+					if (drawSlice) {
+						// Draw as a pie slice, connecting to center
+						this.context2d.lineTo(x, y)
+					}
+					this.context2d.closePath()
+				}
+
+				this.context2d.stroke()
+				didDraw = true
+			}
+		}
+
+		return didDraw
+	}
+
+	/**
 	 * Draws an outline rectangle
 	 * @param x1 position of left edge
 	 * @param y1 position of top edge

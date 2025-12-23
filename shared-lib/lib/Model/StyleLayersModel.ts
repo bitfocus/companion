@@ -38,6 +38,18 @@ export interface ButtonGraphicsBounds {
 	height: ExpressionOrValue<number>
 }
 
+export interface ButtonGraphicsDrawBorder {
+	borderWidth: number
+	borderColor: number
+	borderPosition: 'inside' | 'center' | 'outside'
+}
+
+export interface ButtonGraphicsBorder {
+	borderWidth: ExpressionOrValue<number>
+	borderColor: ExpressionOrValue<number>
+	borderPosition: ExpressionOrValue<'inside' | 'center' | 'outside'>
+}
+
 export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled' | 'opacity'> {
 	// Note: this is the background element and can only be at the bottom of the stack
 	type: 'canvas'
@@ -86,20 +98,16 @@ export interface ButtonGraphicsImageElement extends ButtonGraphicsElementBase, B
 	fillMode: ExpressionOrValue<'fit_or_shrink' | 'fit' | 'fill' | 'crop'>
 }
 
-export interface ButtonGraphicsBoxDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {
+export interface ButtonGraphicsBoxDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawBorder {
 	type: 'box'
 	color: number
-	borderWidth: number
-	borderColor: number
-	borderPosition: 'inside' | 'center' | 'outside'
 }
 
-export interface ButtonGraphicsBoxElement extends ButtonGraphicsElementBase, ButtonGraphicsBounds {
+export interface ButtonGraphicsBoxElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsBorder {
 	type: 'box'
 	color: ExpressionOrValue<number>
-	borderWidth: ExpressionOrValue<number>
-	borderColor: ExpressionOrValue<number>
-	borderPosition: ExpressionOrValue<'inside' | 'center' | 'outside'>
 }
 
 export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase {
@@ -134,6 +142,26 @@ export interface ButtonGraphicsGroupElement extends ButtonGraphicsElementBase, B
 	children: SomeButtonGraphicsElement[]
 }
 
+export interface ButtonGraphicsCircleDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawBorder {
+	type: 'circle'
+	color: number
+	startAngle: number
+	endAngle: number
+	drawSlice: boolean
+	borderOnlyArc: boolean
+}
+
+export interface ButtonGraphicsCircleElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsBorder {
+	type: 'circle'
+	color: ExpressionOrValue<number>
+	startAngle: ExpressionOrValue<number>
+	endAngle: ExpressionOrValue<number>
+	drawSlice: ExpressionOrValue<boolean>
+	borderOnlyArc: ExpressionOrValue<boolean>
+}
+
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsTextDrawElement
@@ -141,6 +169,7 @@ export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsBoxDrawElement
 	| ButtonGraphicsLineDrawElement
 	| ButtonGraphicsGroupDrawElement
+	| ButtonGraphicsCircleDrawElement
 
 export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCanvasElement
@@ -149,3 +178,4 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsBoxElement
 	| ButtonGraphicsLineElement
 	| ButtonGraphicsGroupElement
+	| ButtonGraphicsCircleElement

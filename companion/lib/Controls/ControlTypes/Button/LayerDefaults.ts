@@ -90,6 +90,27 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				borderColor: { value: 0xffffff, isExpression: false },
 				borderPosition: { value: 'center', isExpression: false },
 			}
+		case 'circle':
+			return {
+				id: nanoid(),
+				name: 'Circle',
+				usage: ButtonGraphicsElementUsage.Automatic,
+				type: 'circle',
+				enabled: { value: true, isExpression: false },
+				opacity: { value: 100, isExpression: false },
+				x: { value: 0, isExpression: false },
+				y: { value: 0, isExpression: false },
+				width: { value: 100, isExpression: false },
+				height: { value: 100, isExpression: false },
+				color: { value: 0xff0000, isExpression: false },
+				startAngle: { value: 0, isExpression: false },
+				endAngle: { value: 360, isExpression: false },
+				drawSlice: { value: false, isExpression: false },
+				borderWidth: { value: 2, isExpression: false },
+				borderColor: { value: 0xffffff, isExpression: false },
+				borderPosition: { value: 'center', isExpression: false },
+				borderOnlyArc: { value: false, isExpression: false },
+			}
 		default:
 			assertNever(type)
 			throw new Error(`Unknown element type: ${type}`)
