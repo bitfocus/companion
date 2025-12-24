@@ -4,10 +4,12 @@
 
 // PART 1:
 // Define variables that should override @coreui defaults:
-// note that Sass will issue a strange error message if a variable specified here is not already in coreui. (As of Sass 1.89)
-$_private-header-bg: #d50215; // needed for both $header-bg and the adjust() call, below.
+// note that Sass may issue a strange error message if a variable specified here is not already in coreui. (As of Sass 1.89)
+$_private-header-bg: #d50215; // note: this is currently used for $primary as well as header
+// coreui doesn't define a header-brand-bg, so define it here and use it for sidebar, which coreui does define
+$header-brand-bg: color.adjust($_private-header-bg, $lightness: -10%);
 @forward '@coreui/coreui/scss/coreui' with (
-	$primary: #d50215,
+	$primary: $_private-header-bg,
 	$secondary: #ccc,
 	$body-bg: #333,
 	$light: #e9e9e9,
@@ -17,7 +19,7 @@ $_private-header-bg: #d50215; // needed for both $header-bg and the adjust() cal
 	$header-brand-color: #fff,
 	$header-brand-hover-color: #fff,
 	$sidebar-bg: #111,
-	$sidebar-brand-bg: color.adjust($_private-header-bg, $lightness: -10%),
+	$sidebar-brand-bg: $header-brand-bg,
 	$form-switch-color: #fff,
 	$form-switch-checked-color: #fff,
 	$form-switch-focus-color: #fff,
@@ -51,9 +53,7 @@ $header-border: (
 
 $variable-padding: 1px 3px 0px;
 
-// coreui doesn't define a header-brand-bg, so define it here
-$header-brand-bg: color.adjust($_private-header-bg, $lightness: -10%);
-
+// variables to be made available for React code:
 :root {
 	--companion-header-brand-bg: #{$header-brand-bg};
 }

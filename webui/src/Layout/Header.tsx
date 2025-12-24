@@ -69,7 +69,7 @@ function circleInfo(stacked = false): ReactElement {
 			icon={faInfo}
 			className="fa-xs"
 			style={{
-				border: '0.2em, solid',
+				border: '0.2em solid',
 				borderRadius: '100%',
 				padding: '0.15em 0.05em 0.35em 0.05em', // top right bottom left
 				marginBottom: '-0.45em',
@@ -131,7 +131,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 					{canLock && (
 						<CNavItem>
 							<CNavLink onClick={() => setLocked(true)} title="Lock Admin UI">
-								<FontAwesomeIcon icon={faLock} className="fa-lg" style={{ paddingTop: '0.3em' }} />
+								<FontAwesomeIcon icon={faLock} className="fa-lg" />
 							</CNavLink>
 						</CNavItem>
 					)}
@@ -180,7 +180,7 @@ function HelpMenu({ ...props }) {
 			label: 'Community Support',
 			icon: faFacebook,
 			destination: 'https://bfoc.us/qjk0reeqmy',
-			tooltip: 'Share you experience or ask questions to your Companions.',
+			tooltip: 'Share your experience or ask questions to your Companions.',
 			isExternal: true,
 		},
 		{
@@ -243,10 +243,10 @@ function HelpMenu({ ...props }) {
 
 // create menu-entries with (1) optional left-hand icon, (2) label, (3) optional right-side "external link" icon
 function MenuItem({ data, ...props }: { data: MenuOption }) {
-	const navProps =
-		typeof data.destination === 'string'
-			? { to: data.destination, target: '_blank', rel: 'noopener noreferrer', as: Link }
-			: { onClick: data.destination }
+	const isUrl = typeof data.destination === 'string'
+	const navProps = isUrl
+		? { to: data.destination, as: Link, rel: 'noopener noreferrer', target: data.isExternal ? '_blank' : '_self' }
+		: { onClick: data.destination }
 
 	// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]] (or separator)
 	return data.isSeparator ? (
@@ -257,7 +257,7 @@ function MenuItem({ data, ...props }: { data: MenuOption }) {
 			}}
 		/>
 	) : (
-		<CDropdownItem as="button" style={{ paddingLeft: 0, paddingRight: 5 }}>
+		<CDropdownItem as={isUrl ? 'div' : 'button'} style={{ paddingLeft: 0, paddingRight: 5 }}>
 			<CNavLink {...navProps} title={data.tooltip}>
 				<span
 					{...props}
