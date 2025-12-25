@@ -15,7 +15,7 @@ import {
 } from '@coreui/react'
 import {
 	faBars,
-	// faCircle, // if backing the faCircleQuestion icon
+	// faCircle, // solid circle, if making the faCircleQuestion icon "opaque"
 	faInfo,
 	faStar,
 	faExternalLinkSquare,
@@ -40,42 +40,45 @@ interface MyHeaderProps {
 }
 
 // provide a declarative menu specification:
-interface MenuOption {
-	readonly value: string
+interface MenuItem {
 	readonly label: string
+	readonly to: string | (() => void) // URL string or action callback
+	readonly id?: string // used for key and to allow individually styled items, see code
 	readonly icon?: IconDefinition | (() => ReactElement)
-	readonly destination: string | (() => void)
 	readonly tooltip?: string
 	readonly isExternal?: boolean
-	readonly isSeparator?: boolean
+	readonly isSeparator?: boolean // currently, everything else is ignored if this is true
 }
 
-const MenuSeparator: MenuOption = {
-	value: '',
+const MenuSeparator: MenuItem = {
 	label: '',
-	destination: '',
+	to: '',
 	isSeparator: true,
 }
 
-// make our own circleInfo since it's not in the free FontAwesome offering
+// make our own circleInfo since it's not in the free FontAwesome offering (two options here)
 function circleInfo(stacked = false): ReactElement {
-	return stacked ? (
-		<span className="fa-stack fa-2xs" style={{ marginRight: '-0.75em', marginTop: '-0.2em' }}>
-			<FontAwesomeIcon icon={faOpenCircle} className="fa-stack-2x" style={{ marginLeft: '-0.45em' }} />
-			<FontAwesomeIcon icon={faInfo} className="fa-stack-1x" style={{ marginLeft: '0.1em' }} />
-		</span>
-	) : (
-		<FontAwesomeIcon
-			icon={faInfo}
-			className="fa-xs"
-			style={{
-				border: '0.2em solid',
-				borderRadius: '100%',
-				padding: '0.15em 0.05em 0.35em 0.05em', // top right bottom left
-				marginBottom: '-0.45em',
-			}}
-		/>
-	)
+	if (stacked) {
+		return (
+			<span className="fa-stack fa-2xs" style={{ marginLeft: '0.2em', marginRight: '-0.8em', marginTop: '-0.35em' }}>
+				<FontAwesomeIcon icon={faOpenCircle} className="fa-stack-2x" style={{ marginLeft: '-0.45em' }} />
+				<FontAwesomeIcon icon={faInfo} className="fa-stack-1x" style={{ marginLeft: '0.1em' }} />
+			</span>
+		)
+	} else {
+		return (
+			<FontAwesomeIcon
+				icon={faInfo}
+				className="fa-xs"
+				style={{
+					border: '0.2em solid',
+					borderRadius: '100%',
+					padding: '0.15em 0.05em 0.35em 0.1em', // top right bottom left
+					margin: '-0.05em 0em -0.45em -0.05em',
+				}}
+			/>
+		)
+	}
 }
 
 export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHeaderProps) {
@@ -103,7 +106,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 					)}
 
 					{updateData.data?.message ? (
-						<CNavItem className="header-nav-item">
+						<CNavItem className="header-notification-item">
 							<CNavLink target="_blank" href={updateData.data.link || 'https://bitfocus.io/companion/'}>
 								<div className="flex">
 									<div className="align-self-center">
@@ -135,106 +138,87 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 							</CNavLink>
 						</CNavItem>
 					)}
-
-					<HelpMenu />
 				</CHeaderNav>
+				{/* Placing HelpMenu outside CHeaderNav gives "standard" menu line-heights. 
+						Move it into the CHeaderNav block to make it look more like the sidebar line height.  */}
+				<HelpMenu />
 			</CContainer>
 		</CHeader>
 	)
 })
 
-function HelpMenu({ ...props }) {
-	// we could add the config wizard here too?
+function HelpMenu() {
+	// We could add the config wizard (showWizard) to the help menu in this useContext...
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
+	let dividerNr = 0
 
-	// specifying this inline below, causes a spurious TypeScript error message on '--cui-dropdown-link-hover-bg'
-	const menuStyle = {
-		backgroundColor: 'var(--cui-header-bg)',
-		// note: hover color is controlled by `.header .nav-link:hover` in _layout.scss
-		'--cui-dropdown-link-hover-bg': 'var(--companion-header-brand-bg)',
-		padding: 0,
-	}
-
-	// note: this const has to be inside the component so that we can grab `whatsNewOpen` which is a useCallback...
-	const helpMenuOptions: MenuOption[] = [
+	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
+	const helpMenuItems: MenuItem[] = [
 		{
-			value: 'help',
+			id: 'user-guide',
 			label: 'User Guide / Help',
-			icon: circleInfo,
-			destination: '/user-guide/',
+			icon: circleInfo, // this is a function call, unlike the rest.
+			to: '/user-guide/',
 			tooltip: 'Open the User Guide in a new tab.',
 			isExternal: true,
 		},
 		{
-			value: 'new',
+			id: 'whats-new',
 			label: "What's New",
 			icon: faStar,
-			destination: whatsNewOpen,
+			to: whatsNewOpen,
 			tooltip: 'Show the current release notes.',
 			isExternal: false,
 		},
 		MenuSeparator,
 		{
-			value: 'fb',
+			id: 'fb',
 			label: 'Community Support',
 			icon: faFacebook,
-			destination: 'https://bfoc.us/qjk0reeqmy',
+			to: 'https://bfoc.us/qjk0reeqmy',
 			tooltip: 'Share your experience or ask questions to your Companions.',
 			isExternal: true,
 		},
 		{
-			value: 'slack',
+			id: 'slack',
 			label: 'Slack Workspace',
 			icon: faSlack,
-			destination: 'https://bfoc.us/ke7e9dqgaz',
+			to: 'https://bfoc.us/ke7e9dqgaz',
 			tooltip: 'Discuss technical issues on Slack.',
 			isExternal: true,
 		},
 		{
-			value: 'github',
+			id: 'github',
 			label: 'Report an Issue',
 			icon: faGithub,
-			destination: 'https://bfoc.us/fiobkz0yqs',
+			to: 'https://bfoc.us/fiobkz0yqs',
 			tooltip: 'Report bugs or request features on GitHub.',
 			isExternal: true,
 		},
 		MenuSeparator,
 		{
-			value: 'donate',
+			id: 'donate',
 			label: 'Donate',
 			icon: faDollarSign,
-			destination: 'https://bfoc.us/ccfbf8wm2x',
+			to: 'https://bfoc.us/ccfbf8wm2x',
 			tooltip: 'Contribute funds to Bitfocus Companion.',
 			isExternal: true,
 		},
 	]
 
+	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,
+	// but worse, if you add it manually, `caret={false}` is ignored, so it's named 'help-toggle' here.
 	return (
-		<CDropdown
-			{...props}
-			className=""
-			offset={[10, 7]}
-			style={{
-				//without the next line, the menu doesn't show:
-				position: 'inherit',
-			}}
-		>
-			<CDropdownToggle
-				color="primary"
-				caret={false}
-				style={{
-					// this is all needed to make the focus/hover-highlight round and just slightly larger than the icon
-					padding: '0.2em 0',
-					marginLeft: '1em',
-					borderRadius: '100%',
-				}}
-			>
+		//note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
+		<CDropdown className="position-static help-menu" offset={[10, 7]}>
+			<CDropdownToggle color="primary" caret={false} className="help-toggle">
 				<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
 			</CDropdownToggle>
-			<CDropdownMenu style={menuStyle}>
-				{helpMenuOptions.map((option) => (
-					<MenuItem key={option.value} data={option} {...props} />
+
+			<CDropdownMenu>
+				{helpMenuItems.map((option) => (
+					<MenuItem key={option.id || `sep${dividerNr++}`} data={option} />
 				))}
 			</CDropdownMenu>
 		</CDropdown>
@@ -242,46 +226,37 @@ function HelpMenu({ ...props }) {
 }
 
 // create menu-entries with (1) optional left-hand icon, (2) label, (3) optional right-side "external link" icon
-function MenuItem({ data, ...props }: { data: MenuOption }) {
-	const isUrl = typeof data.destination === 'string'
-	const navProps = isUrl
-		? { to: data.destination, as: Link, rel: 'noopener noreferrer', target: data.isExternal ? '_blank' : '_self' }
-		: { onClick: data.destination }
+// The menu action can be either a URL or a function call
+function MenuItem({ data }: { data: MenuItem }) {
+	if (data.isSeparator) {
+		return <CDropdownDivider />
+	} else {
+		const isUrl = typeof data.to === 'string'
+		const navProps = isUrl
+			? { to: data.to, as: Link, rel: 'noopener noreferrer', target: data.isExternal ? '_blank' : '_self' }
+			: { onClick: data.to }
 
-	// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]] (or separator)
-	return data.isSeparator ? (
-		<CDropdownDivider
-			style={{
-				borderTop: '1px solid #888',
-				margin: '0px 5px',
-			}}
-		/>
-	) : (
-		<CDropdownItem as={isUrl ? 'div' : 'button'} style={{ paddingLeft: 0, paddingRight: 5 }}>
-			<CNavLink {...navProps} title={data.tooltip}>
-				<span
-					{...props}
-					style={{
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'space-between',
-					}}
-				>
-					<span style={{ paddingLeft: '0.5em' }}>
+		// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]]
+		return (
+			// note: CDropdownItem has CSS class: dropdown-item. Here we only add the optional item-specific class
+			<CDropdownItem as={isUrl ? 'div' : 'button'} className={data.id && `dropdown-item-${data.id}`}>
+				<CNavLink {...navProps} className="d-flex justify-content-start" title={data.tooltip}>
+					<span className="dropdown-item-icon">
 						{typeof data.icon === 'function' ? (
 							data.icon()
 						) : (
 							<FontAwesomeIcon
-								icon={data.icon ? data.icon : faInfo}
-								style={{ visibility: data.icon ? 'inherit' : 'hidden' }}
+								icon={data.icon ? data.icon : faOpenCircle}
+								className={data.icon ? 'visible' : 'invisible'}
 							/>
 						)}
-						<span style={{ paddingRight: '1em', paddingLeft: '1em' }}>{data.label}</span>
 					</span>
 
-					{data.isExternal ? <FontAwesomeIcon icon={faExternalLinkSquare} /> : ' '}
-				</span>
-			</CNavLink>
-		</CDropdownItem>
-	)
+					<span className="dropdown-item-label">{data.label}</span>
+
+					{data.isExternal ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
+				</CNavLink>
+			</CDropdownItem>
+		)
+	}
 }

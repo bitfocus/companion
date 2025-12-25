@@ -81,21 +81,86 @@ form.row > * {
 // 	margin: 0 auto;
 // }
 
-.header-toggler svg {
-	color: #fff;
-}
+// not used? looks like only sidebar-header-toggler is used
+// .header-toggler svg {
+// 	color: #fff;
+// }
 
 .header-right {
 	margin-right: 5px;
 }
 
-.header .nav-link:hover {
-	color: #ddd;
+.header {
+	.nav-link:hover {
+		color: #ddd;
+	}
+	/* ensure .header-notification-item text doesn't disappear on focus */
+	.nav-link:focus {
+		color: #ddd;
+	}
 }
 
-/* ensure .header-nav-item text doesn't disappear on focus */
-.header .nav-link:focus {
-	color: #ddd;
+.header-notification-item {
+	border-radius: 2em;
+	margin-left: 1em;
+	background-color: #333;
+}
+
+.header-update-icon {
+	margin-right: 0.5em;
+}
+
+.help-menu {
+	// gather the color scheme up front:
+	--menu-color: var(--cui-header-color);
+	--menu-bg: var(--cui-header-bg);
+	--menu-hover-bg: #{$header-brand-bg};
+	color: var(--menu-color); // this may not affect anything
+
+	// note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed.
+	.help-toggle {
+		color: var(--menu-color); // color of the toggle foreground; could be independent of menu-color...
+		margin-left: 1em; // buffer between this and the lock icon
+		// the following two lines make the focus/hover-highlight circular (as small as it can be?)
+		padding: 0.2em 0em 0.2em 0em;
+		border-radius: 100% !important; // default behavior undoes the right-side rounding
+	}
+
+	// The nesting within .dropdown-menu is mostly for clarity, to emphasize the DOM structure:
+	.dropdown-menu {
+		background-color: var(--menu-bg);
+		--cui-dropdown-link-hover-bg: var(--menu-hover-bg);
+		padding: 0; // tightens the top and bottom of the menu
+
+		// override the global header hover defined above
+		.nav-link:hover {
+			color: var(--menu-color);
+		}
+
+		.dropdown-item {
+			color: var(--menu-color);
+			font-weight: 500; // slightly bold (400 is normal; 700 is "bold")
+			padding-left: 0.75em;
+			padding-right: 0.75em;
+
+			.dropdown-item-icon {
+				// let the rules above and below control its padding
+				padding-left: 0em;
+				padding-right: 0em;
+			}
+
+			.dropdown-item-label {
+				padding-left: 0.75em;
+				padding-right: 1.5em;
+			}
+		}
+
+		.dropdown-divider {
+			border-top: 1px solid #888;
+			margin-left: 5px;
+			margin-right: 5px;
+		}
+	}
 }
 
 .login-form {

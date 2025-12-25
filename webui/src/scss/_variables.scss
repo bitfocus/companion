@@ -52,8 +52,3 @@ $header-border: (
 );
 
 $variable-padding: 1px 3px 0px;
-
-// variables to be made available for React code:
-:root {
-	--companion-header-brand-bg: #{$header-brand-bg};
-}
