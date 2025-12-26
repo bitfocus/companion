@@ -211,7 +211,7 @@ function HelpMenu() {
 	return (
 		//note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
 		<CDropdown className="position-static help-menu" offset={[10, 7]}>
-			<CDropdownToggle color="primary" caret={false} className="help-toggle">
+			<CDropdownToggle color="primary" caret={false} className="help-toggle" aria-label="Help and support menu">
 				<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
 			</CDropdownToggle>
 
