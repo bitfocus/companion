@@ -40,7 +40,7 @@ interface MyHeaderProps {
 }
 
 // provide a declarative menu specification:
-interface MenuItem {
+interface MenuItemData {
 	readonly label: string
 	readonly to: string | (() => void) // URL string or action callback
 	readonly id?: string // used for key and to allow individually styled items, see code
@@ -50,7 +50,7 @@ interface MenuItem {
 	readonly isSeparator?: boolean // currently, everything else is ignored if this is true
 }
 
-const MenuSeparator: MenuItem = {
+const MenuSeparatorSpec: MenuItemData = {
 	label: '',
 	to: '',
 	isSeparator: true,
@@ -153,7 +153,7 @@ function HelpMenu() {
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
-	const helpMenuItems: MenuItem[] = [
+	const helpMenuItems: MenuItemData[] = [
 		{
 			id: 'user-guide',
 			label: 'User Guide / Help',
@@ -170,7 +170,7 @@ function HelpMenu() {
 			tooltip: 'Show the current release notes.',
 			isExternal: false,
 		},
-		MenuSeparator,
+		MenuSeparatorSpec,
 		{
 			id: 'fb',
 			label: 'Community Support',
@@ -195,7 +195,7 @@ function HelpMenu() {
 			tooltip: 'Report bugs or request features on GitHub.',
 			isExternal: true,
 		},
-		MenuSeparator,
+		MenuSeparatorSpec,
 		{
 			id: 'donate',
 			label: 'Donate',
@@ -226,7 +226,7 @@ function HelpMenu() {
 
 // create menu-entries with (1) optional left-hand icon, (2) label, (3) optional right-side "external link" icon
 // The menu action can be either a URL or a function call
-function MenuItem({ data }: { data: MenuItem }) {
+function MenuItem({ data }: { data: MenuItemData }) {
 	if (data.isSeparator) {
 		return <CDropdownDivider />
 	} else {
