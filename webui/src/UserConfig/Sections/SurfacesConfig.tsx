@@ -3,6 +3,8 @@ import { observer } from 'mobx-react-lite'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import type { UserConfigProps } from '../Components/Common.js'
+import { CAlert } from '@coreui/react'
+import { Link } from '@tanstack/react-router'
 
 export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfigProps) {
 	return (
@@ -15,6 +17,15 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 				label="Enable Elgato software Plugin support"
 				field="elgato_plugin_enable"
 			/>
+
+			<tr>
+				<td colSpan={3}>
+					<CAlert color="info" className="mt-3">
+						You can configure support for different types of surfaces in the{' '}
+						<Link to="/surfaces/integrations">Surface Integrations</Link> page.
+					</CAlert>
+				</td>
+			</tr>
 		</>
 	)
 })
