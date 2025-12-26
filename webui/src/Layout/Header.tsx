@@ -151,7 +151,6 @@ function HelpMenu() {
 	// We could add the config wizard (showWizard) to the help menu in this useContext...
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
-	let dividerNr = 0
 
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
 	const helpMenuItems: MenuItem[] = [
@@ -217,8 +216,8 @@ function HelpMenu() {
 			</CDropdownToggle>
 
 			<CDropdownMenu>
-				{helpMenuItems.map((option) => (
-					<MenuItem key={option.id || `sep${dividerNr++}`} data={option} />
+				{helpMenuItems.map((option, idx) => (
+					<MenuItem key={option.id || `item-${idx}`} data={option} />
 				))}
 			</CDropdownMenu>
 		</CDropdown>
