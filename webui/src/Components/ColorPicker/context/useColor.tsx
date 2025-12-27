@@ -71,7 +71,13 @@ export function ColorProvider({
 				onChange?.(newState, event)
 			},
 			changeHexColor: (newColor: HexColor, event: React.SyntheticEvent | MouseEvent) => {
-				const newState = store.update(colord(newColor))
+				let parsedColor = colord(newColor)
+				if (!parsedColor.isValid()) {
+					// Try adding # if missing. This allows other non-hex input to be tried first, like rgb() before falling back to hex
+					parsedColor = colord(`#${newColor}`)
+				}
+
+				const newState = store.update(parsedColor)
 
 				if (onChangeComplete) debouncedChangeHandler(onChangeComplete, newState, event)
 				onChange?.(newState, event)
