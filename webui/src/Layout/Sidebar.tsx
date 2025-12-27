@@ -484,18 +484,21 @@ function CNavGroup({
 	return (
 		<li className={classNames('nav-group', { show: _visible }, className)} {...rest}>
 			{to ? (
-				<a className="nav-link nav-group-toggle nav-group-toggle-link" onClick={(event) => handleTogglerOnCLick(event)}>
+				<div
+					className="nav-link nav-group-toggle nav-group-toggle-link"
+					onClick={(event) => handleTogglerOnCLick(event)}
+				>
 					<Link
 						to={to}
 						className="nav-link"
 						onClick={(e) => {
 							e.stopPropagation()
-							setVisible(true)
+							setVisible(!_visible)
 						}}
 					>
 						{toggler}
 					</Link>
-				</a>
+				</div>
 			) : (
 				<a
 					className="nav-link nav-group-toggle nav-group-toggle-basic"
