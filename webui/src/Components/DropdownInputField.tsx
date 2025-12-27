@@ -53,6 +53,9 @@ export const DropdownInputField = observer(function DropdownInputField({
 }: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
+	// If fancy format is enabled, always search full option
+	if (fancyFormat) searchLabelsOnly = false
+
 	const options = useComputed(() => {
 		let options: DropdownChoice[] = []
 		if (options) {
