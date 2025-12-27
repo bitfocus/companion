@@ -24,6 +24,9 @@ if (trpcUrl.startsWith('http')) trpcUrl = 'ws' + trpcUrl.slice(4)
 
 export const trpcWsClient = createWSClient({
 	url: trpcUrl,
+	keepAlive: {
+		enabled: true,
+	},
 	onError: (error) => {
 		// This is probably pretty noisy, but there are some issues around here that need debugging
 		Sentry.captureException(error, { tags: { area: 'trpc-ws-client' } })
