@@ -32,7 +32,6 @@ import { EventEmitter } from 'events'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import debounceFn from 'debounce-fn'
 import type { AppInfo } from '../Registry.js'
-import { PreserveEnvVars } from '../Instance/Environment.js'
 
 const execAsync = promisify(exec)
 
@@ -320,9 +319,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 				try {
 					const { stdout } = await execAsync(path, {
 						timeout: action.rawOptions.timeout ?? 5000,
-						env: {
-							...PreserveEnvVars(),
-						},
 					})
 
 					// Trim EOL character(s) appended by the OS
