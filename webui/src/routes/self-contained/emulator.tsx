@@ -1,7 +1,7 @@
 import { CRow } from '@coreui/react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useDocumentTitle } from 'usehooks-ts'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 import { trpc } from '~/Resources/TRPC'
@@ -22,13 +22,21 @@ function RouteComponent() {
 			: 'Bitfocus Companion - Emulator'
 	)
 
+	const doRetry = useCallback(() => window.location.reload(), [])
+
 	return (
 		<div className="page-emulator-base">
 			{status.status === TRPCConnectionStatus.Connected || !emulatorPageConfig.data ? (
 				<Outlet />
 			) : (
 				<CRow className={'loading'}>
-					<LoadingRetryOrError dataReady={false} error={status.error || emulatorPageConfig.error} design="pulse-xl" />
+					<LoadingRetryOrError
+						dataReady={false}
+						error={status.error || emulatorPageConfig.error || 'test'}
+						doRetry={doRetry}
+						retryLabel="Reload Emulator"
+						design="pulse-xl"
+					/>
 				</CRow>
 			)}
 		</div>

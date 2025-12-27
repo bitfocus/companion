@@ -23,6 +23,8 @@ interface LoadingRetryOrErrorProps {
 	error?: string | TRPCClientErrorLike<any> | null
 	dataReady: boolean
 	doRetry?: () => void
+	retryLabel?: string
+	/** Number of seconds to wait before automatically retrying. When set, a countdown timer is shown and doRetry() is called when it reaches 0. If null, no automatic retry occurs. */
 	autoRetryAfter?: number | null
 	design: 'bar' | 'pulse' | 'pulse-xl'
 }
@@ -30,15 +32,19 @@ export function LoadingRetryOrError({
 	error,
 	dataReady,
 	doRetry,
+	retryLabel,
 	autoRetryAfter = null,
 	design,
 }: LoadingRetryOrErrorProps): React.JSX.Element {
+	// Track the countdown timer for automatic retry
 	const [countdown, setCountdown] = useState(autoRetryAfter)
 
+	// Manage the countdown timer - decrements every second when data is not ready and autoRetryAfter is set
 	useEffect(() => {
 		if (!dataReady && autoRetryAfter) {
 			const interval = setInterval(() => {
 				setCountdown((c) => {
+					// Reset to initial countdown value when timer expires or is not set
 					if (!c || c <= 0) {
 						return autoRetryAfter - 1
 					} else {
@@ -53,6 +59,7 @@ export function LoadingRetryOrError({
 		}
 	}, [dataReady, autoRetryAfter])
 
+	// Trigger the retry callback when countdown reaches 0
 	useEffect(() => {
 		if (countdown === 0 && doRetry) {
 			doRetry()
@@ -61,18 +68,21 @@ export function LoadingRetryOrError({
 
 	return (
 		<>
+			{/* Show error message with manual retry button */}
 			{error && (
 				<CCol sm={12}>
 					<CAlert color="danger" role="alert">
 						<p>{typeof error === 'string' ? error : error.message}</p>
-						{!dataReady && (
+						{/* Show retry button with countdown when data is not ready and retry function is provided */}
+						{!dataReady && !!doRetry && (
 							<CButton color="primary" onClick={doRetry}>
-								Retry {countdown && '(' + countdown + ')'}
+								{retryLabel || 'Retry'} {countdown && '(' + countdown + ')'}
 							</CButton>
 						)}
 					</CAlert>
 				</CCol>
 			)}
+			{/* Show loading spinner when data is not ready and there's no error */}
 			{!dataReady && !error && (
 				<CCol sm={12}>
 					{design === 'pulse' ? (
