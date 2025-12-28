@@ -8,17 +8,15 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 		// while avoiding any message-only ignores.
 		beforeSend(event, _hint) {
 			try {
-				const frames = (event?.exception?.values?.[0]?.stacktrace?.frames as any[]) || []
+				const frames = event?.exception?.values?.[0]?.stacktrace?.frames || []
 
 				// If we have a stacktrace, prefer that to decide origin.
 				if (frames.length > 0) {
 					let monaco = 0
 					let app = 0
-					const host = typeof window !== 'undefined' ? window.location?.hostname : ''
 					for (const f of frames) {
 						const name = String(f.filename || f.abs_path || f.module || '')
 						if (/monaco|monaco-editor|vs\/editor|loader\.js|_deps\/monaco/i.test(name)) monaco++
-						if (host && name.includes(host)) app++
 						if (/\/src\/|\/assets\/|webui|app\.|bundle/i.test(name)) app++
 						if (monaco > 0 && app > 0) break
 					}
