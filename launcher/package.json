@@ -17,12 +17,12 @@
 		"debounce-fn": "^6.0.0",
 		"electron-store": "^11.0.2",
 		"file-stream-rotator": "^1.0.0",
-		"fs-extra": "^11.3.2",
+		"fs-extra": "^11.3.3",
 		"nanoid": "^5.1.6",
 		"plist": "^3.1.0",
 		"semver": "^7.7.3",
 		"strip-ansi": "^7.1.2",
-		"systeminformation": "^5.27.14"
+		"systeminformation": "^5.28.3"
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
