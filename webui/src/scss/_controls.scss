@@ -167,6 +167,11 @@ label.disabled {
 	}
 }
 
+.variable-select-root__menu-portal {
+	// Ensure variable dropdowns appear above other UI elements
+	z-index: 20;
+}
+
 /* Styling for the dropdown options list, so they can accommodate two-line entries
 
   Companion's default line-height (`--cui-body-line-height`) is 1.5,
