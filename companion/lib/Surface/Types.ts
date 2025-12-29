@@ -76,6 +76,7 @@ export interface SurfacePanelEvents {
 	changePage: [forward: boolean]
 	pincodeKey: [key: number]
 
+	setVariable: [variableId: string, value: CompanionVariableValue]
 	setCustomVariable: [variableId: string, value: CompanionVariableValue]
 
 	resized: []

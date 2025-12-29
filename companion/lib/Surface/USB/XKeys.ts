@@ -172,13 +172,14 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		if (panel.info.hasJog) {
 			this.info.configFields.push(jogConfigField)
 			this.#myXkeysPanel.on('jog', (index, deltaPos, metadata) => {
-				const jogVariableName = this.config.jogValueVariable
-				if (!jogVariableName) return
+				const useCustom = !!this.config.jogValueVariable
+				const jogVariableName = useCustom ? this.config.jogValueVariable : 'internal:jog'
+				const setVariableCmd = useCustom ? 'setCustomVariable' : 'setVariable'
 
 				this.#logger.silly(`Jog ${index} position has changed`, deltaPos, metadata)
-				this.emit('setCustomVariable', jogVariableName, deltaPos)
+				this.emit(setVariableCmd, jogVariableName, deltaPos)
 				setTimeout(() => {
-					this.emit('setCustomVariable', jogVariableName, 0)
+					this.emit(setVariableCmd, jogVariableName, 0)
 				}, 20)
 			})
 		}
@@ -187,11 +188,12 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 		if (panel.info.hasShuttle) {
 			this.info.configFields.push(shuttleConfigField)
 			this.#myXkeysPanel.on('shuttle', (index, shuttlePos, metadata) => {
-				const shuttleVariableName = this.config.shuttleValueVariable
-				if (!shuttleVariableName) return
+				const useCustom = !!this.config.shuttleValueVariable
+				const shuttleVariableName = useCustom ? this.config.shuttleValueVariable : 'internal:shuttle'
+				const setVariableCmd = useCustom ? 'setCustomVariable' : 'setVariable'
 
 				this.#logger.silly(`Shuttle ${index} position has changed`, shuttlePos, metadata)
-				this.emit('setCustomVariable', shuttleVariableName, shuttlePos)
+				this.emit(setVariableCmd, shuttleVariableName, shuttlePos)
 			})
 		}
 		// Listen to joystick changes:
@@ -206,11 +208,12 @@ export class SurfaceUSBXKeys extends EventEmitter<SurfacePanelEvents> implements
 			this.info.configFields.push(tbarConfigField)
 			// Listen to t-bar changes:
 			this.#myXkeysPanel.on('tbar', (index, position, metadata) => {
-				const tbarVariableName = this.config.tbarValueVariable
-				if (!tbarVariableName) return
+				const useCustom = !!this.config.tbarValueVariable
+				const tbarVariableName = useCustom ? this.config.tbarValueVariable : 'internal:t-bar'
+				const setVariableCmd = useCustom ? 'setCustomVariable' : 'setVariable'
 
 				this.#logger.silly(`T-bar ${index} position has changed`, position, metadata)
-				this.emit('setCustomVariable', tbarVariableName, position)
+				this.emit(setVariableCmd, tbarVariableName, position)
 			})
 		}
 	}

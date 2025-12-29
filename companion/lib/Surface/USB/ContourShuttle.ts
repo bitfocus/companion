@@ -235,14 +235,14 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			}
 
 			//console.log(`Jog position has changed`, delta)
-			const jogVariableName = this.config.jogValueVariable
-			if (jogVariableName) {
-				this.#logger.debug(`Setting jog variable ${jogVariableName} to ${delta}`)
-				this.emit('setCustomVariable', jogVariableName, delta)
-				setTimeout(() => {
-					this.emit('setCustomVariable', jogVariableName, 0)
-				}, 20)
-			}
+			const useCustom = !!this.config.jogValueVariable
+			const jogVariableName = useCustom ? this.config.jogValueVariable : 'internal:jog'
+			const setVariableCmd = useCustom ? 'setCustomVariable' : 'setVariable'
+			this.#logger.debug(`Setting jog variable ${jogVariableName} to ${delta}`)
+			this.emit(setVariableCmd, jogVariableName, delta)
+			setTimeout(() => {
+				this.emit(setVariableCmd, jogVariableName, 0)
+			}, 20)
 
 			this.emit('rotate', ...xy, delta == 1)
 		})
@@ -266,11 +266,11 @@ export class SurfaceUSBContourShuttle extends EventEmitter<SurfacePanelEvents> i
 			}
 
 			// do this before emitting any events:
-			const shuttleVariableName = this.config.shuttleValueVariable
-			if (shuttleVariableName) {
-				this.#logger.debug(`Setting shuttle variable ${shuttleVariableName} to ${shuttle}`)
-				this.emit('setCustomVariable', shuttleVariableName, shuttle)
-			}
+			const useCustom = !!this.config.shuttleValueVariable
+			const shuttleVariableName = useCustom ? this.config.shuttleValueVariable : 'internal:shuttle'
+			const setVariableCmd = useCustom ? 'setCustomVariable' : 'setVariable'
+			this.#logger.debug(`Setting shuttle variable ${shuttleVariableName} to ${shuttle}`)
+			this.emit(setVariableCmd, shuttleVariableName, shuttle)
 
 			// Direction of rotation events (true triggers "rotate-right") is different than for knobs
 			// because the ring has limited travel and always springs back to zero. In typical usage,
