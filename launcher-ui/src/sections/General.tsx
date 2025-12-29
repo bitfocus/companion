@@ -18,7 +18,8 @@ export function GeneralSection(): JSX.Element {
 	}, [config.log_level])
 
 	// Handle changes and update config
-	const handleLogLevelChange = (value: string) => {
+	const handleLogLevelChange = (value: string | null) => {
+		if (!value) return
 		setLogLevel(value)
 		updateConfig({ log_level: value })
 	}
