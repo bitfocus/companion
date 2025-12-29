@@ -164,13 +164,14 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 				const touch = data.changedTouches.find(
 					(touch) => touch.target.screen == LoupedeckDisplayId.Right || touch.target.screen == LoupedeckDisplayId.Left
 				)
-				if (touch && touch.target.screen == LoupedeckDisplayId.Right && this.config.rightFaderValueVariable) {
+				if (touch && touch.target.screen == LoupedeckDisplayId.Right) {
 					const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
-					this.emit(
-						'setCustomVariable',
-						this.config.rightFaderValueVariable,
-						this.config.invertFaderValues ? 256 - val : val
-					)
+
+					const useCustom = !!this.config.rightFaderValueVariable
+					const tbarVariableName = useCustom ? this.config.rightFaderValueVariable : 'internal:t-bar'
+					const setVariableCmd = useCustom ? 'setCustomVariable' : 'setVariable'
+					this.emit(setVariableCmd, tbarVariableName, this.config.invertFaderValues ? 256 - val : val)
+
 					this.DisplayColors.RightValue = val
 					if (this.config.invertFaderValues) {
 						// Draw from bottom → up
@@ -197,13 +198,14 @@ export class SurfaceUSBLoupedeck extends EventEmitter<SurfacePanelEvents> implem
 								this.#logger.error('Drawing right fader value ' + touch.y + ' to loupedeck failed: ' + e)
 							})
 					}
-				} else if (touch && touch.target.screen == LoupedeckDisplayId.Left && this.config.leftFaderValueVariable) {
+				} else if (touch && touch.target.screen == LoupedeckDisplayId.Left) {
 					const val = Math.min(touch.y + 7, 256) // map the touch screen height of 270 to 256 by capping top and bottom 7 pixels
-					this.emit(
-						'setCustomVariable',
-						this.config.leftFaderValueVariable,
-						this.config.invertFaderValues ? 256 - val : val
-					)
+
+					const useCustom = !!this.config.leftFaderValueVariable
+					const shuttleVariableName = useCustom ? this.config.leftFaderValueVariable : 'internal:shuttle'
+					const setVariableCmd = useCustom ? 'setCustomVariable' : 'setVariable'
+					this.emit(setVariableCmd, shuttleVariableName, this.config.invertFaderValues ? 256 - val : val)
+
 					this.DisplayColors.LeftValue = val
 					if (this.config.invertFaderValues) {
 						// Draw from bottom → up
