@@ -31,8 +31,15 @@ export function AppSidebar(): JSX.Element {
 						<SidebarMenu>
 							{SectionDefinitions.map((item) => (
 								<SidebarMenuItem key={item.id}>
-									<SidebarMenuButton asChild isActive={activeSectionId === item.id}>
-										<a href={`#${item.id}`}>{item.title}</a>
+									<SidebarMenuButton
+										asChild
+										isActive={activeSectionId === item.id}
+										className="cursor-pointer mb-1"
+										onClick={() => {
+											window.location.hash = `#${item.id}`
+										}}
+									>
+										{item.title}
 									</SidebarMenuButton>
 								</SidebarMenuItem>
 							))}
