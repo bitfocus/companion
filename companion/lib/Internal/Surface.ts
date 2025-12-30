@@ -155,6 +155,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		this.#controlsController = controlsController
 		this.#pageStore = pageStore
 
+		setImmediate(() => {
+			this.emit('setVariables', {
+				't-bar': 0,
+				jog: 0,
+				shuttle: 0,
+			})
+		})
+
 		const debounceUpdateVariableDefinitions = debounceFn(() => this.emit('regenerateVariables'), {
 			maxWait: 100,
 			wait: 20,
@@ -248,7 +256,23 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	}
 
 	getVariableDefinitions(): VariableDefinition[] {
-		const variables: VariableDefinition[] = []
+		const variables: VariableDefinition[] = [
+			{
+				name: 't-bar',
+				description:
+					'DEPRECATED Legacy T-bar position. Value is never updated: link a custom variable in the surfaces page instead.',
+			},
+			{
+				name: 'shuttle',
+				description:
+					'DEPRECATED Legacy Shuttle position. Value is never updated: link a custom variable in the surfaces page instead.',
+			},
+			{
+				name: 'jog',
+				description:
+					'DEPRECATED Legacy Jog position. Value is never updated: link a custom variable in the surfaces page instead.',
+			},
+		]
 
 		const surfaceInfos = this.#surfaceController.getDevicesList()
 		for (const surfaceGroup of surfaceInfos) {
