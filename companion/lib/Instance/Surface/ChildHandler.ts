@@ -25,12 +25,8 @@ import type { InstanceStatus } from '../Status.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import {
-	StableDeviceIdGenerator,
-	type HIDDevice,
-	type RemoteSurfaceConnectionInfo,
-	type SurfaceModuleManifest,
-} from '@companion-surface/base'
+import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
+import { StableDeviceIdGenerator } from './StableDeviceIdGenerator.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -325,6 +321,9 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		}
 
 		if (this.features.supportsHid) {
+			// Prepare for the scan by noting which devices are still present
+			this.#stableDeviceIdGenerator.prepareForScan(new Set<string>(hidDevices.map((d) => d.path)))
+
 			for (let device of hidDevices) {
 				// Check if this device is relevant
 				const hidVendorEntry = this.#relevantHidDevices.get(device.vendorId)
@@ -369,9 +368,6 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 						this.logger.warn(`Error performing checkHidDevice: ${e.message ?? e}`)
 					})
 			}
-
-			// Prune cache entries for devices that weren't seen in this scan
-			this.#stableDeviceIdGenerator.pruneNotSeen()
 		}
 	}
 
