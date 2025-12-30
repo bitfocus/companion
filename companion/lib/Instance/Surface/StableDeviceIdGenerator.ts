@@ -33,7 +33,7 @@ export class StableDeviceIdGenerator {
 
 		// Loop until we find a non-colliding ID
 		for (let i = 0; ; i++) {
-			const fakeSerial = createHash('sha1').update(`${uniquenessKey}||${i}`).digest('hex')
+			const fakeSerial = createHash('sha1').update(`${uniquenessKey}||${i}`).digest('hex').slice(0, 20)
 			if (!this.#returnedThisScan.has(fakeSerial)) {
 				this.#returnedThisScan.add(fakeSerial)
 				this.#previousForDevicePath.set(pathCacheKey, {

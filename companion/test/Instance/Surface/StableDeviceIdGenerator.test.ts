@@ -9,8 +9,8 @@ describe('StableDeviceIdGenerator', () => {
 		const id2 = generator.generateId('1234:9999', '/dev/hidraw1')
 
 		expect(id1).not.toBe(id2)
-		expect(id1).toHaveLength(40) // SHA1 hex digest length
-		expect(id2).toHaveLength(40)
+		expect(id1).toHaveLength(20) // SHA1 hex digest length
+		expect(id2).toHaveLength(20)
 	})
 
 	test('generates different IDs for same uniqueness key with different paths', () => {
@@ -75,8 +75,8 @@ describe('StableDeviceIdGenerator', () => {
 
 		const id = generator.generateId('1234:5678', '/dev/hidraw0')
 
-		// Should be 40 character hex string
-		expect(id).toMatch(/^[0-9a-f]{40}$/)
+		// Should be 20 character hex string
+		expect(id).toMatch(/^[0-9a-f]{20}$/)
 	})
 
 	test('deduplicates multiple endpoints of same device', () => {
@@ -98,7 +98,7 @@ describe('StableDeviceIdGenerator', () => {
 		const id2 = generator.generateId('', '/dev/hidraw1')
 
 		expect(id1).not.toBe(id2)
-		expect(id1).toHaveLength(40)
+		expect(id1).toHaveLength(20)
 	})
 
 	test('real-world scenario: 2 identical Stream Decks', () => {
@@ -109,8 +109,8 @@ describe('StableDeviceIdGenerator', () => {
 		const deck2 = generator.generateId('4057:96', '/dev/hidraw1')
 
 		expect(deck1).not.toBe(deck2)
-		expect(deck1).toHaveLength(40)
-		expect(deck2).toHaveLength(40)
+		expect(deck1).toHaveLength(20)
+		expect(deck2).toHaveLength(20)
 
 		// Re-enumerating same devices should return same IDs
 		expect(generator.generateId('4057:96', '/dev/hidraw0')).toBe(deck1)
