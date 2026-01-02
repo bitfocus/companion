@@ -47,6 +47,20 @@ import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/E
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import type { HIDDevice } from '@companion-surface/host'
 import type { Complete } from '@companion-module/base/dist/util.js'
+import { StableDeviceIdGenerator } from '../Instance/Surface/StableDeviceIdGenerator.js'
+
+/**
+ * Interface for a handler that can process HID device scans.
+ * Implemented by SurfaceChildHandler to allow centralized scan coordination.
+ */
+export interface HidScanHandler {
+	/**
+	 * Process HID devices during a scan.
+	 * The handler should check each device and open any that it supports.
+	 * @param devices - HID devices with serialNumber already populated
+	 */
+	scanHidDevices(devices: HIDDevice[]): void
+}
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
@@ -66,8 +80,6 @@ export interface SurfaceControllerEvents {
 	group_page: [groupId: string, pageId: string]
 	'group-add': [groupId: string]
 	'group-delete': [surfaceId: string]
-
-	scanDevices: [hidDevices: HIDDevice[]]
 }
 
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
@@ -119,6 +131,18 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Whether a usb scan is currently in progress
 	 */
 	#runningRefreshDevices: boolean = false
+
+	/**
+	 * Stable device ID generator for assigning fake serials to HID devices.
+	 * Centralized here so all handlers see the same collision-resolved serials.
+	 */
+	readonly #stableDeviceIdGenerator = new StableDeviceIdGenerator()
+
+	/**
+	 * Registered handlers for HID device scanning.
+	 * Map of instanceId -> handler
+	 */
+	readonly #hidScanHandlers = new Map<string, HidScanHandler>()
 
 	readonly #outboundController: SurfaceOutboundController
 
@@ -1120,6 +1144,25 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#lastSentJson = newJson
 	}
 
+	/**
+	 * Register a handler for HID device scanning.
+	 * @param instanceId - Unique identifier for the handler (typically the instance ID)
+	 * @param handler - The handler to register
+	 */
+	registerHidScanHandler(instanceId: string, handler: HidScanHandler): void {
+		this.#hidScanHandlers.set(instanceId, handler)
+		this.#logger.debug(`Registered HID scan handler for instance: ${instanceId}`)
+	}
+
+	/**
+	 * Unregister a handler for HID device scanning.
+	 * @param instanceId - The instance ID of the handler to unregister
+	 */
+	unregisterHidScanHandler(instanceId: string): void {
+		this.#hidScanHandlers.delete(instanceId)
+		this.#logger.debug(`Unregistered HID scan handler for instance: ${instanceId}`)
+	}
+
 	async #refreshDevices(): Promise<string | undefined> {
 		// Ensure only one scan is being run at a time
 		if (this.#runningRefreshDevices) {
@@ -1142,7 +1185,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								vendorId: deviceInfo.vendorId,
 								productId: deviceInfo.productId,
 								path: deviceInfo.path,
-								serialNumber: deviceInfo.serialNumber || '', // Filled in later
+								serialNumber: deviceInfo.serialNumber || '', // Will be filled in below if empty
 								manufacturer: deviceInfo.manufacturer,
 								product: deviceInfo.product,
 								release: deviceInfo.release,
@@ -1151,8 +1194,25 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								usage: deviceInfo.usage,
 							} satisfies Complete<HIDDevice>)
 						}
-						// emit to plugins
-						this.emit('scanDevices', sanitisedDevices)
+
+						// Prepare for scan and generate stable IDs for devices without hardware serials
+						this.#stableDeviceIdGenerator.prepareForScan(new Set<string>(sanitisedDevices.map((d) => d.path)))
+
+						// Fill in missing serial numbers with stable generated IDs
+						const devicesWithSerials = sanitisedDevices.map((device) => {
+							if (device.serialNumber) return device
+
+							const uniquenessKey = `${device.vendorId}:${device.productId}`
+							return {
+								...device,
+								serialNumber: this.#stableDeviceIdGenerator.generateId(uniquenessKey, device.path),
+							}
+						})
+
+						// Dispatch to all registered handlers
+						for (const handler of this.#hidScanHandlers.values()) {
+							handler.scanHidDevices(devicesWithSerials)
+						}
 					}),
 				])
 
