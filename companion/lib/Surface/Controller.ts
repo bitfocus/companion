@@ -87,7 +87,6 @@ export interface HidScanHandler {
 
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
-HID.devices()
 
 export interface SurfaceControllerEvents {
 	surface_name: [surfaceId: string, name: string]
@@ -164,12 +163,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	#scanLockRelease: (() => void) | null = null
 
 	/**
-	 * Registry of discovered surfaces that are currently tracked.
-	 * Map of devicePath -> resolvedSurfaceId
-	 * This tracks ALL discovered surfaces (not just approved ones) so that
-	 * collision resolution is consistent.
+	 * Registry of surfaces from the module discovery events.
+	 * Stores `${instanceId}:${devicePath}` so we can clean up when instances are destroyed.
+	 * The key is prefixed with instanceId to ensure device paths are globally unique across modules.
 	 */
-	readonly #discoveredSurfaces = new Map<string, string>()
+	readonly #discoveredSurfaces = new Set<`${string}:${string}`>()
 
 	/**
 	 * Stable device ID generator for assigning fake serials to HID devices.
@@ -1194,12 +1192,31 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
-	 * Unregister a handler for HID device scanning.
-	 * @param instanceId - The instance ID of the handler to unregister
+	 * Clean up all surface-related state for an instance.
+	 * This unregisters the HID scan handler, unloads all surfaces, and forgets discovered surfaces.
+	 * @param instanceId - The instance ID to clean up
 	 */
-	unregisterHidScanHandler(instanceId: string): void {
+	cleanupForInstance(instanceId: string): void {
+		// Unregister HID scan handler
 		this.#hidScanHandlers.delete(instanceId)
-		this.#logger.debug(`Unregistered HID scan handler for instance: ${instanceId}`)
+
+		// Unload all surfaces for this instance
+		for (const [id, surface] of this.#surfaceHandlers.entries()) {
+			if (surface?.panel.instanceId === instanceId) {
+				this.removeDevice(id)
+			}
+		}
+
+		// Forget all discovered surfaces for this instance
+		const prefix = `${instanceId}:`
+		for (const prefixedDevicePath of this.#discoveredSurfaces) {
+			if (prefixedDevicePath.startsWith(prefix)) {
+				this.#discoveredSurfaces.delete(prefixedDevicePath)
+				this.#stableDeviceIdGenerator.forgetDevice(prefixedDevicePath)
+			}
+		}
+
+		this.#logger.debug(`Cleaned up surfaces for instance: ${instanceId}`)
 	}
 
 	async #refreshDevices(): Promise<string | undefined> {
@@ -1239,18 +1256,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 						// Collect discovered surfaces from all handlers
 						const discoveryPromises: Promise<{
+							instanceId: string
 							handler: HidScanHandler
 							surfaces: DiscoveredHidSurface[]
 						}>[] = []
 
-						for (const handler of this.#hidScanHandlers.values()) {
+						for (const [instanceId, handler] of this.#hidScanHandlers.entries()) {
 							discoveryPromises.push(
 								handler
 									.scanHidDevices(sanitisedDevices)
-									.then((surfaces) => ({ handler, surfaces }))
+									.then((surfaces) => ({ instanceId, handler, surfaces }))
 									.catch((e) => {
 										this.#logger.warn(`Error during HID scan: ${e}`)
-										return { handler, surfaces: [] }
+										return { instanceId, handler, surfaces: [] }
 									})
 							)
 						}
@@ -1259,24 +1277,26 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						const results = await Promise.all(discoveryPromises)
 
 						// Collect all discovered surfaces with their handlers
-						const allDiscovered: Array<{ handler: HidScanHandler; surface: DiscoveredHidSurface }> = []
-						for (const { handler, surfaces } of results) {
+						const allDiscovered: Array<{ instanceId: string; handler: HidScanHandler; surface: DiscoveredHidSurface }> =
+							[]
+						for (const { instanceId, handler, surfaces } of results) {
 							for (const surface of surfaces) {
-								allDiscovered.push({ handler, surface })
+								allDiscovered.push({ instanceId, handler, surface })
 							}
 						}
 
 						// Collect all device paths that should not be pruned from the generator cache
 						// This includes both HID scan paths and discovered surface paths from module detection
+						// Device paths are prefixed with instanceId to ensure global uniqueness
 						const devicePathsToKeep = this.getDiscoveredSurfacePaths()
-						for (const { surface } of allDiscovered) {
+						for (const { instanceId, surface } of allDiscovered) {
 							const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
-							if (devicePath) devicePathsToKeep.add(devicePath)
+							if (devicePath) devicePathsToKeep.add(`${instanceId}:${devicePath}`)
 						}
 						this.#stableDeviceIdGenerator.prepareForScan(devicePathsToKeep)
 
 						// Open discovered surfaces with collision-resolved IDs
-						for (const { handler, surface } of allDiscovered) {
+						for (const { instanceId, handler, surface } of allDiscovered) {
 							// Generate collision-resolved surface ID
 							// Use HID path as the unique key if available, otherwise use scanned device path
 							const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
@@ -1284,7 +1304,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								this.#logger.warn(`Discovered surface ${surface.surfaceId} has no device path, skipping`)
 								continue
 							}
-							const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surface.surfaceId, devicePath)
+							// Prefix device path with instanceId to ensure global uniqueness
+							const prefixedDevicePath = `${instanceId}:${devicePath}`
+							const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surface.surfaceId, prefixedDevicePath)
+
+							// Check if it should be opened
+							if (!this.#shouldOpenSurface(resolvedSurfaceId) || this.#surfaceHandlers.has(resolvedSurfaceId)) {
+								continue
+							}
 
 							// Open the surface with the resolved ID
 							handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e) => {
@@ -1525,30 +1552,27 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Generate a collision-resolved surface ID for a discovered surface.
 	 * This acquires the scan lock, generates the ID, and tracks the surface.
+	 * @param instanceId - The instance ID of the module that discovered this surface
 	 * @param surfaceId - The base surface ID proposed by the module
 	 * @param devicePath - The unique device path for this surface
 	 * @returns The collision-resolved surface ID, and whether the surface should be opened
 	 */
 	async generateDiscoveredSurfaceId(
+		instanceId: string,
 		surfaceId: string,
 		devicePath: string
 	): Promise<{ resolvedSurfaceId: string; shouldOpen: boolean }> {
 		const releaseLock = await this.#acquireScanLock()
 
 		try {
-			// Check if we already have this device tracked
-			const existingId = this.#discoveredSurfaces.get(devicePath)
-			if (existingId) {
-				// Surface is already tracked, return the existing ID
-				const shouldOpen = this.#shouldOpenSurface(existingId)
-				return { resolvedSurfaceId: existingId, shouldOpen }
-			}
+			// Prefix device path with instanceId to ensure global uniqueness
+			const prefixedDevicePath = `${instanceId}:${devicePath}` as const
 
 			// Generate a new collision-resolved ID
-			const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surfaceId, devicePath)
+			const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surfaceId, prefixedDevicePath)
 
-			// Track this discovered surface
-			this.#discoveredSurfaces.set(devicePath, resolvedSurfaceId)
+			// Track this discovered surface with its owning instance
+			this.#discoveredSurfaces.add(prefixedDevicePath)
 
 			// Determine if the surface should be opened
 			const shouldOpen = this.#shouldOpenSurface(resolvedSurfaceId)
@@ -1575,14 +1599,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Forget a discovered surface by its device path.
 	 * This removes the surface from the discovered registry and the ID generator.
+	 * @param instanceId - The instance ID that owns this surface
 	 * @param devicePath - The device path of the surface to forget
 	 */
-	forgetDiscoveredSurface(devicePath: string): void {
-		const resolvedId = this.#discoveredSurfaces.get(devicePath)
-		if (resolvedId) {
-			this.#discoveredSurfaces.delete(devicePath)
-			this.#stableDeviceIdGenerator.forgetDevice(devicePath)
-			this.#logger.debug(`Forgot discovered surface: ${devicePath} (was ${resolvedId})`)
+	forgetDiscoveredSurface(instanceId: string, devicePath: string): void {
+		const prefixedDevicePath = `${instanceId}:${devicePath}` as const
+		if (this.#discoveredSurfaces.delete(prefixedDevicePath)) {
+			this.#stableDeviceIdGenerator.forgetDevice(prefixedDevicePath)
+			this.#logger.debug(`Forgot discovered surface: ${prefixedDevicePath}`)
 		}
 	}
 
@@ -1592,7 +1616,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @returns Set of device paths
 	 */
 	getDiscoveredSurfacePaths(): Set<string> {
-		return new Set(this.#discoveredSurfaces.keys())
+		return new Set(this.#discoveredSurfaces)
 	}
 
 	initInstance(_instanceId: string, features: SurfaceChildFeatures): void {
@@ -1625,17 +1649,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 
 		this.triggerUpdateDevicesList()
-	}
-
-	/**
-	 * Remove all surfaces belonging to an instance
-	 */
-	unloadSurfacesForInstance(instanceId: string): void {
-		for (const [id, surface] of this.#surfaceHandlers.entries()) {
-			if (surface?.panel.instanceId === instanceId) {
-				this.removeDevice(id)
-			}
-		}
 	}
 
 	quit(): void {
