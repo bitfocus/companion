@@ -19,6 +19,7 @@ export interface SurfaceModuleToHostEvents {
 
 	shouldOpenDiscoveredSurface: (msg: ShouldOpenDeviceMessage) => ShouldOpenDeviceResponseMessage
 	notifyOpenedDiscoveredDevice: (msg: NotifyOpenedDeviceMessage) => never
+	forgetDiscoveredSurfaces: (msg: ForgetDiscoveredSurfacesMessage) => never
 
 	notifyConnectionsFound: (msg: NotifyConnectionsFoundMessage) => never
 	notifyConnectionsForgotten: (msg: NotifyConnectionsForgottenMessage) => never
@@ -130,9 +131,15 @@ export interface ShouldOpenDeviceMessage {
 }
 export interface ShouldOpenDeviceResponseMessage {
 	shouldOpen: boolean
+	/** The collision-resolved surface ID to use when opening */
+	resolvedSurfaceId: string
 }
 export interface NotifyOpenedDeviceMessage {
 	info: HostOpenDeviceResult
+}
+export interface ForgetDiscoveredSurfacesMessage {
+	/** The device paths of the surfaces to forget */
+	devicePaths: string[]
 }
 
 export interface LogMessageMessage {
