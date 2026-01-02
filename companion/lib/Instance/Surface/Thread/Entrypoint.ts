@@ -57,11 +57,18 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		checkHidDevices: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			const results: Record<string, { surfaceId: string; description: string } | null> = {}
+			const devices: { devicePath: string; surfaceId: string; description: string }[] = []
 			for (const device of msg.devices) {
-				results[device.path] = await plugin.checkHidDevice(device)
+				const result = await plugin.checkHidDevice(device)
+				if (result) {
+					devices.push({
+						devicePath: device.path,
+						surfaceId: result.surfaceId,
+						description: result.description,
+					})
+				}
 			}
-			return { results }
+			return { devices }
 		},
 		scanDevices: async () => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')

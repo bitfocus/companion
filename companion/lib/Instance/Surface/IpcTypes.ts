@@ -78,15 +78,10 @@ export interface CheckHidDevicesMessage {
 	devices: HIDDevice[]
 }
 export interface CheckHidDevicesResponseMessage {
-	/** Results keyed by device path */
-	results: Record<string, CheckHidDeviceResult | null>
-}
-export interface CheckHidDeviceResult {
-	surfaceId: string
-	description: string
+	devices: CheckDeviceInfo[]
 }
 
-/** Info returned from scanDevices for scanned (non-HID) surfaces */
+/** Info returned from checkHidDevices and scanDevices */
 export interface CheckDeviceInfo {
 	devicePath: string
 	surfaceId: string
