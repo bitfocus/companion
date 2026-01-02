@@ -274,9 +274,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 		this.#surfaceConfigListeners.clear()
 		this.#deps.surfaceController.outbound.discovery.instanceForget(this.instanceId)
 
-		// Unregister from HID scan events
-		this.#deps.surfaceController.unregisterHidScanHandler(this.instanceId)
-		this.#deps.surfaceController.unloadSurfacesForInstance(this.instanceId)
+		// Clean up all surface-related state
+		this.#deps.surfaceController.cleanupForInstance(this.instanceId)
 	}
 
 	/**
@@ -476,6 +475,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 		// Generate a collision-resolved surface ID and check if it should be opened
 		// This acquires the scan lock and tracks the surface in the discovered registry
 		const { resolvedSurfaceId, shouldOpen } = await this.#deps.surfaceController.generateDiscoveredSurfaceId(
+			this.instanceId,
 			msg.info.surfaceId,
 			msg.info.devicePath
 		)
@@ -498,7 +498,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 	}
 	async #handleForgetDiscoveredSurfaces(msg: ForgetDiscoveredSurfacesMessage): Promise<void> {
 		for (const devicePath of msg.devicePaths) {
-			this.#deps.surfaceController.forgetDiscoveredSurface(devicePath)
+			this.#deps.surfaceController.forgetDiscoveredSurface(this.instanceId, devicePath)
 		}
 	}
 
