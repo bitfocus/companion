@@ -326,10 +326,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 					// Single batched IPC call for all relevant devices
 					const msg = await this.#ipcWrapper.sendWithCb('checkHidDevices', { devices: relevantDevices })
 
-					for (const [path, result] of Object.entries(msg.results)) {
-						if (!result) continue
-
-						const device = devicesByPath.get(path)
+					for (const result of msg.devices) {
+						const device = devicesByPath.get(result.devicePath)
 						if (!device) continue
 
 						discovered.push({

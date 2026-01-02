@@ -150,17 +150,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	#runningUsbHotplug: boolean = false
 
 	/**
-	 * Whether a usb scan is currently in progress
+	 * Promise for the currently running scan operation.
+	 * Used by generateDiscoveredSurfaceId to wait for any in-progress scan.
 	 */
-	#runningRefreshDevices: boolean = false
-
-	/**
-	 * Lock for synchronizing scans with discovered surface operations.
-	 * This ensures that discovery operations don't run in parallel with scans,
-	 * which would mess with the StableDeviceIdGenerator results.
-	 */
-	#scanLock: Promise<void> = Promise.resolve()
-	#scanLockRelease: (() => void) | null = null
+	#runningScan: Promise<void> | null = null
 
 	/**
 	 * Registry of surfaces from the module discovery events.
@@ -227,7 +220,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 
 			// Initial search for USB devices
-			this.#refreshDevices().catch(() => {
+			this.triggerRefreshDevices().catch(() => {
 				this.#logger.warn('Initial USB scan failed')
 			})
 			this.#outboundController.init()
@@ -251,11 +244,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
-	 * Trigger a rescan of connected devices
+	 * Trigger a rescan of connected devices.
 	 */
-	triggerRefreshDevices = pDebounce(async () => this.#refreshDevices(), 50, {
-		before: false,
-	})
+	triggerRefreshDevices = pDebounce(
+		pDebounce.promise(async () => this.#refreshDevices()),
+		50,
+		{ before: false }
+	)
 
 	/**
 	 * Process an updated userconfig value and update as necessary.
@@ -1220,117 +1215,114 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	async #refreshDevices(): Promise<string | undefined> {
-		// Ensure only one scan is being run at a time
-		if (this.#runningRefreshDevices) {
-			return this.triggerRefreshDevices()
-		}
-
-		// Acquire the scan lock to prevent discovery operations from running in parallel
-		const releaseLock = await this.#acquireScanLock()
+		// Set #pendingScan so generateDiscoveredSurfaceId can wait for us
+		const { promise, resolve } = Promise.withResolvers<void>()
+		this.#runningScan = promise
 
 		try {
-			this.#runningRefreshDevices = true
-
-			// Now do the scan
-			this.#logger.silly('USB: checking devices')
-
-			try {
-				await Promise.allSettled([
-					HID.devicesAsync().then(async (deviceInfos) => {
-						const sanitisedDevices: HIDDevice[] = []
-						for (const deviceInfo of deviceInfos) {
-							if (!deviceInfo.path) continue
-							sanitisedDevices.push({
-								vendorId: deviceInfo.vendorId,
-								productId: deviceInfo.productId,
-								path: deviceInfo.path,
-								serialNumber: deviceInfo.serialNumber || '',
-								manufacturer: deviceInfo.manufacturer,
-								product: deviceInfo.product,
-								release: deviceInfo.release,
-								interface: deviceInfo.interface,
-								usagePage: deviceInfo.usagePage,
-								usage: deviceInfo.usage,
-							} satisfies Complete<HIDDevice>)
-						}
-
-						// Collect discovered surfaces from all handlers
-						const discoveryPromises: Promise<{
-							instanceId: string
-							handler: HidScanHandler
-							surfaces: DiscoveredHidSurface[]
-						}>[] = []
-
-						for (const [instanceId, handler] of this.#hidScanHandlers.entries()) {
-							discoveryPromises.push(
-								handler
-									.scanHidDevices(sanitisedDevices)
-									.then((surfaces) => ({ instanceId, handler, surfaces }))
-									.catch((e) => {
-										this.#logger.warn(`Error during HID scan: ${e}`)
-										return { instanceId, handler, surfaces: [] }
-									})
-							)
-						}
-
-						// Wait for all handlers to complete discovery
-						const results = await Promise.all(discoveryPromises)
-
-						// Collect all discovered surfaces with their handlers
-						const allDiscovered: Array<{ instanceId: string; handler: HidScanHandler; surface: DiscoveredHidSurface }> =
-							[]
-						for (const { instanceId, handler, surfaces } of results) {
-							for (const surface of surfaces) {
-								allDiscovered.push({ instanceId, handler, surface })
-							}
-						}
-
-						// Collect all device paths that should not be pruned from the generator cache
-						// This includes both HID scan paths and discovered surface paths from module detection
-						// Device paths are prefixed with instanceId to ensure global uniqueness
-						const devicePathsToKeep = this.getDiscoveredSurfacePaths()
-						for (const { instanceId, surface } of allDiscovered) {
-							const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
-							if (devicePath) devicePathsToKeep.add(`${instanceId}:${devicePath}`)
-						}
-						this.#stableDeviceIdGenerator.prepareForScan(devicePathsToKeep)
-
-						// Open discovered surfaces with collision-resolved IDs
-						for (const { instanceId, handler, surface } of allDiscovered) {
-							// Generate collision-resolved surface ID
-							// Use HID path as the unique key if available, otherwise use scanned device path
-							const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
-							if (!devicePath) {
-								this.#logger.warn(`Discovered surface ${surface.surfaceId} has no device path, skipping`)
-								continue
-							}
-							// Prefix device path with instanceId to ensure global uniqueness
-							const prefixedDevicePath = `${instanceId}:${devicePath}`
-							const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surface.surfaceId, prefixedDevicePath)
-
-							// Check if it should be opened
-							if (!this.#shouldOpenSurface(resolvedSurfaceId) || this.#surfaceHandlers.has(resolvedSurfaceId)) {
-								continue
-							}
-
-							// Open the surface with the resolved ID
-							handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e) => {
-								this.#logger.warn(`Error opening discovered surface ${resolvedSurfaceId}: ${e}`)
-							})
-						}
-					}),
-				])
-
-				this.#logger.silly('USB: done')
-
-				return undefined
-			} catch (e) {
-				this.#logger.silly('USB: scan failed ' + e)
-				return 'Scan failed'
-			}
+			return await this.#doRefreshDevices()
 		} finally {
-			this.#runningRefreshDevices = false
-			releaseLock()
+			this.#runningScan = null
+			resolve()
+		}
+	}
+
+	async #doRefreshDevices(): Promise<string | undefined> {
+		this.#logger.silly('USB: checking devices')
+
+		try {
+			await Promise.allSettled([
+				HID.devicesAsync().then(async (deviceInfos) => {
+					const sanitisedDevices: HIDDevice[] = []
+					for (const deviceInfo of deviceInfos) {
+						if (!deviceInfo.path) continue
+						sanitisedDevices.push({
+							vendorId: deviceInfo.vendorId,
+							productId: deviceInfo.productId,
+							path: deviceInfo.path,
+							serialNumber: deviceInfo.serialNumber || '',
+							manufacturer: deviceInfo.manufacturer,
+							product: deviceInfo.product,
+							release: deviceInfo.release,
+							interface: deviceInfo.interface,
+							usagePage: deviceInfo.usagePage,
+							usage: deviceInfo.usage,
+						} satisfies Complete<HIDDevice>)
+					}
+
+					// Collect discovered surfaces from all handlers
+					const discoveryPromises: Promise<{
+						instanceId: string
+						handler: HidScanHandler
+						surfaces: DiscoveredHidSurface[]
+					}>[] = []
+
+					for (const [instanceId, handler] of this.#hidScanHandlers.entries()) {
+						discoveryPromises.push(
+							handler
+								.scanHidDevices(sanitisedDevices)
+								.then((surfaces) => ({ instanceId, handler, surfaces }))
+								.catch((e) => {
+									this.#logger.warn(`Error during HID scan: ${e}`)
+									return { instanceId, handler, surfaces: [] }
+								})
+						)
+					}
+
+					// Wait for all handlers to complete discovery
+					const results = await Promise.all(discoveryPromises)
+
+					// Collect all discovered surfaces with their handlers
+					const allDiscovered: Array<{ instanceId: string; handler: HidScanHandler; surface: DiscoveredHidSurface }> =
+						[]
+					for (const { instanceId, handler, surfaces } of results) {
+						for (const surface of surfaces) {
+							allDiscovered.push({ instanceId, handler, surface })
+						}
+					}
+
+					// Collect all device paths that should not be pruned from the generator cache
+					// This includes both HID scan paths and discovered surface paths from module detection
+					// Device paths are prefixed with instanceId to ensure global uniqueness
+					const devicePathsToKeep = new Set(this.#discoveredSurfaces)
+					for (const { instanceId, surface } of allDiscovered) {
+						const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
+						if (devicePath) devicePathsToKeep.add(`${instanceId}:${devicePath}`)
+					}
+					this.#stableDeviceIdGenerator.prepareForScan(devicePathsToKeep)
+
+					// Open discovered surfaces with collision-resolved IDs
+					for (const { instanceId, handler, surface } of allDiscovered) {
+						// Generate collision-resolved surface ID
+						// Use HID path as the unique key if available, otherwise use scanned device path
+						const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
+						if (!devicePath) {
+							this.#logger.warn(`Discovered surface ${surface.surfaceId} has no device path, skipping`)
+							continue
+						}
+						// Prefix device path with instanceId to ensure global uniqueness
+						const prefixedDevicePath = `${instanceId}:${devicePath}`
+						const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surface.surfaceId, prefixedDevicePath)
+
+						// Check if it should be opened
+						if (!this.#shouldOpenSurface(resolvedSurfaceId)) {
+							continue
+						}
+
+						// Open the surface with the resolved ID
+						handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e) => {
+							this.#logger.warn(`Error opening discovered surface ${resolvedSurfaceId}: ${e}`)
+						})
+					}
+				}),
+			])
+
+			this.#logger.silly('USB: done')
+
+			return undefined
+		} catch (e) {
+			this.#logger.silly('USB: scan failed ' + e)
+			return 'Scan failed'
 		}
 	}
 
@@ -1526,32 +1518,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
-	 * Acquire the scan lock. This must be held when performing operations that
-	 * interact with the StableDeviceIdGenerator to prevent race conditions.
-	 * @returns A promise that resolves when the lock is acquired, along with a release function
-	 */
-	async #acquireScanLock(): Promise<() => void> {
-		// Wait for any existing lock to be released
-		await this.#scanLock
-
-		// Create a new lock
-		let release: () => void
-		this.#scanLock = new Promise<void>((resolve) => {
-			release = resolve
-		})
-		this.#scanLockRelease = release!
-
-		return () => {
-			if (this.#scanLockRelease === release!) {
-				this.#scanLockRelease = null
-				release!()
-			}
-		}
-	}
-
-	/**
 	 * Generate a collision-resolved surface ID for a discovered surface.
-	 * This acquires the scan lock, generates the ID, and tracks the surface.
+	 * Waits for any pending scan to complete first to avoid race conditions.
 	 * @param instanceId - The instance ID of the module that discovered this surface
 	 * @param surfaceId - The base surface ID proposed by the module
 	 * @param devicePath - The unique device path for this surface
@@ -1562,25 +1530,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		surfaceId: string,
 		devicePath: string
 	): Promise<{ resolvedSurfaceId: string; shouldOpen: boolean }> {
-		const releaseLock = await this.#acquireScanLock()
+		// Wait for any pending scan to complete
+		if (this.#runningScan) await this.#runningScan
 
-		try {
-			// Prefix device path with instanceId to ensure global uniqueness
-			const prefixedDevicePath = `${instanceId}:${devicePath}` as const
+		// Prefix device path with instanceId to ensure global uniqueness
+		const prefixedDevicePath = `${instanceId}:${devicePath}` as const
 
-			// Generate a new collision-resolved ID
-			const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surfaceId, prefixedDevicePath)
+		// Generate a new collision-resolved ID
+		const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surfaceId, prefixedDevicePath)
 
-			// Track this discovered surface with its owning instance
-			this.#discoveredSurfaces.add(prefixedDevicePath)
+		// Track this discovered surface with its owning instance
+		this.#discoveredSurfaces.add(prefixedDevicePath)
 
-			// Determine if the surface should be opened
-			const shouldOpen = this.#shouldOpenSurface(resolvedSurfaceId)
+		// Determine if the surface should be opened
+		const shouldOpen = this.#shouldOpenSurface(resolvedSurfaceId)
 
-			return { resolvedSurfaceId, shouldOpen }
-		} finally {
-			releaseLock()
-		}
+		return { resolvedSurfaceId, shouldOpen }
 	}
 
 	/**
@@ -1608,15 +1573,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			this.#stableDeviceIdGenerator.forgetDevice(prefixedDevicePath)
 			this.#logger.debug(`Forgot discovered surface: ${prefixedDevicePath}`)
 		}
-	}
-
-	/**
-	 * Get the set of device paths for all currently discovered surfaces.
-	 * Used to prevent these from being pruned during scans.
-	 * @returns Set of device paths
-	 */
-	getDiscoveredSurfacePaths(): Set<string> {
-		return new Set(this.#discoveredSurfaces)
 	}
 
 	initInstance(_instanceId: string, features: SurfaceChildFeatures): void {
