@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto'
-
 /**
  * Generator for stable fake serial numbers for usb devices without hardware serials.
  *
@@ -33,7 +31,7 @@ export class StableDeviceIdGenerator {
 
 		// Loop until we find a non-colliding ID
 		for (let i = 0; ; i++) {
-			const fakeSerial = createHash('sha1').update(`${uniquenessKey}||${i}`).digest('hex').slice(0, 20)
+			const fakeSerial = i > 0 ? `${uniquenessKey}-${i}` : uniquenessKey
 			if (!this.#returnedThisScan.has(fakeSerial)) {
 				this.#returnedThisScan.add(fakeSerial)
 				this.#previousForDevicePath.set(pathCacheKey, {
