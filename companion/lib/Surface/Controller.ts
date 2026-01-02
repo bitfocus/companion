@@ -49,6 +49,7 @@ import type { HIDDevice } from '@companion-surface/host'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import { StableDeviceIdGenerator } from '../Instance/Surface/StableDeviceIdGenerator.js'
+import { createHash } from 'node:crypto'
 
 /**
  * Information about a discovered surface during a HID scan.
@@ -1240,7 +1241,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							vendorId: deviceInfo.vendorId,
 							productId: deviceInfo.productId,
 							path: deviceInfo.path,
-							serialNumber: deviceInfo.serialNumber || '',
+							serialNumber:
+								deviceInfo.serialNumber ||
+								createHash('sha1').update(`${deviceInfo.vendorId}:${deviceInfo.productId}`).digest('hex').slice(0, 20),
 							manufacturer: deviceInfo.manufacturer,
 							product: deviceInfo.product,
 							release: deviceInfo.release,
