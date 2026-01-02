@@ -22,11 +22,10 @@ import type {
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
-import type { SurfaceController } from '../../Surface/Controller.js'
+import type { HidScanHandler, SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
-import { StableDeviceIdGenerator } from './StableDeviceIdGenerator.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -53,7 +52,7 @@ export interface SurfaceChildFeatures {
 	} | null
 }
 
-export class SurfaceChildHandler implements ChildProcessHandlerBase {
+export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHandler {
 	logger: Logger
 
 	readonly #ipcWrapper: IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>
@@ -80,12 +79,6 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 	#unsubListeners: () => void
 
 	#relevantHidDevices = new Map<number, Set<number>>()
-
-	/**
-	 * Stable device ID generator for assigning fake serials to HID devices.
-	 * Persists across scans to prevent duplicate serial assignments when devices are re-enumerated.
-	 */
-	#stableDeviceIdGenerator = new StableDeviceIdGenerator()
 
 	constructor(
 		deps: SurfaceChildHandlerDependencies,
@@ -184,7 +177,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		this.logger.debug(`Received features: ${JSON.stringify(this.features)}`)
 
 		if (this.features.supportsScan || this.features.supportsDetection || this.features.supportsHid) {
-			this.#deps.surfaceController.on('scanDevices', this.#scanDevices)
+			// Register with the controller for HID scan events
+			this.#deps.surfaceController.registerHidScanHandler(this.instanceId, this)
 		}
 
 		if (this.features.supportsRemote) {
@@ -278,11 +272,18 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		this.#surfaceConfigListeners.clear()
 		this.#deps.surfaceController.outbound.discovery.instanceForget(this.instanceId)
 
-		this.#deps.surfaceController.off('scanDevices', this.#scanDevices)
+		// Unregister from HID scan events
+		this.#deps.surfaceController.unregisterHidScanHandler(this.instanceId)
 		this.#deps.surfaceController.unloadSurfacesForInstance(this.instanceId)
 	}
 
-	#scanDevices = (hidDevices: HIDDevice[]): void => {
+	/**
+	 * Process HID devices during a scan.
+	 * Implements the HidScanHandler interface.
+	 * Serial numbers are already populated by the Controller's StableDeviceIdGenerator.
+	 * @param hidDevices - HID devices with serialNumber already populated
+	 */
+	scanHidDevices(hidDevices: HIDDevice[]): void {
 		if (this.features.supportsScan || this.features.supportsDetection) {
 			this.#ipcWrapper
 				.sendWithCb('scanDevices', {})
@@ -321,22 +322,12 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase {
 		}
 
 		if (this.features.supportsHid) {
-			// Prepare for the scan by noting which devices are still present
-			this.#stableDeviceIdGenerator.prepareForScan(new Set<string>(hidDevices.map((d) => d.path)))
-
-			for (let device of hidDevices) {
+			for (const device of hidDevices) {
 				// Check if this device is relevant
 				const hidVendorEntry = this.#relevantHidDevices.get(device.vendorId)
 				if (!hidVendorEntry || !hidVendorEntry.has(device.productId)) continue
 
-				// Ensure we have a predictable serial number
-				if (!device.serialNumber) {
-					const uniquenessKey = `${device.vendorId}:${device.productId}`
-					device = {
-						...device,
-						serialNumber: this.#stableDeviceIdGenerator.generateId(uniquenessKey, device.path),
-					}
-				}
+				// Serial numbers are already populated by the Controller
 
 				this.#ipcWrapper
 					.sendWithCb('checkHidDevice', { device })
