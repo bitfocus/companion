@@ -156,6 +156,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	#runningRefreshDevices: boolean = false
 
 	/**
+	 * Lock for synchronizing scans with discovered surface operations.
+	 * This ensures that discovery operations don't run in parallel with scans,
+	 * which would mess with the StableDeviceIdGenerator results.
+	 */
+	#scanLock: Promise<void> = Promise.resolve()
+	#scanLockRelease: (() => void) | null = null
+
+	/**
+	 * Registry of discovered surfaces that are currently tracked.
+	 * Map of devicePath -> resolvedSurfaceId
+	 * This tracks ALL discovered surfaces (not just approved ones) so that
+	 * collision resolution is consistent.
+	 */
+	readonly #discoveredSurfaces = new Map<string, string>()
+
+	/**
 	 * Stable device ID generator for assigning fake serials to HID devices.
 	 * Centralized here so all handlers see the same collision-resolved serials.
 	 */
@@ -1192,6 +1208,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			return this.triggerRefreshDevices()
 		}
 
+		// Acquire the scan lock to prevent discovery operations from running in parallel
+		const releaseLock = await this.#acquireScanLock()
+
 		try {
 			this.#runningRefreshDevices = true
 
@@ -1247,27 +1266,25 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							}
 						}
 
-						// Prepare the stable ID generator with all discovered surface IDs
-						// Use a unique key per surface (e.g., HID path) for collision resolution
-						const uniqueKeys = new Set<string>()
+						// Collect all device paths that should not be pruned from the generator cache
+						// This includes both HID scan paths and discovered surface paths from module detection
+						const devicePathsToKeep = this.getDiscoveredSurfacePaths()
 						for (const { surface } of allDiscovered) {
-							const key = surface.hidDevice?.path ?? surface.surfaceId
-							uniqueKeys.add(key)
+							const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
+							if (devicePath) devicePathsToKeep.add(devicePath)
 						}
-						this.#stableDeviceIdGenerator.prepareForScan(uniqueKeys)
+						this.#stableDeviceIdGenerator.prepareForScan(devicePathsToKeep)
 
 						// Open discovered surfaces with collision-resolved IDs
-						const openedSurfaceIds = new Set<string>()
-
 						for (const { handler, surface } of allDiscovered) {
 							// Generate collision-resolved surface ID
-							// Use HID path as the unique key if available, otherwise use surfaceId
-							const uniqueKey = surface.hidDevice?.path ?? surface.surfaceId
-							const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surface.surfaceId, uniqueKey)
-
-							// Skip if already opened (shouldn't happen after resolution, but safety check)
-							if (openedSurfaceIds.has(resolvedSurfaceId)) continue
-							openedSurfaceIds.add(resolvedSurfaceId)
+							// Use HID path as the unique key if available, otherwise use scanned device path
+							const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
+							if (!devicePath) {
+								this.#logger.warn(`Discovered surface ${surface.surfaceId} has no device path, skipping`)
+								continue
+							}
+							const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surface.surfaceId, devicePath)
 
 							// Open the surface with the resolved ID
 							handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e) => {
@@ -1286,6 +1303,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 		} finally {
 			this.#runningRefreshDevices = false
+			releaseLock()
 		}
 	}
 
@@ -1478,6 +1496,103 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				this.#surfaceHandlers.delete(surfaceId)
 			}
 		}
+	}
+
+	/**
+	 * Acquire the scan lock. This must be held when performing operations that
+	 * interact with the StableDeviceIdGenerator to prevent race conditions.
+	 * @returns A promise that resolves when the lock is acquired, along with a release function
+	 */
+	async #acquireScanLock(): Promise<() => void> {
+		// Wait for any existing lock to be released
+		await this.#scanLock
+
+		// Create a new lock
+		let release: () => void
+		this.#scanLock = new Promise<void>((resolve) => {
+			release = resolve
+		})
+		this.#scanLockRelease = release!
+
+		return () => {
+			if (this.#scanLockRelease === release!) {
+				this.#scanLockRelease = null
+				release!()
+			}
+		}
+	}
+
+	/**
+	 * Generate a collision-resolved surface ID for a discovered surface.
+	 * This acquires the scan lock, generates the ID, and tracks the surface.
+	 * @param surfaceId - The base surface ID proposed by the module
+	 * @param devicePath - The unique device path for this surface
+	 * @returns The collision-resolved surface ID, and whether the surface should be opened
+	 */
+	async generateDiscoveredSurfaceId(
+		surfaceId: string,
+		devicePath: string
+	): Promise<{ resolvedSurfaceId: string; shouldOpen: boolean }> {
+		const releaseLock = await this.#acquireScanLock()
+
+		try {
+			// Check if we already have this device tracked
+			const existingId = this.#discoveredSurfaces.get(devicePath)
+			if (existingId) {
+				// Surface is already tracked, return the existing ID
+				const shouldOpen = this.#shouldOpenSurface(existingId)
+				return { resolvedSurfaceId: existingId, shouldOpen }
+			}
+
+			// Generate a new collision-resolved ID
+			const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surfaceId, devicePath)
+
+			// Track this discovered surface
+			this.#discoveredSurfaces.set(devicePath, resolvedSurfaceId)
+
+			// Determine if the surface should be opened
+			const shouldOpen = this.#shouldOpenSurface(resolvedSurfaceId)
+
+			return { resolvedSurfaceId, shouldOpen }
+		} finally {
+			releaseLock()
+		}
+	}
+
+	/**
+	 * Check if a surface with the given resolved ID should be opened.
+	 * @param resolvedSurfaceId - The collision-resolved surface ID
+	 * @returns Whether the surface should be opened
+	 */
+	#shouldOpenSurface(resolvedSurfaceId: string): boolean {
+		// Already opened or reserved, don't open again
+		if (this.#surfaceHandlers.has(resolvedSurfaceId)) return false
+
+		// Future: check if the config of the surface/global config allows it to be opened
+		return true
+	}
+
+	/**
+	 * Forget a discovered surface by its device path.
+	 * This removes the surface from the discovered registry and the ID generator.
+	 * @param devicePath - The device path of the surface to forget
+	 */
+	forgetDiscoveredSurface(devicePath: string): void {
+		const resolvedId = this.#discoveredSurfaces.get(devicePath)
+		if (resolvedId) {
+			this.#discoveredSurfaces.delete(devicePath)
+			this.#stableDeviceIdGenerator.forgetDevice(devicePath)
+			this.#logger.debug(`Forgot discovered surface: ${devicePath} (was ${resolvedId})`)
+		}
+	}
+
+	/**
+	 * Get the set of device paths for all currently discovered surfaces.
+	 * Used to prevent these from being pruned during scans.
+	 * @returns Set of device paths
+	 */
+	getDiscoveredSurfacePaths(): Set<string> {
+		return new Set(this.#discoveredSurfaces.keys())
 	}
 
 	initInstance(_instanceId: string, features: SurfaceChildFeatures): void {

@@ -4,6 +4,7 @@ import type {
 	ChangePageMessage,
 	DisconnectMessage,
 	FirmwareUpdateInfoMessage,
+	ForgetDiscoveredSurfacesMessage,
 	HostOpenDeviceResult,
 	HostToSurfaceModuleEvents,
 	InputPressMessage,
@@ -118,6 +119,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 
 			shouldOpenDiscoveredSurface: this.#handleShouldOpenDiscoveredSurface.bind(this),
 			notifyOpenedDiscoveredDevice: this.#handleNotifyOpenedDiscoveredDevice.bind(this),
+			forgetDiscoveredSurfaces: this.#handleForgetDiscoveredSurfaces.bind(this),
 
 			notifyConnectionsFound: this.#handleNotifyConnectionsFound.bind(this),
 			notifyConnectionsForgotten: this.#handleNotifyConnectionsForgotten.bind(this),
@@ -471,22 +473,33 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 	}
 
 	async #handleShouldOpenDiscoveredSurface(msg: ShouldOpenDeviceMessage): Promise<ShouldOpenDeviceResponseMessage> {
-		// Already opened, stop here
-		if (this.#panels.has(msg.info.surfaceId)) return { shouldOpen: false }
+		// Generate a collision-resolved surface ID and check if it should be opened
+		// This acquires the scan lock and tracks the surface in the discovered registry
+		const { resolvedSurfaceId, shouldOpen } = await this.#deps.surfaceController.generateDiscoveredSurfaceId(
+			msg.info.surfaceId,
+			msg.info.devicePath
+		)
 
-		// Check if it can be opened here
-		const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(msg.info.surfaceId)
-		if (!reserveCb) return { shouldOpen: false }
+		if (!shouldOpen) {
+			return { shouldOpen: false, resolvedSurfaceId }
+		}
 
-		// Clear the reservation, as we are just checking
-		reserveCb()
+		// Already opened with this resolved ID, stop here
+		if (this.#panels.has(resolvedSurfaceId)) {
+			return { shouldOpen: false, resolvedSurfaceId }
+		}
 
-		return { shouldOpen: true }
+		return { shouldOpen: true, resolvedSurfaceId }
 	}
 	async #handleNotifyOpenedDiscoveredDevice(msg: NotifyOpenedDeviceMessage): Promise<void> {
 		this.#setupSurfacePanel(msg.info).catch((e) => {
 			this.logger.warn(`Error opening discovered surface panel: ${e}`)
 		})
+	}
+	async #handleForgetDiscoveredSurfaces(msg: ForgetDiscoveredSurfacesMessage): Promise<void> {
+		for (const devicePath of msg.devicePaths) {
+			this.#deps.surfaceController.forgetDiscoveredSurface(devicePath)
+		}
 	}
 
 	async #handleNotifyConnectionsFound(msg: NotifyConnectionsFoundMessage): Promise<void> {
