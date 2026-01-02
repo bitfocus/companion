@@ -10,6 +10,7 @@ import {
 import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
+import { convertOpenDeviceResult } from './Util.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')
@@ -42,14 +43,25 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		openHidDevice: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			const info = await plugin.openHidDevice(msg.device)
-			return { info }
+			const info = await plugin.openHidDevice(msg.device, msg.resolvedSurfaceId)
+			if (!info) return { info: null }
+
+			// Return with the resolved surface ID
+			return {
+				info: convertOpenDeviceResult({
+					...info,
+					surfaceId: msg.resolvedSurfaceId,
+				}),
+			}
 		},
-		checkHidDevice: async (msg) => {
+		checkHidDevices: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			const info = await plugin.checkHidDevice(msg.device)
-			return { info }
+			const results: Record<string, { surfaceId: string; description: string } | null> = {}
+			for (const device of msg.devices) {
+				results[device.path] = await plugin.checkHidDevice(device)
+			}
+			return { results }
 		},
 		scanDevices: async () => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
@@ -60,8 +72,16 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		openScannedDevice: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			const info = await plugin.openScannedDevice(msg.device)
-			return { info }
+			const info = await plugin.openScannedDevice(msg.device, msg.resolvedSurfaceId)
+			if (!info) return { info: null }
+
+			// Return with the resolved surface ID
+			return {
+				info: convertOpenDeviceResult({
+					...info,
+					surfaceId: msg.resolvedSurfaceId,
+				}),
+			}
 		},
 		readySurface: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')

@@ -22,7 +22,7 @@ import type {
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
-import type { HidScanHandler, SurfaceController } from '../../Surface/Controller.js'
+import type { DiscoveredHidSurface, HidScanHandler, SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
@@ -278,87 +278,114 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 	}
 
 	/**
-	 * Process HID devices during a scan.
+	 * Process HID devices during a scan and return discovered surfaces.
 	 * Implements the HidScanHandler interface.
 	 * Serial numbers are already populated by the Controller's StableDeviceIdGenerator.
 	 * @param hidDevices - HID devices with serialNumber already populated
+	 * @returns Promise resolving to array of discovered surfaces
 	 */
-	scanHidDevices(hidDevices: HIDDevice[]): void {
+	async scanHidDevices(hidDevices: HIDDevice[]): Promise<DiscoveredHidSurface[]> {
+		const discovered: DiscoveredHidSurface[] = []
+
+		// Handle plugins with their own scan/detection
 		if (this.features.supportsScan || this.features.supportsDetection) {
-			this.#ipcWrapper
-				.sendWithCb('scanDevices', {})
-				.then((msg) => {
-					this.logger.debug(`scan devices returned ${msg.devices.length} devices`)
+			try {
+				const msg = await this.#ipcWrapper.sendWithCb('scanDevices', {})
+				this.logger.debug(`scan devices returned ${msg.devices.length} devices`)
 
-					for (const device of msg.devices) {
-						// Future: track this as a known surface?
-
-						// Already opened, stop here
-						if (this.#panels.has(device.surfaceId)) return
-
-						// Check if it can be opened here
-						const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(device.surfaceId)
-						if (!reserveCb) return
-
-						this.#ipcWrapper
-							.sendWithCb('openScannedDevice', { device })
-							.then(async (openInfo) => {
-								if (!openInfo.info) return
-
-								await this.#setupSurfacePanel(openInfo.info)
-							})
-							.finally(() => {
-								// clear the reservation, if it hasnt been used
-								reserveCb()
-							})
-							.catch((e) => {
-								this.logger.warn(`Error performing openScannedDevice: ${e.message}`)
-							})
-					}
-				})
-				.catch((e) => {
-					this.logger.warn(`Error performing scanDevices: ${e.message}`)
-				})
+				for (const device of msg.devices) {
+					discovered.push({
+						surfaceId: device.surfaceId,
+						description: device.description,
+						scannedDeviceInfo: device,
+					})
+				}
+			} catch (e: unknown) {
+				const message = e instanceof Error ? e.message : String(e)
+				this.logger.warn(`Error performing scanDevices: ${message}`)
+			}
 		}
 
+		// Handle HID-based surfaces
 		if (this.features.supportsHid) {
+			// Filter to only devices relevant to this handler
+			const relevantDevices: HIDDevice[] = []
+			const devicesByPath = new Map<string, HIDDevice>()
+
 			for (const device of hidDevices) {
-				// Check if this device is relevant
 				const hidVendorEntry = this.#relevantHidDevices.get(device.vendorId)
-				if (!hidVendorEntry || !hidVendorEntry.has(device.productId)) continue
-
-				// Serial numbers are already populated by the Controller
-
-				this.#ipcWrapper
-					.sendWithCb('checkHidDevice', { device })
-					.then(async (msg) => {
-						// If no info, then device is not for us
-						if (!msg.info) return
-
-						// Future: track this as a known surface?
-
-						// Already opened, stop here
-						if (this.#panels.has(msg.info.surfaceId)) return
-
-						// Check if it can be opened here
-						const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(msg.info.surfaceId)
-						if (!reserveCb) return
-
-						try {
-							// Try and open it
-							const openInfo = await this.#ipcWrapper.sendWithCb('openHidDevice', { device })
-							if (!openInfo.info) return
-
-							await this.#setupSurfacePanel(openInfo.info)
-						} finally {
-							// clear the reservation, if it hasnt been used
-							reserveCb()
-						}
-					})
-					.catch((e) => {
-						this.logger.warn(`Error performing checkHidDevice: ${e.message ?? e}`)
-					})
+				if (hidVendorEntry && hidVendorEntry.has(device.productId)) {
+					relevantDevices.push(device)
+					devicesByPath.set(device.path, device)
+				}
 			}
+
+			if (relevantDevices.length > 0) {
+				try {
+					// Single batched IPC call for all relevant devices
+					const msg = await this.#ipcWrapper.sendWithCb('checkHidDevices', { devices: relevantDevices })
+
+					for (const [path, result] of Object.entries(msg.results)) {
+						if (!result) continue
+
+						const device = devicesByPath.get(path)
+						if (!device) continue
+
+						discovered.push({
+							surfaceId: result.surfaceId,
+							description: result.description,
+							hidDevice: device,
+						})
+					}
+				} catch (e: unknown) {
+					const message = e instanceof Error ? e.message : String(e)
+					this.logger.warn(`Error performing checkHidDevices: ${message}`)
+				}
+			}
+		}
+
+		return discovered
+	}
+
+	/**
+	 * Open a discovered surface.
+	 * Implements the HidScanHandler interface.
+	 * @param surface - The surface to open (as returned from scanHidDevices)
+	 * @param resolvedSurfaceId - The collision-resolved surface ID to use
+	 */
+	async openDiscoveredSurface(surface: DiscoveredHidSurface, resolvedSurfaceId: string): Promise<void> {
+		// Already opened, stop here
+		if (this.#panels.has(resolvedSurfaceId)) return
+
+		// Check if it can be opened here
+		const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(resolvedSurfaceId)
+		if (!reserveCb) return
+
+		try {
+			if (surface.hidDevice) {
+				// HID device - use openHidDevice
+				const openInfo = await this.#ipcWrapper.sendWithCb('openHidDevice', {
+					device: surface.hidDevice,
+					resolvedSurfaceId,
+				})
+				if (!openInfo.info) return
+
+				await this.#setupSurfacePanel(openInfo.info)
+			} else if (surface.scannedDeviceInfo) {
+				// Scanned device - use openScannedDevice
+				const openInfo = await this.#ipcWrapper.sendWithCb('openScannedDevice', {
+					device: surface.scannedDeviceInfo,
+					resolvedSurfaceId,
+				})
+				if (!openInfo.info) return
+
+				await this.#setupSurfacePanel(openInfo.info)
+			} else {
+				this.logger.warn(`Cannot open surface ${surface.surfaceId}: no HID or scanned device info`)
+			}
+		} finally {
+			// Clear the reservation, if it hasn't been used
+			reserveCb()
 		}
 	}
 

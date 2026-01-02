@@ -41,7 +41,7 @@ export interface HostToSurfaceModuleEvents {
 	/** Cleanup the connection in preparation for the thread/process to be terminated */
 	destroy: (msg: Record<string, never>) => void
 
-	checkHidDevice: (msg: CheckHidDeviceMessage) => CheckHidDeviceResponseMessage
+	checkHidDevices: (msg: CheckHidDevicesMessage) => CheckHidDevicesResponseMessage
 	openHidDevice: (msg: OpenHidDeviceMessage) => OpenDeviceResponseMessage
 
 	scanDevices: (msg: Record<string, never>) => ScanDevicesResponseMessage
@@ -73,13 +73,21 @@ export interface RegisterMessage {
 }
 export type RegisterResponseMessage = Record<string, never>
 
-export interface CheckHidDeviceMessage {
-	device: HIDDevice
+export interface CheckHidDevicesMessage {
+	devices: HIDDevice[]
 }
-export interface CheckHidDeviceResponseMessage {
-	info: CheckDeviceInfo | null
+export interface CheckHidDevicesResponseMessage {
+	/** Results keyed by device path */
+	results: Record<string, CheckHidDeviceResult | null>
 }
+export interface CheckHidDeviceResult {
+	surfaceId: string
+	description: string
+}
+
+/** Info returned from scanDevices for scanned (non-HID) surfaces */
 export interface CheckDeviceInfo {
+	devicePath: string
 	surfaceId: string
 	description: string
 }
@@ -90,6 +98,8 @@ export interface ScanDevicesResponseMessage {
 
 export interface OpenScannedDeviceMessage {
 	device: CheckDeviceInfo
+	/** The collision-resolved surface ID to use when opening */
+	resolvedSurfaceId: string
 }
 
 export interface ReadySurfaceMessage {
@@ -103,6 +113,8 @@ export interface UpdateConfigMessage {
 
 export interface OpenHidDeviceMessage {
 	device: HIDDevice
+	/** The collision-resolved surface ID to use when opening */
+	resolvedSurfaceId: string
 }
 export interface OpenDeviceResponseMessage {
 	info: HostOpenDeviceResult | null

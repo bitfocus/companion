@@ -46,8 +46,23 @@ import type { SurfacePluginPanel } from './PluginPanel.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import type { HIDDevice } from '@companion-surface/host'
+import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import { StableDeviceIdGenerator } from '../Instance/Surface/StableDeviceIdGenerator.js'
+
+/**
+ * Information about a discovered surface during a HID scan.
+ */
+export interface DiscoveredHidSurface {
+	/** Unique id of the surface as reported by the plugin (may collide, will be resolved later) */
+	surfaceId: string
+	/** Human friendly description of the surface (typically model name) */
+	description: string
+	/** The HID device info, if this is a HID-based surface */
+	hidDevice?: HIDDevice
+	/** Info for scanned (non-HID) surfaces, used to open the device */
+	scannedDeviceInfo?: CheckDeviceInfo
+}
 
 /**
  * Interface for a handler that can process HID device scans.
@@ -55,11 +70,19 @@ import { StableDeviceIdGenerator } from '../Instance/Surface/StableDeviceIdGener
  */
 export interface HidScanHandler {
 	/**
-	 * Process HID devices during a scan.
-	 * The handler should check each device and open any that it supports.
+	 * Process HID devices during a scan and return discovered surfaces.
+	 * The handler should check each device and return info about any it supports.
 	 * @param devices - HID devices with serialNumber already populated
+	 * @returns Promise resolving to array of discovered surfaces
 	 */
-	scanHidDevices(devices: HIDDevice[]): void
+	scanHidDevices(devices: HIDDevice[]): Promise<DiscoveredHidSurface[]>
+
+	/**
+	 * Open a discovered surface.
+	 * @param surface - The surface to open (as returned from scanHidDevices)
+	 * @param resolvedSurfaceId - The collision-resolved surface ID to use
+	 */
+	openDiscoveredSurface(surface: DiscoveredHidSurface, resolvedSurfaceId: string): Promise<void>
 }
 
 // Force it to load the hidraw driver just in case
@@ -1185,7 +1208,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								vendorId: deviceInfo.vendorId,
 								productId: deviceInfo.productId,
 								path: deviceInfo.path,
-								serialNumber: deviceInfo.serialNumber || '', // Will be filled in below if empty
+								serialNumber: deviceInfo.serialNumber || '',
 								manufacturer: deviceInfo.manufacturer,
 								product: deviceInfo.product,
 								release: deviceInfo.release,
@@ -1195,23 +1218,61 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							} satisfies Complete<HIDDevice>)
 						}
 
-						// Prepare for scan and generate stable IDs for devices without hardware serials
-						this.#stableDeviceIdGenerator.prepareForScan(new Set<string>(sanitisedDevices.map((d) => d.path)))
+						// Collect discovered surfaces from all handlers
+						const discoveryPromises: Promise<{
+							handler: HidScanHandler
+							surfaces: DiscoveredHidSurface[]
+						}>[] = []
 
-						// Fill in missing serial numbers with stable generated IDs
-						const devicesWithSerials = sanitisedDevices.map((device) => {
-							if (device.serialNumber) return device
-
-							const uniquenessKey = `${device.vendorId}:${device.productId}`
-							return {
-								...device,
-								serialNumber: this.#stableDeviceIdGenerator.generateId(uniquenessKey, device.path),
-							}
-						})
-
-						// Dispatch to all registered handlers
 						for (const handler of this.#hidScanHandlers.values()) {
-							handler.scanHidDevices(devicesWithSerials)
+							discoveryPromises.push(
+								handler
+									.scanHidDevices(sanitisedDevices)
+									.then((surfaces) => ({ handler, surfaces }))
+									.catch((e) => {
+										this.#logger.warn(`Error during HID scan: ${e}`)
+										return { handler, surfaces: [] }
+									})
+							)
+						}
+
+						// Wait for all handlers to complete discovery
+						const results = await Promise.all(discoveryPromises)
+
+						// Collect all discovered surfaces with their handlers
+						const allDiscovered: Array<{ handler: HidScanHandler; surface: DiscoveredHidSurface }> = []
+						for (const { handler, surfaces } of results) {
+							for (const surface of surfaces) {
+								allDiscovered.push({ handler, surface })
+							}
+						}
+
+						// Prepare the stable ID generator with all discovered surface IDs
+						// Use a unique key per surface (e.g., HID path) for collision resolution
+						const uniqueKeys = new Set<string>()
+						for (const { surface } of allDiscovered) {
+							const key = surface.hidDevice?.path ?? surface.surfaceId
+							uniqueKeys.add(key)
+						}
+						this.#stableDeviceIdGenerator.prepareForScan(uniqueKeys)
+
+						// Open discovered surfaces with collision-resolved IDs
+						const openedSurfaceIds = new Set<string>()
+
+						for (const { handler, surface } of allDiscovered) {
+							// Generate collision-resolved surface ID
+							// Use HID path as the unique key if available, otherwise use surfaceId
+							const uniqueKey = surface.hidDevice?.path ?? surface.surfaceId
+							const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surface.surfaceId, uniqueKey)
+
+							// Skip if already opened (shouldn't happen after resolution, but safety check)
+							if (openedSurfaceIds.has(resolvedSurfaceId)) continue
+							openedSurfaceIds.add(resolvedSurfaceId)
+
+							// Open the surface with the resolved ID
+							handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e) => {
+								this.#logger.warn(`Error opening discovered surface ${resolvedSurfaceId}: ${e}`)
+							})
 						}
 					}),
 				])
