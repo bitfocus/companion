@@ -143,6 +143,27 @@ describe('functions', () => {
 				expect(result).toBeLessThanOrEqual(5)
 			}
 		})
+
+		it('log', () => {
+			expect(ExpressionFunctions.log(1)).toBe(0)
+			expect(ExpressionFunctions.log(Math.E)).toBeCloseTo(1)
+			expect(ExpressionFunctions.log(Math.E * Math.E)).toBeCloseTo(2)
+			expect(ExpressionFunctions.log(0)).toBe(Number.NEGATIVE_INFINITY)
+			expect(ExpressionFunctions.log(-1)).toBe(NaN)
+			expect(ExpressionFunctions.log('10')).toBeCloseTo(Math.log(10))
+			expect(ExpressionFunctions.log(undefined)).toBe(NaN)
+		})
+
+		it('log10', () => {
+			expect(ExpressionFunctions.log10(1)).toBe(0)
+			expect(ExpressionFunctions.log10(10)).toBe(1)
+			expect(ExpressionFunctions.log10(100)).toBe(2)
+			expect(ExpressionFunctions.log10(1000)).toBe(3)
+			expect(ExpressionFunctions.log10(0)).toBe(Number.NEGATIVE_INFINITY)
+			expect(ExpressionFunctions.log10(-1)).toBe(NaN)
+			expect(ExpressionFunctions.log10('100')).toBe(2)
+			expect(ExpressionFunctions.log10(undefined)).toBe(NaN)
+		})
 	})
 
 	describe('string', () => {
@@ -411,6 +432,66 @@ describe('functions', () => {
 			expect(ExpressionFunctions.arrayIncludes(['1', '2', '3'], 2)).toBe(false) // String vs number
 			expect(ExpressionFunctions.arrayIncludes([true, false], 1)).toBe(false) // Boolean vs number
 			expect(ExpressionFunctions.arrayIncludes([true, false], 'true')).toBe(false) // Boolean vs string
+		})
+
+		it('arrayIndexOf', () => {
+			// Test with valid arrays and values
+			expect(ExpressionFunctions.arrayIndexOf([1, 2, 3], 2)).toBe(1)
+			expect(ExpressionFunctions.arrayIndexOf([1, 2, 3], 4)).toBe(-1)
+			expect(ExpressionFunctions.arrayIndexOf(['a', 'b', 'c'], 'b')).toBe(1)
+			expect(ExpressionFunctions.arrayIndexOf(['a', 'b', 'c'], 'd')).toBe(-1)
+
+			// Test with duplicate values
+			expect(ExpressionFunctions.arrayIndexOf([1, 2, 3, 2, 1], 2)).toBe(1)
+			expect(ExpressionFunctions.arrayIndexOf(['a', 'b', 'a', 'b'], 'a')).toBe(0)
+
+			// Test with offset
+			expect(ExpressionFunctions.arrayIndexOf([1, 2, 3, 2, 1], 2, 2)).toBe(3)
+			expect(ExpressionFunctions.arrayIndexOf(['a', 'b', 'a', 'b'], 'a', 1)).toBe(2)
+			expect(ExpressionFunctions.arrayIndexOf([1, 2, 3], 1, 1)).toBe(-1)
+
+			// Test with empty array
+			expect(ExpressionFunctions.arrayIndexOf([], 'anything')).toBe(-1)
+
+			// Test with non-array inputs (should return false)
+			expect(ExpressionFunctions.arrayIndexOf(null, 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayIndexOf(undefined, 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayIndexOf('not an array', 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayIndexOf(123, 'test')).toBe(false)
+
+			// Test strict equality (no type coercion)
+			expect(ExpressionFunctions.arrayIndexOf([1, 2, 3], '2')).toBe(-1)
+			expect(ExpressionFunctions.arrayIndexOf(['1', '2', '3'], 2)).toBe(-1)
+		})
+
+		it('arrayLastIndexOf', () => {
+			// Test with valid arrays and values
+			expect(ExpressionFunctions.arrayLastIndexOf([1, 2, 3], 2)).toBe(1)
+			expect(ExpressionFunctions.arrayLastIndexOf([1, 2, 3], 4)).toBe(-1)
+			expect(ExpressionFunctions.arrayLastIndexOf(['a', 'b', 'c'], 'b')).toBe(1)
+			expect(ExpressionFunctions.arrayLastIndexOf(['a', 'b', 'c'], 'd')).toBe(-1)
+
+			// Test with duplicate values
+			expect(ExpressionFunctions.arrayLastIndexOf([1, 2, 3, 2, 1], 2)).toBe(3)
+			expect(ExpressionFunctions.arrayLastIndexOf(['a', 'b', 'a', 'b'], 'a')).toBe(2)
+
+			// Test with offset
+			expect(ExpressionFunctions.arrayLastIndexOf([1, 2, 3, 2, 1], 2, 2)).toBe(1)
+			expect(ExpressionFunctions.arrayLastIndexOf(['a', 'b', 'a', 'b'], 'a', 1)).toBe(0)
+			expect(ExpressionFunctions.arrayLastIndexOf([1, 2, 3, 2, 1], 1, 3)).toBe(0)
+
+			// Test with empty array
+			expect(ExpressionFunctions.arrayLastIndexOf([], 'anything')).toBe(-1)
+
+			// Test with non-array inputs (should return false)
+			expect(ExpressionFunctions.arrayLastIndexOf(null, 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayLastIndexOf(undefined, 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayLastIndexOf('not an array', 'test')).toBe(false)
+			expect(ExpressionFunctions.arrayLastIndexOf(123, 'test')).toBe(false)
+
+			// Test strict equality (no type coercion)
+			expect(ExpressionFunctions.arrayLastIndexOf([1, 2, 3], '2')).toBe(-1)
+			expect(ExpressionFunctions.arrayLastIndexOf(['1', '2', '3'], 2)).toBe(-1)
 		})
 	})
 

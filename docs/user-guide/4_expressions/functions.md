@@ -234,7 +234,7 @@ Optionally provide an offset to begin the search from, otherwise it starts from 
 
 If the value isn't found, it will return -1, otherwise the index of the first occurrence.
 
-**arrayLastIndexOf(val, find, offset)**
+**arrayLastIndexOf(arr, val, offset)**
 
 Find the index of the last occurrence of a value within the provided array, searching from the end.
 
