@@ -159,7 +159,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	},
 	arrayLastIndexOf: (arr, val, offset) => {
 		if (!Array.isArray(arr)) return false
-		return arr.lastIndexOf(val, offset)
+		return arr.lastIndexOf(val, offset ?? arr.length)
 	},
 
 	// Time operations
