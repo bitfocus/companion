@@ -1,7 +1,9 @@
 /**
- * Generator for stable fake serial numbers for usb devices without hardware serials.
+ * Generates stable synthetic identifiers for devices without hardware serials.
  *
- * Generates deterministic serials by hashing just the uniqueness key and an index.
+ * Identifiers are deterministic strings built from a `uniquenessKey` and a
+ * small numeric index. The generator avoids collisions during a scan and
+ * caches identifiers per device path.
  */
 export class StableDeviceIdGenerator {
 	/**
@@ -16,12 +18,12 @@ export class StableDeviceIdGenerator {
 	#returnedThisScan = new Set<string>()
 
 	/**
-	 * Generate a stable serial number for a device without a hardware serial.
+	 * Return a cached identifier or assign the next available one.
 	 *
-	 * @param uniquenessKey - Identifier for the device type (e.g., "vendorId:productId")
-	 * @param alwaysAddSuffix - Whether to always add a suffix to avoid collisions
-	 * @param path - Device path (e.g., "/dev/hidraw0")
-	 * @returns A stable fake serial number
+	 * @param uniquenessKey - Device-type key (e.g. "vendor:product").
+	 * @param alwaysAddSuffix - Force numeric suffix on the first id when true.
+	 * @param devicePath - Path used for caching (e.g. "/dev/hidraw0").
+	 * @returns Synthetic identifier string.
 	 */
 	generateId(uniquenessKey: string, alwaysAddSuffix: boolean, devicePath: string): string {
 		const pathCacheKey = `${uniquenessKey}||${devicePath}`
