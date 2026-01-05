@@ -130,6 +130,26 @@ export const builtinFunctionCompletions: Array<{
 		detail: 'encode(string, encoding)',
 		documentation: 'Encodes a string to specified encoding',
 	},
+	{
+		name: 'encodeURI',
+		detail: 'encodeURI(string)',
+		documentation: 'Encodes a string as a valid Uniform Resource Identifier (URI)',
+	},
+	{
+		name: 'decodeURI',
+		detail: 'decodeURI(string)',
+		documentation: 'Gets the unencoded version of an encoded Uniform Resource Identifier (URI)',
+	},
+	{
+		name: 'encodeURIComponent',
+		detail: 'encodeURIComponent(string)',
+		documentation: 'Encodes a string as a valid component of a Uniform Resource Identifier (URI)',
+	},
+	{
+		name: 'decodeURIComponent',
+		detail: 'decodeURIComponent(string)',
+		documentation: 'Gets the unencoded version of an encoded component of a Uniform Resource Identifier (URI)',
+	},
 
 	// Bool operations
 	{ name: 'bool', detail: 'bool(value)', documentation: 'Converts a value to boolean' },
