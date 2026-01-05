@@ -19,6 +19,7 @@ export interface SurfaceModuleToHostEvents {
 
 	shouldOpenDiscoveredSurface: (msg: ShouldOpenDeviceMessage) => ShouldOpenDeviceResponseMessage
 	notifyOpenedDiscoveredDevice: (msg: NotifyOpenedDeviceMessage) => never
+	forgetDiscoveredSurfaces: (msg: ForgetDiscoveredSurfacesMessage) => never
 
 	notifyConnectionsFound: (msg: NotifyConnectionsFoundMessage) => never
 	notifyConnectionsForgotten: (msg: NotifyConnectionsForgottenMessage) => never
@@ -41,7 +42,7 @@ export interface HostToSurfaceModuleEvents {
 	/** Cleanup the connection in preparation for the thread/process to be terminated */
 	destroy: (msg: Record<string, never>) => void
 
-	checkHidDevice: (msg: CheckHidDeviceMessage) => CheckHidDeviceResponseMessage
+	checkHidDevices: (msg: CheckHidDevicesMessage) => CheckHidDevicesResponseMessage
 	openHidDevice: (msg: OpenHidDeviceMessage) => OpenDeviceResponseMessage
 
 	scanDevices: (msg: Record<string, never>) => ScanDevicesResponseMessage
@@ -73,14 +74,18 @@ export interface RegisterMessage {
 }
 export type RegisterResponseMessage = Record<string, never>
 
-export interface CheckHidDeviceMessage {
-	device: HIDDevice
+export interface CheckHidDevicesMessage {
+	devices: HIDDevice[]
 }
-export interface CheckHidDeviceResponseMessage {
-	info: CheckDeviceInfo | null
+export interface CheckHidDevicesResponseMessage {
+	devices: CheckDeviceInfo[]
 }
+
+/** Info returned from checkHidDevices and scanDevices */
 export interface CheckDeviceInfo {
+	devicePath: string
 	surfaceId: string
+	surfaceIdIsNotUnique: boolean
 	description: string
 }
 
@@ -90,6 +95,8 @@ export interface ScanDevicesResponseMessage {
 
 export interface OpenScannedDeviceMessage {
 	device: CheckDeviceInfo
+	/** The collision-resolved surface ID to use when opening */
+	resolvedSurfaceId: string
 }
 
 export interface ReadySurfaceMessage {
@@ -103,6 +110,8 @@ export interface UpdateConfigMessage {
 
 export interface OpenHidDeviceMessage {
 	device: HIDDevice
+	/** The collision-resolved surface ID to use when opening */
+	resolvedSurfaceId: string
 }
 export interface OpenDeviceResponseMessage {
 	info: HostOpenDeviceResult | null
@@ -118,9 +127,15 @@ export interface ShouldOpenDeviceMessage {
 }
 export interface ShouldOpenDeviceResponseMessage {
 	shouldOpen: boolean
+	/** The collision-resolved surface ID to use when opening */
+	resolvedSurfaceId: string
 }
 export interface NotifyOpenedDeviceMessage {
 	info: HostOpenDeviceResult
+}
+export interface ForgetDiscoveredSurfacesMessage {
+	/** The device paths of the surfaces to forget */
+	devicePaths: string[]
 }
 
 export interface LogMessageMessage {
