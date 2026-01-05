@@ -40,7 +40,7 @@ export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void
 	})
 }
 
-const builtinFunctionCompletions: Array<{
+export const builtinFunctionCompletions: Array<{
 	name: string
 	detail: string
 	documentation?: string
