@@ -19,10 +19,11 @@ export class StableDeviceIdGenerator {
 	 * Generate a stable serial number for a device without a hardware serial.
 	 *
 	 * @param uniquenessKey - Identifier for the device type (e.g., "vendorId:productId")
+	 * @param alwaysAddSuffix - Whether to always add a suffix to avoid collisions
 	 * @param path - Device path (e.g., "/dev/hidraw0")
 	 * @returns A stable fake serial number
 	 */
-	generateId(uniquenessKey: string, devicePath: string): string {
+	generateId(uniquenessKey: string, alwaysAddSuffix: boolean, devicePath: string): string {
 		const pathCacheKey = `${uniquenessKey}||${devicePath}`
 
 		// If there is something cached against the devicePath, use that
@@ -30,8 +31,8 @@ export class StableDeviceIdGenerator {
 		if (cachedSerial) return cachedSerial.serial
 
 		// Loop until we find a non-colliding ID
-		for (let i = 0; ; i++) {
-			const fakeSerial = i > 0 ? `${uniquenessKey}-${i}` : uniquenessKey
+		for (let i = 1; ; i++) {
+			const fakeSerial = i > 1 || alwaysAddSuffix ? `${uniquenessKey}-${i}` : uniquenessKey
 			if (!this.#returnedThisScan.has(fakeSerial)) {
 				this.#returnedThisScan.add(fakeSerial)
 				this.#previousForDevicePath.set(pathCacheKey, {

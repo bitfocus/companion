@@ -57,6 +57,8 @@ import { createHash } from 'node:crypto'
 export interface DiscoveredHidSurface {
 	/** Unique id of the surface as reported by the plugin (may collide, will be resolved later) */
 	surfaceId: string
+	/** Whether the surfaceId is known to not be unique */
+	surfaceIdIsNotUnique: boolean
 	/** Human friendly description of the surface (typically model name) */
 	description: string
 	/** The HID device info, if this is a HID-based surface */
@@ -1305,7 +1307,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						}
 						// Prefix device path with instanceId to ensure global uniqueness
 						const prefixedDevicePath = `${instanceId}:${devicePath}`
-						const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surface.surfaceId, prefixedDevicePath)
+						const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(
+							surface.surfaceId,
+							surface.surfaceIdIsNotUnique,
+							prefixedDevicePath
+						)
 
 						// Check if it should be opened
 						if (!this.#shouldOpenSurface(resolvedSurfaceId)) {
@@ -1525,12 +1531,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Waits for any pending scan to complete first to avoid race conditions.
 	 * @param instanceId - The instance ID of the module that discovered this surface
 	 * @param surfaceId - The base surface ID proposed by the module
+	 * @param surfaceIdIsNotUnique - Whether the proposed surface ID is known to not be unique
 	 * @param devicePath - The unique device path for this surface
 	 * @returns The collision-resolved surface ID, and whether the surface should be opened
 	 */
 	async generateDiscoveredSurfaceId(
 		instanceId: string,
 		surfaceId: string,
+		surfaceIdIsNotUnique: boolean,
 		devicePath: string
 	): Promise<{ resolvedSurfaceId: string; shouldOpen: boolean }> {
 		// Wait for any pending scan to complete
@@ -1540,7 +1548,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const prefixedDevicePath = `${instanceId}:${devicePath}` as const
 
 		// Generate a new collision-resolved ID
-		const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(surfaceId, prefixedDevicePath)
+		const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(
+			surfaceId,
+			surfaceIdIsNotUnique,
+			prefixedDevicePath
+		)
 
 		// Track this discovered surface with its owning instance
 		this.#discoveredSurfaces.add(prefixedDevicePath)

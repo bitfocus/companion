@@ -85,6 +85,7 @@ export interface CheckHidDevicesResponseMessage {
 export interface CheckDeviceInfo {
 	devicePath: string
 	surfaceId: string
+	surfaceIdIsNotUnique: boolean
 	description: string
 }
 

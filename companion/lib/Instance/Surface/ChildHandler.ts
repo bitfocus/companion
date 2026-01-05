@@ -297,6 +297,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 				for (const device of msg.devices) {
 					discovered.push({
 						surfaceId: device.surfaceId,
+						surfaceIdIsNotUnique: device.surfaceIdIsNotUnique,
 						description: device.description,
 						scannedDeviceInfo: device,
 					})
@@ -332,6 +333,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 
 						discovered.push({
 							surfaceId: result.surfaceId,
+							surfaceIdIsNotUnique: result.surfaceIdIsNotUnique,
 							description: result.description,
 							hidDevice: device,
 						})
@@ -475,6 +477,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 		const { resolvedSurfaceId, shouldOpen } = await this.#deps.surfaceController.generateDiscoveredSurfaceId(
 			this.instanceId,
 			msg.info.surfaceId,
+			msg.info.surfaceIdIsNotUnique,
 			msg.info.devicePath
 		)
 

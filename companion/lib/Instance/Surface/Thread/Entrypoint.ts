@@ -1,6 +1,6 @@
 /* eslint-disable n/no-process-exit */
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import type { SurfaceModuleToHostEvents, HostToSurfaceModuleEvents } from '../IpcTypes.js'
+import type { SurfaceModuleToHostEvents, HostToSurfaceModuleEvents, CheckDeviceInfo } from '../IpcTypes.js'
 import {
 	type SurfaceModuleManifest,
 	registerLoggingSink,
@@ -57,13 +57,14 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		checkHidDevices: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			const devices: { devicePath: string; surfaceId: string; description: string }[] = []
+			const devices: CheckDeviceInfo[] = []
 			for (const device of msg.devices) {
 				const result = await plugin.checkHidDevice(device)
 				if (result) {
 					devices.push({
 						devicePath: device.path,
 						surfaceId: result.surfaceId,
+						surfaceIdIsNotUnique: result.surfaceIdIsNotUnique,
 						description: result.description,
 					})
 				}
