@@ -3,7 +3,7 @@ import { ModuleInstanceType } from './Model/Instance.js'
 import { assertNever } from './Util.js'
 
 export const MODULE_BASE_VERSION = '1.14.0'
-export const SURFACE_BASE_VERSION = '1.0.0'
+export const SURFACE_BASE_VERSION = '1.1.0'
 
 const moduleVersion = semver.parse(MODULE_BASE_VERSION)
 if (!moduleVersion) throw new Error(`Failed to parse version as semver: ${MODULE_BASE_VERSION}`)
