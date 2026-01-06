@@ -10,7 +10,7 @@ import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVi
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from '~/Instances/MissingVersionsWarning.js'
 import { useSurfaceInstanceCollectionsApi } from './SurfaceInstanceCollectionsApi.js'
-import { useInstanceStatuses } from '~/Instances/useInstanceStatuses.js'
+
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { SurfaceInstancesListContextProvider, useSurfaceInstancesListContext } from './SurfaceInstancesListContext.js'
@@ -39,9 +39,7 @@ interface SurfaceInstancesListProps {
 export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	selectedInstanceId,
 }: SurfaceInstancesListProps) {
-	const { surfaceInstances } = useContext(RootAppStoreContext)
-
-	const instanceStatuses = useInstanceStatuses()
+	const { surfaceInstances, instanceStatuses } = useContext(RootAppStoreContext)
 
 	const navigate = useNavigate({ from: '/surfaces/integrations' })
 	const doConfigureInstance = useCallback(
@@ -70,7 +68,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 		const allSurfaceInstances: ClientSurfaceInstanceConfigWithId[] = []
 
 		for (const [instanceId, instance] of surfaceInstances.instances) {
-			const status = instanceStatuses.get(instanceId)
+			const status = instanceStatuses.getStatus(instanceId)
 			allSurfaceInstances.push({ ...instance, id: instanceId, status })
 		}
 

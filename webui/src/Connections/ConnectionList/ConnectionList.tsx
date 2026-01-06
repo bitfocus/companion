@@ -12,7 +12,7 @@ import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from '../../Instances/MissingVersionsWarning.js'
 import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { useConnectionCollectionsApi } from './ConnectionListApi.js'
-import { useInstanceStatuses } from '../../Instances/useInstanceStatuses.js'
+
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
@@ -35,9 +35,7 @@ interface ConnectionsListProps {
 }
 
 export const ConnectionsList = observer(function ConnectionsList({ selectedConnectionId }: ConnectionsListProps) {
-	const { connections } = useContext(RootAppStoreContext)
-
-	const connectionStatuses = useInstanceStatuses()
+	const { connections, instanceStatuses } = useContext(RootAppStoreContext)
 
 	const navigate = useNavigate({ from: '/connections' })
 	const doConfigureConnection = useCallback(
@@ -72,12 +70,12 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 		const allConnections: ClientConnectionConfigWithId[] = []
 
 		for (const [connectionId, connection] of connections.connections) {
-			const status = connectionStatuses.get(connectionId)
+			const status = instanceStatuses.getStatus(connectionId)
 			allConnections.push({ ...connection, id: connectionId, status })
 		}
 
 		return allConnections
-	}, [connections.connections, connectionStatuses])
+	}, [connections.connections, instanceStatuses])
 
 	const ConnectionsItemRow = useCallback(
 		(item: ClientConnectionConfigWithId) =>

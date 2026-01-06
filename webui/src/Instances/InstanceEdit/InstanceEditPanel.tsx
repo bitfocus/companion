@@ -33,7 +33,9 @@ interface InstanceGenericEditPanelProps<TConfig extends ClientInstanceConfigBase
 export const InstanceGenericEditPanel = observer(function InstanceGenericEditPanel<
 	TConfig extends ClientInstanceConfigBase,
 >({ instanceInfo, service, changeModuleDangerMessage, cannotEnableReason }: InstanceGenericEditPanelProps<TConfig>) {
-	const { modules } = useContext(RootAppStoreContext)
+	const { modules, instanceStatuses } = useContext(RootAppStoreContext)
+
+	const isInstanceRunning = instanceStatuses.getStatus(instanceInfo.id)?.level ?? false
 
 	const panelStore = useMemo(() => new InstanceEditPanelStore(service, instanceInfo), [service, instanceInfo])
 
@@ -49,6 +51,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 		panelStore.instanceInfo.enabled &&
 		instanceVersionExists &&
 		service.isCollectionEnabled(panelStore.instanceInfo.collectionId)
+	const instanceIsCrashed = instanceShouldBeRunning && isInstanceRunning === 'Crashed'
 
 	const isSaving = observable.box(false)
 	const [saveError, setSaveError] = useState<string | null>(null)
@@ -124,7 +127,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 							</CCol>
 						)}
 
-						{instanceShouldBeRunning && (panelStore.isLoading || panelStore.loadError) && (
+						{instanceShouldBeRunning && !instanceIsCrashed && (panelStore.isLoading || panelStore.loadError) && (
 							<CCol xs={12}>
 								<LoadingRetryOrError
 									error={panelStore.loadError}
@@ -135,7 +138,17 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 							</CCol>
 						)}
 
-						{instanceShouldBeRunning && !panelStore.isLoading && <InstanceConfigFields panelStore={panelStore} />}
+						{instanceShouldBeRunning && !panelStore.isLoading && !instanceIsCrashed && (
+							<InstanceConfigFields panelStore={panelStore} />
+						)}
+
+						{instanceShouldBeRunning && instanceIsCrashed && (
+							<NonIdealState icon={faCircleExclamation}>
+								{capitalize(panelStore.service.moduleTypeDisplayName)} is not running.
+								<br />
+								Please check the logs for more information.
+							</NonIdealState>
+						)}
 					</div>
 				</div>
 
