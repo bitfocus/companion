@@ -21,7 +21,7 @@ describe('StableDeviceIdGenerator', () => {
 
 		expect(id1).not.toBe(id2)
 		expect(id1).toBe('1234:5678')
-		expect(id2).toBe('1234:5678-2')
+		expect(id2).toBe('1234:5678-dev2')
 	})
 
 	test('returns same ID for same device path on repeated calls', () => {
@@ -43,8 +43,8 @@ describe('StableDeviceIdGenerator', () => {
 		// All should be unique
 		expect(new Set([id1, id2, id3]).size).toBe(3)
 		expect(id1).toBe('1234:5678')
-		expect(id2).toBe('1234:5678-2')
-		expect(id3).toBe('1234:5678-3')
+		expect(id2).toBe('1234:5678-dev2')
+		expect(id3).toBe('1234:5678-dev3')
 	})
 
 	test('separate instances have independent state', () => {
@@ -72,8 +72,8 @@ describe('StableDeviceIdGenerator', () => {
 		// All should be unique
 		expect(new Set(ids).size).toBe(3)
 		expect(ids[0]).toBe('1234:5678')
-		expect(ids[1]).toBe('1234:5678-2')
-		expect(ids[2]).toBe('1234:5678-3')
+		expect(ids[1]).toBe('1234:5678-dev2')
+		expect(ids[2]).toBe('1234:5678-dev3')
 
 		// Requesting same path again should return cached ID
 		expect(generator.generateId('1234:5678', false, '/dev/hidraw1')).toBe(ids[1])
@@ -84,7 +84,7 @@ describe('StableDeviceIdGenerator', () => {
 
 		const id = generator.generateId('1234:5678', true, '/dev/hidraw0')
 
-		expect(id).toBe('1234:5678-1')
+		expect(id).toBe('1234:5678-dev1')
 	})
 
 	test('deduplicates multiple endpoints of same device', () => {
@@ -107,7 +107,7 @@ describe('StableDeviceIdGenerator', () => {
 
 		expect(id1).not.toBe(id2)
 		expect(id1).toBe('')
-		expect(id2).toBe('-2')
+		expect(id2).toBe('-dev2')
 	})
 
 	test('real-world scenario: 2 identical Stream Decks', () => {
@@ -119,7 +119,7 @@ describe('StableDeviceIdGenerator', () => {
 
 		expect(deck1).not.toBe(deck2)
 		expect(deck1).toBe('4057:96')
-		expect(deck2).toBe('4057:96-2')
+		expect(deck2).toBe('4057:96-dev2')
 
 		// Re-enumerating same devices should return same IDs
 		expect(generator.generateId('4057:96', false, '/dev/hidraw0')).toBe(deck1)
@@ -135,8 +135,8 @@ describe('StableDeviceIdGenerator', () => {
 		const id3 = generator.generateId('1234:5678', false, '/dev/hidraw2')
 
 		expect(id1).toBe('1234:5678')
-		expect(id2).toBe('1234:5678-2')
-		expect(id3).toBe('1234:5678-3')
+		expect(id2).toBe('1234:5678-dev2')
+		expect(id3).toBe('1234:5678-dev3')
 
 		// Second scan: only 2 devices (hidraw1 disconnected)
 		generator.prepareForScan(new Set(['/dev/hidraw0', '/dev/hidraw2']))
@@ -156,7 +156,7 @@ describe('StableDeviceIdGenerator', () => {
 		expect(id1Third).toBe(id1)
 		expect(id3Third).toBe(id3)
 		// After pruning and re-adding, collision avoidance assigns next available counter
-		expect(id2Reconnect).toBe('1234:5678-2')
+		expect(id2Reconnect).toBe('1234:5678-dev2')
 	})
 
 	test('prepareForScan clears scan tracking sets', () => {
@@ -220,7 +220,7 @@ describe('StableDeviceIdGenerator', () => {
 
 		// But now if we add another device of same type, it gets different ID
 		const id3 = generator.generateId('1234:5678', false, '/dev/hidraw6')
-		expect(id3).toBe('1234:5678-2')
+		expect(id3).toBe('1234:5678-dev2')
 	})
 
 	test('handles partial device changes between scans', () => {
