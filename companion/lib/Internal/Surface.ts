@@ -256,23 +256,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	}
 
 	getVariableDefinitions(): VariableDefinition[] {
-		const variables: VariableDefinition[] = [
-			{
-				name: 't-bar',
-				description:
-					'DEPRECATED Legacy T-bar position. Value is never updated: link a custom variable in the surfaces page instead.',
-			},
-			{
-				name: 'shuttle',
-				description:
-					'DEPRECATED Legacy Shuttle position. Value is never updated: link a custom variable in the surfaces page instead.',
-			},
-			{
-				name: 'jog',
-				description:
-					'DEPRECATED Legacy Jog position. Value is never updated: link a custom variable in the surfaces page instead.',
-			},
-		]
+		const variables: VariableDefinition[] = []
 
 		const surfaceInfos = this.#surfaceController.getDevicesList()
 		for (const surfaceGroup of surfaceInfos) {
