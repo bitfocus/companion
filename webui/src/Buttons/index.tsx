@@ -1,5 +1,5 @@
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
-import { faCalculator, faGift, faLayerGroup, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faGift, faLayerGroup, faThLarge, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { ConnectionPresets } from './Presets/Presets.js'
@@ -7,7 +7,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton/EditButton.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -18,6 +18,7 @@ import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useMediaQuery } from 'usehooks-ts'
 
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
 
@@ -50,8 +51,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
 
+	const isLargeScreen = useMediaQuery('(min-width: 1200px)')
+
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
-	const [activeTab, setActiveTab] = useState('pages')
+	const [activeTab, setActiveTab] = useState('grid')
+
 	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
 	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
@@ -66,7 +70,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 
 	const doChangeTab = useCallback((newTab: string) => {
 		setActiveTab((oldTab) => {
-			if (newTab !== 'edit' && oldTab !== newTab) {
+			if (newTab !== 'edit' && newTab !== 'grid' && oldTab !== newTab) {
 				setSelectedButton(null)
 				setTabResetToken(nanoid())
 			}
@@ -93,6 +97,13 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const clearSelectedButton = useCallback(() => {
 		doChangeTab('pages')
 	}, [doChangeTab])
+
+	// When screen becomes large, switch away from grid tab since it's now in its own column
+	useEffect(() => {
+		if (isLargeScreen && activeTab === 'grid') {
+			setActiveTab('pages')
+		}
+	}, [isLargeScreen, activeTab])
 
 	const gridSize = userConfig.properties?.gridSize
 
@@ -284,29 +295,43 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		pageNumber = newPageNumber
 	}
 
+	const gridPanel = (
+		<MyErrorBoundary>
+			<ButtonsGridPanel
+				buttonGridClick={doButtonGridClick}
+				isHot={viewControl.buttonGridHotPress}
+				selectedButton={selectedButton}
+				pageNumber={pageNumber}
+				changePage={setPageNumber}
+				onKeyDown={handleKeyDownInButtons}
+				clearSelectedButton={clearSelectedButton}
+				gridZoomController={gridZoomController}
+				gridZoomValue={gridZoomValue}
+			/>
+		</MyErrorBoundary>
+	)
+
 	return (
 		<CRow className="buttons-page split-panels">
 			<GenericConfirmModal ref={clearModalRef} />
 
-			<CCol xs={12} xl={6} className="primary-panel">
-				<MyErrorBoundary>
-					<ButtonsGridPanel
-						buttonGridClick={doButtonGridClick}
-						isHot={viewControl.buttonGridHotPress}
-						selectedButton={selectedButton}
-						pageNumber={pageNumber}
-						changePage={setPageNumber}
-						onKeyDown={handleKeyDownInButtons}
-						clearSelectedButton={clearSelectedButton}
-						gridZoomController={gridZoomController}
-						gridZoomValue={gridZoomValue}
-					/>
-				</MyErrorBoundary>
-			</CCol>
+			{/* On large screens, show the grid in its own column */}
+			{isLargeScreen && (
+				<CCol xs={12} xl={6} className="primary-panel">
+					{gridPanel}
+				</CCol>
+			)}
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
 					<CNav variant="tabs">
+						{!isLargeScreen && (
+							<CNavItem>
+								<CNavLink active={activeTab === 'grid'} onClick={() => doChangeTab('grid')}>
+									<FontAwesomeIcon icon={faThLarge} /> Buttons
+								</CNavLink>
+							</CNavItem>
+						)}
 						<CNavItem
 							className={classNames({
 								hidden: !selectedButton,
@@ -334,6 +359,8 @@ export const ButtonsPage = observer(function ButtonsPage() {
 						</CNavItem>
 					</CNav>
 					<CTabContent>
+						{/* On small screens, show the grid in its own tab */}
+						{!isLargeScreen && <CTabPane visible={activeTab === 'grid'}>{gridPanel}</CTabPane>}
 						<CTabPane visible={activeTab === 'edit'}>
 							<MyErrorBoundary>
 								{selectedButton && (
