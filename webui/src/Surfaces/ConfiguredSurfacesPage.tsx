@@ -1,5 +1,5 @@
 import { CCol, CRow, CAlert, CButtonGroup, CButton, CCallout } from '@coreui/react'
-import { faSync, faAdd } from '@fortawesome/free-solid-svg-icons'
+import { faSync, faAdd, faCog } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useRef, useState, useCallback } from 'react'
 import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
@@ -10,6 +10,7 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
+import { ConfiguredSurfaceContext } from './ConfiguredSurfacesContext'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
 	const navigate = useNavigate()
@@ -45,6 +46,11 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		addGroupModalRef.current?.show()
 	}, [])
 
+	const [showSettings, setShowSettings] = useState(false)
+	const settingsVisibility = useCallback(() => {
+		setShowSettings((val) => !val)
+	}, [])
+
 	const selectItem = useCallback(
 		(itemId: string | null) => {
 			if (itemId === null || selectedItemId === itemId) {
@@ -61,8 +67,8 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		[navigate, selectedItemId]
 	)
 
-	const showPrimaryPanel = !selectedItemId
-	const showSecondaryPanel = !!selectedItemId
+	const showPrimaryPanel = !selectedItemId && !showSettings
+	const showSecondaryPanel = !!selectedItemId || showSettings
 
 	return (
 		<CRow className="surfaces-page split-panels">
@@ -94,6 +100,10 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 					<AddSurfaceGroupModal ref={addGroupModalRef} />
 					<AddEmulatorModal ref={addEmulatorModalRef} />
+
+					<CButton color="info" className="d-xl-none float-end" size="sm" onClick={settingsVisibility}>
+						<FontAwesomeIcon icon={faCog} /> Show Settings
+					</CButton>
 				</div>
 
 				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
@@ -112,7 +122,9 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
-						<Outlet />
+						<ConfiguredSurfaceContext.Provider value={{ setShowSettings }}>
+							<Outlet />
+						</ConfiguredSurfaceContext.Provider>
 					</MyErrorBoundary>
 				</div>
 			</CCol>

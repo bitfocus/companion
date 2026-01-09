@@ -7,6 +7,8 @@ import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/S
 import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 import { useUserConfigProps } from '~/UserConfig/Context'
 import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
+import { CNavLink } from '@coreui/react'
+import { useConfiguredSurfaceContext } from '~/Surfaces/ConfiguredSurfacesContext'
 
 export const Route = createFileRoute('/_app/surfaces/configured/')({
 	component: SurfaceSettingsPanel,
@@ -19,7 +21,7 @@ function SurfaceSettingsPanel() {
 
 	return (
 		<>
-			<EditPanelHeading />
+			<SettingsPanelTitleBar />
 			<div className="secondary-panel-simple-body" style={{ paddingTop: '0.5em', paddingRight: '1.25em' }}>
 				<p style={{ marginBottom: '0em', fontStyle: 'italic' }}>
 					The following are global surface settings. To configure a known surface, select an item in the{' '}
@@ -87,36 +89,27 @@ function SurfaceSettingsPanel() {
 	)
 }
 
-function EditPanelHeading() {
-	// const { helpViewer, modules } = useContext(RootAppStoreContext)
-
-	// const moduleInfo = modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
-	// const moduleVersion = getModuleVersionInfo(moduleInfo, connectionInfo.moduleVersionId)
-
-	// TODO: Is there some generic help we can show here? Or go to the doc page?
-	const doShowHelp = useCallback(
-		() => {},
-		[]
-		// 		moduleVersion?.helpPath &&
-		// 		helpViewer.current?.showFromUrl(
-		// 			ModuleInstanceType.Connection,
-		// 			connectionInfo.moduleId,
-		// 			moduleVersion.versionId,
-		// 			moduleVersion.helpPath
-		// 		),
-		// 	[helpViewer, connectionInfo.moduleId, moduleVersion]
-	)
-
+function SettingsPanelTitleBar() {
+	const setPanelVisiblity = useConfiguredSurfaceContext()
 	// note that the close button is currently hidden
-	const doClose = useCallback(() => {}, [])
+	const doClose = useCallback(() => {
+		setPanelVisiblity(false)
+	}, [setPanelVisiblity])
 
 	return (
 		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Surface Settings</h4>
+			<h4 className="panel-title">Surface/Integration Settings</h4>
 			<div className="header-buttons">
-				<div className="float_right" onClick={doShowHelp} title="Show help for this connection">
-					<FontAwesomeIcon icon={faQuestionCircle} size="lg" />
-				</div>
+				<CNavLink
+					to="/user-guide/config/settings#surfaces"
+					target="_blank"
+					as={Link}
+					title="Open help for surface settings"
+				>
+					<div className="float_right">
+						<FontAwesomeIcon icon={faQuestionCircle} size="lg" />
+					</div>
+				</CNavLink>
 
 				<div className="float_right d-xl-none" onClick={doClose} title="Close">
 					<FontAwesomeIcon icon={faTimes} size="lg" />
