@@ -34,7 +34,7 @@ export class StableDeviceIdGenerator {
 
 		// Loop until we find a non-colliding ID
 		for (let i = 1; ; i++) {
-			const fakeSerial = i > 1 || alwaysAddSuffix ? `${uniquenessKey}-${i}` : uniquenessKey
+			const fakeSerial = i > 1 || alwaysAddSuffix ? `${uniquenessKey}-dev${i}` : uniquenessKey
 			if (!this.#returnedThisScan.has(fakeSerial)) {
 				this.#returnedThisScan.add(fakeSerial)
 				this.#previousForDevicePath.set(pathCacheKey, {
