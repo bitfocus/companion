@@ -1,5 +1,6 @@
 @use 'variables' as *;
 @use '@coreui/coreui/scss/coreui'; // not strictly necessary, but it allows us to clarify the origin of mixins
+@use 'sass:color';
 
 body {
 	-webkit-text-size-adjust: 100%;
@@ -81,16 +82,95 @@ form.row > * {
 // 	margin: 0 auto;
 // }
 
-.header-toggler svg {
-	color: #fff;
-}
+// not used? looks like only sidebar-header-toggler is used
+// .header-toggler svg {
+// 	color: #fff;
+// }
 
 .header-right {
 	margin-right: 5px;
 }
 
-.header .nav-link:hover {
-	color: #ddd;
+.header {
+	.nav-link:hover {
+		color: #ddd;
+	}
+	/* ensure .header-notification-item text doesn't disappear on focus */
+	.nav-link:focus {
+		color: #ddd;
+	}
+}
+
+.header-notification-item {
+	border-radius: 2em;
+	margin-left: 1em;
+	background-color: #333;
+}
+
+.header-update-icon {
+	margin-right: 0.5em;
+}
+
+.help-menu {
+	// gather the color scheme up front:
+	--menu-color: var(--cui-header-color);
+	--menu-bg: #{$header-brand-bg};
+	--menu-hover-bg: #{color.adjust($header-brand-bg, $lightness: +7%)};
+	color: var(--menu-color); // this may not affect anything
+
+	// note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed.
+	.help-toggle {
+		color: var(--cui-header-color); // Keep toggle white on red header
+		margin-left: 1em; // buffer between this and the lock icon
+		// the following two lines make the focus/hover-highlight circular (as small as it can be?)
+		padding: 0.2em 0em 0.2em 0em;
+		border-radius: 100% !important; // default behavior undoes the right-side rounding
+	}
+
+	// The nesting within .dropdown-menu is mostly for clarity, to emphasize the DOM structure:
+	.dropdown-menu {
+		background-color: var(--menu-bg);
+		--cui-dropdown-link-hover-bg: var(--menu-hover-bg);
+		padding: 0.5em 0;
+		border: 1px solid rgba(0, 0, 0, 0.2); // Subtle dark border
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow
+		border-radius: 6px; // Slightly rounded corners
+		min-width: 240px; // Slightly wider for breathing room
+
+		// override the global header hover defined above
+		.nav-link:hover {
+			color: var(--menu-color);
+		}
+
+		.dropdown-item {
+			color: var(--menu-color);
+			font-size: 0.95rem; // Slightly smaller, more refined
+			padding: 0.4em 0.75em; // More vertical padding, balanced horizontal
+			transition: background-color 0.15s ease-in-out; // Smooth hover transition
+
+			.dropdown-item-icon {
+				// let the rules above and below control its padding
+				padding-left: 0em;
+				padding-right: 0em;
+				color: rgba(255, 255, 255, 0.75); // Semi-transparent white icons
+			}
+
+			.dropdown-item-label {
+				padding-left: 0.75em;
+				padding-right: 1.5em;
+			}
+
+			// Brighten icons on hover
+			&:hover .dropdown-item-icon {
+				color: rgba(255, 255, 255, 1); // Full white on hover
+			}
+		}
+
+		.dropdown-divider {
+			border-top: 1px solid rgba(255, 255, 255, 0.5); // Light divider
+			margin: 0.4em 0.6em;
+		}
+	}
 }
 
 .login-form {
