@@ -15,7 +15,6 @@ import {
 } from '@coreui/react'
 import {
 	faBars,
-	// faCircle, // solid circle, if making the faCircleQuestion icon "opaque"
 	faInfo,
 	faStar,
 	faExternalLinkSquare,
