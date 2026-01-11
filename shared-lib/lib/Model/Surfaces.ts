@@ -41,7 +41,6 @@ export interface ClientSurfaceItem {
 
 	/**
 	 * Whether the enabled setting can be changed for this surface.
-	 * False when the surface is currently connected via Satellite or Plugin (they don't respect enabled).
 	 * Note: A surface can move between connection types, so this is based on the current connection.
 	 */
 	canChangeEnabled: boolean

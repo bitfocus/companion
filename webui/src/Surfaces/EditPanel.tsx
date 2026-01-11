@@ -119,6 +119,7 @@ function SurfaceEnabledToggle({ surfaceId, enabled, canChangeEnabled }: SurfaceE
 			</CFormLabel>
 			<CCol sm={8}>
 				<CFormSwitch
+					id="colFormEnabled"
 					name="colFormEnabled"
 					className="mx-2"
 					size="xl"

@@ -23,10 +23,11 @@ import type {
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
-import type { DiscoveredHidSurface, SurfaceScanHandler, SurfaceController } from '../../Surface/Controller.js'
+import type { SurfaceScanHandler, SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
+import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -179,8 +180,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		this.logger.debug(`Received features: ${JSON.stringify(this.features)}`)
 
 		if (this.features.supportsScan || this.features.supportsDetection || this.features.supportsHid) {
-			// Register with the controller for HID scan events
-			this.#deps.surfaceController.registerHidScanHandler(this.instanceId, this)
+			// Register with the controller for scan events
+			this.#deps.surfaceController.registerSurfaceScanHandler(this.instanceId, this)
 		}
 
 		if (this.features.supportsRemote) {
@@ -285,8 +286,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 	 * @param hidDevices - HID devices with serialNumber already populated
 	 * @returns Promise resolving to array of discovered surfaces
 	 */
-	async scanForSurfaces(hidDevices: HIDDevice[]): Promise<DiscoveredHidSurface[]> {
-		const discovered: DiscoveredHidSurface[] = []
+	async scanForSurfaces(hidDevices: HIDDevice[]): Promise<DiscoveredSurfaceInfo[]> {
+		const discovered: DiscoveredSurfaceInfo[] = []
 
 		// Handle plugins with their own scan/detection
 		if (this.features.supportsScan || this.features.supportsDetection) {
@@ -354,12 +355,12 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 	 * @param surface - The surface to open (as returned from scanHidDevices)
 	 * @param resolvedSurfaceId - The collision-resolved surface ID to use
 	 */
-	async openDiscoveredSurface(surface: DiscoveredHidSurface, resolvedSurfaceId: string): Promise<void> {
+	async openDiscoveredSurface(surface: DiscoveredSurfaceInfo, resolvedSurfaceId: string): Promise<void> {
 		// Already opened, stop here
 		if (this.#panels.has(resolvedSurfaceId)) return
 
 		// Check if it can be opened here
-		const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(resolvedSurfaceId)
+		const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(resolvedSurfaceId, true)
 		if (!reserveCb) return
 
 		try {

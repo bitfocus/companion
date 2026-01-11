@@ -34,7 +34,7 @@ import type {
 import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
-import { createOrSanitizeSurfaceHandlerConfig } from './Config.js'
+import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
@@ -54,9 +54,6 @@ import {
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 import { createHash } from 'node:crypto'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
-
-// Re-export for external use
-export type { DiscoveredSurfaceInfo as DiscoveredHidSurface } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 
 /**
  * Interface for a handler that can process HID device scans.
@@ -159,7 +156,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Registered handlers for HID device scanning.
 	 * Map of instanceId -> handler
 	 */
-	readonly #hidScanHandlers = new Map<string, SurfaceScanHandler>()
+	readonly #surfaceScanHandlers = new Map<string, SurfaceScanHandler>()
 
 	readonly #outboundController: SurfaceOutboundController
 
@@ -1220,13 +1217,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
-	 * Register a handler for HID device scanning.
+	 * Register a handler for surface scanning.
 	 * @param instanceId - Unique identifier for the handler (typically the instance ID)
 	 * @param handler - The handler to register
 	 */
-	registerHidScanHandler(instanceId: string, handler: SurfaceScanHandler): void {
-		this.#hidScanHandlers.set(instanceId, handler)
-		this.#logger.debug(`Registered HID scan handler for instance: ${instanceId}`)
+	registerSurfaceScanHandler(instanceId: string, handler: SurfaceScanHandler): void {
+		this.#surfaceScanHandlers.set(instanceId, handler)
+		this.#logger.debug(`Registered surface scan handler for instance: ${instanceId}`)
 	}
 
 	/**
@@ -1236,7 +1233,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 */
 	cleanupForInstance(instanceId: string): void {
 		// Unregister HID scan handler
-		this.#hidScanHandlers.delete(instanceId)
+		this.#surfaceScanHandlers.delete(instanceId)
 
 		// Unload all surfaces for this instance
 		for (const [id, surface] of this.#surfaceHandlers.entries()) {
@@ -1304,7 +1301,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						surfaces: DiscoveredSurfaceInfo[]
 					}>[] = []
 
-					for (const [instanceId, handler] of this.#hidScanHandlers.entries()) {
+					for (const [instanceId, handler] of this.#surfaceScanHandlers.entries()) {
 						discoveryPromises.push(
 							handler
 								.scanForSurfaces(sanitisedDevices)
@@ -1553,8 +1550,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * If the surface is already open, or already reserved, this will return null.
 	 * @returns A function to clear the reservation, or null if it could not be reserved
 	 */
-	reserveSurfaceForOpening(surfaceId: string): (() => void) | null {
-		if (!this.#shouldOpenSurface(surfaceId)) return null
+	reserveSurfaceForOpening(surfaceId: string, respectEnabled: boolean): (() => void) | null {
+		if (!this.#shouldOpenSurface(surfaceId, respectEnabled)) return null
 
 		// Reserve it
 		this.#surfaceHandlers.set(surfaceId, null)
@@ -1621,7 +1618,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param respectEnabled - Whether to respect the per-surface enabled setting and global auto_enable_discovered_surfaces.
 	 * @returns Whether the surface should be opened
 	 */
-	#shouldOpenSurface(resolvedSurfaceId: string, respectEnabled: boolean = true): boolean {
+	#shouldOpenSurface(resolvedSurfaceId: string, respectEnabled: boolean): boolean {
 		// Already opened or reserved, don't open again
 		if (this.#surfaceHandlers.has(resolvedSurfaceId)) return false
 
@@ -1662,20 +1659,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		// Create a minimal config entry with enabled=false
 		const minimalConfig: SurfaceConfig = {
-			config: {
-				brightness: 100,
-				rotation: 0,
-				never_lock: false,
-				xOffset: 0,
-				yOffset: 0,
-				groupId: null,
-			},
-			groupConfig: {
-				name: '',
-				last_page_id: 'default',
-				startup_page_id: 'default',
-				use_last_page: true,
-			},
+			config: structuredClone(PanelDefaults),
+			groupConfig: structuredClone(SurfaceGroup.DefaultOptions),
 			groupId: null,
 			enabled: false,
 			type: description || 'Unknown',
