@@ -459,15 +459,9 @@ async function convertCompositeElementForDrawing(
 					break
 				default:
 					assertNever(option)
-					propOverrides[overrideKey] = helper.getUnknown(
-						optionKey,
-						'default' in option ? (option as any).default : undefined
-					)
+					// Ignore unknown type
 					break
 			}
-
-			// TODO - better type handling?
-			// propOverrides[key] = helper.getUnknown(optionKey, undefined)
 		}
 
 		// Inject the prop overrides into a new factory
