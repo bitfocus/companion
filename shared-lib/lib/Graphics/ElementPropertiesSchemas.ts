@@ -364,6 +364,8 @@ export const groupElementSchema: SomeCompanionInputField[] = [
 	...rotationFields,
 ]
 
+export const compositeElementSchema: SomeCompanionInputField[] = [...commonElementFields, ...boundsFields]
+
 export const elementSchemas = {
 	text: textElementSchema,
 	image: imageElementSchema,
@@ -372,4 +374,5 @@ export const elementSchemas = {
 	canvas: canvasElementSchema,
 	group: groupElementSchema,
 	circle: circleElementSchema,
+	composite: compositeElementSchema,
 } as const

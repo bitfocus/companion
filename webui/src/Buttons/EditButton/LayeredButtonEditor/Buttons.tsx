@@ -1,5 +1,13 @@
-import { CButton, CButtonGroup, CPopover } from '@coreui/react'
-import React, { useCallback } from 'react'
+import {
+	CButton,
+	CButtonGroup,
+	CPopover,
+	CAccordion,
+	CAccordionItem,
+	CAccordionHeader,
+	CAccordionBody,
+} from '@coreui/react'
+import React, { useCallback, useContext, useMemo, useState } from 'react'
 import type { LayeredStyleStore } from './StyleStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -12,6 +20,7 @@ import {
 	faTrash,
 	faMinus,
 	faCircle,
+	faCube,
 } from '@fortawesome/free-solid-svg-icons'
 import { Tuck } from '~/Components/Tuck.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -19,6 +28,8 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { observer } from 'mobx-react-lite'
 import { useMutationExt, trpc } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import type { UICompositeElementDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 
 export function RemoveElementButton({
 	controlId,
@@ -88,6 +99,7 @@ export function AddElementDropdownButton({
 			animation={false}
 			placement="bottom"
 			style={{ backgroundColor: 'white' }}
+			className="add-layered-element-popover"
 		>
 			<CButton color="white" size="sm" title="Add element">
 				<FontAwesomeIcon icon={faPlus} />
@@ -105,7 +117,7 @@ function AddElementDropdownPopoverButton({
 }: {
 	styleStore: LayeredStyleStore
 	controlId: string
-	elementType: SomeButtonGraphicsElement['type']
+	elementType: SomeButtonGraphicsElement['type'] | string
 	label: string
 	icon: IconProp
 }) {
@@ -133,13 +145,87 @@ function AddElementDropdownPopoverButton({
 	)
 }
 
-function AddElementDropdownPopoverContent({
+interface CompositeElementGroup {
+	connectionId: string
+	connectionLabel: string
+	elements: Array<{
+		elementId: string
+		definition: UICompositeElementDefinition
+	}>
+}
+
+const CompositeElementConnectionGroup = observer(function CompositeElementConnectionGroup({
+	styleStore,
+	controlId,
+	group,
+}: {
+	styleStore: LayeredStyleStore
+	controlId: string
+	group: CompositeElementGroup
+}) {
+	const [isOpen, setIsOpen] = useState(false)
+
+	const toggleOpen = useCallback((e: React.MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+
+		setIsOpen((prev) => !prev)
+	}, [])
+
+	return (
+		<CAccordion activeItemKey={isOpen ? group.connectionId : undefined} flush>
+			<CAccordionItem itemKey={group.connectionId}>
+				<CAccordionHeader onMouseDown={toggleOpen}>{group.connectionLabel}</CAccordionHeader>
+				<CAccordionBody>
+					<CButtonGroup vertical>
+						{group.elements.map(({ elementId, definition }) => (
+							<AddElementDropdownPopoverButton
+								key={`${group.connectionId};${elementId}`}
+								styleStore={styleStore}
+								controlId={controlId}
+								elementType={`${group.connectionId};${elementId}`}
+								label={definition.name}
+								icon={faCube}
+							/>
+						))}
+					</CButtonGroup>
+				</CAccordionBody>
+			</CAccordionItem>
+		</CAccordion>
+	)
+})
+
+const AddElementDropdownPopoverContent = observer(function AddElementDropdownPopoverContent({
 	styleStore,
 	controlId,
 }: {
 	styleStore: LayeredStyleStore
 	controlId: string
 }) {
+	const { compositeElementDefinitions, connections } = useContext(RootAppStoreContext)
+
+	const compositeGroups = useMemo(() => {
+		const groups: CompositeElementGroup[] = []
+
+		for (const [connectionId, connectionDefinitions] of compositeElementDefinitions.connections.entries()) {
+			if (connectionDefinitions.size === 0) continue
+
+			const connectionLabel = connections.getLabel(connectionId) ?? connectionId
+			const elements = Array.from(connectionDefinitions.entries()).map(([elementId, definition]) => ({
+				elementId,
+				definition,
+			}))
+
+			groups.push({
+				connectionId,
+				connectionLabel,
+				elements,
+			})
+		}
+
+		return groups.sort((a, b) => a.connectionLabel.localeCompare(b.connectionLabel))
+	}, [compositeElementDefinitions.connections, connections])
+
 	return (
 		<>
 			{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
@@ -187,6 +273,16 @@ function AddElementDropdownPopoverContent({
 					icon={faCircle}
 				/>
 			</CButtonGroup>
+
+			{/* Composite Elements grouped by connection */}
+			{compositeGroups.map((group) => (
+				<CompositeElementConnectionGroup
+					key={group.connectionId}
+					styleStore={styleStore}
+					controlId={controlId}
+					group={group}
+				/>
+			))}
 		</>
 	)
-}
+})

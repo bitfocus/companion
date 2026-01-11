@@ -42,6 +42,7 @@ import { ExpressionVariableCollections } from './ExpressionVariableCollections.j
 import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRouter.js'
 import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
+import type { CompositeElementIdString } from '../Instance/Definitions.js'
 
 /**
  * The class that manages the controls
@@ -560,6 +561,20 @@ export class ControlsController {
 				if (control.supportsLayeredStyle) {
 					control.onVariablesChanged(allChangedVariablesSet)
 				}
+			}
+		}
+	}
+
+	/**
+	 * Propagate composite element changes
+	 * @param allChangedElementIds - composite element ids with changes
+	 */
+	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {
+		if (allChangedElementIds.size === 0) return
+
+		for (const control of this.#controls.values()) {
+			if (control.supportsLayeredStyle) {
+				control.onCompositeElementsChanged(allChangedElementIds)
 			}
 		}
 	}

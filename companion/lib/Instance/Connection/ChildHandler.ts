@@ -27,6 +27,7 @@ import type {
 	SharedUdpSocketMessageSend,
 	UpdateFeedbackInstancesMessage,
 	UpdateActionInstancesMessage,
+	SetCompositeElementDefinitionsMessage,
 } from '@companion-module/base/dist/host-api/api.js'
 import type { ModuleRegisterMessage, ModuleToHostEventsInit } from '@companion-module/base/dist/host-api/versions.js'
 import type { InstanceStatus } from '../Status.js'
@@ -38,7 +39,7 @@ import {
 	type CompanionOptionValues,
 	type LogLevel,
 } from '@companion-module/base'
-import type { InstanceDefinitions } from '../Definitions.js'
+import type { CompositeElementDefinition, InstanceDefinitions } from '../Definitions.js'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { VariablesController } from '../../Variables/Controller.js'
 import type { ServiceOscSender } from '../../Service/OscSender.js'
@@ -74,6 +75,7 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import type { RunActionExtras } from './ChildHandlerApi.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { ConvertPresetDefinition } from './Presets.js'
+import { ConvertLayerPresetElements } from './PresetsLayered.js'
 
 const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
 
@@ -160,6 +162,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			setFeedbackDefinitions: this.#handleSetFeedbackDefinitions.bind(this),
 			setVariableDefinitions: this.#handleSetVariableDefinitions.bind(this),
 			setPresetDefinitions: this.#handleSetPresetDefinitions.bind(this),
+			setCompositeElementDefinitions: this.#handleSetCompositeElementDefinitions.bind(this),
 			setVariableValues: this.#handleSetVariableValues.bind(this),
 			updateFeedbackValues: this.#handleUpdateFeedbackValues.bind(this),
 			saveConfig: this.#handleSaveConfig.bind(this),
@@ -171,7 +174,6 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			sharedUdpSocketJoin: this.#handleSharedUdpSocketJoin.bind(this),
 			sharedUdpSocketLeave: this.#handleSharedUdpSocketLeave.bind(this),
 			sharedUdpSocketSend: this.#handleSharedUdpSocketSend.bind(this),
-			setCompositeElementDefinitions: null as any, // TODO: composite elements PR
 		}
 
 		this.#ipcWrapper = new IpcWrapper(
@@ -893,6 +895,39 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
 			throw new Error(`Failed to set Preset Definitions: ${e}`)
+		}
+	}
+
+	async #handleSetCompositeElementDefinitions(msg: SetCompositeElementDefinitionsMessage): Promise<void> {
+		try {
+			this.#sendToModuleLog(
+				'debug',
+				`Updating composite element definitions (${(msg.compositeElements || []).length} elements)`
+			)
+
+			const compositeElements: Record<string, CompositeElementDefinition> = {}
+			for (const rawElement of msg.compositeElements) {
+				compositeElements[rawElement.id] = {
+					id: rawElement.id,
+					name: rawElement.name,
+					description: rawElement.description,
+					options: translateEntityInputFields(rawElement.options || [], EntityModelType.Feedback, true),
+					elements: ConvertLayerPresetElements(
+						this.logger,
+						this.connectionId,
+						undefined,
+						rawElement.elements || []
+					).slice(
+						1 // Crop off the canvas element
+					),
+				} satisfies Complete<CompositeElementDefinition>
+			}
+
+			this.#deps.instanceDefinitions.setCompositeElementDefinitions(this.connectionId, compositeElements)
+		} catch (e: any) {
+			this.logger.error(`setCompositeElementDefinitions: ${e}`)
+
+			throw new Error(`Failed to set Composite Graphics Element Definitions: ${e}`)
 		}
 	}
 

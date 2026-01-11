@@ -27,8 +27,9 @@ import type {
 	ButtonGraphicsBounds,
 	ButtonGraphicsElementBase,
 	ButtonGraphicsCircleElement,
+	ButtonGraphicsCompositeElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsElementUsage, type CompositeElementOptionKey } from '@companion-app/shared/Model/StyleModel.js'
 
 export function ConvertLayeredPresetFeedbacksToEntities(
 	rawFeedbacks: CompanionPresetLayeredFeedback[] | undefined,
@@ -68,6 +69,7 @@ export function ConvertLayeredPresetFeedbacksToEntities(
 
 export function ConvertLayerPresetElements(
 	logger: Logger,
+	connectionId: string,
 	canvas: ButtonGraphicsCanvasElementModule | undefined,
 	elements: SomeButtonGraphicsElementModule[]
 ): SomeButtonGraphicsElement[] {
@@ -85,13 +87,14 @@ export function ConvertLayerPresetElements(
 	return [
 		canvasElement,
 		...elements
-			.map((el) => convertLayeredPresetElement(logger, el))
+			.map((el) => convertLayeredPresetElement(logger, connectionId, el))
 			.filter((el): el is SomeButtonGraphicsElement => el !== null),
 	]
 }
 
 function convertLayeredPresetElement(
 	logger: Logger,
+	connectionId: string,
 	element: SomeButtonGraphicsElementModule
 ): SomeButtonGraphicsElement | null {
 	const elementType = element.type
@@ -122,7 +125,7 @@ function convertLayeredPresetElement(
 				rotation: { value: 0, isExpression: false }, // TODO - presets
 
 				children: element.children
-					.map((child) => convertLayeredPresetElement(logger, child))
+					.map((child) => convertLayeredPresetElement(logger, connectionId, child))
 					.filter((el): el is SomeButtonGraphicsElement => el !== null),
 			} satisfies ButtonGraphicsGroupElement
 		case 'image':
@@ -147,10 +150,10 @@ function convertLayeredPresetElement(
 				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				text: convertModuleExpressionOrValue(element.text, { value: '', isExpression: false }),
-				fontsize: convertModuleExpressionOrValue(element.fontsize, {
+				fontsize: convertModuleExpressionOrValue(element.fontsize as ExpressionOrValueModule<string>, {
 					value: 'auto',
 					isExpression: false,
-				}) as ExpressionOrValue<string>,
+				}),
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
 				halign: convertModuleExpressionOrValue(element.halign, { value: 'center', isExpression: false }),
 				valign: convertModuleExpressionOrValue(element.valign, { value: 'center', isExpression: false }),
@@ -195,9 +198,24 @@ function convertLayeredPresetElement(
 				}),
 				borderOnlyArc: convertModuleExpressionOrValue(element.borderOnlyArc, { value: false, isExpression: false }),
 			} satisfies ButtonGraphicsCircleElement
-		case 'composite':
-			// TODO - composite elements PR
-			return null
+		case 'composite': {
+			const options: Record<CompositeElementOptionKey, ExpressionOrValue<any>> = {}
+			for (const [key, value] of Object.entries(element.options || {})) {
+				options[`opt:${key}`] = convertModuleExpressionOrValue(value, undefined as any) // Convert, and omit invalid values
+			}
+
+			return {
+				type: 'composite',
+				...convertElementBasicProperties(element, 'Composite'),
+
+				...convertElementSize(element),
+
+				connectionId,
+				elementId: element.elementId,
+
+				...options,
+			} satisfies ButtonGraphicsCompositeElement
+		}
 		default:
 			assertNever(element)
 			logger.info('Unsupported element type in layered-button preset:', elementType)

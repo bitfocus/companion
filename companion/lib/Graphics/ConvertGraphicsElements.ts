@@ -21,18 +21,38 @@ import type {
 	ButtonGraphicsCircleDrawElement,
 	ButtonGraphicsDrawBorder,
 	ButtonGraphicsBorder,
+	ButtonGraphicsCompositeElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
-import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
-import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	type CompositeElementOptionKey,
+	type DrawImageBuffer,
+} from '@companion-app/shared/Model/StyleModel.js'
+import {
+	stringifyVariableValue,
+	type VariableValues,
+	type VariableValue,
+} from '@companion-app/shared/Model/Variables.js'
+import type {
+	InstanceDefinitions,
+	CompositeElementDefinition,
+	CompositeElementIdString,
+} from '../Instance/Definitions.js'
+
+interface ExpressionReferences {
+	readonly variables: Set<string>
+	readonly compositeElements: Set<CompositeElementIdString>
+}
 
 class ElementExpressionHelper<T> {
+	readonly #compositeElementStore: InstanceDefinitions
 	readonly #parser: VariablesAndExpressionParser
 	readonly drawPixelBuffers: DrawPixelBuffers
-	readonly #usedVariables = new Set<string>()
+	readonly #references: ExpressionReferences
 
 	readonly #element: T
 	readonly #elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined
@@ -40,16 +60,18 @@ class ElementExpressionHelper<T> {
 	readonly onlyEnabled: boolean
 
 	constructor(
+		compositeElementStore: InstanceDefinitions,
 		parser: VariablesAndExpressionParser,
 		drawPixelBuffers: DrawPixelBuffers,
-		usedVariables: Set<string>,
+		references: ExpressionReferences,
 		element: T,
 		elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined,
 		onlyEnabled: boolean
 	) {
+		this.#compositeElementStore = compositeElementStore
 		this.#parser = parser
 		this.drawPixelBuffers = drawPixelBuffers
-		this.#usedVariables = usedVariables
+		this.#references = references
 
 		this.#element = element
 		this.#elementOverrides = elementOverrides
@@ -57,24 +79,31 @@ class ElementExpressionHelper<T> {
 		this.onlyEnabled = onlyEnabled
 	}
 
-	#executeExpressionAndTrackVariables(str: string, requiredType: string | undefined): ExecuteExpressionResult {
+	resolveCompositeElement(connectionId: string, elementId: string): CompositeElementDefinition | null {
+		this.#references.compositeElements.add(`${connectionId}:${elementId}`)
+
+		const definition = this.#compositeElementStore.getCompositeElementDefinition(connectionId, elementId)
+		return definition ?? null
+	}
+
+	executeExpressionAndTrackVariables(str: string, requiredType: string | undefined): ExecuteExpressionResult {
 		const result = this.#parser.executeExpression(str, requiredType)
 
 		// Track the variables used in the expression, even when it failed
 		for (const variable of result.variableIds) {
-			this.#usedVariables.add(variable)
+			this.#references.variables.add(variable)
 		}
 
 		return result
 	}
 
-	#parseVariablesInString(str: string, defaultValue: string): string {
+	parseVariablesInString(str: string, defaultValue: string): string {
 		try {
 			const result = this.#parser.parseVariables(str)
 
-			// Track the variables used in the expression, even when it failed
+			// Track the variables used
 			for (const variable of result.variableIds) {
-				this.#usedVariables.add(variable)
+				this.#references.variables.add(variable)
 			}
 
 			return String(result.text)
@@ -94,7 +123,7 @@ class ElementExpressionHelper<T> {
 
 		if (!value.isExpression) return value.value
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, undefined)
+		const result = this.executeExpressionAndTrackVariables(value.value, undefined)
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -107,7 +136,7 @@ class ElementExpressionHelper<T> {
 		if (value.isExpression) {
 			return stringifyVariableValue(this.getUnknown(propertyName, 'ERR')) ?? ''
 		} else {
-			return this.#parseVariablesInString(value.value, 'ERR')
+			return this.parseVariablesInString(value.value, 'ERR')
 		}
 	}
 
@@ -116,7 +145,7 @@ class ElementExpressionHelper<T> {
 
 		if (!value.isExpression) return value.value * scale
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, 'number')
+		const result = this.executeExpressionAndTrackVariables(value.value, 'number')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -129,7 +158,7 @@ class ElementExpressionHelper<T> {
 
 		if (!value.isExpression) return value.value
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -141,12 +170,12 @@ class ElementExpressionHelper<T> {
 		return result.value as TVal
 	}
 
-	getEnum<TVal extends string>(propertyName: keyof T, values: TVal[], defaultValue: TVal): TVal {
+	getEnum<TVal extends string | number>(propertyName: keyof T, values: TVal[], defaultValue: TVal): TVal {
 		const value = this.#getValue(propertyName)
 
 		let actualValue: TVal = value.value
 		if (value.isExpression) {
-			const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
+			const result = this.executeExpressionAndTrackVariables(value.value, 'string')
 			if (!result.ok) {
 				return defaultValue
 			}
@@ -165,7 +194,7 @@ class ElementExpressionHelper<T> {
 
 		if (!value.isExpression) return value.value
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, 'boolean')
+		const result = this.executeExpressionAndTrackVariables(value.value, 'boolean')
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -180,7 +209,7 @@ class ElementExpressionHelper<T> {
 			return this.getEnum<HorizontalAlignment>(propertyName, ['left', 'center', 'right'], 'center')
 		}
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) return 'center'
 
 		const firstChar = (stringifyVariableValue(result.value) ?? '').trim().toLowerCase()[0]
@@ -204,7 +233,7 @@ class ElementExpressionHelper<T> {
 			return this.getEnum<VerticalAlignment>(propertyName, ['top', 'center', 'bottom'], 'center')
 		}
 
-		const result = this.#executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) return 'center'
 
 		const firstChar = (stringifyVariableValue(result.value) ?? '').trim().toLowerCase()[0]
@@ -222,11 +251,15 @@ class ElementExpressionHelper<T> {
 		}
 	}
 }
-type ElementExpressionHelperFactory = <T extends { readonly id: string }>(element: T) => ElementExpressionHelper<T>
+type ElementExpressionHelperFactory = <T extends { readonly id: string }>(
+	element: T,
+	propOverrides?: VariableValues
+) => ElementExpressionHelper<T>
 
 type DrawPixelBuffers = (imageBuffers: DrawImageBuffer[]) => Promise<string | undefined>
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
+	compositeElementStore: InstanceDefinitions,
 	parser: VariablesAndExpressionParser,
 	drawPixelBuffers: DrawPixelBuffers,
 	elements: SomeButtonGraphicsElement[],
@@ -235,14 +268,19 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 ): Promise<{
 	elements: SomeButtonGraphicsDrawElement[]
 	usedVariables: Set<string>
+	usedCompositeElements: Set<CompositeElementIdString>
 }> {
-	const usedVariables = new Set<string>()
+	const references: ExpressionReferences = {
+		variables: new Set(),
+		compositeElements: new Set(),
+	}
 
-	const helperFactory: ElementExpressionHelperFactory = (element) =>
+	const helperFactory: ElementExpressionHelperFactory = (element, propOverrides) =>
 		new ElementExpressionHelper(
-			parser,
+			compositeElementStore,
+			propOverrides ? parser.createChildParser(propOverrides) : parser,
 			drawPixelBuffers,
-			usedVariables,
+			references,
 			element,
 			feedbackOverrides.get(element.id),
 			onlyEnabled
@@ -252,7 +290,8 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 
 	return {
 		elements: newElements,
-		usedVariables: usedVariables,
+		usedVariables: references.variables,
+		usedCompositeElements: references.compositeElements,
 	}
 }
 
@@ -277,6 +316,8 @@ async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
 					return convertLineElementForDrawing(helperFactory, element)
 				case 'circle':
 					return convertCircleElementForDrawing(helperFactory, element)
+				case 'composite':
+					return convertCompositeElementForDrawing(helperFactory, element)
 				default:
 					assertNever(element)
 					return null
@@ -326,6 +367,115 @@ async function convertGroupElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
+		children,
+	}
+}
+
+async function convertCompositeElementForDrawing(
+	helperFactory: ElementExpressionHelperFactory,
+	element: ButtonGraphicsCompositeElement
+): Promise<ButtonGraphicsGroupDrawElement | null> {
+	const helper = helperFactory(element)
+
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = helper.getBoolean('enabled', true)
+	if (!enabled && helper.onlyEnabled) return null
+
+	const opacity = helper.getNumber('opacity', 1, 0.01)
+	const bounds = convertDrawBounds(helper)
+
+	let children: SomeButtonGraphicsDrawElement[] = []
+
+	const childElement = helper.resolveCompositeElement(element.connectionId, element.elementId)
+	if (childElement) {
+		// Inject new values
+		const propOverrides: VariableValues = {}
+
+		for (const option of childElement.options) {
+			const optionKey: CompositeElementOptionKey = `opt:${option.id}`
+			const overrideKey = `$(options:${option.id})`
+
+			switch (option.type) {
+				case 'checkbox':
+					propOverrides[overrideKey] = helper.getBoolean(optionKey, option.default)
+					break
+
+				case 'textinput': {
+					const rawValue = element[optionKey]
+					if (!rawValue) {
+						propOverrides[overrideKey] = option.default ?? ''
+					} else if (option.isExpression || rawValue.isExpression) {
+						const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
+						propOverrides[overrideKey] = res.ok ? res.value : option.default
+					} else if (option.useVariables) {
+						propOverrides[overrideKey] = helper.parseVariablesInString(rawValue.value, option.default ?? '')
+					} else {
+						propOverrides[overrideKey] = String(rawValue.value)
+					}
+					break
+				}
+
+				case 'number':
+					propOverrides[overrideKey] = helper.getNumber(optionKey, option.default ?? 0, 1)
+					break
+
+				case 'dropdown':
+					propOverrides[overrideKey] = helper.getEnum(
+						optionKey,
+						option.choices.map((c) => c.id),
+						option.default
+					)
+					break
+
+				case 'colorpicker':
+					if (option.returnType === 'string') {
+						propOverrides[overrideKey] = helper.getString(optionKey, String(option.default))
+					} else {
+						propOverrides[overrideKey] = helper.getNumber(optionKey, Number(option.default) || 0, 1)
+					}
+					break
+
+				case 'multidropdown':
+				case 'internal:connection_collection':
+				case 'internal:connection_id':
+				case 'internal:custom_variable':
+				case 'internal:date':
+				case 'internal:time':
+				case 'internal:horizontal-alignment':
+				case 'internal:page':
+				case 'internal:png-image':
+				case 'internal:surface_serial':
+				case 'internal:vertical-alignment':
+				case 'internal:trigger':
+				case 'internal:trigger_collection':
+				case 'internal:variable':
+				case 'secret-text':
+				case 'static-text':
+				case 'custom-variable':
+				case 'bonjour-device':
+					// Not supported
+					break
+				default:
+					assertNever(option)
+					// Ignore unknown type
+					break
+			}
+		}
+
+		// Inject the prop overrides into a new factory
+		const childHelperFactory: ElementExpressionHelperFactory = (element, newPropOverrides) =>
+			helperFactory(element, newPropOverrides ?? propOverrides)
+		children = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(childHelperFactory, childElement.elements)
+	}
+
+	return {
+		id: element.id,
+		type: 'group',
+		usage: element.usage,
+		enabled,
+		opacity,
+		...bounds,
+		rotation: 0, // Not supported on composite elements
 		children,
 	}
 }

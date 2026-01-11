@@ -355,6 +355,63 @@ table.variables-table {
 	}
 }
 
+.add-layered-element-popover {
+	max-width: 300px;
+	width: 300px;
+
+	.btn {
+		width: 100%;
+
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.btn-group-vertical {
+		width: 100%;
+	}
+
+	.accordion {
+		--cui-accordion-bg: transparent;
+		--cui-accordion-border-width: 0;
+
+		.accordion-item {
+			background-color: transparent;
+		}
+
+		.accordion-header {
+			margin-bottom: 0;
+		}
+
+		.accordion-button {
+			padding: 0.375rem 0.75rem;
+			background-color: var(--cui-secondary);
+			color: var(--cui-secondary-color);
+			font-weight: 600;
+			border: none;
+			border-radius: 0;
+			box-shadow: none;
+
+			&:not(.collapsed) {
+				background-color: var(--cui-secondary);
+				color: var(--cui-secondary-color);
+				box-shadow: none;
+			}
+
+			&:focus {
+				box-shadow: none;
+			}
+
+			&::after {
+				margin-left: auto;
+			}
+		}
+
+		.accordion-body {
+			padding: 0;
+		}
+	}
+}
+
 .field-with-expression {
 	display: flex;
 	gap: 0.5rem;

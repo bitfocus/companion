@@ -4,6 +4,7 @@ import type { NotificationsManagerRef } from '~/Components/Notifications.js'
 import type { PagesStore } from './PagesStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
+import type { CompositeElementDefinitionsStore } from './CompositeElementDefinitionsStore.js'
 import type { ModuleInfoStore } from './ModuleInfoStore.js'
 import type { TriggersListStore } from './TriggersListStore.js'
 import type { SurfacesStore } from './SurfacesStore.js'
@@ -36,6 +37,7 @@ export interface RootAppStore {
 
 	readonly entityDefinitions: EntityDefinitionsStore
 	readonly eventDefinitions: EventDefinitionsStore
+	readonly compositeElementDefinitions: CompositeElementDefinitionsStore
 
 	readonly pages: PagesStore
 	readonly surfaces: SurfacesStore
