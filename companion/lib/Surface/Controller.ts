@@ -49,26 +49,27 @@ import type { HIDDevice } from '@companion-surface/host'
 import type { Complete } from '@companion-module/base/dist/util.js'
 import {
 	DiscoveredSurfaceRegistry,
-	type DiscoveredHidSurface,
-	type HidSurfaceOpener,
+	type DiscoveredSurfaceInfo,
+	type SurfaceOpener,
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 import { createHash } from 'node:crypto'
+import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
 
 // Re-export for external use
-export type { DiscoveredHidSurface } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
+export type { DiscoveredSurfaceInfo as DiscoveredHidSurface } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 
 /**
  * Interface for a handler that can process HID device scans.
  * Implemented by SurfaceChildHandler to allow centralized scan coordination.
  */
-export interface HidScanHandler extends HidSurfaceOpener {
+export interface SurfaceScanHandler extends SurfaceOpener {
 	/**
-	 * Process HID devices during a scan and return discovered surfaces.
-	 * The handler should check each device and return info about any it supports.
-	 * @param devices - HID devices with serialNumber already populated
+	 * Scan for surfaces
+	 * This either processes HID devices to find supported surfaces, or can prtform its own non-hid scan.
+	 * @param hidDevices - HID devices with serialNumber already populated
 	 * @returns Promise resolving to array of discovered surfaces
 	 */
-	scanHidDevices(devices: HIDDevice[]): Promise<DiscoveredHidSurface[]>
+	scanForSurfaces(hidDevices: HIDDevice[]): Promise<DiscoveredSurfaceInfo[]>
 }
 
 // Force it to load the hidraw driver just in case
@@ -158,7 +159,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Registered handlers for HID device scanning.
 	 * Map of instanceId -> handler
 	 */
-	readonly #hidScanHandlers = new Map<string, HidScanHandler>()
+	readonly #hidScanHandlers = new Map<string, SurfaceScanHandler>()
 
 	readonly #outboundController: SurfaceOutboundController
 
@@ -1219,7 +1220,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param instanceId - Unique identifier for the handler (typically the instance ID)
 	 * @param handler - The handler to register
 	 */
-	registerHidScanHandler(instanceId: string, handler: HidScanHandler): void {
+	registerHidScanHandler(instanceId: string, handler: SurfaceScanHandler): void {
 		this.#hidScanHandlers.set(instanceId, handler)
 		this.#logger.debug(`Registered HID scan handler for instance: ${instanceId}`)
 	}
@@ -1295,14 +1296,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					// Collect discovered surfaces from all handlers
 					const discoveryPromises: Promise<{
 						instanceId: string
-						handler: HidScanHandler
-						surfaces: DiscoveredHidSurface[]
+						handler: SurfaceScanHandler
+						surfaces: DiscoveredSurfaceInfo[]
 					}>[] = []
 
 					for (const [instanceId, handler] of this.#hidScanHandlers.entries()) {
 						discoveryPromises.push(
 							handler
-								.scanHidDevices(sanitisedDevices)
+								.scanForSurfaces(sanitisedDevices)
 								.then((surfaces) => ({ instanceId, handler, surfaces }))
 								.catch((e) => {
 									this.#logger.warn(`Error during HID scan: ${e}`)
@@ -1315,8 +1316,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					const results = await Promise.all(discoveryPromises)
 
 					// Collect all discovered surfaces with their handlers
-					const allDiscovered: Array<{ instanceId: string; handler: HidScanHandler; surface: DiscoveredHidSurface }> =
-						[]
+					const allDiscovered: Array<{
+						instanceId: string
+						handler: SurfaceScanHandler
+						surface: DiscoveredSurfaceInfo
+					}> = []
 					for (const { instanceId, handler, surfaces } of results) {
 						for (const surface of surfaces) {
 							allDiscovered.push({ instanceId, handler, surface })
@@ -1345,13 +1349,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						// Prefix device path with instanceId to ensure global uniqueness
 						const prefixedDevicePath = `${instanceId}:${devicePath}` as const
 						// Generate ID and cache opener info in the generator
-						const resolvedSurfaceId = this.#discoveredSurfaceRegistry.trackSurface(
-							surface.surfaceId,
-							surface.surfaceIdIsNotUnique,
-							prefixedDevicePath,
-							handler,
-							surface
-						)
+						const resolvedSurfaceId = this.#discoveredSurfaceRegistry.trackSurface(surface, prefixedDevicePath, handler)
 
 						// Check if it should be opened (respecting per-surface enabled and global auto_enable)
 						if (!this.#shouldOpenSurface(resolvedSurfaceId, true)) {
@@ -1576,23 +1574,28 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @returns The collision-resolved surface ID, and whether the surface should be opened
 	 */
 	async generateDiscoveredSurfaceId(
-		instanceId: string,
-		surfaceId: string,
-		surfaceIdIsNotUnique: boolean,
-		devicePath: string,
-		description: string
+		instance: SurfaceOpener,
+		info: CheckDeviceInfo
 	): Promise<{ resolvedSurfaceId: string; shouldOpen: boolean }> {
 		// Wait for any pending scan to complete
 		if (this.#runningScan) await this.#runningScan
 
 		// Prefix device path with instanceId to ensure global uniqueness
-		const prefixedDevicePath = `${instanceId}:${devicePath}` as const
+		const prefixedDevicePath = `${instance.instanceId}:${info.devicePath}` as const
+
+		const discoveredSurface: DiscoveredSurfaceInfo = {
+			surfaceId: info.surfaceId,
+			surfaceIdIsNotUnique: info.surfaceIdIsNotUnique,
+			description: info.description,
+			hidDevice: undefined,
+			scannedDeviceInfo: info,
+		}
 
 		// Generate a new collision-resolved ID
 		const resolvedSurfaceId = this.#discoveredSurfaceRegistry.trackSurface(
-			surfaceId,
-			surfaceIdIsNotUnique,
-			prefixedDevicePath
+			discoveredSurface,
+			prefixedDevicePath,
+			instance
 		)
 
 		// Track this discovered surface with its owning instance
@@ -1603,7 +1606,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		// If not opening due to enabled settings, ensure a disabled entry exists in DB
 		if (!shouldOpen && !this.#surfaceHandlers.has(resolvedSurfaceId)) {
-			this.#ensureDisabledSurfaceEntry(resolvedSurfaceId, description)
+			this.#ensureDisabledSurfaceEntry(resolvedSurfaceId, info.description)
 		}
 
 		return { resolvedSurfaceId, shouldOpen }

@@ -2,9 +2,9 @@ import type { HIDDevice } from '@companion-surface/host'
 import type { CheckDeviceInfo } from './IpcTypes.js'
 
 /**
- * Information about a discovered surface during a HID scan.
+ * Information about a discovered surface during a scan.
  */
-export interface DiscoveredHidSurface {
+export interface DiscoveredSurfaceInfo {
 	/** Unique id of the surface as reported by the plugin (may collide, will be resolved later) */
 	surfaceId: string
 	/** Whether the surfaceId is known to not be unique */
@@ -20,13 +20,15 @@ export interface DiscoveredHidSurface {
 /**
  * Interface for a handler that can open discovered HID surfaces.
  */
-export interface HidSurfaceOpener {
+export interface SurfaceOpener {
+	readonly instanceId: string
+
 	/**
 	 * Open a discovered surface.
-	 * @param surface - The surface to open (as returned from scanHidDevices)
+	 * @param surface - The surface to open (as returned from scan Devices)
 	 * @param resolvedSurfaceId - The collision-resolved surface ID to use
 	 */
-	openDiscoveredSurface(surface: DiscoveredHidSurface, resolvedSurfaceId: string): Promise<void>
+	openDiscoveredSurface(surface: DiscoveredSurfaceInfo, resolvedSurfaceId: string): Promise<void>
 }
 
 /**
@@ -38,9 +40,9 @@ interface DeviceCacheEntry {
 	/** The collision-resolved surface ID */
 	resolvedSurfaceId: string
 	/** The handler that can open this surface (only for HID-scanned surfaces) */
-	opener?: HidSurfaceOpener
+	opener: SurfaceOpener
 	/** The discovered surface info (only for HID-scanned surfaces) */
-	surface?: DiscoveredHidSurface
+	surface: DiscoveredSurfaceInfo
 }
 
 /**
@@ -75,13 +77,11 @@ export class DiscoveredSurfaceRegistry {
 	 * @returns The collision-resolved surface ID.
 	 */
 	trackSurface(
-		uniquenessKey: string,
-		alwaysAddSuffix: boolean,
+		surface: DiscoveredSurfaceInfo,
 		prefixedDevicePath: `${string}:${string}`,
-		opener?: HidSurfaceOpener,
-		surface?: DiscoveredHidSurface
+		opener: SurfaceOpener
 	): string {
-		const cacheKey = `${uniquenessKey}||${prefixedDevicePath}`
+		const cacheKey = `${surface.surfaceId}||${prefixedDevicePath}`
 
 		// If there is something cached against the devicePath, update opener info and return
 		const cached = this.#deviceCache.get(cacheKey)
@@ -94,7 +94,8 @@ export class DiscoveredSurfaceRegistry {
 
 		// Loop until we find a non-colliding ID
 		for (let i = 1; ; i++) {
-			const resolvedSurfaceId = i > 1 || alwaysAddSuffix ? `${uniquenessKey}-dev${i}` : uniquenessKey
+			const resolvedSurfaceId =
+				i > 1 || surface.surfaceIdIsNotUnique ? `${surface.surfaceId}-dev${i}` : surface.surfaceId
 			if (!this.#surfaceIdToKey.has(resolvedSurfaceId)) {
 				this.#surfaceIdToKey.set(resolvedSurfaceId, cacheKey)
 
@@ -161,12 +162,12 @@ export class DiscoveredSurfaceRegistry {
 	 * @param resolvedSurfaceId - The surface ID to look up
 	 * @returns The opener and surface info if available, or undefined
 	 */
-	getOpenerInfo(resolvedSurfaceId: string): { opener: HidSurfaceOpener; surface: DiscoveredHidSurface } | undefined {
+	getOpenerInfo(resolvedSurfaceId: string): { opener: SurfaceOpener; surface: DiscoveredSurfaceInfo } | undefined {
 		const key = this.#surfaceIdToKey.get(resolvedSurfaceId)
 		if (!key) return undefined
 
 		const entry = this.#deviceCache.get(key)
-		if (!entry?.opener || !entry?.surface) return undefined
+		if (!entry) return undefined
 
 		return { opener: entry.opener, surface: entry.surface }
 	}

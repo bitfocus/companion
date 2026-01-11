@@ -23,7 +23,7 @@ import type {
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
-import type { DiscoveredHidSurface, HidScanHandler, SurfaceController } from '../../Surface/Controller.js'
+import type { DiscoveredHidSurface, SurfaceScanHandler, SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
@@ -53,7 +53,7 @@ export interface SurfaceChildFeatures {
 	} | null
 }
 
-export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHandler {
+export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScanHandler {
 	logger: Logger
 
 	readonly #ipcWrapper: IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>
@@ -285,7 +285,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 	 * @param hidDevices - HID devices with serialNumber already populated
 	 * @returns Promise resolving to array of discovered surfaces
 	 */
-	async scanHidDevices(hidDevices: HIDDevice[]): Promise<DiscoveredHidSurface[]> {
+	async scanForSurfaces(hidDevices: HIDDevice[]): Promise<DiscoveredHidSurface[]> {
 		const discovered: DiscoveredHidSurface[] = []
 
 		// Handle plugins with their own scan/detection
@@ -475,11 +475,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 		// Generate a collision-resolved surface ID and check if it should be opened
 		// This acquires the scan lock and tracks the surface in the discovered registry
 		const { resolvedSurfaceId, shouldOpen } = await this.#deps.surfaceController.generateDiscoveredSurfaceId(
-			this.instanceId,
-			msg.info.surfaceId,
-			msg.info.surfaceIdIsNotUnique,
-			msg.info.devicePath,
-			msg.info.description
+			this,
+			msg.info
 		)
 
 		if (!shouldOpen) {
