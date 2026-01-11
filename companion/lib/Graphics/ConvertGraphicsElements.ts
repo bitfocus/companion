@@ -101,7 +101,7 @@ class ElementExpressionHelper<T> {
 		try {
 			const result = this.#parser.parseVariables(str)
 
-			// Track the variables used in the expression, even when it failed
+			// Track the variables used
 			for (const variable of result.variableIds) {
 				this.#references.variables.add(variable)
 			}
@@ -393,11 +393,6 @@ async function convertCompositeElementForDrawing(
 
 		for (const option of childElement.options) {
 			const optionKey: CompositeElementOptionKey = `opt:${option.id}`
-
-			// Make sure the property is defined
-			const rawValue = element[`opt:${option.id}`]
-			if (!rawValue) continue
-
 			const overrideKey = `$(options:${option.id})`
 
 			switch (option.type) {
@@ -406,7 +401,10 @@ async function convertCompositeElementForDrawing(
 					break
 
 				case 'textinput': {
-					if (option.isExpression || rawValue.isExpression) {
+					const rawValue = element[optionKey]
+					if (!rawValue) {
+						propOverrides[overrideKey] = option.default ?? ''
+					} else if (option.isExpression || rawValue.isExpression) {
 						const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
 						propOverrides[overrideKey] = res.ok ? res.value : option.default
 					} else if (option.useVariables) {
