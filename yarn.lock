@@ -1902,14 +1902,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/host@npm:~1.1.1":
-  version: 1.1.1
-  resolution: "@companion-surface/host@npm:1.1.1"
+"@companion-surface/host@npm:~1.1.2":
+  version: 1.1.2
+  resolution: "@companion-surface/host@npm:1.1.2"
   dependencies:
     "@companion-surface/base": "npm:~1.1.0"
     fast-deep-equal: "npm:^3.1.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/a438ac6b0902cf8ed20c94f62f683f90e50542372f1bf6f49e6460b4180f13311a0c9f35cce74f3ab99fd3fb7d9257f4c9fffc17b51a18c73ccabd4e952bd172
+  checksum: 10c0/c799e84733a78432d7b940185efa9a369bfb4121e108d0301d62f1a0a7b6ac3866956428bacb2af2134f8e984b6b5e3f09feeaf672648153c429770928f4806d
   languageName: node
   linkType: hard
 
@@ -10729,7 +10729,7 @@ __metadata:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:^1.14.1"
-    "@companion-surface/host": "npm:~1.1.1"
+    "@companion-surface/host": "npm:~1.1.2"
     "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^2.1.1"
     "@julusian/segfault-raub": "npm:^2.3.2"
