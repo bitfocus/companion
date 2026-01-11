@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { LRUCache } from 'lru-cache'
+import QuickLRU from 'quick-lru'
 import { GlobalFonts } from '@napi-rs/canvas'
 import { GraphicsRenderer } from './Renderer.js'
 import { ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
@@ -37,6 +37,13 @@ const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
 const WORKER_TERMINATION_THRESHOLD = 30 // High limit, to catch extreme cases
 
 const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADING === '1'
+
+// LRU cache sizing parameters
+const RENDER_CACHE_AVG_ACTIVE_STATES = 1.5 // Average number of frequently-used states per button
+const RENDER_CACHE_PER_BUTTON_RATIO = 0.1 // Proportion of states to keep cached
+const RENDER_CACHE_MIN_SIZE = 100
+const RENDER_CACHE_MAX_SIZE = 1000
+const RENDER_CACHE_RESIZE_DEBOUNCE_MS = 500
 
 export interface GraphicsOptions {
 	page_direction_flipped: boolean
@@ -90,7 +97,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Last recently used cache for button renders
 	 */
-	readonly #renderLRUCache = new LRUCache<string, ImageResult>({ max: 100 })
+	readonly #renderLRUCache: QuickLRU<string, ImageResult>
 
 	readonly #renderQueue: ImageWriteQueue<string, [RenderArguments, boolean]>
 
@@ -176,6 +183,23 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 	)
 
+	/**
+	 * Debounced handler for resizing the render LRU cache when control count changes
+	 */
+	#debounceResizeRenderCache = debounceFn(
+		() => {
+			const newSize = this.#computeRenderCacheSize()
+			const currentSize = this.#renderLRUCache.maxSize
+			if (newSize !== currentSize) {
+				this.#renderLRUCache.resize(newSize)
+				this.#logger.debug(`Render LRU cache resized from ${currentSize} to ${newSize}`)
+			}
+		},
+		{
+			wait: RENDER_CACHE_RESIZE_DEBOUNCE_MS,
+		}
+	)
+
 	constructor(
 		controlsController: ControlsController,
 		pageStore: IPageStore,
@@ -188,6 +212,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#pageStore = pageStore
 		this.#userConfigController = userConfigController
 		this.#variableValuesController = variableValuesController
+
+		// Initialize render LRU cache with dynamic size based on control count
+		const initialCacheSize = this.#computeRenderCacheSize()
+		this.#renderLRUCache = new QuickLRU({ maxSize: initialCacheSize })
+		this.#logger.debug(`Render LRU cache initialized with size ${initialCacheSize}`)
 
 		this.setMaxListeners(0)
 
@@ -220,6 +249,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									CRASHED_WORKER_RETRY_COUNT
 								)
 								render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
+								this.#renderLRUCache.set(key, render)
 							}
 						} else {
 							render = GraphicsRenderer.drawBlank(this.#drawOptions, null)
@@ -294,6 +324,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								CRASHED_WORKER_RETRY_COUNT
 							)
 							render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
+							this.#renderLRUCache.set(key, render)
 						}
 					} else {
 						render = GraphicsRenderer.drawBlank(this.#drawOptions, location)
@@ -540,6 +571,23 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		if (render) return render
 
 		return GraphicsRenderer.drawBlank(this.#drawOptions, location)
+	}
+
+	/**
+	 * Compute the target size for the render LRU cache based on control count
+	 */
+	#computeRenderCacheSize(): number {
+		const allControls = this.#controlsController.getAllControls()
+		const totalControls = Object.keys(allControls).length
+		const computed = Math.ceil(totalControls * RENDER_CACHE_AVG_ACTIVE_STATES * RENDER_CACHE_PER_BUTTON_RATIO)
+		return Math.max(RENDER_CACHE_MIN_SIZE, Math.min(computed, RENDER_CACHE_MAX_SIZE))
+	}
+
+	/**
+	 * Trigger a debounced resize of the render LRU cache (called when controls are added/removed)
+	 */
+	triggerCacheResize(): void {
+		this.#debounceResizeRenderCache()
 	}
 
 	/**

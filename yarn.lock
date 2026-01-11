@@ -10767,7 +10767,6 @@ __metadata:
     fast-json-patch: "patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch"
     fs-extra: "npm:^11.3.3"
     get-port: "npm:^7.1.0"
-    lru-cache: "npm:^11.2.4"
     nanoid: "npm:^5.1.6"
     node-cron: "npm:^4.2.1"
     node-hid: "npm:^3.2.0"
@@ -10778,6 +10777,7 @@ __metadata:
     p-debounce: "npm:^5.1.0"
     p-queue: "npm:^9.0.1"
     path-to-regexp: "npm:^8.3.0"
+    quick-lru: "npm:^7.3.0"
     selfsigned: "npm:^5.4.0"
     semver: "npm:^7.7.3"
     socketcluster-client: "npm:^20.0.1"
@@ -20502,6 +20502,13 @@ __metadata:
   version: 5.1.1
   resolution: "quick-lru@npm:5.1.1"
   checksum: 10c0/a24cba5da8cec30d70d2484be37622580f64765fb6390a928b17f60cd69e8dbd32a954b3ff9176fa1b86d86ff2ba05252fae55dc4d40d0291c60412b0ad096da
+  languageName: node
+  linkType: hard
+
+"quick-lru@npm:^7.3.0":
+  version: 7.3.0
+  resolution: "quick-lru@npm:7.3.0"
+  checksum: 10c0/28dc8eaadcd489d26917f238ad27a6b09f8fe3a609152b0a4f399d5805094e07b56fe1e8c0d7ade0c11463c31bef329803672effc559601daf160a85f578fd05
   languageName: node
   linkType: hard
 

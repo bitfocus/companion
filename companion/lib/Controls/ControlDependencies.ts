@@ -41,6 +41,11 @@ export interface ControlCommonEvents {
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
 
 	presetDrawn: [controlId: string, render: ImageResult]
+
+	/**
+	 * Emitted when a control is added or removed, to notify that the total control count has changed
+	 */
+	controlCountChanged: []
 }
 
 export type ControlChangeEvents = {
