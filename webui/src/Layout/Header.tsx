@@ -45,7 +45,7 @@ interface MenuItemData {
 	readonly id?: string // used for key and to allow individually styled items, see code
 	readonly icon?: IconDefinition | (() => ReactElement)
 	readonly tooltip?: string
-	readonly isExternal?: boolean
+	readonly inNewTab?: boolean
 	readonly isSeparator?: boolean // currently, everything else is ignored if this is true
 }
 
@@ -160,7 +160,7 @@ function HelpMenu() {
 				icon: circleInfo, // this is a function call, unlike the rest.
 				to: '/user-guide/',
 				tooltip: 'Open the User Guide in a new tab.',
-				isExternal: true,
+				inNewTab: true,
 			},
 			{
 				id: 'whats-new',
@@ -168,16 +168,16 @@ function HelpMenu() {
 				icon: faStar,
 				to: whatsNewOpen,
 				tooltip: 'Show the current release notes.',
-				isExternal: false,
+				inNewTab: false,
 			},
-			MenuSeparatorSpec,
+			{ ...MenuSeparatorSpec, label: 'Additional Support' },
 			{
 				id: 'fb',
 				label: 'Community Support',
 				icon: faFacebook,
 				to: 'https://bfoc.us/qjk0reeqmy',
 				tooltip: 'Share your experience or ask questions to your Companions.',
-				isExternal: true,
+				inNewTab: true,
 			},
 			{
 				id: 'slack',
@@ -185,7 +185,7 @@ function HelpMenu() {
 				icon: faSlack,
 				to: 'https://bfoc.us/ke7e9dqgaz',
 				tooltip: 'Discuss technical issues on Slack.',
-				isExternal: true,
+				inNewTab: true,
 			},
 			{
 				id: 'github',
@@ -193,7 +193,7 @@ function HelpMenu() {
 				icon: faGithub,
 				to: 'https://bfoc.us/fiobkz0yqs',
 				tooltip: 'Report bugs or request features on GitHub.',
-				isExternal: true,
+				inNewTab: true,
 			},
 			MenuSeparatorSpec,
 			{
@@ -202,7 +202,7 @@ function HelpMenu() {
 				icon: faDollarSign,
 				to: 'https://bfoc.us/ccfbf8wm2x',
 				tooltip: 'Contribute funds to Bitfocus Companion.',
-				isExternal: true,
+				inNewTab: true,
 			},
 		],
 		[whatsNewOpen]
@@ -230,16 +230,21 @@ function HelpMenu() {
 // The menu action can be either a URL or a function call
 function MenuItem({ data }: { data: MenuItemData }) {
 	if (data.isSeparator) {
-		return <CDropdownDivider />
+		return (
+			<div className={data.id && `dropdown-sep-${data.id}`}>
+				<CDropdownDivider />
+				{data.label && <div className="dropdown-group-label">{data.label}</div>}
+			</div>
+		)
 	} else {
 		const isUrl = typeof data.to === 'string'
-		const isHTTP = isUrl && data.to.startsWith('http')
+		const isHTTP = isUrl && data.to.toLowerCase().startsWith('http') // http or https
 
 		const navProps = isUrl
 			? {
 					...(isHTTP ? { href: data.to, as: 'a' as ElementType } : { to: data.to, as: Link }),
 					rel: 'noopener noreferrer',
-					target: data.isExternal ? '_blank' : '_self',
+					target: data.inNewTab ? '_blank' : '_self',
 				}
 			: { as: 'button' as ElementType, onClick: data.to }
 
@@ -265,7 +270,7 @@ function MenuItem({ data }: { data: MenuItemData }) {
 
 				<span className="dropdown-item-label">{data.label}</span>
 
-				{data.isExternal ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
+				{data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
 			</CDropdownItem>
 		)
 	}

@@ -168,6 +168,12 @@ form.row > * {
 			border-top: 1px solid rgba(0, 0, 0, 0.25); // Light divider
 			margin: 0.4em 0.6em;
 		}
+
+		.dropdown-group-label {
+			cursor: default;
+			padding-left: 0.75em;
+			color: rgba(0, 0, 0, 0.5);
+		}
 	}
 }
 
