@@ -159,8 +159,30 @@ form.row > * {
 }
 
 .nav.nav-tabs {
+	flex-wrap: nowrap;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: thin;
+
+	// Hide scrollbar visually but keep functionality
+	&::-webkit-scrollbar {
+		height: 4px;
+	}
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	&::-webkit-scrollbar-thumb {
+		background: #ccc;
+		border-radius: 2px;
+	}
+
 	.nav-last {
 		margin-left: auto;
+		flex-shrink: 0;
+	}
+
+	.nav-item {
+		flex-shrink: 0;
 	}
 
 	.nav-item .nav-link {

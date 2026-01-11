@@ -234,42 +234,6 @@ export function translateRotation(rotation: SurfaceRotation | null): imageRs.Rot
 }
 
 /**
- * Offset a SurfaceRotation by a given amount in 90° steps
- * @param rotation - the rotation to apply the offset to
- * @param offset - the amount to offset by, will be rounded to full quarters
- */
-export function offsetRotation(rotation: SurfaceRotation | null, offset: number): SurfaceRotation | null {
-	let orig: string | number | null = rotation
-	let surface = false
-	if (orig === null) return null
-	if (typeof orig === 'string' && orig.startsWith('surface')) {
-		orig = parseInt(orig.replace('surface', ''))
-		surface = true
-	}
-
-	const quarter = (Number(orig) / 90 + Math.round(offset / 90)) % 4
-
-	let newRotation: SurfaceRotation
-	if (quarter == 0) {
-		newRotation = 0
-	} else if (quarter == 1 || quarter == -3) {
-		newRotation = 90
-	} else if (quarter == 2 || quarter == -2) {
-		newRotation = 180
-	} else if (quarter == 3 || quarter == -1) {
-		newRotation = -90
-	} else {
-		return null
-	}
-
-	if (surface) {
-		return `surface${newRotation}`
-	} else {
-		return newRotation
-	}
-}
-
-/**
  * Rotate a resolution based on a SurfaceRotation
  */
 export function rotateResolution(width: number, height: number, rotation: SurfaceRotation | null): [number, number] {

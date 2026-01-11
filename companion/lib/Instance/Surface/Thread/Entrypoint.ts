@@ -1,6 +1,6 @@
 /* eslint-disable n/no-process-exit */
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import type { SurfaceModuleToHostEvents, HostToSurfaceModuleEvents } from '../IpcTypes.js'
+import type { SurfaceModuleToHostEvents, HostToSurfaceModuleEvents, CheckDeviceInfo } from '../IpcTypes.js'
 import {
 	type SurfaceModuleManifest,
 	registerLoggingSink,
@@ -10,6 +10,7 @@ import {
 import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
+import { convertOpenDeviceResult } from './Util.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')
@@ -42,14 +43,33 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		openHidDevice: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			const info = await plugin.openHidDevice(msg.device)
-			return { info }
+			const info = await plugin.openHidDevice(msg.device, msg.resolvedSurfaceId)
+			if (!info) return { info: null }
+
+			// Return with the resolved surface ID
+			return {
+				info: convertOpenDeviceResult({
+					...info,
+					surfaceId: msg.resolvedSurfaceId,
+				}),
+			}
 		},
-		checkHidDevice: async (msg) => {
+		checkHidDevices: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			const info = await plugin.checkHidDevice(msg.device)
-			return { info }
+			const devices: CheckDeviceInfo[] = []
+			for (const device of msg.devices) {
+				const result = await plugin.checkHidDevice(device)
+				if (result) {
+					devices.push({
+						devicePath: device.path,
+						surfaceId: result.surfaceId,
+						surfaceIdIsNotUnique: result.surfaceIdIsNotUnique,
+						description: result.description,
+					})
+				}
+			}
+			return { devices }
 		},
 		scanDevices: async () => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
@@ -60,8 +80,16 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		openScannedDevice: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			const info = await plugin.openScannedDevice(msg.device)
-			return { info }
+			const info = await plugin.openScannedDevice(msg.device, msg.resolvedSurfaceId)
+			if (!info) return { info: null }
+
+			// Return with the resolved surface ID
+			return {
+				info: convertOpenDeviceResult({
+					...info,
+					surfaceId: msg.resolvedSurfaceId,
+				}),
+			}
 		},
 		readySurface: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')

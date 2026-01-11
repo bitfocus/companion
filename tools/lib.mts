@@ -23,6 +23,19 @@ export async function generateVersionString() {
 		const packageVersion = packageJson.version
 
 		let gitRef = await parseGitRef()
+
+		// In GitHub Actions, validate that tag matches package.json version
+		const githubRef = process.env.GITHUB_REF
+		if (githubRef && githubRef.startsWith('refs/tags/')) {
+			const tagName = githubRef.replace('refs/tags/', '')
+			const expectedTag = 'v' + packageVersion
+			if (tagName !== expectedTag) {
+				throw new Error(
+					`Version mismatch: package.json version is ${packageVersion} but git tag is ${tagName}. Expected tag to be ${expectedTag}.`
+				)
+			}
+		}
+
 		if (gitRef === 'v' + packageVersion) {
 			gitRef = 'stable'
 		} else {

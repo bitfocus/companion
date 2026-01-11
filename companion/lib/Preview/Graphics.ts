@@ -175,7 +175,7 @@ export class PreviewGraphics {
 							controlId,
 							options,
 							resolvedLocation: result.location,
-							referencedVariableIds: Array.from(result.referencedVariables),
+							referencedVariableIds: result.referencedVariables,
 						})
 
 						// Emit the initial image
@@ -235,15 +235,12 @@ export class PreviewGraphics {
 	onVariablesChanged(allChangedSet: Set<string>, fromControlId: string | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
-			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.length) continue
+			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.size) continue
 
 			// If the changed variables belong to a control, only update if the query is for that control
 			if (fromControlId && previewSession.controlId != fromControlId) continue
 
-			const matchingChangedVariable = previewSession.referencedVariableIds.some((variable) =>
-				allChangedSet.has(variable)
-			)
-			if (!matchingChangedVariable) continue
+			if (previewSession.referencedVariableIds.isDisjointFrom(allChangedSet)) continue
 
 			// Recheck the reference
 			this.#triggerRecheck(previewSession)
@@ -259,7 +256,7 @@ export class PreviewGraphics {
 
 		const lastResolvedLocation = previewSession.resolvedLocation
 
-		previewSession.referencedVariableIds = Array.from(result.referencedVariables)
+		previewSession.referencedVariableIds = result.referencedVariables
 		previewSession.resolvedLocation = result.location
 
 		if (!result.location) {
@@ -289,5 +286,5 @@ interface PreviewSession {
 	readonly controlId: string
 	options: Record<string, any>
 	resolvedLocation: ControlLocation | null
-	referencedVariableIds: string[]
+	referencedVariableIds: ReadonlySet<string>
 }

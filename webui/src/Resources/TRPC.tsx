@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
+import * as Sentry from '@sentry/react'
 
 export type RouterInputs = inferRouterInputs<AppRouter>
 export type RouterOutputs = inferRouterOutputs<AppRouter>
@@ -25,6 +26,13 @@ if (trpcUrl.startsWith('http')) trpcUrl = 'ws' + trpcUrl.slice(4)
 
 export const trpcWsClient = createWSClient({
 	url: trpcUrl,
+	keepAlive: {
+		enabled: true,
+	},
+	onError: (error) => {
+		// This is probably pretty noisy, but there are some issues around here that need debugging
+		Sentry.captureException(error, { tags: { area: 'trpc-ws-client' } })
+	},
 })
 
 export const trpcClient = createTRPCClient<AppRouter>({

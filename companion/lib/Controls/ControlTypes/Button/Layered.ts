@@ -116,7 +116,7 @@ export class ControlButtonLayered
 	/**
 	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
-	#last_draw_variables: Set<string> | null = null
+	#lastDrawVariables: Set<string> | null = null
 
 	/**
 	 * The base style without feedbacks applied
@@ -224,7 +224,7 @@ export class ControlButtonLayered
 			feedbackOverrides,
 			true
 		)
-		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
+		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
 
 		const result: DrawStyleLayeredButtonModel = {
 			...this.getDrawStyleButtonStateProps(),
@@ -592,14 +592,12 @@ export class ControlButtonLayered
 	 * @param allChangedVariables - variables with changes
 	 */
 	onVariablesChanged(allChangedVariables: Set<string>): void {
-		if (!this.#last_draw_variables) return
-		for (const variable of allChangedVariables.values()) {
-			if (!this.#last_draw_variables.has(variable)) continue
-			this.logger.silly('variable changed in button ' + this.controlId)
+		if (!this.#lastDrawVariables) return
 
-			this.triggerRedraw()
-			return
-		}
+		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
+
+		this.logger.silly('variable changed in button ' + this.controlId)
+		this.triggerRedraw()
 	}
 
 	/**

@@ -64,8 +64,36 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const growWidth = doGrow ? 90 : 0
 		const growHeight = doGrow ? 60 : 0
 
-		const [setSizeElement, windowSize] = useElementInnerSize()
-		const { scrollX, scrollY, setRef: setScrollRef } = useScrollPosition<HTMLDivElement>()
+		const [setSizeElement, windowSizeRaw] = useElementInnerSize()
+		const { scrollX: scrollXRaw, scrollY: scrollYRaw, setRef: setScrollRef } = useScrollPosition<HTMLDivElement>()
+
+		// Freeze visible area when hidden: keep last known valid (non-zero) size/scroll
+		// This prevents visible buttons from being unmounted when the grid is hidden (e.g., tab switch)
+		const lastValidWindowSize = useRef<{ width: number; height: number } | null>(null)
+		const lastValidScroll = useRef<{ x: number; y: number } | null>(null)
+
+		// Update last valid values only when we have non-trivial sizes (grid is actually visible)
+		useEffect(() => {
+			if (windowSizeRaw.width > 10 && windowSizeRaw.height > 10) {
+				lastValidWindowSize.current = windowSizeRaw
+			}
+		}, [windowSizeRaw])
+
+		useEffect(() => {
+			if (
+				lastValidWindowSize.current &&
+				lastValidWindowSize.current.width > 10 &&
+				lastValidWindowSize.current.height > 10
+			) {
+				lastValidScroll.current = { x: scrollXRaw, y: scrollYRaw }
+			}
+		}, [scrollXRaw, scrollYRaw])
+
+		// Use frozen values if current size is zero/tiny (grid is hidden), otherwise use live values
+		const isHidden = windowSizeRaw.width <= 10 || windowSizeRaw.height <= 10
+		const windowSize = isHidden && lastValidWindowSize.current ? lastValidWindowSize.current : windowSizeRaw
+		const scrollX = isHidden && lastValidScroll.current ? lastValidScroll.current.x : scrollXRaw
+		const scrollY = isHidden && lastValidScroll.current ? lastValidScroll.current.y : scrollYRaw
 
 		// Reposition the window to have 0/0 in the top left
 		const [scrollerRef, setScrollerRef] = useState<HTMLDivElement | null>(null)

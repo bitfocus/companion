@@ -328,14 +328,10 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			if (!outputVariable.lastReferencedVariables) continue
 
-			for (const variable of allChangedVariables.values()) {
-				if (!outputVariable.lastReferencedVariables.has(variable)) continue
+			if (outputVariable.lastReferencedVariables.isDisjointFrom(allChangedVariables)) continue
 
-				// There is a change, recalculate and send the value
-
-				this.#triggerOutputVariable(name, outputVariable)
-				break
-			}
+			// There is a change, recalculate and send the value
+			this.#triggerOutputVariable(name, outputVariable)
 		}
 	}
 

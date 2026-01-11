@@ -202,9 +202,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
 
-		const anyControlHasBitmap = !!Array.from(this.#controlDefinitions.values()).find(
-			(controls) => !!controls.find((control) => !!control.style.bitmap)
-		)
+		const anyControlHasBitmap = !!this.#controlDefinitions
+			.values()
+			.find((controls) => !!controls.find((control) => !!control.style.bitmap))
 
 		this.info = {
 			description: deviceInfo.productName,
@@ -448,14 +448,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			if (!outputVariable.lastReferencedVariables) continue
 
-			for (const variable of allChangedVariables.values()) {
-				if (!outputVariable.lastReferencedVariables.has(variable)) continue
+			if (outputVariable.lastReferencedVariables.isDisjointFrom(allChangedVariables)) continue
 
-				// There is a change, recalculate and send the value
-
-				this.#triggerOutputVariable(name, outputVariable)
-				break
-			}
+			// There is a change, recalculate and send the value
+			this.#triggerOutputVariable(name, outputVariable)
 		}
 	}
 

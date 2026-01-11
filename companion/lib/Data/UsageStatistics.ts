@@ -29,6 +29,7 @@ import type { CloudController } from '../Cloud/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { ServiceController } from '../Service/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 type DetailedUsagePayload =
 	CompanionUpdatesApiOperations['companion_detailed-usage_post']['requestBody']['content']['application/json']
@@ -160,8 +161,15 @@ export class DataUsageStatistics {
 
 		try {
 			const moduleVersionCounts = this.#instancesController.getConnectionsMetrics()
+			const publishedModules = this.#instancesController.modulesStore.getCachedStoreList(ModuleInstanceType.Connection)
+
 			for (const [moduleId, counts] of Object.entries(moduleVersionCounts)) {
 				if (!moduleId || !counts) continue
+
+				// Filter out any not yet published modules
+				// Note: this does mean that we won't report anything if the module store manifest is not loaded yet,
+				// but if that is the case then we are unlikely to be able to make the request to report the modules anyway
+				if (!publishedModules[moduleId]) continue
 
 				payload.connections.push({
 					moduleId,

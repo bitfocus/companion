@@ -1,12 +1,12 @@
 {
 	"elgato-stream-deck": {
-		"version": "v1.0.0",
-		"tarUrl": "https://s4.bitfocus.io/developer-module-builds/surface/elgato-stream-deck/v1.0.0-8c1ac4f1bf8e6a75350e923786925c18b07fdcbb/elgato-stream-deck-v1.0.0.tgz",
-		"tarSha": "bb3fe37dd7b7ca8fe1d3114f994bde16688471a10057135c16cea7202f9efd3c"
+		"version": "v1.0.3",
+		"tarUrl": "https://s4.bitfocus.io/developer-module-builds/surface/elgato-stream-deck/v1.0.3-1bfa25707e6843e6f0fc2f9b64c9d9224f9e512e/elgato-stream-deck-v1.0.3.tgz",
+		"tarSha": "eef9943842a25a5ca0d3404feb629aae2841ebda6228a8edf95466a50772e0f4"
 	},
 	"xkeys": {
-		"version": "v1.0.0",
-		"tarUrl": "https://s4.bitfocus.io/developer-module-builds/surface/xkeys/v1.0.0-5741ec9a8617720065a8fd89aab23d847a9af31e/xkeys-v1.0.0.tgz",
-		"tarSha": "249db8b11b5551fdec2ac78e610464b419121a1d19a83fe860be03572b32ccf1"
+		"version": "v1.0.2",
+		"tarUrl": "https://s4.bitfocus.io/developer-module-builds/surface/xkeys/v1.0.2-876f00ee194faa57ec14468b7019bbaa516a9e6d/xkeys-v1.0.2.tgz",
+		"tarSha": "2d8243d166fdd21208b3c008899a2a2f1c4ab4c5a4a3daebc8f49db3d65809a7"
 	}
 }

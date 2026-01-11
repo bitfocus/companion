@@ -47,16 +47,14 @@ describe('isSurfaceApiVersionCompatible', () => {
 	test('check previous minor version', () => {
 		const version = semver.parse(surfaceBasePkg.version)
 		expect(version).not.toBe(null)
-		// TODO - undo this once we have api versions beyond 1.0.0
-		expect(version?.minor).toBe(0)
-		// version!.minor--
-		// version!.prerelease = []
+		version!.minor--
+		version!.prerelease = []
 
-		// const versionStr = version!.format()
-		// expect(versionStr).toBeTruthy()
-		// expect(versionStr).not.toBe(surfaceBasePkg.version)
+		const versionStr = version!.format()
+		expect(versionStr).toBeTruthy()
+		expect(versionStr).not.toBe(surfaceBasePkg.version)
 
-		// expect(isSurfaceApiVersionCompatible(versionStr)).toBe(true)
+		expect(isSurfaceApiVersionCompatible(versionStr)).toBe(true)
 	})
 	test('check previous major version', () => {
 		const version = semver.parse(surfaceBasePkg.version)

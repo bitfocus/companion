@@ -77,7 +77,7 @@ export class ControlButtonPreset
 	/**
 	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
-	#last_draw_variables: ReadonlySet<string> | null = null
+	#lastDrawVariables: ReadonlySet<string> | null = null
 
 	/**
 	 * The base style without feedbacks applied
@@ -212,7 +212,7 @@ export class ControlButtonPreset
 			feedbackOverrides,
 			true
 		)
-		this.#last_draw_variables = usedVariables.size > 0 ? usedVariables : null
+		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
 
 		const result: DrawStyleLayeredButtonModel = {
 			elements,
@@ -273,16 +273,11 @@ export class ControlButtonPreset
 	onVariablesChanged(allChangedVariables: Set<string>): void {
 		this.entities.stepCheckExpressionOnVariablesChanged(allChangedVariables)
 
-		if (this.#last_draw_variables) {
-			for (const variable of allChangedVariables.values()) {
-				if (this.#last_draw_variables.has(variable)) {
-					this.logger.silly('variable changed in button ' + this.controlId)
+		if (!this.#lastDrawVariables) return
+		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 
-					this.triggerRedraw()
-					return
-				}
-			}
-		}
+		this.logger.silly('variable changed in button ' + this.controlId)
+		this.triggerRedraw()
 	}
 
 	/**

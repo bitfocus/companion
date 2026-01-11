@@ -147,7 +147,31 @@ _If enabled, Companion will listen for Artnet messages, allowing for external de
 
 ## Backups
 
-TODO
+Companion can back itself up on a schedule to multiple directories if desired. These backups can be synced to cloud storage or backed up during OS backup to give more piece-of-mind to administrators.
+
+Companion has four different types of backups: Raw Database, Compressed, JSON, and YAML. Raw Database backups are the most complete yet can't be restored using Companion's UI. Compressed, JSON, and YAML backup types can be restored using Companion's UI (see the Restoring section below).
+
+Compressed backups are recommended for most users.
+
+### Setting Up Backups
+
+1. Click on **Add Backup Rule** to create a new backup entry
+2. Fill out the right pane:
+   - Rule Name - The name of your backup schedule.
+   - Cron Schedule - Use cron syntax to indicate your backup schedule. You can use [crontab guru](https://crontab.guru/) to help you generate the correct syntax.
+   - Backup Type - Select a backup type. Compressed backups are recommended for most users.
+   - Backup Path - Fill out where backups are stored, including your root directory (Linux, Mac OS) or drive letter (Windows). If left blank, Companion will default to its built-in location.
+   - Backup Name Pattern - Using Companion variables, fill out the name of each backup.
+   - Number of Backups to Keep - Companion will delete older backups after this number of backups has been reached.
+3. Click the yellow **Run Now** button to test your backup rule.
+
+### Restoring
+
+Compressed, JSON, and YAML backups can be restored using the [Import/Export](import-export.md) page. Click Import Configuration and select the backup file.
+
+Raw database backups _cannot_ be imported using Companion's UI.
+
+A list of previous backups can be found at the bottom of the **Edit Backup Rule** pane after clicking the backup rule. Backups can be deleted using Companion's UI.
 
 ## Advanced
 

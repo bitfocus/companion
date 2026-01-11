@@ -105,6 +105,20 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		return Buffer.from(toString(str)).toString(enc)
 	},
 
+	encodeURI: (str) => {
+		return encodeURI(toString(str))
+	},
+	decodeURI: (str) => {
+		return decodeURI(toString(str))
+	},
+
+	encodeURIComponent: (str) => {
+		return encodeURIComponent(toString(str))
+	},
+	decodeURIComponent: (str) => {
+		return decodeURIComponent(toString(str))
+	},
+
 	// Bool operations
 	bool: (v) => !!v && v !== 'false' && v !== '0',
 
@@ -159,7 +173,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	},
 	arrayLastIndexOf: (arr, val, offset) => {
 		if (!Array.isArray(arr)) return false
-		return arr.lastIndexOf(val, offset)
+		return arr.lastIndexOf(val, offset ?? arr.length)
 	},
 
 	// Time operations

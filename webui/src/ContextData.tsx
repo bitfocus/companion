@@ -37,6 +37,8 @@ import { useExpressionVariablesListSubscription } from './Hooks/useExpressionVar
 import { ExpressionVariablesListStore } from './Stores/ExpressionVariablesListStore.js'
 import { SurfaceInstancesStore } from './Stores/SurfaceInstancesStore.js'
 import { useSurfaceInstancesSubscription } from './Hooks/useSurfaceInstancesSubscription.js'
+import { InstanceStatusesStore } from './Stores/InstanceStatusesStore.js'
+import { useInstanceStatusesSubscription } from './Hooks/useInstanceStatusesSubscription.js'
 
 interface ContextDataProps {
 	children: (progressPercent: number, loadingComplete: boolean) => React.JSX.Element | React.JSX.Element[]
@@ -73,6 +75,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			connections: new ConnectionsStore(),
 			surfaceInstances: new SurfaceInstancesStore(),
+			instanceStatuses: new InstanceStatusesStore(),
 
 			activeLearns: observable.set(),
 
@@ -129,6 +132,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		trpc.instances.surfaces.collections.watchQuery,
 		undefined
 	)
+	const instanceStatusesReady = useInstanceStatusesSubscription(rootStore.instanceStatuses)
 	const triggersListReady = useTriggersListSubscription(rootStore.triggersList)
 	const triggerGroupsReady = useGenericCollectionsSubscription(
 		rootStore.triggersList,
@@ -167,6 +171,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		connectionGroupsReady,
 		surfaceInstancesReady,
 		surfaceInstanceCollectionsReady,
+		instanceStatusesReady,
 		variablesReady,
 		actionDefinitionsReady,
 		feedbackDefinitionsReady,

@@ -165,6 +165,30 @@ Decode a string from the requested format ('hex','base64'). If `enc` is missing,
 
 eg `decode("436f6d70616e696f6e","hex")` gives `"Companion"`
 
+**encodeURI(str)**
+
+Encodes a string as a valid Uniform Resource Identifier (URI)
+
+eg `encodeURI('hello world&1')` gives `"hello%20world&1"`
+
+**decodeURI(str)**
+
+Gets the unencoded version of an encoded Uniform Resource Identifier (URI)
+
+eg `decodeURI('hello%20world&1')` gives `"hello world&1"`
+
+**encodeURIComponent(str)**
+
+Encodes a string as a valid component of a Uniform Resource Identifier (URI)
+
+eg `encodeURIComponent('hello world&1')` gives `"test%20123%261"`
+
+**decodeURIComponent(str)**
+
+Gets the unencoded version of an encoded component of a Uniform Resource Identifier (URI)
+
+eg `decodeURIComponent('test%20123%261')` gives `"hello world&1"`
+
 **parseVariables(string, ?undefinedValue)**
 
 In some cases you may need nested variable evaluation (for example `$(custom:$(custom:b))`). The expression parser does not support that nested variable syntax directly. To evaluate nested variables inside an expression, pass the string to `parseVariables`, which will interpret string-variable and template syntax.
@@ -234,7 +258,7 @@ Optionally provide an offset to begin the search from, otherwise it starts from 
 
 If the value isn't found, it will return -1, otherwise the index of the first occurrence.
 
-**arrayLastIndexOf(val, find, offset)**
+**arrayLastIndexOf(arr, val, offset)**
 
 Find the index of the last occurrence of a value within the provided array, searching from the end.
 

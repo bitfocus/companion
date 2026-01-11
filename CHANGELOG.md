@@ -1,5 +1,21 @@
 # Bitfocus Companion
 
+## Companion v4.2.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- add keepalive interval for client websocket
+- improve emulator behaviour when websocket closes
+- revert: limit environment variables exposed to internal actions
+- only search labels in dropdown fields
+- unable to edit color inputs as hex
+- bluetooth support for blackmagic controllers
+- open help links in a new windows
+- isVisibleExpression clone error
+- loupedeck ct bad key map
+- sidebar dom issues
+- better suppress some common/excessive errors
+
 ## Companion v4.2.1 - Release Notes
 
 ### 🐞 BUG FIXES

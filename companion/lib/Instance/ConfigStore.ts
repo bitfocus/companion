@@ -58,7 +58,7 @@ export class InstanceConfigStore {
 	 * Get all connection IDs
 	 */
 	getAllInstanceIdsOfType(type: ModuleInstanceType | null): string[] {
-		if (!type) return Array.from(this.#store.keys())
+		if (!type) return this.#store.keys().toArray()
 
 		const ids: string[] = []
 		for (const [id, conf] of this.#store) {
@@ -101,7 +101,8 @@ export class InstanceConfigStore {
 		const highestRank =
 			Math.max(
 				0,
-				...Array.from(this.#store.values())
+				...this.#store
+					.values()
 					.map((c) => c?.sortOrder)
 					.filter((n) => typeof n === 'number')
 			) || 0
@@ -141,7 +142,8 @@ export class InstanceConfigStore {
 		const highestRank =
 			Math.max(
 				0,
-				...Array.from(this.#store.values())
+				...this.#store
+					.values()
 					.map((c) => c?.sortOrder)
 					.filter((n) => typeof n === 'number')
 			) || 0
@@ -296,7 +298,8 @@ export class InstanceConfigStore {
 		const changedIds: string[] = []
 
 		// find all the other instances with the matching collectionId
-		const sortedInstanceIds = Array.from(this.#store)
+		const sortedInstanceIds = this.#store
+			.entries()
 			.filter(
 				([id, config]) =>
 					config &&
@@ -304,6 +307,7 @@ export class InstanceConfigStore {
 					id !== instanceId &&
 					config.moduleInstanceType === moduleType
 			)
+			.toArray()
 			.sort(([, a], [, b]) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
 			.map(([id]) => id)
 

@@ -25,6 +25,7 @@ interface DropdownInputFieldProps {
 	onPasteIntercept?: (value: string) => string
 	checkValid?: (value: DropdownChoiceId) => boolean
 	fancyFormat?: boolean
+	searchLabelsOnly?: boolean
 }
 
 interface DropdownChoiceInt {
@@ -48,8 +49,12 @@ export const DropdownInputField = observer(function DropdownInputField({
 	onPasteIntercept,
 	checkValid,
 	fancyFormat = false,
+	searchLabelsOnly = true,
 }: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
+
+	// If fancy format is enabled, always search full option
+	if (fancyFormat) searchLabelsOnly = false
 
 	const options = useComputed(() => {
 		let options: DropdownChoice[] = []
@@ -126,7 +131,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 		)
 	}, [onPasteIntercept, fancyFormat])
 
-	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
+	const minChoicesForSearchNumber = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 
 	// const selectRef = useRef<any>(null)
 
@@ -140,12 +145,15 @@ export const DropdownInputField = observer(function DropdownInputField({
 		menuPosition: 'fixed',
 		menuPlacement: 'auto',
 		isClearable: false,
-		isSearchable: minChoicesForSearch2 <= options.length,
+		isSearchable: minChoicesForSearchNumber <= options.length,
 		isMulti: false,
 		options: options,
 		value: currentValue,
 		onChange: onChange,
-		filterOption: createFilter({ ignoreAccents: false }),
+		filterOption: createFilter({
+			ignoreAccents: false,
+			stringify: searchLabelsOnly ? (option) => option.label : (option) => `${option.label} ${option.value}`,
+		}),
 		components: {
 			MenuList: WindowedMenuList,
 			Input: inputComponent,
