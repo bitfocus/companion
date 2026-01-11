@@ -1033,6 +1033,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				location: null,
 				locked: false,
 				enabled: config?.enabled !== false, // Default to true if not specified
+				canChangeEnabled: !surfaceHandler?.panel.info.isRemote,
 				hasFirmwareUpdates: null,
 
 				size: config.gridSize || null,
@@ -1043,6 +1044,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			if (surfaceHandler) {
 				let location = surfaceHandler.panel.info.location
 				if (location && location.startsWith('::ffff:')) location = location.substring(7)
+
+				// Satellite-connected surfaces cannot be disabled
+				if (location && config?.integrationType === 'satellite') surfaceInfo.canChangeEnabled = false
 
 				surfaceInfo.location = location || null
 				surfaceInfo.configFields = surfaceHandler.panel.info.configFields || []
@@ -1566,16 +1570,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Generate a collision-resolved surface ID for a discovered surface.
 	 * Waits for any pending scan to complete first to avoid race conditions.
-	 * @param instanceId - The instance ID of the module that discovered this surface
-	 * @param surfaceId - The base surface ID proposed by the module
-	 * @param surfaceIdIsNotUnique - Whether the proposed surface ID is known to not be unique
-	 * @param devicePath - The unique device path for this surface
-	 * @param description - Description/type of the surface (used when creating disabled entries)
+	 * @param instance - The instance/opener responsible for this surface
+	 * @param info - Information about the discovered surface
+	 * @param respectEnabled - Whether to respect the per-surface enabled setting. Set to false for self-discovering surfaces that cannot reliably abort the open process.
 	 * @returns The collision-resolved surface ID, and whether the surface should be opened
 	 */
 	async generateDiscoveredSurfaceId(
 		instance: SurfaceOpener,
-		info: CheckDeviceInfo
+		info: CheckDeviceInfo,
+		respectEnabled: boolean
 	): Promise<{ resolvedSurfaceId: string; shouldOpen: boolean }> {
 		// Wait for any pending scan to complete
 		if (this.#runningScan) await this.#runningScan
@@ -1602,7 +1605,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#discoveredSurfaces.add(prefixedDevicePath)
 
 		// Determine if the surface should be opened (respecting per-surface enabled and global auto_enable)
-		const shouldOpen = this.#shouldOpenSurface(resolvedSurfaceId, true)
+		const shouldOpen = this.#shouldOpenSurface(resolvedSurfaceId, respectEnabled)
 
 		// If not opening due to enabled settings, ensure a disabled entry exists in DB
 		if (!shouldOpen && !this.#surfaceHandlers.has(resolvedSurfaceId)) {

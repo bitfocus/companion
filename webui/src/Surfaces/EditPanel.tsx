@@ -90,33 +90,43 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 interface SurfaceEnabledToggleProps {
 	surfaceId: string
 	enabled: boolean
+	canChangeEnabled: boolean
 }
 
 /**
  * Toggle for enabling/disabling a surface.
  */
-function SurfaceEnabledToggle({ surfaceId, enabled }: SurfaceEnabledToggleProps) {
+function SurfaceEnabledToggle({ surfaceId, enabled, canChangeEnabled }: SurfaceEnabledToggleProps) {
 	const setEnabledMutation = useMutationExt(trpc.surfaces.surfaceSetEnabled.mutationOptions())
 
 	const handleToggle = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
+			if (!canChangeEnabled) return
 			setEnabledMutation.mutateAsync({ surfaceId, enabled: e.currentTarget.checked }).catch((err) => {
 				console.error('Failed to set surface enabled', err)
 			})
 		},
-		[setEnabledMutation, surfaceId]
+		[setEnabledMutation, surfaceId, canChangeEnabled]
 	)
 
 	return (
 		<>
 			<CFormLabel htmlFor="colFormEnabled" className="col-sm-4 col-form-label col-form-label-sm">
 				Enabled&nbsp;
-				<InlineHelp help="When disabled, Companion will not open this surface. Note: This setting does not apply to surfaces connected over Satellite.">
+				<InlineHelp help="When disabled, Companion will not open this surface.">
 					<FontAwesomeIcon icon={faQuestionCircle} />
 				</InlineHelp>
 			</CFormLabel>
 			<CCol sm={8}>
-				<CFormSwitch name="colFormEnabled" className="mx-2" size="xl" checked={enabled} onChange={handleToggle} />
+				<CFormSwitch
+					name="colFormEnabled"
+					className="mx-2"
+					size="xl"
+					checked={enabled}
+					onChange={handleToggle}
+					disabled={!canChangeEnabled}
+				/>
+				<div className="form-text">Only surfaces connected locally can be disabled here</div>
 			</CCol>
 		</>
 	)
@@ -325,9 +335,13 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							<TextInputField value={surfaceInfo.name} setValue={(name) => updateName(surfaceInfo.id, name)} />
 						</CCol>
 
-						{/* Show enabled toggle for surfaces that respect the setting (not emulator or elgato-plugin) */}
+						{/* Show enabled toggle for all surfaces, but disable it for non-local ones */}
 						{surfaceInfo.integrationType !== 'emulator' && surfaceInfo.integrationType !== 'elgato-plugin' && (
-							<SurfaceEnabledToggle surfaceId={surfaceInfo.id} enabled={surfaceInfo.enabled} />
+							<SurfaceEnabledToggle
+								surfaceId={surfaceInfo.id}
+								enabled={surfaceInfo.enabled}
+								canChangeEnabled={surfaceInfo.canChangeEnabled}
+							/>
 						)}
 
 						<CFormLabel htmlFor="colFormGroupId" className="col-sm-4 col-form-label col-form-label-sm">

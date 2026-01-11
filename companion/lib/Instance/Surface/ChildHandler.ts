@@ -473,10 +473,11 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 	async #handleShouldOpenDiscoveredSurface(msg: ShouldOpenDeviceMessage): Promise<ShouldOpenDeviceResponseMessage> {
 		// Generate a collision-resolved surface ID and check if it should be opened
-		// This acquires the scan lock and tracks the surface in the discovered registry
+		// Self-discovering surfaces bypass the enabled check since we cannot reliably abort the open process (for now)
 		const { resolvedSurfaceId, shouldOpen } = await this.#deps.surfaceController.generateDiscoveredSurfaceId(
 			this,
-			msg.info
+			msg.info,
+			false
 		)
 
 		if (!shouldOpen) {

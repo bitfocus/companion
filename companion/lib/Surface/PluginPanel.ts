@@ -266,6 +266,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			description: surfaceInfo.description,
 			configFields: configFields,
 			location: surfaceInfo.location ?? null,
+			isRemote: surfaceInfo.isRemote,
 			// hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 		}
 
