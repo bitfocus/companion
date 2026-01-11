@@ -429,4 +429,154 @@ describe('DiscoveredSurfaceRegistry', () => {
 		// All current devices have unique IDs
 		expect(new Set([typeA_dev0_s3, typeB_dev1_s3, typeA_dev3_s3]).size).toBe(3)
 	})
+
+	test('forgetSurface removes a specific device', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		// Track 3 devices
+		const id1 = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw0', mockOpener)
+		const id2 = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw1', mockOpener)
+		const id3 = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw2', mockOpener)
+
+		expect(id1).toBe('1234:5678')
+		expect(id2).toBe('1234:5678-dev2')
+		expect(id3).toBe('1234:5678-dev3')
+
+		// Forget the middle device
+		generator.forgetSurface('test-instance:/dev/hidraw1')
+
+		// Verify it's gone
+		expect(generator.getOpenerInfo(id2)).toBeUndefined()
+
+		// Other devices should still be available
+		expect(generator.getOpenerInfo(id1)).toBeDefined()
+		expect(generator.getOpenerInfo(id3)).toBeDefined()
+
+		// Re-tracking the forgotten device should assign a new ID
+		const id2New = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw1', mockOpener)
+		expect(id2New).toBe('1234:5678-dev2')
+	})
+
+	test('forgetInstance removes all devices for an instance', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		const mockOpener2: SurfaceOpener = {
+			instanceId: 'instance-2',
+			openDiscoveredSurface: async () => {},
+		}
+
+		// Track devices from two different instances
+		const inst1_id1 = generator.trackSurface(
+			createSurface('1234:5678', false),
+			'test-instance:/dev/hidraw0',
+			mockOpener
+		)
+		const inst1_id2 = generator.trackSurface(
+			createSurface('1234:5678', false),
+			'test-instance:/dev/hidraw1',
+			mockOpener
+		)
+		const inst2_id1 = generator.trackSurface(createSurface('9999:8888', false), 'instance-2:/dev/hidraw2', mockOpener2)
+
+		// Verify all are tracked
+		expect(generator.getOpenerInfo(inst1_id1)).toBeDefined()
+		expect(generator.getOpenerInfo(inst1_id2)).toBeDefined()
+		expect(generator.getOpenerInfo(inst2_id1)).toBeDefined()
+
+		// Forget all devices from test-instance
+		generator.forgetInstance('test-instance')
+
+		// Instance 1 devices should be gone
+		expect(generator.getOpenerInfo(inst1_id1)).toBeUndefined()
+		expect(generator.getOpenerInfo(inst1_id2)).toBeUndefined()
+
+		// Instance 2 device should still be available
+		expect(generator.getOpenerInfo(inst2_id1)).toBeDefined()
+	})
+
+	test('getOpenerInfo returns correct opener and surface info', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		const mockOpener2: SurfaceOpener = {
+			instanceId: 'different-instance',
+			openDiscoveredSurface: async () => {},
+		}
+
+		const surface1 = createSurface('1234:5678', false)
+		const surface2 = createSurface('9999:8888', true)
+
+		const id1 = generator.trackSurface(surface1, 'test-instance:/dev/hidraw0', mockOpener)
+		const id2 = generator.trackSurface(surface2, 'different-instance:/dev/hidraw1', mockOpener2)
+
+		// Get opener info for first surface
+		const info1 = generator.getOpenerInfo(id1)
+		expect(info1).toBeDefined()
+		expect(info1?.opener).toBe(mockOpener)
+		expect(info1?.surface).toEqual(surface1)
+
+		// Get opener info for second surface
+		const info2 = generator.getOpenerInfo(id2)
+		expect(info2).toBeDefined()
+		expect(info2?.opener).toBe(mockOpener2)
+		expect(info2?.surface).toEqual(surface2)
+
+		// Non-existent ID returns undefined
+		expect(generator.getOpenerInfo('non-existent-id')).toBeUndefined()
+	})
+
+	test('getOpenerInfo updates when surface is re-tracked with new opener', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		const mockOpener2: SurfaceOpener = {
+			instanceId: 'test-instance',
+			openDiscoveredSurface: async () => {},
+		}
+
+		const surface = createSurface('1234:5678', false)
+		const id = generator.trackSurface(surface, 'test-instance:/dev/hidraw0', mockOpener)
+
+		// Initially should have mockOpener
+		let info = generator.getOpenerInfo(id)
+		expect(info?.opener).toBe(mockOpener)
+
+		// Re-track with different opener
+		generator.trackSurface(surface, 'test-instance:/dev/hidraw0', mockOpener2)
+
+		// Should now have mockOpener2
+		info = generator.getOpenerInfo(id)
+		expect(info?.opener).toBe(mockOpener2)
+	})
+
+	test('forgetSurface followed by scan can reassign different ID', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		// Track 3 devices
+		const id1 = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw0', mockOpener)
+		const id2 = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw1', mockOpener)
+		const id3 = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw2', mockOpener)
+
+		expect(id1).toBe('1234:5678')
+		expect(id2).toBe('1234:5678-dev2')
+		expect(id3).toBe('1234:5678-dev3')
+
+		// Forget device 2
+		generator.forgetSurface('test-instance:/dev/hidraw1')
+
+		// Prepare for scan with remaining devices
+		generator.prepareForScan(
+			new Set(['/dev/hidraw0', '/dev/hidraw2'].map((p) => `test-instance:${p}` as `${string}:${string}`))
+		)
+
+		// Track the same devices again
+		const id1Again = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw0', mockOpener)
+		const id3Again = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw2', mockOpener)
+
+		// IDs should be preserved for still-present devices
+		expect(id1Again).toBe(id1)
+		expect(id3Again).toBe(id3)
+
+		// Add a new device at hidraw1 - should get -dev2 since that's now available
+		const id2New = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw1', mockOpener)
+		expect(id2New).toBe('1234:5678-dev2')
+	})
 })
