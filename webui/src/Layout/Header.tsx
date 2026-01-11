@@ -56,6 +56,7 @@ const MenuSeparatorSpec: MenuItemData = {
 }
 
 // make our own circleInfo since it's not in the free FontAwesome offering (two options here)
+// note: the inline styling here is because it's aligning the compound element components rather than a stylistic choice.
 function circleInfo(stacked = false): ReactElement {
 	if (stacked) {
 		return (
@@ -238,7 +239,7 @@ function MenuItem({ data }: { data: MenuItemData }) {
 		)
 	} else {
 		const isUrl = typeof data.to === 'string'
-		const isHTTP = isUrl && data.to.toLowerCase().startsWith('http') // http or https
+		const isHTTP = isUrl && /^https?:\/\//i.test(data.to) // "http://" or "https://"
 
 		const navProps = isUrl
 			? {
