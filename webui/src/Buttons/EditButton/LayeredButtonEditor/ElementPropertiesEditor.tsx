@@ -5,7 +5,7 @@ import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CForm } from '@coreui/react'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
-import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { OptionsInputControl, getInputFeatures } from '~/Controls/OptionsInputField.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { FormPropertyField } from './ElementPropertiesUtil.js'
@@ -19,6 +19,7 @@ interface ElementPropertiesEditorProps {
 	elementProps: SomeButtonGraphicsElement
 	localVariablesStore: LocalVariablesStore
 	isPropertyOverridden: IsPropertyOverridden
+	simpleMode: boolean
 }
 
 export const ElementPropertiesEditor = observer(function ElementPropertiesEditor({
@@ -26,6 +27,7 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 	elementProps,
 	localVariablesStore,
 	isPropertyOverridden,
+	simpleMode,
 }: ElementPropertiesEditorProps) {
 	return (
 		<ElementPropertiesProvider
@@ -34,9 +36,9 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 			isPropertyOverridden={isPropertyOverridden}
 		>
 			<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
-				<ElementCommonProperties elementProps={elementProps} />
+				<ElementCommonProperties elementProps={elementProps} simpleMode={simpleMode} />
 
-				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} />
+				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} simpleMode={simpleMode} />
 			</CForm>
 		</ElementPropertiesProvider>
 	)
@@ -44,8 +46,10 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 
 const ElementPropertiesEditorSchemaVersion = observer(function ElementPropertiesEditorSchemaVersion({
 	elementProps,
+	simpleMode,
 }: {
 	elementProps: SomeButtonGraphicsElement
+	simpleMode: boolean
 }) {
 	const { localVariablesStore } = useElementPropertiesContext()
 	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
@@ -65,20 +69,35 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 		}
 	}
 
+	const simpleModeFields: string[] | undefined =
+		simpleMode && elementProps.type in elementSimpleModeFields
+			? elementSimpleModeFields[elementProps.type as keyof typeof elementSimpleModeFields]
+			: undefined
+
 	if (!schema) {
 		return <div>No schema found for element type: {elementProps.type}</div>
 	}
 
 	return (
 		<>
-			{schema.map((field) => (
-				<SchemaFieldWrapper
-					key={field.id}
-					field={field}
-					elementProps={elementProps}
-					localVariablesStore={localVariablesStore}
-				/>
-			))}
+			{schema.map((field) => {
+				// In simple mode, skip fields not in the allowlist
+				if (simpleModeFields && !simpleModeFields.includes(field.id)) return null
+
+				return (
+					<SchemaFieldWrapper
+						key={field.id}
+						field={field}
+						elementProps={elementProps}
+						localVariablesStore={localVariablesStore}
+					/>
+				)
+			})}
+			{simpleModeFields ? (
+				<div className="text-center text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+					Some fields are hidden in simple mode
+				</div>
+			) : null}
 		</>
 	)
 })

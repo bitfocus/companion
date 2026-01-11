@@ -15,8 +15,10 @@ import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleMod
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	elementProps,
+	simpleMode,
 }: {
 	elementProps: Readonly<SomeButtonGraphicsElement>
+	simpleMode: boolean
 }) {
 	return (
 		<>
@@ -27,7 +29,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 				<FieldElementNameInput elementProps={elementProps} />
 			</CCol>
 
-			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && (
+			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && !simpleMode && (
 				<>
 					<CFormLabel htmlFor="inputUsage" className="col-sm-4 col-form-label col-form-label-sm">
 						<InlineHelp help="Some surfaces do not have full rgb displays and require specific elements for providing feedback in alternate ways. You can override the automatic selection of elements for these purposes by selecting the appropriate usage for this element.">

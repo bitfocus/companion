@@ -1,5 +1,10 @@
 import type { SomeCompanionInputField } from '../Model/Options.js'
 import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
+import type {
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsTextElement,
+} from '../Model/StyleLayersModel.js'
 
 // Type-safe constants for border position values
 const LINE_ORIENTATION_CHOICES = [
@@ -375,4 +380,28 @@ export const elementSchemas = {
 	group: groupElementSchema,
 	circle: circleElementSchema,
 	composite: compositeElementSchema,
+} as const
+
+/**
+ * Fields to show for text elements when "simple mode" is enabled in the editor.
+ */
+export const elementSimpleModeFields = {
+	text: [
+		//
+		'text',
+		'fontsize',
+		'color',
+		'halign',
+		'valign',
+	] satisfies ReadonlyArray<keyof ButtonGraphicsTextElement>,
+	image: [
+		//
+		'base64Image',
+		'halign',
+		'valign',
+	] satisfies ReadonlyArray<keyof ButtonGraphicsImageElement>,
+	box: [
+		//
+		'color',
+	] satisfies ReadonlyArray<keyof ButtonGraphicsBoxElement>,
 } as const

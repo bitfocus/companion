@@ -15,6 +15,8 @@ import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
 import { type LocalVariablesStore, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { FeedbackOverridesTab } from '../FeedbackOverridesTab.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
+import { useLocalStorage } from 'usehooks-ts'
+import { CFormSwitch } from '@coreui/react'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
 	{ id: 'style', name: 'Style', position: 'end' },
@@ -149,6 +151,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	localVariablesStore,
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
+	const [simpleMode, setSimpleMode] = useLocalStorage('layeredEditor.simpleMode', false)
 
 	return (
 		<div className="button-layer-style-editor h-100">
@@ -159,6 +162,15 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 				<div className="button-layer-elementlist">
 					<ElementsList styleStore={styleStore} controlId={controlId} />
 				</div>
+				<div className="button-layer-simple">
+					<CFormSwitch
+						className="text-muted"
+						label="Simple"
+						checked={simpleMode}
+						onChange={(e) => setSimpleMode(e.target.checked)}
+						title={simpleMode ? 'Show reduced set of properties' : 'Show full set of properties'}
+					/>
+				</div>
 				<hr />
 			</div>
 			<div className="button-layer-options">
@@ -168,6 +180,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						elementProps={elementProps}
 						localVariablesStore={localVariablesStore}
 						isPropertyOverridden={styleStore.isPropertyOverridden}
+						simpleMode={simpleMode}
 					/>
 				) : (
 					<NonIdealState icon={faLayerGroup}>

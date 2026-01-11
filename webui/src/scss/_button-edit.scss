@@ -249,13 +249,23 @@ table.variables-table {
 
 		hr {
 			grid-column: 1 / span 2;
-			margin: 1rem 0 0.5rem;
+			margin: 0.25rem 0 0.5rem;
 		}
+	}
+
+	.button-layer-simple {
+		grid-column: 2;
+		grid-row: 2;
+		align-self: end;
+		justify-self: end;
+		padding-right: 2em;
 	}
 
 	.button-layer-preview {
 		display: flex;
 		flex-direction: column;
+		grid-row: 1 / span 2;
+		margin-bottom: 0.75rem;
 
 		.button-layer-canvas {
 			max-width: 100%;
