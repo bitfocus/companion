@@ -78,7 +78,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 				{label}
 				<InputFeatureIcons {...(elementProp.isExpression ? { variables: true, local: true } : features)} />
 				{isOverridden ? (
-					<span title="Value is affected by at least one feedback">
+					<span title="Value is affected by a feedback">
 						<FontAwesomeIcon icon={faLayerGroup} />
 					</span>
 				) : null}

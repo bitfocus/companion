@@ -17,8 +17,8 @@ import { FeedbackOverridesTab } from '../FeedbackOverridesTab.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 
 const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
-	{ id: 'style', name: 'Style', position: 'start' },
-	{ id: 'feedbacks', name: 'Feedbacks', position: 'start' },
+	{ id: 'style', name: 'Style', position: 'end' },
+	{ id: 'feedbacks', name: 'Feedbacks', position: 'end' },
 	{ id: 'variables', name: 'Local Variables', position: 'end' },
 	{ id: 'options', name: 'Options', position: 'end' },
 ]

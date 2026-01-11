@@ -31,7 +31,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 				<>
 					<CFormLabel htmlFor="inputUsage" className="col-sm-4 col-form-label col-form-label-sm">
 						<InlineHelp help="Some surfaces do not have full rgb displays and require specific elements for providing feedback in alternate ways. You can override the automatic selection of elements for these purposes by selecting the appropriate usage for this element.">
-							Usage
+							External Usage
 						</InlineHelp>
 					</CFormLabel>
 					<CCol sm={8}>
