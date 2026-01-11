@@ -8,6 +8,7 @@ export interface UserConfigModel {
 
 	elgato_plugin_enable: boolean
 	usb_hotplug: boolean
+	auto_enable_discovered_surfaces: boolean
 
 	pin_enable: boolean
 	link_lockouts: boolean

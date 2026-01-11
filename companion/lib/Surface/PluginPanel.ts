@@ -379,7 +379,9 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	}
 
 	quit(): void {
-		// TODO - forward to plugin
+		this.#ipcWrapper.sendWithCb('closeSurface', { surfaceId: this.#surfaceInfo.surfaceId }).catch((e) => {
+			this.#logger.debug(`Close surface failed: ${e}`)
+		})
 	}
 
 	setLocked(locked: boolean, characterCount: number): void {

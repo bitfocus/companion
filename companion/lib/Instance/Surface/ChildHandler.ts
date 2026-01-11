@@ -281,7 +281,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 	/**
 	 * Process HID devices during a scan and return discovered surfaces.
 	 * Implements the HidScanHandler interface.
-	 * Serial numbers are already populated by the Controller's StableDeviceIdGenerator.
+	 * Serial numbers are already populated by the Controller's DiscoveredSurfaceRegistry.
 	 * @param hidDevices - HID devices with serialNumber already populated
 	 * @returns Promise resolving to array of discovered surfaces
 	 */
@@ -478,7 +478,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 			this.instanceId,
 			msg.info.surfaceId,
 			msg.info.surfaceIdIsNotUnique,
-			msg.info.devicePath
+			msg.info.devicePath,
+			msg.info.description
 		)
 
 		if (!shouldOpen) {

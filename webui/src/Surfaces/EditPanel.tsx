@@ -87,6 +87,41 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 	)
 })
 
+interface SurfaceEnabledToggleProps {
+	surfaceId: string
+	enabled: boolean
+}
+
+/**
+ * Toggle for enabling/disabling a surface.
+ */
+function SurfaceEnabledToggle({ surfaceId, enabled }: SurfaceEnabledToggleProps) {
+	const setEnabledMutation = useMutationExt(trpc.surfaces.surfaceSetEnabled.mutationOptions())
+
+	const handleToggle = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setEnabledMutation.mutateAsync({ surfaceId, enabled: e.currentTarget.checked }).catch((err) => {
+				console.error('Failed to set surface enabled', err)
+			})
+		},
+		[setEnabledMutation, surfaceId]
+	)
+
+	return (
+		<>
+			<CFormLabel htmlFor="colFormEnabled" className="col-sm-4 col-form-label col-form-label-sm">
+				Enabled&nbsp;
+				<InlineHelp help="When disabled, Companion will not open this surface. Note: This setting does not apply to surfaces connected over Satellite.">
+					<FontAwesomeIcon icon={faQuestionCircle} />
+				</InlineHelp>
+			</CFormLabel>
+			<CCol sm={8}>
+				<CFormSwitch name="colFormEnabled" className="mx-2" size="xl" checked={enabled} onChange={handleToggle} />
+			</CCol>
+		</>
+	)
+}
+
 interface SurfaceEditPanelContentProps {
 	surfaceInfo: SurfaceInfo | null
 	groupInfo: ClientDevicesListItem | null
@@ -289,6 +324,11 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						<CCol sm={8}>
 							<TextInputField value={surfaceInfo.name} setValue={(name) => updateName(surfaceInfo.id, name)} />
 						</CCol>
+
+						{/* Show enabled toggle for surfaces that respect the setting (not emulator or elgato-plugin) */}
+						{surfaceInfo.integrationType !== 'emulator' && surfaceInfo.integrationType !== 'elgato-plugin' && (
+							<SurfaceEnabledToggle surfaceId={surfaceInfo.id} enabled={surfaceInfo.enabled} />
+						)}
 
 						<CFormLabel htmlFor="colFormGroupId" className="col-sm-4 col-form-label col-form-label-sm">
 							Surface Group&nbsp;

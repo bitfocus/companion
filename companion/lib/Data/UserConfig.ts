@@ -45,6 +45,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		elgato_plugin_enable: false,
 		usb_hotplug: true,
+		auto_enable_discovered_surfaces: true,
 
 		pin_enable: false,
 		link_lockouts: false,

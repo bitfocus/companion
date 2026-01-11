@@ -48,6 +48,9 @@ export interface HostToSurfaceModuleEvents {
 	scanDevices: (msg: Record<string, never>) => ScanDevicesResponseMessage
 	openScannedDevice: (msg: OpenScannedDeviceMessage) => OpenDeviceResponseMessage
 
+	/** Close a specific surface, releasing the underlying device */
+	closeSurface: (msg: CloseSurfaceMessage) => void
+
 	readySurface: (msg: ReadySurfaceMessage) => void
 	updateConfig: (msg: UpdateConfigMessage) => void
 
@@ -97,6 +100,10 @@ export interface OpenScannedDeviceMessage {
 	device: CheckDeviceInfo
 	/** The collision-resolved surface ID to use when opening */
 	resolvedSurfaceId: string
+}
+
+export interface CloseSurfaceMessage {
+	surfaceId: string
 }
 
 export interface ReadySurfaceMessage {

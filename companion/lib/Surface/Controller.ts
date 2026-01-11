@@ -46,32 +46,22 @@ import type { SurfacePluginPanel } from './PluginPanel.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import type { HIDDevice } from '@companion-surface/host'
-import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
 import type { Complete } from '@companion-module/base/dist/util.js'
-import { StableDeviceIdGenerator } from '../Instance/Surface/StableDeviceIdGenerator.js'
+import {
+	DiscoveredSurfaceRegistry,
+	type DiscoveredHidSurface,
+	type HidSurfaceOpener,
+} from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 import { createHash } from 'node:crypto'
 
-/**
- * Information about a discovered surface during a HID scan.
- */
-export interface DiscoveredHidSurface {
-	/** Unique id of the surface as reported by the plugin (may collide, will be resolved later) */
-	surfaceId: string
-	/** Whether the surfaceId is known to not be unique */
-	surfaceIdIsNotUnique: boolean
-	/** Human friendly description of the surface (typically model name) */
-	description: string
-	/** The HID device info, if this is a HID-based surface */
-	hidDevice?: HIDDevice
-	/** Info for scanned (non-HID) surfaces, used to open the device */
-	scannedDeviceInfo?: CheckDeviceInfo
-}
+// Re-export for external use
+export type { DiscoveredHidSurface } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 
 /**
  * Interface for a handler that can process HID device scans.
  * Implemented by SurfaceChildHandler to allow centralized scan coordination.
  */
-export interface HidScanHandler {
+export interface HidScanHandler extends HidSurfaceOpener {
 	/**
 	 * Process HID devices during a scan and return discovered surfaces.
 	 * The handler should check each device and return info about any it supports.
@@ -79,13 +69,6 @@ export interface HidScanHandler {
 	 * @returns Promise resolving to array of discovered surfaces
 	 */
 	scanHidDevices(devices: HIDDevice[]): Promise<DiscoveredHidSurface[]>
-
-	/**
-	 * Open a discovered surface.
-	 * @param surface - The surface to open (as returned from scanHidDevices)
-	 * @param resolvedSurfaceId - The collision-resolved surface ID to use
-	 */
-	openDiscoveredSurface(surface: DiscoveredHidSurface, resolvedSurfaceId: string): Promise<void>
 }
 
 // Force it to load the hidraw driver just in case
@@ -169,7 +152,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Stable device ID generator for assigning fake serials to HID devices.
 	 * Centralized here so all handlers see the same collision-resolved serials.
 	 */
-	readonly #stableDeviceIdGenerator = new StableDeviceIdGenerator()
+	readonly #discoveredSurfaceRegistry = new DiscoveredSurfaceRegistry()
 
 	/**
 	 * Registered handlers for HID device scanning.
@@ -889,6 +872,57 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					}
 					return 'device not found'
 				}),
+
+			surfaceSetEnabled: publicProcedure
+				.input(
+					z.object({
+						surfaceId: z.string(),
+						enabled: z.boolean(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					const surfaceConfig = this.#dbTableSurfaces.get(input.surfaceId)
+					if (!surfaceConfig) {
+						throw new Error(`Surface not found: ${input.surfaceId}`)
+					}
+
+					// Update the enabled field
+					surfaceConfig.enabled = input.enabled
+					this.#dbTableSurfaces.set(input.surfaceId, surfaceConfig)
+
+					// If enabling a surface that is not currently open, try to open it directly
+					if (input.enabled && !this.#surfaceHandlers.has(input.surfaceId)) {
+						// Check if we have cached opener info for this surface
+						const openerInfo = this.#discoveredSurfaceRegistry.getOpenerInfo(input.surfaceId)
+						if (openerInfo) {
+							// Directly open the surface using the cached handler
+							this.#logger.debug(`Enabling surface ${input.surfaceId}, opening directly via cached handler`)
+							openerInfo.opener.openDiscoveredSurface(openerInfo.surface, input.surfaceId).catch((e: unknown) => {
+								this.#logger.warn(`Error opening enabled surface ${input.surfaceId}: ${e}`)
+								// If direct open failed, fall back to a full refresh
+								this.triggerRefreshDevices().catch(() => {
+									this.#logger.warn('Device refresh after enable failed')
+								})
+							})
+						} else {
+							// No cached info (module-discovered surface), trigger a rescan to find it
+							this.#logger.debug(`Enabling surface ${input.surfaceId}, triggering rescan (module-discovered surface)`)
+							this.triggerRefreshDevices().catch(() => {
+								this.#logger.warn('Device refresh after enable failed')
+							})
+						}
+					}
+
+					// If disabling a connected surface, close it
+					if (!input.enabled) {
+						const handler = this.#surfaceHandlers.get(input.surfaceId)
+						if (handler) {
+							this.removeDevice(input.surfaceId)
+						}
+					}
+
+					this.triggerUpdateDevicesList()
+				}),
 		})
 	}
 
@@ -997,6 +1031,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				displayName: getSurfaceName(config, id),
 				location: null,
 				locked: false,
+				enabled: config?.enabled !== false, // Default to true if not specified
 				hasFirmwareUpdates: null,
 
 				size: config.gridSize || null,
@@ -1210,9 +1245,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		for (const prefixedDevicePath of this.#discoveredSurfaces) {
 			if (prefixedDevicePath.startsWith(prefix)) {
 				this.#discoveredSurfaces.delete(prefixedDevicePath)
-				this.#stableDeviceIdGenerator.forgetDevice(prefixedDevicePath)
 			}
 		}
+
+		// Clear all cached info for this instance from the generator
+		this.#discoveredSurfaceRegistry.forgetInstance(instanceId)
 
 		this.#logger.debug(`Cleaned up surfaces for instance: ${instanceId}`)
 	}
@@ -1294,7 +1331,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						const devicePath = surface.hidDevice?.path ?? surface.scannedDeviceInfo?.devicePath
 						if (devicePath) devicePathsToKeep.add(`${instanceId}:${devicePath}`)
 					}
-					this.#stableDeviceIdGenerator.prepareForScan(devicePathsToKeep)
+					this.#discoveredSurfaceRegistry.prepareForScan(devicePathsToKeep)
 
 					// Open discovered surfaces with collision-resolved IDs
 					for (const { instanceId, handler, surface } of allDiscovered) {
@@ -1306,15 +1343,20 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							continue
 						}
 						// Prefix device path with instanceId to ensure global uniqueness
-						const prefixedDevicePath = `${instanceId}:${devicePath}`
-						const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(
+						const prefixedDevicePath = `${instanceId}:${devicePath}` as const
+						// Generate ID and cache opener info in the generator
+						const resolvedSurfaceId = this.#discoveredSurfaceRegistry.trackSurface(
 							surface.surfaceId,
 							surface.surfaceIdIsNotUnique,
-							prefixedDevicePath
+							prefixedDevicePath,
+							handler,
+							surface
 						)
 
-						// Check if it should be opened
-						if (!this.#shouldOpenSurface(resolvedSurfaceId)) {
+						// Check if it should be opened (respecting per-surface enabled and global auto_enable)
+						if (!this.#shouldOpenSurface(resolvedSurfaceId, true)) {
+							// Surface should not be opened - ensure a disabled entry exists in DB for later acceptance
+							this.#ensureDisabledSurfaceEntry(resolvedSurfaceId, surface.description)
 							continue
 						}
 
@@ -1510,10 +1552,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @returns A function to clear the reservation, or null if it could not be reserved
 	 */
 	reserveSurfaceForOpening(surfaceId: string): (() => void) | null {
-		// Ensure it isnt already open
-		if (this.#surfaceHandlers.has(surfaceId)) return null
-
-		// Future: check if the config of the surface/global config allows it to be opened
+		if (!this.#shouldOpenSurface(surfaceId)) return null
 
 		// Reserve it
 		this.#surfaceHandlers.set(surfaceId, null)
@@ -1533,13 +1572,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param surfaceId - The base surface ID proposed by the module
 	 * @param surfaceIdIsNotUnique - Whether the proposed surface ID is known to not be unique
 	 * @param devicePath - The unique device path for this surface
+	 * @param description - Description/type of the surface (used when creating disabled entries)
 	 * @returns The collision-resolved surface ID, and whether the surface should be opened
 	 */
 	async generateDiscoveredSurfaceId(
 		instanceId: string,
 		surfaceId: string,
 		surfaceIdIsNotUnique: boolean,
-		devicePath: string
+		devicePath: string,
+		description: string
 	): Promise<{ resolvedSurfaceId: string; shouldOpen: boolean }> {
 		// Wait for any pending scan to complete
 		if (this.#runningScan) await this.#runningScan
@@ -1548,7 +1589,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const prefixedDevicePath = `${instanceId}:${devicePath}` as const
 
 		// Generate a new collision-resolved ID
-		const resolvedSurfaceId = this.#stableDeviceIdGenerator.generateId(
+		const resolvedSurfaceId = this.#discoveredSurfaceRegistry.trackSurface(
 			surfaceId,
 			surfaceIdIsNotUnique,
 			prefixedDevicePath
@@ -1557,8 +1598,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		// Track this discovered surface with its owning instance
 		this.#discoveredSurfaces.add(prefixedDevicePath)
 
-		// Determine if the surface should be opened
-		const shouldOpen = this.#shouldOpenSurface(resolvedSurfaceId)
+		// Determine if the surface should be opened (respecting per-surface enabled and global auto_enable)
+		const shouldOpen = this.#shouldOpenSurface(resolvedSurfaceId, true)
+
+		// If not opening due to enabled settings, ensure a disabled entry exists in DB
+		if (!shouldOpen && !this.#surfaceHandlers.has(resolvedSurfaceId)) {
+			this.#ensureDisabledSurfaceEntry(resolvedSurfaceId, description)
+		}
 
 		return { resolvedSurfaceId, shouldOpen }
 	}
@@ -1566,14 +1612,74 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Check if a surface with the given resolved ID should be opened.
 	 * @param resolvedSurfaceId - The collision-resolved surface ID
+	 * @param respectEnabled - Whether to respect the per-surface enabled setting and global auto_enable_discovered_surfaces.
 	 * @returns Whether the surface should be opened
 	 */
-	#shouldOpenSurface(resolvedSurfaceId: string): boolean {
+	#shouldOpenSurface(resolvedSurfaceId: string, respectEnabled: boolean = true): boolean {
 		// Already opened or reserved, don't open again
 		if (this.#surfaceHandlers.has(resolvedSurfaceId)) return false
 
-		// Future: check if the config of the surface/global config allows it to be opened
+		// Check the per-surface enabled setting and global auto_enable_discovered_surfaces
+		if (respectEnabled) {
+			const existingConfig = this.getDeviceConfig(resolvedSurfaceId)
+			if (existingConfig) {
+				// Surface has an existing config - check if it's enabled (default to true if not specified)
+				if (existingConfig.enabled === false) {
+					return false
+				}
+			} else {
+				// No existing config - check global auto_enable_discovered_surfaces setting
+				const autoEnableDiscovered = this.#handlerDependencies.userconfig.getKey('auto_enable_discovered_surfaces')
+				if (!autoEnableDiscovered) {
+					return false
+				}
+			}
+		}
+
 		return true
+	}
+
+	/**
+	 * Ensure a disabled surface entry exists in the database.
+	 * This is called when a discovered surface is not opened because it's disabled or auto_enable is off.
+	 * Creating the entry allows the user to see and enable the surface later via the UI.
+	 *
+	 * @param surfaceId - The surface ID
+	 * @param description - Description/type of the surface
+	 */
+	#ensureDisabledSurfaceEntry(surfaceId: string, description: string): void {
+		const existingConfig = this.getDeviceConfig(surfaceId)
+		if (existingConfig) {
+			// Config already exists, don't overwrite
+			return
+		}
+
+		// Create a minimal config entry with enabled=false
+		const minimalConfig: SurfaceConfig = {
+			config: {
+				brightness: 100,
+				rotation: 0,
+				never_lock: false,
+				xOffset: 0,
+				yOffset: 0,
+				groupId: null,
+			},
+			groupConfig: {
+				name: '',
+				last_page_id: 'default',
+				startup_page_id: 'default',
+				use_last_page: true,
+			},
+			groupId: null,
+			enabled: false,
+			type: description || 'Unknown',
+			integrationType: undefined,
+			gridSize: undefined,
+		}
+
+		this.setDeviceConfig(surfaceId, minimalConfig)
+		this.triggerUpdateDevicesList()
+		this.#logger.debug(`Created disabled surface entry for: ${surfaceId}`)
 	}
 
 	/**
@@ -1585,7 +1691,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	forgetDiscoveredSurface(instanceId: string, devicePath: string): void {
 		const prefixedDevicePath = `${instanceId}:${devicePath}` as const
 		if (this.#discoveredSurfaces.delete(prefixedDevicePath)) {
-			this.#stableDeviceIdGenerator.forgetDevice(prefixedDevicePath)
+			this.#discoveredSurfaceRegistry.forgetSurface(prefixedDevicePath)
 			this.#logger.debug(`Forgot discovered surface: ${prefixedDevicePath}`)
 		}
 	}

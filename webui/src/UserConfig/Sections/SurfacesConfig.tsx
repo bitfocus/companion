@@ -14,6 +14,12 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 
 			<UserConfigSwitchRow
 				userConfig={props}
+				label="Auto-enable newly discovered surfaces"
+				field="auto_enable_discovered_surfaces"
+			/>
+
+			<UserConfigSwitchRow
+				userConfig={props}
 				label="Enable Elgato software Plugin support"
 				field="elgato_plugin_enable"
 			/>

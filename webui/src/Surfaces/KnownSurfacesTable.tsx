@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleUp, faCopy, faFolderOpen, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCircleUp, faCopy, faFolderOpen, faPowerOff, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import classNames from 'classnames'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
@@ -244,7 +244,16 @@ const SurfaceRow = observer(function SurfaceRow({
 			})}
 			onClick={handleSurfaceClick}
 		>
-			<div className="grid-cell">{index !== null ? `#${index}` : ''}</div>
+			<div className="grid-cell">
+				{index !== null ? `#${index}` : ''}
+				{/* Show disabled icon for surfaces that respect the enabled setting and are disabled */}
+				{!surface.enabled &&
+					surface.integrationType !== 'emulator' &&
+					surface.integrationType !== 'elgato-plugin' &&
+					surface.integrationType !== 'satellite' && (
+						<FontAwesomeIcon icon={faPowerOff} color="gray" title="Disabled" />
+					)}
+			</div>
 			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
 				<div>
 					<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>

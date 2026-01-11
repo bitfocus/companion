@@ -91,6 +91,11 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 				}),
 			}
 		},
+		closeSurface: async (msg) => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			await plugin.closeDevice(msg.surfaceId)
+		},
 		readySurface: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
