@@ -102,7 +102,7 @@ form.row > * {
 }
 
 .header-notification-item {
-	border-radius: 2em;
+	border-radius: 0.5em;
 	margin-left: 1em;
 	background-color: #333;
 }
@@ -113,9 +113,10 @@ form.row > * {
 
 .help-menu {
 	// gather the color scheme up front:
-	--menu-color: var(--cui-header-color);
-	--menu-bg: #{$header-brand-bg};
-	--menu-hover-bg: #{color.adjust($header-brand-bg, $lightness: +7%)};
+	--menu-color: #000;
+	--menu-bg: var(--cui-tertiary-bg); // or just use white?
+	--menu-hover-color: #fff;
+	--menu-hover-bg: var(--cui-info);
 	color: var(--menu-color); // this may not affect anything
 
 	// note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed.
@@ -131,16 +132,12 @@ form.row > * {
 	.dropdown-menu {
 		background-color: var(--menu-bg);
 		--cui-dropdown-link-hover-bg: var(--menu-hover-bg);
+		--cui-dropdown-link-hover-color: var(--menu-hover-color); // not strictly necessary
 		padding: 0.5em 0;
-		border: 1px solid rgba(0, 0, 0, 0.2); // Subtle dark border
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow
+		border: 1px solid rgba(0, 0, 0, 0.2); // Subtle dark border to the dropdown
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow to the dropdown
 		border-radius: 6px; // Slightly rounded corners
 		min-width: 240px; // Slightly wider for breathing room
-
-		// override the global header hover defined above
-		.nav-link:hover {
-			color: var(--menu-color);
-		}
 
 		.dropdown-item {
 			color: var(--menu-color);
@@ -152,7 +149,6 @@ form.row > * {
 				// let the rules above and below control its padding
 				padding-left: 0em;
 				padding-right: 0em;
-				color: rgba(255, 255, 255, 0.75); // Semi-transparent white icons
 			}
 
 			.dropdown-item-label {
@@ -160,14 +156,16 @@ form.row > * {
 				padding-right: 1.5em;
 			}
 
-			// Brighten icons on hover
-			&:hover .dropdown-item-icon {
-				color: rgba(255, 255, 255, 1); // Full white on hover
+			// override the global header hover defined above
+			&:hover,
+			.nav-link:hover {
+				color: var(--menu-hover-color);
+				font-weight: 500; // slightly bold (400 is normal; 700 is "bold")
 			}
 		}
 
 		.dropdown-divider {
-			border-top: 1px solid rgba(255, 255, 255, 0.5); // Light divider
+			border-top: 1px solid rgba(0, 0, 0, 0.25); // Light divider
 			margin: 0.4em 0.6em;
 		}
 	}

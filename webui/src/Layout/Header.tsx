@@ -1,4 +1,4 @@
-import React, { type ReactElement, useCallback, useContext } from 'react'
+import React, { type ReactElement, useCallback, useContext, useMemo } from 'react'
 import {
 	CHeader,
 	CHeaderBrand,
@@ -152,64 +152,67 @@ function HelpMenu() {
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
-	const helpMenuItems: MenuItemData[] = [
-		{
-			id: 'user-guide',
-			label: 'User Guide / Help',
-			icon: circleInfo, // this is a function call, unlike the rest.
-			to: '/user-guide/',
-			tooltip: 'Open the User Guide in a new tab.',
-			isExternal: true,
-		},
-		{
-			id: 'whats-new',
-			label: "What's New",
-			icon: faStar,
-			to: whatsNewOpen,
-			tooltip: 'Show the current release notes.',
-			isExternal: false,
-		},
-		MenuSeparatorSpec,
-		{
-			id: 'fb',
-			label: 'Community Support',
-			icon: faFacebook,
-			to: 'https://bfoc.us/qjk0reeqmy',
-			tooltip: 'Share your experience or ask questions to your Companions.',
-			isExternal: true,
-		},
-		{
-			id: 'slack',
-			label: 'Slack Workspace',
-			icon: faSlack,
-			to: 'https://bfoc.us/ke7e9dqgaz',
-			tooltip: 'Discuss technical issues on Slack.',
-			isExternal: true,
-		},
-		{
-			id: 'github',
-			label: 'Report an Issue',
-			icon: faGithub,
-			to: 'https://bfoc.us/fiobkz0yqs',
-			tooltip: 'Report bugs or request features on GitHub.',
-			isExternal: true,
-		},
-		MenuSeparatorSpec,
-		{
-			id: 'donate',
-			label: 'Donate',
-			icon: faDollarSign,
-			to: 'https://bfoc.us/ccfbf8wm2x',
-			tooltip: 'Contribute funds to Bitfocus Companion.',
-			isExternal: true,
-		},
-	]
+	const helpMenuItems: MenuItemData[] = useMemo(
+		() => [
+			{
+				id: 'user-guide',
+				label: 'User Guide / Help',
+				icon: circleInfo, // this is a function call, unlike the rest.
+				to: '/user-guide/',
+				tooltip: 'Open the User Guide in a new tab.',
+				isExternal: true,
+			},
+			{
+				id: 'whats-new',
+				label: "What's New",
+				icon: faStar,
+				to: whatsNewOpen,
+				tooltip: 'Show the current release notes.',
+				isExternal: false,
+			},
+			MenuSeparatorSpec,
+			{
+				id: 'fb',
+				label: 'Community Support',
+				icon: faFacebook,
+				to: 'https://bfoc.us/qjk0reeqmy',
+				tooltip: 'Share your experience or ask questions to your Companions.',
+				isExternal: true,
+			},
+			{
+				id: 'slack',
+				label: 'Slack Workspace',
+				icon: faSlack,
+				to: 'https://bfoc.us/ke7e9dqgaz',
+				tooltip: 'Discuss technical issues on Slack.',
+				isExternal: true,
+			},
+			{
+				id: 'github',
+				label: 'Report an Issue',
+				icon: faGithub,
+				to: 'https://bfoc.us/fiobkz0yqs',
+				tooltip: 'Report bugs or request features on GitHub.',
+				isExternal: true,
+			},
+			MenuSeparatorSpec,
+			{
+				id: 'donate',
+				label: 'Donate',
+				icon: faDollarSign,
+				to: 'https://bfoc.us/ccfbf8wm2x',
+				tooltip: 'Contribute funds to Bitfocus Companion.',
+				isExternal: true,
+			},
+		],
+		[whatsNewOpen]
+	)
 
 	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,
 	// but worse, if you add it manually, `caret={false}` is ignored, so it's named 'help-toggle' here.
 	return (
 		//note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
-		<CDropdown className="position-static help-menu" offset={[10, 7]}>
+		<CDropdown className="position-static help-menu" offset={[10, 0]}>
 			<CDropdownToggle color="primary" caret={false} className="help-toggle" aria-label="Help and support menu">
 				<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
 			</CDropdownToggle>
@@ -237,7 +240,11 @@ function MenuItem({ data }: { data: MenuItemData }) {
 		// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]]
 		return (
 			// note: CDropdownItem has CSS class: dropdown-item. Here we only add the optional item-specific class
-			<CDropdownItem as={isUrl ? 'div' : 'button'} className={data.id && `dropdown-item-${data.id}`}>
+			<CDropdownItem
+				as={isUrl ? 'div' : 'button'}
+				type={isUrl ? undefined : 'button'}
+				className={data.id && `dropdown-item-${data.id}`}
+			>
 				<CNavLink {...navProps} className="d-flex justify-content-start" title={data.tooltip}>
 					<span className="dropdown-item-icon">
 						{typeof data.icon === 'function' ? (
