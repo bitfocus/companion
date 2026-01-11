@@ -1,4 +1,4 @@
-import React, { type ReactElement, useCallback, useContext, useMemo } from 'react'
+import React, { type ElementType, type ReactElement, useCallback, useContext, useMemo } from 'react'
 import {
 	CHeader,
 	CHeaderBrand,
@@ -233,34 +233,39 @@ function MenuItem({ data }: { data: MenuItemData }) {
 		return <CDropdownDivider />
 	} else {
 		const isUrl = typeof data.to === 'string'
+		const isHTTP = isUrl && data.to.startsWith('http')
+
 		const navProps = isUrl
-			? { to: data.to, as: Link, rel: 'noopener noreferrer', target: data.isExternal ? '_blank' : '_self' }
-			: { onClick: data.to }
+			? {
+					...(isHTTP ? { href: data.to, as: 'a' as ElementType } : { to: data.to, as: Link }),
+					rel: 'noopener noreferrer',
+					target: data.isExternal ? '_blank' : '_self',
+				}
+			: { as: 'button' as ElementType, onClick: data.to }
 
 		// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]]
 		return (
 			// note: CDropdownItem has CSS class: dropdown-item. Here we only add the optional item-specific class
 			<CDropdownItem
-				as={isUrl ? 'div' : 'button'}
 				type={isUrl ? undefined : 'button'}
-				className={data.id && `dropdown-item-${data.id}`}
+				className={'d-flex justify-content-start' + (data.id ? ` dropdown-item-${data.id}` : '')}
+				title={data.tooltip}
+				{...navProps}
 			>
-				<CNavLink {...navProps} className="d-flex justify-content-start" title={data.tooltip}>
-					<span className="dropdown-item-icon">
-						{typeof data.icon === 'function' ? (
-							data.icon()
-						) : (
-							<FontAwesomeIcon
-								icon={data.icon ? data.icon : faOpenCircle}
-								className={data.icon ? 'visible' : 'invisible'}
-							/>
-						)}
-					</span>
+				<span className="dropdown-item-icon">
+					{typeof data.icon === 'function' ? (
+						data.icon()
+					) : (
+						<FontAwesomeIcon
+							icon={data.icon ? data.icon : faOpenCircle}
+							className={data.icon ? 'visible' : 'invisible'}
+						/>
+					)}
+				</span>
 
-					<span className="dropdown-item-label">{data.label}</span>
+				<span className="dropdown-item-label">{data.label}</span>
 
-					{data.isExternal ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
-				</CNavLink>
+				{data.isExternal ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
 			</CDropdownItem>
 		)
 	}
