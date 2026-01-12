@@ -2,9 +2,11 @@
 
 For documentation on developing modules, please see [the Wiki](https://github.com/bitfocus/companion-module-base/wiki)
 
-To develop Companion itself, [start here](https://companion.free/for-developers/core-development/setting-up-developer-environment)
+To develop Companion itself (aka core Companion, i.e. this repo), [start here](https://companion.free/for-developers/)
 
 ## TL;DR
+
+For core Companion:
 
 ```bash
 yarn install
