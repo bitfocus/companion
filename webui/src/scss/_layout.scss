@@ -123,14 +123,15 @@ form.row > * {
 		color: var(--cui-header-color); // Keep toggle white on red header
 		margin-left: 1em; // buffer between this and the lock icon
 		// the following line makes the focus/hover-highlight a square that is the same size as the notification
-		padding: 0.2em 0em 0.2em 0em;
+		padding: 0.2em 0em;
 	}
 
 	// The nesting within .dropdown-menu is mostly for clarity, to emphasize the DOM structure:
 	.dropdown-menu {
-		background-color: var(--menu-bg);
+		--cui-dropdown-bg: var(--menu-bg);
+		--cui-dropdown-link-color: var(--menu-color);
 		--cui-dropdown-link-hover-bg: var(--menu-hover-bg);
-		--cui-dropdown-link-hover-color: var(--menu-hover-color); // not strictly necessary
+		--cui-dropdown-link-hover-color: var(--menu-hover-color); // only works if .dropdown-item doesn't define color:
 		padding: 0.5em 0;
 		border: 1px solid rgba(0, 0, 0, 0.2); // Subtle dark border to the dropdown
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow to the dropdown
@@ -138,26 +139,19 @@ form.row > * {
 		min-width: 240px; // Slightly wider for breathing room
 
 		.dropdown-item {
-			color: var(--menu-color);
 			font-size: 0.95rem; // Slightly smaller, more refined
 			padding: 0.4em 0.75em; // More vertical padding, balanced horizontal
 			transition: background-color 0.15s ease-in-out; // Smooth hover transition
 
 			.dropdown-item-icon {
 				// let the rules above and below control its padding
-				padding-left: 0em;
-				padding-right: 0em;
+				padding-left: 0;
+				padding-right: 0;
 			}
 
 			.dropdown-item-label {
 				padding-left: 0.75em;
 				padding-right: 1.5em;
-			}
-
-			// override the global header hover defined above
-			&:hover,
-			.nav-link:hover {
-				color: var(--menu-hover-color);
 			}
 		}
 
