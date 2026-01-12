@@ -1753,6 +1753,7 @@ __metadata:
     "@fontsource/roboto": "npm:^5.2.9"
     "@fortawesome/fontawesome-svg-core": "npm:^7.1.0"
     "@fortawesome/free-brands-svg-icons": "npm:^7.1.0"
+    "@fortawesome/free-regular-svg-icons": "npm:^7.1.0"
     "@fortawesome/free-solid-svg-icons": "npm:^7.1.0"
     "@fortawesome/react-fontawesome": "npm:^3.1.1"
     "@monaco-editor/react": "npm:^4.8.0-rc.3"
@@ -3799,6 +3800,15 @@ __metadata:
   dependencies:
     "@fortawesome/fontawesome-common-types": "npm:7.1.0"
   checksum: 10c0/f12c17386f8e5d12b31936617fdb37f5bbd82617ea990197255be1d1818a0fc736b99c715591c6bb3e995851bcd72cc7cf6d76d49eb16486e0db84b4723fa4ad
+  languageName: node
+  linkType: hard
+
+"@fortawesome/free-regular-svg-icons@npm:^7.1.0":
+  version: 7.1.0
+  resolution: "@fortawesome/free-regular-svg-icons@npm:7.1.0"
+  dependencies:
+    "@fortawesome/fontawesome-common-types": "npm:7.1.0"
+  checksum: 10c0/541fa44db8c0e1c3ad8c2cb7b8285070cb5c1e7d2feb593447a1f1a6c85bacb72fb53a8313f0510736f79572582925fcdf6cc57567c6ab7edcff7c99dd86090b
   languageName: node
   linkType: hard
 
