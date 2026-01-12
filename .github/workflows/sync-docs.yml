@@ -55,6 +55,8 @@ jobs:
           repository: website
           commit_message: "Sync user-guide from companion"
           file_pattern: "user-guide/** whats-new/**"
+          commit_user_name: companion-module-bot
+          commit_user_email: companion-module-bot@users.noreply.github.com
 
       - name: Sync user-guide folder (release)
         if: github.ref != 'refs/heads/main'
@@ -89,3 +91,5 @@ jobs:
           repository: website
           commit_message: "Sync user-guide (v${{ steps.sync_release.outputs.version }}) from companion"
           file_pattern: "versioned_docs/** versioned_sidebars/** versions.json"
+          commit_user_name: companion-module-bot
+          commit_user_email: companion-module-bot@users.noreply.github.com
