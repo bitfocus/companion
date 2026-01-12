@@ -62,7 +62,7 @@ import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
 export interface SurfaceScanHandler extends SurfaceOpener {
 	/**
 	 * Scan for surfaces
-	 * This either processes HID devices to find supported surfaces, or can prtform its own non-hid scan.
+	 * This either processes HID devices to find supported surfaces, or can perform its own non-hid scan.
 	 * @param hidDevices - HID devices with serialNumber already populated
 	 * @returns Promise resolving to array of discovered surfaces
 	 */
