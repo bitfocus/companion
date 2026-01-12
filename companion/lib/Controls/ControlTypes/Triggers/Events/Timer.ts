@@ -143,8 +143,8 @@ export class TriggersEventTimer {
 	 * Get a description for an interval event
 	 */
 	getRandomIntervalDescription(event: EventInstance): string {
-		const iMin = this.formatSeconds(Number(event.options.min))
-		const iMax = this.formatSeconds(Number(event.options.min))
+		const iMin = this.formatSeconds(Number(event.options.minimum))
+		const iMax = this.formatSeconds(Number(event.options.maximum))
 
 		return `Every <strong>${iMin} - ${iMax}</strong>`
 	}
