@@ -67,6 +67,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 			configFields: [],
 			surfaceId: deviceId,
 			location: this.socket.remoteAddress ?? null,
+			isRemote: false, // Plugin connections are local (through Stream Deck app)
 		}
 
 		const triggerKeyPress = (data: Record<string, any>, pressed: boolean) => {

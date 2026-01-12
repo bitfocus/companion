@@ -33,6 +33,18 @@ export interface ClientSurfaceItem {
 	location: string | null
 	locked: boolean
 
+	/**
+	 * Whether this surface is enabled and should be opened when discovered.
+	 * Note: This setting does not apply to satellite, emulator, or elgato-plugin surfaces.
+	 */
+	enabled: boolean
+
+	/**
+	 * Whether the enabled setting can be changed for this surface.
+	 * Note: A surface can move between connection types, so this is based on the current connection.
+	 */
+	canChangeEnabled: boolean
+
 	hasFirmwareUpdates: SurfaceFirmwareUpdateInfo | null
 
 	size: RowsAndColumns | null
@@ -55,6 +67,13 @@ export interface SurfaceConfig {
 	groupId: string | null
 
 	name?: string
+
+	/**
+	 * Whether this surface is enabled and should be opened when discovered.
+	 * Defaults to true when not specified.
+	 * Note: This setting does not apply to satellite, emulator, or elgato-plugin surfaces.
+	 */
+	enabled?: boolean
 
 	// Properties defined by the panel/integration, that may not be defined for old configs
 	type: string | undefined
