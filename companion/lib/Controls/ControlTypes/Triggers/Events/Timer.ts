@@ -404,11 +404,11 @@ export class TriggersEventTimer {
 	 * @param interval The interval object to update
 	 */
 	#calcRandomPeriod(interval: IntervalEvent) {
-		if ('maxperiod' in interval && 'minperiod' in interval) {
-			const iMin = Math.ceil(interval.minperiod!)
-			const iMax = Math.floor(interval.maxperiod!)
-			if (iMax < iMin || iMin <= 0) {
-				// If illegal range, never trigger
+		if (interval.maxperiod !== undefined && interval.minperiod !== undefined) {
+			const iMin = Math.ceil(interval.minperiod)
+			const iMax = Math.floor(interval.maxperiod)
+			if (iMax < iMin || iMin <= 0 || isNaN(iMin) || isNaN(iMax)) {
+				// If illegal range, never trigger (and don't make period NaN, although the text-input fields may prevent it from happening)
 				interval.period = Infinity
 				return
 			}
