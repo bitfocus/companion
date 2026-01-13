@@ -129,7 +129,7 @@ export class TriggersEventTimer {
 		// this is somewhat simplified and modified from Utils.ts `msToStamp``
 		const hours = Math.floor(seconds / 3600)
 		const minutes = Math.floor(seconds / 60) % 60
-		seconds = Math.floor(seconds) % 60
+		seconds = Math.ceil(seconds) % 60 // note: ceil is correct only for the current 1-sec time-resolution
 
 		const pad2 = (val: number) => String(val).padStart(2, '0')
 		if (hours > 0) {
@@ -137,7 +137,7 @@ export class TriggersEventTimer {
 		} else if (minutes > 0) {
 			return `${minutes}:${pad2(seconds)} minute${minutes + seconds > 1 ? 's' : ''}`
 		} else {
-			return `${seconds} second${seconds > 1 ? 's' : ''}`
+			return `${seconds} second${seconds === 1 ? '' : 's'}`
 		}
 	}
 
@@ -145,9 +145,15 @@ export class TriggersEventTimer {
 	 * Get a description for an interval event
 	 */
 	getIntervalDescription(event: EventInstance): string {
-		const time = this.formatSeconds(Number(event.options.seconds))
+		const seconds = Number(event.options.seconds)
+		const time = this.formatSeconds(seconds)
 
-		return `Every <strong>${time}</strong>`
+		if (seconds <= 0) {
+			// setInterval() requires period > 0
+			return 'Never: interval must be greater than 0'
+		} else {
+			return `Every <strong>${time}</strong>`
+		}
 	}
 
 	/**
