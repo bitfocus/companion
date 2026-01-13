@@ -150,6 +150,14 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		return this.#variablesController.custom.getDefinitions()
 	}
 
+	/**
+	 * Get all expression variable definitions
+	 * @returns Object with variable names as keys and their definitions
+	 */
+	getExpressionVariableDefinitions(): ModuleVariableDefinitions {
+		return this.#controlController.getExpressionVariableDefinitions()
+	}
+
 	async triggerRescanForSurfaces(): Promise<void> {
 		await this.#surfaceController.triggerRefreshDevices()
 	}

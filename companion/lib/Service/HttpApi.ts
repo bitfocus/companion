@@ -7,6 +7,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ServiceApi } from './ServiceApi.js'
+import { Registry, Gauge } from 'prom-client'
 
 const HTTP_API_SURFACE_ID = 'http'
 
@@ -319,6 +320,12 @@ export class ServiceHttpApi {
 
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
+
+		// JSON endpoints
+		this.#apiRouter.get('/variables/:label/json', this.#variablesGetJson)
+
+		// Prometheus metrics
+		this.#apiRouter.get('/variables/:label/prometheus', this.#variablesGetPrometheus)
 
 		// Finally, default all unhandled to 404
 		this.#apiRouter.use((_req, res) => {
@@ -640,5 +647,166 @@ export class ServiceHttpApi {
 				res.send(result)
 			}
 		}
+	}
+
+	/**
+	 * Provides JSON for module or custom variables
+	 */
+	#variablesGetJson = (req: Express.Request, res: Express.Response): void => {
+		const connectionLabel = req.params.label
+		this.logger.debug(`Got HTTP /api/variables/${connectionLabel}/json`)
+
+		// Determine variable type and fetch definitions
+		const isCustomVariable = connectionLabel === 'custom'
+		const isExpressionVariable = connectionLabel === 'expression'
+
+		let variableDefinitions: Record<string, any>
+
+		if (isCustomVariable) {
+			variableDefinitions = this.#serviceApi.getCustomVariableDefinitions()
+		} else if (isExpressionVariable) {
+			variableDefinitions = this.#serviceApi.getExpressionVariableDefinitions()
+		} else {
+			variableDefinitions = this.#serviceApi.getConnectionVariableDefinitions(connectionLabel)
+		}
+
+		// Check if connection/module exists by checking if we got any definitions
+		if (!variableDefinitions || Object.keys(variableDefinitions).length === 0) {
+			if (!isCustomVariable && !isExpressionVariable) {
+				res.status(404).json({
+					error: 'Connection not found',
+					connection: connectionLabel,
+				})
+				return
+			}
+		}
+
+		const result: Record<string, any> = {}
+
+		for (const [variableName, obj] of Object.entries(variableDefinitions)) {
+			let value: any
+			if (isCustomVariable) {
+				value = this.#serviceApi.getCustomVariableValue(variableName)
+			} else if (isExpressionVariable) {
+				value = this.#serviceApi.getConnectionVariableValue(connectionLabel, variableName)
+			} else {
+				value = this.#serviceApi.getConnectionVariableValue(connectionLabel, variableName)
+			}
+
+			result[variableName] = {
+				value,
+				name: connectionLabel,
+				...obj,
+			}
+		}
+
+		res.json({
+			connection: connectionLabel,
+			variables: result,
+		})
+	}
+
+	/**
+	 * Provides Prometheus metrics for module or custom variables
+	 */
+	#variablesGetPrometheus = (req: Express.Request, res: Express.Response): void => {
+		const connectionLabel = req.params.label
+		this.logger.debug(`Got HTTP /api/variables/${connectionLabel}/prometheus`)
+
+		// Determine variable type and fetch definitions
+		const isCustomVariable = connectionLabel === 'custom'
+		const isExpressionVariable = connectionLabel === 'expression'
+
+		let variableDefinitions: Record<string, any>
+
+		if (isCustomVariable) {
+			variableDefinitions = this.#serviceApi.getCustomVariableDefinitions()
+		} else if (isExpressionVariable) {
+			variableDefinitions = this.#serviceApi.getExpressionVariableDefinitions()
+		} else {
+			variableDefinitions = this.#serviceApi.getConnectionVariableDefinitions(connectionLabel)
+		}
+
+		// Check if connection exists
+		if (!variableDefinitions || Object.keys(variableDefinitions).length === 0) {
+			if (!isCustomVariable && !isExpressionVariable) {
+				res.status(404).send('# Connection not found\n')
+				return
+			}
+		}
+
+		// Create a new registry for this request
+		const register = new Registry()
+
+		for (const [variableName, obj] of Object.entries(variableDefinitions)) {
+			let value: any
+			if (isCustomVariable) {
+				value = this.#serviceApi.getCustomVariableValue(variableName)
+			} else if (isExpressionVariable) {
+				value = this.#serviceApi.getConnectionVariableValue(connectionLabel, variableName)
+			} else {
+				value = this.#serviceApi.getConnectionVariableValue(connectionLabel, variableName)
+			}
+
+			// Create sanitized metric name
+			const sanitizedVariableName = variableName.replace(/[^a-zA-Z0-9_]/g, '_')
+			const metricName = isCustomVariable
+				? `companion_custom_variable_${sanitizedVariableName}`
+				: isExpressionVariable
+					? `companion_expression_variable_${sanitizedVariableName}`
+					: `companion_connection_variable_${sanitizedVariableName}`
+
+			const help = isCustomVariable
+				? obj.description || variableName
+				: isExpressionVariable
+					? obj.description || variableName
+					: obj.label || variableName
+
+			// Create labels object
+			const labels: Record<string, string> = {
+				variable_name: variableName,
+			}
+
+			if (!isCustomVariable && !isExpressionVariable) {
+				labels.connection_label = connectionLabel
+			}
+
+			// Handle different value types
+			if (typeof value === 'number') {
+				// Numeric values as gauges
+				const gauge = new Gauge({
+					name: metricName,
+					help: help,
+					labelNames: Object.keys(labels),
+					registers: [register],
+				})
+				gauge.set(labels, value)
+			} else {
+				// String and other values as info metrics (gauge with value 1)
+				const stringLabels = {
+					...labels,
+					value: value !== null && value !== undefined ? String(value) : '',
+				}
+				const gauge = new Gauge({
+					name: `${metricName}_info`,
+					help: help,
+					labelNames: Object.keys(stringLabels),
+					registers: [register],
+				})
+				gauge.set(stringLabels, 1)
+			}
+		}
+
+		// Return metrics in Prometheus format
+		res.header('Content-Type', register.contentType)
+		register.metrics().then(
+			(metrics) => {
+				res.send(metrics)
+			},
+			(err) => {
+				this.logger.error(`Error generating Prometheus metrics: ${err}`)
+				res.status(500).send('# Error generating metrics\n')
+			}
+		)
 	}
 }

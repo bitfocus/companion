@@ -68,6 +68,39 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Method: POST  
   Path: `/api/surfaces/rescan`
 
+- Get all custom variables in JSON format  
+  Method: GET  
+  Content-Type: `application/json`  
+  Path: `/api/variables/custom/json`
+
+- Get all expression variables in JSON format  
+  Method: GET  
+  Content-Type: `application/json`  
+  Path: `/api/variables/expression/json`
+
+- Get all module/connection variables in JSON format  
+  Method: GET  
+  Content-Type: `application/json`  
+  Path: `/api/variables/<Connection Label>/json`
+
+- Get all custom variables as Prometheus metrics  
+  Method: GET  
+  Content-Type: `text/plain; version=0.0.4`  
+  Path: `/api/variables/custom/prometheus`  
+  Returns metrics in Prometheus format with `companion_custom_variable_` prefix
+
+- Get all expression variables as Prometheus metrics  
+  Method: GET  
+  Content-Type: `text/plain; version=0.0.4`  
+  Path: `/api/variables/expression/prometheus`  
+  Returns metrics in Prometheus format with `companion_expression_variable_` prefix
+
+- Get all module/connection variables as Prometheus metrics  
+  Method: GET  
+  Content-Type: `text/plain; version=0.0.4`  
+  Path: `/api/variables/<Connection Label>/prometheus`  
+  Returns metrics in Prometheus format with `companion_connection_variable_` prefix and connection labels
+
 ## Examples
 
 Press page 1 row 0 column 2:  

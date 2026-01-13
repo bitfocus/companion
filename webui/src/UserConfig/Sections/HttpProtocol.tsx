@@ -61,9 +61,7 @@ export function HttpProtocol(): React.JSX.Element {
 					Path: <code>/api/location/</code>&lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt;
 					<code>/step?step=&lt;step&gt;</code>
 				</li>
-
 				<br />
-
 				<li>
 					Change background color of button
 					<br />
@@ -96,9 +94,7 @@ export function HttpProtocol(): React.JSX.Element {
 					Path: <code>/api/location/</code>&lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt;
 					<code>/style?size=</code>&lt;text size&gt;
 				</li>
-
 				<br />
-
 				<li>
 					Change custom variable value
 					<br />
@@ -134,18 +130,60 @@ export function HttpProtocol(): React.JSX.Element {
 					<br />
 					Path: <code>/api/surfaces/rescan</code>
 				</li>
-			</ul>
-
-			<p>
-				<strong>Examples</strong>
-			</p>
-
-			<p>
+				<br />
+				<li>
+					Get all custom variables in JSON format
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Content-Type: <code>application/json</code>
+					<br />
+					Path: <code>/api/variables/custom/json</code>
+				</li>
+				<li>
+					Get all expression variables in JSON format
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Content-Type: <code>application/json</code>
+					<br />
+					Path: <code>/api/variables/expression/json</code>
+				</li>
+				<li>
+					Get all module/connection variables in JSON format
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Content-Type: <code>application/json</code>
+					<br />
+					Path: <code>/api/variables/</code>&lt;Connection label&gt;<code>/json</code>
+				</li>
+				<br />
+				<li>
+					Get all custom variables as Prometheus metrics
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Path: <code>/api/variables/custom/prometheus</code>
+				</li>
+				<li>
+					Get all expression variables as Prometheus metrics
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Path: <code>/api/variables/expression/prometheus</code>
+				</li>
+				<li>
+					Get all module/connection variables as Prometheus metrics
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Path: <code>/api/variables/</code>&lt;Connection label&gt;<code>/prometheus</code>
+				</li>
 				Press page 1 row 0 column 2
 				<br />
 				POST <code>/api/location/1/0/2/press</code>
-			</p>
-
+			</ul>
 			<p>
 				Change the text of row 0 column 4 on page 2 to TEST
 				<br />

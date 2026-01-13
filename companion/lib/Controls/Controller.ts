@@ -400,6 +400,26 @@ export class ControlsController {
 		return variables
 	}
 
+	/**
+	 * Get all expression variable definitions
+	 * @returns Object with variable names as keys and their definitions
+	 */
+	getExpressionVariableDefinitions(): Record<string, { name: string; description: string }> {
+		const definitions: Record<string, { name: string; description: string }> = {}
+
+		for (const variable of this.getAllExpressionVariables()) {
+			const name = variable.options.variableName
+			if (name) {
+				definitions[name] = {
+					name,
+					description: variable.options.description,
+				}
+			}
+		}
+
+		return definitions
+	}
+
 	getExpressionVariableByName(name: string): ControlExpressionVariable | undefined {
 		if (!name) return undefined
 
