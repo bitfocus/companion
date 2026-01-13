@@ -127,15 +127,16 @@ export class TriggersEventTimer {
 	 */
 	formatSeconds(seconds: number): string {
 		// this is somewhat simplified and modified from Utils.ts `msToStamp``
+		// (note that dayjs isn't a great option for simple durations, so we hand code it)
 		const hours = Math.floor(seconds / 3600)
 		const minutes = Math.floor(seconds / 60) % 60
 		seconds = Math.ceil(seconds) % 60 // note: ceil is correct only for the current 1-sec time-resolution
 
 		const pad2 = (val: number) => String(val).padStart(2, '0')
 		if (hours > 0) {
-			return `${hours}:${pad2(minutes)}:${pad2(seconds)} hour${hours + minutes + seconds > 1 ? 's' : ''}`
+			return `${hours}:${pad2(minutes)}:${pad2(seconds)} hour${hours + minutes + seconds === 1 ? 's' : ''}`
 		} else if (minutes > 0) {
-			return `${minutes}:${pad2(seconds)} minute${minutes + seconds > 1 ? 's' : ''}`
+			return `${minutes}:${pad2(seconds)} minute${minutes + seconds === 1 ? 's' : ''}`
 		} else {
 			return `${seconds} second${seconds === 1 ? '' : 's'}`
 		}
