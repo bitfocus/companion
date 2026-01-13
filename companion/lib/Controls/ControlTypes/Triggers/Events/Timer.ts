@@ -120,9 +120,14 @@ export class TriggersEventTimer {
 		this.#eventBus.off('tick', this.#onTick)
 	}
 
+	/**
+	 * Format a duration in seconds to a human-readable string
+	 * @param seconds Duration in seconds
+	 * @returns Formatted string like "1:30:00 hours" or "45 seconds"
+	 */
 	formatSeconds(seconds: number): string {
 		// this is somewhat simplified and modified from Utils.ts `msToStamp``
-		const hours = Math.floor(seconds / 3600) % 24
+		const hours = Math.floor(seconds / 3600)
 		const minutes = Math.floor(seconds / 60) % 60
 		seconds = Math.floor(seconds) % 60
 
