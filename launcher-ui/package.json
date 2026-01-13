@@ -22,14 +22,14 @@
     "lucide-react": "^0.562.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-error-boundary": "^6.0.0",
-    "sass-embedded": "^1.97.1",
+    "react-error-boundary": "^6.0.3",
+    "sass-embedded": "^1.97.2",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "terser": "^5.44.1",
     "typescript": "~5.9.3",
     "usehooks-ts": "^3.1.1",
-    "vite": "^7.3.0",
+    "vite": "^7.3.1",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "scripts": {
