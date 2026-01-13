@@ -121,13 +121,19 @@ export class TriggersEventTimer {
 	}
 
 	formatSeconds(seconds: number): string {
-		let time = `${seconds} seconds`
-		if (seconds >= 3600) {
-			time = `${Math.floor(seconds / 3600)} hours`
-		} else if (seconds >= 60) {
-			time = `${Math.floor(seconds / 60)} minutes`
+		// this is somewhat simplified and modified from Utils.ts `msToStamp``
+		const hours = Math.floor(seconds / 3600) % 24
+		const minutes = Math.floor(seconds / 60) % 60
+		seconds = Math.floor(seconds) % 60
+
+		const pad2 = (val: number) => String(val).padStart(2, '0')
+		if (hours > 0) {
+			return `${hours}:${pad2(minutes)}:${pad2(seconds)} hour${hours + minutes + seconds > 1 ? 's' : ''}`
+		} else if (minutes > 0) {
+			return `${minutes}:${pad2(seconds)} minute${minutes + seconds > 1 ? 's' : ''}`
+		} else {
+			return `${seconds} second${seconds > 1 ? 's' : ''}`
 		}
-		return time
 	}
 
 	/**
@@ -143,10 +149,18 @@ export class TriggersEventTimer {
 	 * Get a description for an interval event
 	 */
 	getRandomIntervalDescription(event: EventInstance): string {
-		const iMin = this.formatSeconds(Number(event.options.minimum))
-		const iMax = this.formatSeconds(Number(event.options.maximum))
+		// show the actual interval, not what the user typed.
+		const iMin = Math.ceil(Number(event.options.minimum))
+		const iMax = Math.floor(Number(event.options.maximum))
 
-		return `Every <strong>${iMin} - ${iMax}</strong>`
+		if (iMax <= iMin) {
+			// If illegal range, never trigger
+			return 'Never (maximum is less than minimum interval)'
+		} else if (iMin < 0) {
+			return 'Never (minimum interval is negative)'
+		} else {
+			return `Every <strong>${this.formatSeconds(iMin)} - ${this.formatSeconds(iMax)}</strong>`
+		}
 	}
 
 	/**
@@ -388,6 +402,11 @@ export class TriggersEventTimer {
 		if ('maxperiod' in interval && 'minperiod' in interval) {
 			const iMin = Math.ceil(interval.minperiod!)
 			const iMax = Math.floor(interval.maxperiod!)
+			if (iMax <= iMin || iMin < 0) {
+				// If illegal range, never trigger
+				interval.period = Infinity
+				return
+			}
 			const newPeriod = iMin + Math.floor(Math.random() * (iMax - iMin + 1))
 			interval.period = newPeriod
 		}
