@@ -11,15 +11,9 @@ export function useSortedConnectionsThatHaveVariables(): ClientConnectionConfigW
 	const { variablesStore, connections } = useContext(RootAppStoreContext)
 
 	return useComputed(() => {
-		const result: ClientConnectionConfigWithId[] = []
-
-		for (const [id, connection] of connections.connections) {
+		return connections.sortedConnections().filter((connection) => {
 			const connectionVariables = variablesStore.variables.get(connection.label)
-			if (connectionVariables && connectionVariables.size > 0) {
-				result.push({ ...connection, id })
-			}
-		}
-
-		return result.sort((a, b) => a.sortOrder - b.sortOrder)
+			return connectionVariables && connectionVariables.size > 0
+		})
 	}, [variablesStore.variables, connections.connections])
 }
