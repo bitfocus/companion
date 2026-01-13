@@ -19,6 +19,7 @@ import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
 import { fileURLToPath } from 'url'
 import path from 'path'
+import os from 'os'
 import debounceFn from 'debounce-fn'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -106,7 +107,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		fileURLToPath(new URL(isPackaged() ? './RenderThread.js' : './Thread.js', import.meta.url)),
 		{
 			minWorkers: 2,
-			maxWorkers: 6,
+			maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
 			workerType: 'thread',
 			onCreateWorker: () => {
 				this.#logger.info('Render worker created')
