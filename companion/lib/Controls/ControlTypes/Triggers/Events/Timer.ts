@@ -153,11 +153,11 @@ export class TriggersEventTimer {
 		const iMin = Math.ceil(Number(event.options.minimum))
 		const iMax = Math.floor(Number(event.options.maximum))
 
-		if (iMax <= iMin) {
+		if (iMax < iMin) {
 			// If illegal range, never trigger
 			return 'Never (maximum is less than minimum interval)'
-		} else if (iMin < 0) {
-			return 'Never (minimum interval is negative)'
+		} else if (iMin <= 0) {
+			return 'Never (minimum interval is zero or less)'
 		} else {
 			return `Every <strong>${this.formatSeconds(iMin)} - ${this.formatSeconds(iMax)}</strong>`
 		}
@@ -402,7 +402,7 @@ export class TriggersEventTimer {
 		if ('maxperiod' in interval && 'minperiod' in interval) {
 			const iMin = Math.ceil(interval.minperiod!)
 			const iMax = Math.floor(interval.maxperiod!)
-			if (iMax <= iMin || iMin < 0) {
+			if (iMax < iMin || iMin <= 0) {
 				// If illegal range, never trigger
 				interval.period = Infinity
 				return
