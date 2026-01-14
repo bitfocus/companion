@@ -103,7 +103,7 @@ export class ExportController {
 	}
 
 	#exportTriggerSingleHandler: RequestHandler = (req, res, next) => {
-		const control = this.#controlsController.getTrigger(req.params.id)
+		const control = this.#controlsController.getTrigger(String(req.params.id))
 		if (control) {
 			const exp = this.#generateTriggersExport([control], {
 				includeCollections: false,

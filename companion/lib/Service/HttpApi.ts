@@ -565,7 +565,7 @@ export class ServiceHttpApi {
 	 * Perform custom variable set value
 	 */
 	#customVariableSetValue = (req: Express.Request, res: Express.Response): void => {
-		const variableName = req.params.name
+		const variableName = String(req.params.name)
 		let variableValue = null
 		let variableError = true
 
@@ -613,7 +613,7 @@ export class ServiceHttpApi {
 	 * Retrieve a custom variable current value
 	 */
 	#customVariableGetValue = (req: Express.Request, res: Express.Response): void => {
-		const variableName = req.params.name
+		const variableName = String(req.params.name)
 
 		this.logger.debug(`Got HTTP custom variable get value name "${variableName}"`)
 
@@ -632,8 +632,8 @@ export class ServiceHttpApi {
 	 * Retrieve any module variable value
 	 */
 	#moduleVariableGetValue = (req: Express.Request, res: Express.Response): void => {
-		const connectionLabel = req.params.label
-		const variableName = req.params.name
+		const connectionLabel = String(req.params.label)
+		const variableName = String(req.params.name)
 
 		this.logger.debug(`Got HTTP module variable get value name "${connectionLabel}:${variableName}"`)
 
@@ -653,7 +653,7 @@ export class ServiceHttpApi {
 	 * Provides JSON for module or custom variables
 	 */
 	#variablesGetJson = (req: Express.Request, res: Express.Response): void => {
-		const connectionLabel = req.params.label
+		const connectionLabel = String(req.params.label)
 		this.logger.debug(`Got HTTP /api/variables/${connectionLabel}/json`)
 
 		// Determine variable type and fetch definitions
@@ -710,7 +710,7 @@ export class ServiceHttpApi {
 	 * Provides Prometheus metrics for module or custom variables
 	 */
 	#variablesGetPrometheus = (req: Express.Request, res: Express.Response): void => {
-		const connectionLabel = req.params.label
+		const connectionLabel = String(req.params.label)
 		this.logger.debug(`Got HTTP /api/variables/${connectionLabel}/prometheus`)
 
 		// Determine variable type and fetch definitions
