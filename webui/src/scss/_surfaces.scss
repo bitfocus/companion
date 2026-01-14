@@ -45,7 +45,7 @@
 	}
 
 	.surface-disabled {
-		// whole line (except for the word "disabled", which overrideds this below)
+		// whole line (except for the word "disabled", which overrides this below)
 		// the copy and delete icon escape this, but that seems ok.
 		color: var(--cui-disabled);
 	}
