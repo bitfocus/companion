@@ -10,6 +10,8 @@ Remote triggering can be done by sending `HTTP` Requests to the same IP and port
 
 This API tries to follow REST principles, and the convention that a `POST` request will modify a value, and a `GET` request will retrieve values.
 
+### Buttons
+
 - Press and release a button (run both down and up actions)  
   Method: POST  
   Path: `/api/location/<page>/<row>/<column>/press`
@@ -51,6 +53,14 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Path: `/api/location/<page>/<row>/<column>/style`  
   Body: `{ "text": "<text>" }`
 
+### Surfaces
+
+- Rescan for USB surfaces  
+  Method: POST  
+  Path: `/api/surfaces/rescan`
+
+### Variables
+
 - Change custom variable value  
   Method: POST  
   Path: `/api/custom-variable/<name>/value?value=<value>`
@@ -61,43 +71,32 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 - Get custom variable value  
   Method: GET  
   Path: `/api/custom-variable/<name>/value`
+- Get Expression variable value  
+  Method: GET
+  Path: `/api/variable/expression/<name>/value`
 - Get Module variable value  
   Method: GET  
   Path: `/api/variable/<Connection Label>/<name>/value`
-- Rescan for USB surfaces  
-  Method: POST  
-  Path: `/api/surfaces/rescan`
 
 - Get all custom variables in JSON format  
   Method: GET  
-  Content-Type: `application/json`  
   Path: `/api/variables/custom/json`
-
 - Get all expression variables in JSON format  
   Method: GET  
-  Content-Type: `application/json`  
   Path: `/api/variables/expression/json`
-
 - Get all module/connection variables in JSON format  
   Method: GET  
-  Content-Type: `application/json`  
   Path: `/api/variables/<Connection Label>/json`
-
 - Get all custom variables as Prometheus metrics  
   Method: GET  
-  Content-Type: `text/plain; version=0.0.4`  
   Path: `/api/variables/custom/prometheus`  
   Returns metrics in Prometheus format with `companion_custom_variable_` prefix
-
 - Get all expression variables as Prometheus metrics  
   Method: GET  
-  Content-Type: `text/plain; version=0.0.4`  
   Path: `/api/variables/expression/prometheus`  
   Returns metrics in Prometheus format with `companion_expression_variable_` prefix
-
 - Get all module/connection variables as Prometheus metrics  
   Method: GET  
-  Content-Type: `text/plain; version=0.0.4`  
   Path: `/api/variables/<Connection Label>/prometheus`  
   Returns metrics in Prometheus format with `companion_connection_variable_` prefix and connection labels
 

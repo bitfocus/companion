@@ -94,6 +94,13 @@ export function HttpProtocol(): React.JSX.Element {
 					Path: <code>/api/location/</code>&lt;page&gt;<code>/</code>&lt;row&gt;<code>/</code>&lt;column&gt;
 					<code>/style?size=</code>&lt;text size&gt;
 				</li>
+				<li>
+					Make Companion rescan for newly attached USB surfaces
+					<br />
+					Method: <code>POST</code>
+					<br />
+					Path: <code>/api/surfaces/rescan</code>
+				</li>
 				<br />
 				<li>
 					Change custom variable value
@@ -117,18 +124,18 @@ export function HttpProtocol(): React.JSX.Element {
 					Path: <code>/api/custom-variable/</code>&lt;name&gt;<code>/value</code>
 				</li>
 				<li>
+					Get Expression variable value
+					<br />
+					Method: <code>GET</code>
+					<br />
+					Path: <code>/api/variable/expression/</code>&lt;name&gt;<code>/value</code>
+				</li>
+				<li>
 					Get Module variable value
 					<br />
 					Method: <code>GET</code>
 					<br />
 					Path: <code>/api/variable/</code>&lt;Connection label&gt;<code>/</code>&lt;name&gt;<code>/value</code>
-				</li>
-				<li>
-					Make Companion rescan for newly attached USB surfaces
-					<br />
-					Method: <code>POST</code>
-					<br />
-					Path: <code>/api/surfaces/rescan</code>
 				</li>
 				<br />
 				<li>
@@ -180,10 +187,16 @@ export function HttpProtocol(): React.JSX.Element {
 					<br />
 					Path: <code>/api/variables/</code>&lt;Connection label&gt;<code>/prometheus</code>
 				</li>
+			</ul>
+			<p>
+				<strong>Examples</strong>
+			</p>
+
+			<p>
 				Press page 1 row 0 column 2
 				<br />
 				POST <code>/api/location/1/0/2/press</code>
-			</ul>
+			</p>
 			<p>
 				Change the text of row 0 column 4 on page 2 to TEST
 				<br />
@@ -199,7 +212,7 @@ export function HttpProtocol(): React.JSX.Element {
 			</p>
 
 			<p>
-				Change custom variable &quot;cue&quot; to value &quot;intro&quot
+				Change custom variable &quot;cue&quot; to value &quot;intro&quot;
 				<br />
 				POST <code>/api/custom-variable/cue/value?value=intro</code>
 			</p>
