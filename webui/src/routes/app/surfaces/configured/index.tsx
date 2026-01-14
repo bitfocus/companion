@@ -48,7 +48,10 @@ function SurfaceSettingsPanel() {
 					style={{ border: '1px solid var(--cui-border-color)', borderBottom: 0 }}
 				>
 					<thead>
-						<UserConfigHeadingRow label="Surface Integrations (Plugins)" />
+						<UserConfigHeadingRow
+							label="Surface Integrations (Plugins)"
+							tooltip="Similar to connections, surface integrations represent the ability to use different hardware or virtual surfaces to trigger buttons in Companion."
+						/>
 					</thead>
 					<tbody>
 						<tr>
