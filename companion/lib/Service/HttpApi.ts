@@ -738,7 +738,15 @@ export class ServiceHttpApi {
 		// Create a new registry for this request
 		const register = new Registry()
 
-		for (const [variableName, obj] of Object.entries(variableDefinitions)) {
+		// Create a single gauge metric for all variables
+		const gauge = new Gauge({
+			name: 'companion_variable',
+			help: 'Companion module variables',
+			labelNames: ['connection', 'variable_name', 'variable_type', 'value'],
+			registers: [register],
+		})
+
+		for (const [variableName, _obj] of Object.entries(variableDefinitions)) {
 			let value: any
 			if (isCustomVariable) {
 				value = this.#serviceApi.getCustomVariableValue(variableName)
@@ -748,53 +756,31 @@ export class ServiceHttpApi {
 				value = this.#serviceApi.getConnectionVariableValue(connectionLabel, variableName)
 			}
 
-			// Create sanitized metric name
-			const sanitizedVariableName = variableName.replace(/[^a-zA-Z0-9_]/g, '_')
-			const metricName = isCustomVariable
-				? `companion_custom_variable_${sanitizedVariableName}`
-				: isExpressionVariable
-					? `companion_expression_variable_${sanitizedVariableName}`
-					: `companion_connection_variable_${sanitizedVariableName}`
-
-			const help = isCustomVariable
-				? obj.description || variableName
-				: isExpressionVariable
-					? obj.description || variableName
-					: obj.label || variableName
+			// Convert value to string for label consistency
+			const stringValue = value !== null && value !== undefined ? String(value) : ''
 
 			// Create labels object
-			const labels: Record<string, string> = {
+			const labels = {
+				connection: connectionLabel,
 				variable_name: variableName,
+				value: stringValue,
 			}
 
-			if (!isCustomVariable && !isExpressionVariable) {
-				labels.connection_label = connectionLabel
-			}
-
-			// Handle different value types
+			// Determine gauge value: use actual number/boolean value, or 1 for info pattern
+			let gaugeValue = 1
 			if (typeof value === 'number') {
-				// Numeric values as gauges
-				const gauge = new Gauge({
-					name: metricName,
-					help: help,
-					labelNames: Object.keys(labels),
-					registers: [register],
-				})
-				gauge.set(labels, value)
-			} else {
-				// String and other values as info metrics (gauge with value 1)
-				const stringLabels = {
-					...labels,
-					value: value !== null && value !== undefined ? String(value) : '',
+				gaugeValue = value
+			} else if (typeof value === 'boolean') {
+				gaugeValue = value ? 1 : 0
+			} else if (typeof value === 'string' && value.trim() !== '') {
+				const trimmed = value.trim()
+				if (/^-?\d+([.,]\d+)?([eE][+-]?\d+)?$/.test(trimmed)) {
+					const normalized = trimmed.replace(',', '.')
+					gaugeValue = Number(normalized)
 				}
-				const gauge = new Gauge({
-					name: `${metricName}_info`,
-					help: help,
-					labelNames: Object.keys(stringLabels),
-					registers: [register],
-				})
-				gauge.set(stringLabels, 1)
 			}
+
+			gauge.set(labels, gaugeValue)
 		}
 
 		// Return metrics in Prometheus format
