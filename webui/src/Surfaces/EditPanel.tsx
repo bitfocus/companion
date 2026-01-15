@@ -75,7 +75,7 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 					Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}
 				</h4>
 				<div className="header-buttons">
-					<div className="float_right d-xl-none" onClick={doCloseSurface} title="Close">
+					<div className="float_right ms-1" onClick={doCloseSurface} title="Close">
 						<FontAwesomeIcon icon={faTimes} size="lg" />
 					</div>
 				</div>

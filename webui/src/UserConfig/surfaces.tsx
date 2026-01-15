@@ -35,7 +35,7 @@ export const SettingsSurfacesPage = memo(function UserConfig() {
 	)
 })
 
-const UserConfigTable = observer(function UserConfigTable() {
+export const UserConfigTable = observer(function UserConfigTable() {
 	const userConfigProps = useUserConfigProps()
 	if (!userConfigProps) return null
 

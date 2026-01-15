@@ -5,7 +5,7 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { SurfaceInstanceEditPanelHeading } from './SurfaceInstanceEditPanelHeading.js'
-import { useNavigate } from '@tanstack/react-router'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { type RouterInputs, trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import type { InstanceEditPanelStore } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -67,10 +67,14 @@ function useInstanceEditPanelService(
 ): InstanceEditPanelService<ClientSurfaceInstanceConfig> {
 	const { surfaceInstances } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: `/surfaces/integrations/$instanceId` })
+	// from: is only needed to resolve relative paths (and using string var caused problems)...
+	const navigate = useNavigate() //{ from: `/surfaces/integrations/$instanceId` }
+	const { pathname } = useLocation()
+	const homepage = pathname.split('/', 3).join('/') // first two elements of the path ex: /surfaces/configured
+
 	const closePanel = useCallback(() => {
-		void navigate({ to: `/surfaces/integrations` })
-	}, [navigate])
+		void navigate({ to: homepage })
+	}, [navigate, homepage])
 
 	const setConfigMutation = useMutationExt(trpc.instances.surfaces.setConfig.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.instances.surfaces.delete.mutationOptions())
