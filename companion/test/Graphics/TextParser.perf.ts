@@ -8,7 +8,6 @@
  * to measure the actual computation cost.
  */
 
-import QuickLRU from 'quick-lru'
 import { Image, TextLayoutCache } from '../../lib/Graphics/Image.js'
 
 interface BenchmarkResult {
