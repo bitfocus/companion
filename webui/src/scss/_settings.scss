@@ -39,7 +39,9 @@
 	background: none;
 
 	// make sure text input isn't squeezed because the first column is set to 100% in UserConfigSwitchRow.tsx
-	input[type='text'] {
-		min-width: 5em;
+	input[type='text'],
+	input[type='number'],
+	.uc-button {
+		min-width: 6em;
 	}
 }
