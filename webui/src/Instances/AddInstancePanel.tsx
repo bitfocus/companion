@@ -28,12 +28,14 @@ interface AddInstancePanelProps {
 
 	title: string
 	description: (storeCount: number) => React.ReactNode
+	isSubpanel?: boolean
 }
 
 export const AddInstancePanel = observer(function AddInstancePanel({
 	service,
 	title,
 	description,
+	isSubpanel,
 }: AddInstancePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
@@ -105,7 +107,11 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
-					<div className="float_right d-xl-none" onClick={service.closeAddInstance} title="Close">
+					<div
+						className={`float_right ${isSubpanel ? '' : 'd-xl-none'}`}
+						onClick={service.closeAddInstance}
+						title="Close"
+					>
 						<FontAwesomeIcon icon={faTimes} size="lg" />
 					</div>
 				</div>

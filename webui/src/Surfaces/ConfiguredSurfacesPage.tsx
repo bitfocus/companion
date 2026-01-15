@@ -1,4 +1,4 @@
-import { CRow, CCol, CAlert, CButtonGroup, CButton, CCallout } from '@coreui/react'
+import { CCol, CRow, CAlert, CButtonGroup, CButton, CCallout } from '@coreui/react'
 import { faSync, faAdd } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useRef, useState, useCallback } from 'react'
@@ -47,7 +47,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 	const selectItem = useCallback(
 		(itemId: string | null) => {
-			if (itemId === null) {
+			if (itemId === null || selectedItemId === itemId) {
 				void navigate({ to: '/surfaces/configured' })
 			} else {
 				void navigate({
@@ -58,7 +58,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				})
 			}
 		},
-		[navigate]
+		[navigate, selectedItemId]
 	)
 
 	const showPrimaryPanel = !selectedItemId
