@@ -229,6 +229,7 @@ form.row > * {
 	overflow-x: auto;
 	overflow-y: hidden;
 	scrollbar-width: thin;
+	flex-shrink: 0;
 
 	// Hide scrollbar visually but keep functionality
 	&::-webkit-scrollbar {
