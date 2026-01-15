@@ -532,6 +532,12 @@ describe('functions', () => {
 			expect(ExpressionFunctions.secondsToTimestamp(11, 'mm:ss')).toBe('00:11')
 			expect(ExpressionFunctions.secondsToTimestamp(9999, 'mm:ss')).toBe('46:39')
 			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'mm:ss')).toBe('56:07')
+
+			// largest unit
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, 'dd:HH:mm:ss')).toBe('14:06:56:07')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, '[HH]:mm:ss')).toBe('342:56:07')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, '[mm]:ss')).toBe('20576:07')
+			expect(ExpressionFunctions.secondsToTimestamp(1234567, '[ss]')).toBe('1234567')
 		})
 
 		it('timestampToSeconds', () => {
@@ -553,14 +559,18 @@ describe('functions', () => {
 
 			const oneDayHourMinuteSecondMs = DAY + HOUR + MINUTE + SECOND + 111
 			expect(ExpressionFunctions.msToTimestamp(-10, 'n')).toBe('-')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'dddd')).toBe('0001')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'dd')).toBe('01')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'd')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'HHH')).toBe('001')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'HH')).toBe('01')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'H')).toBe('1')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'hh')).toBe('01')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'h')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'mmm')).toBe('001')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'mm')).toBe('01')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'm')).toBe('1')
+			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'sss')).toBe('001')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'ss')).toBe('01')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 's')).toBe('1')
 			expect(ExpressionFunctions.msToTimestamp(oneDayHourMinuteSecondMs, 'S')).toBe('1')
@@ -604,6 +614,25 @@ describe('functions', () => {
 			expect(ExpressionFunctions.msToTimestamp(testValue2, 'HH-mm-ss')).toBe('23-46-39')
 			expect(ExpressionFunctions.msToTimestamp(testValue2, 'HH#mm#ss')).toBe('23#46#39')
 			expect(ExpressionFunctions.msToTimestamp(testValue2, 'ss mm HH')).toBe('39 46 23')
+
+			expect(ExpressionFunctions.msToTimestamp(789, 'S')).toBe('7')
+			expect(ExpressionFunctions.msToTimestamp(789, 'SS')).toBe('78')
+			expect(ExpressionFunctions.msToTimestamp(789, 'SSS')).toBe('789')
+
+			expect(ExpressionFunctions.msToTimestamp(1, 'S')).toBe('0')
+			expect(ExpressionFunctions.msToTimestamp(1, 'SS')).toBe('00')
+			expect(ExpressionFunctions.msToTimestamp(1, 'SSS')).toBe('001')
+
+			// largest unit
+			expect(() => ExpressionFunctions.msToTimestamp(1234567890, '[dd]:HH:mm:ss.SSS')).toThrowError() // day cant be largest unit
+			expect(() => ExpressionFunctions.msToTimestamp(1234567890, '[]dd:HH:mm:ss.SSS')).toThrowError() // largest unit cant be empty
+			expect(() => ExpressionFunctions.msToTimestamp(1234567890, '[k]dd:HH:mm:ss.SSS')).toThrowError() // other chars not allowed in []
+			expect(() => ExpressionFunctions.msToTimestamp(1234567890, 'dd:[HM]:mm:ss.SSS')).toThrowError() // only one unit in []
+			expect(() => ExpressionFunctions.msToTimestamp(1234567890, '[HH]:[mm]:ss.SSS')).toThrowError() // only one unit can be marked
+
+			expect(ExpressionFunctions.msToTimestamp(1234567890, '[HH]:mm:ss.SSS')).toBe('342:56:07.890')
+			expect(ExpressionFunctions.msToTimestamp(1234567890, '[mm]:ss.SSS')).toBe('20576:07.890')
+			expect(ExpressionFunctions.msToTimestamp(1234567890, '[ss].SSS')).toBe('1234567.890')
 		})
 
 		it('timeOffset', () => {
