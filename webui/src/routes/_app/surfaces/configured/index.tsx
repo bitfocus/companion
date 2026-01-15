@@ -1,14 +1,13 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import React, { useCallback } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
 //import { SurfacesConfig } from '~/UserConfig/Sections/SurfacesConfig'
 import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 import { useUserConfigProps } from '~/UserConfig/Context'
 import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
-import { CNavLink } from '@coreui/react'
 import { useConfiguredSurfaceContext } from '~/Surfaces/ConfiguredSurfacesContext'
+import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
+import { CloseButton, ContextHelpButton } from '~/UserConfig/Components/Common'
 
 export const Route = createFileRoute('/_app/surfaces/configured/')({
 	component: SurfaceSettingsPanel,
@@ -103,20 +102,12 @@ function SettingsPanelTitleBar() {
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Surface/Integration Settings</h4>
 			<div className="header-buttons">
-				<CNavLink
-					to="/user-guide/config/settings#surfaces"
-					target="_blank"
-					as={Link}
-					title="Open help for surface settings"
-				>
-					<div className="float_right">
-						<FontAwesomeIcon icon={faQuestionCircle} size="lg" />
-					</div>
-				</CNavLink>
+				<ContextHelpButton
+					hoverText="Manage global surface settings and surface integrations here."
+					userGuide="/user-guide/config/settings#surfaces"
+				/>
 
-				<div className="float_right d-xl-none" onClick={doClose} title="Close">
-					<FontAwesomeIcon icon={faTimes} size="lg" />
-				</div>
+				<CloseButton closeFn={doClose} visibilityClass="d-xl-none" />
 			</div>
 		</div>
 	)

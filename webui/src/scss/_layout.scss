@@ -521,6 +521,20 @@ form.row > * {
 	}
 }
 
+.panel-close-button {
+	box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.context-help-button-2xl {
+	border: 0;
+	border-radius: 100%;
+	box-shadow: 2px 3px 4px 1px rgba(0, 0, 0, 0.3);
+
+	.fa-2xl {
+		margin: 0px -4px -2px -4px;
+	}
+}
+
 .secondary-panel {
 	padding-left: 15px;
 	padding-right: 5px;
