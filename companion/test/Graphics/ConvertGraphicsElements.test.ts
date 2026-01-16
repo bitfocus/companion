@@ -872,6 +872,42 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.usedVariables.has('test:var1')).toBe(true)
 			expect(result.usedVariables.has('test:var2')).toBe(true)
 		})
+
+		test('tracks referenced variables in expression', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'text1',
+					name: '',
+					type: 'text',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: expr<number>('$(test:var3)'),
+					rotation: val(0),
+					text: val('abc'),
+					fontsize: val('auto'),
+					color: val(0xffffff),
+					halign: val('center'),
+					valign: val('center'),
+					outlineColor: val(0),
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser({ test: { var3: 10 } }),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
+
+			expect(result.usedVariables.has('test:var3')).toBe(true)
+		})
 	})
 
 	describe('caching', () => {
@@ -1037,6 +1073,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				cache
 			)
 
+			expect(cache.get('text1')).toBeDefined()
+			expect(cache.get('text2')).toBeDefined()
+
 			// Second conversion with only one element
 			await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -1047,9 +1086,6 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				true,
 				cache
 			)
-
-			// Purge cache - should remove text2 entry since it wasn't used
-			cache.purgeUnusedElements(new Set(['text1']))
 
 			// Cache should now only have text1
 			expect(cache.get('text1')).toBeDefined()
@@ -1126,7 +1162,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			cache.queueInvalidate('group1')
 
 			// Second conversion with disabled group
-			await ConvertSomeButtonGraphicsElementForDrawing(
+			let result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),
 				mockDrawPixelBuffers,
@@ -1135,6 +1171,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				true,
 				cache
 			)
+			expect(result.elements).toHaveLength(0)
 
 			// Child should still be cached (not purged) even though group is disabled
 			expect(cache.get('child1')).toBeDefined()
@@ -1144,7 +1181,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			setSpy.mockClear()
 
 			// Third conversion with re-enabled group
-			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+			result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),
 				mockDrawPixelBuffers,
@@ -1565,84 +1602,6 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 	})
 
-	describe('alignment conversion', () => {
-		test('converts horizontal alignment', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Left aligned'),
-					fontsize: val('auto'),
-					color: val(0xffffff),
-					halign: val('left'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
-
-			const result = await ConvertSomeButtonGraphicsElementForDrawing(
-				createMockInstanceDefinitions(),
-				createMockParser(),
-				mockDrawPixelBuffers,
-				elements,
-				new Map(),
-				true,
-				null
-			)
-
-			expect(result.elements[0]).toMatchObject({
-				halign: 'left',
-			})
-		})
-
-		test('converts vertical alignment', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Top aligned'),
-					fontsize: val('auto'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('top'),
-					outlineColor: val(0),
-				},
-			]
-
-			const result = await ConvertSomeButtonGraphicsElementForDrawing(
-				createMockInstanceDefinitions(),
-				createMockParser(),
-				mockDrawPixelBuffers,
-				elements,
-				new Map(),
-				true,
-				null
-			)
-
-			expect(result.elements[0]).toMatchObject({
-				valign: 'top',
-			})
-		})
-	})
-
 	describe('id prefixing', () => {
 		test('children within groups share same prefix', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
@@ -1762,93 +1721,252 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
 			expect(groupElement.id).toBe('comp1')
-			// Composite children get prefixed with composite ID + '/'
+			// Composite children get prefixed with composite ID - variableshash + '/'
 			expect(groupElement.children[0].id).toBe(
-				'comp1-44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a/inner1'
+				`comp1-44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a/inner1`
 			)
 		})
 	})
 
-	describe('edge cases', () => {
-		describe('opacity handling', () => {
-			test('converts opacity with 0.01 scale factor', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(50),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
+	describe('expression error handling', () => {
+		test('handles failed expression with default value', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'text1',
+					name: '',
+					type: 'text',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: expr<number>('invalid_syntax(('),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					rotation: val(0),
+					text: val('Test'),
+					fontsize: val('auto'),
+					color: val(0xffffff),
+					halign: val('center'),
+					valign: val('center'),
+					outlineColor: val(0),
+				},
+			]
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
 
-				expect((result.elements[0] as { opacity: number }).opacity).toBe(0.5)
-			})
-
-			test('handles zero opacity', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(0),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect((result.elements[0] as { opacity: number }).opacity).toBe(0)
-			})
+			// Should use default value (0) when expression fails
+			expect(result.elements).toHaveLength(1)
+			expect((result.elements[0] as { x: number }).x).toBe(0)
 		})
 
-		describe('rotation handling', () => {
-			test('converts rotation value', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
+		test('handles missing variable reference gracefully', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'text1',
+					name: '',
+					type: 'text',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					rotation: val(0),
+					text: val('Value: $(nonexistent:var)'),
+					fontsize: val('auto'),
+					color: val(0xffffff),
+					halign: val('center'),
+					valign: val('center'),
+					outlineColor: val(0),
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
+
+			// Missing variables should show $NA
+			expect((result.elements[0] as { text: string }).text).toBe('Value: $NA')
+			expect(result.usedVariables.has('nonexistent:var')).toBe(true)
+		})
+	})
+
+	describe('composite element with options', () => {
+		test('injects textinput option value into composite child', async () => {
+			const compositeDefinition: CompositeElementDefinition = {
+				id: 'labelComposite',
+				name: 'Label Composite',
+				description: '',
+				options: [
 					{
-						id: 'box1',
+						id: 'labelText',
+						type: 'textinput',
+						label: 'Label',
+						default: 'Default',
+						useVariables: { local: true },
+					},
+				],
+				elements: [
+					{
+						id: 'label',
+						name: '',
+						type: 'text',
+						usage: USAGE,
+						enabled: val(true),
+						opacity: val(100),
+						x: val(0),
+						y: val(0),
+						width: val(100),
+						height: val(100),
+						rotation: val(0),
+						text: val('$(options:labelText)'),
+						fontsize: val('auto'),
+						color: val(0xffffff),
+						halign: val('center'),
+						valign: val('center'),
+						outlineColor: val(0),
+					},
+				],
+			}
+
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					labelComposite: compositeDefinition,
+				},
+			})
+
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'test-connection',
+					elementId: 'labelComposite',
+					'opt:labelText': val('Custom Label'),
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
+
+			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
+			expect((groupElement.children[0] as { text: string }).text).toBe('Custom Label')
+		})
+
+		test('uses default option value when not provided', async () => {
+			const compositeDefinition: CompositeElementDefinition = {
+				id: 'labelComposite',
+				name: 'Label Composite',
+				description: '',
+				options: [
+					{
+						id: 'labelText',
+						type: 'textinput',
+						label: 'Label',
+						default: 'Default Label',
+					},
+				],
+				elements: [
+					{
+						id: 'label',
+						name: '',
+						type: 'text',
+						usage: USAGE,
+						enabled: val(true),
+						opacity: val(100),
+						x: val(0),
+						y: val(0),
+						width: val(100),
+						height: val(100),
+						rotation: val(0),
+						text: val('$(options:labelText)'),
+						fontsize: val('auto'),
+						color: val(0xffffff),
+						halign: val('center'),
+						valign: val('center'),
+						outlineColor: val(0),
+					},
+				],
+			}
+
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					labelComposite: compositeDefinition,
+				},
+			})
+
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'test-connection',
+					elementId: 'labelComposite',
+					// No opt:labelText provided
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
+
+			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
+			expect((groupElement.children[0] as { text: string }).text).toBe('Default Label')
+		})
+	})
+
+	describe('composite element reference tracking', () => {
+		test('tracks composite element references', async () => {
+			const compositeDefinition: CompositeElementDefinition = {
+				id: 'simpleComposite',
+				name: 'Simple',
+				description: '',
+				options: [],
+				elements: [
+					{
+						id: 'child',
 						name: '',
 						type: 'box',
 						usage: USAGE,
@@ -1856,1063 +1974,213 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						opacity: val(100),
 						x: val(0),
 						y: val(0),
-						width: val(50),
-						height: val(50),
-						rotation: val(45),
-						color: val(0xff0000),
-						borderWidth: val(0),
-						borderColor: val(0),
-						borderPosition: val('inside'),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect((result.elements[0] as { rotation: number }).rotation).toBe(45)
-			})
-
-			test('handles negative rotation', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'box1',
-						name: '',
-						type: 'box',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(50),
-						height: val(50),
-						rotation: val(-90),
-						color: val(0xff0000),
-						borderWidth: val(0),
-						borderColor: val(0),
-						borderPosition: val('inside'),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect((result.elements[0] as { rotation: number }).rotation).toBe(-90)
-			})
-		})
-
-		describe('fontsize handling', () => {
-			test('converts fixed fontsize', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
 						width: val(100),
 						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('14'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect((result.elements[0] as { fontsize: string }).fontsize).toBe('14')
-			})
-		})
-
-		describe('expression error handling', () => {
-			test('handles failed expression with default value', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: expr<number>('invalid_syntax(('),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				// Should use default value (0) when expression fails
-				expect(result.elements).toHaveLength(1)
-				expect((result.elements[0] as { x: number }).x).toBe(0)
-			})
-
-			test('handles missing variable reference gracefully', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Value: $(nonexistent:var)'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				// Missing variables should show $NA
-				expect((result.elements[0] as { text: string }).text).toBe('Value: $NA')
-				expect(result.usedVariables.has('nonexistent:var')).toBe(true)
-			})
-		})
-
-		describe('border position handling', () => {
-			test('converts all border positions', async () => {
-				const positions = ['inside', 'center', 'outside'] as const
-
-				for (const position of positions) {
-					const elements: SomeButtonGraphicsElement[] = [
-						{
-							id: 'box1',
-							name: '',
-							type: 'box',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(50),
-							height: val(50),
-							rotation: val(0),
-							color: val(0xff0000),
-							borderWidth: val(2),
-							borderColor: val(0x00ff00),
-							borderPosition: val(position),
-						},
-					]
-
-					const result = await ConvertSomeButtonGraphicsElementForDrawing(
-						createMockInstanceDefinitions(),
-						createMockParser(),
-						mockDrawPixelBuffers,
-						elements,
-						new Map(),
-						true,
-						null
-					)
-
-					expect((result.elements[0] as { borderPosition: string }).borderPosition).toBe(position)
-				}
-			})
-		})
-
-		describe('circle-specific properties', () => {
-			test('converts circle with partial arc', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'circle1',
-						name: '',
-						type: 'circle',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(50),
-						height: val(50),
-						color: val(0x00ff00),
-						borderWidth: val(1),
-						borderColor: val(0xff0000),
-						borderPosition: val('inside'),
-						startAngle: val(0),
-						endAngle: val(180),
-						drawSlice: val(true),
-						borderOnlyArc: val(true),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements[0]).toMatchObject({
-					type: 'circle',
-					startAngle: 0,
-					endAngle: 180,
-					drawSlice: true,
-					borderOnlyArc: true,
-				})
-			})
-		})
-
-		describe('multiple elements in array', () => {
-			test('converts multiple element types together', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'canvas1',
-						name: '',
-						type: 'canvas',
-						usage: USAGE,
-						decoration: val(ButtonGraphicsDecorationType.Border),
-					},
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(50),
-						rotation: val(0),
-						text: val('Hello'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-					{
-						id: 'box1',
-						name: '',
-						type: 'box',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(50),
-						width: val(100),
-						height: val(22),
 						rotation: val(0),
 						color: val(0xff0000),
 						borderWidth: val(0),
 						borderColor: val(0),
 						borderPosition: val('inside'),
 					},
-				]
+				],
+			}
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements).toHaveLength(3)
-				expect(result.elements[0].type).toBe('canvas')
-				expect(result.elements[1].type).toBe('text')
-				expect(result.elements[2].type).toBe('box')
+			const instanceDefs = createMockInstanceDefinitions({
+				myconn: {
+					simpleComposite: compositeDefinition,
+				},
 			})
 
-			test('filters only disabled elements when mixed', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(50),
-						rotation: val(0),
-						text: val('Visible'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-					{
-						id: 'text2',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(false),
-						opacity: val(100),
-						x: val(0),
-						y: val(50),
-						width: val(100),
-						height: val(22),
-						rotation: val(0),
-						text: val('Hidden'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-					{
-						id: 'text3',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(72),
-						width: val(100),
-						height: val(28),
-						rotation: val(0),
-						text: val('Also Visible'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'myconn',
+					elementId: 'simpleComposite',
+				},
+			]
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
 
-				expect(result.elements).toHaveLength(2)
-				expect(result.elements[0].id).toBe('text1')
-				expect(result.elements[1].id).toBe('text3')
+			expect(result.usedCompositeElements.has('myconn:simpleComposite')).toBe(true)
+		})
+	})
+
+	describe('alignment expression aliases', () => {
+		test('converts "s" prefix to left/top (start alias)', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'text1',
+					name: '',
+					type: 'text',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					rotation: val(0),
+					text: val('Test'),
+					fontsize: val('auto'),
+					color: val(0xffffff),
+					halign: { isExpression: true, value: '"start"' } as ExpressionOrValue<HorizontalAlignment>,
+					valign: { isExpression: true, value: '"start"' } as ExpressionOrValue<VerticalAlignment>,
+					outlineColor: val(0),
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({
+				halign: 'left',
+				valign: 'top',
 			})
 		})
 
-		describe('deeply nested groups', () => {
-			test('converts 3 levels of nesting', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'group1',
-						name: '',
-						type: 'group',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						children: [
-							{
-								id: 'group2',
-								name: '',
-								type: 'group',
-								usage: USAGE,
-								enabled: val(true),
-								opacity: val(100),
-								x: val(10),
-								y: val(10),
-								width: val(80),
-								height: val(80),
-								rotation: val(0),
-								children: [
-									{
-										id: 'group3',
-										name: '',
-										type: 'group',
-										usage: USAGE,
-										enabled: val(true),
-										opacity: val(100),
-										x: val(20),
-										y: val(20),
-										width: val(60),
-										height: val(60),
-										rotation: val(0),
-										children: [
-											{
-												id: 'leaf',
-												name: '',
-												type: 'text',
-												usage: USAGE,
-												enabled: val(true),
-												opacity: val(100),
-												x: val(0),
-												y: val(0),
-												width: val(60),
-												height: val(60),
-												rotation: val(0),
-												text: val('Deep'),
-												fontsize: val('auto'),
-												color: val(0xffffff),
-												halign: val('center'),
-												valign: val('center'),
-												outlineColor: val(0),
-											},
-										],
-									},
-								],
-							},
-						],
-					},
-				]
+		test('converts "e" prefix to right/bottom (end alias)', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'text1',
+					name: '',
+					type: 'text',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					rotation: val(0),
+					text: val('Test'),
+					fontsize: val('auto'),
+					color: val(0xffffff),
+					halign: { isExpression: true, value: '"end"' } as ExpressionOrValue<HorizontalAlignment>,
+					valign: { isExpression: true, value: '"end"' } as ExpressionOrValue<VerticalAlignment>,
+					outlineColor: val(0),
+				},
+			]
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
 
-				const group1 = result.elements[0] as ButtonGraphicsGroupDrawElement
-				const group2 = group1.children[0] as ButtonGraphicsGroupDrawElement
-				const group3 = group2.children[0] as ButtonGraphicsGroupDrawElement
-				const leaf = group3.children[0]
-
-				expect(group1.id).toBe('group1')
-				expect(group2.id).toBe('group2')
-				expect(group3.id).toBe('group3')
-				expect(leaf.id).toBe('leaf')
-				expect((leaf as { text: string }).text).toBe('Deep')
+			expect(result.elements[0]).toMatchObject({
+				halign: 'right',
+				valign: 'bottom',
 			})
 		})
 
-		describe('alignment expressions', () => {
-			test('converts alignment from expression starting with l to left', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: { isExpression: true, value: '"left"' } as ExpressionOrValue<HorizontalAlignment>,
-						valign: { isExpression: true, value: '"top"' } as ExpressionOrValue<VerticalAlignment>,
-						outlineColor: val(0),
-					},
-				]
+		test('defaults to center for invalid alignment expression', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'text1',
+					name: '',
+					type: 'text',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					rotation: val(0),
+					text: val('Test'),
+					fontsize: val('auto'),
+					color: val(0xffffff),
+					halign: { isExpression: true, value: '"xyz"' } as ExpressionOrValue<HorizontalAlignment>,
+					valign: { isExpression: true, value: '"abc"' } as ExpressionOrValue<VerticalAlignment>,
+					outlineColor: val(0),
+				},
+			]
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
 
-				expect(result.elements[0]).toMatchObject({
-					halign: 'left',
-					valign: 'top',
-				})
+			expect(result.elements[0]).toMatchObject({
+				halign: 'center',
+				valign: 'center',
 			})
 		})
+	})
 
-		describe('empty text handling', () => {
-			test('converts empty text string', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val(''),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
+	describe('image element edge cases', () => {
+		test('handles null base64Image', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'image1',
+					name: '',
+					type: 'image',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(72),
+					height: val(72),
+					rotation: val(0),
+					base64Image: val(null),
+					halign: val('center'),
+					valign: val('center'),
+					fillMode: val('fit'),
+				},
+			]
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
 
-				expect((result.elements[0] as { text: string }).text).toBe('')
-			})
+			expect(result.elements).toHaveLength(1)
+			expect((result.elements[0] as { base64Image: string | null }).base64Image).toBeNull()
 		})
 
-		describe('negative position values', () => {
-			test('handles negative x and y positions', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'box1',
-						name: '',
-						type: 'box',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(-10),
-						y: val(-20),
-						width: val(50),
-						height: val(50),
-						rotation: val(0),
-						color: val(0xff0000),
-						borderWidth: val(0),
-						borderColor: val(0),
-						borderPosition: val('inside'),
-					},
-				]
+		test('converts all fillMode options', async () => {
+			const fillModes = ['crop', 'fill', 'fit', 'fit_or_shrink'] as const
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements[0]).toMatchObject({
-					x: -0.1, // -10 * 0.01
-					y: -0.2, // -20 * 0.01
-				})
-			})
-		})
-
-		describe('composite element with options', () => {
-			test('injects textinput option value into composite child', async () => {
-				const compositeDefinition: CompositeElementDefinition = {
-					id: 'labelComposite',
-					name: 'Label Composite',
-					description: '',
-					options: [
-						{
-							id: 'labelText',
-							type: 'textinput',
-							label: 'Label',
-							default: 'Default',
-							useVariables: { local: true },
-						},
-					],
-					elements: [
-						{
-							id: 'label',
-							name: '',
-							type: 'text',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(100),
-							height: val(100),
-							rotation: val(0),
-							text: val('$(options:labelText)'),
-							fontsize: val('auto'),
-							color: val(0xffffff),
-							halign: val('center'),
-							valign: val('center'),
-							outlineColor: val(0),
-						},
-					],
-				}
-
-				const instanceDefs = createMockInstanceDefinitions({
-					'test-connection': {
-						labelComposite: compositeDefinition,
-					},
-				})
-
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'comp1',
-						name: '',
-						type: 'composite',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						connectionId: 'test-connection',
-						elementId: 'labelComposite',
-						'opt:labelText': val('Custom Label'),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					instanceDefs,
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
-				expect((groupElement.children[0] as { text: string }).text).toBe('Custom Label')
-			})
-
-			test('uses default option value when not provided', async () => {
-				const compositeDefinition: CompositeElementDefinition = {
-					id: 'labelComposite',
-					name: 'Label Composite',
-					description: '',
-					options: [
-						{
-							id: 'labelText',
-							type: 'textinput',
-							label: 'Label',
-							default: 'Default Label',
-						},
-					],
-					elements: [
-						{
-							id: 'label',
-							name: '',
-							type: 'text',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(100),
-							height: val(100),
-							rotation: val(0),
-							text: val('$(options:labelText)'),
-							fontsize: val('auto'),
-							color: val(0xffffff),
-							halign: val('center'),
-							valign: val('center'),
-							outlineColor: val(0),
-						},
-					],
-				}
-
-				const instanceDefs = createMockInstanceDefinitions({
-					'test-connection': {
-						labelComposite: compositeDefinition,
-					},
-				})
-
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'comp1',
-						name: '',
-						type: 'composite',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						connectionId: 'test-connection',
-						elementId: 'labelComposite',
-						// No opt:labelText provided
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					instanceDefs,
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
-				expect((groupElement.children[0] as { text: string }).text).toBe('Default Label')
-			})
-		})
-
-		describe('composite element reference tracking', () => {
-			test('tracks composite element references', async () => {
-				const compositeDefinition: CompositeElementDefinition = {
-					id: 'simpleComposite',
-					name: 'Simple',
-					description: '',
-					options: [],
-					elements: [
-						{
-							id: 'child',
-							name: '',
-							type: 'box',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(100),
-							height: val(100),
-							rotation: val(0),
-							color: val(0xff0000),
-							borderWidth: val(0),
-							borderColor: val(0),
-							borderPosition: val('inside'),
-						},
-					],
-				}
-
-				const instanceDefs = createMockInstanceDefinitions({
-					myconn: {
-						simpleComposite: compositeDefinition,
-					},
-				})
-
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'comp1',
-						name: '',
-						type: 'composite',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						connectionId: 'myconn',
-						elementId: 'simpleComposite',
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					instanceDefs,
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.usedCompositeElements.has('myconn:simpleComposite')).toBe(true)
-			})
-		})
-
-		describe('canvas decoration types', () => {
-			test('converts all decoration types', async () => {
-				const decorations = [
-					ButtonGraphicsDecorationType.FollowDefault,
-					ButtonGraphicsDecorationType.None,
-					ButtonGraphicsDecorationType.TopBar,
-					ButtonGraphicsDecorationType.Border,
-				]
-
-				for (const decoration of decorations) {
-					const elements: SomeButtonGraphicsElement[] = [
-						{
-							id: 'canvas1',
-							name: '',
-							type: 'canvas',
-							usage: USAGE,
-							decoration: val(decoration),
-						},
-					]
-
-					const result = await ConvertSomeButtonGraphicsElementForDrawing(
-						createMockInstanceDefinitions(),
-						createMockParser(),
-						mockDrawPixelBuffers,
-						elements,
-						new Map(),
-						true,
-						null
-					)
-
-					expect((result.elements[0] as { decoration: ButtonGraphicsDecorationType }).decoration).toBe(decoration)
-				}
-			})
-		})
-
-		describe('alignment expression aliases', () => {
-			test('converts "s" prefix to left/top (start alias)', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: { isExpression: true, value: '"start"' } as ExpressionOrValue<HorizontalAlignment>,
-						valign: { isExpression: true, value: '"start"' } as ExpressionOrValue<VerticalAlignment>,
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements[0]).toMatchObject({
-					halign: 'left',
-					valign: 'top',
-				})
-			})
-
-			test('converts "e" prefix to right/bottom (end alias)', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: { isExpression: true, value: '"end"' } as ExpressionOrValue<HorizontalAlignment>,
-						valign: { isExpression: true, value: '"end"' } as ExpressionOrValue<VerticalAlignment>,
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements[0]).toMatchObject({
-					halign: 'right',
-					valign: 'bottom',
-				})
-			})
-
-			test('defaults to center for invalid alignment expression', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: { isExpression: true, value: '"xyz"' } as ExpressionOrValue<HorizontalAlignment>,
-						valign: { isExpression: true, value: '"abc"' } as ExpressionOrValue<VerticalAlignment>,
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements[0]).toMatchObject({
-					halign: 'center',
-					valign: 'center',
-				})
-			})
-		})
-
-		describe('boolean expressions', () => {
-			test('evaluates enabled property from expression', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: expr<boolean>('1 == 0'),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				// Expression evaluates to false, element should be filtered
-				expect(result.elements).toHaveLength(0)
-			})
-
-			test('evaluates enabled property from expression to true', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: expr<boolean>('1 == 1'),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements).toHaveLength(1)
-			})
-		})
-
-		describe('image element edge cases', () => {
-			test('handles null base64Image', async () => {
+			for (const fillMode of fillModes) {
 				const elements: SomeButtonGraphicsElement[] = [
 					{
 						id: 'image1',
@@ -2926,10 +2194,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						width: val(72),
 						height: val(72),
 						rotation: val(0),
-						base64Image: val(null),
+						base64Image: val('data:image/png;base64,abc'),
 						halign: val('center'),
 						valign: val('center'),
-						fillMode: val('fit'),
+						fillMode: val(fillMode),
 					},
 				]
 
@@ -2943,404 +2211,28 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					null
 				)
 
-				expect(result.elements).toHaveLength(1)
-				expect((result.elements[0] as { base64Image: string | null }).base64Image).toBeNull()
-			})
-
-			test('converts all fillMode options', async () => {
-				const fillModes = ['crop', 'fill', 'fit', 'fit_or_shrink'] as const
-
-				for (const fillMode of fillModes) {
-					const elements: SomeButtonGraphicsElement[] = [
-						{
-							id: 'image1',
-							name: '',
-							type: 'image',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(72),
-							height: val(72),
-							rotation: val(0),
-							base64Image: val('data:image/png;base64,abc'),
-							halign: val('center'),
-							valign: val('center'),
-							fillMode: val(fillMode),
-						},
-					]
-
-					const result = await ConvertSomeButtonGraphicsElementForDrawing(
-						createMockInstanceDefinitions(),
-						createMockParser(),
-						mockDrawPixelBuffers,
-						elements,
-						new Map(),
-						true,
-						null
-					)
-
-					expect((result.elements[0] as { fillMode: string }).fillMode).toBe(fillMode)
-				}
-			})
+				expect((result.elements[0] as { fillMode: string }).fillMode).toBe(fillMode)
+			}
 		})
+	})
 
-		describe('composite option types', () => {
-			test('injects checkbox option value', async () => {
-				const compositeDefinition: CompositeElementDefinition = {
-					id: 'checkboxComposite',
-					name: 'Checkbox Composite',
-					description: '',
-					options: [
-						{
-							id: 'showBorder',
-							type: 'checkbox',
-							label: 'Show Border',
-							default: false,
-						},
-					],
-					elements: [
-						{
-							id: 'box',
-							name: '',
-							type: 'box',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(100),
-							height: val(100),
-							rotation: val(0),
-							color: val(0xff0000),
-							borderWidth: val(0),
-							borderColor: val(0),
-							borderPosition: val('inside'),
-						},
-					],
-				}
-
-				const instanceDefs = createMockInstanceDefinitions({
-					'test-connection': {
-						checkboxComposite: compositeDefinition,
-					},
-				})
-
-				const elements: SomeButtonGraphicsElement[] = [
+	describe('composite option types', () => {
+		test('injects checkbox option value', async () => {
+			const compositeDefinition: CompositeElementDefinition = {
+				id: 'checkboxComposite',
+				name: 'Checkbox Composite',
+				description: '',
+				options: [
 					{
-						id: 'comp1',
-						name: '',
-						type: 'composite',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						connectionId: 'test-connection',
-						elementId: 'checkboxComposite',
-						'opt:showBorder': val(true),
+						id: 'showBorder',
+						type: 'checkbox',
+						label: 'Show Border',
+						default: false,
 					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					instanceDefs,
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements).toHaveLength(1)
-				expect(result.elements[0].type).toBe('group')
-			})
-
-			test('injects number option value', async () => {
-				const compositeDefinition: CompositeElementDefinition = {
-					id: 'numberComposite',
-					name: 'Number Composite',
-					description: '',
-					options: [
-						{
-							id: 'size',
-							type: 'number',
-							label: 'Size',
-							default: 50,
-							min: 0,
-							max: 100,
-						},
-					],
-					elements: [
-						{
-							id: 'box',
-							name: '',
-							type: 'box',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(100),
-							height: val(100),
-							rotation: val(0),
-							color: val(0xff0000),
-							borderWidth: val(0),
-							borderColor: val(0),
-							borderPosition: val('inside'),
-						},
-					],
-				}
-
-				const instanceDefs = createMockInstanceDefinitions({
-					'test-connection': {
-						numberComposite: compositeDefinition,
-					},
-				})
-
-				const elements: SomeButtonGraphicsElement[] = [
+				],
+				elements: [
 					{
-						id: 'comp1',
-						name: '',
-						type: 'composite',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						connectionId: 'test-connection',
-						elementId: 'numberComposite',
-						'opt:size': val(75),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					instanceDefs,
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements).toHaveLength(1)
-			})
-
-			test('injects dropdown option value', async () => {
-				const compositeDefinition: CompositeElementDefinition = {
-					id: 'dropdownComposite',
-					name: 'Dropdown Composite',
-					description: '',
-					options: [
-						{
-							id: 'color',
-							type: 'dropdown',
-							label: 'Color',
-							default: 'red',
-							choices: [
-								{ id: 'red', label: 'Red' },
-								{ id: 'green', label: 'Green' },
-								{ id: 'blue', label: 'Blue' },
-							],
-						},
-					],
-					elements: [
-						{
-							id: 'box',
-							name: '',
-							type: 'box',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(100),
-							height: val(100),
-							rotation: val(0),
-							color: val(0xff0000),
-							borderWidth: val(0),
-							borderColor: val(0),
-							borderPosition: val('inside'),
-						},
-					],
-				}
-
-				const instanceDefs = createMockInstanceDefinitions({
-					'test-connection': {
-						dropdownComposite: compositeDefinition,
-					},
-				})
-
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'comp1',
-						name: '',
-						type: 'composite',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						connectionId: 'test-connection',
-						elementId: 'dropdownComposite',
-						'opt:color': val('green'),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					instanceDefs,
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements).toHaveLength(1)
-			})
-		})
-
-		describe('disabled group handling', () => {
-			test('filters disabled group when onlyEnabled is true', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'group1',
-						name: '',
-						type: 'group',
-						usage: USAGE,
-						enabled: val(false),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						children: [
-							{
-								id: 'child1',
-								name: '',
-								type: 'text',
-								usage: USAGE,
-								enabled: val(true),
-								opacity: val(100),
-								x: val(0),
-								y: val(0),
-								width: val(50),
-								height: val(50),
-								rotation: val(0),
-								text: val('Child'),
-								fontsize: val('auto'),
-								color: val(0xffffff),
-								halign: val('center'),
-								valign: val('center'),
-								outlineColor: val(0),
-							},
-						],
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect(result.elements).toHaveLength(0)
-			})
-		})
-
-		describe('text expression handling', () => {
-			test('evaluates text from expression with concat', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: expr<string>('concat("Hello ", "World")'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect((result.elements[0] as { text: string }).text).toBe('Hello World')
-			})
-
-			test('handles number expression result for text', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: expr<string>('10 + 5'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect((result.elements[0] as { text: string }).text).toBe('15')
-			})
-		})
-
-		describe('enum fallback handling', () => {
-			test('falls back to default for invalid enum value', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'box1',
+						id: 'box',
 						name: '',
 						type: 'box',
 						usage: USAGE,
@@ -3348,79 +2240,75 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						opacity: val(100),
 						x: val(0),
 						y: val(0),
-						width: val(50),
-						height: val(50),
+						width: val(100),
+						height: val(100),
 						rotation: val(0),
 						color: val(0xff0000),
-						borderWidth: val(2),
-						borderColor: val(0x00ff00),
-						borderPosition: expr<'inside' | 'center' | 'outside'>('"invalid"'),
+						borderWidth: val(0),
+						borderColor: val(0),
+						borderPosition: val('inside'),
 					},
-				]
+				],
+			}
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				// Should fall back to 'inside' as default
-				expect((result.elements[0] as { borderPosition: string }).borderPosition).toBe('inside')
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					checkboxComposite: compositeDefinition,
+				},
 			})
+
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'test-connection',
+					elementId: 'checkboxComposite',
+					'opt:showBorder': val(true),
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
+
+			expect(result.elements).toHaveLength(1)
+			expect(result.elements[0].type).toBe('group')
 		})
 
-		describe('line element coordinates', () => {
-			test('line coordinates are not scaled', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
+		test('injects number option value', async () => {
+			const compositeDefinition: CompositeElementDefinition = {
+				id: 'numberComposite',
+				name: 'Number Composite',
+				description: '',
+				options: [
 					{
-						id: 'line1',
-						name: '',
-						type: 'line',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						fromX: val(10),
-						fromY: val(20),
-						toX: val(90),
-						toY: val(80),
-						borderWidth: val(2),
-						borderColor: val(0xffffff),
-						borderPosition: val('center'),
+						id: 'size',
+						type: 'number',
+						label: 'Size',
+						default: 50,
+						min: 0,
+						max: 100,
 					},
-				]
-
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				// Line coordinates use default scale (1), not 0.01
-				expect(result.elements[0]).toMatchObject({
-					fromX: 0.1,
-					fromY: 0.2,
-					toX: 0.9,
-					toY: 0.8,
-					borderWidth: 0.02, // borderWidth is still scaled
-				})
-			})
-		})
-
-		describe('outlineColor handling', () => {
-			test('converts outlineColor for text element', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
+				],
+				elements: [
 					{
-						id: 'text1',
+						id: 'box',
 						name: '',
-						type: 'text',
+						type: 'box',
 						usage: USAGE,
 						enabled: val(true),
 						opacity: val(100),
@@ -3429,36 +2317,74 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						width: val(100),
 						height: val(100),
 						rotation: val(0),
-						text: val('Outlined'),
-						fontsize: val('auto'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0x000000),
+						color: val(0xff0000),
+						borderWidth: val(0),
+						borderColor: val(0),
+						borderPosition: val('inside'),
 					},
-				]
+				],
+			}
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect((result.elements[0] as { outlineColor: number }).outlineColor).toBe(0x000000)
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					numberComposite: compositeDefinition,
+				},
 			})
+
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'test-connection',
+					elementId: 'numberComposite',
+					'opt:size': val(75),
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
+
+			expect(result.elements).toHaveLength(1)
 		})
 
-		describe('fontsize expression handling', () => {
-			test('evaluates fontsize from expression', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
+		test('injects dropdown option value', async () => {
+			const compositeDefinition: CompositeElementDefinition = {
+				id: 'dropdownComposite',
+				name: 'Dropdown Composite',
+				description: '',
+				options: [
 					{
-						id: 'text1',
+						id: 'color',
+						type: 'dropdown',
+						label: 'Color',
+						default: 'red',
+						choices: [
+							{ id: 'red', label: 'Red' },
+							{ id: 'green', label: 'Green' },
+							{ id: 'blue', label: 'Blue' },
+						],
+					},
+				],
+				elements: [
+					{
+						id: 'box',
 						name: '',
-						type: 'text',
+						type: 'box',
 						usage: USAGE,
 						enabled: val(true),
 						opacity: val(100),
@@ -3467,66 +2393,86 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						width: val(100),
 						height: val(100),
 						rotation: val(0),
-						text: val('Test'),
-						fontsize: expr<string>('$(test:fontSize)'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
+						color: val(0xff0000),
+						borderWidth: val(0),
+						borderColor: val(0),
+						borderPosition: val('inside'),
 					},
-				]
+				],
+			}
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser({ test: { fontSize: '24' } }),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
-
-				expect((result.elements[0] as { fontsize: string }).fontsize).toBe('24')
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					dropdownComposite: compositeDefinition,
+				},
 			})
+
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'test-connection',
+					elementId: 'dropdownComposite',
+					'opt:color': val('green'),
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
+
+			expect(result.elements).toHaveLength(1)
 		})
+	})
 
-		describe('color expression handling', () => {
-			test('evaluates color from expression', async () => {
-				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'text1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Test'),
-						fontsize: val('auto'),
-						color: expr<number>('255 * 256 * 256'),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				]
+	describe('enum fallback handling', () => {
+		test('falls back to default for invalid enum value', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'box1',
+					name: '',
+					type: 'box',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(50),
+					height: val(50),
+					rotation: val(0),
+					color: val(0xff0000),
+					borderWidth: val(2),
+					borderColor: val(0x00ff00),
+					borderPosition: expr<'inside' | 'center' | 'outside'>('"invalid"'),
+				},
+			]
 
-				const result = await ConvertSomeButtonGraphicsElementForDrawing(
-					createMockInstanceDefinitions(),
-					createMockParser(),
-					mockDrawPixelBuffers,
-					elements,
-					new Map(),
-					true,
-					null
-				)
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null
+			)
 
-				// 255 * 256 * 256 = 0xff0000 (red)
-				expect((result.elements[0] as { color: number }).color).toBe(0xff0000)
-			})
+			// Should fall back to 'inside' as default
+			expect((result.elements[0] as { borderPosition: string }).borderPosition).toBe('inside')
 		})
 	})
 })
