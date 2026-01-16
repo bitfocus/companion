@@ -313,7 +313,7 @@ export class GraphicsLayeredButtonRenderer {
 		element: ButtonGraphicsLineDrawElement,
 		skipDraw: boolean
 	): Promise<DrawBounds> {
-		// Convert from percentage coordinates to pixel coordinates within parent bounds
+		// Convert from fractional coordinates (0-1) to pixel coordinates within parent bounds
 		const fromX = parentBounds.x + element.fromX * parentBounds.width
 		const fromY = parentBounds.y + element.fromY * parentBounds.height
 		const toX = parentBounds.x + element.toX * parentBounds.width

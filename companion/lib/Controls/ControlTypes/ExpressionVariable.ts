@@ -134,7 +134,7 @@ export class ControlExpressionVariable
 			this.commitChange(false)
 		}
 
-		// Elements are not relevant for triggers
+		// Elements are not relevant for expression variables
 
 		if (options.redraw) {
 			this.triggerRedraw()

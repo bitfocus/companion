@@ -131,7 +131,10 @@ export class ElementExpressionHelper<T> {
 
 		let actualValue: TVal = value.value
 		if (value.isExpression) {
-			const result = this.executeExpressionAndTrackVariables(value.value, 'string')
+			const result = this.executeExpressionAndTrackVariables(
+				value.value,
+				typeof defaultValue === 'number' ? 'number' : 'string'
+			)
 			if (!result.ok) {
 				return defaultValue
 			}
@@ -218,8 +221,7 @@ export interface ParseElementsContext {
 	 * Create a helper for converting a specific element
 	 */
 	createHelper<T extends { readonly id: string }>(
-		element: T,
-		propOverrides?: VariableValues
+		element: T
 	): { helper: ElementExpressionHelper<T>; usedVariables: ReadonlySet<string> }
 
 	/** The cache for storing/retrieving converted elements */
