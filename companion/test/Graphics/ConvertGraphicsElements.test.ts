@@ -308,7 +308,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -351,7 +352,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -393,7 +395,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(0)
@@ -428,7 +431,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				false
+				false,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -466,7 +470,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements[0]).toMatchObject({
@@ -504,7 +509,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -550,7 +556,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -589,7 +596,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -636,7 +644,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -697,7 +706,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -774,7 +784,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
@@ -813,7 +824,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			// Note: x position is divided by 100 during conversion (0.01 scale), so 15 -> 0.15
@@ -853,7 +865,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.usedVariables.has('test:var1')).toBe(true)
@@ -1309,7 +1322,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				globalReferences,
-				true
+				true,
+				null
 			)
 
 			expect((result.elements[0] as { text: string }).text).toBe('Overridden')
@@ -1346,7 +1360,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			const result2 = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1355,7 +1370,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result1.elements[0].contentHash).toBe(result2.elements[0].contentHash)
@@ -1412,7 +1428,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements1,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			const result2 = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1421,7 +1438,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements2,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result1.elements[0].contentHash).not.toBe(result2.elements[0].contentHash)
@@ -1487,7 +1505,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(1)
@@ -1538,7 +1557,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements).toHaveLength(0)
@@ -1575,7 +1595,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements[0]).toMatchObject({
@@ -1612,7 +1633,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			expect(result.elements[0]).toMatchObject({
@@ -1666,7 +1688,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
@@ -1733,7 +1756,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
-				true
+				true,
+				null
 			)
 
 			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
@@ -1776,7 +1800,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { opacity: number }).opacity).toBe(0.5)
@@ -1811,7 +1836,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { opacity: number }).opacity).toBe(0)
@@ -1846,7 +1872,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { rotation: number }).rotation).toBe(45)
@@ -1879,7 +1906,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { rotation: number }).rotation).toBe(-90)
@@ -1916,7 +1944,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { fontsize: string }).fontsize).toBe('14')
@@ -1953,7 +1982,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				// Should use default value (0) when expression fails
@@ -1990,7 +2020,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				// Missing variables should show $NA
@@ -2030,7 +2061,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						mockDrawPixelBuffers,
 						elements,
 						new Map(),
-						true
+						true,
+						null
 					)
 
 					expect((result.elements[0] as { borderPosition: string }).borderPosition).toBe(position)
@@ -2069,7 +2101,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements[0]).toMatchObject({
@@ -2136,7 +2169,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements).toHaveLength(3)
@@ -2212,7 +2246,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements).toHaveLength(2)
@@ -2296,7 +2331,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				const group1 = result.elements[0] as ButtonGraphicsGroupDrawElement
@@ -2342,7 +2378,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements[0]).toMatchObject({
@@ -2382,7 +2419,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { text: string }).text).toBe('')
@@ -2417,7 +2455,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements[0]).toMatchObject({
@@ -2495,7 +2534,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
@@ -2568,7 +2608,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
@@ -2633,7 +2674,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.usedCompositeElements.has('myconn:simpleComposite')).toBe(true)
@@ -2666,7 +2708,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						mockDrawPixelBuffers,
 						elements,
 						new Map(),
-						true
+						true,
+						null
 					)
 
 					expect((result.elements[0] as { decoration: ButtonGraphicsDecorationType }).decoration).toBe(decoration)
@@ -2704,7 +2747,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements[0]).toMatchObject({
@@ -2742,7 +2786,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements[0]).toMatchObject({
@@ -2780,7 +2825,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements[0]).toMatchObject({
@@ -2820,7 +2866,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				// Expression evaluates to false, element should be filtered
@@ -2856,7 +2903,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements).toHaveLength(1)
@@ -2891,7 +2939,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements).toHaveLength(1)
@@ -2928,7 +2977,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						mockDrawPixelBuffers,
 						elements,
 						new Map(),
-						true
+						true,
+						null
 					)
 
 					expect((result.elements[0] as { fillMode: string }).fillMode).toBe(fillMode)
@@ -3001,7 +3051,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements).toHaveLength(1)
@@ -3074,7 +3125,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements).toHaveLength(1)
@@ -3149,7 +3201,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements).toHaveLength(1)
@@ -3201,7 +3254,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect(result.elements).toHaveLength(0)
@@ -3238,7 +3292,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { text: string }).text).toBe('Hello World')
@@ -3273,7 +3328,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { text: string }).text).toBe('15')
@@ -3308,7 +3364,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				// Should fall back to 'inside' as default
@@ -3342,7 +3399,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				// Line coordinates use default scale (1), not 0.01
@@ -3386,7 +3444,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { outlineColor: number }).outlineColor).toBe(0x000000)
@@ -3423,7 +3482,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				expect((result.elements[0] as { fontsize: string }).fontsize).toBe('24')
@@ -3460,7 +3520,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					mockDrawPixelBuffers,
 					elements,
 					new Map(),
-					true
+					true,
+					null
 				)
 
 				// 255 * 256 * 256 = 0xff0000 (red)
