@@ -151,7 +151,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	localVariablesStore,
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
-	const [simpleMode, setSimpleMode] = useLocalStorage('layeredEditor.simpleMode', false)
+	const [simpleMode, setSimpleMode] = useLocalStorage('layeredEditor.simpleMode', true)
 
 	return (
 		<div className="button-layer-style-editor h-100">
