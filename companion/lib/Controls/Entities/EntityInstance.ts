@@ -95,6 +95,11 @@ export class ControlEntityInstance {
 		return (this.#data as FeedbackEntityModel).styleOverrides
 	}
 
+	get styleOverrideAffectedElementIds(): ReadonlySet<string> | undefined {
+		if (!this.styleOverrides) return undefined
+		return new Set(this.styleOverrides.map((o) => o.elementId))
+	}
+
 	get localVariableName(): string | null {
 		if (this.type !== EntityModelType.Feedback || this.disabled) return null
 
@@ -412,10 +417,10 @@ export class ControlEntityInstance {
 	/**
 	 * Replace a style override for a feedback entity
 	 * @param override the new style override
-	 * @returns success
+	 * @returns the override if successful, null otherwise
 	 */
-	replaceStyleOverride(override: FeedbackEntityStyleOverride): boolean {
-		if (this.#data.type !== EntityModelType.Feedback) return false
+	replaceStyleOverride(override: FeedbackEntityStyleOverride): FeedbackEntityStyleOverride | null {
+		if (this.#data.type !== EntityModelType.Feedback) return null
 
 		const feedbackData = this.#data as FeedbackEntityModel
 
@@ -428,27 +433,27 @@ export class ControlEntityInstance {
 			feedbackData.styleOverrides.push(override)
 		}
 
-		return true
+		return override
 	}
 
 	/**
 	 * Remove a style override for a feedback entity
 	 * @param id the id of the override to remove
-	 * @returns success
+	 * @returns the removed override if successful, null otherwise
 	 */
-	removeStyleOverride(id: string): boolean {
-		if (this.#data.type !== EntityModelType.Feedback) return false
+	removeStyleOverride(id: string): FeedbackEntityStyleOverride | null {
+		if (this.#data.type !== EntityModelType.Feedback) return null
 
 		const feedbackData = this.#data as FeedbackEntityModel
 
-		if (!feedbackData.styleOverrides) return false
+		if (!feedbackData.styleOverrides) return null
 
 		const index = feedbackData.styleOverrides.findIndex((o) => o.overrideId === id)
-		if (index === -1) return false
+		if (index === -1) return null
 
-		feedbackData.styleOverrides.splice(index, 1)
+		const [removed] = feedbackData.styleOverrides.splice(index, 1)
 
-		return true
+		return removed
 	}
 
 	/**

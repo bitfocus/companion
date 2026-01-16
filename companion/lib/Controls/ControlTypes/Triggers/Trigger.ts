@@ -26,6 +26,7 @@ import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigg
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
 
 /**
  * Class for an interval trigger.
@@ -153,8 +154,7 @@ export class ControlTrigger
 
 		this.entities = new ControlEntityListPoolTrigger({
 			controlId,
-			commitChange: this.commitChange.bind(this),
-			invalidateControl: this.triggerRedraw.bind(this),
+			reportChange: this.#entityListReportChange.bind(this),
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
@@ -191,6 +191,18 @@ export class ControlTrigger
 		setImmediate(() => {
 			this.#setupEvents()
 		})
+	}
+
+	#entityListReportChange(options: ControlEntityListChangeProps): void {
+		if (!options.noSave) {
+			this.commitChange(false)
+		}
+
+		// Elements are not relevant for triggers
+
+		if (options.redraw) {
+			this.triggerRedraw()
+		}
 	}
 
 	abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null): void {

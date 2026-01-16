@@ -45,6 +45,7 @@ import type { DataDatabase } from '../Data/Database.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
@@ -241,10 +242,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						const buttonStyle = (await control?.getDrawStyle()) ?? undefined
 
 						let render: ImageResult | undefined
-						if (buttonStyle && buttonStyle.style) {
+						if (buttonStyle && buttonStyle.style === 'button-layered') {
 							// Check if the image is already present in the render cache and if so, return it
-
-							const key = JSON.stringify({ options: this.#drawOptions, buttonStyle })
+							// Use collected contentHashes instead of JSON.stringify on entire buttonStyle to avoid
+							// serializing large binary data (images can be 100KB+)
+							const key = JSON.stringify({
+								options: this.#drawOptions,
+								...buttonStyle,
+								elements: collectContentHashes(buttonStyle.elements),
+							})
 							render = this.#renderLRUCache.get(key)
 
 							if (!render) {
@@ -307,7 +313,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									? location
 									: undefined
 						}
-						const key = JSON.stringify({ options: this.#drawOptions, buttonStyle, keyLocation, pagename })
+						const key =
+							buttonStyle.style === 'button-layered'
+								? JSON.stringify({
+										options: this.#drawOptions,
+										...buttonStyle,
+										elements: collectContentHashes(buttonStyle.elements),
+										keyLocation,
+										pagename,
+									})
+								: JSON.stringify({ options: this.#drawOptions, buttonStyle, keyLocation, pagename })
 						render = this.#renderLRUCache.get(key)
 
 						if (!render) {

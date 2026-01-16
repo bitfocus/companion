@@ -7,6 +7,7 @@ import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
 
 /**
  * Abstract class for a editable button control.
@@ -71,8 +72,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		this.entities = new ControlEntityListPoolButton(
 			{
 				controlId,
-				commitChange: this.commitChange.bind(this),
-				invalidateControl: this.triggerRedraw.bind(this),
+				reportChange: this.entityListReportChange.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
@@ -90,6 +90,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 			isLayered
 		)
 	}
+
+	/**
+	 * Report that the entity list has changed
+	 * @param options - change options
+	 */
+	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
 	/**
 	 * Abort pending delayed actions for a control

@@ -1,13 +1,17 @@
 import { nanoid } from 'nanoid'
-import {
-	type CompanionPresetLayeredFeedback,
-	type ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
-	type SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
-	type ExpressionOrValue as ExpressionOrValueModule,
-	type ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
-	type ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
-	ButtonGraphicsDecorationType,
+import type {
+	CompanionPresetLayeredFeedback,
+	ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
+	SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
+	ExpressionOrValue as ExpressionOrValueModule,
+	ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
+	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
 } from '@companion-module/base'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	type CompositeElementOptionKey,
+} from '@companion-app/shared/Model/StyleModel.js'
 import { type Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
@@ -29,7 +33,6 @@ import type {
 	ButtonGraphicsCircleElement,
 	ButtonGraphicsCompositeElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsElementUsage, type CompositeElementOptionKey } from '@companion-app/shared/Model/StyleModel.js'
 
 export function ConvertLayeredPresetFeedbacksToEntities(
 	rawFeedbacks: CompanionPresetLayeredFeedback[] | undefined,
@@ -71,7 +74,8 @@ export function ConvertLayerPresetElements(
 	logger: Logger,
 	connectionId: string,
 	canvas: ButtonGraphicsCanvasElementModule | undefined,
-	elements: SomeButtonGraphicsElementModule[]
+	elements: SomeButtonGraphicsElementModule[],
+	forceNewIds = false
 ): SomeButtonGraphicsElement[] {
 	const canvasElement: ButtonGraphicsCanvasElement = {
 		id: nanoid(),
@@ -87,7 +91,7 @@ export function ConvertLayerPresetElements(
 	return [
 		canvasElement,
 		...elements
-			.map((el) => convertLayeredPresetElement(logger, connectionId, el))
+			.map((el) => convertLayeredPresetElement(logger, connectionId, el, forceNewIds))
 			.filter((el): el is SomeButtonGraphicsElement => el !== null),
 	]
 }
@@ -95,14 +99,15 @@ export function ConvertLayerPresetElements(
 function convertLayeredPresetElement(
 	logger: Logger,
 	connectionId: string,
-	element: SomeButtonGraphicsElementModule
+	element: SomeButtonGraphicsElementModule,
+	forceNewIds: boolean
 ): SomeButtonGraphicsElement | null {
 	const elementType = element.type
 	switch (element.type) {
 		case 'box':
 			return {
 				type: 'box',
-				...convertElementBasicProperties(element, 'Box'),
+				...convertElementBasicProperties(element, 'Box', forceNewIds),
 
 				...convertElementSize(element),
 				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
@@ -119,19 +124,19 @@ function convertLayeredPresetElement(
 		case 'group':
 			return {
 				type: 'group',
-				...convertElementBasicProperties(element, 'Group'),
+				...convertElementBasicProperties(element, 'Group', forceNewIds),
 
 				...convertElementSize(element),
 				rotation: { value: 0, isExpression: false }, // TODO - presets
 
 				children: element.children
-					.map((child) => convertLayeredPresetElement(logger, connectionId, child))
+					.map((child) => convertLayeredPresetElement(logger, connectionId, child, forceNewIds))
 					.filter((el): el is SomeButtonGraphicsElement => el !== null),
 			} satisfies ButtonGraphicsGroupElement
 		case 'image':
 			return {
 				type: 'image',
-				...convertElementBasicProperties(element, 'Image'),
+				...convertElementBasicProperties(element, 'Image', forceNewIds),
 
 				...convertElementSize(element),
 				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
@@ -144,7 +149,7 @@ function convertLayeredPresetElement(
 		case 'text':
 			return {
 				type: 'text',
-				...convertElementBasicProperties(element, 'Text'),
+				...convertElementBasicProperties(element, 'Text', forceNewIds),
 
 				...convertElementSize(element),
 				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
@@ -163,7 +168,7 @@ function convertLayeredPresetElement(
 		case 'line':
 			return {
 				type: 'line',
-				...convertElementBasicProperties(element, 'Line'),
+				...convertElementBasicProperties(element, 'Line', forceNewIds),
 
 				fromX: convertModuleExpressionOrValue(element.fromX, { value: 0, isExpression: false }),
 				fromY: convertModuleExpressionOrValue(element.fromY, { value: 0, isExpression: false }),
@@ -180,7 +185,7 @@ function convertLayeredPresetElement(
 		case 'circle':
 			return {
 				type: 'circle',
-				...convertElementBasicProperties(element, 'Circle'),
+				...convertElementBasicProperties(element, 'Circle', forceNewIds),
 
 				...convertElementSize(element),
 
@@ -206,7 +211,7 @@ function convertLayeredPresetElement(
 
 			return {
 				type: 'composite',
-				...convertElementBasicProperties(element, 'Composite'),
+				...convertElementBasicProperties(element, 'Composite', forceNewIds),
 
 				...convertElementSize(element),
 
@@ -234,10 +239,11 @@ function convertElementSize(element: ButtonGraphicsDrawBoundsModule): ButtonGrap
 
 function convertElementBasicProperties(
 	element: ButtonGraphicsElementBaseModule,
-	defaultName: string
+	defaultName: string,
+	forceNewIds: boolean
 ): ButtonGraphicsElementBase {
 	return {
-		id: element.id || nanoid(),
+		id: forceNewIds ? nanoid() : element.id || nanoid(),
 		name: element.name ?? defaultName,
 		usage: ButtonGraphicsElementUsage.Automatic,
 		enabled: convertModuleExpressionOrValue(element.enabled, { value: true, isExpression: false }),

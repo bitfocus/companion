@@ -23,6 +23,7 @@ import type {
 import jsonPatch from 'fast-json-patch'
 import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
 
 /**
  * Class for an expression variable.
@@ -100,8 +101,7 @@ export class ControlExpressionVariable
 
 		this.entities = new EntityListPoolExpressionVariable({
 			controlId,
-			commitChange: this.commitChange.bind(this),
-			invalidateControl: this.triggerRedraw.bind(this),
+			reportChange: this.#entityListReportChange.bind(this),
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
@@ -126,6 +126,18 @@ export class ControlExpressionVariable
 
 			if (isImport) setImmediate(() => this.#postProcessImport())
 			else this.commitChange()
+		}
+	}
+
+	#entityListReportChange(options: ControlEntityListChangeProps): void {
+		if (!options.noSave) {
+			this.commitChange(false)
+		}
+
+		// Elements are not relevant for triggers
+
+		if (options.redraw) {
+			this.triggerRedraw()
 		}
 	}
 

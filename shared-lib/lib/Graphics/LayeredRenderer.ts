@@ -314,10 +314,10 @@ export class GraphicsLayeredButtonRenderer {
 		skipDraw: boolean
 	): Promise<DrawBounds> {
 		// Convert from percentage coordinates to pixel coordinates within parent bounds
-		const fromX = parentBounds.x + (element.fromX / 100) * parentBounds.width
-		const fromY = parentBounds.y + (element.fromY / 100) * parentBounds.height
-		const toX = parentBounds.x + (element.toX / 100) * parentBounds.width
-		const toY = parentBounds.y + (element.toY / 100) * parentBounds.height
+		const fromX = parentBounds.x + element.fromX * parentBounds.width
+		const fromY = parentBounds.y + element.fromY * parentBounds.height
+		const toX = parentBounds.x + element.toX * parentBounds.width
+		const toY = parentBounds.y + element.toY * parentBounds.height
 
 		// Calculate bounds for selection (use the bounding box of the line)
 		const minX = Math.min(fromX, toX)

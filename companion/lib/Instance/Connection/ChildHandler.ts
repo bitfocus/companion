@@ -916,7 +916,8 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 						this.logger,
 						this.connectionId,
 						undefined,
-						rawElement.elements || []
+						rawElement.elements || [],
+						true // Force new unique IDs for elements within composite definitions
 					).slice(
 						1 // Crop off the canvas element
 					),

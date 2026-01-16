@@ -29,6 +29,8 @@ import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
+import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
 
 /**
  * Class for the preset button control.
@@ -86,6 +88,11 @@ export class ControlButtonPreset
 	 */
 	#drawElements: SomeButtonGraphicsElement[] = []
 
+	/**
+	 * Cache for element conversion results (for future per-element caching optimization)
+	 */
+	readonly #elementConversionCache = new ElementConversionCache()
+
 	readonly #connectionId: string
 	readonly #presetId: string
 
@@ -105,8 +112,7 @@ export class ControlButtonPreset
 		this.entities = new ControlEntityListPoolButton(
 			{
 				controlId,
-				commitChange: this.commitChange.bind(this),
-				invalidateControl: this.triggerRedraw.bind(this),
+				reportChange: this.#entityListReportChange.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
@@ -144,12 +150,31 @@ export class ControlButtonPreset
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.#elementConversionCache.clear()
 		this.entities.destroy()
 
 		super.destroy()
 
 		this.deps.events.off('presetDrawn', this.#updateLastRender)
 		this.deps.instance.definitions.off('updatePresets', this.#updatePresetDefinition)
+	}
+
+	#entityListReportChange(options: ControlEntityListChangeProps): void {
+		if (!options.noSave) {
+			this.commitChange(false)
+		}
+
+		if (options.invalidateAllElements) {
+			this.#elementConversionCache.clear()
+		} else if (options.changedElementIds) {
+			for (const elementId of options.changedElementIds) {
+				this.#elementConversionCache.queueInvalidate(elementId)
+			}
+		}
+
+		if (options.redraw || options.changedElementIds || options.invalidateAllElements) {
+			this.triggerRedraw()
+		}
 	}
 
 	#updateLastRender = (controlId: string, render: ImageResult): void => {
@@ -213,7 +238,8 @@ export class ControlButtonPreset
 			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
 			this.#drawElements,
 			feedbackOverrides,
-			true
+			true,
+			this.#elementConversionCache
 		)
 		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
 		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
@@ -280,6 +306,9 @@ export class ControlButtonPreset
 		if (!this.#lastDrawVariables) return
 		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 
+		// Queue invalidation for cached elements that use any of the changed variables
+		this.#elementConversionCache.queueInvalidateVariables(allChangedVariables)
+
 		this.logger.silly('variable changed in button ' + this.controlId)
 		this.triggerRedraw()
 	}
@@ -291,6 +320,9 @@ export class ControlButtonPreset
 	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {
 		if (!this.#lastDrawCompositeElements) return
 		if (this.#lastDrawCompositeElements.isDisjointFrom(allChangedElementIds)) return
+
+		// Queue invalidation for any cached elements that use these composite types
+		this.#elementConversionCache.queueInvalidateCompositeType(allChangedElementIds)
 
 		this.logger.silly('composite element changed in button ' + this.controlId)
 		this.triggerRedraw()

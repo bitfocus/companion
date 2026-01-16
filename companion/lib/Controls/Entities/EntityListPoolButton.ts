@@ -275,7 +275,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			// add the default '1000' set
 			step.sets.set(1000, this.#createActionEntityList([], false, false))
 
-			this.commitChange(true)
+			this.reportChange({ redraw: true })
 
 			return true
 			// return 1000
@@ -286,7 +286,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 			step.sets.set(newIndex, this.#createActionEntityList([], false, false))
 
-			this.commitChange(false)
+			this.reportChange({ redraw: false })
 
 			return true
 			// return newIndex
@@ -314,7 +314,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		step.sets.delete(setIdNumber)
 
 		// Save the change, and perform a draw
-		this.commitChange(true)
+		this.reportChange({ redraw: true })
 
 		return true
 	}
@@ -344,7 +344,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const runWhileHeldIndex = step.options.runWhileHeld.indexOf(oldSetIdNumber)
 		if (runWhileHeldIndex !== -1) step.options.runWhileHeld[runWhileHeldIndex] = newSetIdNumber
 
-		this.commitChange(false)
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -369,7 +369,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			step.options.runWhileHeld.splice(runWhileHeldIndex, 1)
 		}
 
-		this.commitChange(false)
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -400,7 +400,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			}
 		}
 
-		if (!skipCommit) this.commitChange(true)
+		if (!skipCommit) this.reportChange({ redraw: true })
 	}
 
 	#createActionEntityList(entities: SomeEntityModel[], skipSubscribe: boolean, isCloned: boolean): ControlEntityList {
@@ -468,7 +468,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			if (changedVariables.has(variableName)) {
 				if (this.#stepCheckExpression(true)) {
 					// Something changed, so redraw
-					this.invalidateControl()
+					this.reportChange({ redraw: true })
 				}
 				return
 			}
@@ -560,7 +560,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		// Ensure current step is valid
 		this.#stepCheckExpression(true)
 
-		this.commitChange(true)
+		this.reportChange({ redraw: true })
 
 		return stepId
 	}
@@ -620,7 +620,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#sendRuntimePropsChange()
 
 		// Save the change, and perform a draw
-		this.commitChange(true)
+		this.reportChange({ redraw: true })
 
 		return true
 	}
@@ -679,7 +679,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		}
 
 		// Save the change, and perform a draw
-		this.commitChange(true)
+		this.reportChange({ redraw: true })
 
 		return true
 	}
@@ -702,7 +702,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		this.#sendRuntimePropsChange()
 
-		this.invalidateControl()
+		this.reportChange({
+			redraw: true,
+			noSave: true,
+		})
 
 		return true
 	}
@@ -724,7 +727,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		// Ensure current step is valid
 		this.#stepCheckExpression(true)
 
-		this.commitChange(false)
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -740,7 +743,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		step.options.name = newName
 
-		this.commitChange(false)
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -751,7 +754,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 			if (this.#stepCheckExpression(true)) {
 				// Something changed, so redraw
-				this.invalidateControl()
+				this.reportChange({
+					redraw: true,
+					noSave: true,
+				})
 			}
 
 			return [this.#currentStep.lastStepId, null]
@@ -823,8 +829,24 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
 
-		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues).length > 0) {
-			this.invalidateControl()
+		const changedFeedbackEntities = this.#feedbacks.updateFeedbackValues(connectionId, newValues)
+		if (changedFeedbackEntities.length > 0) {
+			// Collect affected element IDs from changed feedbacks that have style overrides
+			const affectedElementIds = new Set<string>()
+			for (const entity of changedFeedbackEntities) {
+				// Only consider enabled feedbacks
+				if (entity.disabled || !entity.styleOverrides) continue
+
+				for (const override of entity.styleOverrides) {
+					affectedElementIds.add(override.elementId)
+				}
+			}
+
+			this.reportChange({
+				redraw: true,
+				noSave: true,
+				changedElementIds: affectedElementIds.size > 0 ? affectedElementIds : undefined,
+			})
 		}
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
