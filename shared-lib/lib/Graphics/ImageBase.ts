@@ -315,8 +315,6 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			drawSlice = false
 		}
 
-		console.log('drawing circle:', { x, y, radiusX, radiusY, startAngle, endAngle, drawSlice })
-
 		let didDraw = false
 		if (fillColor) {
 			this.context2d.fillStyle = fillColor
