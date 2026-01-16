@@ -315,7 +315,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								!this.#drawOptions.remove_topbar &&
 								canvasElement?.decoration === ButtonGraphicsDecorationType.FollowDefault
 
-							if (canvasElement?.decoration !== ButtonGraphicsDecorationType.TopBar && globalShowTopBar) {
+							if (canvasElement?.decoration !== ButtonGraphicsDecorationType.TopBar && !globalShowTopBar) {
 								// Location is not needed in the cache key if topbar is not shown
 								delete cacheKeyObj.location
 							}

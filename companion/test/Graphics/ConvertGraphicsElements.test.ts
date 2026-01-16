@@ -937,7 +937,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			]
 
 			// First conversion
-			const result1 = await ConvertSomeButtonGraphicsElementForDrawing(
+			await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),
 				mockDrawPixelBuffers,
@@ -947,8 +947,14 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				cache
 			)
 
-			// Second conversion with same elements
-			const result2 = await ConvertSomeButtonGraphicsElementForDrawing(
+			// Cache should now contain the element
+			const cachedEntry = cache.get('text1')
+			expect(cachedEntry).toBeDefined()
+			expect(cachedEntry?.drawElement).toBeDefined()
+
+			// Second conversion with same elements should use cache
+			const getSpy = vi.spyOn(cache, 'get')
+			await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),
 				mockDrawPixelBuffers,
@@ -958,8 +964,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				cache
 			)
 
-			// Results should be equivalent
-			expect(result2.elements[0].contentHash).toBe(result1.elements[0].contentHash)
+			// Verify cache was queried
+			expect(getSpy).toHaveBeenCalledWith('text1')
+			// Verify cache entry was returned (not undefined)
+			expect(getSpy.mock.results[0].value).toBe(cachedEntry)
 		})
 
 		test('invalidates cache when variables change', async () => {
