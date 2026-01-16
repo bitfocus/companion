@@ -23,10 +23,11 @@ import type {
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
-import type { DiscoveredHidSurface, HidScanHandler, SurfaceController } from '../../Surface/Controller.js'
+import type { SurfaceScanHandler, SurfaceController } from '../../Surface/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
+import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -53,7 +54,7 @@ export interface SurfaceChildFeatures {
 	} | null
 }
 
-export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHandler {
+export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScanHandler {
 	logger: Logger
 
 	readonly #ipcWrapper: IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>
@@ -179,8 +180,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 		this.logger.debug(`Received features: ${JSON.stringify(this.features)}`)
 
 		if (this.features.supportsScan || this.features.supportsDetection || this.features.supportsHid) {
-			// Register with the controller for HID scan events
-			this.#deps.surfaceController.registerHidScanHandler(this.instanceId, this)
+			// Register with the controller for scan events
+			this.#deps.surfaceController.registerSurfaceScanHandler(this.instanceId, this)
 		}
 
 		if (this.features.supportsRemote) {
@@ -281,12 +282,12 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 	/**
 	 * Process HID devices during a scan and return discovered surfaces.
 	 * Implements the HidScanHandler interface.
-	 * Serial numbers are already populated by the Controller's StableDeviceIdGenerator.
+	 * Serial numbers are already populated by the Controller's DiscoveredSurfaceRegistry.
 	 * @param hidDevices - HID devices with serialNumber already populated
 	 * @returns Promise resolving to array of discovered surfaces
 	 */
-	async scanHidDevices(hidDevices: HIDDevice[]): Promise<DiscoveredHidSurface[]> {
-		const discovered: DiscoveredHidSurface[] = []
+	async scanForSurfaces(hidDevices: HIDDevice[]): Promise<DiscoveredSurfaceInfo[]> {
+		const discovered: DiscoveredSurfaceInfo[] = []
 
 		// Handle plugins with their own scan/detection
 		if (this.features.supportsScan || this.features.supportsDetection) {
@@ -354,12 +355,12 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 	 * @param surface - The surface to open (as returned from scanHidDevices)
 	 * @param resolvedSurfaceId - The collision-resolved surface ID to use
 	 */
-	async openDiscoveredSurface(surface: DiscoveredHidSurface, resolvedSurfaceId: string): Promise<void> {
+	async openDiscoveredSurface(surface: DiscoveredSurfaceInfo, resolvedSurfaceId: string): Promise<void> {
 		// Already opened, stop here
 		if (this.#panels.has(resolvedSurfaceId)) return
 
 		// Check if it can be opened here
-		const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(resolvedSurfaceId)
+		const reserveCb = this.#deps.surfaceController.reserveSurfaceForOpening(resolvedSurfaceId, true)
 		if (!reserveCb) return
 
 		try {
@@ -473,12 +474,11 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, HidScanHand
 
 	async #handleShouldOpenDiscoveredSurface(msg: ShouldOpenDeviceMessage): Promise<ShouldOpenDeviceResponseMessage> {
 		// Generate a collision-resolved surface ID and check if it should be opened
-		// This acquires the scan lock and tracks the surface in the discovered registry
+		// Self-discovering surfaces bypass the enabled check since we cannot reliably abort the open process (for now)
 		const { resolvedSurfaceId, shouldOpen } = await this.#deps.surfaceController.generateDiscoveredSurfaceId(
-			this.instanceId,
-			msg.info.surfaceId,
-			msg.info.surfaceIdIsNotUnique,
-			msg.info.devicePath
+			this,
+			msg.info,
+			false
 		)
 
 		if (!shouldOpen) {

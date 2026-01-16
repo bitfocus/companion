@@ -75,6 +75,11 @@ table.variables-table td {
 
 table.entity-table,
 table.variables-table {
+	tr {
+		// Fix for dnd in chrome previewing too much
+		transform: translate3d(0, 0, 0);
+	}
+
 	.entitylist-dragging {
 		opacity: 0.5;
 	}

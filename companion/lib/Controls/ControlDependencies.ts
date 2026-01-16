@@ -44,6 +44,11 @@ export interface ControlCommonEvents {
 	layeredStyleElementChanged: [controlId: string, elementId: string]
 
 	presetDrawn: [controlId: string, render: ImageResult]
+
+	/**
+	 * Emitted when a control is added or removed, to notify that the total control count has changed
+	 */
+	controlCountChanged: []
 }
 
 export type ControlChangeEvents = {

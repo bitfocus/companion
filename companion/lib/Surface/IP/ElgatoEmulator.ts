@@ -132,6 +132,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 			configFields: configFields,
 			surfaceId: `emulator:${emulatorId}`,
 			location: null,
+			isRemote: false, // Emulators are virtual local surfaces
 		}
 
 		this.#logger.debug('Adding Elgato Streamdeck Emulator')

@@ -211,6 +211,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
 			surfaceId: deviceInfo.deviceId,
 			location: deviceInfo.socket.remoteAddress ?? null,
+			isRemote: true, // Satellite connections are always remote
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)

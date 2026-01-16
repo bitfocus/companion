@@ -11,7 +11,12 @@
 
 import { Canvas, ImageData, loadImage, type Image as CanvasImage, type SKRSContext2D } from '@napi-rs/canvas'
 import LogController from '../Log/Controller.js'
-import { ImageBase, ImagePoolBase, LineStyle } from '@companion-app/shared/Graphics/ImageBase.js'
+import {
+	ImageBase,
+	ImagePoolBase,
+	type LineStyle,
+	type TextLayoutCache,
+} from '@companion-app/shared/Graphics/ImageBase.js'
 
 export { LineStyle }
 
@@ -28,7 +33,7 @@ class ImagePool extends ImagePoolBase<Image> {
 		this.#oversampling = oversampling
 	}
 
-	createImage(): Image {
+	createImage(textLayoutCache: TextLayoutCache | null): Image {
 		const realwidth = this.#width * this.#oversampling
 		const realheight = this.#height * this.#oversampling
 
@@ -38,7 +43,7 @@ class ImagePool extends ImagePoolBase<Image> {
 		// @ts-expect-error Unknown property but we may need it?
 		context2d.textWrap = false
 
-		return new Image(this, canvas, context2d, this.#width, this.#height, realwidth, realheight)
+		return new Image(this, canvas, context2d, this.#width, this.#height, realwidth, realheight, textLayoutCache)
 	}
 }
 
@@ -63,9 +68,10 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 		width: number,
 		height: number,
 		realwidth: number,
-		realheight: number
+		realheight: number,
+		textLayoutCache: TextLayoutCache | null
 	) {
-		super(LogController.createLogger('Graphics/Image'), pool, context2d, width, height)
+		super(LogController.createLogger('Graphics/Image'), pool, context2d, width, height, textLayoutCache)
 
 		this.#canvas = canvas
 		this.#context2d = context2d
@@ -74,11 +80,11 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 		this.realheight = realheight
 	}
 
-	static create(width: number, height: number, oversampling: number): Image {
+	static create(width: number, height: number, oversampling: number, textLayoutCache: TextLayoutCache | null): Image {
 		if (oversampling === undefined) oversampling = 1
 
 		const pool = new ImagePool(width, height, oversampling)
-		return pool.createImage()
+		return pool.createImage(textLayoutCache)
 	}
 
 	protected drawImage(

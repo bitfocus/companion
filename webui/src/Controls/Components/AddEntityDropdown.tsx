@@ -59,12 +59,14 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 
 	const options = useComputed(() => {
 		const options: Array<AddEntityOption | AddEntityGroup> = []
-		for (const [connectionId, entityDefinitions] of definitions.connections.entries()) {
+		const pushConnection = (connectionId: string, label: string) => {
+			const entityDefinitions = definitions.connections.get(connectionId)
+			if (!entityDefinitions) return
+
 			for (const [definitionId, definition] of entityDefinitions.entries()) {
 				if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
 
-				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
-				const optionLabel = `${connectionLabel}: ${definition.label}`
+				const optionLabel = `${label}: ${definition.label}`
 				options.push({
 					isRecent: false,
 					value: `${connectionId}:${definitionId}`,
@@ -72,6 +74,11 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 					fuzzy: fuzzyPrepare(optionLabel),
 				})
 			}
+		}
+
+		pushConnection('internal', 'internal')
+		for (const connection of connections.sortedConnections()) {
+			pushConnection(connection.id, connection.label)
 		}
 
 		if (!showAll) {

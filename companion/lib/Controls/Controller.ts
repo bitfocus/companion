@@ -648,6 +648,9 @@ export class ControlsController {
 			// Force a redraw
 			this.#controlEvents.emit('invalidateLocationRender', location)
 		}
+
+		// Notify that control count has changed
+		this.#controlEvents.emit('controlCountChanged')
 	}
 
 	exportTriggerCollections(): TriggerCollection[] {
@@ -689,6 +692,9 @@ export class ControlsController {
 
 		// Force a redraw
 		this.#controlEvents.emit('invalidateLocationRender', location)
+
+		// Notify that control count has changed
+		this.#controlEvents.emit('controlCountChanged')
 
 		return controlId
 	}

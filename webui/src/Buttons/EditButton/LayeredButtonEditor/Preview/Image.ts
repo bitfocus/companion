@@ -1,4 +1,4 @@
-import { ImageBase, ImagePoolBase } from '@companion-app/shared/Graphics/ImageBase.js'
+import { ImageBase, ImagePoolBase, type TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import type { MinimalLogger } from '@companion-app/shared/Logger.js'
 import { LastUsedCache } from './DrawStyleParser.js'
 
@@ -20,7 +20,7 @@ class GraphicsImagePool extends ImagePoolBase<GraphicsImage> {
 		this.#height = height
 	}
 
-	createImage(): GraphicsImage {
+	createImage(textLayoutCache: TextLayoutCache | null): GraphicsImage {
 		const canvas = document.createElement('canvas')
 		canvas.width = this.#width
 		canvas.height = this.#height
@@ -28,7 +28,7 @@ class GraphicsImagePool extends ImagePoolBase<GraphicsImage> {
 		const context2d = canvas.getContext('2d')
 		if (!context2d) throw new Error('Failed to get 2d context')
 
-		return new GraphicsImage(this, canvas, context2d, this.#width, this.#height)
+		return new GraphicsImage(this, canvas, context2d, this.#width, this.#height, textLayoutCache)
 	}
 }
 
@@ -47,15 +47,16 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 		canvas: HTMLCanvasElement,
 		context2d: CanvasRenderingContext2D,
 		width: number,
-		height: number
+		height: number,
+		textLayoutCache: TextLayoutCache | null
 	) {
-		super(logger, pool, context2d, width, height)
+		super(logger, pool, context2d, width, height, textLayoutCache)
 
 		this.#canvas = canvas
 		this.#context2d = context2d
 	}
 
-	static create(canvas: HTMLCanvasElement): GraphicsImage | null {
+	static create(canvas: HTMLCanvasElement, textLayoutCache: TextLayoutCache | null): GraphicsImage | null {
 		const context2d = canvas.getContext('2d')
 		if (!context2d) return null
 
@@ -63,7 +64,7 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 		const height = canvas.height
 
 		const pool = new GraphicsImagePool(width, height)
-		return new GraphicsImage(pool, canvas, context2d, width, height)
+		return new GraphicsImage(pool, canvas, context2d, width, height, textLayoutCache)
 	}
 
 	protected drawImage(

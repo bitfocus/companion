@@ -1,14 +1,21 @@
 # [Bitfocus Companion](https://companion.free)
 
-**Documentation**
+**User Documentation**
 
 - https://companion.free/user-guide/beta/getting-started/Installation
+
+**Developer Documentation**
+
+Bitfocus Companion is open-source software. If you would like to contribute to our project please check out the developer documentation.
+Slack is also the perfect place for asking questions, especially when you're getting started.
+
+- https://companion.free/for-developers/
 
 **Slack / Chat**
 
 - https://bfoc.us/ke7e9dqgaz
 
-**Our website**
+**Our websites**
 
 - https://companion.free/
 - https://bitfocus.io/companion/

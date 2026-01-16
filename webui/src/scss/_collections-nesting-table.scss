@@ -24,6 +24,9 @@
 			cursor: ns-resize;
 		}
 
+		// Fix for dnd in chrome previewing too much
+		transform: translate3d(0, 0, 0);
+
 		&.row-dragging {
 			opacity: 0.5;
 		}

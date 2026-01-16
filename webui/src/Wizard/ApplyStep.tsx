@@ -20,6 +20,19 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		)
 	}
 
+	if (
+		oldConfig.setup_wizard < WIZARD_VERSION_3_0 ||
+		oldConfig.auto_enable_discovered_surfaces !== newConfig.auto_enable_discovered_surfaces
+	) {
+		changes.push(
+			newConfig.auto_enable_discovered_surfaces ? (
+				<li>Newly discovered surfaces will be automatically enabled.</li>
+			) : (
+				<li>Newly discovered surfaces will need to be manually enabled in the Surfaces tab.</li>
+			)
+		)
+	}
+
 	if (oldConfig.setup_wizard === 0 || oldConfig.elgato_plugin_enable !== newConfig.elgato_plugin_enable) {
 		changes.push(
 			newConfig.elgato_plugin_enable ? (

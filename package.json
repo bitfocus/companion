@@ -42,7 +42,7 @@
   "engines": {
     "npm": "please-use-yarn",
     "yarn": "^4.5",
-    "node": ">=22.21.1 <23"
+    "node": ">=22.22.0 <23"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": "eslint",
@@ -72,10 +72,10 @@
     "openapi-typescript": "^7.10.1",
     "p-retry": "^7.1.1",
     "prettier": "^3.7.4",
-    "socket": "^1.1.52",
+    "socket": "^1.1.55",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.51.0",
+    "typescript-eslint": "^8.52.0",
     "vitest": "^4.0.16",
     "vitest-mock-extended": "^3.1.0",
     "yaml": "^2.8.2",

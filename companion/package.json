@@ -19,7 +19,7 @@
   "engines": {
     "npm": "please-use-yarn",
     "yarn": "^4.5",
-    "node": ">=22.21.1 <23"
+    "node": ">=22.22.0 <23"
   },
   "author": "Bitfocus AS",
   "license": "MIT",
@@ -38,7 +38,7 @@
     "@types/winston-syslog": "^2.4.4",
     "@types/ws": "^8.18.1",
     "@types/yazl": "^3.3.0",
-    "supertest": "^7.1.4",
+    "supertest": "^7.2.2",
     "typescript": "~5.9.3",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1"
@@ -46,7 +46,7 @@
   "dependencies": {
     "@companion-app/shared": "*",
     "@companion-module/base": "1.99.0-nightly-feat-graphics-overhaul-20251223-212718-d376d60",
-    "@companion-surface/host": "~1.1.0",
+    "@companion-surface/host": "~1.1.2",
     "@julusian/bonjour-service": "^1.4.2",
     "@julusian/image-rs": "^2.1.1",
     "@julusian/segfault-raub": "^2.3.2",
@@ -70,7 +70,6 @@
     "fast-json-patch": "patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch",
     "fs-extra": "^11.3.3",
     "get-port": "^7.1.0",
-    "lru-cache": "^11.2.4",
     "nanoid": "^5.1.6",
     "node-cron": "^4.2.1",
     "node-hid": "^3.2.0",
@@ -79,13 +78,14 @@
     "openapi-fetch": "^0.15.0",
     "osc": "2.4.5",
     "p-debounce": "^5.1.0",
-    "p-queue": "^9.0.1",
+    "p-queue": "^9.1.0",
     "path-to-regexp": "^8.3.0",
+    "quick-lru": "^7.3.0",
     "selfsigned": "^5.4.0",
     "semver": "^7.7.3",
     "socketcluster-client": "^20.0.1",
     "supports-color": "^10.2.2",
-    "systeminformation": "^5.28.9",
+    "systeminformation": "^5.30.2",
     "tar-fs": "^3.1.1",
     "tar-stream": "^3.1.7",
     "type-fest": "^5.3.1",
@@ -95,9 +95,9 @@
     "winston": "^3.19.0",
     "winston-syslog": "patch:winston-syslog@npm%3A2.7.1#~/.yarn/patches/winston-syslog-npm-2.7.1-c8df046508.patch",
     "workerpool": "^10.0.1",
-    "ws": "^8.18.3",
+    "ws": "^8.19.0",
     "yaml": "^2.8.2",
     "yazl": "^3.3.1",
-    "zod": "^4.3.4"
+    "zod": "^4.3.5"
   }
 }

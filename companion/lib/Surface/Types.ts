@@ -28,6 +28,7 @@ export interface SurfacePanelInfo {
 	description: string
 	configFields: CompanionSurfaceConfigField[]
 	location: string | null
+	isRemote: boolean
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 }
 

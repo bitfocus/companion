@@ -23,6 +23,8 @@ import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type * as imageRs from '@julusian/image-rs'
 import { Canvas, loadImage } from '@napi-rs/canvas'
+import QuickLRU from 'quick-lru'
+import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -49,6 +51,9 @@ const emptySet: ReadonlySet<string> = new Set()
 
 export class GraphicsRenderer {
 	static #IMAGE_CACHE = new Map<string, Image[]>()
+
+	/** Static cache for text layout computations, shared across all Image instances */
+	static #textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 5000 })
 
 	private static calculateTransforms(resolution: { width: number; height: number }) {
 		// Calculate some constants for drawing without reinventing the numbers
@@ -78,7 +83,7 @@ export class GraphicsRenderer {
 			GraphicsRenderer.#IMAGE_CACHE.set(key, pool)
 		}
 
-		const img = pool.pop() || Image.create(width, height, oversampling)
+		const img = pool.pop() || Image.create(width, height, oversampling, GraphicsRenderer.#textLayoutCache)
 		img.clear()
 
 		const res = fcn(img)
