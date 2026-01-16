@@ -246,12 +246,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							// Check if the image is already present in the render cache and if so, return it
 							// Use collected contentHashes instead of JSON.stringify on entire buttonStyle to avoid
 							// serializing large binary data (images can be 100KB+)
-							const key = JSON.stringify({
+							const cacheKey = JSON.stringify({
 								options: this.#drawOptions,
 								...buttonStyle,
 								elements: collectContentHashes(buttonStyle.elements),
 							})
-							render = this.#renderLRUCache.get(key)
+							render = this.#renderLRUCache.get(cacheKey)
 
 							if (!render) {
 								const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
@@ -271,7 +271,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 										CRASHED_WORKER_RETRY_COUNT
 									)
 								)
-								this.#renderLRUCache.set(key, render)
+								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
 							render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, null)
@@ -300,30 +300,31 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
 						const pagename = this.#pageStore.getPageName(location.pageNumber)
 
+						const cacheKeyObj: Record<string, any> = {
+							options: this.#drawOptions,
+							pagename,
+							location,
+							...buttonStyle,
+						}
+
 						// Check if the image is already present in the render cache and if so, return it
-						let keyLocation: ControlLocation | undefined
 						if (buttonStyle.style === 'button-layered') {
 							const canvasElement = buttonStyle.elements.find((el) => el.type === 'canvas')
 
 							const globalShowTopBar =
 								!this.#drawOptions.remove_topbar &&
 								canvasElement?.decoration === ButtonGraphicsDecorationType.FollowDefault
-							keyLocation =
-								globalShowTopBar || canvasElement?.decoration === ButtonGraphicsDecorationType.TopBar
-									? location
-									: undefined
+
+							if (canvasElement?.decoration !== ButtonGraphicsDecorationType.TopBar && globalShowTopBar) {
+								// Location is not needed in the cache key if topbar is not shown
+								delete cacheKeyObj.location
+							}
+
+							cacheKeyObj.elements = collectContentHashes(buttonStyle.elements)
 						}
-						const key =
-							buttonStyle.style === 'button-layered'
-								? JSON.stringify({
-										options: this.#drawOptions,
-										...buttonStyle,
-										elements: collectContentHashes(buttonStyle.elements),
-										keyLocation,
-										pagename,
-									})
-								: JSON.stringify({ options: this.#drawOptions, buttonStyle, keyLocation, pagename })
-						render = this.#renderLRUCache.get(key)
+
+						const cacheKey = JSON.stringify(cacheKeyObj)
+						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
 							const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
@@ -343,7 +344,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									CRASHED_WORKER_RETRY_COUNT
 								)
 							)
-							this.#renderLRUCache.set(key, render)
+							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
 						render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
