@@ -11,11 +11,14 @@ export interface ElementConversionCacheEntry {
 	/** Variables referenced during expression evaluation for this element */
 	readonly usedVariables: ReadonlySet<string>
 
+	/** Composite element information if this element is a composite */
 	readonly compositeElement: {
 		/** Composite element types referenced during evaluation (for composite elements only) */
 		readonly elementId: CompositeElementIdString
 
+		/** Property overrides applied to child elements */
 		readonly childPropOverrides: VariableValues
+		/** Prefix applied to child element IDs */
 		readonly childIdPrefix: string
 	} | null
 }
@@ -152,13 +155,5 @@ export class ElementConversionCache {
 		this.#invalidationQueue.clear()
 		this.#compositeTypesToInvalidate.clear()
 		this.#changedVariables.clear()
-	}
-
-	/**
-	 * Get all variables used by cached elements
-	 * @returns Set of all variable names referenced by cached elements
-	 */
-	getAllUsedVariables(): Set<string> {
-		return new Set(this.#cache.values().flatMap((entry) => entry.usedVariables))
 	}
 }

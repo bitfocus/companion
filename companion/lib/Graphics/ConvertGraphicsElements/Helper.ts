@@ -245,6 +245,12 @@ export interface ParseElementsContext {
 	 */
 	withPropOverrides(propOverrides: VariableValues): ParseElementsContext
 
+	/**
+	 * Resolve a composite element definition by connection and element ID
+	 * @param connectionId The connection ID
+	 * @param elementId The element ID
+	 * @return The definition or null if not found
+	 */
 	resolveCompositeElement(connectionId: string, elementId: string): CompositeElementDefinition | null
 }
 
