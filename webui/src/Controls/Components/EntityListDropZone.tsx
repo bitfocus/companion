@@ -10,6 +10,7 @@ export interface EntityListDragItem {
 	index: number
 	ownerId: EntityOwner | null
 	dragState: DragState | null
+	elementWidth: number | undefined
 }
 
 interface EntityDropPlaceholderZoneProps {

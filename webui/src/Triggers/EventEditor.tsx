@@ -8,12 +8,13 @@ import {
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useRef, useState, useEffect } from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
 import { OptionsInputField } from '~/Controls/OptionsInputField.js'
-import { useDrag, useDrop } from 'react-dnd'
+import { useDrag, useDrop, useDragLayer } from 'react-dnd'
+import { getEmptyImage } from 'react-dnd-html5-backend'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
@@ -76,12 +77,18 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 					</CButtonGroup>
 				)}
 			</h4>
-
+			<EventListDragLayer
+				events={events}
+				dragId={`events_${controlId}`}
+				serviceFactory={eventsService}
+				panelCollapseHelper={panelCollapseHelper}
+				localVariablesStore={localVariablesStore}
+			/>
 			<table className="table entity-table">
 				<tbody>
 					{events.map((a, i) => (
 						<MyErrorBoundary key={a?.id ?? i}>
-							<EventsTableRow
+							<EventTableRow
 								key={a?.id ?? i}
 								index={i}
 								event={a}
@@ -103,12 +110,53 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 })
 
 interface EventsTableRowDragObject {
+	eventId: string
 	index: number
 	dragState: DragState | null
+	width?: number
 }
 interface EventsTableRowDragCollection {
 	isDragging: boolean
 }
+
+interface EventTableRowContentProps {
+	event: EventInstance
+	serviceFactory: IEventEditorService
+	panelCollapseHelper: PanelCollapseHelperLite
+	localVariablesStore: LocalVariablesStore
+
+	isDragging: boolean
+	rowRef: React.LegacyRef<HTMLTableRowElement> | null
+	dragRef: React.LegacyRef<HTMLTableCellElement> | null
+}
+
+const EventTableRowContent = observer(function EventTableRowContent({
+	event,
+	serviceFactory,
+	panelCollapseHelper,
+	localVariablesStore,
+	isDragging,
+	rowRef,
+	dragRef,
+}: EventTableRowContentProps): JSX.Element {
+	const service = useControlEventService(serviceFactory, event)
+
+	return (
+		<tr ref={rowRef} className={isDragging ? 'entitylist-dragging' : ''}>
+			<td ref={dragRef} className="td-reorder">
+				<FontAwesomeIcon icon={faSort} />
+			</td>
+			<td>
+				<EventEditor
+					event={event}
+					service={service}
+					panelCollapseHelper={panelCollapseHelper}
+					localVariablesStore={localVariablesStore}
+				/>
+			</td>
+		</tr>
+	)
+})
 
 interface EventsTableRowProps {
 	event: EventInstance
@@ -119,7 +167,7 @@ interface EventsTableRowProps {
 	localVariablesStore: LocalVariablesStore
 }
 
-function EventsTableRow({
+export const EventTableRow = observer(function EventTableRow({
 	event,
 	index,
 	dragId,
@@ -127,8 +175,6 @@ function EventsTableRow({
 	panelCollapseHelper,
 	localVariablesStore,
 }: EventsTableRowProps): JSX.Element | null {
-	const service = useControlEventService(serviceFactory, event)
-
 	const ref = useRef<HTMLTableRowElement>(null)
 	const [, drop] = useDrop<EventsTableRowDragObject>({
 		accept: dragId,
@@ -164,17 +210,30 @@ function EventsTableRow({
 			item.dragState = null
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag<EventsTableRowDragObject, never, EventsTableRowDragCollection>({
+
+	const [_c, drag, preview] = useDrag<EventsTableRowDragObject, never, EventsTableRowDragCollection>({
 		type: dragId,
-		item: {
+		item: () => ({
+			eventId: event.id,
 			index: index,
 			dragState: null,
-		},
-		collect: (monitor) => ({
-			isDragging: monitor.isDragging(),
+			width: ref.current?.offsetWidth,
 		}),
 	})
-	preview(drop(ref))
+
+	// Check if the current item is being dragged
+	const { draggingItem } = useDragLayer((monitor) => ({
+		draggingItem: monitor.getItem<EventsTableRowDragObject>(),
+	}))
+	const isDragging = draggingItem?.eventId === event.id
+
+	// Hide default browser drag preview
+	useEffect(() => {
+		preview(getEmptyImage(), { captureDraggingState: true })
+	}, [preview])
+
+	// Connect drag and drop
+	drop(ref)
 
 	if (!event) {
 		// Invalid event, so skip
@@ -182,21 +241,79 @@ function EventsTableRow({
 	}
 
 	return (
-		<tr ref={ref} className={isDragging ? 'entitylist-dragging' : ''}>
-			<td ref={drag} className="td-reorder">
-				<FontAwesomeIcon icon={faSort} />
-			</td>
-			<td>
-				<EventEditor
-					event={event}
-					service={service}
-					panelCollapseHelper={panelCollapseHelper}
-					localVariablesStore={localVariablesStore}
-				/>
-			</td>
-		</tr>
+		<EventTableRowContent
+			event={event}
+			serviceFactory={serviceFactory}
+			panelCollapseHelper={panelCollapseHelper}
+			localVariablesStore={localVariablesStore}
+			isDragging={isDragging}
+			rowRef={ref}
+			dragRef={drag}
+		/>
 	)
+})
+
+interface EventListDragLayerProps {
+	events: EventInstance[]
+	dragId: string
+	serviceFactory: IEventEditorService
+	panelCollapseHelper: PanelCollapseHelperLite
+	localVariablesStore: LocalVariablesStore
 }
+
+const EventListDragLayer = observer(function EventListDragLayer({
+	events,
+	dragId,
+	serviceFactory,
+	panelCollapseHelper,
+	localVariablesStore,
+}: EventListDragLayerProps): JSX.Element | null {
+	const { isDragging, item, currentOffset } = useDragLayer<{
+		isDragging: boolean
+		item: EventsTableRowDragObject | null
+		currentOffset: { x: number; y: number } | null
+	}>((monitor) => ({
+		isDragging: monitor.isDragging() && monitor.getItemType() === dragId,
+		item: monitor.getItem(),
+		currentOffset: monitor.getSourceClientOffset(),
+	}))
+
+	if (!isDragging || !item || !currentOffset) {
+		return null
+	}
+
+	const event = events.find((e) => e.id === item.eventId)
+	if (!event) return null
+
+	return (
+		<div
+			className="entity-list-drag-layer"
+			style={{
+				position: 'fixed',
+				pointerEvents: 'none',
+				zIndex: 100,
+				left: 0,
+				top: 0,
+				transform: `translate(${currentOffset.x}px, ${currentOffset.y}px)`,
+				width: item.width,
+			}}
+		>
+			<table className="table entity-table">
+				<tbody>
+					<EventTableRowContent
+						event={event}
+						serviceFactory={serviceFactory}
+						panelCollapseHelper={panelCollapseHelper}
+						localVariablesStore={localVariablesStore}
+						isDragging={true}
+						rowRef={null}
+						dragRef={null}
+					/>
+				</tbody>
+			</table>
+		</div>
+	)
+})
 
 interface EventEditorProps {
 	event: EventInstance
