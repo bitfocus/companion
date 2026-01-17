@@ -164,12 +164,12 @@ export class InstanceProcessManager {
 	 * Send a list of changed variables to all active instances.
 	 * This will trigger feedbacks using variables to be rechecked
 	 */
-	onVariablesChanged(all_changed_variables_set: Set<string>): void {
+	onVariablesChanged(all_changed_variables_set: Set<string>, fromControlId: string | null): void {
 		const changedVariableIds = Array.from(all_changed_variables_set)
 
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady && child.handler instanceof ConnectionChildHandler) {
-				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds).catch((e) => {
+				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds, fromControlId).catch((e) => {
 					this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
 				})
 			}
