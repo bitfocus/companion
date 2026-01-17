@@ -5,7 +5,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { observer } from 'mobx-react-lite'
-import React, { useContext, useState, useCallback, useRef } from 'react'
+import React, { useContext, useState, useCallback, useRef, useEffect } from 'react'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -15,12 +15,14 @@ import { EntityManageChildGroups } from './EntityChildGroup.js'
 import { EntityCommonCells } from './EntityCommonCells.js'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useDrop, useDrag } from 'react-dnd'
+import { useDrop, useDrag, useDragLayer } from 'react-dnd'
 import { checkDragStateWithThresholds, DragPlacement } from '~/Resources/DragAndDrop.js'
 import type { EntityListDragItem } from './EntityListDropZone.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
 import { LearnButton } from '~/Components/LearnButton.js'
+import { getEmptyImage } from 'react-dnd-html5-backend'
+import classNames from 'classnames'
 
 interface EntityTableRowDragStatus {
 	isDragging: boolean
@@ -48,7 +50,8 @@ export const EntityTableRow = observer(function EntityTableRow({
 }: EntityTableRowProps): JSX.Element | null {
 	const { serviceFactory, readonly } = useEntityEditorContext()
 
-	const ref = useRef<HTMLTableRowElement>(null)
+	const ref = useRef<HTMLDivElement>(null)
+
 	const [, drop] = useDrop<EntityListDragItem>({
 		accept: dragId,
 		hover(item, monitor) {
@@ -101,22 +104,33 @@ export const EntityTableRow = observer(function EntityTableRow({
 			item.dragState = null
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag<EntityListDragItem, unknown, EntityTableRowDragStatus>({
+
+	const [_c, drag, preview] = useDrag<EntityListDragItem, unknown, EntityTableRowDragStatus>({
 		type: dragId,
 		canDrag: !readonly,
-		item: {
+		item: () => ({
 			entityId: entity.id,
 			listId: serviceFactory.listId,
 			index: index,
 			ownerId: ownerId,
-			// ref: ref,
 			dragState: null,
-		},
-		collect: (monitor) => ({
-			isDragging: monitor.isDragging(),
+			elementWidth: ref.current?.offsetWidth,
 		}),
 	})
-	preview(drop(ref))
+
+	// Check if the current item is being dragged
+	const { draggingItem } = useDragLayer((monitor) => ({
+		draggingItem: monitor.getItem<EntityListDragItem>(),
+	}))
+	const isDragging = draggingItem?.entityId === entity.id
+
+	// Hide default browser preview
+	useEffect(() => {
+		preview(getEmptyImage())
+	}, [preview])
+
+	// Connect drag and drop
+	drop(ref)
 
 	if (!entity) {
 		// Invalid entity, so skip
@@ -124,11 +138,48 @@ export const EntityTableRow = observer(function EntityTableRow({
 	}
 
 	return (
-		<tr ref={ref} className={isDragging ? 'entitylist-dragging' : ''}>
-			<td ref={drag} className="td-reorder">
+		<EntityTableRowContent
+			entity={entity}
+			ownerId={ownerId}
+			entityType={entityType}
+			entityTypeLabel={entityTypeLabel}
+			feedbackListType={feedbackListType}
+			isDragging={isDragging}
+			rowRef={ref}
+			dragRef={drag}
+		/>
+	)
+})
+
+interface EntityTableRowContentProps {
+	entity: SomeEntityModel
+	ownerId: EntityOwner | null
+
+	entityType: EntityModelType
+	entityTypeLabel: string
+	feedbackListType: ClientEntityDefinition['feedbackType']
+
+	isDragging: boolean
+	rowRef: React.LegacyRef<HTMLDivElement> | null
+	dragRef: React.LegacyRef<HTMLDivElement> | null
+}
+
+export const EntityTableRowContent = observer(function EntityTableRowContent({
+	entity,
+	ownerId,
+	entityType,
+	entityTypeLabel,
+	feedbackListType,
+	isDragging,
+	rowRef,
+	dragRef,
+}: EntityTableRowContentProps): React.JSX.Element {
+	return (
+		<div ref={rowRef} className={classNames('entity-row', { 'entitylist-dragging': isDragging })}>
+			<div ref={dragRef} className="entity-row-reorder">
 				<FontAwesomeIcon icon={faSort} />
-			</td>
-			<td>
+			</div>
+			<div className="entity-row-content">
 				{entity.type === entityType ? (
 					<EntityEditorRowContent
 						ownerId={ownerId}
@@ -139,8 +190,8 @@ export const EntityTableRow = observer(function EntityTableRow({
 				) : (
 					<p>Entity is not a {entityTypeLabel}!</p>
 				)}
-			</td>
-		</tr>
+			</div>
+		</div>
 	)
 })
 
