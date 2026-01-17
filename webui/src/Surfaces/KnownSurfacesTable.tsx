@@ -93,7 +93,7 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 
-			<div className="surfaces-grid-container">
+			<div className="scrollable-content surfaces-grid-container">
 				<div className="grid-header-cell">NO</div>
 				<div className="grid-header-cell">Info</div>
 				<div className="grid-header-cell"></div>
