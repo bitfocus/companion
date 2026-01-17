@@ -5,6 +5,7 @@ import { SatelliteSocketWrapper, ServiceSatelliteApi } from './Satellite/Satelli
 import { WebSocketServer, type WebSocket } from 'ws'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { SurfaceController } from '../Surface/Controller.js'
+import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
 
 /**
  * Class providing the Satellite/Remote Surface api over websockets.
@@ -44,6 +45,7 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 		if (this.#server === undefined) {
 			try {
 				this.#server = new WebSocketServer({
+					host: GLOBAL_BIND_ADDRESS,
 					port: this.port,
 				})
 

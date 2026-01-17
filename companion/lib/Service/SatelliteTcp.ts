@@ -5,6 +5,7 @@ import type { AppInfo } from '../Registry.js'
 import { SatelliteSocketWrapper, ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { SurfaceController } from '../Surface/Controller.js'
+import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
 
 /**
  * Class providing the Satellite/Remote Surface api over tcp.
@@ -83,7 +84,7 @@ export class ServiceSatelliteTcp extends ServiceBase {
 		})
 
 		try {
-			this.#server.listen(this.port)
+			this.#server.listen(this.port, GLOBAL_BIND_ADDRESS)
 		} catch (_e) {
 			this.logger.debug(`ERROR opening tcp port ${this.port} for companion satellite devices`)
 		}
