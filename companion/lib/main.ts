@@ -19,7 +19,8 @@ import envPaths from 'env-paths'
 import { nanoid } from 'nanoid'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
-import net from 'net'
+import net, { isIPv6 } from 'net'
+import { DISABLE_IPv6, GLOBAL_BIND_ADDRESS } from './Resources/Constants.js'
 
 const program = new Command()
 
@@ -99,7 +100,12 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		process.exit(1)
 	}
 
-	let adminIp = options.adminAddress || '::' // default to admin global
+	let adminIp = options.adminAddress || GLOBAL_BIND_ADDRESS // default to admin global
+
+	if (DISABLE_IPv6 && isIPv6(adminIp)) {
+		console.error(`IPv6 has been disabled but has been specified as the admin address`)
+		process.exit(1)
+	}
 
 	if (options.adminInterface) {
 		adminIp = null
