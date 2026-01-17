@@ -1,6 +1,6 @@
 {
   "name": "@companion-app/launcher-ui",
-  "version": "4.2.2",
+  "version": "4.2.3",
   "private": true,
   "type": "module",
   "dependencies": {
