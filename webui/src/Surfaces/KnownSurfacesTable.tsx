@@ -277,7 +277,7 @@ const SurfaceRow = observer(function SurfaceRow({
 							<FontAwesomeIcon icon={faCopy} color="#000" />
 						</CButton>
 					</CopyToClipboard>
-					<span className={`surface-location${surfaceDisabled ? ' surface-disabled' : ''}`}>
+					<span className={classNames('surface-status', { 'surface-disabled': surfaceDisabled })}>
 						{surfaceDisabled ? 'Disabled' : surface.isConnected ? surface.location || 'Local' : 'Offline'}
 					</span>
 				</div>

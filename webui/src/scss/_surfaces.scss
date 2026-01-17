@@ -95,15 +95,17 @@
 				max-width: fit-content;
 			}
 
-			.surface-location {
+			.surface-status {
 				white-space: nowrap;
 				font-size: 0.9em;
 				color: #666;
 				margin-left: auto;
 			}
 
+			// note: this is needed to override the .surface-status rule, immediately above,
+			//       to make it consistent with the disabled row.
 			.surface-disabled {
-				color: var(--cui-danger);
+				color: var(--cui-disabled);
 			}
 		}
 
