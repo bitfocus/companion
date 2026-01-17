@@ -1,5 +1,20 @@
 # Bitfocus Companion
 
+## Companion v4.2.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- local variables not invalidating module entities #3896
+- expression arrayLastIndexOf not working if no offset provided #3873
+- drag and drop previews showing more than the dragged element #3883
+- avoid invalid values being sent to a surface when referencing old jog/tbar variables (#3872)
+- improve scrolling behaviour of surfaces page
+- variables dropdown showing behind heading in settings
+- make connected network docks stick below the active surfaces in the list
+- respect DISABLE_IPV6 env var to disable admin interface binding to ipv6
+- respect collections when sorting connections for add entity dropdowns and variables page #3899
+- only report usage stats for published modules
+
 ## Companion v4.2.2 - Release Notes
 
 ### 🐞 BUG FIXES
