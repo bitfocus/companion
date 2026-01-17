@@ -1701,6 +1701,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		if (surfaceHandler) {
 			this.#logger.silly('remove device ' + surfaceId)
 
+			// Release the id from the discovered registry, so that it can be reattached
+			this.#discoveredSurfaceRegistry.forgetSurfaceById(surfaceId)
+
 			// Detach surface from any group
 			this.#detachSurfaceFromGroup(surfaceHandler)
 

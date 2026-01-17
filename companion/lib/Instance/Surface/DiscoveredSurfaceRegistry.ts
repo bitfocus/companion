@@ -144,6 +144,19 @@ export class DiscoveredSurfaceRegistry {
 	}
 
 	/**
+	 * Forget a specific device by its resolved surface ID.
+	 * This should be called when a discovered surface is no longer available.
+	 * @param resolvedSurfaceId - The resolved surface ID to forget
+	 */
+	forgetSurfaceById(resolvedSurfaceId: string): void {
+		const key = this.#surfaceIdToKey.get(resolvedSurfaceId)
+		if (!key) return
+
+		this.#deviceCache.delete(key)
+		this.#surfaceIdToKey.delete(resolvedSurfaceId)
+	}
+
+	/**
 	 * Forget all devices belonging to a specific instance.
 	 * @param instanceId - The instance ID prefix to match
 	 */

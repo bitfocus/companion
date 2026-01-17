@@ -426,7 +426,7 @@ export class InstanceProcessManager {
 				Date.now(),
 				'System',
 				'system',
-				`** Starting Instance from "${runtimeInfo.entrypoint}" **`
+				`** Starting Instance from "${runtimeInfo.moduleEntrypoint}" **`
 			)
 
 			const monitor = new RespawnMonitor(cmd, {
@@ -665,6 +665,7 @@ export class InstanceProcessManager {
 		lastLabel: string
 	): Promise<{
 		entrypoint: string
+		moduleEntrypoint: string
 		apiVersion: string
 		env: Record<string, string>
 	} | null> {
@@ -709,6 +710,7 @@ export class InstanceProcessManager {
 				return {
 					apiVersion: moduleApiVersion,
 					entrypoint: jsFullPath,
+					moduleEntrypoint: jsFullPath,
 					env: {
 						CONNECTION_ID: instanceId,
 					},
@@ -744,6 +746,7 @@ export class InstanceProcessManager {
 						import.meta.dirname,
 						isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'
 					),
+					moduleEntrypoint: jsFullPath,
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,
 					},
