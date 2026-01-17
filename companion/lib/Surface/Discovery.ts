@@ -78,10 +78,10 @@ export class ServiceSurfaceDiscovery {
 
 		if (!connectionsToForget) return
 
-		for (const id of connectionsToForget.keys()) {
+		for (const info of connectionsToForget.values()) {
 			this.#surfaceEvents.emit('event', {
 				type: 'remove',
-				itemId: id,
+				itemId: convertPluginConnectionToUi(instanceId, info).id,
 			})
 		}
 	}
