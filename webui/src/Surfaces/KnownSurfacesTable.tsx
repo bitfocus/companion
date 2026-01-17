@@ -68,11 +68,25 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 	)
 
 	const surfacesList = Array.from(surfaces.store.values()).sort((a, b) => {
-		if (a.index === undefined && b.index === undefined) {
-			return a.id.localeCompare(b.id)
-		} else {
-			return (a.index ?? Number.POSITIVE_INFINITY) - (b.index ?? Number.POSITIVE_INFINITY)
+		// 1) Those with an index should be first, sorted by index
+		if (a.index !== null && b.index !== null) {
+			return a.index - b.index
 		}
+		if (a.index !== null) return -1
+		if (b.index !== null) return 1
+
+		// 2) Those with a location but no index, sorted by id
+		const aHasLocation = a.isAutoGroup && !!a.surfaces?.some((s) => s.location)
+		const bHasLocation = b.isAutoGroup && !!b.surfaces?.some((s) => s.location)
+
+		if (aHasLocation && bHasLocation) {
+			return a.id.localeCompare(b.id)
+		}
+		if (aHasLocation) return -1
+		if (bHasLocation) return 1
+
+		// 3) Everything else, sorted by id
+		return a.id.localeCompare(b.id)
 	})
 
 	return (
