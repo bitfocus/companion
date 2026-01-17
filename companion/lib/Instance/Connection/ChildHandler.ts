@@ -334,9 +334,13 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 * Send the list of changed variables to the child process
 	 * @access public - called whenever variables change
 	 */
-	async sendVariablesChanged(changedVariableIdSet: Set<string>, changedVariableIds: string[]): Promise<void> {
+	async sendVariablesChanged(
+		changedVariableIdSet: Set<string>,
+		changedVariableIds: string[],
+		fromControlId: string | null
+	): Promise<void> {
 		if (this.#entityManager) {
-			this.#entityManager.onVariablesChanged(changedVariableIdSet)
+			this.#entityManager.onVariablesChanged(changedVariableIdSet, fromControlId)
 			return
 		}
 

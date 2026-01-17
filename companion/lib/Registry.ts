@@ -328,13 +328,14 @@ export class Registry {
 			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
 				this.internalModule.onVariablesChanged(all_changed_variables_set, null)
 				this.controls.onVariablesChanged(all_changed_variables_set, null)
-				this.instance.processManager.onVariablesChanged(all_changed_variables_set)
+				this.instance.processManager.onVariablesChanged(all_changed_variables_set, null)
 				this.preview.onVariablesChanged(all_changed_variables_set, null)
 				this.surfaces.onVariablesChanged(all_changed_variables_set)
 			})
 			this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
 				this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
 				this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
+				this.instance.processManager.onVariablesChanged(all_changed_variables_set, fromControlId)
 				this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
 			})
 

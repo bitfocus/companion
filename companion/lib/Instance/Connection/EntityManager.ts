@@ -554,7 +554,7 @@ export class ConnectionEntityManager {
 	 * Inform the entity manager that some variables have changed.
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: Set<string>): void {
+	onVariablesChanged(variableIds: Set<string>, fromControlId: string | null): void {
 		let anyInvalidated = false
 
 		for (const wrapper of this.#entities.values()) {
@@ -565,6 +565,11 @@ export class ConnectionEntityManager {
 				wrapper.state === EntityState.PENDING_DELETE
 			) {
 				// Nothing to do, the entity is not in the ready state
+				continue
+			}
+
+			if (fromControlId && wrapper.controlId !== fromControlId) {
+				// The change came from a specific control, and this entity is not in that control
 				continue
 			}
 
