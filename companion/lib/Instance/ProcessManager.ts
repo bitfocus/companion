@@ -793,7 +793,15 @@ interface RuntimeInfo {
  * Only some env vars should be forwarded to child processes
  */
 function preserveEnvVars(): Record<string, string> {
-	const preserveNames = ['HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'http_proxy', 'https_proxy', 'no_proxy']
+	const preserveNames = [
+		'HTTP_PROXY',
+		'HTTPS_PROXY',
+		'NO_PROXY',
+		'http_proxy',
+		'https_proxy',
+		'no_proxy',
+		'DISABLE_IPV6',
+	]
 
 	const preservedEnvVars: Record<string, string> = {}
 	for (const name of preserveNames) {
