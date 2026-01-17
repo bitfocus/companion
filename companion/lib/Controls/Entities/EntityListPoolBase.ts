@@ -503,7 +503,7 @@ export abstract class ControlEntityListPoolBase {
 		if (!entity) return false
 
 		// Make sure the new name is valid
-		if (!isLabelValid(name)) {
+		if (name !== '' && !isLabelValid(name)) {
 			// throw new Error(`Invalid local variable name "${name}"`)
 			return false
 		}
