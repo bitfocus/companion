@@ -329,7 +329,8 @@ export class ImportExportController {
 						this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
 						controlObjLayered.style.layers,
 						new Map(),
-						true
+						true,
+						null
 					)
 
 					const res = await this.#graphicsController.drawPreview(elements)

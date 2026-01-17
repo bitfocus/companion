@@ -37,6 +37,8 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { lazy } from '../../../Resources/Util.js'
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
+import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -126,6 +128,11 @@ export class ControlButtonLayered
 	 */
 	#drawElements: SomeButtonGraphicsElement[] = cloneDeep(ControlButtonLayered.DefaultElements)
 
+	/**
+	 * Cache for element conversion results (for future per-element caching optimization)
+	 */
+	readonly #elementConversionCache = new ElementConversionCache()
+
 	get actionSets(): ControlActionSetAndStepsManager {
 		return this.entities
 	}
@@ -189,7 +196,25 @@ export class ControlButtonLayered
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.#elementConversionCache.clear()
 		super.destroy()
+	}
+
+	protected override entityListReportChange(options: ControlEntityListChangeProps): void {
+		if (!options.noSave) {
+			this.commitChange(false)
+		}
+		if (options.invalidateAllElements) {
+			this.#elementConversionCache.clear()
+		} else if (options.changedElementIds) {
+			for (const elementId of options.changedElementIds) {
+				this.#elementConversionCache.queueInvalidate(elementId)
+			}
+		}
+
+		if (options.redraw || options.changedElementIds || options.invalidateAllElements) {
+			this.triggerRedraw()
+		}
 	}
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
@@ -219,14 +244,15 @@ export class ControlButtonLayered
 
 		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
 
-		// Compute the new drawing
+		// Compute the new drawing, using the element conversion cache for per-element caching
 		const { elements, usedVariables, usedCompositeElements } = await ConvertSomeButtonGraphicsElementForDrawing(
 			this.deps.instance.definitions,
 			parser,
 			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
 			this.#drawElements,
 			feedbackOverrides,
-			true
+			true,
+			this.#elementConversionCache
 		)
 		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
 		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
@@ -305,6 +331,9 @@ export class ControlButtonLayered
 			this.#drawElements.push(newElement)
 		}
 
+		// Invalidate cache for the new element
+		this.#elementConversionCache.queueInvalidate(newElement.id)
+
 		// Save change and redraw
 		this.commitChange(true)
 
@@ -321,6 +350,9 @@ export class ControlButtonLayered
 		const { indexOfElement, currentParentElementArray } = currentElementLocation
 
 		currentParentElementArray.splice(indexOfElement, 1)
+
+		// Invalidate cache for the removed element
+		this.#elementConversionCache.queueInvalidate(id)
 
 		// Save change and redraw
 		this.commitChange(true)
@@ -461,6 +493,9 @@ export class ControlButtonLayered
 		// Update the value
 		elementEntry.value = value
 
+		// Invalidate cache for this element
+		this.#elementConversionCache.queueInvalidate(id)
+
 		// Save change and redraw
 		this.commitChange(true)
 
@@ -515,6 +550,9 @@ export class ControlButtonLayered
 
 		// Update the value
 		elementEntry.isExpression = value
+
+		// Invalidate cache for this element
+		this.#elementConversionCache.queueInvalidate(id)
 
 		// Save change and redraw
 		this.commitChange(true)
@@ -637,6 +675,9 @@ export class ControlButtonLayered
 		if (!this.#lastDrawVariables) return
 		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 
+		// Queue invalidation for cached elements that use any of the changed variables
+		this.#elementConversionCache.queueInvalidateVariables(allChangedVariables)
+
 		this.logger.silly('variable changed in button ' + this.controlId)
 		this.triggerRedraw()
 	}
@@ -648,6 +689,9 @@ export class ControlButtonLayered
 	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {
 		if (!this.#lastDrawCompositeElements) return
 		if (this.#lastDrawCompositeElements.isDisjointFrom(allChangedElementIds)) return
+
+		// Queue invalidation for any cached elements that use these composite types
+		this.#elementConversionCache.queueInvalidateCompositeType(allChangedElementIds)
 
 		this.logger.silly('composite element changed in button ' + this.controlId)
 		this.triggerRedraw()

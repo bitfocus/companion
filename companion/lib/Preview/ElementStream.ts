@@ -258,7 +258,8 @@ export class PreviewElementStream {
 				this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
 				[elementDefToProcess],
 				feedbackOverrides,
-				false // onlyEnabled
+				false, // onlyEnabled
+				null
 			)
 
 			if (elements.length === 0) {

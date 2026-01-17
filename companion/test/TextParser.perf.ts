@@ -8,7 +8,7 @@
  * to measure the actual computation cost.
  */
 
-import { Image, TextLayoutCache } from '../../lib/Graphics/Image.js'
+import { Image } from '../lib/Graphics/Image.js'
 
 interface BenchmarkResult {
 	name: string

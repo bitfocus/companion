@@ -4,11 +4,11 @@ import {
 	computeTextLayout,
 	segmentTextToUnicodeChars,
 	type TextLayoutResult,
-} from '../../lib/Graphics/TextParser.js'
-import type { CanvasRenderingContext2D } from '@napi-rs/canvas'
+} from '../../Graphics/TextParser.js'
+import type { CompanionImageContext2D } from '../../Graphics/ImageBase.js'
 
 // Mock context that simulates measuring text with roughly 10px per character for simplicity
-function createMockContext(charWidth: number = 10, lineHeight: number = 14): CanvasRenderingContext2D {
+function createMockContext(charWidth: number = 10, lineHeight: number = 14): CompanionImageContext2D {
 	return {
 		font: '',
 		measureText: vi.fn((text: string) => ({
@@ -16,7 +16,7 @@ function createMockContext(charWidth: number = 10, lineHeight: number = 14): Can
 			fontBoundingBoxAscent: lineHeight * 0.8,
 			fontBoundingBoxDescent: lineHeight * 0.2,
 		})),
-	} as unknown as CanvasRenderingContext2D
+	} as unknown as CompanionImageContext2D
 }
 
 describe('segmentTextToUnicodeChars', () => {
@@ -144,7 +144,6 @@ describe('resolveFontSizes', () => {
 		describe('w:72 h:72 (standard button)', () => {
 			const w = 72
 			const h = 72
-			const area = (w * h) / 5000 // ~1.04
 
 			test('very short text returns largest font sizes first', () => {
 				// charCount < 7 * area (~7 chars)
@@ -185,7 +184,6 @@ describe('resolveFontSizes', () => {
 		describe('w:144 h:144 (double-size button)', () => {
 			const w = 144
 			const h = 144
-			const area = (w * h) / 5000 // ~4.15
 
 			test('thresholds scale with area', () => {
 				// charCount < 7 * area (~29 chars)
@@ -199,7 +197,6 @@ describe('resolveFontSizes', () => {
 		describe('w:360 h:360 (large display)', () => {
 			const w = 360
 			const h = 360
-			const area = (w * h) / 5000 // ~25.9
 
 			test('larger area allows more characters at larger font sizes', () => {
 				// charCount < 7 * area (~181 chars)
@@ -225,15 +222,15 @@ describe('resolveFontSizes', () => {
 			expect(resolveFontSizes(72, 72, -5, 10)).toEqual([3])
 		})
 
-		test('clamps maximum font size to 120', () => {
-			expect(resolveFontSizes(72, 72, 150, 10)).toEqual([120])
-			expect(resolveFontSizes(72, 72, 200, 10)).toEqual([120])
-			expect(resolveFontSizes(72, 72, 120, 10)).toEqual([120])
+		test('clamps maximum font size to height', () => {
+			expect(resolveFontSizes(72, 72, 150, 10)).toEqual([72])
+			expect(resolveFontSizes(72, 123, 200, 10)).toEqual([123])
+			expect(resolveFontSizes(72, 72, 120, 10)).toEqual([72])
 		})
 
 		test('passes through edge values', () => {
 			expect(resolveFontSizes(72, 72, 3, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 119, 10)).toEqual([119])
+			expect(resolveFontSizes(72, 72, 71, 10)).toEqual([71])
 		})
 	})
 

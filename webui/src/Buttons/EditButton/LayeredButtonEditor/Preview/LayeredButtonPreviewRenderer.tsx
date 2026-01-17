@@ -13,6 +13,8 @@ import type { DropdownChoice } from '@companion-module/base'
 import { isEqual } from 'lodash-es'
 import { useLocalStorage } from 'usehooks-ts'
 import { CFormLabel } from '@coreui/react'
+import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
+import QuickLRU from 'quick-lru'
 
 const PAD_X = 10
 const PAD_Y = 10
@@ -159,7 +161,8 @@ class RendererDrawContext {
 	#selectedElementId: string | null = null
 
 	constructor(canvas: HTMLCanvasElement, location: ControlLocation) {
-		const image = GraphicsImage.create(canvas)
+		const textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 200 })
+		const image = GraphicsImage.create(canvas, textLayoutCache)
 		if (!image) throw new Error('Failed to create image')
 
 		this.#image = image

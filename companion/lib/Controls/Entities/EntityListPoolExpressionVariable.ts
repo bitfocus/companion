@@ -62,7 +62,10 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
 
 		if (this.#entities.updateFeedbackValues(connectionId, newValues).length > 0) {
-			this.invalidateControl()
+			this.reportChange({
+				redraw: true,
+				noSave: true,
+			})
 		}
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)

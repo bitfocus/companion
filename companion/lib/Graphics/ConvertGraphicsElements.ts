@@ -1,4 +1,3 @@
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type {
 	ButtonGraphicsDrawBounds,
 	ButtonGraphicsImageDrawElement,
@@ -25,238 +24,28 @@ import type {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import {
 	ButtonGraphicsDecorationType,
 	type CompositeElementOptionKey,
 	type DrawImageBuffer,
 } from '@companion-app/shared/Model/StyleModel.js'
-import {
-	stringifyVariableValue,
-	type VariableValues,
-	type VariableValue,
-} from '@companion-app/shared/Model/Variables.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type {
 	InstanceDefinitions,
-	CompositeElementDefinition,
 	CompositeElementIdString,
+	CompositeElementDefinition,
 } from '../Instance/Definitions.js'
-
-interface ExpressionReferences {
-	readonly variables: Set<string>
-	readonly compositeElements: Set<CompositeElementIdString>
-}
-
-class ElementExpressionHelper<T> {
-	readonly #compositeElementStore: InstanceDefinitions
-	readonly #parser: VariablesAndExpressionParser
-	readonly drawPixelBuffers: DrawPixelBuffers
-	readonly #references: ExpressionReferences
-
-	readonly #element: T
-	readonly #elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined
-
-	readonly onlyEnabled: boolean
-
-	constructor(
-		compositeElementStore: InstanceDefinitions,
-		parser: VariablesAndExpressionParser,
-		drawPixelBuffers: DrawPixelBuffers,
-		references: ExpressionReferences,
-		element: T,
-		elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined,
-		onlyEnabled: boolean
-	) {
-		this.#compositeElementStore = compositeElementStore
-		this.#parser = parser
-		this.drawPixelBuffers = drawPixelBuffers
-		this.#references = references
-
-		this.#element = element
-		this.#elementOverrides = elementOverrides
-
-		this.onlyEnabled = onlyEnabled
-	}
-
-	resolveCompositeElement(connectionId: string, elementId: string): CompositeElementDefinition | null {
-		this.#references.compositeElements.add(`${connectionId}:${elementId}`)
-
-		const definition = this.#compositeElementStore.getCompositeElementDefinition(connectionId, elementId)
-		return definition ?? null
-	}
-
-	executeExpressionAndTrackVariables(str: string, requiredType: string | undefined): ExecuteExpressionResult {
-		const result = this.#parser.executeExpression(str, requiredType)
-
-		// Track the variables used in the expression, even when it failed
-		for (const variable of result.variableIds) {
-			this.#references.variables.add(variable)
-		}
-
-		return result
-	}
-
-	parseVariablesInString(str: string, defaultValue: string): string {
-		try {
-			const result = this.#parser.parseVariables(str)
-
-			// Track the variables used
-			for (const variable of result.variableIds) {
-				this.#references.variables.add(variable)
-			}
-
-			return String(result.text)
-		} catch (_e) {
-			// Ignore errors
-			return defaultValue
-		}
-	}
-
-	#getValue(propertyName: keyof T): ExpressionOrValue<any> {
-		const override = this.#elementOverrides?.get(String(propertyName))
-		return override ? override : (this.#element as any)[propertyName]
-	}
-
-	getUnknown(propertyName: keyof T, defaultValue: VariableValue): VariableValue | undefined {
-		const value = this.#getValue(propertyName)
-
-		if (!value.isExpression) return value.value
-
-		const result = this.executeExpressionAndTrackVariables(value.value, undefined)
-		if (!result.ok) {
-			return defaultValue
-		}
-
-		return result.value
-	}
-
-	getDrawText(propertyName: keyof T): string {
-		const value = this.#getValue(propertyName)
-		if (value.isExpression) {
-			return stringifyVariableValue(this.getUnknown(propertyName, 'ERR')) ?? ''
-		} else {
-			return this.parseVariablesInString(value.value, 'ERR')
-		}
-	}
-
-	getNumber(propertyName: keyof T, defaultValue: number, scale = 1): number {
-		const value = this.#getValue(propertyName)
-
-		if (!value.isExpression) return value.value * scale
-
-		const result = this.executeExpressionAndTrackVariables(value.value, 'number')
-		if (!result.ok) {
-			return defaultValue
-		}
-
-		return Number(result.value) * scale
-	}
-
-	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {
-		const value = this.#getValue(propertyName)
-
-		if (!value.isExpression) return value.value
-
-		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
-		if (!result.ok) {
-			return defaultValue
-		}
-
-		if (typeof result.value !== 'string') {
-			return defaultValue
-		}
-
-		return result.value as TVal
-	}
-
-	getEnum<TVal extends string | number>(propertyName: keyof T, values: TVal[], defaultValue: TVal): TVal {
-		const value = this.#getValue(propertyName)
-
-		let actualValue: TVal = value.value
-		if (value.isExpression) {
-			const result = this.executeExpressionAndTrackVariables(value.value, 'string')
-			if (!result.ok) {
-				return defaultValue
-			}
-			actualValue = result.value as TVal
-		}
-
-		if (!values.includes(actualValue)) {
-			return defaultValue
-		}
-
-		return actualValue
-	}
-
-	getBoolean(propertyName: keyof T, defaultValue: boolean): boolean {
-		const value = this.#getValue(propertyName)
-
-		if (!value.isExpression) return value.value
-
-		const result = this.executeExpressionAndTrackVariables(value.value, 'boolean')
-		if (!result.ok) {
-			return defaultValue
-		}
-
-		return result.value as boolean
-	}
-
-	getHorizontalAlignment(propertyName: keyof T): HorizontalAlignment {
-		const value = this.#getValue(propertyName)
-
-		if (!value.isExpression) {
-			return this.getEnum<HorizontalAlignment>(propertyName, ['left', 'center', 'right'], 'center')
-		}
-
-		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
-		if (!result.ok) return 'center'
-
-		const firstChar = (stringifyVariableValue(result.value) ?? '').trim().toLowerCase()[0]
-		switch (firstChar) {
-			case 'l':
-			case 's':
-				return 'left'
-
-			case 'r':
-			case 'e':
-				return 'right'
-
-			default:
-				return 'center'
-		}
-	}
-	getVerticalAlignment(propertyName: keyof T): VerticalAlignment {
-		const value = this.#getValue(propertyName)
-
-		if (!value.isExpression) {
-			return this.getEnum<VerticalAlignment>(propertyName, ['top', 'center', 'bottom'], 'center')
-		}
-
-		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
-		if (!result.ok) return 'center'
-
-		const firstChar = (stringifyVariableValue(result.value) ?? '').trim().toLowerCase()[0]
-		switch (firstChar) {
-			case 't':
-			case 's':
-				return 'top'
-
-			case 'b':
-			case 'e':
-				return 'bottom'
-
-			default:
-				return 'center'
-		}
-	}
-}
-type ElementExpressionHelperFactory = <T extends { readonly id: string }>(
-	element: T,
-	propOverrides?: VariableValues
-) => ElementExpressionHelper<T>
-
-type DrawPixelBuffers = (imageBuffers: DrawImageBuffer[]) => Promise<string | undefined>
+import type { ElementConversionCache, ElementConversionCacheEntry } from './ElementConversionCache.js'
+import { computeElementContentHash } from './ConvertGraphicsElements/Util.js'
+import {
+	createParseElementsContext,
+	type ElementExpressionHelper,
+	type ParseElementsContext,
+	type DrawPixelBuffers,
+	type ExpressionReferences,
+} from './ConvertGraphicsElements/Helper.js'
+import { createHash } from 'node:crypto'
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	compositeElementStore: InstanceDefinitions,
@@ -264,78 +53,160 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	drawPixelBuffers: DrawPixelBuffers,
 	elements: SomeButtonGraphicsElement[],
 	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>,
-	onlyEnabled: boolean
+	onlyEnabled: boolean,
+	cache: ElementConversionCache | null
 ): Promise<{
 	elements: SomeButtonGraphicsDrawElement[]
 	usedVariables: Set<string>
 	usedCompositeElements: Set<CompositeElementIdString>
 }> {
-	const references: ExpressionReferences = {
+	// Apply any queued invalidations before processing
+	cache?.applyQueuedInvalidations()
+
+	const globalReferences: ExpressionReferences = {
 		variables: new Set(),
 		compositeElements: new Set(),
 	}
 
-	const helperFactory: ElementExpressionHelperFactory = (element, propOverrides) =>
-		new ElementExpressionHelper(
-			compositeElementStore,
-			propOverrides ? parser.createChildParser(propOverrides) : parser,
-			drawPixelBuffers,
-			references,
-			element,
-			feedbackOverrides.get(element.id),
-			onlyEnabled
-		)
+	// Track all processed element IDs (with prefixes) for cache purging
+	const processedElementIds = new Set<string>()
 
-	const newElements = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(helperFactory, elements)
+	const context = createParseElementsContext(
+		compositeElementStore,
+		parser,
+		drawPixelBuffers,
+		feedbackOverrides,
+		onlyEnabled,
+		cache,
+		globalReferences,
+		processedElementIds
+	)
+
+	const newElements = await convertElements(context, elements, '')
+
+	// Purge cache entries for elements no longer in the tree
+	// Uses processedElementIds which contains the actual prefixed IDs we processed
+	cache?.purgeUnusedElements(processedElementIds)
 
 	return {
 		elements: newElements,
-		usedVariables: references.variables,
-		usedCompositeElements: references.compositeElements,
+		usedVariables: globalReferences.variables,
+		usedCompositeElements: globalReferences.compositeElements,
 	}
 }
 
-async function ConvertSomeButtonGraphicsElementForDrawingWithHelper(
-	helperFactory: ElementExpressionHelperFactory,
-	elements: SomeButtonGraphicsElement[]
+async function convertElements(
+	context: ParseElementsContext,
+	elements: SomeButtonGraphicsElement[],
+	idPrefix: string
 ): Promise<SomeButtonGraphicsDrawElement[]> {
 	const newElements = await Promise.all(
-		elements.map(async (element) => {
-			switch (element.type) {
-				case 'canvas':
-					return convertCanvasElementForDrawing(helperFactory, element)
-				case 'group':
-					return convertGroupElementForDrawing(helperFactory, element)
-				case 'image':
-					return convertImageElementForDrawing(helperFactory, element)
-				case 'text':
-					return convertTextElementForDrawing(helperFactory, element)
-				case 'box':
-					return convertBoxElementForDrawing(helperFactory, element)
-				case 'line':
-					return convertLineElementForDrawing(helperFactory, element)
-				case 'circle':
-					return convertCircleElementForDrawing(helperFactory, element)
-				case 'composite':
-					return convertCompositeElementForDrawing(helperFactory, element)
-				default:
-					assertNever(element)
-					return null
+		elements.map(async (element): Promise<SomeButtonGraphicsDrawElement | null> => {
+			const elementId = idPrefix + element.id
+
+			// Track that we're processing this element (for cache purging)
+			context.processedElementIds.add(elementId)
+
+			let cacheEntry = context.cache?.get(elementId)
+			if (!cacheEntry) {
+				// No cache entry, compute from scratch
+
+				switch (element.type) {
+					case 'canvas': {
+						cacheEntry = convertCanvasElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'group': {
+						cacheEntry = convertGroupElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'image': {
+						cacheEntry = await convertImageElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'text': {
+						cacheEntry = convertTextElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'box': {
+						cacheEntry = convertBoxElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'line': {
+						cacheEntry = convertLineElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'circle': {
+						cacheEntry = convertCircleElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'composite': {
+						cacheEntry = await convertCompositeElementForDrawing(context, element, idPrefix)
+						break
+					}
+					default:
+						assertNever(element)
+						return null
+				}
+
+				// Cache the result for cacheable element types (not groups/composites as they have children cached separately)
+				if (context.cache) {
+					context.cache.set(elementId, cacheEntry)
+				}
+			}
+
+			// Merge element's references into global references
+			for (const variable of cacheEntry.usedVariables) {
+				context.globalReferences.variables.add(variable)
+			}
+			if (cacheEntry.compositeElement?.elementId)
+				context.globalReferences.compositeElements.add(cacheEntry.compositeElement.elementId)
+
+			// If this is a group, populate the children
+			if (element.type === 'group' || element.type === 'composite') {
+				const childIdPrefix = cacheEntry.compositeElement ? cacheEntry.compositeElement.childIdPrefix : idPrefix
+
+				const children =
+					element.type === 'group'
+						? element.children
+						: (context.resolveCompositeElement(element.connectionId, element.elementId)?.elements ?? [])
+
+				if (cacheEntry.drawElement?.type === 'group') {
+					const childContext = cacheEntry.compositeElement?.childPropOverrides
+						? context.withPropOverrides(cacheEntry.compositeElement.childPropOverrides)
+						: context
+
+					// Recurse to process children
+					return {
+						...cacheEntry.drawElement,
+						children: await convertElements(childContext, children, childIdPrefix),
+					}
+				} else {
+					// Element is disabled but we still need to track child IDs so they aren't purged from cache
+					// This allows re-enabling the element to reuse cached children without recomputation
+					collectChildElementIds(context, children, childIdPrefix)
+
+					return cacheEntry.drawElement
+				}
+			} else {
+				// No children to process, return cached entry directly
+				return cacheEntry.drawElement
 			}
 		})
 	)
 
-	return newElements.filter((element) => element !== null)
+	return newElements.filter((el): el is SomeButtonGraphicsDrawElement => el !== null)
 }
 
 function convertCanvasElementForDrawing(
-	helperFactory: ElementExpressionHelperFactory,
-	element: ButtonGraphicsCanvasElement
-): ButtonGraphicsCanvasDrawElement {
-	const helper = helperFactory(element)
+	context: ParseElementsContext,
+	element: ButtonGraphicsCanvasElement,
+	idPrefix: string
+): ElementConversionCacheEntry {
+	const { helper, usedVariables } = context.createHelper(element)
 
-	return {
-		id: element.id,
+	const drawElement: ButtonGraphicsCanvasDrawElement = {
+		id: idPrefix + element.id,
 		type: 'canvas',
 		usage: element.usage,
 		// color,
@@ -344,151 +215,210 @@ function convertCanvasElementForDrawing(
 			Object.values(ButtonGraphicsDecorationType),
 			ButtonGraphicsDecorationType.FollowDefault
 		),
+		contentHash: '', // Will be computed below
 	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
 }
 
-async function convertGroupElementForDrawing(
-	helperFactory: ElementExpressionHelperFactory,
-	element: ButtonGraphicsGroupElement
-): Promise<ButtonGraphicsGroupDrawElement | null> {
-	const helper = helperFactory(element)
+/**
+ * Convert group element using the context for recursive child conversion
+ */
+function convertGroupElementForDrawing(
+	context: ParseElementsContext,
+	element: ButtonGraphicsGroupElement,
+	idPrefix: string
+): ElementConversionCacheEntry {
+	const { helper, usedVariables } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && helper.onlyEnabled) return null
+	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	const children = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(helperFactory, element.children)
-
-	return {
-		id: element.id,
+	// Note: Group hash is shallow - children have their own hashes
+	const drawElement: ButtonGraphicsGroupDrawElement = {
+		id: idPrefix + element.id,
 		type: 'group',
 		usage: element.usage,
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
-		children,
+		children: [], // Will be filled in by caller
+		contentHash: '', // Will be computed below
 	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
 }
 
-async function convertCompositeElementForDrawing(
-	helperFactory: ElementExpressionHelperFactory,
+function parseCompositeElementChildOptions(
+	helper: ElementExpressionHelper<ButtonGraphicsCompositeElement>,
+	elementDefinition: CompositeElementDefinition,
 	element: ButtonGraphicsCompositeElement
-): Promise<ButtonGraphicsGroupDrawElement | null> {
-	const helper = helperFactory(element)
+): VariableValues {
+	// Inject new values
+	const propOverrides: VariableValues = {}
+
+	for (const option of elementDefinition.options) {
+		const optionKey: CompositeElementOptionKey = `opt:${option.id}`
+		const overrideKey = `$(options:${option.id})`
+
+		switch (option.type) {
+			case 'checkbox':
+				propOverrides[overrideKey] = helper.getBoolean(optionKey, option.default)
+				break
+
+			case 'textinput': {
+				const rawValue = element[optionKey]
+				if (!rawValue) {
+					propOverrides[overrideKey] = option.default ?? ''
+				} else if (option.isExpression || rawValue.isExpression) {
+					const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
+					propOverrides[overrideKey] = res.ok ? res.value : option.default
+				} else if (option.useVariables) {
+					propOverrides[overrideKey] = helper.parseVariablesInString(rawValue.value, option.default ?? '')
+				} else {
+					propOverrides[overrideKey] = String(rawValue.value)
+				}
+				break
+			}
+
+			case 'number':
+				propOverrides[overrideKey] = helper.getNumber(optionKey, option.default ?? 0, 1)
+				break
+
+			case 'dropdown':
+				propOverrides[overrideKey] = helper.getEnum(
+					optionKey,
+					option.choices.map((c) => c.id),
+					option.default
+				)
+				break
+
+			case 'colorpicker':
+				if (option.returnType === 'string') {
+					propOverrides[overrideKey] = helper.getString(optionKey, String(option.default))
+				} else {
+					propOverrides[overrideKey] = helper.getNumber(optionKey, Number(option.default) || 0, 1)
+				}
+				break
+
+			case 'multidropdown':
+			case 'internal:connection_collection':
+			case 'internal:connection_id':
+			case 'internal:custom_variable':
+			case 'internal:date':
+			case 'internal:time':
+			case 'internal:horizontal-alignment':
+			case 'internal:page':
+			case 'internal:png-image':
+			case 'internal:surface_serial':
+			case 'internal:vertical-alignment':
+			case 'internal:trigger':
+			case 'internal:trigger_collection':
+			case 'internal:variable':
+			case 'secret-text':
+			case 'static-text':
+			case 'custom-variable':
+			case 'bonjour-device':
+				// Not supported
+				break
+			default:
+				assertNever(option)
+				// Ignore unknown type
+				break
+		}
+	}
+
+	return propOverrides
+}
+
+/**
+ * Convert composite element using the factory for recursive child conversion
+ */
+async function convertCompositeElementForDrawing(
+	context: ParseElementsContext,
+	element: ButtonGraphicsCompositeElement,
+	idPrefix: string
+): Promise<ElementConversionCacheEntry> {
+	const { helper, usedVariables } = context.createHelper(element)
+
+	const compositeElementId: CompositeElementIdString = `${element.connectionId}:${element.elementId}`
+
+	// The full ID of this composite element (with any parent prefixes)
+	const compositeFullId = idPrefix + element.id
+
+	const childElement = context.resolveCompositeElement(element.connectionId, element.elementId)
+	if (!childElement) {
+		return {
+			drawElement: null,
+			usedVariables,
+			compositeElement: {
+				elementId: compositeElementId,
+				childIdPrefix: compositeFullId + '/',
+				childPropOverrides: {},
+			},
+		}
+	}
+
+	const propOverrides = parseCompositeElementChildOptions(helper, childElement, element)
+	const propOverridesHash = createHash('sha256').update(JSON.stringify(propOverrides)).digest('hex')
+
+	const childIdPrefix = compositeFullId + '-' + propOverridesHash + '/'
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && helper.onlyEnabled) return null
+	if (!enabled && context.onlyEnabled)
+		return {
+			drawElement: null,
+			usedVariables,
+			compositeElement: {
+				elementId: compositeElementId,
+				childIdPrefix,
+				childPropOverrides: propOverrides,
+			},
+		}
 
 	const opacity = helper.getNumber('opacity', 1, 0.01)
 	const bounds = convertDrawBounds(helper)
 
-	let children: SomeButtonGraphicsDrawElement[] = []
-
-	const childElement = helper.resolveCompositeElement(element.connectionId, element.elementId)
-	if (childElement) {
-		// Inject new values
-		const propOverrides: VariableValues = {}
-
-		for (const option of childElement.options) {
-			const optionKey: CompositeElementOptionKey = `opt:${option.id}`
-			const overrideKey = `$(options:${option.id})`
-
-			switch (option.type) {
-				case 'checkbox':
-					propOverrides[overrideKey] = helper.getBoolean(optionKey, option.default)
-					break
-
-				case 'textinput': {
-					const rawValue = element[optionKey]
-					if (!rawValue) {
-						propOverrides[overrideKey] = option.default ?? ''
-					} else if (option.isExpression || rawValue.isExpression) {
-						const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
-						propOverrides[overrideKey] = res.ok ? res.value : option.default
-					} else if (option.useVariables) {
-						propOverrides[overrideKey] = helper.parseVariablesInString(rawValue.value, option.default ?? '')
-					} else {
-						propOverrides[overrideKey] = String(rawValue.value)
-					}
-					break
-				}
-
-				case 'number':
-					propOverrides[overrideKey] = helper.getNumber(optionKey, option.default ?? 0, 1)
-					break
-
-				case 'dropdown':
-					propOverrides[overrideKey] = helper.getEnum(
-						optionKey,
-						option.choices.map((c) => c.id),
-						option.default
-					)
-					break
-
-				case 'colorpicker':
-					if (option.returnType === 'string') {
-						propOverrides[overrideKey] = helper.getString(optionKey, String(option.default))
-					} else {
-						propOverrides[overrideKey] = helper.getNumber(optionKey, Number(option.default) || 0, 1)
-					}
-					break
-
-				case 'multidropdown':
-				case 'internal:connection_collection':
-				case 'internal:connection_id':
-				case 'internal:custom_variable':
-				case 'internal:date':
-				case 'internal:time':
-				case 'internal:horizontal-alignment':
-				case 'internal:page':
-				case 'internal:png-image':
-				case 'internal:surface_serial':
-				case 'internal:vertical-alignment':
-				case 'internal:trigger':
-				case 'internal:trigger_collection':
-				case 'internal:variable':
-				case 'secret-text':
-				case 'static-text':
-				case 'custom-variable':
-				case 'bonjour-device':
-					// Not supported
-					break
-				default:
-					assertNever(option)
-					// Ignore unknown type
-					break
-			}
-		}
-
-		// Inject the prop overrides into a new factory
-		const childHelperFactory: ElementExpressionHelperFactory = (element, newPropOverrides) =>
-			helperFactory(element, newPropOverrides ?? propOverrides)
-		children = await ConvertSomeButtonGraphicsElementForDrawingWithHelper(childHelperFactory, childElement.elements)
-	}
-
-	return {
-		id: element.id,
+	// Note: Composite elements render as groups - hash is shallow (children have their own hashes)
+	const drawElement: ButtonGraphicsGroupDrawElement = {
+		id: compositeFullId,
 		type: 'group',
 		usage: element.usage,
 		enabled,
 		opacity,
 		...bounds,
 		rotation: 0, // Not supported on composite elements
-		children,
+		children: [], // Will be filled in by caller
+		contentHash: '', // Will be computed below
+	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return {
+		drawElement,
+		usedVariables,
+		compositeElement: {
+			elementId: compositeElementId,
+			childIdPrefix,
+			childPropOverrides: propOverrides,
+		},
 	}
 }
 
 async function convertImageElementForDrawing(
-	helperFactory: ElementExpressionHelperFactory,
-	element: ButtonGraphicsImageElement
-): Promise<ButtonGraphicsImageDrawElement | null> {
-	const helper = helperFactory(element)
+	context: ParseElementsContext,
+	element: ButtonGraphicsImageElement,
+	idPrefix: string
+): Promise<ElementConversionCacheEntry> {
+	const { helper, usedVariables } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && helper.onlyEnabled) return null
+	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
 	let base64Image = helper.getString<string | null>('base64Image', null)
 	// Hack: composite deprecated imageBuffers into a single base64 image
@@ -496,12 +426,12 @@ async function convertImageElementForDrawing(
 		const imageObjs = base64Image as unknown as DrawImageBuffer[]
 		if (Array.isArray(imageObjs)) {
 			// This is not very efficient, as it is not cached, but as this is a deprecated feature, it is acceptable for now
-			base64Image = (await helper.drawPixelBuffers(imageObjs)) || null
+			base64Image = (await context.drawPixelBuffers(imageObjs)) || null
 		}
 	}
 
-	return {
-		id: element.id,
+	const drawElement: ButtonGraphicsImageDrawElement = {
+		id: idPrefix + element.id,
 		type: 'image',
 		usage: element.usage,
 		enabled,
@@ -512,21 +442,26 @@ async function convertImageElementForDrawing(
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
 		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
+		contentHash: '', // Will be computed below
 	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
 }
 
 function convertTextElementForDrawing(
-	helperFactory: ElementExpressionHelperFactory,
-	element: ButtonGraphicsTextElement
-): ButtonGraphicsTextDrawElement | null {
-	const helper = helperFactory(element)
+	context: ParseElementsContext,
+	element: ButtonGraphicsTextElement,
+	idPrefix: string
+): ElementConversionCacheEntry {
+	const { helper, usedVariables } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && helper.onlyEnabled) return null
+	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	return {
-		id: element.id,
+	const drawElement: ButtonGraphicsTextDrawElement = {
+		id: idPrefix + element.id,
 		type: 'text',
 		usage: element.usage,
 		enabled,
@@ -539,21 +474,26 @@ function convertTextElementForDrawing(
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
 		outlineColor: helper.getNumber('outlineColor', 0),
+		contentHash: '', // Will be computed below
 	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
 }
 
 function convertBoxElementForDrawing(
-	helperFactory: ElementExpressionHelperFactory,
-	element: ButtonGraphicsBoxElement
-): ButtonGraphicsBoxDrawElement | null {
-	const helper = helperFactory(element)
+	context: ParseElementsContext,
+	element: ButtonGraphicsBoxElement,
+	idPrefix: string
+): ElementConversionCacheEntry {
+	const { helper, usedVariables } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && helper.onlyEnabled) return null
+	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	return {
-		id: element.id,
+	const drawElement: ButtonGraphicsBoxDrawElement = {
+		id: idPrefix + element.id,
 		type: 'box',
 		usage: element.usage,
 		enabled,
@@ -563,32 +503,41 @@ function convertBoxElementForDrawing(
 		color: helper.getNumber('color', 0),
 
 		...convertBorderProperties(helper),
+		contentHash: '', // Will be computed below
 	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
 }
 
 function convertLineElementForDrawing(
-	helperFactory: ElementExpressionHelperFactory,
-	element: ButtonGraphicsLineElement
-): ButtonGraphicsLineDrawElement | null {
-	const helper = helperFactory(element)
+	context: ParseElementsContext,
+	element: ButtonGraphicsLineElement,
+	idPrefix: string
+): ElementConversionCacheEntry {
+	const { helper, usedVariables } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && helper.onlyEnabled) return null
+	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	return {
-		id: element.id,
+	const drawElement: ButtonGraphicsLineDrawElement = {
+		id: idPrefix + element.id,
 		type: 'line',
 		usage: element.usage,
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
-		fromX: helper.getNumber('fromX', 0),
-		fromY: helper.getNumber('fromY', 0),
-		toX: helper.getNumber('toX', 100),
-		toY: helper.getNumber('toY', 100),
+		fromX: helper.getNumber('fromX', 0, 0.01),
+		fromY: helper.getNumber('fromY', 0, 0.01),
+		toX: helper.getNumber('toX', 1, 0.01),
+		toY: helper.getNumber('toY', 1, 0.01),
 
 		...convertBorderProperties(helper),
+		contentHash: '', // Will be computed below
 	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
 }
 
 function convertDrawBounds(
@@ -603,17 +552,18 @@ function convertDrawBounds(
 }
 
 function convertCircleElementForDrawing(
-	helperFactory: ElementExpressionHelperFactory,
-	element: ButtonGraphicsCircleElement
-): ButtonGraphicsCircleDrawElement | null {
-	const helper = helperFactory(element)
+	context: ParseElementsContext,
+	element: ButtonGraphicsCircleElement,
+	idPrefix: string
+): ElementConversionCacheEntry {
+	const { helper, usedVariables } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && helper.onlyEnabled) return null
+	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	return {
-		id: element.id,
+	const drawElement: ButtonGraphicsCircleDrawElement = {
+		id: idPrefix + element.id,
 		type: 'circle',
 		usage: element.usage,
 		enabled,
@@ -625,7 +575,11 @@ function convertCircleElementForDrawing(
 		drawSlice: helper.getBoolean('drawSlice', false),
 		...convertBorderProperties(helper),
 		borderOnlyArc: helper.getBoolean('borderOnlyArc', false),
+		contentHash: '', // Will be computed below
 	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
 }
 
 function convertBorderProperties(
@@ -635,5 +589,38 @@ function convertBorderProperties(
 		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
 		borderColor: helper.getNumber('borderColor', 0),
 		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
+	}
+}
+
+/**
+ * Recursively collect element IDs from children without converting them.
+ * Used to preserve cache entries for children of disabled groups/composites,
+ * so re-enabling the parent can reuse cached children without recomputation.
+ */
+function collectChildElementIds(
+	context: ParseElementsContext,
+	children: readonly SomeButtonGraphicsElement[],
+	idPrefix: string
+): void {
+	for (const child of children) {
+		const childId = idPrefix + child.id
+		context.processedElementIds.add(childId)
+
+		// If this child is a group, recurse with same prefix
+		if (child.type === 'group') {
+			collectChildElementIds(context, child.children, idPrefix)
+		}
+
+		// If this child is a composite, we need to check if we have a cached entry
+		// to determine the correct childIdPrefix for its children
+		if (child.type === 'composite') {
+			const cachedEntry = context.cache?.get(childId)
+			if (cachedEntry?.compositeElement) {
+				const compositeChildren = context.resolveCompositeElement(child.connectionId, child.elementId)?.elements
+				if (compositeChildren) {
+					collectChildElementIds(context, compositeChildren, cachedEntry.compositeElement.childIdPrefix)
+				}
+			}
+		}
 	}
 }

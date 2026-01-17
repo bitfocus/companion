@@ -209,12 +209,14 @@ export class ControlEntityList {
 	/**
 	 * Reorder an entity directly in in the list
 	 */
-	moveEntity(oldIndex: number, newIndex: number): void {
+	moveEntity(oldIndex: number, newIndex: number): ControlEntityInstance {
 		oldIndex = clamp(oldIndex, 0, this.#entities.length)
 		newIndex = clamp(newIndex, 0, this.#entities.length)
 		if (oldIndex < newIndex) newIndex -= 1
 
 		this.#entities.splice(newIndex, 0, ...this.#entities.splice(oldIndex, 1))
+
+		return this.#entities[newIndex]
 	}
 
 	/**

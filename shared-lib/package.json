@@ -24,6 +24,7 @@
     "jsep": "^1.4.0",
     "jsonpath-plus": "^10.3.0",
     "ps-tree": "^1.2.0",
+    "quick-lru": "^7.3.0",
     "semver": "^7.7.3",
     "unicode-segmenter": "^0.14.5",
     "zod": "^4.3.5"

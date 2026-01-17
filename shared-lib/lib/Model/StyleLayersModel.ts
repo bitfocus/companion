@@ -15,6 +15,8 @@ export interface ButtonGraphicsDrawBase {
 	usage: ButtonGraphicsElementUsage
 	enabled: boolean
 	opacity: number
+	/** A hash of the element content, used for render cache key generation */
+	contentHash: string
 }
 
 export interface ButtonGraphicsElementBase {

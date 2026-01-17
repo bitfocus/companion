@@ -66,6 +66,8 @@ generatedFile += `\treadonly id: string\n`
 generatedFile += `\tusage: ButtonGraphicsElementUsage\n`
 generatedFile += `\tenabled: boolean\n`
 generatedFile += `\topacity: number\n`
+generatedFile += `\t/** A hash of the element content, used for render cache key generation */\n`
+generatedFile += `\tcontentHash: string\n`
 generatedFile += '}\n\n'
 
 // Generate ButtonGraphicsElementBase interface

@@ -20,14 +20,23 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 
+export interface ControlEntityListChangeProps {
+	/** If true, do not save changes to the database/disk */
+	noSave?: boolean
+	/** If true, the control should be redrawn */
+	redraw: boolean
+	/** The id of drawing elements that are affected */
+	changedElementIds?: ReadonlySet<string>
+	/** If true, invalidate all drawing elements */
+	invalidateAllElements?: boolean
+}
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
 	internalModule: InternalController
 	processManager: InstanceProcessManager
 	variableValues: VariablesValues
 	controlId: string
-	commitChange: (redraw?: boolean) => void
-	invalidateControl: () => void
+	reportChange: (options: ControlEntityListChangeProps) => void
 }
 
 export abstract class ControlEntityListPoolBase {
@@ -45,21 +54,15 @@ export abstract class ControlEntityListPoolBase {
 	protected readonly controlId: string
 
 	/**
-	 * Commit changes to the database and disk
+	 * Report changes to the database and disk
 	 */
-	protected readonly commitChange: (redraw?: boolean) => void
-
-	/**
-	 * Trigger a redraw/invalidation of the control
-	 */
-	protected readonly invalidateControl: () => void
+	protected readonly reportChange: (options: ControlEntityListChangeProps) => void
 
 	protected constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
 
 		this.controlId = props.controlId
-		this.commitChange = props.commitChange
-		this.invalidateControl = props.invalidateControl
+		this.reportChange = props.reportChange
 
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule
@@ -121,7 +124,11 @@ export abstract class ControlEntityListPoolBase {
 		for (const list of this.getAllEntityLists()) {
 			if (list.clearCachedValueForConnectionId(connectionId)) changed = true
 		}
-		if (changed) this.invalidateControl()
+		if (changed)
+			this.reportChange({
+				redraw: true,
+				noSave: true,
+			})
 	}
 
 	/**
@@ -239,7 +246,11 @@ export abstract class ControlEntityListPoolBase {
 
 		this.tryTriggerLocalVariablesChanged(...newEntities)
 
-		this.commitChange()
+		this.reportChange({
+			// Ensure new feedbacks clear caches
+			redraw: true, // Need to recheck status icon
+			invalidateAllElements: listId === 'feedbacks',
+		})
 
 		return true
 	}
@@ -256,7 +267,11 @@ export abstract class ControlEntityListPoolBase {
 
 		this.tryTriggerLocalVariablesChanged(entity)
 
-		this.commitChange(false)
+		this.reportChange({
+			// Ensure new feedbacks clear caches
+			redraw: listId === 'feedbacks',
+			changedElementIds: listId === 'feedbacks' ? entity.styleOverrideAffectedElementIds : undefined,
+		})
 
 		return true
 	}
@@ -271,11 +286,17 @@ export abstract class ControlEntityListPoolBase {
 		const entity = entityList.findById(id)
 		if (!entity) return false
 
+		// Collect element IDs referenced by style overrides
+		const affectedElementIds = listId === 'feedbacks' ? entity.styleOverrideAffectedElementIds : undefined
+
 		entity.setEnabled(enabled)
 
 		this.tryTriggerLocalVariablesChanged(entity)
 
-		this.commitChange()
+		this.reportChange({
+			redraw: true,
+			changedElementIds: affectedElementIds,
+		})
 
 		return true
 	}
@@ -292,7 +313,9 @@ export abstract class ControlEntityListPoolBase {
 
 		entity.setHeadline(headline)
 
-		this.commitChange()
+		this.reportChange({
+			redraw: false,
+		})
 
 		return true
 	}
@@ -317,7 +340,10 @@ export abstract class ControlEntityListPoolBase {
 
 		this.tryTriggerLocalVariablesChanged(entityAfter)
 
-		this.commitChange(true)
+		this.reportChange({
+			redraw: listId === 'feedbacks',
+		})
+
 		return true
 	}
 
@@ -330,7 +356,10 @@ export abstract class ControlEntityListPoolBase {
 
 		const removedEntity = entityList.removeEntity(id)
 		if (removedEntity) {
-			this.commitChange()
+			this.reportChange({
+				redraw: true, // Need to recheck status icon
+				changedElementIds: listId === 'feedbacks' ? removedEntity.styleOverrideAffectedElementIds : undefined,
+			})
 
 			this.tryTriggerLocalVariablesChanged(removedEntity.localVariableName)
 
@@ -360,12 +389,14 @@ export abstract class ControlEntityListPoolBase {
 		const oldInfo = this.getEntityList(moveListId)?.findParentAndIndex(moveEntityId)
 		if (!oldInfo) return false
 
+		let movedEntity: ControlEntityInstance | undefined
+
 		if (
 			isEqual(moveListId, newListId) &&
 			oldInfo.parent.ownerId?.parentId === newOwnerId?.parentId &&
 			oldInfo.parent.ownerId?.childGroup === newOwnerId?.childGroup
 		) {
-			oldInfo.parent.moveEntity(oldInfo.index, newIndex)
+			movedEntity = oldInfo.parent.moveEntity(oldInfo.index, newIndex)
 		} else {
 			const newEntityList = this.getEntityList(newListId)
 			if (!newEntityList) return false
@@ -380,17 +411,21 @@ export abstract class ControlEntityListPoolBase {
 			if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldInfo.item)) return false
 			if (!newParent && !newEntityList.canAcceptEntity(oldInfo.item)) return false
 
-			const poppedEntity = oldInfo.parent.popEntity(oldInfo.index)
-			if (!poppedEntity) return false
+			movedEntity = oldInfo.parent.popEntity(oldInfo.index)
+			if (!movedEntity) return false
 
 			if (newParent) {
-				newParent.pushChild(poppedEntity, newOwnerId!.childGroup, newIndex)
+				newParent.pushChild(movedEntity, newOwnerId!.childGroup, newIndex)
 			} else {
-				newEntityList.pushEntity(poppedEntity, newIndex)
+				newEntityList.pushEntity(movedEntity, newIndex)
 			}
 		}
 
-		this.commitChange()
+		this.reportChange({
+			redraw: true,
+			// If it moved at all, that could invalidate the overrides. Play it safe
+			changedElementIds: movedEntity?.styleOverrideAffectedElementIds,
+		})
 
 		return true
 	}
@@ -405,6 +440,8 @@ export abstract class ControlEntityListPoolBase {
 
 			// Ignore if the types do not match
 			if (entity.type !== newProps.type) return undefined
+
+			const oldElementIds = entity.styleOverrideAffectedElementIds
 
 			// If this is a layered drawing, translate the style into the overrides format
 			const existingStyleOverrides = entity.styleOverrides
@@ -445,7 +482,10 @@ export abstract class ControlEntityListPoolBase {
 
 			this.tryTriggerLocalVariablesChanged(entity)
 
-			this.commitChange(true)
+			this.reportChange({
+				redraw: true,
+				changedElementIds: entity.styleOverrideAffectedElementIds?.union(oldElementIds || new Set<string>()),
+			})
 
 			return entity
 		}
@@ -464,7 +504,10 @@ export abstract class ControlEntityListPoolBase {
 
 		entityList.loadStorage(entities, false, false)
 
-		this.commitChange(true)
+		this.reportChange({
+			redraw: true,
+			invalidateAllElements: listId === 'feedbacks',
+		})
 
 		return true
 	}
@@ -487,7 +530,7 @@ export abstract class ControlEntityListPoolBase {
 
 		this.tryTriggerLocalVariablesChanged(entity)
 
-		this.commitChange()
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -508,7 +551,10 @@ export abstract class ControlEntityListPoolBase {
 
 		this.tryTriggerLocalVariablesChanged(entity)
 
-		this.commitChange()
+		this.reportChange({
+			redraw: true,
+			// No need to invalidate caches, feedback values havent changed
+		})
 
 		return true
 	}
@@ -529,7 +575,10 @@ export abstract class ControlEntityListPoolBase {
 
 		this.tryTriggerLocalVariablesChanged(entity)
 
-		this.commitChange()
+		this.reportChange({
+			redraw: true,
+			changedElementIds: listId === 'feedbacks' ? entity.styleOverrideAffectedElementIds : undefined,
+		})
 
 		return true
 	}
@@ -559,7 +608,7 @@ export abstract class ControlEntityListPoolBase {
 
 		this.tryTriggerLocalVariablesChanged(entity, oldLocalVariableName)
 
-		this.commitChange()
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -584,7 +633,7 @@ export abstract class ControlEntityListPoolBase {
 
 		// Persist value if needed
 		if (needsPersistence) {
-			this.commitChange(false)
+			this.reportChange({ redraw: false })
 		}
 
 		this.tryTriggerLocalVariablesChanged(entity)
@@ -605,8 +654,13 @@ export abstract class ControlEntityListPoolBase {
 
 		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
-		if (entity.replaceStyleOverride(override)) {
-			this.commitChange()
+		const result = entity.replaceStyleOverride(override)
+		if (result) {
+			// Invalidate the specific element if the feedback is enabled
+			this.reportChange({
+				redraw: !entity.disabled,
+				changedElementIds: !entity.disabled ? new Set([result.elementId]) : undefined,
+			})
 
 			return true
 		}
@@ -623,8 +677,13 @@ export abstract class ControlEntityListPoolBase {
 
 		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
 
-		if (entity.removeStyleOverride(overrideId)) {
-			this.commitChange()
+		const removed = entity.removeStyleOverride(overrideId)
+		if (removed) {
+			// Invalidate the specific element if the feedback is enabled
+			this.reportChange({
+				redraw: !entity.disabled,
+				changedElementIds: !entity.disabled ? new Set([removed.elementId]) : undefined,
+			})
 
 			return true
 		}
@@ -641,7 +700,12 @@ export abstract class ControlEntityListPoolBase {
 			if (list.forgetForConnection(connectionId)) changed = true
 		}
 
-		if (changed) this.commitChange(true)
+		if (changed) {
+			this.reportChange({
+				redraw: true,
+				invalidateAllElements: true,
+			})
+		}
 	}
 
 	/**
@@ -656,7 +720,10 @@ export abstract class ControlEntityListPoolBase {
 		}
 
 		if (changed) {
-			this.commitChange(true)
+			this.reportChange({
+				redraw: true,
+				invalidateAllElements: true,
+			})
 		}
 	}
 
