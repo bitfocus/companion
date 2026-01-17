@@ -199,6 +199,13 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				showInvert: false,
 				options: [
 					{
+						type: 'checkbox',
+						label: 'Persist value',
+						tooltip: 'If enabled, variable value will be saved and restored when Companion restarts.',
+						id: 'persist_value',
+						default: false,
+					},
+					{
 						type: 'textinput',
 						label: 'Startup Value',
 						id: 'startup_value',
@@ -207,13 +214,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 							type: 'expression',
 							fn: '!$(options:persist_value)',
 						},
-					},
-					{
-						type: 'checkbox',
-						label: 'Persist value',
-						tooltip: 'If enabled, variable value will be saved and restored when Companion restarts.',
-						id: 'persist_value',
-						default: false,
 					},
 				],
 			},
