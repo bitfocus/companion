@@ -39,12 +39,12 @@ import type {
 	// eslint-disable-next-line n/no-missing-import
 } from '@companion-module/base-old/dist/host-api/versions.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
-import {
-	assertNever,
-	type CompanionHTTPRequest,
-	type CompanionInputFieldBase,
-	type CompanionOptionValues,
-	type LogLevel,
+import type {
+	OptionsObject,
+	CompanionHTTPRequest,
+	CompanionInputFieldBase,
+	CompanionOptionValues,
+	LogLevel,
 } from '@companion-module/base-old'
 import {
 	EntityModelType,
@@ -81,6 +81,7 @@ import type {
 } from './ChildHandlerApi.js'
 import { ConvertPresetDefinition } from './Thread/Presets.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -1078,7 +1079,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					id: value.entity.id,
 					controlId: value.controlId,
 					actionId: value.entity.definitionId,
-					options: value.parsedOptions,
+					options: value.parsedOptions as OptionsObject,
 
 					upgradeIndex: value.entity.upgradeIndex ?? null,
 					disabled: !!value.entity.disabled,
@@ -1100,7 +1101,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					id: value.entity.id,
 					controlId: value.controlId,
 					feedbackId: value.entity.definitionId,
-					options: value.parsedOptions,
+					options: value.parsedOptions as OptionsObject,
 
 					image: value.imageSize,
 

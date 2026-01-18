@@ -1,5 +1,6 @@
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
+	CompanionFieldVariablesSupport,
 	CompanionInputFieldBaseExtended,
 	CompanionInputFieldBonjourDeviceExtended,
 	CompanionInputFieldCheckboxExtended,
@@ -16,7 +17,6 @@ import type {
 } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
-	CompanionFieldVariablesSupport,
 	CompanionInputFieldBase,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
@@ -31,7 +31,10 @@ import type {
 	SomeCompanionFeedbackInputField,
 	Complete,
 } from '@companion-module/base'
-import type { CompanionInputFieldBase as CompanionInputFieldBaseOld } from '@companion-module/base-old'
+import type {
+	CompanionInputFieldBase as CompanionInputFieldBaseOld,
+	CompanionFieldVariablesSupport as CompanionFieldVariablesSupportOld,
+} from '@companion-module/base-old'
 // eslint-disable-next-line n/no-missing-import
 import type { EncodeIsVisible, SomeEncodedCompanionConfigField } from '@companion-module/base-old/dist/host-api/api.js'
 
@@ -148,8 +151,11 @@ function translateTextInputField(
 ): Complete<CompanionInputFieldTextInputExtended> {
 	let useVariables: CompanionFieldVariablesSupport | undefined
 	if (field.useVariables) {
+		// Type casting to support both old and new formats
+		const fieldUseVariables = field.useVariables as CompanionFieldVariablesSupportOld | true
+
 		useVariables = {
-			local: usesInternalVariableParsing || (typeof field.useVariables === 'object' && field.useVariables.local),
+			local: usesInternalVariableParsing || (typeof fieldUseVariables === 'object' && fieldUseVariables.local),
 		}
 	}
 
