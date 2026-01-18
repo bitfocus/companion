@@ -164,6 +164,11 @@ export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
 
+	const [hideHelp, _setHideHelp] = useLocalStorage('hide_sidebar_help', false)
+	const [showCloud, _setShowCloud] = useLocalStorage('show_companion_cloud', '0')
+
+	const showHelpButtons = !hideHelp
+
 	const doToggle = useCallback(() => setUnfoldable((val) => !val), [setUnfoldable])
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
@@ -224,9 +229,7 @@ export const MySidebar = memo(function MySidebar() {
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
-				{window.localStorage.getItem('show_companion_cloud') === '1' && (
-					<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
-				)}
+				{showCloud === '1' && <SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />}
 				<SidebarMenuItemGroup name="Interactive Buttons" icon={faSquareCaretRight}>
 					<SidebarMenuItem name="Emulator" icon={null} path="/emulator" target="_blank" />
 					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_blank" />
@@ -235,16 +238,18 @@ export const MySidebar = memo(function MySidebar() {
 			<div className="sidebar-bottom-shadow-container">
 				<div className="sidebar-bottom-shadow" />
 			</div>
-			<CSidebarNav className="nav-secondary border-top">
-				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-				<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
-				<SidebarMenuItemGroup name="Support" icon={faHeadset}>
-					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
-					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
-					<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
-					<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
-				</SidebarMenuItemGroup>
-			</CSidebarNav>
+			{showHelpButtons && (
+				<CSidebarNav className="nav-secondary border-top">
+					<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
+					<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
+					<SidebarMenuItemGroup name="Support" icon={faHeadset}>
+						<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
+						<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
+						<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
+						<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
+					</SidebarMenuItemGroup>
+				</CSidebarNav>
+			)}
 			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
 				<SidebarTogglerAndVersion doToggle={doToggle} />
 			</CSidebarHeader>
