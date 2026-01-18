@@ -18,9 +18,7 @@ import { registerLoggingSink, createModuleLogger, InstanceWrapper } from '@compa
 import type { ModuleManifest } from '@companion-module/base/manifest'
 import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
-import { translateConnectionConfigFields } from '../ConfigFields.js'
-// eslint-disable-next-line n/no-missing-import
-import { serializeIsVisibleFn } from '@companion-module/base-old/dist/internal/base.js'
+import { translateConnectionConfigFields } from './ConfigFields.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')
@@ -114,8 +112,7 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 
 			const fields = await instance.getConfigFields()
 			return {
-				// TODO - simplify/streamline this
-				fields: translateConnectionConfigFields(serializeIsVisibleFn(fields)),
+				fields: translateConnectionConfigFields(fields),
 			}
 		},
 		handleHttpRequest: async (msg): Promise<HandleHttpRequestResponseMessage> => {

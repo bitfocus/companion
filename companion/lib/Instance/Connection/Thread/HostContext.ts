@@ -18,10 +18,8 @@ import {
 } from '@companion-module/host'
 import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
 import { EntityModelType, isValidFeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { translateEntityInputFields } from '../ConfigFields.js'
+import { translateEntityInputFields } from './ConfigFields.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-// eslint-disable-next-line n/no-missing-import
-import { serializeIsVisibleFn } from '@companion-module/base-old/dist/internal/base.js'
 import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
@@ -60,11 +58,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				options: translateEntityInputFields(
-					serializeIsVisibleFn(rawAction.options || []),
-					EntityModelType.Action,
-					true
-				),
+				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action),
 				optionsToIgnoreForSubscribe: rawAction.optionsToIgnoreForSubscribe || [],
 				hasLifecycleFunctions: !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
@@ -92,11 +86,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				description: rawFeedback.description,
-				options: translateEntityInputFields(
-					serializeIsVisibleFn(rawFeedback.options || []),
-					EntityModelType.Feedback,
-					true
-				),
+				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback),
 				optionsToIgnoreForSubscribe: [],
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,

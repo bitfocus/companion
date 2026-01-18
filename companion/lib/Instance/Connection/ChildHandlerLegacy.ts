@@ -70,7 +70,7 @@ import {
 	type EntityManagerFeedbackEntity,
 } from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFields.js'
+import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFieldsLegacy.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
