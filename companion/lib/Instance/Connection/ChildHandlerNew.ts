@@ -13,8 +13,6 @@ import type {
 	SetPresetDefinitionsMessage,
 	SaveConfigMessage,
 	SendOscMessage,
-	ParseVariablesInStringMessage,
-	ParseVariablesInStringResponseMessage,
 	RecordActionMessage,
 	SetCustomVariableMessage,
 	UpdateActionInstancesMessage,
@@ -117,7 +115,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			updateFeedbackValues: this.#handleUpdateFeedbackValues.bind(this),
 			saveConfig: this.#handleSaveConfig.bind(this),
 			'send-osc': this.#handleSendOsc.bind(this),
-			parseVariablesInString: this.#handleParseVariablesInString.bind(this),
 			recordAction: this.#handleRecordAction.bind(this),
 			setCustomVariable: this.#handleSetCustomVariable.bind(this),
 			sharedUdpSocketJoin: this.#handleSharedUdpSocketJoin.bind(this),
@@ -590,26 +587,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		})
 
 		this.#deps.oscSender.send(msg.host, msg.port, msg.path, decodedArgs)
-	}
-
-	/**
-	 * Handle request to parse variables in a string
-	 */
-	async #handleParseVariablesInString(
-		msg: ParseVariablesInStringMessage
-	): Promise<ParseVariablesInStringResponseMessage> {
-		try {
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(msg.controlId, null)
-			const result = parser.parseVariables(msg.text)
-
-			return {
-				text: result.text,
-			}
-		} catch (e: any) {
-			this.logger.error(`Parse variables failed: ${e}`)
-
-			throw new Error(`Failed to parse variables in string`)
-		}
 	}
 
 	/**

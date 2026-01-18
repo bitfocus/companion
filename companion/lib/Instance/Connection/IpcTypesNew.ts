@@ -47,11 +47,6 @@ export interface ModuleToHostEventsNew {
 	saveConfig: (msg: SaveConfigMessage) => never
 	/** Send an OSC message from the default osc listener in companion */
 	'send-osc': (msg: SendOscMessage) => never
-	/**
-	 * Parse the variables in a string of text.
-	 * This has been semi deprecated in favor of the companion parsing the options before the module.
-	 */
-	parseVariablesInString: (msg: ParseVariablesInStringMessage) => ParseVariablesInStringResponseMessage
 	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction: (msg: RecordActionMessage) => never
 	/**
@@ -243,16 +238,6 @@ export interface SendOscMessage {
 	port: number
 	path: string
 	args: EncodedOSCArgument[]
-}
-
-export interface ParseVariablesInStringMessage {
-	text: string
-	controlId: string | undefined
-	feedbackInstanceId: string | undefined
-	actionInstanceId: string | undefined
-}
-export interface ParseVariablesInStringResponseMessage {
-	text: string
 }
 
 export interface HandleHttpRequestMessage {

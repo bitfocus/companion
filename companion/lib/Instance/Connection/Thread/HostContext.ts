@@ -14,7 +14,6 @@ import {
 	type ModuleHostContext,
 	type OSCMetaArgument,
 	type OSCSomeArguments,
-	type ParseVariablesInfo,
 	type SomeCompanionFeedbackInputField,
 } from '@companion-module/host'
 import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
@@ -211,14 +210,6 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 		}
 
 		this.#ipcWrapper.sendWithNoCb('send-osc', { host, port, path, args: encodedArgs })
-	}
-	/**
-	 * Parse the variables in a string of text.
-	 * This has been semi deprecated in favor of the companion parsing the options before the module.
-	 */
-	async parseVariablesInString(text: string, info: ParseVariablesInfo): Promise<string> {
-		const res = await this.#ipcWrapper.sendWithCb('parseVariablesInString', { ...info, text })
-		return res.text
 	}
 	/** When the action-recorder is running, the module has recorded an action to add to the recorded stack */
 	recordAction(action: CompanionRecordedAction, uniquenessId: string | undefined): void {
