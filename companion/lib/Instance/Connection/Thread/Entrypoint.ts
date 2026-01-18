@@ -192,19 +192,6 @@ const ensureFileUrl = (url: string) => {
 	}
 }
 
-// Load the module code, setting up the global
-// Future: When hitting 2.0 of the module/base API, this should move to be a default+named exports instead
-if (typeof __non_webpack_require__ === 'function') {
-	__non_webpack_require__(moduleEntrypoint)
-} else {
-	await import(ensureFileUrl(moduleEntrypoint))
-}
-
-const moduleEntrypointInfo = global.COMPANION_ENTRYPOINT_INFO
-if (!moduleEntrypointInfo) {
-	throw new Error('Module did not call runEntrypoint')
-}
-
 ipcWrapper
 	.sendWithCb('register', {
 		verificationToken,
@@ -212,12 +199,27 @@ ipcWrapper
 	.then(async (msg) => {
 		logger.info(`Module-host accepted registration`)
 
+		// Future: Once webpacked, the dynamic import() doesn't work, so fallback to require()
+		const moduleImport =
+			typeof __non_webpack_require__ === 'function'
+				? __non_webpack_require__(moduleEntrypoint)
+				: await import(ensureFileUrl(moduleEntrypoint))
+
+		const moduleConstructor = typeof moduleImport === 'function' ? moduleImport : moduleImport.default
+		if (typeof moduleConstructor !== 'function')
+			throw new Error(`Module entrypoint did not return a valid constructor function`)
+
+		const moduleUpgradeScripts = moduleImport.upgradeScripts ?? []
+		if (!Array.isArray(moduleUpgradeScripts)) throw new Error(`Module entrypoint upgradeScripts is not an array`)
+
+		logger.info(`Found module entrypoint, with ${moduleUpgradeScripts.length} upgrade scripts`)
+
 		// Now load the plugin
 		instance = new InstanceWrapper(
 			msg.connectionId,
-			new HostContext(ipcWrapper, msg.connectionId, moduleEntrypointInfo.upgradeScripts.length - 1),
-			moduleEntrypointInfo.factory,
-			moduleEntrypointInfo.upgradeScripts
+			new HostContext(ipcWrapper, msg.connectionId, moduleUpgradeScripts.length - 1),
+			moduleConstructor,
+			moduleUpgradeScripts
 		)
 	})
 	.catch((err) => {

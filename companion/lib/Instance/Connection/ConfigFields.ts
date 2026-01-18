@@ -31,6 +31,7 @@ import type {
 	SomeCompanionFeedbackInputField,
 	Complete,
 } from '@companion-module/base'
+import type { CompanionInputFieldBase as CompanionInputFieldBaseOld } from '@companion-module/base-old'
 // eslint-disable-next-line n/no-missing-import
 import type { EncodeIsVisible, SomeEncodedCompanionConfigField } from '@companion-module/base-old/dist/host-api/api.js'
 
@@ -264,7 +265,9 @@ function translateCommonFields(
 	}
 }
 
-function translateIsVisibleFn<T extends EncodeIsVisible<CompanionInputFieldBase>>(field: T): IsVisibleUiFn | undefined {
+function translateIsVisibleFn<T extends EncodeIsVisible<CompanionInputFieldBase | CompanionInputFieldBaseOld>>(
+	field: T
+): IsVisibleUiFn | undefined {
 	let isVisibleUi: SomeCompanionInputField['isVisibleUi'] | undefined = undefined
 	if (field.isVisibleFn && field.isVisibleFnType === 'expression') {
 		isVisibleUi = {
@@ -277,7 +280,7 @@ function translateIsVisibleFn<T extends EncodeIsVisible<CompanionInputFieldBase>
 		isVisibleUi = {
 			type: 'function',
 			fn: field.isVisibleFn,
-			data: field.isVisibleData,
+			data: (field as EncodeIsVisible<CompanionInputFieldBaseOld>).isVisibleData,
 		}
 	}
 

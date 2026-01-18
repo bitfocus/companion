@@ -90,7 +90,7 @@
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "@companion-module/base": "1.99.0-1-nightly-feat-2-0-20260118-151621-d8641d7",
+    "@companion-module/base": "1.99.0-1-nightly-feat-2-0-20260118-153719-7f21867",
     "@companion-module/host": "0.1.0-1-nightly-feat-2-0-20260118-143144-3c21960"
   },
   "dependenciesMeta": {
