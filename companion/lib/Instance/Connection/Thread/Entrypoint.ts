@@ -209,7 +209,7 @@ ipcWrapper
 		if (typeof moduleConstructor !== 'function')
 			throw new Error(`Module entrypoint did not return a valid constructor function`)
 
-		const moduleUpgradeScripts = moduleImport.upgradeScripts ?? []
+		const moduleUpgradeScripts = moduleImport.UpgradeScripts ?? []
 		if (!Array.isArray(moduleUpgradeScripts)) throw new Error(`Module entrypoint upgradeScripts is not an array`)
 
 		logger.info(`Found module entrypoint, with ${moduleUpgradeScripts.length} upgrade scripts`)
