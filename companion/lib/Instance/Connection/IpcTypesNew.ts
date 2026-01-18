@@ -98,8 +98,8 @@ export interface HostToModuleEventsNew {
 	 */
 	learnAction: (msg: LearnActionMessage) => LearnActionResponseMessage
 	/**
-	 * Learn the options for an feedback
-	 * This allows the module to update the options for an feedback based on the current state of the device
+	 * Learn the options for a feedback
+	 * This allows the module to update the options for a feedback based on the current state of the device
 	 */
 	learnFeedback: (msg: LearnFeedbackMessage) => LearnFeedbackResponseMessage
 

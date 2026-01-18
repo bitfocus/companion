@@ -9,14 +9,14 @@ const moduleBaseRules = MODULE_BASE_VERSIONS.map((v) => {
 	const parsedVersion = semver.parse(v)
 	if (!parsedVersion) throw new Error(`Failed to parse version as semver: ${v}`)
 
-	return `${parsedVersion.major} <= ${parsedVersion.major}.${parsedVersion.minor}` // allow patch versions of the same minor
+	return `${parsedVersion.major} - ${parsedVersion.major}.${parsedVersion.minor}.x` // allow patch versions of the same minor
 })
 const validModuleApiRange = new semver.Range(`~0.6 || ${moduleBaseRules.join(' || ')}`)
 
 const surfaceVersion = semver.parse(SURFACE_BASE_VERSION)
 if (!surfaceVersion) throw new Error(`Failed to parse version as semver: ${SURFACE_BASE_VERSION}`)
 const validSurfaceApiRange = new semver.Range(
-	`${surfaceVersion.major} <= ${surfaceVersion.major}.${surfaceVersion.minor}` // allow patch versions of the same minor
+	`${surfaceVersion.major}<=${surfaceVersion.major}.${surfaceVersion.minor}` // allow patch versions of the same minor
 )
 
 export function isModuleApiVersionCompatible(version: string): boolean {
