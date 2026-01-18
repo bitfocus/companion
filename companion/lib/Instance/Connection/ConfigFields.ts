@@ -29,8 +29,8 @@ import type {
 	SomeCompanionActionInputField,
 	SomeCompanionConfigField,
 	SomeCompanionFeedbackInputField,
+	Complete,
 } from '@companion-module/base'
-import type { Complete } from '@companion-module/base/dist/util.js'
 // eslint-disable-next-line n/no-missing-import
 import type { EncodeIsVisible, SomeEncodedCompanionConfigField } from '@companion-module/base-old/dist/host-api/api.js'
 

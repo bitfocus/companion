@@ -27,7 +27,7 @@ import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
-} from '@companion-module/base/dist/host-api/context.js'
+} from '@companion-module/base/host-api'
 import { ConvertPresetDefinition } from './Presets.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
 

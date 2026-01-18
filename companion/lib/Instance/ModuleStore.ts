@@ -17,7 +17,7 @@ import type {
 	paths as ModuleStoreOpenApiPaths,
 	components as ModuleStoreOpenApiComponents,
 } from '@companion-app/shared/OpenApi/ModuleStore.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 import EventEmitter from 'node:events'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { AppInfo } from '../Registry.js'

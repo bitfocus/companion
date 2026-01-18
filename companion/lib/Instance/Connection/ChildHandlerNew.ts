@@ -52,10 +52,7 @@ import type {
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
-import type {
-	SharedUdpSocketMessageJoin,
-	SharedUdpSocketMessageLeave,
-} from '@companion-module/base/dist/host-api/context.js'
+import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {

@@ -14,7 +14,8 @@ import type {
 	UpgradeActionsResponse,
 	UpgradeFeedbacksResponse,
 } from '../IpcTypesNew.js'
-import { type ModuleManifest, registerLoggingSink, createModuleLogger, InstanceWrapper } from '@companion-module/host'
+import { registerLoggingSink, createModuleLogger, InstanceWrapper } from '@companion-module/host'
+import type { ModuleManifest } from '@companion-module/base/manifest'
 import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
 import { translateConnectionConfigFields } from '../ConfigFields.js'
@@ -157,7 +158,8 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 				handleId: msg.handleId,
 				portNumber: msg.portNumber,
 
-				error: new Error(msg.errorMessage),
+				errorMessage: msg.errorMessage,
+				errorStack: undefined, // TODO - provide a stack?
 			})
 		},
 	},

@@ -56,7 +56,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import {
 	doesModuleExpectLabelUpdates,
