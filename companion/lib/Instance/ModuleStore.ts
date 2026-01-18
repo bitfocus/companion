@@ -244,7 +244,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 									moduleType: 'connection',
 								},
 								query: {
-									'module-api-version': MODULE_BASE_VERSION,
+									'module-api-version': [MODULE_BASE_VERSION],
 								},
 							},
 						})
@@ -259,7 +259,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 									moduleType: 'surface',
 								},
 								query: {
-									'module-api-version': SURFACE_BASE_VERSION,
+									'module-api-version': [SURFACE_BASE_VERSION],
 								},
 							},
 						})
