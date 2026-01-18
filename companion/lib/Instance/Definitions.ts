@@ -27,7 +27,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { ConvertPresetStyleToDrawStyle } from './Connection/Presets.js'
+import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/Presets.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -317,7 +317,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastActionDefinitions = this.#actionDefinitions[connectionId]
-		this.#actionDefinitions[connectionId] = structuredClone(actionDefinitions)
+		this.#actionDefinitions[connectionId] = actionDefinitions
 
 		if (this.#events.listenerCount('actions') > 0) {
 			if (!lastActionDefinitions) {
@@ -346,7 +346,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastFeedbackDefinitions = this.#feedbackDefinitions[connectionId]
-		this.#feedbackDefinitions[connectionId] = structuredClone(feedbackDefinitions)
+		this.#feedbackDefinitions[connectionId] = feedbackDefinitions
 
 		if (this.#events.listenerCount('feedbacks') > 0) {
 			if (!lastFeedbackDefinitions) {

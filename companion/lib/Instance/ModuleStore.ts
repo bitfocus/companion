@@ -9,7 +9,7 @@ import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import semver from 'semver'
 import {
 	isSomeModuleApiVersionCompatible,
-	MODULE_BASE_VERSION,
+	MODULE_BASE_VERSIONS,
 	SURFACE_BASE_VERSION,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import createClient, { type Client } from 'openapi-fetch'
@@ -17,7 +17,7 @@ import type {
 	paths as ModuleStoreOpenApiPaths,
 	components as ModuleStoreOpenApiComponents,
 } from '@companion-app/shared/OpenApi/ModuleStore.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 import EventEmitter from 'node:events'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { AppInfo } from '../Registry.js'
@@ -90,7 +90,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		// If this is the first time we're running, refresh the store data now
 		if (
 			this.#listStore.lastUpdated === 0 ||
-			this.#listStore.connectionModuleApiVersion !== MODULE_BASE_VERSION ||
+			this.#listStore.connectionModuleApiVersion !== JSON.stringify(MODULE_BASE_VERSIONS) ||
 			this.#listStore.surfaceModuleApiVersion !== SURFACE_BASE_VERSION
 		) {
 			setImmediate(() => this.refreshStoreListData())
@@ -244,7 +244,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 									moduleType: 'connection',
 								},
 								query: {
-									'module-api-version': [MODULE_BASE_VERSION],
+									'module-api-version': MODULE_BASE_VERSIONS,
 								},
 							},
 						})
@@ -279,7 +279,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 					lastUpdateAttempt: Date.now(),
 					updateWarning: null,
 
-					connectionModuleApiVersion: MODULE_BASE_VERSION,
+					connectionModuleApiVersion: JSON.stringify(MODULE_BASE_VERSIONS),
 					connectionModules: Object.fromEntries(
 						connectionResult.data.modules.map((data) => [data.id, transformApiModuleToCache(data)])
 					),

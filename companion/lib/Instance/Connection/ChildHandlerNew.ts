@@ -1,12 +1,8 @@
 import LogController, { type Logger } from '../../Log/Controller.js'
-import { IpcWrapper, type IpcEventHandlers } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
+import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import semver from 'semver'
 import type express from 'express'
 import type {
-	ActionInstance as ModuleActionInstance,
-	FeedbackInstance as ModuleFeedbackInstance,
-	HostToModuleEventsV0,
-	ModuleToHostEventsV0,
 	LogMessageMessage,
 	SetStatusMessage,
 	SetActionDefinitionsMessage,
@@ -17,49 +13,30 @@ import type {
 	SetPresetDefinitionsMessage,
 	SaveConfigMessage,
 	SendOscMessage,
-	ParseVariablesInStringMessage,
-	ParseVariablesInStringResponseMessage,
 	RecordActionMessage,
 	SetCustomVariableMessage,
-	UpgradedDataResponseMessage,
-	SharedUdpSocketMessageJoin,
-	SharedUdpSocketMessageLeave,
-	SharedUdpSocketMessageSend,
-	UpdateFeedbackInstancesMessage,
 	UpdateActionInstancesMessage,
-} from '@companion-module/base/dist/host-api/api.js'
-import type { ModuleRegisterMessage, ModuleToHostEventsInit } from '@companion-module/base/dist/host-api/versions.js'
-import type { InstanceStatus } from '../Status.js'
+	UpdateFeedbackInstancesMessage,
+	ModuleIpcWrapper,
+	ModuleToHostEventsNew,
+	SharedUdpSocketMessageSend,
+} from './IpcTypesNew.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import {
 	assertNever,
+	type OSCMetaArgument,
 	type CompanionHTTPRequest,
-	type CompanionInputFieldBase,
 	type CompanionOptionValues,
 	type LogLevel,
 } from '@companion-module/base'
-import type { InstanceDefinitions } from '../Definitions.js'
-import type { ControlsController } from '../../Controls/Controller.js'
-import type { VariablesController } from '../../Variables/Controller.js'
-import type { ServiceOscSender } from '../../Service/OscSender.js'
-import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import {
 	EntityModelType,
-	isValidFeedbackEntitySubType,
 	type ReplaceableActionEntityModel,
 	type ReplaceableFeedbackEntityModel,
 	type ActionEntityModel,
-	type FeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import {
-	doesModuleExpectLabelUpdates,
-	doesModuleUseSeparateUpgradeMethod,
-	doesModuleUseNewConfigLayout,
-} from './ApiVersions.js'
 import {
 	ConnectionEntityManager,
 	type EntityManagerActionEntity,
@@ -67,42 +44,19 @@ import {
 	type EntityManagerFeedbackEntity,
 } from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFields.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type {
+	ConnectionChildHandlerApi,
+	ConnectionChildHandlerDependencies,
+	RunActionExtras,
+} from './ChildHandlerApi.js'
+import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import type { RunActionExtras } from './ChildHandlerApi.js'
-import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
-import { ConvertPresetDefinition } from './Presets.js'
 
-export interface ConnectionChildHandlerDependencies {
-	readonly controls: ControlsController
-	readonly variables: VariablesController
-	readonly oscSender: ServiceOscSender
-
-	readonly instanceDefinitions: InstanceDefinitions
-	readonly instanceStatus: InstanceStatus
-	readonly sharedUdpManager: InstanceSharedUdpManager
-
-	readonly setConnectionConfig: (
-		connectionId: string,
-		config: unknown | null,
-		secrets: unknown | null,
-		newUpgradeIndex: number | null
-	) => void
-	readonly debugLogLine: (
-		connectionId: string,
-		time: number | null,
-		source: string,
-		level: string,
-		message: string
-	) => void
-}
-
-export class ConnectionChildHandler implements ChildProcessHandlerBase {
+export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
 
-	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
+	readonly #ipcWrapper: ModuleIpcWrapper
 
 	readonly #deps: ConnectionChildHandlerDependencies
 
@@ -111,13 +65,9 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	#hasHttpHandler = false
 
 	hasRecordActionsHandler: boolean = false
-	usesNewConfigLayout: boolean = false
+	usesNewConfigLayout: boolean = true
 
-	#expectsLabelUpdates: boolean = false
-
-	readonly #entityManager: ConnectionEntityManager | null
-
-	#currentUpgradeIndex: number | null = null
+	readonly #entityManager: ConnectionEntityManager
 
 	/**
 	 * Current label of the connection
@@ -145,12 +95,15 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 
 		this.connectionId = connectionId
 		this.#label = connectionId // Give a default label until init is called
-		this.#expectsLabelUpdates = doesModuleExpectLabelUpdates(apiVersion)
 
-		const funcs: IpcEventHandlers<ModuleToHostEventsV0 & ModuleToHostEventsInit> = {
-			register: async (msg: ModuleRegisterMessage) => {
+		const funcs: IpcEventHandlers<ModuleToHostEventsNew> = {
+			register: async (msg) => {
 				// Call back to ProcessManager to handle registration
 				await onRegister(msg.verificationToken)
+
+				return {
+					connectionId: this.connectionId,
+				}
 			},
 			'log-message': this.#handleLogMessage.bind(this),
 			'set-status': this.#handleSetStatus.bind(this),
@@ -162,8 +115,6 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			updateFeedbackValues: this.#handleUpdateFeedbackValues.bind(this),
 			saveConfig: this.#handleSaveConfig.bind(this),
 			'send-osc': this.#handleSendOsc.bind(this),
-			parseVariablesInString: this.#handleParseVariablesInString.bind(this),
-			upgradedItems: this.#handleUpgradedItems.bind(this),
 			recordAction: this.#handleRecordAction.bind(this),
 			setCustomVariable: this.#handleSetCustomVariable.bind(this),
 			sharedUdpSocketJoin: this.#handleSharedUdpSocketJoin.bind(this),
@@ -183,15 +134,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			5000
 		)
 
-		this.usesNewConfigLayout = doesModuleUseNewConfigLayout(apiVersion0)
-
-		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
-			? new ConnectionEntityManager(
-					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper),
-					this.#deps.controls,
-					this.connectionId
-				)
-			: null
+		this.#entityManager = new ConnectionEntityManager(
+			new ConnectionNewEntityManagerAdapter(this.#ipcWrapper),
+			this.#deps.controls,
+			this.connectionId
+		)
 
 		const messageHandler = (msg: any) => {
 			this.#ipcWrapper.receivedMessage(msg)
@@ -222,7 +169,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 					entity.setMissingUpgradeIndex(config.lastUpgradeIndex)
 				}
 
-				this.#entityManager?.trackEntity(entity, controlId)
+				this.#entityManager.trackEntity(entity, controlId)
 			}
 		}
 
@@ -235,10 +182,6 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 				secrets: config.secrets,
 
 				lastUpgradeIndex: config.lastUpgradeIndex,
-
-				// If using the old flow, pass all actions and feedbacks for upgrading and initial subscribe calls
-				actions: this.#entityManager ? {} : this.#getAllActionInstances(),
-				feedbacks: this.#entityManager ? {} : this.#getAllFeedbackInstances(),
 			},
 			undefined,
 			10000 // Allow more time before timeout, as init is likely to have a lot to do or high cpu contention
@@ -247,11 +190,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		// Save the resulting values
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
-		this.usesNewConfigLayout = this.usesNewConfigLayout && !msg.disableNewConfigLayout
-		this.#currentUpgradeIndex = config.lastUpgradeIndex = msg.newUpgradeIndex
+		this.usesNewConfigLayout = !msg.disableNewConfigLayout
+		config.lastUpgradeIndex = msg.newUpgradeIndex
 		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 
-		this.#entityManager?.start(config.lastUpgradeIndex)
+		this.#entityManager.start(config.lastUpgradeIndex)
 
 		// Inform action recorder
 		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
@@ -264,15 +207,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		this.logger = LogController.createLogger(`Instance/Connection/${config.label}`)
 		this.#label = config.label
 
-		if (this.#expectsLabelUpdates) {
-			await this.#ipcWrapper.sendWithCb('updateConfigAndLabel', {
-				config: config.config,
-				secrets: config.secrets,
-				label: config.label,
-			})
-		} else {
-			await this.#ipcWrapper.sendWithCb('updateConfig', config.config)
-		}
+		await this.#ipcWrapper.sendWithCb('updateConfig', {
+			config: config.config,
+			secrets: config.secrets,
+			label: config.label,
+		})
 	}
 
 	/**
@@ -281,7 +220,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	async requestConfigFields(): Promise<SomeCompanionInputField[]> {
 		try {
 			const res = await this.#ipcWrapper.sendWithCb('getConfigFields', {})
-			return translateConnectionConfigFields(res.fields)
+			return res.fields
 		} catch (e: any) {
 			this.logger.warn('Error getting config fields: ' + e?.message)
 			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
@@ -291,59 +230,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	}
 
 	/**
-	 * Get all the feedback instances for this instance
-	 */
-	#getAllFeedbackInstances(): Record<string, ModuleFeedbackInstance> {
-		const allFeedbacks: Record<string, ModuleFeedbackInstance> = {}
-
-		// Find all the feedbacks on controls
-		const allControls = this.#deps.controls.getAllControls()
-		for (const [controlId, control] of allControls.entries()) {
-			if (!control.supportsEntities) continue
-
-			const controlEntities = control.entities.getAllEntities()
-			if (!controlEntities || controlEntities.length === 0) continue
-
-			const imageSize = control.getBitmapSize()
-			for (const entity of controlEntities) {
-				if (entity.connectionId !== this.connectionId) continue
-				if (entity.type !== EntityModelType.Feedback) continue
-
-				const entityModel = entity.asEntityModel(false) as FeedbackEntityModel
-				allFeedbacks[entityModel.id] = {
-					id: entityModel.id,
-					controlId: controlId,
-					feedbackId: entityModel.definitionId,
-					options: entityModel.options,
-
-					isInverted: !!entityModel.isInverted,
-
-					upgradeIndex: entityModel.upgradeIndex ?? null,
-					disabled: !!entityModel.disabled,
-
-					image: imageSize ?? undefined,
-				}
-			}
-		}
-
-		return allFeedbacks
-	}
-
-	/**
 	 * Send all feedback instances to the child process
 	 * @access public - needs to be re-run when the topbar setting changes
 	 */
 	async sendAllFeedbackInstances(): Promise<void> {
-		if (this.#entityManager) {
-			this.#entityManager.resendFeedbacks()
-			return
-		}
-
-		const msg = {
-			feedbacks: this.#getAllFeedbackInstances(),
-		}
-
-		await this.#ipcWrapper.sendWithCb('updateFeedbacks', msg)
+		this.#entityManager.resendFeedbacks()
 	}
 
 	/**
@@ -352,95 +243,17 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 */
 	async sendVariablesChanged(
 		changedVariableIdSet: Set<string>,
-		changedVariableIds: string[],
+		_changedVariableIds: string[],
 		fromControlId: string | null
 	): Promise<void> {
-		if (this.#entityManager) {
-			this.#entityManager.onVariablesChanged(changedVariableIdSet, fromControlId)
-			return
-		}
-
-		// Old flow means informing the module about any variable changes so that it can check for anything to invalidate
-		this.#ipcWrapper.sendWithNoCb('variablesChanged', {
-			variablesIds: changedVariableIds,
-		})
-	}
-
-	/**
-	 * Get all the action instances for this instance
-	 */
-	#getAllActionInstances(): Record<string, ModuleActionInstance> {
-		const allActions: Record<string, ModuleActionInstance> = {}
-
-		const allControls = this.#deps.controls.getAllControls()
-		for (const [controlId, control] of allControls.entries()) {
-			if (!control.supportsEntities) continue
-
-			for (const entity of control.entities.getAllEntities()) {
-				if (entity.connectionId !== this.connectionId) continue
-				if (entity.type !== EntityModelType.Action) continue
-
-				const entityModel = entity.asEntityModel(false)
-
-				allActions[entity.id] = {
-					id: entityModel.id,
-					controlId: controlId,
-					actionId: entityModel.definitionId,
-					options: entityModel.options,
-
-					upgradeIndex: entityModel.upgradeIndex ?? null,
-					disabled: !!entityModel.disabled,
-				}
-			}
-		}
-
-		return allActions
+		this.#entityManager.onVariablesChanged(changedVariableIdSet, fromControlId)
 	}
 
 	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
-		if (this.#entityManager) {
-			if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
-			if (entity.disabled) return
+		if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
+		if (entity.disabled) return
 
-			this.#entityManager.trackEntity(entity, controlId)
-			return
-		}
-
-		const entityModel = entity.asEntityModel(false)
-		switch (entityModel.type) {
-			case EntityModelType.Action:
-				return this.#actionUpdate(entityModel, controlId)
-			case EntityModelType.Feedback:
-				return this.#feedbackUpdate(entityModel, controlId)
-		}
-	}
-
-	/**
-	 * Inform the child instance class about an updated feedback
-	 */
-	async #feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): Promise<void> {
-		if (feedback.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
-		if (feedback.disabled) return
-
-		const control = this.#deps.controls.getControl(controlId)
-
-		await this.#ipcWrapper.sendWithCb('updateFeedbacks', {
-			feedbacks: {
-				[feedback.id]: {
-					id: feedback.id,
-					controlId: controlId,
-					feedbackId: feedback.definitionId,
-					options: feedback.options,
-
-					isInverted: !!feedback.isInverted,
-
-					image: control?.getBitmapSize() ?? undefined,
-
-					upgradeIndex: feedback.upgradeIndex ?? null,
-					disabled: !!feedback.disabled,
-				},
-			},
-		})
+		this.#entityManager.trackEntity(entity, controlId)
 	}
 
 	/**
@@ -521,56 +334,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 * Inform the child instance class about an entity that has been deleted
 	 */
 	async entityDelete(oldEntity: SomeEntityModel): Promise<void> {
-		if (this.#entityManager) {
-			this.#entityManager.forgetEntity(oldEntity.id)
-			return
-		}
-
-		if (oldEntity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
-
-		switch (oldEntity.type) {
-			case EntityModelType.Action:
-				await this.#ipcWrapper.sendWithCb('updateActions', {
-					actions: {
-						// Mark as deleted
-						[oldEntity.id]: null,
-					},
-				})
-				break
-			case EntityModelType.Feedback:
-				await this.#ipcWrapper.sendWithCb('updateFeedbacks', {
-					feedbacks: {
-						// Mark as deleted
-						[oldEntity.id]: null,
-					},
-				})
-				break
-			default:
-				assertNever(oldEntity)
-				break
-		}
-	}
-
-	/**
-	 * Inform the child instance class about an updated action
-	 */
-	async #actionUpdate(action: ActionEntityModel, controlId: string): Promise<void> {
-		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
-		if (action.disabled) return
-
-		await this.#ipcWrapper.sendWithCb('updateActions', {
-			actions: {
-				[action.id]: {
-					id: action.id,
-					controlId: controlId,
-					actionId: action.definitionId,
-					options: action.options,
-
-					upgradeIndex: action.upgradeIndex ?? null,
-					disabled: !!action.disabled,
-				},
-			},
-		})
+		this.#entityManager.forgetEntity(oldEntity.id)
 	}
 
 	/**
@@ -580,23 +344,20 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 
 		try {
-			let actionOptions = action.options
-			if (this.#entityManager) {
-				// This means the new flow is being done, and the options must be parsed at this stage
-				const actionDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
-					EntityModelType.Action,
-					this.connectionId,
-					action.definitionId
-				)
-				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
+			// This means the new flow is being done, and the options must be parsed at this stage
+			const actionDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
+				EntityModelType.Action,
+				this.connectionId,
+				action.definitionId
+			)
+			if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
-				// Note: for actions, this doesn't need to be reactive
-				actionOptions = this.#entityManager.parseOptionsObject(
-					actionDefinition,
-					actionOptions,
-					extras.controlId
-				).parsedOptions
-			}
+			// Note: for actions, this doesn't need to be reactive
+			const actionOptions = this.#entityManager.parseOptionsObject(
+				actionDefinition,
+				action.options,
+				extras.controlId
+			).parsedOptions
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
@@ -651,7 +412,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
-		this.#entityManager?.destroy()
+		this.#entityManager.destroy()
 
 		this.#deps.instanceDefinitions.forgetConnection(this.connectionId)
 		this.#deps.variables.values.forgetConnection(this.connectionId, this.#label)
@@ -690,16 +451,9 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 					() => new Error(timeoutMessage)
 				)
 				.then((msg) => {
-					const data = {
-						status: 200,
-						headers: {},
-						body: '',
-						...msg.response,
-					}
-
-					res.status(data.status)
-					res.set(data.headers)
-					res.send(data.body)
+					res.status(msg.response.status ?? 200)
+					res.set(msg.response.headers ?? {})
+					res.send(msg.response.body ?? '')
 				})
 				.catch((err) => {
 					if (err.message.endsWith(timeoutMessage)) {
@@ -719,11 +473,15 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	async #handleLogMessage(msg: LogMessageMessage): Promise<void> {
 		if (msg.level === 'error' || msg.level === 'warn' || msg.level === 'info') {
 			// Ignore debug from modules in main log
-			this.logger.log(msg.level, msg.message)
+			this.logger.log({
+				source: msg.source ? `${this.logger.source}/${msg.source}` : this.logger.source,
+				level: msg.level,
+				message: msg.message,
+			})
 		}
 
 		// Send everything to the 'debug' page
-		this.#sendToModuleLog(msg.level, msg.message.toString())
+		this.#deps.debugLogLine(this.connectionId, msg.time, msg.source || '/', msg.level, msg.message.toString())
 	}
 
 	/**
@@ -748,71 +506,20 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 * Handle settings action definitions from the child process
 	 */
 	async #handleSetActionDefinitions(msg: SetActionDefinitionsMessage): Promise<void> {
-		const actions: Record<string, ClientEntityDefinition> = {}
+		this.#sendToModuleLog('debug', `Updating action definitions (${Object.keys(msg.actions).length} actions)`)
 
-		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
-
-		for (const rawAction of msg.actions || []) {
-			actions[rawAction.id] = {
-				entityType: EntityModelType.Action,
-				label: rawAction.name,
-				description: rawAction.description,
-				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager),
-				optionsToIgnoreForSubscribe: rawAction.optionsToIgnoreForSubscribe || [],
-				hasLifecycleFunctions: !this.#entityManager || !!rawAction.hasLifecycleFunctions,
-				hasLearn: !!rawAction.hasLearn,
-				learnTimeout: rawAction.learnTimeout,
-
-				showInvert: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-
-				feedbackType: null,
-				feedbackStyle: undefined,
-			} satisfies Complete<ClientEntityDefinition>
-		}
-
-		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, actions)
-
-		if (this.#entityManager) {
-			this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Action)
-		}
+		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, msg.actions)
+		this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Action)
 	}
 
 	/**
 	 * Handle settings feedback definitions from the child process
 	 */
 	async #handleSetFeedbackDefinitions(msg: SetFeedbackDefinitionsMessage): Promise<void> {
-		const feedbacks: Record<string, ClientEntityDefinition> = {}
+		this.#sendToModuleLog('debug', `Updating feedback definitions (${Object.keys(msg.feedbacks).length} feedbacks)`)
 
-		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
-
-		for (const rawFeedback of msg.feedbacks || []) {
-			if (!isValidFeedbackEntitySubType(rawFeedback.type)) continue
-
-			feedbacks[rawFeedback.id] = {
-				entityType: EntityModelType.Feedback,
-				label: rawFeedback.name,
-				description: rawFeedback.description,
-				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback, !!this.#entityManager),
-				optionsToIgnoreForSubscribe: [],
-				feedbackType: rawFeedback.type,
-				feedbackStyle: rawFeedback.defaultStyle,
-				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
-				hasLearn: !!rawFeedback.hasLearn,
-				learnTimeout: rawFeedback.learnTimeout,
-				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
-
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			} satisfies Complete<ClientEntityDefinition>
-		}
-
-		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, feedbacks)
-
-		if (this.#entityManager) {
-			this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Feedback)
-		}
+		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, msg.feedbacks)
+		this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Feedback)
 	}
 
 	/**
@@ -837,37 +544,11 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	async #handleSetVariableDefinitions(msg: SetVariableDefinitionsMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableDefinitions before init was called`)
 
-		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
-		const invalidIds = []
+		this.#sendToModuleLog('debug', `Updating variable definitions (${msg.variables.length} variables)`)
 
-		const newVariables: VariableDefinition[] = []
-		for (const variable of msg.variables) {
-			// Ensure it is correctly formed
-			if (variable && typeof variable.name === 'string' && typeof variable.id === 'string') {
-				// Ensure the ids are valid
-				if (variable.id.match(idCheckRegex)) {
-					newVariables.push({
-						description: variable.name,
-						name: variable.id,
-					})
-				} else {
-					invalidIds.push(variable.id)
-				}
-			}
-		}
+		this.#deps.variables.definitions.setVariableDefinitions(this.#label, msg.variables)
 
-		this.#sendToModuleLog('debug', `Updating variable definitions (${newVariables.length} variables)`)
-
-		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
-
-		if (msg.newValues) {
-			this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
-		}
-
-		if (invalidIds.length > 0) {
-			this.logger.warn(`Got variable definitions with invalid ids: ${JSON.stringify(invalidIds)}`)
-			this.#sendToModuleLog('warn', `Got variable definitions with invalid ids: ${JSON.stringify(invalidIds)}`)
-		}
+		this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 	}
 
 	/**
@@ -877,20 +558,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			const convertedPresets: PresetDefinition[] = []
-
-			for (const rawPreset of msg.presets) {
-				const convertedPreset = ConvertPresetDefinition(
-					this.logger,
-					this.connectionId,
-					this.#currentUpgradeIndex ?? undefined,
-					rawPreset.id,
-					rawPreset
-				)
-				if (convertedPreset) convertedPresets.push(convertedPreset)
-			}
-
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, convertedPresets)
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, msg.presets)
 		} catch (e: any) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
@@ -910,28 +578,15 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 * Handle sending an osc message from the child process
 	 */
 	async #handleSendOsc(msg: SendOscMessage): Promise<void> {
-		this.#deps.oscSender.send(msg.host, msg.port, msg.path, msg.args)
-	}
-
-	/**
-	 * Handle request to parse variables in a string
-	 */
-	async #handleParseVariablesInString(
-		msg: ParseVariablesInStringMessage
-	): Promise<ParseVariablesInStringResponseMessage> {
-		try {
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(msg.controlId, null)
-			const result = parser.parseVariables(msg.text)
-
-			return {
-				text: result.text,
-				variableIds: Array.from(result.variableIds),
+		const decodedArgs: OSCMetaArgument[] = msg.args.map((arg) => {
+			if (arg.type === 'b') {
+				return { type: 'b', value: Buffer.from(arg.value, 'base64') }
+			} else {
+				return arg
 			}
-		} catch (e: any) {
-			this.logger.error(`Parse variables failed: ${e}`)
+		})
 
-			throw new Error(`Failed to parse variables in string`)
-		}
+		this.#deps.oscSender.send(msg.host, msg.port, msg.path, decodedArgs)
 	}
 
 	/**
@@ -969,66 +624,6 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	}
 
 	/**
-	 * Handle the module informing us of some actions/feedbacks which have been run through upgrade scripts
-	 */
-	async #handleUpgradedItems(msg: UpgradedDataResponseMessage): Promise<void> {
-		if (this.#entityManager) {
-			this.logger.error(`Module should not be using 'upgradedItems' as it uses the new upgrade flow`)
-			throw new Error(`Module should not be using 'upgradedItems' as it uses the new upgrade flow`)
-		}
-
-		try {
-			// TODO - we should batch these changes when there are multiple on one control (to void excessive redrawing)
-
-			for (const feedback of Object.values(msg.updatedFeedbacks)) {
-				if (feedback) {
-					const control = this.#deps.controls.getControl(feedback.controlId)
-					const found =
-						control?.supportsEntities &&
-						control.entities.entityReplace(
-							{
-								type: EntityModelType.Feedback,
-								id: feedback.id,
-								definitionId: feedback.feedbackId,
-								options: feedback.options,
-								style: feedback.style,
-								isInverted: feedback.isInverted,
-								upgradeIndex: feedback.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
-							},
-							true
-						)
-					if (!found) {
-						this.logger.silly(`Failed to replace upgraded feedback: ${feedback.id} ${feedback.controlId}`)
-					}
-				}
-			}
-
-			for (const action of Object.values(msg.updatedActions)) {
-				if (action) {
-					const control = this.#deps.controls.getControl(action.controlId)
-					const found =
-						control?.supportsEntities &&
-						control.entities.entityReplace(
-							{
-								type: EntityModelType.Action,
-								id: action.id,
-								definitionId: action.actionId,
-								options: action.options,
-								upgradeIndex: action.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
-							},
-							true
-						)
-					if (!found) {
-						this.logger.silly(`Failed to replace upgraded action: ${action.id} ${action.controlId}`)
-					}
-				}
-			}
-		} catch (e: any) {
-			this.logger.error(`Upgrades failed to save: ${e}`)
-		}
-	}
-
-	/**
 	 * Inform the child instance class to start or stop recording actions
 	 */
 	async startStopRecordingActions(recording: boolean): Promise<void> {
@@ -1051,7 +646,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 				this.#ipcWrapper.sendWithNoCb('sharedUdpSocketMessage', {
 					handleId,
 					portNumber: msg.portNumber,
-					message: message,
+					message: message.toString('base64'),
 					source: rInfo,
 				})
 			},
@@ -1059,7 +654,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 				this.#ipcWrapper.sendWithNoCb('sharedUdpSocketError', {
 					handleId,
 					portNumber: msg.portNumber,
-					error: error,
+					errorMessage: error.message,
 				})
 			}
 		)
@@ -1075,14 +670,20 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 *
 	 */
 	async #handleSharedUdpSocketSend(msg: SharedUdpSocketMessageSend): Promise<void> {
-		this.#deps.sharedUdpManager.sendOnPort(this.connectionId, msg.handleId, msg.address, msg.port, msg.message)
+		this.#deps.sharedUdpManager.sendOnPort(
+			this.connectionId,
+			msg.handleId,
+			msg.address,
+			msg.port,
+			Buffer.from(msg.message, 'base64')
+		)
 	}
 }
 
-class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
-	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
+class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
+	readonly #ipcWrapper: ModuleIpcWrapper
 
-	constructor(ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>) {
+	constructor(ipcWrapper: ModuleIpcWrapper) {
 		this.#ipcWrapper = ipcWrapper
 	}
 
@@ -1136,7 +737,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 
 	async upgradeActions(actions: EntityManagerActionEntity[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
-			.sendWithCb('upgradeActionsAndFeedbacks', {
+			.sendWithCb('upgradeActions', {
 				actions: actions.map((act) => ({
 					id: act.entity.id,
 					controlId: act.controlId,
@@ -1146,7 +747,6 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					upgradeIndex: act.entity.upgradeIndex ?? null,
 					disabled: !!act.entity.disabled,
 				})),
-				feedbacks: [],
 				defaultUpgradeIndex: 0, // Unused
 			})
 			.then((upgraded) => {
@@ -1165,8 +765,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 
 	async upgradeFeedbacks(feedbacks: EntityManagerFeedbackEntity[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
-			.sendWithCb('upgradeActionsAndFeedbacks', {
-				actions: [],
+			.sendWithCb('upgradeFeedbacks', {
 				feedbacks: feedbacks.map((fb) => ({
 					id: fb.entity.id,
 					controlId: fb.controlId,
@@ -1195,16 +794,4 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 				)
 			})
 	}
-}
-
-function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolean {
-	for (const option of options) {
-		if (option.type === 'checkbox' && (option.id === 'invert' || option.id === 'inverted')) {
-			// It looks like there is already a matching field
-			return false
-		}
-	}
-
-	// Nothing looked to be a user defined invert field
-	return true
 }
