@@ -20,13 +20,22 @@ export function ParseLocationString(
 	// Special case handling for local special modes
 	if (str.startsWith('this')) return pressLocation ?? null
 
-	const sanitisePageNumber = (pageNumber: number): number | null => {
-		return pageNumber == 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
+	const parseNumber = (str: string): number | null => {
+		// Reject empty strings (Number("") === 0 which is misleading)
+		if (str.trim() === '') return null
+		const num = Number(str)
+		if (isNaN(num)) return null
+		return num
+	}
+
+	const sanitisePageNumber = (pageNumber: number | null): number | null => {
+		if (pageNumber === null || pageNumber < 0) return null
+		return pageNumber === 0 ? (pressLocation?.pageNumber ?? null) : pageNumber
 	}
 	const parseBankString = (pageNumber: number, str: string): ControlLocation | null => {
 		// Legacy bank id
-		const bankIndex = Number(str.trim())
-		const xy = oldBankIndexToXY(bankIndex)
+		const bankIndex = parseNumber(str)
+		const xy = bankIndex !== null && oldBankIndexToXY(bankIndex)
 		if (xy) {
 			return {
 				pageNumber: pageNumber,
@@ -44,33 +53,46 @@ export function ParseLocationString(
 		}
 	}
 
-	const parts = str.split('/') // TODO - more chars
-
-	// nocommit - this is horrible, and needs reworking to be simpler
+	const parts = str.split('/')
 
 	if (parts.length === 1 && parts[0].startsWith('bank')) {
+		// Handle backwards compatibility for bank numbers
 		return pressLocation ? parseBankString(pressLocation.pageNumber, parts[0].slice(4)) : null
 	} else if (parts.length === 2) {
 		if (parts[1].startsWith('bank')) {
-			const safePageNumber = sanitisePageNumber(Number(parts[0]))
+			// Handle backwards compatibility for bank numbers
+			const safePageNumber = sanitisePageNumber(parseNumber(parts[0]))
 			if (safePageNumber === null) return null
+
 			return parseBankString(safePageNumber, parts[1].slice(4))
+		} else if (pressLocation) {
+			// Standard column/row
+			const row = parseNumber(parts[0])
+			const column = parseNumber(parts[1])
+
+			if (row === null || column === null) return null
+
+			return {
+				pageNumber: pressLocation.pageNumber,
+				column,
+				row,
+			}
 		} else {
-			return pressLocation
-				? {
-						pageNumber: pressLocation.pageNumber,
-						column: Number(parts[1]),
-						row: Number(parts[0]),
-					}
-				: null
+			return null
 		}
 	} else if (parts.length === 3) {
-		const safePageNumber = sanitisePageNumber(Number(parts[0]))
+		const safePageNumber = sanitisePageNumber(parseNumber(parts[0]))
 		if (safePageNumber === null) return null
+
+		const row = parseNumber(parts[1])
+		const column = parseNumber(parts[2])
+
+		if (row === null || column === null) return null
+
 		return {
 			pageNumber: safePageNumber,
-			column: Number(parts[2]),
-			row: Number(parts[1]),
+			column,
+			row,
 		}
 	} else {
 		return null

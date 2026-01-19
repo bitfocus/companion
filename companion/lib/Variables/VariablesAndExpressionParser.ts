@@ -185,8 +185,6 @@ export class VariablesAndExpressionParser {
 				value: parseResult.value as any,
 				referencedVariableIds: parseResult.variableIds,
 			}
-
-			// nocommit - check value is valid according to the rules
 		} else if (fieldType === 'variables') {
 			// Field needs parsing
 			// Note - we don't need to care about the granularity given in `useVariables`,
