@@ -28,6 +28,7 @@ import { EventEmitter } from 'node:events'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/Presets.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -151,7 +152,15 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		if (definition.options !== undefined && definition.options.length > 0) {
 			for (const opt of definition.options) {
-				entity.options[opt.id] = structuredClone((opt as any).default)
+				const defaultValue = structuredClone((opt as any).default)
+				if (definition.optionsSupportExpressions && !opt.disableAutoExpression) {
+					entity.options[opt.id] = {
+						isExpression: false,
+						value: defaultValue,
+					} satisfies ExpressionOrValue<any>
+				} else {
+					entity.options[opt.id] = defaultValue
+				}
 			}
 		}
 

@@ -190,7 +190,7 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 							color="info"
 							variant="outline"
 							onClick={toggleExpression}
-							title={values.textExpression ? 'Expression mode ' : 'String mode'}
+							title={values.textExpression ? 'Expression mode' : 'String mode'}
 						>
 							<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
 						</CButton>

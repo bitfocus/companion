@@ -240,12 +240,16 @@ function translateCustomVariableField(
 
 function translateCommonFields(
 	field: CompanionInputFieldBase
-): Pick<Complete<CompanionInputFieldBaseExtended>, 'id' | 'label' | 'tooltip' | 'description' | 'isVisibleUi'> {
+): Pick<
+	Complete<CompanionInputFieldBaseExtended>,
+	'id' | 'label' | 'tooltip' | 'description' | 'expressionDescription' | 'isVisibleUi' | 'disableAutoExpression'
+> {
 	return {
 		id: field.id,
 		label: field.label,
 		tooltip: field.tooltip,
 		description: field.description,
+		expressionDescription: undefined, // Temporary until #2345
 		isVisibleUi: field.isVisibleExpression
 			? {
 					type: 'expression',
@@ -253,5 +257,6 @@ function translateCommonFields(
 					data: undefined,
 				}
 			: undefined,
+		disableAutoExpression: true, // Temporary until #2345
 	}
 }

@@ -202,17 +202,13 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 * @param defaultVal Default value of the variable (string)
 	 * @returns null or failure reason
 	 */
-	createVariable(name: string, defaultVal: string): string | null {
+	createVariable(name: string, defaultVal: VariableValue | undefined): string | null {
 		if (this.#custom_variables[name]) {
 			return `Variable "${name}" already exists`
 		}
 
 		if (!isCustomVariableValid(name)) {
 			return `Variable name "${name}" is not valid`
-		}
-
-		if (typeof defaultVal !== 'string') {
-			return 'Bad default value'
 		}
 
 		const highestSortOrder = Math.max(-1, ...Object.values(this.#custom_variables).map((v) => v.sortOrder))
