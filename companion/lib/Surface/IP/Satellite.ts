@@ -320,7 +320,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			if (buffer === undefined || buffer.length == 0) {
 				this.#logger.warn('buffer has invalid size')
 			} else {
-				params['BITMAP'] = Buffer.from(buffer).toString('base64')
+				params['BITMAP'] = buffer.toString('base64')
 			}
 		}
 

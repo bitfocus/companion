@@ -12,8 +12,9 @@ import {
 import { nanoid } from 'nanoid'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { OptionsObject } from '@companion-module/base/dist/util.js'
+import type { CompanionOptionValues } from '@companion-module/base'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -43,12 +44,12 @@ export interface EntityManagerImageSize {
 export interface EntityManagerActionEntity {
 	controlId: string
 	entity: ActionEntityModel
-	parsedOptions: OptionsObject
+	parsedOptions: CompanionOptionValues
 }
 export interface EntityManagerFeedbackEntity {
 	controlId: string
 	entity: FeedbackEntityModel
-	parsedOptions: OptionsObject
+	parsedOptions: CompanionOptionValues
 
 	imageSize: EntityManagerImageSize | undefined
 }
@@ -519,17 +520,17 @@ export class ConnectionEntityManager {
 	 */
 	parseOptionsObject(
 		entityDefinition: ClientEntityDefinition | undefined,
-		options: OptionsObject,
+		options: CompanionOptionValues,
 		controlId: string
 	): {
-		parsedOptions: OptionsObject
+		parsedOptions: CompanionOptionValues
 		referencedVariableIds: Set<string>
 	} {
 		if (!entityDefinition)
 			// If we don't know what fields need parsing, we can't do anything
 			return { parsedOptions: options, referencedVariableIds: new Set() }
 
-		const parsedOptions: OptionsObject = {}
+		const parsedOptions: CompanionOptionValues = {}
 		const referencedVariableIds = new Set<string>()
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
@@ -543,7 +544,7 @@ export class ConnectionEntityManager {
 
 			// Field needs parsing
 			// Note - we don't need to care about the granularity given in `useVariables`,
-			const parseResult = parser.parseVariables(String(options[field.id]))
+			const parseResult = parser.parseVariables(stringifyVariableValue(options[field.id]) ?? '')
 			parsedOptions[field.id] = parseResult.text
 
 			// Track the variables referenced in this field

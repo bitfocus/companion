@@ -47,6 +47,12 @@
 		}
 	}
 
+	.surface-disabled {
+		// whole line (except for the word "disabled", which overrides this below)
+		// the copy and delete icon escape this, but that seems ok.
+		color: var(--cui-disabled);
+	}
+
 	.grid-cell {
 		padding: 5px 10px;
 		display: flex;
@@ -92,11 +98,17 @@
 				max-width: fit-content;
 			}
 
-			.surface-location {
+			.surface-status {
 				white-space: nowrap;
 				font-size: 0.9em;
 				color: #666;
 				margin-left: auto;
+			}
+
+			// note: this is needed to override the .surface-status rule, immediately above,
+			//       to make it consistent with the disabled row.
+			.surface-disabled {
+				color: var(--cui-disabled);
 			}
 		}
 

@@ -23,7 +23,7 @@ import {
 	type InstanceConfig,
 	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
-import type { ModuleManifest } from '@companion-module/base'
+import type { ModuleManifest } from '@companion-module/base/manifest'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
 import { InstanceConfigStore, type AddInstanceProps } from './ConfigStore.js'
 import { EventEmitter } from 'events'
@@ -38,7 +38,7 @@ import { ModuleStoreService } from './ModuleStore.js'
 import type { AppInfo } from '../Registry.js'
 import type { DataCache } from '../Data/Cache.js'
 import { ConnectionsCollections } from './Connection/Collections.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
