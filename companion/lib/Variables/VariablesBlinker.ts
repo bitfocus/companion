@@ -36,9 +36,11 @@ export class VariablesBlinker {
 		}, CLEANUP_INTERVAL)
 	}
 
-	trackDependencyOnInterval(interval: number): GetVariableValueProps | null {
-		if (isNaN(interval) || interval <= 0) return null
+	trackDependencyOnInterval(interval: number, dutyCycle: number): GetVariableValueProps | null {
+		if (isNaN(interval) || interval <= 0 || NaN(dutyCycle)) return null
 		if (interval < MIN_INTERVAL) interval = MIN_INTERVAL
+
+		dutyCycle = Math.min(Math.max(dutyCycle, 0), 1)
 
 		// Check if already running
 		const entry = this.#intervals.get(interval)

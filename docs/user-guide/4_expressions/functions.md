@@ -189,12 +189,17 @@ Gets the unencoded version of an encoded component of a Uniform Resource Identif
 
 eg `decodeURIComponent('test%20123%261')` gives `"hello world&1"`
 
-**blink(number)**
+**blink(number, ?number)**
 
-Generate a pulsing boolean value that alternates between on/off.  
-The provided number specifies the duration of each on/off state
+Generate a pulsing 0/1 value that alternates between on/off.  
+The provided number specifies the duration of each cycle.  
+The second parameter is an optional value between 0 - 1 which specifies the portion of the time to spend in the on state.
 
-eg `blink(500)` to flash once a second
+eg `blink(1000)` to flash once a second, on for 500ms then off for 500ms. `blink(1000, 0.25)` flashes once a second, on for 250ms off for 750ms
+
+:::tip
+The 0/1 returned from this can be treated as a boolean, you do not need to explicitly do this yourself
+:::
 
 **parseVariables(string, ?undefinedValue)**
 

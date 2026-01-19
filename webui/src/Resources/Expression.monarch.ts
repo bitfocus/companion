@@ -157,9 +157,9 @@ export const builtinFunctionCompletions: Array<{
 	// Variable operations
 	{
 		name: 'blink',
-		detail: 'blink(number)',
+		detail: 'blink(number, ?number)',
 		documentation:
-			'A pulsing boolean value that cycles at the specified interval in milliseconds. The provided interval specified how long to show each state for.',
+			'A pulsing 0/1 value that cycles at the specified interval in milliseconds. The provided interval specifies how long each cycle should take. The second optional parameter specifies the portion of the time to spend in the on state.',
 	},
 	{
 		name: 'parseVariables',

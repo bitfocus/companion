@@ -230,13 +230,16 @@ export function executeExpression(
 
 		const functions = {
 			...ExpressionFunctions,
-			blink(interval: any) {
+			blink(interval: any, dutyCycle: any): boolean {
 				// Validate the interval
 				const int = Number(interval)
 				if (isNaN(int) || int <= 0) return false
 
+				const dutyRaw = Number(dutyCycle)
+				const duty = isNaN(dutyRaw) ? 0.5 : dutyRaw
+
 				// Fetch the name of the variable to watch
-				const variableName = blinker.trackDependencyOnInterval(int)
+				const variableName = blinker.trackDependencyOnInterval(int, duty)
 				if (!variableName) return false
 
 				return !!getVariableValue(variableName)
