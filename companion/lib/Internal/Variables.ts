@@ -355,23 +355,17 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	) {
 		if (!action.options.name) return
 
-		// nocommit - this needs to be adjusted to handle triggers/expression variables
-		const location = ParseLocationString(stringifyVariableValue(action.options.location), extras.location)
-		const theControlId = location ? this.#pageStore.getControlIdAt(location) : null
+		const locationStr = stringifyVariableValue(action.options.location)
 
-		// let theControlId: string | null = null
-		// if (action.rawOptions.location_target === 'this') {
-		// 	// This could be any type of control (button, trigger, etc)
-		// 	theControlId = extras.controlId
-		// } else {
-		// 	// Parse the location of a button
-		// 	const result = this.#internalUtils.parseInternalControlReferenceForActionOrFeedback(
-		// 		extras,
-		// 		action.rawOptions,
-		// 		true
-		// 	)
-		// 	theControlId = result.location ? this.#pageStore.getControlIdAt(result.location) : null
-		// }
+		let theControlId: string | null = null
+		if (locationStr?.trim().toLocaleLowerCase() === 'this') {
+			// This could be any type of control (button, trigger, etc)
+			theControlId = extras.controlId
+		} else {
+			// Parse the location of a button
+			const location = ParseLocationString(locationStr, extras.location)
+			theControlId = location ? this.#pageStore.getControlIdAt(location) : null
+		}
 		if (!theControlId) return
 
 		const control = this.#controlsController.getControl(theControlId)
