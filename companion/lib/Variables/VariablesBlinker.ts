@@ -25,7 +25,7 @@ export class VariablesBlinker {
 				if (Date.now() - entry.lastProbed > entry.interval * CLEANUP_EXPIRY) {
 					this.#logger.debug(`Cleaning up unused blinker interval: ${entry.onPeriod}ms/${entry.offPeriod}ms`)
 
-					if (entry.handle) clearInterval(entry.handle)
+					if (entry.handle) clearTimeout(entry.handle)
 					entry.aborted = true
 					this.#intervals.delete(key)
 				}
