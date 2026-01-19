@@ -9,6 +9,7 @@ import React, {
 	useState,
 	type CSSProperties,
 	type ReactNode,
+	type MouseEventHandler,
 } from 'react'
 import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop } from '@coreui/react'
 import {
@@ -52,6 +53,7 @@ import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { trpc } from '~/Resources/TRPC'
 import { useQuery } from '@tanstack/react-query'
+import { ContextMenu, useContextMenuState } from '~/UserConfig/Components/ContextMenu'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -168,8 +170,12 @@ export const MySidebar = memo(function MySidebar() {
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
+	// we need the following primarily to provide the onContextMenu callback, which resides in the parent, not the component.
+	const contextState = useContextMenuState()
+
 	return (
-		<CSidebar unfoldable={unfoldable}>
+		<CSidebar unfoldable={unfoldable} onContextMenu={contextState.onContextMenu}>
+			<ContextMenu {...contextState} />
 			<CSidebarHeader className="brand">
 				<CSidebarBrand>
 					<div className="sidebar-brand-full">
@@ -319,8 +325,9 @@ interface CSidebarProps {
 	 * Expand narrowed sidebar on hover.
 	 */
 	unfoldable?: boolean
+	onContextMenu?: MouseEventHandler<HTMLDivElement>
 }
-function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProps>) {
+function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildren<CSidebarProps>) {
 	const sidebarRef = useRef<HTMLDivElement>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
@@ -406,6 +413,7 @@ function CSidebar({ children, unfoldable }: React.PropsWithChildren<CSidebarProp
 					// hide: visibleDesktop === false && !sidebarState.showToggle && !overlaid,
 				})}
 				ref={sidebarRef}
+				onContextMenu={onContextMenu}
 			>
 				{children}
 			</div>
