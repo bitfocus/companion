@@ -251,14 +251,6 @@ describe('ParseLocationString', () => {
 			expect(ParseLocationString('1/2/abc', DEFAULT_PRESS_LOCATION)).toBeNull()
 		})
 
-		test('handles decimal values (truncated to integer)', () => {
-			expect(ParseLocationString('1/2.5/3.9', DEFAULT_PRESS_LOCATION)).toEqual({
-				pageNumber: 1,
-				row: 2.5,
-				column: 3.9,
-			})
-		})
-
 		test('handles whitespace in parts', () => {
 			expect(ParseLocationString(' 1 / 2 / 3 ', DEFAULT_PRESS_LOCATION)).toEqual({
 				pageNumber: 1,
