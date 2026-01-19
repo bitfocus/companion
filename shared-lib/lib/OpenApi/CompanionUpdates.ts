@@ -13,8 +13,25 @@ export interface paths {
 		}
 		get?: never
 		put?: never
-		/** @description Check if updaes are available */
+		/** @description Check if updates are available */
 		post: operations['updates_post']
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
+	'/updates-old': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		get?: never
+		put?: never
+		/** @description Check if updates are available (legacy endpoint) */
+		post: operations['updates-old_post']
 		delete?: never
 		options?: never
 		head?: never
@@ -95,6 +112,99 @@ export interface operations {
 						/** @description OS release version */
 						release: string
 					}
+				}
+			}
+		}
+		responses: {
+			/** @description Default Response */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						/** @description Indicates if the check was successful, or should be retried later */
+						ok: boolean
+						/** @description Update message */
+						message: string
+						/** @description Additional message (Supported since Companion 4.2) */
+						message2?: string
+						/**
+						 * Format: uri
+						 * @description Download URL
+						 */
+						link?: string
+					}
+				}
+			}
+			/** @description Validation error */
+			400: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						/** @description HTTP status code */
+						statusCode: number
+						/** @description Error code */
+						code?: string
+						/** @description Error name */
+						error: string
+						/** @description Error message */
+						message: string
+					}
+				}
+			}
+			/** @description Internal server error */
+			500: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						/** @description HTTP status code */
+						statusCode: number
+						/** @description Error code */
+						code?: string
+						/** @description Error name */
+						error: string
+						/** @description Error message */
+						message: string
+					}
+				}
+			}
+		}
+	}
+	'updates-old_post': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		requestBody: {
+			content: {
+				'application/json': {
+					/** @description Unique identifier for the installation */
+					id: string
+					/**
+					 * @description Name of the application
+					 * @enum {string}
+					 */
+					app_name: 'companion'
+					/** @description Current version of the application */
+					app_version: string
+					/** @description Full build number or identifier */
+					app_build: string
+					/** @description Operating system platform */
+					platform: string
+					/** @description System architecture */
+					arch: string
+					/** @description OS release version */
+					release: string
+					tz?: unknown
+					cpus?: unknown
+					type?: unknown
 				}
 			}
 		}

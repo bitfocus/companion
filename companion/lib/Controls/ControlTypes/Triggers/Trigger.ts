@@ -299,6 +299,9 @@ export class ControlTrigger
 					case 'interval':
 						eventStrings.push(this.#timerEvents.getIntervalDescription(event))
 						break
+					case 'intervalRandom':
+						eventStrings.push(this.#timerEvents.getRandomIntervalDescription(event))
+						break
 					case 'timeofday':
 						eventStrings.push(this.#timerEvents.getTimeOfDayDescription(event))
 						break
@@ -391,6 +394,12 @@ export class ControlTrigger
 				case 'interval':
 					this.#timerEvents.setInterval(event.id, Number(event.options.seconds))
 					break
+				case 'intervalRandom': {
+					const iMin = Number(event.options.minimum)
+					const iMax = Number(event.options.maximum)
+					this.#timerEvents.setInterval(event.id, iMin, iMax)
+					break
+				}
 				case 'timeofday':
 					this.#timerEvents.setTimeOfDay(event.id, event.options)
 					break
@@ -441,6 +450,7 @@ export class ControlTrigger
 	#stopEvent(event: EventInstance): void {
 		switch (event.type) {
 			case 'interval':
+			case 'intervalRandom':
 				this.#timerEvents.clearInterval(event.id)
 				break
 			case 'timeofday':

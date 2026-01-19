@@ -11,7 +11,7 @@
 
 import { Canvas, ImageData, loadImage, type Image as CanvasImage, type SKRSContext2D } from '@napi-rs/canvas'
 import LogController from '../Log/Controller.js'
-import type { HorizontalAlignment, VerticalAlignment } from '../Resources/Util.js'
+import { uint8ArrayToBuffer, type HorizontalAlignment, type VerticalAlignment } from '../Resources/Util.js'
 import type QuickLRU from 'quick-lru'
 import { computeTextLayout, resolveFontSizes, segmentTextToUnicodeChars, type TextLayoutResult } from './TextParser.js'
 
@@ -621,7 +621,7 @@ export class Image {
 			if (bufferRaw instanceof Buffer) {
 				buffer = bufferRaw
 			} else if (bufferRaw instanceof Uint8Array) {
-				buffer = Buffer.from(bufferRaw.buffer, bufferRaw.byteOffset, bufferRaw.byteLength)
+				buffer = uint8ArrayToBuffer(bufferRaw)
 			} else {
 				this.#logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
 				return
@@ -816,7 +816,7 @@ export class Image {
 	 * @returns RGBA buffer of the pixels
 	 */
 	buffer(): Buffer {
-		const buffer = Buffer.from(this.context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
+		const buffer = uint8ArrayToBuffer(this.context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
 		return buffer
 	}
 

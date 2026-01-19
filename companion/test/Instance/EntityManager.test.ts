@@ -10,7 +10,6 @@ import {
 	ReplaceableActionEntityModel,
 	ReplaceableFeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { UpdateActionInstancesMessage } from '@companion-module/base/dist/host-api/api.js'
 
 // Mock dependencies
 vi.mock('nanoid', () => ({
@@ -468,7 +467,7 @@ describe('InstanceEntityManager', () => {
 			}
 			const options = { field2: 'option1' } // field1 missing
 
-			// For missing fields, parseVariables will be called with "undefined"
+			// For missing fields, parseVariables will be called with ""
 			// So we need to update our mock for this specific test case
 			mockVariablesParser.parseVariables.mockReturnValueOnce({
 				text: undefined,
@@ -485,7 +484,7 @@ describe('InstanceEntityManager', () => {
 
 			// parseVariables should be called with "undefined" for the missing field
 			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('undefined')
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('')
 		})
 
 		it('should parse variables but not include them in referencedVariableIds for options in optionsToIgnoreForSubscribe', () => {
@@ -1446,7 +1445,7 @@ describe('InstanceEntityManager', () => {
 
 			// Should convert to string for parsing
 			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('[object Object]')
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('{\"nestedObject\":true}')
 			expect(result.parsedOptions).toEqual({
 				field1: 'parsed-object',
 			})

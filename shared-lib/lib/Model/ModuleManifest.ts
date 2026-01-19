@@ -1,4 +1,4 @@
-import type { ModuleManifest } from '@companion-module/base'
+import type { ModuleManifest } from '@companion-module/base/manifest'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 
 export interface ModuleManifestExt extends ModuleManifest {

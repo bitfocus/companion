@@ -24,6 +24,10 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 
 	const ownerIdString = stringifyEntityOwnerId(ownerId)
 
+	// Hide this element if there's no defined content
+	// TODO: This is a bit of a hack, ideally this should be informed by the parent component
+	if (!heading && (!headingActions || headingActions.length === 0)) return null
+
 	return (
 		<h5>
 			{heading}

@@ -250,23 +250,26 @@ const SurfaceRow = observer(function SurfaceRow({
 		[selectItem, surface.id]
 	)
 
+	const surfaceDisabled =
+		!surface.enabled &&
+		!surface.isConnected &&
+		surface.integrationType !== 'emulator' &&
+		surface.integrationType !== 'elgato-plugin' &&
+		surface.integrationType !== 'satellite'
+
 	return (
 		<div
 			className={classNames('grid-row', {
 				'grid-row-no-border': noBorder,
 				'grid-row-selected': isSelected,
+				'surface-disabled': surfaceDisabled,
 			})}
 			onClick={handleSurfaceClick}
 		>
 			<div className="grid-cell">
 				{index !== null ? `#${index}` : ''}
 				{/* Show disabled icon for surfaces that respect the enabled setting and are disabled */}
-				{!surface.enabled &&
-					surface.integrationType !== 'emulator' &&
-					surface.integrationType !== 'elgato-plugin' &&
-					surface.integrationType !== 'satellite' && (
-						<FontAwesomeIcon icon={faPowerOff} color="gray" title="Disabled" />
-					)}
+				{surfaceDisabled && <FontAwesomeIcon icon={faPowerOff} color="gray" title="Disabled" />}
 			</div>
 			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
 				<div>
@@ -289,7 +292,9 @@ const SurfaceRow = observer(function SurfaceRow({
 							<FontAwesomeIcon icon={faCopy} color="#000" />
 						</CButton>
 					</CopyToClipboard>
-					<span className="surface-location">{surface.isConnected ? surface.location || 'Local' : 'Offline'}</span>
+					<span className={classNames('surface-status', { 'surface-disabled': surfaceDisabled })}>
+						{surfaceDisabled ? 'Disabled' : surface.isConnected ? surface.location || 'Local' : 'Offline'}
+					</span>
 				</div>
 			</div>
 			<div className="grid-cell">
