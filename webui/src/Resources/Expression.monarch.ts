@@ -156,12 +156,6 @@ export const builtinFunctionCompletions: Array<{
 
 	// Variable operations
 	{
-		name: 'blink',
-		detail: 'blink(number, ?number)',
-		documentation:
-			'A pulsing 0/1 value that cycles at the specified interval in milliseconds. The provided interval specifies how long each cycle should take. The second optional parameter specifies the portion of the time to spend in the on state.',
-	},
-	{
 		name: 'parseVariables',
 		detail: 'parseVariables(string, ?undefinedValue)',
 		documentation: 'Parses and resolves Companion variables in a string',
@@ -175,6 +169,12 @@ export const builtinFunctionCompletions: Array<{
 		name: 'getVariable',
 		detail: 'getVariable(label, name)',
 		documentation: 'Fetches the value of a Companion variable',
+	},
+	{
+		name: 'blink',
+		detail: 'blink(number, ?number)',
+		documentation:
+			'A pulsing 0/1 value that cycles at the specified interval in milliseconds. The provided interval specifies how long each cycle should take. The second optional parameter specifies the portion of the time to spend in the on state.',
 	},
 
 	// Object/array operations

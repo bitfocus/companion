@@ -78,14 +78,17 @@ export class VariablesBlinker {
 		setTimeout(() => {
 			if (newEntry.aborted) return
 
-			// First tick
-			newEntry.value = true
+			// First tick (respect 0/1 duty)
+			newEntry.value = newEntry.onPeriod > 0
 			this.#emitChange([
 				{
 					id: newEntry.name.name,
 					value: newEntry.value,
 				},
 			])
+
+			// If dutyCycle is 0 or 1, keep a constant state (no toggling)
+			if (newEntry.onPeriod === 0 || newEntry.offPeriod === 0) return
 
 			// Subsequent ticks
 			const scheduleNextTick = () => {
