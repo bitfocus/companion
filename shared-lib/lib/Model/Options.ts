@@ -1,5 +1,5 @@
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
-import type { JsonValue } from './JSON.js'
+import type { JsonValue } from 'type-fest'
 
 export type CompanionColorPresetValue =
 	| string

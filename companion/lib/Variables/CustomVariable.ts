@@ -516,7 +516,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	/**
 	 * Set the default value of a custom variable
 	 */
-	setVariableDefaultValue(name: string, value: string): string | null {
+	setVariableDefaultValue(name: string, value: VariableValue): string | null {
 		if (!this.#custom_variables[name]) {
 			return 'Unknown name'
 		}
