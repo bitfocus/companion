@@ -1,6 +1,6 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { JsonValue } from '@companion-app/shared/Model/JSON.js'
+import type { JsonValue } from 'type-fest'
 import {
 	isExpressionOrValue,
 	type ExpressionOrValue,
