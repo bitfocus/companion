@@ -252,6 +252,7 @@ const SurfaceRow = observer(function SurfaceRow({
 
 	const surfaceDisabled =
 		!surface.enabled &&
+		!surface.isConnected &&
 		surface.integrationType !== 'emulator' &&
 		surface.integrationType !== 'elgato-plugin' &&
 		surface.integrationType !== 'satellite'
