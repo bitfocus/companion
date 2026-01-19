@@ -25,10 +25,10 @@ import type {
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
-import { ActionEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { convertSimplePropertyToExpresionValue } from './Util.js'
+import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { convertSimplePropertyToExpressionValue } from './Util.js'
 import { EventEmitter } from 'events'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalActionRecorder
 	extends EventEmitter<InternalModuleFragmentEvents>
@@ -82,7 +82,7 @@ export class InternalActionRecorder
 						expressionDescription: `Valid values are 'true', 'false', or 'toggle'`,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			action_recorder_set_connections: {
 				label: 'Action Recorder: Set connections',
@@ -112,7 +112,7 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			action_recorder_save_to_button: {
 				label: 'Action Recorder: Finish recording and save to button',
@@ -171,13 +171,13 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			action_recorder_discard_actions: {
 				label: 'Action Recorder: Discard actions',
 				description: undefined,
 				options: [],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -186,12 +186,12 @@ export class InternalActionRecorder
 		let changed = false
 
 		if (action.definitionId === 'action_recorder_set_recording') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'enable') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'enable') || changed
 		} else if (action.definitionId === 'action_recorder_save_to_button') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'page') || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'bank') || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'step') || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'set') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'page') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'bank') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'step') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'set') || changed
 		}
 
 		if (changed) return action
@@ -216,7 +216,14 @@ export class InternalActionRecorder
 			if (session) {
 				let result = new Set(session.connectionIds)
 
-				const selectedIds = new Set<string>(action.options.connections as string[])
+				const selectedIds = new Set<string>()
+				if (Array.isArray(action.options.connections)) {
+					for (const connectionId of action.options.connections) {
+						if (typeof connectionId === 'string' && connectionId) {
+							selectedIds.add(connectionId)
+						}
+					}
+				}
 
 				switch (action.options.mode) {
 					case 'set':
@@ -247,8 +254,8 @@ export class InternalActionRecorder
 
 			return true
 		} else if (action.definitionId === 'action_recorder_save_to_button') {
-			let stepId = String(action.options.step)
-			let setId = String(action.options.set)
+			let stepId = stringifyVariableValue(action.options.step)
+			let setId = stringifyVariableValue(action.options.set)
 
 			if (setId === 'press') setId = 'down'
 			else if (setId === 'release') setId = 'up'
@@ -339,7 +346,7 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -354,7 +361,7 @@ export class InternalActionRecorder
 
 			const connectionIds = feedback.options.connections as string[]
 
-			if (connectionIds.length === 0) {
+			if (!Array.isArray(connectionIds) || connectionIds.length === 0) {
 				// shortcut for when there are no connections selected
 				return !!session.isRunning && feedback.options.state === 'recording'
 			}

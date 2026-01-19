@@ -1,5 +1,9 @@
-import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ReadonlyDeep } from 'type-fest'
+import {
+	stringifyVariableValue,
+	type VariableValue,
+	type VariableValues,
+} from '@companion-app/shared/Model/Variables.js'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import {
 	executeExpression,
 	parseVariablesInString,
@@ -12,7 +16,7 @@ import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { InputValue, OptionsObject } from '@companion-module/base'
+import type { CompanionOptionValues } from '@companion-module/base'
 import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 /**
@@ -92,19 +96,19 @@ export class VariablesAndExpressionParser {
 	 */
 	parseEntityOptions(
 		entityDefinition: ClientEntityDefinition | undefined,
-		options: OptionsObject
+		options: CompanionOptionValues
 	): {
-		parsedOptions: OptionsObject
+		parsedOptions: CompanionOptionValues
 		referencedVariableIds: Set<string>
 	} {
 		if (!entityDefinition)
 			// If we don't know what fields need parsing, we can't do anything
 			return { parsedOptions: options, referencedVariableIds: new Set() }
 
-		const parsedOptions: OptionsObject = {}
+		const parsedOptions: CompanionOptionValues = {}
 		const referencedVariableIds = new Set<string>()
 
-		if (entityDefinition.internalUsesAutoParser) {
+		if (entityDefinition.optionsSupportExpressions) {
 			// If the entity uses the auto parser, we can just parse all
 
 			for (const field of entityDefinition.options) {
@@ -139,7 +143,7 @@ export class VariablesAndExpressionParser {
 
 				// Field needs parsing
 				// Note - we don't need to care about the granularity given in `useVariables`,
-				const parseResult = this.parseVariables(String(options[field.id]))
+				const parseResult = this.parseVariables(stringifyVariableValue(options[field.id]) ?? '')
 				parsedOptions[field.id] = parseResult.text
 
 				// Track the variables referenced in this field
@@ -154,17 +158,23 @@ export class VariablesAndExpressionParser {
 		return { parsedOptions, referencedVariableIds }
 	}
 
+	/**
+	 * Parse a single option value for an entity
+	 * @param optionsValue The raw option value, either a plan value or an ExpressionOrValue
+	 * @param fieldType The type of field being parsed. This controls how the bare non-expression value is interpreted
+	 * @returns The value and the variables it references
+	 */
 	parseEntityOption(
-		optionsValue: InputValue | undefined,
+		optionsValue: JsonValue | ExpressionOrValue<JsonValue> | undefined,
 		fieldType: 'expression' | 'variables' | 'generic'
 	): {
-		value: InputValue
+		value: JsonValue
 		referencedVariableIds: ReadonlySet<string>
 	} {
 		// Get the value as an ExpressionOrValue
-		const rawValue: ExpressionOrValue<any> = isExpressionOrValue(optionsValue)
-			? (optionsValue as any)
-			: { value: optionsValue, isExpression: fieldType === 'expression' }
+		const rawValue: ExpressionOrValue<JsonValue> = isExpressionOrValue(optionsValue)
+			? optionsValue
+			: { value: optionsValue as any, isExpression: fieldType === 'expression' }
 
 		if (rawValue.isExpression) {
 			// Parse the expression
@@ -176,11 +186,11 @@ export class VariablesAndExpressionParser {
 				referencedVariableIds: parseResult.variableIds,
 			}
 
-			// TODO - check value is valid according to the rules
+			// nocommit - check value is valid according to the rules
 		} else if (fieldType === 'variables') {
 			// Field needs parsing
 			// Note - we don't need to care about the granularity given in `useVariables`,
-			const parseResult = this.parseVariables(String(rawValue.value))
+			const parseResult = this.parseVariables(stringifyVariableValue(rawValue.value) ?? '')
 
 			return {
 				value: parseResult.text,

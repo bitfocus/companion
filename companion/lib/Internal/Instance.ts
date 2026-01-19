@@ -29,7 +29,11 @@ import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.j
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import {
+	stringifyVariableValue,
+	type VariableDefinition,
+	type VariableValues,
+} from '@companion-app/shared/Model/Variables.js'
 
 export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('InternalInstance')
@@ -154,7 +158,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 					},
 				],
 
-				internalUsesAutoParser: false,
+				optionsSupportExpressions: false,
 			},
 			connection_collection_enabled: {
 				label: 'Connection: Enable or disable connection collection',
@@ -178,7 +182,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 					},
 				],
 
-				internalUsesAutoParser: false,
+				optionsSupportExpressions: false,
 			},
 		}
 	}
@@ -250,7 +254,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 					},
 				],
 
-				internalUsesAutoParser: false,
+				optionsSupportExpressions: false,
 			},
 			instance_custom_state: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -283,7 +287,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 					},
 				],
 
-				internalUsesAutoParser: false,
+				optionsSupportExpressions: false,
 			},
 			connection_collection_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -312,30 +316,33 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 					},
 				],
 
-				internalUsesAutoParser: false,
+				optionsSupportExpressions: false,
 			},
 		}
 	}
 
 	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
 		if (action.definitionId === 'instance_control') {
+			const instanceId = stringifyVariableValue(action.options.instance_id)
+			if (!instanceId) return true
+
 			let newState = action.options.enable == 'true'
 			if (action.options.enable == 'toggle') {
-				const curState = this.#instanceController.getInstanceStatus(String(action.options.instance_id))
+				const curState = this.#instanceController.getInstanceStatus(instanceId)
 
 				newState = !curState?.category
 			}
 
-			this.#instanceController.enableDisableConnection(String(action.options.instance_id), newState)
+			this.#instanceController.enableDisableConnection(instanceId, newState)
 			return true
 		} else if (action.definitionId === 'connection_collection_enabled') {
+			const collectionId = stringifyVariableValue(action.options.collection_id)
+			if (!collectionId) return true
+
 			let newState: boolean | 'toggle' = action.options.enable == 'true'
 			if (action.options.enable == 'toggle') newState = 'toggle'
 
-			this.#instanceController.connectionCollections.setCollectionEnabled(
-				String(action.options.collection_id),
-				newState
-			)
+			this.#instanceController.connectionCollections.setCollectionEnabled(collectionId, newState)
 			return true
 		} else {
 			return false
@@ -365,7 +372,8 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				}
 			}
 
-			const cur_instance = this.#instanceController.getInstanceStatus(String(feedback.options.instance_id))
+			const instanceId = stringifyVariableValue(feedback.options.instance_id)
+			const cur_instance = instanceId ? this.#instanceController.getInstanceStatus(instanceId) : undefined
 			if (cur_instance !== undefined) {
 				switch (cur_instance.category) {
 					case 'error':
@@ -396,13 +404,17 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				bgcolor: feedback.options.disabled_bg as any,
 			}
 		} else if (feedback.definitionId === 'instance_custom_state') {
-			const selected_status = this.#instanceStatuses[String(feedback.options.instance_id)]?.category ?? null
+			const instanceId = stringifyVariableValue(feedback.options.instance_id)
+			if (!instanceId) return false
+
+			const selected_status = this.#instanceStatuses[instanceId]?.category ?? null
 
 			return selected_status == feedback.options.state
 		} else if (feedback.definitionId === 'connection_collection_enabled') {
-			const state = this.#instanceController.connectionCollections.isCollectionEnabled(
-				String(feedback.options.collection_id)
-			)
+			const collectionId = stringifyVariableValue(feedback.options.collection_id)
+			if (!collectionId) return false
+
+			const state = this.#instanceController.connectionCollections.isCollectionEnabled(collectionId)
 			const target = feedback.options.enable == 'true'
 			return state == target
 		}

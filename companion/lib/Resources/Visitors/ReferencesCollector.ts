@@ -71,7 +71,7 @@ export class VisitorReferencesCollectorVisitor {
 	 * Visit a property containing variables
 	 */
 	visitString(obj: Record<string, any>, propName: string): void {
-		const rawStr = obj[propName]
+		const rawStr = this.#getAndUnwrapPropertyValue(obj, propName)
 		if (typeof rawStr !== 'string') return
 
 		// Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
@@ -100,7 +100,7 @@ export class VisitorReferencesCollectorVisitor {
 
 	#getAndUnwrapPropertyValue(obj: Record<string, any>, propName: string): any {
 		const value = obj[propName]
-		if (isExpressionOrValue(value) && value.isExpression) {
+		if (isExpressionOrValue(value)) {
 			return value.value
 		}
 		return value

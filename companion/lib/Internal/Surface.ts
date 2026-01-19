@@ -28,13 +28,18 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import {
-	FeedbackEntityModel,
 	FeedbackEntitySubType,
+	type FeedbackEntityModel,
 	type ActionEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { convertOldSplitOptionToExpression, convertSimplePropertyToExpresionValue } from './Util.js'
+import { convertOldSplitOptionToExpression, convertSimplePropertyToExpressionValue } from './Util.js'
 import { EventEmitter } from 'events'
-import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import {
+	stringifyVariableValue,
+	type VariableDefinition,
+	type VariableValues,
+} from '@companion-app/shared/Model/Variables.js'
+import type { CompanionOptionValues } from '@companion-module/host'
 
 const CHOICES_SURFACE_ID: SomeCompanionInputField = {
 	type: 'internal:surface_serial',
@@ -124,10 +129,10 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	}
 
 	#fetchSurfaceId(
-		options: Record<string, any>,
+		options: CompanionOptionValues,
 		info: RunActionExtras | FeedbackForInternalExecution
 	): string | undefined {
-		let surfaceId: string | undefined = String(options.surfaceId).trim()
+		let surfaceId: string | undefined = stringifyVariableValue(options.surfaceId)?.trim()
 
 		if (info && surfaceId === 'self' && 'surfaceId' in info) surfaceId = info.surfaceId
 
@@ -135,11 +140,11 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	}
 
 	#fetchPage(
-		options: Record<string, any>,
+		options: CompanionOptionValues,
 		extras: RunActionExtras | FeedbackForInternalExecution,
 		surfaceId: string | undefined
 	): string | 'back' | 'forward' | '+1' | '-1' | undefined {
-		let thePageNumber: number | string | undefined = options.page
+		let thePageNumber = options.page
 
 		if (extras.location) {
 			if (thePageNumber === 0 || thePageNumber === '0')
@@ -298,7 +303,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		}
 
 		if (action.definitionId === 'set_brightness') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'brightness') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'brightness') || changed
 		}
 
 		if (
@@ -328,19 +333,19 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					useVariables: 'controller_from_variable',
 					simple: 'controller',
 					variable: 'controller_variable',
-					result: 'surfaceId',
+					result: 'surfaceIndex',
 				},
 				true
 			)
 		}
 
 		if (action.definitionId === 'surface_set_position') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'x_offset') || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'y_offset') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'x_offset') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'y_offset') || changed
 		}
 		if (action.definitionId === 'surface_adjust_position') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'x_adjustment') || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'y_adjustment') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'x_adjustment') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'y_adjustment') || changed
 		}
 
 		if (changed) return action
@@ -350,10 +355,8 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		let changed = false
 
 		if (feedback.definitionId === 'surface_on_page') {
-			changed = convertSimplePropertyToExpresionValue(feedback.options, 'surfaceId', 'controller', 'self') || changed
-		}
-		if (feedback.definitionId === 'surface_on_page') {
-			changed = convertSimplePropertyToExpresionValue(feedback.options, 'page') || changed
+			changed = convertSimplePropertyToExpressionValue(feedback.options, 'surfaceId', 'controller', 'self') || changed
+			changed = convertSimplePropertyToExpressionValue(feedback.options, 'page') || changed
 		}
 
 		if (changed) return feedback
@@ -379,7 +382,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					},
 				],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			set_page: {
@@ -387,7 +390,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				description: undefined,
 				options: [CHOICES_SURFACE_GROUP, CHOICES_PAGE],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			set_page_byindex: {
 				label: 'Surface: Set by index to page',
@@ -407,7 +410,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					CHOICES_PAGE,
 				],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			inc_page: {
@@ -415,14 +418,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				description: undefined,
 				options: [CHOICES_SURFACE_GROUP],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			dec_page: {
 				label: 'Surface: Decrement page number',
 				description: undefined,
 				options: [CHOICES_SURFACE_GROUP],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			lockout_device: {
@@ -430,14 +433,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [CHOICES_SURFACE_GROUP],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			unlockout_device: {
 				label: 'Surface: Unlock specified surface immediately.',
 				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [CHOICES_SURFACE_GROUP],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			lockout_all: {
@@ -445,14 +448,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			unlockout_all: {
 				label: 'Surface: Unlock all immediately.',
 				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			rescan: {
@@ -460,7 +463,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				description: undefined,
 				options: [],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			surface_set_position: {
@@ -489,7 +492,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					},
 				],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			surface_adjust_position: {
@@ -518,7 +521,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					},
 				],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -531,13 +534,10 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			this.#surfaceController.setDeviceBrightness(surfaceId, Number(action.options.brightness), true)
 			return true
 		} else if (action.definitionId === 'set_page') {
-			console.log('set', action.options)
 			const surfaceId = this.#fetchSurfaceId(action.options, extras)
 			if (!surfaceId) return true
 
 			const thePage = this.#fetchPage(action.options, extras, surfaceId)
-			console.log('set', thePage)
-
 			if (thePage === undefined) return true
 
 			this.#changeSurfacePage(surfaceId, thePage)
@@ -545,13 +545,15 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		} else if (action.definitionId === 'set_page_byindex') {
 			const surfaceIndexNumber = Number(action.options.surfaceIndex)
 			if (isNaN(surfaceIndexNumber) || surfaceIndexNumber < 0) {
-				this.#logger.warn(`Trying to set controller #${action.options.surfaceIndex} but it isn't a valid index.`)
+				this.#logger.warn(
+					`Trying to set controller #${stringifyVariableValue(action.options.surfaceIndex)} but it isn't a valid index.`
+				)
 				return true
 			}
 
 			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(surfaceIndexNumber)
 			if (surfaceId === undefined || surfaceId === '') {
-				this.#logger.warn(`Trying to set controller #${action.options.controller} but it isn't available.`)
+				this.#logger.warn(`Trying to set controller #${surfaceIndexNumber} but it isn't available.`)
 				return true
 			}
 
@@ -698,7 +700,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						default: 0,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}

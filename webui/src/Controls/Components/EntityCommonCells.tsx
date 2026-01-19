@@ -143,7 +143,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								visibility={optionVisibility[opt.id] ?? true}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
-								fieldsSupportExpressions={entityDefinition.internalUsesAutoParser && !opt.disableAutoExpression}
+								fieldSupportsExpression={entityDefinition.optionsSupportExpressions && !opt.disableAutoExpression}
 							/>
 						</MyErrorBoundary>
 					))}

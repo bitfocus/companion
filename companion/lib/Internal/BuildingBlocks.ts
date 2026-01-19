@@ -30,6 +30,7 @@ import {
 import { EventEmitter } from 'events'
 import { setTimeout } from 'node:timers/promises'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalBuildingBlocks
 	extends EventEmitter<InternalModuleFragmentEvents>
@@ -73,7 +74,7 @@ export class InternalBuildingBlocks
 						label: '',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			logic_conditionalise_advanced: {
@@ -101,7 +102,7 @@ export class InternalBuildingBlocks
 						label: 'Feedbacks',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -138,7 +139,7 @@ export class InternalBuildingBlocks
 						label: '',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			wait: {
 				label: 'Wait',
@@ -156,7 +157,7 @@ export class InternalBuildingBlocks
 				],
 				hasLearn: false,
 				learnTimeout: undefined,
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			logic_if: {
 				label: 'Logic: If statement',
@@ -185,7 +186,7 @@ export class InternalBuildingBlocks
 						entityTypeLabel: 'action',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			logic_while: {
 				label: 'Logic: While loop',
@@ -208,7 +209,7 @@ export class InternalBuildingBlocks
 						entityTypeLabel: 'action',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -295,7 +296,7 @@ export class InternalBuildingBlocks
 					executeSequential = extras.executionMode === 'sequential'
 					break
 				default:
-					this.#logger.error(`Unknown execution mode: ${action.options.execution_mode}`)
+					this.#logger.error(`Unknown execution mode: ${stringifyVariableValue(action.options.execution_mode)}`)
 			}
 
 			const newExtras: RunActionExtras = {

@@ -32,7 +32,7 @@ interface OptionsInputFieldProps {
 	visibility: boolean
 	readonly?: boolean
 	localVariablesStore: LocalVariablesStore | null
-	fieldsSupportExpressions: boolean
+	fieldSupportsExpression: boolean
 }
 
 function OptionLabel({ option, features }: { option: SomeCompanionInputField; features?: InputFeatureIconsProps }) {
@@ -59,7 +59,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 	visibility,
 	readonly,
 	localVariablesStore,
-	fieldsSupportExpressions,
+	fieldSupportsExpression: fieldsSupportExpressions,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
 	const setValue2 = useCallback(
@@ -214,9 +214,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 		control = (
 			<FieldOrExpression
-				localVariablesStore={localVariablesStore!}
+				localVariablesStore={localVariablesStore}
 				value={rawExpressionValue}
 				setValue={(val) => setValue(option.id, val)}
+				disabled={!!readonly}
+				entityType={entityType}
+				isInternal={isInternal}
+				isLocatedInGrid={isLocatedInGrid}
 			>
 				{control}
 			</FieldOrExpression>

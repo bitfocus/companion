@@ -22,10 +22,10 @@ import type {
 import type { VariablesController } from '../Variables/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { convertSimplePropertyToExpresionValue } from './Util.js'
+import { convertSimplePropertyToExpressionValue } from './Util.js'
 import { EventEmitter } from 'events'
-import type { CompanionVariableValue } from '@companion-module/base'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalCustomVariables
 	extends EventEmitter<InternalModuleFragmentEvents>
@@ -70,7 +70,7 @@ export class InternalCustomVariables
 						expressionDescription: 'The expression will be executed with the result written to the variable',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			custom_variable_reset_to_default: {
@@ -85,7 +85,7 @@ export class InternalCustomVariables
 							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			custom_variable_sync_to_default: {
 				label: 'Custom Variable: Write current value to startup value',
@@ -99,7 +99,7 @@ export class InternalCustomVariables
 							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -226,12 +226,12 @@ export class InternalCustomVariables
 			action.definitionId === 'custom_variable_sync_to_default' ||
 			action.definitionId === 'custom_variable_reset_to_default'
 		) {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
 		} else if (action.definitionId === 'custom_variable_set_value') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'value') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'value') || changed
 		} else if (action.definitionId === 'custom_variable_set_expression') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
 
 			// Rename to the combined action
 			action.definitionId = 'custom_variable_set_value'
@@ -243,8 +243,8 @@ export class InternalCustomVariables
 
 			changed = true
 		} else if (action.definitionId === 'custom_variable_create_value') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'value') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'value') || changed
 
 			// Rename to the combined action
 			action.definitionId = 'custom_variable_set_value'
@@ -252,7 +252,7 @@ export class InternalCustomVariables
 
 			changed = true
 		} else if (action.definitionId === 'custom_variable_store_variable') {
-			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
 
 			// Rename to the combined action
 			action.definitionId = 'custom_variable_set_value'
@@ -271,25 +271,28 @@ export class InternalCustomVariables
 
 	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
 		if (action.definitionId === 'custom_variable_set_value') {
-			if (this.#variableController.custom.hasCustomVariable(String(action.options.name))) {
-				this.#variableController.custom.setValue(
-					String(action.options.name),
-					action.options.value as CompanionVariableValue
-				)
+			const variableName = stringifyVariableValue(action.options.name)
+			if (!variableName) return true
+
+			if (this.#variableController.custom.hasCustomVariable(variableName)) {
+				this.#variableController.custom.setValue(variableName, action.options.value)
 			} else if (action.options.create) {
-				this.#variableController.custom.createVariable(
-					String(action.options.name),
-					action.options.value as CompanionVariableValue
-				)
+				this.#variableController.custom.createVariable(variableName, action.options.value)
 			} else {
-				this.#logger.warn(`Custom variable "${action.options.name}" not found`)
+				this.#logger.warn(`Custom variable "${variableName}" not found`)
 			}
 			return true
 		} else if (action.definitionId === 'custom_variable_reset_to_default') {
-			this.#variableController.custom.resetValueToDefault(String(action.options.name))
+			const variableName = stringifyVariableValue(action.options.name)
+			if (!variableName) return true
+
+			this.#variableController.custom.resetValueToDefault(variableName)
 			return true
 		} else if (action.definitionId === 'custom_variable_sync_to_default') {
-			this.#variableController.custom.syncValueToDefault(String(action.options.name))
+			const variableName = stringifyVariableValue(action.options.name)
+			if (!variableName) return true
+
+			this.#variableController.custom.syncValueToDefault(variableName)
 			return true
 		} else {
 			return false

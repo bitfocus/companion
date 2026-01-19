@@ -30,7 +30,7 @@ import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
 import type { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type {
@@ -41,6 +41,7 @@ import { ExpressionVariableCollections } from './ExpressionVariableCollections.j
 import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRouter.js'
 import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/host'
 
 /**
  * The class that manages the controls
@@ -766,5 +767,5 @@ export class ControlsController {
 export interface NewFeedbackValue {
 	id: string
 	controlId: string
-	value: any
+	value: CompanionFeedbackButtonStyleResult | VariableValue
 }

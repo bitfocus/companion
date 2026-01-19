@@ -33,13 +33,14 @@ import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListP
 import {
 	CHOICES_LOCATION,
 	convertOldLocationToExpressionOrValue,
-	convertSimplePropertyToExpresionValue,
+	convertSimplePropertyToExpressionValue,
 	ParseLocationString,
 } from './Util.js'
 import { EventEmitter } from 'events'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { CompanionInputFieldDropdownExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	type: 'dropdown',
@@ -108,7 +109,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			variable_variable: {
@@ -139,7 +140,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			check_expression: {
@@ -164,7 +165,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			expression_value: {
@@ -186,7 +187,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			user_value: {
 				feedbackType: FeedbackEntitySubType.Value,
@@ -215,7 +216,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -242,32 +243,8 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 					},
 				],
 
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
-			local_variable_set_expression: {
-				label: 'Local Variable: Set with expression',
-				description: undefined,
-				options: [
-					...CHOICES_DYNAMIC_LOCATION_OR_TRIGGER,
-
-					{
-						type: 'textinput',
-						label: 'Local variable',
-						id: 'name',
-					},
-					{
-						type: 'textinput',
-						label: 'Expression',
-						id: 'expression',
-						default: '',
-						useVariables: {
-							local: true,
-						},
-						isExpression: true,
-					},
-				],
-			},
-
 			local_variable_reset_to_default: {
 				label: 'Local Variable: Reset to startup value',
 				description: undefined,
@@ -279,7 +256,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						id: 'name',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			local_variable_sync_to_default: {
 				label: 'Local Variable: Write current value to startup value',
@@ -292,7 +269,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						id: 'name',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -305,15 +282,22 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		parser: VariablesAndExpressionParser
 	): boolean | ExecuteFeedbackResultWithReferences | void {
 		if (feedback.definitionId == 'variable_value') {
-			const result = parser.parseVariables(`$(${feedback.options.variable})`)
+			const variableName = stringifyVariableValue(feedback.options.variable)
+			if (!variableName) return false
+
+			const result = parser.parseVariables(`$(${variableName})`)
 
 			return {
-				value: compareValues(feedback.options.op, result.text, feedback.options.value),
-				referencedVariables: Array.from(result.variableIds),
+				value: compareValues(feedback.options.op, result.text, stringifyVariableValue(feedback.options.value)),
+				referencedVariables: result.variableIds,
 			}
 		} else if (feedback.definitionId == 'variable_variable') {
-			const result1 = parser.parseVariables(`$(${feedback.options.variable})`)
-			const result2 = parser.parseVariables(`$(${feedback.options.variable2})`)
+			const variableName1 = stringifyVariableValue(feedback.options.variable)
+			const variableName2 = stringifyVariableValue(feedback.options.variable2)
+			if (!variableName1 || !variableName2) return false
+
+			const result1 = parser.parseVariables(`$(${variableName1})`)
+			const result2 = parser.parseVariables(`$(${variableName2})`)
 
 			return {
 				value: compareValues(feedback.options.op, result1.text, result2.text),
@@ -334,11 +318,11 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 		if (action.definitionId === 'local_variable_set_value') {
 			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'value') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'value') || changed
 		} else if (action.definitionId === 'local_variable_set_expression') {
 			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
 
 			// Rename to the combined action
 			action.definitionId = 'local_variable_set_value'
@@ -354,7 +338,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			action.definitionId === 'local_variable_sync_to_default'
 		) {
 			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
 		}
 
 		if (changed) return action
@@ -372,7 +356,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		if (!action.options.name) return
 
 		// nocommit - this needs to be adjusted to handle triggers/expression variables
-		const location = ParseLocationString(String(action.options.location), extras.location)
+		const location = ParseLocationString(stringifyVariableValue(action.options.location), extras.location)
 		const theControlId = location ? this.#pageStore.getControlIdAt(location) : null
 
 		// let theControlId: string | null = null

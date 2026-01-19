@@ -265,9 +265,9 @@ function translateCommonFields(
 		label: field.label,
 		tooltip: field.tooltip,
 		description: field.description,
-		expressionDescription: undefined, // Temporary until #2345
+		expressionDescription: undefined, // Expressions not supported from 1.x modules
 		isVisibleUi: translateIsVisibleFn(field),
-		disableAutoExpression: true, // Temporary until #2345
+		disableAutoExpression: true, // Expressions not supported from 1.x modules
 	}
 }
 

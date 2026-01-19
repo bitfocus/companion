@@ -18,7 +18,7 @@ export function visitEntityModel(visitor: InternalVisitor, entity: SomeEntityMod
 	// Fixup any references in entity options
 	for (const key of Object.keys(entity.options || {})) {
 		const origValue = entity.options[key]
-		if (isExpressionOrValue(origValue) && origValue.isExpression) {
+		if (isExpressionOrValue(origValue)) {
 			// Wrapped option
 			visitor.visitString(origValue, 'value', entity.id)
 		} else {

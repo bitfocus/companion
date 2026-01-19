@@ -424,7 +424,7 @@ const EventEditor = observer(function EventEditor({
 									setValue={service.setValue}
 									visibility={optionVisibility[opt.id] ?? true}
 									localVariablesStore={localVariablesStore}
-									fieldsSupportExpressions={false} // Events do not support expressions
+									fieldSupportsExpression={false} // Events do not support expressions
 								/>
 							</MyErrorBoundary>
 						))}

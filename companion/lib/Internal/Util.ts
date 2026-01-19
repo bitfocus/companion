@@ -1,13 +1,16 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { JsonValue } from '@companion-app/shared/Model/JSON.js'
 import {
 	isExpressionOrValue,
 	type ExpressionOrValue,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { CompanionOptionValues } from '@companion-module/host'
 
 export function ParseLocationString(
-	str: string | undefined,
+	str: string | null | undefined,
 	pressLocation: ControlLocation | undefined
 ): ControlLocation | null {
 	if (!str) return null
@@ -43,7 +46,7 @@ export function ParseLocationString(
 
 	const parts = str.split('/') // TODO - more chars
 
-	// TODO - this is horrible, and needs reworking to be simpler
+	// nocommit - this is horrible, and needs reworking to be simpler
 
 	if (parts.length === 1 && parts[0].startsWith('bank')) {
 		return pressLocation ? parseBankString(pressLocation.pageNumber, parts[0].slice(4)) : null
@@ -86,34 +89,34 @@ export const CHOICES_LOCATION: SomeCompanionInputField = {
 	},
 }
 
-export function convertOldLocationToExpressionOrValue(options: Record<string, any>): boolean {
+export function convertOldLocationToExpressionOrValue(options: CompanionOptionValues): boolean {
 	if (options.location) return false
 
 	if (options.location_target === 'this:only-this-run') {
 		options.location = {
 			isExpression: false,
 			value: 'this-run',
-		} satisfies ExpressionOrValue<any>
+		} satisfies ExpressionOrValue<string>
 	} else if (options.location_target === 'this:all-runs') {
 		options.location = {
 			isExpression: false,
 			value: 'this-all-runs',
-		} satisfies ExpressionOrValue<any>
+		} satisfies ExpressionOrValue<string>
 	} else if (options.location_target === 'this') {
 		options.location = {
 			isExpression: false,
 			value: '$(this:location)',
-		} satisfies ExpressionOrValue<any>
+		} satisfies ExpressionOrValue<string>
 	} else if (options.location_target === 'expression') {
 		options.location = {
 			isExpression: true,
-			value: options.location_expression || '',
-		} satisfies ExpressionOrValue<any>
+			value: stringifyVariableValue(options.location_expression) || '',
+		} satisfies ExpressionOrValue<string>
 	} else {
 		options.location = {
 			isExpression: false,
 			value: options.location_text || '',
-		} satisfies ExpressionOrValue<any>
+		} satisfies ExpressionOrValue<JsonValue>
 	}
 
 	delete options.location_target
@@ -123,7 +126,7 @@ export function convertOldLocationToExpressionOrValue(options: Record<string, an
 }
 
 export function convertOldSplitOptionToExpression(
-	options: Record<string, any>,
+	options: CompanionOptionValues,
 	keys: {
 		useVariables: string
 		simple: string
@@ -136,19 +139,20 @@ export function convertOldSplitOptionToExpression(
 		if (variableIsExpression) {
 			options[keys.result] = {
 				isExpression: true,
-				value: options[keys.variable] || '',
+				value: stringifyVariableValue(options[keys.variable]) || '',
 			} satisfies ExpressionOrValue<string>
 		} else {
+			const variableName = stringifyVariableValue(options[keys.variable])
 			options[keys.result] = {
 				isExpression: true,
-				value: options[keys.variable] === undefined ? '' : `parseVariables(\`${options[keys.variable]}\`)`,
+				value: !variableName ? '' : `parseVariables(\`${variableName}\`)`,
 			} satisfies ExpressionOrValue<string>
 		}
 	} else {
 		options[keys.result] = {
 			isExpression: false,
 			value: options[keys.simple] || '',
-		} satisfies ExpressionOrValue<string>
+		} satisfies ExpressionOrValue<JsonValue>
 	}
 
 	delete options[keys.useVariables]
@@ -156,8 +160,8 @@ export function convertOldSplitOptionToExpression(
 	if (keys.simple !== keys.result) delete options[keys.simple]
 }
 
-export function convertSimplePropertyToExpresionValue(
-	options: Record<string, any>,
+export function convertSimplePropertyToExpressionValue(
+	options: CompanionOptionValues,
 	key: string,
 	oldKey?: string,
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

@@ -6,25 +6,36 @@ import { ExpressionInputField } from './ExpressionInputField'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
-interface FormPropertyFieldProps {
-	localVariablesStore: LocalVariablesStore
+interface FieldOrExpressionProps {
+	localVariablesStore: LocalVariablesStore | null
 	value: ExpressionOrValue<any>
 	setValue: (value: ExpressionOrValue<any>) => void
+	disabled: boolean
+
+	entityType: EntityModelType | null
+	isInternal: boolean
+	isLocatedInGrid: boolean
+
 	children: React.ReactNode
 }
 export const FieldOrExpression = observer(function FieldOrExpression({
 	localVariablesStore,
 	value,
 	setValue,
+	disabled,
+	entityType,
+	isInternal,
+	isLocatedInGrid,
 	children,
-}: FormPropertyFieldProps) {
+}: FieldOrExpressionProps) {
 	const setExpression = useCallback(
-		(value: any) => {
-			console.log('set expression', value)
+		(value: string) => {
 			setValue({
 				isExpression: true,
-				value,
+				value: value,
 			})
 		},
 		[setValue]
@@ -32,7 +43,6 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 
 	const setIsExpression = useCallback(
 		(isExpression: boolean) => {
-			console.log('setIsExpression', isExpression)
 			setValue({
 				isExpression,
 				value: value.value,
@@ -51,9 +61,10 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 			<div className="expression-field">
 				{value.isExpression ? (
 					<ExpressionInputField
-						setValue={setExpression as (value: string) => void}
-						value={value.value ?? ''}
-						localVariables={localVariablesStore.getOptions(null, false, true)} // nocommit - the args here
+						setValue={setExpression}
+						value={stringifyVariableValue(value.value) ?? ''}
+						localVariables={localVariablesStore?.getOptions(entityType, isInternal, isLocatedInGrid)}
+						disabled={disabled}
 					/>
 				) : (
 					children
@@ -64,7 +75,8 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 					color="info"
 					variant="outline"
 					onClick={toggleExpression}
-					title={value.isExpression ? 'Expression mode ' : 'Value mode'}
+					title={value.isExpression ? 'Expression mode' : 'Value mode'}
+					disabled={disabled}
 				>
 					<FontAwesomeIcon icon={value.isExpression ? faSquareRootVariable : faFilter} />
 				</CButton>

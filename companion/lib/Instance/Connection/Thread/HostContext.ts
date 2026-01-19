@@ -70,6 +70,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				feedbackType: null,
 				feedbackStyle: undefined,
+
+				optionsSupportExpressions: false, // Future: follow up to enable for modules!
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
@@ -97,6 +99,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
+
+				optionsSupportExpressions: false, // Future: follow up to enable for modules!
 			} satisfies Complete<ClientEntityDefinition>
 		}
 

@@ -41,12 +41,13 @@ import {
 	CHOICES_LOCATION,
 	convertOldLocationToExpressionOrValue,
 	convertOldSplitOptionToExpression,
-	convertSimplePropertyToExpresionValue,
+	convertSimplePropertyToExpressionValue,
 	ParseLocationString,
 } from './Util.js'
 import { EventEmitter } from 'events'
 import { parseColorToNumber } from '../Resources/Util.js'
-import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
+import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 const ButtonStylePropertiesExt = [
 	...ButtonStyleProperties,
@@ -132,24 +133,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		})
 	}
 
-	#fetchPage(options: Record<string, any>, extras: RunActionExtras): { thePage: number | null } {
-		let thePage = options.page
-
-		if (thePage === 0 || thePage === '0') thePage = extras.location?.pageNumber ?? null
-
-		return {
-			thePage,
-		}
-	}
-
 	#fetchLocationAndControlId(
-		options: Record<string, any>,
+		options: CompanionOptionValues,
 		extras: RunActionExtras | FeedbackForInternalExecution
 	): {
 		theControlId: string | null
 		theLocation: ControlLocation | null
 	} {
-		const location = ParseLocationString(String(options.location), extras.location)
+		const location = ParseLocationString(stringifyVariableValue(options.location), extras.location)
 		const theControlId = location ? this.#pageStore.getControlIdAt(location) : null
 
 		return {
@@ -174,7 +165,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			button_press: {
 				label: 'Button: Trigger press',
@@ -190,7 +181,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			button_release: {
 				label: 'Button: Trigger release',
@@ -206,7 +197,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			button_rotate_left: {
@@ -214,14 +205,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: 'Make sure to enable rotary actions for the specified button',
 				showButtonPreview: true,
 				options: [CHOICES_LOCATION],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			button_rotate_right: {
 				label: 'Button: Trigger rotate right',
 				description: 'Make sure to enable rotary actions for the specified button',
 				showButtonPreview: true,
 				options: [CHOICES_LOCATION],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			button_text: {
@@ -238,7 +229,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						default: '',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			textcolor: {
 				label: 'Button: Set text color',
@@ -254,7 +245,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						description: 'This can be an integer or hex in the format 0xffffff',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			bgcolor: {
 				label: 'Button: Set background color',
@@ -270,7 +261,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						description: 'This can be an integer or hex in the format 0xffffff',
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			panic_bank: {
@@ -282,7 +273,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						...CHOICES_LOCATION,
 						description: 'In the format 1/0/0. this-run or this-all-runs is also accepted as special modes',
 						expressionDescription:
-							'In the format `1/0/0`. `this-run` or `this-all-runs` is also accepted as special modes',
+							"In the format '1/0/0'. 'this-run' or 'this-all-runs' is also accepted as special modes",
 					},
 					{
 						type: 'checkbox',
@@ -292,7 +283,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			panic_page: {
 				label: 'Actions: Abort all button runs on a page',
@@ -327,7 +318,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			panic_trigger: {
 				label: 'Actions: Abort trigger runs',
@@ -342,7 +333,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			panic: {
 				label: 'Actions: Abort all button and trigger runs',
@@ -357,7 +348,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 
 			bank_current_step: {
@@ -377,7 +368,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						},
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			bank_current_step_delta: {
 				label: 'Button: Skip step',
@@ -395,7 +386,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						max: Number.MAX_SAFE_INTEGER,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -421,7 +412,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			bank_pushed: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -443,7 +434,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 			bank_current_step: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -467,7 +458,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						max: Number.MAX_SAFE_INTEGER,
 					},
 				],
-				internalUsesAutoParser: true,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -503,7 +494,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			changed = convertOldLocationToExpressionOrValue(feedback.options) || changed
 		} else if (feedback.definitionId === 'bank_current_step') {
 			changed = convertOldLocationToExpressionOrValue(feedback.options) || changed
-			changed = convertSimplePropertyToExpresionValue(feedback.options, 'step') || changed
+			changed = convertSimplePropertyToExpressionValue(feedback.options, 'step') || changed
 		}
 
 		if (changed) return feedback
@@ -532,13 +523,13 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			const render = this.#graphicsController.getCachedRender(theLocation)
 			if (render?.style && typeof render.style === 'object') {
-				if (!feedback.options.properties) {
+				if (!feedback.options.properties || !Array.isArray(feedback.options.properties)) {
 					// TODO populate these properties instead
 					return structuredClone(render.style as any)
 				} else {
 					const newStyle: Record<string, any> = {}
 
-					for (const prop of feedback.options.properties as any) {
+					for (const prop of feedback.options.properties) {
 						// @ts-expect-error mismatch in prop type
 						newStyle[prop] = render.style[prop]
 					}
@@ -760,8 +751,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				upgradeIndex: undefined,
 			}
 
-			// TODO - recursive upgrade this new feedback?
-
 			return {
 				type: EntityModelType.Action,
 				id: action.id,
@@ -800,17 +789,17 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			changed = convertOldLocationToExpressionOrValue(action.options) || changed
 		} else if (action.definitionId === 'button_text') {
 			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'label') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'label') || changed
 		} else if (action.definitionId === 'bgcolor' || action.definitionId === 'textcolor') {
 			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'color') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'color') || changed
 		} else if (action.definitionId === 'bank_current_step_delta') {
 			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpresionValue(action.options, 'amount') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'amount') || changed
 		} else if (action.definitionId === 'bank_current_step') {
 			changed = convertOldLocationToExpressionOrValue(action.options) || changed
 
-			if (action.options.step === undefined) {
+			if (!isExpressionOrValue(action.options.step)) {
 				convertOldSplitOptionToExpression(
 					action.options,
 					{
@@ -895,7 +884,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			return true
 		} else if (action.definitionId === 'panic_bank') {
 			// Special case handling for special modes
-			const rawControlId = String(action.options.location).trim().toLowerCase()
+			const rawControlId = stringifyVariableValue(action.options.location)?.trim()?.toLowerCase()
 			if (rawControlId === 'this-run') {
 				const control = this.#controlsController.getControl(extras.controlId)
 				if (control && control.supportsActions) {
@@ -925,8 +914,11 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			return true
 		} else if (action.definitionId === 'panic_page') {
-			const { thePage } = this.#fetchPage(action.options, extras)
-			if (thePage === null) return true
+			let thePage: number | null = Number(action.options.page)
+
+			if (thePage === 0) thePage = extras.location?.pageNumber ?? null
+
+			if (thePage === null || isNaN(thePage)) return true
 
 			const controlIdsOnPage = this.#pageStore.getAllControlIdsOnPage(thePage)
 			for (const controlId of controlIdsOnPage) {
@@ -940,7 +932,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			return true
 		} else if (action.definitionId === 'panic_trigger') {
-			const rawControlId = String(action.options.trigger_id)
+			const rawControlId = stringifyVariableValue(action.options.trigger_id)
 			let controlId = rawControlId
 			if (controlId === 'self' || controlId?.startsWith('self:')) controlId = extras.controlId
 

@@ -9,6 +9,7 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),
@@ -166,8 +167,8 @@ export class PreviewGraphics {
 						const parser = self.#controlsController.createVariablesAndExpressionParser(controlId, null)
 
 						// Do a resolve of the reference for the starting image
-						const locationValue = parser.parseEntityOption(options.location, 'variables')
-						const resolvedLocation = ParseLocationString(String(locationValue.value), location)
+						const locationValue = parser.parseEntityOption(options.location, 'variables') // nocommit - this looks wrong
+						const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
 
 						// Track the subscription, to allow it to be invalidated
 						self.#buttonReferencePreviews.set(id, {
@@ -252,8 +253,8 @@ export class PreviewGraphics {
 		const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.controlId, null)
 
 		// Resolve the new location
-		const locationValue = parser.parseEntityOption(previewSession.options.location, 'variables')
-		const resolvedLocation = ParseLocationString(String(locationValue.value), location)
+		const locationValue = parser.parseEntityOption(previewSession.options.location, 'variables') // nocommit - this looks wrong
+		const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
 
 		const lastResolvedLocation = previewSession.resolvedLocation
 

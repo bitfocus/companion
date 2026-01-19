@@ -1,4 +1,5 @@
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
+import type { JsonValue } from './JSON.js'
 
 export type CompanionColorPresetValue =
 	| string
@@ -49,6 +50,10 @@ export interface CompanionInputFieldBaseExtended {
 
 	width?: number // For connection config
 
+	/**
+	 * Whether to disable support for toggling this field to be an expression
+	 * Note: This is only available for internal connections
+	 */
 	disableAutoExpression?: boolean
 }
 
@@ -243,7 +248,7 @@ export type SomeCompanionInputField = ExtendedInputField | SomeCompanionConfigIn
 
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 export type ExpressionableOptionsObject = {
-	[key: string]: ExpressionOrValue<any> | undefined
+	[key: string]: ExpressionOrValue<JsonValue> | undefined
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

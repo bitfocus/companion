@@ -34,7 +34,7 @@ import {
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { Complete, OptionsObject } from '@companion-module/base'
+import type { CompanionFeedbackButtonStyleResult, Complete } from '@companion-module/base'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -292,20 +292,29 @@ export class InternalController {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	#feedbackGetValue(feedback: FeedbackEntityState): any {
+	#feedbackGetValue(feedback: FeedbackEntityState): CompanionFeedbackButtonStyleResult | VariableValue {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Feedback,
-				'internal',
+				'internal', // This is the internal instance code
 				feedback.entityModel.definitionId
 			)
+			if (!entityDefinition) {
+				// No definition found, so cannot evaluate
+				feedback.referencedVariables = null
+
+				return undefined
+			}
 
 			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.controlId, null)
 
-			// Parse the otpions if enabled
-			const { parsedOptions, referencedVariableIds } = entityDefinition?.internalUsesAutoParser
+			// Parse the options if enabled
+			const { parsedOptions, referencedVariableIds } = entityDefinition.optionsSupportExpressions
 				? parser.parseEntityOptions(entityDefinition, feedback.entityModel.options)
-				: { parsedOptions: feedback.entityModel.options as OptionsObject, referencedVariableIds: new Set<string>() }
+				: {
+						parsedOptions: feedback.entityModel.options,
+						referencedVariableIds: new Set<string>(),
+					}
 
 			const executionFeedback: Complete<FeedbackForInternalExecution> = {
 				controlId: feedback.controlId,
@@ -433,6 +442,7 @@ export class InternalController {
 				'internal',
 				action.definitionId
 			)
+			if (!entityDefinition) return
 
 			const overrideVariableValues: VariableValues = {
 				'$(this:surface_id)': extras.surfaceId,
@@ -443,9 +453,9 @@ export class InternalController {
 			)
 
 			// Parse the options if enabled
-			const { parsedOptions } = entityDefinition?.internalUsesAutoParser
-				? parser.parseEntityOptions(entityDefinition, action.rawOptions)
-				: { parsedOptions: action.rawOptions as OptionsObject }
+			const parsedOptions = entityDefinition.optionsSupportExpressions
+				? parser.parseEntityOptions(entityDefinition, action.rawOptions).parsedOptions
+				: action.rawOptions
 
 			const executionAction: Complete<ActionForInternalExecution> = {
 				options: parsedOptions,
@@ -565,7 +575,7 @@ export class InternalController {
 						feedbackType: null,
 						feedbackStyle: undefined,
 
-						internalUsesAutoParser: action.internalUsesAutoParser ?? false,
+						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
 						optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe || [],
 					} satisfies Complete<ClientEntityDefinition>
@@ -594,7 +604,7 @@ export class InternalController {
 						showButtonPreview: feedback.showButtonPreview ?? false,
 						supportsChildGroups: feedback.supportsChildGroups ?? [],
 
-						internalUsesAutoParser: feedback.internalUsesAutoParser ?? false,
+						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 
 						optionsToIgnoreForSubscribe: [],
 					} satisfies Complete<ClientEntityDefinition>

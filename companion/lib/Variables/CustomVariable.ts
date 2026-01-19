@@ -211,10 +211,6 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 			return `Variable name "${name}" is not valid`
 		}
 
-		if (typeof defaultVal !== 'string') {
-			return 'Bad default value'
-		}
-
 		const highestSortOrder = Math.max(-1, ...Object.values(this.#custom_variables).map((v) => v.sortOrder))
 
 		this.#custom_variables[name] = {
