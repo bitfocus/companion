@@ -1637,16 +1637,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@base-ui/react@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@base-ui/react@npm:1.0.0"
+"@base-ui/react@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@base-ui/react@npm:1.1.0"
   dependencies:
     "@babel/runtime": "npm:^7.28.4"
-    "@base-ui/utils": "npm:0.2.3"
+    "@base-ui/utils": "npm:0.2.4"
     "@floating-ui/react-dom": "npm:^2.1.6"
     "@floating-ui/utils": "npm:^0.2.10"
     reselect: "npm:^5.1.1"
-    tabbable: "npm:^6.3.0"
+    tabbable: "npm:^6.4.0"
     use-sync-external-store: "npm:^1.6.0"
   peerDependencies:
     "@types/react": ^17 || ^18 || ^19
@@ -1655,13 +1655,13 @@ __metadata:
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 10c0/64f51cb1138fc2236de22d7190fe111ce1141666c6eb1722ec06419ebb368927b29741d3c919fb6dbd1f5776e2635cc24201441d08016d7b0319e40732b88532
+  checksum: 10c0/7a84af8ba7e5ace677443e5b98e488039d5b254e24042a2b618cf02e6e4f81ef21c18c64fe9ce7752ae103db2a96a6cd0a102a936f558066ebd8637ac89f6ec4
   languageName: node
   linkType: hard
 
-"@base-ui/utils@npm:0.2.3":
-  version: 0.2.3
-  resolution: "@base-ui/utils@npm:0.2.3"
+"@base-ui/utils@npm:0.2.4":
+  version: 0.2.4
+  resolution: "@base-ui/utils@npm:0.2.4"
   dependencies:
     "@babel/runtime": "npm:^7.28.4"
     "@floating-ui/utils": "npm:^0.2.10"
@@ -1674,7 +1674,7 @@ __metadata:
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 10c0/5a75102851e8096402a4185d7b4182a7579069869f3f6f09ec46ce6b5318192f5e8e07ada67af370cf85a055fb0e9693bcaa224dffc51c9d432cf57e05b58144
+  checksum: 10c0/98305af23d44fb42a2c331a95a0d90be1008a183dfaf767b3804f0962cee7d339d71d29732b2cb102b32f2b9c0ca5b756d5ca47d9c654673e72e4dbf4dba7f07
   languageName: node
   linkType: hard
 
@@ -1729,7 +1729,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@companion-app/launcher-ui@workspace:launcher-ui"
   dependencies:
-    "@base-ui/react": "npm:^1.0.0"
+    "@base-ui/react": "npm:^1.1.0"
     "@companion-app/shared": "npm:*"
     "@fontsource/roboto": "npm:^5.2.9"
     "@tailwindcss/vite": "npm:^4.1.18"
@@ -1743,7 +1743,7 @@ __metadata:
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
     react-error-boundary: "npm:^6.0.3"
-    shadcn: "npm:^3.6.2"
+    shadcn: "npm:^3.7.0"
     tailwind-merge: "npm:^3.4.0"
     tailwindcss: "npm:^4.1.18"
     terser: "npm:^5.44.1"
@@ -7775,6 +7775,13 @@ __metadata:
   version: 2.0.11
   resolution: "@types/unist@npm:2.0.11"
   checksum: 10c0/24dcdf25a168f453bb70298145eb043cfdbb82472db0bc0b56d6d51cd2e484b9ed8271d4ac93000a80da568f2402e9339723db262d0869e2bf13bc58e081768d
+  languageName: node
+  linkType: hard
+
+"@types/validate-npm-package-name@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "@types/validate-npm-package-name@npm:4.0.2"
+  checksum: 10c0/5a109fe12570b7125740fdac8678970e3caf7de0cbd6e15cf93dad67a427a3a83e0759b5d4b64fd75bce6cdf43b0569275456a35183059046cba6c25d096b916
   languageName: node
   linkType: hard
 
@@ -22518,9 +22525,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shadcn@npm:^3.6.2":
-  version: 3.6.2
-  resolution: "shadcn@npm:3.6.2"
+"shadcn@npm:^3.7.0":
+  version: 3.7.0
+  resolution: "shadcn@npm:3.7.0"
   dependencies:
     "@antfu/ni": "npm:^25.0.0"
     "@babel/core": "npm:^7.28.0"
@@ -22529,6 +22536,7 @@ __metadata:
     "@babel/preset-typescript": "npm:^7.27.1"
     "@dotenvx/dotenvx": "npm:^1.48.4"
     "@modelcontextprotocol/sdk": "npm:^1.17.2"
+    "@types/validate-npm-package-name": "npm:^4.0.2"
     browserslist: "npm:^4.26.2"
     commander: "npm:^14.0.0"
     cosmiconfig: "npm:^9.0.0"
@@ -22552,11 +22560,12 @@ __metadata:
     stringify-object: "npm:^5.0.0"
     ts-morph: "npm:^26.0.0"
     tsconfig-paths: "npm:^4.2.0"
+    validate-npm-package-name: "npm:^7.0.1"
     zod: "npm:^3.24.1"
     zod-to-json-schema: "npm:^3.24.6"
   bin:
     shadcn: dist/index.js
-  checksum: 10c0/b532cb95f35d20b2e5939b2dc5960e2075c713f38a921380c732caadcdb1f4d01f2412c278c570496064e3a727f8ac23d8a762a951708f32a8677e7a31682283
+  checksum: 10c0/a8e4a30e6d509eb6ffa39edc60fcca921ac022e68d80aaa38b5e4777915ee15531f6d14815405f53757cdab71a4992ba331f05498cc7dcae51750f198cd1178d
   languageName: node
   linkType: hard
 
@@ -23598,10 +23607,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tabbable@npm:^6.3.0":
-  version: 6.3.0
-  resolution: "tabbable@npm:6.3.0"
-  checksum: 10c0/57ba019d29b5cfa0c862248883bcec0e6d29d8f156ba52a1f425e7cfeca4a0fc701ab8d035c4c86ddf74ecdbd0e9f454a88d9b55d924a51f444038e9cd14d7a0
+"tabbable@npm:^6.4.0":
+  version: 6.4.0
+  resolution: "tabbable@npm:6.4.0"
+  checksum: 10c0/d931427f4a96b801fd8801ba296a702119e06f70ad262fed8abc5271225c9f1ca51b89fdec4fb2f22e1d35acb3d2881db0a17cedc758272e9ecb540d00299d76
   languageName: node
   linkType: hard
 
@@ -24838,6 +24847,13 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 10c0/1607dd32ac7fc22f2d8f77051e6a64845c9bce5cd3dd8aa0070c074ec73e666a1f63c7b4e0f4bf2bc8b9d59dc85a15e17807446d9d2b17c8485fbc2147b27f9b
+  languageName: node
+  linkType: hard
+
+"validate-npm-package-name@npm:^7.0.1":
+  version: 7.0.2
+  resolution: "validate-npm-package-name@npm:7.0.2"
+  checksum: 10c0/adf32e943148e13e8df13d06b855493908e6ae7a847610e8543c6291cbf42f40e653249a5b2275e2e615e3224c574ade5a9064a9e2d1ab629386284ea99e8f39
   languageName: node
   linkType: hard
 

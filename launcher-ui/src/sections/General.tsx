@@ -3,6 +3,13 @@ import { useConfig } from '~/hooks/useConfig'
 import { Label } from '~/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
 
+const LOG_LEVELS = [
+	{ value: 'error', label: 'Error' },
+	{ value: 'warn', label: 'Warning' },
+	{ value: 'info', label: 'Info' },
+	{ value: 'debug', label: 'Debug' },
+]
+
 export function GeneralSection(): JSX.Element {
 	const { state, updateConfig } = useConfig()
 
@@ -31,15 +38,16 @@ export function GeneralSection(): JSX.Element {
 					<div className="grid grid-cols-4 gap-4 items-center">
 						<Label htmlFor="log-level">Log Level</Label>
 						<div className="col-span-3">
-							<Select value={logLevel} onValueChange={handleLogLevelChange}>
+							<Select value={logLevel} onValueChange={handleLogLevelChange} items={LOG_LEVELS}>
 								<SelectTrigger className="w-48">
 									<SelectValue placeholder="Select log level" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="error">Error</SelectItem>
-									<SelectItem value="warn">Warning</SelectItem>
-									<SelectItem value="info">Info</SelectItem>
-									<SelectItem value="debug">Debug</SelectItem>
+									{LOG_LEVELS.map((value) => (
+										<SelectItem key={value.value} value={value.value}>
+											{value.label}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 							<p className="text-sm text-muted-foreground mt-1">
