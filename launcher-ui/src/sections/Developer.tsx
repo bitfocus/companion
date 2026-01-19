@@ -88,11 +88,7 @@ export function DeveloperSection(): JSX.Element {
 									placeholder="Path to local modules directory"
 									className="flex-1 rounded-r-none"
 								/>
-								<Button
-									variant="outline"
-									onClick={handleSelectModulesPath}
-									className="rounded-l-none px-3 shrink-0 h-9"
-								>
+								<Button variant="outline" onClick={handleSelectModulesPath} className="rounded-l-none px-3 shrink-0">
 									Select
 								</Button>
 							</div>
