@@ -1,5 +1,9 @@
 import LogController, { type Logger } from '../../Log/Controller.js'
-import { IpcWrapper, type IpcEventHandlers } from '@companion-module/base/dist/host-api/ipc-wrapper.js'
+import {
+	IpcWrapper as IpcWrapperEJSON,
+	type IpcEventHandlers,
+	// eslint-disable-next-line n/no-missing-import
+} from '@companion-module/base-old/dist/host-api/ipc-wrapper.js'
 import semver from 'semver'
 import type express from 'express'
 import type {
@@ -25,24 +29,23 @@ import type {
 	SharedUdpSocketMessageJoin,
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
-	UpdateFeedbackInstancesMessage,
 	UpdateActionInstancesMessage,
-} from '@companion-module/base/dist/host-api/api.js'
-import type { ModuleRegisterMessage, ModuleToHostEventsInit } from '@companion-module/base/dist/host-api/versions.js'
-import type { InstanceStatus } from '../Status.js'
+	UpdateFeedbackInstancesMessage,
+	// eslint-disable-next-line n/no-missing-import
+} from '@companion-module/base-old/dist/host-api/api.js'
+import type {
+	ModuleRegisterMessage,
+	ModuleToHostEventsInit,
+	// eslint-disable-next-line n/no-missing-import
+} from '@companion-module/base-old/dist/host-api/versions.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
-import {
-	assertNever,
-	type CompanionHTTPRequest,
-	type CompanionInputFieldBase,
-	type CompanionOptionValues,
-	type LogLevel,
-} from '@companion-module/base'
-import type { InstanceDefinitions } from '../Definitions.js'
-import type { ControlsController } from '../../Controls/Controller.js'
-import type { VariablesController } from '../../Variables/Controller.js'
-import type { ServiceOscSender } from '../../Service/OscSender.js'
-import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
+import type {
+	OptionsObject,
+	CompanionHTTPRequest,
+	CompanionInputFieldBase,
+	CompanionOptionValues,
+	LogLevel,
+} from '@companion-module/base-old'
 import {
 	EntityModelType,
 	isValidFeedbackEntitySubType,
@@ -53,7 +56,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import {
 	doesModuleExpectLabelUpdates,
@@ -67,42 +70,23 @@ import {
 	type EntityManagerFeedbackEntity,
 } from './EntityManager.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFields.js'
+import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFieldsLegacy.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import type { RunActionExtras } from './ChildHandlerApi.js'
+import type {
+	ConnectionChildHandlerApi,
+	ConnectionChildHandlerDependencies,
+	RunActionExtras,
+} from './ChildHandlerApi.js'
+import { ConvertPresetDefinition } from './Thread/Presets.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
-import { ConvertPresetDefinition } from './Presets.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
-export interface ConnectionChildHandlerDependencies {
-	readonly controls: ControlsController
-	readonly variables: VariablesController
-	readonly oscSender: ServiceOscSender
-
-	readonly instanceDefinitions: InstanceDefinitions
-	readonly instanceStatus: InstanceStatus
-	readonly sharedUdpManager: InstanceSharedUdpManager
-
-	readonly setConnectionConfig: (
-		connectionId: string,
-		config: unknown | null,
-		secrets: unknown | null,
-		newUpgradeIndex: number | null
-	) => void
-	readonly debugLogLine: (
-		connectionId: string,
-		time: number | null,
-		source: string,
-		level: string,
-		message: string
-	) => void
-}
-
-export class ConnectionChildHandler implements ChildProcessHandlerBase {
+export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
 
-	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
+	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
 
 	readonly #deps: ConnectionChildHandlerDependencies
 
@@ -171,7 +155,7 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 			sharedUdpSocketSend: this.#handleSharedUdpSocketSend.bind(this),
 		}
 
-		this.#ipcWrapper = new IpcWrapper(
+		this.#ipcWrapper = new IpcWrapperEJSON(
 			funcs,
 			(msg) => {
 				if (monitor.child) {
@@ -350,9 +334,13 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 	 * Send the list of changed variables to the child process
 	 * @access public - called whenever variables change
 	 */
-	async sendVariablesChanged(changedVariableIdSet: Set<string>, changedVariableIds: string[]): Promise<void> {
+	async sendVariablesChanged(
+		changedVariableIdSet: Set<string>,
+		changedVariableIds: string[],
+		fromControlId: string | null
+	): Promise<void> {
 		if (this.#entityManager) {
-			this.#entityManager.onVariablesChanged(changedVariableIdSet)
+			this.#entityManager.onVariablesChanged(changedVariableIdSet, fromControlId)
 			return
 		}
 
@@ -1076,9 +1064,9 @@ export class ConnectionChildHandler implements ChildProcessHandlerBase {
 }
 
 class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
-	readonly #ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>
+	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
 
-	constructor(ipcWrapper: IpcWrapper<HostToModuleEventsV0, ModuleToHostEventsV0>) {
+	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>) {
 		this.#ipcWrapper = ipcWrapper
 	}
 
@@ -1091,7 +1079,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					id: value.entity.id,
 					controlId: value.controlId,
 					actionId: value.entity.definitionId,
-					options: value.parsedOptions,
+					options: value.parsedOptions as OptionsObject,
 
 					upgradeIndex: value.entity.upgradeIndex ?? null,
 					disabled: !!value.entity.disabled,
@@ -1113,7 +1101,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					id: value.entity.id,
 					controlId: value.controlId,
 					feedbackId: value.entity.definitionId,
-					options: value.parsedOptions,
+					options: value.parsedOptions as OptionsObject,
 
 					image: value.imageSize,
 

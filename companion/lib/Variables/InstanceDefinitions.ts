@@ -20,7 +20,7 @@ import type {
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
 import { diffObjects } from '@companion-app/shared/Diff.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 
 /**
  * Variable definitions as defined by the instances/connections

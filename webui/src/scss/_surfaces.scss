@@ -20,6 +20,9 @@
 		background-color: #f0f0f0;
 		border-bottom: 1px solid #ddd;
 		white-space: nowrap;
+		position: sticky;
+		top: 0;
+		z-index: 1;
 	}
 
 	.grid-row {

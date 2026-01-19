@@ -10,6 +10,7 @@ export interface EntityListDragItem {
 	index: number
 	ownerId: EntityOwner | null
 	dragState: DragState | null
+	elementWidth: number | undefined
 }
 
 interface EntityDropPlaceholderZoneProps {
@@ -53,10 +54,8 @@ export function EntityDropPlaceholderZone({
 	if (!isDraggingDeferred || entityCount > 0) return null
 
 	return (
-		<tr ref={drop} className="entitylist-dropzone">
-			<td colSpan={3}>
-				<p>Drop {entityTypeLabel} here</p>
-			</td>
-		</tr>
+		<div ref={drop} className="entitylist-dropzone">
+			<p>Drop {entityTypeLabel} here</p>
+		</div>
 	)
 }

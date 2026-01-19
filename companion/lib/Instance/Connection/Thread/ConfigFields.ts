@@ -11,12 +11,10 @@ import type {
 	CompanionInputFieldSecretExtended,
 	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
-	IsVisibleUiFn,
 	SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
-	CompanionFieldVariablesSupport,
 	CompanionInputFieldBase,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldColor,
@@ -29,14 +27,12 @@ import type {
 	SomeCompanionActionInputField,
 	SomeCompanionConfigField,
 	SomeCompanionFeedbackInputField,
+	Complete,
 } from '@companion-module/base'
-import type { EncodeIsVisible, SomeEncodedCompanionConfigField } from '@companion-module/base/dist/host-api/api.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
 
-export function translateConnectionConfigFields(fields: SomeEncodedCompanionConfigField[]): SomeCompanionInputField[] {
+export function translateConnectionConfigFields(fields: SomeCompanionConfigField[]): SomeCompanionInputField[] {
 	return fields.map((raw) => {
-		// Cast to remove the EncodeIsVisible mangling
-		const o = raw as SomeCompanionConfigField
+		const o = raw
 		switch (o.type) {
 			case 'bonjour-device':
 				return {
@@ -77,18 +73,16 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 }
 
 export function translateEntityInputFields(
-	fields: EncodeIsVisible<SomeCompanionActionInputField | SomeCompanionFeedbackInputField>[],
-	entityType: EntityModelType,
-	usesInternalVariableParsing: boolean
+	fields: (SomeCompanionActionInputField | SomeCompanionFeedbackInputField)[],
+	entityType: EntityModelType
 ): SomeCompanionInputField[] {
 	return fields.map((raw) => {
-		// Cast to remove the EncodeIsVisible mangling
-		const o = raw as SomeCompanionActionInputField | SomeCompanionFeedbackInputField
+		const o = raw
 		switch (o.type) {
 			case 'static-text':
 				return translateStaticTextField(o, 0)
 			case 'textinput':
-				return translateTextInputField(o, 0, usesInternalVariableParsing)
+				return translateTextInputField(o, 0, true)
 			case 'checkbox':
 				return translateCheckboxField(o, 0)
 			case 'colorpicker':
@@ -113,7 +107,7 @@ export function translateEntityInputFields(
 	})
 }
 
-function generateUnsupportedField<T extends EncodeIsVisible<CompanionInputFieldBase>>(
+function generateUnsupportedField<T extends CompanionInputFieldBase>(
 	field: T,
 	width: number
 ): Complete<CompanionInputFieldStaticTextExtended> {
@@ -127,7 +121,7 @@ function generateUnsupportedField<T extends EncodeIsVisible<CompanionInputFieldB
 }
 
 function translateStaticTextField(
-	field: EncodeIsVisible<CompanionInputFieldStaticText>,
+	field: CompanionInputFieldStaticText,
 	width: number
 ): Complete<CompanionInputFieldStaticTextExtended> {
 	return {
@@ -140,17 +134,10 @@ function translateStaticTextField(
 	}
 }
 function translateTextInputField(
-	field: EncodeIsVisible<CompanionInputFieldTextInput>,
+	field: CompanionInputFieldTextInput,
 	width: number,
 	usesInternalVariableParsing: boolean
 ): Complete<CompanionInputFieldTextInputExtended> {
-	let useVariables: CompanionFieldVariablesSupport | undefined
-	if (field.useVariables) {
-		useVariables = {
-			local: usesInternalVariableParsing || (typeof field.useVariables === 'object' && field.useVariables.local),
-		}
-	}
-
 	return {
 		...translateCommonFields(field),
 		type: 'textinput',
@@ -158,14 +145,14 @@ function translateTextInputField(
 		regex: field.regex,
 		required: field.required,
 		width: width,
-		useVariables,
+		useVariables: field.useVariables && usesInternalVariableParsing ? { local: true } : undefined,
 		multiline: field.multiline,
 		placeholder: undefined, // Not supported from modules
 		isExpression: false, // Not supported from modules
 	}
 }
 function translateCheckboxField(
-	field: EncodeIsVisible<CompanionInputFieldCheckbox>,
+	field: CompanionInputFieldCheckbox,
 	width: number
 ): Complete<CompanionInputFieldCheckboxExtended> {
 	return {
@@ -176,7 +163,7 @@ function translateCheckboxField(
 	}
 }
 function translateColorPickerField(
-	field: EncodeIsVisible<CompanionInputFieldColor>,
+	field: CompanionInputFieldColor,
 	width: number
 ): Complete<CompanionInputFieldColorExtended> {
 	return {
@@ -190,7 +177,7 @@ function translateColorPickerField(
 	}
 }
 function translateNumberField(
-	field: EncodeIsVisible<CompanionInputFieldNumber>,
+	field: CompanionInputFieldNumber,
 	width: number
 ): Complete<CompanionInputFieldNumberExtended> {
 	return {
@@ -208,7 +195,7 @@ function translateNumberField(
 	}
 }
 function translateDropdownField(
-	field: EncodeIsVisible<CompanionInputFieldDropdown>,
+	field: CompanionInputFieldDropdown,
 	width: number
 ): Complete<CompanionInputFieldDropdownExtended> {
 	return {
@@ -223,7 +210,7 @@ function translateDropdownField(
 	}
 }
 function translateMultiDropdownField(
-	field: EncodeIsVisible<CompanionInputFieldMultiDropdown>,
+	field: CompanionInputFieldMultiDropdown,
 	width: number
 ): Complete<CompanionInputFieldMultiDropdownExtended> {
 	return {
@@ -240,7 +227,7 @@ function translateMultiDropdownField(
 	}
 }
 function translateCustomVariableField(
-	field: EncodeIsVisible<CompanionInputFieldCustomVariable>,
+	field: CompanionInputFieldCustomVariable,
 	width: number
 ): Complete<CompanionInputFieldCustomVariableExtended> {
 	return {
@@ -252,33 +239,19 @@ function translateCustomVariableField(
 }
 
 function translateCommonFields(
-	field: EncodeIsVisible<CompanionInputFieldBase>
+	field: CompanionInputFieldBase
 ): Pick<Complete<CompanionInputFieldBaseExtended>, 'id' | 'label' | 'tooltip' | 'description' | 'isVisibleUi'> {
 	return {
 		id: field.id,
 		label: field.label,
 		tooltip: field.tooltip,
 		description: field.description,
-		isVisibleUi: translateIsVisibleFn(field),
+		isVisibleUi: field.isVisibleExpression
+			? {
+					type: 'expression',
+					fn: field.isVisibleExpression,
+					data: undefined,
+				}
+			: undefined,
 	}
-}
-
-function translateIsVisibleFn<T extends EncodeIsVisible<CompanionInputFieldBase>>(field: T): IsVisibleUiFn | undefined {
-	let isVisibleUi: SomeCompanionInputField['isVisibleUi'] | undefined = undefined
-	if (field.isVisibleFn && field.isVisibleFnType === 'expression') {
-		isVisibleUi = {
-			type: 'expression',
-			fn: field.isVisibleFn,
-			data: undefined,
-		}
-	} else if (field.isVisibleFn) {
-		// Either type: 'function' or undefined (backwards compat)
-		isVisibleUi = {
-			type: 'function',
-			fn: field.isVisibleFn,
-			data: field.isVisibleData,
-		}
-	}
-
-	return isVisibleUi
 }

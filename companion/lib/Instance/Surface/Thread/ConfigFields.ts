@@ -15,7 +15,7 @@ import type {
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
 } from '@companion-surface/base'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 import type {
 	CompanionSurfaceConfigField,
 	CompanionSurfaceInputFieldTextInput,

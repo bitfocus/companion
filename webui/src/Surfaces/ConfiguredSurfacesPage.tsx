@@ -100,9 +100,9 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 					<AddEmulatorModal ref={addEmulatorModalRef} />
 				</div>
 
-				<div className="scrollable-content">
-					<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
+				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
 
+				<div className="fixed-header">
 					<CCallout color="info">
 						Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
 						<a target="_blank" rel="noreferrer" href="https://bfoc.us/70n2m47akw">

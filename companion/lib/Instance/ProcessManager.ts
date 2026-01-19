@@ -2,7 +2,8 @@ import LogController, { type Logger } from '../Log/Controller.js'
 import PQueue from 'p-queue'
 import { nanoid } from 'nanoid'
 import path from 'path'
-import { ConnectionChildHandler, type ConnectionChildHandlerDependencies } from './Connection/ChildHandler.js'
+import { ConnectionChildHandlerLegacy } from './Connection/ChildHandlerLegacy.js'
+import type { ConnectionChildHandlerApi, ConnectionChildHandlerDependencies } from './Connection/ChildHandlerApi.js'
 import fs from 'fs-extra'
 import os from 'os'
 import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
@@ -23,6 +24,8 @@ import type { SomeModuleVersionInfo } from './Types.js'
 import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
 import { isPackaged } from '../Resources/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
+import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
+import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
 
 /**
  * A backoff sleep strategy
@@ -128,9 +131,9 @@ export class InstanceProcessManager {
 		}
 	}
 
-	getConnectionChild(connectionId: string, allowInitialising?: boolean): ConnectionChildHandler | undefined {
+	getConnectionChild(connectionId: string, allowInitialising?: boolean): ConnectionChildHandlerApi | undefined {
 		const child = this.getChild(connectionId, allowInitialising)
-		if (child && child instanceof ConnectionChildHandler) {
+		if (child && isConnectionChild(child)) {
 			return child
 		} else {
 			return undefined
@@ -152,7 +155,7 @@ export class InstanceProcessManager {
 	 */
 	resubscribeAllFeedbacks(): void {
 		for (const child of this.#children.values()) {
-			if (child.handler && child.isReady && child.handler instanceof ConnectionChildHandler) {
+			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
 				child.handler.sendAllFeedbackInstances().catch((e) => {
 					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.instanceId}": ${e}`)
 				})
@@ -164,12 +167,12 @@ export class InstanceProcessManager {
 	 * Send a list of changed variables to all active instances.
 	 * This will trigger feedbacks using variables to be rechecked
 	 */
-	onVariablesChanged(all_changed_variables_set: Set<string>): void {
+	onVariablesChanged(all_changed_variables_set: Set<string>, fromControlId: string | null): void {
 		const changedVariableIds = Array.from(all_changed_variables_set)
 
 		for (const child of this.#children.values()) {
-			if (child.handler && child.isReady && child.handler instanceof ConnectionChildHandler) {
-				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds).catch((e) => {
+			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
+				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds, fromControlId).catch((e) => {
 					this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
 				})
 			}
@@ -426,7 +429,7 @@ export class InstanceProcessManager {
 				Date.now(),
 				'System',
 				'system',
-				`** Starting Instance from "${runtimeInfo.entrypoint}" **`
+				`** Starting Instance from "${runtimeInfo.moduleEntrypoint}" **`
 			)
 
 			const monitor = new RespawnMonitor(cmd, {
@@ -625,13 +628,23 @@ export class InstanceProcessManager {
 		// Bind the event listeners
 		switch (child.targetState.moduleType) {
 			case ModuleInstanceType.Connection:
-				child.handler = new ConnectionChildHandler(
-					this.#connectionDeps,
-					monitor,
-					child.instanceId,
-					runtimeInfo.apiVersion,
-					onRegisterReceived
-				)
+				if (doesModuleUseNewChildHandler(runtimeInfo.apiVersion)) {
+					child.handler = new ConnectionChildHandlerNew(
+						this.#connectionDeps,
+						monitor,
+						child.instanceId,
+						runtimeInfo.apiVersion,
+						onRegisterReceived
+					)
+				} else {
+					child.handler = new ConnectionChildHandlerLegacy(
+						this.#connectionDeps,
+						monitor,
+						child.instanceId,
+						runtimeInfo.apiVersion,
+						onRegisterReceived
+					)
+				}
 				break
 			case ModuleInstanceType.Surface:
 				child.handler = new SurfaceChildHandler(
@@ -665,6 +678,7 @@ export class InstanceProcessManager {
 		lastLabel: string
 	): Promise<{
 		entrypoint: string
+		moduleEntrypoint: string
 		apiVersion: string
 		env: Record<string, string>
 	} | null> {
@@ -706,12 +720,27 @@ export class InstanceProcessManager {
 					return null
 				}
 
-				return {
-					apiVersion: moduleApiVersion,
-					entrypoint: jsFullPath,
-					env: {
-						CONNECTION_ID: instanceId,
-					},
+				if (doesModuleUseNewChildHandler(moduleApiVersion)) {
+					return {
+						apiVersion: moduleApiVersion,
+						entrypoint: path.join(
+							import.meta.dirname,
+							isPackaged() ? './ConnectionThread.js' : './Connection/Thread/Entrypoint.js'
+						),
+						moduleEntrypoint: jsFullPath,
+						env: {
+							MODULE_ENTRYPOINT: jsFullPath,
+						},
+					}
+				} else {
+					return {
+						apiVersion: moduleApiVersion,
+						entrypoint: jsFullPath,
+						moduleEntrypoint: jsFullPath,
+						env: {
+							CONNECTION_ID: instanceId,
+						},
+					}
 				}
 			}
 			case ModuleInstanceType.Surface: {
@@ -744,6 +773,7 @@ export class InstanceProcessManager {
 						import.meta.dirname,
 						isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'
 					),
+					moduleEntrypoint: jsFullPath,
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,
 					},
@@ -793,7 +823,15 @@ interface RuntimeInfo {
  * Only some env vars should be forwarded to child processes
  */
 function preserveEnvVars(): Record<string, string> {
-	const preserveNames = ['HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'http_proxy', 'https_proxy', 'no_proxy']
+	const preserveNames = [
+		'HTTP_PROXY',
+		'HTTPS_PROXY',
+		'NO_PROXY',
+		'http_proxy',
+		'https_proxy',
+		'no_proxy',
+		'DISABLE_IPV6',
+	]
 
 	const preservedEnvVars: Record<string, string> = {}
 	for (const name of preserveNames) {
@@ -804,4 +842,8 @@ function preserveEnvVars(): Record<string, string> {
 	}
 
 	return preservedEnvVars
+}
+
+function isConnectionChild(handler: ChildProcessHandlerBase): handler is ConnectionChildHandlerApi {
+	return !!handler && (handler instanceof ConnectionChildHandlerLegacy || handler instanceof ConnectionChildHandlerNew)
 }

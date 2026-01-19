@@ -4,10 +4,10 @@ import {
 	type FeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import React, { useContext } from 'react'
+import React, { useCallback, useContext } from 'react'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
-import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
+import { CAlert, CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { OptionsInputField } from '../OptionsInputField.js'
@@ -24,6 +24,10 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { trpc } from '~/Resources/TRPC.js'
+import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
+import { LoadingBar } from '~/Resources/Loading.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -77,6 +81,16 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 										disabled={readonly}
 									/>
 								</CCol>
+							</MyErrorBoundary>
+
+							<MyErrorBoundary>
+								<EntityLocalVariableValueField
+									controlId={controlId}
+									entity={entity}
+									localVariablesStore={localVariablesStore}
+									readonly={readonly}
+									service={service}
+								/>
 							</MyErrorBoundary>
 						</>
 					)}
@@ -133,13 +147,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						</MyErrorBoundary>
 					))}
 
-					<EntityLocalVariableValueField
-						entity={entity}
-						localVariablesStore={localVariablesStore}
-						readonly={readonly}
-						service={service}
-					/>
-
 					{!!entity && entity.type === EntityModelType.Feedback && feedbackListType === null && (
 						<>
 							<FeedbackManageStyles
@@ -162,39 +169,70 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 })
 
 const EntityLocalVariableValueField = observer(function EntityLocalVariableValueField({
+	controlId,
 	entity,
 	localVariablesStore,
 	readonly,
 	service,
 }: {
+	controlId: string
 	entity: SomeEntityModel
 	localVariablesStore: LocalVariablesStore | null
 	readonly: boolean
 	service: IEntityEditorActionService
 }) {
-	if (
-		!localVariablesStore ||
-		!entity ||
-		entity.type !== EntityModelType.Feedback ||
-		entity.connectionId !== 'internal' ||
-		entity.definitionId !== 'user_value'
-	)
-		return null
+	if (!localVariablesStore || entity.type !== EntityModelType.Feedback) return null
 
-	const value = entity.variableName ? localVariablesStore.getValue(entity.variableName) : undefined
 	return (
 		<MyErrorBoundary>
 			<CFormLabel htmlFor="colFormInvert" className="col-sm-4 col-form-label col-form-label-sm">
 				Current Value
 			</CFormLabel>
 			<CCol sm={8}>
-				<TextInputField
-					disabled={!entity.variableName || readonly}
-					value={stringifyVariableValue(value) ?? ''}
-					setValue={service.setVariableValue}
-					// setValid?: (valid: boolean) => void
-				/>
+				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
+					<TextInputField
+						disabled={!entity.variableName || readonly}
+						value={
+							stringifyVariableValue(
+								entity.variableName ? localVariablesStore.getValue(entity.variableName) : undefined
+							) ?? ''
+						}
+						setValue={service.setVariableValue}
+						// setValid?: (valid: boolean) => void
+					/>
+				) : entity.variableName ? (
+					<LocalVariableCurrentValue controlId={controlId} name={entity.variableName} />
+				) : (
+					<small>Variable is not active (the name is empty)</small>
+				)}
 			</CCol>
 		</MyErrorBoundary>
 	)
 })
+
+function LocalVariableCurrentValue({ controlId, name }: { controlId: string; name: string }) {
+	const { notifier } = useContext(RootAppStoreContext)
+
+	const onCopied = useCallback(() => notifier.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
+
+	const sub = useSubscription(
+		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
+			{
+				controlId: controlId,
+				expression: `$(local:${name})`,
+				isVariableString: false,
+			},
+			{}
+		)
+	)
+
+	if (!sub.data) {
+		return <LoadingBar />
+	}
+
+	if (!sub.data.ok) {
+		return <CAlert color="danger">Error: {sub.data.error}</CAlert>
+	}
+
+	return <VariableValueDisplay value={sub.data.value} onCopied={onCopied} />
+}

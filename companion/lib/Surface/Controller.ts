@@ -46,7 +46,7 @@ import type { SurfacePluginPanel } from './PluginPanel.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import type { HIDDevice } from '@companion-surface/host'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 import {
 	DiscoveredSurfaceRegistry,
 	type DiscoveredSurfaceInfo,
@@ -1700,6 +1700,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const surfaceHandler = this.#surfaceHandlers.get(surfaceId)
 		if (surfaceHandler) {
 			this.#logger.silly('remove device ' + surfaceId)
+
+			// Release the id from the discovered registry, so that it can be reattached
+			this.#discoveredSurfaceRegistry.forgetSurfaceById(surfaceId)
 
 			// Detach surface from any group
 			this.#detachSurfaceFromGroup(surfaceHandler)

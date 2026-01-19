@@ -9,13 +9,14 @@
  * this program.
  */
 
-import { Image } from './Image.js'
+import { Image, type TextLayoutCache } from './Image.js'
 import { ParseAlignment, parseColor } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
 import type { GraphicsOptions } from './Controller.js'
 import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import QuickLRU from 'quick-lru'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -70,6 +71,9 @@ const internalIcons = {
 // let lastDraw = 0
 
 export class GraphicsRenderer {
+	/** Static cache for text layout computations, shared across all Image instances */
+	static #textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 5000 })
+
 	/**
 	 * Draw the image for an empty button
 	 */
@@ -78,7 +82,7 @@ export class GraphicsRenderer {
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
-		const img = new Image(72, 72, 2)
+		const img = new Image(72, 72, 2, GraphicsRenderer.#textLayoutCache)
 
 		img.fillColor('black')
 
@@ -120,7 +124,7 @@ export class GraphicsRenderer {
 	}> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
-		const img = new Image(72, 72, 4)
+		const img = new Image(72, 72, 4, GraphicsRenderer.#textLayoutCache)
 
 		let draw_style: DrawStyleModel['style'] | undefined = undefined
 
@@ -393,7 +397,7 @@ export class GraphicsRenderer {
 	 * @param height Height of the image
 	 */
 	static drawLockIcon(width: number, height: number): ImageResult {
-		const img = new Image(width, height, 2)
+		const img = new Image(width, height, 2, GraphicsRenderer.#textLayoutCache)
 
 		// Fill with black background
 		img.fillColor('rgb(0, 0, 0)')

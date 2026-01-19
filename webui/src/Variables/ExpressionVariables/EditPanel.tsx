@@ -227,7 +227,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</CFormLabel>
 					<CCol xs={8}>
 						{expressionVariableDefinition?.isActive ? (
-							<ExpressionVariableCurrentValue controlId={controlId} name={expressionVariableDefinition.variableName} />
+							<ExpressionVariableCurrentValue name={expressionVariableDefinition.variableName} />
 						) : (
 							<small>Variable is not active (the name is either empty or in use elsewhere)</small>
 						)}
@@ -304,7 +304,7 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 	)
 })
 
-function ExpressionVariableCurrentValue({ name }: { controlId: string; name: string }) {
+function ExpressionVariableCurrentValue({ name }: { name: string }) {
 	const { notifier } = useContext(RootAppStoreContext)
 
 	const onCopied = useCallback(() => notifier.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
