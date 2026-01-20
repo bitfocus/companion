@@ -24,7 +24,7 @@ const allUpgrades = [
 	v6tov7, // v4.0 - rework 'entities' for better nesting https://github.com/bitfocus/companion/pull/3185
 	v7tov8, // v4.0 - break out into more tables
 	v8tov9, // v4.1 - convert button stepAutoProgress to stepProgression
-	v9tov10, // v4.2 - surface integrations
+	v9tov10, // v4.3 - surface integrations
 ]
 const targetVersion = allUpgrades.length + 1
 

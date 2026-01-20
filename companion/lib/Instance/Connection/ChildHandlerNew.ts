@@ -292,7 +292,10 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						learnTimeout
 					)
 
-					return msg.options
+					return {
+						...entity.options,
+						...msg.options,
+					}
 				}
 				case EntityModelType.Feedback: {
 					const control = this.#deps.controls.getControl(controlId)
@@ -318,7 +321,10 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						learnTimeout
 					)
 
-					return msg.options
+					return {
+						...entity.options,
+						...msg.options,
+					}
 				}
 				default:
 					assertNever(entity)

@@ -152,6 +152,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		if (definition.options !== undefined && definition.options.length > 0) {
 			for (const opt of definition.options) {
+				if (opt.type === 'static-text') continue
 				const defaultValue = structuredClone((opt as any).default)
 				if (definition.optionsSupportExpressions && !opt.disableAutoExpression) {
 					entity.options[opt.id] = {
