@@ -8,7 +8,11 @@ export interface ClientEntityDefinition {
 	label: string
 	description: string | undefined
 	options: SomeCompanionInputField[]
-	optionsToIgnoreForSubscribe: string[]
+	/**
+	 * The options that should be monitored for triggering subscribes
+	 * If null, all options are monitored
+	 */
+	optionsToMonitorForSubscribe: string[] | null
 	feedbackType: FeedbackEntitySubType | null
 	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
 	hasLifecycleFunctions: boolean

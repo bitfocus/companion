@@ -734,12 +734,15 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
 
 		for (const rawAction of msg.actions || []) {
+			const optionsToIgnoreForSubscribeSet = new Set<string>(rawAction.optionsToIgnoreForSubscribe || [])
+			const options = translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager)
+
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager),
-				optionsToIgnoreForSubscribe: rawAction.optionsToIgnoreForSubscribe || [],
+				options: options,
+				optionsToMonitorForSubscribe: options.map((o) => o.id).filter((o) => !optionsToIgnoreForSubscribeSet.has(o)),
 				hasLifecycleFunctions: !this.#entityManager || !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
@@ -777,7 +780,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				label: rawFeedback.name,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback, !!this.#entityManager),
-				optionsToIgnoreForSubscribe: [],
+				optionsToMonitorForSubscribe: null, // All should be monitored
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions

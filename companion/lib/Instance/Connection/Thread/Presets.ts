@@ -79,7 +79,7 @@ export function ConvertPresetDefinition(
 							newStep.action_sets[setIdSafe] = convertActionsDelay(
 								setActions,
 								connectionId,
-								rawPreset.options?.relativeDelay,
+								true, // Always relative now
 								connectionUpgradeIndex
 							)
 						}

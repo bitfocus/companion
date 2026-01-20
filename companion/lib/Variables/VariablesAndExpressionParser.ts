@@ -125,7 +125,10 @@ export class VariablesAndExpressionParser {
 				parsedOptions[field.id] = parsedValue.value
 
 				// Track the variables referenced in this field
-				if (!entityDefinition.optionsToIgnoreForSubscribe.includes(field.id)) {
+				if (
+					!entityDefinition.optionsToMonitorForSubscribe ||
+					entityDefinition.optionsToMonitorForSubscribe.includes(field.id)
+				) {
 					for (const variable of parsedValue.referencedVariableIds) {
 						referencedVariableIds.add(variable)
 					}
@@ -147,7 +150,10 @@ export class VariablesAndExpressionParser {
 				parsedOptions[field.id] = parseResult.text
 
 				// Track the variables referenced in this field
-				if (!entityDefinition.optionsToIgnoreForSubscribe.includes(field.id)) {
+				if (
+					!entityDefinition.optionsToMonitorForSubscribe ||
+					entityDefinition.optionsToMonitorForSubscribe.includes(field.id)
+				) {
 					for (const variable of parseResult.variableIds) {
 						referencedVariableIds.add(variable)
 					}

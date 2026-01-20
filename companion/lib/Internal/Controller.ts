@@ -577,7 +577,7 @@ export class InternalController {
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
-						optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe || [],
+						optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe || null,
 					} satisfies Complete<ClientEntityDefinition>
 				}
 			}
@@ -606,7 +606,8 @@ export class InternalController {
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 
-						optionsToIgnoreForSubscribe: [],
+						// Feedbacks don't have a concept of subscribe
+						optionsToMonitorForSubscribe: [],
 					} satisfies Complete<ClientEntityDefinition>
 				}
 			}
