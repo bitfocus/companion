@@ -39,19 +39,24 @@ interface MyHeaderProps {
 }
 
 // provide a declarative menu specification:
-interface MenuItemData {
+interface MenuActiveData {
 	readonly label: string
 	readonly to: string | (() => void) // URL string or action callback
 	readonly id?: string // used for key and to allow individually styled items, see code
-	readonly icon?: IconDefinition | (() => ReactElement)
+	readonly icon?: IconDefinition | (() => ReactElement) | 'none'
 	readonly tooltip?: string
 	readonly inNewTab?: boolean
-	readonly isSeparator?: boolean // currently, everything else is ignored if this is true
 }
 
+interface MenuSeperatorData {
+	readonly label?: string // to create a "group" heading
+	readonly id?: string // used for key and to allow individually styled items, see code
+	readonly isSeparator: true
+}
+
+export type MenuItemData = MenuActiveData | MenuSeperatorData
+
 const MenuSeparatorSpec: MenuItemData = {
-	label: '',
-	to: '',
 	isSeparator: true,
 }
 
@@ -229,8 +234,8 @@ function HelpMenu() {
 
 // create menu-entries with (1) optional left-hand icon, (2) label, (3) optional right-side "external link" icon
 // The menu action can be either a URL or a function call
-function MenuItem({ data }: { data: MenuItemData }) {
-	if (data.isSeparator) {
+export function MenuItem({ data }: { data: MenuItemData }): React.JSX.Element {
+	if ('isSeparator' in data) {
 		return (
 			<div className={data.id && `dropdown-sep-${data.id}`}>
 				<CDropdownDivider />
@@ -258,17 +263,18 @@ function MenuItem({ data }: { data: MenuItemData }) {
 				title={data.tooltip}
 				{...navProps}
 			>
-				<span className="dropdown-item-icon">
-					{typeof data.icon === 'function' ? (
-						data.icon()
-					) : (
-						<FontAwesomeIcon
-							icon={data.icon ? data.icon : faOpenCircle}
-							className={data.icon ? 'visible' : 'invisible'}
-						/>
-					)}
-				</span>
-
+				{data.icon !== 'none' && (
+					<span className="dropdown-item-icon">
+						{typeof data.icon === 'function' ? (
+							data.icon()
+						) : (
+							<FontAwesomeIcon
+								icon={data.icon ? data.icon : faOpenCircle}
+								className={data.icon ? 'visible' : 'invisible'}
+							/>
+						)}
+					</span>
+				)}
 				<span className="dropdown-item-label">{data.label}</span>
 
 				{data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
