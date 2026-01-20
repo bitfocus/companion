@@ -575,11 +575,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 				// Note: for actions, this doesn't need to be reactive
-				actionOptions = this.#entityManager.parseOptionsObject(
-					actionDefinition,
-					actionOptions,
-					extras.controlId
-				).parsedOptions
+				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
+				actionOptions = parser.parseEntityOptions(actionDefinition, action.options).parsedOptions
 			}
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {

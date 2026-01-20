@@ -10,6 +10,7 @@ import {
 	ReplaceableActionEntityModel,
 	ReplaceableFeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { CompanionOptionValues } from '@companion-module/host'
 
 // Mock dependencies
 vi.mock('nanoid', () => ({
@@ -35,9 +36,18 @@ describe('InstanceEntityManager', () => {
 	}
 
 	const mockVariablesParser = {
-		parseVariables: vi.fn().mockReturnValue({
-			text: 'parsed-value',
-			variableIds: ['var1', 'var2'],
+		parseEntityOptions: vi.fn().mockImplementation((entityDefinition, options) => {
+			const parsedOptions: CompanionOptionValues = {}
+
+			let i = 0
+			for (const option of entityDefinition.options) {
+				parsedOptions[option.id] = `value-${i++}`
+			}
+
+			return {
+				parsedOptions: parsedOptions,
+				referencedVariableIds: new Set(['var1', 'var2']),
+			}
 		}),
 	}
 
@@ -168,7 +178,7 @@ describe('InstanceEntityManager', () => {
 								connectionId: 'connection-1',
 								options: { replaced: true },
 							} as any,
-							parsedOptions: { replaced: true },
+							parsedOptions: { replaced: 'value-0' },
 						} satisfies EntityManagerActionEntity,
 					],
 				])
@@ -409,132 +419,6 @@ describe('InstanceEntityManager', () => {
 		})
 	})
 
-	describe('parseOptionsObject', () => {
-		it('should return unchanged options if no entityDefinition provided', () => {
-			const options = { key1: 'value1' }
-			const result = entityManager.parseOptionsObject(undefined, options, 'control-1')
-
-			expect(result).toEqual({
-				parsedOptions: options,
-				referencedVariableIds: expect.any(Set),
-			})
-			expect(result.referencedVariableIds.size).toBe(0)
-		})
-
-		it('should parse options with variables', () => {
-			const entityDefinition = {
-				options: [
-					{ id: 'field1', type: 'textinput', useVariables: true },
-					{ id: 'field2', type: 'dropdown' },
-				],
-				optionsToIgnoreForSubscribe: [],
-			}
-			const options = { field1: '$(var:text)', field2: 'option1' }
-
-			const result = entityManager.parseOptionsObject(entityDefinition as any, options, 'control-1')
-
-			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(var:text)')
-			expect(result.parsedOptions).toEqual({
-				field1: 'parsed-value',
-				field2: 'option1',
-			})
-			expect(result.referencedVariableIds.has('var1')).toBe(true)
-			expect(result.referencedVariableIds.has('var2')).toBe(true)
-		})
-
-		it('should pass through non-variable fields unchanged', () => {
-			const entityDefinition = {
-				options: [{ id: 'field1', type: 'number' }],
-				optionsToIgnoreForSubscribe: [],
-			}
-			const options = { field1: 42 }
-
-			const result = entityManager.parseOptionsObject(entityDefinition as any, options, 'control-1')
-
-			expect(result.parsedOptions).toEqual({ field1: 42 })
-			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
-			expect(mockVariablesParser.parseVariables).not.toHaveBeenCalled()
-		})
-
-		it('should handle missing option values', () => {
-			const entityDefinition = {
-				options: [
-					{ id: 'field1', type: 'textinput', useVariables: true },
-					{ id: 'field2', type: 'dropdown' },
-				],
-				optionsToIgnoreForSubscribe: [],
-			}
-			const options = { field2: 'option1' } // field1 missing
-
-			// For missing fields, parseVariables will be called with ""
-			// So we need to update our mock for this specific test case
-			mockVariablesParser.parseVariables.mockReturnValueOnce({
-				text: undefined,
-				variableIds: [],
-			})
-
-			const result = entityManager.parseOptionsObject(entityDefinition as any, options, 'control-1')
-
-			// field1 should be undefined in the parsed options
-			expect(result.parsedOptions).toEqual({
-				field1: undefined,
-				field2: 'option1',
-			})
-
-			// parseVariables should be called with "undefined" for the missing field
-			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('')
-		})
-
-		it('should parse variables but not include them in referencedVariableIds for options in optionsToIgnoreForSubscribe', () => {
-			const entityDefinition = {
-				options: [
-					{ id: 'field1', type: 'textinput', useVariables: true },
-					{ id: 'field2', type: 'textinput', useVariables: true },
-					{ id: 'field3', type: 'dropdown' },
-				],
-				optionsToIgnoreForSubscribe: ['field1'],
-			}
-			const options = {
-				field1: '$(var:ignored)',
-				field2: '$(var:parsed)',
-				field3: 'option1',
-			}
-
-			// Mock different return values for each parseVariables call
-			mockVariablesParser.parseVariables
-				.mockReturnValueOnce({
-					text: 'parsed-ignored-value',
-					variableIds: ['ignored-var'],
-				})
-				.mockReturnValueOnce({
-					text: 'parsed-value',
-					variableIds: ['var1'],
-				})
-
-			const result = entityManager.parseOptionsObject(entityDefinition as any, options, 'control-1')
-
-			// Both field1 and field2 should be parsed for display
-			expect(result.parsedOptions).toEqual({
-				field1: 'parsed-ignored-value',
-				field2: 'parsed-value',
-				field3: 'option1',
-			})
-
-			// parseVariables should be called for both variable fields
-			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledTimes(2)
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(var:ignored)')
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(var:parsed)')
-
-			// Should only reference variables from non-ignored fields
-			expect(result.referencedVariableIds.has('var1')).toBe(true)
-			expect(result.referencedVariableIds.has('ignored-var')).toBe(false)
-			expect(result.referencedVariableIds.size).toBe(1)
-		})
-	})
-
 	describe('onVariablesChanged', () => {
 		it('should invalidate entities that reference changed variables', () => {
 			// Setup an entity that references variables
@@ -583,7 +467,7 @@ describe('InstanceEntityManager', () => {
 								connectionId: 'connection-1',
 								options: { field1: '$(var:test)' },
 							} as any,
-							parsedOptions: { field1: 'parsed-value' },
+							parsedOptions: { field1: 'value-0' },
 						} satisfies EntityManagerActionEntity,
 					],
 				])
@@ -611,11 +495,11 @@ describe('InstanceEntityManager', () => {
 				}),
 			}
 
-			// Customize parse variables to return specific variables
-			mockVariablesParser.parseVariables.mockReturnValue({
-				text: 'parsed-value',
-				variableIds: ['specific-var'],
-			})
+			// Customize parseEntityOptions to return specific variables
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				parsedOptions: options,
+				referencedVariableIds: new Set(['specific-var']),
+			}))
 
 			// Add entity to manager
 			entityManager.start(5)
@@ -675,10 +559,10 @@ describe('InstanceEntityManager', () => {
 			}
 
 			// Both entities reference 'var1' and 'var2'
-			mockVariablesParser.parseVariables.mockReturnValue({
-				text: 'parsed-value',
-				variableIds: ['var1', 'var2'],
-			})
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				parsedOptions: options,
+				referencedVariableIds: new Set(['var1', 'var2']),
+			}))
 
 			// Add entities to manager on different controls
 			entityManager.start(5)
@@ -707,7 +591,7 @@ describe('InstanceEntityManager', () => {
 								connectionId: 'connection-1',
 								options: { field1: '$(var:test)' },
 							} as any,
-							parsedOptions: { field1: 'parsed-value' },
+							parsedOptions: { field1: '$(var:test)' },
 						} satisfies EntityManagerActionEntity,
 					],
 				])
@@ -756,10 +640,10 @@ describe('InstanceEntityManager', () => {
 			}
 
 			// Both entities reference 'control-var'
-			mockVariablesParser.parseVariables.mockReturnValue({
-				text: 'parsed-value',
-				variableIds: ['control-var'],
-			})
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				parsedOptions: options,
+				referencedVariableIds: new Set(['control-var']),
+			}))
 
 			// Add entities to manager on different controls
 			entityManager.start(5)
@@ -788,7 +672,7 @@ describe('InstanceEntityManager', () => {
 								connectionId: 'connection-1',
 								options: { field1: '$(var:test)' },
 							} as any,
-							parsedOptions: { field1: 'parsed-value' },
+							parsedOptions: { field1: '$(var:test)' },
 							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
@@ -1216,7 +1100,7 @@ describe('InstanceEntityManager', () => {
 
 			// Should have passed the location to parse variables
 			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(var:page_specific)')
+			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalled()
 		})
 	})
 
@@ -1423,32 +1307,6 @@ describe('InstanceEntityManager', () => {
 			// Should only be called once (for upgrade), not for regular processing
 			expect(mockAdapter.upgradeActions).toHaveBeenCalledTimes(1)
 			expect(mockAdapter.upgradeFeedbacks).toHaveBeenCalledTimes(0)
-		})
-
-		it('should handle entity with invalid option types', () => {
-			const entityDefinition = {
-				options: [{ id: 'field1', type: 'textinput', useVariables: true }],
-				optionsToIgnoreForSubscribe: [],
-			}
-
-			// Test with option value that's not a string
-			const options = {
-				field1: { nestedObject: true },
-			}
-
-			mockVariablesParser.parseVariables.mockReturnValueOnce({
-				text: 'parsed-object',
-				variableIds: [],
-			})
-
-			const result = entityManager.parseOptionsObject(entityDefinition as any, options as any, 'control-1')
-
-			// Should convert to string for parsing
-			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
-			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('{\"nestedObject\":true}')
-			expect(result.parsedOptions).toEqual({
-				field1: 'parsed-object',
-			})
 		})
 	})
 

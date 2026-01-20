@@ -11,10 +11,8 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { nanoid } from 'nanoid'
 import type { ControlsController } from '../../Controls/Controller.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import LogController, { type Logger } from '../../Log/Controller.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -179,10 +177,10 @@ export class ConnectionEntityManager {
 							const entityModel = entity.asEntityModel(false)
 
 							// Parse the options and track the variables referenced
-							const { parsedOptions, referencedVariableIds } = this.parseOptionsObject(
+							const parser = this.#controlsController.createVariablesAndExpressionParser(wrapper.controlId, null)
+							const { parsedOptions, referencedVariableIds } = parser.parseEntityOptions(
 								entityDefinition,
-								entityModel.options,
-								wrapper.controlId
+								entityModel.options
 							)
 							wrapper.lastReferencedVariableIds = referencedVariableIds
 
@@ -512,50 +510,6 @@ export class ConnectionEntityManager {
 		}
 
 		this.#debounceProcessPending()
-	}
-
-	/**
-	 * Parse any variables in the options object for an entity.
-	 * Note: this will drop any options that are not defined in the entity definition.
-	 */
-	parseOptionsObject(
-		entityDefinition: ClientEntityDefinition | undefined,
-		options: CompanionOptionValues,
-		controlId: string
-	): {
-		parsedOptions: CompanionOptionValues
-		referencedVariableIds: Set<string>
-	} {
-		if (!entityDefinition)
-			// If we don't know what fields need parsing, we can't do anything
-			return { parsedOptions: options, referencedVariableIds: new Set() }
-
-		const parsedOptions: CompanionOptionValues = {}
-		const referencedVariableIds = new Set<string>()
-
-		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
-
-		for (const field of entityDefinition.options) {
-			if (field.type !== 'textinput' || !field.useVariables) {
-				// Field doesn't support variables, pass unchanged
-				parsedOptions[field.id] = options[field.id]
-				continue
-			}
-
-			// Field needs parsing
-			// Note - we don't need to care about the granularity given in `useVariables`,
-			const parseResult = parser.parseVariables(stringifyVariableValue(options[field.id]) ?? '')
-			parsedOptions[field.id] = parseResult.text
-
-			// Track the variables referenced in this field
-			if (!entityDefinition.optionsToIgnoreForSubscribe.includes(field.id)) {
-				for (const variable of parseResult.variableIds) {
-					referencedVariableIds.add(variable)
-				}
-			}
-		}
-
-		return { parsedOptions, referencedVariableIds }
 	}
 
 	/**
