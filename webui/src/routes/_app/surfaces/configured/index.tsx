@@ -92,11 +92,11 @@ function SurfaceSettingsPanel() {
 }
 
 function SettingsPanelTitleBar() {
-	const setPanelVisiblity = useConfiguredSurfaceContext()
+	const setPanelVisibility = useConfiguredSurfaceContext()
 	// note that the close button is currently hidden
 	const doClose = useCallback(() => {
-		setPanelVisiblity(false)
-	}, [setPanelVisiblity])
+		setPanelVisibility(false)
+	}, [setPanelVisibility])
 
 	return (
 		<div className="secondary-panel-simple-header">
