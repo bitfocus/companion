@@ -79,7 +79,7 @@ import type {
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
-import { ConvertPresetDefinition } from './Thread/Presets.js'
+import { ConvertPresetDefinition } from './PresetsLegacy.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 

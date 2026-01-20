@@ -27,7 +27,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/Presets.js'
+import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/PresetUtils.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 type InstanceDefinitionsEvents = {
