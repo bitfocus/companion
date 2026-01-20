@@ -1,6 +1,5 @@
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
-import { ParseInternalControlReference } from '../Internal/Util.js'
-import LogController from '../Log/Controller.js'
+import { ParseLocationString } from '../Internal/Util.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
@@ -10,6 +9,7 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),
@@ -42,7 +42,7 @@ const getLocationSubId = (location: ControlLocation): string =>
  * this program.
  */
 export class PreviewGraphics {
-	readonly #logger = LogController.createLogger('Graphics/Preview')
+	// readonly #logger = LogController.createLogger('Graphics/Preview')
 
 	readonly #graphicsController: GraphicsController
 	readonly #pageStore: IPageStore
@@ -167,20 +167,21 @@ export class PreviewGraphics {
 						const parser = self.#controlsController.createVariablesAndExpressionParser(controlId, null)
 
 						// Do a resolve of the reference for the starting image
-						const result = ParseInternalControlReference(self.#logger, parser, location, options, true)
+						const locationValue = parser.parseEntityOption(options.location, 'variables') // This value should be a ExpressionOrValue, and the value mode is variables
+						const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
 
 						// Track the subscription, to allow it to be invalidated
 						self.#buttonReferencePreviews.set(id, {
 							id,
 							controlId,
 							options,
-							resolvedLocation: result.location,
-							referencedVariableIds: result.referencedVariables,
+							resolvedLocation: resolvedLocation,
+							referencedVariableIds: locationValue.referencedVariableIds,
 						})
 
 						// Emit the initial image
-						yield result.location
-							? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
+						yield resolvedLocation
+							? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(resolvedLocation).asDataUrl
 							: null
 
 						for await (const [image] of changes) {
@@ -252,14 +253,15 @@ export class PreviewGraphics {
 		const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.controlId, null)
 
 		// Resolve the new location
-		const result = ParseInternalControlReference(this.#logger, parser, location, previewSession.options, true)
+		const locationValue = parser.parseEntityOption(previewSession.options.location, 'variables') // This value should be a ExpressionOrValue, and the value mode is variables
+		const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
 
 		const lastResolvedLocation = previewSession.resolvedLocation
 
-		previewSession.referencedVariableIds = result.referencedVariables
-		previewSession.resolvedLocation = result.location
+		previewSession.referencedVariableIds = locationValue.referencedVariableIds
+		previewSession.resolvedLocation = resolvedLocation
 
-		if (!result.location) {
+		if (!resolvedLocation) {
 			// Now has an invalid location
 			this.#renderEvents.emit(`reference:${previewSession.id}`, null)
 			return
@@ -268,15 +270,15 @@ export class PreviewGraphics {
 		// Check if it has changed
 		if (
 			lastResolvedLocation &&
-			result.location.pageNumber == lastResolvedLocation.pageNumber &&
-			result.location.row == lastResolvedLocation.row &&
-			result.location.column == lastResolvedLocation.column
+			resolvedLocation.pageNumber == lastResolvedLocation.pageNumber &&
+			resolvedLocation.row == lastResolvedLocation.row &&
+			resolvedLocation.column == lastResolvedLocation.column
 		)
 			return
 
 		this.#renderEvents.emit(
 			`reference:${previewSession.id}`,
-			this.#graphicsController.getCachedRenderOrGeneratePlaceholder(result.location).asDataUrl
+			this.#graphicsController.getCachedRenderOrGeneratePlaceholder(resolvedLocation).asDataUrl
 		)
 	}
 }

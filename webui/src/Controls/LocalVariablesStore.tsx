@@ -103,6 +103,10 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:row',
 		label: 'This row',
 	},
+	{
+		value: 'this:location',
+		label: 'This location (eg 1/2/3)',
+	},
 	// {
 	// 	value: 'this:pushed',
 	// 	label: 'Whether the button is in the pushed state',

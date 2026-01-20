@@ -1,3 +1,4 @@
+import type { Logger } from '../../Log/Controller.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
@@ -6,10 +7,13 @@ import type {
 	CompanionButtonPresetDefinition,
 	CompanionPresetAction,
 	CompanionTextPresetDefinition,
-	Complete,
-	ModuleLogger,
-} from '@companion-module/base'
-import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
+} from '@companion-module/base-old'
+import {
+	convertActionsDelay,
+	convertPresetFeedbacksToEntities,
+	ConvertPresetStyleToDrawStyle,
+} from './Thread/PresetUtils.js'
+import type { Complete } from '@companion-module/host'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -17,7 +21,7 @@ const DefaultStepOptions: Complete<ActionStepOptions> = {
 }
 
 export function ConvertPresetDefinition(
-	logger: ModuleLogger,
+	logger: Logger,
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined,
 	presetId: string,
@@ -79,7 +83,7 @@ export function ConvertPresetDefinition(
 							newStep.action_sets[setIdSafe] = convertActionsDelay(
 								setActions,
 								connectionId,
-								true, // Always relative now
+								rawPreset.options?.relativeDelay,
 								connectionUpgradeIndex
 							)
 						}

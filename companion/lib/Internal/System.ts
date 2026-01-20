@@ -16,6 +16,7 @@ import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type {
+	ActionForInternalExecution,
 	ActionForVisitor,
 	FeedbackForVisitor,
 	InternalActionDefinition,
@@ -24,14 +25,18 @@ import type {
 	InternalVisitor,
 } from './Types.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { promisify } from 'util'
-import type { InternalModuleUtils } from './Util.js'
+import { convertSimplePropertyToExpressionValue } from './Util.js'
 import { EventEmitter } from 'events'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import debounceFn from 'debounce-fn'
 import type { AppInfo } from '../Registry.js'
-import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import {
+	stringifyVariableValue,
+	type VariableDefinition,
+	type VariableValues,
+} from '@companion-app/shared/Model/Variables.js'
+import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 const execAsync = promisify(exec)
 
@@ -94,7 +99,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	readonly #customMessageLogger = LogController.createLogger('Custom')
 
 	readonly #appInfo: AppInfo
-	readonly #internalUtils: InternalModuleUtils
 	readonly #variableController: VariablesController
 	readonly #userConfigController: DataUserConfig
 	readonly #requestExit: (fromInternal: boolean, restart: boolean) => void
@@ -104,7 +108,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 
 	constructor(
 		appInfo: AppInfo,
-		internalUtils: InternalModuleUtils,
 		userConfigController: DataUserConfig,
 		variableController: VariablesController,
 		requestExit: (fromInternal: boolean, restart: boolean) => void
@@ -112,7 +115,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		super()
 
 		this.#appInfo = appInfo
-		this.#internalUtils = internalUtils
 		this.#userConfigController = userConfigController
 		this.#variableController = variableController
 		this.#requestExit = requestExit
@@ -258,12 +260,12 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		const actions: Record<string, InternalActionDefinition> = {
 			exec: {
-				label: 'System: Run shell path (local)',
+				label: 'System: Run shell command (local)',
 				description: undefined,
 				options: [
 					{
 						type: 'textinput',
-						label: 'Path (supports variables in path)',
+						label: 'Command',
 						id: 'path',
 						useVariables: {
 							local: true,
@@ -282,8 +284,11 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						label: 'Target Variable (stdout)',
 						id: 'targetVariable',
 						includeNone: true,
+						expressionDescription:
+							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
+				optionsSupportExpressions: true,
 			},
 			custom_log: {
 				label: 'Write to companion log',
@@ -298,6 +303,8 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						},
 					},
 				],
+
+				optionsSupportExpressions: true,
 			},
 		}
 
@@ -307,6 +314,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 				label: 'System: Restart companion',
 				description: undefined,
 				options: [],
+				optionsSupportExpressions: true,
 			}
 		}
 		if (process.env.COMPANION_IPC_PARENT) {
@@ -315,29 +323,50 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 				label: 'System: Exit companion',
 				description: undefined,
 				options: [],
+				optionsSupportExpressions: true,
 			}
 		}
 
 		return actions
 	}
 
-	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<boolean> {
+	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
+		let changed = false
+
+		if (action.definitionId === 'custom_log') {
+			changed = convertSimplePropertyToExpressionValue(action.options, 'message') || changed
+		} else if (action.definitionId === 'exec') {
+			changed = convertSimplePropertyToExpressionValue(action.options, 'path') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'timeout') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'targetVariable') || changed
+		}
+
+		if (changed) return action
+	}
+
+	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<boolean> {
 		if (action.definitionId === 'exec') {
-			if (action.rawOptions.path) {
-				const path = this.#internalUtils.parseVariablesForInternalActionOrFeedback(action.rawOptions.path, extras).text
-				this.#logger.silly(`Running path: '${path}'`)
+			if (action.options.path) {
+				const command = stringifyVariableValue(action.options.path)
+				this.#logger.silly(`Running command: '${command}'`)
+
+				if (!command || command.trim() === '') {
+					this.#logger.warn('No command specified')
+					return true
+				}
 
 				try {
-					const { stdout } = await execAsync(path, {
-						timeout: action.rawOptions.timeout ?? 5000,
+					const { stdout } = await execAsync(command, {
+						timeout: Number(action.options.timeout) || 5000,
 					})
 
 					// Trim EOL character(s) appended by the OS
 					let stdoutStr = stdout.toString()
 					if (stdoutStr.endsWith(os.EOL)) stdoutStr = stdoutStr.substring(0, stdoutStr.length - os.EOL.length)
 
-					if (action.rawOptions.targetVariable) {
-						this.#variableController.custom.setValue(action.rawOptions.targetVariable, stdoutStr)
+					const targetVarName = stringifyVariableValue(action.options.targetVariable)
+					if (targetVarName) {
+						this.#variableController.custom.setValue(targetVarName, stdoutStr)
 					}
 				} catch (error) {
 					this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
@@ -346,11 +375,8 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			}
 			return true
 		} else if (action.definitionId === 'custom_log') {
-			const message = this.#internalUtils.parseVariablesForInternalActionOrFeedback(
-				action.rawOptions.message,
-				extras
-			).text
-			this.#customMessageLogger.info(message)
+			const message = stringifyVariableValue(action.options.message)
+			this.#customMessageLogger.info(message ?? '')
 
 			return true
 		} else if (action.definitionId === 'app_restart') {
@@ -364,7 +390,15 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
+		for (const action of actions) {
+			try {
+				if (action.action === 'exec') {
+					visitor.visitVariableName(action.options, 'targetVariable')
+				}
+			} catch (_e) {
+				//Ignore
+			}
+		}
 	}
 }

@@ -79,7 +79,7 @@ import type {
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
-import { ConvertPresetDefinition } from './Thread/Presets.js'
+import { ConvertPresetDefinition } from './PresetsLegacy.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
@@ -575,11 +575,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 				// Note: for actions, this doesn't need to be reactive
-				actionOptions = this.#entityManager.parseOptionsObject(
-					actionDefinition,
-					actionOptions,
-					extras.controlId
-				).parsedOptions
+				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
+				actionOptions = parser.parseEntityOptions(actionDefinition, action.options).parsedOptions
 			}
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
@@ -737,12 +734,15 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
 
 		for (const rawAction of msg.actions || []) {
+			const optionsToIgnoreForSubscribeSet = new Set<string>(rawAction.optionsToIgnoreForSubscribe || [])
+			const options = translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager)
+
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				description: rawAction.description,
-				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager),
-				optionsToIgnoreForSubscribe: rawAction.optionsToIgnoreForSubscribe || [],
+				options: options,
+				optionsToMonitorForSubscribe: options.map((o) => o.id).filter((o) => !optionsToIgnoreForSubscribeSet.has(o)),
 				hasLifecycleFunctions: !this.#entityManager || !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
@@ -753,6 +753,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				feedbackType: null,
 				feedbackStyle: undefined,
+				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
@@ -779,7 +780,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				label: rawFeedback.name,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback, !!this.#entityManager),
-				optionsToIgnoreForSubscribe: [],
+				optionsToMonitorForSubscribe: null, // All should be monitored
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
@@ -789,6 +790,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
+				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
 			} satisfies Complete<ClientEntityDefinition>
 		}
 

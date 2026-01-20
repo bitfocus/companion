@@ -1791,6 +1791,7 @@ __metadata:
     jsonpath-plus: "npm:^10.3.0"
     ps-tree: "npm:^1.2.0"
     semver: "npm:^7.7.3"
+    type-fest: "npm:^5.4.1"
     typescript: "npm:~5.9.3"
     unicode-segmenter: "npm:^0.14.5"
     zod: "npm:^4.3.5"
@@ -1877,6 +1878,7 @@ __metadata:
     sanitize-html: "npm:^2.17.0"
     sass-embedded: "npm:^1.97.2"
     terser: "npm:^5.46.0"
+    type-fest: "npm:^5.4.1"
     typescript: "npm:~5.9.3"
     use-deep-compare: "npm:^1.3.0"
     usehooks-ts: "npm:^3.1.1"
@@ -1949,25 +1951,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260118-221158-2f35d66":
-  version: 2.0.0-0-nightly-feat-2-0-20260118-221158-2f35d66
-  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260118-221158-2f35d66"
+"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260120-182015-a651213":
+  version: 2.0.0-0-nightly-feat-2-0-20260120-182015-a651213
+  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260120-182015-a651213"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/bb53b9481051d0e23d7b29d99bd87261e91cc38c1fe00737d93ba06a96387db6c044339d8f31e98ede04bcb2692850a56744e83e05c8d1fcedec805fd1121f73
+  checksum: 10c0/096d82398e4606fe011abdfe11cd68f18aec9e2d4aef8d0bb2acbe30764901a31360516806c11b3a53bbc48145ac131e35fc8f6fc5852199867c3b7b3546b53e
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260118-222124-69bb0f7":
-  version: 0.1.0-1-nightly-feat-2-0-20260118-222124-69bb0f7
-  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260118-222124-69bb0f7"
+"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260120-182242-a651213":
+  version: 0.1.0-1-nightly-feat-2-0-20260120-182242-a651213
+  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260120-182242-a651213"
   dependencies:
     "@companion-module/base": "npm:~2.0.0-0"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^8.1.1"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/cef262f2b78ee93362139ab7eb82861d106b44fb659f1c5145ffae822869fe40eae818304b749041827a6dc21e3f444347b53c3f897d3d4e9b9ae507f8cb6290
+  checksum: 10c0/133a0e3a250ce32ed314bb009790e2a66a53263d85db6662185e5b9a2ee8d731e0c984458e2d8d4baf2fa4bd69e956a1f1c27a4df06fb4ac30d8a4b4c0d4c03e
   languageName: node
   linkType: hard
 

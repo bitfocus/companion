@@ -1,5 +1,5 @@
+import type { JsonValue } from 'type-fest'
 import type { ObjectsDiff } from './Common.js'
-import type { JsonValue } from './JSON.js'
 
 export interface VariableDefinition {
 	name: string

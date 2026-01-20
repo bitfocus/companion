@@ -1,4 +1,5 @@
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
+import type { JsonValue } from 'type-fest'
 
 export type CompanionColorPresetValue =
 	| string
@@ -42,10 +43,18 @@ export interface CompanionInputFieldBaseExtended {
 	tooltip?: string
 	/** A description for this field */
 	description?: string
+	/** A description for this field when in expression mode. This will replace the normal description */
+	expressionDescription?: string
 
 	isVisibleUi?: IsVisibleUiFn
 
 	width?: number // For connection config
+
+	/**
+	 * Whether to disable support for toggling this field to be an expression
+	 * Note: This is only available for internal connections
+	 */
+	disableAutoExpression?: boolean
 }
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
@@ -236,3 +245,13 @@ export interface IsVisibleUiFn {
 }
 
 export type SomeCompanionInputField = ExtendedInputField | SomeCompanionConfigInputField | InternalInputField
+
+export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
+export type ExpressionableOptionsObject = {
+	[key: string]: ExpressionOrValue<JsonValue> | undefined
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function isExpressionOrValue(input: any): input is ExpressionOrValue<any> {
+	return !!input && typeof input === 'object' && 'isExpression' in input && typeof input.isExpression === 'boolean'
+}

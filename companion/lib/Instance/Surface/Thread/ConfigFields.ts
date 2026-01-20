@@ -113,7 +113,14 @@ function translateCommonFields(
 	field: CompanionInputFieldBase
 ): Pick<
 	Complete<CompanionInputFieldBaseExtended>,
-	'id' | 'label' | 'tooltip' | 'description' | 'isVisibleUi' | 'width'
+	| 'id'
+	| 'label'
+	| 'tooltip'
+	| 'description'
+	| 'expressionDescription'
+	| 'isVisibleUi'
+	| 'width'
+	| 'disableAutoExpression'
 > {
 	return {
 		id: field.id,
@@ -127,6 +134,9 @@ function translateCommonFields(
 					data: undefined,
 				}
 			: undefined,
+		// Note valid for surface configs:
+		expressionDescription: undefined,
 		width: undefined,
+		disableAutoExpression: true,
 	}
 }

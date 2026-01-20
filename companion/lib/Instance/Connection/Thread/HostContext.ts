@@ -59,7 +59,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				label: rawAction.name,
 				description: rawAction.description,
 				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action),
-				optionsToIgnoreForSubscribe: rawAction.optionsToIgnoreForSubscribe || [],
+				optionsToMonitorForSubscribe: rawAction.optionsToMonitorForSubscribe || null,
 				hasLifecycleFunctions: !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
@@ -70,6 +70,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				feedbackType: null,
 				feedbackStyle: undefined,
+
+				optionsSupportExpressions: false, // Future: follow up to enable for modules!
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
@@ -87,7 +89,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				label: rawFeedback.name,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback),
-				optionsToIgnoreForSubscribe: [],
+				optionsToMonitorForSubscribe: null,
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
@@ -97,6 +99,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
+
+				optionsSupportExpressions: false, // Future: follow up to enable for modules!
 			} satisfies Complete<ClientEntityDefinition>
 		}
 

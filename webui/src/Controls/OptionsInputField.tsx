@@ -11,7 +11,7 @@ import {
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
@@ -20,6 +20,7 @@ import { observer } from 'mobx-react-lite'
 import { validateInputValue } from '~/Helpers/validateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
+import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -31,6 +32,7 @@ interface OptionsInputFieldProps {
 	visibility: boolean
 	readonly?: boolean
 	localVariablesStore: LocalVariablesStore | null
+	fieldSupportsExpression: boolean
 }
 
 function OptionLabel({ option, features }: { option: SomeCompanionInputField; features?: InputFeatureIconsProps }) {
@@ -52,14 +54,29 @@ export const OptionsInputField = observer(function OptionsInputField({
 	isLocatedInGrid,
 	entityType,
 	option,
-	value,
+	value: rawValue,
 	setValue,
 	visibility,
 	readonly,
 	localVariablesStore,
+	fieldSupportsExpression: fieldsSupportExpressions,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
-	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
+	const setValue2 = useCallback(
+		(val: any) =>
+			setValue(
+				option.id,
+				fieldsSupportExpressions
+					? ({
+							isExpression: false,
+							value: val,
+						} satisfies ExpressionOrValue<any>)
+					: val
+			),
+		[option.id, setValue, fieldsSupportExpressions]
+	)
+
+	const value = fieldsSupportExpressions ? (rawValue as ExpressionOrValue<any>)?.value : rawValue
 
 	if (!option) {
 		return <p>Bad option</p>
@@ -188,8 +205,37 @@ export const OptionsInputField = observer(function OptionsInputField({
 			break
 	}
 
+	let description = option.description
+
 	if (control === undefined) {
 		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
+	} else if (fieldsSupportExpressions) {
+		const rawExpressionValue = (rawValue as ExpressionOrValue<any>) || { isExpression: false, value: undefined }
+
+		control = (
+			<FieldOrExpression
+				localVariablesStore={localVariablesStore}
+				value={rawExpressionValue}
+				setValue={(val) => setValue(option.id, val)}
+				disabled={!!readonly}
+				entityType={entityType}
+				isInternal={isInternal}
+				isLocatedInGrid={isLocatedInGrid}
+			>
+				{control}
+			</FieldOrExpression>
+		)
+
+		// Update the features in the label when toggling the mode
+		if (rawExpressionValue?.isExpression) {
+			if (!features) features = {}
+			features.local = true
+			features.variables = true
+
+			if (option.expressionDescription !== undefined) {
+				description = option.expressionDescription
+			}
+		}
 	}
 
 	return (
@@ -202,7 +248,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 			</CFormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
 				{control}
-				{option.description && <div className="form-text">{option.description}</div>}
+				{description && <div className="form-text">{description}</div>}
 			</CCol>
 		</>
 	)

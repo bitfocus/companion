@@ -9,7 +9,6 @@
  * this program.
  */
 
-import { SplitVariableId } from '@companion-app/shared/Variables.js'
 import LogController from '../Log/Controller.js'
 import type {
 	FeedbackForVisitor,
@@ -18,13 +17,15 @@ import type {
 	InternalActionDefinition,
 	ActionForVisitor,
 	InternalModuleFragmentEvents,
+	ActionForInternalExecution,
 } from './Types.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import type { InternalModuleUtils } from './Util.js'
+import { convertSimplePropertyToExpressionValue } from './Util.js'
 import { EventEmitter } from 'events'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalCustomVariables
 	extends EventEmitter<InternalModuleFragmentEvents>
@@ -32,90 +33,44 @@ export class InternalCustomVariables
 {
 	readonly #logger = LogController.createLogger('Internal/CustomVariables')
 
-	readonly #internalUtils: InternalModuleUtils
 	readonly #variableController: VariablesController
 
-	constructor(internalUtils: InternalModuleUtils, variableController: VariablesController) {
+	constructor(variableController: VariablesController) {
 		super()
 
-		this.#internalUtils = internalUtils
 		this.#variableController = variableController
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
 			custom_variable_set_value: {
-				label: 'Custom Variable: Set raw value',
+				label: 'Custom Variable: Set value',
 				description: undefined,
 				options: [
 					{
 						type: 'internal:custom_variable',
 						label: 'Custom variable',
 						id: 'name',
+						expressionDescription:
+							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
+					},
+					{
+						type: 'checkbox',
+						label: 'Create if not exists',
+						id: 'create',
+						default: false,
+						disableAutoExpression: true,
 					},
 					{
 						type: 'textinput',
 						label: 'Value',
 						id: 'value',
 						default: '',
+						description: 'The raw value will be written to the variable',
+						expressionDescription: 'The expression will be executed with the result written to the variable',
 					},
 				],
-			},
-			custom_variable_create_value: {
-				label: 'Custom Variable: Set or Create raw value if not exists',
-				description: undefined,
-				options: [
-					{
-						type: 'textinput',
-						label: 'Custom variable',
-						id: 'name',
-					},
-					{
-						type: 'textinput',
-						label: 'Value',
-						id: 'value',
-						default: '',
-					},
-				],
-			},
-			custom_variable_set_expression: {
-				label: 'Custom Variable: Set with expression',
-				description: undefined,
-				options: [
-					{
-						type: 'internal:custom_variable',
-						label: 'Custom variable',
-						id: 'name',
-					},
-					{
-						type: 'textinput',
-						label: 'Expression',
-						id: 'expression',
-						default: '',
-						useVariables: {
-							local: true,
-						},
-						isExpression: true,
-					},
-				],
-			},
-			custom_variable_store_variable: {
-				label: 'Custom Variable: Store variable value',
-				description: undefined,
-				options: [
-					{
-						type: 'internal:custom_variable',
-						label: 'Custom variable',
-						id: 'name',
-					},
-					{
-						type: 'internal:variable',
-						id: 'variable',
-						label: 'Variable to store value from',
-						tooltip: 'What variable to store in the custom variable?',
-						supportsLocal: false,
-					},
-				],
+				optionsSupportExpressions: true,
 			},
 
 			custom_variable_reset_to_default: {
@@ -126,8 +81,11 @@ export class InternalCustomVariables
 						type: 'internal:custom_variable',
 						label: 'Custom variable',
 						id: 'name',
+						expressionDescription:
+							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
+				optionsSupportExpressions: true,
 			},
 			custom_variable_sync_to_default: {
 				label: 'Custom Variable: Write current value to startup value',
@@ -137,8 +95,11 @@ export class InternalCustomVariables
 						type: 'internal:custom_variable',
 						label: 'Custom variable',
 						id: 'name',
+						expressionDescription:
+							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -155,6 +116,9 @@ export class InternalCustomVariables
 			}
 		}
 
+		let changed = false
+
+		// Consolidation for use expressions
 		if (action.definitionId === 'custom_variable_math_operation') {
 			let op = '???'
 			let reverse = false
@@ -193,7 +157,7 @@ export class InternalCustomVariables
 			delete action.options.value
 			delete action.options.result
 
-			return action
+			changed = true
 		} else if (action.definitionId === 'custom_variable_math_int_operation') {
 			action.definitionId = 'custom_variable_set_expression'
 			action.options.expression = `fromRadix($(${action.options.variable}), ${action.options.radix || 2})`
@@ -202,7 +166,7 @@ export class InternalCustomVariables
 			delete action.options.radix
 			delete action.options.result
 
-			return action
+			changed = true
 		} else if (action.definitionId === 'custom_variable_string_trim_operation') {
 			action.definitionId = 'custom_variable_set_expression'
 			action.options.expression = `trim($(${action.options.variable}))`
@@ -210,7 +174,7 @@ export class InternalCustomVariables
 			delete action.options.variable
 			delete action.options.result
 
-			return action
+			changed = true
 		} else if (action.definitionId === 'custom_variable_string_concat_operation') {
 			action.definitionId = 'custom_variable_set_expression'
 
@@ -229,7 +193,7 @@ export class InternalCustomVariables
 			delete action.options.order
 			delete action.options.result
 
-			return action
+			changed = true
 		} else if (action.definitionId === 'custom_variable_string_substring_operation') {
 			action.definitionId = 'custom_variable_set_expression'
 
@@ -243,7 +207,7 @@ export class InternalCustomVariables
 			delete action.options.end
 			delete action.options.result
 
-			return action
+			changed = true
 		} else if (action.definitionId === 'custom_variable_set_via_jsonpath') {
 			action.definitionId = 'custom_variable_set_expression'
 			action.options.expression = `jsonpath($(custom:${action.options.jsonResultDataVariable}), "${action.options.jsonPath?.replaceAll('"', '\\"')}")`
@@ -254,59 +218,88 @@ export class InternalCustomVariables
 			delete action.options.jsonResultDataVariable
 			delete action.options.jsonPath
 
-			return action
+			changed = true
 		}
+
+		// Conversion to auto-expressions
+		if (
+			action.definitionId === 'custom_variable_sync_to_default' ||
+			action.definitionId === 'custom_variable_reset_to_default'
+		) {
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
+		} else if (action.definitionId === 'custom_variable_set_value') {
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'value') || changed
+		} else if (action.definitionId === 'custom_variable_set_expression') {
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
+
+			// Rename to the combined action
+			action.definitionId = 'custom_variable_set_value'
+			action.options.value = {
+				isExpression: true,
+				value: action.options.expression,
+			} satisfies ExpressionOrValue<any>
+			delete action.options.expression
+
+			changed = true
+		} else if (action.definitionId === 'custom_variable_create_value') {
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
+			changed = convertSimplePropertyToExpressionValue(action.options, 'value') || changed
+
+			// Rename to the combined action
+			action.definitionId = 'custom_variable_set_value'
+			action.options.create = true
+
+			changed = true
+		} else if (action.definitionId === 'custom_variable_store_variable') {
+			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
+
+			// Rename to the combined action
+			action.definitionId = 'custom_variable_set_value'
+			action.options.create = false
+			action.options.value = {
+				isExpression: true,
+				value: `$(${action.options.variable})`,
+			} satisfies ExpressionOrValue<any>
+			delete action.options.variable
+
+			changed = true
+		}
+
+		if (changed) return action
 	}
 
-	executeAction(action: ControlEntityInstance, extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
 		if (action.definitionId === 'custom_variable_set_value') {
-			this.#variableController.custom.setValue(action.rawOptions.name, action.rawOptions.value)
-			return true
-		} else if (action.definitionId === 'custom_variable_create_value') {
-			if (this.#variableController.custom.hasCustomVariable(action.rawOptions.name)) {
-				this.#variableController.custom.setValue(action.rawOptions.name, action.rawOptions.value)
-			} else {
-				this.#variableController.custom.createVariable(action.rawOptions.name, action.rawOptions.value)
-			}
-			return true
-		} else if (action.definitionId === 'custom_variable_set_expression') {
-			const result = this.#internalUtils.executeExpressionForInternalActionOrFeedback(
-				action.rawOptions.expression,
-				extras
-			)
-			if (result.ok) {
-				this.#variableController.custom.setValue(action.rawOptions.name, result.value)
-			} else {
-				this.#logger.warn(`${result.error}, in expression: "${action.rawOptions.expression}"`)
-			}
+			const variableName = stringifyVariableValue(action.options.name)
+			if (!variableName) return true
 
-			return true
-		} else if (action.definitionId === 'custom_variable_store_variable') {
-			const [connectionLabel, variableName] = SplitVariableId(action.rawOptions.variable)
-			const value = this.#variableController.values.getVariableValue(connectionLabel, variableName)
-			this.#variableController.custom.setValue(action.rawOptions.name, value)
+			if (this.#variableController.custom.hasCustomVariable(variableName)) {
+				this.#variableController.custom.setValue(variableName, action.options.value)
+			} else if (action.options.create) {
+				this.#variableController.custom.createVariable(variableName, action.options.value)
+			} else {
+				this.#logger.warn(`Custom variable "${variableName}" not found`)
+			}
 			return true
 		} else if (action.definitionId === 'custom_variable_reset_to_default') {
-			this.#variableController.custom.resetValueToDefault(action.rawOptions.name)
+			const variableName = stringifyVariableValue(action.options.name)
+			if (!variableName) return true
+
+			this.#variableController.custom.resetValueToDefault(variableName)
 			return true
 		} else if (action.definitionId === 'custom_variable_sync_to_default') {
-			this.#variableController.custom.syncValueToDefault(action.rawOptions.name)
+			const variableName = stringifyVariableValue(action.options.name)
+			if (!variableName) return true
+
+			this.#variableController.custom.syncValueToDefault(variableName)
 			return true
 		} else {
 			return false
 		}
 	}
 
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			try {
-				// custom_variable_set_expression.expression handled by generic options visitor
-				if (action.action === 'custom_variable_store_variable') {
-					visitor.visitVariableName(action.options, 'variable')
-				}
-			} catch (_e) {
-				//Ignore
-			}
-		}
+	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
+		// Nothing to do
 	}
 }

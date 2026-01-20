@@ -10,16 +10,16 @@
  */
 
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
-import { InternalModuleUtils } from './Util.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
-	FeedbackEntityModelExt,
 	InternalModuleFragment,
 	InternalVisitor,
+	FeedbackForInternalExecution,
+	ActionForInternalExecution,
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
@@ -34,7 +34,7 @@ import {
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { Complete } from '@companion-module/base'
+import type { CompanionFeedbackButtonStyleResult, Complete } from '@companion-module/base'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -53,6 +53,15 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type EventEmitter from 'node:events'
 import type { AppInfo } from '../Registry.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+
+interface FeedbackEntityState {
+	controlId: string
+	location: ControlLocation | undefined
+	referencedVariables: Set<string> | null
+
+	entityModel: FeedbackEntityModel
+}
 
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
@@ -62,7 +71,7 @@ export class InternalController {
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #variablesController: VariablesController
 
-	readonly #feedbacks = new Map<string, FeedbackEntityModelExt>()
+	readonly #feedbacks = new Map<string, FeedbackEntityState>()
 
 	readonly #buildingBlocksFragment: InternalBuildingBlocks
 	readonly #fragments: InternalModuleFragment[]
@@ -86,21 +95,19 @@ export class InternalController {
 		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
 
-		const internalUtils = new InternalModuleUtils(controlsController)
-
-		this.#buildingBlocksFragment = new InternalBuildingBlocks(internalUtils)
+		this.#buildingBlocksFragment = new InternalBuildingBlocks()
 		this.#fragments = [
 			this.#buildingBlocksFragment,
-			new InternalActionRecorder(internalUtils, controlsController.actionRecorder, pageStore),
-			new InternalInstance(internalUtils, instanceController),
-			new InternalTime(internalUtils),
-			new InternalControls(internalUtils, graphicsController, controlsController, pageStore, controlEvents),
-			new InternalCustomVariables(internalUtils, variablesController),
-			new InternalPage(internalUtils, pageStore),
-			new InternalSurface(internalUtils, surfaceController, controlsController, pageStore),
-			new InternalSystem(appInfo, internalUtils, userConfigController, variablesController, requestExit),
-			new InternalTriggers(internalUtils, controlsController),
-			new InternalVariables(internalUtils, controlsController, pageStore),
+			new InternalActionRecorder(controlsController.actionRecorder, pageStore),
+			new InternalInstance(instanceController),
+			new InternalTime(),
+			new InternalControls(graphicsController, controlsController, pageStore, controlEvents),
+			new InternalCustomVariables(variablesController),
+			new InternalPage(pageStore),
+			new InternalSurface(surfaceController, controlsController, pageStore),
+			new InternalSystem(appInfo, userConfigController, variablesController, requestExit),
+			new InternalTriggers(controlsController),
+			new InternalVariables(controlsController, pageStore),
 		]
 
 		this.#init()
@@ -243,11 +250,12 @@ export class InternalController {
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 
-		const cloned: FeedbackEntityModelExt = {
-			...structuredClone(feedback),
+		const cloned: FeedbackEntityState = {
 			controlId,
 			location,
 			referencedVariables: null,
+
+			entityModel: structuredClone(feedback),
 		}
 		this.#feedbacks.set(feedback.id, cloned)
 
@@ -284,25 +292,72 @@ export class InternalController {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	#feedbackGetValue(feedback: FeedbackEntityModelExt): any {
-		for (const fragment of this.#fragments) {
-			if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
-				let value: ReturnType<Required<InternalModuleFragment>['executeFeedback']> | undefined
-				try {
-					value = fragment.executeFeedback(feedback)
-				} catch (e: any) {
-					this.#logger.silly(`Feedback check failed: ${JSON.stringify(feedback)} - ${e?.message ?? e} ${e?.stack}`)
+	#feedbackGetValue(feedback: FeedbackEntityState): CompanionFeedbackButtonStyleResult | VariableValue {
+		try {
+			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
+				EntityModelType.Feedback,
+				'internal', // This is the internal instance code
+				feedback.entityModel.definitionId
+			)
+			if (!entityDefinition) {
+				// No definition found, so cannot evaluate
+				feedback.referencedVariables = null
+
+				return undefined
+			}
+
+			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.controlId, null)
+
+			// Parse the options if enabled
+			const { parsedOptions, referencedVariableIds } = entityDefinition.optionsSupportExpressions
+				? parser.parseEntityOptions(entityDefinition, feedback.entityModel.options)
+				: {
+						parsedOptions: feedback.entityModel.options,
+						referencedVariableIds: new Set<string>(),
+					}
+
+			const executionFeedback: Complete<FeedbackForInternalExecution> = {
+				controlId: feedback.controlId,
+				location: feedback.location,
+
+				options: parsedOptions,
+
+				id: feedback.entityModel.id,
+				definitionId: feedback.entityModel.definitionId,
+			}
+			feedback.referencedVariables = referencedVariableIds
+
+			for (const fragment of this.#fragments) {
+				if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
+					let value: ReturnType<Required<InternalModuleFragment>['executeFeedback']> | undefined
+					try {
+						value = fragment.executeFeedback(executionFeedback, parser)
+					} catch (e: any) {
+						this.#logger.silly(
+							`Feedback check failed: ${JSON.stringify(executionFeedback)} - ${e?.message ?? e} ${e?.stack}`
+						)
+					}
+
+					if (value && typeof value === 'object' && 'referencedVariables' in value) {
+						for (const variable of value.referencedVariables) {
+							feedback.referencedVariables.add(variable)
+						}
+
+						return value.value
+					} else if (value !== undefined) {
+						return value
+					}
 				}
-
-				if (value && typeof value === 'object' && 'referencedVariables' in value) {
-					feedback.referencedVariables = value.referencedVariables
-
-					return value.value
-				} else if (value !== undefined) {
-					feedback.referencedVariables = null
-
-					return value
-				}
+			}
+		} catch (e: any) {
+			this.#logger.warn(
+				`Feedback get value failed: ${JSON.stringify(feedback.entityModel)} - ${e?.message ?? e} ${e?.stack}`
+			)
+			return undefined
+		} finally {
+			// If there are no referenced variables, set to null
+			if (feedback.referencedVariables && feedback.referencedVariables.size === 0) {
+				feedback.referencedVariables = null
 			}
 		}
 
@@ -381,10 +436,39 @@ export class InternalController {
 		if (action.type !== EntityModelType.Action)
 			throw new Error(`Cannot execute entity of type "${action.type}" as an action`)
 
-		for (const fragment of this.#fragments) {
-			if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
-				try {
-					let value = fragment.executeAction(action, extras, this.#controlsController.actionRunner)
+		try {
+			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
+				EntityModelType.Action,
+				'internal',
+				action.definitionId
+			)
+			if (!entityDefinition) return
+
+			const overrideVariableValues: VariableValues = {
+				'$(this:surface_id)': extras.surfaceId,
+			}
+			const parser = this.#controlsController.createVariablesAndExpressionParser(
+				extras.controlId,
+				overrideVariableValues
+			)
+
+			// Parse the options if enabled
+			const parsedOptions = entityDefinition.optionsSupportExpressions
+				? parser.parseEntityOptions(entityDefinition, action.rawOptions).parsedOptions
+				: action.rawOptions
+
+			const executionAction: Complete<ActionForInternalExecution> = {
+				options: parsedOptions,
+
+				id: action.id,
+				definitionId: action.definitionId,
+
+				rawEntity: action,
+			}
+
+			for (const fragment of this.#fragments) {
+				if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
+					let value = fragment.executeAction(executionAction, extras, this.#controlsController.actionRunner, parser)
 					// Only await if it is a promise, to avoid unnecessary async pauses
 					value = value instanceof Promise ? await value : value
 
@@ -392,14 +476,14 @@ export class InternalController {
 						// It was handled, so break
 						return
 					}
-				} catch (e: any) {
-					this.#logger.warn(
-						`Action execute failed: ${JSON.stringify(action.asEntityModel(false))}(${JSON.stringify(extras)}) - ${e?.message ?? e} ${
-							e?.stack
-						}`
-					)
 				}
 			}
+		} catch (e: any) {
+			this.#logger.warn(
+				`Action execute failed: ${JSON.stringify(action.asEntityModel(false))}(${JSON.stringify(extras)}) - ${e?.message ?? e} ${
+					e?.stack
+				}`
+			)
 		}
 	}
 
@@ -437,7 +521,7 @@ export class InternalController {
 		const newValues: NewFeedbackValue[] = []
 
 		for (const [id, feedback] of this.#feedbacks.entries()) {
-			if (typesSet.size === 0 || typesSet.has(feedback.definitionId)) {
+			if (typesSet.size === 0 || typesSet.has(feedback.entityModel.definitionId)) {
 				newValues.push({
 					id: id,
 					controlId: feedback.controlId,
@@ -491,7 +575,9 @@ export class InternalController {
 						feedbackType: null,
 						feedbackStyle: undefined,
 
-						optionsToIgnoreForSubscribe: action.optionsToIgnoreForSubscribe || [],
+						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
+
+						optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe || null,
 					} satisfies Complete<ClientEntityDefinition>
 				}
 			}
@@ -518,7 +604,10 @@ export class InternalController {
 						showButtonPreview: feedback.showButtonPreview ?? false,
 						supportsChildGroups: feedback.supportsChildGroups ?? [],
 
-						optionsToIgnoreForSubscribe: [],
+						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
+
+						// Feedbacks don't have a concept of subscribe
+						optionsToMonitorForSubscribe: [],
 					} satisfies Complete<ClientEntityDefinition>
 				}
 			}
@@ -543,24 +632,17 @@ export class InternalController {
 	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		// Inform all fragments
-		for (const fragment of this.#fragments) {
-			if (typeof fragment.onVariablesChanged === 'function') {
-				fragment.onVariablesChanged(changedVariablesSet, fromControlId)
-			}
-		}
-
 		const newValues: NewFeedbackValue[] = []
 
 		// Lookup feedbacks
 		for (const [id, feedback] of this.#feedbacks) {
-			if (!feedback.referencedVariables || !feedback.referencedVariables.length) continue
+			if (!feedback.referencedVariables || !feedback.referencedVariables.size) continue
 
 			// If a specific control is specified, only update feedbacks for that control
 			if (fromControlId && feedback.controlId !== fromControlId) continue
 
 			// Check a referenced variable was changed
-			if (!feedback.referencedVariables.some((variable) => changedVariablesSet.has(variable))) continue
+			if (feedback.referencedVariables.isDisjointFrom(changedVariablesSet)) continue
 
 			newValues.push({
 				id: id,
