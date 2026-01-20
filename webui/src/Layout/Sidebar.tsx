@@ -15,6 +15,7 @@ import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdr
 import {
 	type IconDefinition,
 	faFileImport,
+	faCheck,
 	faCog,
 	faClipboardList,
 	faCloud,
@@ -53,7 +54,9 @@ import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { trpc } from '~/Resources/TRPC'
 import { useQuery } from '@tanstack/react-query'
-import { ContextMenu, useContextMenuState } from '~/UserConfig/Components/ContextMenu'
+import { ContextMenu } from '~/UserConfig/Components/ContextMenu'
+import { useContextMenuState, MenuSeparator } from '~/UserConfig/Components/useContextMenuProps'
+import { type MenuItemData } from './Header'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -152,11 +155,18 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 
 interface SidebarMenuItemGroupProps extends SidebarMenuItemProps {
 	children?: Array<React.ReactElement | null>
+	groupVisible: boolean
+	groupSetVisible: (val: boolean) => void
 }
 
 function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 	return (
-		<CNavGroup toggler={<SidebarMenuItemLabel {...item} />} to={item.path}>
+		<CNavGroup
+			toggler={<SidebarMenuItemLabel {...item} />}
+			to={item.path}
+			visible={item.groupVisible}
+			setVisible={item.groupSetVisible}
+		>
 			{item.children}
 		</CNavGroup>
 	)
@@ -164,14 +174,91 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 
 export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
+	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
+
+	const [hideHelp, setHideHelp] = useLocalStorage('hide_sidebar_help', false)
+	const showHelpButtons = !hideHelp
+	const [accordionMode, setAccordionMode] = useLocalStorage('sidebar_auto_collapse', false)
+
+	const [surfacesGroupVis, setSurfacesGroupVis] = useState(false)
+	const [variablesGroupVis, setVariablesGroupVis] = useState(false)
+	const [settingsGroupVis, setSettingsGroupVis] = useState(false)
+	const [ibuttonsGroupVis, setIbuttonsGroupVis] = useState(false)
+	const [supportGroupVis, setSupportGroupVis] = useState(false)
 
 	const doToggle = useCallback(() => setUnfoldable((val) => !val), [setUnfoldable])
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
+	const expandAllGroups = useCallback(
+		(expand: boolean) => {
+			const setGroupFns = [
+				setSurfacesGroupVis,
+				setVariablesGroupVis,
+				setSettingsGroupVis,
+				setIbuttonsGroupVis,
+				setSupportGroupVis,
+			]
+			for (const setVis of setGroupFns) setVis(expand)
+		},
+		[setSurfacesGroupVis, setVariablesGroupVis, setSettingsGroupVis, setIbuttonsGroupVis, setSupportGroupVis]
+	)
+
+	const smartExpand = useCallback(
+		(setter: (val: boolean) => void, expand: boolean) => {
+			if (accordionMode) expandAllGroups(false)
+			setter(expand)
+		},
+		[accordionMode, expandAllGroups]
+	)
+
+	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
+	const contextMenuItems: MenuItemData[] = useMemo(
+		() => [
+			{
+				id: 'collapse-all',
+				label: 'Collapse All Groups',
+				to: () => expandAllGroups(false),
+				tooltip: 'Collapse all group in the scrolling section of the sidebar.',
+			},
+			{
+				// not sure this is useful
+				id: 'expand-all',
+				label: 'Expand All Groups',
+				to: () => {
+					expandAllGroups(true)
+					setAccordionMode(false)
+				},
+				tooltip: 'Expand all group in the scrolling section of the sidebar.',
+			},
+			{
+				id: 'accordion-mode',
+				label: 'Auto-Collapse Groups',
+				icon: accordionMode ? faCheck : undefined,
+				to: () => setAccordionMode(!accordionMode),
+				tooltip: 'Allow only one group to be expanded at a time: opening one group closes all others.',
+			},
+			MenuSeparator,
+			{
+				id: 'hide-sidebar',
+				label: unfoldable ? 'Fixed-width Sidebar' : 'Dynamic-width Sidebar',
+				to: doToggle,
+				tooltip:
+					'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
+			},
+			{
+				id: 'hide-help',
+				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
+				to: () => setHideHelp(!hideHelp),
+				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
+			},
+		],
+		[unfoldable, doToggle, hideHelp, expandAllGroups, accordionMode, setHideHelp, setAccordionMode]
+	)
+
 	// we need the following primarily to provide the onContextMenu callback, which resides in the parent, not the component.
-	const contextState = useContextMenuState()
+	const contextState = useContextMenuState(contextMenuItems)
 
 	return (
 		<CSidebar unfoldable={unfoldable} onContextMenu={contextState.onContextMenu}>
@@ -196,7 +283,14 @@ export const MySidebar = memo(function MySidebar() {
 					path="/connections"
 				/>
 				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
-				<SidebarMenuItemGroup name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces">
+				<SidebarMenuItemGroup
+					name="Surfaces"
+					icon={faGamepad}
+					notifications={SurfacesTabNotifyIcon}
+					path="/surfaces"
+					groupVisible={surfacesGroupVis}
+					groupSetVisible={(expand) => smartExpand(setSurfacesGroupVis, expand)}
+				>
 					<SidebarMenuItem
 						name="Configured"
 						icon={null}
@@ -212,14 +306,26 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/remote" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
-				<SidebarMenuItemGroup name="Variables" icon={faDollarSign} path="/variables">
+				<SidebarMenuItemGroup
+					name="Variables"
+					icon={faDollarSign}
+					path="/variables"
+					groupVisible={variablesGroupVis}
+					groupSetVisible={(expand) => smartExpand(setVariablesGroupVis, expand)}
+				>
 					<SidebarMenuItem name="Custom Variables" icon={faDollarSign} path="/variables/custom" />
 					<SidebarMenuItem name="Expression Variables" icon={faSquareRootVariable} path="/variables/expression" />
 					<SidebarMenuItem name="Internal" icon={null} path="/variables/connection/internal" />
 					<SidebarVariablesGroups />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
-				<SidebarMenuItemGroup name="Settings" icon={faCog} path="/settings">
+				<SidebarMenuItemGroup
+					name="Settings"
+					icon={faCog}
+					path="/settings"
+					groupVisible={settingsGroupVis}
+					groupSetVisible={(expand) => smartExpand(setSettingsGroupVis, expand)}
+				>
 					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
 					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
 					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
@@ -233,7 +339,12 @@ export const MySidebar = memo(function MySidebar() {
 				{window.localStorage.getItem('show_companion_cloud') === '1' && (
 					<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
 				)}
-				<SidebarMenuItemGroup name="Interactive Buttons" icon={faSquareCaretRight}>
+				<SidebarMenuItemGroup
+					name="Interactive Buttons"
+					icon={faSquareCaretRight}
+					groupVisible={ibuttonsGroupVis}
+					groupSetVisible={(expand) => smartExpand(setIbuttonsGroupVis, expand)}
+				>
 					<SidebarMenuItem name="Emulator" icon={null} path="/emulator" target="_blank" />
 					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_blank" />
 				</SidebarMenuItemGroup>
@@ -241,16 +352,23 @@ export const MySidebar = memo(function MySidebar() {
 			<div className="sidebar-bottom-shadow-container">
 				<div className="sidebar-bottom-shadow" />
 			</div>
-			<CSidebarNav className="nav-secondary border-top">
-				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-				<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
-				<SidebarMenuItemGroup name="Support" icon={faHeadset}>
-					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
-					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
-					<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
-					<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
-				</SidebarMenuItemGroup>
-			</CSidebarNav>
+			{showHelpButtons && (
+				<CSidebarNav className="nav-secondary border-top">
+					<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
+					<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
+					<SidebarMenuItemGroup
+						name="Support"
+						icon={faHeadset}
+						groupVisible={supportGroupVis}
+						groupSetVisible={(expand) => smartExpand(setSupportGroupVis, expand)}
+					>
+						<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
+						<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
+						<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
+						<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
+					</SidebarMenuItemGroup>
+				</CSidebarNav>
+			)}
 			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
 				<SidebarTogglerAndVersion doToggle={doToggle} />
 			</CSidebarHeader>
@@ -408,7 +526,7 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 					// [`sidebar-${placement}`]: placement,
 					// [`sidebar-${position}`]: position,
 					// [`sidebar-${size}`]: size,
-					'sidebar-narrow-unfoldable': unfoldable,
+					'sidebar-narrow-unfoldable': unfoldable, // // unfold-able. This is a CoreUI class so can't be renamed.
 					show: sidebarState.showToggle && visibleMobile,
 					// hide: visibleDesktop === false && !sidebarState.showToggle && !overlaid,
 				})}
@@ -445,7 +563,8 @@ interface CNavGroupProps {
 	/**
 	 * Show nav group items.
 	 */
-	visible?: boolean
+	visible: boolean
+	setVisible: (val: boolean) => void
 }
 
 /*
@@ -458,16 +577,17 @@ function CNavGroup({
 	compact,
 	toggler,
 	visible,
+	setVisible,
 	...rest
 }: React.PropsWithChildren<CNavGroupProps>) {
 	const [height, setHeight] = useState<number | string>()
 	const navItemsRef = useRef<HTMLUListElement>(null)
 
-	const [_visible, setVisible] = useState(Boolean(visible))
+	//const [_visible, setVisible] = useState(Boolean(visible))
 
 	const handleTogglerOnCLick = (event: React.MouseEvent<HTMLElement>) => {
 		event.preventDefault()
-		setVisible(!_visible)
+		setVisible(!visible)
 	}
 
 	const style: CSSProperties = {
@@ -506,7 +626,7 @@ function CNavGroup({
 	}
 
 	return (
-		<li className={classNames('nav-group', { show: _visible }, className)} {...rest}>
+		<li className={classNames('nav-group', { show: visible }, className)} {...rest}>
 			{to ? (
 				<div
 					className="nav-link nav-group-toggle nav-group-toggle-link"
@@ -517,7 +637,7 @@ function CNavGroup({
 						className="nav-link"
 						onClick={(e) => {
 							e.stopPropagation()
-							setVisible(!_visible)
+							setVisible(!visible)
 						}}
 					>
 						{toggler}
@@ -533,7 +653,7 @@ function CNavGroup({
 			)}
 
 			<Transition
-				in={_visible}
+				in={visible}
 				nodeRef={navItemsRef}
 				onEntering={onEntering}
 				onEntered={onEntered}
