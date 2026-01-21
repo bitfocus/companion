@@ -411,7 +411,7 @@ form.row > * {
 		--cui-sidebar-nav-link-bg: #{$group-background-color};
 
 		&:hover {
-			background-color: color.adjust($group-background-color, $lightness: -5%) !important;
+			background-color: color.adjust($group-background-color, $lightness: 5%) !important;
 		}
 	}
 
