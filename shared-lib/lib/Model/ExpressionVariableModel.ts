@@ -13,7 +13,7 @@ export interface ExpressionVariableModel {
 	localVariables: SomeEntityModel[]
 }
 
-export interface ExpressionVariableOptions {
+export type ExpressionVariableOptions = {
 	variableName: string
 	description: string
 	sortOrder: number

@@ -20,6 +20,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { InlineHelp } from '~/Components/InlineHelp'
+import type { JsonValue } from 'type-fest'
 
 type SurfaceInfo = ClientSurfaceItem & { groupId: string | null }
 
@@ -241,7 +242,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	const surfaceSetConfigKeyMutation = useMutationExt(trpc.surfaces.surfaceSetConfigKey.mutationOptions())
 	const setSurfaceConfigValue = useCallback(
-		(key: string, value: any) => {
+		(key: string, value: JsonValue) => {
 			console.log('update surface', key, value)
 			if (surfaceId) {
 				surfaceSetConfigKeyMutation
@@ -265,7 +266,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	const setGroupConfigKeyMutation = useMutationExt(trpc.surfaces.groupSetConfigKey.mutationOptions())
 	const setGroupConfigValue = useCallback(
-		(key: string, value: any) => {
+		(key: string, value: JsonValue) => {
 			console.log('update group', key, value)
 			if (groupId) {
 				setGroupConfigKeyMutation

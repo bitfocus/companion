@@ -1,6 +1,7 @@
 import z from 'zod'
 import type { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
+import type { ExpressionableOptionsObject } from './Options.js'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel = ReplaceableActionEntityModel | ReplaceableFeedbackEntityModel
@@ -58,7 +59,7 @@ export interface EntityModelBase {
 	definitionId: string
 	connectionId: string
 	headline?: string
-	options: Record<string, any>
+	options: ExpressionableOptionsObject
 	disabled?: boolean
 	upgradeIndex: number | undefined
 

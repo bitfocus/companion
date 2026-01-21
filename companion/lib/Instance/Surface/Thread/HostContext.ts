@@ -12,6 +12,7 @@ import type { SurfaceIpcWrapper } from '../IpcTypes.js'
 import { LockingGraphicsGeneratorImpl } from './LockingGraphics.js'
 import { CardGenerator } from './Cards.js'
 import { convertOpenDeviceResult } from './Util.js'
+import type { JsonValue } from 'type-fest'
 
 /**
  * The context of methods and properties provided to the surfaces, which they can use to report events or make requests.
@@ -42,7 +43,7 @@ export class HostContext implements SurfaceHostContext {
 			changePage: (surfaceId: string, forward: boolean) => {
 				this.#ipcWrapper.sendWithNoCb('change-page', { surfaceId, forward })
 			},
-			setVariableValue: (surfaceId: string, name: string, value: any) => {
+			setVariableValue: (surfaceId: string, name: string, value: JsonValue) => {
 				this.#ipcWrapper.sendWithNoCb('set-variable-value', { surfaceId, name, value })
 			},
 			pincodeEntry: (surfaceId: string, char: number) => {

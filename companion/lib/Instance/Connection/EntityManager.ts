@@ -57,12 +57,12 @@ export interface EntityManagerAdapter {
 	updateFeedbacks: (feedbacks: Map<string, EntityManagerFeedbackEntity | null>) => Promise<void>
 
 	upgradeActions: (
-		actions: EntityManagerActionEntity[],
+		actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[],
 		currentUpgradeIndex: number
 	) => Promise<ReplaceableActionEntityModel[]>
 
 	upgradeFeedbacks: (
-		feedbacks: EntityManagerFeedbackEntity[],
+		feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[],
 		currentUpgradeIndex: number
 	) => Promise<ReplaceableFeedbackEntityModel[]>
 }
@@ -96,8 +96,8 @@ export class ConnectionEntityManager {
 
 			let actionIdsInThisBatch = new Map<string, string>()
 			let feedbackIdsInThisBatch = new Map<string, string>()
-			let upgradeActions: EntityManagerActionEntity[] = []
-			let upgradeFeedbacks: EntityManagerFeedbackEntity[] = []
+			let upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[] = []
+			let upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[] = []
 
 			let updateActionsPayload = new Map<string, EntityManagerActionEntity | null>()
 			let updateFeedbacksPayload = new Map<string, EntityManagerFeedbackEntity | null>()
@@ -114,7 +114,6 @@ export class ConnectionEntityManager {
 						upgradeActions.push({
 							controlId: wrapper.controlId,
 							entity: entityModel,
-							parsedOptions: entityModel.options, // Unused, so keep unparsed
 						})
 						break
 					case EntityModelType.Feedback:
@@ -122,7 +121,6 @@ export class ConnectionEntityManager {
 						upgradeFeedbacks.push({
 							controlId: wrapper.controlId,
 							entity: entityModel,
-							parsedOptions: entityModel.options, // Unused, so keep unparsed
 							imageSize: undefined, // Unused
 						})
 						break
@@ -304,7 +302,7 @@ export class ConnectionEntityManager {
 
 	#sendUpgradeActionsBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
-		upgradeActions: EntityManagerActionEntity[]
+		upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[]
 	): void {
 		this.#adapter
 			.upgradeActions(upgradeActions, this.#currentUpgradeIndex)
@@ -319,7 +317,7 @@ export class ConnectionEntityManager {
 	}
 	#sendUpgradeFeedbacksBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
-		upgradeFeedbacks: EntityManagerFeedbackEntity[]
+		upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[]
 	): void {
 		this.#adapter
 			.upgradeFeedbacks(upgradeFeedbacks, this.#currentUpgradeIndex)

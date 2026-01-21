@@ -20,6 +20,8 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ProcessManagerForEntity } from './Types.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { JsonValue } from 'type-fest'
 
 export class ControlEntityInstance {
 	/**
@@ -86,7 +88,7 @@ export class ControlEntityInstance {
 	 * Get a reference to the options for this action
 	 * Note: This must not be a copy, but the raw object
 	 */
-	get rawOptions(): Record<string, any> {
+	get rawOptions(): ExpressionableOptionsObject {
 		return this.#data.options
 	}
 
@@ -348,7 +350,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set the options for this entity
 	 */
-	setOptions(options: Record<string, any>): void {
+	setOptions(options: ExpressionableOptionsObject): void {
 		this.#data.options = options
 
 		// Remove from cached feedback values
@@ -387,8 +389,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set an option for this entity
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setOption(key: string, value: any): void {
+	setOption(key: string, value: ExpressionOrValue<JsonValue>): void {
 		this.#data.options[key] = value
 
 		// Remove from cached feedback values
@@ -828,15 +829,14 @@ export class ControlEntityInstance {
 	 * If this is the user value feedback, set the value
 	 * @returns Whether the entity options were changed and need to be persisted
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setUserValue(value: any): boolean {
+	setUserValue(value: JsonValue | undefined): boolean {
 		if (!isInternalUserValueFeedback(this)) return false
 
 		this.#cachedFeedbackValue = value
 
 		// Persist value if needed
 		if (this.#data.options.persist_value) {
-			this.#data.options.startup_value = value
+			this.#data.options.startup_value = { isExpression: false, value }
 
 			return true
 		}

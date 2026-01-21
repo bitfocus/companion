@@ -1,4 +1,4 @@
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionableOptionsObject, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { assertNever, deepFreeze, useComputed } from '~/Resources/util.js'
 import { sandbox } from '~/Resources/sandbox.js'
 import type { CompanionOptionValues } from '@companion-module/base'
@@ -9,7 +9,7 @@ import { ExpressionFunctions } from '@companion-app/shared/Expression/Expression
 
 export function useOptionsVisibility(
 	itemOptions: Array<SomeCompanionInputField> | undefined | null,
-	optionValues: CompanionOptionValues | undefined | null
+	optionValues: CompanionOptionValues | ExpressionableOptionsObject | undefined | null
 ): Record<string, boolean | undefined> {
 	const isVisibleFns = useOptionsAndIsVisibleFns(itemOptions)
 
@@ -20,7 +20,7 @@ export function useOptionsVisibility(
 			for (const [id, entry] of Object.entries(isVisibleFns)) {
 				try {
 					if (entry && typeof entry === 'function') {
-						visibility[id] = entry(structuredClone(toJS(optionValues)))
+						visibility[id] = entry(structuredClone(toJS(optionValues as any))) // TODO: fixup this!
 					}
 				} catch (e) {
 					console.error('Failed to check visibility', e)

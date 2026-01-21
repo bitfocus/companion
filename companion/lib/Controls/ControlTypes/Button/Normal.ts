@@ -18,6 +18,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
 import { parseVariablesInButtonStyle } from './Util.js'
+import type { JsonValue } from 'type-fest'
 
 /**
  * Class for the stepped button control.
@@ -195,8 +196,7 @@ export class ControlButtonNormal
 	/**
 	 * Update an option field of this control
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	optionsSetField(key: string, value: any): boolean {
+	optionsSetField(key: string, value: JsonValue): boolean {
 		const changed = super.optionsSetField(key, value)
 
 		if (key === 'stepProgression' || key === 'stepExpression') {

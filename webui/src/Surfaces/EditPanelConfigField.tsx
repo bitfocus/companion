@@ -10,7 +10,8 @@ import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
 import { validateInputValue } from '~/Helpers/validateInputValue'
-import { type DropdownChoiceInt } from '~/DropDownInputFancy'
+import type { DropdownChoiceInt } from '~/DropDownInputFancy'
+import type { JsonValue } from 'type-fest'
 
 interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: any) => void
@@ -39,8 +40,11 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	value,
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
-	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
-	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
+	const checkValid = useCallback(
+		(value: JsonValue) => validateInputValue(definition, value) === undefined,
+		[definition]
+	)
+	const setValue2 = useCallback((val: JsonValue) => setValue(id, val), [setValue, id])
 
 	let control: JSX.Element | string | undefined = undefined
 	let features: InputFeatureIconsProps | undefined

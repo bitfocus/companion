@@ -73,7 +73,12 @@ import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstan
 import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFieldsLegacy.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	convertExpressionOptionsWithoutParsing,
+	optionsObjectToExpressionOptions,
+	type ExpressionableOptionsObject,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import type {
 	ConnectionChildHandlerApi,
 	ConnectionChildHandlerDependencies,
@@ -83,6 +88,7 @@ import { ConvertPresetDefinition } from './PresetsLegacy.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
 
 export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -299,7 +305,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					id: entityModel.id,
 					controlId: controlId,
 					feedbackId: entityModel.definitionId,
-					options: entityModel.options,
+					options: convertExpressionOptionsWithoutParsing(entityModel.options) as OptionsObject, // This is fine, there should be no expressions here
 
 					isInverted: !!entityModel.isInverted,
 
@@ -371,7 +377,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					id: entityModel.id,
 					controlId: controlId,
 					actionId: entityModel.definitionId,
-					options: entityModel.options,
+					options: convertExpressionOptionsWithoutParsing(entityModel.options) as OptionsObject, // This is fine, there should be no expressions here
 
 					upgradeIndex: entityModel.upgradeIndex ?? null,
 					disabled: !!entityModel.disabled,
@@ -415,7 +421,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					id: feedback.id,
 					controlId: controlId,
 					feedbackId: feedback.definitionId,
-					options: feedback.options,
+					options: convertExpressionOptionsWithoutParsing(feedback.options) as OptionsObject, // This is fine, there should be no expressions here
 
 					isInverted: !!feedback.isInverted,
 
@@ -434,7 +440,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async entityLearnValues(
 		entity: SomeEntityModel,
 		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
+	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
 		const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
@@ -454,7 +460,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 								id: entity.id,
 								controlId: controlId,
 								actionId: entity.definitionId,
-								options: entity.options,
+								options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,
@@ -464,7 +470,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 						learnTimeout
 					)
 
-					return msg.options
+					// This will replace any user expressions, if they were able to define any
+					return optionsObjectToExpressionOptions(msg.options as OptionsObject, false)
 				}
 				case EntityModelType.Feedback: {
 					const control = this.#deps.controls.getControl(controlId)
@@ -476,7 +483,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 								id: entity.id,
 								controlId: controlId,
 								feedbackId: entity.definitionId,
-								options: entity.options,
+								options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
 								isInverted: !!entity.isInverted,
 
@@ -490,7 +497,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 						learnTimeout
 					)
 
-					return msg.options
+					// This will replace any user expressions, if they were able to define any
+					return optionsObjectToExpressionOptions(msg.options as OptionsObject, false)
 				}
 				default:
 					assertNever(entity)
@@ -549,7 +557,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					id: action.id,
 					controlId: controlId,
 					actionId: action.definitionId,
-					options: action.options,
+					options: convertExpressionOptionsWithoutParsing(action.options) as OptionsObject, // This is fine, there should be no expressions here
 
 					upgradeIndex: action.upgradeIndex ?? null,
 					disabled: !!action.disabled,
@@ -565,7 +573,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 
 		try {
-			let actionOptions = action.options
+			let actionOptions: CompanionOptionValuesNew
 			if (this.#entityManager) {
 				// This means the new flow is being done, and the options must be parsed at this stage
 				const actionDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
@@ -578,6 +586,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				// Note: for actions, this doesn't need to be reactive
 				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
 				actionOptions = parser.parseEntityOptions(actionDefinition, action.options).parsedOptions
+			} else {
+				actionOptions = convertExpressionOptionsWithoutParsing(action.options)
 			}
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
@@ -585,7 +595,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					id: action.id,
 					controlId: extras?.controlId,
 					actionId: action.definitionId,
-					options: actionOptions,
+					options: actionOptions as OptionsObject,
 
 					upgradeIndex: null,
 					disabled: !!action.disabled,
@@ -979,7 +989,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 								type: EntityModelType.Feedback,
 								id: feedback.id,
 								definitionId: feedback.feedbackId,
-								options: feedback.options,
+								options: optionsObjectToExpressionOptions(feedback.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
 								style: feedback.style,
 								isInverted: feedback.isInverted,
 								upgradeIndex: feedback.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
@@ -1002,7 +1012,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 								type: EntityModelType.Action,
 								id: action.id,
 								definitionId: action.actionId,
-								options: action.options,
+								options: optionsObjectToExpressionOptions(action.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
 								upgradeIndex: action.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
 							},
 							true
@@ -1123,14 +1133,14 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
 	}
 
-	async upgradeActions(actions: EntityManagerActionEntity[], currentUpgradeIndex: number) {
+	async upgradeActions(actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActionsAndFeedbacks', {
 				actions: actions.map((act) => ({
 					id: act.entity.id,
 					controlId: act.controlId,
 					actionId: act.entity.definitionId,
-					options: act.entity.options,
+					options: convertExpressionOptionsWithoutParsing(act.entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
 					upgradeIndex: act.entity.upgradeIndex ?? null,
 					disabled: !!act.entity.disabled,
@@ -1145,14 +1155,14 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 							id: action.id,
 							type: EntityModelType.Action,
 							definitionId: action.actionId,
-							options: action.options,
+							options: optionsObjectToExpressionOptions(action.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableActionEntityModel
 				)
 			})
 	}
 
-	async upgradeFeedbacks(feedbacks: EntityManagerFeedbackEntity[], currentUpgradeIndex: number) {
+	async upgradeFeedbacks(feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActionsAndFeedbacks', {
 				actions: [],
@@ -1160,7 +1170,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					id: fb.entity.id,
 					controlId: fb.controlId,
 					feedbackId: fb.entity.definitionId,
-					options: fb.entity.options,
+					options: convertExpressionOptionsWithoutParsing(fb.entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
 					isInverted: !!fb.entity.isInverted,
 
@@ -1176,7 +1186,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 							id: feedback.id,
 							type: EntityModelType.Feedback,
 							definitionId: feedback.feedbackId,
-							options: feedback.options,
+							options: optionsObjectToExpressionOptions(feedback.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
 							style: feedback.style,
 							isInverted: feedback.isInverted,
 							upgradeIndex: currentUpgradeIndex,
