@@ -21,24 +21,15 @@ import type {
 	FeedbackForInternalExecution,
 	ActionForInternalExecution,
 } from './Types.js'
-import {
-	FeedbackEntitySubType,
-	type ActionEntityModel,
-	type SomeSocketEntityLocation,
-} from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { IPageStore } from '../Page/Store.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
-import {
-	CHOICES_LOCATION,
-	convertOldLocationToExpressionOrValue,
-	convertSimplePropertyToExpressionValue,
-	ParseLocationString,
-} from './Util.js'
+import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
 import { EventEmitter } from 'events'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { CompanionInputFieldDropdownExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
@@ -311,37 +302,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			// Not used
 			return false
 		}
-	}
-
-	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
-		let changed = false
-
-		if (action.definitionId === 'local_variable_set_value') {
-			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'value') || changed
-		} else if (action.definitionId === 'local_variable_set_expression') {
-			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
-
-			// Rename to the combined action
-			action.definitionId = 'local_variable_set_value'
-			action.options.value = {
-				isExpression: true,
-				value: action.options.expression,
-			} satisfies ExpressionOrValue<any>
-			delete action.options.expression
-
-			changed = true
-		} else if (
-			action.definitionId === 'local_variable_reset_to_default' ||
-			action.definitionId === 'local_variable_sync_to_default'
-		) {
-			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'name') || changed
-		}
-
-		if (changed) return action
 	}
 
 	#updateLocalVariableValue(

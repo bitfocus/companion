@@ -25,8 +25,7 @@ import type {
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
-import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { convertSimplePropertyToExpressionValue } from './Util.js'
+import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import { stringifyVariableValue, type VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
@@ -180,21 +179,6 @@ export class InternalActionRecorder
 				optionsSupportExpressions: true,
 			},
 		}
-	}
-
-	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
-		let changed = false
-
-		if (action.definitionId === 'action_recorder_set_recording') {
-			changed = convertSimplePropertyToExpressionValue(action.options, 'enable') || changed
-		} else if (action.definitionId === 'action_recorder_save_to_button') {
-			changed = convertSimplePropertyToExpressionValue(action.options, 'page') || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'bank') || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'step') || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'set') || changed
-		}
-
-		if (changed) return action
 	}
 
 	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {

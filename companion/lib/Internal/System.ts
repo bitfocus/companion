@@ -26,7 +26,6 @@ import type {
 } from './Types.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { promisify } from 'util'
-import { convertSimplePropertyToExpressionValue } from './Util.js'
 import { EventEmitter } from 'events'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import debounceFn from 'debounce-fn'
@@ -36,7 +35,6 @@ import {
 	type VariableDefinition,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
-import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 const execAsync = promisify(exec)
 
@@ -328,20 +326,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		}
 
 		return actions
-	}
-
-	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
-		let changed = false
-
-		if (action.definitionId === 'custom_log') {
-			changed = convertSimplePropertyToExpressionValue(action.options, 'message') || changed
-		} else if (action.definitionId === 'exec') {
-			changed = convertSimplePropertyToExpressionValue(action.options, 'path') || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'timeout') || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'targetVariable') || changed
-		}
-
-		if (changed) return action
 	}
 
 	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<boolean> {

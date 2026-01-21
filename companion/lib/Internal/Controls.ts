@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { formatLocation, oldBankIndexToXY, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import debounceFn from 'debounce-fn'
 import type {
@@ -27,23 +27,10 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import {
-	EntityModelType,
-	FeedbackEntitySubType,
-	type ActionEntityModel,
-	type FeedbackEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
-import { nanoid } from 'nanoid'
+import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
-import {
-	CHOICES_LOCATION,
-	convertOldLocationToExpressionOrValue,
-	convertOldSplitOptionToExpression,
-	convertSimplePropertyToExpressionValue,
-	ParseLocationString,
-} from './Util.js'
+import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
 import { EventEmitter } from 'events'
 import { parseColorToNumber } from '../Resources/Util.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
@@ -463,43 +450,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	}
 
-	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
-		let changed = false
-
-		if (feedback.options.bank !== undefined) {
-			if (feedback.options.bank == 0 && feedback.options.page == 0) {
-				feedback.options.location_target = 'this'
-
-				delete feedback.options.bank
-				delete feedback.options.page
-				changed = true
-			} else {
-				const xy = oldBankIndexToXY(feedback.options.bank)
-
-				let pageNumber = feedback.options.page
-				if (pageNumber == 0) pageNumber = `$(this:page)`
-
-				const buttonId = xy ? `${xy[1]}/${xy[0]}` : `$(this:row)/$(this:column)`
-
-				feedback.options.location_target = 'text'
-				feedback.options.location_text = `${pageNumber}/${buttonId}`
-
-				delete feedback.options.bank
-				delete feedback.options.page
-				changed = true
-			}
-		}
-
-		if (feedback.definitionId === 'bank_style' || feedback.definitionId === 'bank_pushed') {
-			changed = convertOldLocationToExpressionOrValue(feedback.options) || changed
-		} else if (feedback.definitionId === 'bank_current_step') {
-			changed = convertOldLocationToExpressionOrValue(feedback.options) || changed
-			changed = convertSimplePropertyToExpressionValue(feedback.options, 'step') || changed
-		}
-
-		if (changed) return feedback
-	}
-
 	executeFeedback(feedback: FeedbackForInternalExecution): CompanionFeedbackButtonStyleResult | boolean | void {
 		if (feedback.definitionId === 'bank_style') {
 			const { theLocation } = this.#fetchLocationAndControlId(feedback.options, feedback)
@@ -585,237 +535,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 	forgetFeedback(feedback: FeedbackEntityModel): void {
 		this.#buttonDrawnSubscriptions.delete(feedback.id)
 		this.#pushStateSubscriptions.delete(feedback.id)
-	}
-
-	actionUpgrade(action: ActionEntityModel, controlId: string): ActionEntityModel | void {
-		let changed = false
-		if (
-			action.definitionId === 'button_pressrelease' ||
-			action.definitionId === 'button_pressrelease_if_expression' ||
-			action.definitionId === 'button_pressrelease_condition' ||
-			action.definitionId === 'button_pressrelease_condition_variable' ||
-			action.definitionId === 'button_press' ||
-			action.definitionId === 'button_release'
-		) {
-			if (action.options.force === undefined) {
-				action.options.force = true
-
-				changed = true
-			}
-		}
-
-		if (action.definitionId === 'button_pressrelease_condition_variable') {
-			action.definitionId = 'button_pressrelease_condition'
-
-			// Also mangle the page & bank inputs
-			action.options.page_from_variable = true
-			action.options.bank_from_variable = true
-			action.options.page_variable = `$(${action.options.page})`
-			delete action.options.page
-			action.options.bank_variable = `$(${action.options.bank})`
-			delete action.options.bank
-
-			changed = true
-		}
-
-		// Update bank -> location
-		if (
-			action.options.location_target === undefined &&
-			(action.definitionId === 'button_pressrelease' ||
-				action.definitionId === 'button_press' ||
-				action.definitionId === 'button_pressrelease_if_expression' ||
-				action.definitionId === 'button_pressrelease_condition' ||
-				action.definitionId === 'button_press' ||
-				action.definitionId === 'button_release' ||
-				action.definitionId === 'button_rotate_left' ||
-				action.definitionId === 'button_rotate_right' ||
-				action.definitionId === 'button_text' ||
-				action.definitionId === 'textcolor' ||
-				action.definitionId === 'bgcolor' ||
-				action.definitionId === 'panic_bank' ||
-				action.definitionId === 'bank_current_step' ||
-				action.definitionId === 'bank_current_step_condition' ||
-				action.definitionId === 'bank_current_step_if_expression' ||
-				action.definitionId === 'bank_current_step_delta')
-		) {
-			const oldOptions = { ...action.options }
-			delete action.options.bank
-			delete action.options.bank_variable
-			delete action.options.bank_from_variable
-			delete action.options.page
-			delete action.options.page_variable
-			delete action.options.page_from_variable
-
-			if (oldOptions.bank == 0 && oldOptions.page == 0) {
-				action.options.location_target = 'this'
-
-				changed = true
-			} else {
-				const xy = oldBankIndexToXY(oldOptions.bank)
-
-				let pageNumber = oldOptions.page_from_variable ? oldOptions.page_variable : oldOptions.page
-				if (pageNumber == 0) pageNumber = `$(this:page)`
-
-				if (oldOptions.bank_from_variable || oldOptions.page_from_variable) {
-					const column = xy ? xy[0] : '$(this:column)'
-					const row = xy ? xy[1] : '$(this:row)'
-
-					action.options.location_target = 'expression'
-					action.options.location_expression = oldOptions.bank_from_variable
-						? `concat(${pageNumber}, '/bank', ${oldOptions.bank_variable})`
-						: `concat(${pageNumber}, '/', ${row}, '/', ${column})`
-				} else {
-					const buttonId = xy ? `${xy[1]}/${xy[0]}` : `$(this:row)/$(this:column)`
-
-					action.options.location_target = 'text'
-					action.options.location_text = `${pageNumber}/${buttonId}`
-				}
-
-				changed = true
-			}
-		}
-
-		if (
-			action.definitionId === 'button_pressrelease_if_expression' ||
-			action.definitionId === 'bank_current_step_if_expression'
-		) {
-			const newChildAction: ActionEntityModel = {
-				type: EntityModelType.Action,
-				id: nanoid(),
-				definitionId: action.definitionId.slice(0, -'_if_expression'.length),
-				connectionId: 'internal',
-				options: {
-					...action.options,
-				},
-				upgradeIndex: undefined,
-			}
-			delete newChildAction.options.expression
-
-			const newExpressionFeedback: FeedbackEntityModel = {
-				type: EntityModelType.Feedback,
-				id: nanoid(),
-				definitionId: 'check_expression',
-				connectionId: 'internal',
-				options: {
-					expression: action.options.expression,
-				},
-				upgradeIndex: undefined,
-			}
-
-			return {
-				type: EntityModelType.Action,
-				id: action.id,
-				definitionId: 'logic_if',
-				connectionId: 'internal',
-				options: {},
-				children: {
-					condition: [newExpressionFeedback],
-					actions: [newChildAction],
-					else_actions: [],
-				},
-				upgradeIndex: undefined,
-			} satisfies ActionEntityModel
-		} else if (
-			action.definitionId === 'button_pressrelease_condition' ||
-			action.definitionId === 'button_press_condition' ||
-			action.definitionId === 'button_release_condition' ||
-			action.definitionId === 'bank_current_step_condition'
-		) {
-			const newChildAction: ActionEntityModel = {
-				type: EntityModelType.Action,
-				id: nanoid(),
-				definitionId: action.definitionId.slice(0, -'_condition'.length),
-				connectionId: 'internal',
-				options: {
-					...action.options,
-				},
-				upgradeIndex: undefined,
-			}
-			delete newChildAction.options.variable
-			delete newChildAction.options.op
-			delete newChildAction.options.value
-
-			// Ensure the new child action is fully upgraded
-			this.actionUpgrade(newChildAction, controlId)
-
-			const newExpressionFeedback: FeedbackEntityModel = {
-				type: EntityModelType.Feedback,
-				id: nanoid(),
-				definitionId: 'variable_value',
-				connectionId: 'internal',
-				options: {
-					variable: action.options.variable,
-					op: action.options.op,
-					value: action.options.value,
-				},
-				upgradeIndex: undefined,
-			}
-
-			return {
-				type: EntityModelType.Action,
-				id: action.id,
-				definitionId: 'logic_if',
-				connectionId: 'internal',
-				options: {},
-				children: {
-					condition: [newExpressionFeedback],
-					actions: [newChildAction],
-					else_actions: [],
-				},
-				upgradeIndex: undefined,
-			} satisfies ActionEntityModel
-		}
-
-		if (action.definitionId === 'panic_page' && !isExpressionOrValue(action.options.page)) {
-			convertOldSplitOptionToExpression(
-				action.options,
-				{
-					useVariables: 'page_from_variable',
-					variable: 'page_variable',
-					simple: 'page',
-					result: 'page',
-				},
-				true
-			)
-			changed = true
-		} else if (
-			action.definitionId === 'button_pressrelease' ||
-			action.definitionId === 'button_press' ||
-			action.definitionId === 'button_release' ||
-			action.definitionId === 'button_rotate_left' ||
-			action.definitionId === 'button_rotate_right' ||
-			action.definitionId === 'panic_bank'
-		) {
-			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-		} else if (action.definitionId === 'button_text') {
-			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'label') || changed
-		} else if (action.definitionId === 'bgcolor' || action.definitionId === 'textcolor') {
-			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'color') || changed
-		} else if (action.definitionId === 'bank_current_step_delta') {
-			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'amount') || changed
-		} else if (action.definitionId === 'bank_current_step') {
-			changed = convertOldLocationToExpressionOrValue(action.options) || changed
-
-			if (!isExpressionOrValue(action.options.step)) {
-				convertOldSplitOptionToExpression(
-					action.options,
-					{
-						useVariables: 'step_from_expression',
-						variable: 'step_expression',
-						simple: 'step',
-						result: 'step',
-					},
-					true
-				)
-				changed = true
-			}
-		}
-
-		// Note: some fixups above return directly, when wrapping the action inside a logic_if. But the new child should be recursively updated
-		if (changed) return action
 	}
 
 	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {

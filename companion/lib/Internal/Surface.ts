@@ -27,12 +27,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import {
-	FeedbackEntitySubType,
-	type FeedbackEntityModel,
-	type ActionEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
-import { convertOldSplitOptionToExpression, convertSimplePropertyToExpressionValue } from './Util.js'
+import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import {
 	stringifyVariableValue,
@@ -264,102 +259,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		this.#lastUpdateVariableNames = idsBeingSetThisRun
 
 		this.emit('setVariables', values)
-	}
-
-	actionUpgrade(action: ActionEntityModel, _controlId: string): void | ActionEntityModel {
-		let changed = false
-
-		// Upgrade an action. This check is not the safest, but it should be ok
-		if (action.options.controller === 'emulator') {
-			// Hope that the default emulator still exists
-			action.options.controller = 'emulator:emulator'
-
-			changed = true
-		}
-
-		if (
-			!action.options.surfaceId &&
-			(action.definitionId === 'set_brightness' ||
-				action.definitionId === 'set_page' ||
-				action.definitionId === 'inc_page' ||
-				action.definitionId === 'dec_page' ||
-				action.definitionId === 'lockout_device' ||
-				action.definitionId === 'unlockout_device' ||
-				action.definitionId === 'surface_set_position' ||
-				action.definitionId === 'surface_adjust_position')
-		) {
-			changed = true
-
-			convertOldSplitOptionToExpression(
-				action.options,
-				{
-					useVariables: 'controller_from_variable',
-					simple: 'controller',
-					variable: 'controller_variable',
-					result: 'surfaceId',
-				},
-				false
-			)
-		}
-
-		if (action.definitionId === 'set_brightness') {
-			changed = convertSimplePropertyToExpressionValue(action.options, 'brightness') || changed
-		}
-
-		if (
-			(action.definitionId === 'set_page' || action.definitionId === 'set_page_byindex') &&
-			action.options.page_from_variable !== undefined
-		) {
-			changed = true
-
-			convertOldSplitOptionToExpression(
-				action.options,
-				{
-					useVariables: 'page_from_variable',
-					simple: 'page',
-					variable: 'page_variable',
-					result: 'page',
-				},
-				true
-			)
-		}
-
-		if (action.definitionId === 'set_page_byindex' && action.options.controller_from_variable !== undefined) {
-			changed = true
-
-			convertOldSplitOptionToExpression(
-				action.options,
-				{
-					useVariables: 'controller_from_variable',
-					simple: 'controller',
-					variable: 'controller_variable',
-					result: 'surfaceIndex',
-				},
-				true
-			)
-		}
-
-		if (action.definitionId === 'surface_set_position') {
-			changed = convertSimplePropertyToExpressionValue(action.options, 'x_offset') || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'y_offset') || changed
-		}
-		if (action.definitionId === 'surface_adjust_position') {
-			changed = convertSimplePropertyToExpressionValue(action.options, 'x_adjustment') || changed
-			changed = convertSimplePropertyToExpressionValue(action.options, 'y_adjustment') || changed
-		}
-
-		if (changed) return action
-	}
-
-	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
-		let changed = false
-
-		if (feedback.definitionId === 'surface_on_page') {
-			changed = convertSimplePropertyToExpressionValue(feedback.options, 'surfaceId', 'controller', 'self') || changed
-			changed = convertSimplePropertyToExpressionValue(feedback.options, 'page') || changed
-		}
-
-		if (changed) return feedback
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {

@@ -9,7 +9,6 @@
  * this program.
  */
 
-import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import debounceFn from 'debounce-fn'
 import type {
 	ActionForVisitor,
@@ -24,7 +23,7 @@ import type {
 } from './Types.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
@@ -111,14 +110,6 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 
 				optionsSupportExpressions: false,
 			},
-		}
-	}
-
-	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
-		if (action.definitionId === 'trigger_enabled' && !isNaN(Number(action.options.trigger_id))) {
-			action.options.trigger_id = CreateTriggerControlId(action.options.trigger_id)
-
-			return action
 		}
 	}
 

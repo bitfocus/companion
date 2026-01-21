@@ -214,25 +214,6 @@ export class InternalBuildingBlocks
 		}
 	}
 
-	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
-		if (feedback.definitionId === 'logic_and') {
-			feedback.definitionId = 'logic_operator'
-			feedback.options = { operation: 'and' }
-
-			return feedback
-		} else if (feedback.definitionId === 'logic_or') {
-			feedback.definitionId = 'logic_operator'
-			feedback.options = { operation: 'or' }
-
-			return feedback
-		} else if (feedback.definitionId === 'logic_xor') {
-			feedback.definitionId = 'logic_operator'
-			feedback.options = { operation: 'xor' }
-
-			return feedback
-		}
-	}
-
 	/**
 	 * Execute a logic feedback
 	 */

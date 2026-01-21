@@ -306,8 +306,6 @@ export class InternalController {
 				return undefined
 			}
 
-			//
-
 			const parser = this.#controlsController.createVariablesAndExpressionParser(feedbackState.controlId, null)
 
 			// Parse the options if enabled
