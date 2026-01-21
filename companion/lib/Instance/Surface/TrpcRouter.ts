@@ -7,6 +7,7 @@ import type { InstanceController, InstanceControllerEvents } from '../Controller
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { Logger } from '../../Log/Controller.js'
 import type EventEmitter from 'events'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSurfacesTrpcRouter(
@@ -106,8 +107,8 @@ export function createSurfacesTrpcRouter(
 						secrets: instanceConf.secrets || {},
 					}
 					return result
-				} catch (e: any) {
-					logger.silly(`Failed to load surface config_fields: ${e.message}`)
+				} catch (e) {
+					logger.silly(`Failed to load surface config_fields: ${stringifyError(e)}`)
 					return null
 				}
 			}),

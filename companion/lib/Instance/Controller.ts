@@ -55,6 +55,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 const execAsync = promisify(exec)
 
@@ -456,8 +457,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const updateInstance = !!values.label || ((values.config || values.secrets) && !options?.skipNotifyConnection)
 		if (updateInstance && instance) {
-			instance.updateConfigAndLabel(connectionConfig).catch((e: any) => {
-				instance.logger.warn('Error updating instance configuration: ' + e.message)
+			instance.updateConfigAndLabel(connectionConfig).catch((e) => {
+				instance.logger.warn('Error updating instance configuration: ' + stringifyError(e))
 			})
 		}
 
@@ -1197,8 +1198,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						this.#logger.info(`Running udev sync command: ${SYNC_UDEV_RULES_COMMAND}`)
 						await execAsync(SYNC_UDEV_RULES_COMMAND)
 						this.#logger.info('Udev rules synced successfully')
-					} catch (e: any) {
-						this.#logger.error(`Failed to sync udev rules: ${e.message}`)
+					} catch (e) {
+						this.#logger.error(`Failed to sync udev rules: ${stringifyError(e)}`)
 					}
 				}
 			} else {

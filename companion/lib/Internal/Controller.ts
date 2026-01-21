@@ -54,6 +54,7 @@ import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type EventEmitter from 'node:events'
 import type { AppInfo } from '../Registry.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 interface FeedbackEntityState {
 	controlId: string
@@ -195,10 +196,8 @@ export class InternalController {
 						// It was handled, so break
 						return newAction
 					}
-				} catch (e: any) {
-					this.#logger.silly(
-						`Action upgrade failed: ${JSON.stringify(action)}(${controlId}) - ${e?.message ?? e} ${e?.stack}`
-					)
+				} catch (e) {
+					this.#logger.silly(`Action upgrade failed: ${JSON.stringify(action)}(${controlId}) - ${stringifyError(e)}`)
 				}
 			}
 		}
@@ -222,9 +221,9 @@ export class InternalController {
 						// It was handled, so break
 						return newFeedback
 					}
-				} catch (e: any) {
+				} catch (e) {
 					this.#logger.silly(
-						`Feedback upgrade failed: ${JSON.stringify(feedback)}(${controlId}) - ${e?.message ?? e} ${e?.stack}`
+						`Feedback upgrade failed: ${JSON.stringify(feedback)}(${controlId}) - ${stringifyError(e)}`
 					)
 				}
 			}
@@ -283,8 +282,8 @@ export class InternalController {
 			if (typeof fragment.forgetFeedback === 'function') {
 				try {
 					fragment.forgetFeedback(entity)
-				} catch (e: any) {
-					this.#logger.silly(`Feedback forget failed: ${JSON.stringify(entity)} - ${e?.message ?? e} ${e?.stack}`)
+				} catch (e) {
+					this.#logger.silly(`Feedback forget failed: ${JSON.stringify(entity)} - ${stringifyError(e)}`)
 				}
 			}
 		}
@@ -332,10 +331,8 @@ export class InternalController {
 					let value: ReturnType<Required<InternalModuleFragment>['executeFeedback']> | undefined
 					try {
 						value = fragment.executeFeedback(executionFeedback, parser)
-					} catch (e: any) {
-						this.#logger.silly(
-							`Feedback check failed: ${JSON.stringify(executionFeedback)} - ${e?.message ?? e} ${e?.stack}`
-						)
+					} catch (e) {
+						this.#logger.silly(`Feedback check failed: ${JSON.stringify(executionFeedback)} - ${stringifyError(e)}`)
 					}
 
 					if (value && typeof value === 'object' && 'referencedVariables' in value) {
@@ -349,9 +346,9 @@ export class InternalController {
 					}
 				}
 			}
-		} catch (e: any) {
+		} catch (e) {
 			this.#logger.warn(
-				`Feedback get value failed: ${JSON.stringify(feedbackState.entityModel)} - ${e?.message ?? e} ${e?.stack}`
+				`Feedback get value failed: ${JSON.stringify(feedbackState.entityModel)} - ${stringifyError(e)}`
 			)
 			return undefined
 		} finally {
@@ -478,11 +475,11 @@ export class InternalController {
 					}
 				}
 			}
-		} catch (e: any) {
+		} catch (e) {
 			this.#logger.warn(
-				`Action execute failed: ${JSON.stringify(action.asEntityModel(false))}(${JSON.stringify(extras)}) - ${e?.message ?? e} ${
-					e?.stack
-				}`
+				`Action execute failed: ${JSON.stringify(action.asEntityModel(false))}(${JSON.stringify(extras)}) - ${stringifyError(
+					e
+				)}`
 			)
 		}
 	}

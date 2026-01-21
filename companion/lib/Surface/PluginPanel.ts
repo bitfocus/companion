@@ -29,6 +29,7 @@ import type {
 	SurfaceModuleToHostEvents,
 } from '../Instance/Surface/IpcTypes.js'
 import type * as imageRs from '@julusian/image-rs'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 interface SatelliteInputVariableInfo {
 	id: string
@@ -243,8 +244,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					.catch((e) => {
 						this.#logger.debug(`Draw failed: ${e}`)
 					})
-			} catch (e: any) {
-				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+			} catch (e) {
+				this.#logger.debug(`scale image failed: ${stringifyError(e)}`)
 				this.emit('remove')
 				return
 			}

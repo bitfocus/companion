@@ -17,6 +17,7 @@ import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/E
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ReadonlyDeep } from 'type-fest'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 // Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
 const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
@@ -269,10 +270,10 @@ export function executeExpression(
 			value,
 			variableIds: referencedVariableIds,
 		}
-	} catch (e: any) {
+	} catch (e) {
 		return {
 			ok: false,
-			error: e?.message ?? 'Unknown error',
+			error: stringifyError(e) || 'Unknown error',
 			variableIds: referencedVariableIds,
 		}
 	}

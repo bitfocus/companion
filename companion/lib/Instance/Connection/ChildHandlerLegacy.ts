@@ -82,6 +82,7 @@ import type {
 import { ConvertPresetDefinition } from './PresetsLegacy.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -266,9 +267,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		try {
 			const res = await this.#ipcWrapper.sendWithCb('getConfigFields', {})
 			return translateConnectionConfigFields(res.fields)
-		} catch (e: any) {
-			this.logger.warn('Error getting config fields: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
+		} catch (e) {
+			this.logger.warn('Error getting config fields: ' + stringifyError(e))
+			this.#sendToModuleLog('error', 'Error getting config fields: ' + stringifyError(e))
 
 			throw e
 		}
@@ -495,9 +496,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					assertNever(entity)
 					break
 			}
-		} catch (e: any) {
-			this.logger.warn('Error learning options: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error learning options: ' + e?.message)
+		} catch (e) {
+			this.logger.warn('Error learning options: ' + stringifyError(e))
+			this.#sendToModuleLog('error', 'Error learning options: ' + stringifyError(e))
 		}
 	}
 
@@ -597,9 +598,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				this.logger.warn(`Error executing action: ${message}`)
 				this.#sendToModuleLog('error', `Error executing action: ${message}`)
 			}
-		} catch (e: any) {
-			this.logger.warn(`Error executing action: ${e.message ?? e}`)
-			this.#sendToModuleLog('error', `Error executing action: ${e?.message}`)
+		} catch (e) {
+			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
+			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e)}`)
 
 			throw e
 		}
@@ -613,7 +614,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
-		} catch (e: any) {
+		} catch (e) {
 			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
 		}
 
@@ -879,7 +880,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			}
 
 			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, convertedPresets)
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
 			throw new Error(`Failed to set Preset Definitions: ${e}`)
@@ -915,7 +916,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				text: result.text,
 				variableIds: Array.from(result.variableIds),
 			}
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`Parse variables failed: ${e}`)
 
 			throw new Error(`Failed to parse variables in string`)
@@ -937,7 +938,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				delay,
 				msg.uniquenessId ?? undefined
 			)
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`Record action failed: ${e}`)
 		}
 	}
@@ -951,7 +952,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			if (failure) {
 				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): ${failure}`)
 			}
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}
 	}
@@ -1011,7 +1012,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					}
 				}
 			}
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`Upgrades failed to save: ${e}`)
 		}
 	}

@@ -39,6 +39,7 @@ import type {
 	SatelliteSurfaceLayout,
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import type { ReadonlyDeep } from 'type-fest'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
@@ -223,8 +224,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, controlDefinition, drawItem) => {
 			try {
 				await this.#sendDraw(controlDefinition, drawItem)
-			} catch (e: any) {
-				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+			} catch (e) {
+				this.#logger.debug(`scale image failed: ${stringifyError(e)}`)
 				this.emit('remove')
 				return
 			}

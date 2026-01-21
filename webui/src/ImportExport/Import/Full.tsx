@@ -25,6 +25,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 // These can't be imported currently
 type ClientImportSelection = Omit<ClientImportOrResetSelection, 'connections' | 'userconfig'>
@@ -194,9 +195,9 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()
-			} catch (e: any) {
-				console.log('import failed', e)
-				notifier.show(`Import failed`, `Full import failed with: "${e?.message ?? e}"`, 10000)
+			} catch (e) {
+				console.log('import failed', stringifyError(e))
+				notifier.show(`Import failed`, `Full import failed with: "${stringifyError(e, true)}"`, 10000)
 			}
 		},
 	})

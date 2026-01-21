@@ -2,6 +2,7 @@ import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import LogController, { type Logger } from '../../../../Log/Controller.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 interface ConnectEvent {
 	id: string
@@ -133,8 +134,8 @@ export class TriggersEventMisc {
 				setImmediate(() => {
 					try {
 						this.#executeActions(nowTime, TriggerExecutionSource.Other)
-					} catch (e: any) {
-						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
+					} catch (e) {
+						this.#logger.warn(`Execute actions failed: ${stringifyError(e)}`)
 					}
 				})
 			}
@@ -169,8 +170,8 @@ export class TriggersEventMisc {
 				setTimeout(() => {
 					try {
 						this.#executeActions(nowTime, TriggerExecutionSource.Other)
-					} catch (e: any) {
-						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
+					} catch (e) {
+						this.#logger.warn(`Execute actions failed: ${stringifyError(e)}`)
 					}
 				}, event.delay || 0)
 			}

@@ -7,6 +7,7 @@ import type { InstanceController } from '../Instance/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import EventEmitter from 'events'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 /**
  * Class providing Bonjour discovery for modules.
@@ -52,8 +53,8 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 				this.#server = new Bonjour()
 
 				this.logger.info('Listening for Bonjour messages')
-			} catch (e: any) {
-				this.logger.error(`Could not launch: ${e.message}`)
+			} catch (e) {
+				this.logger.error(`Could not launch: ${stringifyError(e)}`)
 			}
 		}
 	}

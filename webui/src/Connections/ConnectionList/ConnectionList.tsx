@@ -22,6 +22,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -185,8 +186,8 @@ function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCo
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const enabled = e.target.checked
 
-			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e: any) => {
-				console.error('Failed to set collection enabled state', e)
+			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e) => {
+				console.error('Failed to set collection enabled state', stringifyError(e))
 			})
 		},
 		[setEnabledMutation, collection.id]

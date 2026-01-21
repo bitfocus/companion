@@ -19,6 +19,7 @@ import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ProcessManagerForEntity } from './Types.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export class ControlEntityInstance {
 	/**
@@ -170,8 +171,8 @@ export class ControlEntityInstance {
 				try {
 					const childGroup = this.#getOrCreateChildGroupFromDefinition(groupDefinition)
 					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], true, isCloned)
-				} catch (e: any) {
-					this.#logger.error(`Error loading child entity group: ${e.message}`)
+				} catch (e) {
+					this.#logger.error(`Error loading child entity group: ${stringifyError(e)}`)
 				}
 			}
 		}

@@ -17,6 +17,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { OutboundSurfaceInfo, OutboundSurfaceCollection } from '@companion-app/shared/Model/Surfaces.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { AddRemoteSurfaceButton } from './AddRemoteSurfaceButton.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 interface RemoteSurfacesListProps {
 	selectedRemoteConnectionId: string | null
@@ -123,8 +124,8 @@ function RemoteSurfacesGroupHeaderContent({ collection }: { collection: Outbound
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const enabled = e.target.checked
 
-			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e: any) => {
-				console.error('Failed to set collection enabled state', e)
+			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e) => {
+				console.error('Failed to set collection enabled state', stringifyError(e))
 			})
 		},
 		[setEnabledMutation, collection.id]

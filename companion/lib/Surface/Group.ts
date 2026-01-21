@@ -18,6 +18,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type EventEmitter from 'node:events'
 import type { UpdateEvents } from './Types.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export class SurfaceGroup {
 	/**
@@ -413,8 +414,8 @@ export class SurfaceGroup {
 		let newValue = null
 		try {
 			newValue = validateGroupConfigValue(this.#pageStore, key, value)
-		} catch (e: any) {
-			this.#logger.warn(`Set config failed: ${e?.message ?? e}`)
+		} catch (e) {
+			this.#logger.warn(`Set config failed: ${stringifyError(e)}`)
 			return 'invalid value'
 		}
 

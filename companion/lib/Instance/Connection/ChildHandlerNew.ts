@@ -52,6 +52,7 @@ import type {
 } from './ChildHandlerApi.js'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -221,9 +222,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		try {
 			const res = await this.#ipcWrapper.sendWithCb('getConfigFields', {})
 			return res.fields
-		} catch (e: any) {
-			this.logger.warn('Error getting config fields: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
+		} catch (e) {
+			this.logger.warn('Error getting config fields: ' + stringifyError(e))
+			this.#sendToModuleLog('error', 'Error getting config fields: ' + stringifyError(e))
 
 			throw e
 		}
@@ -330,9 +331,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					assertNever(entity)
 					break
 			}
-		} catch (e: any) {
-			this.logger.warn('Error learning options: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error learning options: ' + e?.message)
+		} catch (e) {
+			this.logger.warn('Error learning options: ' + stringifyError(e))
+			this.#sendToModuleLog('error', 'Error learning options: ' + stringifyError(e))
 		}
 	}
 
@@ -380,9 +381,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				this.logger.warn(`Error executing action: ${message}`)
 				this.#sendToModuleLog('error', `Error executing action: ${message}`)
 			}
-		} catch (e: any) {
-			this.logger.warn(`Error executing action: ${e.message ?? e}`)
-			this.#sendToModuleLog('error', `Error executing action: ${e?.message}`)
+		} catch (e) {
+			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
+			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e)}`)
 
 			throw e
 		}
@@ -396,7 +397,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
-		} catch (e: any) {
+		} catch (e) {
 			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
 		}
 
@@ -562,7 +563,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
 			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, msg.presets)
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
 			throw new Error(`Failed to set Preset Definitions: ${e}`)
@@ -607,7 +608,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				delay,
 				msg.uniquenessId ?? undefined
 			)
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`Record action failed: ${e}`)
 		}
 	}
@@ -621,7 +622,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			if (failure) {
 				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): ${failure}`)
 			}
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}
 	}

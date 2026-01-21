@@ -24,6 +24,7 @@ import type {
 	SurfaceInstanceCollection,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export interface VisibleSurfaceInstancesState {
 	disabled: boolean
@@ -181,8 +182,8 @@ function SurfaceInstancesGroupHeaderContent({ collection }: { collection: Surfac
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const enabled = e.target.checked
 
-			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e: any) => {
-				console.error('Failed to set collection enabled state', e)
+			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e) => {
+				console.error('Failed to set collection enabled state', stringifyError(e))
 			})
 		},
 		[setEnabledMutation, collection.id]

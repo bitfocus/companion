@@ -54,6 +54,7 @@ import {
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 import { createHash } from 'node:crypto'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 /**
  * Interface for a handler that can process HID device scans.
@@ -489,8 +490,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			rescanUsb: publicProcedure.mutation(async () => {
 				try {
 					return this.triggerRefreshDevices()
-				} catch (e: any) {
-					return e.message
+				} catch (e) {
+					return stringifyError(e, true)
 				}
 			}),
 
@@ -733,8 +734,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							this.#updateEvents.emit(`groupConfig:${input.groupId}`, surfaceConfig.groupConfig)
 
 							return
-						} catch (e: any) {
-							throw new Error(`Failed to update value: ${e?.message ?? e}`)
+						} catch (e) {
+							throw new Error(`Failed to update value: ${stringifyError(e)}`)
 						}
 					}
 

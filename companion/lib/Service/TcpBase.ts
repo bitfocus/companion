@@ -1,3 +1,4 @@
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
 import { ServiceBase } from './Base.js'
 import net, { type Socket } from 'net'
@@ -64,8 +65,8 @@ export abstract class ServiceTcpBase extends ServiceBase {
 				this.server.listen(this.port, GLOBAL_BIND_ADDRESS)
 				this.currentState = true
 				this.logger.info('Listening on port ' + this.port)
-			} catch (e: any) {
-				this.logger.error(`Could not launch: ${e.message}`)
+			} catch (e) {
+				this.logger.error(`Could not launch: ${stringifyError(e)}`)
 			}
 		}
 	}
