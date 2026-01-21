@@ -126,8 +126,8 @@ export class VariablesAndExpressionParser {
 
 				// Track the variables referenced in this field
 				if (
-					!entityDefinition.optionsToMonitorForSubscribe ||
-					entityDefinition.optionsToMonitorForSubscribe.includes(field.id)
+					!entityDefinition.optionsToMonitorForInvalidations ||
+					entityDefinition.optionsToMonitorForInvalidations.includes(field.id)
 				) {
 					for (const variable of parsedValue.referencedVariableIds) {
 						referencedVariableIds.add(variable)
@@ -151,8 +151,8 @@ export class VariablesAndExpressionParser {
 
 				// Track the variables referenced in this field
 				if (
-					!entityDefinition.optionsToMonitorForSubscribe ||
-					entityDefinition.optionsToMonitorForSubscribe.includes(field.id)
+					!entityDefinition.optionsToMonitorForInvalidations ||
+					entityDefinition.optionsToMonitorForInvalidations.includes(field.id)
 				) {
 					for (const variable of parseResult.variableIds) {
 						referencedVariableIds.add(variable)

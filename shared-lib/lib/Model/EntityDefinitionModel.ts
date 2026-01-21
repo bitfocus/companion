@@ -9,10 +9,10 @@ export interface ClientEntityDefinition {
 	description: string | undefined
 	options: SomeCompanionInputField[]
 	/**
-	 * The options that should be monitored for triggering subscribes
+	 * The options that should be monitored for triggering invalidations
 	 * If null, all options are monitored
 	 */
-	optionsToMonitorForSubscribe: string[] | null
+	optionsToMonitorForInvalidations: string[] | null
 	feedbackType: FeedbackEntitySubType | null
 	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
 	hasLifecycleFunctions: boolean

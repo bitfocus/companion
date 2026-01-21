@@ -250,20 +250,20 @@ export class InternalController {
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 
-		const cloned: FeedbackEntityState = {
+		const feedbackState: FeedbackEntityState = {
 			controlId,
 			location,
 			referencedVariables: null,
 
 			entityModel: structuredClone(feedback),
 		}
-		this.#feedbacks.set(feedback.id, cloned)
+		this.#feedbacks.set(feedback.id, feedbackState)
 
 		this.#controlsController.updateFeedbackValues('internal', [
 			{
 				id: feedback.id,
 				controlId: controlId,
-				value: this.#feedbackGetValue(cloned),
+				value: this.#feedbackGetValue(feedbackState),
 			},
 		])
 	}
@@ -292,40 +292,42 @@ export class InternalController {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	#feedbackGetValue(feedback: FeedbackEntityState): CompanionFeedbackButtonStyleResult | VariableValue {
+	#feedbackGetValue(feedbackState: FeedbackEntityState): CompanionFeedbackButtonStyleResult | VariableValue {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Feedback,
 				'internal', // This is the internal instance code
-				feedback.entityModel.definitionId
+				feedbackState.entityModel.definitionId
 			)
 			if (!entityDefinition) {
 				// No definition found, so cannot evaluate
-				feedback.referencedVariables = null
+				feedbackState.referencedVariables = null
 
 				return undefined
 			}
 
-			const parser = this.#controlsController.createVariablesAndExpressionParser(feedback.controlId, null)
+			//
+
+			const parser = this.#controlsController.createVariablesAndExpressionParser(feedbackState.controlId, null)
 
 			// Parse the options if enabled
 			const { parsedOptions, referencedVariableIds } = entityDefinition.optionsSupportExpressions
-				? parser.parseEntityOptions(entityDefinition, feedback.entityModel.options)
+				? parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
 				: {
-						parsedOptions: feedback.entityModel.options,
+						parsedOptions: feedbackState.entityModel.options,
 						referencedVariableIds: new Set<string>(),
 					}
 
 			const executionFeedback: Complete<FeedbackForInternalExecution> = {
-				controlId: feedback.controlId,
-				location: feedback.location,
+				controlId: feedbackState.controlId,
+				location: feedbackState.location,
 
 				options: parsedOptions,
 
-				id: feedback.entityModel.id,
-				definitionId: feedback.entityModel.definitionId,
+				id: feedbackState.entityModel.id,
+				definitionId: feedbackState.entityModel.definitionId,
 			}
-			feedback.referencedVariables = referencedVariableIds
+			feedbackState.referencedVariables = referencedVariableIds
 
 			for (const fragment of this.#fragments) {
 				if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
@@ -340,7 +342,7 @@ export class InternalController {
 
 					if (value && typeof value === 'object' && 'referencedVariables' in value) {
 						for (const variable of value.referencedVariables) {
-							feedback.referencedVariables.add(variable)
+							feedbackState.referencedVariables.add(variable)
 						}
 
 						return value.value
@@ -351,13 +353,13 @@ export class InternalController {
 			}
 		} catch (e: any) {
 			this.#logger.warn(
-				`Feedback get value failed: ${JSON.stringify(feedback.entityModel)} - ${e?.message ?? e} ${e?.stack}`
+				`Feedback get value failed: ${JSON.stringify(feedbackState.entityModel)} - ${e?.message ?? e} ${e?.stack}`
 			)
 			return undefined
 		} finally {
 			// If there are no referenced variables, set to null
-			if (feedback.referencedVariables && feedback.referencedVariables.size === 0) {
-				feedback.referencedVariables = null
+			if (feedbackState.referencedVariables && feedbackState.referencedVariables.size === 0) {
+				feedbackState.referencedVariables = null
 			}
 		}
 
@@ -577,7 +579,7 @@ export class InternalController {
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
-						optionsToMonitorForSubscribe: action.optionsToMonitorForSubscribe || null,
+						optionsToMonitorForInvalidations: action.optionsToMonitorForInvalidations || null,
 					} satisfies Complete<ClientEntityDefinition>
 				}
 			}
@@ -606,8 +608,8 @@ export class InternalController {
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 
-						// Feedbacks don't have a concept of subscribe
-						optionsToMonitorForSubscribe: [],
+						// Always monitor everything
+						optionsToMonitorForInvalidations: null,
 					} satisfies Complete<ClientEntityDefinition>
 				}
 			}

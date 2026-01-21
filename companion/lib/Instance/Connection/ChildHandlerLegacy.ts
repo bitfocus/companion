@@ -742,7 +742,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				label: rawAction.name,
 				description: rawAction.description,
 				options: options,
-				optionsToMonitorForSubscribe: options.map((o) => o.id).filter((o) => !optionsToIgnoreForSubscribeSet.has(o)),
+				optionsToMonitorForInvalidations: options
+					.map((o) => o.id)
+					.filter((o) => !optionsToIgnoreForSubscribeSet.has(o)),
 				hasLifecycleFunctions: !this.#entityManager || !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
@@ -780,7 +782,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				label: rawFeedback.name,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback, !!this.#entityManager),
-				optionsToMonitorForSubscribe: null, // All should be monitored
+				optionsToMonitorForInvalidations: null, // All should be monitored
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions

@@ -59,7 +59,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				label: rawAction.name,
 				description: rawAction.description,
 				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action),
-				optionsToMonitorForSubscribe: rawAction.optionsToMonitorForSubscribe || null,
+				optionsToMonitorForInvalidations: rawAction.optionsToMonitorForSubscribe || null,
 				hasLifecycleFunctions: !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
@@ -89,7 +89,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				label: rawFeedback.name,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback),
-				optionsToMonitorForSubscribe: null,
+				optionsToMonitorForInvalidations: null,
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
