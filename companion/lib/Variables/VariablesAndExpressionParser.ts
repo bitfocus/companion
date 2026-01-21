@@ -182,9 +182,9 @@ export class VariablesAndExpressionParser {
 			? optionsValue
 			: { value: optionsValue as any, isExpression: fieldType === 'expression' }
 
-		if (rawValue.isExpression) {
+		if (rawValue.isExpression || fieldType === 'expression') {
 			// Parse the expression
-			const parseResult = this.executeExpression(rawValue.value || '', undefined)
+			const parseResult = this.executeExpression(stringifyVariableValue(rawValue.value) ?? '', undefined)
 			if (!parseResult.ok) throw new Error(parseResult.error)
 
 			return {

@@ -427,6 +427,19 @@ describe('VariablesAndExpressionParser', () => {
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
 
+		it('should handle ExpressionOrValue with isExpression false, but as an expression', () => {
+			const parser = createParser()
+			const nonExpressionValue = {
+				value: '$(test:num) + 1',
+				isExpression: false,
+			}
+			// When fieldType is 'variables', it should parse variables
+			const result = parser.parseEntityOption(nonExpressionValue, 'expression')
+
+			expect(result.value).toBe(43)
+			expect(result.referencedVariableIds.has('test:num')).toBe(true)
+		})
+
 		it('should throw error on invalid expression', () => {
 			const parser = createParser()
 
