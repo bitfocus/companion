@@ -6,6 +6,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { useMemo, useRef } from 'react'
+import type { JsonValue } from 'type-fest'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -20,7 +21,7 @@ export interface IEntityEditorService {
 		ownerId: EntityOwner | null
 	) => Promise<string | null>
 
-	setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: any) => void
+	setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: JsonValue) => void
 	performDelete: (entityId: string, entityTypeLabel: string) => void
 	performDuplicate: (entityId: string) => void
 	setConnection: (entityId: string, connectionId: string) => void
@@ -42,7 +43,7 @@ export interface IEntityEditorService {
 }
 
 export interface IEntityEditorActionService {
-	setValue: (key: string, val: any) => void
+	setValue: (key: string, val: JsonValue) => void
 	performDelete: () => void
 	performDuplicate: () => void
 	setConnection: (connectionId: string) => void
@@ -312,7 +313,7 @@ export function useControlEntityService(
 
 	return useMemo(
 		() => ({
-			setValue: (key: string, val: any) => serviceFactory.setValue(entityId, entityRef.current, key, val),
+			setValue: (key: string, val: JsonValue) => serviceFactory.setValue(entityId, entityRef.current, key, val),
 			performDelete: () => serviceFactory.performDelete(entityId, entityTypeLabel),
 			performDuplicate: () => serviceFactory.performDuplicate(entityId),
 			setConnection: (connectionId: string) => serviceFactory.setConnection(entityId, connectionId),
@@ -325,7 +326,7 @@ export function useControlEntityService(
 				: undefined,
 			setInverted: (inverted: boolean) => serviceFactory.setInverted(entityId, inverted),
 			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),
-			setVariableValue: (value: any) => serviceFactory.setVariableValue(entityId, value),
+			setVariableValue: (value: JsonValue) => serviceFactory.setVariableValue(entityId, value),
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
 			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 		}),

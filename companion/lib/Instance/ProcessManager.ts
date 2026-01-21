@@ -15,7 +15,6 @@ import {
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { CompanionOptionValues } from '@companion-module/base'
 import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
@@ -27,6 +26,7 @@ import type { SurfaceModuleManifest } from '@companion-surface/host'
 import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
 import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
 import { PreserveEnvVars } from './Environment.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 
 /**
  * A backoff sleep strategy
@@ -806,7 +806,7 @@ export class InstanceProcessManager {
 	async connectionEntityLearnOptions(
 		entityModel: SomeEntityModel,
 		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
+	): Promise<ExpressionableOptionsObject | undefined | void> {
 		const connection = this.getConnectionChild(entityModel.connectionId)
 		if (!connection) return undefined
 

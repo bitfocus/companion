@@ -55,6 +55,7 @@ import type EventEmitter from 'node:events'
 import type { AppInfo } from '../Registry.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
 
 interface FeedbackEntityState {
 	controlId: string
@@ -311,7 +312,7 @@ export class InternalController {
 			const { parsedOptions, referencedVariableIds } = entityDefinition.optionsSupportExpressions
 				? parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
 				: {
-						parsedOptions: feedbackState.entityModel.options,
+						parsedOptions: convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options),
 						referencedVariableIds: new Set<string>(),
 					}
 
@@ -452,7 +453,7 @@ export class InternalController {
 			// Parse the options if enabled
 			const parsedOptions = entityDefinition.optionsSupportExpressions
 				? parser.parseEntityOptions(entityDefinition, action.rawOptions).parsedOptions
-				: action.rawOptions
+				: convertExpressionOptionsWithoutParsing(action.rawOptions)
 
 			const executionAction: Complete<ActionForInternalExecution> = {
 				options: parsedOptions,

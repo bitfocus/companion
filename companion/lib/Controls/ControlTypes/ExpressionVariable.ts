@@ -23,6 +23,8 @@ import type {
 import jsonPatch from 'fast-json-patch'
 import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import type { JsonValue } from 'type-fest'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 /**
  * Class for an expression variable.
@@ -214,16 +216,15 @@ export class ControlExpressionVariable
 	/**
 	 * Update an option field of this control
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	optionsSetField(key: string, value: any, forceSet?: boolean): boolean {
+	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
 		// Handle expression variable name changes
 		if (key === 'variableName') {
 			// Make sure the new name is valid
-			if (value != '' && !isLabelValid(value)) {
-				throw new Error(`Invalid variable name "${value}"`)
+			if (value != '' && (typeof value !== 'string' || !isLabelValid(value))) {
+				throw new Error(`Invalid variable name "${stringifyVariableValue(value)}"`)
 			}
 
 			const oldVariableName = this.options.variableName

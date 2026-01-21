@@ -26,8 +26,8 @@ import {
 	assertNever,
 	type OSCMetaArgument,
 	type CompanionHTTPRequest,
-	type CompanionOptionValues,
 	type LogLevel,
+	type ExpressionOptionsObject,
 } from '@companion-module/base'
 import {
 	EntityModelType,
@@ -51,7 +51,11 @@ import type {
 	RunActionExtras,
 } from './ChildHandlerApi.js'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	optionsObjectToExpressionOptions,
+	type ExpressionableOptionsObject,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
@@ -263,7 +267,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async entityLearnValues(
 		entity: SomeEntityModel,
 		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
+	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
 		const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
@@ -271,7 +275,14 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			this.connectionId,
 			entity.definitionId
 		)
-		const learnTimeout = entityDefinition?.learnTimeout
+		if (!entityDefinition) {
+			this.logger.warn(`Cannot learn values for unknown entity definition ${entity.definitionId}`)
+			return undefined
+		}
+		const learnTimeout = entityDefinition.learnTimeout
+
+		const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
+		const { parsedOptions } = parser.parseEntityOptions(entityDefinition, entity.options)
 
 		try {
 			switch (entity.type) {
@@ -283,7 +294,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								actionId: entity.definitionId,
-								options: entity.options,
+								options: parsedOptions,
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,
@@ -293,9 +304,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						learnTimeout
 					)
 
+					if (!msg.options) return undefined
+
 					return {
 						...entity.options,
-						...msg.options,
+						...optionsObjectToExpressionOptions(msg.options, false),
 					}
 				}
 				case EntityModelType.Feedback: {
@@ -308,7 +321,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								feedbackId: entity.definitionId,
-								options: entity.options,
+								options: parsedOptions,
 
 								isInverted: !!entity.isInverted,
 
@@ -322,9 +335,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						learnTimeout
 					)
 
+					if (!msg.options) return undefined
+
 					return {
 						...entity.options,
-						...msg.options,
+						...optionsObjectToExpressionOptions(msg.options, false),
 					}
 				}
 				default:
@@ -739,14 +754,14 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
 	}
 
-	async upgradeActions(actions: EntityManagerActionEntity[], currentUpgradeIndex: number) {
+	async upgradeActions(actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActions', {
 				actions: actions.map((act) => ({
 					id: act.entity.id,
 					controlId: act.controlId,
 					actionId: act.entity.definitionId,
-					options: act.entity.options,
+					options: act.entity.options as ExpressionOptionsObject, // TODO - remove cast
 
 					upgradeIndex: act.entity.upgradeIndex ?? null,
 					disabled: !!act.entity.disabled,
@@ -767,14 +782,14 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 			})
 	}
 
-	async upgradeFeedbacks(feedbacks: EntityManagerFeedbackEntity[], currentUpgradeIndex: number) {
+	async upgradeFeedbacks(feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeFeedbacks', {
 				feedbacks: feedbacks.map((fb) => ({
 					id: fb.entity.id,
 					controlId: fb.controlId,
 					feedbackId: fb.entity.definitionId,
-					options: fb.entity.options,
+					options: fb.entity.options as ExpressionOptionsObject, // TODO - remove cast
 
 					isInverted: !!fb.entity.isInverted,
 

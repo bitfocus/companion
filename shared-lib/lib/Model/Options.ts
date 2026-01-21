@@ -1,5 +1,6 @@
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
 import type { JsonValue } from 'type-fest'
+import type { CompanionOptionValues } from '@companion-module/host'
 
 export type CompanionColorPresetValue =
 	| string
@@ -248,10 +249,40 @@ export type SomeCompanionInputField = ExtendedInputField | SomeCompanionConfigIn
 
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 export type ExpressionableOptionsObject = {
-	[key: string]: ExpressionOrValue<JsonValue> | undefined
+	[key: string]: ExpressionOrValue<JsonValue | undefined> | undefined
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function isExpressionOrValue(input: any): input is ExpressionOrValue<any> {
 	return !!input && typeof input === 'object' && 'isExpression' in input && typeof input.isExpression === 'boolean'
+}
+
+export function optionsObjectToExpressionOptions(
+	options: CompanionOptionValues,
+	allowExpressions = true
+): ExpressionableOptionsObject {
+	const res: ExpressionableOptionsObject = {}
+
+	for (const [key, val] of Object.entries(options)) {
+		res[key] = allowExpressions && isExpressionOrValue(val) ? val : { value: val, isExpression: false }
+	}
+
+	return res
+}
+
+export function convertExpressionOptionsWithoutParsing(options: ExpressionableOptionsObject): CompanionOptionValues {
+	const res: CompanionOptionValues = {}
+
+	for (const [key, val] of Object.entries(options)) {
+		res[key] = val?.value
+	}
+
+	return res
+}
+
+export function exprVal<T extends JsonValue>(value: T): ExpressionOrValue<T> {
+	return { value: value, isExpression: false }
+}
+export function exprExpr(value: string): ExpressionOrValue<any> {
+	return { value: value, isExpression: true }
 }

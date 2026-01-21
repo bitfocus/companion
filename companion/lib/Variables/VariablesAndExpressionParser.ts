@@ -17,8 +17,12 @@ import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/E
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { CompanionOptionValues } from '@companion-module/base'
-import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariablesBlinker } from './VariablesBlinker.js'
+import {
+	isExpressionOrValue,
+	type ExpressionableOptionsObject,
+	type ExpressionOrValue,
+} from '@companion-app/shared/Model/Options.js'
 
 /**
  * A class to parse and execute expressions with variables
@@ -100,16 +104,12 @@ export class VariablesAndExpressionParser {
 	 * Note: this will drop any options that are not defined in the entity definition.
 	 */
 	parseEntityOptions(
-		entityDefinition: ClientEntityDefinition | undefined,
-		options: CompanionOptionValues
+		entityDefinition: ClientEntityDefinition,
+		options: ExpressionableOptionsObject
 	): {
 		parsedOptions: CompanionOptionValues
 		referencedVariableIds: Set<string>
 	} {
-		if (!entityDefinition)
-			// If we don't know what fields need parsing, we can't do anything
-			return { parsedOptions: options, referencedVariableIds: new Set() }
-
 		const parsedOptions: CompanionOptionValues = {}
 		const referencedVariableIds = new Set<string>()
 
@@ -145,13 +145,13 @@ export class VariablesAndExpressionParser {
 			for (const field of entityDefinition.options) {
 				if (field.type !== 'textinput' || !field.useVariables) {
 					// Field doesn't support variables, pass unchanged
-					parsedOptions[field.id] = options[field.id]
+					parsedOptions[field.id] = options[field.id]?.value
 					continue
 				}
 
 				// Field needs parsing
 				// Note - we don't need to care about the granularity given in `useVariables`,
-				const parseResult = this.parseVariables(stringifyVariableValue(options[field.id]) ?? '')
+				const parseResult = this.parseVariables(stringifyVariableValue(options[field.id]?.value) ?? '')
 				parsedOptions[field.id] = parseResult.text
 
 				// Track the variables referenced in this field
@@ -176,14 +176,14 @@ export class VariablesAndExpressionParser {
 	 * @returns The value and the variables it references
 	 */
 	parseEntityOption(
-		optionsValue: JsonValue | ExpressionOrValue<JsonValue> | undefined,
+		optionsValue: JsonValue | ExpressionOrValue<JsonValue | undefined> | undefined,
 		fieldType: 'expression' | 'variables' | 'generic'
 	): {
-		value: JsonValue
+		value: JsonValue | undefined
 		referencedVariableIds: ReadonlySet<string>
 	} {
 		// Get the value as an ExpressionOrValue
-		const rawValue: ExpressionOrValue<JsonValue> = isExpressionOrValue(optionsValue)
+		const rawValue: ExpressionOrValue<JsonValue | undefined> = isExpressionOrValue(optionsValue)
 			? optionsValue
 			: { value: optionsValue as any, isExpression: fieldType === 'expression' }
 

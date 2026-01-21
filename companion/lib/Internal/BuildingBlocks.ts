@@ -219,7 +219,9 @@ export class InternalBuildingBlocks
 	 */
 	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
 		if (feedback.definitionId === 'logic_operator') {
-			switch (feedback.options.operation) {
+			switch (
+				feedback.options.operation?.value // This can't be an expression
+			) {
 				case 'and':
 					return booleanAnd(!!feedback.isInverted, childValues)
 				case 'or':

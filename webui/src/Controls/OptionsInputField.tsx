@@ -21,6 +21,7 @@ import { validateInputValue } from '~/Helpers/validateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import type { JsonValue } from 'type-fest'
 
 interface OptionsInputFieldProps {
 	connectionId: string
@@ -61,22 +62,22 @@ export const OptionsInputField = observer(function OptionsInputField({
 	localVariablesStore,
 	fieldSupportsExpression: fieldsSupportExpressions,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
-	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
+	const checkValid = useCallback((value: JsonValue) => validateInputValue(option, value) === undefined, [option])
 	const setValue2 = useCallback(
-		(val: any) =>
+		(val: JsonValue) =>
 			setValue(
 				option.id,
 				fieldsSupportExpressions
 					? ({
 							isExpression: false,
 							value: val,
-						} satisfies ExpressionOrValue<any>)
+						} satisfies ExpressionOrValue<JsonValue>)
 					: val
 			),
 		[option.id, setValue, fieldsSupportExpressions]
 	)
 
-	const value = fieldsSupportExpressions ? (rawValue as ExpressionOrValue<any>)?.value : rawValue
+	const value = fieldsSupportExpressions ? (rawValue as ExpressionOrValue<JsonValue>)?.value : rawValue
 
 	if (!option) {
 		return <p>Bad option</p>

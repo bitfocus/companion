@@ -16,6 +16,7 @@ import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import type { JsonValue } from 'type-fest'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -146,7 +147,7 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	const setValueInner = useCallback(
-		(key: string, value: any) => {
+		(key: string, value: JsonValue) => {
 			console.log('set', controlId, key, value)
 			setOptionsFieldMutation
 				.mutateAsync({

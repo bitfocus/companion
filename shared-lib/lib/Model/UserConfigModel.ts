@@ -1,4 +1,4 @@
-export interface UserConfigModel {
+export type UserConfigModel = {
 	setup_wizard: number
 	detailed_data_collection: boolean
 

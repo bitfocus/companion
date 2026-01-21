@@ -15,7 +15,7 @@ import {
 	RotationConfigField,
 } from './CommonConfigFields.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { ReadonlyDeep } from 'type-fest'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../Resources/Util.js'
@@ -38,7 +38,7 @@ interface SatelliteInputVariableInfo {
 interface SatelliteOutputVariableInfo {
 	id: string
 	lastReferencedVariables: ReadonlySet<string> | null
-	lastValue: any
+	lastValue: JsonValue | undefined
 	triggerUpdate?: () => void
 }
 

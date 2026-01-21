@@ -17,6 +17,8 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { JsonValue } from 'type-fest'
 
 export interface ControlEntityListPoolProps {
 	instanceDefinitions: InstanceDefinitionsForEntity
@@ -430,8 +432,12 @@ export abstract class ControlEntityListPoolBase {
 	 * @param key the key/name of the property
 	 * @param value the new value
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	entrySetOptions(listId: SomeSocketEntityLocation, id: string, key: string, value: any): boolean {
+	entrySetOptions(
+		listId: SomeSocketEntityLocation,
+		id: string,
+		key: string,
+		value: ExpressionOrValue<JsonValue>
+	): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 
@@ -525,8 +531,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param id The id of the entity
 	 * @param value The new value for the variable
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: any): boolean {
+	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: JsonValue | undefined): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 

@@ -15,6 +15,8 @@ import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/s
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { CompanionOptionValues } from '@companion-module/host'
+import { optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
 
 export interface ActionRecorderEvents {
 	sessions_changed: [sessionIds: string[]]
@@ -392,7 +394,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	receiveAction(
 		connectionId: string,
 		actionId: string,
-		options: Record<string, any>,
+		options: CompanionOptionValues,
 		delay: number,
 		uniquenessId: string | undefined
 	): void {
@@ -412,7 +414,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 					id: nanoid(),
 					connectionId: connectionId,
 					definitionId: actionId,
-					options: options,
+					options: optionsObjectToExpressionOptions(options),
 
 					uniquenessId,
 					upgradeIndex: currentUpgradeIndex,
@@ -423,7 +425,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 					connectionId: 'internal',
 					definitionId: 'wait',
 					options: {
-						time: delay,
+						time: { isExpression: true, value: delay + '' },
 					},
 					uniquenessId: undefined,
 					upgradeIndex: undefined,

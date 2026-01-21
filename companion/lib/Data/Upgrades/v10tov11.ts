@@ -681,7 +681,16 @@ function fixupEntity(entity: SomeEntityModelV10): SomeEntityModelV10 | null {
 		}
 	}
 
-	// TODO ensure everything is now an expression
+	// ensure everything, for all modules is now an expression
+	for (const [key, value] of Object.entries(entity.options)) {
+		if (!isExpressionOrValue(value)) {
+			entity.options[key] = {
+				isExpression: false,
+				value: value,
+			} satisfies ExpressionOrValue<any>
+			changed = true
+		}
+	}
 
 	return changed ? entity : null
 }

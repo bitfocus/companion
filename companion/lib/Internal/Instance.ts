@@ -500,7 +500,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		for (const feedback of feedbacks) {
 			try {
 				if (feedback.type === 'instance_status') {
-					if (feedback.options.instance_id !== 'all') {
+					if (feedback.options.instance_id?.value !== 'all') {
 						visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)
 					}
 				} else if (feedback.type === 'instance_custom_state') {
