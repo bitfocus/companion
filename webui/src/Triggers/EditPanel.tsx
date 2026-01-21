@@ -165,18 +165,15 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm onSubmit={PreventDefaultHandler}>
-				<CForm className="row flex-form">
-					<CCol xs={12}>
-						<CFormLabel>Name</CFormLabel>
-						<p>
-							<CInputGroup>
-								<TextInputField setValue={setName} value={options.name} />
-								<TestActionsButton controlId={controlId} hidden={!options} />
-							</CInputGroup>
-						</p>
-					</CCol>
-				</CForm>
+			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
+				<CCol xs={12}>
+					<CFormLabel>Name</CFormLabel>
+					<br />
+					<CInputGroup>
+						<TextInputField setValue={setName} value={options.name} />
+						<TestActionsButton controlId={controlId} hidden={!options} />
+					</CInputGroup>
+				</CCol>
 			</CForm>
 		</CCol>
 	)
