@@ -95,15 +95,9 @@ table.variables-table,
 	}
 
 	.entitylist-dragging {
-		// affects both the layer in the table and the layer that floats with the cursor
-		// (.entity-list-drag-layer is technically the top layer, but trying to style it separately didn't work as expected)
-		background-color: #e8d4ff; //or var(--cui-primary-bg-subtle), which is similar, but I'm concerned that we've changed primary to red, so not having changed primary-bg-subtle is a bit of an oversight that could be "corrected" in the future.
-		opacity: 0.75;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-		border-radius: 4px;
-		// outline with negative offset (instead of border) ensures that the other elements aren't affected
-		outline: 2px solid rgba(0, 0, 0, 0.5);
-		outline-offset: -2px;
+		@include dragging-style();
+		// keep the top sharp (dragging actions in v4.3 work differently than other lists)
+		filter: blur(0);
 	}
 
 	.entitylist-dropzone {
@@ -197,6 +191,12 @@ table.variables-table,
 			flex-wrap: nowrap;
 		}
 	}
+}
+
+// apparently this excludes .entity-list-drag-layer
+.entity-list .entitylist-dragging {
+	// blurs the bottom only (blurs the top one too if dragging in an action group)
+	filter: blur(1px);
 }
 
 .entity-list {

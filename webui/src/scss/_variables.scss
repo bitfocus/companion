@@ -52,3 +52,16 @@ $header-border: (
 );
 
 $variable-padding: 1px 3px 0px;
+
+@mixin dragging-style() {
+	// affects both the layer in the table and the layer that floats with the cursor
+	// (.entity-list-drag-layer is technically the top layer, but trying to style it separately didn't work as expected)
+	background-color: #e8d4ff30; //or var(--cui-primary-bg-subtle), which is similar, but I'm concerned that we've changed primary to red, so not having changed primary-bg-subtle is a bit of an oversight that could be "corrected" in the future.
+	opacity: 0.75;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	// outline with negative offset (instead of border) ensures that the other elements aren't affected
+	outline: 2px solid rgba(0, 0, 0, 0.5);
+	outline-offset: -2px;
+	border-radius: 4px;
+	filter: blur(1px);
+}

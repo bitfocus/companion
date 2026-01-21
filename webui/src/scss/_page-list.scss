@@ -1,6 +1,8 @@
+@use 'variables' as *;
+
 .pages-list-table {
-	.list-dragging {
-		opacity: 0.5;
+	.entitylist-dragging {
+		@include dragging-style();
 	}
 
 	td.td-reorder {
