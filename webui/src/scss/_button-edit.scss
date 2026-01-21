@@ -95,6 +95,8 @@ table.variables-table,
 	}
 
 	.entitylist-dragging {
+		// affects both the layer in the table and the layer that floats with the cursor
+		// (.entity-list-drag-layer is technically the top layer, but trying to style it separately didn't work as expected)
 		@include dragging-style();
 		// keep the top sharp (dragging actions in v4.3 work differently than other lists)
 		filter: blur(0);
@@ -198,6 +200,16 @@ table.variables-table,
 	// blurs the bottom only (blurs the top one too if dragging in an action group)
 	filter: blur(1px);
 }
+
+// .entity-list .entity-list .entitylist-dragging {
+// 	// makes the bottom sharp in an action group
+// 	filter: blur(0px);
+// }
+
+// .entity-list .entity-list .entity-list-drag-layer {
+// 	// doesn't do anything
+// 	filter: blur(0px);
+// }
 
 .entity-list {
 	background-color: #f0f0f0;
