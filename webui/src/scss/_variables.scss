@@ -56,7 +56,6 @@ $variable-padding: 1px 3px 0px;
 @mixin dragging-style() {
 	// clearly highlight the item being dragged:
 	background-color: #e8d4ff30; //or var(--cui-primary-bg-subtle), which is similar, but I'm concerned that we've changed primary to red, so not having changed primary-bg-subtle is a bit of an oversight that could be "corrected" in the future.
-	opacity: 0.75;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 	// outline with negative offset (instead of border) ensures that the other elements aren't affected
 	outline: 2px solid rgba(0, 0, 0, 0.5);

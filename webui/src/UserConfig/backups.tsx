@@ -104,7 +104,7 @@ const BackupsTable = observer(function BackupsTable({ editRule }: BackupsTablePr
 	)
 
 	return (
-		<table className="table-tight table-responsive-sm" style={{ marginBottom: 10 }}>
+		<table className="table-tight table-responsive-sm collections-nesting-table" style={{ marginBottom: 10 }}>
 			<tbody>
 				{backupRules.length > 0 ? (
 					backupRules.map((rule) => (
@@ -207,10 +207,10 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 	return (
 		<tr
 			ref={ref}
-			className={classNames({
-				'connectionlist-dragging': isDragging,
-				'connectionlist-notdragging': !isDragging,
-				'connectionlist-selected': isSelected,
+			className={classNames('collections-nesting-table-row-item', {
+				'row-dragging': isDragging,
+				'row-notdragging': !isDragging,
+				'row-selected': isSelected,
 			})}
 		>
 			<td ref={drag} className="td-reorder">
