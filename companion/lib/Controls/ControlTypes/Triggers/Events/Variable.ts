@@ -2,6 +2,7 @@ import LogController, { type Logger } from '../../../../Log/Controller.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 interface VariableChangeEvent {
 	id: string
@@ -79,7 +80,7 @@ export class TriggersEventVariables {
 	 * Get a description for a variable_changed event
 	 */
 	getVariablesChangedDescription(event: EventInstance): string {
-		return `When <strong>$(${event.options.variableId})</strong> changes`
+		return `When <strong>$(${stringifyVariableValue(event.options.variableId) ?? 'Unknown'})</strong> changes`
 	}
 
 	/**

@@ -204,8 +204,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			}
 
 			for (const opt of definition.options) {
-				// @ts-expect-error mismatch in key type
-				event.options[opt.id] = structuredClone(opt.default)
+				event.options[opt.id] = structuredClone((opt as any).default)
 			}
 
 			return event

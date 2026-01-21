@@ -749,7 +749,6 @@ function convertSimplePropertyToExpressionValue(
 	options: CompanionOptionValues,
 	key: string,
 	oldKey?: string,
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	defaultValue?: any
 ): boolean {
 	if (!isExpressionOrValue(options[key])) {

@@ -25,6 +25,7 @@ import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 /**
  * Class for an interval trigger.
@@ -430,7 +431,7 @@ export class ControlTrigger
 					this.triggerRedraw() // Recheck the condition
 					break
 				case 'variable_changed':
-					this.#variablesEvents.setVariableChanged(event.id, String(event.options.variableId))
+					this.#variablesEvents.setVariableChanged(event.id, stringifyVariableValue(event.options.variableId) ?? '')
 					break
 				case 'computer_locked':
 					this.#miscEvents.setComputerLocked(event.id, true)
