@@ -7,7 +7,7 @@ import {
 import React, { useCallback, useContext } from 'react'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
-import { CAlert, CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
+import { CAlert, CCol, CForm, CFormLabel } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { OptionsInputField } from '../OptionsInputField.js'
@@ -28,6 +28,8 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
 import { LoadingBar } from '~/Resources/Loading.js'
+import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { JsonValue } from 'type-fest'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -53,6 +55,13 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
 	const optionVisibility = useOptionsVisibility(entityDefinition?.options, entity?.options)
+
+	const setInverted = useCallback(
+		(_k: string, inverted: ExpressionOrValue<JsonValue | undefined>) => {
+			service.setInverted(inverted.isExpression ? inverted : { isExpression: false, value: !!inverted.value })
+		},
+		[service]
+	)
 
 	return (
 		<>
@@ -102,19 +111,18 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						entityDefinition.feedbackType === FeedbackEntitySubType.Boolean &&
 						entityDefinition.showInvert !== false && (
 							<MyErrorBoundary>
-								<CFormLabel htmlFor="colFormInvert" className="col-sm-4 col-form-label col-form-label-sm">
-									<InlineHelp help="If checked, the behaviour of this feedback is inverted">Invert</InlineHelp>
-								</CFormLabel>
-								<CCol sm={8}>
-									<CFormSwitch
-										name="colFormInvert"
-										color="success"
-										checked={!!('isInverted' in entity && entity.isInverted)}
-										size="xl"
-										onChange={(e) => service.setInverted(e.currentTarget.checked)}
-										disabled={readonly}
-									/>
-								</CCol>
+								<OptionsInputField
+									isLocatedInGrid={!!location}
+									entityType={entity.type}
+									connectionId={entity.connectionId}
+									option={FeedbackInvertOption}
+									value={'isInverted' in entity ? entity.isInverted : undefined}
+									setValue={setInverted}
+									visibility={true}
+									readonly={readonly}
+									localVariablesStore={localVariablesStore}
+									fieldSupportsExpression={entityDefinition.optionsSupportExpressions}
+								/>
 							</MyErrorBoundary>
 						)}
 
@@ -236,4 +244,13 @@ function LocalVariableCurrentValue({ controlId, name }: { controlId: string; nam
 	}
 
 	return <VariableValueDisplay value={sub.data.value} onCopied={onCopied} />
+}
+
+const FeedbackInvertOption: CompanionInputFieldCheckboxExtended = {
+	id: 'isInverted',
+	type: 'checkbox',
+	default: false,
+	label: 'Invert',
+	tooltip: 'If checked, the behaviour of this feedback is inverted',
+	displayToggle: true,
 }

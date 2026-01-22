@@ -6,7 +6,11 @@ import { EntityModelType, zodEntityLocation, type EntityOwner } from '@companion
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import LogController from '../Log/Controller.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import { ExpressionOrJsonValueSchema, JsonValueSchema } from '@companion-app/shared/Model/Options.js'
+import {
+	createExpressionOrValueSchema,
+	ExpressionOrJsonValueSchema,
+	JsonValueSchema,
+} from '@companion-app/shared/Model/Options.js'
 
 const zodEntityOwner: z.ZodSchema<EntityOwner> = z.object({
 	parentId: z.string(),
@@ -200,7 +204,7 @@ export function createEntitiesTrpcRouter(
 					controlId: z.string(),
 					entityLocation: zodEntityLocation,
 					entityId: z.string(),
-					isInverted: z.boolean(),
+					isInverted: createExpressionOrValueSchema(z.boolean()),
 				})
 			)
 			.mutation(async ({ input }) => {

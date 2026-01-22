@@ -480,14 +480,14 @@ export abstract class ControlEntityListPoolBase {
 	 * @param id the id of the entity
 	 * @param isInverted the new value
 	 */
-	entitySetInverted(listId: SomeSocketEntityLocation, id: string, isInverted: boolean): boolean {
+	entitySetInverted(listId: SomeSocketEntityLocation, id: string, isInverted: ExpressionOrValue<boolean>): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 
 		const entity = entityList.findById(id)
 		if (!entity) return false
 
-		entity.setInverted(!!isInverted)
+		entity.setInverted(isInverted)
 
 		this.tryTriggerLocalVariablesChanged(entity)
 

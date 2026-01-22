@@ -28,7 +28,7 @@ import { EventEmitter } from 'node:events'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/PresetUtils.js'
-import { exprExpr, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -174,7 +174,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					...entity,
 					type: EntityModelType.Feedback,
 					style: {},
-					isInverted: false,
+					isInverted: exprVal(false),
 				}
 
 				if (/*!booleanOnly &&*/ definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
@@ -283,7 +283,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				options: {
 					expression: exprExpr('true'),
 				},
-				isInverted: false,
+				isInverted: exprVal(false),
 				style: definition.previewStyle,
 				upgradeIndex: undefined,
 			}

@@ -107,7 +107,7 @@ export function convertPresetFeedbacksToEntities(
 		connectionId: connectionId,
 		definitionId: feedback.feedbackId,
 		options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, false)),
-		isInverted: !!feedback.isInverted,
+		isInverted: exprVal(!!feedback.isInverted),
 		style: structuredClone(feedback.style),
 		headline: feedback.headline,
 		upgradeIndex: connectionUpgradeIndex,

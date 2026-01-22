@@ -81,6 +81,7 @@ function translateCheckboxField(field: CompanionInputFieldCheckbox): Complete<Co
 		...translateCommonFields(field),
 		type: 'checkbox',
 		default: field.default,
+		displayToggle: false,
 	}
 }
 function translateNumberField(field: CompanionInputFieldNumber): Complete<CompanionInputFieldNumberExtended> {

@@ -1,7 +1,7 @@
 import z from 'zod'
 import type { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
-import type { ExpressionableOptionsObject } from './Options.js'
+import type { ExpressionableOptionsObject, ExpressionOrValue } from './Options.js'
 import type { VariableValue } from './Variables.js'
 import type { CompanionFeedbackButtonStyleResult } from '@companion-module/host'
 
@@ -47,7 +47,7 @@ export interface FeedbackEntityModel extends EntityModelBase {
 	readonly type: EntityModelType.Feedback
 
 	/** Boolean feedbacks can be inverted */
-	isInverted?: boolean
+	isInverted?: ExpressionOrValue<boolean>
 	/** If in a list that produces local-variables, this entity value will be exposed under this name */
 	variableName?: string
 	/** When in a list that supports advanced feedbacks, this style can be set */
