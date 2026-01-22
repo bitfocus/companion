@@ -89,6 +89,14 @@ function fixupEntitiesOnControl(control: any): boolean {
 		}
 	}
 
+	// Trigger Events
+	for (const eventObj of control.events ?? []) {
+		if (eventObj.type === 'button_depress') {
+			eventObj.type = 'button_release'
+			changed = true
+		}
+	}
+
 	return changed
 }
 

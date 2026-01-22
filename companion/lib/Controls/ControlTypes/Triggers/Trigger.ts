@@ -321,7 +321,7 @@ export class ControlTrigger
 					case 'button_press':
 						eventStrings.push('On any button press')
 						break
-					case 'button_depress': // button release
+					case 'button_release':
 						eventStrings.push('On any button release')
 						break
 					case 'condition_true':
@@ -419,7 +419,7 @@ export class ControlTrigger
 				case 'button_press':
 					this.#miscEvents.setControlPress(event.id, true)
 					break
-				case 'button_depress': // button release
+				case 'button_release':
 					this.#miscEvents.setControlPress(event.id, false)
 					break
 				case 'condition_true':
@@ -470,7 +470,7 @@ export class ControlTrigger
 				this.#miscEvents.clearClientConnect(event.id)
 				break
 			case 'button_press':
-			case 'button_depress': // button release
+			case 'button_release':
 				this.#miscEvents.clearControlPress(event.id)
 				break
 			case 'condition_true':

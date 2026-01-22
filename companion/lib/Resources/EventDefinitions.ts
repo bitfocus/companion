@@ -168,7 +168,7 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 		name: 'On any button press',
 		options: [],
 	},
-	button_depress: {
+	button_release: {
 		name: 'On any button release',
 		options: [],
 	},
