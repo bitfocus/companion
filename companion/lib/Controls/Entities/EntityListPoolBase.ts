@@ -432,11 +432,11 @@ export abstract class ControlEntityListPoolBase {
 	 * @param key the key/name of the property
 	 * @param value the new value
 	 */
-	entrySetOptions(
+	entitySetOption(
 		listId: SomeSocketEntityLocation,
 		id: string,
 		key: string,
-		value: ExpressionOrValue<JsonValue>
+		value: ExpressionOrValue<JsonValue | undefined>
 	): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false

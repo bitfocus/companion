@@ -105,7 +105,7 @@ export interface ControlWithEvents extends ControlBase<any> {
 	 * @param key the key/name of the property
 	 * @param value the new value
 	 */
-	eventSetOptions(id: string, key: string, value: JsonValue): boolean
+	eventSetOptions(id: string, key: string, value: JsonValue | undefined): boolean
 }
 
 export interface ControlWithoutEvents extends ControlBase<any> {
@@ -137,7 +137,7 @@ export interface ControlWithOptions extends ControlBase<any> {
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue, forceSet?: boolean): boolean
+	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean
 }
 
 export interface ControlWithoutOptions extends ControlBase<any> {

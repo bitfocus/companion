@@ -16,7 +16,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { CompanionOptionValues } from '@companion-module/host'
-import { optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
+import { ExpressionOrJsonValueSchema, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
 
 export interface ActionRecorderEvents {
 	sessions_changed: [sessionIds: string[]]
@@ -215,7 +215,14 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 						}),
 
 					setValue: publicProcedure
-						.input(z.object({ sessionId: z.string(), actionId: z.string(), key: z.string(), value: z.any() }))
+						.input(
+							z.object({
+								sessionId: z.string(),
+								actionId: z.string(),
+								key: z.string(),
+								value: ExpressionOrJsonValueSchema,
+							})
+						)
 						.mutation(async ({ input }) => {
 							if (!this.#currentSession || this.#currentSession.id !== input.sessionId)
 								throw new Error(`Invalid session: ${input.sessionId}`)

@@ -389,7 +389,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set an option for this entity
 	 */
-	setOption(key: string, value: ExpressionOrValue<JsonValue>): void {
+	setOption(key: string, value: ExpressionOrValue<JsonValue | undefined>): void {
 		this.#data.options[key] = value
 
 		// Remove from cached feedback values

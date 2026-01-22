@@ -56,6 +56,7 @@ import { createHash } from 'node:crypto'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { JsonValue } from 'type-fest'
+import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 
 /**
  * Interface for a handler that can process HID device scans.
@@ -714,7 +715,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					z.object({
 						groupId: z.string(),
 						key: z.string(),
-						value: z.any(),
+						value: JsonValueSchema.optional(),
 					})
 				)
 				.mutation(async ({ input }) => {
@@ -849,7 +850,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					z.object({
 						surfaceId: z.string(),
 						key: z.string(),
-						value: z.any(),
+						value: JsonValueSchema.optional(),
 					})
 				)
 				.mutation(async ({ input }) => {

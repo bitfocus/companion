@@ -2,6 +2,7 @@ import z from 'zod'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
+import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createEventsTrpcRouter(
@@ -111,7 +112,7 @@ export function createEventsTrpcRouter(
 					controlId: z.string(),
 					eventId: z.string(),
 					key: z.string(),
-					value: z.any(),
+					value: JsonValueSchema.optional(),
 				})
 			)
 			.mutation(async ({ input }) => {

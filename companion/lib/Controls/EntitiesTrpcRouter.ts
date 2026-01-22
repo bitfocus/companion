@@ -6,6 +6,7 @@ import { EntityModelType, zodEntityLocation, type EntityOwner } from '@companion
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import LogController from '../Log/Controller.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { ExpressionOrJsonValueSchema, JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 
 const zodEntityOwner: z.ZodSchema<EntityOwner> = z.object({
 	parentId: z.string(),
@@ -159,7 +160,7 @@ export function createEntitiesTrpcRouter(
 					entityLocation: zodEntityLocation,
 					entityId: z.string(),
 					key: z.string(),
-					value: z.any(),
+					value: ExpressionOrJsonValueSchema,
 				})
 			)
 			.mutation(async ({ input }) => {
@@ -170,7 +171,7 @@ export function createEntitiesTrpcRouter(
 
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
-				return control.entities.entrySetOptions(entityLocation, entityId, key, value)
+				return control.entities.entitySetOption(entityLocation, entityId, key, value)
 			}),
 
 		setConnection: publicProcedure
@@ -304,7 +305,7 @@ export function createEntitiesTrpcRouter(
 					controlId: z.string(),
 					entityLocation: zodEntityLocation,
 					entityId: z.string(),
-					value: z.any(),
+					value: JsonValueSchema.optional(),
 				})
 			)
 			.mutation(async ({ input }) => {
