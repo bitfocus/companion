@@ -230,6 +230,8 @@ export interface CompanionInputFieldCheckboxExtended extends CompanionInputField
 	type: 'checkbox'
 	/** The default value */
 	default: boolean
+	/** Display as a toggle */
+	displayToggle?: boolean
 }
 export interface CompanionInputFieldCustomVariableExtended extends CompanionInputFieldBaseExtended {
 	type: 'custom-variable'

@@ -176,6 +176,7 @@ function translateCheckboxField(
 		type: 'checkbox',
 		default: field.default,
 		width: width,
+		displayToggle: false,
 	}
 }
 function translateColorPickerField(

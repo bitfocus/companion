@@ -75,6 +75,7 @@ import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import {
 	convertExpressionOptionsWithoutParsing,
+	exprVal,
 	optionsObjectToExpressionOptions,
 	type ExpressionableOptionsObject,
 	type SomeCompanionInputField,
@@ -307,7 +308,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					feedbackId: entityModel.definitionId,
 					options: convertExpressionOptionsWithoutParsing(entityModel.options) as OptionsObject, // This is fine, there should be no expressions here
 
-					isInverted: !!entityModel.isInverted,
+					isInverted: !!entityModel.isInverted?.value, // This is fine, there should be no expressions here
 
 					upgradeIndex: entityModel.upgradeIndex ?? null,
 					disabled: !!entityModel.disabled,
@@ -423,7 +424,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					feedbackId: feedback.definitionId,
 					options: convertExpressionOptionsWithoutParsing(feedback.options) as OptionsObject, // This is fine, there should be no expressions here
 
-					isInverted: !!feedback.isInverted,
+					isInverted: !!feedback.isInverted?.value, // This is fine, there should be no expressions here
 
 					image: control?.getBitmapSize() ?? undefined,
 
@@ -485,7 +486,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 								feedbackId: entity.definitionId,
 								options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
-								isInverted: !!entity.isInverted,
+								isInverted: !!entity.isInverted?.value, // This is fine, there should be no expressions here
 
 								image: control?.getBitmapSize() ?? undefined,
 
@@ -991,7 +992,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 								definitionId: feedback.feedbackId,
 								options: optionsObjectToExpressionOptions(feedback.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
 								style: feedback.style,
-								isInverted: feedback.isInverted,
+								isInverted: exprVal(feedback.isInverted),
 								upgradeIndex: feedback.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
 							},
 							true
@@ -1120,7 +1121,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 
 					image: value.imageSize,
 
-					isInverted: !!value.entity.isInverted,
+					isInverted: !!value.entity.isInverted?.value, // This is fine, there should be no expressions here
 
 					upgradeIndex: value.entity.upgradeIndex ?? null,
 					disabled: !!value.entity.disabled,
@@ -1172,7 +1173,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					feedbackId: fb.entity.definitionId,
 					options: convertExpressionOptionsWithoutParsing(fb.entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
-					isInverted: !!fb.entity.isInverted,
+					isInverted: !!fb.entity.isInverted?.value, // This is fine, there should be no expressions here
 
 					upgradeIndex: fb.entity.upgradeIndex ?? null,
 					disabled: !!fb.entity.disabled,
@@ -1188,7 +1189,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 							definitionId: feedback.feedbackId,
 							options: optionsObjectToExpressionOptions(feedback.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
 							style: feedback.style,
-							isInverted: feedback.isInverted,
+							isInverted: exprVal(feedback.isInverted),
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableFeedbackEntityModel
 				)

@@ -42,7 +42,7 @@ export interface IEntityEditorService {
 	setEnabled: ((entityId: string, enabled: boolean) => void) | undefined
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
 
-	setInverted: (entityId: string, inverted: boolean) => void
+	setInverted: (entityId: string, inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (entityId: string, name: string) => void
 	setVariableValue: (entityId: string, value: VariableValue) => void
 	setSelectedStyleProps: (entityId: string, keys: string[]) => void
@@ -58,7 +58,7 @@ export interface IEntityEditorActionService {
 	setEnabled: ((enabled: boolean) => void) | undefined
 	setHeadline: ((headline: string) => void) | undefined
 
-	setInverted: (inverted: boolean) => void
+	setInverted: (inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (name: string) => void
 	setVariableValue: (value: VariableValue) => void
 	setSelectedStyleProps: (keys: string[]) => void
@@ -223,7 +223,7 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
-			setInverted: (entityId: string, isInverted: boolean) => {
+			setInverted: (entityId: string, isInverted: ExpressionOrValue<boolean>) => {
 				setInvertedMutation
 					.mutateAsync({
 						controlId,
@@ -337,7 +337,7 @@ export function useControlEntityService(
 			setHeadline: serviceFactory.setHeadline
 				? (headline: string) => serviceFactory.setHeadline?.(entityId, headline)
 				: undefined,
-			setInverted: (inverted: boolean) => serviceFactory.setInverted(entityId, inverted),
+			setInverted: (inverted: ExpressionOrValue<boolean>) => serviceFactory.setInverted(entityId, inverted),
 			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),
 			setVariableValue: (value: VariableValue) => serviceFactory.setVariableValue(entityId, value),
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),

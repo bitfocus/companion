@@ -72,7 +72,7 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			setEnabled: undefined,
 			setHeadline: undefined,
 
-			setInverted: (_entityId: string, _inverted: boolean) => {
+			setInverted: (_entityId: string, _inverted: ExpressionOrValue<boolean>) => {
 				// Not supported
 			},
 			setVariableName: (_entityId: string, _variableName: string) => {

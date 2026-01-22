@@ -322,7 +322,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set whether this feedback is inverted
 	 */
-	setInverted(isInverted: boolean): void {
+	setInverted(isInverted: ExpressionOrValue<boolean>): void {
 		if (this.#data.type !== EntityModelType.Feedback) return
 
 		const thisData = this.#data as FeedbackEntityModel
@@ -648,7 +648,7 @@ export class ControlEntityInstance {
 		if (this.#data.type === EntityModelType.Feedback) {
 			const feedbackData = this.#data as FeedbackEntityModel
 			const newPropsData = newProps as FeedbackEntityModel
-			feedbackData.isInverted = !!newPropsData.isInverted
+			feedbackData.isInverted = newPropsData.isInverted ?? feedbackData.isInverted
 			feedbackData.style = Object.keys(feedbackData.style || {}).length > 0 ? feedbackData.style : newPropsData.style
 		}
 
@@ -740,6 +740,7 @@ export class ControlEntityInstance {
 
 		if (typeof this.#cachedFeedbackValue === 'boolean') {
 			const feedbackData = this.#data as FeedbackEntityModel
+			// nocommit isInverted as an expression
 			if (definition.showInvert && feedbackData.isInverted) return !this.#cachedFeedbackValue
 
 			return this.#cachedFeedbackValue

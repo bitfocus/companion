@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CInputGroupText } from '@coreui/react'
+import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
 import React, { useCallback } from 'react'
 import {
 	CheckboxInputField,
@@ -155,7 +155,19 @@ export const OptionsInputField = observer(function OptionsInputField({
 			break
 		}
 		case 'checkbox': {
-			control = <CheckboxInputField value={basicValue as any} disabled={readonly} setValue={setBasicValue} />
+			if (option.displayToggle) {
+				control = (
+					<CFormSwitch
+						color="success"
+						checked={!!basicValue}
+						size="xl"
+						onChange={(e) => setBasicValue(e.currentTarget.checked)}
+						disabled={readonly}
+					/>
+				)
+			} else {
+				control = <CheckboxInputField value={basicValue as any} disabled={readonly} setValue={setBasicValue} />
+			}
 			break
 		}
 		case 'colorpicker': {

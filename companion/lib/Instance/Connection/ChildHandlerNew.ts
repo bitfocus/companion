@@ -52,6 +52,8 @@ import type {
 } from './ChildHandlerApi.js'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
 import {
+	exprVal,
+	isExpressionOrValue,
 	optionsObjectToExpressionOptions,
 	type ExpressionableOptionsObject,
 	type SomeCompanionInputField,
@@ -322,8 +324,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								controlId: controlId,
 								feedbackId: entity.definitionId,
 								options: parsedOptions,
-
-								isInverted: !!entity.isInverted,
 
 								image: control?.getBitmapSize() ?? undefined,
 
@@ -741,8 +741,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 
 					image: value.imageSize,
 
-					isInverted: !!value.entity.isInverted,
-
 					upgradeIndex: value.entity.upgradeIndex ?? null,
 					disabled: !!value.entity.disabled,
 				}
@@ -791,7 +789,9 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					feedbackId: fb.entity.definitionId,
 					options: fb.entity.options as ExpressionOptionsObject, // TODO - remove cast
 
-					isInverted: !!fb.entity.isInverted,
+					isInverted: isExpressionOrValue(fb.entity.isInverted)
+						? fb.entity.isInverted
+						: exprVal(!!fb.entity.isInverted),
 
 					upgradeIndex: fb.entity.upgradeIndex ?? null,
 					disabled: !!fb.entity.disabled,
@@ -807,7 +807,9 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 							definitionId: feedback.feedbackId,
 							options: feedback.options,
 							style: feedback.style,
-							isInverted: feedback.isInverted,
+							isInverted: isExpressionOrValue(feedback.isInverted)
+								? feedback.isInverted
+								: exprVal(!!feedback.isInverted),
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableFeedbackEntityModel
 				)
