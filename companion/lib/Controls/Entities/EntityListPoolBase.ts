@@ -2,6 +2,7 @@ import LogController, { type Logger } from '../../Log/Controller.js'
 import type {
 	EntityModelType,
 	EntityOwner,
+	FeedbackValue,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 	SomeSocketEntityLocation,
@@ -638,7 +639,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	abstract updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void
+	abstract updateFeedbackValues(connectionId: string, newValues: Record<string, FeedbackValue>): void
 
 	/**
 	 * Get all the connectionIds for entities which are active

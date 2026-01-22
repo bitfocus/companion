@@ -1,6 +1,7 @@
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	type FeedbackValue,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
@@ -76,7 +77,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+	updateFeedbackValues(connectionId: string, newValues: Record<string, FeedbackValue>): void {
 		this.#actions.updateFeedbackValues(connectionId, newValues)
 
 		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)

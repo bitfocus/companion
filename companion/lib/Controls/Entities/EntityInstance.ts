@@ -3,6 +3,7 @@ import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
+	type FeedbackValue,
 	type EntitySupportedChildGroupDefinition,
 	type FeedbackEntityModel,
 	type SomeEntityModel,
@@ -43,7 +44,7 @@ export class ControlEntityInstance {
 	/**
 	 * Value of the feedback when it was last executed
 	 */
-	#cachedFeedbackValue: any = undefined
+	#cachedFeedbackValue: FeedbackValue = undefined
 
 	#children = new Map<string, ControlEntityList>()
 
@@ -794,7 +795,7 @@ export class ControlEntityInstance {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
+	updateFeedbackValues(connectionId: string, newValues: Record<string, FeedbackValue>): ControlEntityInstance[] {
 		const changed: ControlEntityInstance[] = []
 
 		let thisChanged = false

@@ -1,6 +1,7 @@
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	type FeedbackValue,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityList } from './EntityList.js'
@@ -57,7 +58,7 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+	updateFeedbackValues(connectionId: string, newValues: Record<string, FeedbackValue>): void {
 		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
 
 		if (this.#entities.updateFeedbackValues(connectionId, newValues).length > 0) {

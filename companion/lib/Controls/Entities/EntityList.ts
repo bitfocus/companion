@@ -1,6 +1,7 @@
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	type FeedbackValue,
 	type EntityOwner,
 	type EntitySupportedChildGroupDefinition,
 	type SomeEntityModel,
@@ -416,7 +417,7 @@ export class ControlEntityList {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
+	updateFeedbackValues(connectionId: string, newValues: Record<string, FeedbackValue>): ControlEntityInstance[] {
 		const changed: ControlEntityInstance[] = []
 
 		for (const entity of this.#entities) {
