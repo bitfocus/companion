@@ -44,10 +44,17 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 
 	const setIsExpression = useCallback(
 		(isExpression: boolean) => {
-			setValue({
-				isExpression,
-				value: value.value as any,
-			})
+			setValue(
+				isExpression
+					? {
+							isExpression: true,
+							value: stringifyVariableValue(value.value) ?? '',
+						}
+					: {
+							isExpression: false,
+							value: value.value,
+						}
+			)
 		},
 		[setValue, value]
 	)

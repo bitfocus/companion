@@ -249,7 +249,7 @@ function translateCommonFields(
 		label: field.label,
 		tooltip: field.tooltip,
 		description: field.description,
-		expressionDescription: undefined, // Temporary until #2345
+		expressionDescription: field.expressionDescription,
 		isVisibleUi: field.isVisibleExpression
 			? {
 					type: 'expression',
@@ -257,6 +257,6 @@ function translateCommonFields(
 					data: undefined,
 				}
 			: undefined,
-		disableAutoExpression: true, // Temporary until #2345
+		disableAutoExpression: field.disableAutoExpression ?? false,
 	}
 }
