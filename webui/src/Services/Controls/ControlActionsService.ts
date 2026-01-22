@@ -45,7 +45,7 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				entityId: string,
 				_action: SomeEntityModel | undefined,
 				key: string,
-				value: ExpressionOrValue<JsonValue>
+				value: ExpressionOrValue<JsonValue | undefined>
 			) => {
 				setValueMutation.mutateAsync({ sessionId, actionId: entityId, key, value }).catch((e) => {
 					console.error(e)
@@ -78,7 +78,7 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			setVariableName: (_entityId: string, _variableName: string) => {
 				// Not supported
 			},
-			setVariableValue: (_entityId: string, _variableValue: string) => {
+			setVariableValue: (_entityId: string, _variableValue: JsonValue | undefined) => {
 				// Not supported
 			},
 

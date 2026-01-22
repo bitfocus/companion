@@ -242,7 +242,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	const surfaceSetConfigKeyMutation = useMutationExt(trpc.surfaces.surfaceSetConfigKey.mutationOptions())
 	const setSurfaceConfigValue = useCallback(
-		(key: string, value: JsonValue) => {
+		(key: string, value: JsonValue | undefined) => {
 			console.log('update surface', key, value)
 			if (surfaceId) {
 				surfaceSetConfigKeyMutation

@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react'
 import { CInputGroup, CButton, CFormInput } from '@coreui/react'
 import JSON5 from 'json5'
 import { VariableTypeIcon } from './VariableTypeIcon.js'
+import type { JsonValue } from 'type-fest'
 
 interface VariableInputGroupProps {
-	value: any // The external variable value (string or object)
-	setCurrentValue: (name: string, value: any) => void
+	value: JsonValue | undefined // The external variable value (string or object)
+	setCurrentValue: (name: string, value: JsonValue | undefined) => void
 	name: string
 	disabled?: boolean
 }

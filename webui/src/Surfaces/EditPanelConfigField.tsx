@@ -14,9 +14,9 @@ import type { DropdownChoiceInt } from '~/DropDownInputFancy'
 import type { JsonValue } from 'type-fest'
 
 interface EditPanelConfigFieldProps {
-	setValue: (key: string, value: any) => void
+	setValue: (key: string, value: JsonValue | undefined) => void
 	definition: CompanionSurfaceConfigField
-	value: any
+	value: JsonValue | undefined
 }
 
 const SurfaceLocalVariables: DropdownChoiceInt[] = [
@@ -61,13 +61,13 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 			control = definition.isExpression ? (
 				<ExpressionInputField
-					value={value}
+					value={value as any}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					setValue={setValue2}
 				/>
 			) : (
 				<TextInputField
-					value={value}
+					value={value as any}
 					placeholder={definition.placeholder}
 					useVariables={features.variables}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
@@ -85,7 +85,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					max={definition.max}
 					step={definition.step}
 					range={definition.range}
-					value={value}
+					value={value as any}
 					setValue={setValue2}
 					checkValid={checkValid}
 					showMinAsNegativeInfinity={definition.showMinAsNegativeInfinity}
@@ -98,7 +98,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 				<div style={{ marginRight: 40, marginTop: 2 }}>
 					<CFormSwitch
 						color="success"
-						checked={value}
+						checked={value as any}
 						size="xl"
 						onChange={() => {
 							setValue2(!value)
@@ -114,7 +114,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					allowCustom={definition.allowCustom}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					regex={definition.regex}
-					value={value}
+					value={value as any}
 					setValue={setValue2}
 					checkValid={checkValid}
 				/>

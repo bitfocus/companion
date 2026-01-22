@@ -12,11 +12,12 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { JsonValue } from 'type-fest'
 
 interface InstanceEditFieldProps {
-	setValue: (value: any) => void
+	setValue: (value: JsonValue | undefined) => void
 	definition: SomeCompanionInputField
-	value: any
+	value: JsonValue | undefined
 	moduleType: ModuleInstanceType
 	instanceId: string
 }
@@ -36,7 +37,7 @@ export function InstanceEditField({
 			return <StaticTextFieldText {...definition} allowImages />
 		}
 		case 'textinput':
-			return <TextInputField value={value} setValue={setValue} checkValid={checkValid} />
+			return <TextInputField value={value as any} setValue={setValue} checkValid={checkValid} />
 		case 'number':
 			return (
 				<NumberInputField
@@ -44,7 +45,7 @@ export function InstanceEditField({
 					max={definition.max}
 					step={definition.step}
 					range={definition.range}
-					value={value}
+					value={value as any}
 					setValue={setValue}
 					checkValid={checkValid}
 				/>
@@ -54,7 +55,7 @@ export function InstanceEditField({
 				<div style={{ marginRight: 40, marginTop: 2 }}>
 					<CFormSwitch
 						color="success"
-						checked={value}
+						checked={value as any}
 						size="xl"
 						onChange={() => {
 							setValue(!value)
@@ -69,7 +70,7 @@ export function InstanceEditField({
 					allowCustom={definition.allowCustom}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					regex={definition.regex}
-					value={value}
+					value={value as any}
 					setValue={setValue}
 					checkValid={checkValid}
 				/>
@@ -83,7 +84,7 @@ export function InstanceEditField({
 					minChoicesForSearch={definition.minChoicesForSearch}
 					maxSelection={definition.maxSelection}
 					regex={definition.regex}
-					value={value}
+					value={value as any}
 					setValue={setValue}
 					checkValid={checkValid}
 				/>
@@ -91,7 +92,7 @@ export function InstanceEditField({
 		case 'colorpicker': {
 			return (
 				<ColorInputField
-					value={value}
+					value={value as any}
 					setValue={setValue}
 					enableAlpha={definition.enableAlpha ?? false}
 					returnType={definition.returnType ?? 'number'}
@@ -101,7 +102,12 @@ export function InstanceEditField({
 		}
 		case 'bonjour-device':
 			return moduleType === ModuleInstanceType.Connection ? (
-				<BonjourDeviceInputField value={value} setValue={setValue} connectionId={instanceId} queryId={definition.id} />
+				<BonjourDeviceInputField
+					value={value as any}
+					setValue={setValue}
+					connectionId={instanceId}
+					queryId={definition.id}
+				/>
 			) : (
 				<p>Bonjour field not supported</p>
 			)

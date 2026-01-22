@@ -432,6 +432,13 @@ export class InstanceProcessManager {
 				'system',
 				`** Starting Instance from "${runtimeInfo.moduleEntrypoint}" **`
 			)
+			this.#connectionDeps.debugLogLine(
+				instanceId,
+				Date.now(),
+				'System',
+				'system',
+				`** API version: ${runtimeInfo.apiVersion} **`
+			)
 
 			const monitor = new RespawnMonitor(cmd, {
 				env: {

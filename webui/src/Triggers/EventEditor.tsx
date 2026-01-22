@@ -31,6 +31,8 @@ import {
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { JsonValue } from 'type-fest'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -352,6 +354,13 @@ const EventEditor = observer(function EventEditor({
 	)
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(event.id)
 
+	// Events don't support expressions, so we have to pretend for the UI
+	const simpleOptions = optionsObjectToExpressionOptions(event.options || {})
+	const setWrappedValue = useCallback(
+		(key: string, value: ExpressionOrValue<JsonValue | undefined>) => service.setValue(key, value.value),
+		[service]
+	)
+
 	return (
 		<>
 			<div className="editor-grid-header editor-grid-events">
@@ -420,8 +429,8 @@ const EventEditor = observer(function EventEditor({
 									entityType={null}
 									connectionId={'internal'}
 									option={opt}
-									value={(event.options || {})[opt.id]}
-									setValue={service.setValue}
+									value={simpleOptions[opt.id]}
+									setValue={setWrappedValue}
 									visibility={optionVisibility[opt.id] ?? true}
 									localVariablesStore={localVariablesStore}
 									fieldSupportsExpression={false} // Events do not support expressions
