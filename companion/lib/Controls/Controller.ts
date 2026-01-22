@@ -30,7 +30,7 @@ import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
 import type { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
-import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type {
@@ -41,7 +41,7 @@ import { ExpressionVariableCollections } from './ExpressionVariableCollections.j
 import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRouter.js'
 import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
-import type { CompanionFeedbackButtonStyleResult } from '@companion-module/host'
+import type { FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
  * The class that manages the controls
@@ -714,7 +714,7 @@ export class ControlsController {
 	updateFeedbackValues(connectionId: string, result: NewFeedbackValue[]): void {
 		if (result.length === 0) return
 
-		const values: Record<string, Record<string, any>> = {}
+		const values: Record<string, Record<string, FeedbackValue>> = {}
 
 		for (const item of result) {
 			if (!values[item.controlId]) values[item.controlId] = {}
@@ -765,5 +765,5 @@ export class ControlsController {
 export interface NewFeedbackValue {
 	id: string
 	controlId: string
-	value: CompanionFeedbackButtonStyleResult | VariableValue
+	value: FeedbackValue
 }

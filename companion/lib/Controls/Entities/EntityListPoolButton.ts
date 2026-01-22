@@ -8,6 +8,7 @@ import {
 	FeedbackEntitySubType,
 	type SomeSocketEntityLocation,
 	type SomeEntityModel,
+	type FeedbackValue,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlEntityList } from './EntityList.js'
@@ -739,7 +740,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+	updateFeedbackValues(connectionId: string, newValues: Record<string, FeedbackValue>): void {
 		for (const step of this.#steps.values()) {
 			for (const set of step.sets.values()) {
 				set.updateFeedbackValues(connectionId, newValues)

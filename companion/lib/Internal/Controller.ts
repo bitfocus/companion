@@ -27,6 +27,7 @@ import type { IPageStore } from '../Page/Store.js'
 import LogController from '../Log/Controller.js'
 import {
 	EntityModelType,
+	type FeedbackValue,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 	type SomeEntityModel,
@@ -34,7 +35,7 @@ import {
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { CompanionFeedbackButtonStyleResult, Complete } from '@companion-module/base'
+import type { Complete } from '@companion-module/base'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -292,7 +293,7 @@ export class InternalController {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	#feedbackGetValue(feedbackState: FeedbackEntityState): CompanionFeedbackButtonStyleResult | VariableValue {
+	#feedbackGetValue(feedbackState: FeedbackEntityState): FeedbackValue {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Feedback,

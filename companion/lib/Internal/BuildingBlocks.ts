@@ -231,7 +231,7 @@ export class InternalBuildingBlocks
 					return isSingleTrue === !feedback.isInverted
 				}
 				default:
-					this.#logger.warn(`Unexpected operation: ${feedback.options.operation}`)
+					this.#logger.warn(`Unexpected operation: ${stringifyVariableValue(feedback.options.operation?.value)}`)
 					return false
 			}
 		} else if (feedback.definitionId === 'logic_conditionalise_advanced') {

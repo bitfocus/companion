@@ -2,6 +2,8 @@ import z from 'zod'
 import type { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
 import type { ExpressionableOptionsObject } from './Options.js'
+import type { VariableValue } from './Variables.js'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/host'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel = ReplaceableActionEntityModel | ReplaceableFeedbackEntityModel
@@ -90,6 +92,8 @@ export interface EntitySupportedChildGroupDefinition {
 	 */
 	maximumChildren?: number
 }
+
+export type FeedbackValue = CompanionFeedbackButtonStyleResult | VariableValue
 
 const zodActionSetId: z.ZodSchema<ActionSetId> = z.union([
 	z.literal('down'),

@@ -13,7 +13,7 @@ import { useLocalVariablesStore } from '../Controls/LocalVariablesStore.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
-import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import type { JsonValue } from 'type-fest'
@@ -140,7 +140,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 
 interface TriggerConfigProps {
 	controlId: string
-	options: Record<string, any>
+	options: TriggerOptions
 }
 
 function TriggerConfig({ controlId, options }: TriggerConfigProps) {
