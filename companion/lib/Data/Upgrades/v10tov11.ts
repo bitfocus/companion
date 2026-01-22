@@ -7,9 +7,8 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { CompanionOptionValues } from '@companion-module/host'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import type { JsonValue } from 'type-fest'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { CreateTriggerControlId, oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
