@@ -409,7 +409,7 @@ export class SurfaceGroup {
 	 * @param key Config field to change
 	 * @param value New value for the field
 	 */
-	setGroupConfigValue(key: string, value: JsonValue): string | undefined {
+	setGroupConfigValue(key: string, value: JsonValue | undefined): string | undefined {
 		this.#logger.debug(`Set config "${key}" to "${stringifyVariableValue(value)}"`)
 
 		let newValue: JsonValue | null = null
@@ -496,7 +496,7 @@ export class SurfaceGroup {
 	}
 }
 
-export function validateGroupConfigValue(pageStore: IPageStore, key: string, value: JsonValue): JsonValue {
+export function validateGroupConfigValue(pageStore: IPageStore, key: string, value: JsonValue | undefined): JsonValue {
 	switch (key) {
 		case 'use_last_page': {
 			return Boolean(value)

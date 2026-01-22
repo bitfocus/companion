@@ -7,6 +7,8 @@ import type {
 	SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import type { JsonValue } from 'type-fest'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 export function useActionRecorderActionService(sessionId: string): IEntityEditorService {
 	const deleteActionMutation = useMutationExt(trpc.actionRecorder.session.action.delete.mutationOptions())
@@ -39,7 +41,12 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				})
 			},
 
-			setValue: (entityId: string, _action: SomeEntityModel | undefined, key: string, value: any) => {
+			setValue: (
+				entityId: string,
+				_action: SomeEntityModel | undefined,
+				key: string,
+				value: ExpressionOrValue<JsonValue>
+			) => {
 				setValueMutation.mutateAsync({ sessionId, actionId: entityId, key, value }).catch((e) => {
 					console.error(e)
 				})

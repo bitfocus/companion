@@ -8,6 +8,7 @@ import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { Logger } from '../../Log/Controller.js'
 import type EventEmitter from 'events'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createConnectionsTrpcRouter(
@@ -123,8 +124,8 @@ export function createConnectionsTrpcRouter(
 					connectionId: z.string(),
 					label: z.string(),
 					enabled: z.boolean().optional(),
-					config: z.record(z.string(), z.any()).optional(),
-					secrets: z.record(z.string(), z.any()).optional(),
+					config: JsonObjectSchema.optional(),
+					secrets: JsonObjectSchema.optional(),
 					updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
 				})
 			)

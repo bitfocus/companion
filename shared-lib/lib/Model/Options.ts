@@ -1,6 +1,32 @@
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
 import type { JsonValue } from 'type-fest'
 import type { CompanionOptionValues } from '@companion-module/host'
+import z from 'zod'
+
+export const JsonValueSchema: z.ZodType<JsonValue> = z.json()
+
+export const JsonObjectSchema = z.record(z.string(), JsonValueSchema.optional())
+
+export function createExpressionOrValueSchema<T extends JsonValue | undefined>(
+	schema: z.ZodType<T>
+): z.ZodType<ExpressionOrValue<T>> {
+	return z.union([
+		z.object({
+			value: schema,
+			isExpression: z.literal(false),
+		}),
+		z.object({
+			value: z.string(),
+			isExpression: z.literal(true),
+		}),
+	])
+}
+export const ExpressionOrJsonValueSchema = createExpressionOrValueSchema(JsonValueSchema.optional())
+
+export const ExpressionableOptionsObjectSchema: z.ZodType<ExpressionableOptionsObject> = z.record(
+	z.string(),
+	ExpressionOrJsonValueSchema.optional()
+)
 
 export type CompanionColorPresetValue =
 	| string

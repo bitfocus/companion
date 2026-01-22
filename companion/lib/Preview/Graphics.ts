@@ -10,7 +10,10 @@ import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
+import {
+	ExpressionableOptionsObjectSchema,
+	type ExpressionableOptionsObject,
+} from '@companion-app/shared/Model/Options.js'
 
 export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),
@@ -151,7 +154,7 @@ export class PreviewGraphics {
 				.input(
 					z.object({
 						controlId: z.string(),
-						options: z.object({}).catchall(z.any()),
+						options: ExpressionableOptionsObjectSchema,
 					})
 				)
 				.subscription(async function* ({ signal, input }) {

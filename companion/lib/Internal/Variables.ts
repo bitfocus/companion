@@ -361,7 +361,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			return true
 		} else if (action.definitionId === 'local_variable_sync_to_default') {
 			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				entityPool.entrySetOptions(listId, variableEntity.id, 'startup_value', variableEntity.feedbackValue)
+				entityPool.entitySetOption(listId, variableEntity.id, 'startup_value', variableEntity.feedbackValue)
 			})
 
 			return true
