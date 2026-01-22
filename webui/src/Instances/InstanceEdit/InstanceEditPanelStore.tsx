@@ -8,6 +8,7 @@ import { nanoid } from 'nanoid'
 import { validateInputValue } from '~/Helpers/validateInputValue'
 import { parseIsVisibleFn } from '~/Hooks/useOptionsAndIsVisible'
 import type { InstanceEditPanelService } from './InstanceEditPanelService'
+import type { JsonValue } from 'type-fest'
 
 export interface InstanceBasicInfoChanges {
 	label?: string
@@ -217,7 +218,7 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 		})
 	})
 
-	setConfigValue = action((fieldId: string, value: any) => {
+	setConfigValue = action((fieldId: string, value: JsonValue | undefined) => {
 		const configAndSecrets = this.#configAndSecrets.get()
 		if (!configAndSecrets) return
 

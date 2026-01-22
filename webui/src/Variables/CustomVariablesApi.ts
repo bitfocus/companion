@@ -8,8 +8,8 @@ export interface CustomVariablesApi {
 	onCopied: () => void
 	doDelete: (name: string) => void
 	setDescription: (name: string, value: string) => void
-	setStartupValue: (name: string, value: JsonValue) => void
-	setCurrentValue: (name: string, value: JsonValue) => void
+	setStartupValue: (name: string, value: JsonValue | undefined) => void
+	setCurrentValue: (name: string, value: JsonValue | undefined) => void
 	setPersistenceValue: (name: string, persisted: boolean) => void
 }
 
@@ -29,12 +29,12 @@ export function useCustomVariablesApi(confirmModalRef: React.RefObject<GenericCo
 					notifier.show(`Copied`, 'Copied to clipboard', 5000)
 				},
 
-				setStartupValue: (name: string, value: JsonValue) => {
+				setStartupValue: (name: string, value: JsonValue | undefined) => {
 					setDefaultMutation.mutateAsync({ name, value }).catch(() => {
 						console.error('Failed to update variable')
 					})
 				},
-				setCurrentValue: (name: string, value: JsonValue) => {
+				setCurrentValue: (name: string, value: JsonValue | undefined) => {
 					setCurrentMutation.mutateAsync({ name, value }).catch(() => {
 						console.error('Failed to update variable')
 					})
