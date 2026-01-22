@@ -2,7 +2,7 @@ import semver from 'semver'
 import { ModuleInstanceType } from './Model/Instance.js'
 import { assertNever } from './Util.js'
 
-export const MODULE_BASE_VERSIONS = ['1.14.0', '2.0.0-0-nightly-feat-2-0-20260120-182015-a651213']
+export const MODULE_BASE_VERSIONS = ['1.14.0', '2.0.0-0-nightly-feat-2-0-20260122-222511-bcabfbb']
 export const SURFACE_BASE_VERSION = '1.1.0'
 
 const moduleBaseRules = MODULE_BASE_VERSIONS.map((v) => {
