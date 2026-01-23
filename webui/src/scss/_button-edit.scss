@@ -1,5 +1,4 @@
 @use 'variables' as *;
-@use 'sass:color';
 
 .edit-button-panel {
 	margin-right: -0.5rem;
@@ -98,10 +97,8 @@ table.variables-table,
 	.entitylist-dragging {
 		// affects both the layer in the table and the layer that floats with the cursor
 		// (.entity-list-drag-layer is technically the top layer, but trying to style it separately didn't work as expected)
-		@include dragging-style();
-		// keep the top sharp (dragging actions in v4.3 work differently than other lists)
-		background-color: rgba($color: $dragging-bg-color, $alpha: 0.5);
-		filter: blur(0);
+		// first arg keeps the top sharp, second make bg translucent (dragging actions in v4.3 work differently than other lists)
+		@include dragging-style(0, 0.5);
 	}
 
 	.entitylist-dropzone {
@@ -198,20 +195,10 @@ table.variables-table,
 }
 
 // apparently this excludes .entity-list-drag-layer
-.entity-list .entitylist-dragging {
+.entity-list > .entitylist-dragging {
 	// blurs the bottom only (blurs the top one too if dragging in an action group)
 	filter: blur(1px);
 }
-
-// .entity-list .entity-list .entitylist-dragging {
-// 	// makes the bottom sharp in an action group
-// 	filter: blur(0px);
-// }
-
-// .entity-list .entity-list .entity-list-drag-layer {
-// 	// doesn't do anything
-// 	filter: blur(0px) !important;
-// }
 
 .entity-list {
 	background-color: #f0f0f0;
