@@ -178,7 +178,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					CHOICES_LOCATION,
 					{
 						type: 'checkbox',
-						label: 'Force press if already pressed',
+						label: 'Force release even if currently pressed',
 						id: 'force',
 						default: false,
 						disableAutoExpression: true,
