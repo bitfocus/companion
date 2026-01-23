@@ -1,4 +1,5 @@
 @use 'variables' as *;
+@use 'sass:color';
 
 .edit-button-panel {
 	margin-right: -0.5rem;
@@ -99,6 +100,7 @@ table.variables-table,
 		// (.entity-list-drag-layer is technically the top layer, but trying to style it separately didn't work as expected)
 		@include dragging-style();
 		// keep the top sharp (dragging actions in v4.3 work differently than other lists)
+		background-color: rgba($color: $dragging-bg-color, $alpha: 0.5);
 		filter: blur(0);
 	}
 
