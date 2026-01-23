@@ -280,24 +280,9 @@ eg `00:10:15` gives 615
 
 You can do the reverse of this with `secondsToTimestamp(str)`
 
-**secondsToTimestamp(seconds, format)**
+**secondsToTimestamp(seconds, format)** / **msToTimestamp(milliseconds, format)**
 
-Convert a number of seconds into a timestamp of format 'n:HH:mm:ss'.
-
-By supplying the format parameter, you can choose which components will be included in the output string.
-
-The following components are allowed:
-
-- `n` - minus sign
-- `dd` - days
-- `HH` / `hh` - 12 hour / 24 hours
-- `mm` - minutes
-- `ss` - seconds
-- `a` - AM/PM decorator
-
-**msToTimestamp(milliseconds, format)**
-
-Convert a number of milliseconds into a timestamp of format 'n:HH:mm:ss.SSS'.
+Convert a number of seconds or milliseconds into a formatted timestamp string. The default format is 'n:HH:mm:ss' for seconds and 'n:HH:mm:ss.SSS' for milliseconds.
 
 By supplying the format parameter, you can choose which components will be included in the output string.
 
@@ -308,8 +293,12 @@ The following components are allowed:
 - `HH` / `hh` - 12 hour / 24 hours
 - `mm` - minutes
 - `ss` - seconds
-- `S` / `SS` / `SSS` - milliseconds, in varying levels of accuracy
+- `S` / `SS` / `SSS` - milliseconds (only for `msToTimestamp`), in varying levels of accuracy (1/100 seconds, 1/10 seconds, or milliseconds)
 - `a` - AM/PM decorator
+
+Using multiple characters to control padding length (e.g., `HHH` for 3-digit hours, `ssss` for 4-digit seconds). Milliseconds (`S`) support 1-3 digits.
+
+By default, time components show modulo values (e.g., hours modulo 24, minutes modulo 60). To show the total value instead, wrap the unit in brackets `[unit]`. For example, `[HH]:mm:ss` will display total hours instead of hours modulo 24, and `[mm]:ss` will display total minutes instead of minutes modulo 60. Only one unit can be marked as largest per format string, and only `H`, `h`, `m`, or `s` can be used as the largest unit.
 
 **timeOffset(timestamp, offset, 12hour)**
 

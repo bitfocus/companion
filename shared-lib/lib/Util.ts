@@ -38,6 +38,11 @@ function canBeLargestUnit(k: string): k is (typeof CAN_BE_LARGEST_UNIT)[number] 
 	return CAN_BE_LARGEST_UNIT.includes(k as (typeof CAN_BE_LARGEST_UNIT)[number])
 }
 
+/**
+ * Creates time value getters for a given number of milliseconds
+ * @param v - Milliseconds (can be negative)
+ * @returns Object with getters for various time components
+ */
 function createTimeValues(v: number): TimeValues {
 	const negative = v < 0 ? '-' : ''
 	v = Math.abs(v)
@@ -58,12 +63,24 @@ function createTimeValues(v: number): TimeValues {
 	}
 }
 
+/**
+ * Truncates milliseconds to the specified precision and pads with zeros
+ * @param v - Milliseconds value
+ * @param length - Number of digits (1-3): 1 = 1/100, 2 = 1/10, 3 = milliseconds
+ * @returns Padded string representation
+ */
 function truncateMilliseconds(v: number, length: number) {
 	if (length > 3) throw new Error('"S" can only pad to 3')
 	const divisor = [100, 10, 1][length - 1]
 	return pad(Math.trunc(v / divisor), '0', length)
 }
 
+/**
+ * Converts milliseconds to a formatted timestamp string
+ * @param v - Milliseconds to convert (can be negative)
+ * @param format - Format string with placeholders
+ * @returns Formatted timestamp string
+ */
 export function msToStamp(v: number, format: string): string {
 	const values = createTimeValues(v)
 
@@ -73,6 +90,10 @@ export function msToStamp(v: number, format: string): string {
 	let lastChar = ''
 	let accChar = ''
 
+	/**
+	 * Handles bracket notation for marking largest unit
+	 * @param u - Character to check
+	 */
 	const handleLargestUnit = (u: string) => {
 		if (inBracket && !outBracket) {
 			if (!canBeLargestUnit(u)) {
