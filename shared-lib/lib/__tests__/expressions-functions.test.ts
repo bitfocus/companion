@@ -615,13 +615,17 @@ describe('functions', () => {
 			expect(ExpressionFunctions.msToTimestamp(testValue2, 'HH#mm#ss')).toBe('23#46#39')
 			expect(ExpressionFunctions.msToTimestamp(testValue2, 'ss mm HH')).toBe('39 46 23')
 
+			//millis truncation
 			expect(ExpressionFunctions.msToTimestamp(789, 'S')).toBe('7')
 			expect(ExpressionFunctions.msToTimestamp(789, 'SS')).toBe('78')
 			expect(ExpressionFunctions.msToTimestamp(789, 'SSS')).toBe('789')
-
 			expect(ExpressionFunctions.msToTimestamp(1, 'S')).toBe('0')
 			expect(ExpressionFunctions.msToTimestamp(1, 'SS')).toBe('00')
 			expect(ExpressionFunctions.msToTimestamp(1, 'SSS')).toBe('001')
+
+			// 12 hour clock edge cases
+			expect(ExpressionFunctions.msToTimestamp(0, 'hh a')).toBe('12 AM')
+			expect(ExpressionFunctions.msToTimestamp(12 * HOUR, 'hh a')).toBe('12 PM')
 
 			// largest unit
 			expect(() => ExpressionFunctions.msToTimestamp(1234567890, '[dd]:HH:mm:ss.SSS')).toThrowError() // day cant be largest unit

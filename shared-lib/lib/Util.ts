@@ -51,7 +51,8 @@ function createTimeValues(v: number): TimeValues {
 		s: (largest) => (largest ? totalSeconds : totalSeconds % 60),
 		m: (largest) => (largest ? totalMinutes : totalMinutes % 60),
 		H: (largest) => (largest ? totalHours : totalHours % 24),
-		h: (largest) => (largest ? totalHours : totalHours % 12),
+		// for 12 hour format 0 is replied with 12
+		h: (largest) => (largest ? totalHours : totalHours % 12 === 0 ? 12 : totalHours % 12),
 		d: (_largest) => Math.floor(v / (1000 * 60 * 60 * 24)),
 		a: totalHours % 24 >= 12 ? 'PM' : 'AM',
 	}
