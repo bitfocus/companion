@@ -27,12 +27,6 @@ export interface ControlWithStyle extends ControlBase<any> {
 	 * @returns true if any changes were made
 	 */
 	styleSetFields(diff: Record<string, any>): boolean
-
-	/**
-	 * Propagate variable changes
-	 * @param allChangedVariables - variables with changes
-	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void
 }
 
 export interface ControlWithoutStyle extends ControlBase<any> {

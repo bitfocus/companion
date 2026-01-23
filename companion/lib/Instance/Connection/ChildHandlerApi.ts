@@ -66,7 +66,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	 * @access public - called whenever variables change
 	 */
 	sendVariablesChanged(
-		changedVariableIdSet: Set<string>,
+		changedVariableIdSet: ReadonlySet<string>,
 		changedVariableIds: string[],
 		fromControlId: string | null
 	): Promise<void>

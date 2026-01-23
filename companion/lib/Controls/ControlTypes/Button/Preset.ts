@@ -258,7 +258,7 @@ export class ControlButtonPreset
 	 * Propagate variable changes
 	 * @param allChangedVariables - variables with changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void {
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
 		this.entities.stepCheckExpressionOnVariablesChanged(allChangedVariables)
 
 		if (!this.#lastDrawVariables) return

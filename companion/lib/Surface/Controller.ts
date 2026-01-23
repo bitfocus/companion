@@ -1854,7 +1854,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void {
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
 		for (const surface of this.#surfaceHandlers.values()) {
 			if (surface?.panel?.onVariablesChanged) {
 				surface.panel.onVariablesChanged(allChangedVariables)

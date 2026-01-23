@@ -541,7 +541,7 @@ export class ControlsController {
 	/**
 	 * Propagate variable changes to the controls
 	 */
-	onVariablesChanged(allChangedVariablesSet: Set<string>, fromControlId: string | null): void {
+	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
 		this.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
@@ -550,9 +550,7 @@ export class ControlsController {
 				// If the changes are local variables and from another control, ignore them
 				if (fromControlId && fromControlId !== control.controlId) continue
 
-				if (control.supportsStyle) {
-					control.onVariablesChanged(allChangedVariablesSet)
-				}
+				control.onVariablesChanged(allChangedVariablesSet)
 			}
 		}
 	}

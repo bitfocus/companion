@@ -516,7 +516,7 @@ export class ConnectionEntityManager {
 	 * Inform the entity manager that some variables have changed.
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: Set<string>, fromControlId: string | null): void {
+	onVariablesChanged(variableIds: ReadonlySet<string>, fromControlId: string | null): void {
 		let anyInvalidated = false
 
 		for (const wrapper of this.#entities.values()) {

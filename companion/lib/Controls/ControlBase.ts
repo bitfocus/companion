@@ -200,4 +200,10 @@ export abstract class ControlBase<TJson> {
 	 * @param force Trigger actions even if already in the state
 	 */
 	abstract pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void
+
+	/**
+	 * Propagate variable changes
+	 * @param allChangedVariables - variables with changes
+	 */
+	abstract onVariablesChanged(allChangedVariables: ReadonlySet<string>): void
 }

@@ -390,17 +390,14 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	/**
 	 * Propagate variable changes, and update the current step if the variables affect it
 	 */
-	stepCheckExpressionOnVariablesChanged(changedVariables: Set<string>): void {
+	stepCheckExpressionOnVariablesChanged(changedVariables: ReadonlySet<string>): void {
 		if (this.#currentStep.type !== 'expression') return
 
-		for (const variableName of this.#currentStep.lastVariables) {
-			if (changedVariables.has(variableName)) {
-				if (this.#stepCheckExpression(true)) {
-					// Something changed, so redraw
-					this.invalidateControl()
-				}
-				return
-			}
+		if (this.#currentStep.lastVariables.isDisjointFrom(changedVariables)) return
+
+		if (this.#stepCheckExpression(true)) {
+			// Something changed, so redraw
+			this.invalidateControl()
 		}
 	}
 

@@ -26,8 +26,8 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 
 export interface VariablesValuesEvents {
-	variables_changed: [changed: Set<string>, connection_labels: Set<string>]
-	local_variables_changed: [changed: Set<string>, fromControlId: string]
+	variables_changed: [changed: ReadonlySet<string>, connection_labels: ReadonlySet<string>]
+	local_variables_changed: [changed: ReadonlySet<string>, fromControlId: string]
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
@@ -143,7 +143,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		this.#emitVariablesChanged(all_changed_variables_set, connection_labels)
 	}
 
-	#emitVariablesChanged(all_changed_variables_set: Set<string>, connection_labels: Set<string>) {
+	#emitVariablesChanged(all_changed_variables_set: ReadonlySet<string>, connection_labels: ReadonlySet<string>) {
 		try {
 			if (all_changed_variables_set.size > 0) {
 				this.emit('variables_changed', all_changed_variables_set, connection_labels)

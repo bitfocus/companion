@@ -243,7 +243,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * @access public - called whenever variables change
 	 */
 	async sendVariablesChanged(
-		changedVariableIdSet: Set<string>,
+		changedVariableIdSet: ReadonlySet<string>,
 		_changedVariableIds: string[],
 		fromControlId: string | null
 	): Promise<void> {

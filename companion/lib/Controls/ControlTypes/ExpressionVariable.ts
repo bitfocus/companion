@@ -341,4 +341,7 @@ export class ControlExpressionVariable
 	getBitmapSize(): { width: number; height: number } | null {
 		return null
 	}
+	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
+		// Nothing to do
+	}
 }

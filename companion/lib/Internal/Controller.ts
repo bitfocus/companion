@@ -626,7 +626,7 @@ export class InternalController {
 		this.#variablesController.definitions.setVariableDefinitions('internal', variables)
 	}
 
-	onVariablesChanged(changedVariablesSet: Set<string>, fromControlId: string | null): void {
+	onVariablesChanged(changedVariablesSet: ReadonlySet<string>, fromControlId: string | null): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const newValues: NewFeedbackValue[] = []

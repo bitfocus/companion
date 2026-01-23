@@ -233,7 +233,7 @@ export class PreviewGraphics {
 		}
 	}
 
-	onVariablesChanged(allChangedSet: Set<string>, fromControlId: string | null): void {
+	onVariablesChanged(allChangedSet: ReadonlySet<string>, fromControlId: string | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.size) continue
