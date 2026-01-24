@@ -20,7 +20,7 @@ import type {
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -57,6 +57,7 @@ import type { AppInfo } from '../Registry.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
+import type { NewFeedbackValue } from '../Controls/Entities/Types.js'
 
 interface FeedbackEntityState {
 	controlId: string
@@ -262,7 +263,7 @@ export class InternalController {
 
 		this.#controlsController.updateFeedbackValues('internal', [
 			{
-				id: feedback.id,
+				entityId: feedback.id,
 				controlId: controlId,
 				value: this.#feedbackGetValue(feedbackState),
 			},
@@ -489,10 +490,10 @@ export class InternalController {
 	/**
 	 * Execute a logic feedback
 	 */
-	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
+	executeLogicFeedback(feedback: FeedbackEntityModel, isInverted: boolean, childValues: boolean[]): boolean {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)
+		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, isInverted, childValues)
 	}
 
 	/**
@@ -522,7 +523,7 @@ export class InternalController {
 		for (const [id, feedback] of this.#feedbacks.entries()) {
 			if (typesSet.size === 0 || typesSet.has(feedback.entityModel.definitionId)) {
 				newValues.push({
-					id: id,
+					entityId: id,
 					controlId: feedback.controlId,
 					value: this.#feedbackGetValue(feedback),
 				})
@@ -543,7 +544,7 @@ export class InternalController {
 			const feedback = this.#feedbacks.get(id)
 			if (feedback) {
 				newValues.push({
-					id: id,
+					entityId: id,
 					controlId: feedback.controlId,
 					value: this.#feedbackGetValue(feedback),
 				})
@@ -644,7 +645,7 @@ export class InternalController {
 			if (feedback.referencedVariables.isDisjointFrom(changedVariablesSet)) continue
 
 			newValues.push({
-				id: id,
+				entityId: id,
 				controlId: feedback.controlId,
 				value: this.#feedbackGetValue(feedback),
 			})

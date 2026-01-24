@@ -109,6 +109,7 @@ export class ControlExpressionVariable
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
 			variableValues: deps.variables.values,
+			pageStore: deps.pageStore,
 		})
 
 		this.options = structuredClone(ControlExpressionVariable.DefaultOptions)
@@ -315,11 +316,11 @@ export class ControlExpressionVariable
 			if (!name) return
 
 			// Only emit variable value if this control is the active one for this variable name
-			if (this.#expressionVariableNameMap.isExpressionVariableActive(this.controlId)) {
-				this.deps.variables.values.setVariableValues('expression', [
-					{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
-				])
-			}
+			if (!this.#expressionVariableNameMap.isExpressionVariableActive(this.controlId)) return
+
+			this.deps.variables.values.setVariableValues('expression', [
+				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
+			])
 		},
 		{
 			before: false,
