@@ -184,8 +184,6 @@ export class ControlButtonNormal
 	 * @param allChangedVariables - variables with changes
 	 */
 	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
-		this.entities.stepCheckExpressionOnVariablesChanged(allChangedVariables)
-
 		if (!this.#lastDrawVariables) return
 		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 

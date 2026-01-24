@@ -78,6 +78,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
 				variableValues: deps.variables.values,
+				pageStore: deps.pageStore,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType, injectedVariableValues) =>
@@ -202,7 +203,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		return result
 	}
 
-	abstract onVariablesChanged(allChangedVariables: Set<string>): void
+	abstract onVariablesChanged(allChangedVariables: ReadonlySet<string>): void
 
 	/**
 	 * Update an option field of this control

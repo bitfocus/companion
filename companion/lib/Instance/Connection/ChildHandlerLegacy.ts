@@ -819,7 +819,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
-		this.#deps.controls.updateFeedbackValues(this.connectionId, msg.values)
+		this.#deps.controls.updateFeedbackValues(
+			this.connectionId,
+			msg.values.map((val) => ({
+				entityId: val.id,
+				controlId: val.controlId,
+				value: val.value,
+			}))
+		)
 	}
 
 	/**

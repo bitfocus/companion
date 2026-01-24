@@ -217,8 +217,7 @@ export class InternalBuildingBlocks
 	/**
 	 * Execute a logic feedback
 	 */
-	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
-		const isInverted = !!feedback.isInverted // nocommit expression
+	executeLogicFeedback(feedback: FeedbackEntityModel, isInverted: boolean, childValues: boolean[]): boolean {
 		if (feedback.definitionId === 'logic_operator') {
 			switch (
 				feedback.options.operation?.value // This can't be an expression
