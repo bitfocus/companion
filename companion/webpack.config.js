@@ -17,6 +17,7 @@ export default {
 		main: './dist/main.js',
 		// Handler: './lib/Surface/USB/Handler.js',
 		RenderThread: './dist/Graphics/Thread.js',
+		ImportExportThread: './dist/ImportExport/Thread.js',
 	},
 	mode: devMode,
 	// note: `undefined` defaults to 'eval' in dev mode, which is not compatible with `output.module: true` (particularly when `importMeta: false`)
