@@ -67,7 +67,7 @@ export function useControlEventsEditorService(
 
 			performDuplicate: (eventId: string) => {
 				duplicateMutation.mutateAsync({ controlId, eventId }).catch((e) => {
-					console.error(`Failed to duplicate feeeventdback: ${e}`)
+					console.error(`Failed to duplicate event: ${e}`)
 				})
 			},
 

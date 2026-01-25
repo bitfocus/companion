@@ -199,7 +199,7 @@ export class VariablesAndExpressionParser {
 			if (!parseResult.ok) throw new Error(parseResult.error)
 
 			return {
-				value: parseResult.value as any,
+				value: parseResult.value,
 				referencedVariableIds: parseResult.variableIds,
 			}
 		} else if (fieldType === 'variables') {

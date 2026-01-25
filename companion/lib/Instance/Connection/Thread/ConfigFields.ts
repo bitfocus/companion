@@ -266,6 +266,6 @@ function translateCommonFields(
 				}
 			: undefined,
 		disableAutoExpression: field.disableAutoExpression ?? false,
-		allowInvalidValues: false, // TODO - support from modules
+		allowInvalidValues: field.allowInvalidValues ?? false,
 	}
 }

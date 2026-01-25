@@ -420,8 +420,8 @@ export class SurfaceGroup {
 			return 'invalid value'
 		}
 
-		if (key === 'last_page_id' && typeof value === 'string') {
-			this.#storeNewPage(value)
+		if (key === 'last_page_id' && typeof newValue === 'string') {
+			this.#storeNewPage(newValue)
 
 			return
 		} else {

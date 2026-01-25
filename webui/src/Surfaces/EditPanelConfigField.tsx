@@ -12,6 +12,7 @@ import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/Optio
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { DropdownChoiceInt } from '~/DropDownInputFancy'
 import type { JsonValue } from 'type-fest'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: JsonValue | undefined) => void
@@ -41,10 +42,10 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
 	const checkValid = useCallback(
-		(value: JsonValue) => validateInputValue(definition, value) === undefined,
+		(value: JsonValue | undefined) => validateInputValue(definition, value) === undefined,
 		[definition]
 	)
-	const setValue2 = useCallback((val: JsonValue) => setValue(id, val), [setValue, id])
+	const setValue2 = useCallback((val: JsonValue | undefined) => setValue(id, val), [setValue, id])
 
 	let control: JSX.Element | string | undefined = undefined
 	let features: InputFeatureIconsProps | undefined
@@ -61,13 +62,13 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 			control = definition.isExpression ? (
 				<ExpressionInputField
-					value={value as any}
+					value={stringifyVariableValue(value) ?? ''}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					setValue={setValue2}
 				/>
 			) : (
 				<TextInputField
-					value={value as any}
+					value={stringifyVariableValue(value) ?? ''}
 					placeholder={definition.placeholder}
 					useVariables={features.variables}
 					localVariables={features.local ? SurfaceLocalVariables : undefined}
@@ -96,14 +97,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 		case 'checkbox':
 			control = (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					<CFormSwitch
-						color="success"
-						checked={value as any}
-						size="xl"
-						onChange={() => {
-							setValue2(!value)
-						}}
-					/>
+					<CFormSwitch color="success" checked={!!value} size="xl" onChange={() => setValue2(!value)} />
 				</div>
 			)
 			break
