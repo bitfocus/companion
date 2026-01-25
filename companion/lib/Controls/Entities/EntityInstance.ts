@@ -206,7 +206,7 @@ export class ControlEntityInstance {
 
 		this.#cachedFeedbackValue = this.#getStartupValue()
 		if (data.type === EntityModelType.Feedback && !data.isInverted?.isExpression) {
-			this.#cachedIsInverted = !!data.isInverted
+			this.#cachedIsInverted = !!data.isInverted?.value
 		}
 	}
 
