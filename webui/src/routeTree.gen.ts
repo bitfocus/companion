@@ -411,6 +411,7 @@ const ModulesModuleTypeDotmoduleIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/emulator': typeof EmulatorRouteWithChildren
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
   '/emulator2': typeof RedirectsEmulator2Route
@@ -432,7 +433,6 @@ export interface FileRoutesByFullPath {
   '/triggers': typeof TriggersRouteWithChildren
   '/connection-debug/$connectionId': typeof ConnectionDebugDotconnectionIdRoute
   '/emulator/$emulatorId': typeof EmulatorEmulatorIdDotlazyRoute
-  '/': typeof IndexRoute
   '/emulator/': typeof EmulatorIndexRoute
   '/buttons/$page': typeof ButtonsPageRoute
   '/connections/$connectionId': typeof ConnectionsConnectionIdRoute
@@ -456,9 +456,9 @@ export interface FileRoutesByFullPath {
   '/surfaces/debug/$instanceId': typeof SurfacesDotdebugDotinstanceIdRoute
   '/connections/': typeof ConnectionsIndexRoute
   '/modules/': typeof ModulesIndexRoute
-  '/settings': typeof SettingsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/triggers/': typeof TriggersIndexRoute
-  '/variables': typeof VariablesIndexRoute
+  '/variables/': typeof VariablesIndexRoute
   '/modules/$moduleType/$moduleId': typeof ModulesModuleTypeDotmoduleIdRoute
   '/settings/backups/$ruleId': typeof SettingsBackupsRuleIdRoute
   '/surfaces/configured/$itemId': typeof SurfacesConfiguredItemIdRoute
@@ -598,6 +598,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/emulator'
     | '/emulator.html'
     | '/emulator2'
@@ -619,7 +620,6 @@ export interface FileRouteTypes {
     | '/triggers'
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
-    | '/'
     | '/emulator/'
     | '/buttons/$page'
     | '/connections/$connectionId'
@@ -643,9 +643,9 @@ export interface FileRouteTypes {
     | '/surfaces/debug/$instanceId'
     | '/connections/'
     | '/modules/'
-    | '/settings'
+    | '/settings/'
     | '/triggers/'
-    | '/variables'
+    | '/variables/'
     | '/modules/$moduleType/$moduleId'
     | '/settings/backups/$ruleId'
     | '/surfaces/configured/$itemId'
@@ -881,7 +881,7 @@ declare module '@tanstack/react-router' {
     '/_app': {
       id: '/_app'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof appRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -972,7 +972,7 @@ declare module '@tanstack/react-router' {
     '/_app/variables/': {
       id: '/_app/variables/'
       path: '/variables'
-      fullPath: '/variables'
+      fullPath: '/variables/'
       preLoaderRoute: typeof VariablesIndexRouteImport
       parentRoute: typeof appRoute
     }
@@ -986,7 +986,7 @@ declare module '@tanstack/react-router' {
     '/_app/settings/': {
       id: '/_app/settings/'
       path: '/settings'
-      fullPath: '/settings'
+      fullPath: '/settings/'
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof appRoute
     }
