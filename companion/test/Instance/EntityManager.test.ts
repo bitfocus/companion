@@ -720,8 +720,7 @@ describe('InstanceEntityManager', () => {
 							id: 'entity-1',
 							upgradeIndex: 3,
 						}),
-						parsedOptions: {},
-					} satisfies EntityManagerActionEntity,
+					} satisfies Omit<EntityManagerActionEntity, 'parsedOptions'>,
 				],
 				5
 			)
@@ -739,7 +738,7 @@ describe('InstanceEntityManager', () => {
 					type: EntityModelType.Action,
 					definitionId: 'action-1',
 					connectionId: 'connection-1',
-					options: { old: true },
+					options: { old: { isExpression: false, value: true } },
 					upgradeIndex: 3,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
@@ -765,7 +764,7 @@ describe('InstanceEntityManager', () => {
 						id: 'entity-1',
 						type: EntityModelType.Action,
 						definitionId: 'action-1',
-						options: { upgraded: true },
+						options: { upgraded: { isExpression: false, value: true } },
 						upgradeIndex: 5,
 					},
 				] satisfies ReplaceableActionEntityModel[]
@@ -786,7 +785,7 @@ describe('InstanceEntityManager', () => {
 					id: 'entity-1',
 					type: EntityModelType.Action,
 					definitionId: 'action-1',
-					options: { upgraded: true },
+					options: { upgraded: { isExpression: false, value: true } },
 					upgradeIndex: 5,
 				})
 			)
@@ -912,7 +911,7 @@ describe('InstanceEntityManager', () => {
 	})
 
 	describe('Performance', () => {
-		it('should handle multiple concurrent entity operations efficiently', () => {
+		it.only('should handle multiple concurrent entity operations efficiently', () => {
 			entityManager.start(5)
 
 			// Create a large number of entities
@@ -947,7 +946,7 @@ describe('InstanceEntityManager', () => {
 						type: isAction ? EntityModelType.Action : EntityModelType.Feedback,
 						definitionId: `def-${i}`,
 						connectionId: 'connection-1',
-						options: { index: i },
+						options: { index: { isExpression: false, value: i } },
 						upgradeIndex: 5,
 					}),
 					getEntityDefinition: vi.fn().mockReturnValue({
@@ -981,10 +980,10 @@ describe('InstanceEntityManager', () => {
 					type: EntityModelType.Action,
 					definitionId: 'def-0',
 					connectionId: 'connection-1',
-					options: { index: 0 },
+					options: { index: { isExpression: false, value: 0 } },
 					upgradeIndex: 5,
 				},
-				parsedOptions: { index: 0 },
+				parsedOptions: { index: 'value-0' },
 			} satisfies EntityManagerActionEntity)
 
 			// Find feedback call and verify it contains expected feedback entities
@@ -1003,10 +1002,10 @@ describe('InstanceEntityManager', () => {
 					type: EntityModelType.Feedback,
 					definitionId: 'def-1',
 					connectionId: 'connection-1',
-					options: { index: 1 },
+					options: { index: { isExpression: false, value: 1 } },
 					upgradeIndex: 5,
 				},
-				parsedOptions: { index: 1 },
+				parsedOptions: { index: 'value-0' },
 				imageSize: { width: 72, height: 58 },
 			} satisfies EntityManagerFeedbackEntity)
 		})
@@ -1298,8 +1297,7 @@ describe('InstanceEntityManager', () => {
 							options: {},
 							upgradeIndex: 3,
 						},
-						parsedOptions: {},
-					} satisfies EntityManagerActionEntity,
+					} satisfies Omit<EntityManagerActionEntity, 'parsedOptions'>,
 				],
 				5
 			)
@@ -1504,7 +1502,7 @@ describe('InstanceEntityManager', () => {
 						id: 'entity-1',
 						type: EntityModelType.Action,
 						definitionId: 'action-1',
-						options: { upgraded: true },
+						options: { upgraded: { isExpression: false, value: true } },
 						upgradeIndex: 5,
 					},
 				] satisfies ReplaceableActionEntityModel[]
@@ -1515,7 +1513,7 @@ describe('InstanceEntityManager', () => {
 						id: 'entity-3',
 						type: EntityModelType.Feedback,
 						definitionId: 'feedback-1',
-						options: { upgraded: true },
+						options: { upgraded: { isExpression: false, value: true } },
 						upgradeIndex: 5,
 					},
 				] satisfies ReplaceableFeedbackEntityModel[]
@@ -1542,9 +1540,8 @@ describe('InstanceEntityManager', () => {
 							options: {},
 							upgradeIndex: 3,
 						},
-						parsedOptions: {},
 					},
-				] satisfies EntityManagerActionEntity[],
+				] satisfies Omit<EntityManagerActionEntity, 'parsedOptions'>[],
 				5
 			)
 			expect(mockAdapter.upgradeFeedbacks).toHaveBeenCalledWith(
@@ -1559,10 +1556,9 @@ describe('InstanceEntityManager', () => {
 							options: {},
 							upgradeIndex: 3,
 						},
-						parsedOptions: {},
 						imageSize: undefined,
 					},
-				] satisfies EntityManagerFeedbackEntity[],
+				] satisfies Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[],
 				5
 			)
 

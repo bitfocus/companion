@@ -18,12 +18,14 @@ import {
 import {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
+	NewFeedbackValue,
 	ProcessManagerForEntity,
 } from '../../../lib/Controls/Entities/Types.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import { FeedbackStyleBuilder } from '../../../lib/Controls/Entities/FeedbackStyleBuilder.js'
 import { mock } from 'vitest-mock-extended'
+import { EntityPoolIsInvertedManager } from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
 
 function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
 	const getEntityDefinition = vi.fn<InstanceDefinitionsForEntity['getEntityDefinition']>()
@@ -41,6 +43,10 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		connectionEntityDelete,
 		connectionEntityLearnOptions: null as any,
 	}
+	const isInvertedManager: EntityPoolIsInvertedManager = {
+		trackEntity: vi.fn(),
+		forgetEntity: vi.fn(),
+	} as any
 	const internalController: InternalControllerForEntity = {
 		entityUpdate: internalEntityUpdate,
 		entityDelete: internalEntityDelete,
@@ -52,6 +58,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
+		isInvertedManager,
 		controlId,
 		ownerId ?? null,
 		listId ?? {
@@ -71,6 +78,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
+		isInvertedManager,
 		controlId,
 		newActionModel,
 		false
@@ -436,7 +444,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -455,7 +463,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -475,7 +483,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -500,7 +508,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -522,7 +530,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -550,7 +558,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -576,7 +584,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -610,7 +618,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 			children: {
@@ -621,7 +629,7 @@ describe('addEntity', () => {
 						connectionId: 'my-conn99',
 						definitionId: 'something',
 						options: {
-							test: 123,
+							test: { isExpression: false, value: 123 },
 						},
 						upgradeIndex: undefined,
 					},
@@ -662,7 +670,7 @@ describe('addEntity', () => {
 			connectionId: 'internal',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 			children: {
@@ -673,7 +681,7 @@ describe('addEntity', () => {
 						connectionId: 'my-conn99',
 						definitionId: 'thing',
 						options: {
-							test: 99,
+							test: { isExpression: false, value: 99 },
 						},
 						upgradeIndex: undefined,
 					},
@@ -685,7 +693,7 @@ describe('addEntity', () => {
 						connectionId: 'my-conn99',
 						definitionId: 'another',
 						options: {
-							test: 45,
+							test: { isExpression: false, value: 45 },
 						},
 						upgradeIndex: undefined,
 					},
@@ -723,7 +731,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -760,7 +768,7 @@ describe('addEntity', () => {
 			connectionId: 'internal',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 			children: {
@@ -771,7 +779,7 @@ describe('addEntity', () => {
 						connectionId: 'my-conn99',
 						definitionId: 'thing',
 						options: {
-							test: 99,
+							test: { isExpression: false, value: 99 },
 						},
 						upgradeIndex: undefined,
 					},
@@ -1290,7 +1298,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('all disabled', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		// Disable all feedbacks
 		for (const entity of list.getAllEntities()) {
@@ -1303,7 +1311,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('basic boolean values', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		const entity = list.findById('02')
 		expect(entity).not.toBeUndefined()
@@ -1317,7 +1325,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('advanced value values', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('internal', { int0: 'abc' })
+		list.updateFeedbackValues('internal', translateFeedbackValues({ int0: 'abc' }))
 
 		const entity = list.findById('int0')
 		expect(entity).not.toBeUndefined()
@@ -1358,7 +1366,7 @@ describe('getBooleanFeedbackValue', () => {
 	test('all disabled', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		// Disable all feedbacks
 		for (const entity of list.getAllEntities()) {
@@ -1376,13 +1384,13 @@ describe('getBooleanFeedbackValue', () => {
 		list.findById('int0')?.setEnabled(false)
 
 		// set some values
-		list.updateFeedbackValues('conn01', { '01': true })
+		list.updateFeedbackValues('conn01', translateFeedbackValues({ '01': true }))
 
 		// check still false
 		expect(list.getBooleanFeedbackValue()).toBe(false)
 
 		// set final value
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 		expect(list.getBooleanFeedbackValue()).toBe(true)
 	})
 })
@@ -1409,7 +1417,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('all disabled', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		// Disable all feedbacks
 		for (const entity of list.getAllEntities()) {
@@ -1422,8 +1430,8 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('basic feedback values', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
-		list.updateFeedbackValues('internal', { int0: 'abcd' })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
+		list.updateFeedbackValues('internal', translateFeedbackValues({ int0: 'abcd' }))
 
 		const fb = list.findById('02')
 		fb!.setStyleValue('bgcolor', 123)
@@ -1463,7 +1471,7 @@ describe('buildFeedbackStyle', () => {
 	test('disabled', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		// Disable all feedbacks
 		for (const entity of list.getAllEntities()) {
@@ -1480,8 +1488,8 @@ describe('buildFeedbackStyle', () => {
 	test('basic feedback values', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
-		list.updateFeedbackValues('internal', { int0: 'abcd' })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
+		list.updateFeedbackValues('internal', translateFeedbackValues({ int0: 'abcd' }))
 
 		const fb = list.findById('02')
 		fb!.setStyleValue('bgcolor', 123)
@@ -1508,7 +1516,7 @@ describe('updateFeedbackValues', () => {
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		expect(list.updateFeedbackValues('internal', {})).toHaveLength(0)
+		expect(list.updateFeedbackValues('internal', new Map())).toHaveLength(0)
 	})
 
 	test('try set value for action', () => {
@@ -1522,9 +1530,12 @@ describe('updateFeedbackValues', () => {
 		expect(list.getAllEntities()).toHaveLength(6)
 
 		expect(
-			list.updateFeedbackValues('internal', {
-				int0: 'abc',
-			})
+			list.updateFeedbackValues(
+				'internal',
+				translateFeedbackValues({
+					int0: 'abc',
+				})
+			)
 		).toHaveLength(0)
 
 		// Ensure value is still undefined
@@ -1546,9 +1557,12 @@ describe('updateFeedbackValues', () => {
 		const entity = list.findById('int2')
 
 		expect(
-			list.updateFeedbackValues('conn04', {
-				int2: 'abc',
-			})
+			list.updateFeedbackValues(
+				'conn04',
+				translateFeedbackValues({
+					int2: 'abc',
+				})
+			)
 		).toEqual([entity])
 
 		// Ensure value is reflected
@@ -1567,16 +1581,10 @@ describe('updateFeedbackValues', () => {
 		expect(list.getAllEntities()).toHaveLength(6)
 
 		// Set once
-		list.updateFeedbackValues('conn04', {
-			int2: 'abc',
-		})
+		list.updateFeedbackValues('conn04', translateFeedbackValues({ int2: 'abc' }))
 
 		// Try again
-		expect(
-			list.updateFeedbackValues('conn04', {
-				int2: 'abc',
-			})
-		).toHaveLength(0)
+		expect(list.updateFeedbackValues('conn04', translateFeedbackValues({ int2: 'abc' }))).toHaveLength(0)
 
 		// Ensure value is reflected
 		const entity = list.findById('int2')
@@ -1624,3 +1632,15 @@ describe('getAllEnabledConnectionIds', () => {
 		expect(connectionIds).toHaveLength(0)
 	})
 })
+
+function translateFeedbackValues(oldValues: Record<string, any>): Map<string, NewFeedbackValue> {
+	const map = new Map<string, NewFeedbackValue>()
+	for (const [entityId, value] of Object.entries(oldValues)) {
+		map.set(entityId, {
+			entityId,
+			controlId: '',
+			value,
+		})
+	}
+	return map
+}
