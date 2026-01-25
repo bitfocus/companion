@@ -10,7 +10,7 @@ import {
 import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
-import { validateInputValue } from '~/Helpers/validateInputValue'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { JsonValue } from 'type-fest'
 

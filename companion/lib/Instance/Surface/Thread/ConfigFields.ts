@@ -122,6 +122,7 @@ function translateCommonFields(
 	| 'isVisibleUi'
 	| 'width'
 	| 'disableAutoExpression'
+	| 'allowInvalidValues'
 > {
 	return {
 		id: field.id,
@@ -139,5 +140,6 @@ function translateCommonFields(
 		expressionDescription: undefined,
 		width: undefined,
 		disableAutoExpression: true,
+		allowInvalidValues: false,
 	}
 }
