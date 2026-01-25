@@ -674,6 +674,11 @@ function fixupEntity(entity: SomeEntityModelV10): SomeEntityModelV10 | null {
 				changed = convertSimplePropertyToExpressionValue(entity.options, 'page') || changed
 			}
 		}
+
+		// Ensure children are also upgraded
+		for (const children of Object.values(entity.children || {})) {
+			changed = fixupEntities(children) || changed
+		}
 	}
 
 	// TODO ensure everything is now an expression
