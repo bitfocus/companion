@@ -2,7 +2,15 @@ import type { JsonValue } from 'type-fest'
 import type { SomeCompanionInputField } from './Model/Options.js'
 import { ParseExpression } from './Expression/ExpressionParse.js'
 import { assertNever } from './Util.js'
+import { stringifyVariableValue } from './Model/Variables.js'
+import isEqual from 'fast-deep-equal'
 
+/**
+ * Check if a value is valid for a given input field definition
+ * @param definition The input field definition
+ * @param value The value to validate
+ * @returns An error message if invalid, or undefined if valid
+ */
 export function validateInputValue(
 	definition: SomeCompanionInputField,
 	value: JsonValue | undefined
@@ -17,9 +25,11 @@ export function validateInputValue(
 				return 'A value must be provided'
 			}
 
+			const valueStr = value === undefined || value === null ? '' : (stringifyVariableValue(value) ?? '')
+
 			if (definition.isExpression) {
 				try {
-					ParseExpression(value)
+					ParseExpression(valueStr)
 				} catch (_e) {
 					return 'Expression is not valid'
 				}
@@ -27,9 +37,7 @@ export function validateInputValue(
 
 			const compiledRegex = compileRegex(definition.regex)
 			if (compiledRegex) {
-				if (value === undefined || value === null) value = ''
-				else value = String(value)
-				if (!compiledRegex.exec(value)) {
+				if (!compiledRegex.exec(valueStr)) {
 					return `Value does not match regex: ${definition.regex}`
 				}
 			}
@@ -42,11 +50,11 @@ export function validateInputValue(
 				return 'A value must be provided'
 			}
 
+			const valueStr = value === undefined || value === null ? '' : (stringifyVariableValue(value) ?? '')
+
 			const compiledRegex = compileRegex(definition.regex)
 			if (compiledRegex) {
-				if (value === undefined || value === null) value = ''
-				else value = String(value)
-				if (!compiledRegex.exec(value)) {
+				if (!compiledRegex.exec(valueStr)) {
 					return `Value does not match regex: ${definition.regex}`
 				}
 			}
@@ -59,15 +67,21 @@ export function validateInputValue(
 				return 'A value must be provided'
 			}
 
-			if (value !== undefined && value !== '' && isNaN(value)) {
+			if (value === undefined || value === '' || value === null) {
+				return undefined
+			}
+
+			// Coerce to number
+			const numValue = typeof value === 'number' ? value : Number(value)
+			if (isNaN(numValue)) {
 				return 'Value must be a number'
 			}
 
 			// Verify the value range
-			if (definition.min !== undefined && value < definition.min) {
+			if (definition.min !== undefined && numValue < definition.min) {
 				return `Value must be greater than or equal to ${definition.min}`
 			}
-			if (definition.max !== undefined && value > definition.max) {
+			if (definition.max !== undefined && numValue > definition.max) {
 				return `Value must be less than or equal to ${definition.max}`
 			}
 
@@ -75,34 +89,80 @@ export function validateInputValue(
 		}
 
 		case 'checkbox':
+			// Coerce to boolean
+			if (value !== undefined && typeof value !== 'boolean') {
+				return 'Value must be a boolean'
+			}
+			return undefined
+
 		case 'colorpicker':
+			if (value === undefined) return undefined
+
+			// Validate based on returnType
+			if (definition.returnType === 'number') {
+				const numValue = typeof value === 'number' ? value : Number(value)
+				if (isNaN(numValue)) {
+					return 'Value must be a number'
+				}
+			} else {
+				if (typeof value !== 'string' && typeof value !== 'number') {
+					return 'Value must be a string or number'
+				}
+			}
+			return undefined
+
 		case 'bonjour-device':
 		case 'custom-variable':
 			// Nothing to check
 			return undefined
 
 		case 'dropdown': {
-			if (definition.allowCustom && !definition.choices.find((c) => c.id === value)) {
-				// If allowCustom is true, and the value is not in the choices, check the regex
-				const compiledRegex = compileRegex(definition.regex)
-				if (compiledRegex && !compiledRegex.exec(String(value))) {
-					return `Value does not match regex: ${definition.regex}`
-				}
+			// Check if value is in choices
+			const isInChoices = definition.choices.some((c) => isEqual(c.id, value))
+			if (isInChoices) return undefined
+
+			if (!definition.allowCustom) {
+				return 'Value is not in the list of choices'
+			}
+
+			// If allowCustom is true, and the value is not in the choices, check the regex
+			const strValue = stringifyVariableValue(value) ?? ''
+			const compiledRegex = compileRegex(definition.regex)
+			if (compiledRegex && !compiledRegex.exec(strValue)) {
+				return `Value does not match regex: ${definition.regex}`
 			}
 
 			return undefined
 		}
 
 		case 'multidropdown': {
-			const newValueArr = Array.isArray(value) ? value : [value]
+			if (value === undefined) return undefined
 
-			if (definition.allowCustom) {
+			if (!Array.isArray(value)) {
+				return 'Value must be an array'
+			}
+
+			// Check min/max selection
+			if (definition.minSelection !== undefined && value.length < definition.minSelection) {
+				return `Must select at least ${definition.minSelection} items`
+			}
+			if (definition.maxSelection !== undefined && value.length > definition.maxSelection) {
+				return `Must select at most ${definition.maxSelection} items`
+			}
+
+			// Validate each value
+			for (const val of value) {
+				// Check if value is in choices
+				const isInChoices = definition.choices.some((c) => isEqual(c.id, val))
+				if (isInChoices) continue
+
+				if (!definition.allowCustom) return 'Value is not in the list of choices'
+
 				// If allowCustom is true, and the value is not in the choices, check the regex
+				const strVal = stringifyVariableValue(val) ?? ''
 				const compiledRegex = compileRegex(definition.regex)
-				for (const val of newValueArr) {
-					if (compiledRegex && !definition.choices.find((c) => c.id === val) && !compiledRegex.exec(String(val))) {
-						return `Value does not match regex: ${definition.regex}`
-					}
+				if (compiledRegex && !compiledRegex.exec(strVal)) {
+					return `Value does not match regex: ${definition.regex}`
 				}
 			}
 

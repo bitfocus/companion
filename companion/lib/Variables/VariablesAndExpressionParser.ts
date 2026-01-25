@@ -131,7 +131,7 @@ export class VariablesAndExpressionParser {
 				parsedOptions[field.id] = parsedValue.value
 
 				// Ensure values are valid, or populate with default
-				if (!field.allowInvalidValues && !validateInputValue(field, parsedValue.value)) {
+				if (!field.allowInvalidValues && validateInputValue(field, parsedValue.value)) {
 					parsedOptions[field.id] = 'default' in field ? field.default : undefined
 				}
 
