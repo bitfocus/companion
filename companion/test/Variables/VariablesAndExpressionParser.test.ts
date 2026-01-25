@@ -25,7 +25,7 @@ describe('VariablesAndExpressionParser', () => {
 		localValues: null = null,
 		overrideValues: null = null
 	): VariablesAndExpressionParser => {
-		return new VariablesAndExpressionParser(variables, thisValues, localValues, overrideValues)
+		return new VariablesAndExpressionParser(null as any, variables, thisValues, localValues, overrideValues)
 	}
 
 	describe('parseVariables', () => {
