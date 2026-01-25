@@ -18,6 +18,7 @@ import { stringifyVariableValue, type VariableValue } from '@companion-app/share
 import type { ReadonlyDeep } from 'type-fest'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { VariablesBlinker } from './VariablesBlinker.js'
 
 // Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
 const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
@@ -156,6 +157,7 @@ export interface VariableValueCache {
  * @param cachedVariableValues - Inject some variable values
  */
 export function executeExpression(
+	blinker: VariablesBlinker,
 	str: string,
 	rawVariableValues: ReadonlyDeep<VariableValueData>,
 	requiredType: string | undefined,
@@ -228,6 +230,20 @@ export function executeExpression(
 
 		const functions = {
 			...ExpressionFunctions,
+			blink(interval: any, dutyCycle: any): 0 | 1 {
+				// Validate the interval
+				const int = Number(interval)
+				if (isNaN(int) || int <= 0) return 0
+
+				const dutyRaw = Number(dutyCycle)
+				const duty = isNaN(dutyRaw) ? 0.5 : dutyRaw
+
+				// Fetch the name of the variable to watch
+				const variableName = blinker.trackDependencyOnInterval(int, duty)
+				if (!variableName) return 0
+
+				return getVariableValue(variableName) ? 1 : 0
+			},
 			parseVariables: (str: string, undefinedValue?: string): string => {
 				const result = parseVariablesInString(
 					str,
