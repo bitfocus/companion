@@ -54,7 +54,11 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
 
-	const optionVisibility = useOptionsVisibility(entityDefinition?.options, entity?.options)
+	const optionVisibility = useOptionsVisibility(
+		entityDefinition?.options,
+		!!entityDefinition?.optionsSupportExpressions,
+		entity?.options
+	)
 
 	const setInverted = useCallback(
 		(_k: string, inverted: ExpressionOrValue<JsonValue | undefined>) => {
@@ -148,7 +152,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								option={opt}
 								value={(entity.options || {})[opt.id]}
 								setValue={service.setValue}
-								visibility={optionVisibility[opt.id] ?? true}
+								visibility={optionVisibility.get(opt.id) ?? true}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
 								fieldSupportsExpression={entityDefinition.optionsSupportExpressions && !opt.disableAutoExpression}
