@@ -17,7 +17,6 @@ import type { ImageResult } from './ImageResult.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import workerPool from 'workerpool'
 import { isPackaged } from '../Resources/Util.js'
-import { fileURLToPath } from 'url'
 import path from 'path'
 import os from 'os'
 import debounceFn from 'debounce-fn'
@@ -58,7 +57,7 @@ export interface GraphicsOptions {
 function generateFontUrl(fontFilename: string): string {
 	const fontPath = isPackaged() ? 'assets/Fonts' : '../../../assets/Fonts'
 	// we could simplify by using import.meta.dirname
-	return fileURLToPath(new URL(path.join(fontPath, fontFilename), import.meta.url))
+	return path.join(import.meta.dirname, fontPath, fontFilename)
 }
 
 interface GraphicsControllerEvents {
@@ -102,22 +101,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 	readonly #renderQueue: ImageWriteQueue<string, [RenderArguments, boolean]>
 
-	#pool = workerPool.pool(
-		// note: import.meta.url can be replaced with import.meta.directory as long as we use node v22.16 and later
-		fileURLToPath(new URL(isPackaged() ? './RenderThread.js' : './Thread.js', import.meta.url)),
-		{
-			minWorkers: 2,
-			maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
-			workerType: 'thread',
-			onCreateWorker: () => {
-				this.#logger.info('Render worker created')
-				return undefined
-			},
-			onTerminateWorker: () => {
-				this.#logger.info('Render worker terminated')
-			},
-		}
-	)
+	#pool = workerPool.pool(path.join(import.meta.dirname, isPackaged() ? './RenderThread.js' : './Thread.js'), {
+		minWorkers: 2,
+		maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
+		workerType: 'thread',
+		onCreateWorker: () => {
+			this.#logger.info('Render worker created')
+			return undefined
+		},
+		onTerminateWorker: () => {
+			this.#logger.info('Render worker terminated')
+		},
+	})
 
 	// Track recent worker terminations (timestamps in ms)
 	#workerTerminationTimestamps: number[] = []

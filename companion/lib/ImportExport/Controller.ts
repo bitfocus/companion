@@ -40,10 +40,10 @@ import type { DataDatabase } from '../Data/Database.js'
 import { ImportController } from './Import.js'
 import { find_smallest_grid_for_page } from './Util.js'
 import workerPool from 'workerpool'
-import { fileURLToPath } from 'url'
 import { isPackaged } from '../Resources/Util.js'
 import LogController from '../Log/Controller.js'
 import type { ImportExportThreadMethods, ParseImportDataResult } from './ThreadMethods.js'
+import path from 'node:path'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -62,21 +62,18 @@ export class ImportExportController {
 	readonly #exportController: ExportController
 	readonly #importController: ImportController
 
-	#pool = workerPool.pool(
-		fileURLToPath(new URL(isPackaged() ? './ImportExportThread.js' : './Thread.js', import.meta.url)),
-		{
-			minWorkers: 1,
-			maxWorkers: 1, // Only need one worker for import parsing
-			workerType: 'thread',
-			onCreateWorker: () => {
-				this.#logger.info('ImportExport worker created')
-				return undefined
-			},
-			onTerminateWorker: () => {
-				this.#logger.info('ImportExport worker terminated')
-			},
-		}
-	)
+	#pool = workerPool.pool(path.join(import.meta.dirname, isPackaged() ? './ImportExportThread.js' : './Thread.js'), {
+		minWorkers: 1,
+		maxWorkers: 1, // Only need one worker for import parsing
+		workerType: 'thread',
+		onCreateWorker: () => {
+			this.#logger.info('ImportExport worker created')
+			return undefined
+		},
+		onTerminateWorker: () => {
+			this.#logger.info('ImportExport worker terminated')
+		},
+	})
 
 	#poolExec = async <TKey extends keyof typeof ImportExportThreadMethods>(
 		key: TKey,
@@ -97,7 +94,7 @@ export class ImportExportController {
 			const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer
 
 			const mainThreadSendTime = performance.now()
-			this.#logger.info(`Import: Transferring ${arrayBuffer.byteLength} bytes to worker (zero-copy)`)
+			this.#logger.info(`Import: Transferring ${arrayBuffer.byteLength} bytes to worker`)
 
 			let result: ParseImportDataResult
 			try {
