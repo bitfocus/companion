@@ -169,7 +169,7 @@ export interface CompanionInputFieldTextInputExtended extends CompanionInputFiel
 	type: 'textinput'
 
 	default?: string
-	required?: boolean
+	minLength?: number
 
 	regex?: string
 
@@ -209,18 +209,13 @@ export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBa
 	/** The default value */
 	default: number
 	/**
-	 * Whether a value is required
-	 * Note: values may not conform to this, it is a visual hint only
-	 */
-	required?: boolean
-	/**
 	 * The minimum value to allow
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Note: values may not conform to this
 	 */
 	min: number
 	/**
 	 * The maximum value to allow
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Note: values may not conform to this
 	 */
 	max: number
 	/** The stepping of the arrows */
@@ -265,9 +260,8 @@ export interface CompanionInputFieldSecretExtended extends CompanionInputFieldBa
 	default?: string
 	/**
 	 * Whether a value is required
-	 * Note: values may not conform to this, it is a visual hint only
 	 */
-	required?: boolean
+	minLength?: number
 
 	regex?: string
 }

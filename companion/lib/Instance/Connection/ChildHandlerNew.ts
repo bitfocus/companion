@@ -266,21 +266,21 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
-		const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
-			entity.type,
-			this.connectionId,
-			entity.definitionId
-		)
-		if (!entityDefinition) {
-			this.logger.warn(`Cannot learn values for unknown entity definition ${entity.definitionId}`)
-			return undefined
-		}
-		const learnTimeout = entityDefinition.learnTimeout
-
-		const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
-		const { parsedOptions } = parser.parseEntityOptions(entityDefinition, entity.options)
-
 		try {
+			const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
+				entity.type,
+				this.connectionId,
+				entity.definitionId
+			)
+			if (!entityDefinition) {
+				this.logger.warn(`Cannot learn values for unknown entity definition ${entity.definitionId}`)
+				return undefined
+			}
+			const learnTimeout = entityDefinition.learnTimeout
+
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
+			const { parsedOptions } = parser.parseEntityOptions(entityDefinition, entity.options)
+
 			switch (entity.type) {
 				case EntityModelType.Action: {
 					const msg = await this.#ipcWrapper.sendWithCb(
