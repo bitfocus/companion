@@ -21,7 +21,7 @@ export function validateInputValue(
 			return undefined
 
 		case 'textinput': {
-			if (definition.required && !value) {
+			if (definition.required && (value === undefined || value === null || value === '')) {
 				return 'A value must be provided'
 			}
 

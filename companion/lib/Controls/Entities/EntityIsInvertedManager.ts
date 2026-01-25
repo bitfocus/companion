@@ -20,7 +20,9 @@ export type CreateVariablesAndExpressionParser = (
 ) => VariablesAndExpressionParser
 
 /**
- *
+ * A manager to handle isInverted expressions for a control's entity pool.
+ * This will track entities, parse their isInverted expressions, and recalcalulate
+ * them when variables change.
  */
 export class EntityPoolIsInvertedManager {
 	readonly #logger: Logger
@@ -66,8 +68,11 @@ export class EntityPoolIsInvertedManager {
 				let isInverted = false
 
 				const isInvertedExpression = entity.rawIsInverted
-				if (!isInvertedExpression || !isExpressionOrValue(isInvertedExpression)) return false
-				if (!isInvertedExpression.isExpression) {
+				if (!isInvertedExpression || !isExpressionOrValue(isInvertedExpression)) {
+					isInverted = false
+
+					wrapper.lastReferencedVariableIds = null
+				} else if (!isInvertedExpression.isExpression) {
 					isInverted = !!isInvertedExpression.value
 
 					wrapper.lastReferencedVariableIds = null
@@ -99,8 +104,6 @@ export class EntityPoolIsInvertedManager {
 			if (updatedValues.size > 0) {
 				this.#updateFn(updatedValues)
 			}
-
-			return
 		},
 		{
 			before: false,
