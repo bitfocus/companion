@@ -84,7 +84,7 @@
     "node-gyp-build": "github:julusian/node-gyp-build#cross-install-support",
     "osc/serialport": "npm:empty-npm-package@1.0.0",
     "react-select": "npm:@julusian/react-select@^5.8.1-3",
-    "app-builder-lib@npm:26.3.6": "patch:app-builder-lib@npm%3A26.3.6#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch",
+    "app-builder-lib@npm:26.5.0": "patch:app-builder-lib@npm%3A26.5.0#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch",
     "@xkeys-lib/core@npm:3.3.0": "patch:@xkeys-lib/core@npm%3A3.3.0#~/.yarn/patches/@xkeys-lib-core-npm-3.3.0-1a65b6423b.patch",
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",

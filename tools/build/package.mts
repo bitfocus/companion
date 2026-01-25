@@ -244,3 +244,5 @@ if (process.env.ELECTRON !== '0') {
 } else {
 	// TODO - populate dist with the rest of the bits
 }
+
+console.log('Packaging complete!')
