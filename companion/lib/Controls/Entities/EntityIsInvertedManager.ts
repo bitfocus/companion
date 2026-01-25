@@ -11,7 +11,7 @@ interface EntityWrapper {
 
 	needsProcessing: boolean
 
-	lastReferencedVariableIds?: ReadonlySet<string>
+	lastReferencedVariableIds: ReadonlySet<string> | null
 }
 
 export type UpdateIsInvertedValuesFn = (newValues: ReadonlyMap<string, NewIsInvertedValue>) => void
@@ -46,7 +46,7 @@ export class EntityPoolIsInvertedManager {
 
 	readonly #debounceProcessPending = debounceFn(
 		() => {
-			if (!this.#destroyed) return
+			if (this.#destroyed) return
 
 			const updatedValues = new Map<string, NewIsInvertedValue>()
 
@@ -69,8 +69,12 @@ export class EntityPoolIsInvertedManager {
 				if (!isInvertedExpression || !isExpressionOrValue(isInvertedExpression)) return false
 				if (!isInvertedExpression.isExpression) {
 					isInverted = !!isInvertedExpression.value
+
+					wrapper.lastReferencedVariableIds = null
 				} else {
 					const parsed = parser.executeExpression(isInvertedExpression.value, 'boolean')
+
+					wrapper.lastReferencedVariableIds = parsed.variableIds
 
 					if (!parsed.ok) {
 						this.#logger.warn(`Failed to parse boolean expression: ${parsed.error}`)
@@ -111,7 +115,7 @@ export class EntityPoolIsInvertedManager {
 	 * Cleanup is not performed, it is assumed that the module is no longer running.
 	 */
 	destroy(): void {
-		this.#destroyed = false
+		this.#destroyed = true
 		this.#debounceProcessPending.cancel()
 		this.#entities.clear()
 	}
@@ -125,6 +129,7 @@ export class EntityPoolIsInvertedManager {
 		this.#entities.set(entity.id, {
 			entity: new WeakRef(entity),
 			needsProcessing: true,
+			lastReferencedVariableIds: null,
 		})
 
 		this.#logger.silly(`Queued entity ${entity.id} for processing`)

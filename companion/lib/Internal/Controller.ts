@@ -143,15 +143,10 @@ export class InternalController {
 
 		// Find all the feedbacks on controls
 		const allControls = this.#controlsController.getAllControls()
-		for (const [controlId, control] of allControls.entries()) {
+		for (const control of allControls.values()) {
 			if (!control.supportsEntities) continue
 
-			const allEntities = control.entities.getAllEntities()
-			for (const entity of allEntities) {
-				if (entity.connectionId !== 'internal') continue
-
-				this.entityUpdate(entity.asEntityModel(), controlId)
-			}
+			control.entities.resubscribeEntities(undefined, 'internal')
 		}
 
 		// Make all variables values
