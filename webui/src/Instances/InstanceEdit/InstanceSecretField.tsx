@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { SecretTextInputField } from '~/Components/SecretTextInputField'
-import { validateInputValue } from '~/Helpers/validateInputValue'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { JsonValue } from 'type-fest'
 
 interface InstanceSecretFieldProps {

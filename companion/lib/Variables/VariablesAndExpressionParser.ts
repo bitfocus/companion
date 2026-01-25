@@ -23,6 +23,7 @@ import {
 	type ExpressionableOptionsObject,
 	type ExpressionOrValue,
 } from '@companion-app/shared/Model/Options.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 
 /**
  * A class to parse and execute expressions with variables
@@ -128,6 +129,11 @@ export class VariablesAndExpressionParser {
 
 				const parsedValue = this.parseEntityOption(options[field.id], fieldType)
 				parsedOptions[field.id] = parsedValue.value
+
+				// Ensure values are valid, or populate with default
+				if (!field.allowInvalidValues && !validateInputValue(field, parsedValue.value)) {
+					parsedOptions[field.id] = 'default' in field ? field.default : undefined
+				}
 
 				// Track the variables referenced in this field
 				if (

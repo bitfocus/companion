@@ -9,7 +9,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { EditPanelConfigField } from '../EditPanelConfigField'
-import { validateInputValue } from '~/Helpers/validateInputValue'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { JsonValue } from 'type-fest'
 
 interface SurfaceEditPanelProps {

@@ -243,7 +243,14 @@ function translateCommonFields(
 	field: CompanionInputFieldBase
 ): Pick<
 	Complete<CompanionInputFieldBaseExtended>,
-	'id' | 'label' | 'tooltip' | 'description' | 'expressionDescription' | 'isVisibleUi' | 'disableAutoExpression'
+	| 'id'
+	| 'label'
+	| 'tooltip'
+	| 'description'
+	| 'expressionDescription'
+	| 'isVisibleUi'
+	| 'disableAutoExpression'
+	| 'allowInvalidValues'
 > {
 	return {
 		id: field.id,
@@ -259,5 +266,6 @@ function translateCommonFields(
 				}
 			: undefined,
 		disableAutoExpression: field.disableAutoExpression ?? false,
+		allowInvalidValues: false, // TODO - support from modules
 	}
 }

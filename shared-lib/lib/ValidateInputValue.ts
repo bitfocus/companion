@@ -1,11 +1,11 @@
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { assertNever } from '~/Resources/util.js'
+import type { JsonValue } from 'type-fest'
+import type { SomeCompanionInputField } from './Model/Options.js'
+import { ParseExpression } from './Expression/ExpressionParse.js'
+import { assertNever } from './Util.js'
 
 export function validateInputValue(
 	definition: SomeCompanionInputField,
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	value: any
+	value: JsonValue | undefined
 ): string | undefined {
 	switch (definition.type) {
 		case 'static-text':

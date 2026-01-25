@@ -9,7 +9,7 @@ import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
-import { validateInputValue } from '~/Helpers/validateInputValue'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { DropdownChoiceInt } from '~/DropDownInputFancy'
 import type { JsonValue } from 'type-fest'
 

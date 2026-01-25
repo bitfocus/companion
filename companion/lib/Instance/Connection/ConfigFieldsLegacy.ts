@@ -259,7 +259,14 @@ function translateCommonFields(
 	field: EncodeIsVisible<CompanionInputFieldBase>
 ): Pick<
 	Complete<CompanionInputFieldBaseExtended>,
-	'id' | 'label' | 'tooltip' | 'description' | 'expressionDescription' | 'isVisibleUi' | 'disableAutoExpression'
+	| 'id'
+	| 'label'
+	| 'tooltip'
+	| 'description'
+	| 'expressionDescription'
+	| 'isVisibleUi'
+	| 'disableAutoExpression'
+	| 'allowInvalidValues'
 > {
 	return {
 		id: field.id,
@@ -269,6 +276,7 @@ function translateCommonFields(
 		expressionDescription: undefined, // Expressions not supported from 1.x modules
 		isVisibleUi: translateIsVisibleFn(field),
 		disableAutoExpression: true, // Expressions not supported from 1.x modules
+		allowInvalidValues: false, // Shouldn't matter as expressions not supported from 1.x modules, but play it safe
 	}
 }
 

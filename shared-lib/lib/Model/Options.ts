@@ -82,6 +82,12 @@ export interface CompanionInputFieldBaseExtended {
 	 * Note: This is only available for internal connections
 	 */
 	disableAutoExpression?: boolean
+
+	/**
+	 * Whether to allow 'invalid' values to be passed to the module when an expression is used in this field.
+	 * If false, the default value will be used instead.
+	 */
+	allowInvalidValues?: boolean
 }
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
