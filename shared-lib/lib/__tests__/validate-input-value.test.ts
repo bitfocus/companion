@@ -370,8 +370,8 @@ describe('validateInputValue', () => {
 			],
 		}
 
-	it('should return error when value is undefined (strict validation)', () => {
-		expect(validateInputValue(definition, undefined)).toBe('Value is not in the list of choices')
+		it('should return error when value is undefined (strict validation)', () => {
+			expect(validateInputValue(definition, undefined)).toBe('Value is not in the list of choices')
 			expect(validateInputValue(definition, 'option1')).toBeUndefined()
 			expect(validateInputValue(definition, 'option2')).toBeUndefined()
 		})
