@@ -330,8 +330,6 @@ const EventEditor = observer(function EventEditor({
 
 	const eventSpec = eventDefinitions.definitions.get(event.type)
 
-	const optionVisibility = useOptionsVisibility(eventSpec?.options, event?.options)
-
 	const innerSetEnabled = useCallback(
 		(e: React.FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
 		[service]
@@ -355,11 +353,13 @@ const EventEditor = observer(function EventEditor({
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(event.id)
 
 	// Events don't support expressions, so we have to pretend for the UI
-	const simpleOptions = optionsObjectToExpressionOptions(event.options || {})
+	const wrappedOptions = optionsObjectToExpressionOptions(event.options || {})
 	const setWrappedValue = useCallback(
 		(key: string, value: ExpressionOrValue<JsonValue | undefined>) => service.setValue(key, value.value),
 		[service]
 	)
+
+	const optionVisibility = useOptionsVisibility(eventSpec?.options, false, wrappedOptions)
 
 	return (
 		<>
@@ -429,9 +429,9 @@ const EventEditor = observer(function EventEditor({
 									entityType={null}
 									connectionId={'internal'}
 									option={opt}
-									value={simpleOptions[opt.id]}
+									value={wrappedOptions[opt.id]}
 									setValue={setWrappedValue}
-									visibility={optionVisibility[opt.id] ?? true}
+									visibility={optionVisibility.get(opt.id) ?? true}
 									localVariablesStore={localVariablesStore}
 									fieldSupportsExpression={false} // Events do not support expressions
 								/>
