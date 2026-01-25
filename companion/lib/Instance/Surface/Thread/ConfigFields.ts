@@ -70,7 +70,7 @@ function translateTextInputField(field: CompanionInputFieldTextInput): Complete<
 		type: 'textinput',
 		default: field.default,
 		regex: field.regex,
-		required: undefined,
+		minLength: undefined,
 		multiline: false,
 		placeholder: undefined, // Not supported from modules
 		isExpression: false, // Not supported from modules
@@ -92,7 +92,6 @@ function translateNumberField(field: CompanionInputFieldNumber): Complete<Compan
 		min: field.min,
 		max: field.max,
 		step: field.step,
-		required: undefined,
 		range: undefined,
 		showMinAsNegativeInfinity: undefined,
 		showMaxAsPositiveInfinity: undefined,

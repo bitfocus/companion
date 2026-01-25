@@ -21,11 +21,14 @@ export function validateInputValue(
 			return undefined
 
 		case 'textinput': {
-			if (definition.required && (value === undefined || value === null || value === '')) {
+			if (value === undefined || value === null) {
 				return 'A value must be provided'
 			}
 
-			const valueStr = value === undefined || value === null ? '' : (stringifyVariableValue(value) ?? '')
+			const valueStr = stringifyVariableValue(value) ?? ''
+			if (definition.minLength !== undefined && valueStr.length < definition.minLength) {
+				return `Value must be at least ${definition.minLength} characters long`
+			}
 
 			if (definition.isExpression) {
 				try {
@@ -46,11 +49,14 @@ export function validateInputValue(
 		}
 
 		case 'secret-text': {
-			if (definition.required && !value) {
+			if (value === undefined || value === null) {
 				return 'A value must be provided'
 			}
 
-			const valueStr = value === undefined || value === null ? '' : (stringifyVariableValue(value) ?? '')
+			const valueStr = stringifyVariableValue(value) ?? ''
+			if (definition.minLength !== undefined && valueStr.length < definition.minLength) {
+				return `Value must be at least ${definition.minLength} characters long`
+			}
 
 			const compiledRegex = compileRegex(definition.regex)
 			if (compiledRegex) {
@@ -63,12 +69,8 @@ export function validateInputValue(
 		}
 
 		case 'number': {
-			if (definition.required && (value === undefined || value === '')) {
-				return 'A value must be provided'
-			}
-
 			if (value === undefined || value === '' || value === null) {
-				return undefined
+				return 'A value must be provided'
 			}
 
 			// Coerce to number

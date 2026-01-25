@@ -1951,13 +1951,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260125-225503-edafde1":
-  version: 2.0.0-0-nightly-feat-2-0-20260125-225503-edafde1
-  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260125-225503-edafde1"
+"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc":
+  version: 2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc
+  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/cfc99f7fec5e91d712f185346efdd4442d63bc3701b92937f97cd95689edea64fe89fa1d28d173856c1842574f9ea79bb570a9114a8f2953bd33f3cc01a373fd
+  checksum: 10c0/a7d264a2532480877593b82be8cbc8ebccae79376f6cd7299f07fe062576a57f0e89ea1938de933b581186fef5725c8c43a3877d5d42ba88785d6a3f7670d15e
   languageName: node
   linkType: hard
 

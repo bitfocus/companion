@@ -51,7 +51,7 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 					type: 'secret-text',
 					width: o.width,
 					default: o.default,
-					required: o.required,
+					minLength: o.required ? 1 : undefined,
 					regex: o.regex,
 				} satisfies Complete<CompanionInputFieldSecretExtended>
 
@@ -159,7 +159,7 @@ function translateTextInputField(
 		type: 'textinput',
 		default: field.default,
 		regex: field.regex,
-		required: field.required,
+		minLength: field.required ? 1 : undefined,
 		width: width,
 		useVariables,
 		multiline: field.multiline,
@@ -205,7 +205,6 @@ function translateNumberField(
 		max: field.max,
 		step: field.step,
 		width: width,
-		required: field.required,
 		range: field.range,
 		showMinAsNegativeInfinity: field.showMinAsNegativeInfinity,
 		showMaxAsPositiveInfinity: field.showMaxAsPositiveInfinity,
