@@ -22,13 +22,7 @@ import type {
 	SharedUdpSocketMessageSend,
 } from './IpcTypesNew.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
-import {
-	assertNever,
-	type OSCMetaArgument,
-	type CompanionHTTPRequest,
-	type LogLevel,
-	type ExpressionOptionsObject,
-} from '@companion-module/base'
+import { assertNever, type OSCMetaArgument, type CompanionHTTPRequest, type LogLevel } from '@companion-module/base'
 import {
 	EntityModelType,
 	type ReplaceableActionEntityModel,
@@ -766,7 +760,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					id: act.entity.id,
 					controlId: act.controlId,
 					actionId: act.entity.definitionId,
-					options: act.entity.options as ExpressionOptionsObject, // TODO - remove cast
+					options: act.entity.options,
 
 					upgradeIndex: act.entity.upgradeIndex ?? null,
 					disabled: !!act.entity.disabled,
@@ -794,7 +788,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					id: fb.entity.id,
 					controlId: fb.controlId,
 					feedbackId: fb.entity.definitionId,
-					options: fb.entity.options as ExpressionOptionsObject, // TODO - remove cast
+					options: fb.entity.options,
 
 					isInverted: isExpressionOrValue(fb.entity.isInverted)
 						? fb.entity.isInverted
