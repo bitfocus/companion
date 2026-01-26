@@ -133,8 +133,9 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 		this.#logger.debug(`Adding elgato-streamdeck ${this.#streamDeck.PRODUCT_NAME} ${protocol} device: ${devicePath}`)
 
+		const companyName = this.#streamDeck.MODEL === DeviceModelId.GALLEON_K100 ? 'Corsair' : 'Elgato'
 		this.info = {
-			type: `Elgato ${this.#streamDeck.PRODUCT_NAME}`,
+			type: `${companyName} ${this.#streamDeck.PRODUCT_NAME}`,
 			devicePath: devicePath,
 			configFields: getConfigFields(this.#streamDeck),
 			deviceId: '', // set in #init()
@@ -214,16 +215,27 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 					})
 				}
 			} else if (control.type === 'lcd-segment' && control.drawRegions) {
-				const drawColumn = x - control.column
+				let targetSize: number
+				let drawX: number
+				let drawY: number
+				if (this.#streamDeck.MODEL === DeviceModelId.GALLEON_K100) {
+					if (x === 1) return
+					if (x === 2) x-- // shift left to account for missing button
 
-				const columnWidth = control.pixelSize.width / control.columnSpan
-				let drawX = drawColumn * columnWidth
-				if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
-					// Position aligned with the buttons/encoders
-					drawX = drawColumn * this.sdPlusLcdButtonSpacing + this.sdPlusLcdButtonOffset
+					targetSize = Math.floor(Math.min(control.pixelSize.width / 2, control.pixelSize.height))
+					drawX = x * targetSize
+					drawY = Math.floor((control.pixelSize.height - targetSize) / 2)
+				} else {
+					const drawColumn = x - control.column
+					const columnWidth = control.pixelSize.width / control.columnSpan
+					drawX = drawColumn * columnWidth
+					if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
+						// Position aligned with the buttons/encoders
+						drawX = drawColumn * this.sdPlusLcdButtonSpacing + this.sdPlusLcdButtonOffset
+					}
+					targetSize = control.pixelSize.height
+					drawY = 0
 				}
-
-				const targetSize = control.pixelSize.height
 
 				let newbuffer
 				try {
@@ -233,11 +245,10 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 					this.emit('remove')
 					return
 				}
-
 				const maxAttempts = 3
 				for (let attempts = 1; attempts <= maxAttempts; attempts++) {
 					try {
-						await this.#streamDeck.fillLcdRegion(control.id, drawX, 0, newbuffer, {
+						await this.#streamDeck.fillLcdRegion(control.id, drawX, drawY, newbuffer, {
 							format: 'rgb',
 							width: targetSize,
 							height: targetSize,
@@ -255,6 +266,9 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 			} else if (control.type === 'encoder' && control.hasLed) {
 				const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
 				await this.#streamDeck.setEncoderColor(control.index, color.r, color.g, color.b)
+			} else if (control.type === 'encoder' && control.ledRingSteps > 0) {
+				const color = render.style ? colorToRgb(render.bgcolor) : { r: 0, g: 0, b: 0 }
+				await this.#streamDeck.setEncoderRingSingleColor(control.index, color.r, color.g, color.b)
 			}
 		})
 
