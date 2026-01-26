@@ -98,9 +98,6 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
 
-				{/* Stop the table from stretching when shorter than the window */}
-				<div className="flex-grow-1"></div>
-
 				<div className="fixed-header">
 					<CCallout color="info">
 						Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
