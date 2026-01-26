@@ -23,6 +23,7 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="00b3", MODE:="660
 KERNEL=="hidraw*", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="00b8", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="00b9", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="00ba", MODE:="660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="1b1c", ATTRS{idProduct}=="2b18", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="32ac", ATTRS{idProduct}=="0013", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f40", MODE:="660", TAG+="uaccess"
 KERNEL=="hidraw*", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="1f41", MODE:="660", TAG+="uaccess"
