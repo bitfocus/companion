@@ -1,11 +1,10 @@
-import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
+import { CloseButton, ContextHelpButton } from '~/UserConfig/Components/Common'
 
 interface SurfaceInstanceEditPanelHeadingProps {
 	instanceInfo: ClientSurfaceInstanceConfig
@@ -38,13 +37,12 @@ export const SurfaceInstanceEditPanelHeading = observer(function SurfaceInstance
 			<h4 className="panel-title">Edit Surface Integration: {moduleInfo?.display?.name ?? instanceInfo.moduleId}</h4>
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
-					<div className="float_right" onClick={doShowHelp} title="Show help for this module">
-						<FontAwesomeIcon icon={faQuestionCircle} size="lg" />
-					</div>
+					<ContextHelpButton
+						userGuide={doShowHelp}
+						hoverText="Change properties of the surface integration here. Click the icon to show instructions for this module."
+					/>
 				)}
-				<div className="float_right ms-1" onClick={closeConfigurePanel} title="Close">
-					<FontAwesomeIcon icon={faTimes} size="lg" />
-				</div>
+				<CloseButton closeFn={closeConfigurePanel} />
 			</div>
 		</div>
 	)
