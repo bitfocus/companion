@@ -145,6 +145,7 @@ export function msToStamp(v: number, format: string): string {
 		}
 		processChar(c)
 	}
+	if (inBracket && !outBracket) throw new Error('"[" was never closed')
 	processChar('')
 	return result.join('')
 }

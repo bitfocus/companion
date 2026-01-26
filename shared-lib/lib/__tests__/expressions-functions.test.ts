@@ -627,6 +627,9 @@ describe('functions', () => {
 			expect(ExpressionFunctions.msToTimestamp(0, 'hh a')).toBe('12 AM')
 			expect(ExpressionFunctions.msToTimestamp(12 * HOUR, 'hh a')).toBe('12 PM')
 
+			// brackets not closed
+			expect(() => ExpressionFunctions.msToTimestamp(1234567890, 'dd:HH:mm:[ss')).toThrowError('"[" was never closed')
+
 			// largest unit
 			expect(() => ExpressionFunctions.msToTimestamp(1234567890, '[dd]:HH:mm:ss.SSS')).toThrowError() // day cant be largest unit
 			expect(() => ExpressionFunctions.msToTimestamp(1234567890, '[]dd:HH:mm:ss.SSS')).toThrowError() // largest unit cant be empty
