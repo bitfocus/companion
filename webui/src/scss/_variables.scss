@@ -40,7 +40,9 @@ $header-brand-bg: color.adjust($_private-header-bg, $lightness: -10%);
 
 	$card-bg: #f7f7f7,
 
-	$sidebar-nav-link-padding-x: 0.5rem
+	$sidebar-nav-link-padding-x: 0.5rem,
+
+	$tooltip-color: #f7f7f7
 );
 
 // PART 2:

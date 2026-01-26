@@ -41,10 +41,29 @@ export function createSurfacesTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
+				const surfaceIds = configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface)
+				let existingCount = 0
+				for (const id of surfaceIds) {
+					const conf = configStore.getConfigOfTypeForId(id, ModuleInstanceType.Surface)
+					if (conf && conf.moduleId === input.moduleId) {
+						existingCount++
+					}
+				}
+
+				const moduleInfo = instanceController.modules.getModuleManifest(
+					ModuleInstanceType.Surface,
+					input.moduleId,
+					input.versionId
+				)
+				const allowMultiple =
+					moduleInfo?.manifest.type === 'surface' ? (moduleInfo.manifest.allowMultipleInstances ?? false) : false
+
+				const shouldBeDisabled = existingCount > 0 && !allowMultiple
+
 				const surfaceInfo = instanceController.addSurfaceInstanceWithLabel(input.moduleId, input.label, {
 					versionId: input.versionId,
 					updatePolicy: InstanceVersionUpdatePolicy.Stable,
-					disabled: false,
+					disabled: shouldBeDisabled,
 				})
 				return surfaceInfo[0]
 			}),
