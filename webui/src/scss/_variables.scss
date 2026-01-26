@@ -54,3 +54,18 @@ $header-border: (
 );
 
 $variable-padding: 1px 3px 0px;
+
+//dragging style works differently for "regular tables" vs. action/feedback lists.
+// Regular tables use the standard HTML drag image, which doesn't appear to be part of the DOM (or even the window)
+// so we use an opaque background for those, since transparency is applied automatically.
+// Action lists use an image that is part of the DOM, so we have to explicitly apply transparency...
+@mixin dragging-style($blur: 1px, $alpha: 1) {
+	// clearly highlight the item being dragged:
+	background-color: #{rgba(#f5f2fa, $alpha)};
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	// outline with negative offset (instead of border) ensures that the other elements aren't affected
+	outline: 2px solid rgba(0, 0, 0, 0.5);
+	outline-offset: -2px;
+	border-radius: 4px;
+	filter: blur($blur);
+}

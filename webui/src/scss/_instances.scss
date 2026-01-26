@@ -113,7 +113,7 @@
 	}
 
 	.variable-dragging {
-		opacity: 0.5;
+		@include dragging-style();
 	}
 
 	.variable-description {
