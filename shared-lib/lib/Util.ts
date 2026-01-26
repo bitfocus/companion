@@ -84,6 +84,7 @@ function truncateMilliseconds(v: number, length: number) {
 export function msToStamp(v: number, format: string): string {
 	const values = createTimeValues(v)
 
+	const result: string[] = []
 	let inBracket = false
 	let outBracket = false
 	let largestUnit: string | null = null
@@ -91,37 +92,23 @@ export function msToStamp(v: number, format: string): string {
 	let accChar = ''
 
 	/**
-	 * Handles bracket notation for marking largest unit
+	 * Ensures correct unit inside the bracket
 	 * @param u - Character to check
 	 */
 	const handleLargestUnit = (u: string) => {
 		if (inBracket && !outBracket) {
-			if (!canBeLargestUnit(u)) {
-				throw new Error(`"${u}" can not be set as largest unit`)
-			}
-			if (largestUnit !== u && largestUnit !== null) {
-				throw new Error('there can only be one unit inside "[ ]"')
-			}
+			if (!canBeLargestUnit(u)) throw new Error(`"${u}" can not be set as largest unit`)
+			if (largestUnit !== u && largestUnit !== null) throw new Error('there can only be one unit inside "[ ]"')
 			largestUnit = u
 		}
 	}
 
-	const result: string[] = []
-	format += ' '
-	for (const c of format) {
-		if (c === '[') {
-			if (inBracket) throw new Error('"[" was already set')
-			if (outBracket) throw new Error('"[" can not come after "]"')
-			inBracket = true
-			continue
-		}
-		if (c === ']') {
-			if (!inBracket) throw new Error('"[" missing')
-			if (outBracket) throw new Error('"]" was already set')
-			if (largestUnit === null) throw new Error('"]" cant be set on empty unit')
-			outBracket = true
-			continue
-		}
+	/**
+	 * Processes a character and if needed substitute in the needed value
+	 * The character is then pushed ton the result array
+	 * @param c - Character to check
+	 */
+	const processChar = (c: string) => {
 		handleLargestUnit(c)
 		if (c !== lastChar) {
 			if (isKeyOfTimeValues(lastChar)) {
@@ -138,9 +125,26 @@ export function msToStamp(v: number, format: string): string {
 			}
 			accChar = ''
 		}
-
 		accChar += c
 		lastChar = c
 	}
-	return result.join('').trim()
+
+	for (const c of format) {
+		if (c === '[') {
+			if (inBracket) throw new Error('"[" was already set')
+			if (outBracket) throw new Error('"[" can not come after "]"')
+			inBracket = true
+			continue
+		}
+		if (c === ']') {
+			if (!inBracket) throw new Error('"[" missing')
+			if (outBracket) throw new Error('"]" was already set')
+			if (largestUnit === null) throw new Error('"]" cant be set on empty unit')
+			outBracket = true
+			continue
+		}
+		processChar(c)
+	}
+	processChar('')
+	return result.join('')
 }
