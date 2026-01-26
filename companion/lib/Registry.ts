@@ -363,7 +363,7 @@ export class Registry {
 			this.graphics.regenerateAll(false)
 
 			// We are ready to start the instances/connections
-			await this.instance.initInstances(extraModulePath)
+			await this.instance.initInstances(this.db.getIsFirstRun(), extraModulePath)
 
 			// Instances are loaded, start up http
 			const router = createTrpcRouter(this)

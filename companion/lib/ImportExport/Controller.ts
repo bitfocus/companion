@@ -511,6 +511,10 @@ export class ImportExportController {
 
 		if (shouldReset(config.surfaces.instances)) {
 			await this.#instancesController.deleteAllSurfaceInstances(true)
+
+			if (!isImporting(config.surfaces.instances)) {
+				this.#instancesController.createDefaultSurfaceInstances()
+			}
 		}
 
 		if (shouldReset(config.surfaces.remote)) {

@@ -21,7 +21,7 @@ import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion
 import {
 	ModuleInstanceType,
 	type InstanceConfig,
-	type InstanceVersionUpdatePolicy,
+	InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleManifest } from '@companion-module/base/manifest'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
@@ -258,16 +258,38 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	/**
+	 * Setup the default surface instances
+	 */
+	createDefaultSurfaceInstances(): void {
+		this.addSurfaceInstanceWithLabel('elgato-stream-deck', 'elgato-stream-deck', {
+			versionId: 'builtin',
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			disabled: false,
+		})
+
+		this.addSurfaceInstanceWithLabel('xkeys', 'xkeys', {
+			versionId: 'builtin',
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			disabled: false,
+		})
+	}
+
+	/**
 	 * Initialise instances
 	 * @param extraModulePath - extra directory to search for modules
 	 */
-	async initInstances(extraModulePath: string): Promise<void> {
+	async initInstances(isFirstRun: boolean, extraModulePath: string): Promise<void> {
 		await this.userModulesManager.init()
 
 		await this.modules.initModules(extraModulePath)
 
 		// Validate and fix surface instance states before initializing
 		this.#validateAndFixSurfaceInstanceStates()
+
+		// If this is a fresh install, setup the default surface instances
+		if (isFirstRun && this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface).length === 0) {
+			this.createDefaultSurfaceInstances()
+		}
 
 		const instanceIds = this.#configStore.getAllInstanceIdsOfType(null)
 		this.#logger.silly('instance_init', instanceIds)

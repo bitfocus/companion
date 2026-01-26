@@ -180,7 +180,7 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 
 	// Note: this will remove the old config fields
 	createInstanceIfNeeded('elgato_plugin_enable', 'elgato-stream-deck', true, true, true)
-	createInstanceIfNeeded('xkeys_enable', 'xkeys', false)
+	createInstanceIfNeeded('xkeys_enable', 'xkeys', true)
 	createInstanceIfNeeded('loupedeck_enable', 'loupedeck', false)
 	createInstanceIfNeeded('mirabox_streamdock_enable', 'mirabox-stream-dock', false)
 	createInstanceIfNeeded('contour_shuttle_enable', 'contour-shuttle', false)
@@ -202,9 +202,6 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 		if (!elgatoSurfaceInstanceId) {
 			// Create new elgato surface integration
 
-			// TODO - setup config to disable usb?
-
-			// Create the instance
 			elgatoSurfaceInstanceId = nanoid()
 			instances.set(elgatoSurfaceInstanceId, {
 				moduleInstanceType: ModuleInstanceType.Surface,
