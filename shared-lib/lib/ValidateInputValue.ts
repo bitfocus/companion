@@ -21,9 +21,7 @@ export function validateInputValue(
 			return undefined
 
 		case 'textinput': {
-			if (value === undefined || value === null) {
-				return 'A value must be provided'
-			}
+			value = value ?? ''
 
 			const valueStr = stringifyVariableValue(value) ?? ''
 			if (definition.minLength !== undefined && valueStr.length < definition.minLength) {
@@ -49,9 +47,7 @@ export function validateInputValue(
 		}
 
 		case 'secret-text': {
-			if (value === undefined || value === null) {
-				return 'A value must be provided'
-			}
+			value = value ?? ''
 
 			const valueStr = stringifyVariableValue(value) ?? ''
 			if (definition.minLength !== undefined && valueStr.length < definition.minLength) {
@@ -191,12 +187,17 @@ export function validateInputValue(
 }
 
 function compileRegex(regex: string | undefined): RegExp | null {
-	if (regex) {
+	if (!regex) return null
+
+	try {
 		// Compile the regex string
 		const match = /^\/(.*)\/(.*)$/.exec(regex)
 		if (match) {
 			return new RegExp(match[1], match[2])
+		} else {
+			return null
 		}
+	} catch {
+		return null
 	}
-	return null
 }
