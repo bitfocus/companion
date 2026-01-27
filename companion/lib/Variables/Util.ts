@@ -289,7 +289,7 @@ export function executeExpression(
 	} catch (e) {
 		return {
 			ok: false,
-			error: stringifyError(e) || 'Unknown error',
+			error: stringifyError(e, true) || 'Unknown error',
 			variableIds: referencedVariableIds,
 		}
 	}
