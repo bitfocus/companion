@@ -22,7 +22,7 @@
 		"plist": "^3.1.0",
 		"semver": "^7.7.3",
 		"strip-ansi": "^7.1.2",
-		"systeminformation": "^5.30.5"
+		"systeminformation": "^5.30.6"
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
