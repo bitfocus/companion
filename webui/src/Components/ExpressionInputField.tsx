@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useContext, useEffect } from 'react'
+import React, { useState, useCallback, useContext, useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
 import type { DropdownChoiceInt } from '~/DropDownInputFancy.js'
 import Editor, { type Monaco } from '@monaco-editor/react'
@@ -24,32 +24,15 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	const { variablesStore } = useContext(RootAppStoreContext)
 
 	const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(null)
-	const valueRef = useRef<string>(value ?? '')
+	const [tmpValue, setTmpValue] = useState<string | null>(null)
 	const [isValid, setValid] = useState(true)
 
-	// Keep track of whether we're updating from external changes
-	const isExternalUpdate = useRef(false)
+	const showValue = tmpValue ?? value ?? ''
 
-	// Update valueRef when value prop changes
+	// Update validation when value changes
 	useEffect(() => {
-		if (editor && value !== valueRef.current) {
-			const model = editor.getModel()
-			if (model && model.getValue() !== value) {
-				// External change - update the editor
-				isExternalUpdate.current = true
-				const position = editor.getPosition()
-				model.setValue(value ?? '')
-				// Restore cursor position if possible
-				if (position) {
-					editor.setPosition(position)
-				}
-				isExternalUpdate.current = false
-			}
-			valueRef.current = value ?? ''
-
-			setValid(isExpressionValid(value ?? ''))
-		}
-	}, [value, editor])
+		setValid(isExpressionValid(showValue))
+	}, [showValue])
 
 	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
 	useEffect(() => {
@@ -75,15 +58,19 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 
 	const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, _monaco: Monaco) => {
 		setEditor(editor)
+
+		editor.onDidFocusEditorText(() => {
+			setTmpValue(editor.getValue())
+		})
+		editor.onDidBlurEditorText(() => {
+			setTmpValue(null)
+		})
 	}, [])
 
 	const storeValue2 = useCallback(
 		(value: string | undefined, _ev: editor.IModelContentChangedEvent) => {
-			// Skip updates that we initiated from external changes
-			if (isExternalUpdate.current) return
-
 			const newValue = value ?? ''
-			valueRef.current = newValue
+			setTmpValue(newValue)
 			setValue(newValue)
 
 			setValid(isExpressionValid(newValue))
@@ -100,7 +87,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 		>
 			<Editor
 				height="100%"
-				defaultValue={String(value ?? '')}
+				value={showValue}
 				onChange={storeValue2}
 				defaultLanguage={COMPANION_EXPRESSION_LANGUAGE_ID}
 				onMount={handleEditorDidMount}
