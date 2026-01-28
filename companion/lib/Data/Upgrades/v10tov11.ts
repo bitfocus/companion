@@ -694,6 +694,7 @@ function fixupEntity(entity: SomeEntityModelV10): SomeEntityModelV10 | null {
 
 	if (entity.type === 'feedback' && typeof entity.isInverted === 'boolean') {
 		entity.isInverted = { isExpression: false, value: entity.isInverted } satisfies ExpressionOrValue<boolean> as any
+		changed = true
 	}
 
 	return changed ? entity : null

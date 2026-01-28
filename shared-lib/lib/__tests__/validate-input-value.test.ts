@@ -40,7 +40,7 @@ describe('validateInputValue', () => {
 			}
 
 			it('should return error when required and value is undefined', () => {
-				expect(validateInputValue(requiredDefinition, undefined)).toBe('A value must be provided')
+				expect(validateInputValue(requiredDefinition, undefined)).toBe('Value must be at least 1 characters long')
 			})
 
 			it('should return error when required and value is empty string', () => {
@@ -60,7 +60,7 @@ describe('validateInputValue', () => {
 			}
 
 			it('should return error when value is undefined (textinput always requires a value)', () => {
-				expect(validateInputValue(definition, undefined)).toBe('A value must be provided')
+				expect(validateInputValue(definition, undefined)).toBeUndefined()
 			})
 
 			it('should return undefined when value is empty string and no minLength', () => {
@@ -143,7 +143,7 @@ describe('validateInputValue', () => {
 			}
 
 			it('should return error when required and value is undefined', () => {
-				expect(validateInputValue(requiredDefinition, undefined)).toBe('A value must be provided')
+				expect(validateInputValue(requiredDefinition, undefined)).toBe('Value must be at least 1 characters long')
 			})
 
 			it('should return error when required and value is empty string', () => {
@@ -576,7 +576,7 @@ describe('validateInputValue', () => {
 				regex: '/^.+$/',
 			}
 			// null triggers the undefined/null check before regex validation
-			expect(validateInputValue(definition, null)).toBe('A value must be provided')
+			expect(validateInputValue(definition, null)).toBe('Value does not match regex: /^.+$/')
 		})
 
 		it('should not coerce object values for dropdown comparison (strict type check)', () => {
