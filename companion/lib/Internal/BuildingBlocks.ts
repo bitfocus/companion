@@ -225,7 +225,7 @@ export class InternalBuildingBlocks
 				case 'and':
 					return booleanAnd(isInverted, childValues)
 				case 'or':
-					return childValues.reduce((acc, val) => acc || val, false)
+					return childValues.reduce((acc, val) => acc || val, false) === !isInverted
 				case 'xor': {
 					const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
 					return isSingleTrue === !isInverted

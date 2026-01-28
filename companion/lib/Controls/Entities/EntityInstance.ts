@@ -303,10 +303,10 @@ export class ControlEntityInstance {
 		}
 	}
 
-	#getStartupValue(): any {
+	#getStartupValue(): JsonValue | undefined {
 		if (!isInternalUserValueFeedback(this)) return undefined
 
-		return this.#data.options.startup_value
+		return this.#data.options.startup_value?.value
 	}
 
 	/**

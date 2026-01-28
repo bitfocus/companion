@@ -5,7 +5,7 @@ import { VariableTypeIcon } from './VariableTypeIcon.js'
 import type { JsonValue } from 'type-fest'
 
 interface VariableInputGroupProps {
-	value: JsonValue | undefined // The external variable value (string or object)
+	value: JsonValue | undefined // The external variable value
 	setCurrentValue: (name: string, value: JsonValue | undefined) => void
 	name: string
 	disabled?: boolean
