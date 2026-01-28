@@ -3,6 +3,7 @@ import {
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { exprExpr, exprVal, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionButtonStyleProps, CompanionPresetAction, CompanionPresetFeedback } from '@companion-module/base'
 import { nanoid } from 'nanoid'
@@ -72,7 +73,7 @@ function wrapActionsInGroup(actions: ActionEntityModel[]): ActionEntityModel {
 		connectionId: 'internal',
 		definitionId: 'action_group',
 		options: {
-			execution_mode: 'concurrent',
+			execution_mode: exprVal('concurrent'),
 		},
 		children: {
 			default: actions,
@@ -87,7 +88,7 @@ function createWaitAction(delay: number): ActionEntityModel {
 		connectionId: 'internal',
 		definitionId: 'wait',
 		options: {
-			time: delay,
+			time: exprExpr(delay + ''),
 		},
 		upgradeIndex: undefined,
 	}
@@ -105,8 +106,8 @@ export function convertPresetFeedbacksToEntities(
 		id: nanoid(),
 		connectionId: connectionId,
 		definitionId: feedback.feedbackId,
-		options: structuredClone(feedback.options ?? {}),
-		isInverted: !!feedback.isInverted,
+		options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, false)),
+		isInverted: exprVal(!!feedback.isInverted),
 		style: structuredClone(feedback.style),
 		headline: feedback.headline,
 		upgradeIndex: connectionUpgradeIndex,
@@ -135,7 +136,7 @@ function toActionInstance(
 		id: nanoid(),
 		connectionId: connectionId,
 		definitionId: action.actionId,
-		options: structuredClone(action.options ?? {}),
+		options: structuredClone(optionsObjectToExpressionOptions(action.options ?? {}, false)),
 		headline: action.headline,
 		upgradeIndex: connectionUpgradeIndex,
 	}

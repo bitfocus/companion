@@ -26,6 +26,7 @@ import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigg
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { JsonValue } from 'type-fest'
 
 /**
  * Class for an interval trigger.
@@ -158,6 +159,7 @@ export class ControlTrigger
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
 			variableValues: deps.variables.values,
+			pageStore: deps.pageStore,
 		})
 
 		this.#eventBus = eventBus
@@ -495,8 +497,7 @@ export class ControlTrigger
 	/**
 	 * Update an option field of this control
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	optionsSetField(key: string, value: any, forceSet?: boolean): boolean {
+	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
@@ -734,8 +735,7 @@ export class ControlTrigger
 	/**
 	 * Update an option for an event
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	eventSetOptions(id: string, key: string, value: any): boolean {
+	eventSetOptions(id: string, key: string, value: JsonValue): boolean {
 		for (const event of this.events) {
 			if (event && event.id === id) {
 				if (!event.options) event.options = {}

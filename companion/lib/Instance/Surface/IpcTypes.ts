@@ -8,6 +8,7 @@ import type {
 } from '@companion-surface/host'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import type { DiscoveredRemoteSurfaceInfo, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
+import type { JsonValue } from 'type-fest'
 
 export type SurfaceIpcWrapper = IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>
 
@@ -176,7 +177,7 @@ export interface PincodeEntryMessage {
 export interface SetVariableValueMessage {
 	surfaceId: string
 	name: string
-	value: any
+	value: JsonValue | undefined
 }
 
 export interface FirmwareUpdateInfoMessage {
@@ -211,7 +212,7 @@ export interface SetLockedMessage {
 export interface SetOutputVariableMessage {
 	surfaceId: string
 	name: string
-	value: any
+	value: JsonValue | undefined
 }
 
 export interface SetupRemoteConnectionsMessage {

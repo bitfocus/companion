@@ -8,8 +8,15 @@ import {
 import { ControlEntityInstance } from './EntityInstance.js'
 import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import { clamp } from '../../Resources/Util.js'
-import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ProcessManagerForEntity } from './Types.js'
+import type {
+	InstanceDefinitionsForEntity,
+	InternalControllerForEntity,
+	NewFeedbackValue,
+	NewIsInvertedValue,
+	ProcessManagerForEntity,
+} from './Types.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
+import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
 
 export type ControlEntityListDefinition = Pick<
 	EntitySupportedChildGroupDefinition,
@@ -20,6 +27,7 @@ export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
+	readonly #isInvertedManager: EntityPoolIsInvertedManager
 
 	/**
 	 * Id of the control this belongs to
@@ -44,6 +52,7 @@ export class ControlEntityList {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
+		isInvertedManager: EntityPoolIsInvertedManager,
 		controlId: string,
 		ownerId: EntityOwner | null,
 		listDefinition: ControlEntityListDefinition
@@ -51,6 +60,7 @@ export class ControlEntityList {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
+		this.#isInvertedManager = isInvertedManager
 		this.#controlId = controlId
 		this.#ownerId = ownerId
 		this.#listDefinition = listDefinition
@@ -96,6 +106,7 @@ export class ControlEntityList {
 						this.#instanceDefinitions,
 						this.#internalModule,
 						this.#processManager,
+						this.#isInvertedManager,
 						this.#controlId,
 						entity,
 						!!isCloned
@@ -172,6 +183,7 @@ export class ControlEntityList {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
+			this.#isInvertedManager,
 			this.#controlId,
 			entityModel,
 			!!isCloned
@@ -287,6 +299,7 @@ export class ControlEntityList {
 				this.#instanceDefinitions,
 				this.#internalModule,
 				this.#processManager,
+				this.#isInvertedManager,
 				this.#controlId,
 				entityModel,
 				true
@@ -416,14 +429,19 @@ export class ControlEntityList {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
-		const changed: ControlEntityInstance[] = []
+	updateFeedbackValues(
+		connectionId: string,
+		newValues: ReadonlyMap<string, NewFeedbackValue>
+	): ControlEntityInstance[] {
+		return this.#entities.flatMap((entity) => entity.updateFeedbackValues(connectionId, newValues))
+	}
 
-		for (const entity of this.#entities) {
-			changed.push(...entity.updateFeedbackValues(connectionId, newValues))
-		}
-
-		return changed
+	/**
+	 * Update the isInverted values on the control with new calculated isInverted values
+	 * @param newValues The new isInverted values
+	 */
+	updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): ControlEntityInstance[] {
+		return this.#entities.flatMap((entity) => entity.updateIsInvertedValues(newValues))
 	}
 
 	/**

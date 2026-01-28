@@ -1951,25 +1951,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260120-182015-a651213":
-  version: 2.0.0-0-nightly-feat-2-0-20260120-182015-a651213
-  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260120-182015-a651213"
+"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc":
+  version: 2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc
+  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/096d82398e4606fe011abdfe11cd68f18aec9e2d4aef8d0bb2acbe30764901a31360516806c11b3a53bbc48145ac131e35fc8f6fc5852199867c3b7b3546b53e
+  checksum: 10c0/a7d264a2532480877593b82be8cbc8ebccae79376f6cd7299f07fe062576a57f0e89ea1938de933b581186fef5725c8c43a3877d5d42ba88785d6a3f7670d15e
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260120-182242-a651213":
-  version: 0.1.0-1-nightly-feat-2-0-20260120-182242-a651213
-  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260120-182242-a651213"
+"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260122-230445-88e0911":
+  version: 0.1.0-1-nightly-feat-2-0-20260122-230445-88e0911
+  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260122-230445-88e0911"
   dependencies:
     "@companion-module/base": "npm:~2.0.0-0"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^8.1.1"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/133a0e3a250ce32ed314bb009790e2a66a53263d85db6662185e5b9a2ee8d731e0c984458e2d8d4baf2fa4bd69e956a1f1c27a4df06fb4ac30d8a4b4c0d4c03e
+  checksum: 10c0/f0f9e7716f265cbe2387ccfa474c08e23c6ec2bf351aae837e744d49e7236ce0f90128ea7cb016365050a42dcbaa154c604ab1577c00eddd5e342375f5ea1448
   languageName: node
   linkType: hard
 

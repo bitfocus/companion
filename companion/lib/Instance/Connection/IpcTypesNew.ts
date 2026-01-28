@@ -10,12 +10,12 @@ import type {
 } from '@companion-module/base'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type { VariableValueEntry } from '../../Variables/Values.js'
-import type { NewFeedbackValue } from '../../Controls/Controller.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { RemoteInfo } from 'dgram'
 import type {
 	ActionInstance,
 	FeedbackInstance,
+	HostFeedbackValue,
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
 } from '@companion-module/host'
@@ -191,7 +191,7 @@ export interface ExecuteActionResponseMessage {
 }
 
 export interface UpdateFeedbackValuesMessage {
-	values: NewFeedbackValue[]
+	values: HostFeedbackValue[]
 }
 
 export interface UpdateConfigMessage {

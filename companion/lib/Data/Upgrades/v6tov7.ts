@@ -9,13 +9,9 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import {
-	EntityModelType,
-	type ActionEntityModel,
-	type FeedbackEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { Complete } from '@companion-module/base'
+import type { ActionEntityModelV10, FeedbackEntityModelV10 } from './v10tov11.js'
 
 /**
  * do the database upgrades to convert from the v6 to the v7 format
@@ -118,9 +114,9 @@ interface OldFeedbackInstance {
 
 	children?: OldFeedbackInstance[]
 }
-function fixupFeedback(feedback: OldFeedbackInstance): Complete<FeedbackEntityModel> {
+function fixupFeedback(feedback: OldFeedbackInstance): Complete<FeedbackEntityModelV10> {
 	return {
-		type: EntityModelType.Feedback,
+		type: 'feedback',
 
 		id: feedback.id,
 		definitionId: feedback.type,
@@ -157,9 +153,9 @@ interface OldActionInstance {
 	 */
 	children?: Record<string, OldActionInstance[] | undefined>
 }
-function fixupAction(action: OldActionInstance): Complete<ActionEntityModel> {
+function fixupAction(action: OldActionInstance): Complete<ActionEntityModelV10> {
 	return {
-		type: EntityModelType.Action,
+		type: 'action',
 
 		id: action.id,
 		definitionId: action.action,

@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CInputGroupText } from '@coreui/react'
+import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
 import React, { useCallback } from 'react'
 import {
 	CheckboxInputField,
@@ -17,18 +17,19 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import { validateInputValue } from '~/Helpers/validateInputValue.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import type { JsonValue } from 'type-fest'
 
 interface OptionsInputFieldProps {
 	connectionId: string
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
-	value: any
-	setValue: (key: string, value: any) => void
+	value: ExpressionOrValue<JsonValue | undefined> | undefined
+	setValue: (key: string, value: ExpressionOrValue<JsonValue | undefined>) => void
 	visibility: boolean
 	readonly?: boolean
 	localVariablesStore: LocalVariablesStore | null
@@ -59,24 +60,30 @@ export const OptionsInputField = observer(function OptionsInputField({
 	visibility,
 	readonly,
 	localVariablesStore,
-	fieldSupportsExpression: fieldsSupportExpressions,
+	fieldSupportsExpression,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
-	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
-	const setValue2 = useCallback(
-		(val: any) =>
-			setValue(
-				option.id,
-				fieldsSupportExpressions
-					? ({
-							isExpression: false,
-							value: val,
-						} satisfies ExpressionOrValue<any>)
-					: val
-			),
-		[option.id, setValue, fieldsSupportExpressions]
+	const checkValid = useCallback(
+		(value: JsonValue | undefined) => validateInputValue(option, value) === undefined,
+		[option]
+	)
+	const setExpressionValue = useCallback(
+		(val: string) =>
+			setValue(option.id, {
+				isExpression: true,
+				value: val,
+			} satisfies ExpressionOrValue<JsonValue>),
+		[option.id, setValue]
+	)
+	const setBasicValue = useCallback(
+		(val: JsonValue) =>
+			setValue(option.id, {
+				isExpression: false,
+				value: val,
+			} satisfies ExpressionOrValue<JsonValue>),
+		[option.id, setValue]
 	)
 
-	const value = fieldsSupportExpressions ? (rawValue as ExpressionOrValue<any>)?.value : rawValue
+	const basicValue: JsonValue | undefined = rawValue?.value
 
 	if (!option) {
 		return <p>Bad option</p>
@@ -98,15 +105,20 @@ export const OptionsInputField = observer(function OptionsInputField({
 				: undefined
 
 			control = option.isExpression ? (
-				<ExpressionInputField value={value} localVariables={localVariables} disabled={readonly} setValue={setValue2} />
+				<ExpressionInputField
+					value={basicValue as any}
+					localVariables={localVariables}
+					disabled={readonly}
+					setValue={setExpressionValue}
+				/>
 			) : (
 				<TextInputField
-					value={value}
+					value={basicValue as any}
 					placeholder={option.placeholder}
 					useVariables={features.variables}
 					localVariables={localVariables}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setBasicValue}
 					checkValid={checkValid}
 					multiline={option.multiline}
 				/>
@@ -116,13 +128,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 		case 'dropdown': {
 			control = (
 				<DropdownInputField
-					value={value}
+					value={basicValue as any}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
 					minChoicesForSearch={option.minChoicesForSearch}
 					regex={option.regex}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setBasicValue}
 					checkValid={checkValid}
 				/>
 			)
@@ -131,7 +143,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 		case 'multidropdown': {
 			control = (
 				<MultiDropdownInputField
-					value={value}
+					value={basicValue as any}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
 					minSelection={option.minSelection}
@@ -139,22 +151,34 @@ export const OptionsInputField = observer(function OptionsInputField({
 					maxSelection={option.maxSelection}
 					regex={option.regex}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setBasicValue}
 					checkValid={checkValid}
 				/>
 			)
 			break
 		}
 		case 'checkbox': {
-			control = <CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
+			if (option.displayToggle) {
+				control = (
+					<CFormSwitch
+						color="success"
+						checked={!!basicValue}
+						size="xl"
+						onChange={(e) => setBasicValue(e.currentTarget.checked)}
+						disabled={readonly}
+					/>
+				)
+			} else {
+				control = <CheckboxInputField value={basicValue as any} disabled={readonly} setValue={setBasicValue} />
+			}
 			break
 		}
 		case 'colorpicker': {
 			control = (
 				<ColorInputField
-					value={value}
+					value={basicValue as any}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setBasicValue}
 					enableAlpha={option.enableAlpha ?? false}
 					returnType={option.returnType ?? 'number'}
 					presetColors={option.presetColors}
@@ -165,13 +189,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 		case 'number': {
 			control = (
 				<NumberInputField
-					value={value}
+					value={basicValue as any}
 					min={option.min}
 					max={option.max}
 					step={option.step}
 					range={option.range}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setBasicValue}
 					checkValid={checkValid}
 					showMinAsNegativeInfinity={option.showMinAsNegativeInfinity}
 					showMaxAsPositiveInfinity={option.showMaxAsPositiveInfinity}
@@ -186,7 +210,12 @@ export const OptionsInputField = observer(function OptionsInputField({
 		case 'custom-variable': {
 			if (entityType === EntityModelType.Action) {
 				control = (
-					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue2} includeNone={true} />
+					<InternalCustomVariableDropdown
+						disabled={!!readonly}
+						value={basicValue}
+						setValue={setBasicValue}
+						includeNone={true}
+					/>
 				)
 			}
 			break
@@ -199,7 +228,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (isInternal) {
 				control =
-					InternalModuleField(option, isLocatedInGrid, localVariablesStore, !!readonly, value, setValue2) ?? undefined
+					InternalModuleField(option, isLocatedInGrid, localVariablesStore, !!readonly, basicValue, setBasicValue) ??
+					undefined
 			}
 			// Use default below
 			break
@@ -209,8 +239,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 	if (control === undefined) {
 		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
-	} else if (fieldsSupportExpressions) {
-		const rawExpressionValue = (rawValue as ExpressionOrValue<any>) || { isExpression: false, value: undefined }
+	} else if (fieldSupportsExpression) {
+		const rawExpressionValue = rawValue || { isExpression: false, value: undefined }
 
 		control = (
 			<FieldOrExpression

@@ -22,13 +22,7 @@ import type {
 	SharedUdpSocketMessageSend,
 } from './IpcTypesNew.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
-import {
-	assertNever,
-	type OSCMetaArgument,
-	type CompanionHTTPRequest,
-	type CompanionOptionValues,
-	type LogLevel,
-} from '@companion-module/base'
+import { assertNever, type OSCMetaArgument, type CompanionHTTPRequest, type LogLevel } from '@companion-module/base'
 import {
 	EntityModelType,
 	type ReplaceableActionEntityModel,
@@ -51,7 +45,13 @@ import type {
 	RunActionExtras,
 } from './ChildHandlerApi.js'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	exprVal,
+	isExpressionOrValue,
+	optionsObjectToExpressionOptions,
+	type ExpressionableOptionsObject,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
@@ -263,17 +263,24 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async entityLearnValues(
 		entity: SomeEntityModel,
 		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
+	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
-		const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
-			entity.type,
-			this.connectionId,
-			entity.definitionId
-		)
-		const learnTimeout = entityDefinition?.learnTimeout
-
 		try {
+			const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
+				entity.type,
+				this.connectionId,
+				entity.definitionId
+			)
+			if (!entityDefinition) {
+				this.logger.warn(`Cannot learn values for unknown entity definition ${entity.definitionId}`)
+				return undefined
+			}
+			const learnTimeout = entityDefinition.learnTimeout
+
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
+			const { parsedOptions } = parser.parseEntityOptions(entityDefinition, entity.options)
+
 			switch (entity.type) {
 				case EntityModelType.Action: {
 					const msg = await this.#ipcWrapper.sendWithCb(
@@ -283,7 +290,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								actionId: entity.definitionId,
-								options: entity.options,
+								options: parsedOptions,
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,
@@ -293,9 +300,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						learnTimeout
 					)
 
+					if (!msg.options) return undefined
+
 					return {
 						...entity.options,
-						...msg.options,
+						...optionsObjectToExpressionOptions(msg.options, false),
 					}
 				}
 				case EntityModelType.Feedback: {
@@ -308,9 +317,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								feedbackId: entity.definitionId,
-								options: entity.options,
-
-								isInverted: !!entity.isInverted,
+								options: parsedOptions,
 
 								image: control?.getBitmapSize() ?? undefined,
 
@@ -322,9 +329,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						learnTimeout
 					)
 
+					if (!msg.options) return undefined
+
 					return {
 						...entity.options,
-						...msg.options,
+						...optionsObjectToExpressionOptions(msg.options, false),
 					}
 				}
 				default:
@@ -530,7 +539,14 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
-		this.#deps.controls.updateFeedbackValues(this.connectionId, msg.values)
+		this.#deps.controls.updateFeedbackValues(
+			this.connectionId,
+			msg.values.map((val) => ({
+				entityId: val.id,
+				controlId: val.controlId,
+				value: val.value,
+			}))
+		)
 	}
 
 	/**
@@ -726,8 +742,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 
 					image: value.imageSize,
 
-					isInverted: !!value.entity.isInverted,
-
 					upgradeIndex: value.entity.upgradeIndex ?? null,
 					disabled: !!value.entity.disabled,
 				}
@@ -739,7 +753,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
 	}
 
-	async upgradeActions(actions: EntityManagerActionEntity[], currentUpgradeIndex: number) {
+	async upgradeActions(actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActions', {
 				actions: actions.map((act) => ({
@@ -767,7 +781,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 			})
 	}
 
-	async upgradeFeedbacks(feedbacks: EntityManagerFeedbackEntity[], currentUpgradeIndex: number) {
+	async upgradeFeedbacks(feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeFeedbacks', {
 				feedbacks: feedbacks.map((fb) => ({
@@ -776,7 +790,9 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					feedbackId: fb.entity.definitionId,
 					options: fb.entity.options,
 
-					isInverted: !!fb.entity.isInverted,
+					isInverted: isExpressionOrValue(fb.entity.isInverted)
+						? fb.entity.isInverted
+						: exprVal(!!fb.entity.isInverted),
 
 					upgradeIndex: fb.entity.upgradeIndex ?? null,
 					disabled: !!fb.entity.disabled,
@@ -792,7 +808,9 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 							definitionId: feedback.feedbackId,
 							options: feedback.options,
 							style: feedback.style,
-							isInverted: feedback.isInverted,
+							isInverted: isExpressionOrValue(feedback.isInverted)
+								? feedback.isInverted
+								: exprVal(!!feedback.isInverted),
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableFeedbackEntityModel
 				)

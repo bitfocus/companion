@@ -13,6 +13,7 @@ import { nanoid } from 'nanoid'
 import type { ControlsController } from '../../Controls/Controller.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -57,12 +58,12 @@ export interface EntityManagerAdapter {
 	updateFeedbacks: (feedbacks: Map<string, EntityManagerFeedbackEntity | null>) => Promise<void>
 
 	upgradeActions: (
-		actions: EntityManagerActionEntity[],
+		actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[],
 		currentUpgradeIndex: number
 	) => Promise<ReplaceableActionEntityModel[]>
 
 	upgradeFeedbacks: (
-		feedbacks: EntityManagerFeedbackEntity[],
+		feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[],
 		currentUpgradeIndex: number
 	) => Promise<ReplaceableFeedbackEntityModel[]>
 }
@@ -96,8 +97,8 @@ export class ConnectionEntityManager {
 
 			let actionIdsInThisBatch = new Map<string, string>()
 			let feedbackIdsInThisBatch = new Map<string, string>()
-			let upgradeActions: EntityManagerActionEntity[] = []
-			let upgradeFeedbacks: EntityManagerFeedbackEntity[] = []
+			let upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[] = []
+			let upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[] = []
 
 			let updateActionsPayload = new Map<string, EntityManagerActionEntity | null>()
 			let updateFeedbacksPayload = new Map<string, EntityManagerFeedbackEntity | null>()
@@ -114,7 +115,6 @@ export class ConnectionEntityManager {
 						upgradeActions.push({
 							controlId: wrapper.controlId,
 							entity: entityModel,
-							parsedOptions: entityModel.options, // Unused, so keep unparsed
 						})
 						break
 					case EntityModelType.Feedback:
@@ -122,7 +122,6 @@ export class ConnectionEntityManager {
 						upgradeFeedbacks.push({
 							controlId: wrapper.controlId,
 							entity: entityModel,
-							parsedOptions: entityModel.options, // Unused, so keep unparsed
 							imageSize: undefined, // Unused
 						})
 						break
@@ -176,21 +175,34 @@ export class ConnectionEntityManager {
 
 							const entityModel = entity.asEntityModel(false)
 
-							// Parse the options and track the variables referenced
-							const parser = this.#controlsController.createVariablesAndExpressionParser(wrapper.controlId, null)
-							const { parsedOptions, referencedVariableIds } = parser.parseEntityOptions(
-								entityDefinition,
-								entityModel.options
-							)
-							wrapper.lastReferencedVariableIds = referencedVariableIds
+							let updateOptions: CompanionOptionValues | undefined
+							try {
+								// Parse the options and track the variables referenced
+								const parser = this.#controlsController.createVariablesAndExpressionParser(wrapper.controlId, null)
+								const { parsedOptions, referencedVariableIds } = parser.parseEntityOptions(
+									entityDefinition,
+									entityModel.options
+								)
+								updateOptions = parsedOptions
+								wrapper.lastReferencedVariableIds = referencedVariableIds
+							} catch (e) {
+								this.#logger.warn(
+									`Error parsing options for entity ${entity.id} in control ${wrapper.controlId}, marking as inactive: ${stringifyError(e, false)}`
+								)
+							}
 
 							switch (entityModel.type) {
 								case EntityModelType.Action:
-									updateActionsPayload.set(entityId, {
-										controlId: wrapper.controlId,
-										entity: entityModel,
-										parsedOptions,
-									})
+									updateActionsPayload.set(
+										entityId,
+										updateOptions
+											? {
+													controlId: wrapper.controlId,
+													entity: entityModel,
+													parsedOptions: updateOptions,
+												}
+											: null
+									)
 									break
 								case EntityModelType.Feedback: {
 									let imageSize: EntityManagerImageSize | undefined
@@ -202,12 +214,17 @@ export class ConnectionEntityManager {
 										controlImageSizeCache.set(wrapper.controlId, imageSize)
 									}
 
-									updateFeedbacksPayload.set(entityId, {
-										controlId: wrapper.controlId,
-										entity: entityModel,
-										parsedOptions,
-										imageSize,
-									})
+									updateFeedbacksPayload.set(
+										entityId,
+										updateOptions
+											? {
+													controlId: wrapper.controlId,
+													entity: entityModel,
+													parsedOptions: updateOptions,
+													imageSize,
+												}
+											: null
+									)
 									break
 								}
 								default:
@@ -304,7 +321,7 @@ export class ConnectionEntityManager {
 
 	#sendUpgradeActionsBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
-		upgradeActions: EntityManagerActionEntity[]
+		upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[]
 	): void {
 		this.#adapter
 			.upgradeActions(upgradeActions, this.#currentUpgradeIndex)
@@ -319,7 +336,7 @@ export class ConnectionEntityManager {
 	}
 	#sendUpgradeFeedbacksBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
-		upgradeFeedbacks: EntityManagerFeedbackEntity[]
+		upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[]
 	): void {
 		this.#adapter
 			.upgradeFeedbacks(upgradeFeedbacks, this.#currentUpgradeIndex)

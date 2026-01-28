@@ -14,7 +14,7 @@ export interface TriggerModel {
 	localVariables: SomeEntityModel[]
 }
 
-export interface TriggerOptions {
+export type TriggerOptions = {
 	name: string
 	enabled: boolean
 	sortOrder: number

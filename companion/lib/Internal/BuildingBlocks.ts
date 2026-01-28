@@ -217,23 +217,25 @@ export class InternalBuildingBlocks
 	/**
 	 * Execute a logic feedback
 	 */
-	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
+	executeLogicFeedback(feedback: FeedbackEntityModel, isInverted: boolean, childValues: boolean[]): boolean {
 		if (feedback.definitionId === 'logic_operator') {
-			switch (feedback.options.operation) {
+			switch (
+				feedback.options.operation?.value // This can't be an expression
+			) {
 				case 'and':
-					return booleanAnd(!!feedback.isInverted, childValues)
+					return booleanAnd(isInverted, childValues)
 				case 'or':
-					return childValues.reduce((acc, val) => acc || val, false)
+					return childValues.reduce((acc, val) => acc || val, false) === !isInverted
 				case 'xor': {
 					const isSingleTrue = childValues.reduce((acc, val) => acc + (val ? 1 : 0), 0) === 1
-					return isSingleTrue === !feedback.isInverted
+					return isSingleTrue === !isInverted
 				}
 				default:
-					this.#logger.warn(`Unexpected operation: ${feedback.options.operation}`)
+					this.#logger.warn(`Unexpected operation: ${stringifyVariableValue(feedback.options.operation?.value)}`)
 					return false
 			}
 		} else if (feedback.definitionId === 'logic_conditionalise_advanced') {
-			return booleanAnd(!!feedback.isInverted, childValues)
+			return booleanAnd(isInverted, childValues)
 		} else {
 			this.#logger.warn(`Unexpected logic feedback type "${feedback.type}"`)
 			return false
