@@ -27,7 +27,6 @@ import type {
 } from '@companion-module/base/host-api'
 import { ConvertPresetDefinition } from './Presets.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
-import { uint8ArrayToBuffer } from '../../../Resources/Util.js'
 
 /**
  * The context of methods and properties provided to the surfaces, which they can use to report events or make requests.
@@ -251,4 +250,11 @@ function shouldShowInvertForFeedback(options: SomeCompanionFeedbackInputField[])
 
 	// Nothing looked to be a user defined invert field
 	return true
+}
+
+/**
+ * Note: explicitly copied away from Resources/Util.ts to avoid circular dependencies
+ */
+function uint8ArrayToBuffer(arr: Uint8Array | Uint8ClampedArray): Buffer {
+	return Buffer.from(arr.buffer, arr.byteOffset, arr.byteLength)
 }

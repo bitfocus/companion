@@ -3,6 +3,7 @@ import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
 import { doesModuleSupportPermissionsModel } from './Connection/ApiVersions.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import { createRequire } from 'module'
 
 /**
  * Get the path to the Node.js binary for the given runtime type.
@@ -49,6 +50,12 @@ export function getNodeJsPermissionArguments(
 		// Always allow read access to the module source directory
 		`--allow-fs-read=${moduleDir}`,
 	]
+
+	if (!isPackaged()) {
+		// Always allow read access to module host package, needed when running a dev version
+		const require = createRequire(import.meta.url)
+		args.push(`--allow-fs-read=${path.join(path.dirname(require.resolve('@companion-module/host')), '../../..')}`)
+	}
 
 	let forceReadWriteAll = false
 	if (process.platform === 'win32' && moduleDir.startsWith('\\\\')) {

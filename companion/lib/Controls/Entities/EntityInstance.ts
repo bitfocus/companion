@@ -205,9 +205,7 @@ export class ControlEntityInstance {
 		}
 
 		this.#cachedFeedbackValue = this.#getStartupValue()
-		if (data.type === EntityModelType.Feedback && !data.isInverted?.isExpression) {
-			this.#cachedIsInverted = !!data.isInverted?.value
-		}
+		this.#cachedIsInverted = this.#getStartupIsInverted()
 	}
 
 	#getOrCreateChildGroupFromDefinition(listDefinition: EntitySupportedChildGroupDefinition): ControlEntityList {
@@ -309,6 +307,14 @@ export class ControlEntityInstance {
 		return this.#data.options.startup_value?.value
 	}
 
+	#getStartupIsInverted(): boolean {
+		if (this.#data.type !== EntityModelType.Feedback) return false
+
+		const thisData = this.#data as FeedbackEntityModel
+		if (thisData.isInverted?.isExpression) return false
+		return !!thisData.isInverted?.value
+	}
+
 	/**
 	 * Set whether this entity is enabled
 	 */
@@ -317,7 +323,6 @@ export class ControlEntityInstance {
 
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = this.#getStartupValue()
-		this.#cachedIsInverted = false
 
 		// Inform relevant module
 		if (!this.#data.disabled) {
@@ -366,6 +371,8 @@ export class ControlEntityInstance {
 		if (isInverted.isExpression) {
 			// Trigger a re-evaluation of the expression
 			this.subscribe(false)
+		} else {
+			this.#cachedIsInverted = !!isInverted.value
 		}
 	}
 
@@ -721,7 +728,7 @@ export class ControlEntityInstance {
 
 		if (this.#data.connectionId === connectionId) {
 			this.#cachedFeedbackValue = this.#getStartupValue()
-			this.#cachedIsInverted = false
+			this.#cachedIsInverted = this.#getStartupIsInverted()
 
 			changed = true
 		}
@@ -879,6 +886,10 @@ export class ControlEntityInstance {
 
 		let thisChanged = false
 		if (this.type === EntityModelType.Feedback && newValue && !isInternalUserValueFeedback(this)) {
+			console.log(
+				'trace',
+				`Checking isInverted for feedback ${this.#data.definitionId}: cached=${this.#cachedIsInverted} new=${!!newValue.isInverted}`
+			)
 			if (!!newValue.isInverted !== this.#cachedIsInverted) {
 				this.#cachedIsInverted = !!newValue.isInverted
 				changed.push(this)
