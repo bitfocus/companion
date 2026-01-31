@@ -153,6 +153,8 @@ export class EntityPoolIsInvertedManager {
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
 	onVariablesChanged(variableIds: ReadonlySet<string>): void {
+		if (this.#destroyed) return
+
 		let anyInvalidated = false
 
 		for (const wrapper of this.#entities.values()) {
