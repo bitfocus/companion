@@ -353,7 +353,7 @@ const EventEditor = observer(function EventEditor({
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(event.id)
 
 	// Events don't support expressions, so we have to pretend for the UI
-	const wrappedOptions = optionsObjectToExpressionOptions(event.options || {})
+	const wrappedOptions = optionsObjectToExpressionOptions(event.options || {}, false)
 	const setWrappedValue = useCallback(
 		(key: string, value: ExpressionOrValue<JsonValue | undefined>) => service.setValue(key, value.value),
 		[service]
