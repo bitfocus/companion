@@ -1951,25 +1951,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc":
-  version: 2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc
-  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260125-231226-63855dc"
+"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d":
+  version: 2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d
+  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/a7d264a2532480877593b82be8cbc8ebccae79376f6cd7299f07fe062576a57f0e89ea1938de933b581186fef5725c8c43a3877d5d42ba88785d6a3f7670d15e
+  checksum: 10c0/bf0bfeef7033d1ffffacdb435f40b361648049ac772e1e1f9d80ddc5b61ddf548f2f30bbeb34ee73a5aa72f5e8517da718c00b89295c27f078330cfd76af512a
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260122-230445-88e0911":
-  version: 0.1.0-1-nightly-feat-2-0-20260122-230445-88e0911
-  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260122-230445-88e0911"
+"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260131-125141-dfad693":
+  version: 0.1.0-1-nightly-feat-2-0-20260131-125141-dfad693
+  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260131-125141-dfad693"
   dependencies:
     "@companion-module/base": "npm:~2.0.0-0"
     debounce-fn: "npm:^6.0.0"
-    p-queue: "npm:^8.1.1"
+    p-queue: "npm:^9.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/f0f9e7716f265cbe2387ccfa474c08e23c6ec2bf351aae837e744d49e7236ce0f90128ea7cb016365050a42dcbaa154c604ab1577c00eddd5e342375f5ea1448
+  checksum: 10c0/e1c1dcc6b3b5c30bca74bf79490b565fbf6c282e337274339d10a33d50bcf509aa11717e0116e9bfa38088fe45d7fb479da9d2cb737acb3258f19242fcbbf845
   languageName: node
   linkType: hard
 
@@ -19156,16 +19156,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-queue@npm:^8.1.1":
-  version: 8.1.1
-  resolution: "p-queue@npm:8.1.1"
-  dependencies:
-    eventemitter3: "npm:^5.0.1"
-    p-timeout: "npm:^6.1.2"
-  checksum: 10c0/7732a6a0fbb67b388ae71a3f4a114c79291f2f466fe31929749aaa237c6ca13b7c3075785b4a16812ec3ed65107944421e6dd7c02a8dceefb69f8c5cc3c7652d
-  languageName: node
-  linkType: hard
-
 "p-queue@npm:^9.1.0":
   version: 9.1.0
   resolution: "p-queue@npm:9.1.0"
@@ -19209,13 +19199,6 @@ __metadata:
   version: 4.1.0
   resolution: "p-timeout@npm:4.1.0"
   checksum: 10c0/25aaf13ae9ebfff4ab45591f6647f3bee1ecede073c367175fb0157c27efb170cfb51259a4d2e9118d2ca595453bc885f086ad0ca7476d1c26cee3d13a7c9f6d
-  languageName: node
-  linkType: hard
-
-"p-timeout@npm:^6.1.2":
-  version: 6.1.4
-  resolution: "p-timeout@npm:6.1.4"
-  checksum: 10c0/019edad1c649ab07552aa456e40ce7575c4b8ae863191477f02ac8d283ac8c66cedef0ca93422735130477a051dfe952ba717641673fd3599befdd13f63bcc33
   languageName: node
   linkType: hard
 
