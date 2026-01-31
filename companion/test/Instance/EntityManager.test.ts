@@ -61,6 +61,28 @@ describe('InstanceEntityManager', () => {
 	// Reset mocks before each test
 	beforeEach(() => {
 		vi.clearAllMocks()
+
+		// Reset mock implementations to defaults (clearAllMocks only clears call history)
+		mockVariablesParser.parseEntityOptions.mockImplementation((entityDefinition, options) => {
+			const parsedOptions: CompanionOptionValues = {}
+
+			let i = 0
+			for (const option of entityDefinition.options) {
+				parsedOptions[option.id] = `value-${i++}`
+			}
+
+			return {
+				parsedOptions: parsedOptions,
+				referencedVariableIds: new Set(['var1', 'var2']),
+			}
+		})
+		mockControlsController.getControl.mockReturnValue(mockControl)
+		mockControlsController.createVariablesAndExpressionParser.mockReturnValue(mockVariablesParser)
+		mockAdapter.updateActions.mockResolvedValue(null)
+		mockAdapter.updateFeedbacks.mockResolvedValue(null)
+		mockAdapter.upgradeActions.mockResolvedValue([])
+		mockAdapter.upgradeFeedbacks.mockResolvedValue([])
+
 		// Create a new instance for each test
 		entityManager = new ConnectionEntityManager(mockAdapter as any, mockControlsController as any, 'test-connection-id')
 
@@ -716,12 +738,15 @@ describe('InstanceEntityManager', () => {
 				[
 					{
 						controlId: 'control-1',
-						entity: expect.objectContaining({
+						entity: {
 							id: 'entity-1',
+							type: EntityModelType.Action,
+							definitionId: 'action-1',
+							connectionId: 'connection-1',
+							options: {},
 							upgradeIndex: 3,
-						}),
-						parsedOptions: {},
-					} satisfies EntityManagerActionEntity,
+						},
+					} satisfies Omit<EntityManagerActionEntity, 'parsedOptions'>,
 				],
 				5
 			)
@@ -739,7 +764,7 @@ describe('InstanceEntityManager', () => {
 					type: EntityModelType.Action,
 					definitionId: 'action-1',
 					connectionId: 'connection-1',
-					options: { old: true },
+					options: { old: { isExpression: false, value: true } },
 					upgradeIndex: 3,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
@@ -765,7 +790,7 @@ describe('InstanceEntityManager', () => {
 						id: 'entity-1',
 						type: EntityModelType.Action,
 						definitionId: 'action-1',
-						options: { upgraded: true },
+						options: { upgraded: { isExpression: false, value: true } },
 						upgradeIndex: 5,
 					},
 				] satisfies ReplaceableActionEntityModel[]
@@ -786,7 +811,7 @@ describe('InstanceEntityManager', () => {
 					id: 'entity-1',
 					type: EntityModelType.Action,
 					definitionId: 'action-1',
-					options: { upgraded: true },
+					options: { upgraded: { isExpression: false, value: true } },
 					upgradeIndex: 5,
 				})
 			)
@@ -909,6 +934,180 @@ describe('InstanceEntityManager', () => {
 				])
 			)
 		})
+
+		it('should mark entity as inactive when parseEntityOptions throws an error', () => {
+			// Setup parseEntityOptions to throw an error
+			mockVariablesParser.parseEntityOptions.mockImplementationOnce(() => {
+				throw new Error('Expression parsing failed')
+			})
+
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: { field1: { isExpression: true, value: 'invalid expression (' } },
+					upgradeIndex: 5,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
+					optionsToIgnoreForSubscribe: [],
+					optionsSupportExpressions: true,
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// Should have been called with null to mark the entity as inactive
+			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
+				new Map<string, EntityManagerActionEntity | null>([['entity-1', null]])
+			)
+		})
+
+		it('should handle entities with expression options that parse successfully', () => {
+			// Setup parseEntityOptions to return parsed expression result
+			mockVariablesParser.parseEntityOptions.mockImplementationOnce(() => ({
+				parsedOptions: { field1: 42 },
+				referencedVariableIds: new Set(['test:num']),
+			}))
+
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: { field1: { isExpression: true, value: '$(test:num) + 1' } },
+					upgradeIndex: 5,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
+					optionsToIgnoreForSubscribe: [],
+					optionsSupportExpressions: true,
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
+				new Map<string, EntityManagerActionEntity | null>([
+					[
+						'entity-1',
+						{
+							controlId: 'control-1',
+							entity: {
+								id: 'entity-1',
+								type: EntityModelType.Action,
+								definitionId: 'action-1',
+								connectionId: 'connection-1',
+								options: { field1: { isExpression: true, value: '$(test:num) + 1' } },
+								upgradeIndex: 5,
+							},
+							parsedOptions: { field1: 42 },
+						} satisfies EntityManagerActionEntity,
+					],
+				])
+			)
+		})
+
+		it('should track referenced variables for entity invalidation with expressions', () => {
+			// Setup parseEntityOptions to track specific variables
+			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				parsedOptions: { field1: 100 },
+				referencedVariableIds: new Set(['test:expr_var']),
+			}))
+
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: { field1: { isExpression: true, value: '$(test:expr_var) * 10' } },
+					upgradeIndex: 5,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
+					optionsToIgnoreForSubscribe: [],
+					optionsSupportExpressions: true,
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			mockAdapter.updateActions.mockClear()
+
+			// Trigger variable change for the referenced variable
+			entityManager.onVariablesChanged(new Set(['test:expr_var']), null)
+			vi.runAllTimers()
+
+			// Should have triggered a re-process because the expression variable changed
+			expect(mockAdapter.updateActions).toHaveBeenCalled()
+		})
+
+		it('should not invalidate entity when unrelated variables change with expressions', () => {
+			// Setup parseEntityOptions to track specific variables
+			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				parsedOptions: { field1: 100 },
+				referencedVariableIds: new Set(['test:expr_var']),
+			}))
+
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: { field1: { isExpression: true, value: '$(test:expr_var) * 10' } },
+					upgradeIndex: 5,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
+					optionsToIgnoreForSubscribe: [],
+					optionsSupportExpressions: true,
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			mockAdapter.updateActions.mockClear()
+
+			// Trigger variable change for an unrelated variable
+			entityManager.onVariablesChanged(new Set(['other:unrelated_var']), null)
+			vi.runAllTimers()
+
+			// Should NOT have triggered a re-process
+			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
+		})
 	})
 
 	describe('Performance', () => {
@@ -947,7 +1146,7 @@ describe('InstanceEntityManager', () => {
 						type: isAction ? EntityModelType.Action : EntityModelType.Feedback,
 						definitionId: `def-${i}`,
 						connectionId: 'connection-1',
-						options: { index: i },
+						options: { index: { isExpression: false, value: i } },
 						upgradeIndex: 5,
 					}),
 					getEntityDefinition: vi.fn().mockReturnValue({
@@ -981,10 +1180,10 @@ describe('InstanceEntityManager', () => {
 					type: EntityModelType.Action,
 					definitionId: 'def-0',
 					connectionId: 'connection-1',
-					options: { index: 0 },
+					options: { index: { isExpression: false, value: 0 } },
 					upgradeIndex: 5,
 				},
-				parsedOptions: { index: 0 },
+				parsedOptions: { index: 'value-0' },
 			} satisfies EntityManagerActionEntity)
 
 			// Find feedback call and verify it contains expected feedback entities
@@ -1003,10 +1202,10 @@ describe('InstanceEntityManager', () => {
 					type: EntityModelType.Feedback,
 					definitionId: 'def-1',
 					connectionId: 'connection-1',
-					options: { index: 1 },
+					options: { index: { isExpression: false, value: 1 } },
 					upgradeIndex: 5,
 				},
-				parsedOptions: { index: 1 },
+				parsedOptions: { index: 'value-0' },
 				imageSize: { width: 72, height: 58 },
 			} satisfies EntityManagerFeedbackEntity)
 		})
@@ -1298,8 +1497,7 @@ describe('InstanceEntityManager', () => {
 							options: {},
 							upgradeIndex: 3,
 						},
-						parsedOptions: {},
-					} satisfies EntityManagerActionEntity,
+					} satisfies Omit<EntityManagerActionEntity, 'parsedOptions'>,
 				],
 				5
 			)
@@ -1504,7 +1702,7 @@ describe('InstanceEntityManager', () => {
 						id: 'entity-1',
 						type: EntityModelType.Action,
 						definitionId: 'action-1',
-						options: { upgraded: true },
+						options: { upgraded: { isExpression: false, value: true } },
 						upgradeIndex: 5,
 					},
 				] satisfies ReplaceableActionEntityModel[]
@@ -1515,7 +1713,7 @@ describe('InstanceEntityManager', () => {
 						id: 'entity-3',
 						type: EntityModelType.Feedback,
 						definitionId: 'feedback-1',
-						options: { upgraded: true },
+						options: { upgraded: { isExpression: false, value: true } },
 						upgradeIndex: 5,
 					},
 				] satisfies ReplaceableFeedbackEntityModel[]
@@ -1542,9 +1740,8 @@ describe('InstanceEntityManager', () => {
 							options: {},
 							upgradeIndex: 3,
 						},
-						parsedOptions: {},
 					},
-				] satisfies EntityManagerActionEntity[],
+				] satisfies Omit<EntityManagerActionEntity, 'parsedOptions'>[],
 				5
 			)
 			expect(mockAdapter.upgradeFeedbacks).toHaveBeenCalledWith(
@@ -1559,10 +1756,9 @@ describe('InstanceEntityManager', () => {
 							options: {},
 							upgradeIndex: 3,
 						},
-						parsedOptions: {},
 						imageSize: undefined,
 					},
-				] satisfies EntityManagerFeedbackEntity[],
+				] satisfies Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[],
 				5
 			)
 

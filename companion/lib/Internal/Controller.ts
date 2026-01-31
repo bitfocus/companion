@@ -20,13 +20,14 @@ import type {
 } from './Types.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ControlsController, NewFeedbackValue } from '../Controls/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
 import LogController from '../Log/Controller.js'
 import {
 	EntityModelType,
+	type FeedbackValue,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 	type SomeEntityModel,
@@ -34,7 +35,7 @@ import {
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { CompanionFeedbackButtonStyleResult, Complete } from '@companion-module/base'
+import type { Complete } from '@companion-module/base'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -55,6 +56,8 @@ import type EventEmitter from 'node:events'
 import type { AppInfo } from '../Registry.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
+import type { NewFeedbackValue } from '../Controls/Entities/Types.js'
 
 interface FeedbackEntityState {
 	controlId: string
@@ -140,15 +143,10 @@ export class InternalController {
 
 		// Find all the feedbacks on controls
 		const allControls = this.#controlsController.getAllControls()
-		for (const [controlId, control] of allControls.entries()) {
+		for (const control of allControls.values()) {
 			if (!control.supportsEntities) continue
 
-			const allEntities = control.entities.getAllEntities()
-			for (const entity of allEntities) {
-				if (entity.connectionId !== 'internal') continue
-
-				this.entityUpdate(entity.asEntityModel(), controlId)
-			}
+			control.entities.resubscribeEntities(undefined, 'internal')
 		}
 
 		// Make all variables values
@@ -260,7 +258,7 @@ export class InternalController {
 
 		this.#controlsController.updateFeedbackValues('internal', [
 			{
-				id: feedback.id,
+				entityId: feedback.id,
 				controlId: controlId,
 				value: this.#feedbackGetValue(feedbackState),
 			},
@@ -291,7 +289,7 @@ export class InternalController {
 	/**
 	 * Get an updated value for a feedback
 	 */
-	#feedbackGetValue(feedbackState: FeedbackEntityState): CompanionFeedbackButtonStyleResult | VariableValue {
+	#feedbackGetValue(feedbackState: FeedbackEntityState): FeedbackValue {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Feedback,
@@ -311,7 +309,7 @@ export class InternalController {
 			const { parsedOptions, referencedVariableIds } = entityDefinition.optionsSupportExpressions
 				? parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
 				: {
-						parsedOptions: feedbackState.entityModel.options,
+						parsedOptions: convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options),
 						referencedVariableIds: new Set<string>(),
 					}
 
@@ -452,7 +450,7 @@ export class InternalController {
 			// Parse the options if enabled
 			const parsedOptions = entityDefinition.optionsSupportExpressions
 				? parser.parseEntityOptions(entityDefinition, action.rawOptions).parsedOptions
-				: action.rawOptions
+				: convertExpressionOptionsWithoutParsing(action.rawOptions)
 
 			const executionAction: Complete<ActionForInternalExecution> = {
 				options: parsedOptions,
@@ -487,10 +485,10 @@ export class InternalController {
 	/**
 	 * Execute a logic feedback
 	 */
-	executeLogicFeedback(feedback: FeedbackEntityModel, childValues: boolean[]): boolean {
+	executeLogicFeedback(feedback: FeedbackEntityModel, isInverted: boolean, childValues: boolean[]): boolean {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, childValues)
+		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, isInverted, childValues)
 	}
 
 	/**
@@ -520,7 +518,7 @@ export class InternalController {
 		for (const [id, feedback] of this.#feedbacks.entries()) {
 			if (typesSet.size === 0 || typesSet.has(feedback.entityModel.definitionId)) {
 				newValues.push({
-					id: id,
+					entityId: id,
 					controlId: feedback.controlId,
 					value: this.#feedbackGetValue(feedback),
 				})
@@ -541,7 +539,7 @@ export class InternalController {
 			const feedback = this.#feedbacks.get(id)
 			if (feedback) {
 				newValues.push({
-					id: id,
+					entityId: id,
 					controlId: feedback.controlId,
 					value: this.#feedbackGetValue(feedback),
 				})
@@ -642,7 +640,7 @@ export class InternalController {
 			if (feedback.referencedVariables.isDisjointFrom(changedVariablesSet)) continue
 
 			newValues.push({
-				id: id,
+				entityId: id,
 				controlId: feedback.controlId,
 				value: this.#feedbackGetValue(feedback),
 			})

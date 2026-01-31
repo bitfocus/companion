@@ -55,6 +55,8 @@ import {
 import { createHash } from 'node:crypto'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { JsonValue } from 'type-fest'
+import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 
 /**
  * Interface for a handler that can process HID device scans.
@@ -713,7 +715,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					z.object({
 						groupId: z.string(),
 						key: z.string(),
-						value: z.any(),
+						value: JsonValueSchema.optional(),
 					})
 				)
 				.mutation(async ({ input }) => {
@@ -848,7 +850,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					z.object({
 						surfaceId: z.string(),
 						key: z.string(),
-						value: z.any(),
+						value: JsonValueSchema.optional(),
 					})
 				)
 				.mutation(async ({ input }) => {
@@ -1488,7 +1490,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			group.setName(surfaceGroup.name ?? '')
 			for (const [key, value] of Object.entries(surfaceGroup)) {
 				if (key === 'name') continue
-				group.setGroupConfigValue(key, value)
+				group.setGroupConfigValue(key, value as JsonValue)
 			}
 			group.clearPageHistory()
 		}
@@ -1521,7 +1523,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					group.setName(surfaceConfig.groupConfig?.name ?? '')
 					for (const [key, value] of Object.entries(surfaceConfig.groupConfig)) {
 						if (key === 'name') continue
-						group.setGroupConfigValue(key, value)
+						group.setGroupConfigValue(key, value as JsonValue)
 					}
 					group.clearPageHistory()
 				}

@@ -51,7 +51,7 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 					type: 'secret-text',
 					width: o.width,
 					default: o.default,
-					required: o.required,
+					minLength: o.required ? 1 : undefined,
 					regex: o.regex,
 				} satisfies Complete<CompanionInputFieldSecretExtended>
 
@@ -159,7 +159,7 @@ function translateTextInputField(
 		type: 'textinput',
 		default: field.default,
 		regex: field.regex,
-		required: field.required,
+		minLength: field.required ? 1 : undefined,
 		width: width,
 		useVariables,
 		multiline: field.multiline,
@@ -176,6 +176,7 @@ function translateCheckboxField(
 		type: 'checkbox',
 		default: field.default,
 		width: width,
+		displayToggle: false,
 	}
 }
 function translateColorPickerField(
@@ -204,7 +205,6 @@ function translateNumberField(
 		max: field.max,
 		step: field.step,
 		width: width,
-		required: field.required,
 		range: field.range,
 		showMinAsNegativeInfinity: field.showMinAsNegativeInfinity,
 		showMaxAsPositiveInfinity: field.showMaxAsPositiveInfinity,
@@ -258,7 +258,14 @@ function translateCommonFields(
 	field: EncodeIsVisible<CompanionInputFieldBase>
 ): Pick<
 	Complete<CompanionInputFieldBaseExtended>,
-	'id' | 'label' | 'tooltip' | 'description' | 'expressionDescription' | 'isVisibleUi' | 'disableAutoExpression'
+	| 'id'
+	| 'label'
+	| 'tooltip'
+	| 'description'
+	| 'expressionDescription'
+	| 'isVisibleUi'
+	| 'disableAutoExpression'
+	| 'allowInvalidValues'
 > {
 	return {
 		id: field.id,
@@ -268,6 +275,7 @@ function translateCommonFields(
 		expressionDescription: undefined, // Expressions not supported from 1.x modules
 		isVisibleUi: translateIsVisibleFn(field),
 		disableAutoExpression: true, // Expressions not supported from 1.x modules
+		allowInvalidValues: false, // Shouldn't matter as expressions not supported from 1.x modules, but play it safe
 	}
 }
 

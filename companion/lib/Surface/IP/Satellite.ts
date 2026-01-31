@@ -38,7 +38,7 @@ import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import type { ReadonlyDeep } from 'type-fest'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export interface SatelliteDeviceInfo {
@@ -66,7 +66,7 @@ interface SatelliteInputVariableInfo {
 interface SatelliteOutputVariableInfo {
 	id: string
 	lastReferencedVariables: ReadonlySet<string> | null
-	lastValue: any
+	lastValue: JsonValue | undefined
 	triggerUpdate?: () => void
 }
 

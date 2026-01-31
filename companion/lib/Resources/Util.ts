@@ -153,8 +153,7 @@ export const convert2Digit = (num: number): string => {
 /**
  * Check if Satellite API value is falsey
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const isFalsey = (val: any): boolean => {
+export const isFalsey = (val: unknown): boolean => {
 	// eslint-disable-next-line no-extra-boolean-cast
 	return (typeof val === 'string' && val.toLowerCase() == 'false') || val == '0' || !Boolean(val)
 }
@@ -162,8 +161,7 @@ export const isFalsey = (val: any): boolean => {
 /**
  * Check if Satellite API value is truthy
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const isTruthy = (val: any): boolean => {
+export const isTruthy = (val: unknown): boolean => {
 	return (
 		!isFalsey(val) &&
 		((typeof val === 'string' && (val.toLowerCase() == 'true' || val.toLowerCase() == 'yes')) || Number(val) >= 1)

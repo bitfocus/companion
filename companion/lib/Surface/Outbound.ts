@@ -16,6 +16,7 @@ import { ServiceSurfaceDiscovery } from './Discovery.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 
 export interface SurfaceOutboundControllerEvents {
 	clientInfo: [update: OutboundSurfacesUpdate]
@@ -319,7 +320,7 @@ export class SurfaceOutboundController {
 					z.object({
 						id: z.string(),
 						name: z.string(),
-						config: z.record(z.string(), z.any()),
+						config: JsonObjectSchema,
 					})
 				)
 				.mutation(async ({ input }) => {

@@ -46,7 +46,7 @@ export function translateConnectionConfigFields(fields: SomeCompanionConfigField
 					type: 'secret-text',
 					width: o.width,
 					default: o.default,
-					required: o.required,
+					minLength: o.minLength,
 					regex: o.regex,
 				} satisfies Complete<CompanionInputFieldSecretExtended>
 
@@ -143,7 +143,7 @@ function translateTextInputField(
 		type: 'textinput',
 		default: field.default,
 		regex: field.regex,
-		required: field.required,
+		minLength: field.minLength,
 		width: width,
 		useVariables: field.useVariables && usesInternalVariableParsing ? { local: true } : undefined,
 		multiline: field.multiline,
@@ -160,6 +160,7 @@ function translateCheckboxField(
 		type: 'checkbox',
 		default: field.default,
 		width: width,
+		displayToggle: false,
 	}
 }
 function translateColorPickerField(
@@ -188,7 +189,6 @@ function translateNumberField(
 		max: field.max,
 		step: field.step,
 		width: width,
-		required: field.required,
 		range: field.range,
 		showMinAsNegativeInfinity: field.showMinAsNegativeInfinity,
 		showMaxAsPositiveInfinity: field.showMaxAsPositiveInfinity,
@@ -242,14 +242,21 @@ function translateCommonFields(
 	field: CompanionInputFieldBase
 ): Pick<
 	Complete<CompanionInputFieldBaseExtended>,
-	'id' | 'label' | 'tooltip' | 'description' | 'expressionDescription' | 'isVisibleUi' | 'disableAutoExpression'
+	| 'id'
+	| 'label'
+	| 'tooltip'
+	| 'description'
+	| 'expressionDescription'
+	| 'isVisibleUi'
+	| 'disableAutoExpression'
+	| 'allowInvalidValues'
 > {
 	return {
 		id: field.id,
 		label: field.label,
 		tooltip: field.tooltip,
 		description: field.description,
-		expressionDescription: undefined, // Temporary until #2345
+		expressionDescription: field.expressionDescription,
 		isVisibleUi: field.isVisibleExpression
 			? {
 					type: 'expression',
@@ -257,6 +264,7 @@ function translateCommonFields(
 					data: undefined,
 				}
 			: undefined,
-		disableAutoExpression: true, // Temporary until #2345
+		disableAutoExpression: field.disableAutoExpression ?? false,
+		allowInvalidValues: field.allowInvalidValues ?? false,
 	}
 }

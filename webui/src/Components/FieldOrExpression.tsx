@@ -8,11 +8,12 @@ import { observer } from 'mobx-react-lite'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { JsonValue } from 'type-fest'
 
 interface FieldOrExpressionProps {
 	localVariablesStore: LocalVariablesStore | null
-	value: ExpressionOrValue<any>
-	setValue: (value: ExpressionOrValue<any>) => void
+	value: ExpressionOrValue<JsonValue | undefined>
+	setValue: (value: ExpressionOrValue<JsonValue | undefined>) => void
 	disabled: boolean
 
 	entityType: EntityModelType | null
@@ -43,10 +44,17 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 
 	const setIsExpression = useCallback(
 		(isExpression: boolean) => {
-			setValue({
-				isExpression,
-				value: value.value,
-			})
+			setValue(
+				isExpression
+					? {
+							isExpression: true,
+							value: stringifyVariableValue(value.value) ?? '',
+						}
+					: {
+							isExpression: false,
+							value: value.value,
+						}
+			)
 		},
 		[setValue, value]
 	)

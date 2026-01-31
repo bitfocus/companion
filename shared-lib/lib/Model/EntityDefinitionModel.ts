@@ -22,7 +22,6 @@ export interface ClientEntityDefinition {
 
 	/**
 	 * Whether this entity definition uses the auto-parser for options
-	 * Note: This is only valid for internal connections. This will change with #2345
 	 */
 	optionsSupportExpressions: boolean
 

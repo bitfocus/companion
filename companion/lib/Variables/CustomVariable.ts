@@ -26,6 +26,7 @@ import { CustomVariableCollections } from './CustomVariableCollections.js'
 import EventEmitter from 'events'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
+import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 
 const CUSTOM_LABEL = 'custom'
 
@@ -124,7 +125,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 				.input(
 					z.object({
 						name: z.string(),
-						value: z.any(),
+						value: JsonValueSchema.optional(),
 					})
 				)
 				.mutation(({ input }) => {
@@ -135,7 +136,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 				.input(
 					z.object({
 						name: z.string(),
-						value: z.any(),
+						value: JsonValueSchema.optional(),
 					})
 				)
 				.mutation(({ input }) => {

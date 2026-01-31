@@ -10,6 +10,11 @@ import type { IPageStore } from '../Page/Store.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import {
+	ExpressionableOptionsObjectSchema,
+	type ExpressionableOptionsObject,
+} from '@companion-app/shared/Model/Options.js'
+import LogController from '../Log/Controller.js'
 
 export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),
@@ -42,7 +47,7 @@ const getLocationSubId = (location: ControlLocation): string =>
  * this program.
  */
 export class PreviewGraphics {
-	// readonly #logger = LogController.createLogger('Graphics/Preview')
+	readonly #logger = LogController.createLogger('Graphics/Preview')
 
 	readonly #graphicsController: GraphicsController
 	readonly #pageStore: IPageStore
@@ -150,7 +155,7 @@ export class PreviewGraphics {
 				.input(
 					z.object({
 						controlId: z.string(),
-						options: z.object({}).catchall(z.any()),
+						options: ExpressionableOptionsObjectSchema,
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
@@ -249,44 +254,48 @@ export class PreviewGraphics {
 	}
 
 	#triggerRecheck(previewSession: PreviewSession): void {
-		const location = this.#pageStore.getLocationOfControlId(previewSession.controlId)
-		const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.controlId, null)
+		try {
+			const location = this.#pageStore.getLocationOfControlId(previewSession.controlId)
+			const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.controlId, null)
 
-		// Resolve the new location
-		const locationValue = parser.parseEntityOption(previewSession.options.location, 'variables') // This value should be a ExpressionOrValue, and the value mode is variables
-		const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
+			// Resolve the new location
+			const locationValue = parser.parseEntityOption(previewSession.options.location, 'variables') // This value should be a ExpressionOrValue, and the value mode is variables
+			const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
 
-		const lastResolvedLocation = previewSession.resolvedLocation
+			const lastResolvedLocation = previewSession.resolvedLocation
 
-		previewSession.referencedVariableIds = locationValue.referencedVariableIds
-		previewSession.resolvedLocation = resolvedLocation
+			previewSession.referencedVariableIds = locationValue.referencedVariableIds
+			previewSession.resolvedLocation = resolvedLocation
 
-		if (!resolvedLocation) {
-			// Now has an invalid location
-			this.#renderEvents.emit(`reference:${previewSession.id}`, null)
-			return
+			if (!resolvedLocation) {
+				// Now has an invalid location
+				this.#renderEvents.emit(`reference:${previewSession.id}`, null)
+				return
+			}
+
+			// Check if it has changed
+			if (
+				lastResolvedLocation &&
+				resolvedLocation.pageNumber == lastResolvedLocation.pageNumber &&
+				resolvedLocation.row == lastResolvedLocation.row &&
+				resolvedLocation.column == lastResolvedLocation.column
+			)
+				return
+
+			this.#renderEvents.emit(
+				`reference:${previewSession.id}`,
+				this.#graphicsController.getCachedRenderOrGeneratePlaceholder(resolvedLocation).asDataUrl
+			)
+		} catch (e) {
+			this.#logger.error(`Error while rechecking preview session for control ${previewSession.controlId}: ${e}`)
 		}
-
-		// Check if it has changed
-		if (
-			lastResolvedLocation &&
-			resolvedLocation.pageNumber == lastResolvedLocation.pageNumber &&
-			resolvedLocation.row == lastResolvedLocation.row &&
-			resolvedLocation.column == lastResolvedLocation.column
-		)
-			return
-
-		this.#renderEvents.emit(
-			`reference:${previewSession.id}`,
-			this.#graphicsController.getCachedRenderOrGeneratePlaceholder(resolvedLocation).asDataUrl
-		)
 	}
 }
 
 interface PreviewSession {
 	readonly id: string
 	readonly controlId: string
-	options: Record<string, any>
+	options: ExpressionableOptionsObject
 	resolvedLocation: ControlLocation | null
 	referencedVariableIds: ReadonlySet<string>
 }

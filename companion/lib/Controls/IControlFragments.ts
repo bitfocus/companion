@@ -4,6 +4,7 @@ import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { JsonObject, JsonValue } from 'type-fest'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithStyle | ControlWithoutStyle) &
@@ -104,7 +105,7 @@ export interface ControlWithEvents extends ControlBase<any> {
 	 * @param key the key/name of the property
 	 * @param value the new value
 	 */
-	eventSetOptions(id: string, key: string, value: any): boolean
+	eventSetOptions(id: string, key: string, value: JsonValue | undefined): boolean
 }
 
 export interface ControlWithoutEvents extends ControlBase<any> {
@@ -131,12 +132,12 @@ export interface ControlWithoutActionSets extends ControlBase<any> {
 export interface ControlWithOptions extends ControlBase<any> {
 	readonly supportsOptions: true
 
-	options: Record<string, any>
+	options: JsonObject
 
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: any, forceSet?: boolean): boolean
+	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean
 }
 
 export interface ControlWithoutOptions extends ControlBase<any> {

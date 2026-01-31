@@ -5,7 +5,10 @@ import {
 	type EntityOwner,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { useMemo, useRef } from 'react'
+import type { JsonValue } from 'type-fest'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -20,7 +23,12 @@ export interface IEntityEditorService {
 		ownerId: EntityOwner | null
 	) => Promise<string | null>
 
-	setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, val: any) => void
+	setValue: (
+		entityId: string,
+		entity: SomeEntityModel | undefined,
+		key: string,
+		val: ExpressionOrValue<JsonValue | undefined>
+	) => void
 	performDelete: (entityId: string, entityTypeLabel: string) => void
 	performDuplicate: (entityId: string) => void
 	setConnection: (entityId: string, connectionId: string) => void
@@ -34,15 +42,15 @@ export interface IEntityEditorService {
 	setEnabled: ((entityId: string, enabled: boolean) => void) | undefined
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
 
-	setInverted: (entityId: string, inverted: boolean) => void
+	setInverted: (entityId: string, inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (entityId: string, name: string) => void
-	setVariableValue: (entityId: string, value: any) => void
+	setVariableValue: (entityId: string, value: VariableValue) => void
 	setSelectedStyleProps: (entityId: string, keys: string[]) => void
 	setStylePropsValue: (entityId: string, key: string, value: any) => void
 }
 
 export interface IEntityEditorActionService {
-	setValue: (key: string, val: any) => void
+	setValue: (key: string, val: ExpressionOrValue<JsonValue | undefined>) => void
 	performDelete: () => void
 	performDuplicate: () => void
 	setConnection: (connectionId: string) => void
@@ -50,9 +58,9 @@ export interface IEntityEditorActionService {
 	setEnabled: ((enabled: boolean) => void) | undefined
 	setHeadline: ((headline: string) => void) | undefined
 
-	setInverted: (inverted: boolean) => void
+	setInverted: (inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (name: string) => void
-	setVariableValue: (value: any) => void
+	setVariableValue: (value: VariableValue) => void
 	setSelectedStyleProps: (keys: string[]) => void
 	setStylePropsValue: (key: string, value: any) => void
 }
@@ -118,7 +126,12 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
-			setValue: (entityId: string, entity: SomeEntityModel | undefined, key: string, value: any) => {
+			setValue: (
+				entityId: string,
+				entity: SomeEntityModel | undefined,
+				key: string,
+				value: ExpressionOrValue<JsonValue | undefined>
+			) => {
 				if (!entity?.options || entity.options[key] !== value) {
 					setOptionMutation
 						.mutateAsync({
@@ -210,7 +223,7 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
-			setInverted: (entityId: string, isInverted: boolean) => {
+			setInverted: (entityId: string, isInverted: ExpressionOrValue<boolean>) => {
 				setInvertedMutation
 					.mutateAsync({
 						controlId,
@@ -235,7 +248,7 @@ export function useControlEntitiesEditorService(
 						console.error('Failed to set entity variable name', e)
 					})
 			},
-			setVariableValue: (entityId: string, value: any) => {
+			setVariableValue: (entityId: string, value: JsonValue | undefined) => {
 				setVariableValueMutation
 					.mutateAsync({
 						controlId,
@@ -312,7 +325,8 @@ export function useControlEntityService(
 
 	return useMemo(
 		() => ({
-			setValue: (key: string, val: any) => serviceFactory.setValue(entityId, entityRef.current, key, val),
+			setValue: (key: string, val: ExpressionOrValue<JsonValue | undefined>) =>
+				serviceFactory.setValue(entityId, entityRef.current, key, val),
 			performDelete: () => serviceFactory.performDelete(entityId, entityTypeLabel),
 			performDuplicate: () => serviceFactory.performDuplicate(entityId),
 			setConnection: (connectionId: string) => serviceFactory.setConnection(entityId, connectionId),
@@ -323,9 +337,9 @@ export function useControlEntityService(
 			setHeadline: serviceFactory.setHeadline
 				? (headline: string) => serviceFactory.setHeadline?.(entityId, headline)
 				: undefined,
-			setInverted: (inverted: boolean) => serviceFactory.setInverted(entityId, inverted),
+			setInverted: (inverted: ExpressionOrValue<boolean>) => serviceFactory.setInverted(entityId, inverted),
 			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),
-			setVariableValue: (value: any) => serviceFactory.setVariableValue(entityId, value),
+			setVariableValue: (value: VariableValue) => serviceFactory.setVariableValue(entityId, value),
 			setSelectedStyleProps: (keys: string[]) => serviceFactory.setSelectedStyleProps(entityId, keys),
 			setStylePropsValue: (key: string, value: any) => serviceFactory.setStylePropsValue(entityId, key, value),
 		}),

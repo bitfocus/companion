@@ -4,13 +4,14 @@ import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/Refe
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { SetOptional } from 'type-fest'
-import type { ActionEntityModel, FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ActionEntityModel, FeedbackEntityModel, FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { EventEmitter } from 'events'
 import type { VariableDefinition, VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 
 export interface FeedbackForInternalExecution {
 	controlId: string
@@ -42,7 +43,7 @@ export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferen
 export interface FeedbackForVisitor {
 	id: string
 	type: string
-	options: CompanionOptionValues
+	options: ExpressionableOptionsObject
 }
 
 /**
@@ -51,7 +52,7 @@ export interface FeedbackForVisitor {
 export interface ActionForVisitor {
 	id: string
 	action: string
-	options: CompanionOptionValues
+	options: ExpressionableOptionsObject
 }
 
 export interface InternalModuleFragmentEvents {
@@ -106,7 +107,7 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 export interface ExecuteFeedbackResultWithReferences {
 	referencedVariables: Iterable<string>
-	value: CompanionFeedbackButtonStyleResult | VariableValue | undefined
+	value: FeedbackValue | undefined
 }
 
 export type InternalActionDefinition = SetOptional<
