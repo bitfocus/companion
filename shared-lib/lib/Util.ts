@@ -16,37 +16,136 @@ export function assertNever(_val: never): void {
 	// Nothing to do
 }
 
-export function msToStamp(v: number, format: string): string {
+type TimeGetter = (largest: boolean) => number
+type TimeValues = {
+	S: number
+	s: TimeGetter
+	m: TimeGetter
+	H: TimeGetter
+	h: TimeGetter
+	d: TimeGetter
+	n: string
+	a: string
+}
+
+const TIME_VALUE_KEYS = ['S', 's', 'm', 'H', 'h', 'd', 'n', 'a'] as const
+function isKeyOfTimeValues(k: string): k is keyof TimeValues {
+	return TIME_VALUE_KEYS.includes(k as keyof TimeValues)
+}
+
+const CAN_BE_LARGEST_UNIT = ['H', 'h', 'm', 's'] as const
+function canBeLargestUnit(k: string): k is (typeof CAN_BE_LARGEST_UNIT)[number] {
+	return CAN_BE_LARGEST_UNIT.includes(k as (typeof CAN_BE_LARGEST_UNIT)[number])
+}
+
+/**
+ * Creates time value getters for a given number of milliseconds
+ * @param v - Milliseconds (can be negative)
+ * @returns Object with getters for various time components
+ */
+function createTimeValues(v: number): TimeValues {
 	const negative = v < 0 ? '-' : ''
 	v = Math.abs(v)
-	const ms = v % 1000
-	const seconds = Math.floor(v / 1000) % 60
-	const minutes = Math.floor(v / 60000) % 60
-	const Hours = Math.floor(v / 3600000) % 24
-	const hours = Math.floor(v / 3600000) % 12
-	const days = Math.floor(v / 86400000)
+	const totalSeconds = Math.floor(v / 1000)
+	const totalMinutes = Math.floor(v / (1000 * 60))
+	const totalHours = Math.floor(v / (1000 * 60 * 60))
 
-	let result = format
+	return {
+		n: negative,
+		S: v % 1000,
+		s: (largest) => (largest ? totalSeconds : totalSeconds % 60),
+		m: (largest) => (largest ? totalMinutes : totalMinutes % 60),
+		H: (largest) => (largest ? totalHours : totalHours % 24),
+		// for 12 hour format 0 is replied with 12
+		h: (largest) => (largest ? totalHours : totalHours % 12 === 0 ? 12 : totalHours % 12),
+		d: (_largest) => Math.floor(v / (1000 * 60 * 60 * 24)),
+		a: totalHours % 24 >= 12 ? 'PM' : 'AM',
+	}
+}
 
-	result = result.replace('n', negative)
+/**
+ * Truncates milliseconds to the specified precision and pads with zeros
+ * @param v - Milliseconds value
+ * @param length - Number of digits (1-3): 1 = 1/100, 2 = 1/10, 3 = milliseconds
+ * @returns Padded string representation
+ */
+function truncateMilliseconds(v: number, length: number) {
+	if (length > 3) throw new Error('"S" can only pad to 3')
+	const divisor = [100, 10, 1][length - 1]
+	return pad(Math.trunc(v / divisor), '0', length)
+}
 
-	result = result.replace('dd', pad(days, '0', 2))
-	result = result.replace('HH', pad(Hours, '0', 2))
-	result = result.replace('hh', pad(hours, '0', 2))
-	result = result.replace('mm', pad(minutes, '0', 2))
-	result = result.replace('ss', pad(seconds, '0', 2))
+/**
+ * Converts milliseconds to a formatted timestamp string
+ * @param v - Milliseconds to convert (can be negative)
+ * @param format - Format string with placeholders
+ * @returns Formatted timestamp string
+ */
+export function msToStamp(v: number, format: string): string {
+	const values = createTimeValues(v)
 
-	result = result.replace('SSS', pad(ms, '0', 3))
-	result = result.replace('SS', pad(Math.trunc(ms / 10), '0', 2))
-	result = result.replace('S', pad(Math.trunc(ms / 100), '0', 1))
+	const result: string[] = []
+	let inBracket = false
+	let outBracket = false
+	let largestUnit: string | null = null
+	let lastChar = ''
+	let accChar = ''
 
-	result = result.replace('d', days.toString())
-	result = result.replace('H', Hours.toString())
-	result = result.replace('h', hours.toString())
-	result = result.replace('m', minutes.toString())
-	result = result.replace('s', seconds.toString())
+	/**
+	 * Ensures correct unit inside the bracket
+	 * @param u - Character to check
+	 */
+	const handleLargestUnit = (u: string) => {
+		if (inBracket && !outBracket) {
+			if (!canBeLargestUnit(u)) throw new Error(`"${u}" can not be set as largest unit`)
+			if (largestUnit !== u && largestUnit !== null) throw new Error('there can only be one unit inside "[ ]"')
+			largestUnit = u
+		}
+	}
 
-	result = result.replace('a', (v / 3600000) % 24 > 12 ? 'PM' : 'AM')
+	/**
+	 * Processes a character and if needed substitute in the needed value
+	 * The character is then pushed ton the result array
+	 * @param c - Character to check
+	 */
+	const processChar = (c: string) => {
+		handleLargestUnit(c)
+		if (c !== lastChar) {
+			if (isKeyOfTimeValues(lastChar)) {
+				if (lastChar === 'n' || lastChar === 'a') {
+					result.push(values[lastChar])
+				} else if (lastChar === 'S') {
+					result.push(truncateMilliseconds(values[lastChar], accChar.length))
+				} else {
+					const isLargestUnit = lastChar === largestUnit
+					result.push(pad(values[lastChar](isLargestUnit), '0', accChar.length))
+				}
+			} else {
+				result.push(accChar)
+			}
+			accChar = ''
+		}
+		accChar += c
+		lastChar = c
+	}
 
-	return result
+	for (const c of format) {
+		if (c === '[') {
+			if (inBracket) throw new Error('"[" was already set')
+			if (outBracket) throw new Error('"[" can not come after "]"')
+			inBracket = true
+			continue
+		}
+		if (c === ']') {
+			if (!inBracket) throw new Error('"[" missing')
+			if (outBracket) throw new Error('"]" was already set')
+			if (largestUnit === null) throw new Error('"]" cant be set on empty unit')
+			outBracket = true
+			continue
+		}
+		processChar(c)
+	}
+	if (inBracket && !outBracket) throw new Error('"[" was never closed')
+	processChar('')
+	return result.join('')
 }
