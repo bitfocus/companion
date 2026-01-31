@@ -1130,6 +1130,33 @@ describe('duplicateEntity', () => {
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01')
 	})
+
+	test('duplicate deep when root is full', () => {
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01', null, {
+			type: EntityModelType.Action,
+			maximumChildren: 3,
+		})
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		list.loadStorage(structuredClone(ActionTree), true, false)
+
+		// Starts with correct length (3 root items)
+		expect(list.getDirectEntities()).toHaveLength(3)
+
+		// Duplicate deep item should succeed even though root is full
+		const newEntity = list.duplicateEntity('int1')
+		expect(newEntity).not.toBeUndefined()
+
+		// Helper to find the parent of the new entity to verify it was added there
+		const newEntityParent = list.findParentAndIndex(newEntity!.id)
+		expect(newEntityParent?.parent).not.toBe(list)
+		expect(newEntityParent?.parent).not.toBeUndefined()
+
+		// No callbacks
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
+	})
 })
 
 describe('forgetForConnection', () => {

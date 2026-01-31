@@ -273,15 +273,15 @@ export class ControlEntityList {
 	 * Duplicate an entity
 	 */
 	duplicateEntity(id: string): ControlEntityInstance | undefined {
-		// Make sure this won't exceed the maximum number of children
-		if (
-			this.#listDefinition.maximumChildren !== undefined &&
-			this.#entities.length >= this.#listDefinition.maximumChildren
-		)
-			return undefined
-
 		const entityIndex = this.#entities.findIndex((entity) => entity.id === id)
 		if (entityIndex !== -1) {
+			// Make sure this won't exceed the maximum number of children
+			if (
+				this.#listDefinition.maximumChildren !== undefined &&
+				this.#entities.length >= this.#listDefinition.maximumChildren
+			)
+				return undefined
+
 			const entityModel = this.#entities[entityIndex].asEntityModel(true)
 			const newEntity = new ControlEntityInstance(
 				this.#instanceDefinitions,
