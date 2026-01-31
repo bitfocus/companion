@@ -916,7 +916,7 @@ export class ControlEntityInstance {
 		this.#cachedFeedbackValue = value
 
 		// Persist value if needed
-		if (this.#data.options.persist_value) {
+		if (this.#data.options.persist_value?.value) {
 			this.#data.options.startup_value = { isExpression: false, value }
 
 			return true
