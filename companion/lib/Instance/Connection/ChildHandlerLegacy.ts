@@ -308,7 +308,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					feedbackId: entityModel.definitionId,
 					options: convertExpressionOptionsWithoutParsing(entityModel.options) as OptionsObject, // This is fine, there should be no expressions here
 
-					isInverted: !!entityModel.isInverted?.value, // This is fine, there should be no expressions here
+					isInverted: typeof entityModel.isInverted?.value === 'boolean' ? entityModel.isInverted.value : false, // This is fine, there should be no expressions here
 
 					upgradeIndex: entityModel.upgradeIndex ?? null,
 					disabled: !!entityModel.disabled,
@@ -424,7 +424,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					feedbackId: feedback.definitionId,
 					options: convertExpressionOptionsWithoutParsing(feedback.options) as OptionsObject, // This is fine, there should be no expressions here
 
-					isInverted: !!feedback.isInverted?.value, // This is fine, there should be no expressions here
+					isInverted: typeof feedback.isInverted?.value === 'boolean' ? feedback.isInverted.value : false, // This is fine, there should be no expressions here
 
 					image: control?.getBitmapSize() ?? undefined,
 
@@ -1128,7 +1128,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 
 					image: value.imageSize,
 
-					isInverted: !!value.entity.isInverted?.value, // This is fine, there should be no expressions here
+					isInverted: typeof value.entity.isInverted?.value === 'boolean' ? value.entity.isInverted.value : false, // This is fine, there should be no expressions here
 
 					upgradeIndex: value.entity.upgradeIndex ?? null,
 					disabled: !!value.entity.disabled,
@@ -1180,7 +1180,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					feedbackId: fb.entity.definitionId,
 					options: convertExpressionOptionsWithoutParsing(fb.entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
-					isInverted: !!fb.entity.isInverted?.value, // This is fine, there should be no expressions here
+					isInverted: typeof fb.entity.isInverted?.value === 'boolean' ? fb.entity.isInverted.value : false, // This is fine, there should be no expressions here
 
 					upgradeIndex: fb.entity.upgradeIndex ?? null,
 					disabled: !!fb.entity.disabled,

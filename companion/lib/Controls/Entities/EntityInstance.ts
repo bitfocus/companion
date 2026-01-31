@@ -886,10 +886,6 @@ export class ControlEntityInstance {
 
 		let thisChanged = false
 		if (this.type === EntityModelType.Feedback && newValue && !isInternalUserValueFeedback(this)) {
-			console.log(
-				'trace',
-				`Checking isInverted for feedback ${this.#data.definitionId}: cached=${this.#cachedIsInverted} new=${!!newValue.isInverted}`
-			)
 			if (!!newValue.isInverted !== this.#cachedIsInverted) {
 				this.#cachedIsInverted = !!newValue.isInverted
 				changed.push(this)

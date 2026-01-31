@@ -7,6 +7,7 @@ import { COMPANION_EXPRESSION_LANGUAGE_ID } from '~/Resources/Expression.monarch
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import classNames from 'classnames'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 interface ExpressionInputFieldProps {
 	value: string
@@ -27,7 +28,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 	const [isValid, setValid] = useState(true)
 
-	const showValue = tmpValue ?? value ?? ''
+	const showValue = stringifyVariableValue(tmpValue ?? value ?? '') ?? ''
 
 	// Update validation when value changes
 	useEffect(() => {
