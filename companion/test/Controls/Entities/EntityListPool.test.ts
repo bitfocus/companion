@@ -9,6 +9,7 @@ describe('EntityListPool', () => {
 			internalModule: null as any,
 			processManager: null as any,
 			variableValues: null as any,
+			pageStore: null as any,
 			controlId,
 			commitChange: vi.fn(),
 			invalidateControl: vi.fn(),
