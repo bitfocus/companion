@@ -49,6 +49,7 @@ export function getNodeJsPermissionArguments(
 		'--permission',
 		// Always allow read access to the module source directory
 		`--allow-fs-read=${moduleDir}`,
+		`--allow-fs-read=${isPackaged() ? import.meta.dirname : path.join(import.meta.dirname, '../../..')}`, // Allow read access to companion code, because of some esm loader issues
 	]
 
 	if (!isPackaged()) {
