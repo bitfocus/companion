@@ -59,7 +59,7 @@ describe('validateInputValue', () => {
 				label: 'Test',
 			}
 
-			it('should return error when value is undefined (textinput always requires a value)', () => {
+			it('should return undefined when value is undefined', () => {
 				expect(validateInputValue(definition, undefined)).toBeUndefined()
 			})
 
