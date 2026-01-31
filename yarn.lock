@@ -1819,9 +1819,9 @@ __metadata:
     "@tanstack/react-form": "npm:^1.27.7"
     "@tanstack/react-query": "npm:^5.90.20"
     "@tanstack/react-query-devtools": "npm:^5.91.2"
-    "@tanstack/react-router": "npm:1.157.16"
-    "@tanstack/react-router-devtools": "npm:1.157.16"
-    "@tanstack/router-plugin": "npm:1.157.16"
+    "@tanstack/react-router": "npm:^1.157.16"
+    "@tanstack/react-router-devtools": "npm:^1.157.16"
+    "@tanstack/router-plugin": "npm:^1.157.16"
     "@tanstack/virtual-file-routes": "npm:^1.154.7"
     "@trpc/client": "npm:^11.8.1"
     "@trpc/tanstack-react-query": "npm:^11.8.1"
@@ -6989,7 +6989,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/react-router-devtools@npm:1.157.16":
+"@tanstack/react-router-devtools@npm:^1.157.16":
   version: 1.157.16
   resolution: "@tanstack/react-router-devtools@npm:1.157.16"
   dependencies:
@@ -7006,7 +7006,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/react-router@npm:1.157.16":
+"@tanstack/react-router@npm:^1.157.16":
   version: 1.157.16
   resolution: "@tanstack/react-router@npm:1.157.16"
   dependencies:
@@ -7084,7 +7084,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/router-plugin@npm:1.157.16":
+"@tanstack/router-plugin@npm:^1.157.16":
   version: 1.157.16
   resolution: "@tanstack/router-plugin@npm:1.157.16"
   dependencies:
