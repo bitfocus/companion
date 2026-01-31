@@ -1,5 +1,5 @@
 {
-	"exclude": ["node_modules/**", "webui/**", "module-local-dev/**" ],
+	"exclude": ["node_modules/**", "webui/**", "module-local-dev/**"],
 	"include": [
 		"vitest.config.mts",
 		"companion/test/**/*",
@@ -10,8 +10,7 @@
 	],
 	"compilerOptions": {
 		"composite": true,
-		"paths": {
-		},
+		"paths": {},
 		"module": "node20",
 		"moduleResolution": "node16",
 		"sourceMap": true,
@@ -24,8 +23,5 @@
 		"noEmit": true,
 		"skipLibCheck": true
 	},
-	"references": [
-		{ "path": "./companion" },
-		{ "path": "./shared-lib" }
-	]
+	"references": [{ "path": "./companion" }, { "path": "./shared-lib" }]
 }
