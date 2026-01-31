@@ -1765,7 +1765,7 @@ __metadata:
     chokidar: "npm:^5.0.0"
     debounce-fn: "npm:^6.0.0"
     electron: "npm:40.0.0"
-    electron-builder: "npm:26.5.0"
+    electron-builder: "npm:26.6.0"
     electron-reloader: "npm:^1.2.3"
     electron-store: "npm:^11.0.2"
     file-stream-rotator: "npm:^1.0.0"
@@ -3339,6 +3339,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@electron/get@npm:^3.0.0":
+  version: 3.1.0
+  resolution: "@electron/get@npm:3.1.0"
+  dependencies:
+    debug: "npm:^4.1.1"
+    env-paths: "npm:^2.2.0"
+    fs-extra: "npm:^8.1.0"
+    global-agent: "npm:^3.0.0"
+    got: "npm:^11.8.5"
+    progress: "npm:^2.0.3"
+    semver: "npm:^6.2.0"
+    sumchecker: "npm:^3.0.1"
+  dependenciesMeta:
+    global-agent:
+      optional: true
+  checksum: 10c0/b56b18710482912681c0497a9a8d74f934e5fcefe527bb1f2be6ec837a3853ad7f4b8849584ce4578c3fdd341cb8364cee54f14d1103862891368bbc20b7c0df
+  languageName: node
+  linkType: hard
+
 "@electron/notarize@npm:2.5.0":
   version: 2.5.0
   resolution: "@electron/notarize@npm:2.5.0"
@@ -3367,12 +3386,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electron/rebuild@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@electron/rebuild@npm:4.0.1"
+"@electron/rebuild@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "@electron/rebuild@npm:4.0.3"
   dependencies:
     "@malept/cross-spawn-promise": "npm:^2.0.0"
-    chalk: "npm:^4.0.0"
     debug: "npm:^4.1.1"
     detect-libc: "npm:^2.0.1"
     got: "npm:^11.7.0"
@@ -3383,11 +3401,14 @@ __metadata:
     ora: "npm:^5.1.0"
     read-binary-file-arch: "npm:^1.0.6"
     semver: "npm:^7.3.5"
-    tar: "npm:^6.0.5"
+    tar: "npm:^7.5.6"
     yargs: "npm:^17.0.1"
+  dependenciesMeta:
+    electron:
+      built: true
   bin:
     electron-rebuild: lib/cli.js
-  checksum: 10c0/4863d39c34515f3fb521ce5e976e25db20e89920574ca353efd0c3272d5f4d14546ba15ce28cee4299187160b2af02e3e130100ba8dc53f313b6eb685dc54928
+  checksum: 10c0/43bdbf85cde13874a2185c161d1943c3c4f12323f25cc3534890b1b0ec451b5bb940aa80e2c42476fe0d8c854d2e62b0e56f0d98c482c03b0715305bf9688171
   languageName: node
   linkType: hard
 
@@ -9124,16 +9145,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"app-builder-lib@npm:26.5.0":
-  version: 26.5.0
-  resolution: "app-builder-lib@npm:26.5.0"
+"app-builder-lib@npm:26.6.0":
+  version: 26.6.0
+  resolution: "app-builder-lib@npm:26.6.0"
   dependencies:
     "@develar/schema-utils": "npm:~2.6.5"
     "@electron/asar": "npm:3.4.1"
     "@electron/fuses": "npm:^1.8.0"
+    "@electron/get": "npm:^3.0.0"
     "@electron/notarize": "npm:2.5.0"
     "@electron/osx-sign": "npm:1.3.3"
-    "@electron/rebuild": "npm:4.0.1"
+    "@electron/rebuild": "npm:^4.0.3"
     "@electron/universal": "npm:2.0.3"
     "@malept/flatpak-bundler": "npm:^0.4.0"
     "@types/fs-extra": "npm:9.0.13"
@@ -9146,7 +9168,7 @@ __metadata:
     dotenv: "npm:^16.4.5"
     dotenv-expand: "npm:^11.0.6"
     ejs: "npm:^3.1.8"
-    electron-publish: "npm:26.4.1"
+    electron-publish: "npm:26.6.0"
     fs-extra: "npm:^10.1.0"
     hosted-git-info: "npm:^4.1.0"
     isbinaryfile: "npm:^5.0.0"
@@ -9156,29 +9178,31 @@ __metadata:
     lazy-val: "npm:^1.0.5"
     minimatch: "npm:^10.0.3"
     plist: "npm:3.1.0"
+    proper-lockfile: "npm:^4.1.2"
     resedit: "npm:^1.7.0"
     semver: "npm:~7.7.3"
-    tar: "npm:7.5.3"
+    tar: "npm:^7.5.6"
     temp-file: "npm:^3.4.0"
     tiny-async-pool: "npm:1.3.0"
     which: "npm:^5.0.0"
   peerDependencies:
-    dmg-builder: 26.5.0
-    electron-builder-squirrel-windows: 26.5.0
-  checksum: 10c0/5e2342506c8497d75e3e1cbe276b8c1f8fa78671e4b59735485bdf086d072d8fa3d4c8f190614e05624a82dd60b0c72aac79de922e12fa07a56775a7176066b7
+    dmg-builder: 26.6.0
+    electron-builder-squirrel-windows: 26.6.0
+  checksum: 10c0/2cea00c8486d4da0e3b1269922cea1c91b316c895c043481a8caf19714dae28cad8c6ca47b12ef501a172f99a94963610655f183c5a75467437393f0e34b33e3
   languageName: node
   linkType: hard
 
-"app-builder-lib@patch:app-builder-lib@npm%3A26.5.0#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch":
-  version: 26.5.0
-  resolution: "app-builder-lib@patch:app-builder-lib@npm%3A26.5.0#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch::version=26.5.0&hash=ec09e7"
+"app-builder-lib@patch:app-builder-lib@npm%3A26.6.0#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch":
+  version: 26.6.0
+  resolution: "app-builder-lib@patch:app-builder-lib@npm%3A26.6.0#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch::version=26.6.0&hash=ec09e7"
   dependencies:
     "@develar/schema-utils": "npm:~2.6.5"
     "@electron/asar": "npm:3.4.1"
     "@electron/fuses": "npm:^1.8.0"
+    "@electron/get": "npm:^3.0.0"
     "@electron/notarize": "npm:2.5.0"
     "@electron/osx-sign": "npm:1.3.3"
-    "@electron/rebuild": "npm:4.0.1"
+    "@electron/rebuild": "npm:^4.0.3"
     "@electron/universal": "npm:2.0.3"
     "@malept/flatpak-bundler": "npm:^0.4.0"
     "@types/fs-extra": "npm:9.0.13"
@@ -9191,7 +9215,7 @@ __metadata:
     dotenv: "npm:^16.4.5"
     dotenv-expand: "npm:^11.0.6"
     ejs: "npm:^3.1.8"
-    electron-publish: "npm:26.4.1"
+    electron-publish: "npm:26.6.0"
     fs-extra: "npm:^10.1.0"
     hosted-git-info: "npm:^4.1.0"
     isbinaryfile: "npm:^5.0.0"
@@ -9201,16 +9225,17 @@ __metadata:
     lazy-val: "npm:^1.0.5"
     minimatch: "npm:^10.0.3"
     plist: "npm:3.1.0"
+    proper-lockfile: "npm:^4.1.2"
     resedit: "npm:^1.7.0"
     semver: "npm:~7.7.3"
-    tar: "npm:7.5.3"
+    tar: "npm:^7.5.6"
     temp-file: "npm:^3.4.0"
     tiny-async-pool: "npm:1.3.0"
     which: "npm:^5.0.0"
   peerDependencies:
-    dmg-builder: 26.5.0
-    electron-builder-squirrel-windows: 26.5.0
-  checksum: 10c0/c9adbaf785e5700afeb69eb9c6b4a0ceb19d6d0c21770e6494ba7896c754bf7faab4f480ac1bba63bbc0a25df5e1d1bd96af71e8f11416c26f0ceefdecd835f1
+    dmg-builder: 26.6.0
+    electron-builder-squirrel-windows: 26.6.0
+  checksum: 10c0/0f26172f70c931a35bcd401769a96cc45257fb4d958936d9d9820c71d7edf30a87b083fe418d0ad6e54632edcc2e49bfa3e3c6bd10b383a0a30a5aa1c5940379
   languageName: node
   linkType: hard
 
@@ -10287,13 +10312,6 @@ __metadata:
   version: 1.1.4
   resolution: "chownr@npm:1.1.4"
   checksum: 10c0/ed57952a84cc0c802af900cf7136de643d3aba2eecb59d29344bc2f3f9bf703a301b9d84cdc71f82c3ffc9ccde831b0d92f5b45f91727d6c9da62f23aef9d9db
-  languageName: node
-  linkType: hard
-
-"chownr@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "chownr@npm:2.0.0"
-  checksum: 10c0/594754e1303672171cc04e50f6c398ae16128eb134a88f801bf5354fd96f205320f23536a045d9abd8b51024a149696e51231565891d4efdab8846021ecf88e6
   languageName: node
   linkType: hard
 
@@ -11825,11 +11843,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dmg-builder@npm:26.5.0":
-  version: 26.5.0
-  resolution: "dmg-builder@npm:26.5.0"
+"dmg-builder@npm:26.6.0":
+  version: 26.6.0
+  resolution: "dmg-builder@npm:26.6.0"
   dependencies:
-    app-builder-lib: "npm:26.5.0"
+    app-builder-lib: "npm:26.6.0"
     builder-util: "npm:26.4.1"
     dmg-license: "npm:^1.0.11"
     fs-extra: "npm:^10.1.0"
@@ -11838,7 +11856,7 @@ __metadata:
   dependenciesMeta:
     dmg-license:
       optional: true
-  checksum: 10c0/3e65c0224b1073dad65c41f5b114c7e87784adb1dd1aeea5c871fadc0a312f6ed9823332676a3e71935836e3a721ad064fb37b1c81483ce3eca93c4bd33201e8
+  checksum: 10c0/fcb40daa6a3d72ba1bb3ff72421883be79edfd7b7b8c6ecc3fb1bb79fe57f83367039143e22280bf2612d2e1f974c36ccb4ee1aace7e68892040761843b8a7c3
   languageName: node
   linkType: hard
 
@@ -12137,16 +12155,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-builder@npm:26.5.0":
-  version: 26.5.0
-  resolution: "electron-builder@npm:26.5.0"
+"electron-builder@npm:26.6.0":
+  version: 26.6.0
+  resolution: "electron-builder@npm:26.6.0"
   dependencies:
-    app-builder-lib: "npm:26.5.0"
+    app-builder-lib: "npm:26.6.0"
     builder-util: "npm:26.4.1"
     builder-util-runtime: "npm:9.5.1"
     chalk: "npm:^4.1.2"
     ci-info: "npm:^4.2.0"
-    dmg-builder: "npm:26.5.0"
+    dmg-builder: "npm:26.6.0"
     fs-extra: "npm:^10.1.0"
     lazy-val: "npm:^1.0.5"
     simple-update-notifier: "npm:2.0.0"
@@ -12154,7 +12172,7 @@ __metadata:
   bin:
     electron-builder: cli.js
     install-app-deps: install-app-deps.js
-  checksum: 10c0/b25bb7dd12e0993aeaca00b00a8c05ce774b6ca184b4fbae797105813f8faf3e2710054bf4b64bd68b03e8afa6a54a33a2182a1e001489ff4aa5fc4d1b1d0078
+  checksum: 10c0/a455f66f74759ccdcce06c938b9ee57cb7911fa68af6ddb16b14479415665597b8730d67aa9baa0410c4bccfd583a07d9a0e6b3a3af653a1c5602454d599eb4b
   languageName: node
   linkType: hard
 
@@ -12165,19 +12183,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-publish@npm:26.4.1":
-  version: 26.4.1
-  resolution: "electron-publish@npm:26.4.1"
+"electron-publish@npm:26.6.0":
+  version: 26.6.0
+  resolution: "electron-publish@npm:26.6.0"
   dependencies:
     "@types/fs-extra": "npm:^9.0.11"
     builder-util: "npm:26.4.1"
     builder-util-runtime: "npm:9.5.1"
     chalk: "npm:^4.1.2"
-    form-data: "npm:^4.0.0"
+    form-data: "npm:^4.0.5"
     fs-extra: "npm:^10.1.0"
     lazy-val: "npm:^1.0.5"
     mime: "npm:^2.5.2"
-  checksum: 10c0/8546c9bb1a2472d637a15e0dcaebb7c5afad1ac454d2205162c62360104e71735110f42b3470a22c642367b2b52630cd4f9b7de393cd550ca37e9398a3e2cb73
+  checksum: 10c0/3aef935010090b197a0942676bc62ee55f84343b0f7986023f8a97108b0891218edfb72b20cfd3c320dcbd4c0054c5629c27914131ae26b124be0610806f01ce
   languageName: node
   linkType: hard
 
@@ -13760,7 +13778,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"form-data@npm:^4.0.0, form-data@npm:^4.0.5":
+"form-data@npm:^4.0.5":
   version: 4.0.5
   resolution: "form-data@npm:4.0.5"
   dependencies:
@@ -13891,15 +13909,6 @@ __metadata:
     jsonfile: "npm:^6.0.1"
     universalify: "npm:^2.0.0"
   checksum: 10c0/9b808bd884beff5cb940773018179a6b94a966381d005479f00adda6b44e5e3d4abf765135773d849cc27efe68c349e4a7b86acd7d3306d5932c14f3a4b17a92
-  languageName: node
-  linkType: hard
-
-"fs-minipass@npm:^2.0.0":
-  version: 2.1.0
-  resolution: "fs-minipass@npm:2.1.0"
-  dependencies:
-    minipass: "npm:^3.0.0"
-  checksum: 10c0/703d16522b8282d7299337539c3ed6edddd1afe82435e4f5b76e34a79cd74e488a8a0e26a636afc2440e1a23b03878e2122e3a2cfe375a5cf63c37d92b86a004
   languageName: node
   linkType: hard
 
@@ -18208,27 +18217,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minipass@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "minipass@npm:5.0.0"
-  checksum: 10c0/a91d8043f691796a8ac88df039da19933ef0f633e3d7f0d35dcd5373af49131cf2399bfc355f41515dc495e3990369c3858cd319e5c2722b4753c90bf3152462
-  languageName: node
-  linkType: hard
-
 "minipass@npm:^5.0.0 || ^6.0.2 || ^7.0.0, minipass@npm:^7.0.2, minipass@npm:^7.0.3, minipass@npm:^7.0.4, minipass@npm:^7.1.2":
   version: 7.1.2
   resolution: "minipass@npm:7.1.2"
   checksum: 10c0/b0fd20bb9fb56e5fa9a8bfac539e8915ae07430a619e4b86ff71f5fc757ef3924b23b2c4230393af1eda647ed3d75739e4e0acb250a6b1eb277cf7f8fe449557
-  languageName: node
-  linkType: hard
-
-"minizlib@npm:^2.1.1":
-  version: 2.1.2
-  resolution: "minizlib@npm:2.1.2"
-  dependencies:
-    minipass: "npm:^3.0.0"
-    yallist: "npm:^4.0.0"
-  checksum: 10c0/64fae024e1a7d0346a1102bb670085b17b7f95bf6cfdf5b128772ec8faf9ea211464ea4add406a3a6384a7d87a0cd1a96263692134323477b4fb43659a6cab78
   languageName: node
   linkType: hard
 
@@ -18252,15 +18244,6 @@ __metadata:
   version: 0.3.0
   resolution: "mkdirp@npm:0.3.0"
   checksum: 10c0/cd9e54878490571df79770de1cdceba48ab6682c004616666d23a38315feaf5822d443aeb500ac298a12d7f6f5e11dc05cea3207d500e547d938218bf22d8629
-  languageName: node
-  linkType: hard
-
-"mkdirp@npm:^1.0.3":
-  version: 1.0.4
-  resolution: "mkdirp@npm:1.0.4"
-  bin:
-    mkdirp: bin/cmd.js
-  checksum: 10c0/46ea0f3ffa8bc6a5bc0c7081ffc3907777f0ed6516888d40a518c5111f8366d97d2678911ad1a6882bf592fa9de6c784fea32e1687bb94e1f4944170af48a5cf
   languageName: node
   linkType: hard
 
@@ -20689,6 +20672,17 @@ __metadata:
     object-assign: "npm:^4.1.1"
     react-is: "npm:^16.13.1"
   checksum: 10c0/59ece7ca2fb9838031d73a48d4becb9a7cc1ed10e610517c7d8f19a1e02fa47f7c27d557d8a5702bec3cfeccddc853579832b43f449e54635803f277b1c78077
+  languageName: node
+  linkType: hard
+
+"proper-lockfile@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "proper-lockfile@npm:4.1.2"
+  dependencies:
+    graceful-fs: "npm:^4.2.4"
+    retry: "npm:^0.12.0"
+    signal-exit: "npm:^3.0.2"
+  checksum: 10c0/2f265dbad15897a43110a02dae55105c04d356ec4ed560723dcb9f0d34bc4fb2f13f79bb930e7561be10278e2314db5aca2527d5d3dcbbdee5e6b331d1571f6d
   languageName: node
   linkType: hard
 
@@ -23995,34 +23989,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:7.5.3":
-  version: 7.5.3
-  resolution: "tar@npm:7.5.3"
-  dependencies:
-    "@isaacs/fs-minipass": "npm:^4.0.0"
-    chownr: "npm:^3.0.0"
-    minipass: "npm:^7.1.2"
-    minizlib: "npm:^3.1.0"
-    yallist: "npm:^5.0.0"
-  checksum: 10c0/e5e3237bca325fbb33282d92d9807f4c8d81abaf71bf2627efdf93bd5610c146460c78fc7e9767d4ab5ae3c0b18af8197314c964f8cbd23b30b25bf4d42d7cb4
-  languageName: node
-  linkType: hard
-
-"tar@npm:^6.0.5":
-  version: 6.2.1
-  resolution: "tar@npm:6.2.1"
-  dependencies:
-    chownr: "npm:^2.0.0"
-    fs-minipass: "npm:^2.0.0"
-    minipass: "npm:^5.0.0"
-    minizlib: "npm:^2.1.1"
-    mkdirp: "npm:^1.0.3"
-    yallist: "npm:^4.0.0"
-  checksum: 10c0/a5eca3eb50bc11552d453488344e6507156b9193efd7635e98e867fab275d527af53d8866e2370cd09dfe74378a18111622ace35af6a608e5223a7d27fe99537
-  languageName: node
-  linkType: hard
-
-"tar@npm:^7.5.2":
+"tar@npm:^7.5.2, tar@npm:^7.5.6":
   version: 7.5.7
   resolution: "tar@npm:7.5.7"
   dependencies:
