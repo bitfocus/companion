@@ -1,10 +1,9 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { ServiceOscApi } from '../../lib/Service/OscApi'
-import { rgb } from '../../lib/Resources/Util'
-import type { ControlEntityListPoolButton } from '../../lib/Controls/Entities/EntityListPoolButton'
-import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi'
-import type { DataUserConfig } from '../../lib/Data/UserConfig'
+import { ServiceOscApi } from '../../lib/Service/OscApi.js'
+import { rgb } from '../../lib/Resources/Util.js'
+import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
+import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -612,7 +611,7 @@ describe('OscApi', () => {
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
-				mockControl.setCurrentStep = vi.fn().mockReturnValue(true)
+				mockControl.setCurrentStep = vi.fn<typeof mockControl.setCurrentStep>().mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
@@ -633,7 +632,7 @@ describe('OscApi', () => {
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
-				mockControl.setCurrentStep = vi.fn().mockReturnValue(true)
+				mockControl.setCurrentStep = vi.fn<typeof mockControl.setCurrentStep>().mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3/step', { args: [{ value: '4' }] })

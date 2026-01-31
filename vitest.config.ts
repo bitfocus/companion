@@ -7,8 +7,24 @@ export default defineConfig({
 
 			{
 				test: {
+					name: 'shared-lib',
+					root: 'shared-lib',
+					exclude: [
+						'**/module-local-dev/**',
+						'**/bundled-modules/**',
+						'**/node_modules/**',
+						'**/dist/**',
+						'**/build/**',
+						'**/coverage/**',
+						'**/webui/**',
+					],
+				},
+			},
+
+			{
+				test: {
 					name: 'companion',
-					root: '.',
+					root: 'companion',
 					exclude: [
 						'**/module-local-dev/**',
 						'**/bundled-modules/**',

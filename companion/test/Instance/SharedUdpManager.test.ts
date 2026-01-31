@@ -11,7 +11,7 @@ vi.mock('dgram', () => ({
 	createSocket: mockCreateSocket,
 }))
 
-const { InstanceSharedUdpManager } = await import('../../lib/Instance/Connection/SharedUdpManager')
+const { InstanceSharedUdpManager } = await import('../../lib/Instance/Connection/SharedUdpManager.js')
 
 class MockSocket extends EventEmitter {
 	// TODO
