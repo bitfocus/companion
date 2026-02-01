@@ -149,9 +149,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Expression',
 						id: 'expression',
 						default: '2 > 1',
-						useVariables: {
-							local: true,
-						},
 						isExpression: true,
 						disableAutoExpression: true,
 					},
@@ -171,9 +168,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Expression',
 						id: 'expression',
 						default: '2 > 1',
-						useVariables: {
-							local: true,
-						},
 						isExpression: true,
 						disableAutoExpression: true,
 					},

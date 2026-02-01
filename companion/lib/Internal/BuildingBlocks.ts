@@ -150,7 +150,6 @@ export class InternalBuildingBlocks
 						label: 'Time expression (ms)',
 						id: 'time',
 						default: '1000',
-						useVariables: { local: true },
 						isExpression: true,
 						disableAutoExpression: true,
 					},

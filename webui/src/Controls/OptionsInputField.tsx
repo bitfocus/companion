@@ -11,7 +11,11 @@ import {
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	CompanionFieldVariablesSupport,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
@@ -97,32 +101,45 @@ export const OptionsInputField = observer(function OptionsInputField({
 		case 'textinput': {
 			features = {
 				variables: !!option.useVariables,
-				local: typeof option.useVariables === 'object' && !!option.useVariables?.local,
+				local:
+					option.useVariables === CompanionFieldVariablesSupport.LocalVariables ||
+					option.useVariables === CompanionFieldVariablesSupport.InternalParser,
 			}
 
-			const localVariables = features.local
-				? localVariablesStore?.getOptions(entityType, isInternal, isLocatedInGrid)
-				: undefined
+			if (option.isExpression) {
+				const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
 
-			control = option.isExpression ? (
-				<ExpressionInputField
-					value={basicValue as any}
-					localVariables={localVariables}
-					disabled={readonly}
-					setValue={setExpressionValue}
-				/>
-			) : (
-				<TextInputField
-					value={basicValue as any}
-					placeholder={option.placeholder}
-					useVariables={features.variables}
-					localVariables={localVariables}
-					disabled={readonly}
-					setValue={setBasicValue}
-					checkValid={checkValid}
-					multiline={option.multiline}
-				/>
-			)
+				control = (
+					<ExpressionInputField
+						value={basicValue as any}
+						localVariables={localVariables}
+						disabled={readonly}
+						setValue={setExpressionValue}
+					/>
+				)
+			} else {
+				const localVariables = features.local
+					? localVariablesStore?.getOptions(
+							entityType,
+							option.useVariables === CompanionFieldVariablesSupport.InternalParser,
+							isLocatedInGrid
+						)
+					: undefined
+
+				control = (
+					<TextInputField
+						value={basicValue as any}
+						placeholder={option.placeholder}
+						useVariables={features.variables}
+						localVariables={localVariables}
+						disabled={readonly}
+						setValue={setBasicValue}
+						checkValid={checkValid}
+						multiline={option.multiline}
+					/>
+				)
+			}
+
 			break
 		}
 		case 'dropdown': {
@@ -249,7 +266,6 @@ export const OptionsInputField = observer(function OptionsInputField({
 				setValue={(val) => setValue(option.id, val)}
 				disabled={!!readonly}
 				entityType={entityType}
-				isInternal={isInternal}
 				isLocatedInGrid={isLocatedInGrid}
 			>
 				{control}

@@ -1,17 +1,18 @@
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	CompanionInputFieldBaseExtended,
-	CompanionInputFieldBonjourDeviceExtended,
-	CompanionInputFieldCheckboxExtended,
-	CompanionInputFieldColorExtended,
-	CompanionInputFieldCustomVariableExtended,
-	CompanionInputFieldDropdownExtended,
-	CompanionInputFieldMultiDropdownExtended,
-	CompanionInputFieldNumberExtended,
-	CompanionInputFieldSecretExtended,
-	CompanionInputFieldStaticTextExtended,
-	CompanionInputFieldTextInputExtended,
-	SomeCompanionInputField,
+import {
+	CompanionFieldVariablesSupport,
+	type CompanionInputFieldBaseExtended,
+	type CompanionInputFieldBonjourDeviceExtended,
+	type CompanionInputFieldCheckboxExtended,
+	type CompanionInputFieldColorExtended,
+	type CompanionInputFieldCustomVariableExtended,
+	type CompanionInputFieldDropdownExtended,
+	type CompanionInputFieldMultiDropdownExtended,
+	type CompanionInputFieldNumberExtended,
+	type CompanionInputFieldSecretExtended,
+	type CompanionInputFieldStaticTextExtended,
+	type CompanionInputFieldTextInputExtended,
+	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
@@ -145,7 +146,8 @@ function translateTextInputField(
 		regex: field.regex,
 		minLength: field.minLength,
 		width: width,
-		useVariables: field.useVariables && usesInternalVariableParsing ? { local: true } : undefined,
+		useVariables:
+			field.useVariables && usesInternalVariableParsing ? CompanionFieldVariablesSupport.InternalParser : undefined,
 		multiline: field.multiline,
 		placeholder: undefined, // Not supported from modules
 		isExpression: false, // Not supported from modules

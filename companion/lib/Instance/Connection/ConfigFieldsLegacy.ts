@@ -1,19 +1,19 @@
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
+import {
 	CompanionFieldVariablesSupport,
-	CompanionInputFieldBaseExtended,
-	CompanionInputFieldBonjourDeviceExtended,
-	CompanionInputFieldCheckboxExtended,
-	CompanionInputFieldColorExtended,
-	CompanionInputFieldCustomVariableExtended,
-	CompanionInputFieldDropdownExtended,
-	CompanionInputFieldMultiDropdownExtended,
-	CompanionInputFieldNumberExtended,
-	CompanionInputFieldSecretExtended,
-	CompanionInputFieldStaticTextExtended,
-	CompanionInputFieldTextInputExtended,
-	IsVisibleUiFn,
-	SomeCompanionInputField,
+	type CompanionInputFieldBaseExtended,
+	type CompanionInputFieldBonjourDeviceExtended,
+	type CompanionInputFieldCheckboxExtended,
+	type CompanionInputFieldColorExtended,
+	type CompanionInputFieldCustomVariableExtended,
+	type CompanionInputFieldDropdownExtended,
+	type CompanionInputFieldMultiDropdownExtended,
+	type CompanionInputFieldNumberExtended,
+	type CompanionInputFieldSecretExtended,
+	type CompanionInputFieldStaticTextExtended,
+	type CompanionInputFieldTextInputExtended,
+	type IsVisibleUiFn,
+	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
@@ -147,11 +147,12 @@ function translateTextInputField(
 ): Complete<CompanionInputFieldTextInputExtended> {
 	let useVariables: CompanionFieldVariablesSupport | undefined
 	if (usesInternalVariableParsing) {
-		useVariables = { local: true }
+		useVariables = CompanionFieldVariablesSupport.InternalParser
 	} else if (field.useVariables) {
-		useVariables = {
-			local: typeof field.useVariables === 'object' && field.useVariables.local,
-		}
+		useVariables =
+			typeof field.useVariables === 'object' && field.useVariables.local
+				? CompanionFieldVariablesSupport.LocalVariables
+				: CompanionFieldVariablesSupport.Basic
 	}
 
 	return {

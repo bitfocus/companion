@@ -35,6 +35,7 @@ import {
 	type VariableDefinition,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
+import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 
 const execAsync = promisify(exec)
 
@@ -265,9 +266,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						type: 'textinput',
 						label: 'Command',
 						id: 'path',
-						useVariables: {
-							local: true,
-						},
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 					{
 						type: 'number',
@@ -296,9 +295,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						type: 'textinput',
 						label: 'Message',
 						id: 'message',
-						useVariables: {
-							local: true,
-						},
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 				],
 

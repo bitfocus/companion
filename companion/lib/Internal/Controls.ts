@@ -35,6 +35,7 @@ import { EventEmitter } from 'events'
 import { parseColorToNumber } from '../Resources/Util.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 
 const ButtonStylePropertiesExt = [
 	...ButtonStyleProperties,
@@ -350,9 +351,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						description: 'eg 1, 2',
 						id: 'step',
 						default: '1',
-						useVariables: {
-							local: true,
-						},
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 				],
 				optionsSupportExpressions: true,
