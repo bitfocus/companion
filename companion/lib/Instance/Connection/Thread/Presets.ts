@@ -34,6 +34,12 @@ export function ConvertPresetDefinition(
 
 		switch (rawPreset.type) {
 			case 'button': {
+				const parsedStyle = ConvertLegacyStyleToElements(
+					ConvertPresetStyleToDrawStyle(rawPreset.style),
+					convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+					rawPreset.previewStyle
+				)
+
 				const presetDefinition: PresetDefinitionButton = {
 					id: presetId,
 					category: rawPreset.category,
@@ -46,15 +52,16 @@ export function ConvertPresetDefinition(
 							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
 							canModifyStyleInApis: false,
 						},
-						...ConvertLegacyStyleToElements(
-							ConvertPresetStyleToDrawStyle(rawPreset.style),
-							convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex)
-						),
+
+						feedbacks: parsedStyle.feedbacks,
+						style: {
+							layers: parsedStyle.layers,
+						},
 
 						steps: ConvertStepsForPreset(logger, connectionId, connectionUpgradeIndex, rawPreset.steps),
 						localVariables: [],
 					},
-					presetExtraFeedbacks: [],
+					presetExtraFeedbacks: parsedStyle.previewStyleFeedbacks,
 				}
 
 				return presetDefinition

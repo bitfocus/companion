@@ -36,8 +36,12 @@ import {
 	CreateAdvancedFeedbackStyleOverrides,
 	ParseLegacyStyle,
 } from '../Resources/ConvertLegacyStyleToElements.js'
-import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { exprVal, type ExpressionOrValue, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	exprVal,
+	isExpressionOrValue,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import type { Complete } from '@companion-module/base'
 
 export interface CompositeElementDefinition {

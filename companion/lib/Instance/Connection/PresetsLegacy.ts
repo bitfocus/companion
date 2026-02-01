@@ -14,6 +14,7 @@ import {
 	ConvertPresetStyleToDrawStyle,
 } from './Thread/PresetUtils.js'
 import type { Complete } from '@companion-module/host'
+import { ConvertLegacyStyleToElements } from '../../Resources/ConvertLegacyStyleToElements.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -30,12 +31,17 @@ export function ConvertPresetDefinition(
 ): PresetDefinition | null {
 	try {
 		if (rawPreset.type === 'button') {
+			const parsedStyle = ConvertLegacyStyleToElements(
+				ConvertPresetStyleToDrawStyle(rawPreset.style),
+				convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+				rawPreset.previewStyle
+			)
+
 			const presetDefinition: PresetDefinitionButton = {
 				id: presetId,
 				category: rawPreset.category,
 				name: rawPreset.name,
 				type: rawPreset.type,
-				previewStyle: rawPreset.previewStyle,
 				model: {
 					type: 'button-layered',
 					options: {
@@ -43,11 +49,16 @@ export function ConvertPresetDefinition(
 						stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
 						canModifyStyleInApis: false,
 					},
-					style: ConvertPresetStyleToDrawStyle(rawPreset.style),
-					feedbacks: convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+
+					feedbacks: parsedStyle.feedbacks,
+					style: {
+						layers: parsedStyle.layers,
+					},
+
 					steps: {},
 					localVariables: [],
 				},
+				presetExtraFeedbacks: parsedStyle.previewStyleFeedbacks,
 			}
 
 			if (rawPreset.steps) {

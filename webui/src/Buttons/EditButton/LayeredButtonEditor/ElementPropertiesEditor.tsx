@@ -13,7 +13,7 @@ import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { ElementPropertiesProvider, type IsPropertyOverridden } from './ElementPropertiesContext.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 
 interface ElementPropertiesEditorProps {
 	controlId: string

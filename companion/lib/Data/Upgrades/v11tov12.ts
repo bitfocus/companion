@@ -53,6 +53,7 @@ function convertDatabaseToV12(db: DataStoreBase<any>, _logger: Logger): void {
 }
 
 function convertControlToLayered(control: NormalButtonModel): LayeredButtonModel {
+	const parsed = ConvertLegacyStyleToElements(control.style, control.feedbacks, null)
 	return {
 		type: 'button-layered',
 		options: {
@@ -61,7 +62,10 @@ function convertControlToLayered(control: NormalButtonModel): LayeredButtonModel
 		} satisfies Complete<LayeredButtonOptions>,
 		localVariables: control.localVariables,
 		steps: control.steps,
-		...ConvertLegacyStyleToElements(control.style, control.feedbacks),
+		feedbacks: parsed.feedbacks,
+		style: {
+			layers: parsed.layers,
+		},
 	}
 }
 

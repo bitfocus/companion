@@ -19,7 +19,12 @@ import {
 	type FeedbackEntityStyleOverride,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { type ExpressionOrValue, isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import {
+	type ExpressionOrValue,
+	exprVal,
+	isExpressionOrValue,
+	optionsObjectToExpressionOptions,
+} from '@companion-app/shared/Model/Options.js'
 import type {
 	SomeButtonGraphicsElement,
 	ButtonGraphicsCanvasElement,
@@ -59,8 +64,8 @@ export function ConvertLayeredPresetFeedbacksToEntities(
 			id: nanoid(),
 			connectionId: connectionId,
 			definitionId: feedback.feedbackId,
-			options: structuredClone(feedback.options ?? {}),
-			isInverted: !!feedback.isInverted,
+			options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, false)),
+			isInverted: exprVal(!!feedback.isInverted),
 			styleOverrides: structuredClone(styleOverrides),
 			headline: feedback.headline,
 			upgradeIndex: connectionUpgradeIndex,
@@ -223,7 +228,7 @@ function convertLayeredPresetElement(
 		}
 		default:
 			assertNever(element)
-			logger.info('Unsupported element type in layered-button preset:', elementType)
+			logger.info(`Unsupported element type in layered-button preset: ${elementType}`)
 			return null
 	}
 }

@@ -177,26 +177,18 @@ export class PreviewElementStream {
 		}
 	}
 
-	onVariablesChanged = (changed: Set<string>, fromControlId: string | null): void => {
+	onVariablesChanged = (changed: ReadonlySet<string>, fromControlId: string | null): void => {
 		for (const [elementStreamId, session] of this.#sessions) {
 			if (fromControlId && session.controlId !== fromControlId) continue
 
 			// Check if any of the changed variables are used by this element
-			let shouldRecompute = false
-			for (const variableId of changed) {
-				if (session.trackedExpressions.has(variableId)) {
-					shouldRecompute = true
-					break
-				}
-			}
+			if (session.trackedExpressions.isDisjointFrom(changed)) continue
 
-			if (shouldRecompute) {
-				this.#logger.silly(
-					`Re-evaluating element: ${elementStreamId} for ${session.changes.listenerCount('change')} clients`
-				)
+			this.#logger.silly(
+				`Re-evaluating element: ${elementStreamId} for ${session.changes.listenerCount('change')} clients`
+			)
 
-				this.#triggerElementReEvaluation(session)
-			}
+			this.#triggerElementReEvaluation(session)
 		}
 	}
 

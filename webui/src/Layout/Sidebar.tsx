@@ -509,7 +509,7 @@ function CNavGroup({
 					<Link
 						to={to}
 						className="nav-link"
-						onClick={(e) => {
+						onClick={(e: any) => {
 							e.stopPropagation()
 							setVisible(!_visible)
 						}}

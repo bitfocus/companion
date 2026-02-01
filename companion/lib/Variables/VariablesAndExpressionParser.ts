@@ -69,10 +69,16 @@ export class VariablesAndExpressionParser {
 	}
 
 	createChildParser(overrideVariableValues: VariableValues): VariablesAndExpressionParser {
-		const childParser = new VariablesAndExpressionParser(this.#rawVariableValues, this.#thisValues, null, {
-			...this.#overrideVariableValues,
-			...overrideVariableValues,
-		})
+		const childParser = new VariablesAndExpressionParser(
+			this.#blinker,
+			this.#rawVariableValues,
+			this.#thisValues,
+			null,
+			{
+				...this.#overrideVariableValues,
+				...overrideVariableValues,
+			}
+		)
 
 		// Manual clone the localValues
 		for (const [key, value] of this.#localValues) {

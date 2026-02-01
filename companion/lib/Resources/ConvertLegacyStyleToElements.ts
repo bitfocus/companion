@@ -1,5 +1,4 @@
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
-import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
 	type FeedbackEntityStyleOverride,
@@ -12,7 +11,7 @@ import {
 	type ButtonGraphicsTextElement,
 	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { exprExpr, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
@@ -190,8 +189,13 @@ export function GetLegacyStyleProperty(
 
 export function ConvertLegacyStyleToElements(
 	style: ButtonStyleProperties,
+	feedbacks: SomeEntityModel[],
+	previewStyle: Partial<ButtonStyleProperties> | null | undefined
+): {
+	layers: SomeButtonGraphicsElement[]
 	feedbacks: SomeEntityModel[]
-): Pick<LayeredButtonModel, 'style' | 'feedbacks'> {
+	previewStyleFeedbacks: SomeEntityModel[]
+} {
 	const canvasElement: ButtonGraphicsCanvasElement = {
 		id: 'canvas',
 		name: 'Canvas',
@@ -288,6 +292,13 @@ export function ConvertLegacyStyleToElements(
 
 	let hasAnyAdvancedFeedbacks = false
 
+	const selectedElementIds: { [usage in ButtonGraphicsElementUsage]: string | undefined } = {
+		[ButtonGraphicsElementUsage.Automatic]: undefined, // Not valid here
+		[ButtonGraphicsElementUsage.Text]: textElement.id,
+		[ButtonGraphicsElementUsage.Image]: imageElement.id,
+		[ButtonGraphicsElementUsage.Color]: backgroundElement.id,
+	}
+
 	const updatedFeedbacks = feedbacks.map((fb) => {
 		if (fb.type !== EntityModelType.Feedback) return fb // Not a feedback
 		if (fb.styleOverrides) return fb // Already converted
@@ -300,12 +311,7 @@ export function ConvertLegacyStyleToElements(
 
 			const parsedStyle = ParseLegacyStyle(fb.style)
 
-			overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, {
-				[ButtonGraphicsElementUsage.Automatic]: undefined, // Not valid here
-				[ButtonGraphicsElementUsage.Text]: textElement.id,
-				[ButtonGraphicsElementUsage.Image]: imageElement.id,
-				[ButtonGraphicsElementUsage.Color]: backgroundElement.id,
-			})
+			overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds)
 
 			if (parsedStyle.canvas.decoration !== undefined) {
 				overrides.push({
@@ -320,15 +326,7 @@ export function ConvertLegacyStyleToElements(
 
 			// Should be advanced, translate all properties
 
-			overrides = CreateAdvancedFeedbackStyleOverrides(
-				{
-					[ButtonGraphicsElementUsage.Automatic]: undefined, // Not valid here
-					[ButtonGraphicsElementUsage.Text]: textElement.id,
-					[ButtonGraphicsElementUsage.Image]: imageElement.id,
-					[ButtonGraphicsElementUsage.Color]: backgroundElement.id,
-				},
-				bufferElement.id
-			)
+			overrides = CreateAdvancedFeedbackStyleOverrides(selectedElementIds, bufferElement.id)
 		}
 
 		return {
@@ -341,11 +339,30 @@ export function ConvertLegacyStyleToElements(
 	const layers: SomeButtonGraphicsElement[] = [canvasElement, backgroundElement, imageElement, textElement]
 	if (hasAnyAdvancedFeedbacks) layers.push(bufferElement)
 
+	const previewStyleFeedbacks: SomeEntityModel[] = []
+	if (previewStyle) {
+		const parsedStyle = ParseLegacyStyle(previewStyle)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds)
+
+		if (overrides.length > 0) {
+			previewStyleFeedbacks.push({
+				type: EntityModelType.Feedback,
+				id: nanoid(),
+				definitionId: 'check_expression',
+				connectionId: 'internal',
+				options: {
+					expression: exprExpr(`true`), // Always true to enable the style
+				},
+				styleOverrides: overrides,
+				upgradeIndex: undefined,
+			})
+		}
+	}
+
 	return {
-		style: {
-			layers,
-		},
+		layers,
 		feedbacks: updatedFeedbacks,
+		previewStyleFeedbacks,
 	}
 }
 

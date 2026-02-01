@@ -46,6 +46,8 @@ function createMockParser(
 	// Create a cache that will be used across all calls
 	const createCache = (): VariableValueCache => new Map()
 
+	const blinker = null as any
+
 	const createParserWithOverrides = (overrides: VariableValues): VariablesAndExpressionParser => {
 		const parser = {
 			executeExpression: (str: string, requiredType: string | undefined) => {
@@ -54,7 +56,7 @@ function createMockParser(
 				for (const [key, value] of Object.entries(overrides)) {
 					cache.set(key, value)
 				}
-				return executeExpression(str, rawVariableValues, requiredType, cache)
+				return executeExpression(blinker, str, rawVariableValues, requiredType, cache)
 			},
 			parseVariables: (str: string) => {
 				const cache = createCache()

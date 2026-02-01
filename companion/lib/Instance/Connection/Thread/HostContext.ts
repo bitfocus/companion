@@ -141,14 +141,14 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 		const convertedElements: CompositeElementDefinition[] = []
 
 		for (const rawElement of compositeElements) {
-			compositeElements.push({
+			convertedElements.push({
 				id: rawElement.id,
 				name: rawElement.name,
 				description: rawElement.description,
-				options: translateEntityInputFields(rawElement.options || [], EntityModelType.Feedback, true),
+				options: translateEntityInputFields(rawElement.options || [], EntityModelType.Feedback),
 				elements: ConvertLayerPresetElements(
-					this.logger,
-					this.connectionId,
+					this.#logger,
+					this.#connectionId,
 					undefined,
 					rawElement.elements || [],
 					true // Force new unique IDs for elements within composite definitions
