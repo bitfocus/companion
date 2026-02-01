@@ -389,36 +389,6 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		this.#updateVariablePrefixesAndStoreDefinitions(connectionId, config.label, newPresets, uiDefinitions)
 	}
 
-	// /**
-	//  * The ui doesnt need many of the preset properties. Simplify an array of them in preparation for sending to the ui
-	//  */
-	// #simplifyPresetsForUi(presets: Record<string, PresetDefinition>): Record<string, UIPresetDefinition> {
-	// 	const res: Record<string, UIPresetDefinition> = {}
-
-	// 	Object.entries(presets).forEach(([id, preset], index) => {
-	// 		if (preset.type === 'button') {
-	// 			res[id] = {
-	// 				id: preset.id,
-	// 				order: index,
-	// 				label: preset.name,
-	// 				category: preset.category,
-	// 				type: 'button',
-	// 			}
-	// 		} else if (preset.type === 'text') {
-	// 			res[id] = {
-	// 				id: preset.id,
-	// 				order: index,
-	// 				label: preset.name,
-	// 				category: preset.category,
-	// 				type: 'text',
-	// 				text: preset.text,
-	// 			}
-	// 		}
-	// 	})
-
-	// 	return res
-	// }
-
 	/**
 	 * Update all the variables in the presets to reference the supplied label
 	 * @param connectionId
@@ -445,6 +415,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		presets: ReadonlyMap<string, PresetDefinition>,
 		uiDefinitions: Record<string, UIPresetSection>
 	): void {
+		const allowedSet = new Set<string>(['local'])
+
 		/*
 		 * Clean up variable references: $(label:variable)
 		 * since the name of the connection is dynamic. We don't want to
@@ -452,13 +424,13 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		 */
 		for (const preset of presets.values()) {
 			if (preset.model.style) {
-				preset.model.style.text = replaceAllVariables(preset.model.style.text, label)
+				preset.model.style.text = replaceAllVariables(preset.model.style.text, label, allowedSet)
 			}
 
 			if (preset.model.feedbacks) {
 				for (const feedback of preset.model.feedbacks) {
 					if (feedback.type === EntityModelType.Feedback && feedback.style && feedback.style.text) {
-						feedback.style.text = replaceAllVariables(feedback.style.text, label)
+						feedback.style.text = replaceAllVariables(feedback.style.text, label, allowedSet)
 					}
 				}
 			}

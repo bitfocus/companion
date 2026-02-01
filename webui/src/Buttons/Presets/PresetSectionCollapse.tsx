@@ -1,7 +1,12 @@
 import { CCard, CCardBody, CCollapse } from '@coreui/react'
 import React, { useCallback } from 'react'
 import { observer } from 'mobx-react-lite'
-import type { UIPresetGroupCustom, UIPresetSection } from '@companion-app/shared/Model/Presets.js'
+import type {
+	UIPresetGroup,
+	UIPresetGroupCustom,
+	UIPresetGroupMatrix,
+	UIPresetSection,
+} from '@companion-app/shared/Model/Presets.js'
 import type { IObservableValue } from 'mobx'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useDrag } from 'react-dnd'
@@ -9,6 +14,9 @@ import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
 import { trpc } from '~/Resources/TRPC'
 import type { PresetDragItem } from './PresetDragItem'
 import { useResizeObserver } from 'usehooks-ts'
+import { useComputed } from '~/Resources/util'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 
 interface PresetSectionCollapseProps {
 	section: UIPresetSection
@@ -58,9 +66,9 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 							{Object.values(section.definitions).map((grp, i) => {
 								switch (grp.type) {
 									case 'custom':
-										return <PresetGroup key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+										return <PresetGroupCustom key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
 									case 'matrix':
-										return <p>TEST</p>
+										return <PresetGroupMatrix key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
 									default:
 										return null
 								}
@@ -73,13 +81,13 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 	)
 })
 
-interface PresetGroupProps {
+interface PresetGroupCustomProps {
 	connectionId: string
 	grp: UIPresetGroupCustom
 	isFirst: boolean
 }
 
-const PresetGroup = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupProps) {
+const PresetGroupCustom = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupCustomProps) {
 	const presets = Object.values(grp.presets).sort((a, b) => a.order - b.order)
 
 	return (
@@ -89,7 +97,97 @@ const PresetGroup = observer(function PresetGroup({ connectionId, grp, isFirst }
 			{presets.length > 0 && (
 				<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
 					{presets.map((p) => (
-						<PresetIconPreview key={p.id} connectionId={connectionId} presetId={p.id} title={p.label} />
+						<PresetIconPreview
+							key={p.id}
+							connectionId={connectionId}
+							presetId={p.id}
+							title={p.label}
+							matrixValues={null}
+						/>
+					))}
+				</div>
+			)}
+		</>
+	)
+})
+
+interface PresetGroupMatrixProps {
+	connectionId: string
+	grp: UIPresetGroupMatrix
+	isFirst: boolean
+}
+
+interface MatrixCombination {
+	hash: string
+	values: VariableValues
+}
+
+const PresetGroupMatrix = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupMatrixProps) {
+	const matrixCombinations = useComputed((): MatrixCombination[] => {
+		// Build the exclusion list
+		const excludeHashes = new Set<string>()
+		for (const exclude of grp.matrixExclude || []) {
+			const hash = createStableObjectHash(exclude)
+			excludeHashes.add(hash)
+		}
+
+		// Fill in the initial ones
+		const generatedHashes = new Set<string>()
+		const values: MatrixCombination[] = []
+
+		if (grp.matrix && Object.keys(grp.matrix).length > 0) {
+			// Get matrix keys and their possible values
+			const matrixKeys = Object.keys(grp.matrix)
+			const matrixValueArrays = matrixKeys.map((key) => grp.matrix[key] || [])
+
+			// Generate all combinations using recursive approach
+			const generateCombinations = (index: number, current: VariableValues) => {
+				if (index === matrixKeys.length) {
+					const hash = createStableObjectHash(current)
+					if (!excludeHashes.has(hash) && !generatedHashes.has(hash)) {
+						generatedHashes.add(hash)
+						values.push({ hash, values: { ...current } })
+					}
+					return
+				}
+
+				const key = matrixKeys[index]
+				const possibleValues = matrixValueArrays[index]
+
+				for (const value of possibleValues) {
+					generateCombinations(index + 1, { ...current, [key]: value })
+				}
+			}
+
+			generateCombinations(0, {})
+		}
+
+		// Add the includes
+		for (const include of grp.matrixInclude || []) {
+			const hash = createStableObjectHash(include)
+			if (!generatedHashes.has(hash)) {
+				generatedHashes.add(hash)
+				values.push({ hash, values: include })
+			}
+		}
+
+		return values
+	}, [grp.matrix, grp.matrixInclude, grp.matrixExclude])
+
+	return (
+		<>
+			{grp.name || grp.description ? <PresetText key={grp.id} grp={grp} /> : null}
+
+			{matrixCombinations.length > 0 && (
+				<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
+					{matrixCombinations.map((p) => (
+						<PresetIconPreview
+							key={p.hash}
+							connectionId={connectionId}
+							presetId={grp.definition.id}
+							title={grp.definition.label}
+							matrixValues={p.values}
+						/>
 					))}
 				</div>
 			)}
@@ -98,7 +196,7 @@ const PresetGroup = observer(function PresetGroup({ connectionId, grp, isFirst }
 })
 
 interface PresetTextProps {
-	grp: UIPresetGroupCustom
+	grp: UIPresetGroup
 }
 function PresetText({ grp }: Readonly<PresetTextProps>) {
 	return (
@@ -112,13 +210,15 @@ interface PresetIconPreviewProps {
 	connectionId: string
 	presetId: string
 	title: string
+	matrixValues: VariableValues | null
 }
-function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIconPreviewProps>) {
+function PresetIconPreview({ connectionId, presetId, title, matrixValues }: Readonly<PresetIconPreviewProps>) {
 	const [, drag] = useDrag<PresetDragItem>({
 		type: 'preset',
 		item: {
-			connectionId: connectionId,
-			presetId: presetId,
+			connectionId,
+			presetId,
+			matrixValues,
 		},
 	})
 
@@ -127,6 +227,7 @@ function PresetIconPreview({ connectionId, presetId, title }: Readonly<PresetIco
 			{
 				connectionId,
 				presetId,
+				matrixValues,
 			},
 			{}
 		)
