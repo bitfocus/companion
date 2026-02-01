@@ -219,6 +219,7 @@ class PresetDefinitionConverter {
 			id: preset.id,
 			order: i,
 			label: preset.name,
+			tags: preset.tags,
 		} satisfies Complete<UIPresetDefinition>
 	}
 

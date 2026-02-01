@@ -121,6 +121,7 @@ function splitPresetsIntoGroups2(presets: (CompanionPresetDefinition & { id: str
 				id: preset.id,
 				order: currentIndex++,
 				label: preset.name,
+				tags: undefined,
 			} satisfies Complete<UIPresetDefinition>
 		}
 	}
