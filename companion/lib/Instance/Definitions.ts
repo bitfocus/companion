@@ -394,36 +394,6 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		this.#updateVariablePrefixesAndStoreDefinitions(connectionId, config.label, newPresets, uiDefinitions)
 	}
 
-	// /**
-	//  * The ui doesnt need many of the preset properties. Simplify an array of them in preparation for sending to the ui
-	//  */
-	// #simplifyPresetsForUi(presets: Record<string, PresetDefinition>): Record<string, UIPresetDefinition> {
-	// 	const res: Record<string, UIPresetDefinition> = {}
-
-	// 	Object.entries(presets).forEach(([id, preset], index) => {
-	// 		if (preset.type === 'button') {
-	// 			res[id] = {
-	// 				id: preset.id,
-	// 				order: index,
-	// 				label: preset.name,
-	// 				category: preset.category,
-	// 				type: 'button',
-	// 			}
-	// 		} else if (preset.type === 'text') {
-	// 			res[id] = {
-	// 				id: preset.id,
-	// 				order: index,
-	// 				label: preset.name,
-	// 				category: preset.category,
-	// 				type: 'text',
-	// 				text: preset.text,
-	// 			}
-	// 		}
-	// 	})
-
-	// 	return res
-	// }
-
 	/**
 	 * Update all the variables in the presets to reference the supplied label
 	 * @param connectionId
@@ -453,6 +423,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const missingReferencedFeedbackDefinitions = new Set<string>()
 		const missingReferencedActionDefinitions = new Set<string>()
 
+		const allowedSet = new Set<string>(['local'])
+
 		const replaceVariablesInEntityOptions = (
 			definition: ClientEntityDefinition,
 			options: ExpressionableOptionsObject
@@ -471,7 +443,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 						typeof optionValue.value === 'string'
 					) {
 						return {
-							value: replaceAllVariables(optionValue.value, label),
+							value: replaceAllVariables(optionValue.value, label, allowedSet),
 							isExpression: optionValue.isExpression,
 						}
 					}
@@ -487,7 +459,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		 */
 		for (const preset of presets.values()) {
 			if (preset.model.style) {
-				preset.model.style.text = replaceAllVariables(preset.model.style.text, label)
+				preset.model.style.text = replaceAllVariables(preset.model.style.text, label, allowedSet)
 			}
 
 			if (preset.model.feedbacks) {
@@ -495,7 +467,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					if (feedback.type !== EntityModelType.Feedback) continue
 
 					if (typeof feedback.style?.text === 'string') {
-						feedback.style.text = replaceAllVariables(feedback.style.text, label)
+						feedback.style.text = replaceAllVariables(feedback.style.text, label, allowedSet)
 					}
 
 					const definition = this.getEntityDefinition(EntityModelType.Feedback, connectionId, feedback.definitionId)
