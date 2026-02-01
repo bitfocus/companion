@@ -5,7 +5,6 @@ import type { NormalButtonModel } from './ButtonModel.js'
 export interface PresetDefinition {
 	id: string
 	name: string
-	category: string
 	type: 'button'
 	model: NormalButtonModel
 	previewStyle: Partial<CompanionButtonStyleProps> | undefined
@@ -28,6 +27,7 @@ export interface UIPresetGroupBase {
 	tags?: string[]
 }
 export interface UIPresetGroupCustom extends UIPresetGroupBase {
+	type: 'custom'
 	presets: Record<string, UIPresetDefinition>
 }
 

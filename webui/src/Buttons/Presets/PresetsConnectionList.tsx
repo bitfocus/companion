@@ -19,7 +19,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	// Sort the connections by the same order as the connections list
 	const options = connections.sortedConnections().map((connectionInfo) => {
 		const presets = presetsDefinitionsStore.presets.get(connectionInfo.id)
-		if (!presets || presets.size === 0) return null
+		if (!presets || Object.keys(presets).length === 0) return null
 
 		const moduleInfo = modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
 		const compactName = modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)
