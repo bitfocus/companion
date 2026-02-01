@@ -17,6 +17,7 @@ export function PreserveEnvVars(): Record<string, string> {
 		'USERPROFILE',
 		'TMP',
 		'TEMP',
+		'TMPDIR',
 
 		// Companion settings that are relevant to modules
 		'DISABLE_IPV6',
