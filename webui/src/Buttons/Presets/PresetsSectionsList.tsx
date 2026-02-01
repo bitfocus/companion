@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react'
-import { CAlert, CButton, CButtonGroup, CCallout, CFormLabel } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection } from '@companion-app/shared/Model/Presets.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
@@ -13,6 +13,7 @@ import { NonIdealState } from '../../Components/NonIdealState.js'
 import { fuzzyMatch } from './fuzzyMatch.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import Select from 'react-select'
+import { useComputed } from '~/Resources/util.js'
 
 interface PresetsSectionsListProps {
 	presets: Record<string, UIPresetSection | undefined> | undefined
@@ -36,28 +37,40 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 		.sort((a, b) => a.order - b.order)
 
 	// Collect all unique tags from sections, groups, and presets
-	const allTags = useMemo(() => {
+	const allTags = useComputed(() => {
 		const tagSet = new Set<string>()
 
 		for (const section of allSections) {
-			// Add section tags
-			if (section.tags) {
-				section.tags.forEach((tag) => tagSet.add(tag))
-			}
-
-			// Add group and preset tags
-			for (const group of Object.values(section.definitions)) {
-				if (group.tags) {
-					group.tags.forEach((tag) => tagSet.add(tag))
+			try {
+				// Add section tags
+				if (Array.isArray(section.tags)) {
+					section.tags.forEach((tag) => tagSet.add(tag))
 				}
 
-				if (group.type === 'custom') {
-					for (const preset of Object.values(group.presets)) {
-						if (preset.tags) {
-							preset.tags.forEach((tag) => tagSet.add(tag))
+				// Add group and preset tags
+				for (const group of Object.values(section.definitions)) {
+					try {
+						if (Array.isArray(group.tags)) {
+							group.tags.forEach((tag) => tagSet.add(tag))
 						}
+
+						if (group.type === 'custom') {
+							for (const preset of Object.values(group.presets)) {
+								try {
+									if (Array.isArray(preset.tags)) {
+										preset.tags.forEach((tag) => tagSet.add(tag))
+									}
+								} catch (_err) {
+									// Ignore presets with bad tags
+								}
+							}
+						}
+					} catch (_err) {
+						// Ignore groups with bad tags or data
 					}
 				}
+			} catch (_err) {
+				// Ignore sections with bad tags or data
 			}
 		}
 
@@ -67,59 +80,96 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 	// Helper function to check if any of the selected tags match
 	const hasMatchingTag = useCallback(
 		(tags: string[] | undefined): boolean => {
-			if (selectedTags.length === 0) return true
-			if (!tags || tags.length === 0) return false
-			return tags.some((tag) => selectedTags.includes(tag))
+			try {
+				if (selectedTags.length === 0) return true
+				if (!Array.isArray(tags) || tags.length === 0) return false
+				return tags.some((tag) => selectedTags.includes(tag))
+			} catch (_err) {
+				// If tag matching fails, hide the item
+				return false
+			}
 		},
 		[selectedTags]
 	)
 
-	// Filter sections based on search query and selected tags
-	const visibleSections = React.useMemo(() => {
-		return allSections.filter((section) => {
-			// First apply search query filter
-			let searchMatches = true
-			if (searchQuery) {
-				const sectionMatches = fuzzyMatch(searchQuery, section.name, section.description, section.tags)
-				if (!sectionMatches) {
-					searchMatches = Object.values(section.definitions).some((grp) => {
-						if (grp.type === 'custom') {
-							const groupMatches = fuzzyMatch(searchQuery, grp.name, grp.description, grp.tags)
-							if (groupMatches) return true
+	// Filter sections, groups, and presets based on search query and selected tags
+	const visibleSections = useComputed(() => {
+		return allSections
+			.map((section) => {
+				try {
+					// Check if section itself matches
+					const sectionMatchesSearch =
+						!searchQuery || fuzzyMatch(searchQuery, section.name, section.description, section.tags)
+					const sectionMatchesTags = hasMatchingTag(section.tags)
 
-							return Object.values(grp.presets).some((preset) => fuzzyMatch(searchQuery, preset.label, preset.tags))
-						} else if (grp.type === 'matrix') {
-							const groupMatches = fuzzyMatch(searchQuery, grp.name, grp.description, grp.tags)
-							if (groupMatches) return true
+					// Filter groups within this section
+					const filteredGroups: Record<string, (typeof section.definitions)[string]> = {}
 
-							return Object.values(grp.matrix).some((values) =>
-								values.some((v) => fuzzyMatch(searchQuery, stringifyVariableValue(v) ?? ''))
-							)
+					for (const [groupId, grp] of Object.entries(section.definitions)) {
+						try {
+							const groupMatchesSearch = !searchQuery || fuzzyMatch(searchQuery, grp.name, grp.description, grp.tags)
+							const groupMatchesTags = hasMatchingTag(grp.tags)
+
+							if (grp.type === 'custom') {
+								// Filter presets within this group
+								const filteredPresets: typeof grp.presets = {}
+
+								for (const [presetId, preset] of Object.entries(grp.presets)) {
+									try {
+										const presetMatchesSearch = !searchQuery || fuzzyMatch(searchQuery, preset.label, preset.tags)
+										const presetMatchesTags = hasMatchingTag(preset.tags)
+
+										// Include preset if it matches both search AND tags (or if section/group matches)
+										if (
+											(sectionMatchesSearch && sectionMatchesTags) ||
+											(groupMatchesSearch && groupMatchesTags) ||
+											(presetMatchesSearch && presetMatchesTags)
+										) {
+											filteredPresets[presetId] = preset
+										}
+									} catch (_err) {
+										// Ignore presets with bad data
+									}
+								}
+
+								// Include group if it has matching presets or matches itself
+								if (Object.keys(filteredPresets).length > 0) {
+									filteredGroups[groupId] = { ...grp, presets: filteredPresets }
+								}
+							} else if (grp.type === 'matrix') {
+								// For matrix, check if matrix values match search
+								const matrixMatchesSearch =
+									!searchQuery ||
+									Object.values(grp.matrix).some((values) =>
+										values.some((v) => fuzzyMatch(searchQuery, stringifyVariableValue(v) ?? ''))
+									)
+
+								// Include matrix group if it matches (matrices don't have individual preset tags)
+								if (
+									(sectionMatchesSearch && sectionMatchesTags) ||
+									(groupMatchesSearch && groupMatchesTags) ||
+									(matrixMatchesSearch && selectedTags.length === 0)
+								) {
+									filteredGroups[groupId] = grp
+								}
+							}
+						} catch (_err) {
+							// Ignore groups with bad data
 						}
-						return false
-					})
+					}
+
+					// Only include section if it has matching groups
+					if (Object.keys(filteredGroups).length > 0) {
+						return { ...section, definitions: filteredGroups }
+					}
+
+					return null
+				} catch (_err) {
+					// Ignore sections with bad data
+					return null
 				}
-			}
-
-			if (!searchMatches) return false
-
-			// Then apply tag filter
-			if (selectedTags.length === 0) return true
-
-			// Check if section has matching tag
-			if (hasMatchingTag(section.tags)) return true
-
-			// Check if any group or preset has matching tag
-			return Object.values(section.definitions).some((grp) => {
-				if (hasMatchingTag(grp.tags)) return true
-
-				if (grp.type === 'custom') {
-					return Object.values(grp.presets).some((preset) => hasMatchingTag(preset.tags))
-				}
-
-				return false
 			})
-		})
+			.filter((section): section is UIPresetSection => section !== null)
 	}, [allSections, searchQuery, selectedTags, hasMatchingTag])
 
 	const sections = visibleSections.map((section) => (
