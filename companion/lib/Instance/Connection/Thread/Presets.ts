@@ -2,13 +2,7 @@ import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { PresetDefinition, PresetDefinitionButton } from '@companion-app/shared/Model/Presets.js'
-import type {
-	CompanionButtonPresetDefinition,
-	CompanionPresetAction,
-	CompanionTextPresetDefinition,
-	Complete,
-	ModuleLogger,
-} from '@companion-module/base'
+import type { CompanionPresetAction, Complete, ModuleLogger } from '@companion-module/base'
 import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {

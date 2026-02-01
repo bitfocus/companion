@@ -1,10 +1,8 @@
+import type jsonPatch from 'fast-json-patch'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
-import type { ObjectsDiff } from './Common.js'
 import type { NormalButtonModel } from './ButtonModel.js'
 
-export type PresetDefinition = PresetDefinitionButton | PresetDefinitionText
-
-export interface PresetDefinitionButton {
+export interface PresetDefinition {
 	id: string
 	name: string
 	category: string
@@ -13,30 +11,32 @@ export interface PresetDefinitionButton {
 	previewStyle: Partial<CompanionButtonStyleProps> | undefined
 }
 
-export interface PresetDefinitionText {
+export interface UIPresetSection {
 	id: string
 	name: string
-	category: string
-	type: 'text'
-	text: string
+	order: number
+	description?: string
+	definitions: Record<string, UIPresetGroup>
+	tags?: string[]
 }
 
-export type UIPresetDefinition = UIPresetDefinitionButton | UIPresetDefinitionText
+export interface UIPresetGroupBase {
+	id: string
+	name: string
+	order: number
+	description?: string
+	tags?: string[]
+}
+export interface UIPresetGroupCustom extends UIPresetGroupBase {
+	presets: Record<string, UIPresetDefinition>
+}
 
-export interface UIPresetDefinitionBase {
+export type UIPresetGroup = UIPresetGroupCustom //| PresetGroupMatrix<TDefinition>
+
+export interface UIPresetDefinition {
 	id: string
 	order: number
 	label: string
-	category: string
-}
-
-export interface UIPresetDefinitionButton extends UIPresetDefinitionBase {
-	type: 'button'
-}
-
-export interface UIPresetDefinitionText extends UIPresetDefinitionBase {
-	type: 'text'
-	text: string
 }
 
 export type UIPresetDefinitionUpdate =
@@ -47,18 +47,19 @@ export type UIPresetDefinitionUpdate =
 
 export interface UIPresetDefinitionUpdateInit {
 	type: 'init'
-	definitions: Record<string, Record<string, UIPresetDefinition>>
+	definitions: Record<string, Record<string, UIPresetSection>>
 }
 export interface UIPresetDefinitionUpdateAdd {
 	type: 'add'
 	connectionId: string
-	definitions: Record<string, UIPresetDefinition>
+	definitions: Record<string, UIPresetSection>
 }
 export interface UIPresetDefinitionUpdateRemove {
 	type: 'remove'
 	connectionId: string
 }
-export interface UIPresetDefinitionUpdatePatch extends ObjectsDiff<UIPresetDefinition> {
+export interface UIPresetDefinitionUpdatePatch {
 	type: 'patch'
 	connectionId: string
+	patch: jsonPatch.Operation<Record<string, UIPresetSection>>[]
 }

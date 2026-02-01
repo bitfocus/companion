@@ -1,13 +1,13 @@
-import type { UIPresetDefinition, UIPresetDefinitionUpdate } from '@companion-app/shared/Model/Presets.js'
+import type { UIPresetDefinitionUpdate, UIPresetSection } from '@companion-app/shared/Model/Presets.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { observable, action, type ObservableMap } from 'mobx'
+import { observable, action } from 'mobx'
 import { useState } from 'react'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever } from '~/Resources/util'
-import { ApplyDiffToStore } from '~/Stores/ApplyDiffToMap'
+import { applyJsonPatchInPlace } from '~/Stores/ApplyDiffToMap'
 
 export class PresetDefinitionsStore {
-	readonly presets = observable.map<string, ObservableMap<string, UIPresetDefinition>>()
+	readonly presets = observable.map<string, Record<string, UIPresetSection | undefined>>()
 
 	updatePresets = action((update: UIPresetDefinitionUpdate | null) => {
 		if (!update) {
@@ -20,12 +20,12 @@ export class PresetDefinitionsStore {
 				this.presets.clear()
 
 				for (const [connectionId, presets] of Object.entries(update.definitions)) {
-					this.presets.set(connectionId, observable.map(presets))
+					this.presets.set(connectionId, presets)
 				}
 				break
 			}
 			case 'add':
-				this.presets.set(update.connectionId, observable.map(update.definitions))
+				this.presets.set(update.connectionId, update.definitions)
 				break
 			case 'remove':
 				this.presets.delete(update.connectionId)
@@ -37,7 +37,7 @@ export class PresetDefinitionsStore {
 					return
 				}
 
-				ApplyDiffToStore(currentPresets, update)
+				applyJsonPatchInPlace(currentPresets, update.patch)
 				break
 			}
 			default:
