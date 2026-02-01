@@ -43,14 +43,21 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 	const cardRef = React.useRef<HTMLDivElement>(null)
 	const { height = 0 } = useResizeObserver({ ref: cardRef })
 
-	// const grouped = groupPresetsForCategory(presets, category)
-	// if (grouped.length === 0) {
-	// 	// Hide card if there are no presets which match
-	// 	return null
-	// }
-
 	const expanded = expandedSection.get() === sectionId
 	const showContent = expanded || height > 0
+
+	const groups = Object.values(section.definitions).sort((a, b) => a.order - b.order)
+
+	const groupComponents = groups.map((grp, i) => {
+		switch (grp.type) {
+			case 'custom':
+				return <PresetGroupCustom key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+			case 'matrix':
+				return <PresetGroupMatrix key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+			default:
+				return null
+		}
+	})
 
 	return (
 		<CCard className={'add-browse-card'}>
@@ -62,17 +69,7 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 					{showContent && (
 						<>
 							{!!section.description && <div className="description">{section.description}</div>}
-
-							{Object.values(section.definitions).map((grp, i) => {
-								switch (grp.type) {
-									case 'custom':
-										return <PresetGroupCustom key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
-									case 'matrix':
-										return <PresetGroupMatrix key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
-									default:
-										return null
-								}
-							})}
+							{groupComponents}
 						</>
 					)}
 				</CCardBody>
@@ -94,19 +91,17 @@ const PresetGroupCustom = observer(function PresetGroup({ connectionId, grp, isF
 		<>
 			{grp.name || grp.description ? <PresetText key={grp.id} grp={grp} /> : null}
 
-			{presets.length > 0 && (
-				<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
-					{presets.map((p) => (
-						<PresetIconPreview
-							key={p.id}
-							connectionId={connectionId}
-							presetId={p.id}
-							title={p.label}
-							matrixValues={null}
-						/>
-					))}
-				</div>
-			)}
+			<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
+				{presets.map((p) => (
+					<PresetIconPreview
+						key={p.id}
+						connectionId={connectionId}
+						presetId={p.id}
+						title={p.label}
+						matrixValues={null}
+					/>
+				))}
+			</div>
 		</>
 	)
 })
@@ -178,19 +173,17 @@ const PresetGroupMatrix = observer(function PresetGroup({ connectionId, grp, isF
 		<>
 			{grp.name || grp.description ? <PresetText key={grp.id} grp={grp} /> : null}
 
-			{matrixCombinations.length > 0 && (
-				<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
-					{matrixCombinations.map((p) => (
-						<PresetIconPreview
-							key={p.hash}
-							connectionId={connectionId}
-							presetId={grp.definition.id}
-							title={grp.definition.label}
-							matrixValues={p.values}
-						/>
-					))}
-				</div>
-			)}
+			<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
+				{matrixCombinations.map((p) => (
+					<PresetIconPreview
+						key={p.hash}
+						connectionId={connectionId}
+						presetId={grp.definition.id}
+						title={grp.definition.label}
+						matrixValues={p.values}
+					/>
+				))}
+			</div>
 		</>
 	)
 })
