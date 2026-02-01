@@ -7,7 +7,7 @@ import type {
 	UIPresetGroupMatrix,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
-import type { IObservableValue } from 'mobx'
+import { runInAction, type IObservableValue } from 'mobx'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
@@ -33,11 +33,13 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 }: PresetSectionCollapseProps) {
 	const sectionId = section.id
 	const doToggleClick = useCallback(() => {
-		if (expandedSection.get() === sectionId) {
-			expandedSection.set(null)
-		} else {
-			expandedSection.set(sectionId)
-		}
+		runInAction(() => {
+			if (expandedSection.get() === sectionId) {
+				expandedSection.set(null)
+			} else {
+				expandedSection.set(sectionId)
+			}
+		})
 	}, [expandedSection, sectionId])
 
 	const cardRef = React.useRef<HTMLDivElement>(null)
