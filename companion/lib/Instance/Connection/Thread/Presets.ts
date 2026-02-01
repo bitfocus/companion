@@ -17,6 +17,9 @@ import type {
 } from '@companion-module/base'
 import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { nanoid } from 'nanoid'
+import { exprVal } from '@companion-app/shared/Model/Options.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -285,6 +288,34 @@ function ConvertPresetDefinition(
 				presetDefinition.model.steps[0] = {
 					action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
 					options: structuredClone(DefaultStepOptions),
+				}
+			}
+
+			// Copy across local variables
+			if (rawPreset.localVariables) {
+				for (const localVariable of rawPreset.localVariables) {
+					switch (localVariable.variableType) {
+						case 'simple':
+							presetDefinition.model.localVariables.push({
+								id: nanoid(),
+								type: EntityModelType.Feedback,
+								definitionId: 'user_value',
+								connectionId: 'internal',
+								upgradeIndex: undefined,
+
+								variableName: localVariable.variableName,
+								headline: localVariable.headline,
+
+								options: {
+									persist_value: exprVal(false),
+									startup_value: exprVal(localVariable.startupValue),
+								},
+							})
+							break
+						default:
+							logger.warn(`Unknown local variable type: ${localVariable.variableType}`)
+							break
+					}
 				}
 			}
 
