@@ -17,7 +17,6 @@ interface FieldOrExpressionProps {
 	disabled: boolean
 
 	entityType: EntityModelType | null
-	isInternal: boolean
 	isLocatedInGrid: boolean
 
 	children: React.ReactNode
@@ -28,7 +27,6 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 	setValue,
 	disabled,
 	entityType,
-	isInternal,
 	isLocatedInGrid,
 	children,
 }: FieldOrExpressionProps) {
@@ -71,7 +69,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 					<ExpressionInputField
 						setValue={setExpression}
 						value={stringifyVariableValue(value.value) ?? ''}
-						localVariables={localVariablesStore?.getOptions(entityType, isInternal, isLocatedInGrid)}
+						localVariables={localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)}
 						disabled={disabled}
 					/>
 				) : (

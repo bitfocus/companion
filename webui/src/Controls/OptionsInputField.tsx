@@ -11,7 +11,11 @@ import {
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	CompanionFieldVariablesSupport,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
@@ -101,7 +105,6 @@ export const OptionsInputField = observer(function OptionsInputField({
 				setValue={(val) => setValue(option.id, val)}
 				disabled={!!readonly}
 				entityType={entityType}
-				isInternal={allowInternalFields} // nocommit - this seems wrong?
 				isLocatedInGrid={isLocatedInGrid}
 			>
 				{control}
@@ -168,30 +171,39 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 
 	switch (option.type) {
 		case 'textinput': {
-			const localVariables =
-				features?.local || option.isExpression
-					? localVariablesStore?.getOptions(entityType, allowInternalFields, isLocatedInGrid)
+			if (option.isExpression) {
+				const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
+
+				return (
+					<ExpressionInputField
+						value={value as any}
+						localVariables={localVariables}
+						disabled={readonly}
+						setValue={setValue}
+					/>
+				)
+			} else {
+				const localVariables = features?.local
+					? localVariablesStore?.getOptions(
+							entityType,
+							option.useVariables === CompanionFieldVariablesSupport.InternalParser,
+							isLocatedInGrid
+						)
 					: undefined
 
-			return option.isExpression ? (
-				<ExpressionInputField
-					value={value as any}
-					localVariables={localVariables}
-					disabled={readonly}
-					setValue={setValue}
-				/>
-			) : (
-				<TextInputField
-					value={value as any}
-					placeholder={option.placeholder}
-					useVariables={features?.variables ?? false}
-					localVariables={localVariables}
-					disabled={readonly}
-					setValue={setValue}
-					checkValid={checkValid}
-					multiline={option.multiline}
-				/>
-			)
+				return (
+					<TextInputField
+						value={value as any}
+						placeholder={option.placeholder}
+						useVariables={features?.variables ?? false}
+						localVariables={localVariables}
+						disabled={readonly}
+						setValue={setValue}
+						checkValid={checkValid}
+						multiline={option.multiline}
+					/>
+				)
+			}
 		}
 		case 'dropdown': {
 			return (
@@ -314,7 +326,9 @@ export function getInputFeatures(option: SomeCompanionInputField): InputFeatureI
 	if (option.type === 'textinput') {
 		return {
 			variables: !!option.useVariables,
-			local: typeof option.useVariables === 'object' && !!option.useVariables?.local,
+			local:
+				option.useVariables === CompanionFieldVariablesSupport.InternalParser ||
+				option.useVariables === CompanionFieldVariablesSupport.LocalVariables,
 		}
 	}
 	return undefined

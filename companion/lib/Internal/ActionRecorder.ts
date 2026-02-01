@@ -28,6 +28,7 @@ import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import { stringifyVariableValue, type VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 
 export class InternalActionRecorder
 	extends EventEmitter<InternalModuleFragmentEvents>
@@ -123,9 +124,7 @@ export class InternalActionRecorder
 						description: '(0 = this page)',
 						id: 'page',
 						default: '0',
-						useVariables: {
-							local: true,
-						},
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 					{
 						type: 'textinput',
@@ -133,9 +132,7 @@ export class InternalActionRecorder
 						description: '(0 = this position)',
 						id: 'bank',
 						default: '0',
-						useVariables: {
-							local: true,
-						},
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 					{
 						type: 'textinput',
@@ -143,9 +140,7 @@ export class InternalActionRecorder
 						description: 'eg 1, 2',
 						id: 'step',
 						default: '1',
-						useVariables: {
-							local: true,
-						},
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 					{
 						type: 'textinput',
@@ -153,9 +148,7 @@ export class InternalActionRecorder
 						description: 'eg press, release, rotate_left, rotate_right, 1000, 2000',
 						id: 'set',
 						default: 'press',
-						useVariables: {
-							local: true,
-						},
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 					{
 						type: 'dropdown',

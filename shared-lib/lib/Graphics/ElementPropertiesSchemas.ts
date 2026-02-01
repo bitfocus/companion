@@ -1,4 +1,4 @@
-import type { SomeCompanionInputField } from '../Model/Options.js'
+import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '../Model/Options.js'
 import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import type {
 	ButtonGraphicsBoxElement,
@@ -120,7 +120,7 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		label: 'Button text string',
 		tooltip: "The text you see on the button you're working with. You can use variables, but not expressions.",
 		default: '',
-		useVariables: { local: true },
+		useVariables: CompanionFieldVariablesSupport.InternalParser,
 	},
 	{
 		type: 'dropdown',

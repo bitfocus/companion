@@ -34,9 +34,14 @@ export type CompanionColorPresetValue =
 			color: string
 			title: string
 	  }
-export interface CompanionFieldVariablesSupport {
-	/** Whether to include local variables */
-	local?: boolean
+
+export enum CompanionFieldVariablesSupport {
+	/** Uses the internal parser, and supports all the features */
+	InternalParser = 'internalParser',
+	/** Old style parsing, with limited local variables */
+	LocalVariables = 'local',
+	/** Old style parsing, with no local variables */
+	Basic = 'basic',
 }
 
 export interface CompanionInputFieldBaseExtended {

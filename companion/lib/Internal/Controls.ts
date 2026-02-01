@@ -38,6 +38,7 @@ import type {
 	CompanionAdvancedFeedbackResult,
 } from '@companion-module/host'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #graphicsController: GraphicsController
@@ -351,9 +352,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						description: 'eg 1, 2',
 						id: 'step',
 						default: '1',
-						useVariables: {
-							local: true,
-						},
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 				],
 				optionsSupportExpressions: true,

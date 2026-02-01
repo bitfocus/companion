@@ -1,10 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { ExpressionableOptionsObject, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	CompanionFieldVariablesSupport,
+	type ExpressionableOptionsObject,
+} from '@companion-app/shared/Model/Options.js'
 import type { VariableValueData, VariablesCache } from '../../lib/Variables/Util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { CompanionOptionValues } from '@companion-module/base'
+
+const useVariablesMinimal = CompanionFieldVariablesSupport.Basic
 
 describe('VariablesAndExpressionParser', () => {
 	// Sample variable data for testing
@@ -118,7 +122,7 @@ describe('VariablesAndExpressionParser', () => {
 				label: 'Test',
 				description: undefined,
 				options: [
-					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: {} },
+					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
 					{ id: 'field2', type: 'dropdown', label: 'Field 2', choices: [], default: 'opt1' },
 				],
 				optionsToMonitorForInvalidations: null,
@@ -181,7 +185,7 @@ describe('VariablesAndExpressionParser', () => {
 				label: 'Test',
 				description: undefined,
 				options: [
-					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: {} },
+					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
 					{ id: 'field2', type: 'dropdown', label: 'Field 2', choices: [], default: 'opt1' },
 				],
 				optionsToMonitorForInvalidations: null,
@@ -214,8 +218,8 @@ describe('VariablesAndExpressionParser', () => {
 				label: 'Test',
 				description: undefined,
 				options: [
-					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: {} },
-					{ id: 'field2', type: 'textinput', label: 'Field 2', useVariables: {} },
+					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
+					{ id: 'field2', type: 'textinput', label: 'Field 2', useVariables: useVariablesMinimal },
 					{ id: 'field3', type: 'dropdown', label: 'Field 3', choices: [], default: 'opt1' },
 				],
 				optionsToMonitorForInvalidations: ['field2'], // Only monitor field2
@@ -335,7 +339,7 @@ describe('VariablesAndExpressionParser', () => {
 						id: 'varField',
 						type: 'textinput',
 						label: 'Variable Field',
-						useVariables: {},
+						useVariables: useVariablesMinimal,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -655,7 +659,7 @@ describe('VariablesAndExpressionParser', () => {
 						id: 'varField',
 						type: 'textinput',
 						label: 'Variable Field',
-						useVariables: {},
+						useVariables: useVariablesMinimal,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -903,7 +907,7 @@ describe('VariablesAndExpressionParser', () => {
 				entityType: EntityModelType.Action,
 				label: 'Test',
 				description: undefined,
-				options: [{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: {} }],
+				options: [{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal }],
 				optionsToMonitorForInvalidations: null,
 				feedbackType: null,
 				feedbackStyle: undefined,
@@ -946,9 +950,9 @@ describe('VariablesAndExpressionParser', () => {
 				label: 'Test',
 				description: undefined,
 				options: [
-					{ id: 'text1', type: 'textinput', label: 'Text 1', useVariables: {} },
+					{ id: 'text1', type: 'textinput', label: 'Text 1', useVariables: useVariablesMinimal },
 					{ id: 'num1', type: 'number', label: 'Number 1', min: 0, max: 100, default: 0 },
-					{ id: 'text2', type: 'textinput', label: 'Text 2', useVariables: {} },
+					{ id: 'text2', type: 'textinput', label: 'Text 2', useVariables: useVariablesMinimal },
 					{ id: 'check1', type: 'checkbox', label: 'Checkbox 1', default: false },
 				],
 				optionsToMonitorForInvalidations: null,
@@ -988,7 +992,7 @@ describe('VariablesAndExpressionParser', () => {
 				entityType: EntityModelType.Action,
 				label: 'Test',
 				description: undefined,
-				options: [{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: {} }],
+				options: [{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal }],
 				optionsToMonitorForInvalidations: null,
 				feedbackType: null,
 				feedbackStyle: undefined,
