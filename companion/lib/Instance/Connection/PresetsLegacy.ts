@@ -89,6 +89,7 @@ function splitPresetsIntoGroups2(presets: (CompanionPresetDefinition & { id: str
 		if (preset.type === 'text') {
 			// Start a new group with this text preset as the heading
 			currentGroup = {
+				type: 'custom',
 				id: 'unknown',
 				name: preset.name,
 				order: groups.length,
@@ -102,6 +103,7 @@ function splitPresetsIntoGroups2(presets: (CompanionPresetDefinition & { id: str
 			// Add to current group, or create a new group without heading if needed
 			if (!currentGroup) {
 				currentGroup = {
+					type: 'custom',
 					id: 'unknown',
 					name: '',
 					order: 0,
@@ -138,7 +140,6 @@ function ConvertPresetDefinition(
 
 		const presetDefinition: PresetDefinition = {
 			id: presetId,
-			category: rawPreset.category,
 			name: rawPreset.name,
 			type: rawPreset.type,
 			previewStyle: rawPreset.previewStyle,
