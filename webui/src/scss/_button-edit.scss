@@ -21,6 +21,8 @@
 }
 
 .form-label .feature-icons {
+	white-space: nowrap;
+
 	background-color: #ddd;
 	border-radius: 100px; // as much as possible
 
@@ -30,8 +32,8 @@
 	padding-right: 3px;
 
 	svg {
-		margin-left: 2px;
-		margin-right: 2px;
+		margin-left: 1px;
+		margin-right: 1px;
 
 		font-size: 0.8rem;
 	}
@@ -64,20 +66,49 @@
 	margin: 0;
 }
 
-table.entity-table > tbody > tr:not(:first-child) > td,
 table.variables-table tr:not(:first-child) td {
 	border-top: 10px solid #f0f0f0;
 }
-table.entity-table > tbody > tr > td,
 table.variables-table td {
 	border-bottom: 10px solid #f0f0f0;
 }
 
-table.entity-table,
-table.variables-table {
-	tr {
-		// Fix for dnd in chrome previewing too much
-		transform: translate3d(0, 0, 0);
+.entity-list,
+table.variables-table,
+.entity-list-drag-layer {
+	// Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues)
+	.entity-row {
+		background-color: white;
+		margin-bottom: 10px;
+		display: flex;
+		flex-direction: row;
+		align-items: stretch;
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+
+		// &.drag-preview {
+		// 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		// 	border-radius: 4px;
+		// 	opacity: 0.95;
+		// }
+	}
+
+	.entity-row-reorder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 10px;
+		cursor: ns-resize;
+		flex-shrink: 0;
+		background-color: #f7f7f7;
+	}
+
+	.entity-row-content {
+		flex: 1;
+		padding: 0.5rem;
+		min-width: 0;
 	}
 
 	.entitylist-dragging {
@@ -85,6 +116,8 @@ table.variables-table {
 	}
 
 	.entitylist-dropzone {
+		background-color: white;
+
 		p {
 			border: 2px dashed #bbb;
 			border-radius: 5px;
@@ -173,16 +206,11 @@ table.variables-table {
 			flex-wrap: nowrap;
 		}
 	}
+}
 
-	// Give a border the bottom of the table. based on the table.td rule from coreui
-	tbody {
-		border-bottom: $table-border-width solid;
-
-		// nocommit
-		// @include themes($table-theme-map, $create: parent) {
-		// 	border-bottom-color: themes-get-value('table-border-color');
-		// }
-	}
+.entity-list {
+	background-color: #f0f0f0;
+	padding: 0 0 10px;
 }
 
 .add-dropdown-wrapper {

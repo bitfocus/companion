@@ -10,7 +10,7 @@ import {
 	ButtonGraphicsElementUsage,
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
+import type { Complete } from '@companion-module/base'
 import type { ImageResultProcessedStyle } from './ImageResult.js'
 
 export class GraphicsLayeredProcessedStyleGenerator {

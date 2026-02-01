@@ -14,6 +14,7 @@ import type { SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js
 // eslint-disable-next-line n/no-missing-import
 import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -152,8 +153,8 @@ export class ServiceSatelliteApi {
 
 					throw new Error(`Failed with errors: ${JSON.stringify(errors)}`)
 				}
-			} catch (e: any) {
-				socketLogger.error(`Manifest validation failed: ${e?.message ?? e}`)
+			} catch (e) {
+				socketLogger.error(`Manifest validation failed: ${stringifyError(e)}`)
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid LAYOUT_MANIFEST')
 			}
 
@@ -334,8 +335,8 @@ export class ServiceSatelliteApi {
 					offset = i + 1
 					try {
 						this.#handleCommand(socketLogger, socket, line.toString().replace(/\r/, ''))
-					} catch (e: any) {
-						socketLogger.error(`Error processing command: ${e?.message ?? e}`)
+					} catch (e) {
+						socketLogger.error(`Error processing command: ${stringifyError(e)}`)
 					}
 				}
 				receivebuffer = receivebuffer.substr(offset)

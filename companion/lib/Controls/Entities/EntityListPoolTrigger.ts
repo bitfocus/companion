@@ -7,7 +7,8 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { NewFeedbackValue, NewIsInvertedValue } from './Types.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	#feedbacks: ControlEntityList
@@ -77,7 +78,7 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void {
+	updateFeedbackValues(connectionId: string, newValues: ReadonlyMap<string, NewFeedbackValue>): void {
 		this.#actions.updateFeedbackValues(connectionId, newValues)
 
 		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
@@ -94,5 +95,24 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 	public getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>> {
 		return new Map()
+	}
+
+	/**
+	 * Update the isInverted values on the control with new calculated isInverted values
+	 * @param newValues The new isInverted values
+	 */
+	updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): void {
+		this.#actions.updateIsInvertedValues(newValues)
+
+		const changedVariableEntities = this.#localVariables.updateIsInvertedValues(newValues)
+
+		if (this.#feedbacks.updateIsInvertedValues(newValues).length > 0) {
+			this.reportChange({
+				redraw: true,
+				noSave: true,
+			})
+		}
+
+		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 }

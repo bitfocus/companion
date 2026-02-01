@@ -5,7 +5,7 @@ import type {
 	SomeButtonGraphicsElement,
 	ButtonGraphicsGroupDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { ButtonGraphicsDecorationType, ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import type { InstanceDefinitions, CompositeElementDefinition } from '../../lib/Instance/Definitions.js'
 import type { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'

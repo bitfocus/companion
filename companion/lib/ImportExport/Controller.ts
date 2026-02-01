@@ -10,8 +10,6 @@
  */
 
 import { upgradeImport } from '../Data/Upgrade.js'
-import yaml from 'yaml'
-import zlib from 'node:zlib'
 import type express from 'express'
 import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { AppInfo } from '../Registry.js'
@@ -43,11 +41,16 @@ import { ImportController } from './Import.js'
 import { find_smallest_grid_for_page } from './Util.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
+import workerPool from 'workerpool'
+import { isPackaged } from '../Resources/Util.js'
+import LogController from '../Log/Controller.js'
+import type { ImportExportThreadMethods, ParseImportDataResult } from './ThreadMethods.js'
+import path from 'node:path'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
 export class ImportExportController {
-	// readonly #logger = LogController.createLogger('ImportExport/Controller')
+	readonly #logger = LogController.createLogger('ImportExport/Controller')
 
 	readonly #controlsController: ControlsController
 	readonly #graphicsController: GraphicsController
@@ -61,38 +64,70 @@ export class ImportExportController {
 	readonly #exportController: ExportController
 	readonly #importController: ImportController
 
+	#pool = workerPool.pool(path.join(import.meta.dirname, isPackaged() ? './ImportExportThread.js' : './Thread.js'), {
+		minWorkers: 1,
+		maxWorkers: 1, // Only need one worker for import parsing
+		workerType: 'thread',
+		onCreateWorker: () => {
+			this.#logger.info('ImportExport worker created')
+			return undefined
+		},
+		onTerminateWorker: () => {
+			this.#logger.info('ImportExport worker terminated')
+		},
+	})
+
+	#poolExec = async <TKey extends keyof typeof ImportExportThreadMethods>(
+		key: TKey,
+		args: Parameters<(typeof ImportExportThreadMethods)[TKey]>,
+		transfer?: object[]
+	): Promise<ReturnType<(typeof ImportExportThreadMethods)[TKey]>> => {
+		return this.#pool.exec(key, args, {
+			transfer: transfer || [],
+		})
+	}
+
 	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null], null>(
 		'ImportExport/Controller',
 		MAX_IMPORT_FILE_SIZE,
 		async (_name, data, _userData, _updateProgress, sessionCtx) => {
-			let dataStr: string
+			// Extract ArrayBuffer from the Buffer for zero-copy transfer
+			// The buffer becomes detached/unusable in this thread after transfer
+			const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer
+
+			const mainThreadSendTime = performance.now()
+			this.#logger.info(`Import: Transferring ${arrayBuffer.byteLength} bytes to worker`)
+
+			let result: ParseImportDataResult
 			try {
-				dataStr = await new Promise((resolve, reject) => {
-					zlib.gunzip(data, (err, data) => {
-						if (err) reject(err)
-						else resolve(data?.toString() || dataStr)
-					})
-				})
-			} catch (_e) {
-				// Ignore, it is probably not compressed
-				dataStr = data.toString('utf-8')
+				result = await this.#poolExec('parseImportData', [arrayBuffer], [arrayBuffer])
+			} catch (e) {
+				this.#logger.error(`Import: Worker error: ${e}`)
+				return ['Worker error during import parsing', null]
 			}
 
-			let rawObject
-			try {
-				// YAML parser will handle JSON too
-				rawObject = yaml.parse(dataStr)
-			} catch (_e) {
-				return ['File is corrupted or unknown format', null]
+			const mainThreadReceiveTime = performance.now()
+
+			// Log detailed timing information
+			const { timing } = result
+			const totalMainThreadTime = mainThreadReceiveTime - mainThreadSendTime
+			const workerTotalTime = timing.workerEndTime - timing.workerStartTime
+			const gunzipTime = timing.gunzipEndTime - timing.gunzipStartTime
+			const parseTime = timing.parseEndTime - timing.parseStartTime
+			const ipcOverhead = totalMainThreadTime - workerTotalTime
+
+			this.#logger.info(
+				`Import: Parsing complete. ` +
+					`Total: ${totalMainThreadTime.toFixed(1)}ms, ` +
+					`Worker: ${workerTotalTime.toFixed(1)}ms (gunzip: ${gunzipTime.toFixed(1)}ms, parse: ${parseTime.toFixed(1)}ms), ` +
+					`IPC overhead: ${ipcOverhead.toFixed(1)}ms`
+			)
+
+			if (result.error) {
+				return [result.error, null]
 			}
 
-			if (rawObject.version > FILE_VERSION) {
-				return ['File was saved with a newer unsupported version of Companion', null]
-			}
-
-			if (rawObject.type !== 'full' && rawObject.type !== 'page' && rawObject.type !== 'trigger_list') {
-				return ['Unknown import type', null]
-			}
+			const rawObject = result.data
 
 			let importObject = upgradeImport(rawObject)
 
@@ -492,6 +527,10 @@ export class ImportExportController {
 
 		if (shouldReset(config.surfaces.instances)) {
 			await this.#instancesController.deleteAllSurfaceInstances(true)
+
+			if (!isImporting(config.surfaces.instances)) {
+				this.#instancesController.createDefaultSurfaceInstances()
+			}
 		}
 
 		if (shouldReset(config.surfaces.remote)) {

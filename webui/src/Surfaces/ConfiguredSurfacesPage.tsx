@@ -66,11 +66,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 	return (
 		<CRow className="surfaces-page split-panels">
-			<CCol
-				xs={12}
-				xl={6}
-				className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'} flex-column-layout`}
-			>
+			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-flex d-none'} flex-column-layout`}>
 				<div className="fixed-header">
 					<h4>Configured Surfaces</h4>
 
@@ -100,9 +96,9 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 					<AddEmulatorModal ref={addEmulatorModalRef} />
 				</div>
 
-				<div className="scrollable-content">
-					<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
+				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
 
+				<div className="fixed-header">
 					<CCallout color="info">
 						Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
 						<a target="_blank" rel="noreferrer" href="https://bfoc.us/70n2m47akw">

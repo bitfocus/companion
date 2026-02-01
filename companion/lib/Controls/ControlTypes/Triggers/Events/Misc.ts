@@ -2,6 +2,7 @@ import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import LogController, { type Logger } from '../../../../Log/Controller.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 interface ConnectEvent {
 	id: string
@@ -108,7 +109,7 @@ export class TriggersEventMisc {
 	/**
 	 * Handler for the control_press event
 	 * @param _controlId Id of the control which was pressed
-	 * @param pressed Whether the control was pressed or depressed.
+	 * @param pressed Whether the control was pressed (true) or released (false).
 	 * @param surfaceId Source of the event
 	 */
 	#onControlPress = (_controlId: string, pressed: boolean, surfaceId: string | undefined): void => {
@@ -133,8 +134,8 @@ export class TriggersEventMisc {
 				setImmediate(() => {
 					try {
 						this.#executeActions(nowTime, TriggerExecutionSource.Other)
-					} catch (e: any) {
-						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
+					} catch (e) {
+						this.#logger.warn(`Execute actions failed: ${stringifyError(e)}`)
 					}
 				})
 			}
@@ -169,8 +170,8 @@ export class TriggersEventMisc {
 				setTimeout(() => {
 					try {
 						this.#executeActions(nowTime, TriggerExecutionSource.Other)
-					} catch (e: any) {
-						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
+					} catch (e) {
+						this.#logger.warn(`Execute actions failed: ${stringifyError(e)}`)
 					}
 				}, event.delay || 0)
 			}
@@ -229,7 +230,7 @@ export class TriggersEventMisc {
 	/**
 	 * Add a control_press event listener
 	 * @param id Id of the event
-	 * @param pressed Listen for pressed or depressed events
+	 * @param pressed Listen for pressed (true) or released (false) events
 	 */
 	setControlPress(id: string, pressed: boolean): void {
 		this.clearControlPress(id)

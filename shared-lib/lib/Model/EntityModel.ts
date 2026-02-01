@@ -1,7 +1,8 @@
 import z from 'zod'
 import type { ActionSetId } from './ActionModel.js'
-import { type ExpressionOrValue, schemaExpressionOrValue } from './Expression.js'
-import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
+import { ExpressionOrJsonValueSchema, type ExpressionableOptionsObject, type ExpressionOrValue } from './Options.js'
+import type { VariableValue } from './Variables.js'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/host'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel = ReplaceableActionEntityModel | ReplaceableFeedbackEntityModel
@@ -49,7 +50,7 @@ export interface FeedbackEntityModel extends EntityModelBase {
 	readonly type: EntityModelType.Feedback
 
 	/** Boolean feedbacks can be inverted */
-	isInverted?: boolean
+	isInverted?: ExpressionOrValue<boolean>
 	/** If in a list that produces local-variables, this entity value will be exposed under this name */
 	variableName?: string
 
@@ -68,7 +69,7 @@ export const schemaFeedbackEntityStyleOverride: z.ZodType<FeedbackEntityStyleOve
 	overrideId: z.string(),
 	elementId: z.string(),
 	elementProperty: z.string(),
-	override: schemaExpressionOrValue,
+	override: ExpressionOrJsonValueSchema,
 })
 
 export interface EntityModelBase {
@@ -78,7 +79,7 @@ export interface EntityModelBase {
 	definitionId: string
 	connectionId: string
 	headline?: string
-	options: Record<string, any>
+	options: ExpressionableOptionsObject
 	disabled?: boolean
 	upgradeIndex: number | undefined
 
@@ -109,6 +110,8 @@ export interface EntitySupportedChildGroupDefinition {
 	 */
 	maximumChildren?: number
 }
+
+export type FeedbackValue = CompanionFeedbackButtonStyleResult | VariableValue
 
 const zodActionSetId: z.ZodSchema<ActionSetId> = z.union([
 	z.literal('down'),

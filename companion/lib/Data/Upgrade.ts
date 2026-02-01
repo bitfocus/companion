@@ -13,6 +13,7 @@ import v7tov8 from './Upgrades/v7tov8.js'
 import v8tov9 from './Upgrades/v8tov9.js'
 import v9tov10 from './Upgrades/v9tov10.js'
 import v10tov11 from './Upgrades/v10tov11.js'
+import v11tov12 from './Upgrades/v11tov12.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -26,7 +27,8 @@ const allUpgrades = [
 	v7tov8, // v4.0 - break out into more tables
 	v8tov9, // v4.1 - convert button stepAutoProgress to stepProgression
 	v9tov10, // v4.2 - surface integrations
-	v10tov11, // v4.x - graphics overhaul
+	v10tov11, // v4.3 - internal action/feedback upgrade & options into ExpressionOrValue
+	v11tov12, // v4.x - graphics overhaul
 ]
 const targetVersion = allUpgrades.length + 1
 

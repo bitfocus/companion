@@ -1,5 +1,6 @@
 @use 'variables' as *;
 @use '@coreui/coreui/scss/coreui'; // not strictly necessary, but it allows us to clarify the origin of mixins
+@use 'sass:color';
 
 body {
 	-webkit-text-size-adjust: 100%;
@@ -341,7 +342,7 @@ form.row > * {
 	}
 
 	.nav-link {
-		background-color: #191919;
+		--cui-sidebar-nav-link-bg: #191919;
 
 		margin-bottom: 0.15rem;
 		padding-top: 0.7rem;
@@ -392,21 +393,35 @@ form.row > * {
 		padding: 0;
 
 		&::after {
+			// affects the caret
 			margin-left: 16px;
 			margin-right: 16px;
+			background-color: white;
 		}
 
 		.nav-link {
 			margin-bottom: 0;
 		}
 	}
+
+	$group-background-color: #2a2a2a;
 	.nav-group-toggle-basic::after,
-	.nav-group-items .nav-link {
-		margin-right: 8px;
+	.nav-group-items {
+		// the box underneath the expanded group
+		padding-left: 0.5em !important;
+		padding-right: 0.1em !important;
+		padding-top: 0px !important;
 	}
 
 	.sidebar-nav .nav-group-items .nav-link {
+		// the individual buttons in a group
 		padding-left: var(--cui-sidebar-nav-link-padding-x);
+		box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.2);
+		--cui-sidebar-nav-link-bg: #{$group-background-color};
+
+		&:hover {
+			background-color: color.adjust($group-background-color, $lightness: 5%) !important;
+		}
 	}
 
 	.sidebar-header.sidebar-header-toggler {

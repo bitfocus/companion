@@ -18,10 +18,13 @@ import {
 import {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
+	NewFeedbackValue,
+	NewIsInvertedValue,
 	ProcessManagerForEntity,
 } from '../../../lib/Controls/Entities/Types.js'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
+import { EntityPoolIsInvertedManager } from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
 
 function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
 	const getEntityDefinition = vi.fn<InstanceDefinitionsForEntity['getEntityDefinition']>()
@@ -39,6 +42,10 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		connectionEntityDelete,
 		connectionEntityLearnOptions: null as any,
 	}
+	const isInvertedManager: EntityPoolIsInvertedManager = {
+		trackEntity: vi.fn(),
+		forgetEntity: vi.fn(),
+	} as any
 	const internalController: InternalControllerForEntity = {
 		entityUpdate: internalEntityUpdate,
 		entityDelete: internalEntityDelete,
@@ -50,6 +57,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
+		isInvertedManager,
 		controlId,
 		ownerId ?? null,
 		listId ?? {
@@ -69,6 +77,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
+		isInvertedManager,
 		controlId,
 		newActionModel,
 		false
@@ -88,6 +97,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
+		isInvertedManager,
 		newActionModel,
 		newAction,
 	}
@@ -434,7 +444,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -453,7 +463,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -473,7 +483,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -498,7 +508,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -520,7 +530,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -548,7 +558,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -574,7 +584,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -608,7 +618,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 			children: {
@@ -619,7 +629,7 @@ describe('addEntity', () => {
 						connectionId: 'my-conn99',
 						definitionId: 'something',
 						options: {
-							test: 123,
+							test: { isExpression: false, value: 123 },
 						},
 						upgradeIndex: undefined,
 					},
@@ -660,7 +670,7 @@ describe('addEntity', () => {
 			connectionId: 'internal',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 			children: {
@@ -671,7 +681,7 @@ describe('addEntity', () => {
 						connectionId: 'my-conn99',
 						definitionId: 'thing',
 						options: {
-							test: 99,
+							test: { isExpression: false, value: 99 },
 						},
 						upgradeIndex: undefined,
 					},
@@ -683,7 +693,7 @@ describe('addEntity', () => {
 						connectionId: 'my-conn99',
 						definitionId: 'another',
 						options: {
-							test: 45,
+							test: { isExpression: false, value: 45 },
 						},
 						upgradeIndex: undefined,
 					},
@@ -721,7 +731,7 @@ describe('addEntity', () => {
 			connectionId: 'my-conn99',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 		}
@@ -758,7 +768,7 @@ describe('addEntity', () => {
 			connectionId: 'internal',
 			definitionId: 'something',
 			options: {
-				test: 123,
+				test: { isExpression: false, value: 123 },
 			},
 			upgradeIndex: undefined,
 			children: {
@@ -769,7 +779,7 @@ describe('addEntity', () => {
 						connectionId: 'my-conn99',
 						definitionId: 'thing',
 						options: {
-							test: 99,
+							test: { isExpression: false, value: 99 },
 						},
 						upgradeIndex: undefined,
 					},
@@ -1128,6 +1138,33 @@ describe('duplicateEntity', () => {
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01')
 	})
+
+	test('duplicate deep when root is full', () => {
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01', null, {
+			type: EntityModelType.Action,
+			maximumChildren: 3,
+		})
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		list.loadStorage(structuredClone(ActionTree), true, false)
+
+		// Starts with correct length (3 root items)
+		expect(list.getDirectEntities()).toHaveLength(3)
+
+		// Duplicate deep item should succeed even though root is full
+		const newEntity = list.duplicateEntity('int1')
+		expect(newEntity).not.toBeUndefined()
+
+		// Helper to find the parent of the new entity to verify it was added there
+		const newEntityParent = list.findParentAndIndex(newEntity!.id)
+		expect(newEntityParent?.parent).not.toBe(list)
+		expect(newEntityParent?.parent).not.toBeUndefined()
+
+		// No callbacks
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
+	})
 })
 
 describe('forgetForConnection', () => {
@@ -1261,7 +1298,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('all disabled', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		// Disable all feedbacks
 		for (const entity of list.getAllEntities()) {
@@ -1274,7 +1311,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('basic boolean values', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		const entity = list.findById('02')
 		expect(entity).not.toBeUndefined()
@@ -1288,7 +1325,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('advanced value values', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('internal', { int0: 'abc' })
+		list.updateFeedbackValues('internal', translateFeedbackValues({ int0: 'abc' }))
 
 		const entity = list.findById('int0')
 		expect(entity).not.toBeUndefined()
@@ -1329,7 +1366,7 @@ describe('getBooleanFeedbackValue', () => {
 	test('all disabled', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		// Disable all feedbacks
 		for (const entity of list.getAllEntities()) {
@@ -1347,13 +1384,13 @@ describe('getBooleanFeedbackValue', () => {
 		list.findById('int0')?.setEnabled(false)
 
 		// set some values
-		list.updateFeedbackValues('conn01', { '01': true })
+		list.updateFeedbackValues('conn01', translateFeedbackValues({ '01': true }))
 
 		// check still false
 		expect(list.getBooleanFeedbackValue()).toBe(false)
 
 		// set final value
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 		expect(list.getBooleanFeedbackValue()).toBe(true)
 	})
 })
@@ -1380,7 +1417,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('all disabled', () => {
 		list.loadStorage(structuredClone(FeedbackTree), true, false)
 		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', { '02': true })
+		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
 		// Disable all feedbacks
 		for (const entity of list.getAllEntities()) {
@@ -1402,7 +1439,7 @@ describe('updateFeedbackValues', () => {
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		expect(list.updateFeedbackValues('internal', {})).toHaveLength(0)
+		expect(list.updateFeedbackValues('internal', new Map())).toHaveLength(0)
 	})
 
 	test('try set value for action', () => {
@@ -1416,9 +1453,12 @@ describe('updateFeedbackValues', () => {
 		expect(list.getAllEntities()).toHaveLength(6)
 
 		expect(
-			list.updateFeedbackValues('internal', {
-				int0: 'abc',
-			})
+			list.updateFeedbackValues(
+				'internal',
+				translateFeedbackValues({
+					int0: 'abc',
+				})
+			)
 		).toHaveLength(0)
 
 		// Ensure value is still undefined
@@ -1440,9 +1480,12 @@ describe('updateFeedbackValues', () => {
 		const entity = list.findById('int2')
 
 		expect(
-			list.updateFeedbackValues('conn04', {
-				int2: 'abc',
-			})
+			list.updateFeedbackValues(
+				'conn04',
+				translateFeedbackValues({
+					int2: 'abc',
+				})
+			)
 		).toEqual([entity])
 
 		// Ensure value is reflected
@@ -1461,16 +1504,10 @@ describe('updateFeedbackValues', () => {
 		expect(list.getAllEntities()).toHaveLength(6)
 
 		// Set once
-		list.updateFeedbackValues('conn04', {
-			int2: 'abc',
-		})
+		list.updateFeedbackValues('conn04', translateFeedbackValues({ int2: 'abc' }))
 
 		// Try again
-		expect(
-			list.updateFeedbackValues('conn04', {
-				int2: 'abc',
-			})
-		).toHaveLength(0)
+		expect(list.updateFeedbackValues('conn04', translateFeedbackValues({ int2: 'abc' }))).toHaveLength(0)
 
 		// Ensure value is reflected
 		const entity = list.findById('int2')
@@ -1518,3 +1555,281 @@ describe('getAllEnabledConnectionIds', () => {
 		expect(connectionIds).toHaveLength(0)
 	})
 })
+
+describe('updateIsInvertedValues', () => {
+	test('update value for feedback', () => {
+		const { list, getEntityDefinition } = createList('test01')
+
+		// Mock definitions to allow inversion
+		getEntityDefinition.mockImplementation((...args) => {
+			const def = FeedbackTreeEntityDefinitions(...args)
+			if (def) {
+				return { ...def, showInvert: true }
+			}
+			return undefined
+		})
+
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
+
+		// Setup initial value
+		const feedbackValues = translateFeedbackValues({
+			'01': true,
+		})
+		list.updateFeedbackValues('conn01', feedbackValues)
+
+		const entity = list.findById('01')
+		expect(entity).toBeTruthy()
+
+		// Initial state
+		expect(entity!.getBooleanFeedbackValue()).toBe(true)
+
+		// Invert
+		const invertValues = translateIsInvertedValues({
+			'01': true,
+		})
+		const changed = list.updateIsInvertedValues(invertValues)
+
+		expect(changed).toHaveLength(1)
+		expect(changed[0]).toBe(entity)
+
+		// Should be inverted now
+		expect(entity!.getBooleanFeedbackValue()).toBe(false)
+
+		// Un-invert
+		const unInvertValues = translateIsInvertedValues({
+			'01': false,
+		})
+		const changed2 = list.updateIsInvertedValues(unInvertValues)
+
+		expect(changed2).toHaveLength(1)
+		expect(entity!.getBooleanFeedbackValue()).toBe(true)
+	})
+
+	test('update value unchanged', () => {
+		const { list, getEntityDefinition } = createList('test01')
+
+		// Mock definitions to allow inversion
+		getEntityDefinition.mockImplementation((...args) => {
+			const def = FeedbackTreeEntityDefinitions(...args)
+			if (def) {
+				return { ...def, showInvert: true }
+			}
+			return undefined
+		})
+
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
+
+		// Setup initial value
+		const feedbackValues = translateFeedbackValues({
+			'01': true,
+		})
+		list.updateFeedbackValues('conn01', feedbackValues)
+
+		const values = translateIsInvertedValues({
+			'01': true,
+		})
+
+		// First update
+		list.updateIsInvertedValues(values)
+
+		// Second update (unchanged)
+		const changed = list.updateIsInvertedValues(values)
+
+		expect(changed).toHaveLength(0)
+
+		// Ensure value remains
+		const entity = list.findById('01')
+		expect(entity!.getBooleanFeedbackValue()).toBe(false)
+	})
+
+	test('update value for nested feedback', () => {
+		const { list, getEntityDefinition } = createList('test01')
+
+		// Mock definitions to allow inversion
+		getEntityDefinition.mockImplementation((...args) => {
+			const def = FeedbackTreeEntityDefinitions(...args)
+			if (def) {
+				return { ...def, showInvert: true }
+			}
+			return undefined
+		})
+
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
+
+		const entity = list.findById('int1')
+		expect(entity).toBeTruthy()
+
+		// Setup initial value
+		// int1 is internal, but logic feedbacks might behave differently.
+		// Assuming int1 is a normal feedback in this mock tree logic
+		list.updateFeedbackValues('internal', translateFeedbackValues({ int1: true }))
+
+		expect(entity!.getBooleanFeedbackValue()).toBe(true)
+
+		const values = translateIsInvertedValues({
+			int1: true,
+		})
+		const changed = list.updateIsInvertedValues(values)
+
+		expect(changed).toHaveLength(1)
+		expect(changed[0]).toBe(entity)
+
+		expect(entity!.getBooleanFeedbackValue()).toBe(false)
+	})
+
+	test('update multiple values', () => {
+		const { list, getEntityDefinition } = createList('test01')
+
+		// Mock definitions to allow inversion
+		getEntityDefinition.mockImplementation((...args) => {
+			const def = FeedbackTreeEntityDefinitions(...args)
+			if (def) {
+				return { ...def, showInvert: true }
+			}
+			return undefined
+		})
+
+		list.loadStorage(structuredClone(FeedbackTree), true, false)
+
+		// Setup initial values
+		list.updateFeedbackValues('conn01', translateFeedbackValues({ '01': true }))
+		list.updateFeedbackValues('internal', translateFeedbackValues({ int1: true }))
+
+		const entity1 = list.findById('01')
+		const entity2 = list.findById('int1')
+
+		const values = translateIsInvertedValues({
+			'01': true,
+			int1: true,
+		})
+
+		const changed = list.updateIsInvertedValues(values)
+
+		expect(changed).toHaveLength(2)
+		expect(changed).toContain(entity1)
+		expect(changed).toContain(entity2)
+
+		expect(entity1!.getBooleanFeedbackValue()).toBe(false)
+		expect(entity2!.getBooleanFeedbackValue()).toBe(false)
+	})
+
+	test('lifecycle tracks inverted', () => {
+		const { list, isInvertedManager, getEntityDefinition } = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Boolean,
+		})
+
+		getEntityDefinition.mockImplementation((...args) => {
+			const def = FeedbackTreeEntityDefinitions(...args)
+			if (def) {
+				return { ...def, showInvert: true }
+			}
+			return undefined
+		})
+
+		const newFeedback: FeedbackEntityModel = {
+			id: 'new01',
+			type: EntityModelType.Feedback,
+			connectionId: 'my-conn99',
+			definitionId: 'def01', // def01 is boolean in FeedbackTreeEntityDefinitions
+			options: {
+				test: { isExpression: false, value: 123 },
+			},
+			upgradeIndex: undefined,
+		}
+
+		// loadStorage calls subscribe(true) if skipSubscribe is false
+		list.loadStorage([newFeedback], false, false)
+
+		expect(isInvertedManager.trackEntity).toHaveBeenCalledTimes(1)
+
+		list.cleanup()
+		expect(isInvertedManager.forgetEntity).toHaveBeenCalledTimes(1)
+	})
+})
+
+describe('moveEntity', () => {
+	test('move down', () => {
+		const { list } = createList('test01')
+
+		// Setup simple list
+		list.loadStorage(
+			[
+				{ id: '1', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
+				{ id: '2', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
+				{ id: '3', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
+			],
+			true,
+			false
+		)
+
+		list.moveEntity(0, 2)
+
+		const ids = list.getAllEntities().map((e) => e.id)
+		expect(ids).toEqual(['2', '1', '3'])
+	})
+
+	test('move up', () => {
+		const { list } = createList('test01')
+
+		// Setup simple list
+		list.loadStorage(
+			[
+				{ id: '1', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
+				{ id: '2', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
+				{ id: '3', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
+			],
+			true,
+			false
+		)
+
+		list.moveEntity(2, 0)
+
+		const ids = list.getAllEntities().map((e) => e.id)
+		expect(ids).toEqual(['3', '1', '2'])
+	})
+
+	test('move out of bounds', () => {
+		const { list } = createList('test01')
+		list.loadStorage(
+			[
+				{ id: '1', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
+				{ id: '2', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
+			],
+			true,
+			false
+		)
+
+		// Move 5 to 0 (invalid old index) -> clamped to 2 (length).
+		list.moveEntity(5, 0)
+		expect(list.getAllEntities().map((e) => e.id)).toEqual(['1', '2'])
+
+		// Move 0 to 5 -> clamped to 2.
+		list.moveEntity(0, 5)
+		expect(list.getAllEntities().map((e) => e.id)).toEqual(['2', '1'])
+	})
+})
+
+function translateIsInvertedValues(oldValues: Record<string, boolean>): Map<string, NewIsInvertedValue> {
+	const map = new Map<string, NewIsInvertedValue>()
+	for (const [entityId, isInverted] of Object.entries(oldValues)) {
+		map.set(entityId, {
+			entityId,
+			controlId: '',
+			isInverted,
+		})
+	}
+	return map
+}
+
+function translateFeedbackValues(oldValues: Record<string, any>): Map<string, NewFeedbackValue> {
+	const map = new Map<string, NewFeedbackValue>()
+	for (const [entityId, value] of Object.entries(oldValues)) {
+		map.set(entityId, {
+			entityId,
+			controlId: '',
+			value,
+		})
+	}
+	return map
+}

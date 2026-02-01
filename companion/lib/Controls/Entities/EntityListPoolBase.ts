@@ -12,13 +12,17 @@ import { ControlEntityList, type ControlEntityListDefinition } from './EntityLis
 import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import isEqual from 'fast-deep-equal'
-import type { InstanceDefinitionsForEntity } from './Types.js'
+import type { InstanceDefinitionsForEntity, NewFeedbackValue, NewIsInvertedValue } from './Types.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { JsonValue } from 'type-fest'
+import { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
+import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type { IPageStore } from '../../Page/Store.js'
 
 export interface ControlEntityListChangeProps {
 	/** If true, do not save changes to the database/disk */
@@ -35,6 +39,7 @@ export interface ControlEntityListPoolProps {
 	internalModule: InternalController
 	processManager: InstanceProcessManager
 	variableValues: VariablesValues
+	pageStore: IPageStore
 	controlId: string
 	reportChange: (options: ControlEntityListChangeProps) => void
 }
@@ -50,6 +55,8 @@ export abstract class ControlEntityListPoolBase {
 	readonly #processManager: InstanceProcessManager
 	readonly #variableValues: VariablesValues
 	readonly #isLayeredDrawing: boolean
+	readonly #isInvertedManager: EntityPoolIsInvertedManager
+	readonly #pageStore: IPageStore
 
 	protected readonly controlId: string
 
@@ -69,6 +76,13 @@ export abstract class ControlEntityListPoolBase {
 		this.#processManager = props.processManager
 		this.#variableValues = props.variableValues
 		this.#isLayeredDrawing = isLayeredDrawing
+		this.#pageStore = props.pageStore
+
+		this.#isInvertedManager = new EntityPoolIsInvertedManager(
+			props.controlId,
+			this.createVariablesAndExpressionParser.bind(this),
+			this.updateIsInvertedValues.bind(this)
+		)
 	}
 
 	protected createEntityList(listDefinition: ControlEntityListDefinition): ControlEntityList {
@@ -76,6 +90,7 @@ export abstract class ControlEntityListPoolBase {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
+			this.#isInvertedManager,
 			this.controlId,
 			null,
 			listDefinition
@@ -131,11 +146,24 @@ export abstract class ControlEntityListPoolBase {
 			})
 	}
 
+	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+		const controlLocation = this.#pageStore.getLocationOfControlId(this.controlId)
+		const variableEntities = this.getLocalVariableEntities()
+
+		return this.#variableValues.createVariablesAndExpressionParser(
+			controlLocation,
+			variableEntities,
+			overrideVariableValues
+		)
+	}
+
 	/**
 	 * Prepare this control for deletion
 	 * @access public
 	 */
 	destroy(): void {
+		this.#isInvertedManager.destroy()
+
 		for (const list of this.getAllEntityLists()) {
 			list.cleanup()
 		}
@@ -518,8 +546,12 @@ export abstract class ControlEntityListPoolBase {
 	 * @param key the key/name of the property
 	 * @param value the new value
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	entrySetOptions(listId: SomeSocketEntityLocation, id: string, key: string, value: any): boolean {
+	entitySetOption(
+		listId: SomeSocketEntityLocation,
+		id: string,
+		key: string,
+		value: ExpressionOrValue<JsonValue | undefined>
+	): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 
@@ -564,14 +596,14 @@ export abstract class ControlEntityListPoolBase {
 	 * @param id the id of the entity
 	 * @param isInverted the new value
 	 */
-	entitySetInverted(listId: SomeSocketEntityLocation, id: string, isInverted: boolean): boolean {
+	entitySetInverted(listId: SomeSocketEntityLocation, id: string, isInverted: ExpressionOrValue<boolean>): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 
 		const entity = entityList.findById(id)
 		if (!entity) return false
 
-		entity.setInverted(!!isInverted)
+		entity.setInverted(isInverted)
 
 		this.tryTriggerLocalVariablesChanged(entity)
 
@@ -597,7 +629,7 @@ export abstract class ControlEntityListPoolBase {
 		if (!entity) return false
 
 		// Make sure the new name is valid
-		if (!isLabelValid(name)) {
+		if (name !== '' && !isLabelValid(name)) {
 			// throw new Error(`Invalid local variable name "${name}"`)
 			return false
 		}
@@ -619,8 +651,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @param id The id of the entity
 	 * @param value The new value for the variable
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: any): boolean {
+	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: JsonValue | undefined): boolean {
 		const entityList = this.getEntityList(listId)
 		if (!entityList) return false
 
@@ -728,11 +759,17 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Update the feedbacks on the button with new values
+	 * Update the feedbacks on the control with new values
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	abstract updateFeedbackValues(connectionId: string, newValues: Record<string, any>): void
+	abstract updateFeedbackValues(connectionId: string, newValues: ReadonlyMap<string, NewFeedbackValue>): void
+
+	/**
+	 * Update the isInverted values on the control with new calculated isInverted values
+	 * @param newValues The new isInverted values
+	 */
+	protected abstract updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): void
 
 	/**
 	 * Get all the connectionIds for entities which are active
@@ -745,5 +782,13 @@ export abstract class ControlEntityListPoolBase {
 		}
 
 		return connectionIds
+	}
+
+	/**
+	 * Propagate variable changes
+	 * @param changedVariables - variables with changes
+	 */
+	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
+		this.#isInvertedManager.onVariablesChanged(changedVariables)
 	}
 }

@@ -3,25 +3,30 @@ import LogController, { type Logger } from '../../../../Log/Controller.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
+import type { CompanionOptionValues } from '@companion-module/host'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 interface IntervalEvent {
 	id: string
 	period: number
+	minperiod?: number
+	maxperiod?: number
 	lastExecute: number
 }
 interface TimeOfDayEvent {
 	id: string
-	time: Record<string, any>
+	time: CompanionOptionValues
 	nextExecute: number | null
 }
 interface SpecificDateEvent {
 	id: string
-	date: Record<string, any>
+	date: CompanionOptionValues
 	nextExecute: number | null
 }
 interface SunEvent {
 	id: string
-	params: Record<string, any>
+	params: CompanionOptionValues
 	nextExecute: number
 }
 
@@ -119,26 +124,65 @@ export class TriggersEventTimer {
 	}
 
 	/**
+	 * Format a duration in seconds to a human-readable string
+	 * @param seconds Duration in seconds
+	 * @returns Formatted string like "1:30:00 hours" or "45 seconds"
+	 */
+	formatSeconds(seconds: number): string {
+		// this is somewhat simplified and modified from Utils.ts `msToStamp``
+		// (note that dayjs isn't a great option for simple durations, so we hand code it)
+		const hours = Math.floor(seconds / 3600)
+		const minutes = Math.floor(seconds / 60) % 60
+		seconds = Math.ceil(seconds) % 60 // note: ceil is correct only for the current 1-sec time-resolution
+
+		const pad2 = (val: number) => String(val).padStart(2, '0')
+		if (hours > 0) {
+			return `${hours}:${pad2(minutes)}:${pad2(seconds)} hour${hours + minutes + seconds === 1 ? 's' : ''}`
+		} else if (minutes > 0) {
+			return `${minutes}:${pad2(seconds)} minute${minutes + seconds === 1 ? 's' : ''}`
+		} else {
+			return `${seconds} second${seconds === 1 ? '' : 's'}`
+		}
+	}
+
+	/**
 	 * Get a description for an interval event
 	 */
 	getIntervalDescription(event: EventInstance): string {
 		const seconds = Number(event.options.seconds)
+		const time = this.formatSeconds(seconds)
 
-		let time = `${seconds} seconds`
-		if (seconds >= 3600) {
-			time = `${Math.floor(seconds / 3600)} hours`
-		} else if (seconds >= 60) {
-			time = `${Math.floor(seconds / 60)} minutes`
+		if (seconds <= 0) {
+			// setInterval() requires period > 0
+			return 'Never: interval must be greater than 0'
+		} else {
+			return `Every <strong>${time}</strong>`
 		}
+	}
 
-		return `Every <strong>${time}</strong>`
+	/**
+	 * Get a description for an interval event
+	 */
+	getRandomIntervalDescription(event: EventInstance): string {
+		// show the actual interval, not what the user typed.
+		const iMin = Math.ceil(Number(event.options.minimum))
+		const iMax = Math.floor(Number(event.options.maximum))
+
+		if (iMax < iMin) {
+			// If illegal range, never trigger
+			return 'Never (maximum is less than minimum interval)'
+		} else if (iMin <= 0) {
+			return 'Never (minimum interval is zero or less)'
+		} else {
+			return `Every <strong>${this.formatSeconds(iMin)} - ${this.formatSeconds(iMax)}</strong>`
+		}
 	}
 
 	/**
 	 * Calculate the next unix time that an timeofday event should execute at
 	 * @param time - time details for timeofday event
 	 */
-	#getNextTODExecuteTime(time: Record<string, any>): number | null {
+	#getNextTODExecuteTime(time: CompanionOptionValues): number | null {
 		if (typeof time.time !== 'string' || !Array.isArray(time.days) || !time.days.length) return null
 
 		const timeMatch = time.time.match(/^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/i)
@@ -161,7 +205,11 @@ export class TriggersEventTimer {
 		if (!parsedDays.includes(currentDay)) {
 			let nextDay = null
 
-			const futureDays = time.days.filter((d) => d > currentDay)
+			const futureDays = time.days.filter((d): d is number => {
+				const n = Number(d)
+				return !isNaN(n) && n > currentDay
+			})
+
 			if (futureDays.length > 0) {
 				// find the first day in the remainder of the week
 				nextDay = futureDays.reduce((first, cand) => Math.min(first, cand), futureDays[0])
@@ -185,8 +233,8 @@ export class TriggersEventTimer {
 	 */
 	getTimeOfDayDescription(event: EventInstance): string {
 		let day_str = 'Unknown'
-		if (event.options.days) {
-			const days = [...event.options.days].sort()
+		if (event.options.days && Array.isArray(event.options.days)) {
+			const days = [...event.options.days].map(Number).filter(isNaN).sort()
 			const days_tmp = days.toString()
 
 			if (days.length === 7) {
@@ -197,22 +245,22 @@ export class TriggersEventTimer {
 				day_str = 'Weekends'
 			} else {
 				try {
-					day_str = days.map((d) => dayjs().day(d).format('ddd')).join(', ')
+					day_str = days.map((d) => dayjs().day(Number(d)).format('ddd')).join(', ')
 				} catch (_e) {
 					day_str = 'Error'
 				}
 			}
 		}
 
-		return `<strong>${day_str}</strong>, ${event.options.time}`
+		return `<strong>${day_str}</strong>, ${stringifyVariableValue(event.options.time) ?? 'Unknown'}`
 	}
 
 	/**
 	 * Get a description for a time of day event
 	 */
 	getSpecificDateDescription(event: EventInstance): string {
-		const date_str = event.options.date ? dayjs(event.options.date).format('YYYY-MM-DD') : 'Unknown'
-		const time_str = event.options.time ? event.options.time : 'Unknown'
+		const date_str = event.options.date ? dayjs(event.options.date as string | number).format('YYYY-MM-DD') : 'Unknown'
+		const time_str = event.options.time ? stringifyVariableValue(event.options.time) : 'Unknown'
 
 		return `<strong>Once</strong>, on ${date_str} at ${time_str}`
 	}
@@ -221,10 +269,12 @@ export class TriggersEventTimer {
 	 * Calculate the next unix time that an specificDate event should execute at
 	 * @param date - date details for specificDate event
 	 */
-	#getSpecificDateExecuteTime(date: Record<string, any>): number | null {
+	#getSpecificDateExecuteTime(date: CompanionOptionValues): number | null {
 		if (typeof date !== 'object' || !date.date || !date.time) return null
 
-		const res = new Date(dayjs(date.date).format('YYYY-MM-DD') + 'T' + date.time)
+		const res = new Date(
+			dayjs(date.date as string | number).format('YYYY-MM-DD') + 'T' + (date.time as string | number)
+		)
 
 		// if specific date is in the past, ignore
 		const now = new Date()
@@ -236,10 +286,10 @@ export class TriggersEventTimer {
 	 * Calculate the next unix time that an sunrise or set event should execute at
 	 */
 
-	#getNextSunExecuteTime(input: Record<string, any>): number {
-		const latitude = input.latitude
-		const longitude = input.longitude
-		const offset = input.offset
+	#getNextSunExecuteTime(input: CompanionOptionValues): number {
+		const latitude = Number(input.latitude)
+		const longitude = Number(input.longitude)
+		const offset = Number(input.offset)
 
 		// convert 0 or 1 to sunrise or sunset
 		const sunset = input.type == 'sunset'
@@ -360,7 +410,27 @@ export class TriggersEventTimer {
 		} else {
 			type_str = 'Error'
 		}
-		return `At <strong>${type_str}</strong>, ${event.options.offset} min offset`
+		return `At <strong>${type_str}</strong>, ${Number(event.options.offset)} min offset`
+	}
+
+	/**
+	 * Calculate a new random interval if both min & max period were specified.
+	 * Otherwise, do nothing.
+	 * For now, limit intervals to integers. Note that the endpoints are inclusive, but strict (if not integers)
+	 * @param interval The interval object to update
+	 */
+	#calcRandomPeriod(interval: IntervalEvent) {
+		if (interval.maxperiod !== undefined && interval.minperiod !== undefined) {
+			const iMin = Math.ceil(interval.minperiod)
+			const iMax = Math.floor(interval.maxperiod)
+			if (iMax < iMin || iMin <= 0 || isNaN(iMin) || isNaN(iMax)) {
+				// If illegal range, never trigger (and don't make period NaN, although the text-input fields may prevent it from happening)
+				interval.period = Infinity
+				return
+			}
+			const newPeriod = iMin + Math.floor(Math.random() * (iMax - iMin + 1))
+			interval.period = newPeriod
+		}
 	}
 
 	/**
@@ -376,6 +446,8 @@ export class TriggersEventTimer {
 			if (interval.lastExecute + interval.period <= tickSeconds) {
 				execute = true
 				interval.lastExecute = tickSeconds
+				// calculate next period if this is a random interval
+				this.#calcRandomPeriod(interval)
 			}
 		}
 
@@ -391,7 +463,7 @@ export class TriggersEventTimer {
 			// check if this date should cause an execution
 			if (date.nextExecute && date.nextExecute <= nowTime) {
 				execute = true
-				date.nextExecute = this.#getSpecificDateExecuteTime(date)
+				date.nextExecute = this.#getSpecificDateExecuteTime(date.date)
 			}
 		}
 
@@ -407,8 +479,8 @@ export class TriggersEventTimer {
 			setImmediate(() => {
 				try {
 					this.#executeActions(nowTime, TriggerExecutionSource.Other)
-				} catch (e: any) {
-					this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
+				} catch (e) {
+					this.#logger.warn(`Execute actions failed: ${stringifyError(e)}`)
 				}
 			})
 		}
@@ -424,6 +496,8 @@ export class TriggersEventTimer {
 			// Reset all the intervals, to be based from the next tick
 			for (const interval of this.#intervalEvents) {
 				interval.lastExecute = this.#lastTick + 1
+				// calculate next period if this is a random interval
+				this.#calcRandomPeriod(interval)
 			}
 		}
 
@@ -433,17 +507,22 @@ export class TriggersEventTimer {
 	/**
 	 * Add an interval event listener
 	 * @param id Id of the event
-	 * @param period Time interval of the trigger (in seconds)
+	 * @param period Time interval of the trigger (in seconds). This is the minimum period.
+	 * @param maxperiod for the time interval, if using random intervals (in seconds)
 	 */
-	setInterval(id: string, period: number): void {
+	setInterval(id: string, period: number, maxperiod?: number): void {
 		this.clearInterval(id)
 
 		if (period && period > 0) {
-			this.#intervalEvents.push({
+			const idx = this.#intervalEvents.push({
 				id,
 				period,
+				minperiod: period,
+				maxperiod,
 				lastExecute: this.#lastTick + 1,
 			})
+			// update the period if this is a random interval:
+			this.#calcRandomPeriod(this.#intervalEvents[idx - 1])
 		}
 	}
 
@@ -457,7 +536,7 @@ export class TriggersEventTimer {
 	/**
 	 * Add a timeofday event listener
 	 */
-	setTimeOfDay(id: string, time: Record<string, any>): void {
+	setTimeOfDay(id: string, time: CompanionOptionValues): void {
 		this.clearTimeOfDay(id)
 
 		this.#timeOfDayEvents.push({
@@ -478,7 +557,7 @@ export class TriggersEventTimer {
 	/**
 	 * Add a specificDate event listener
 	 */
-	setSpecificDate(id: string, date: Record<string, any>): void {
+	setSpecificDate(id: string, date: CompanionOptionValues): void {
 		this.clearSpecificDate(id)
 
 		this.#specificDateEvents.push({
@@ -499,7 +578,7 @@ export class TriggersEventTimer {
 	/**
 	 * Add a sun event listener
 	 */
-	setSun(id: string, params: Record<string, any>): void {
+	setSun(id: string, params: CompanionOptionValues): void {
 		this.clearSun(id)
 
 		this.#sunEvents.push({

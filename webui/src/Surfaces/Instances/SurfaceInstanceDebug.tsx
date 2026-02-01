@@ -4,7 +4,7 @@ import { trpc, useMutationExt } from '../../Resources/TRPC'
 import { InstanceDebugLog } from '../../Instances/DebugLog'
 
 export function SurfaceInstanceDebug(): React.JSX.Element {
-	const { instanceId } = useParams({ from: '/surfaces/debug/$instanceId' })
+	const { instanceId } = useParams({ from: '/_standalone/surfaces/debug/$instanceId' })
 
 	const setEnabledMutation = useMutationExt(trpc.instances.surfaces.setEnabled.mutationOptions())
 

@@ -1,14 +1,13 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { ServiceHttpApi } from '../../lib/Service/HttpApi'
+import { ServiceHttpApi } from '../../lib/Service/HttpApi.js'
 import express from 'express'
 import supertest from 'supertest'
 import Express from 'express'
-import { rgb } from '../../lib/Resources/Util'
-import type { UIExpress } from '../../lib/UI/Express'
-import type { ControlEntityListPoolButton } from '../../lib/Controls/Entities/EntityListPoolButton'
-import type { DataUserConfig } from '../../lib/Data/UserConfig'
-import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi'
+import { rgb } from '../../lib/Resources/Util.js'
+import type { UIExpress } from '../../lib/UI/Express.js'
+import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {

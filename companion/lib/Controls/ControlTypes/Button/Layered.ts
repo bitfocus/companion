@@ -24,7 +24,7 @@ import type {
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
@@ -39,6 +39,7 @@ import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElement
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
+import type { JsonValue } from 'type-fest'
 
 /**
  * Class for the button control with layer based rendering.
@@ -475,8 +476,7 @@ export class ControlButtonLayered
 		return true
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	layeredStyleUpdateOptionValue(id: string, key: string, value: any): boolean {
+	layeredStyleUpdateOptionValue(id: string, key: string, value: JsonValue | undefined): boolean {
 		// Ignore some fixed properties
 		if (key === 'id' || key === 'type' || key === 'name') return false
 
@@ -487,7 +487,7 @@ export class ControlButtonLayered
 		const { element } = currentElementLocation
 
 		// Fetch the property wrapper
-		const elementEntry = (element as any)[key] as ExpressionOrValue<any>
+		const elementEntry = (element as any)[key] as ExpressionOrValue<JsonValue | undefined>
 		if (!elementEntry) return false
 
 		// Update the value
@@ -516,7 +516,7 @@ export class ControlButtonLayered
 		const { element } = currentElementLocation
 
 		// Fetch the property wrapper
-		const elementEntry = (element as any)[key] as ExpressionOrValue<any>
+		const elementEntry = (element as any)[key] as ExpressionOrValue<JsonValue | undefined>
 		if (!elementEntry) return false
 
 		if (!elementEntry.isExpression && value) {
@@ -671,7 +671,7 @@ export class ControlButtonLayered
 	 * Propagate variable changes
 	 * @param allChangedVariables - variables with changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void {
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
 		if (!this.#lastDrawVariables) return
 		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 

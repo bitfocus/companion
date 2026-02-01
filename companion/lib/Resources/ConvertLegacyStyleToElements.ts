@@ -12,7 +12,7 @@ import {
 	type ButtonGraphicsTextElement,
 	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,

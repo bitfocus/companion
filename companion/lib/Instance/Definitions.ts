@@ -36,9 +36,9 @@ import {
 	CreateAdvancedFeedbackStyleOverrides,
 	ParseLegacyStyle,
 } from '../Resources/ConvertLegacyStyleToElements.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import type { Complete } from '@companion-module/base/dist/util.js'
-import { isExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { exprVal, type ExpressionOrValue, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { Complete } from '@companion-module/base'
 
 export interface CompositeElementDefinition {
 	id: string
@@ -202,7 +202,13 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		if (definition.options !== undefined && definition.options.length > 0) {
 			for (const opt of definition.options) {
-				entity.options[opt.id] = structuredClone((opt as any).default)
+				if (opt.type === 'static-text') continue
+
+				const defaultValue = structuredClone((opt as any).default)
+				entity.options[opt.id] = {
+					isExpression: false,
+					value: defaultValue,
+				} satisfies ExpressionOrValue<any>
 			}
 		}
 
@@ -217,7 +223,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				const feedback: FeedbackEntityModel = {
 					...entity,
 					type: EntityModelType.Feedback,
-					isInverted: false,
+					isInverted: exprVal(false),
 					styleOverrides: [],
 				}
 
@@ -256,8 +262,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			}
 
 			for (const opt of definition.options) {
-				// @ts-expect-error mismatch in key type
-				event.options[opt.id] = structuredClone(opt.default)
+				event.options[opt.id] = structuredClone((opt as any).default)
 			}
 
 			return event
@@ -387,7 +392,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastActionDefinitions = this.#actionDefinitions[connectionId]
-		this.#actionDefinitions[connectionId] = structuredClone(actionDefinitions)
+		this.#actionDefinitions[connectionId] = actionDefinitions
 
 		if (this.#events.listenerCount('actions') > 0) {
 			if (!lastActionDefinitions) {
@@ -416,7 +421,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, ClientEntityDefinition>): void {
 		const lastFeedbackDefinitions = this.#feedbackDefinitions[connectionId]
-		this.#feedbackDefinitions[connectionId] = structuredClone(feedbackDefinitions)
+		this.#feedbackDefinitions[connectionId] = feedbackDefinitions
 
 		if (this.#events.listenerCount('feedbacks') > 0) {
 			if (!lastFeedbackDefinitions) {
@@ -455,11 +460,16 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		this.#updateVariablePrefixesAndStoreDefinitions(connectionId, config.label, newPresets)
 	}
 
-	setCompositeElementDefinitions(connectionId: string, definitions: Record<string, CompositeElementDefinition>): void {
+	setCompositeElementDefinitions(connectionId: string, rawDefinitions: CompositeElementDefinition[]): void {
 		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!config) return
 
-		this.#updateVariablePrefixesAndStoreCompositeElements(connectionId, config.label, definitions)
+		const newDefinitions: Record<string, CompositeElementDefinition> = {}
+		for (const rawDefinition of rawDefinitions) {
+			newDefinitions[rawDefinition.id] = rawDefinition
+		}
+
+		this.#updateVariablePrefixesAndStoreCompositeElements(connectionId, config.label, newDefinitions)
 	}
 
 	/**

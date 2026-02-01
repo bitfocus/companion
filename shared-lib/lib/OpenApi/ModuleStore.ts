@@ -44,6 +44,26 @@ export interface paths {
 		patch?: never
 		trace?: never
 	}
+	'/v1/website/connections/featured': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get a list of featured connections
+		 * @description Get a list of featured connections
+		 */
+		get: operations['getWebsiteFeaturedConnections']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
 	'/v1/companion/modules/{moduleType}': {
 		parameters: {
 			query?: never
@@ -264,6 +284,44 @@ export interface components {
 			}[]
 			/** @description Url to the module help markdown. This may reference other assets in the same folder */
 			helpUrl?: string
+			/** @description Blurb for the connection */
+			blulb?: string | null
+			/** @description Url to the company logo */
+			companyLogo?: string | null
+			/**
+			 * @description The type of connection
+			 * @enum {string}
+			 */
+			connectionType: 'COMMUNITY' | 'VENDOR' | 'VERIFIED' | 'PRO' | 'ELITE'
+			/** @description Whether the connection is featured */
+			isFeatured: boolean
+			images: {
+				url: string
+				/** @enum {string} */
+				type: 'PRODUCT' | 'ACTION'
+			}[]
+			trainingVideos: {
+				url: string
+				title?: string | null
+			}[]
+			categories: {
+				id: string
+				name: string
+			}[]
+		}
+		WebsiteFeaturedConnectionInfo: components['schemas']['WebsiteConnectionInfo'] & {
+			/** @description The order in which the connection is featured */
+			featuredOrder: number
+			/**
+			 * Format: date-time
+			 * @description When the connection was featured
+			 */
+			featuredAt?: string | null
+			/**
+			 * Format: date-time
+			 * @description When the connection feature expires
+			 */
+			featuredExpiry?: string | null
 		}
 	}
 	responses: never
@@ -327,11 +385,33 @@ export interface operations {
 			}
 		}
 	}
+	getWebsiteFeaturedConnections: {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						connections: components['schemas']['WebsiteFeaturedConnectionInfo'][]
+					}
+				}
+			}
+		}
+	}
 	getCompanionModules: {
 		parameters: {
 			query?: {
 				/** @description Limit versions included in results to those compatible with the given API version */
-				'module-api-version'?: string
+				'module-api-version'?: string[]
 			}
 			header?: never
 			path: {

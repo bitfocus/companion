@@ -17,6 +17,7 @@ import {
 	type LineStyle,
 	type TextLayoutCache,
 } from '@companion-app/shared/Graphics/ImageBase.js'
+import { uint8ArrayToBuffer } from '../Resources/Util.js'
 
 export { LineStyle }
 
@@ -136,7 +137,7 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	 * @returns RGBA buffer of the pixels
 	 */
 	buffer(): Buffer {
-		const buffer = Buffer.from(this.#context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
+		const buffer = uint8ArrayToBuffer(this.#context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
 		return buffer
 	}
 

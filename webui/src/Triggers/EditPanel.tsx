@@ -13,9 +13,10 @@ import { useLocalVariablesStore } from '../Controls/LocalVariablesStore.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
-import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import type { JsonValue } from 'type-fest'
 
 interface EditTriggerPanelProps {
 	controlId: string
@@ -139,14 +140,14 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 
 interface TriggerConfigProps {
 	controlId: string
-	options: Record<string, any>
+	options: TriggerOptions
 }
 
 function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	const setValueInner = useCallback(
-		(key: string, value: any) => {
+		(key: string, value: JsonValue) => {
 			console.log('set', controlId, key, value)
 			setOptionsFieldMutation
 				.mutateAsync({
@@ -165,18 +166,15 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm onSubmit={PreventDefaultHandler}>
-				<CForm className="row flex-form">
-					<CCol xs={12}>
-						<CFormLabel>Name</CFormLabel>
-						<p>
-							<CInputGroup>
-								<TextInputField setValue={setName} value={options.name} />
-								<TestActionsButton controlId={controlId} hidden={!options} />
-							</CInputGroup>
-						</p>
-					</CCol>
-				</CForm>
+			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
+				<CCol xs={12}>
+					<CFormLabel>Name</CFormLabel>
+					<br />
+					<CInputGroup>
+						<TextInputField setValue={setName} value={options.name} />
+						<TestActionsButton controlId={controlId} hidden={!options} />
+					</CInputGroup>
+				</CCol>
 			</CForm>
 		</CCol>
 	)

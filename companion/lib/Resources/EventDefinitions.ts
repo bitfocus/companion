@@ -22,12 +22,35 @@ import type { InternalVisitor } from '../Internal/Types.js'
 
 export const EventDefinitions: Record<string, EventDefinition> = {
 	interval: {
-		name: 'Time Interval',
+		name: 'Time Interval: Fixed',
 		options: [
 			{
 				id: 'seconds',
 				type: 'number',
 				label: 'Interval (seconds)',
+				min: 1,
+				max: Number.MAX_SAFE_INTEGER,
+				default: 10,
+			},
+		],
+	},
+	intervalRandom: {
+		name: 'Time Interval: Random',
+		options: [
+			{
+				id: 'minimum',
+				type: 'number',
+				label: 'Minimum (seconds)',
+				tooltip: 'The shortest allowed interval, in seconds.',
+				min: 1,
+				max: Number.MAX_SAFE_INTEGER,
+				default: 3,
+			},
+			{
+				id: 'maximum',
+				type: 'number',
+				label: 'Maximum (seconds)',
+				tooltip: 'The longest allowed interval, in seconds.',
 				min: 1,
 				max: Number.MAX_SAFE_INTEGER,
 				default: 10,
@@ -145,8 +168,8 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 		name: 'On any button press',
 		options: [],
 	},
-	button_depress: {
-		name: 'On any button depress',
+	button_release: {
+		name: 'On any button release',
 		options: [],
 	},
 	condition_true: {

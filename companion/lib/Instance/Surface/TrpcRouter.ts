@@ -7,6 +7,8 @@ import type { InstanceController, InstanceControllerEvents } from '../Controller
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { Logger } from '../../Log/Controller.js'
 import type EventEmitter from 'events'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSurfacesTrpcRouter(
@@ -40,10 +42,29 @@ export function createSurfacesTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
+				const surfaceIds = configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface)
+				let existingCount = 0
+				for (const id of surfaceIds) {
+					const conf = configStore.getConfigOfTypeForId(id, ModuleInstanceType.Surface)
+					if (conf && conf.moduleId === input.moduleId) {
+						existingCount++
+					}
+				}
+
+				const moduleInfo = instanceController.modules.getModuleManifest(
+					ModuleInstanceType.Surface,
+					input.moduleId,
+					input.versionId
+				)
+				const allowMultiple =
+					moduleInfo?.manifest.type === 'surface' ? (moduleInfo.manifest.allowMultipleInstances ?? false) : false
+
+				const shouldBeDisabled = existingCount > 0 && !allowMultiple
+
 				const surfaceInfo = instanceController.addSurfaceInstanceWithLabel(input.moduleId, input.label, {
 					versionId: input.versionId,
 					updatePolicy: InstanceVersionUpdatePolicy.Stable,
-					disabled: false,
+					disabled: shouldBeDisabled,
 				})
 				return surfaceInfo[0]
 			}),
@@ -106,8 +127,8 @@ export function createSurfacesTrpcRouter(
 						secrets: instanceConf.secrets || {},
 					}
 					return result
-				} catch (e: any) {
-					logger.silly(`Failed to load surface config_fields: ${e.message}`)
+				} catch (e) {
+					logger.silly(`Failed to load surface config_fields: ${stringifyError(e)}`)
 					return null
 				}
 			}),
@@ -118,7 +139,7 @@ export function createSurfacesTrpcRouter(
 					instanceId: z.string(),
 					label: z.string(),
 					enabled: z.boolean().optional(),
-					config: z.record(z.string(), z.any()).optional(),
+					config: JsonObjectSchema.optional(),
 					updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
 				})
 			)

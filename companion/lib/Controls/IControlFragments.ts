@@ -5,6 +5,7 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
+import type { JsonObject, JsonValue } from 'type-fest'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &
@@ -86,12 +87,6 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * @returns true if any changes were made
 	 */
 	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean
-
-	/**
-	 * Propagate variable changes
-	 * @param allChangedVariables - variables with changes
-	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void
 
 	/**
 	 * Propagate composite element changes
@@ -183,7 +178,7 @@ export interface ControlWithEvents extends ControlBase<any> {
 	 * @param key the key/name of the property
 	 * @param value the new value
 	 */
-	eventSetOptions(id: string, key: string, value: any): boolean
+	eventSetOptions(id: string, key: string, value: JsonValue | undefined): boolean
 }
 
 export interface ControlWithoutEvents extends ControlBase<any> {
@@ -210,12 +205,12 @@ export interface ControlWithoutActionSets extends ControlBase<any> {
 export interface ControlWithOptions extends ControlBase<any> {
 	readonly supportsOptions: true
 
-	options: Record<string, any>
+	options: JsonObject
 
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: any, forceSet?: boolean): boolean
+	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean
 }
 
 export interface ControlWithoutOptions extends ControlBase<any> {

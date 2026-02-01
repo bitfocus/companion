@@ -35,6 +35,13 @@ export const trpcWsClient = createWSClient({
 	},
 })
 
+// Close the WebSocket connection when the page is unloading to prevent wasteful reconnection attempts
+window.addEventListener('beforeunload', () => {
+	trpcWsClient.close().catch((err) => {
+		console.error('Error closing TRPC WebSocket client on unload:', err)
+	})
+})
+
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		loggerLink(),

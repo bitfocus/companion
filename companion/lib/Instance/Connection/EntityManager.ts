@@ -11,9 +11,9 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { nanoid } from 'nanoid'
 import type { ControlsController } from '../../Controls/Controller.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { OptionsObject } from '@companion-module/base/dist/util.js'
+import type { CompanionOptionValues } from '@companion-module/base'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -38,12 +38,12 @@ interface EntityWrapper {
 export interface EntityManagerActionEntity {
 	controlId: string
 	entity: ActionEntityModel
-	parsedOptions: OptionsObject
+	parsedOptions: CompanionOptionValues
 }
 export interface EntityManagerFeedbackEntity {
 	controlId: string
 	entity: FeedbackEntityModel
-	parsedOptions: OptionsObject
+	parsedOptions: CompanionOptionValues
 }
 
 export interface EntityManagerAdapter {
@@ -51,12 +51,12 @@ export interface EntityManagerAdapter {
 	updateFeedbacks: (feedbacks: Map<string, EntityManagerFeedbackEntity | null>) => Promise<void>
 
 	upgradeActions: (
-		actions: EntityManagerActionEntity[],
+		actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[],
 		currentUpgradeIndex: number
 	) => Promise<ReplaceableActionEntityModel[]>
 
 	upgradeFeedbacks: (
-		feedbacks: EntityManagerFeedbackEntity[],
+		feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[],
 		currentUpgradeIndex: number
 	) => Promise<ReplaceableFeedbackEntityModel[]>
 }
@@ -90,8 +90,8 @@ export class ConnectionEntityManager {
 
 			let actionIdsInThisBatch = new Map<string, string>()
 			let feedbackIdsInThisBatch = new Map<string, string>()
-			let upgradeActions: EntityManagerActionEntity[] = []
-			let upgradeFeedbacks: EntityManagerFeedbackEntity[] = []
+			let upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[] = []
+			let upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[] = []
 
 			let updateActionsPayload = new Map<string, EntityManagerActionEntity | null>()
 			let updateFeedbacksPayload = new Map<string, EntityManagerFeedbackEntity | null>()
@@ -108,7 +108,6 @@ export class ConnectionEntityManager {
 						upgradeActions.push({
 							controlId: wrapper.controlId,
 							entity: entityModel,
-							parsedOptions: entityModel.options, // Unused, so keep unparsed
 						})
 						break
 					case EntityModelType.Feedback:
@@ -116,7 +115,6 @@ export class ConnectionEntityManager {
 						upgradeFeedbacks.push({
 							controlId: wrapper.controlId,
 							entity: entityModel,
-							parsedOptions: entityModel.options, // Unused, so keep unparsed
 						})
 						break
 					default:
@@ -167,28 +165,46 @@ export class ConnectionEntityManager {
 
 							const entityModel = entity.asEntityModel(false)
 
-							// Parse the options and track the variables referenced
-							const { parsedOptions, referencedVariableIds } = this.parseOptionsObject(
-								entityDefinition,
-								entityModel.options,
-								wrapper.controlId
-							)
-							wrapper.lastReferencedVariableIds = referencedVariableIds
+							let updateOptions: CompanionOptionValues | undefined
+							try {
+								// Parse the options and track the variables referenced
+								const parser = this.#controlsController.createVariablesAndExpressionParser(wrapper.controlId, null)
+								const { parsedOptions, referencedVariableIds } = parser.parseEntityOptions(
+									entityDefinition,
+									entityModel.options
+								)
+								updateOptions = parsedOptions
+								wrapper.lastReferencedVariableIds = referencedVariableIds
+							} catch (e) {
+								this.#logger.warn(
+									`Error parsing options for entity ${entity.id} in control ${wrapper.controlId}, marking as inactive: ${stringifyError(e, false)}`
+								)
+							}
 
 							switch (entityModel.type) {
 								case EntityModelType.Action:
-									updateActionsPayload.set(entityId, {
-										controlId: wrapper.controlId,
-										entity: entityModel,
-										parsedOptions,
-									})
+									updateActionsPayload.set(
+										entityId,
+										updateOptions
+											? {
+													controlId: wrapper.controlId,
+													entity: entityModel,
+													parsedOptions: updateOptions,
+												}
+											: null
+									)
 									break
 								case EntityModelType.Feedback: {
-									updateFeedbacksPayload.set(entityId, {
-										controlId: wrapper.controlId,
-										entity: entityModel,
-										parsedOptions,
-									})
+									updateFeedbacksPayload.set(
+										entityId,
+										updateOptions
+											? {
+													controlId: wrapper.controlId,
+													entity: entityModel,
+													parsedOptions: updateOptions,
+												}
+											: null
+									)
 									break
 								}
 								default:
@@ -285,7 +301,7 @@ export class ConnectionEntityManager {
 
 	#sendUpgradeActionsBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
-		upgradeActions: EntityManagerActionEntity[]
+		upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[]
 	): void {
 		this.#adapter
 			.upgradeActions(upgradeActions, this.#currentUpgradeIndex)
@@ -300,7 +316,7 @@ export class ConnectionEntityManager {
 	}
 	#sendUpgradeFeedbacksBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
-		upgradeFeedbacks: EntityManagerFeedbackEntity[]
+		upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[]
 	): void {
 		this.#adapter
 			.upgradeFeedbacks(upgradeFeedbacks, this.#currentUpgradeIndex)
@@ -494,54 +510,10 @@ export class ConnectionEntityManager {
 	}
 
 	/**
-	 * Parse any variables in the options object for an entity.
-	 * Note: this will drop any options that are not defined in the entity definition.
-	 */
-	parseOptionsObject(
-		entityDefinition: ClientEntityDefinition | undefined,
-		options: OptionsObject,
-		controlId: string
-	): {
-		parsedOptions: OptionsObject
-		referencedVariableIds: Set<string>
-	} {
-		if (!entityDefinition)
-			// If we don't know what fields need parsing, we can't do anything
-			return { parsedOptions: options, referencedVariableIds: new Set() }
-
-		const parsedOptions: OptionsObject = {}
-		const referencedVariableIds = new Set<string>()
-
-		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
-
-		for (const field of entityDefinition.options) {
-			if (field.type !== 'textinput' || !field.useVariables) {
-				// Field doesn't support variables, pass unchanged
-				parsedOptions[field.id] = options[field.id]
-				continue
-			}
-
-			// Field needs parsing
-			// Note - we don't need to care about the granularity given in `useVariables`,
-			const parseResult = parser.parseVariables(String(options[field.id]))
-			parsedOptions[field.id] = parseResult.text
-
-			// Track the variables referenced in this field
-			if (!entityDefinition.optionsToIgnoreForSubscribe.includes(field.id)) {
-				for (const variable of parseResult.variableIds) {
-					referencedVariableIds.add(variable)
-				}
-			}
-		}
-
-		return { parsedOptions, referencedVariableIds }
-	}
-
-	/**
 	 * Inform the entity manager that some variables have changed.
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: Set<string>): void {
+	onVariablesChanged(variableIds: ReadonlySet<string>, fromControlId: string | null): void {
 		let anyInvalidated = false
 
 		for (const wrapper of this.#entities.values()) {
@@ -552,6 +524,11 @@ export class ConnectionEntityManager {
 				wrapper.state === EntityState.PENDING_DELETE
 			) {
 				// Nothing to do, the entity is not in the ready state
+				continue
+			}
+
+			if (fromControlId && wrapper.controlId !== fromControlId) {
+				// The change came from a specific control, and this entity is not in that control
 				continue
 			}
 

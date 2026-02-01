@@ -2,7 +2,8 @@ import LogController, { type Logger } from '../Log/Controller.js'
 import PQueue from 'p-queue'
 import { nanoid } from 'nanoid'
 import path from 'path'
-import { ConnectionChildHandler, type ConnectionChildHandlerDependencies } from './Connection/ChildHandler.js'
+import { ConnectionChildHandlerLegacy } from './Connection/ChildHandlerLegacy.js'
+import type { ConnectionChildHandlerApi, ConnectionChildHandlerDependencies } from './Connection/ChildHandlerApi.js'
 import fs from 'fs-extra'
 import os from 'os'
 import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
@@ -14,7 +15,6 @@ import {
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { CompanionOptionValues } from '@companion-module/base'
 import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
@@ -23,6 +23,10 @@ import type { SomeModuleVersionInfo } from './Types.js'
 import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
 import { isPackaged } from '../Resources/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
+import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
+import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
+import { PreserveEnvVars } from './Environment.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 
 /**
  * A backoff sleep strategy
@@ -128,9 +132,9 @@ export class InstanceProcessManager {
 		}
 	}
 
-	getConnectionChild(connectionId: string, allowInitialising?: boolean): ConnectionChildHandler | undefined {
+	getConnectionChild(connectionId: string, allowInitialising?: boolean): ConnectionChildHandlerApi | undefined {
 		const child = this.getChild(connectionId, allowInitialising)
-		if (child && child instanceof ConnectionChildHandler) {
+		if (child && isConnectionChild(child)) {
 			return child
 		} else {
 			return undefined
@@ -152,7 +156,7 @@ export class InstanceProcessManager {
 	 */
 	resubscribeAllFeedbacks(): void {
 		for (const child of this.#children.values()) {
-			if (child.handler && child.isReady && child.handler instanceof ConnectionChildHandler) {
+			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
 				child.handler.sendAllFeedbackInstances().catch((e) => {
 					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.instanceId}": ${e}`)
 				})
@@ -164,12 +168,12 @@ export class InstanceProcessManager {
 	 * Send a list of changed variables to all active instances.
 	 * This will trigger feedbacks using variables to be rechecked
 	 */
-	onVariablesChanged(all_changed_variables_set: Set<string>): void {
+	onVariablesChanged(all_changed_variables_set: ReadonlySet<string>, fromControlId: string | null): void {
 		const changedVariableIds = Array.from(all_changed_variables_set)
 
 		for (const child of this.#children.values()) {
-			if (child.handler && child.isReady && child.handler instanceof ConnectionChildHandler) {
-				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds).catch((e) => {
+			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
+				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds, fromControlId).catch((e) => {
 					this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
 				})
 			}
@@ -426,12 +430,19 @@ export class InstanceProcessManager {
 				Date.now(),
 				'System',
 				'system',
-				`** Starting Instance from "${runtimeInfo.entrypoint}" **`
+				`** Starting Instance from "${runtimeInfo.moduleEntrypoint}" **`
+			)
+			this.#connectionDeps.debugLogLine(
+				instanceId,
+				Date.now(),
+				'System',
+				'system',
+				`** API version: ${runtimeInfo.apiVersion} **`
 			)
 
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
-					...preserveEnvVars(),
+					...PreserveEnvVars(),
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
 					...runtimeInfo.env,
@@ -625,13 +636,23 @@ export class InstanceProcessManager {
 		// Bind the event listeners
 		switch (child.targetState.moduleType) {
 			case ModuleInstanceType.Connection:
-				child.handler = new ConnectionChildHandler(
-					this.#connectionDeps,
-					monitor,
-					child.instanceId,
-					runtimeInfo.apiVersion,
-					onRegisterReceived
-				)
+				if (doesModuleUseNewChildHandler(runtimeInfo.apiVersion)) {
+					child.handler = new ConnectionChildHandlerNew(
+						this.#connectionDeps,
+						monitor,
+						child.instanceId,
+						runtimeInfo.apiVersion,
+						onRegisterReceived
+					)
+				} else {
+					child.handler = new ConnectionChildHandlerLegacy(
+						this.#connectionDeps,
+						monitor,
+						child.instanceId,
+						runtimeInfo.apiVersion,
+						onRegisterReceived
+					)
+				}
 				break
 			case ModuleInstanceType.Surface:
 				child.handler = new SurfaceChildHandler(
@@ -665,6 +686,7 @@ export class InstanceProcessManager {
 		lastLabel: string
 	): Promise<{
 		entrypoint: string
+		moduleEntrypoint: string
 		apiVersion: string
 		env: Record<string, string>
 	} | null> {
@@ -706,12 +728,27 @@ export class InstanceProcessManager {
 					return null
 				}
 
-				return {
-					apiVersion: moduleApiVersion,
-					entrypoint: jsFullPath,
-					env: {
-						CONNECTION_ID: instanceId,
-					},
+				if (doesModuleUseNewChildHandler(moduleApiVersion)) {
+					return {
+						apiVersion: moduleApiVersion,
+						entrypoint: path.join(
+							import.meta.dirname,
+							isPackaged() ? './ConnectionThread.js' : './Connection/Thread/Entrypoint.js'
+						),
+						moduleEntrypoint: jsFullPath,
+						env: {
+							MODULE_ENTRYPOINT: jsFullPath,
+						},
+					}
+				} else {
+					return {
+						apiVersion: moduleApiVersion,
+						entrypoint: jsFullPath,
+						moduleEntrypoint: jsFullPath,
+						env: {
+							CONNECTION_ID: instanceId,
+						},
+					}
 				}
 			}
 			case ModuleInstanceType.Surface: {
@@ -744,6 +781,7 @@ export class InstanceProcessManager {
 						import.meta.dirname,
 						isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'
 					),
+					moduleEntrypoint: jsFullPath,
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,
 					},
@@ -775,7 +813,7 @@ export class InstanceProcessManager {
 	async connectionEntityLearnOptions(
 		entityModel: SomeEntityModel,
 		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
+	): Promise<ExpressionableOptionsObject | undefined | void> {
 		const connection = this.getConnectionChild(entityModel.connectionId)
 		if (!connection) return undefined
 
@@ -789,19 +827,6 @@ interface RuntimeInfo {
 	env: Record<string, string>
 }
 
-/**
- * Only some env vars should be forwarded to child processes
- */
-function preserveEnvVars(): Record<string, string> {
-	const preserveNames = ['HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'http_proxy', 'https_proxy', 'no_proxy']
-
-	const preservedEnvVars: Record<string, string> = {}
-	for (const name of preserveNames) {
-		const value = process.env[name]
-		if (value !== undefined) {
-			preservedEnvVars[name] = value
-		}
-	}
-
-	return preservedEnvVars
+function isConnectionChild(handler: ChildProcessHandlerBase): handler is ConnectionChildHandlerApi {
+	return !!handler && (handler instanceof ConnectionChildHandlerLegacy || handler instanceof ConnectionChildHandlerNew)
 }

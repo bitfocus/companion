@@ -28,6 +28,7 @@ import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
 import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -253,8 +254,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
-		} catch (e: any) {
-			this.logger.warn(`Destroy for "${this.instanceId}" errored: ${e}`)
+		} catch (e) {
+			this.logger.warn(`Destroy for "${this.instanceId}" errored: ${stringifyError(e)}`)
 		}
 
 		// Stop ipc commands being received

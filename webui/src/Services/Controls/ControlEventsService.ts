@@ -3,12 +3,13 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import type { JsonValue } from 'type-fest'
 
 export interface IEventEditorService {
 	addEvent: (eventType: DropdownChoiceId) => void
 	moveCard: (dragIndex: number, hoverIndex: number) => void
 
-	setValue: (eventId: string, Event: EventInstance | undefined, key: string, value: any) => void
+	setValue: (eventId: string, Event: EventInstance | undefined, key: string, value: JsonValue | undefined) => void
 	performDelete: (eventId: string) => void
 	performDuplicate: (eventId: string) => void
 	setEnabled: (eventId: string, enabled: boolean) => void
@@ -16,7 +17,7 @@ export interface IEventEditorService {
 }
 
 export interface IEventEditorEventService {
-	setValue: (key: string, value: any) => void
+	setValue: (key: string, value: JsonValue | undefined) => void
 	performDelete: () => void
 	performDuplicate: () => void
 	setEnabled: (enabled: boolean) => void
@@ -48,7 +49,7 @@ export function useControlEventsEditorService(
 				})
 			},
 
-			setValue: (eventId: string, event: EventInstance | undefined, key: string, value: any) => {
+			setValue: (eventId: string, event: EventInstance | undefined, key: string, value: JsonValue | undefined) => {
 				if (!event?.options || event.options[key] !== value) {
 					setOptionMutation.mutateAsync({ controlId, eventId, key, value }).catch((e) => {
 						console.error(`Set-option failed: ${e}`)
@@ -66,7 +67,7 @@ export function useControlEventsEditorService(
 
 			performDuplicate: (eventId: string) => {
 				duplicateMutation.mutateAsync({ controlId, eventId }).catch((e) => {
-					console.error(`Failed to duplicate feeeventdback: ${e}`)
+					console.error(`Failed to duplicate event: ${e}`)
 				})
 			},
 
@@ -107,7 +108,8 @@ export function useControlEventService(
 
 	return useMemo(
 		() => ({
-			setValue: (key: string, val: any) => serviceFactory.setValue(eventId, eventRef.current, key, val),
+			setValue: (key: string, val: JsonValue | undefined) =>
+				serviceFactory.setValue(eventId, eventRef.current, key, val),
 			performDelete: () => serviceFactory.performDelete(eventId),
 			performDuplicate: () => serviceFactory.performDuplicate(eventId),
 			setEnabled: (enabled: boolean) => serviceFactory.setEnabled(eventId, enabled),

@@ -6,20 +6,20 @@ import type {
 	ExpressionOrValue as ExpressionOrValueModule,
 	ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
 	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
-} from '@companion-module/base'
+	ModuleLogger,
+} from '@companion-module/host'
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
 	type CompositeElementOptionKey,
 } from '@companion-app/shared/Model/StyleModel.js'
-import { type Logger } from '../../Log/Controller.js'
 import {
 	EntityModelType,
 	type FeedbackEntityModel,
 	type FeedbackEntityStyleOverride,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { type ExpressionOrValue, isExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import { type ExpressionOrValue, isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	SomeButtonGraphicsElement,
 	ButtonGraphicsCanvasElement,
@@ -71,7 +71,7 @@ export function ConvertLayeredPresetFeedbacksToEntities(
 }
 
 export function ConvertLayerPresetElements(
-	logger: Logger,
+	logger: ModuleLogger,
 	connectionId: string,
 	canvas: ButtonGraphicsCanvasElementModule | undefined,
 	elements: SomeButtonGraphicsElementModule[],
@@ -97,7 +97,7 @@ export function ConvertLayerPresetElements(
 }
 
 function convertLayeredPresetElement(
-	logger: Logger,
+	logger: ModuleLogger,
 	connectionId: string,
 	element: SomeButtonGraphicsElementModule,
 	forceNewIds: boolean

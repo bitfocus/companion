@@ -1,4 +1,4 @@
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { CFormLabel, CCol } from '@coreui/react'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -9,8 +9,9 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { ExpressionFieldControl } from '~/Controls/Components/ExpressionFieldControl.js'
+import type { JsonValue } from 'type-fest'
 
-type SetValueFn = (value: any) => void
+type SetValueFn = (value: JsonValue | undefined) => void
 
 export interface InputFieldCommonProps {
 	elementProp: { value: any }
@@ -22,7 +23,7 @@ interface FormPropertyFieldProps {
 	property: string
 	label: string
 	features?: InputFeatureIconsProps
-	children: (elementProp: { value: any }, setValue: SetValueFn) => React.ReactNode
+	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField({
 	elementProps,

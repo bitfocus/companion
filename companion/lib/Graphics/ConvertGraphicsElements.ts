@@ -22,7 +22,7 @@ import type {
 	ButtonGraphicsBorder,
 	ButtonGraphicsCompositeElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import {

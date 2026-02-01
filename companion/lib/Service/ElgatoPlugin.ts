@@ -10,6 +10,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ServiceApi } from './ServiceApi.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 /**
  * Class providing the Elgato Plugin service.
@@ -208,8 +209,8 @@ export class ServiceElgatoPlugin extends ServiceBase {
 					const index = this.#clients.indexOf(socket)
 					if (index >= 0) this.#clients.splice(index, 1)
 				})
-			} catch (e: any) {
-				this.logger.error(`Elgato plugin add failed: ${e?.message ?? e}`)
+			} catch (e) {
+				this.logger.error(`Elgato plugin add failed: ${stringifyError(e)}`)
 				socket.close()
 			}
 		})
@@ -314,8 +315,8 @@ export class ServiceElgatoPlugin extends ServiceBase {
 
 				this.currentState = true
 				this.logger.info('Listening on port ' + this.port)
-			} catch (e: any) {
-				this.logger.error(`Could not launch: ${e.message}`)
+			} catch (e) {
+				this.logger.error(`Could not launch: ${stringifyError(e)}`)
 			}
 		}
 	}
@@ -388,8 +389,8 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 				const newbuffer = await drawItem.drawNative(targetSize, targetSize, null, 'rgb')
 
 				this.apicommand('fillImage', { ...partial, data: newbuffer })
-			} catch (e: any) {
-				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+			} catch (e) {
+				this.#logger.debug(`scale image failed: ${stringifyError(e)}`)
 				this.emit('remove')
 				return
 			}

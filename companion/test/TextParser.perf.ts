@@ -157,7 +157,7 @@ const testCases: BenchmarkCase[] = [
 
 function runBenchmark(testCase: BenchmarkCase, iterations: number): BenchmarkResult {
 	// Create a single image instance to reuse (no cache)
-	const image = new Image(testCase.width, testCase.height, 1, null)
+	const image = Image.create(testCase.width, testCase.height, 1, null)
 
 	const startTime = performance.now()
 

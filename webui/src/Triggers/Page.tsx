@@ -28,6 +28,7 @@ import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export const TriggersPage = observer(function Triggers() {
 	const { triggersList } = useContext(RootAppStoreContext)
@@ -208,8 +209,8 @@ function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollecti
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const enabled = e.target.checked
 
-			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e: any) => {
-				console.error('Failed to reorder collection', e)
+			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e) => {
+				console.error('Failed to reorder collection', stringifyError(e))
 			})
 		},
 		[setEnabledMutation, collection.id]

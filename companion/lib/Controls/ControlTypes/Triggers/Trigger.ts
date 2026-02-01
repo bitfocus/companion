@@ -27,6 +27,8 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { JsonValue } from 'type-fest'
 
 /**
  * Class for an interval trigger.
@@ -159,6 +161,7 @@ export class ControlTrigger
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
 			variableValues: deps.variables.values,
+			pageStore: deps.pageStore,
 		})
 
 		this.#eventBus = eventBus
@@ -313,6 +316,9 @@ export class ControlTrigger
 					case 'interval':
 						eventStrings.push(this.#timerEvents.getIntervalDescription(event))
 						break
+					case 'intervalRandom':
+						eventStrings.push(this.#timerEvents.getRandomIntervalDescription(event))
+						break
 					case 'timeofday':
 						eventStrings.push(this.#timerEvents.getTimeOfDayDescription(event))
 						break
@@ -331,8 +337,8 @@ export class ControlTrigger
 					case 'button_press':
 						eventStrings.push('On any button press')
 						break
-					case 'button_depress':
-						eventStrings.push('On any button depress')
+					case 'button_release':
+						eventStrings.push('On any button release')
 						break
 					case 'condition_true':
 						eventStrings.push('On condition becoming true')
@@ -405,6 +411,12 @@ export class ControlTrigger
 				case 'interval':
 					this.#timerEvents.setInterval(event.id, Number(event.options.seconds))
 					break
+				case 'intervalRandom': {
+					const iMin = Number(event.options.minimum)
+					const iMax = Number(event.options.maximum)
+					this.#timerEvents.setInterval(event.id, iMin, iMax)
+					break
+				}
 				case 'timeofday':
 					this.#timerEvents.setTimeOfDay(event.id, event.options)
 					break
@@ -423,7 +435,7 @@ export class ControlTrigger
 				case 'button_press':
 					this.#miscEvents.setControlPress(event.id, true)
 					break
-				case 'button_depress':
+				case 'button_release':
 					this.#miscEvents.setControlPress(event.id, false)
 					break
 				case 'condition_true':
@@ -435,7 +447,7 @@ export class ControlTrigger
 					this.triggerRedraw() // Recheck the condition
 					break
 				case 'variable_changed':
-					this.#variablesEvents.setVariableChanged(event.id, String(event.options.variableId))
+					this.#variablesEvents.setVariableChanged(event.id, stringifyVariableValue(event.options.variableId) ?? '')
 					break
 				case 'computer_locked':
 					this.#miscEvents.setComputerLocked(event.id, true)
@@ -455,6 +467,7 @@ export class ControlTrigger
 	#stopEvent(event: EventInstance): void {
 		switch (event.type) {
 			case 'interval':
+			case 'intervalRandom':
 				this.#timerEvents.clearInterval(event.id)
 				break
 			case 'timeofday':
@@ -473,7 +486,7 @@ export class ControlTrigger
 				this.#miscEvents.clearClientConnect(event.id)
 				break
 			case 'button_press':
-			case 'button_depress':
+			case 'button_release':
 				this.#miscEvents.clearControlPress(event.id)
 				break
 			case 'condition_true':
@@ -498,8 +511,7 @@ export class ControlTrigger
 	/**
 	 * Update an option field of this control
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	optionsSetField(key: string, value: any, forceSet?: boolean): boolean {
+	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
@@ -737,8 +749,7 @@ export class ControlTrigger
 	/**
 	 * Update an option for an event
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	eventSetOptions(id: string, key: string, value: any): boolean {
+	eventSetOptions(id: string, key: string, value: JsonValue): boolean {
 		for (const event of this.events) {
 			if (event && event.id === id) {
 				if (!event.options) event.options = {}
@@ -765,6 +776,9 @@ export class ControlTrigger
 	 * Execute a press of this control
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
+		// Nothing to do
+	}
+	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
 		// Nothing to do
 	}
 }

@@ -1,10 +1,11 @@
 import React from 'react'
 import { CAlert, CFormInput, CFormCheck } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { JsonValue } from 'type-fest'
 
 interface PasswordStepProps {
 	config: Partial<UserConfigModel>
-	setValue: (key: keyof UserConfigModel, value: any) => void
+	setValue: (key: keyof UserConfigModel, value: JsonValue) => void
 }
 
 export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX.Element {

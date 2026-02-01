@@ -79,27 +79,23 @@ export class PreviewExpressionStream {
 		})
 	}
 
-	onVariablesChanged = (changed: Set<string>, fromControlId: string | null): void => {
+	onVariablesChanged = (changed: ReadonlySet<string>, fromControlId: string | null): void => {
 		for (const [expressionId, session] of this.#sessions) {
 			if (fromControlId && session.controlId !== fromControlId) continue
 
-			for (const variableId of changed) {
-				if (session.latestResult.variableIds.has(variableId)) {
-					// There is some overlap, re-evaluate the expression
-					// Future: this doesn't need to be done immediately, debounce it?
+			if (session.latestResult.variableIds.isDisjointFrom(changed)) continue
 
-					this.#logger.silly(
-						`Re-evaluating expression: ${expressionId} for ${session.changes.listenerCount('change')} clients`
-					)
+			// There is some overlap, re-evaluate the expression
+			// Future: this doesn't need to be done immediately, debounce it?
 
-					const newValue = this.#executeExpression(session.expression, session.controlId, session.requiredType)
-					session.latestResult = newValue
+			this.#logger.debug(
+				`Re-evaluating expression: ${expressionId} for ${session.changes.listenerCount('change')} clients`
+			)
 
-					session.changes.emit('change', convertExpressionResult(newValue))
+			const newValue = this.#executeExpression(session.expression, session.controlId, session.requiredType)
+			session.latestResult = newValue
 
-					break
-				}
-			}
+			session.changes.emit('change', convertExpressionResult(newValue))
 		}
 	}
 

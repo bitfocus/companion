@@ -4,6 +4,7 @@ import {
 	FeedbackEntitySubType,
 	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
 	type FeedbackEntityStyleOverride,
+	type FeedbackValue,
 	type EntitySupportedChildGroupDefinition,
 	type FeedbackEntityModel,
 	type SomeEntityModel,
@@ -15,7 +16,17 @@ import { ControlEntityList } from './EntityList.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { InstanceDefinitionsForEntity, InternalControllerForEntity, ProcessManagerForEntity } from './Types.js'
+import type {
+	InstanceDefinitionsForEntity,
+	InternalControllerForEntity,
+	NewFeedbackValue,
+	NewIsInvertedValue,
+	ProcessManagerForEntity,
+} from './Types.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { JsonValue } from 'type-fest'
+import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
 
 export class ControlEntityInstance {
 	/**
@@ -26,6 +37,7 @@ export class ControlEntityInstance {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
+	readonly #isInvertedManager: EntityPoolIsInvertedManager
 
 	/**
 	 * Id of the control this belongs to
@@ -37,12 +49,17 @@ export class ControlEntityInstance {
 	/**
 	 * Value of the feedback when it was last executed
 	 */
-	#cachedFeedbackValue: any = undefined
+	#cachedFeedbackValue: FeedbackValue = undefined
+	/**
+	 * Value of whether the feedback value should be inverted
+	 * Note: This only applies to boolean feedbacks
+	 */
+	#cachedIsInverted: boolean = false
 
 	#children = new Map<string, ControlEntityList>()
 
 	/**
-	 * Get the id of this action instance
+	 * Get the id of this entity
 	 */
 	get id(): string {
 		return this.#data.id
@@ -82,8 +99,17 @@ export class ControlEntityInstance {
 	 * Get a reference to the options for this action
 	 * Note: This must not be a copy, but the raw object
 	 */
-	get rawOptions(): Record<string, any> {
+	get rawOptions(): ExpressionableOptionsObject {
 		return this.#data.options
+	}
+
+	/**
+	 * Get the raw isInverted value for this feedback
+	 */
+	get rawIsInverted(): ExpressionOrValue<boolean> | undefined {
+		const data = this.#data
+		if (data.type !== EntityModelType.Feedback) return undefined
+		return (data as FeedbackEntityModel).isInverted
 	}
 
 	get feedbackValue(): any {
@@ -138,6 +164,7 @@ export class ControlEntityInstance {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
+		isInvertedManager: EntityPoolIsInvertedManager,
 		controlId: string,
 		data: SomeEntityModel,
 		isCloned: boolean
@@ -147,6 +174,7 @@ export class ControlEntityInstance {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
+		this.#isInvertedManager = isInvertedManager
 		this.#controlId = controlId
 
 		{
@@ -177,13 +205,14 @@ export class ControlEntityInstance {
 				try {
 					const childGroup = this.#getOrCreateChildGroupFromDefinition(groupDefinition)
 					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], true, isCloned)
-				} catch (e: any) {
-					this.#logger.error(`Error loading child entity group: ${e.message}`)
+				} catch (e) {
+					this.#logger.error(`Error loading child entity group: ${stringifyError(e)}`)
 				}
 			}
 		}
 
 		this.#cachedFeedbackValue = this.#getStartupValue()
+		this.#cachedIsInverted = this.#getStartupIsInverted()
 	}
 
 	#getOrCreateChildGroupFromDefinition(listDefinition: EntitySupportedChildGroupDefinition): ControlEntityList {
@@ -194,6 +223,7 @@ export class ControlEntityInstance {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
+			this.#isInvertedManager,
 			this.#controlId,
 			{ parentId: this.id, childGroup: listDefinition.groupId },
 			listDefinition
@@ -239,6 +269,8 @@ export class ControlEntityInstance {
 			})
 		}
 
+		this.#isInvertedManager.forgetEntity(this.id)
+
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = undefined
 
@@ -266,6 +298,7 @@ export class ControlEntityInstance {
 					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 				})
 			}
+			this.#isInvertedManager.trackEntity(this)
 		}
 
 		if (recursive) {
@@ -275,10 +308,18 @@ export class ControlEntityInstance {
 		}
 	}
 
-	#getStartupValue(): any {
+	#getStartupValue(): JsonValue | undefined {
 		if (!isInternalUserValueFeedback(this)) return undefined
 
-		return this.#data.options.startup_value
+		return this.#data.options.startup_value?.value
+	}
+
+	#getStartupIsInverted(): boolean {
+		if (this.#data.type !== EntityModelType.Feedback) return false
+
+		const thisData = this.#data as FeedbackEntityModel
+		if (thisData.isInverted?.isExpression) return false
+		return !!thisData.isInverted?.value
 	}
 
 	/**
@@ -325,7 +366,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set whether this feedback is inverted
 	 */
-	setInverted(isInverted: boolean): void {
+	setInverted(isInverted: ExpressionOrValue<boolean>): void {
 		if (this.#data.type !== EntityModelType.Feedback) return
 
 		const thisData = this.#data as FeedbackEntityModel
@@ -334,8 +375,12 @@ export class ControlEntityInstance {
 
 		thisData.isInverted = isInverted
 
-		// Don't need to resubscribe
-		// Don't need to clear cached value
+		if (isInverted.isExpression) {
+			// Trigger a re-evaluation of the expression
+			this.subscribe(false)
+		} else {
+			this.#cachedIsInverted = !!isInverted.value
+		}
 	}
 
 	/**
@@ -354,7 +399,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set the options for this entity
 	 */
-	setOptions(options: Record<string, any>): void {
+	setOptions(options: ExpressionableOptionsObject): void {
 		this.#data.options = options
 
 		// Remove from cached feedback values
@@ -393,8 +438,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set an option for this entity
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setOption(key: string, value: any): void {
+	setOption(key: string, value: ExpressionOrValue<JsonValue | undefined>): void {
 		this.#data.options[key] = value
 
 		// Remove from cached feedback values
@@ -607,7 +651,7 @@ export class ControlEntityInstance {
 		if (this.#data.type === EntityModelType.Feedback) {
 			const feedbackData = this.#data as FeedbackEntityModel
 			const newPropsData = newProps as FeedbackEntityModel
-			feedbackData.isInverted = !!newPropsData.isInverted
+			feedbackData.isInverted = newPropsData.isInverted ?? feedbackData.isInverted
 
 			// Replace the style overrides only if the new one is non-empty
 			feedbackData.styleOverrides =
@@ -651,6 +695,7 @@ export class ControlEntityInstance {
 
 		if (this.#data.connectionId === connectionId) {
 			this.#cachedFeedbackValue = this.#getStartupValue()
+			this.#cachedIsInverted = this.#getStartupIsInverted()
 
 			changed = true
 		}
@@ -692,7 +737,11 @@ export class ControlEntityInstance {
 			const childGroup = this.#children.get('default') || this.#children.get('children')
 			const childValues = childGroup?.getChildBooleanFeedbackValues() ?? []
 
-			return this.#internalModule.executeLogicFeedback(this.asEntityModel() as FeedbackEntityModel, childValues)
+			return this.#internalModule.executeLogicFeedback(
+				this.asEntityModel() as FeedbackEntityModel,
+				this.#cachedIsInverted,
+				childValues
+			)
 		}
 
 		if (
@@ -703,8 +752,7 @@ export class ControlEntityInstance {
 			return false
 
 		if (typeof this.#cachedFeedbackValue === 'boolean') {
-			const feedbackData = this.#data as FeedbackEntityModel
-			if (definition.showInvert && feedbackData.isInverted) return !this.#cachedFeedbackValue
+			if (definition.showInvert && this.#cachedIsInverted) return !this.#cachedFeedbackValue
 
 			return this.#cachedFeedbackValue
 		} else {
@@ -718,19 +766,23 @@ export class ControlEntityInstance {
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
-	updateFeedbackValues(connectionId: string, newValues: Record<string, any>): ControlEntityInstance[] {
+	updateFeedbackValues(
+		connectionId: string,
+		newValues: ReadonlyMap<string, NewFeedbackValue>
+	): ControlEntityInstance[] {
 		const changed: ControlEntityInstance[] = []
+
+		const newValue = newValues.get(this.#data.id)
 
 		let thisChanged = false
 		if (
 			this.type === EntityModelType.Feedback &&
 			this.#data.connectionId === connectionId &&
-			this.#data.id in newValues &&
+			newValue &&
 			!isInternalUserValueFeedback(this)
 		) {
-			const newValue = newValues[this.#data.id]
-			if (!isEqual(newValue, this.#cachedFeedbackValue)) {
-				this.#cachedFeedbackValue = newValue
+			if (!isEqual(newValue.value, this.#cachedFeedbackValue)) {
+				this.#cachedFeedbackValue = newValue.value
 				changed.push(this)
 				thisChanged = true
 			}
@@ -750,18 +802,48 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Update the isInverted values on the control with new calculated isInverted values
+	 * @param newValues The new isInverted values
+	 */
+	updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): ControlEntityInstance[] {
+		const changed: ControlEntityInstance[] = []
+
+		const newValue = newValues.get(this.#data.id)
+
+		let thisChanged = false
+		if (this.type === EntityModelType.Feedback && newValue && !isInternalUserValueFeedback(this)) {
+			if (!!newValue.isInverted !== this.#cachedIsInverted) {
+				this.#cachedIsInverted = !!newValue.isInverted
+				changed.push(this)
+				thisChanged = true
+			}
+		}
+
+		for (const childGroup of this.#children.values()) {
+			const childrenChanged = childGroup.updateIsInvertedValues(newValues)
+			changed.push(...childrenChanged)
+
+			if (!thisChanged && isInternalLogicFeedback(this) && childrenChanged.length > 0) {
+				// If this is a logic operator, and one of its children changed, we need to re-evaluate
+				changed.push(this)
+			}
+		}
+
+		return changed
+	}
+
+	/**
 	 * If this is the user value feedback, set the value
 	 * @returns Whether the entity options were changed and need to be persisted
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setUserValue(value: any): boolean {
+	setUserValue(value: JsonValue | undefined): boolean {
 		if (!isInternalUserValueFeedback(this)) return false
 
 		this.#cachedFeedbackValue = value
 
 		// Persist value if needed
-		if (this.#data.options.persist_value) {
-			this.#data.options.startup_value = value
+		if (this.#data.options.persist_value?.value) {
+			this.#data.options.startup_value = { isExpression: false, value }
 
 			return true
 		}

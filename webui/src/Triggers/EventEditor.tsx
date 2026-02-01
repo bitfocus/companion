@@ -8,12 +8,14 @@ import {
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useRef, useState, useEffect } from 'react'
+import classNames from 'classnames'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
 import { OptionsInputField } from '~/Controls/OptionsInputField.js'
-import { useDrag, useDrop } from 'react-dnd'
+import { useDrag, useDrop, useDragLayer } from 'react-dnd'
+import { getEmptyImage } from 'react-dnd-html5-backend'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
@@ -29,6 +31,8 @@ import {
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { JsonValue } from 'type-fest'
 
 interface TriggerEventEditorProps {
 	controlId: string
@@ -77,23 +81,28 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 				)}
 			</h4>
 
-			<table className="table entity-table">
-				<tbody>
-					{events.map((a, i) => (
-						<MyErrorBoundary key={a?.id ?? i}>
-							<EventsTableRow
-								key={a?.id ?? i}
-								index={i}
-								event={a}
-								dragId={`events_${controlId}`}
-								serviceFactory={eventsService}
-								panelCollapseHelper={panelCollapseHelper}
-								localVariablesStore={localVariablesStore}
-							/>
-						</MyErrorBoundary>
-					))}
-				</tbody>
-			</table>
+			<EventListDragLayer
+				events={events}
+				dragId={`events_${controlId}`}
+				serviceFactory={eventsService}
+				panelCollapseHelper={panelCollapseHelper}
+				localVariablesStore={localVariablesStore}
+			/>
+			<div className="entity-list">
+				{events.map((a, i) => (
+					<MyErrorBoundary key={a?.id ?? i}>
+						<EventsTableRow
+							key={a?.id ?? i}
+							index={i}
+							event={a}
+							dragId={`events_${controlId}`}
+							serviceFactory={eventsService}
+							panelCollapseHelper={panelCollapseHelper}
+							localVariablesStore={localVariablesStore}
+						/>
+					</MyErrorBoundary>
+				))}
+			</div>
 
 			<div className="add-dropdown-wrapper">
 				<AddEventDropdown onSelect={eventsService.addEvent} />
@@ -103,12 +112,53 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 })
 
 interface EventsTableRowDragObject {
+	eventId: string
 	index: number
 	dragState: DragState | null
+	width?: number
 }
 interface EventsTableRowDragCollection {
 	isDragging: boolean
 }
+
+interface EventEditorRowContentProps {
+	event: EventInstance
+	serviceFactory: IEventEditorService
+	panelCollapseHelper: PanelCollapseHelperLite
+	localVariablesStore: LocalVariablesStore
+
+	isDragging: boolean
+	rowRef: React.LegacyRef<HTMLDivElement> | null
+	dragRef: React.LegacyRef<HTMLDivElement> | null
+}
+
+const EventEditorRowContent = observer(function EventEditorRowContent({
+	event,
+	serviceFactory,
+	panelCollapseHelper,
+	localVariablesStore,
+	isDragging,
+	rowRef,
+	dragRef,
+}: EventEditorRowContentProps): JSX.Element {
+	const service = useControlEventService(serviceFactory, event)
+
+	return (
+		<div ref={rowRef} className={classNames('entity-row', { 'entitylist-dragging': isDragging })}>
+			<div ref={dragRef} className="entity-row-reorder">
+				<FontAwesomeIcon icon={faSort} />
+			</div>
+			<div className="entity-row-content">
+				<EventEditor
+					event={event}
+					service={service}
+					panelCollapseHelper={panelCollapseHelper}
+					localVariablesStore={localVariablesStore}
+				/>
+			</div>
+		</div>
+	)
+})
 
 interface EventsTableRowProps {
 	event: EventInstance
@@ -127,9 +177,7 @@ function EventsTableRow({
 	panelCollapseHelper,
 	localVariablesStore,
 }: EventsTableRowProps): JSX.Element | null {
-	const service = useControlEventService(serviceFactory, event)
-
-	const ref = useRef<HTMLTableRowElement>(null)
+	const ref = useRef<HTMLDivElement>(null)
 	const [, drop] = useDrop<EventsTableRowDragObject>({
 		accept: dragId,
 		hover(item, monitor) {
@@ -164,17 +212,30 @@ function EventsTableRow({
 			item.dragState = null
 		},
 	})
-	const [{ isDragging }, drag, preview] = useDrag<EventsTableRowDragObject, never, EventsTableRowDragCollection>({
+
+	const [_c, drag, preview] = useDrag<EventsTableRowDragObject, never, EventsTableRowDragCollection>({
 		type: dragId,
-		item: {
+		item: () => ({
+			eventId: event.id,
 			index: index,
 			dragState: null,
-		},
-		collect: (monitor) => ({
-			isDragging: monitor.isDragging(),
+			width: ref.current?.offsetWidth,
 		}),
 	})
-	preview(drop(ref))
+
+	// Check if the current item is being dragged
+	const { draggingItem } = useDragLayer((monitor) => ({
+		draggingItem: monitor.getItem<EventsTableRowDragObject>(),
+	}))
+	const isDragging = draggingItem?.eventId === event.id
+
+	// Hide default browser drag preview
+	useEffect(() => {
+		preview(getEmptyImage(), { captureDraggingState: true })
+	}, [preview])
+
+	// Connect drag and drop
+	drop(ref)
 
 	if (!event) {
 		// Invalid event, so skip
@@ -182,21 +243,75 @@ function EventsTableRow({
 	}
 
 	return (
-		<tr ref={ref} className={isDragging ? 'entitylist-dragging' : ''}>
-			<td ref={drag} className="td-reorder">
-				<FontAwesomeIcon icon={faSort} />
-			</td>
-			<td>
-				<EventEditor
-					event={event}
-					service={service}
-					panelCollapseHelper={panelCollapseHelper}
-					localVariablesStore={localVariablesStore}
-				/>
-			</td>
-		</tr>
+		<EventEditorRowContent
+			event={event}
+			serviceFactory={serviceFactory}
+			panelCollapseHelper={panelCollapseHelper}
+			localVariablesStore={localVariablesStore}
+			isDragging={isDragging}
+			dragRef={drag}
+			rowRef={ref}
+		/>
 	)
 }
+
+interface EventListDragLayerProps {
+	events: EventInstance[]
+	dragId: string
+	serviceFactory: IEventEditorService
+	panelCollapseHelper: PanelCollapseHelperLite
+	localVariablesStore: LocalVariablesStore
+}
+
+const EventListDragLayer = observer(function EventListDragLayer({
+	events,
+	dragId,
+	serviceFactory,
+	panelCollapseHelper,
+	localVariablesStore,
+}: EventListDragLayerProps): JSX.Element | null {
+	const { isDragging, item, currentOffset } = useDragLayer<{
+		isDragging: boolean
+		item: EventsTableRowDragObject | null
+		currentOffset: { x: number; y: number } | null
+	}>((monitor) => ({
+		isDragging: monitor.isDragging() && monitor.getItemType() === dragId,
+		item: monitor.getItem(),
+		currentOffset: monitor.getSourceClientOffset(),
+	}))
+
+	if (!isDragging || !item || !currentOffset) {
+		return null
+	}
+
+	const event = events.find((e) => e.id === item.eventId)
+	if (!event) return null
+
+	return (
+		<div
+			className="entity-list-drag-layer"
+			style={{
+				position: 'fixed',
+				pointerEvents: 'none',
+				zIndex: 100,
+				left: 0,
+				top: 0,
+				transform: `translate(${currentOffset.x}px, ${currentOffset.y}px)`,
+				width: item.width,
+			}}
+		>
+			<EventEditorRowContent
+				event={event}
+				serviceFactory={serviceFactory}
+				panelCollapseHelper={panelCollapseHelper}
+				localVariablesStore={localVariablesStore}
+				isDragging={true}
+				rowRef={null}
+				dragRef={null}
+			/>
+		</div>
+	)
+})
 
 interface EventEditorProps {
 	event: EventInstance
@@ -214,8 +329,6 @@ const EventEditor = observer(function EventEditor({
 	const { eventDefinitions } = useContext(RootAppStoreContext)
 
 	const eventSpec = eventDefinitions.definitions.get(event.type)
-
-	const optionVisibility = useOptionsVisibility(eventSpec?.options, event?.options)
 
 	const innerSetEnabled = useCallback(
 		(e: React.FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
@@ -238,6 +351,15 @@ const EventEditor = observer(function EventEditor({
 		[panelCollapseHelper, event.id]
 	)
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(event.id)
+
+	// Events don't support expressions, so we have to pretend for the UI
+	const wrappedOptions = optionsObjectToExpressionOptions(event.options || {}, false)
+	const setWrappedValue = useCallback(
+		(key: string, value: ExpressionOrValue<JsonValue | undefined>) => service.setValue(key, value.value),
+		[service]
+	)
+
+	const optionVisibility = useOptionsVisibility(eventSpec?.options, false, wrappedOptions)
 
 	return (
 		<>
@@ -307,10 +429,11 @@ const EventEditor = observer(function EventEditor({
 									entityType={null}
 									allowInternalFields={true}
 									option={opt}
-									value={(event.options || {})[opt.id]}
-									setValue={service.setValue}
-									visibility={optionVisibility[opt.id] ?? true}
+									value={wrappedOptions[opt.id]}
+									setValue={setWrappedValue}
+									visibility={optionVisibility.get(opt.id) ?? true}
 									localVariablesStore={localVariablesStore}
+									fieldSupportsExpression={false} // Events do not support expressions
 								/>
 							</MyErrorBoundary>
 						))}

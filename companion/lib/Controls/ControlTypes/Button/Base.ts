@@ -8,6 +8,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
+import type { JsonValue } from 'type-fest'
 
 /**
  * Abstract class for a editable button control.
@@ -77,6 +78,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
 				variableValues: deps.variables.values,
+				pageStore: deps.pageStore,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType, injectedVariableValues) =>
@@ -205,13 +207,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		return result
 	}
 
-	abstract onVariablesChanged(allChangedVariables: Set<string>): void
+	abstract onVariablesChanged(allChangedVariables: ReadonlySet<string>): void
 
 	/**
 	 * Update an option field of this control
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	optionsSetField(key: string, value: any): boolean {
+	optionsSetField(key: string, value: JsonValue): boolean {
 		// Check if rotary_actions should be added/remove
 		if (key === 'rotaryActions') {
 			this.entities.setupRotaryActionSets(!!value, true)

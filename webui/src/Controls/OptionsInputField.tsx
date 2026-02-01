@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CInputGroupText } from '@coreui/react'
+import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
 import React, { useCallback } from 'react'
 import {
 	CheckboxInputField,
@@ -11,26 +11,29 @@ import {
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import classNames from 'classnames'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import { validateInputValue } from '~/Helpers/validateInputValue.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
+import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import type { JsonValue } from 'type-fest'
 
 interface OptionsInputFieldProps {
 	allowInternalFields: boolean
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
-	value: any
-	setValue: (key: string, value: any) => void
+	value: ExpressionOrValue<JsonValue | undefined> | undefined
+	setValue: (key: string, value: ExpressionOrValue<JsonValue | undefined>) => void
 	visibility: boolean
 	readonly?: boolean
 	localVariablesStore: LocalVariablesStore | null
+	fieldSupportsExpression: boolean
 }
 
 function OptionLabel({ option, features }: { option: SomeCompanionInputField; features?: InputFeatureIconsProps }) {
@@ -52,13 +55,70 @@ export const OptionsInputField = observer(function OptionsInputField({
 	isLocatedInGrid,
 	entityType,
 	option,
-	value,
+	value: rawValue,
 	setValue,
 	visibility,
 	readonly,
 	localVariablesStore,
+	fieldSupportsExpression,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
-	const features = getInputFeatures(option)
+	let features = getInputFeatures(option)
+
+	const isExpression = !!(option.type === 'textinput' && option.isExpression)
+
+	const setControlValue = useCallback(
+		(val: JsonValue) =>
+			setValue(option.id, {
+				isExpression: isExpression,
+				value: val as any,
+			} satisfies ExpressionOrValue<JsonValue>),
+		[option.id, setValue, isExpression]
+	)
+
+	let control = (
+		<OptionsInputControl
+			allowInternalFields={allowInternalFields}
+			isLocatedInGrid={isLocatedInGrid}
+			entityType={entityType}
+			option={option}
+			value={rawValue?.value}
+			setValue={setControlValue}
+			readonly={readonly}
+			localVariablesStore={localVariablesStore}
+			features={features}
+		/>
+	)
+
+	let description = option.description
+
+	if (fieldSupportsExpression) {
+		const rawExpressionValue = rawValue || { isExpression: false, value: undefined }
+
+		control = (
+			<FieldOrExpression
+				localVariablesStore={localVariablesStore}
+				value={rawExpressionValue}
+				setValue={(val) => setValue(option.id, val)}
+				disabled={!!readonly}
+				entityType={entityType}
+				isInternal={allowInternalFields} // nocommit - this seems wrong?
+				isLocatedInGrid={isLocatedInGrid}
+			>
+				{control}
+			</FieldOrExpression>
+		)
+
+		// Update the features in the label when toggling the mode
+		if (rawExpressionValue?.isExpression) {
+			if (!features) features = {}
+			features.local = true
+			features.variables = true
+
+			if (option.expressionDescription !== undefined) {
+				description = option.expressionDescription
+			}
+		}
+	}
 
 	return (
 		<>
@@ -69,18 +129,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 				<OptionLabel option={option} features={features} />
 			</CFormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
-				<OptionsInputControl
-					allowInternalFields={allowInternalFields}
-					isLocatedInGrid={isLocatedInGrid}
-					entityType={entityType}
-					option={option}
-					value={value}
-					setValue={setValue}
-					readonly={readonly}
-					localVariablesStore={localVariablesStore}
-					features={features}
-				/>
-				{option.description && <div className="form-text">{option.description}</div>}
+				{control}
+				{description && <div className="form-text">{description}</div>}
 			</CCol>
 		</>
 	)
@@ -91,8 +141,8 @@ interface OptionsInputControlProps {
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
-	value: any
-	setValue: (key: string, value: any) => void
+	value: JsonValue | undefined
+	setValue: (value: any) => void
 	readonly?: boolean
 	localVariablesStore: LocalVariablesStore | null
 	features?: InputFeatureIconsProps
@@ -109,29 +159,35 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 	localVariablesStore,
 	features,
 }: Readonly<OptionsInputControlProps>): React.JSX.Element {
-	const checkValid = useCallback((value: any) => validateInputValue(option, value) === undefined, [option])
-	const setValue2 = useCallback((val: any) => setValue(option.id, val), [option.id, setValue])
+	const checkValid = useCallback(
+		(value: JsonValue | undefined) => validateInputValue(option, value) === undefined,
+		[option]
+	)
 
-	if (!option) {
-		return <p>Bad option</p>
-	}
+	if (!option) return <p>Bad option</p>
 
 	switch (option.type) {
 		case 'textinput': {
-			const localVariables = features?.local
-				? localVariablesStore?.getOptions(entityType, allowInternalFields, isLocatedInGrid)
-				: undefined
+			const localVariables =
+				features?.local || option.isExpression
+					? localVariablesStore?.getOptions(entityType, allowInternalFields, isLocatedInGrid)
+					: undefined
 
 			return option.isExpression ? (
-				<ExpressionInputField value={value} localVariables={localVariables} disabled={readonly} setValue={setValue2} />
+				<ExpressionInputField
+					value={value as any}
+					localVariables={localVariables}
+					disabled={readonly}
+					setValue={setValue}
+				/>
 			) : (
 				<TextInputField
-					value={value}
+					value={value as any}
 					placeholder={option.placeholder}
 					useVariables={features?.variables ?? false}
 					localVariables={localVariables}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setValue}
 					checkValid={checkValid}
 					multiline={option.multiline}
 				/>
@@ -140,13 +196,13 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		case 'dropdown': {
 			return (
 				<DropdownInputField
-					value={value}
+					value={value as any}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
 					minChoicesForSearch={option.minChoicesForSearch}
 					regex={option.regex}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setValue}
 					checkValid={checkValid}
 				/>
 			)
@@ -154,7 +210,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		case 'multidropdown': {
 			return (
 				<MultiDropdownInputField
-					value={value}
+					value={value as any}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
 					minSelection={option.minSelection}
@@ -162,20 +218,32 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 					maxSelection={option.maxSelection}
 					regex={option.regex}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setValue}
 					checkValid={checkValid}
 				/>
 			)
 		}
 		case 'checkbox': {
-			return <CheckboxInputField value={value} disabled={readonly} setValue={setValue2} />
+			if (option.displayToggle) {
+				return (
+					<CFormSwitch
+						color="success"
+						checked={!!value}
+						size="xl"
+						onChange={(e) => setValue(e.currentTarget.checked)}
+						disabled={readonly}
+					/>
+				)
+			} else {
+				return <CheckboxInputField value={value as any} disabled={readonly} setValue={setValue} />
+			}
 		}
 		case 'colorpicker': {
 			return (
 				<ColorInputField
-					value={value}
+					value={value as any}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setValue}
 					enableAlpha={option.enableAlpha ?? false}
 					returnType={option.returnType ?? 'number'}
 					presetColors={option.presetColors}
@@ -185,13 +253,13 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		case 'number': {
 			return (
 				<NumberInputField
-					value={value}
+					value={value as any}
 					min={option.min}
 					max={option.max}
 					step={option.step}
 					range={option.range}
 					disabled={readonly}
-					setValue={setValue2}
+					setValue={setValue}
 					checkValid={checkValid}
 					showMinAsNegativeInfinity={option.showMinAsNegativeInfinity}
 					showMaxAsPositiveInfinity={option.showMaxAsPositiveInfinity}
@@ -204,7 +272,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		case 'custom-variable': {
 			if (entityType === EntityModelType.Action) {
 				return (
-					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue2} includeNone={true} />
+					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue} includeNone={true} />
 				)
 			}
 			break
@@ -216,22 +284,14 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		default:
 			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (allowInternalFields) {
-				const internalControl = InternalModuleField(
-					option as any,
-					isLocatedInGrid,
-					localVariablesStore,
-					!!readonly,
-					value,
-					setValue2
-				)
-				if (internalControl) {
-					return internalControl
-				}
+				const internalControl =
+					InternalModuleField(option, isLocatedInGrid, localVariablesStore, !!readonly, value, setValue) ?? undefined
+				if (internalControl) return internalControl
 			}
+			// Use default below
 			break
 	}
 
-	// Fallback for unknown types
 	return <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 })
 

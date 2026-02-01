@@ -3,7 +3,6 @@
 // Scrollable container with sticky header styles
 .scrollable-container {
 	// Scrollable area styles
-	flex-grow: 1;
 	overflow: auto;
 	min-height: 0; // This is important for flex containers to allow proper scrolling
 

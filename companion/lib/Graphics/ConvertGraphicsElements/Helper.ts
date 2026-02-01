@@ -1,5 +1,5 @@
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'

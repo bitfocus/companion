@@ -22,21 +22,24 @@ export const ActionTree: SomeEntityModel[] = [
 		id: '01',
 		definitionId: 'def01',
 		connectionId: 'conn01',
-		options: { a: 1 },
+		options: { a: { isExpression: false, value: 1 } },
+		upgradeIndex: undefined,
 	},
 	{
 		type: EntityModelType.Action,
 		id: '02',
 		definitionId: 'def02',
 		connectionId: 'conn02',
-		options: { a: 2 },
+		options: { a: { isExpression: false, value: 2 } },
+		upgradeIndex: undefined,
 	},
 	{
 		type: EntityModelType.Action,
 		id: 'int0',
 		definitionId: 'action-with-children',
 		connectionId: 'internal',
-		options: { a: 3 },
+		options: { a: { isExpression: false, value: 3 } },
+		upgradeIndex: undefined,
 		children: {
 			group1: [
 				{
@@ -44,7 +47,8 @@ export const ActionTree: SomeEntityModel[] = [
 					id: 'int1',
 					definitionId: 'def01',
 					connectionId: 'internal',
-					options: { a: 4 },
+					options: { a: { isExpression: false, value: 4 } },
+					upgradeIndex: undefined,
 					children: {
 						default: [
 							{
@@ -52,7 +56,8 @@ export const ActionTree: SomeEntityModel[] = [
 								id: 'int1-b',
 								definitionId: 'def05',
 								connectionId: 'conn04',
-								options: { a: 5 },
+								options: { a: { isExpression: false, value: 5 } },
+								upgradeIndex: undefined,
 							},
 						],
 					},
@@ -64,7 +69,8 @@ export const ActionTree: SomeEntityModel[] = [
 					id: 'int2',
 					definitionId: 'def01',
 					connectionId: 'conn04',
-					options: { a: 5 },
+					options: { a: { isExpression: false, value: 5 } },
+					upgradeIndex: undefined,
 					children: {
 						default: [
 							{
@@ -72,7 +78,8 @@ export const ActionTree: SomeEntityModel[] = [
 								id: 'int2-a',
 								definitionId: 'def05',
 								connectionId: 'conn05',
-								options: { a: 6 },
+								options: { a: { isExpression: false, value: 6 } },
+								upgradeIndex: undefined,
 							},
 						],
 					},
@@ -134,21 +141,24 @@ export const FeedbackTree: SomeEntityModel[] = [
 		id: '01',
 		definitionId: 'def01',
 		connectionId: 'conn01',
-		options: { a: 1 },
+		options: { a: { isExpression: false, value: 1 } },
+		upgradeIndex: undefined,
 	},
 	{
 		type: EntityModelType.Feedback,
 		id: '02',
 		definitionId: 'def02',
 		connectionId: 'conn02',
-		options: { a: 2 },
+		options: { a: { isExpression: false, value: 2 } },
+		upgradeIndex: undefined,
 	},
 	{
 		type: EntityModelType.Feedback,
 		id: 'int0',
 		definitionId: 'feedback-with-children',
 		connectionId: 'internal',
-		options: { a: 3 },
+		options: { a: { isExpression: false, value: 3 } },
+		upgradeIndex: undefined,
 		children: {
 			group1: [
 				{
@@ -156,7 +166,8 @@ export const FeedbackTree: SomeEntityModel[] = [
 					id: 'int1',
 					definitionId: 'def01',
 					connectionId: 'internal',
-					options: { a: 4 },
+					options: { a: { isExpression: false, value: 4 } },
+					upgradeIndex: undefined,
 					children: {
 						default: [
 							{
@@ -164,7 +175,8 @@ export const FeedbackTree: SomeEntityModel[] = [
 								id: 'int1-b',
 								definitionId: 'def05',
 								connectionId: 'conn04',
-								options: { a: 5 },
+								options: { a: { isExpression: false, value: 5 } },
+								upgradeIndex: undefined,
 							},
 						],
 					},
@@ -176,7 +188,8 @@ export const FeedbackTree: SomeEntityModel[] = [
 					id: 'int2',
 					definitionId: 'def01',
 					connectionId: 'conn04',
-					options: { a: 5 },
+					options: { a: { isExpression: false, value: 5 } },
+					upgradeIndex: undefined,
 					children: {
 						default: [
 							{
@@ -184,7 +197,8 @@ export const FeedbackTree: SomeEntityModel[] = [
 								id: 'int2-a',
 								definitionId: 'def05',
 								connectionId: 'conn05',
-								options: { a: 6 },
+								options: { a: { isExpression: false, value: 6 } },
+								upgradeIndex: undefined,
 							},
 						],
 					},

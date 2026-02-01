@@ -15,7 +15,7 @@ import {
 	RotationConfigField,
 } from './CommonConfigFields.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { ReadonlyDeep } from 'type-fest'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { parseColorToNumber } from '../Resources/Util.js'
@@ -30,6 +30,7 @@ import type {
 } from '../Instance/Surface/IpcTypes.js'
 import type * as imageRs from '@julusian/image-rs'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 interface SatelliteInputVariableInfo {
 	id: string
@@ -38,7 +39,7 @@ interface SatelliteInputVariableInfo {
 interface SatelliteOutputVariableInfo {
 	id: string
 	lastReferencedVariables: ReadonlySet<string> | null
-	lastValue: any
+	lastValue: JsonValue | undefined
 	triggerUpdate?: () => void
 }
 
@@ -242,8 +243,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					.catch((e) => {
 						this.#logger.debug(`Draw failed: ${e}`)
 					})
-			} catch (e: any) {
-				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+			} catch (e) {
+				this.#logger.debug(`scale image failed: ${stringifyError(e)}`)
 				this.emit('remove')
 				return
 			}
@@ -325,7 +326,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void {
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			if (!outputVariable.lastReferencedVariables) continue
 

@@ -117,6 +117,7 @@ export class ControlButtonPreset
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
 				variableValues: deps.variables.values,
+				pageStore: deps.pageStore,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType, injectedVariableValues) =>
@@ -300,9 +301,7 @@ export class ControlButtonPreset
 	 * Propagate variable changes
 	 * @param allChangedVariables - variables with changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void {
-		this.entities.stepCheckExpressionOnVariablesChanged(allChangedVariables)
-
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
 		if (!this.#lastDrawVariables) return
 		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 

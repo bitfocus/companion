@@ -7,7 +7,7 @@ import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCCo
 import { trpc } from '~/Resources/TRPC'
 import { LoadingRetryOrError } from '~/Resources/Loading'
 
-export const Route = createFileRoute('/emulator')({
+export const Route = createFileRoute('/_standalone/emulator')({
 	component: RouteComponent,
 })
 

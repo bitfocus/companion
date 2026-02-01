@@ -11,7 +11,7 @@
 import LogController from '../../Log/Controller.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { parseColorToNumber } from '../../Resources/Util.js'
+import { parseColorToNumber, uint8ArrayToBuffer } from '../../Resources/Util.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
@@ -39,7 +39,8 @@ import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import type { ReadonlyDeep } from 'type-fest'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
@@ -66,7 +67,7 @@ interface SatelliteInputVariableInfo {
 interface SatelliteOutputVariableInfo {
 	id: string
 	lastReferencedVariables: ReadonlySet<string> | null
-	lastValue: any
+	lastValue: JsonValue | undefined
 	triggerUpdate?: () => void
 }
 
@@ -224,8 +225,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, controlDefinition, drawItem) => {
 			try {
 				await this.#sendDraw(controlDefinition, drawItem)
-			} catch (e: any) {
-				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+			} catch (e) {
+				this.#logger.debug(`scale image failed: ${stringifyError(e)}`)
 				this.emit('remove')
 				return
 			}
@@ -308,7 +309,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			if (buffer === undefined || buffer.length == 0) {
 				this.#logger.warn('buffer has invalid size')
 			} else {
-				params['BITMAP'] = Buffer.from(buffer).toString('base64')
+				params['BITMAP'] = uint8ArrayToBuffer(buffer).toString('base64')
 			}
 		}
 
@@ -445,7 +446,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void {
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			if (!outputVariable.lastReferencedVariables) continue
 

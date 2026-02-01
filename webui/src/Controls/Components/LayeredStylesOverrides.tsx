@@ -23,6 +23,7 @@ import { ExpressionFieldControl } from './ExpressionFieldControl.js'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { useComputed } from '~/Resources/util.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import type { JsonValue } from 'type-fest'
 
 interface LayeredStylesOverridesProps {
 	feedback: FeedbackEntityModel
@@ -304,7 +305,7 @@ const PropertyValueInput = observer(function PropertyValueInput({
 							entityType={EntityModelType.Feedback}
 							option={selectedProperty}
 							value={value}
-							setValue={(_key: string, val: any) => setValue(val)}
+							setValue={(val: JsonValue | undefined) => setValue(val)}
 							readonly={false}
 							localVariablesStore={localVariablesStore}
 						/>

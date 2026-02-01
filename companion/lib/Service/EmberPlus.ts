@@ -16,6 +16,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
 import debounceFn from 'debounce-fn'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 // const LOCATION_NODE_CONTROLID = 0
 const LOCATION_NODE_PRESSED = 1
@@ -560,15 +561,15 @@ export class ServiceEmberPlus extends ServiceBase {
 				.then(() => {
 					this.logger.info('Listening on port ' + this.port)
 				})
-				.catch((e: any) => {
-					this.logger.error(`Could not launch: ${e.message}`)
+				.catch((e) => {
+					this.logger.error(`Could not launch: ${stringifyError(e)}`)
 					this.#server = undefined
 					this.currentState = false
 				})
 
 			this.currentState = true
-		} catch (e: any) {
-			this.logger.error(`Could not launch: ${e.message}`)
+		} catch (e) {
+			this.logger.error(`Could not launch: ${stringifyError(e)}`)
 		}
 	}
 

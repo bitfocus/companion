@@ -10,6 +10,7 @@ import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { InputFeatureIcons } from '~/Controls/OptionsInputField'
+import type { JsonValue } from 'type-fest'
 
 interface ControlOptionsEditorProps {
 	controlId: string
@@ -23,7 +24,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	const setValueInner = useCallback(
-		(key: string, value: any) => {
+		(key: string, value: JsonValue) => {
 			if (configRef.current === undefined || value !== configRef.current.options[key]) {
 				setOptionsFieldMutation.mutateAsync({ controlId, key, value }).catch((e) => {
 					console.error(`Set field failed: ${e}`)
@@ -33,7 +34,10 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 		[setOptionsFieldMutation, controlId, configRef]
 	)
 
-	const setStepProgressionValue = useCallback((val: any) => setValueInner('stepProgression', val), [setValueInner])
+	const setStepProgressionValue = useCallback(
+		(val: JsonValue) => setValueInner('stepProgression', val),
+		[setValueInner]
+	)
 	const setStepExpressionValue = useCallback((val: string) => setValueInner('stepExpression', val), [setValueInner])
 	const setRotaryActions = useCallback(
 		(val: boolean) => {

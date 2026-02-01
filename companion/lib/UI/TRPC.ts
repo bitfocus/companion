@@ -125,7 +125,7 @@ export function toIterable<TEmitter extends EventEmitter, TKey extends string & 
 	key: TKey,
 	signal: AbortSignal | undefined
 ): NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]> {
-	return on(ee as any, key, { signal }) as NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]>
+	return on(ee, key, { signal }) as NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]>
 }
 
 export type RouterInput = inferRouterInputs<AppRouter>

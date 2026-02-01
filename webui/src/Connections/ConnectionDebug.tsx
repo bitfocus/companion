@@ -4,7 +4,7 @@ import { trpc, useMutationExt } from '../Resources/TRPC'
 import { InstanceDebugLog } from '../Instances/DebugLog'
 
 export function ConnectionDebug(): React.JSX.Element {
-	const { connectionId } = useParams({ from: '/connection-debug/$connectionId' })
+	const { connectionId } = useParams({ from: '/_standalone/connection-debug/$connectionId' })
 
 	const setEnabledMutation = useMutationExt(trpc.instances.connections.setEnabled.mutationOptions())
 

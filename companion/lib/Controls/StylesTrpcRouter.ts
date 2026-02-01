@@ -2,6 +2,7 @@ import z from 'zod'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
+import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>>) {
@@ -79,7 +80,7 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 				z.object({
 					controlId: z.string(),
 					elementId: z.string(),
-					usage: z.nativeEnum(ButtonGraphicsElementUsage),
+					usage: z.enum(ButtonGraphicsElementUsage),
 				})
 			)
 			.mutation(async ({ input }) => {
@@ -97,7 +98,7 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 					controlId: z.string(),
 					elementId: z.string(),
 					key: z.string(),
-					value: z.any(),
+					value: JsonValueSchema.optional(),
 				})
 			)
 			.mutation(async ({ input }) => {

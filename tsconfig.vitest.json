@@ -1,0 +1,27 @@
+{
+	"exclude": ["node_modules/**", "webui/**", "module-local-dev/**"],
+	"include": [
+		"vitest.config.mts",
+		"companion/test/**/*",
+		"shared-lib/lib/**/*spec.ts",
+		"shared-lib/lib/**/*test.ts",
+		"shared-lib/lib/**/__tests__/*",
+		"shared-lib/lib/**/__mocks__/*"
+	],
+	"compilerOptions": {
+		"composite": true,
+		"paths": {},
+		"module": "node20",
+		"moduleResolution": "node16",
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"importHelpers": true,
+		"pretty": true,
+		"types": ["node"],
+		"esModuleInterop": true,
+		"noEmit": true,
+		"skipLibCheck": true
+	},
+	"references": [{ "path": "./companion" }, { "path": "./shared-lib" }]
+}

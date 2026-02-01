@@ -125,4 +125,7 @@ export class ControlButtonPageDown
 	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
 	}
+	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
+		// Nothing to do
+	}
 }

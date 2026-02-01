@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { ServiceRosstalk } from '../../lib/Service/Rosstalk'
-import type { DataUserConfig } from '../../lib/Data/UserConfig'
-import type { ServiceApi } from '../../lib/Service/ServiceApi'
+import { ServiceRosstalk } from '../../lib/Service/Rosstalk.js'
+import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import type { ServiceApi } from '../../lib/Service/ServiceApi.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {

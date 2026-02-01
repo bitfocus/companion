@@ -8,7 +8,11 @@ export interface ClientEntityDefinition {
 	label: string
 	description: string | undefined
 	options: SomeCompanionInputField[]
-	optionsToIgnoreForSubscribe: string[]
+	/**
+	 * The options that should be monitored for triggering invalidations
+	 * If null, all options are monitored
+	 */
+	optionsToMonitorForInvalidations: string[] | null
 	feedbackType: FeedbackEntitySubType | null
 	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
 	hasLifecycleFunctions: boolean
@@ -16,7 +20,20 @@ export interface ClientEntityDefinition {
 	learnTimeout: number | undefined
 	showInvert: boolean
 
+	/**
+	 * Whether this entity definition uses the auto-parser for options
+	 */
+	optionsSupportExpressions: boolean
+
+	/**
+	 * Whether this entity supports button previewing a reference in the UI
+	 * Note: This is only valid for internal connections. It expects to find a 'location' option to preview
+	 */
 	showButtonPreview: boolean
+	/**
+	 * Whether this entity supports child groups, and if so, details about them
+	 * Note: This is only valid for internal connections
+	 */
 	supportsChildGroups: EntitySupportedChildGroupDefinition[]
 }
 

@@ -26,8 +26,9 @@
     "ps-tree": "^1.2.0",
     "quick-lru": "^7.3.0",
     "semver": "^7.7.3",
+    "type-fest": "^5.4.1",
     "unicode-segmenter": "^0.14.5",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "scripts": {
     "build": "run build:ts",

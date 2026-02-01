@@ -18,6 +18,9 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type EventEmitter from 'node:events'
 import type { UpdateEvents } from './Types.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { JsonValue } from 'type-fest'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 export class SurfaceGroup {
 	/**
@@ -406,20 +409,19 @@ export class SurfaceGroup {
 	 * @param key Config field to change
 	 * @param value New value for the field
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setGroupConfigValue(key: string, value: any): string | undefined {
-		this.#logger.debug(`Set config "${key}" to "${value}"`)
+	setGroupConfigValue(key: string, value: JsonValue | undefined): string | undefined {
+		this.#logger.debug(`Set config "${key}" to "${stringifyVariableValue(value)}"`)
 
-		let newValue = null
+		let newValue: JsonValue | null = null
 		try {
 			newValue = validateGroupConfigValue(this.#pageStore, key, value)
-		} catch (e: any) {
-			this.#logger.warn(`Set config failed: ${e?.message ?? e}`)
+		} catch (e) {
+			this.#logger.warn(`Set config failed: ${stringifyError(e)}`)
 			return 'invalid value'
 		}
 
-		if (key === 'last_page_id') {
-			this.#storeNewPage(value)
+		if (key === 'last_page_id' && typeof newValue === 'string') {
+			this.#storeNewPage(newValue)
 
 			return
 		} else {
@@ -494,14 +496,13 @@ export class SurfaceGroup {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function validateGroupConfigValue(pageStore: IPageStore, key: string, value: any): any {
+export function validateGroupConfigValue(pageStore: IPageStore, key: string, value: JsonValue | undefined): JsonValue {
 	switch (key) {
 		case 'use_last_page': {
 			return Boolean(value)
 		}
 		case 'startup_page_id': {
-			value = String(value)
+			value = stringifyVariableValue(value) ?? ''
 			if (!pageStore.isPageIdValid(value)) {
 				throw new Error(`Invalid startup_page "${value}"`)
 			}
@@ -509,7 +510,7 @@ export function validateGroupConfigValue(pageStore: IPageStore, key: string, val
 			return value
 		}
 		case 'last_page_id': {
-			value = String(value)
+			value = stringifyVariableValue(value) ?? ''
 			if (!pageStore.isPageIdValid(value)) {
 				throw new Error(`Invalid current_page "${value}"`)
 			}

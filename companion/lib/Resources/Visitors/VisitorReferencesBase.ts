@@ -7,7 +7,7 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Expression.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 export class VisitorReferencesBase<T extends InternalVisitor> {
 	protected readonly internalModule: InternalController

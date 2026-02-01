@@ -51,12 +51,12 @@ export type NormalButtonSteps = Record<
 	}
 >
 
-export interface ButtonOptionsBase {
+export type ButtonOptionsBase = {
 	stepProgression: 'auto' | 'manual' | 'expression'
 	stepExpression?: string
 }
 
-export interface LayeredButtonOptions extends ButtonOptionsBase {
+export type LayeredButtonOptions = ButtonOptionsBase & {
 	rotaryActions: boolean
 	canModifyStyleInApis: boolean
 }

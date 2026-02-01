@@ -4,6 +4,7 @@ import type { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
 import { createSqliteDatabase } from './Util.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 enum DatabaseStartupState {
 	Normal = 0,
@@ -228,7 +229,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 							fs.moveSync(this.cfgFile, this.cfgCorruptFile)
 							this.logger.error(`${this.name} could not be parsed.  A copy has been saved to ${this.cfgCorruptFile}.`)
-						} catch (_e: any) {
+						} catch (_e) {
 							this.logger.error(`${this.name} could not be parsed.  A copy could not be saved.`)
 						}
 					} catch (err) {
@@ -247,9 +248,9 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
 					this.migrateFileToSqlite()
 					this.defaultTableView.get('test')
-				} catch (e: any) {
+				} catch (e) {
 					this.setStartupState(DatabaseStartupState.Reset)
-					this.logger.error(e.message)
+					this.logger.error(stringifyError(e))
 					this.startSQLiteWithDefaults()
 				}
 			} else {
@@ -266,7 +267,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 				this.create()
 				this.defaultTableView.get('test')
 				this.loadDefaults()
-			} catch (_e: any) {
+			} catch (_e) {
 				this.setStartupState(DatabaseStartupState.Fatal)
 			}
 		}
@@ -321,9 +322,9 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 				this.store = this.#createDatabase(this.cfgFile)
 				this.tableCache.clear()
 				this.defaultTableView.get('test')
-			} catch (e: any) {
+			} catch (e) {
 				this.setStartupState(DatabaseStartupState.Reset)
-				this.logger.error(e.message)
+				this.logger.error(stringifyError(e))
 				this.startSQLiteWithDefaults()
 			}
 		} else {
@@ -340,7 +341,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			if (fs.existsSync(this.cfgFile)) {
 				fs.rmSync(this.cfgFile)
 			}
-		} catch (_e: any) {
+		} catch (_e) {
 			// Ignore, we are about to replace the file anyway
 		} finally {
 			try {
@@ -349,8 +350,8 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 				this.create()
 				this.defaultTableView.get('test')
 				this.loadDefaults()
-			} catch (e: any) {
-				this.logger.error(e.message)
+			} catch (e) {
+				this.logger.error(stringifyError(e))
 			}
 		}
 	}
@@ -385,8 +386,8 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 				.get(tableName) as { name: string } | undefined
 
 			return !!result
-		} catch (e: any) {
-			this.logger.warn(`Error checking if table ${tableName} exists: ${e.message}`)
+		} catch (e) {
+			this.logger.warn(`Error checking if table ${tableName} exists: ${stringifyError(e)}`)
 			return false
 		}
 	}
@@ -467,8 +468,8 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			)
 
 			this.setDirty()
-		} catch (e: any) {
-			this.logger.error(`Error merging tables "${oldTableName}" and "${newTableName}": ${e.message}`)
+		} catch (e) {
+			this.logger.error(`Error merging tables "${oldTableName}" and "${newTableName}": ${stringifyError(e)}`)
 			throw e
 		}
 	}
@@ -533,8 +534,8 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 					out[record.id] = record.value
 				}
 			}
-		} catch (e: any) {
-			this.#logger.warn(`Error getting: ${e.message}`)
+		} catch (e) {
+			this.#logger.warn(`Error getting: ${stringifyError(e)}`)
 		}
 
 		return out
@@ -546,8 +547,8 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 		try {
 			const row = this.#getByIdQuery.get({ id: key })
 			return row?.value
-		} catch (e: any) {
-			this.#logger.warn(`Error getting ${key}: ${e.message}`)
+		} catch (e) {
+			this.#logger.warn(`Error getting ${key}: ${stringifyError(e)}`)
 			return undefined
 		}
 	}
@@ -562,8 +563,8 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 
 		try {
 			this.#setByIdQuery.run({ id: key, value: value })
-		} catch (e: any) {
-			this.#logger.warn(`Error updating ${key}: ${e.message}`)
+		} catch (e) {
+			this.#logger.warn(`Error updating ${key}: ${stringifyError(e)}`)
 		}
 
 		this.#triggerDirty()
@@ -581,8 +582,8 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 
 		try {
 			return JSON.parse(value)
-		} catch (e: any) {
-			this.#logger.warn(`Error parsing ${id}: ${e.message}`)
+		} catch (e) {
+			this.#logger.warn(`Error parsing ${id}: ${stringifyError(e)}`)
 			return undefined
 		}
 	}
@@ -606,8 +607,8 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 
 		try {
 			return JSON.parse(value)
-		} catch (e: any) {
-			this.#logger.warn(`Error parsing ${String(id)}: ${e.message}`)
+		} catch (e) {
+			this.#logger.warn(`Error parsing ${String(id)}: ${stringifyError(e)}`)
 			return defaultValue
 		}
 	}
@@ -664,8 +665,8 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 
 		try {
 			this.#deleteByIdQuery.run({ id })
-		} catch (e: any) {
-			this.#logger.warn(`Error deleting ${id}: ${e.message}`)
+		} catch (e) {
+			this.#logger.warn(`Error deleting ${id}: ${stringifyError(e)}`)
 		}
 
 		this.#triggerDirty()
@@ -679,8 +680,8 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 
 		try {
 			this.#emptyTableQuery.run()
-		} catch (e: any) {
-			this.#logger.warn(`Error emptying: ${e.message}`)
+		} catch (e) {
+			this.#logger.warn(`Error emptying: ${stringifyError(e)}`)
 		}
 
 		this.#triggerDirty()

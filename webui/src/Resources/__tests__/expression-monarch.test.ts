@@ -15,6 +15,7 @@ describe('Ensure all documentation references real functions', () => {
 		// Some functions are implemented elsewhere
 		'parseVariables',
 		'getVariable',
+		'blink',
 	])
 
 	for (const funcDocs of builtinFunctionCompletions) {

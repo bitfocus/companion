@@ -20,6 +20,8 @@ export default {
 		// Handler: './lib/Surface/USB/Handler.js',
 		RenderThread: './dist/Graphics/Thread.js',
 		SurfaceThread: './dist/Instance/Surface/Thread/Entrypoint.js',
+		ConnectionThread: './dist/Instance/Connection/Thread/Entrypoint.js',
+		ImportExportThread: './dist/ImportExport/Thread.js',
 	},
 	mode: devMode,
 	// note: `undefined` defaults to 'eval' in dev mode, which is not compatible with `output.module: true` (particularly when `importMeta: false`)

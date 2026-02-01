@@ -43,6 +43,7 @@ import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRout
 import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
+import type { NewFeedbackValue } from './Entities/Types.js'
 
 /**
  * The class that manages the controls
@@ -549,7 +550,7 @@ export class ControlsController {
 	/**
 	 * Propagate variable changes to the controls
 	 */
-	onVariablesChanged(allChangedVariablesSet: Set<string>, fromControlId: string | null): void {
+	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
 		this.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
@@ -558,9 +559,8 @@ export class ControlsController {
 				// If the changes are local variables and from another control, ignore them
 				if (fromControlId && fromControlId !== control.controlId) continue
 
-				if (control.supportsLayeredStyle) {
-					control.onVariablesChanged(allChangedVariablesSet)
-				}
+				if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
+				control.onVariablesChanged(allChangedVariablesSet)
 			}
 		}
 	}
@@ -738,16 +738,16 @@ export class ControlsController {
 	updateFeedbackValues(connectionId: string, result: NewFeedbackValue[]): void {
 		if (result.length === 0) return
 
-		const values: Record<string, Record<string, any>> = {}
+		const values = new Map<string, Map<string, NewFeedbackValue>>()
 
 		for (const item of result) {
-			if (!values[item.controlId]) values[item.controlId] = {}
-
-			values[item.controlId][item.id] = item.value
+			const mapEntry = values.get(item.controlId) || new Map<string, NewFeedbackValue>()
+			mapEntry.set(item.entityId, item)
+			values.set(item.controlId, mapEntry)
 		}
 
 		// Pass values to controls
-		for (const [controlId, newValues] of Object.entries(values)) {
+		for (const [controlId, newValues] of values) {
 			const control = this.getControl(controlId)
 			if (control && control.supportsEntities) {
 				control.entities.updateFeedbackValues(connectionId, newValues)
@@ -775,19 +775,11 @@ export class ControlsController {
 	): VariablesAndExpressionParser {
 		const control = controlId && this.getControl(controlId)
 
-		const controlLocation = control ? this.#registry.page.store.getLocationOfControlId(control.controlId) : null
-		const variableEntities = control && control.supportsEntities ? control.entities.getLocalVariableEntities() : []
+		// If the control exists and supports entities, use its parser for local variables
+		if (control && control.supportsEntities)
+			return control.entities.createVariablesAndExpressionParser(overrideVariableValues)
 
-		return this.#registry.variables.values.createVariablesAndExpressionParser(
-			controlLocation,
-			variableEntities,
-			overrideVariableValues
-		)
+		// Otherwise create a generic one
+		return this.#registry.variables.values.createVariablesAndExpressionParser(null, null, overrideVariableValues)
 	}
-}
-
-export interface NewFeedbackValue {
-	id: string
-	controlId: string
-	value: any
 }

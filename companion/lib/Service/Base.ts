@@ -1,6 +1,7 @@
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 /**
  * Abstract class providing base functionality for services.
@@ -79,8 +80,8 @@ export abstract class ServiceBase {
 				this.currentState = false
 				this.close()
 				this.logger.info(`Stopped listening on port ${this.port}`)
-			} catch (e: any) {
-				this.logger.silly(`Could not stop listening: ${e.message}`)
+			} catch (e) {
+				this.logger.silly(`Could not stop listening: ${stringifyError(e)}`)
 			}
 		}
 	}
@@ -92,8 +93,8 @@ export abstract class ServiceBase {
 		if (this.initialized === true) {
 			try {
 				this.listen()
-			} catch (e: any) {
-				this.logger.error(`Error listening: ${e.message}`)
+			} catch (e) {
+				this.logger.error(`Error listening: ${stringifyError(e)}`)
 			}
 		}
 	}

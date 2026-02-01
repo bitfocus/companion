@@ -36,7 +36,9 @@ function SettingsContent(): JSX.Element {
 		return (
 			<div className="flex flex-1 items-center justify-center">
 				<div className="text-center">
-					<LoadingSpinner size="lg" className="mb-4" />
+					<div className="flex items-center justify-center">
+						<LoadingSpinner className="mb-4 h-12 w-12" />
+					</div>
 					<p className="text-muted-foreground">Loading configuration...</p>
 				</div>
 			</div>
