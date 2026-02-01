@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import { diffObjects } from '@companion-app/shared/Diff.js'
-import { replaceAllVariables } from '../Variables/Util.js'
+import { injectOverriddenLocalVariableValues, replaceAllVariables } from '../Variables/Util.js'
 import type {
 	PresetDefinition,
 	UIPresetDefinitionUpdate,
@@ -30,6 +30,7 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/PresetUtils.js'
 import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import jsonPatch from 'fast-json-patch'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -310,11 +311,24 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	/**
 	 * Import a preset to a location
 	 */
-	convertPresetToControlModel(connectionId: string, presetId: string): NormalButtonModel | null {
+	convertPresetToControlModel(
+		connectionId: string,
+		presetId: string,
+		matrixValues: VariableValues | null
+	): NormalButtonModel | null {
 		const definition = this.#presetDefinitions[connectionId]?.get(presetId)
 		if (!definition || definition.type !== 'button') return null
 
-		return definition.model
+		if (!matrixValues) return definition.model
+
+		const model: NormalButtonModel = {
+			...definition.model,
+			localVariables: structuredClone(definition.model.localVariables),
+		}
+
+		injectOverriddenLocalVariableValues(model.localVariables, matrixValues)
+
+		return model
 	}
 
 	/**
