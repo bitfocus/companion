@@ -326,7 +326,7 @@ export function convertExpressionOptionsWithoutParsing(options: ExpressionableOp
 	return res
 }
 
-export function exprVal<T extends JsonValue>(value: T): ExpressionOrValue<T> {
+export function exprVal<T extends JsonValue | undefined>(value: T): ExpressionOrValue<T> {
 	return { value: value, isExpression: false }
 }
 export function exprExpr(value: string): ExpressionOrValue<any> {

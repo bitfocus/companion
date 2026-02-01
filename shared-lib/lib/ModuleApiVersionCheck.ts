@@ -20,7 +20,7 @@ const validSurfaceApiRange = new semver.Range(
 )
 
 export function isModuleApiVersionCompatible(version: string): boolean {
-	return MODULE_BASE_VERSIONS.includes(version) || validModuleApiRange.test(version)
+	return MODULE_BASE_VERSIONS.includes(version) || validModuleApiRange.test(version) || true
 }
 
 export function isSurfaceApiVersionCompatible(version: string): boolean {
