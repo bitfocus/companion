@@ -16,6 +16,7 @@ import type {
 	ModuleLogger,
 } from '@companion-module/base'
 import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -30,23 +31,35 @@ export function ConvertPresetDefinitions(
 ): {
 	presets: Record<string, PresetDefinition>
 	uiPresets: Record<string, UIPresetSection>
-	duplicateIds: Set<string>
 } {
 	const converter = new PresetDefinitionConverter(logger, connectionId, connectionUpgradeIndex)
 
 	const uiPresets: Record<string, UIPresetSection> = {}
 
-	rawSections?.forEach((rawSection, i) => {
-		const section = converter.convertSection(rawSection, i)
-		if (!section) return
+	try {
+		rawSections?.forEach?.((rawSection, i) => {
+			const section = converter.convertSection(rawSection, i)
+			if (!section) return
 
-		uiPresets[section.id] = section
-	})
+			uiPresets[section.id] = section
+		})
 
-	return {
-		presets: converter.presetDefinitions,
-		uiPresets,
-		duplicateIds: converter.duplicatePresetIds,
+		if (converter.duplicatePresetIds.size > 0) {
+			logger.warn(
+				`Some preset ids are duplicated. Duplications have been dropped: ${Array.from(converter.duplicatePresetIds).join(', ')}`
+			)
+		}
+
+		return {
+			presets: converter.presetDefinitions,
+			uiPresets,
+		}
+	} catch (e) {
+		logger.error(`Converting presets failed: ${stringifyError(e)}`)
+		return {
+			presets: {},
+			uiPresets: {},
+		}
 	}
 }
 
@@ -65,61 +78,68 @@ class PresetDefinitionConverter {
 	}
 
 	convertSection(section: CompanionPresetSection, i: number): UIPresetSection | null {
-		if (!section.definitions || section.definitions.length === 0) return null
+		try {
+			if (!section.definitions || section.definitions.length === 0) return null
 
-		const uiSection: Complete<UIPresetSection> = {
-			id: section.id,
-			name: section.name || '',
-			order: i,
-			description: section.description,
-			definitions: {},
-			tags: section.tags,
-		}
-
-		const presetGroups = section.definitions.filter((grp) => this.isGroup(grp))
-		if (presetGroups.length > 0) {
-			const invalidCount = section.definitions.length - presetGroups.length
-			if (invalidCount > 0) {
-				this.#logger.warn(`Found preset section "${section.name}" containing ${invalidCount} invalid definitions`)
+			const uiSection: Complete<UIPresetSection> = {
+				id: section.id,
+				name: section.name || '',
+				order: i,
+				description: section.description,
+				definitions: {},
+				tags: section.tags,
 			}
 
-			const convertedGroups = presetGroups.map((grp, i) => this.convertGroup(grp, i)).filter((v) => !!v)
-			uiSection.definitions = Object.fromEntries(convertedGroups.map((g) => [g.id, g]))
+			const presetGroups = section.definitions.filter((grp) => this.isGroup(grp))
+			if (presetGroups.length > 0) {
+				const invalidCount = section.definitions.length - presetGroups.length
+				if (invalidCount > 0) {
+					this.#logger.warn(`Found preset section "${section.name}" containing ${invalidCount} invalid definitions`)
+				}
 
-			return uiSection
-		}
+				const convertedGroups = presetGroups.map((grp, i) => this.convertGroup(grp, i)).filter((v) => !!v)
+				uiSection.definitions = Object.fromEntries(convertedGroups.map((g) => [g.id, g]))
 
-		const presetDefinitions = section.definitions.filter((def) => this.isPreset(def))
-		if (presetDefinitions.length > 0) {
-			const invalidCount = section.definitions.length - presetDefinitions.length
-			if (invalidCount > 0) {
-				this.#logger.warn(`Found preset section "${section.name}" containing ${invalidCount} invalid definitions`)
+				return uiSection
 			}
 
-			const convertedDefinitions = presetDefinitions
-				.map((preset, i) => this.convertPreset(preset, i))
-				.filter((v) => !!v)
+			const presetDefinitions = section.definitions.filter((def) => this.isPreset(def))
+			if (presetDefinitions.length > 0) {
+				const invalidCount = section.definitions.length - presetDefinitions.length
+				if (invalidCount > 0) {
+					this.#logger.warn(`Found preset section "${section.name}" containing ${invalidCount} invalid definitions`)
+				}
 
-			// Wrap in a group, for ui simplicity
-			uiSection.definitions = {
-				default: {
-					type: 'custom',
-					id: 'default',
-					name: '',
-					order: 0,
-					description: undefined,
-					presets: Object.fromEntries(convertedDefinitions.map((d) => [d.id, d])),
-					tags: undefined,
-				} satisfies Complete<UIPresetGroup>,
+				const convertedDefinitions = presetDefinitions
+					.map((preset, i) => this.convertPreset(preset, i))
+					.filter((v) => !!v)
+
+				// Wrap in a group, for ui simplicity
+				uiSection.definitions = {
+					default: {
+						type: 'custom',
+						id: 'default',
+						name: '',
+						order: 0,
+						description: undefined,
+						presets: Object.fromEntries(convertedDefinitions.map((d) => [d.id, d])),
+						tags: undefined,
+					} satisfies Complete<UIPresetGroup>,
+				}
+
+				return uiSection
 			}
 
-			return uiSection
+			this.#logger.warn(
+				`Found preset section "${section.name}" containing ${section.definitions.length} invalid definitions`
+			)
+			return null
+		} catch (e) {
+			this.#logger.error(
+				`An error was encountered while sanitising the ${section?.name} preset section. It has been ignored: ${stringifyError(e, true)}`
+			)
+			return null
 		}
-
-		this.#logger.warn(
-			`Found preset section "${section.name}" containing ${section.definitions.length} invalid definitions`
-		)
-		return null
 	}
 
 	convertGroup(group: CompanionPresetGroup, i: number): UIPresetGroup | null {
@@ -142,6 +162,12 @@ class PresetDefinitionConverter {
 	}
 
 	convertPreset(preset: CompanionPresetDefinition, i: number): UIPresetDefinition | null {
+		// Check if an id is duplicated
+		if (this.presetDefinitions[preset.id]) {
+			this.duplicatePresetIds.add(preset.id)
+			return null
+		}
+
 		const definition = ConvertPresetDefinition(
 			this.#logger,
 			this.#connectionId,
