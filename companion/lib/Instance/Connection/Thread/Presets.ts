@@ -5,6 +5,8 @@ import type {
 	PresetDefinition,
 	UIPresetDefinition,
 	UIPresetGroup,
+	UIPresetGroupCustom,
+	UIPresetGroupMatrix,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
 import type {
@@ -20,6 +22,7 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { nanoid } from 'nanoid'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -146,22 +149,52 @@ class PresetDefinitionConverter {
 	}
 
 	convertGroup(group: CompanionPresetGroup, i: number): UIPresetGroup | null {
-		const uiGroup: Complete<UIPresetGroup> = {
-			type: 'custom',
-			id: group.id,
-			name: group.name,
-			order: i,
-			description: group.description,
-			presets: {},
-			tags: group.tags,
+		const groupName = group.name
+		const groupType = group.type
+
+		console.log('group', group.name, group.type)
+
+		switch (group.type) {
+			case 'custom': {
+				const uiGroup: Complete<UIPresetGroupCustom> = {
+					type: 'custom',
+					id: group.id,
+					name: group.name,
+					order: i,
+					description: group.description,
+					presets: {},
+					tags: group.tags,
+				}
+
+				const convertedDefinitions = group.presets.map((preset, i) => this.convertPreset(preset, i)).filter((v) => !!v)
+				if (convertedDefinitions.length === 0) return null
+
+				uiGroup.presets = Object.fromEntries(convertedDefinitions.map((d) => [d.id, d]))
+
+				return uiGroup
+			}
+			case 'matrix': {
+				const uiDefinition = this.convertPreset(group.definition, 0)
+				if (!uiDefinition) return null
+
+				return {
+					type: 'matrix',
+					id: group.id,
+					name: group.name,
+					order: i,
+					description: group.description,
+					tags: group.tags,
+
+					definition: uiDefinition,
+					matrix: structuredClone(group.matrix),
+					matrixExclude: structuredClone(group.matrixExclude),
+					matrixInclude: structuredClone(group.matrixInclude),
+				} satisfies Complete<UIPresetGroupMatrix>
+			}
+			default:
+				this.#logger.warn(`Unknown preset group "${groupName}" type: ${groupType}`)
+				return null
 		}
-
-		const convertedDefinitions = group.presets.map((preset, i) => this.convertPreset(preset, i)).filter((v) => !!v)
-		if (convertedDefinitions.length === 0) return null
-
-		uiGroup.presets = Object.fromEntries(convertedDefinitions.map((d) => [d.id, d]))
-
-		return uiGroup
 	}
 
 	convertPreset(preset: CompanionPresetDefinition, i: number): UIPresetDefinition | null {
@@ -193,8 +226,10 @@ class PresetDefinitionConverter {
 		const objGroup = obj as CompanionPresetGroup
 		switch (objGroup.type) {
 			case 'custom':
+			case 'matrix':
 				return true
 			default:
+				assertNever(objGroup)
 				return false
 		}
 	}
@@ -204,6 +239,7 @@ class PresetDefinitionConverter {
 			case 'simple':
 				return true
 			default:
+				assertNever(objPreset.type)
 				return false
 		}
 	}

@@ -56,7 +56,14 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 							{!!section.description && <div className="description">{section.description}</div>}
 
 							{Object.values(section.definitions).map((grp, i) => {
-								return <PresetGroup key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+								switch (grp.type) {
+									case 'custom':
+										return <PresetGroup key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+									case 'matrix':
+										return <p>TEST</p>
+									default:
+										return null
+								}
 							})}
 						</>
 					)}

@@ -1,6 +1,7 @@
 import type jsonPatch from 'fast-json-patch'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { NormalButtonModel } from './ButtonModel.js'
+import type { VariableValue, VariableValues } from './Variables.js'
 
 export interface PresetDefinition {
 	id: string
@@ -30,8 +31,18 @@ export interface UIPresetGroupCustom extends UIPresetGroupBase {
 	type: 'custom'
 	presets: Record<string, UIPresetDefinition>
 }
+export interface UIPresetGroupMatrix extends UIPresetGroupBase {
+	type: 'matrix'
 
-export type UIPresetGroup = UIPresetGroupCustom //| PresetGroupMatrix<TDefinition>
+	definition: UIPresetDefinition
+
+	// Matrix for combinations
+	matrix: Record<string, VariableValue[]>
+	matrixInclude?: VariableValues[]
+	matrixExclude?: VariableValues[]
+}
+
+export type UIPresetGroup = UIPresetGroupCustom | UIPresetGroupMatrix
 
 export interface UIPresetDefinition {
 	id: string
