@@ -4,7 +4,7 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { PresetsConnectionList } from './PresetsConnectionList.js'
-import { PresetsCategoryList } from './PresetsCategoryList.js'
+import { PresetsSectionsList } from './PresetsSectionsList.js'
 import { PresetDefinitionsStore, usePresetsDefinitions } from './PresetDefinitionsStore.js'
 
 interface ConnectionPresetsProps {
@@ -46,7 +46,7 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 		const presets = presetsDefinitionsStore.presets.get(selectedConnectionId)
 
 		return (
-			<PresetsCategoryList
+			<PresetsSectionsList
 				key={selectedConnectionId}
 				presets={presets}
 				connectionInfo={connectionInfo}

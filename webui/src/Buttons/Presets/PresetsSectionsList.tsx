@@ -1,43 +1,38 @@
 import React, { useMemo } from 'react'
 import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { UIPresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import type { UIPresetSection } from '@companion-app/shared/Model/Presets.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
-import { PresetButtonsCollapse } from './PresetButtonsCollapse'
+import { PresetSectionCollapse } from './PresetSectionCollapse'
 import { observable } from 'mobx'
 
-interface PresetsCategoryListProps {
-	presets: Map<string, UIPresetDefinition> | undefined
+interface PresetsSectionsListProps {
+	presets: Record<string, UIPresetSection | undefined> | undefined
 	connectionInfo: ClientConnectionConfig | undefined
 	moduleInfo: ClientModuleInfo | undefined
 	selectedConnectionId: string
 	clearSelectedConnectionId: () => void
 }
-export const PresetsCategoryList = observer(function PresetsCategoryList({
+export const PresetsSectionsList = observer(function PresetsCategoryList({
 	presets,
 	connectionInfo,
 	selectedConnectionId,
 	clearSelectedConnectionId,
-}: Readonly<PresetsCategoryListProps>): React.JSX.Element {
-	const categories = new Set<string>()
-	for (const preset of presets?.values() || []) {
-		categories.add(preset.category)
-	}
+}: Readonly<PresetsSectionsListProps>): React.JSX.Element {
+	const expandedSection = useMemo(() => observable.box<string | null>(null), [])
 
-	const expandedCategory = useMemo(() => observable.box<string | null>(null), [])
-
-	const buttons = Array.from(categories)
-		.sort((a, b) => a.localeCompare(b))
-		.map((category) => (
-			<PresetButtonsCollapse
-				key={category}
-				presets={presets}
-				category={category}
+	const sections = Object.values(presets || {})
+		.filter((p) => !!p)
+		.sort((a, b) => a.order - b.order)
+		.map((section) => (
+			<PresetSectionCollapse
+				key={section.id}
+				section={section}
 				connectionId={selectedConnectionId}
-				expandedCategory={expandedCategory}
+				expandedSection={expandedSection}
 			/>
 		))
 
@@ -55,14 +50,14 @@ export const PresetsCategoryList = observer(function PresetsCategoryList({
 					</CButton>
 				</CButtonGroup>
 			</div>
-			{buttons.length === 0 ? (
+			{sections.length === 0 ? (
 				<CAlert color="primary">Connection has no presets.</CAlert>
 			) : (
 				<>
 					<CCallout color="info" className="my-2">
 						<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
 					</CCallout>
-					<div>{buttons}</div>
+					<div>{sections}</div>
 				</>
 			)}
 		</div>

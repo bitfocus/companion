@@ -4,8 +4,8 @@ import { diffObjects } from '@companion-app/shared/Diff.js'
 import { replaceAllVariables, visitEntityOptionsForVariables } from '../Variables/Util.js'
 import type {
 	PresetDefinition,
-	UIPresetDefinition,
 	UIPresetDefinitionUpdate,
+	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { NormalButtonModel, PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -29,11 +29,12 @@ import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/PresetUtils.js'
 import {
-	type ExpressionableOptionsObject,
 	exprExpr,
 	exprVal,
 	type ExpressionOrValue,
+	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
+import jsonPatch from 'fast-json-patch'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -74,9 +75,13 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	#feedbackDefinitions: Record<string, Record<string, ClientEntityDefinition>> = {}
 	/**
-	 * The preset definitions
+	 * The flattened preset definitions
 	 */
-	#presetDefinitions: Record<string, Record<string, PresetDefinition>> = {}
+	#presetDefinitions: Record<string, ReadonlyMap<string, PresetDefinition>> = {}
+	/**
+	 * The preset definitions, as viewed by the ui
+	 */
+	#uiPresetDefinitions: Record<string, Record<string, UIPresetSection>> = {}
 
 	#events = new EventEmitter<DefinitionsEvents>()
 
@@ -99,14 +104,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			presets: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(self.#events, 'presets', signal)
 
-				const result: Record<string, Record<string, UIPresetDefinition>> = {}
-				for (const [id, presets] of Object.entries(self.#presetDefinitions)) {
-					if (Object.keys(presets).length > 0) {
-						result[id] = self.#simplifyPresetsForUi(presets)
-					}
-				}
-
-				yield { type: 'init', definitions: result } satisfies UIPresetDefinitionUpdate
+				yield { type: 'init', definitions: self.#uiPresetDefinitions } satisfies UIPresetDefinitionUpdate
 
 				for await (const [update] of changes) {
 					yield update
@@ -220,6 +218,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	forgetConnection(connectionId: string): void {
 		delete this.#presetDefinitions[connectionId]
+		delete this.#uiPresetDefinitions[connectionId]
 		if (this.#events.listenerCount('presets') > 0) {
 			this.#events.emit('presets', {
 				type: 'remove',
@@ -266,7 +265,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	}
 
 	convertPresetToPreviewControlModel(connectionId: string, presetId: string): PresetButtonModel | null {
-		const definition = this.#presetDefinitions[connectionId]?.[presetId]
+		const definition = this.#presetDefinitions[connectionId]?.get(presetId)
 		if (!definition || definition.type !== 'button') return null
 
 		const result: PresetButtonModel = {
@@ -317,7 +316,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * Import a preset to a location
 	 */
 	convertPresetToControlModel(connectionId: string, presetId: string): NormalButtonModel | null {
-		const definition = this.#presetDefinitions[connectionId]?.[presetId]
+		const definition = this.#presetDefinitions[connectionId]?.get(presetId)
 		if (!definition || definition.type !== 'button') return null
 
 		return definition.model
@@ -384,47 +383,46 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	/**
 	 * Set the preset definitions for a connection
 	 */
-	setPresetDefinitions(connectionId: string, rawPresets: PresetDefinition[]): void {
+	setPresetDefinitions(
+		connectionId: string,
+		newPresets: ReadonlyMap<string, PresetDefinition>,
+		uiDefinitions: Record<string, UIPresetSection>
+	): void {
 		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!config) return
 
-		const newPresets: Record<string, PresetDefinition> = {}
-		for (const preset of rawPresets) {
-			newPresets[preset.id] = preset
-		}
-
-		this.#updateVariablePrefixesAndStoreDefinitions(connectionId, config.label, newPresets)
+		this.#updateVariablePrefixesAndStoreDefinitions(connectionId, config.label, newPresets, uiDefinitions)
 	}
 
-	/**
-	 * The ui doesnt need many of the preset properties. Simplify an array of them in preparation for sending to the ui
-	 */
-	#simplifyPresetsForUi(presets: Record<string, PresetDefinition>): Record<string, UIPresetDefinition> {
-		const res: Record<string, UIPresetDefinition> = {}
+	// /**
+	//  * The ui doesnt need many of the preset properties. Simplify an array of them in preparation for sending to the ui
+	//  */
+	// #simplifyPresetsForUi(presets: Record<string, PresetDefinition>): Record<string, UIPresetDefinition> {
+	// 	const res: Record<string, UIPresetDefinition> = {}
 
-		Object.entries(presets).forEach(([id, preset], index) => {
-			if (preset.type === 'button') {
-				res[id] = {
-					id: preset.id,
-					order: index,
-					label: preset.name,
-					category: preset.category,
-					type: 'button',
-				}
-			} else if (preset.type === 'text') {
-				res[id] = {
-					id: preset.id,
-					order: index,
-					label: preset.name,
-					category: preset.category,
-					type: 'text',
-					text: preset.text,
-				}
-			}
-		})
+	// 	Object.entries(presets).forEach(([id, preset], index) => {
+	// 		if (preset.type === 'button') {
+	// 			res[id] = {
+	// 				id: preset.id,
+	// 				order: index,
+	// 				label: preset.name,
+	// 				category: preset.category,
+	// 				type: 'button',
+	// 			}
+	// 		} else if (preset.type === 'text') {
+	// 			res[id] = {
+	// 				id: preset.id,
+	// 				order: index,
+	// 				label: preset.name,
+	// 				category: preset.category,
+	// 				type: 'text',
+	// 				text: preset.text,
+	// 			}
+	// 		}
+	// 	})
 
-		return res
-	}
+	// 	return res
+	// }
 
 	/**
 	 * Update all the variables in the presets to reference the supplied label
@@ -434,7 +432,12 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	updateVariablePrefixesForLabel(connectionId: string, labelTo: string): void {
 		if (this.#presetDefinitions[connectionId] !== undefined) {
 			this.#logger.silly('Updating presets for connection ' + labelTo)
-			this.#updateVariablePrefixesAndStoreDefinitions(connectionId, labelTo, this.#presetDefinitions[connectionId])
+			this.#updateVariablePrefixesAndStoreDefinitions(
+				connectionId,
+				labelTo,
+				this.#presetDefinitions[connectionId],
+				this.#uiPresetDefinitions[connectionId]
+			)
 		}
 	}
 
@@ -444,7 +447,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	#updateVariablePrefixesAndStoreDefinitions(
 		connectionId: string,
 		label: string,
-		presets: Record<string, PresetDefinition>
+		presets: ReadonlyMap<string, PresetDefinition>,
+		uiDefinitions: Record<string, UIPresetSection>
 	): void {
 		const missingReferencedFeedbackDefinitions = new Set<string>()
 		const missingReferencedActionDefinitions = new Set<string>()
@@ -481,46 +485,44 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		 * since the name of the connection is dynamic. We don't want to
 		 * demand that your presets MUST be dynamically generated.
 		 */
-		for (const preset of Object.values(presets)) {
-			if (preset.type !== 'text') {
-				if (preset.model.style) {
-					preset.model.style.text = replaceAllVariables(preset.model.style.text, label)
+		for (const preset of presets.values()) {
+			if (preset.model.style) {
+				preset.model.style.text = replaceAllVariables(preset.model.style.text, label)
+			}
+
+			if (preset.model.feedbacks) {
+				for (const feedback of preset.model.feedbacks) {
+					if (feedback.type !== EntityModelType.Feedback) continue
+
+					if (typeof feedback.style?.text === 'string') {
+						feedback.style.text = replaceAllVariables(feedback.style.text, label)
+					}
+
+					const definition = this.getEntityDefinition(EntityModelType.Feedback, connectionId, feedback.definitionId)
+					if (!definition) {
+						missingReferencedFeedbackDefinitions.add(feedback.definitionId)
+						continue
+					}
+
+					feedback.options = replaceVariablesInEntityOptions(definition, feedback.options)
 				}
+			}
 
-				if (preset.model.feedbacks) {
-					for (const feedback of preset.model.feedbacks) {
-						if (feedback.type !== EntityModelType.Feedback) continue
+			for (const step of Object.values(preset.model.steps)) {
+				if (!step.action_sets || typeof step.action_sets !== 'object') continue
+				for (const set of Object.values(step.action_sets)) {
+					if (!set || !Array.isArray(set)) continue
 
-						if (typeof feedback.style?.text === 'string') {
-							feedback.style.text = replaceAllVariables(feedback.style.text, label)
-						}
+					for (const action of set) {
+						if (action.type !== EntityModelType.Action) continue
 
-						const definition = this.getEntityDefinition(EntityModelType.Feedback, connectionId, feedback.definitionId)
+						const definition = this.getEntityDefinition(EntityModelType.Action, connectionId, action.definitionId)
 						if (!definition) {
-							missingReferencedFeedbackDefinitions.add(feedback.definitionId)
+							missingReferencedActionDefinitions.add(action.definitionId)
 							continue
 						}
 
-						feedback.options = replaceVariablesInEntityOptions(definition, feedback.options)
-					}
-				}
-
-				for (const step of Object.values(preset.model.steps)) {
-					if (!step.action_sets || typeof step.action_sets !== 'object') continue
-					for (const set of Object.values(step.action_sets)) {
-						if (!set || !Array.isArray(set)) continue
-
-						for (const action of set) {
-							if (action.type !== EntityModelType.Action) continue
-
-							const definition = this.getEntityDefinition(EntityModelType.Action, connectionId, action.definitionId)
-							if (!definition) {
-								missingReferencedActionDefinitions.add(action.definitionId)
-								continue
-							}
-
-							action.options = replaceVariablesInEntityOptions(definition, action.options)
-						}
+						action.options = replaceVariablesInEntityOptions(definition, action.options)
 					}
 				}
 			}
@@ -537,24 +539,23 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			)
 		}
 
-		const lastPresetDefinitions = this.#presetDefinitions[connectionId]
 		this.#presetDefinitions[connectionId] = structuredClone(presets)
+		const lastPresetDefinitions = this.#uiPresetDefinitions[connectionId]
+		this.#uiPresetDefinitions[connectionId] = structuredClone(uiDefinitions)
 
 		this.emit('updatePresets', connectionId)
 
 		if (this.#events.listenerCount('presets') > 0) {
-			const newSimplifiedPresets = this.#simplifyPresetsForUi(presets)
 			if (!lastPresetDefinitions) {
 				this.#events.emit('presets', {
 					type: 'add',
 					connectionId,
-					definitions: newSimplifiedPresets,
+					definitions: uiDefinitions,
 				})
 			} else {
-				const lastSimplifiedPresets = this.#simplifyPresetsForUi(lastPresetDefinitions)
-				const diff = diffObjects(lastSimplifiedPresets, newSimplifiedPresets)
-				if (diff) {
-					this.#events.emit('presets', { type: 'patch', connectionId, ...diff })
+				const diff = jsonPatch.compare(lastPresetDefinitions, uiDefinitions)
+				if (diff && diff.length > 0) {
+					this.#events.emit('presets', { type: 'patch', connectionId, patch: diff })
 				}
 			}
 		}
