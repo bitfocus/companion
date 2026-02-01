@@ -48,6 +48,7 @@ export interface UIPresetDefinition {
 	id: string
 	order: number
 	label: string
+	tags?: string[]
 }
 
 export type UIPresetDefinitionUpdate =
