@@ -1,10 +1,9 @@
-// @ts-check
-
 import { fetch, fs, path, $ } from 'zx'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
 import { toPosix } from './build/util.mts'
+import { type PlatformInfo } from './build/util.mjs'
 const streamPipeline = promisify(pipeline)
 
 const nodeVersionsJsonPath = new URL('../assets/nodejs-versions.json', import.meta.url)
@@ -15,19 +14,19 @@ const cacheRoot = path.join(import.meta.dirname, '../.cache')
 const cacheDir = path.join(cacheRoot, 'node')
 const cacheRuntimeDir = path.join(cacheRoot, 'node-runtime')
 
-export async function fetchNodejs(platformInfo) {
+export async function fetchNodejs(platformInfo: PlatformInfo) {
 	await fs.mkdirp(cacheDir)
 	await fs.mkdirp(cacheRuntimeDir)
 
 	return Promise.all(
 		Object.entries(nodeVersionsJson).map(async ([name, version]) => {
-			const runtimeDir = await fetchSingleVersion(platformInfo, version)
+			const runtimeDir = await fetchSingleVersion(platformInfo, version as string)
 			return [name, runtimeDir]
 		})
 	)
 }
 
-async function fetchSingleVersion(platformInfo, nodeVersion) {
+async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: string) {
 	const isZip = platformInfo.runtimePlatform === 'win'
 
 	// Download and cache build of nodejs
