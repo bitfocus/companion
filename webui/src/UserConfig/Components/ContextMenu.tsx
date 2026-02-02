@@ -4,7 +4,7 @@ import { MenuItem } from '~/Layout/Header'
 import { type ContextMenuProps } from './useContextMenuProps'
 
 export const ContextMenu = ({ visible, position, menuItems = [] }: ContextMenuProps): React.JSX.Element => {
-	// All the code before the reture statement is to make sure the menu doesn't get clipped.
+	// All the code before the return statement is to make sure the menu doesn't get clipped.
 	//  note that the CSS transform doesn't work on the outer div. I don't know why.
 	const ref = useRef<HTMLInputElement>(null)
 	// store the result of useLayoutEffect:

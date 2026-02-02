@@ -48,13 +48,13 @@ interface MenuActiveData {
 	readonly inNewTab?: boolean
 }
 
-interface MenuSeperatorData {
+interface MenuSeparatorData {
 	readonly label?: string // to create a "group" heading
 	readonly id?: string // used for key and to allow individually styled items, see code
 	readonly isSeparator: true
 }
 
-export type MenuItemData = MenuActiveData | MenuSeperatorData
+export type MenuItemData = MenuActiveData | MenuSeparatorData
 
 const MenuSeparatorSpec: MenuItemData = {
 	isSeparator: true,
