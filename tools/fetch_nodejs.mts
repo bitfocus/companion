@@ -4,7 +4,7 @@ import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
 import { toPosix } from './build/util.mts'
 import { type PlatformInfo } from './build/util.mts'
-import nodeVersionsJson from '../assets/nodejs-versions.json'
+import nodeVersionsJson from '../assets/nodejs-versions.json' with { type: 'json' }
 
 const streamPipeline = promisify(pipeline)
 

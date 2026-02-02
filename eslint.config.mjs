@@ -146,6 +146,7 @@ export default [
 			'webui/public/_deps/**/*',
 			'webui/post-install.ts',
 			'.yarnrc.yml',
+			'companion/generated/**/*',
 			// TMP
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',
