@@ -17,6 +17,7 @@ import { showSettings, getSettingsWindow } from './settings.js'
 import os from 'os'
 
 // Show a warning in the launcher window
+/** @type {string | null} */
 let version_warning = null
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
@@ -93,6 +94,13 @@ if (!lock) {
 		console.log('Error writing log:', e)
 	})
 
+	/**
+	 * @param {string} line - the main log string.
+	 * @param {string} [prefix]
+	 * @returns {void}
+	 *
+	 * Side-effect: logs `${new Date().toISOString()} ${prefix}: ${line}` to logStream and console
+	 */
 	function customLog(line, prefix) {
 		line = stripAnsi(line.trim())
 		if (prefix) line = `${new Date().toISOString()} ${prefix}: ${line}`
@@ -237,6 +245,7 @@ if (!lock) {
 		}
 	}
 
+	/** @type {RespawnMonitor} */
 	let child
 
 	function rebindHttp() {
@@ -257,6 +266,7 @@ if (!lock) {
 	/** @type {electron.Tray | null} */
 	let tray = null
 
+	/** @type {Record<string, ReturnType<typeof debounceFn>>} */
 	const cachedDebounces = {}
 
 	const triggerRestart = debounceFn(
@@ -274,8 +284,10 @@ if (!lock) {
 
 	let restartCounter = 0
 
+	/** @type {ReturnType<typeof chokidar.watch> | null} */
 	let watcher = null
-	let pendingWatcher = null
+	/** @type {boolean} */
+	let pendingWatcher = false
 	function restartWatcher() {
 		if (pendingWatcher) return
 
@@ -903,6 +915,7 @@ if (!lock) {
 				}
 			})
 
+			/** @type {NodeJS.Timeout | null} */
 			let crashTimeout = null
 
 			// Find the node binary
@@ -974,7 +987,7 @@ if (!lock) {
 				customLog(`Companion process started`, 'Application')
 
 				if (isLocked) {
-					child.child.send({
+					child.child?.send({
 						messageType: 'lock-screen',
 						status: isLocked,
 					})
@@ -1016,7 +1029,7 @@ if (!lock) {
 				if (code === 0) return
 
 				restartCounter++
-				clearTimeout(crashTimeout)
+				if (crashTimeout) clearTimeout(crashTimeout)
 				crashTimeout = null
 
 				customLog(`Restart Count: ${restartCounter}`, 'Application')
