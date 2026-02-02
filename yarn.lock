@@ -10748,7 +10748,7 @@ __metadata:
     get-port: "npm:^7.1.0"
     nanoid: "npm:^5.1.6"
     node-cron: "npm:^4.2.1"
-    node-hid: "npm:^3.2.0"
+    node-hid: "npm:^3.3.0"
     node-machine-id: "npm:^1.1.12"
     on-headers: "npm:^1.1.0"
     openapi-fetch: "npm:^0.15.0"
@@ -18611,16 +18611,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-hid@npm:^3.2.0":
-  version: 3.2.0
-  resolution: "node-hid@npm:3.2.0"
+"node-hid@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "node-hid@npm:3.3.0"
   dependencies:
     node-addon-api: "npm:^3.2.1"
     node-gyp: "npm:latest"
     pkg-prebuilds: "npm:^1.0.0"
   bin:
     hid-showdevices: src/show-devices.js
-  checksum: 10c0/6b61c023f8bc80cec0297bd43252715740cec16411139211d5b2de4b661036c75e05a74d5eaf727df47e6da8a62c07bb922a3b6b5c866381cecea00e3eb53471
+  checksum: 10c0/3b0af78ca6e533bed7bda5834bc9c4babb4006cfee891383361b0593ebcec9b33c57e856e2928b0ad6592219de5d34026682164210866e536d1cb23e8457864c
   languageName: node
   linkType: hard
 

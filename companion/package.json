@@ -73,7 +73,7 @@
     "get-port": "^7.1.0",
     "nanoid": "^5.1.6",
     "node-cron": "^4.2.1",
-    "node-hid": "^3.2.0",
+    "node-hid": "^3.3.0",
     "node-machine-id": "^1.1.12",
     "on-headers": "^1.1.0",
     "openapi-fetch": "^0.15.0",
