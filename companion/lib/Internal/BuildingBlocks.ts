@@ -152,6 +152,7 @@ export class InternalBuildingBlocks
 						default: '1000',
 						isExpression: true,
 						disableAutoExpression: true,
+						allowInvalidValues: true,
 					},
 				],
 				hasLearn: false,

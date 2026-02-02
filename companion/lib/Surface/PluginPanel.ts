@@ -84,6 +84,7 @@ function generateConfigFields(
 				label: variable.name,
 				tooltip: variable.description,
 				isExpression: true,
+				allowInvalidValues: true,
 			})
 
 			outputVariables[variable.id] = {
