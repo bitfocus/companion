@@ -23,7 +23,7 @@ An update (late October 2019) combines the update mechanisms for both the SPI EE
 Models older than the 4 are not supported as stability issues were identified which we believe are due to multiple (potentially interrelated) factors, including:
 
 - Power output capability (e.g. to power a Stream Deck)
-- Ethernet being on a shared USB bus intefering with Stream Decks
+- Ethernet being on a shared USB bus interfering with Stream Decks
 - Maximum RAM
 - CPU performance
 
