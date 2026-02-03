@@ -59,7 +59,7 @@ If you wish to install manually on a Pi, follow the instructions below for other
 
 Since 3.0, the downloads can be used for both a desktop version, and a headless version. Check the README in the download for guidance on how to do this and for other system setup for both.
 
-If you want a headless version, we recommend using our install script to get a CompanionPi like environment. Read more on the [manual installation](getting-started/companion-pi/manual-install) page.
+If you want a headless version, we recommend using our install script to get a CompanionPi like environment. Read more on the [manual installation](./companion-pi/manual-install) page.
 
 ### Docker
 
