@@ -220,7 +220,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'collapse-all',
 				label: 'Collapse All Groups',
 				to: () => expandAllGroups(false),
-				tooltip: 'Collapse all group in the scrolling section of the sidebar.',
+				tooltip: 'Collapse all groups in the sidebar.',
 			},
 			{
 				// not sure this is useful
@@ -230,7 +230,7 @@ export const MySidebar = memo(function MySidebar() {
 					expandAllGroups(true)
 					setAccordionMode(false)
 				},
-				tooltip: 'Expand all group in the scrolling section of the sidebar.',
+				tooltip: 'Expand all groups in the sidebar. (Tip: this works best with the sidebar-help hidden.)',
 			},
 			{
 				id: 'accordion-mode',

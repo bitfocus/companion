@@ -6,9 +6,11 @@ export const MenuSeparator: MenuItemData = {
 	isSeparator: true,
 }
 
+// technically, ContextMenuProps is private to the ContextMenu code,
+// but since we have to split the hook and component into two files, it needs to be exported here.
 export interface ContextMenuProps {
 	visible: boolean
-	position: any // {x, y} ??
+	position: { x: number; y: number }
 	onContextMenu: MouseEventHandler<HTMLDivElement>
 	menuItems: MenuItemData[]
 }
