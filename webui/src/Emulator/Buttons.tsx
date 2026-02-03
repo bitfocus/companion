@@ -64,5 +64,5 @@ interface ButtonPreview2Props {
 }
 function ButtonPreview2({ column, row, ...props }: ButtonPreview2Props) {
 	const location = useMemo(() => ({ pageNumber: 0, column, row }), [column, row])
-	return <ButtonPreview {...props} location={location} title={`Button ${column}/${row}`} />
+	return <ButtonPreview {...props} location={location} title={`Button ${row}/${column}`} />
 }
