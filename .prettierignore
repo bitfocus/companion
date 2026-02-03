@@ -18,3 +18,4 @@ companion/generated/
 webui/public/_deps
 webui/public/whatsnew
 docs/.docusaurus/
+launcher/assets/*.icon/

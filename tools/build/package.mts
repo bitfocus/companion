@@ -151,6 +151,7 @@ if (process.env.ELECTRON !== '0') {
 				gatekeeperAssess: false,
 				entitlements: 'launcher/entitlements.mac.plist',
 				entitlementsInherit: 'launcher/entitlements.mac.plist',
+				icon: 'icon-macos-glass.icon',
 			},
 			win: {
 				target: 'nsis',
