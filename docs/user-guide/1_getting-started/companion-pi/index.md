@@ -15,4 +15,4 @@ There are two main ways to get Companion running on a Pi:
 1. **[Using the CompanionPi Image](./using-the-image)** - The easiest option. Download a prebuilt image and flash it to your SD card.
 2. **[Manual Installation](./manual-install)** - For advanced users who want to install Companion on an existing Linux system.
 
-Before you begin, make sure to check the [System Requirements](./system-requirements) and [Choosing a Pi](./choosing-a-pi) guides.
+Before you begin, make sure to check the [Choosing a Pi](./choosing-a-pi) guides.
