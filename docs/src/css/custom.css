@@ -26,6 +26,7 @@
 	--companion-tab-shadow-color: rgba(0, 0, 0, 0.1);
 	--companion-mode-toggle-bg: rgba(255, 255, 255, 0.75);
 	--companion-group-border-color: rgba(0, 0, 0, 0.12);
+	--companion-pulldown-sidebar-bg: #fff; /* --ifm-background-color is transparent in light mode */
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -48,6 +49,7 @@
 	--companion-tab-shadow-color: rgba(125, 125, 125, 0.1);
 	--companion-mode-toggle-bg: rgba(0, 0, 0, 0.25);
 	--companion-group-border-color: rgba(255, 255, 255, 0.12);
+	--companion-pulldown-sidebar-bg: var(--ifm-background-color);
 }
 
 /* parent of the "tabs" needs slight adjustments: */
@@ -119,11 +121,7 @@
    (when the window is wider, the permanent sidebar class is .theme-doc-sidebar-menu)
  */
 .navbar-sidebar {
-	--ifm-navbar-background-color: #fff; /* --ifm-background-color is transparent in light mode */
-}
-
-[data-theme='dark'] .navbar-sidebar {
-	--ifm-navbar-background-color: var(--ifm-background-color);
+	--ifm-navbar-background-color: var(--companion-pulldown-sidebar-bg);
 }
 
 /* the top of the narrow-win sidebar should be red regardless of theme */
