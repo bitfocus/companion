@@ -28,14 +28,6 @@ export function validateInputValue(
 				return `Value must be at least ${definition.minLength} characters long`
 			}
 
-			if (definition.isExpression) {
-				try {
-					ParseExpression(valueStr)
-				} catch (_e) {
-					return 'Expression is not valid'
-				}
-			}
-
 			const compiledRegex = compileRegex(definition.regex)
 			if (compiledRegex) {
 				if (!compiledRegex.exec(valueStr)) {
@@ -43,6 +35,21 @@ export function validateInputValue(
 				}
 			}
 
+			return undefined
+		}
+
+		case 'expression': {
+			value = value ?? ''
+
+			const valueStr = stringifyVariableValue(value) ?? ''
+
+			try {
+				ParseExpression(valueStr)
+			} catch (_e) {
+				return 'Expression is not valid'
+			}
+
+			// An expression could be wanting any return type, so we can't continue with further checks.
 			return undefined
 		}
 

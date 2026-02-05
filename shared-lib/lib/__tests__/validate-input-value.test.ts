@@ -12,6 +12,7 @@ import type {
 	CompanionInputFieldCustomVariableExtended,
 	CompanionInputFieldBonjourDeviceExtended,
 	InternalInputFieldTime,
+	CompanionInputFieldExpressionExtended,
 } from '../Model/Options.js'
 
 describe('validateInputValue', () => {
@@ -69,11 +70,10 @@ describe('validateInputValue', () => {
 		})
 
 		describe('expression validation', () => {
-			const expressionDefinition: CompanionInputFieldTextInputExtended = {
+			const expressionDefinition: CompanionInputFieldExpressionExtended = {
 				id: 'test',
-				type: 'textinput',
+				type: 'expression',
 				label: 'Test',
-				isExpression: true,
 			}
 
 			it('should return undefined for valid expression', () => {

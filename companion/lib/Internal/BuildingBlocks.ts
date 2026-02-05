@@ -146,11 +146,10 @@ export class InternalBuildingBlocks
 				description: 'Wait for a specified amount of time',
 				options: [
 					{
-						type: 'textinput',
+						type: 'expression',
 						label: 'Time expression (ms)',
 						id: 'time',
 						default: '1000',
-						isExpression: true,
 						disableAutoExpression: true,
 						allowInvalidValues: true,
 					},

@@ -119,12 +119,10 @@ export class VariablesAndExpressionParser {
 
 			for (const field of entityDefinition.options) {
 				let fieldType: 'expression' | 'variables' | 'generic' = 'generic'
-				if (field.type === 'textinput') {
-					if (field.isExpression) {
-						fieldType = 'expression'
-					} else if (field.useVariables) {
-						fieldType = 'variables'
-					}
+				if (field.type === 'textinput' && field.useVariables) {
+					fieldType = 'variables'
+				} else if (field.type === 'expression') {
+					fieldType = 'expression'
 				}
 
 				const parsedValue = this.parseEntityOption(options[field.id], fieldType)

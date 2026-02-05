@@ -51,6 +51,7 @@ export interface CompanionInputFieldBaseExtended {
 	type:
 		| 'static-text'
 		| 'textinput'
+		| 'expression'
 		| 'dropdown'
 		| 'multidropdown'
 		| 'colorpicker'
@@ -181,9 +182,14 @@ export interface CompanionInputFieldTextInputExtended extends CompanionInputFiel
 	useVariables?: CompanionFieldVariablesSupport
 
 	placeholder?: string
-	/** A UI hint indicating the field is an expression */
-	isExpression?: boolean
 	multiline?: boolean
+}
+export interface CompanionInputFieldExpressionExtended extends CompanionInputFieldBaseExtended {
+	type: 'expression'
+
+	default?: string
+
+	// placeholder?: string
 }
 export interface CompanionInputFieldDropdownExtended extends CompanionInputFieldBaseExtended {
 	type: 'dropdown'
@@ -248,6 +254,7 @@ export type ExtendedInputField =
 	| CompanionInputFieldStaticTextExtended
 	| CompanionInputFieldColorExtended
 	| CompanionInputFieldTextInputExtended
+	| CompanionInputFieldExpressionExtended
 	| CompanionInputFieldDropdownExtended
 	| CompanionInputFieldMultiDropdownExtended
 	| CompanionInputFieldNumberExtended

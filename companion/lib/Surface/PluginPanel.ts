@@ -80,10 +80,9 @@ function generateConfigFields(
 
 			fields.push({
 				id,
-				type: 'textinput',
+				type: 'expression',
 				label: variable.name,
 				tooltip: variable.description,
-				isExpression: true,
 				allowInvalidValues: true,
 			})
 

@@ -150,7 +150,6 @@ function translateTextInputField(
 			field.useVariables && usesInternalVariableParsing ? CompanionFieldVariablesSupport.InternalParser : undefined,
 		multiline: field.multiline,
 		placeholder: undefined, // Not supported from modules
-		isExpression: false, // Not supported from modules
 	}
 }
 function translateCheckboxField(

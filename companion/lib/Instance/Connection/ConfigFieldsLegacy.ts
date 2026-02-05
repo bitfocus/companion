@@ -165,7 +165,6 @@ function translateTextInputField(
 		useVariables,
 		multiline: field.multiline,
 		placeholder: undefined, // Not supported from modules
-		isExpression: false, // Not supported from modules
 	}
 }
 function translateCheckboxField(

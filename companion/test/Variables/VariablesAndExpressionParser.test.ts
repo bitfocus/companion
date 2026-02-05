@@ -296,9 +296,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -331,9 +330,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'exprField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Expression Field',
-						isExpression: true,
 					},
 					{
 						id: 'varField',
@@ -375,9 +373,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -409,9 +406,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -444,9 +440,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -479,21 +474,18 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'mathField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Math Field',
-						isExpression: true,
 					},
 					{
 						id: 'stringField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'String Field',
-						isExpression: true,
 					},
 					{
 						id: 'boolField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Bool Field',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -531,15 +523,13 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'monitoredExpr',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Monitored Expression',
-						isExpression: true,
 					},
 					{
 						id: 'unmonitoredExpr',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Unmonitored Expression',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: ['monitoredExpr'],
@@ -576,9 +566,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -610,9 +599,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -646,9 +634,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'exprField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Expression Field',
-						isExpression: true,
 					},
 					{
 						id: 'plainField',
@@ -697,9 +684,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -737,9 +723,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -772,9 +757,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,

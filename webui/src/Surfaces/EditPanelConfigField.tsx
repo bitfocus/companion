@@ -53,28 +53,28 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'textinput':
-			features = definition.isExpression
-				? {
-						variables: true,
-						local: true,
-					}
-				: {}
-
-			control = definition.isExpression ? (
-				<ExpressionInputField
-					value={stringifyVariableValue(value) ?? ''}
-					localVariables={features.local ? SurfaceLocalVariables : undefined}
-					setValue={setValue2}
-				/>
-			) : (
+			control = (
 				<TextInputField
 					value={stringifyVariableValue(value) ?? ''}
 					placeholder={definition.placeholder}
-					useVariables={features.variables}
-					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					multiline={definition.multiline}
 					setValue={setValue2}
 					checkValid={checkValid}
+				/>
+			)
+
+			break
+		case 'expression':
+			features = {
+				variables: true,
+				local: true,
+			}
+
+			control = (
+				<ExpressionInputField
+					value={stringifyVariableValue(value) ?? ''}
+					localVariables={SurfaceLocalVariables}
+					setValue={setValue2}
 				/>
 			)
 
