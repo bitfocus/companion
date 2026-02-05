@@ -70,6 +70,8 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 			const entry = options.find((o) => o.value == val) // Intentionally loose for compatibility
 			if (entry) {
 				res.push(entry)
+			} else if (allowCustom) {
+				res.push({ value: val, label: val })
 			} else {
 				res.push({ value: val, label: allowCustom ? val : `?? (${val})` })
 			}

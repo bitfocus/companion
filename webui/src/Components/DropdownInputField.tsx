@@ -73,8 +73,12 @@ export const DropdownInputField = observer(function DropdownInputField({
 		const entry = options.find((o) => o.value == value) // Intentionally loose for compatibility
 		if (entry) {
 			return entry
+		} else if (allowCustom) {
+			return { value: value, label: value }
+		} else if (value === '' || value === undefined || value === null) {
+			return null
 		} else {
-			return { value: value, label: allowCustom ? value : `?? (${value})` }
+			return { value: value, label: `?? (${value})` }
 		}
 	}, [value, options, allowCustom])
 
