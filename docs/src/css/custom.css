@@ -16,9 +16,16 @@
 	--ifm-code-font-size: 95%;
 	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
-	--ifm-navbar-background-color: #d50215;
+	--companion-navbar-bg: #d50215;
+	--ifm-navbar-background-color: var(--companion-navbar-bg);
 	--ifm-navbar-link-color: #ffffff;
 	--ifm-navbar-link-hover-color: #ffffff;
+
+	--companion-tab-color: var(--ifm-color);
+	--companion-tab-bg: white;
+	--companion-tab-shadow-color: rgba(0, 0, 0, 0.1);
+	--companion-mode-toggle-bg: rgba(255, 255, 255, 0.75);
+	--companion-group-border-color: rgba(0, 0, 0, 0.12);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -32,30 +39,132 @@
 	--ifm-color-primary-lightest: #f89aa7;
 
 	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+	--ifm-navbar-link-hover-bg: #ffffff;
+	--ifm-navbar-link-color: #ffffff;
+	--ifm-navbar-link-hover-color: #ffffff;
+
+	--companion-tab-color: var(--ifm-color); /* for the pseudo-tab links in the top navbar */
+	--companion-tab-bg: var(--ifm-background-color); /* #1b1b1d */
+	--companion-tab-shadow-color: rgba(125, 125, 125, 0.1);
+	--companion-mode-toggle-bg: rgba(0, 0, 0, 0.25);
+	--companion-group-border-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Navbar active link styles */
+/* parent of the "tabs" needs slight adjustments: */
+.navbar {
+	box-shadow: none; /* keeps tab continuous with page content */
+	/*box-shadow: 0 0 0.5em 0px rgba(0, 0, 0, 0.2);*/ /* alternative but breaks continuity of tab with page in light mode */
+}
+
+/* Navbar (the top bar, not the sidebar) link styles 
+   note: don't put `overflow: hidden;` here as it causes weird text-wrapping as the window narrows */
+.navbar__link {
+	border-radius: 0.5rem;
+	text-align: center; /* keep labels horizontally centered when they become two lines */
+	padding: 0 var(--ifm-navbar-item-padding-horizontal); /* keep labels vertically centered when they become two lines */
+}
+
 .navbar__link--active {
-	color: #ffffff !important;
-	background-color: rgba(255, 255, 255, 0.1);
-	border-radius: 0.25rem;
+	/* Make active links have rounded top corners only */
+	border-radius: 0.5rem 0.5rem 0 0;
+	/* Make active link look a like a page-tab (like a browser tab) */
+	color: var(--ifm-color);
+	background-color: var(--companion-tab-bg);
+	border-bottom: 1.1em solid var(--companion-tab-bg);
+	margin-bottom: -1.1em;
+	box-shadow: 0 -5px 1em 1px var(--companion-tab-shadow-color);
 }
 
-.navbar__link--active:hover {
-	color: #ffffff !important;
+/* we can't use `overflow: hidden` on .navbar because then it blocks the pulldown for user-guide versions
+   so instead we have to micromanage the border-bottom property: 
+   - Two-word labels wrap to two-lines (so exclude satellite)
+   - When user-guide is selected the pull-down appear in the header, so the two-liners wrap sooner
+   */
+@media screen and (max-width: 1105px) {
+	.navbar__link--active:not([href^='/satellite']) {
+		border-bottom: 0;
+		margin-bottom: 0;
+	}
+}
+
+@media screen and (max-width: 1200px) {
+	.navbar__link--active[href^='/user-guide'] {
+		border-bottom: 0;
+		margin-bottom: 0;
+	}
+}
+
+/* Hover styles for all types of navbar links */
+.navbar__link:hover:not(.navbar__link--active),
+.navbar-sidebar__brand:hover,
+.navbar__brand:hover,
+.navbar__toggle:hover {
 	background-color: rgba(255, 255, 255, 0.2);
 }
 
-[data-theme='dark'] .navbar__link--active {
-	color: #ffffff !important;
-	background-color: rgba(255, 255, 255, 0.15);
+/* Make the dark/light mode button stand out better.
+   Unfortunately, it doesn't have a non-serialized classname, so do it by elimination  */
+.clean-btn:not(:hover):not(.navbar-sidebar__close):not(.navbar__toggle) {
+	background-color: var(--companion-mode-toggle-bg);
 }
 
-[data-theme='dark'] .navbar__link--active:hover {
-	color: #ffffff !important;
-	background-color: rgba(255, 255, 255, 0.25);
+/* Default color for the sidebar toggle is black in light mode and grey in dark mode for some reason; neither look great */
+.navbar__toggle {
+	color: white;
+	padding: 2px;
 }
 
+/* when window is narrow, the "pull-down" sidebar's class is .navbar-sidebar.
+   Adjust its colors here to match the body/sidebar colors rather than the (top) navbar colors
+   (when the window is wider, the permanent sidebar class is .theme-doc-sidebar-menu)
+ */
+.navbar-sidebar {
+	--ifm-navbar-background-color: #fff; /* --ifm-background-color is transparent in light mode */
+}
+
+[data-theme='dark'] .navbar-sidebar {
+	--ifm-navbar-background-color: var(--ifm-background-color);
+}
+
+/* the top of the narrow-win sidebar should be red regardless of theme */
+.navbar-sidebar__brand,
+.navbar-sidebar__brand:hover {
+	background-color: var(--companion-navbar-bg);
+}
+
+/* make groups (start and end of group) more distinct
+   note that the DOM is:
+    <li class="... menu__list-item--collapsed> 
+		<div class="menu__list-item-collapsible">...
+		</div>
+	</li>
+   but the class .menu__list-item--collapsed is removed from the <li> and not
+   replaced by another class. In other words, there's no way to identify the <li> when it is open.
+   Nevertheless, .menu__list-item-collapsible is hidden when .menu__list-item--collapsed is present,
+   so the following works through a sleight of hand. */
+.menu__list-item--collapsed {
+	border: 1px solid var(--companion-group-border-color);
+	border-right: 0;
+	border-radius: 0.3rem 0.3rem 0rem 0.3rem;
+}
+
+.menu__list-item-collapsible {
+	border: 1px solid var(--companion-group-border-color);
+	border-radius: 0.3rem 0.3rem 0rem 0;
+	border-bottom: 0;
+	border-right: 0;
+}
+
+.theme-doc-sidebar-item-category .menu__list {
+	border: 1px solid var(--companion-group-border-color);
+	border-top: 0;
+	border-right: 0;
+	border-radius: 0 0 0.3rem 0.3rem;
+	margin-top: 0;
+	padding-top: 4px; /* replace margin-top with padding-top so the border is uninterrupted */
+}
+
+/* Main body styling? */
 .text-gray-50 {
 	color: #f9fafb;
 }
@@ -63,6 +172,7 @@
 	color: #6b7280;
 }
 
+/* indent text under H2 headers */
 h2 ~ :not(h1, h2) {
 	margin-left: 2rem;
 }
