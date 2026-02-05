@@ -45,6 +45,7 @@ describe('InstanceEntityManager', () => {
 			}
 
 			return {
+				ok: true,
 				parsedOptions: parsedOptions,
 				referencedVariableIds: new Set(['var1', 'var2']),
 			}
@@ -72,6 +73,7 @@ describe('InstanceEntityManager', () => {
 			}
 
 			return {
+				ok: true,
 				parsedOptions: parsedOptions,
 				referencedVariableIds: new Set(['var1', 'var2']),
 			}
@@ -519,6 +521,7 @@ describe('InstanceEntityManager', () => {
 
 			// Customize parseEntityOptions to return specific variables
 			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
 				parsedOptions: options,
 				referencedVariableIds: new Set(['specific-var']),
 			}))
@@ -582,6 +585,7 @@ describe('InstanceEntityManager', () => {
 
 			// Both entities reference 'var1' and 'var2'
 			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
 				parsedOptions: options,
 				referencedVariableIds: new Set(['var1', 'var2']),
 			}))
@@ -663,6 +667,7 @@ describe('InstanceEntityManager', () => {
 
 			// Both entities reference 'control-var'
 			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
 				parsedOptions: options,
 				referencedVariableIds: new Set(['control-var']),
 			}))
@@ -975,6 +980,7 @@ describe('InstanceEntityManager', () => {
 		it('should handle entities with expression options that parse successfully', () => {
 			// Setup parseEntityOptions to return parsed expression result
 			mockVariablesParser.parseEntityOptions.mockImplementationOnce(() => ({
+				ok: true,
 				parsedOptions: { field1: 42 },
 				referencedVariableIds: new Set(['test:num']),
 			}))

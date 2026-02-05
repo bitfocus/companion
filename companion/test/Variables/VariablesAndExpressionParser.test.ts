@@ -143,10 +143,13 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions).toEqual({
-				field1: 'value1',
-				field2: 'option1',
-			})
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions).toEqual({
+					field1: 'value1',
+					field2: 'option1',
+				})
+			}
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
 
@@ -174,7 +177,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions).toEqual({ field1: 42 })
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions).toEqual({ field1: 42 })
+			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
 
@@ -206,9 +212,12 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// field1 should be parsed from empty string
-			expect(result.parsedOptions.field1).toBe('')
-			expect(result.parsedOptions.field2).toBe('option1')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// field1 should be parsed from empty string
+				expect(result.parsedOptions.field1).toBe('')
+				expect(result.parsedOptions.field2).toBe('option1')
+			}
 		})
 
 		it('should not include variables in referencedVariableIds for options in optionsToMonitorForSubscribe', () => {
@@ -241,12 +250,15 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Both field1 and field2 should be parsed for display
-			expect(result.parsedOptions).toEqual({
-				field1: 'value1',
-				field2: 'value2',
-				field3: 'option1',
-			})
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Both field1 and field2 should be parsed for display
+				expect(result.parsedOptions).toEqual({
+					field1: 'value1',
+					field2: 'value2',
+					field3: 'option1',
+				})
+			}
 
 			// Should only reference variables from monitored fields (field2)
 			expect(result.referencedVariableIds.has('test:var2')).toBe(true)
@@ -280,8 +292,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should be passed through unchanged
-			expect(result.parsedOptions.field1).toBe('$(test:var1)')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should be passed through unchanged
+				expect(result.parsedOptions.field1).toBe('$(test:var1)')
+			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
 	})
@@ -317,7 +332,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe(43)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe(43)
+			}
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 		})
 
@@ -358,10 +376,13 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Expression field should compute
-			expect(result.parsedOptions.exprField).toBe(84)
-			// Variable field should substitute
-			expect(result.parsedOptions.varField).toBe('Hello value1')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Expression field should compute
+				expect(result.parsedOptions.exprField).toBe(84)
+				// Variable field should substitute
+				expect(result.parsedOptions.varField).toBe('Hello value1')
+			}
 		})
 
 		it('should execute expression when isExpression is true in option value', () => {
@@ -394,7 +415,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe(25)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe(25)
+			}
 		})
 
 		it('should handle expressions with string results', () => {
@@ -427,7 +451,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe('value1-suffix')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe('value1-suffix')
+			}
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
 
@@ -461,7 +488,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe(true)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe(true)
+			}
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 		})
 
@@ -507,9 +537,12 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.mathField).toBe(50)
-			expect(result.parsedOptions.stringField).toBe('value1-suffix')
-			expect(result.parsedOptions.boolField).toBe(true)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.mathField).toBe(50)
+				expect(result.parsedOptions.stringField).toBe('value1-suffix')
+				expect(result.parsedOptions.boolField).toBe(true)
+			}
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
@@ -550,8 +583,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.monitoredExpr).toBe('value1 monitored')
-			expect(result.parsedOptions.unmonitoredExpr).toBe('value2 unmonitored')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.monitoredExpr).toBe('value1 monitored')
+				expect(result.parsedOptions.unmonitoredExpr).toBe('value2 unmonitored')
+			}
 			// Only monitored field variables should be tracked
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var2')).toBe(false)
@@ -587,7 +623,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBeUndefined()
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBeUndefined()
+			}
 		})
 
 		it('should handle expression with missing variables', () => {
@@ -620,8 +659,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should substitute '' for unknown variable, then concatenate
-			expect(result.parsedOptions.field1).toBe(' test')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should substitute '' for unknown variable, then concatenate
+				expect(result.parsedOptions.field1).toBe(' test')
+			}
 			expect(result.referencedVariableIds.has('unknown:var')).toBe(true)
 		})
 
@@ -668,9 +710,12 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.exprField).toBe(126)
-			expect(result.parsedOptions.plainField).toBe('$(test:var1) literal')
-			expect(result.parsedOptions.varField).toBe('value1 parsed')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.exprField).toBe(126)
+				expect(result.parsedOptions.plainField).toBe('$(test:var1) literal')
+				expect(result.parsedOptions.varField).toBe('value1 parsed')
+			}
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
@@ -708,7 +753,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe('value1 value2 42')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe('value1 value2 42')
+			}
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var2')).toBe(true)
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
@@ -744,8 +792,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should NOT evaluate when module doesn't support expressions
-			expect(result.parsedOptions.field1).toBe('1 + 1')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should NOT evaluate when module doesn't support expressions
+				expect(result.parsedOptions.field1).toBe('1 + 1')
+			}
 		})
 
 		it('should handle non-expression value in expression field', () => {
@@ -779,8 +830,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should still evaluate because field definition has isExpression: true
-			expect(result.parsedOptions.field1).toBe(2)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should still evaluate because field definition has isExpression: true
+				expect(result.parsedOptions.field1).toBe(2)
+			}
 		})
 	})
 
@@ -908,8 +962,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should convert to string
-			expect(result.parsedOptions.field1).toBe('123')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should convert to string
+				expect(result.parsedOptions.field1).toBe('123')
+			}
 		})
 
 		it('should handle nested variable references', () => {
@@ -959,12 +1016,15 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions).toEqual({
-				text1: 'value1',
-				num1: 50,
-				text2: 'value2 and another-value',
-				check1: true,
-			})
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions).toEqual({
+					text1: 'value1',
+					num1: 50,
+					text2: 'value2 and another-value',
+					check1: true,
+				})
+			}
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var2')).toBe(true)
 			expect(result.referencedVariableIds.has('another:var')).toBe(true)
@@ -992,7 +1052,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe('')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe('')
+			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
 
@@ -1020,8 +1083,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// No options defined, so nothing to parse
-			expect(result.parsedOptions).toEqual({})
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// No options defined, so nothing to parse
+				expect(result.parsedOptions).toEqual({})
+			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
 	})

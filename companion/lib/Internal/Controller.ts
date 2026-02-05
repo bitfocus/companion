@@ -35,7 +35,7 @@ import {
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { Complete } from '@companion-module/base'
+import type { CompanionOptionValues, Complete } from '@companion-module/base'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -306,12 +306,24 @@ export class InternalController {
 			const parser = this.#controlsController.createVariablesAndExpressionParser(feedbackState.controlId, null)
 
 			// Parse the options if enabled
-			const { parsedOptions, referencedVariableIds } = entityDefinition.optionsSupportExpressions
-				? parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
-				: {
-						parsedOptions: convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options),
-						referencedVariableIds: new Set<string>(),
-					}
+			let parsedOptions: CompanionOptionValues
+			if (entityDefinition.optionsSupportExpressions) {
+				const parseRes = parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
+				if (!parseRes.ok) {
+					this.#logger.warn(
+						`Failed to parse options for feedback ${feedbackState.entityModel.definitionId} in control ${feedbackState.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+					)
+					throw new Error(
+						`Failed to parse options for feedback ${feedbackState.entityModel.definitionId}. One or more options were invalid`
+					)
+				} else {
+					parsedOptions = parseRes.parsedOptions
+					feedbackState.referencedVariables = parseRes.referencedVariableIds
+				}
+			} else {
+				parsedOptions = convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options)
+				feedbackState.referencedVariables = new Set<string>()
+			}
 
 			const executionFeedback: Complete<FeedbackForInternalExecution> = {
 				controlId: feedbackState.controlId,
@@ -322,7 +334,6 @@ export class InternalController {
 				id: feedbackState.entityModel.id,
 				definitionId: feedbackState.entityModel.definitionId,
 			}
-			feedbackState.referencedVariables = referencedVariableIds
 
 			for (const fragment of this.#fragments) {
 				if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
@@ -447,10 +458,20 @@ export class InternalController {
 				overrideVariableValues
 			)
 
-			// Parse the options if enabled
-			const parsedOptions = entityDefinition.optionsSupportExpressions
-				? parser.parseEntityOptions(entityDefinition, action.rawOptions).parsedOptions
-				: convertExpressionOptionsWithoutParsing(action.rawOptions)
+			let parsedOptions: CompanionOptionValues
+			if (entityDefinition.optionsSupportExpressions) {
+				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions)
+				if (!parseRes.ok) {
+					this.#logger.warn(
+						`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+					)
+					throw new Error(`Failed to parse options for action ${action.definitionId}. One or more options were invalid`)
+				} else {
+					parsedOptions = parseRes.parsedOptions
+				}
+			} else {
+				parsedOptions = convertExpressionOptionsWithoutParsing(action.rawOptions)
+			}
 
 			const executionAction: Complete<ActionForInternalExecution> = {
 				options: parsedOptions,

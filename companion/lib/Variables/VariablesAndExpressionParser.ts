@@ -107,12 +107,21 @@ export class VariablesAndExpressionParser {
 	parseEntityOptions(
 		entityDefinition: ClientEntityDefinition,
 		options: ExpressionableOptionsObject
-	): {
-		parsedOptions: CompanionOptionValues
-		referencedVariableIds: Set<string>
-	} {
+	):
+		| {
+				ok: true
+				parsedOptions: CompanionOptionValues
+				referencedVariableIds: Set<string>
+		  }
+		| {
+				ok: false
+				optionErrors: Record<string, string | undefined>
+				referencedVariableIds: Set<string>
+		  } {
 		const parsedOptions: CompanionOptionValues = {}
 		const referencedVariableIds = new Set<string>()
+
+		const parseErrors: Record<string, string | undefined> = {}
 
 		if (entityDefinition.optionsSupportExpressions) {
 			// If the entity uses the auto parser, we can just parse all
@@ -128,9 +137,10 @@ export class VariablesAndExpressionParser {
 				const parsedValue = this.parseEntityOption(options[field.id], fieldType)
 				parsedOptions[field.id] = parsedValue.value
 
-				// Ensure values are valid, or populate with default
-				if (!field.allowInvalidValues && validateInputValue(field, parsedValue.value)) {
-					parsedOptions[field.id] = 'default' in field ? field.default : undefined
+				// Ensure values are valid, or report the error
+				if (!field.allowInvalidValues) {
+					const errorMessage = validateInputValue(field, parsedValue.value)
+					if (errorMessage) parseErrors[field.id] = errorMessage
 				}
 
 				// Track the variables referenced in this field
@@ -170,7 +180,11 @@ export class VariablesAndExpressionParser {
 			}
 		}
 
-		return { parsedOptions, referencedVariableIds }
+		if (Object.keys(parseErrors).length > 0) {
+			return { ok: false, optionErrors: parseErrors, referencedVariableIds }
+		} else {
+			return { ok: true, parsedOptions, referencedVariableIds }
+		}
 	}
 
 	/**

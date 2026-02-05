@@ -586,7 +586,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				// Note: for actions, this doesn't need to be reactive
 				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
-				actionOptions = parser.parseEntityOptions(actionDefinition, action.options).parsedOptions
+				const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+				if (!parseRes.ok) {
+					this.logger.warn(
+						`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
+					)
+					throw new Error(`Failed to parse action options. One or more options were invalid`)
+				}
+				actionOptions = parseRes.parsedOptions
 			} else {
 				actionOptions = convertExpressionOptionsWithoutParsing(action.options)
 			}
