@@ -106,7 +106,7 @@
 
 /* Make the dark/light mode button stand out better.
    Unfortunately, it doesn't have a non-serialized classname, so do it by elimination  */
-.clean-btn:not(:hover):not(.navbar-sidebar__close):not(.navbar__toggle) {
+.navbar .clean-btn:not(:hover):not(.navbar-sidebar__close):not(.navbar__toggle) {
 	background-color: var(--companion-mode-toggle-bg);
 }
 
