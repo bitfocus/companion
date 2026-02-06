@@ -16,6 +16,7 @@ import LogController, { Logger } from '../Log/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { CloudController, CloudUIEvents } from './Controller.js'
 import type EventEmitter from 'node:events'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 /**
  * Functionality for a connection region for cloud control
@@ -166,15 +167,15 @@ export class CloudRegion {
 			this.setState({ connected: true, error: '' })
 			try {
 				await this.#transmitFull()
-			} catch (e: any) {
+			} catch (e) {
 				if (this.isEnabled) {
-					this.#logger.error(`Error transmitting full state: ${e.message}`)
+					this.#logger.error(`Error transmitting full state: ${stringifyError(e)}`)
 				}
 			}
-		} catch (e: any) {
+		} catch (e) {
 			if (this.isEnabled) {
-				this.#logger.error(`Error logging into cloud: ${e.message}, retrying`)
-				this.setState({ connected: false, error: e.message, loginRetry: 5 })
+				this.#logger.error(`Error logging into cloud: ${stringifyError(e)}, retrying`)
+				this.setState({ connected: false, error: stringifyError(e), loginRetry: 5 })
 			}
 		}
 	}
@@ -305,10 +306,10 @@ export class CloudRegion {
 						const result = await callback(...data.args)
 						await socket.invokePublish('companionProcResult:' + data.callerId, { result: result })
 						this.#logger.silly(`rpc result: companionProcResult:${data.callerId} : ${result}`)
-					} catch (e: any) {
+					} catch (e) {
 						if (this.isEnabled) {
 							try {
-								await socket.invokePublish('companionProcResult:' + data.callerId, { error: e.message })
+								await socket.invokePublish('companionProcResult:' + data.callerId, { error: stringifyError(e) })
 							} catch (e) {}
 						}
 					}
@@ -417,11 +418,11 @@ export class CloudRegion {
 							this.setState({ pingResults: Date.now() - result })
 						}
 					}
-				} catch (e: any) {
+				} catch (e) {
 					// Handle error
 					if (this.state.enabled) {
-						this.setState({ error: e.message })
-						this.#logger.silly(`couldn't ping ${this.state.name}: ${e.message}`)
+						this.setState({ error: stringifyError(e) })
+						this.#logger.silly(`couldn't ping ${this.state.name}: ${stringifyError(e)}`)
 					}
 				}
 			})()

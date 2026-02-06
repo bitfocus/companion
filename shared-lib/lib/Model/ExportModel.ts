@@ -10,7 +10,7 @@ import type { OutboundSurfaceInfo } from './Surfaces.js'
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8 | 9 | 10
+	readonly version: 6 | 7 | 8 | 9 | 10 | 11
 	readonly type: Type
 	readonly companionBuild: string | undefined // The build of the companion that exported this
 }

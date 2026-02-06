@@ -18,7 +18,6 @@ import type {
 	InternalVisitor,
 } from './Types.js'
 import { EventEmitter } from 'events'
-import type { InternalModuleUtils } from './Util.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 
@@ -27,7 +26,7 @@ export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> imp
 
 	readonly #pageStore: IPageStore
 
-	constructor(_internalUtils: InternalModuleUtils, pageStore: IPageStore) {
+	constructor(pageStore: IPageStore) {
 		super()
 
 		this.#pageStore = pageStore

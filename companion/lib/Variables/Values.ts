@@ -23,16 +23,27 @@ import z from 'zod'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { VariablesBlinker } from './VariablesBlinker.js'
 
 export interface VariablesValuesEvents {
-	variables_changed: [changed: Set<string>, connection_labels: Set<string>]
-	local_variables_changed: [changed: Set<string>, fromControlId: string]
+	variables_changed: [changed: ReadonlySet<string>, connection_labels: ReadonlySet<string>]
+	local_variables_changed: [changed: ReadonlySet<string>, fromControlId: string]
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #logger = LogController.createLogger('Variables/Values')
 
+	readonly #blinker: VariablesBlinker
 	#variableValues: VariableValueData = {}
+
+	constructor() {
+		super()
+
+		this.#blinker = new VariablesBlinker((values) => {
+			this.setVariableValues('internal', values)
+		})
+	}
 
 	getVariableValue(label: string, name: string): VariableValue | undefined {
 		if (label === 'internal' && name.substring(0, 7) == 'custom_') {
@@ -55,7 +66,13 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		const thisValues: VariablesCache = new Map()
 		this.addInjectedVariablesForLocation(thisValues, controlLocation)
 
-		return new VariablesAndExpressionParser(this.#variableValues, thisValues, localValues, overrideVariableValues)
+		return new VariablesAndExpressionParser(
+			this.#blinker,
+			this.#variableValues,
+			thisValues,
+			localValues,
+			overrideVariableValues
+		)
 	}
 
 	forgetConnection(_id: string, label: string): void {
@@ -142,7 +159,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		this.#emitVariablesChanged(all_changed_variables_set, connection_labels)
 	}
 
-	#emitVariablesChanged(all_changed_variables_set: Set<string>, connection_labels: Set<string>) {
+	#emitVariablesChanged(all_changed_variables_set: ReadonlySet<string>, connection_labels: ReadonlySet<string>) {
 		try {
 			if (all_changed_variables_set.size > 0) {
 				this.emit('variables_changed', all_changed_variables_set, connection_labels)
@@ -159,6 +176,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		values.set('$(this:page)', location?.pageNumber)
 		values.set('$(this:column)', location?.column)
 		values.set('$(this:row)', location?.row)
+		values.set('$(this:location)', location ? formatLocation(location) : undefined)
 
 		// Reactivity happens for these because of references to the inner variables
 		values.set(

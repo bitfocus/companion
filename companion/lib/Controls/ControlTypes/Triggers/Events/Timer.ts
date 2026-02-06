@@ -3,6 +3,9 @@ import LogController, { type Logger } from '../../../../Log/Controller.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
+import type { CompanionOptionValues } from '@companion-module/host'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 interface IntervalEvent {
 	id: string
@@ -13,17 +16,17 @@ interface IntervalEvent {
 }
 interface TimeOfDayEvent {
 	id: string
-	time: Record<string, any>
+	time: CompanionOptionValues
 	nextExecute: number | null
 }
 interface SpecificDateEvent {
 	id: string
-	date: Record<string, any>
+	date: CompanionOptionValues
 	nextExecute: number | null
 }
 interface SunEvent {
 	id: string
-	params: Record<string, any>
+	params: CompanionOptionValues
 	nextExecute: number
 }
 
@@ -179,7 +182,7 @@ export class TriggersEventTimer {
 	 * Calculate the next unix time that an timeofday event should execute at
 	 * @param time - time details for timeofday event
 	 */
-	#getNextTODExecuteTime(time: Record<string, any>): number | null {
+	#getNextTODExecuteTime(time: CompanionOptionValues): number | null {
 		if (typeof time.time !== 'string' || !Array.isArray(time.days) || !time.days.length) return null
 
 		const timeMatch = time.time.match(/^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/i)
@@ -202,7 +205,11 @@ export class TriggersEventTimer {
 		if (!parsedDays.includes(currentDay)) {
 			let nextDay = null
 
-			const futureDays = time.days.filter((d) => d > currentDay)
+			const futureDays = time.days.filter((d): d is number => {
+				const n = Number(d)
+				return !isNaN(n) && n > currentDay
+			})
+
 			if (futureDays.length > 0) {
 				// find the first day in the remainder of the week
 				nextDay = futureDays.reduce((first, cand) => Math.min(first, cand), futureDays[0])
@@ -226,8 +233,8 @@ export class TriggersEventTimer {
 	 */
 	getTimeOfDayDescription(event: EventInstance): string {
 		let day_str = 'Unknown'
-		if (event.options.days) {
-			const days = [...event.options.days].sort()
+		if (event.options.days && Array.isArray(event.options.days)) {
+			const days = [...event.options.days].map(Number).filter(isNaN).sort()
 			const days_tmp = days.toString()
 
 			if (days.length === 7) {
@@ -238,22 +245,22 @@ export class TriggersEventTimer {
 				day_str = 'Weekends'
 			} else {
 				try {
-					day_str = days.map((d) => dayjs().day(d).format('ddd')).join(', ')
+					day_str = days.map((d) => dayjs().day(Number(d)).format('ddd')).join(', ')
 				} catch (_e) {
 					day_str = 'Error'
 				}
 			}
 		}
 
-		return `<strong>${day_str}</strong>, ${event.options.time}`
+		return `<strong>${day_str}</strong>, ${stringifyVariableValue(event.options.time) ?? 'Unknown'}`
 	}
 
 	/**
 	 * Get a description for a time of day event
 	 */
 	getSpecificDateDescription(event: EventInstance): string {
-		const date_str = event.options.date ? dayjs(event.options.date).format('YYYY-MM-DD') : 'Unknown'
-		const time_str = event.options.time ? event.options.time : 'Unknown'
+		const date_str = event.options.date ? dayjs(event.options.date as string | number).format('YYYY-MM-DD') : 'Unknown'
+		const time_str = event.options.time ? stringifyVariableValue(event.options.time) : 'Unknown'
 
 		return `<strong>Once</strong>, on ${date_str} at ${time_str}`
 	}
@@ -262,10 +269,12 @@ export class TriggersEventTimer {
 	 * Calculate the next unix time that an specificDate event should execute at
 	 * @param date - date details for specificDate event
 	 */
-	#getSpecificDateExecuteTime(date: Record<string, any>): number | null {
+	#getSpecificDateExecuteTime(date: CompanionOptionValues): number | null {
 		if (typeof date !== 'object' || !date.date || !date.time) return null
 
-		const res = new Date(dayjs(date.date).format('YYYY-MM-DD') + 'T' + date.time)
+		const res = new Date(
+			dayjs(date.date as string | number).format('YYYY-MM-DD') + 'T' + (date.time as string | number)
+		)
 
 		// if specific date is in the past, ignore
 		const now = new Date()
@@ -277,10 +286,10 @@ export class TriggersEventTimer {
 	 * Calculate the next unix time that an sunrise or set event should execute at
 	 */
 
-	#getNextSunExecuteTime(input: Record<string, any>): number {
-		const latitude = input.latitude
-		const longitude = input.longitude
-		const offset = input.offset
+	#getNextSunExecuteTime(input: CompanionOptionValues): number {
+		const latitude = Number(input.latitude)
+		const longitude = Number(input.longitude)
+		const offset = Number(input.offset)
 
 		// convert 0 or 1 to sunrise or sunset
 		const sunset = input.type == 'sunset'
@@ -401,7 +410,7 @@ export class TriggersEventTimer {
 		} else {
 			type_str = 'Error'
 		}
-		return `At <strong>${type_str}</strong>, ${event.options.offset} min offset`
+		return `At <strong>${type_str}</strong>, ${Number(event.options.offset)} min offset`
 	}
 
 	/**
@@ -454,7 +463,7 @@ export class TriggersEventTimer {
 			// check if this date should cause an execution
 			if (date.nextExecute && date.nextExecute <= nowTime) {
 				execute = true
-				date.nextExecute = this.#getSpecificDateExecuteTime(date)
+				date.nextExecute = this.#getSpecificDateExecuteTime(date.date)
 			}
 		}
 
@@ -470,8 +479,8 @@ export class TriggersEventTimer {
 			setImmediate(() => {
 				try {
 					this.#executeActions(nowTime, TriggerExecutionSource.Other)
-				} catch (e: any) {
-					this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
+				} catch (e) {
+					this.#logger.warn(`Execute actions failed: ${stringifyError(e)}`)
 				}
 			})
 		}
@@ -527,7 +536,7 @@ export class TriggersEventTimer {
 	/**
 	 * Add a timeofday event listener
 	 */
-	setTimeOfDay(id: string, time: Record<string, any>): void {
+	setTimeOfDay(id: string, time: CompanionOptionValues): void {
 		this.clearTimeOfDay(id)
 
 		this.#timeOfDayEvents.push({
@@ -548,7 +557,7 @@ export class TriggersEventTimer {
 	/**
 	 * Add a specificDate event listener
 	 */
-	setSpecificDate(id: string, date: Record<string, any>): void {
+	setSpecificDate(id: string, date: CompanionOptionValues): void {
 		this.clearSpecificDate(id)
 
 		this.#specificDateEvents.push({
@@ -569,7 +578,7 @@ export class TriggersEventTimer {
 	/**
 	 * Add a sun event listener
 	 */
-	setSun(id: string, params: Record<string, any>): void {
+	setSun(id: string, params: CompanionOptionValues): void {
 		this.clearSun(id)
 
 		this.#sunEvents.push({

@@ -1,23 +1,15 @@
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
-import {
-	EntityModelType,
-	type ActionEntityModel,
-	type FeedbackEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
 import type { PresetDefinition, PresetDefinitionButton } from '@companion-app/shared/Model/Presets.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type {
 	CompanionButtonPresetDefinition,
-	CompanionButtonStyleProps,
 	CompanionPresetAction,
-	CompanionPresetFeedback,
 	CompanionTextPresetDefinition,
 	Complete,
 	ModuleLogger,
 } from '@companion-module/base'
-import { nanoid } from 'nanoid'
+import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -87,7 +79,7 @@ export function ConvertPresetDefinition(
 							newStep.action_sets[setIdSafe] = convertActionsDelay(
 								setActions,
 								connectionId,
-								rawPreset.options?.relativeDelay,
+								true, // Always relative now
 								connectionUpgradeIndex
 							)
 						}
@@ -118,139 +110,5 @@ export function ConvertPresetDefinition(
 	} catch (e) {
 		logger.warn(`Received invalid preset "${rawPreset.name}"(${presetId}): ${e}`)
 		return null
-	}
-}
-
-function convertActionsDelay(
-	actions: CompanionPresetAction[],
-	connectionId: string,
-	relativeDelays: boolean | undefined,
-	connectionUpgradeIndex: number | undefined
-): ActionEntityModel[] {
-	if (relativeDelays) {
-		const newActions: ActionEntityModel[] = []
-
-		for (const action of actions) {
-			const delay = Number(action.delay)
-
-			// Add the wait action
-			if (!isNaN(delay) && delay > 0) {
-				newActions.push(createWaitAction(delay))
-			}
-
-			newActions.push(toActionInstance(action, connectionId, connectionUpgradeIndex))
-		}
-
-		return newActions
-	} else {
-		let currentDelay = 0
-		let currentDelayGroupChildren: ActionEntityModel[] = []
-
-		const delayGroups: ActionEntityModel[] = [wrapActionsInGroup(currentDelayGroupChildren)]
-
-		for (const action of actions) {
-			const delay = Number(action.delay)
-
-			if (!isNaN(delay) && delay >= 0 && delay !== currentDelay) {
-				// action has different delay to the last one
-				if (delay > currentDelay) {
-					// delay is greater than the last one, translate it to a relative delay
-					currentDelayGroupChildren.push(createWaitAction(delay - currentDelay))
-				} else {
-					// delay is less than the last one, preserve the weird order
-					currentDelayGroupChildren = []
-					if (delay > 0) currentDelayGroupChildren.push(createWaitAction(delay))
-					delayGroups.push(wrapActionsInGroup(currentDelayGroupChildren))
-				}
-
-				currentDelay = delay
-			}
-
-			currentDelayGroupChildren.push(toActionInstance(action, connectionId, connectionUpgradeIndex))
-		}
-
-		if (delayGroups.length > 1) {
-			// Weird delay ordering was found, preserve it
-			return delayGroups
-		} else {
-			// Order was incrementing, don't add the extra group layer
-			return currentDelayGroupChildren
-		}
-	}
-}
-
-function wrapActionsInGroup(actions: ActionEntityModel[]): ActionEntityModel {
-	return {
-		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: 'internal',
-		definitionId: 'action_group',
-		options: {
-			execution_mode: 'concurrent',
-		},
-		children: {
-			default: actions,
-		},
-		upgradeIndex: undefined,
-	}
-}
-function createWaitAction(delay: number): ActionEntityModel {
-	return {
-		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: 'internal',
-		definitionId: 'wait',
-		options: {
-			time: delay,
-		},
-		upgradeIndex: undefined,
-	}
-}
-
-function convertPresetFeedbacksToEntities(
-	rawFeedbacks: CompanionPresetFeedback[] | undefined,
-	connectionId: string,
-	connectionUpgradeIndex: number | undefined
-): FeedbackEntityModel[] {
-	if (!rawFeedbacks) return []
-
-	return rawFeedbacks.map((feedback) => ({
-		type: EntityModelType.Feedback,
-		id: nanoid(),
-		connectionId: connectionId,
-		definitionId: feedback.feedbackId,
-		options: structuredClone(feedback.options ?? {}),
-		isInverted: !!feedback.isInverted,
-		style: structuredClone(feedback.style),
-		headline: feedback.headline,
-		upgradeIndex: connectionUpgradeIndex,
-	}))
-}
-
-export function ConvertPresetStyleToDrawStyle(rawStyle: CompanionButtonStyleProps): ButtonStyleProperties {
-	return {
-		textExpression: false,
-		...structuredClone(rawStyle),
-		// TODO - avoid defaults..
-		alignment: rawStyle.alignment ?? 'center:center',
-		pngalignment: rawStyle.pngalignment ?? 'center:center',
-		png64: rawStyle.png64 ?? null,
-		show_topbar: rawStyle.show_topbar ?? 'default',
-	}
-}
-
-function toActionInstance(
-	action: CompanionPresetAction,
-	connectionId: string,
-	connectionUpgradeIndex: number | undefined
-): ActionEntityModel {
-	return {
-		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: connectionId,
-		definitionId: action.actionId,
-		options: structuredClone(action.options ?? {}),
-		headline: action.headline,
-		upgradeIndex: connectionUpgradeIndex,
 	}
 }

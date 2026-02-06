@@ -4,7 +4,7 @@ sidebar_position: 2
 description: Define button behavior with press, release, and duration actions.
 ---
 
-The actions define the behaviour of the button when it is pressed or depressed (or when triggered externally).
+The actions define the behaviour of the button when it is pressed or released (or when triggered externally).
 
 Multiple actions, even those from multiple modules, can be linked to a button. Most actions have options to let you customize how it performs.
 

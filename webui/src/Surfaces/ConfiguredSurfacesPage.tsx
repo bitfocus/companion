@@ -66,11 +66,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 	return (
 		<CRow className="surfaces-page split-panels">
-			<CCol
-				xs={12}
-				xl={6}
-				className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'} flex-column-layout`}
-			>
+			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-flex d-none'} flex-column-layout`}>
 				<div className="fixed-header">
 					<h4>Configured Surfaces</h4>
 

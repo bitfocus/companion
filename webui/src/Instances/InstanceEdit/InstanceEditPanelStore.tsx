@@ -5,9 +5,10 @@ import type { CompanionOptionValues } from '@companion-module/base'
 import { action, observable, runInAction } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import { nanoid } from 'nanoid'
-import { validateInputValue } from '~/Helpers/validateInputValue'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { parseIsVisibleFn } from '~/Hooks/useOptionsAndIsVisible'
 import type { InstanceEditPanelService } from './InstanceEditPanelService'
+import type { JsonValue } from 'type-fest'
 
 export interface InstanceBasicInfoChanges {
 	label?: string
@@ -178,9 +179,9 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 		}
 
 		if (!isConfigFieldSecret(field)) {
-			return !validateInputValue(field, configAndSecrets.config[field.id])
+			return !validateInputValue(field, configAndSecrets.config[field.id]).validationError
 		} else {
-			return !validateInputValue(field, configAndSecrets.secrets[field.id])
+			return !validateInputValue(field, configAndSecrets.secrets[field.id]).validationError
 		}
 	}
 
@@ -217,7 +218,7 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 		})
 	})
 
-	setConfigValue = action((fieldId: string, value: any) => {
+	setConfigValue = action((fieldId: string, value: JsonValue | undefined) => {
 		const configAndSecrets = this.#configAndSecrets.get()
 		if (!configAndSecrets) return
 

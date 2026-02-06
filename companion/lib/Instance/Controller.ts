@@ -21,7 +21,7 @@ import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion
 import {
 	ModuleInstanceType,
 	type InstanceConfig,
-	type InstanceVersionUpdatePolicy,
+	InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleManifest } from '@companion-module/base/manifest'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
@@ -55,6 +55,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 const execAsync = promisify(exec)
 
@@ -257,16 +258,38 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	/**
+	 * Setup the default surface instances
+	 */
+	createDefaultSurfaceInstances(): void {
+		this.addSurfaceInstanceWithLabel('elgato-stream-deck', 'elgato-stream-deck', {
+			versionId: 'builtin',
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			disabled: false,
+		})
+
+		this.addSurfaceInstanceWithLabel('xkeys', 'xkeys', {
+			versionId: 'builtin',
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			disabled: false,
+		})
+	}
+
+	/**
 	 * Initialise instances
 	 * @param extraModulePath - extra directory to search for modules
 	 */
-	async initInstances(extraModulePath: string): Promise<void> {
+	async initInstances(isFirstRun: boolean, extraModulePath: string): Promise<void> {
 		await this.userModulesManager.init()
 
 		await this.modules.initModules(extraModulePath)
 
 		// Validate and fix surface instance states before initializing
 		this.#validateAndFixSurfaceInstanceStates()
+
+		// If this is a fresh install, setup the default surface instances
+		if (isFirstRun && this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface).length === 0) {
+			this.createDefaultSurfaceInstances()
+		}
 
 		const instanceIds = this.#configStore.getAllInstanceIdsOfType(null)
 		this.#logger.silly('instance_init', instanceIds)
@@ -456,8 +479,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const updateInstance = !!values.label || ((values.config || values.secrets) && !options?.skipNotifyConnection)
 		if (updateInstance && instance) {
-			instance.updateConfigAndLabel(connectionConfig).catch((e: any) => {
-				instance.logger.warn('Error updating instance configuration: ' + e.message)
+			instance.updateConfigAndLabel(connectionConfig).catch((e) => {
+				instance.logger.warn('Error updating instance configuration: ' + stringifyError(e))
 			})
 		}
 
@@ -1197,8 +1220,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						this.#logger.info(`Running udev sync command: ${SYNC_UDEV_RULES_COMMAND}`)
 						await execAsync(SYNC_UDEV_RULES_COMMAND)
 						this.#logger.info('Udev rules synced successfully')
-					} catch (e: any) {
-						this.#logger.error(`Failed to sync udev rules: ${e.message}`)
+					} catch (e) {
+						this.#logger.error(`Failed to sync udev rules: ${stringifyError(e)}`)
 					}
 				}
 			} else {

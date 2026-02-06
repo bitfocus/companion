@@ -1,9 +1,8 @@
-import { rootRoute, route, physical, layout } from '@tanstack/virtual-file-routes'
+import { rootRoute, route, physical } from '@tanstack/virtual-file-routes'
 
 export const routes = rootRoute('__root.tsx', [
 	// Use default folder routing
-	physical('', 'self-contained'),
-	layout('_app.tsx', [physical('', 'app')]),
+	physical('', '.'),
 
 	// Add in a few backwards compatibility redirects
 	route('/help[.]html', '-redirects/help-html.tsx'),

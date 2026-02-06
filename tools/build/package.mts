@@ -151,6 +151,7 @@ if (process.env.ELECTRON !== '0') {
 				gatekeeperAssess: false,
 				entitlements: 'launcher/entitlements.mac.plist',
 				entitlementsInherit: 'launcher/entitlements.mac.plist',
+				icon: 'icon-macos-glass.icon',
 			},
 			win: {
 				target: 'nsis',
@@ -244,3 +245,5 @@ if (process.env.ELECTRON !== '0') {
 } else {
 	// TODO - populate dist with the rest of the bits
 }
+
+console.log('Packaging complete!')

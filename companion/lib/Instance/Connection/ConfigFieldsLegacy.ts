@@ -1,19 +1,19 @@
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
+import {
 	CompanionFieldVariablesSupport,
-	CompanionInputFieldBaseExtended,
-	CompanionInputFieldBonjourDeviceExtended,
-	CompanionInputFieldCheckboxExtended,
-	CompanionInputFieldColorExtended,
-	CompanionInputFieldCustomVariableExtended,
-	CompanionInputFieldDropdownExtended,
-	CompanionInputFieldMultiDropdownExtended,
-	CompanionInputFieldNumberExtended,
-	CompanionInputFieldSecretExtended,
-	CompanionInputFieldStaticTextExtended,
-	CompanionInputFieldTextInputExtended,
-	IsVisibleUiFn,
-	SomeCompanionInputField,
+	type CompanionInputFieldBaseExtended,
+	type CompanionInputFieldBonjourDeviceExtended,
+	type CompanionInputFieldCheckboxExtended,
+	type CompanionInputFieldColorExtended,
+	type CompanionInputFieldCustomVariableExtended,
+	type CompanionInputFieldDropdownExtended,
+	type CompanionInputFieldMultiDropdownExtended,
+	type CompanionInputFieldNumberExtended,
+	type CompanionInputFieldSecretExtended,
+	type CompanionInputFieldStaticTextExtended,
+	type CompanionInputFieldTextInputExtended,
+	type IsVisibleUiFn,
+	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
@@ -51,7 +51,7 @@ export function translateConnectionConfigFields(fields: SomeEncodedCompanionConf
 					type: 'secret-text',
 					width: o.width,
 					default: o.default,
-					required: o.required,
+					minLength: o.required ? 1 : undefined,
 					regex: o.regex,
 				} satisfies Complete<CompanionInputFieldSecretExtended>
 
@@ -146,10 +146,13 @@ function translateTextInputField(
 	usesInternalVariableParsing: boolean
 ): Complete<CompanionInputFieldTextInputExtended> {
 	let useVariables: CompanionFieldVariablesSupport | undefined
-	if (field.useVariables) {
-		useVariables = {
-			local: usesInternalVariableParsing || (typeof field.useVariables === 'object' && field.useVariables.local),
-		}
+	if (usesInternalVariableParsing) {
+		useVariables = CompanionFieldVariablesSupport.InternalParser
+	} else if (field.useVariables) {
+		useVariables =
+			typeof field.useVariables === 'object' && field.useVariables.local
+				? CompanionFieldVariablesSupport.LocalVariables
+				: CompanionFieldVariablesSupport.Basic
 	}
 
 	return {
@@ -157,12 +160,11 @@ function translateTextInputField(
 		type: 'textinput',
 		default: field.default,
 		regex: field.regex,
-		required: field.required,
+		minLength: field.required ? 1 : undefined,
 		width: width,
 		useVariables,
 		multiline: field.multiline,
 		placeholder: undefined, // Not supported from modules
-		isExpression: false, // Not supported from modules
 	}
 }
 function translateCheckboxField(
@@ -174,6 +176,7 @@ function translateCheckboxField(
 		type: 'checkbox',
 		default: field.default,
 		width: width,
+		displayToggle: false,
 	}
 }
 function translateColorPickerField(
@@ -202,7 +205,6 @@ function translateNumberField(
 		max: field.max,
 		step: field.step,
 		width: width,
-		required: field.required,
 		range: field.range,
 		showMinAsNegativeInfinity: field.showMinAsNegativeInfinity,
 		showMaxAsPositiveInfinity: field.showMaxAsPositiveInfinity,
@@ -254,13 +256,26 @@ function translateCustomVariableField(
 
 function translateCommonFields(
 	field: EncodeIsVisible<CompanionInputFieldBase>
-): Pick<Complete<CompanionInputFieldBaseExtended>, 'id' | 'label' | 'tooltip' | 'description' | 'isVisibleUi'> {
+): Pick<
+	Complete<CompanionInputFieldBaseExtended>,
+	| 'id'
+	| 'label'
+	| 'tooltip'
+	| 'description'
+	| 'expressionDescription'
+	| 'isVisibleUi'
+	| 'disableAutoExpression'
+	| 'allowInvalidValues'
+> {
 	return {
 		id: field.id,
 		label: field.label,
 		tooltip: field.tooltip,
 		description: field.description,
+		expressionDescription: undefined, // Expressions not supported from 1.x modules
 		isVisibleUi: translateIsVisibleFn(field),
+		disableAutoExpression: true, // Expressions not supported from 1.x modules
+		allowInvalidValues: false, // Shouldn't matter as expressions not supported from 1.x modules, but play it safe
 	}
 }
 

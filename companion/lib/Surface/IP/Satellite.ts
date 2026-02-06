@@ -38,7 +38,8 @@ import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import type { ReadonlyDeep } from 'type-fest'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
@@ -65,7 +66,7 @@ interface SatelliteInputVariableInfo {
 interface SatelliteOutputVariableInfo {
 	id: string
 	lastReferencedVariables: ReadonlySet<string> | null
-	lastValue: any
+	lastValue: JsonValue | undefined
 	triggerUpdate?: () => void
 }
 
@@ -100,10 +101,10 @@ function generateConfigFields(
 
 			fields.push({
 				id,
-				type: 'textinput',
+				type: 'expression',
 				label: variable.name,
 				tooltip: variable.description,
-				isExpression: true,
+				allowInvalidValues: true,
 			})
 
 			outputVariables[variable.id] = {
@@ -223,8 +224,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#writeQueue = new ImageWriteQueue(this.#logger, async (_id, controlDefinition, drawItem) => {
 			try {
 				await this.#sendDraw(controlDefinition, drawItem)
-			} catch (e: any) {
-				this.#logger.debug(`scale image failed: ${e}\n${e.stack}`)
+			} catch (e) {
+				this.#logger.debug(`scale image failed: ${stringifyError(e)}`)
 				this.emit('remove')
 				return
 			}
@@ -457,7 +458,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(allChangedVariables: Set<string>): void {
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			if (!outputVariable.lastReferencedVariables) continue
 

@@ -26,6 +26,7 @@ import { CustomVariableCollections } from './CustomVariableCollections.js'
 import EventEmitter from 'events'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
+import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 
 const CUSTOM_LABEL = 'custom'
 
@@ -124,7 +125,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 				.input(
 					z.object({
 						name: z.string(),
-						value: z.any(),
+						value: JsonValueSchema.optional(),
 					})
 				)
 				.mutation(({ input }) => {
@@ -135,7 +136,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 				.input(
 					z.object({
 						name: z.string(),
-						value: z.any(),
+						value: JsonValueSchema.optional(),
 					})
 				)
 				.mutation(({ input }) => {
@@ -202,17 +203,13 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 * @param defaultVal Default value of the variable (string)
 	 * @returns null or failure reason
 	 */
-	createVariable(name: string, defaultVal: string): string | null {
+	createVariable(name: string, defaultVal: VariableValue | undefined): string | null {
 		if (this.#custom_variables[name]) {
 			return `Variable "${name}" already exists`
 		}
 
 		if (!isCustomVariableValid(name)) {
 			return `Variable name "${name}" is not valid`
-		}
-
-		if (typeof defaultVal !== 'string') {
-			return 'Bad default value'
 		}
 
 		const highestSortOrder = Math.max(-1, ...Object.values(this.#custom_variables).map((v) => v.sortOrder))
@@ -520,7 +517,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	/**
 	 * Set the default value of a custom variable
 	 */
-	setVariableDefaultValue(name: string, value: string): string | null {
+	setVariableDefaultValue(name: string, value: VariableValue): string | null {
 		if (!this.#custom_variables[name]) {
 			return 'Unknown name'
 		}

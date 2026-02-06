@@ -9,13 +9,15 @@ import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
-import { validateInputValue } from '~/Helpers/validateInputValue'
-import { type DropdownChoiceInt } from '~/DropDownInputFancy'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import type { DropdownChoiceInt } from '~/DropDownInputFancy'
+import type { JsonValue } from 'type-fest'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 interface EditPanelConfigFieldProps {
-	setValue: (key: string, value: any) => void
+	setValue: (key: string, value: JsonValue | undefined) => void
 	definition: CompanionSurfaceConfigField
-	value: any
+	value: JsonValue | undefined
 }
 
 const SurfaceLocalVariables: DropdownChoiceInt[] = [
@@ -39,8 +41,11 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	value,
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
-	const checkValid = useCallback((value: any) => validateInputValue(definition, value) === undefined, [definition])
-	const setValue2 = useCallback((val: any) => setValue(id, val), [setValue, id])
+	const checkValid = useCallback(
+		(value: JsonValue | undefined) => validateInputValue(definition, value).validationError === undefined,
+		[definition]
+	)
+	const setValue2 = useCallback((val: JsonValue | undefined) => setValue(id, val), [setValue, id])
 
 	let control: JSX.Element | string | undefined = undefined
 	let features: InputFeatureIconsProps | undefined
@@ -48,28 +53,28 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'textinput':
-			features = definition.isExpression
-				? {
-						variables: true,
-						local: true,
-					}
-				: {}
-
-			control = definition.isExpression ? (
-				<ExpressionInputField
-					value={value}
-					localVariables={features.local ? SurfaceLocalVariables : undefined}
-					setValue={setValue2}
-				/>
-			) : (
+			control = (
 				<TextInputField
-					value={value}
+					value={stringifyVariableValue(value) ?? ''}
 					placeholder={definition.placeholder}
-					useVariables={features.variables}
-					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					multiline={definition.multiline}
 					setValue={setValue2}
 					checkValid={checkValid}
+				/>
+			)
+
+			break
+		case 'expression':
+			features = {
+				variables: true,
+				local: true,
+			}
+
+			control = (
+				<ExpressionInputField
+					value={stringifyVariableValue(value) ?? ''}
+					localVariables={SurfaceLocalVariables}
+					setValue={setValue2}
 				/>
 			)
 
@@ -81,7 +86,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					max={definition.max}
 					step={definition.step}
 					range={definition.range}
-					value={value}
+					value={value as any}
 					setValue={setValue2}
 					checkValid={checkValid}
 					showMinAsNegativeInfinity={definition.showMinAsNegativeInfinity}
@@ -92,14 +97,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 		case 'checkbox':
 			control = (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					<CFormSwitch
-						color="success"
-						checked={value}
-						size="xl"
-						onChange={() => {
-							setValue2(!value)
-						}}
-					/>
+					<CFormSwitch color="success" checked={!!value} size="xl" onChange={() => setValue2(!value)} />
 				</div>
 			)
 			break
@@ -110,7 +108,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					allowCustom={definition.allowCustom}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					regex={definition.regex}
-					value={value}
+					value={value as any}
 					setValue={setValue2}
 					checkValid={checkValid}
 				/>

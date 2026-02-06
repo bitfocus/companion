@@ -1,5 +1,3 @@
-// @ts-check
-
 import { fetch, fs, path, usePowerShell } from 'zx'
 import { Readable } from 'node:stream'
 import { promisify } from 'node:util'

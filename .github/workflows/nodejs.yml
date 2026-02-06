@@ -204,7 +204,7 @@ jobs:
           GH_TOKEN: ${{ secrets.SYNC_MODULES_PAT }}
 
   osx-x64:
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: check-types
     timeout-minutes: 60
 
@@ -284,7 +284,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   osx-arm64:
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: check-types
     timeout-minutes: 60
 

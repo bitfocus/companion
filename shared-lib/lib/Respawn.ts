@@ -127,7 +127,7 @@ export class RespawnMonitor extends EventEmitter<RespawnEvents> {
 	private sleep: (restarts: number) => number
 	private maxRestarts: number
 	private kill: number | false
-	private shouldRestart: boolean
+	public shouldRestart: boolean // this is used in launcher/main.js
 
 	/*private*/ child: RespawnChild | null
 	private started: Date | null

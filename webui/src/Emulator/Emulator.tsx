@@ -16,7 +16,7 @@ import { EmulatorButtons } from './Buttons.js'
 import { EmulatorLockedPage } from './LockedState.js'
 
 export const Emulator = observer(function Emulator() {
-	const { emulatorId } = useParams({ from: '/emulator/$emulatorId' })
+	const { emulatorId } = useParams({ from: '/_standalone/emulator/$emulatorId' })
 
 	const config = useSubscription(trpc.surfaces.emulatorConfig.subscriptionOptions({ id: emulatorId }))
 	const lockedState = useSubscription(trpc.surfaces.emulatorLocked.subscriptionOptions({ id: emulatorId }))

@@ -2,7 +2,6 @@ import type { Logger } from '../../Log/Controller.js'
 import type express from 'express'
 import type { InstanceStatus } from '../Status.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
-import type { CompanionOptionValues } from '@companion-module/base'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceDefinitions } from '../Definitions.js'
 import type { ControlsController } from '../../Controls/Controller.js'
@@ -11,7 +10,7 @@ import type { ServiceOscSender } from '../../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
 import type { ActionEntityModel, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionableOptionsObject, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 
 export interface ConnectionChildHandlerDependencies {
@@ -66,7 +65,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	 * @access public - called whenever variables change
 	 */
 	sendVariablesChanged(
-		changedVariableIdSet: Set<string>,
+		changedVariableIdSet: ReadonlySet<string>,
 		changedVariableIds: string[],
 		fromControlId: string | null
 	): Promise<void>
@@ -76,7 +75,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	/**
 	 *
 	 */
-	entityLearnValues(entity: SomeEntityModel, controlId: string): Promise<CompanionOptionValues | undefined | void>
+	entityLearnValues(entity: SomeEntityModel, controlId: string): Promise<ExpressionableOptionsObject | undefined | void>
 
 	/**
 	 * Inform the child instance class about an entity that has been deleted

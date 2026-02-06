@@ -29,7 +29,7 @@ function convertDatabaseToV5(db: DataStoreBase<any>, _logger: Logger): void {
 			const clouddb = new DataLegacyCloudDatabase(db.cfgDir)
 			const cloud = clouddb.getAll()
 			batchInsert('cloud', cloud)
-		} catch (_e: any) {
+		} catch (_e) {
 			// Ignore errors here, as the cloud DB may not exist
 		}
 

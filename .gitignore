@@ -16,7 +16,7 @@ TODO
 /run.sh
 /html
 /bundled-modules
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 dist
 

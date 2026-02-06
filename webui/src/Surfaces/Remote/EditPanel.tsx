@@ -9,7 +9,8 @@ import { useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { EditPanelConfigField } from '../EditPanelConfigField'
-import { validateInputValue } from '~/Helpers/validateInputValue'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import type { JsonValue } from 'type-fest'
 
 interface SurfaceEditPanelProps {
 	remoteInfo: OutboundSurfaceInfo
@@ -45,7 +46,7 @@ interface SurfaceEditPanelContentProps {
 
 interface FormData {
 	name: string
-	config: Record<string, any>
+	config: Record<string, JsonValue | undefined>
 }
 
 const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function SurfaceEditPanelContent({
@@ -148,7 +149,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								<form.Field
 									name={`config.${fieldDef.id}`}
 									validators={{
-										onChange: ({ value }) => validateInputValue(fieldDef, value),
+										onChange: ({ value }) => validateInputValue(fieldDef, value).validationError,
 									}}
 									children={(field) => (
 										<>

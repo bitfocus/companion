@@ -1,4 +1,32 @@
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
+import type { JsonValue } from 'type-fest'
+import type { CompanionOptionValues } from '@companion-module/host'
+import z from 'zod'
+
+export const JsonValueSchema: z.ZodType<JsonValue> = z.json()
+
+export const JsonObjectSchema = z.record(z.string(), JsonValueSchema.optional())
+
+export function createExpressionOrValueSchema<T extends JsonValue | undefined>(
+	schema: z.ZodType<T>
+): z.ZodType<ExpressionOrValue<T>> {
+	return z.union([
+		z.object({
+			value: schema,
+			isExpression: z.literal(false),
+		}),
+		z.object({
+			value: z.string(),
+			isExpression: z.literal(true),
+		}),
+	])
+}
+export const ExpressionOrJsonValueSchema = createExpressionOrValueSchema(JsonValueSchema.optional())
+
+export const ExpressionableOptionsObjectSchema: z.ZodType<ExpressionableOptionsObject> = z.record(
+	z.string(),
+	ExpressionOrJsonValueSchema.optional()
+)
 
 export type CompanionColorPresetValue =
 	| string
@@ -6,9 +34,14 @@ export type CompanionColorPresetValue =
 			color: string
 			title: string
 	  }
-export interface CompanionFieldVariablesSupport {
-	/** Whether to include local variables */
-	local?: boolean
+
+export enum CompanionFieldVariablesSupport {
+	/** Uses the internal parser, and supports all the features */
+	InternalParser = 'internalParser',
+	/** Old style parsing, with limited local variables */
+	LocalVariables = 'local',
+	/** Old style parsing, with no local variables */
+	Basic = 'basic',
 }
 
 export interface CompanionInputFieldBaseExtended {
@@ -18,6 +51,7 @@ export interface CompanionInputFieldBaseExtended {
 	type:
 		| 'static-text'
 		| 'textinput'
+		| 'expression'
 		| 'dropdown'
 		| 'multidropdown'
 		| 'colorpicker'
@@ -42,10 +76,24 @@ export interface CompanionInputFieldBaseExtended {
 	tooltip?: string
 	/** A description for this field */
 	description?: string
+	/** A description for this field when in expression mode. This will replace the normal description */
+	expressionDescription?: string
 
 	isVisibleUi?: IsVisibleUiFn
 
 	width?: number // For connection config
+
+	/**
+	 * Whether to disable support for toggling this field to be an expression
+	 * Note: This is only available for internal connections
+	 */
+	disableAutoExpression?: boolean
+
+	/**
+	 * Whether to allow 'invalid' values to be passed to the module when an expression is used in this field.
+	 * If false, the default value will be used instead.
+	 */
+	allowInvalidValues?: boolean
 }
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
@@ -127,16 +175,21 @@ export interface CompanionInputFieldTextInputExtended extends CompanionInputFiel
 	type: 'textinput'
 
 	default?: string
-	required?: boolean
+	minLength?: number
 
 	regex?: string
 
 	useVariables?: CompanionFieldVariablesSupport
 
 	placeholder?: string
-	/** A UI hint indicating the field is an expression */
-	isExpression?: boolean
 	multiline?: boolean
+}
+export interface CompanionInputFieldExpressionExtended extends CompanionInputFieldBaseExtended {
+	type: 'expression'
+
+	default?: string
+
+	// placeholder?: string
 }
 export interface CompanionInputFieldDropdownExtended extends CompanionInputFieldBaseExtended {
 	type: 'dropdown'
@@ -167,18 +220,13 @@ export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBa
 	/** The default value */
 	default: number
 	/**
-	 * Whether a value is required
-	 * Note: values may not conform to this, it is a visual hint only
-	 */
-	required?: boolean
-	/**
 	 * The minimum value to allow
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Note: values may not conform to this
 	 */
 	min: number
 	/**
 	 * The maximum value to allow
-	 * Note: values may not conform to this, it is a visual hint only
+	 * Note: values may not conform to this
 	 */
 	max: number
 	/** The stepping of the arrows */
@@ -194,6 +242,8 @@ export interface CompanionInputFieldCheckboxExtended extends CompanionInputField
 	type: 'checkbox'
 	/** The default value */
 	default: boolean
+	/** Display as a toggle */
+	displayToggle?: boolean
 }
 export interface CompanionInputFieldCustomVariableExtended extends CompanionInputFieldBaseExtended {
 	type: 'custom-variable'
@@ -204,6 +254,7 @@ export type ExtendedInputField =
 	| CompanionInputFieldStaticTextExtended
 	| CompanionInputFieldColorExtended
 	| CompanionInputFieldTextInputExtended
+	| CompanionInputFieldExpressionExtended
 	| CompanionInputFieldDropdownExtended
 	| CompanionInputFieldMultiDropdownExtended
 	| CompanionInputFieldNumberExtended
@@ -221,9 +272,8 @@ export interface CompanionInputFieldSecretExtended extends CompanionInputFieldBa
 	default?: string
 	/**
 	 * Whether a value is required
-	 * Note: values may not conform to this, it is a visual hint only
 	 */
-	required?: boolean
+	minLength?: number
 
 	regex?: string
 }
@@ -236,3 +286,43 @@ export interface IsVisibleUiFn {
 }
 
 export type SomeCompanionInputField = ExtendedInputField | SomeCompanionConfigInputField | InternalInputField
+
+export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
+export type ExpressionableOptionsObject = {
+	[key: string]: ExpressionOrValue<JsonValue | undefined> | undefined
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function isExpressionOrValue(input: any): input is ExpressionOrValue<any> {
+	return !!input && typeof input === 'object' && 'isExpression' in input && typeof input.isExpression === 'boolean'
+}
+
+export function optionsObjectToExpressionOptions(
+	options: CompanionOptionValues,
+	allowExpressions = true
+): ExpressionableOptionsObject {
+	const res: ExpressionableOptionsObject = {}
+
+	for (const [key, val] of Object.entries(options)) {
+		res[key] = allowExpressions && isExpressionOrValue(val) ? val : { value: val, isExpression: false }
+	}
+
+	return res
+}
+
+export function convertExpressionOptionsWithoutParsing(options: ExpressionableOptionsObject): CompanionOptionValues {
+	const res: CompanionOptionValues = {}
+
+	for (const [key, val] of Object.entries(options)) {
+		res[key] = val?.value
+	}
+
+	return res
+}
+
+export function exprVal<T extends JsonValue>(value: T): ExpressionOrValue<T> {
+	return { value: value, isExpression: false }
+}
+export function exprExpr(value: string): ExpressionOrValue<any> {
+	return { value: value, isExpression: true }
+}

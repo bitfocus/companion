@@ -19,6 +19,7 @@ import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
+import type { JsonValue } from 'type-fest'
 
 interface ButtonStyleConfigProps {
 	controlId: string
@@ -106,7 +107,7 @@ export function ButtonStyleConfig({
 
 interface ButtonStyleConfigFieldsProps {
 	values: Partial<ButtonStyleProperties>
-	setValueInner: (key: string, value: any) => void
+	setValueInner: (key: string, value: JsonValue) => void
 	setPng: (png64: string | null) => void
 	setPngError: (error: string | null) => void
 	clearPng: () => void
@@ -125,13 +126,13 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 	showField,
 	localVariablesStore,
 }: ButtonStyleConfigFieldsProps): React.JSX.Element {
-	const setTextValue = useCallback((val: any) => setValueInner('text', val), [setValueInner])
-	const setSizeValue = useCallback((val: any) => setValueInner('size', val), [setValueInner])
-	const setAlignmentValue = useCallback((val: any) => setValueInner('alignment', val), [setValueInner])
-	const setPngAlignmentValue = useCallback((val: any) => setValueInner('pngalignment', val), [setValueInner])
-	const setColorValue = useCallback((val: any) => setValueInner('color', val), [setValueInner])
-	const setBackgroundColorValue = useCallback((val: any) => setValueInner('bgcolor', val), [setValueInner])
-	const setShowTopBar = useCallback((val: any) => setValueInner('show_topbar', val), [setValueInner])
+	const setTextValue = useCallback((val: JsonValue) => setValueInner('text', val), [setValueInner])
+	const setSizeValue = useCallback((val: JsonValue) => setValueInner('size', val), [setValueInner])
+	const setAlignmentValue = useCallback((val: JsonValue) => setValueInner('alignment', val), [setValueInner])
+	const setPngAlignmentValue = useCallback((val: JsonValue) => setValueInner('pngalignment', val), [setValueInner])
+	const setColorValue = useCallback((val: JsonValue) => setValueInner('color', val), [setValueInner])
+	const setBackgroundColorValue = useCallback((val: JsonValue) => setValueInner('bgcolor', val), [setValueInner])
+	const setShowTopBar = useCallback((val: JsonValue) => setValueInner('show_topbar', val), [setValueInner])
 	const toggleExpression = useCallback(
 		() => setValueInner('textExpression', !values.textExpression),
 		[setValueInner, values.textExpression]
@@ -190,7 +191,7 @@ export const ButtonStyleConfigFields = observer(function ButtonStyleConfigFields
 							color="info"
 							variant="outline"
 							onClick={toggleExpression}
-							title={values.textExpression ? 'Expression mode ' : 'String mode'}
+							title={values.textExpression ? 'Expression mode' : 'String mode'}
 						>
 							<FontAwesomeIcon icon={values.textExpression ? faDollarSign : faFont} />
 						</CButton>

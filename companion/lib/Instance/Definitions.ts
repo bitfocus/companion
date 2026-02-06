@@ -27,7 +27,8 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { EventEmitter } from 'node:events'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/Presets.js'
+import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/PresetUtils.js'
+import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -151,7 +152,13 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		if (definition.options !== undefined && definition.options.length > 0) {
 			for (const opt of definition.options) {
-				entity.options[opt.id] = structuredClone((opt as any).default)
+				if (opt.type === 'static-text') continue
+
+				const defaultValue = structuredClone((opt as any).default)
+				entity.options[opt.id] = {
+					isExpression: false,
+					value: defaultValue,
+				} satisfies ExpressionOrValue<any>
 			}
 		}
 
@@ -167,7 +174,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					...entity,
 					type: EntityModelType.Feedback,
 					style: {},
-					isInverted: false,
+					isInverted: exprVal(false),
 				}
 
 				if (/*!booleanOnly &&*/ definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
@@ -194,8 +201,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			}
 
 			for (const opt of definition.options) {
-				// @ts-expect-error mismatch in key type
-				event.options[opt.id] = structuredClone(opt.default)
+				event.options[opt.id] = structuredClone((opt as any).default)
 			}
 
 			return event
@@ -275,9 +281,9 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				connectionId: 'internal',
 				definitionId: 'check_expression',
 				options: {
-					expression: 'true',
+					expression: exprExpr('true'),
 				},
-				isInverted: false,
+				isInverted: exprVal(false),
 				style: definition.previewStyle,
 				upgradeIndex: undefined,
 			}

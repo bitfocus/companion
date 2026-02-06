@@ -1,7 +1,8 @@
 {
 	"files": [],
 	"references": [
-		//
+		{ "path": "./tsconfig.vitest.json" },
+		{ "path": "./tsconfig.tools.json" },
 		{ "path": "./companion" },
 		{ "path": "./shared-lib" },
 		{ "path": "./webui" },

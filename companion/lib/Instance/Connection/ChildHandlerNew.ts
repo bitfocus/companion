@@ -22,13 +22,7 @@ import type {
 	SharedUdpSocketMessageSend,
 } from './IpcTypesNew.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
-import {
-	assertNever,
-	type OSCMetaArgument,
-	type CompanionHTTPRequest,
-	type CompanionOptionValues,
-	type LogLevel,
-} from '@companion-module/base'
+import { assertNever, type OSCMetaArgument, type CompanionHTTPRequest, type LogLevel } from '@companion-module/base'
 import {
 	EntityModelType,
 	type ReplaceableActionEntityModel,
@@ -51,7 +45,14 @@ import type {
 	RunActionExtras,
 } from './ChildHandlerApi.js'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	exprVal,
+	isExpressionOrValue,
+	optionsObjectToExpressionOptions,
+	type ExpressionableOptionsObject,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -221,9 +222,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		try {
 			const res = await this.#ipcWrapper.sendWithCb('getConfigFields', {})
 			return res.fields
-		} catch (e: any) {
-			this.logger.warn('Error getting config fields: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error getting config fields: ' + e?.message)
+		} catch (e) {
+			this.logger.warn('Error getting config fields: ' + stringifyError(e))
+			this.#sendToModuleLog('error', 'Error getting config fields: ' + stringifyError(e))
 
 			throw e
 		}
@@ -242,7 +243,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * @access public - called whenever variables change
 	 */
 	async sendVariablesChanged(
-		changedVariableIdSet: Set<string>,
+		changedVariableIdSet: ReadonlySet<string>,
 		_changedVariableIds: string[],
 		fromControlId: string | null
 	): Promise<void> {
@@ -262,17 +263,30 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async entityLearnValues(
 		entity: SomeEntityModel,
 		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
+	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
 
-		const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
-			entity.type,
-			this.connectionId,
-			entity.definitionId
-		)
-		const learnTimeout = entityDefinition?.learnTimeout
-
 		try {
+			const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
+				entity.type,
+				this.connectionId,
+				entity.definitionId
+			)
+			if (!entityDefinition) {
+				this.logger.warn(`Cannot learn values for unknown entity definition ${entity.definitionId}`)
+				return undefined
+			}
+			const learnTimeout = entityDefinition.learnTimeout
+
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
+			const parseRes = parser.parseEntityOptions(entityDefinition, entity.options)
+			if (!parseRes.ok) {
+				this.logger.warn(
+					`Failed to parse action options for ${entity.type} ${entity.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(`Failed to parse ${entity.type} options. One or more options were invalid`)
+			}
+
 			switch (entity.type) {
 				case EntityModelType.Action: {
 					const msg = await this.#ipcWrapper.sendWithCb(
@@ -282,7 +296,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								actionId: entity.definitionId,
-								options: entity.options,
+								options: parseRes.parsedOptions,
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,
@@ -292,7 +306,12 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						learnTimeout
 					)
 
-					return msg.options
+					if (!msg.options) return undefined
+
+					return {
+						...entity.options,
+						...optionsObjectToExpressionOptions(msg.options, false),
+					}
 				}
 				case EntityModelType.Feedback: {
 					const control = this.#deps.controls.getControl(controlId)
@@ -304,9 +323,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								feedbackId: entity.definitionId,
-								options: entity.options,
-
-								isInverted: !!entity.isInverted,
+								options: parseRes.parsedOptions,
 
 								image: control?.getBitmapSize() ?? undefined,
 
@@ -318,15 +335,20 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						learnTimeout
 					)
 
-					return msg.options
+					if (!msg.options) return undefined
+
+					return {
+						...entity.options,
+						...optionsObjectToExpressionOptions(msg.options, false),
+					}
 				}
 				default:
 					assertNever(entity)
 					break
 			}
-		} catch (e: any) {
-			this.logger.warn('Error learning options: ' + e?.message)
-			this.#sendToModuleLog('error', 'Error learning options: ' + e?.message)
+		} catch (e) {
+			this.logger.warn('Error learning options: ' + stringifyError(e))
+			this.#sendToModuleLog('error', 'Error learning options: ' + stringifyError(e))
 		}
 	}
 
@@ -353,18 +375,21 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 			// Note: for actions, this doesn't need to be reactive
-			const actionOptions = this.#entityManager.parseOptionsObject(
-				actionDefinition,
-				action.options,
-				extras.controlId
-			).parsedOptions
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
+			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+			if (!parseRes.ok) {
+				this.logger.warn(
+					`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(`Failed to parse action options. One or more options were invalid`)
+			}
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
 					id: action.id,
 					controlId: extras?.controlId,
 					actionId: action.definitionId,
-					options: actionOptions,
+					options: parseRes.parsedOptions,
 
 					upgradeIndex: null,
 					disabled: !!action.disabled,
@@ -377,9 +402,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				this.logger.warn(`Error executing action: ${message}`)
 				this.#sendToModuleLog('error', `Error executing action: ${message}`)
 			}
-		} catch (e: any) {
-			this.logger.warn(`Error executing action: ${e.message ?? e}`)
-			this.#sendToModuleLog('error', `Error executing action: ${e?.message}`)
+		} catch (e) {
+			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
+			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e)}`)
 
 			throw e
 		}
@@ -393,7 +418,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
-		} catch (e: any) {
+		} catch (e) {
 			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
 		}
 
@@ -526,7 +551,14 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
-		this.#deps.controls.updateFeedbackValues(this.connectionId, msg.values)
+		this.#deps.controls.updateFeedbackValues(
+			this.connectionId,
+			msg.values.map((val) => ({
+				entityId: val.id,
+				controlId: val.controlId,
+				value: val.value,
+			}))
+		)
 	}
 
 	/**
@@ -559,7 +591,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
 			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, msg.presets)
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
 			throw new Error(`Failed to set Preset Definitions: ${e}`)
@@ -604,7 +636,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				delay,
 				msg.uniquenessId ?? undefined
 			)
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`Record action failed: ${e}`)
 		}
 	}
@@ -618,7 +650,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			if (failure) {
 				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): ${failure}`)
 			}
-		} catch (e: any) {
+		} catch (e) {
 			this.logger.error(`Set custom variable failed: ${e}`)
 		}
 	}
@@ -722,8 +754,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 
 					image: value.imageSize,
 
-					isInverted: !!value.entity.isInverted,
-
 					upgradeIndex: value.entity.upgradeIndex ?? null,
 					disabled: !!value.entity.disabled,
 				}
@@ -735,7 +765,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
 	}
 
-	async upgradeActions(actions: EntityManagerActionEntity[], currentUpgradeIndex: number) {
+	async upgradeActions(actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActions', {
 				actions: actions.map((act) => ({
@@ -763,7 +793,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 			})
 	}
 
-	async upgradeFeedbacks(feedbacks: EntityManagerFeedbackEntity[], currentUpgradeIndex: number) {
+	async upgradeFeedbacks(feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeFeedbacks', {
 				feedbacks: feedbacks.map((fb) => ({
@@ -772,7 +802,9 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					feedbackId: fb.entity.definitionId,
 					options: fb.entity.options,
 
-					isInverted: !!fb.entity.isInverted,
+					isInverted: isExpressionOrValue(fb.entity.isInverted)
+						? fb.entity.isInverted
+						: exprVal(!!fb.entity.isInverted),
 
 					upgradeIndex: fb.entity.upgradeIndex ?? null,
 					disabled: !!fb.entity.disabled,
@@ -788,7 +820,9 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 							definitionId: feedback.feedbackId,
 							options: feedback.options,
 							style: feedback.style,
-							isInverted: feedback.isInverted,
+							isInverted: isExpressionOrValue(feedback.isInverted)
+								? feedback.isInverted
+								: exprVal(!!feedback.isInverted),
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableFeedbackEntityModel
 				)

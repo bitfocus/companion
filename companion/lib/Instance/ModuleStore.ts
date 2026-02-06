@@ -25,6 +25,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import z from 'zod'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
@@ -385,10 +386,10 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 					),
 				}
 			}
-		} catch (e: any) {
+		} catch (e) {
 			// This could be on an always offline system
 
-			this.#logger.warn(`Refreshing store info for module "${moduleId}" failed: ${e?.message ?? e}`)
+			this.#logger.warn(`Refreshing store info for module "${moduleId}" failed: ${stringifyError(e)}`)
 
 			moduleData = this.#infoStore.get(`${moduleType}:${moduleId}`) ?? {
 				id: moduleId,

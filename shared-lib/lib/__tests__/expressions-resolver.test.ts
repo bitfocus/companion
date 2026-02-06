@@ -419,4 +419,16 @@ describe('resolver', function () {
 			expect(inputValue).toEqual([1, 2, 3])
 		})
 	})
+
+	describe('integer as boolean', () => {
+		it('should treat 0 as false', () => {
+			const result = resolve(parse('0 ? 1 : 2'), defaultGetValue)
+			expect(result).toBe(2)
+		})
+
+		it('should treat non-zero as true', () => {
+			const result = resolve(parse('42 ? 1 : 2'), defaultGetValue)
+			expect(result).toBe(1)
+		})
+	})
 })

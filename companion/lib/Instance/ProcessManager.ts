@@ -15,7 +15,6 @@ import {
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { CompanionOptionValues } from '@companion-module/base'
 import { createRequire } from 'module'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
@@ -26,6 +25,8 @@ import { isPackaged } from '../Resources/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
 import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
+import { PreserveEnvVars } from './Environment.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 
 /**
  * A backoff sleep strategy
@@ -167,7 +168,7 @@ export class InstanceProcessManager {
 	 * Send a list of changed variables to all active instances.
 	 * This will trigger feedbacks using variables to be rechecked
 	 */
-	onVariablesChanged(all_changed_variables_set: Set<string>, fromControlId: string | null): void {
+	onVariablesChanged(all_changed_variables_set: ReadonlySet<string>, fromControlId: string | null): void {
 		const changedVariableIds = Array.from(all_changed_variables_set)
 
 		for (const child of this.#children.values()) {
@@ -431,10 +432,17 @@ export class InstanceProcessManager {
 				'system',
 				`** Starting Instance from "${runtimeInfo.moduleEntrypoint}" **`
 			)
+			this.#connectionDeps.debugLogLine(
+				instanceId,
+				Date.now(),
+				'System',
+				'system',
+				`** API version: ${runtimeInfo.apiVersion} **`
+			)
 
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
-					...preserveEnvVars(),
+					...PreserveEnvVars(),
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
 					...runtimeInfo.env,
@@ -805,7 +813,7 @@ export class InstanceProcessManager {
 	async connectionEntityLearnOptions(
 		entityModel: SomeEntityModel,
 		controlId: string
-	): Promise<CompanionOptionValues | undefined | void> {
+	): Promise<ExpressionableOptionsObject | undefined | void> {
 		const connection = this.getConnectionChild(entityModel.connectionId)
 		if (!connection) return undefined
 
@@ -817,31 +825,6 @@ interface RuntimeInfo {
 	entrypoint: string
 	apiVersion: string
 	env: Record<string, string>
-}
-
-/**
- * Only some env vars should be forwarded to child processes
- */
-function preserveEnvVars(): Record<string, string> {
-	const preserveNames = [
-		'HTTP_PROXY',
-		'HTTPS_PROXY',
-		'NO_PROXY',
-		'http_proxy',
-		'https_proxy',
-		'no_proxy',
-		'DISABLE_IPV6',
-	]
-
-	const preservedEnvVars: Record<string, string> = {}
-	for (const name of preserveNames) {
-		const value = process.env[name]
-		if (value !== undefined) {
-			preservedEnvVars[name] = value
-		}
-	}
-
-	return preservedEnvVars
 }
 
 function isConnectionChild(handler: ChildProcessHandlerBase): handler is ConnectionChildHandlerApi {

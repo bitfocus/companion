@@ -27,7 +27,6 @@ import type {
 } from '@companion-module/base/host-api'
 import { ConvertPresetDefinition } from './Presets.js'
 import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
-import { uint8ArrayToBuffer } from '../../../Resources/Util.js'
 
 /**
  * The context of methods and properties provided to the surfaces, which they can use to report events or make requests.
@@ -59,7 +58,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				label: rawAction.name,
 				description: rawAction.description,
 				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action),
-				optionsToIgnoreForSubscribe: rawAction.optionsToIgnoreForSubscribe || [],
+				optionsToMonitorForInvalidations: rawAction.optionsToMonitorForSubscribe || null,
 				hasLifecycleFunctions: !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
@@ -70,6 +69,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				feedbackType: null,
 				feedbackStyle: undefined,
+
+				optionsSupportExpressions: true,
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
@@ -87,7 +88,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				label: rawFeedback.name,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback),
-				optionsToIgnoreForSubscribe: [],
+				optionsToMonitorForInvalidations: null,
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
@@ -97,6 +98,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
+
+				optionsSupportExpressions: true,
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
@@ -247,4 +250,11 @@ function shouldShowInvertForFeedback(options: SomeCompanionFeedbackInputField[])
 
 	// Nothing looked to be a user defined invert field
 	return true
+}
+
+/**
+ * Note: explicitly copied away from Resources/Util.ts to avoid circular dependencies
+ */
+function uint8ArrayToBuffer(arr: Uint8Array | Uint8ClampedArray): Buffer {
+	return Buffer.from(arr.buffer, arr.byteOffset, arr.byteLength)
 }

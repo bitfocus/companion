@@ -24,13 +24,9 @@
     "jsonpath-plus": "^10.3.0",
     "ps-tree": "^1.2.0",
     "semver": "^7.7.3",
+    "type-fest": "^5.4.1",
     "unicode-segmenter": "^0.14.5",
-    "zod": "^4.3.5"
-  },
-  "scripts": {
-    "build": "run build:ts",
-    "build:ts": "tsc",
-    "dev": "tsc --watch"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/semver": "^7.7.1",

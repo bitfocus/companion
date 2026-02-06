@@ -1,6 +1,6 @@
 import { $, path } from 'zx'
 import fs from 'fs'
-import Ajv2020 from 'ajv/dist/2020'
+import { Ajv2020 } from 'ajv/dist/2020.js'
 import standaloneCode from 'ajv/dist/standalone/index.js'
 import { compileFromFile } from 'json-schema-to-typescript'
 
@@ -16,6 +16,7 @@ const ajv = new Ajv2020({
 	allowMatchingProperties: true, // because of 'default' in stylePresets
 })
 const validate = ajv.compile(schema)
+// @ts-expect-error - TS can't resolve the default export properly with node16 moduleResolution
 let moduleCode = standaloneCode(ajv, validate)
 
 // Now you can write the module code to file

@@ -1,10 +1,11 @@
 import React from 'react'
 import { CFormCheck } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { JsonValue } from 'type-fest'
 
 interface SurfacesStepProps {
 	config: Partial<UserConfigModel>
-	setValue: (key: keyof UserConfigModel, value: any) => void
+	setValue: (key: keyof UserConfigModel, value: JsonValue) => void
 }
 
 export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX.Element {

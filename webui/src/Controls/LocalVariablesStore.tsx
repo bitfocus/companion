@@ -34,13 +34,13 @@ export class LocalVariablesStore {
 	}
 
 	getOptions = computedFn(
-		(entityType: EntityModelType | null, isInternal: boolean, isLocatedInGrid: boolean): DropdownChoiceInt[] => {
+		(entityType: EntityModelType | null, internalParser: boolean, isLocatedInGrid: boolean): DropdownChoiceInt[] => {
 			let fixedVariables: DropdownChoiceInt[] = []
 
 			if (isLocatedInGrid) {
 				fixedVariables = ControlLocalVariables
-				if (isInternal && entityType === EntityModelType.Action) {
-					fixedVariables = InternalActionLocalVariables
+				if (internalParser && entityType === EntityModelType.Action) {
+					fixedVariables = ControlWithInternalLocalVariables
 				}
 			}
 
@@ -103,6 +103,10 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:row',
 		label: 'This row',
 	},
+	{
+		value: 'this:location',
+		label: 'This location (eg 1/2/3)',
+	},
 	// {
 	// 	value: 'this:pushed',
 	// 	label: 'Whether the button is in the pushed state',
@@ -129,7 +133,7 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 	},
 ]
 
-export const InternalActionLocalVariables: DropdownChoiceInt[] = [
+export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
 	...ControlLocalVariables,
 	{
 		value: 'this:surface_id',

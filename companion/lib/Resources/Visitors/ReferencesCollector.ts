@@ -1,3 +1,4 @@
+import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import { TrySplitVariableId } from '@companion-app/shared/Variables.js'
 import { VisitorReferencesBase } from './VisitorReferencesBase.js'
@@ -49,14 +50,20 @@ export class VisitorReferencesCollectorVisitor {
 	 * Visit a connection id property
 	 */
 	visitConnectionId(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
-		this.connectionIds.add(obj[propName])
+		const connectionId = this.#getAndUnwrapPropertyValue(obj, propName)
+		if (typeof connectionId !== 'string') return
+
+		this.connectionIds.add(connectionId)
 	}
 	/**
 	 * Visit a connection id array property
 	 */
 	visitConnectionIdArray(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
-		for (const id of obj[propName]) {
-			this.connectionIds.add(id)
+		const connectionIds = this.#getAndUnwrapPropertyValue(obj, propName)
+		if (!Array.isArray(connectionIds)) return
+
+		for (const id of connectionIds) {
+			if (typeof id === 'string') this.connectionIds.add(id)
 		}
 	}
 
@@ -64,7 +71,7 @@ export class VisitorReferencesCollectorVisitor {
 	 * Visit a property containing variables
 	 */
 	visitString(obj: Record<string, any>, propName: string): void {
-		const rawStr = obj[propName]
+		const rawStr = this.#getAndUnwrapPropertyValue(obj, propName)
 		if (typeof rawStr !== 'string') return
 
 		// Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
@@ -81,10 +88,21 @@ export class VisitorReferencesCollectorVisitor {
 	 * Visit a variable name property
 	 */
 	visitVariableName(obj: Record<string, any>, propName: string): void {
-		const label = TrySplitVariableId(obj[propName])
+		const variableName = this.#getAndUnwrapPropertyValue(obj, propName)
+		if (typeof variableName !== 'string') return
+
+		const label = TrySplitVariableId(variableName)
 		if (label) {
 			this.connectionLabels.add(label[0])
-			this.variables.add(obj[propName])
+			this.variables.add(variableName)
 		}
+	}
+
+	#getAndUnwrapPropertyValue(obj: Record<string, any>, propName: string): any {
+		const value = obj[propName]
+		if (isExpressionOrValue(value)) {
+			return value.value
+		}
+		return value
 	}
 }
