@@ -304,6 +304,12 @@ class LogController {
 	 * Initialize Sentry and UI logging
 	 */
 	init(appInfo: AppInfo): void {
+		// Check if Sentry is explicitly disabled
+		if (process.env.SENTRY_DISABLE) {
+			this.#logger.info('Sentry error reporting is disabled (SENTRY_DISABLE env var set)')
+			return
+		}
+
 		// Allow the DSN to be provided as an env variable
 		let sentryDsn = process.env.SENTRY_DSN
 		if (!sentryDsn) {
