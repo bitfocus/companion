@@ -2690,6 +2690,7 @@ class StreamDock extends EventEmitter {
 		}
 		let sendpr: Promise<void> | undefined
 		const writepr = this.writeRaw(writebuffer)
+		writepr.catch(() => null) // Ensure error doesnt go uncaught, because this may not get awaited...
 
 		if (data.byteLength + prefixbuffer.byteLength > this.packetSize) {
 			const remain = data.subarray(this.packetSize - prefixbuffer.byteLength)
