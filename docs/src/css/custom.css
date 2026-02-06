@@ -74,7 +74,7 @@
 	/* Extend the button to just beyond the bottom of the header (when text is on one line) */
 	border-bottom: 1.1em solid var(--companion-active-tab-bg);
 	margin-bottom: -1.1em; /* counteract button-size effects of the border-bottom */
-	/* Give the tab a glow above; minimize an separation from the page body */
+	/* Give the tab a glow above, minimizing separation from the page body */
 	box-shadow: 0 -4px 10px 1px var(--companion-active-tab-shadow-color);
 }
 
