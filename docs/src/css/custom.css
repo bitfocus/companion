@@ -172,6 +172,7 @@
 	order: -1;
 	padding-left: 0.45em;
 	padding-right: 0.45em;
+	border-radius: 0.5rem 0 0 0.5rem; /* match the outer box's corner */
 
 	/* The caret is taller than wide, so to keep visual left-alignment we have to move it over when rotating 90 degrees.
 	   An alternative would be to adjust only padding-left and push the text over too... */
