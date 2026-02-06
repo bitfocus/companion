@@ -135,12 +135,12 @@ export class VariablesAndExpressionParser {
 				}
 
 				const parsedValue = this.parseEntityOption(options[field.id], fieldType)
-				parsedOptions[field.id] = parsedValue.value
+				const { sanitisedValue, validationError } = validateInputValue(field, parsedValue.value, true)
+				parsedOptions[field.id] = sanitisedValue
 
 				// Ensure values are valid, or report the error
-				if (!field.allowInvalidValues) {
-					const errorMessage = validateInputValue(field, parsedValue.value)
-					if (errorMessage) parseErrors[field.id] = errorMessage
+				if (!field.allowInvalidValues && validationError) {
+					parseErrors[field.id] = validationError
 				}
 
 				// Track the variables referenced in this field

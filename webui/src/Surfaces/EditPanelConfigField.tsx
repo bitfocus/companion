@@ -42,7 +42,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(definition, value) === undefined,
+		(value: JsonValue | undefined) => validateInputValue(definition, value).validationError === undefined,
 		[definition]
 	)
 	const setValue2 = useCallback((val: JsonValue | undefined) => setValue(id, val), [setValue, id])

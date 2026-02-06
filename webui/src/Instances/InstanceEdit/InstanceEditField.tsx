@@ -30,7 +30,7 @@ export function InstanceEditField({
 	instanceId,
 }: InstanceEditFieldProps): React.JSX.Element {
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(definition, value) === undefined,
+		(value: JsonValue | undefined) => validateInputValue(definition, value).validationError === undefined,
 		[definition]
 	)
 

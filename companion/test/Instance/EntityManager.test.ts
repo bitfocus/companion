@@ -940,6 +940,45 @@ describe('InstanceEntityManager', () => {
 			)
 		})
 
+		it('should mark entity as inactive when parseEntityOptions returns ok: false', () => {
+			// Setup parseEntityOptions to return ok: false with option errors
+			mockVariablesParser.parseEntityOptions.mockImplementationOnce(() => ({
+				ok: false,
+				optionErrors: { field1: 'Invalid expression syntax' },
+				referencedVariableIds: new Set(['test:num']),
+			}))
+
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: { field1: { isExpression: true, value: 'invalid expression (' } },
+					upgradeIndex: 5,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
+					optionsToIgnoreForSubscribe: [],
+					optionsSupportExpressions: true,
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// Should have been called with null to mark the entity as inactive
+			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
+				new Map<string, EntityManagerActionEntity | null>([['entity-1', null]])
+			)
+		})
+
 		it('should mark entity as inactive when parseEntityOptions throws an error', () => {
 			// Setup parseEntityOptions to throw an error
 			mockVariablesParser.parseEntityOptions.mockImplementationOnce(() => {
@@ -1034,6 +1073,7 @@ describe('InstanceEntityManager', () => {
 		it('should track referenced variables for entity invalidation with expressions', () => {
 			// Setup parseEntityOptions to track specific variables
 			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				ok: true,
 				parsedOptions: { field1: 100 },
 				referencedVariableIds: new Set(['test:expr_var']),
 			}))
@@ -1076,6 +1116,7 @@ describe('InstanceEntityManager', () => {
 		it('should not invalidate entity when unrelated variables change with expressions', () => {
 			// Setup parseEntityOptions to track specific variables
 			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				ok: true,
 				parsedOptions: { field1: 100 },
 				referencedVariableIds: new Set(['test:expr_var']),
 			}))

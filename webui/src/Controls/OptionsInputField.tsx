@@ -67,7 +67,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 	fieldSupportsExpression,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(option, value) === undefined,
+		(value: JsonValue | undefined) => validateInputValue(option, value).validationError === undefined,
 		[option]
 	)
 	const setExpressionValue = useCallback(
