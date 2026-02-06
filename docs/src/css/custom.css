@@ -40,7 +40,6 @@
 	--ifm-color-primary-lightest: #f89aa7;
 
 	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
-	--ifm-navbar-link-hover-bg: #ffffff;
 	--ifm-navbar-link-color: #ffffff;
 	--ifm-navbar-link-hover-color: #ffffff;
 
@@ -72,9 +71,11 @@
 	/* Make active link look a like a page-tab (like a browser tab) */
 	color: var(--companion-active-tab-color);
 	background-color: var(--companion-active-tab-bg);
+	/* Extend the button to just beyond the bottom of the header (when text is on one line) */
 	border-bottom: 1.1em solid var(--companion-active-tab-bg);
-	margin-bottom: -1.1em;
-	box-shadow: 0 -5px 1em 1px var(--companion-active-tab-shadow-color);
+	margin-bottom: -1.1em; /* counteract button-size effects of the border-bottom */
+	/* Give the tab a glow above; minimize an separation from the page body */
+	box-shadow: 0 -4px 10px 1px var(--companion-active-tab-shadow-color);
 }
 
 /* we can't use `overflow: hidden` on .navbar because then it blocks the pulldown for user-guide versions
@@ -156,9 +157,8 @@
 
 .theme-doc-sidebar-item-category:not(.menu__list-item--collapsed) {
 	box-shadow: 1px 0px 16px -3px var(--companion-group-border-color);
-	border: 1px solid var(--companion-group-border-color);
+	border-right: 1px solid var(--companion-group-border-color);
 	border-radius: 0.5rem;
-	border: 0;
 }
 
 /* move the expand/contract caret to the far left for improved visibility/group offsetting */
@@ -185,7 +185,7 @@
 	margin-left: 0.75em;
 }
 
-/* Main body styling? */
+/* Main body styling? CodeRabbit says these are safe to prune, but was there an intention to use these? */
 .text-gray-50 {
 	color: #f9fafb;
 }
@@ -194,6 +194,6 @@
 }
 
 /* indent text under H2 headers */
-h2 ~ :not(h1, h2) {
+.markdown h2 ~ :not(h1, h2) {
 	margin-left: 2rem;
 }
