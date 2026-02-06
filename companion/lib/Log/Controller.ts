@@ -8,7 +8,7 @@ import Transport from 'winston-transport'
 import { Syslog, type SyslogTransportOptions } from 'winston-syslog'
 import supportsColor from 'supports-color'
 import { LogColors } from './Colors.js'
-import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
+import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration, httpIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
 import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model/LogLine.js'
 import type { AppInfo } from '../Registry.js'
@@ -334,7 +334,12 @@ class LogController {
 						}
 						return event
 					},
-					integrations: [rewriteFramesIntegration()],
+					integrations: [
+						rewriteFramesIntegration(),
+						httpIntegration({
+							trackIncomingRequestsAsSessions: false,
+						}),
+					],
 					// Disable periodic client reports - we only care about actual errors
 					sendClientReports: false,
 				})
