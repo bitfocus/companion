@@ -323,7 +323,7 @@ class LogController {
 			}
 		}
 
-		if (sentryDsn && sentryDsn.substring(0, 8) == 'https://') {
+		if (sentryDsn && sentryDsn.startsWith('https://')) {
 			try {
 				init({
 					dsn: sentryDsn,
@@ -335,6 +335,8 @@ class LogController {
 						return event
 					},
 					integrations: [rewriteFramesIntegration()],
+					// Disable periodic client reports - we only care about actual errors
+					sendClientReports: false,
 				})
 
 				const scope = getCurrentScope()
