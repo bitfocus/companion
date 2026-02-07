@@ -172,7 +172,7 @@ export const builtinFunctionCompletions: Array<{
 	},
 	{
 		name: 'blink',
-		detail: 'blink(number, ?number)',
+		detail: 'blink(period_ms, ?fraction_on)',
 		documentation:
 			'A pulsing 0/1 value that cycles at the specified interval in milliseconds. The provided interval specifies how long each cycle should take. The second optional parameter specifies the portion of the time to spend in the on state.',
 	},
