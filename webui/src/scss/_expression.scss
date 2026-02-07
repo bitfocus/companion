@@ -68,6 +68,15 @@
 	line-height: 1.5 !important;
 	min-height: 15em;
 
+	.header {
+		padding: 0.5em;
+		background-color: var(--cui-danger-bg-subtle);
+
+		.type {
+			padding-top: 0 !important;
+			padding-bottom: 0 !important;
+		}
+	}
 	.docs {
 		padding-top: 1em;
 		padding-bottom: 1em;
