@@ -62,3 +62,31 @@
 		}
 	}
 }
+
+// full path is: .monaco-editor .suggest-widget, .monaco-editor .suggest-details
+.monaco-editor .suggest-details {
+	line-height: 1.5 !important;
+	min-height: 15em;
+
+	.header {
+		padding: 0.5em;
+		background-color: var(--cui-danger-bg-subtle);
+
+		.type {
+			padding-top: 0 !important;
+			padding-bottom: 0 !important;
+		}
+
+		.codicon-close {
+			height: 1em !important;
+			width: 1em !important;
+			margin-top: -1.5em;
+			margin-right: -1.2em;
+			background-color: lightgray;
+		}
+	}
+	.docs {
+		padding-top: 1em;
+		padding-bottom: 1em;
+	}
+}
