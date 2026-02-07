@@ -26,8 +26,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 
 	return (
 		<h5>
-			{heading}
-
+			{heading}&nbsp;
 			<CButtonGroup className="right">
 				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
 					<CButton
