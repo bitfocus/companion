@@ -106,7 +106,7 @@ export function convertPresetFeedbacksToEntities(
 		id: nanoid(),
 		connectionId: connectionId,
 		definitionId: feedback.feedbackId,
-		options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, false)),
+		options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, true)),
 		isInverted: exprVal(!!feedback.isInverted),
 		style: structuredClone(feedback.style),
 		headline: feedback.headline,
@@ -136,7 +136,7 @@ function toActionInstance(
 		id: nanoid(),
 		connectionId: connectionId,
 		definitionId: action.actionId,
-		options: structuredClone(optionsObjectToExpressionOptions(action.options ?? {}, false)),
+		options: structuredClone(optionsObjectToExpressionOptions(action.options ?? {}, true)),
 		headline: action.headline,
 		upgradeIndex: connectionUpgradeIndex,
 	}

@@ -12,6 +12,7 @@ import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import {
 	ExpressionableOptionsObjectSchema,
+	JsonValueSchema,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
 import LogController from '../Log/Controller.js'
@@ -122,10 +123,15 @@ export class PreviewGraphics {
 					z.object({
 						connectionId: z.string(),
 						presetId: z.string(),
+						matrixValues: z.record(z.string(), JsonValueSchema.optional()).nullable(),
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
-					const control = self.#controlsController.getOrCreatePresetControl(input.connectionId, input.presetId)
+					const control = self.#controlsController.getOrCreatePresetControl(
+						input.connectionId,
+						input.presetId,
+						input.matrixValues
+					)
 					if (!control) throw new Error(`Preset "${input.presetId}" not found for connection "${input.connectionId}"`)
 
 					// track this session on the control

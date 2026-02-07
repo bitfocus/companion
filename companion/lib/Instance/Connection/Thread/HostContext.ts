@@ -1,7 +1,7 @@
 import {
 	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
-	type CompanionPresetDefinitions,
+	type CompanionPresetSection,
 	type CompanionRecordedAction,
 	type CompanionVariableValue,
 	type Complete,
@@ -25,8 +25,7 @@ import type {
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
 } from '@companion-module/base/host-api'
-import { ConvertPresetDefinition } from './Presets.js'
-import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import { ConvertPresetDefinitions } from './Presets.js'
 
 /**
  * The context of methods and properties provided to the surfaces, which they can use to report events or make requests.
@@ -113,24 +112,17 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 		})
 	}
 	/** The presets provided by the connection have changed */
-	setPresetDefinitions(presets: CompanionPresetDefinitions): void {
-		const convertedPresets: PresetDefinition[] = []
-
-		for (const [id, rawPreset] of Object.entries(presets)) {
-			if (!rawPreset) continue
-
-			const convertedPreset = ConvertPresetDefinition(
-				this.#logger,
-				this.#connectionId,
-				this.#currentUpgradeIndex,
-				id,
-				rawPreset
-			)
-			if (convertedPreset) convertedPresets.push(convertedPreset)
-		}
+	setPresetDefinitions(rawPresets: CompanionPresetSection[]): void {
+		const { presets, uiPresets } = ConvertPresetDefinitions(
+			this.#logger,
+			this.#connectionId,
+			this.#currentUpgradeIndex,
+			rawPresets
+		)
 
 		this.#ipcWrapper.sendWithNoCb('setPresetDefinitions', {
-			presets: convertedPresets,
+			presets: presets,
+			uiPresets: uiPresets,
 		})
 	}
 	/** The connection has some new values for variables */

@@ -590,7 +590,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, msg.presets)
+			const presetsMap = new Map(Object.entries(msg.presets))
+
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presetsMap, msg.uiPresets)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 

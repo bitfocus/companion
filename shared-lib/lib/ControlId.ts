@@ -59,8 +59,8 @@ export function CreateExpressionVariableControlId(variableId: string): string {
 /**
  * Create preset control id
  */
-export function CreatePresetControlId(connectionId: string, presetId: string): string {
-	return `preset:${connectionId}:${presetId}`
+export function CreatePresetControlId(connectionId: string, presetId: string, matrixHash: string): string {
+	return `preset:${connectionId}:${presetId}:${matrixHash}`
 }
 
 export interface ParsedControlIdBank {
