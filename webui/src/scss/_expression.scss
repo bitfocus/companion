@@ -57,6 +57,17 @@
 						// color: #000;
 						display: block !important;
 					}
+					.readMore {
+						visibility: visible !important;
+						margin-top: -0.75em;
+						&::before {
+							font-size: 28px !important;
+							background-color: rgba(255, 255, 255, 0.2);
+						}
+						&:hover::before {
+							background-color: rgba(255, 255, 255, 0.4);
+						}
+					}
 				}
 			}
 		}
@@ -66,11 +77,16 @@
 // full path is: .monaco-editor .suggest-widget, .monaco-editor .suggest-details
 .monaco-editor .suggest-details {
 	line-height: 1.5 !important;
-	min-height: 15em;
+	height: auto !important;
+	overflow-y: auto;
+	max-height: 25em;
+	position: absolute;
+	top: 2em;
+	z-index: 10000 !important; // this isn't working for some reason so top: 2em keeps it away from the top header
 
 	.header {
 		padding: 0.5em;
-		background-color: var(--cui-danger-bg-subtle);
+		background-color: var(--cui-info-bg-subtle);
 
 		.type {
 			padding-top: 0 !important;
