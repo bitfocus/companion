@@ -80,7 +80,7 @@
 	height: auto !important;
 	overflow-y: auto;
 	max-height: 25em;
-	position: absolute;
+	position: relative;
 	top: 2em;
 	z-index: 10000 !important; // this isn't working for some reason so top: 2em keeps it away from the top header
 
