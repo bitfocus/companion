@@ -111,7 +111,8 @@ form.row > * {
 	margin-right: 0.5em;
 }
 
-.help-menu {
+.help-menu,
+.context-menu {
 	// gather the color scheme up front:
 	--menu-color: #000;
 	--menu-bg: var(--cui-tertiary-bg); // or just use white?
@@ -133,6 +134,9 @@ form.row > * {
 		--cui-dropdown-link-color: var(--menu-color);
 		--cui-dropdown-link-hover-bg: var(--menu-hover-bg);
 		--cui-dropdown-link-hover-color: var(--menu-hover-color); // only works if .dropdown-item doesn't define color:
+		--cui-dropdown-link-active-bg: var(--menu-hover-bg); // don't change during click
+		--cui-dropdown-link-active-color: var(--menu-hover-color);
+
 		padding: 0.5em 0;
 		border: 1px solid rgba(0, 0, 0, 0.2); // Subtle dark border to the dropdown
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow to the dropdown
@@ -165,6 +169,18 @@ form.row > * {
 			cursor: default;
 			padding-left: 0.75em;
 			color: rgba(0, 0, 0, 0.5);
+		}
+	}
+}
+
+// override parts that differ from (dropdown) help-menus
+.context-menu {
+	--menu-bg: #f3f4f7; //sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here.
+	.dropdown-menu {
+		min-width: 0;
+
+		.dropdown-item {
+			font-size: 0.85rem;
 		}
 	}
 }
