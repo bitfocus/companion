@@ -62,3 +62,14 @@
 		}
 	}
 }
+
+// full path is: .monaco-editor .suggest-widget, .monaco-editor .suggest-details
+.monaco-editor .suggest-details {
+	line-height: 1.5 !important;
+	min-height: 15em;
+
+	.docs {
+		padding-top: 1em;
+		padding-bottom: 1em;
+	}
+}
