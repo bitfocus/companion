@@ -45,9 +45,12 @@
 					grid-column: 2;
 					grid-row: 1;
 					font-weight: bold;
-					text-decoration: none !important; /* this doesn't work */
 					padding-top: 5px;
-					white-space: pre-wrap !important; /* this doesn't work */
+
+					.label-name {
+						text-decoration: none !important; // don't need important, but we are overriding at this level
+						//white-space: pre-wrap !important; /* this doesn't work; maybe don't even want it? */
+					}
 				}
 
 				/* Right (details/description) moves below name */
