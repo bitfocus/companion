@@ -114,7 +114,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 						<CButton
 							color="primary"
 							size="sm"
-							className={toDir ? 'undefined' : 'd-xl-none'}
+							className={toDir ? undefined : 'd-xl-none'}
 							onClick={() => void navigate({ to: `/surfaces/${toDir ?? 'integrations'}/add` })}
 						>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />

@@ -64,17 +64,17 @@ function SurfaceSettingsPanel() {
 				<div style={{ border: '1px solid var(--cui-border-color)', borderTop: 0 }}>
 					<SurfaceInstancesList selectedInstanceId={null} toDir="configured/integration" />
 					{userConfigProps && (
-						<b>
-							<table className="table table-responsive-sm table-settings ms-3">
-								<tbody>
+						<table className="table table-responsive-sm table-settings ms-3">
+							<tbody>
+								<b>
 									<UserConfigSwitchRow
 										userConfig={userConfigProps}
 										label="Enable Elgato software Plugin support"
 										field="elgato_plugin_enable"
 									/>
-								</tbody>
-							</table>
-						</b>
+								</b>
+							</tbody>
+						</table>
 					)}
 				</div>
 
@@ -93,7 +93,7 @@ function SurfaceSettingsPanel() {
 
 function SettingsPanelTitleBar() {
 	const setPanelVisibility = useConfiguredSurfaceContext()
-	// note that the close button is currently hidden
+	// note that the close button is hidden when the window is wide enough.
 	const doClose = useCallback(() => {
 		setPanelVisibility(false)
 	}, [setPanelVisibility])
