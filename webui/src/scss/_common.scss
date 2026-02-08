@@ -48,7 +48,7 @@ legend {
 }
 
 .btn-group {
-	//overflow: hidden; // if this is this needed it should be scoped properly. As written it prevents dropdown menus!
+	//overflow: hidden; // if this is needed it should be scoped properly. As written it prevents dropdown menus!
 	&.margin-bottom {
 		margin-bottom: 1rem;
 	}

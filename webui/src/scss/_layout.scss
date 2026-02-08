@@ -91,7 +91,7 @@ form.row > * {
 	margin-right: 5px;
 }
 
-// unomment this if header is assigned position=sticky in Header.tsx
+// uncomment this if CHeader is assigned position=sticky in Header.tsx
 // .header.header-sticky {
 // 	z-index: 40; // monaco-edit's suggest-details pane is buried if z-index > 41; use 40 just as a round number
 // }
