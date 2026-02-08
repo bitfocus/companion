@@ -72,6 +72,8 @@ import { Route as AppSurfacesIntegrationsInstanceIdRouteImport } from './routes/
 import { Route as AppSurfacesConfiguredItemIdRouteImport } from './routes/_app/surfaces/configured/$itemId.tsx'
 import { Route as AppSettingsBackupsRuleIdRouteImport } from './routes/_app/settings/backups/$ruleId.tsx'
 import { Route as AppModulesModuleTypeDotmoduleIdRouteImport } from './routes/_app/modules/$moduleType.$moduleId.tsx'
+import { Route as AppSurfacesConfiguredIntegrationDotaddRouteImport } from './routes/_app/surfaces/configured/integration.add.tsx'
+import { Route as AppSurfacesConfiguredIntegrationDotinstanceIdRouteImport } from './routes/_app/surfaces/configured/integration.$instanceId.tsx'
 
 const StandaloneTabletDotlazyRouteImport = createFileRoute(
   '/_standalone/tablet',
@@ -416,6 +418,18 @@ const AppModulesModuleTypeDotmoduleIdRoute =
     path: '/$moduleType/$moduleId',
     getParentRoute: () => AppModulesRoute,
   } as any)
+const AppSurfacesConfiguredIntegrationDotaddRoute =
+  AppSurfacesConfiguredIntegrationDotaddRouteImport.update({
+    id: '/integration/add',
+    path: '/integration/add',
+    getParentRoute: () => AppSurfacesConfiguredRoute,
+  } as any)
+const AppSurfacesConfiguredIntegrationDotinstanceIdRoute =
+  AppSurfacesConfiguredIntegrationDotinstanceIdRouteImport.update({
+    id: '/integration/$instanceId',
+    path: '/integration/$instanceId',
+    getParentRoute: () => AppSurfacesConfiguredRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -480,6 +494,8 @@ export interface FileRoutesByFullPath {
   '/surfaces/integrations/': typeof AppSurfacesIntegrationsIndexRoute
   '/surfaces/remote/': typeof AppSurfacesRemoteIndexRoute
   '/variables/expression/': typeof AppVariablesExpressionIndexRoute
+  '/surfaces/configured/integration/$instanceId': typeof AppSurfacesConfiguredIntegrationDotinstanceIdRoute
+  '/surfaces/configured/integration/add': typeof AppSurfacesConfiguredIntegrationDotaddRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
@@ -535,6 +551,8 @@ export interface FileRoutesByTo {
   '/surfaces/integrations': typeof AppSurfacesIntegrationsIndexRoute
   '/surfaces/remote': typeof AppSurfacesRemoteIndexRoute
   '/variables/expression': typeof AppVariablesExpressionIndexRoute
+  '/surfaces/configured/integration/$instanceId': typeof AppSurfacesConfiguredIntegrationDotinstanceIdRoute
+  '/surfaces/configured/integration/add': typeof AppSurfacesConfiguredIntegrationDotaddRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -601,6 +619,8 @@ export interface FileRoutesById {
   '/_app/surfaces/integrations/': typeof AppSurfacesIntegrationsIndexRoute
   '/_app/surfaces/remote/': typeof AppSurfacesRemoteIndexRoute
   '/_app/variables/expression/': typeof AppVariablesExpressionIndexRoute
+  '/_app/surfaces/configured/integration/$instanceId': typeof AppSurfacesConfiguredIntegrationDotinstanceIdRoute
+  '/_app/surfaces/configured/integration/add': typeof AppSurfacesConfiguredIntegrationDotaddRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -667,6 +687,8 @@ export interface FileRouteTypes {
     | '/surfaces/integrations/'
     | '/surfaces/remote/'
     | '/variables/expression/'
+    | '/surfaces/configured/integration/$instanceId'
+    | '/surfaces/configured/integration/add'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -722,6 +744,8 @@ export interface FileRouteTypes {
     | '/surfaces/integrations'
     | '/surfaces/remote'
     | '/variables/expression'
+    | '/surfaces/configured/integration/$instanceId'
+    | '/surfaces/configured/integration/add'
   id:
     | '__root__'
     | '/_app'
@@ -787,6 +811,8 @@ export interface FileRouteTypes {
     | '/_app/surfaces/integrations/'
     | '/_app/surfaces/remote/'
     | '/_app/variables/expression/'
+    | '/_app/surfaces/configured/integration/$instanceId'
+    | '/_app/surfaces/configured/integration/add'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1249,6 +1275,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppModulesModuleTypeDotmoduleIdRouteImport
       parentRoute: typeof AppModulesRoute
     }
+    '/_app/surfaces/configured/integration/add': {
+      id: '/_app/surfaces/configured/integration/add'
+      path: '/integration/add'
+      fullPath: '/surfaces/configured/integration/add'
+      preLoaderRoute: typeof AppSurfacesConfiguredIntegrationDotaddRouteImport
+      parentRoute: typeof AppSurfacesConfiguredRoute
+    }
+    '/_app/surfaces/configured/integration/$instanceId': {
+      id: '/_app/surfaces/configured/integration/$instanceId'
+      path: '/integration/$instanceId'
+      fullPath: '/surfaces/configured/integration/$instanceId'
+      preLoaderRoute: typeof AppSurfacesConfiguredIntegrationDotinstanceIdRouteImport
+      parentRoute: typeof AppSurfacesConfiguredRoute
+    }
   }
 }
 
@@ -1324,11 +1364,17 @@ const AppSettingsBackupsRouteWithChildren =
 interface AppSurfacesConfiguredRouteChildren {
   AppSurfacesConfiguredItemIdRoute: typeof AppSurfacesConfiguredItemIdRoute
   AppSurfacesConfiguredIndexRoute: typeof AppSurfacesConfiguredIndexRoute
+  AppSurfacesConfiguredIntegrationDotinstanceIdRoute: typeof AppSurfacesConfiguredIntegrationDotinstanceIdRoute
+  AppSurfacesConfiguredIntegrationDotaddRoute: typeof AppSurfacesConfiguredIntegrationDotaddRoute
 }
 
 const AppSurfacesConfiguredRouteChildren: AppSurfacesConfiguredRouteChildren = {
   AppSurfacesConfiguredItemIdRoute: AppSurfacesConfiguredItemIdRoute,
   AppSurfacesConfiguredIndexRoute: AppSurfacesConfiguredIndexRoute,
+  AppSurfacesConfiguredIntegrationDotinstanceIdRoute:
+    AppSurfacesConfiguredIntegrationDotinstanceIdRoute,
+  AppSurfacesConfiguredIntegrationDotaddRoute:
+    AppSurfacesConfiguredIntegrationDotaddRoute,
 }
 
 const AppSurfacesConfiguredRouteWithChildren =
