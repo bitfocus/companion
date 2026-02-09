@@ -52,74 +52,56 @@
 }
 
 /* parent of the "tabs" needs slight adjustments: */
+/* The navbar and (implicitly) right container must not hide overflow: or the version dropdown will be clipped. */
 .navbar {
+	padding-top: 0; /* In order to enable tab-like visuals, we need to let the inner elements deal with padding. */
+	padding-bottom: 0;
 	box-shadow: none; /* keeps tab continuous with page content */
 	/*box-shadow: 0 0 0.5em 0px rgba(0, 0, 0, 0.2);*/ /* alternative but breaks continuity of tab with page in light mode */
 }
 
+/* To get the best tab effect clip overflow so no shadow spills down, for example */
+.theme-layout-navbar-left {
+	overflow: hidden;
+}
+
+.navbar__brand {
+	padding-left: 0;
+	padding-right: 0.5em;
+}
+
 /* Navbar (the top bar, not the sidebar) link styles 
    note: don't put `overflow: hidden;` here as it causes weird text-wrapping as the window narrows 
-   Note: All of the margin-bottom/border-bottom adjustment here are established empirically 
-   to make the tabs touch the bottom of the header bar
+   Note: The margin-bottom/border-bottom adjustment here is made large to make the tabs touch the bottom of the header bar
+        Since we're clipping the left-container, the bottom-border needn't be precise -- as long as it's big enough.
    */
-.navbar__link {
+.theme-layout-navbar-left .navbar__link,
+.navbar__brand {
 	text-align: center; /* keep labels horizontally centered when they become two lines */
 	line-height: 1; /* keep labels compact when words wrap to two lines */
 	padding-top: 0.55em; /* make up for the reduced line-height */
-	padding-bottom: 0.55em; /* make up for the reduced line-height */
-	/* Make page-tab links have rounded top corners only */
+	padding-bottom: 0.55em; /* needed for symmetry to match the right-side container */
+	/* Make page-tab links with rounded top corners only so it visually "fuses" with the page */
 	border-radius: 0.5rem 0.5rem 0 0;
-	/* Extend the button to just beyond the bottom of the header (when text is on one line) */
-	margin-bottom: -0.9em; /* counteract button-size effects of the border-bottom */
-	border-bottom: 0.9em solid transparent; /* hover background will include this border */
+	/* Extend the button beyond the bottom of the header (when text is on one line) */
+	margin-bottom: -2em; /* counteract button-size effects of the border-bottom */
+	border-bottom: 2em solid transparent; /* hover background will include this border */
 }
 
 .navbar__link--active {
 	/* Make active link look a like a page-tab (like a browser tab or VS Code editor tabs) */
 	color: var(--companion-active-tab-color);
 	background-color: var(--companion-active-tab-bg);
-	/* Give the tab a glow above, minimizing separation from the page body */
+	/* Give the tab a glow  */
 	box-shadow: 0 -4px 10px 1px var(--companion-active-tab-shadow-color);
-	margin-bottom: -0.9em; /* counteract button-size effects of the border-bottom */
-	border-bottom: 0.9em solid var(--companion-active-tab-bg);
+	margin-bottom: -2em; /* counteract button-size effects of the border-bottom */
+	border-bottom: 2em solid var(--companion-active-tab-bg);
 }
 
-/* we can't use `overflow: hidden` on .navbar because then it blocks the pulldown for user-guide versions
-   so instead we have to micromanage the border-bottom property: 
-   - Two-word labels wrap to two-lines (so exclude satellite)
-   - When user-guide is selected the pull-down appear in the header, so the two-liners wrap sooner
-   */
-@media screen and (max-width: 1106px) {
-	.navbar__link:not([href*='/satellite']) {
-		border-bottom: 0.5em solid transparent;
-		margin-bottom: -0.5em;
-		padding: 0.25em var(--ifm-navbar-item-padding-horizontal); /* keep labels vertically centered when they become two lines */
-	}
-	.navbar__link[href*='/satellite'] {
-		border-bottom: 0.45em solid transparent;
-		margin-bottom: -0.45em;
-		padding: 0.9em var(--ifm-navbar-item-padding-horizontal); /* keep labels vertically centered when they become two lines */
-	}
-
-	.navbar__link--active:not([href*='/satellite']) {
-		border-bottom: 0.75em solid var(--companion-active-tab-bg);
-	}
-	.navbar__link--active[href*='/satellite'] {
-		border-bottom: 0.45em solid var(--companion-active-tab-bg);
-		margin-bottom: -0.45em;
-	}
-}
-
-@media screen and (max-width: 1177px) {
-	.navbar__link--active[href*='/user-guide'] {
-		border-bottom: 0.6em solid rgba(0, 0, 0, 0);
-		margin-bottom: -0.6em;
-		padding: 0.25em var(--ifm-navbar-item-padding-horizontal); /* keep labels vertically centered when they become two lines */
-	}
-}
-
-/* Hover styles for all types of navbar links */
-.navbar__link:hover:not(.navbar__link--active),
+/* Hover styles for (almost) all types of navbar links. 
+	Note: ".navbar__item.navbar__link" excludes dropdown menus, which by default do not highlight, possibly due to dropdown--hoverable
+	*/
+.navbar__item.navbar__link:hover:not(.navbar__link--active),
 .navbar-sidebar__brand:hover,
 .navbar__brand:hover,
 .navbar__toggle:hover {
@@ -127,20 +109,26 @@
 }
 
 /* Make the dark/light mode button stand out better.
-   Unfortunately, it doesn't have a non-serialized classname, so do it by nesting  */
-.theme-layout-navbar-right .clean-btn:not(:hover),
-.navbar-sidebar__brand .clean-btn:not(:hover) {
+   Unfortunately, it doesn't have a non-serialized classname, but this works. 
+   Can't say if it's better than nesting, but it's nested in two places, so this seems simpler  */
+.clean-btn[title='system mode']:not(:hover) {
 	background-color: var(--companion-mode-toggle-bg);
 }
 
-.navbar-sidebar__close {
-	padding: 0.5em;
-	border-radius: 0.5em;
-	color: white; /* doesn't do anything currently, because the SVG is hardcoded to: */
-	--ifm-color-emphasis-600: white;
+/* The next two rules adjust spacing for the download, github and light/dark buttons. */
+.clean-btn[title='system mode'] {
+	margin: 0 0.25em;
+}
 
-	&:hover {
-		background-color: var(--companion-mode-toggle-bg);
+.theme-layout-navbar-right .navbar__link {
+	padding: 0.25em;
+	border-radius: 0.5rem;
+
+	.fontawesome {
+		/* we could have used svg as the selector, but this is probably better */
+		height: 2rem;
+		width: auto;
+		display: block; /* Helps remove extra spacing below the SVG */
 	}
 }
 
@@ -165,7 +153,19 @@
 	background-color: var(--companion-navbar-bg);
 }
 
-/* Make subgroup (aka category) boundaries more distinct.
+/* For the drop-down sidebar when the window is narrow */
+.navbar-sidebar__close {
+	padding: 0.5em;
+	border-radius: 0.5em;
+	color: white; /* doesn't do anything currently, because the SVG is hardcoded to: */
+	--ifm-color-emphasis-600: white;
+
+	&:hover {
+		background-color: var(--companion-mode-toggle-bg);
+	}
+}
+
+/* For all sidebars: Make subgroup (aka category) boundaries more distinct.
    note that the DOM for collapsing lists in the sidebar is:
     <li class="theme-doc-sidebar-item-category ... menu__list-item menu__list-item--collapsed> 
 		<div class="menu__list-item-collapsible">...</div>
@@ -215,7 +215,18 @@
 	color: #6b7280;
 }
 
-/* indent text under H2 headers */
+/* In markdown pages indent all text, including subheaders, under H2 headers */
 .markdown h2 ~ :not(h1, h2) {
 	margin-left: 2rem;
+}
+
+/* Auto-generated TOC heading links should be white, not red */
+.auto-toc-heading a {
+	color: var(--ifm-heading-color);
+	text-decoration: none;
+}
+
+.auto-toc-heading a:hover {
+	color: var(--ifm-heading-color);
+	text-decoration: underline;
 }
