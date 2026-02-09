@@ -186,25 +186,22 @@
 .menu__caret {
 	order: -1;
 	padding-left: 0.45em;
-	padding-right: 0.45em;
+	padding-right: 0em;
 	border-radius: 0.5rem 0 0 0.5rem; /* match the outer box's corner */
 
-	/* The caret is taller than wide, so to keep visual left-alignment we have to move it over when rotating 90 degrees.
-	   An alternative would be to adjust only padding-left and push the text over too... */
-	&[aria-expanded='true'] {
-		padding-left: 0.75em;
-		padding-right: 0.15em;
+	&::before {
+		scale: 0.6;
 	}
 }
 
 /* split the padding between the caret (above) and the text in the category header */
 .menu__link--sublist {
-	padding-left: 0.3em;
+	padding-left: 0.2em;
 }
 
 /* indent sublists, i.e. list under a category, to  align with the category header */
 .menu__list-item .menu__list-item {
-	margin-left: 0.75em;
+	margin-left: 0.35em;
 }
 
 /* Main body styling? CodeRabbit says these are safe to prune, but was there an intention to use these? */
