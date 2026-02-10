@@ -10,7 +10,7 @@ import {
 } from '@companion-app/shared/Model/Instance.js'
 import type { PresetDefinitionButton, PresetDefinitionText } from '@companion-app/shared/Model/Presets.js'
 import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import { exprVal } from '@companion-app/shared/Model/Options.js'
+import { CompanionFieldVariablesSupport, exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import { EventDefinitions } from '../../lib/Resources/EventDefinitions.js'
 import { initTRPC } from '@trpc/server'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
@@ -1568,6 +1568,638 @@ describe('InstanceDefinitions', () => {
 			})
 
 			await iter.return?.()
+		})
+	})
+
+	// ── Variable replacement in presets ──────────────────────────────────
+
+	describe('variable replacement in presets', () => {
+		it('replaces $(label:var) in action options with textinput+useVariables', () => {
+			const { defs } = createInstanceDefinitions()
+
+			// Set up action definition with textinput field that supports variables
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				options: [
+					{
+						id: 'text',
+						type: 'textinput',
+						label: 'Text',
+						default: '',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			// Set up preset with action that uses $(label:var)
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											text: exprVal('Hello $(label:variable)'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const action = result!.steps.step1.action_sets.down[0]
+			expect(action.options.text).toEqual(exprVal('Hello $(conn1:variable)'))
+		})
+
+		it('replaces $(label:var) in feedback options with textinput+useVariables', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const feedbackDef = makeFeedbackDefinition({
+				label: 'Test Feedback',
+				options: [
+					{
+						id: 'value',
+						type: 'textinput',
+						label: 'Value',
+						default: '',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+					},
+				],
+			})
+			defs.setFeedbackDefinitions('conn1', { fb1: feedbackDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					feedbacks: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'feedback1',
+							connectionId: 'conn1',
+							definitionId: 'fb1',
+							options: {
+								value: exprVal('Check $(label:status)'),
+							},
+							isInverted: exprVal(false),
+							style: {},
+							upgradeIndex: undefined,
+						},
+					],
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const feedback = result!.feedbacks[0]
+			expect(feedback.options.value).toEqual(exprVal('Check $(conn1:status)'))
+		})
+
+		it('replaces $(label:var) in expression fields when optionsSupportExpressions is true', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Expression Action',
+				optionsSupportExpressions: true,
+				options: [
+					{
+						id: 'expr',
+						type: 'expression',
+						label: 'Expression',
+						default: '',
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											expr: exprVal('$(label:count) + 10'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const action = result!.steps.step1.action_sets.down[0]
+			expect(action.options.expr).toEqual(exprVal('$(conn1:count) + 10'))
+		})
+
+		it('replaces $(label:var) in textinput with isExpression=true when optionsSupportExpressions is true', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				optionsSupportExpressions: true,
+				options: [
+					{
+						id: 'text',
+						type: 'textinput',
+						label: 'Text',
+						default: '',
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											text: exprExpr('$(label:var1) + " text"'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const action = result!.steps.step1.action_sets.down[0]
+			expect(action.options.text).toEqual(exprExpr('$(conn1:var1) + " text"'))
+		})
+
+		it('does NOT replace $(label:var) in textinput with isExpression=false even when optionsSupportExpressions is true', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				optionsSupportExpressions: true,
+				options: [
+					{
+						id: 'text',
+						type: 'textinput',
+						label: 'Text',
+						default: '',
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											text: exprVal('$(label:var1)'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const action = result!.steps.step1.action_sets.down[0]
+			// Should NOT replace because isExpression is false (literal dropdown value case)
+			expect(action.options.text).toEqual(exprVal('$(label:var1)'))
+		})
+
+		it('does not replace variables in fields without useVariables or expression support', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				options: [
+					{
+						id: 'text',
+						type: 'textinput',
+						label: 'Text',
+						default: '',
+						// No useVariables
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											text: exprVal('$(label:var) should not change'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const action = result!.steps.step1.action_sets.down[0]
+			expect(action.options.text).toEqual(exprVal('$(label:var) should not change'))
+		})
+
+		it('replaces $(label:var) in button style text', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					style: {
+						text: 'Status: $(label:state)',
+						textExpression: false,
+						size: 'auto',
+						alignment: 'center:center',
+						pngalignment: 'center:center',
+						color: 0xffffff,
+						bgcolor: 0x000000,
+						show_topbar: 'default',
+						png64: null,
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+			expect(result!.style.text).toBe('Status: $(conn1:state)')
+		})
+
+		it('replaces $(label:var) in feedback style text', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const feedbackDef = makeFeedbackDefinition({ label: 'Test Feedback' })
+			defs.setFeedbackDefinitions('conn1', { fb1: feedbackDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					feedbacks: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'feedback1',
+							connectionId: 'conn1',
+							definitionId: 'fb1',
+							options: {},
+							isInverted: exprVal(false),
+							style: {
+								text: 'Value: $(label:reading)',
+							},
+							upgradeIndex: undefined,
+						},
+					],
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const feedback = result!.feedbacks[0]
+			if (feedback.type === EntityModelType.Feedback) {
+				expect(feedback.style?.text).toBe('Value: $(conn1:reading)')
+			}
+		})
+
+		it('handles multiple $(label:) references in the same string', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				options: [
+					{
+						id: 'text',
+						type: 'textinput',
+						label: 'Text',
+						default: '',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											text: exprVal('$(label:var1) and $(label:var2) and $(label:var3)'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const action = result!.steps.step1.action_sets.down[0]
+			expect(action.options.text).toEqual(exprVal('$(conn1:var1) and $(conn1:var2) and $(conn1:var3)'))
+		})
+
+		it('preserves isExpression flag when replacing variables', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				optionsSupportExpressions: true,
+				options: [
+					{
+						id: 'text',
+						type: 'textinput',
+						label: 'Text',
+						default: '',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											text: { value: '$(label:var)', isExpression: true },
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const action = result!.steps.step1.action_sets.down[0]
+			expect(action.options.text).toEqual({ value: '$(conn1:var)', isExpression: true })
+		})
+
+		it('handles missing action definition gracefully and logs warning', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'nonexistent',
+										options: {
+											text: exprVal('$(label:var)'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			// Variable replacement should not happen for missing definitions
+			const action = result!.steps.step1.action_sets.down[0]
+			expect(action.options.text).toEqual(exprVal('$(label:var)'))
+		})
+
+		it('handles missing feedback definition gracefully and logs warning', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					feedbacks: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'feedback1',
+							connectionId: 'conn1',
+							definitionId: 'nonexistent',
+							options: {
+								value: exprVal('$(label:var)'),
+							},
+							isInverted: exprVal(false),
+							style: {},
+							upgradeIndex: undefined,
+						},
+					],
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			// Variable replacement should not happen for missing definitions
+			const feedback = result!.feedbacks[0]
+			expect(feedback.options.value).toEqual(exprVal('$(label:var)'))
+		})
+
+		it('handles non-string values in options correctly', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				options: [
+					{
+						id: 'number',
+						type: 'number',
+						label: 'Number',
+						default: 0,
+						min: 0,
+						max: 100,
+					},
+					{
+						id: 'checkbox',
+						type: 'checkbox',
+						label: 'Checkbox',
+						default: false,
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											number: exprVal(42),
+											checkbox: exprVal(true),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', [preset])
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			expect(result).not.toBeNull()
+
+			const action = result!.steps.step1.action_sets.down[0]
+			expect(action.options.number).toEqual(exprVal(42))
+			expect(action.options.checkbox).toEqual(exprVal(true))
 		})
 	})
 })

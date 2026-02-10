@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import { diffObjects } from '@companion-app/shared/Diff.js'
-import { replaceAllVariables } from '../Variables/Util.js'
+import { replaceAllVariables, visitEntityOptionsForVariables } from '../Variables/Util.js'
 import type {
 	PresetDefinition,
 	UIPresetDefinition,
@@ -28,7 +28,12 @@ import { EventEmitter } from 'node:events'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ConvertPresetStyleToDrawStyle } from './Connection/Thread/PresetUtils.js'
-import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import {
+	type ExpressionableOptionsObject,
+	exprExpr,
+	exprVal,
+	type ExpressionOrValue,
+} from '@companion-app/shared/Model/Options.js'
 
 type InstanceDefinitionsEvents = {
 	readonly updatePresets: [connectionId: string]
@@ -441,6 +446,36 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		label: string,
 		presets: Record<string, PresetDefinition>
 	): void {
+		const missingReferencedFeedbackDefinitions = new Set<string>()
+		const missingReferencedActionDefinitions = new Set<string>()
+
+		const replaceVariablesInEntityOptions = (
+			definition: ClientEntityDefinition,
+			options: ExpressionableOptionsObject
+		): ExpressionableOptionsObject =>
+			visitEntityOptionsForVariables<ExpressionOrValue<any> | undefined>(
+				definition,
+				options,
+				(_field, optionValue, fieldType) => {
+					if (!optionValue || !fieldType) return optionValue
+
+					// Only replace variables in fields that support them
+					if (
+						(fieldType.parseVariables ||
+							fieldType.forceExpression ||
+							(fieldType.allowExpression && optionValue.isExpression)) &&
+						typeof optionValue.value === 'string'
+					) {
+						return {
+							value: replaceAllVariables(optionValue.value, label),
+							isExpression: optionValue.isExpression,
+						}
+					}
+
+					return optionValue
+				}
+			)
+
 		/*
 		 * Clean up variable references: $(label:variable)
 		 * since the name of the connection is dynamic. We don't want to
@@ -454,12 +489,52 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 				if (preset.model.feedbacks) {
 					for (const feedback of preset.model.feedbacks) {
-						if (feedback.type === EntityModelType.Feedback && feedback.style && feedback.style.text) {
+						if (feedback.type !== EntityModelType.Feedback) continue
+
+						if (typeof feedback.style?.text === 'string') {
 							feedback.style.text = replaceAllVariables(feedback.style.text, label)
+						}
+
+						const definition = this.getEntityDefinition(EntityModelType.Feedback, connectionId, feedback.definitionId)
+						if (!definition) {
+							missingReferencedFeedbackDefinitions.add(feedback.definitionId)
+							continue
+						}
+
+						feedback.options = replaceVariablesInEntityOptions(definition, feedback.options)
+					}
+				}
+
+				for (const step of Object.values(preset.model.steps)) {
+					if (!step.action_sets || typeof step.action_sets !== 'object') continue
+					for (const set of Object.values(step.action_sets)) {
+						if (!set || !Array.isArray(set)) continue
+
+						for (const action of set) {
+							if (action.type !== EntityModelType.Action) continue
+
+							const definition = this.getEntityDefinition(EntityModelType.Action, connectionId, action.definitionId)
+							if (!definition) {
+								missingReferencedActionDefinitions.add(action.definitionId)
+								continue
+							}
+
+							action.options = replaceVariablesInEntityOptions(definition, action.options)
 						}
 					}
 				}
 			}
+		}
+
+		if (missingReferencedActionDefinitions.size > 0) {
+			this.#logger.warn(
+				`Presets for connection ${label} reference action definitions that do not exist: ${[...missingReferencedActionDefinitions].join(', ')}`
+			)
+		}
+		if (missingReferencedFeedbackDefinitions.size > 0) {
+			this.#logger.warn(
+				`Presets for connection ${label} reference feedback definitions that do not exist: ${[...missingReferencedFeedbackDefinitions].join(', ')}`
+			)
 		}
 
 		const lastPresetDefinitions = this.#presetDefinitions[connectionId]

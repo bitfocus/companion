@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ParseFieldOptions, VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
+import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
+import type { VisitEntityOptionValueOptions, VariableValueData, VariablesCache } from '../../lib/Variables/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	CompanionFieldVariablesSupport,
@@ -7,7 +8,6 @@ import {
 	exprVal,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
-import type { VariableValueData, VariablesCache } from '../../lib/Variables/Util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 const useVariablesMinimal = CompanionFieldVariablesSupport.Basic
@@ -841,23 +841,23 @@ describe('VariablesAndExpressionParser', () => {
 	})
 
 	describe('parseEntityOption', () => {
-		const parseExpressionOrVariables: ParseFieldOptions = {
+		const parseExpressionOrVariables: VisitEntityOptionValueOptions = {
 			allowExpression: true,
 			parseVariables: true,
 		}
-		const parseExpressionOnly: ParseFieldOptions = {
+		const parseExpressionOnly: VisitEntityOptionValueOptions = {
 			allowExpression: true,
 			parseVariables: false,
 		}
-		const parseVariablesOnly: ParseFieldOptions = {
+		const parseVariablesOnly: VisitEntityOptionValueOptions = {
 			allowExpression: false,
 			parseVariables: true,
 		}
-		const parseNothing: ParseFieldOptions = {
+		const parseNothing: VisitEntityOptionValueOptions = {
 			allowExpression: false,
 			parseVariables: false,
 		}
-		const parseForceExpression: ParseFieldOptions = {
+		const parseForceExpression: VisitEntityOptionValueOptions = {
 			allowExpression: false,
 			parseVariables: false,
 			forceExpression: true,

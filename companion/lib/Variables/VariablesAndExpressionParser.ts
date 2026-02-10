@@ -7,10 +7,12 @@ import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import {
 	executeExpression,
 	parseVariablesInString,
+	visitEntityOptionsForVariables,
 	type VariableValueData,
 	type VariablesCache,
 	type ParseVariablesResult,
 	type VariableValueCache,
+	type VisitEntityOptionValueOptions,
 } from './Util.js'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
@@ -114,70 +116,35 @@ export class VariablesAndExpressionParser {
 				optionErrors: Record<string, string | undefined>
 				referencedVariableIds: Set<string>
 		  } {
-		const parsedOptions: CompanionOptionValues = {}
 		const referencedVariableIds = new Set<string>()
-
 		const parseErrors: Record<string, string | undefined> = {}
 
-		if (entityDefinition.optionsSupportExpressions) {
-			// If the entity uses the auto parser, we can just parse all
+		const parsedOptions = visitEntityOptionsForVariables(entityDefinition, options, (field, optionValue, fieldType) => {
+			// For passthrough fields, skip all processing and just extract the raw value
+			if (fieldType === null) {
+				return optionValue?.value
+			}
 
-			for (const field of entityDefinition.options) {
-				const fieldType: ParseFieldOptions = {
-					allowExpression: !field.disableAutoExpression,
-					parseVariables: false,
-				}
-				if (field.type === 'textinput' && field.useVariables) {
-					fieldType.parseVariables = true
-				} else if (field.type === 'expression') {
-					fieldType.forceExpression = true
-				}
+			const parsedValue = this.parseEntityOption(optionValue, fieldType)
+			const { sanitisedValue, validationError } = validateInputValue(field, parsedValue.value, true)
 
-				const parsedValue = this.parseEntityOption(options[field.id], fieldType)
-				const { sanitisedValue, validationError } = validateInputValue(field, parsedValue.value, true)
-				parsedOptions[field.id] = sanitisedValue
+			// Ensure values are valid, or report the error
+			if (!field.allowInvalidValues && validationError) {
+				parseErrors[field.id] = validationError
+			}
 
-				// Ensure values are valid, or report the error
-				if (!field.allowInvalidValues && validationError) {
-					parseErrors[field.id] = validationError
-				}
-
-				// Track the variables referenced in this field
-				if (
-					!entityDefinition.optionsToMonitorForInvalidations ||
-					entityDefinition.optionsToMonitorForInvalidations.includes(field.id)
-				) {
-					for (const variable of parsedValue.referencedVariableIds) {
-						referencedVariableIds.add(variable)
-					}
+			// Track the variables referenced in this field
+			if (
+				!entityDefinition.optionsToMonitorForInvalidations ||
+				entityDefinition.optionsToMonitorForInvalidations.includes(field.id)
+			) {
+				for (const variable of parsedValue.referencedVariableIds) {
+					referencedVariableIds.add(variable)
 				}
 			}
-		} else {
-			// The old approach for only text inputs
 
-			for (const field of entityDefinition.options) {
-				if (field.type !== 'textinput' || !field.useVariables) {
-					// Field doesn't support variables, pass unchanged
-					parsedOptions[field.id] = options[field.id]?.value
-					continue
-				}
-
-				// Field needs parsing
-				// Note - we don't need to care about the granularity given in `useVariables`,
-				const parseResult = this.parseVariables(stringifyVariableValue(options[field.id]?.value) ?? '')
-				parsedOptions[field.id] = parseResult.text
-
-				// Track the variables referenced in this field
-				if (
-					!entityDefinition.optionsToMonitorForInvalidations ||
-					entityDefinition.optionsToMonitorForInvalidations.includes(field.id)
-				) {
-					for (const variable of parseResult.variableIds) {
-						referencedVariableIds.add(variable)
-					}
-				}
-			}
-		}
+			return sanitisedValue
+		})
 
 		if (Object.keys(parseErrors).length > 0) {
 			return { ok: false, optionErrors: parseErrors, referencedVariableIds }
@@ -194,7 +161,7 @@ export class VariablesAndExpressionParser {
 	 */
 	parseEntityOption(
 		rawValue: ExpressionOrValue<JsonValue | undefined> | undefined,
-		options: ParseFieldOptions
+		options: VisitEntityOptionValueOptions
 	): {
 		value: JsonValue | undefined
 		referencedVariableIds: ReadonlySet<string>
@@ -226,20 +193,11 @@ export class VariablesAndExpressionParser {
 				referencedVariableIds: parseResult.variableIds,
 			}
 		} else {
-			// Just use the value as-is
+			// 'expression-or-variables' with isExpression=false - just use the value as-is
 			return {
 				value: rawValue.value,
 				referencedVariableIds: new Set(),
 			}
 		}
 	}
-}
-
-export interface ParseFieldOptions {
-	/** Whether expressions are allowed in the field */
-	allowExpression: boolean
-	/** Whether to parse variables in the field (only applies if not an expression) */
-	parseVariables: boolean
-	/** Force the field to be treated as an expression, even if not marked as such. */
-	forceExpression?: boolean
 }
