@@ -5,7 +5,7 @@ import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.
 import type {
 	PresetDefinition,
 	UIPresetDefinition,
-	UIPresetGroupCustom,
+	UIPresetGroupSimple,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
 import type {
@@ -69,7 +69,7 @@ export function ConvertPresetDefinitions(
 			order: i,
 			description: undefined, // Not supported
 			definitions: Object.fromEntries(groupedPresets.map((g) => [g.id, g])),
-			tags: undefined,
+			keywords: undefined,
 		} satisfies Complete<UIPresetSection>
 	})
 
@@ -79,38 +79,38 @@ export function ConvertPresetDefinitions(
 	}
 }
 
-function splitPresetsIntoGroups2(presets: (CompanionPresetDefinition & { id: string })[]): UIPresetGroupCustom[] {
-	const groups: UIPresetGroupCustom[] = []
+function splitPresetsIntoGroups2(presets: (CompanionPresetDefinition & { id: string })[]): UIPresetGroupSimple[] {
+	const groups: UIPresetGroupSimple[] = []
 
-	let currentGroup: UIPresetGroupCustom | null = null
+	let currentGroup: UIPresetGroupSimple | null = null
 	let currentIndex = 0
 
 	for (const preset of presets) {
 		if (preset.type === 'text') {
 			// Start a new group with this text preset as the heading
 			currentGroup = {
-				type: 'custom',
+				type: 'simple',
 				id: 'unknown',
 				name: preset.name,
 				order: groups.length,
 				description: preset.text,
 				presets: {},
-				tags: undefined,
-			} satisfies Complete<UIPresetGroupCustom>
+				keywords: undefined,
+			} satisfies Complete<UIPresetGroupSimple>
 			currentIndex = 0
 			groups.push(currentGroup)
 		} else if (preset.type === 'button') {
 			// Add to current group, or create a new group without heading if needed
 			if (!currentGroup) {
 				currentGroup = {
-					type: 'custom',
+					type: 'simple',
 					id: 'unknown',
 					name: '',
 					order: 0,
 					description: undefined,
 					presets: {},
-					tags: undefined,
-				} satisfies Complete<UIPresetGroupCustom>
+					keywords: undefined,
+				} satisfies Complete<UIPresetGroupSimple>
 				groups.push(currentGroup)
 			}
 
@@ -121,7 +121,7 @@ function splitPresetsIntoGroups2(presets: (CompanionPresetDefinition & { id: str
 				id: preset.id,
 				order: currentIndex++,
 				label: preset.name,
-				tags: undefined,
+				keywords: undefined,
 			} satisfies Complete<UIPresetDefinition>
 		}
 	}
@@ -155,6 +155,7 @@ function ConvertPresetDefinition(
 				steps: {},
 				localVariables: [],
 			},
+			keywords: undefined,
 		}
 
 		if (rawPreset.steps) {

@@ -693,24 +693,24 @@ export class ControlsController {
 	getOrCreatePresetControl(
 		connectionId: string,
 		presetId: string,
-		matrixValues: VariableValues | null
+		variableValues: VariableValues | null
 	): ControlButtonPreset | null {
 		let presetModel = this.#registry.instance.definitions.convertPresetToPreviewControlModel(connectionId, presetId)
 		if (!presetModel) return null
 
 		// Interleave the values into the preset
-		let matrixUsedValues: VariableValues | undefined
-		if (matrixValues) {
+		let usedVariableValues: VariableValues | undefined
+		if (variableValues) {
 			presetModel = {
 				...presetModel,
 				localVariables: structuredClone(presetModel.localVariables),
 			}
 
-			matrixUsedValues = injectOverriddenLocalVariableValues(presetModel.localVariables, matrixValues)
+			usedVariableValues = injectOverriddenLocalVariableValues(presetModel.localVariables, variableValues)
 		}
 
-		const matrixHash = matrixUsedValues
-			? crypto.createHash('sha256').update(createStableObjectHash(matrixUsedValues)).digest('hex')
+		const matrixHash = usedVariableValues
+			? crypto.createHash('sha256').update(createStableObjectHash(usedVariableValues)).digest('hex')
 			: 'default'
 
 		// Check for an existing control that should be reused

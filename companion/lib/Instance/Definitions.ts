@@ -323,19 +323,19 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	convertPresetToControlModel(
 		connectionId: string,
 		presetId: string,
-		matrixValues: VariableValues | null
+		variableValues: VariableValues | null
 	): NormalButtonModel | null {
 		const definition = this.#presetDefinitions[connectionId]?.get(presetId)
 		if (!definition || definition.type !== 'button') return null
 
-		if (!matrixValues) return definition.model
+		if (!variableValues) return definition.model
 
 		const model: NormalButtonModel = {
 			...definition.model,
 			localVariables: structuredClone(definition.model.localVariables),
 		}
 
-		injectOverriddenLocalVariableValues(model.localVariables, matrixValues)
+		injectOverriddenLocalVariableValues(model.localVariables, variableValues)
 
 		return model
 	}

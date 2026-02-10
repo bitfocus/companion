@@ -1951,27 +1951,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d":
-  version: 2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d
-  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d"
+"@companion-module/base@portal:/home/julus/Projects/companion/companion-module-base/packages/companion-module-base::locator=%40companion-app%2Fworkspace%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@companion-module/base@portal:/home/julus/Projects/companion/companion-module-base/packages/companion-module-base::locator=%40companion-app%2Fworkspace%40workspace%3A."
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/bf0bfeef7033d1ffffacdb435f40b361648049ac772e1e1f9d80ddc5b61ddf548f2f30bbeb34ee73a5aa72f5e8517da718c00b89295c27f078330cfd76af512a
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260131-125141-dfad693":
-  version: 0.1.0-1-nightly-feat-2-0-20260131-125141-dfad693
-  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260131-125141-dfad693"
+"@companion-module/host@portal:/home/julus/Projects/companion/companion-module-base/packages/companion-module-host::locator=%40companion-app%2Fworkspace%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@companion-module/host@portal:/home/julus/Projects/companion/companion-module-base/packages/companion-module-host::locator=%40companion-app%2Fworkspace%40workspace%3A."
   dependencies:
-    "@companion-module/base": "npm:~2.0.0-0"
+    "@companion-module/base": "workspace:~"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^9.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/e1c1dcc6b3b5c30bca74bf79490b565fbf6c282e337274339d10a33d50bcf509aa11717e0116e9bfa38088fe45d7fb479da9d2cb737acb3258f19242fcbbf845
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@companion-surface/base@npm:~1.1.0":
   version: 1.1.0

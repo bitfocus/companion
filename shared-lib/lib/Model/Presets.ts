@@ -9,6 +9,7 @@ export interface PresetDefinition {
 	type: 'button'
 	model: NormalButtonModel
 	previewStyle: Partial<CompanionButtonStyleProps> | undefined
+	keywords: string[] | undefined
 }
 
 export interface UIPresetSection {
@@ -17,7 +18,7 @@ export interface UIPresetSection {
 	order: number
 	description?: string
 	definitions: Record<string, UIPresetGroup>
-	tags?: string[]
+	keywords?: string[]
 }
 
 export interface UIPresetGroupBase {
@@ -25,30 +26,34 @@ export interface UIPresetGroupBase {
 	name: string
 	order: number
 	description?: string
-	tags?: string[]
+	keywords?: string[]
 }
-export interface UIPresetGroupCustom extends UIPresetGroupBase {
-	type: 'custom'
+export interface UIPresetGroupSimple extends UIPresetGroupBase {
+	type: 'simple'
 	presets: Record<string, UIPresetDefinition>
 }
-export interface UIPresetGroupMatrix extends UIPresetGroupBase {
-	type: 'matrix'
+export interface UIPresetGroupTemplate extends UIPresetGroupBase {
+	type: 'template'
 
 	definition: UIPresetDefinition
 
-	// Matrix for combinations
-	matrix: Record<string, VariableValue[]>
-	matrixInclude?: VariableValues[]
-	matrixExclude?: VariableValues[]
+	// Templating
+	templateVariableName: string
+	templateValues: {
+		label: string | null
+		value?: VariableValue
+	}[]
+
+	commonVariableValues: VariableValues | null
 }
 
-export type UIPresetGroup = UIPresetGroupCustom | UIPresetGroupMatrix
+export type UIPresetGroup = UIPresetGroupSimple | UIPresetGroupTemplate
 
 export interface UIPresetDefinition {
 	id: string
 	order: number
 	label: string
-	tags?: string[]
+	keywords?: string[]
 }
 
 export type UIPresetDefinitionUpdate =

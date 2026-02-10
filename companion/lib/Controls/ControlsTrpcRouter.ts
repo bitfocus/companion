@@ -28,14 +28,14 @@ export function createControlsTrpcRouter(
 					connectionId: z.string(),
 					presetId: z.string(),
 					location: zodLocation,
-					matrixValues: z.record(z.string(), JsonValueSchema.optional()).nullable(),
+					variableValues: z.record(z.string(), JsonValueSchema.optional()).nullable(),
 				})
 			)
 			.mutation(async ({ input }) => {
 				const model = instanceDefinitions.convertPresetToControlModel(
 					input.connectionId,
 					input.presetId,
-					input.matrixValues
+					input.variableValues
 				)
 				if (!model) return null
 

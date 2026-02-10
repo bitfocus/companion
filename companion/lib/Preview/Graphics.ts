@@ -123,14 +123,14 @@ export class PreviewGraphics {
 					z.object({
 						connectionId: z.string(),
 						presetId: z.string(),
-						matrixValues: z.record(z.string(), JsonValueSchema.optional()).nullable(),
+						variableValues: z.record(z.string(), JsonValueSchema.optional()).nullable(),
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
 					const control = self.#controlsController.getOrCreatePresetControl(
 						input.connectionId,
 						input.presetId,
-						input.matrixValues
+						input.variableValues
 					)
 					if (!control) throw new Error(`Preset "${input.presetId}" not found for connection "${input.connectionId}"`)
 

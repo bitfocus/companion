@@ -2,6 +2,7 @@ import {
 	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
 	type CompanionPresetSection,
+	type CompanionPresetDefinitions,
 	type CompanionRecordedAction,
 	type CompanionVariableValue,
 	type Complete,
@@ -112,11 +113,12 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 		})
 	}
 	/** The presets provided by the connection have changed */
-	setPresetDefinitions(rawPresets: CompanionPresetSection[]): void {
+	setPresetDefinitions(rawSections: CompanionPresetSection[], rawPresets: CompanionPresetDefinitions): void {
 		const { presets, uiPresets } = ConvertPresetDefinitions(
 			this.#logger,
 			this.#connectionId,
 			this.#currentUpgradeIndex,
+			rawSections,
 			rawPresets
 		)
 

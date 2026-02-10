@@ -5,14 +5,16 @@ import type {
 	PresetDefinition,
 	UIPresetDefinition,
 	UIPresetGroup,
-	UIPresetGroupCustom,
-	UIPresetGroupMatrix,
+	UIPresetGroupSimple,
+	UIPresetGroupTemplate,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
 import type {
 	CompanionPresetAction,
 	CompanionPresetDefinition,
+	CompanionPresetDefinitions,
 	CompanionPresetGroup,
+	CompanionPresetReference,
 	CompanionPresetSection,
 	Complete,
 	ModuleLogger,
@@ -33,7 +35,8 @@ export function ConvertPresetDefinitions(
 	logger: ModuleLogger,
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined,
-	rawSections: CompanionPresetSection[]
+	rawSections: CompanionPresetSection[],
+	rawPresets: CompanionPresetDefinitions
 ): {
 	presets: Record<string, PresetDefinition>
 	uiPresets: Record<string, UIPresetSection>
@@ -43,6 +46,11 @@ export function ConvertPresetDefinitions(
 	const uiPresets: Record<string, UIPresetSection> = {}
 
 	try {
+		// Translate all the preset definitions
+		for (const [id, preset] of Object.entries(rawPresets ?? {})) {
+			if (preset) converter.convertPreset(id, preset)
+		}
+
 		rawSections?.forEach?.((rawSection, i) => {
 			const section = converter.convertSection(rawSection, i)
 			if (!section) return
@@ -55,17 +63,33 @@ export function ConvertPresetDefinitions(
 				`Some preset ids are duplicated. Duplications have been dropped: ${Array.from(converter.duplicatePresetIds).join(', ')}`
 			)
 		}
-
-		return {
-			presets: converter.presetDefinitions,
-			uiPresets,
-		}
 	} catch (e) {
 		logger.error(`Converting presets failed: ${stringifyError(e)}`)
 		return {
 			presets: {},
 			uiPresets: {},
 		}
+	}
+
+	// Sanity check that all referenced presets are present
+	const allDefinedPresetIds = new Set(Object.keys(converter.presetDefinitions))
+	const unreferencedPresetIds = allDefinedPresetIds.difference(converter.referencedPresetIds)
+	if (unreferencedPresetIds.size > 0) {
+		logger.warn(
+			`Some preset definitions are not referenced by any preset groups, and will be ignored: ${Array.from(unreferencedPresetIds).join(', ')}`
+		)
+	}
+
+	const missingReferencedPresetIds = converter.missingPresetIds.difference(allDefinedPresetIds)
+	if (missingReferencedPresetIds.size > 0) {
+		logger.warn(
+			`Some preset references could not be found in the preset definitions: ${Array.from(missingReferencedPresetIds).join(', ')}`
+		)
+	}
+
+	return {
+		presets: converter.presetDefinitions,
+		uiPresets,
 	}
 }
 
@@ -75,6 +99,8 @@ class PresetDefinitionConverter {
 	readonly #connectionUpgradeIndex: number | undefined
 
 	readonly duplicatePresetIds = new Set<string>()
+	readonly referencedPresetIds = new Set<string>()
+	readonly missingPresetIds = new Set<string>()
 	readonly presetDefinitions: Record<string, PresetDefinition> = {}
 
 	constructor(logger: ModuleLogger, connectionId: string, connectionUpgradeIndex: number | undefined) {
@@ -93,7 +119,7 @@ class PresetDefinitionConverter {
 				order: i,
 				description: section.description,
 				definitions: {},
-				tags: section.tags,
+				keywords: section.keywords,
 			}
 
 			const presetGroups = section.definitions.filter((grp) => this.isGroup(grp))
@@ -109,7 +135,7 @@ class PresetDefinitionConverter {
 				return uiSection
 			}
 
-			const presetDefinitions = section.definitions.filter((def) => this.isPreset(def))
+			const presetDefinitions = section.definitions.filter((def) => this.isPresetReference(def))
 			if (presetDefinitions.length > 0) {
 				const invalidCount = section.definitions.length - presetDefinitions.length
 				if (invalidCount > 0) {
@@ -117,19 +143,19 @@ class PresetDefinitionConverter {
 				}
 
 				const convertedDefinitions = presetDefinitions
-					.map((preset, i) => this.convertPreset(preset, i))
+					.map((presetRef, i) => this.resolvePreset(presetRef, i))
 					.filter((v) => !!v)
 
 				// Wrap in a group, for ui simplicity
 				uiSection.definitions = {
 					default: {
-						type: 'custom',
+						type: 'simple',
 						id: 'default',
 						name: '',
 						order: 0,
 						description: undefined,
 						presets: Object.fromEntries(convertedDefinitions.map((d) => [d.id, d])),
-						tags: undefined,
+						keywords: undefined,
 					} satisfies Complete<UIPresetGroup>,
 				}
 
@@ -152,97 +178,118 @@ class PresetDefinitionConverter {
 		const groupName = group.name
 		const groupType = group.type
 
-		console.log('group', group.name, group.type)
-
 		switch (group.type) {
-			case 'custom': {
-				const uiGroup: Complete<UIPresetGroupCustom> = {
-					type: 'custom',
+			case 'simple': {
+				const uiGroup: Complete<UIPresetGroupSimple> = {
+					type: 'simple',
 					id: group.id,
 					name: group.name,
 					order: i,
 					description: group.description,
 					presets: {},
-					tags: group.tags,
+					keywords: group.keywords,
 				}
 
-				const convertedDefinitions = group.presets.map((preset, i) => this.convertPreset(preset, i)).filter((v) => !!v)
-				if (convertedDefinitions.length === 0) return null
+				const resolvedDefinitions = group.presets
+					.map((presetRef, i) => this.resolvePreset(presetRef, i))
+					.filter((v) => !!v)
+				if (resolvedDefinitions.length === 0) return null
 
-				uiGroup.presets = Object.fromEntries(convertedDefinitions.map((d) => [d.id, d]))
+				uiGroup.presets = Object.fromEntries(resolvedDefinitions.map((d) => [d.id, d]))
 
 				return uiGroup
 			}
-			case 'matrix': {
-				const uiDefinition = this.convertPreset(group.definition, 0)
+			case 'template': {
+				const uiDefinition = this.resolvePreset(group.presetId, 0)
 				if (!uiDefinition) return null
 
 				return {
-					type: 'matrix',
+					type: 'template',
 					id: group.id,
 					name: group.name,
 					order: i,
 					description: group.description,
-					tags: group.tags,
+					keywords: group.keywords,
 
 					definition: uiDefinition,
-					matrix: structuredClone(group.matrix),
-					matrixExclude: structuredClone(group.matrixExclude),
-					matrixInclude: structuredClone(group.matrixInclude),
-				} satisfies Complete<UIPresetGroupMatrix>
+					templateVariableName: group.templateVariableName,
+					templateValues: group.templateValues.map((templateValue) => ({
+						label: templateValue.name ?? null,
+						value: structuredClone(templateValue.value),
+					})),
+					commonVariableValues: structuredClone(group.commonVariableValues) || null,
+				} satisfies Complete<UIPresetGroupTemplate>
 			}
 			default:
+				assertNever(group)
 				this.#logger.warn(`Unknown preset group "${groupName}" type: ${groupType}`)
 				return null
 		}
 	}
 
-	convertPreset(preset: CompanionPresetDefinition, i: number): UIPresetDefinition | null {
-		// Check if an id is duplicated
-		if (this.presetDefinitions[preset.id]) {
-			this.duplicatePresetIds.add(preset.id)
+	resolvePreset(presetRef: CompanionPresetReference, i: number): UIPresetDefinition | null {
+		const definition = this.presetDefinitions[presetRef]
+		if (!definition) {
+			// Track it is missing
+			this.missingPresetIds.add(presetRef)
 			return null
+		}
+
+		// Track the reference
+		this.referencedPresetIds.add(presetRef)
+
+		return {
+			id: presetRef,
+			order: i,
+			label: definition.name,
+			keywords: definition.keywords,
+		} satisfies Complete<UIPresetDefinition>
+	}
+
+	convertPreset(presetId: string, preset: CompanionPresetDefinition): boolean {
+		// Check if an id is duplicated
+		if (this.presetDefinitions[presetId]) {
+			this.duplicatePresetIds.add(presetId)
+			return false
 		}
 
 		const definition = ConvertPresetDefinition(
 			this.#logger,
 			this.#connectionId,
 			this.#connectionUpgradeIndex,
-			preset.id,
+			presetId,
 			preset
 		)
-		if (!definition) return null
+		if (!definition) return false
 
 		this.presetDefinitions[definition.id] = definition
 
-		return {
-			id: preset.id,
-			order: i,
-			label: preset.name,
-			tags: preset.tags,
-		} satisfies Complete<UIPresetDefinition>
+		return true
 	}
 
-	isGroup(obj: { type: string }): obj is CompanionPresetGroup {
+	isGroup(obj: { type: string } | CompanionPresetReference): obj is CompanionPresetGroup {
+		if (typeof obj === 'string') return false
+
 		const objGroup = obj as CompanionPresetGroup
 		switch (objGroup.type) {
-			case 'custom':
-			case 'matrix':
+			case 'simple':
+			case 'template':
 				return true
 			default:
 				assertNever(objGroup)
 				return false
 		}
 	}
-	isPreset(obj: { type: string }): obj is CompanionPresetDefinition {
-		const objPreset = obj as CompanionPresetDefinition
-		switch (objPreset.type) {
-			case 'simple':
-				return true
-			default:
-				assertNever(objPreset.type)
-				return false
-		}
+	isPresetReference(obj: CompanionPresetGroup<any> | CompanionPresetReference): obj is CompanionPresetReference {
+		return typeof obj === 'string'
+		// const objPreset = obj as CompanionPresetDefinition
+		// switch (objPreset.type) {
+		// 	case 'simple':
+		// 		return true
+		// 	default:
+		// 		assertNever(objPreset.type)
+		// 		return false
+		// }
 	}
 }
 
@@ -271,6 +318,7 @@ function ConvertPresetDefinition(
 					steps: {},
 					localVariables: [],
 				},
+				keywords: structuredClone(rawPreset.keywords),
 			}
 
 			if (rawPreset.steps) {
@@ -350,6 +398,7 @@ function ConvertPresetDefinition(
 							})
 							break
 						default:
+							assertNever(localVariable.variableType)
 							logger.warn(`Unknown local variable type: ${localVariable.variableType}`)
 							break
 					}

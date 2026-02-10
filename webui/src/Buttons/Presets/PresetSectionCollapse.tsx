@@ -3,8 +3,8 @@ import React, { useCallback } from 'react'
 import { observer } from 'mobx-react-lite'
 import type {
 	UIPresetGroup,
-	UIPresetGroupCustom,
-	UIPresetGroupMatrix,
+	UIPresetGroupSimple,
+	UIPresetGroupTemplate,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
 import { runInAction, type IObservableValue } from 'mobx'
@@ -52,10 +52,10 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 
 	const groupComponents = groups.map((grp, i) => {
 		switch (grp.type) {
-			case 'custom':
-				return <PresetGroupCustom key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
-			case 'matrix':
-				return <PresetGroupMatrix key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+			case 'simple':
+				return <PresetGroupSimple key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+			case 'template':
+				return <PresetGroupTemplate key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
 			default:
 				return null
 		}
@@ -82,11 +82,11 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 
 interface PresetGroupCustomProps {
 	connectionId: string
-	grp: UIPresetGroupCustom
+	grp: UIPresetGroupSimple
 	isFirst: boolean
 }
 
-const PresetGroupCustom = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupCustomProps) {
+const PresetGroupSimple = observer(function PresetGroupSimple({ connectionId, grp, isFirst }: PresetGroupCustomProps) {
 	const presets = Object.values(grp.presets).sort((a, b) => a.order - b.order)
 
 	return (
@@ -100,7 +100,7 @@ const PresetGroupCustom = observer(function PresetGroup({ connectionId, grp, isF
 						connectionId={connectionId}
 						presetId={p.id}
 						title={p.label}
-						matrixValues={null}
+						variableValues={null}
 					/>
 				))}
 			</div>
@@ -110,66 +110,32 @@ const PresetGroupCustom = observer(function PresetGroup({ connectionId, grp, isF
 
 interface PresetGroupMatrixProps {
 	connectionId: string
-	grp: UIPresetGroupMatrix
+	grp: UIPresetGroupTemplate
 	isFirst: boolean
 }
 
-interface MatrixCombination {
+interface TemplateCombination {
+	label: string | null
 	hash: string
 	values: VariableValues
 }
 
-const PresetGroupMatrix = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupMatrixProps) {
-	const matrixCombinations = useComputed((): MatrixCombination[] => {
-		// Build the exclusion list
-		const excludeHashes = new Set<string>()
-		for (const exclude of grp.matrixExclude || []) {
-			const hash = createStableObjectHash(exclude)
-			excludeHashes.add(hash)
-		}
+const PresetGroupTemplate = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupMatrixProps) {
+	const matrixCombinations = useComputed((): TemplateCombination[] => {
+		if (grp.templateValues.length === 0) return []
 
-		// Fill in the initial ones
-		const generatedHashes = new Set<string>()
-		const values: MatrixCombination[] = []
-
-		if (grp.matrix && Object.keys(grp.matrix).length > 0) {
-			// Get matrix keys and their possible values
-			const matrixKeys = Object.keys(grp.matrix)
-			const matrixValueArrays = matrixKeys.map((key) => grp.matrix[key] || [])
-
-			// Generate all combinations using recursive approach
-			const generateCombinations = (index: number, current: VariableValues) => {
-				if (index === matrixKeys.length) {
-					const hash = createStableObjectHash(current)
-					if (!excludeHashes.has(hash) && !generatedHashes.has(hash)) {
-						generatedHashes.add(hash)
-						values.push({ hash, values: { ...current } })
-					}
-					return
-				}
-
-				const key = matrixKeys[index]
-				const possibleValues = matrixValueArrays[index]
-
-				for (const value of possibleValues) {
-					generateCombinations(index + 1, { ...current, [key]: value })
-				}
+		return grp.templateValues.map((templateValue): TemplateCombination => {
+			const values: VariableValues = {
+				...grp.commonVariableValues,
+				[grp.templateVariableName]: templateValue.value,
 			}
-
-			generateCombinations(0, {})
-		}
-
-		// Add the includes
-		for (const include of grp.matrixInclude || []) {
-			const hash = createStableObjectHash(include)
-			if (!generatedHashes.has(hash)) {
-				generatedHashes.add(hash)
-				values.push({ hash, values: include })
+			return {
+				label: templateValue.label,
+				hash: createStableObjectHash(values),
+				values,
 			}
-		}
-
-		return values
-	}, [grp.matrix, grp.matrixInclude, grp.matrixExclude])
+		})
+	}, [grp.templateValues, grp.commonVariableValues, grp.templateVariableName])
 
 	return (
 		<>
@@ -181,8 +147,8 @@ const PresetGroupMatrix = observer(function PresetGroup({ connectionId, grp, isF
 						key={p.hash}
 						connectionId={connectionId}
 						presetId={grp.definition.id}
-						title={grp.definition.label}
-						matrixValues={p.values}
+						title={p.label || grp.definition.label}
+						variableValues={p.values}
 					/>
 				))}
 			</div>
@@ -205,15 +171,15 @@ interface PresetIconPreviewProps {
 	connectionId: string
 	presetId: string
 	title: string
-	matrixValues: VariableValues | null
+	variableValues: VariableValues | null
 }
-function PresetIconPreview({ connectionId, presetId, title, matrixValues }: Readonly<PresetIconPreviewProps>) {
+function PresetIconPreview({ connectionId, presetId, title, variableValues }: Readonly<PresetIconPreviewProps>) {
 	const [, drag] = useDrag<PresetDragItem>({
 		type: 'preset',
 		item: {
 			connectionId,
 			presetId,
-			matrixValues,
+			variableValues: variableValues,
 		},
 	})
 
@@ -222,7 +188,7 @@ function PresetIconPreview({ connectionId, presetId, title, matrixValues }: Read
 			{
 				connectionId,
 				presetId,
-				matrixValues,
+				variableValues: variableValues,
 			},
 			{}
 		)
