@@ -26,6 +26,8 @@ export function validateInputValue(
 			return { sanitisedValue: undefined, validationError: undefined }
 
 		case 'textinput': {
+			if (definition.disableSanitisation) return { sanitisedValue: value, validationError: undefined }
+
 			const sanitisedValue = stringifyVariableValue(value ?? '') ?? ''
 
 			if (definition.minLength !== undefined && sanitisedValue.length < definition.minLength) {
