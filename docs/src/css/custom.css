@@ -68,6 +68,7 @@
 .navbar__brand {
 	padding-left: 0;
 	padding-right: 0.5em;
+	border-radius: 0.5rem;
 }
 
 /* Navbar (the top bar, not the sidebar) link styles 
@@ -75,27 +76,23 @@
    Note: The margin-bottom/border-bottom adjustment here is made large to make the tabs touch the bottom of the header bar
         Since we're clipping the left-container, the bottom-border needn't be precise -- as long as it's big enough.
    */
-.theme-layout-navbar-left .navbar__link,
-.navbar__brand {
+.theme-layout-navbar-left .navbar__link {
 	text-align: center; /* keep labels horizontally centered when they become two lines */
 	line-height: 1; /* keep labels compact when words wrap to two lines */
-	padding-top: 0.55em; /* make up for the reduced line-height */
-	padding-bottom: 0.55em; /* needed for symmetry to match the right-side container */
-	/* Make page-tab links with rounded top corners only so it visually "fuses" with the page */
+	padding-top: 0.65em; /* make up for the reduced line-height */
+	padding-bottom: 0.85rem; /* combined with margin-bottom, establish the space below the text */
+	/* Extend the button beyond the bottom of the header */
+	margin-bottom: -1.5rem; /* move the button down to create the tab-like effect */
+	/* Make page-tab links with rounded top corners, but square bottom corners so it visually "fuses" with the page */
 	border-radius: 0.5rem 0.5rem 0 0;
-	/* Extend the button beyond the bottom of the header (when text is on one line) */
-	margin-bottom: -2em; /* counteract button-size effects of the border-bottom */
-	border-bottom: 2em solid transparent; /* hover background will include this border */
 }
 
-.navbar__link--active {
+.theme-layout-navbar-left .navbar__link--active {
 	/* Make active link look a like a page-tab (like a browser tab or VS Code editor tabs) */
 	color: var(--companion-active-tab-color);
 	background-color: var(--companion-active-tab-bg);
 	/* Give the tab a glow  */
 	box-shadow: 0 -4px 10px 1px var(--companion-active-tab-shadow-color);
-	margin-bottom: -2em; /* counteract button-size effects of the border-bottom */
-	border-bottom: 2em solid var(--companion-active-tab-bg);
 }
 
 /* Hover styles for (almost) all types of navbar links. 
@@ -110,13 +107,15 @@
 
 /* Make the dark/light mode button stand out better.
    Unfortunately, it doesn't have a non-serialized classname, but this works. 
-   Can't say if it's better than nesting, but it's nested in two places, so this seems simpler  */
-.clean-btn[title='system mode']:not(:hover) {
+   Can't say if it's better than .clean-btn[title='system mode'], but it's safer from internationalization */
+.theme-layout-navbar-right .clean-btn:not(:hover),
+.navbar-sidebar__brand .clean-btn:not(:hover) {
 	background-color: var(--companion-mode-toggle-bg);
 }
 
-/* The next two rules adjust spacing for the download, github and light/dark buttons. */
-.clean-btn[title='system mode'] {
+/* The next two rules adjust spacing for the download, github and light/dark buttons.
+   The first is for the light/dark button when it is grouped with the other two, so only needs to work on the full navbar. */
+.theme-layout-navbar-right .clean-btn {
 	margin: 0 0.25em;
 }
 
@@ -124,11 +123,33 @@
 	padding: 0.25em;
 	border-radius: 0.5rem;
 
+	/* fontawesome-* classes are added in the item definitions in docusaurus.config.ts  */
 	.fontawesome {
-		/* we could have used svg as the selector, but this is probably better */
 		height: 2rem;
 		width: auto;
 		display: block; /* Helps remove extra spacing below the SVG */
+	}
+	.fontawesome-text {
+		display: none;
+	}
+}
+
+/* when the window is narrow, the right-header icons are in the pull-down sidebar */
+.navbar-sidebar__items {
+	/* fontawesome-* classes were added in the item definitions in docusaurus.config.ts  */
+	.fontawesome-container {
+		display: flex;
+		align-items: center;
+
+		.fontawesome {
+			height: 1.5em;
+			width: auto;
+		}
+
+		.fontawesome-text {
+			line-height: 1;
+			padding-left: 0.5em;
+		}
 	}
 }
 
@@ -153,7 +174,7 @@
 	background-color: var(--companion-navbar-bg);
 }
 
-/* For the drop-down sidebar when the window is narrow */
+/* Close-icon for the drop-down sidebar when the window is narrow */
 .navbar-sidebar__close {
 	padding: 0.5em;
 	border-radius: 0.5em;
