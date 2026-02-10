@@ -18,11 +18,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { VariablesBlinker } from './VariablesBlinker.js'
-import {
-	isExpressionOrValue,
-	type ExpressionableOptionsObject,
-	type ExpressionOrValue,
-} from '@companion-app/shared/Model/Options.js'
+import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 
 /**
@@ -127,11 +123,14 @@ export class VariablesAndExpressionParser {
 			// If the entity uses the auto parser, we can just parse all
 
 			for (const field of entityDefinition.options) {
-				let fieldType: 'expression' | 'variables' | 'generic' = 'generic'
+				const fieldType: ParseFieldOptions = {
+					allowExpression: !field.disableAutoExpression,
+					parseVariables: false,
+				}
 				if (field.type === 'textinput' && field.useVariables) {
-					fieldType = 'variables'
+					fieldType.parseVariables = true
 				} else if (field.type === 'expression') {
-					fieldType = 'expression'
+					fieldType.forceExpression = true
 				}
 
 				const parsedValue = this.parseEntityOption(options[field.id], fieldType)
@@ -194,18 +193,21 @@ export class VariablesAndExpressionParser {
 	 * @returns The value and the variables it references
 	 */
 	parseEntityOption(
-		optionsValue: JsonValue | ExpressionOrValue<JsonValue | undefined> | undefined,
-		fieldType: 'expression' | 'variables' | 'generic'
+		rawValue: ExpressionOrValue<JsonValue | undefined> | undefined,
+		options: ParseFieldOptions
 	): {
 		value: JsonValue | undefined
 		referencedVariableIds: ReadonlySet<string>
 	} {
-		// Get the value as an ExpressionOrValue
-		const rawValue: ExpressionOrValue<JsonValue | undefined> = isExpressionOrValue(optionsValue)
-			? optionsValue
-			: { value: optionsValue as any, isExpression: fieldType === 'expression' }
+		// No object, so just return undefined
+		if (!rawValue) {
+			return {
+				value: undefined,
+				referencedVariableIds: new Set(),
+			}
+		}
 
-		if (rawValue.isExpression || fieldType === 'expression') {
+		if ((rawValue.isExpression && options.allowExpression) || options.forceExpression) {
 			// Parse the expression
 			const parseResult = this.executeExpression(stringifyVariableValue(rawValue.value) ?? '', undefined)
 			if (!parseResult.ok) throw new Error(parseResult.error)
@@ -214,7 +216,7 @@ export class VariablesAndExpressionParser {
 				value: parseResult.value,
 				referencedVariableIds: parseResult.variableIds,
 			}
-		} else if (fieldType === 'variables') {
+		} else if ((!rawValue.isExpression || !options.allowExpression) && options.parseVariables) {
 			// Field needs parsing
 			// Note - we don't need to care about the granularity given in `useVariables`,
 			const parseResult = this.parseVariables(stringifyVariableValue(rawValue.value) ?? '')
@@ -231,4 +233,13 @@ export class VariablesAndExpressionParser {
 			}
 		}
 	}
+}
+
+export interface ParseFieldOptions {
+	/** Whether expressions are allowed in the field */
+	allowExpression: boolean
+	/** Whether to parse variables in the field (only applies if not an expression) */
+	parseVariables: boolean
+	/** Force the field to be treated as an expression, even if not marked as such. */
+	forceExpression?: boolean
 }
