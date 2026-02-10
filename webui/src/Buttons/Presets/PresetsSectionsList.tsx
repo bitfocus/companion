@@ -33,7 +33,8 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 		.filter((p) => !!p)
 		.sort((a, b) => a.order - b.order)
 
-	// Filter sections, groups, and presets based on search query and selected tags
+	// Filter sections and groups based on search query
+	// Groups are shown/hidden as a whole - we don't hide individual presets within a group
 	const visibleSections = useComputed(() => {
 		return allSections
 			.map((section) => {
@@ -51,42 +52,36 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 								!searchQuery || fuzzyMatch(searchQuery, grp.name, grp.description, grp.keywords?.join(' '))
 
 							if (grp.type === 'simple') {
-								// Filter presets within this group
-								const filteredPresets: typeof grp.presets = {}
-
-								for (const [presetId, preset] of Object.entries(grp.presets)) {
+								// Check if any preset within this group matches
+								const hasMatchingPreset = Object.values(grp.presets).some((preset) => {
 									try {
-										const presetMatchesSearch =
-											!searchQuery || fuzzyMatch(searchQuery, preset.label, preset.keywords?.join(' '))
-
-										// Include preset if it matches both search AND tags (or if section/group matches)
-										if (sectionMatchesSearch || groupMatchesSearch || presetMatchesSearch) {
-											filteredPresets[presetId] = preset
-										}
+										return !searchQuery || fuzzyMatch(searchQuery, preset.label, preset.keywords?.join(' '))
 									} catch (_err) {
-										// Ignore presets with bad data
+										return false
 									}
-								}
+								})
 
-								// Include group if it has matching presets or matches itself
-								if (Object.keys(filteredPresets).length > 0) {
-									filteredGroups[groupId] = { ...grp, presets: filteredPresets }
+								// Include entire group if section matches, group matches, or any preset matches
+								if (sectionMatchesSearch || groupMatchesSearch || hasMatchingPreset) {
+									filteredGroups[groupId] = grp
 								}
 							} else if (grp.type === 'template') {
-								// // For template, check if template values match search
-								// const templateMatchesSearch =
-								// 	!searchQuery ||
-								// 	Object.values(grp.templateValues).some((values) =>
-								// 		values.some((v) => fuzzyMatch(searchQuery, stringifyVariableValue(v) ?? ''))
-								// 	)
-								// // Include matrix group if it matches (matrices don't have individual preset tags)
-								// if (
-								// 	(sectionMatchesSearch && sectionMatchesTags) ||
-								// 	(groupMatchesSearch && groupMatchesTags) ||
-								// 	(matrixMatchesSearch && selectedTags.length === 0)
-								// ) {
-								filteredGroups[groupId] = grp
-								// }
+								// For template groups, check if template label matches or any template value label matches
+								const hasMatchingTemplateValue = grp.templateValues.some((templateValue) => {
+									try {
+										return !searchQuery || fuzzyMatch(searchQuery, templateValue.label ?? '')
+									} catch (_err) {
+										return false
+									}
+								})
+
+								const definitionMatchesSearch =
+									!searchQuery || fuzzyMatch(searchQuery, grp.definition.label, grp.definition.keywords?.join(' '))
+
+								// Include entire group if section matches, group matches, definition matches, or any template value matches
+								if (sectionMatchesSearch || groupMatchesSearch || definitionMatchesSearch || hasMatchingTemplateValue) {
+									filteredGroups[groupId] = grp
+								}
 							}
 						} catch (_err) {
 							// Ignore groups with bad data

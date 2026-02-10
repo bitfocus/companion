@@ -282,14 +282,6 @@ class PresetDefinitionConverter {
 	}
 	isPresetReference(obj: CompanionPresetGroup<any> | CompanionPresetReference): obj is CompanionPresetReference {
 		return typeof obj === 'string'
-		// const objPreset = obj as CompanionPresetDefinition
-		// switch (objPreset.type) {
-		// 	case 'simple':
-		// 		return true
-		// 	default:
-		// 		assertNever(objPreset.type)
-		// 		return false
-		// }
 	}
 }
 
