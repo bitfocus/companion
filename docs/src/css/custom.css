@@ -14,18 +14,19 @@
 	--ifm-color-primary-lighter: #e60c22;
 	--ifm-color-primary-lightest: #ea2336;
 	--ifm-code-font-size: 95%;
-	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+	--docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 10%);
 
 	--companion-navbar-bg: #d50215;
+	--ifm-navbar-height: 3.25rem; /* default is 3.75 */
 	--ifm-navbar-background-color: var(--companion-navbar-bg);
 	--ifm-navbar-link-color: #ffffff;
 	--ifm-navbar-link-hover-color: #ffffff;
 
 	--companion-active-tab-color: var(--ifm-font-color-base);
 	--companion-active-tab-bg: white;
-	--companion-active-tab-shadow-color: rgba(0, 0, 0, 0.1);
-	--companion-mode-toggle-bg: rgba(255, 255, 255, 0.4);
-	--companion-group-border-color: rgba(0, 0, 0, 0.1);
+	--companion-active-tab-shadow-color: rgb(0 0 0 / 10%);
+	--companion-mode-toggle-bg: rgb(255 255 255 / 40%);
+	--companion-group-border-color: rgb(0 0 0 / 10%);
 	--companion-pulldown-sidebar-bg: white; /* --ifm-background-color is transparent in light mode */
 }
 
@@ -39,15 +40,15 @@
 	--ifm-color-primary-lighter: #f47788;
 	--ifm-color-primary-lightest: #f89aa7;
 
-	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+	--docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 30%);
 	--ifm-navbar-link-color: #ffffff;
 	--ifm-navbar-link-hover-color: #ffffff;
 
 	--companion-active-tab-color: var(--ifm-font-color-base); /* for the pseudo-tab links in the top navbar */
 	--companion-active-tab-bg: var(--ifm-background-color); /* #1b1b1d */
-	--companion-active-tab-shadow-color: rgba(125, 125, 125, 0.1);
-	--companion-mode-toggle-bg: rgba(0, 0, 0, 0.25);
-	--companion-group-border-color: rgba(255, 255, 255, 0.1);
+	--companion-active-tab-shadow-color: rgb(125 125 125 / 10%);
+	--companion-mode-toggle-bg: rgb(0 0 0 / 25%);
+	--companion-group-border-color: rgb(255 255 255 / 10%);
 	--companion-pulldown-sidebar-bg: var(--ifm-background-color);
 }
 
@@ -57,57 +58,55 @@
 	padding-top: 0; /* In order to enable tab-like visuals, we need to let the inner elements deal with padding. */
 	padding-bottom: 0;
 	box-shadow: none; /* keeps tab continuous with page content */
-	/*box-shadow: 0 0 0.5em 0px rgba(0, 0, 0, 0.2);*/ /* alternative but breaks continuity of tab with page in light mode */
 }
 
-/* To get the best tab effect clip overflow so no shadow spills down, for example */
+/* To get the best tab effect clip overflow so we don't have to precisely calculate the button padding.
+   This also prevents the shadow from interrupting the continuity of the tab to the page contents */
 .theme-layout-navbar-left {
 	overflow: hidden;
 }
 
-.navbar__brand {
-	padding-left: 0;
-	padding-right: 0.5em;
-	border-radius: 0.5rem;
-}
-
 /* Navbar (the top bar, not the sidebar) link styles 
-   note: don't put `overflow: hidden;` here as it causes weird text-wrapping as the window narrows 
+   note: `overflow: hidden;` can causes weird text-wrapping when text wraps, and unnecessarily clips button text with nowrap;
    Note: The margin-bottom/border-bottom adjustment here is made large to make the tabs touch the bottom of the header bar
         Since we're clipping the left-container, the bottom-border needn't be precise -- as long as it's big enough.
    */
 .theme-layout-navbar-left .navbar__link {
+	--vertical-padding: 0.5rem; /* make up for the reduced line-height */
+	--margin-bottom: calc(0rem - var(--ifm-navbar-height) / 2); /* move the button down to create the tab-like effect */
 	text-align: center; /* keep labels horizontally centered when they become two lines */
-	line-height: 1; /* keep labels compact when words wrap to two lines */
-	padding-top: 0.65em; /* make up for the reduced line-height */
-	padding-bottom: 0.85rem; /* combined with margin-bottom, establish the space below the text */
-	/* Extend the button beyond the bottom of the header */
-	margin-bottom: -1.5rem; /* move the button down to create the tab-like effect */
+	line-height: 1; /* keep labels compact when words wrap to two lines (in case we remove nowrap later, below) */
+	padding-top: var(--vertical-padding);
+	padding-bottom: calc(
+		var(--vertical-padding) - var(--margin-bottom)
+	); /* note that margin-bottom is negative, so padding-bottom is positive and larger in magnitude */
+	margin-bottom: var(--margin-bottom);
+	white-space: nowrap; /* Prevent two-line buttons! If we add more buttons, this may be removed */
+
 	/* Make page-tab links with rounded top corners, but square bottom corners so it visually "fuses" with the page */
 	border-radius: 0.5rem 0.5rem 0 0;
 }
 
+/* Make the active link look a like a page-tab (like a browser tab or VS Code editor tabs) */
 .theme-layout-navbar-left .navbar__link--active {
-	/* Make active link look a like a page-tab (like a browser tab or VS Code editor tabs) */
 	color: var(--companion-active-tab-color);
 	background-color: var(--companion-active-tab-bg);
 	/* Give the tab a glow  */
 	box-shadow: 0 -4px 10px 1px var(--companion-active-tab-shadow-color);
 }
 
-/* Hover styles for (almost) all types of navbar links. 
+/* Hover styles for navbar links. 
 	Note: ".navbar__item.navbar__link" excludes dropdown menus, which by default do not highlight, possibly due to dropdown--hoverable
 	*/
 .navbar__item.navbar__link:hover:not(.navbar__link--active),
 .navbar-sidebar__brand:hover,
-.navbar__brand:hover,
 .navbar__toggle:hover {
-	background-color: rgba(255, 255, 255, 0.2);
+	background-color: rgb(255 255 255 / 20%);
 }
 
 /* Make the dark/light mode button stand out better.
    Unfortunately, it doesn't have a non-serialized classname, but this works. 
-   Can't say if it's better than .clean-btn[title='system mode'], but it's safer from internationalization */
+   Can't say if it's better than .clean-btn[title='system mode'], but it's safer from localization */
 .theme-layout-navbar-right .clean-btn:not(:hover),
 .navbar-sidebar__brand .clean-btn:not(:hover) {
 	background-color: var(--companion-mode-toggle-bg);
@@ -119,6 +118,7 @@
 	margin: 0 0.25em;
 }
 
+/* when the window is wide, the icons show in the right-header. Don't show text. */
 .theme-layout-navbar-right .navbar__link {
 	padding: 0.25em;
 	border-radius: 0.5rem;
@@ -127,7 +127,7 @@
 	.fontawesome {
 		height: 2rem;
 		width: auto;
-		display: block; /* Helps remove extra spacing below the SVG */
+		display: block; /* removes extra spacing below the SVG */
 	}
 	.fontawesome-text {
 		display: none;
@@ -144,6 +144,7 @@
 		.fontawesome {
 			height: 1.5em;
 			width: auto;
+			/* for some reason we don't need display: block here' maybe flex handles it? */
 		}
 
 		.fontawesome-text {
@@ -193,12 +194,12 @@
 		<ul class="menu__list> <li class="...menu__list-item">...</li>...   </ul>
 	</li>
    but the class .menu__list-item--collapsed is removed from the outer <li> and not
-   replaced by another classname, so the condition for open is:
+   replaced by another classname, the condition for open is therefore:
    .theme-doc-sidebar-item-category:not(.menu__list-item--collapsed)
  */
 
 .theme-doc-sidebar-item-category:not(.menu__list-item--collapsed) {
-	box-shadow: 1px 0px 16px -3px var(--companion-group-border-color);
+	box-shadow: 1px 0 16px -3px var(--companion-group-border-color);
 	border-right: 1px solid var(--companion-group-border-color);
 	border-radius: 0.5rem;
 }
@@ -207,7 +208,7 @@
 .menu__caret {
 	order: -1;
 	padding-left: 0.45em;
-	padding-right: 0em;
+	padding-right: 0;
 	border-radius: 0.5rem 0 0 0.5rem; /* match the outer box's corner */
 
 	&::before {
@@ -215,7 +216,7 @@
 	}
 }
 
-/* split the padding between the caret (above) and the text in the category header */
+/* split the padding between the caret (previous rule) and the text in the category header */
 .menu__link--sublist {
 	padding-left: 0.2em;
 }
