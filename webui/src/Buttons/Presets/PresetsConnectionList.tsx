@@ -5,8 +5,12 @@ import { faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
 import { CollapsibleTree, CollapsibleTreeNesting, type CollapsibleTreeNode } from '~/Components/CollapsibleTree.js'
-import { useCollapsibleTreeExpansion } from '~/Components/useCollapsibleTreeExpansion.js'
-import { useConnectionTreeNodes, type ConnectionTreeLeaf } from '~/Components/useConnectionTreeNodes.js'
+import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
+import {
+	useConnectionLeafTree,
+	type ConnectionLeafItem,
+	type CollectionGroupMeta,
+} from '~/Components/useConnectionLeafTree.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 interface PresetsConnectionListProps {
@@ -25,17 +29,20 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 		[presetsDefinitionsStore.presets]
 	)
 
-	const { nodes, ungroupedLeafs } = useConnectionTreeNodes(filterConnection)
-	const collectionExpansion = useCollapsibleTreeExpansion(false)
+	const { nodes, ungroupedLeafs, allNodeIds } = useConnectionLeafTree(filterConnection)
+	const collapseHelper = usePanelCollapseHelper('presets-connections', allNodeIds)
 
 	const hasAnyConnections = nodes.length > 0 || ungroupedLeafs.length > 0
 
-	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionTreeLeaf>) => {
-		return <span>{node.label ?? node.id}</span>
-	}, [])
+	const renderGroupHeader = useCallback(
+		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
+			return <span>{node.metadata.label}</span>
+		},
+		[]
+	)
 
 	const renderLeaf = useCallback(
-		(leaf: ConnectionTreeLeaf, nestingLevel: number) => {
+		(leaf: ConnectionLeafItem, nestingLevel: number) => {
 			return (
 				<div className="collapsible-tree-leaf-row" key={leaf.connectionId}>
 					<CollapsibleTreeNesting nestingLevel={nestingLevel}>
@@ -72,8 +79,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 					nodes={nodes}
 					ungroupedLeafs={ungroupedLeafs}
 					ungroupedLabel="Ungrouped Connections"
-					expandedNodeIds={collectionExpansion.expandedNodeIds}
-					toggleNodeExpanded={collectionExpansion.toggleNodeExpanded}
+					collapseHelper={collapseHelper}
 					renderGroupHeader={renderGroupHeader}
 					renderLeaf={renderLeaf}
 				/>

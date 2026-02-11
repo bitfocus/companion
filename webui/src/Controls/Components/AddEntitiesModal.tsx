@@ -1,5 +1,5 @@
 import { CButton, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useState } from 'react'
+import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { capitalize } from 'lodash-es'
@@ -12,12 +12,15 @@ import {
 	CollapsibleTreeNesting,
 	type CollapsibleTreeNode,
 } from '~/Components/CollapsibleTree.js'
-import { useCollapsibleTreeExpansion } from '~/Components/useCollapsibleTreeExpansion.js'
+import { useInMemoryPanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionTreeNodes,
 	type ConnectionTreeNodeMeta,
 } from '~/Components/useConnectionTreeNodes.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 
 interface AddEntitiesModalProps {
 	addEntity: (connectionId: string, definitionId: string) => void
@@ -58,9 +61,6 @@ export const AddEntitiesModal = observer(
 			[]
 		)
 
-		// Collection tree expand/collapse state (auto-expand when filtering)
-		const collectionExpansion = useCollapsibleTreeExpansion(!!filter)
-
 		const addAndTrackRecentUsage = useCallback(
 			(connectionAndDefinitionId: string) => {
 				recentlyUsed.trackId(connectionAndDefinitionId)
@@ -93,7 +93,7 @@ export const AddEntitiesModal = observer(
 			[definitions.connections, feedbackListType]
 		)
 
-		const { nodes, ungroupedNodes, allNodeIds } = useConnectionTreeNodes(getEntityLeafs)
+		const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeafs)
 
 		// Build internal connection node if it has matching entities
 		const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
@@ -126,21 +126,16 @@ export const AddEntitiesModal = observer(
 			}
 		}, [definitions.connections, feedbackListType])
 
-		// Expand all collection nodes by default on first mount
-		useEffect(() => {
-			if (allNodeIds.length > 0) {
-				collectionExpansion.expandAll(allNodeIds)
-			}
-			// Only run on first load to expand everything by default
-			// eslint-disable-next-line react-hooks/exhaustive-deps
-		}, [])
+		// Collections default expanded, connections default collapsed (no localStorage persistence for modals)
+		const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
+		const collapseHelper = useInMemoryPanelCollapseHelper(defaultCollapsedFn)
 
 		const renderGroupHeader = useCallback(
 			(node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>) => {
 				const meta = node.metadata
 				if (meta.type === 'connection') {
 					return (
-						<span>
+						<span className="collapsible-tree-connection-header">
 							{meta.connectionLabel}
 							{meta.moduleDisplayName && (
 								<small className="collapsible-tree-connection-module">{meta.moduleDisplayName}</small>
@@ -156,18 +151,18 @@ export const AddEntitiesModal = observer(
 		const renderLeaf = useCallback(
 			(leaf: EntityLeafItem, nestingLevel: number) => {
 				return (
-					<div
-						className="collapsible-tree-leaf-row"
-						onClick={() => addAndTrackRecentUsage(leaf.fullId)}
-					>
-						<CollapsibleTreeNesting nestingLevel={nestingLevel}>
-							<span className="collapsible-tree-leaf-label">{leaf.label}</span>
-							{leaf.description && (
-								<>
-									<br />
-									<span className="collapsible-tree-leaf-description">{leaf.description}</span>
-								</>
-							)}
+					<div className="collapsible-tree-leaf-row" onClick={() => addAndTrackRecentUsage(leaf.fullId)}>
+						<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
+							<div className="collapsible-tree-leaf-text">
+								<span className="collapsible-tree-leaf-label">{leaf.label}</span>
+								{leaf.description && (
+									<>
+										<br />
+										<span className="collapsible-tree-leaf-description">{leaf.description}</span>
+									</>
+								)}
+							</div>
+							<FontAwesomeIcon icon={faPlus} className="collapsible-tree-leaf-add-icon" />
 						</CollapsibleTreeNesting>
 					</div>
 				)
@@ -180,6 +175,11 @@ export const AddEntitiesModal = observer(
 			if (!filter) return { nodes: internalNode ? [internalNode, ...nodes] : nodes, ungroupedNodes }
 			return filterTreeNodes(filter, internalNode ? [internalNode, ...nodes] : nodes, ungroupedNodes)
 		}, [filter, nodes, ungroupedNodes, internalNode])
+
+		const noResultsContent = useMemo(
+			() => <NonIdealState icon={faSearch} text={`No ${entityTypeLabel}s match your search.`} />,
+			[entityTypeLabel]
+		)
 
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
@@ -200,10 +200,10 @@ export const AddEntitiesModal = observer(
 						nodes={filteredNodes.nodes}
 						ungroupedNodes={filteredNodes.ungroupedNodes}
 						ungroupedLabel="Ungrouped Connections"
-						expandedNodeIds={collectionExpansion.expandedNodeIds}
-						toggleNodeExpanded={collectionExpansion.toggleNodeExpanded}
+						collapseHelper={filter ? null : collapseHelper}
 						renderGroupHeader={renderGroupHeader}
 						renderLeaf={renderLeaf}
+						noContent={filter ? noResultsContent : undefined}
 					/>
 				</CModalBody>
 				<CModalFooter>

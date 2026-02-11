@@ -2,6 +2,8 @@ import React, { useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCaretRight, faCaretDown } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
+import type { PanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
+import { observer } from 'mobx-react-lite'
 
 /**
  * A node in the collapsible tree. Nodes can have children (making them collapsible groups)
@@ -27,14 +29,14 @@ interface CollapsibleTreeProps<TLeafData, TNodeMeta> {
 	ungroupedLeafs?: TLeafData[]
 	/** Label for the ungrouped section header */
 	ungroupedLabel?: string
-	/** Set of node IDs that are currently expanded */
-	expandedNodeIds: ReadonlySet<string>
-	/** Callback to toggle the expanded state of a node */
-	toggleNodeExpanded: (nodeId: string) => void
+	/** Collapse helper (handles expand/collapse state). Pass `null` to force all nodes expanded (e.g. during search). */
+	collapseHelper: PanelCollapseHelper | null
 	/** Renders the header content for a group node */
 	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
 	/** Renders a single leaf item */
 	renderLeaf: (leaf: TLeafData, nestingLevel: number) => React.ReactNode
+	/** Content to show when the tree has no nodes or leafs at all */
+	noContent?: React.ReactNode
 	/** Optional extra class name for the root element */
 	className?: string
 }
@@ -42,29 +44,32 @@ interface CollapsibleTreeProps<TLeafData, TNodeMeta> {
 /**
  * A lightweight, read-only collapsible tree component.
  *
- * Unlike CollectionsNestingTable, this does not support drag-and-drop or
- * localStorage persistence. It is intended for read-only selection UIs
- * like modals and connection pickers.
+ * Unlike CollectionsNestingTable, this does not support drag-and-drop.
+ * It is intended for read-only selection UIs like modals and connection pickers.
  */
-export function CollapsibleTree<TLeafData, TNodeMeta>({
+export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNodeMeta>({
 	nodes,
 	ungroupedNodes,
 	ungroupedLeafs,
 	ungroupedLabel,
-	expandedNodeIds,
-	toggleNodeExpanded,
+	collapseHelper,
 	renderGroupHeader,
 	renderLeaf,
+	noContent,
 	className,
 }: CollapsibleTreeProps<TLeafData, TNodeMeta>): React.JSX.Element {
 	const hasUngrouped = (ungroupedNodes && ungroupedNodes.length > 0) || (ungroupedLeafs && ungroupedLeafs.length > 0)
+	const hasContent = nodes.length > 0 || hasUngrouped
+
+	if (!hasContent && noContent) {
+		return <>{noContent}</>
+	}
 
 	return (
 		<div className={classNames('collapsible-tree', className)}>
 			<CollapsibleTreeNodeList
 				nodes={nodes}
-				expandedNodeIds={expandedNodeIds}
-				toggleNodeExpanded={toggleNodeExpanded}
+				collapseHelper={collapseHelper}
 				renderGroupHeader={renderGroupHeader}
 				renderLeaf={renderLeaf}
 				nestingLevel={0}
@@ -79,8 +84,7 @@ export function CollapsibleTree<TLeafData, TNodeMeta>({
 			{ungroupedNodes && (
 				<CollapsibleTreeNodeList
 					nodes={ungroupedNodes}
-					expandedNodeIds={expandedNodeIds}
-					toggleNodeExpanded={toggleNodeExpanded}
+					collapseHelper={collapseHelper}
 					renderGroupHeader={renderGroupHeader}
 					renderLeaf={renderLeaf}
 					nestingLevel={0}
@@ -92,12 +96,11 @@ export function CollapsibleTree<TLeafData, TNodeMeta>({
 			))}
 		</div>
 	)
-}
+})
 
 interface CollapsibleTreeNodeListProps<TLeafData, TNodeMeta> {
 	nodes: CollapsibleTreeNode<TLeafData, TNodeMeta>[]
-	expandedNodeIds: ReadonlySet<string>
-	toggleNodeExpanded: (nodeId: string) => void
+	collapseHelper: PanelCollapseHelper | null
 	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
 	renderLeaf: (leaf: TLeafData, nestingLevel: number) => React.ReactNode
 	nestingLevel: number
@@ -105,8 +108,7 @@ interface CollapsibleTreeNodeListProps<TLeafData, TNodeMeta> {
 
 function CollapsibleTreeNodeList<TLeafData, TNodeMeta>({
 	nodes,
-	expandedNodeIds,
-	toggleNodeExpanded,
+	collapseHelper,
 	renderGroupHeader,
 	renderLeaf,
 	nestingLevel,
@@ -117,8 +119,7 @@ function CollapsibleTreeNodeList<TLeafData, TNodeMeta>({
 				<CollapsibleTreeNodeSingle
 					key={node.id}
 					node={node}
-					expandedNodeIds={expandedNodeIds}
-					toggleNodeExpanded={toggleNodeExpanded}
+					collapseHelper={collapseHelper}
 					renderGroupHeader={renderGroupHeader}
 					renderLeaf={renderLeaf}
 					nestingLevel={nestingLevel}
@@ -130,23 +131,22 @@ function CollapsibleTreeNodeList<TLeafData, TNodeMeta>({
 
 interface CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta> {
 	node: CollapsibleTreeNode<TLeafData, TNodeMeta>
-	expandedNodeIds: ReadonlySet<string>
-	toggleNodeExpanded: (nodeId: string) => void
+	collapseHelper: PanelCollapseHelper | null
 	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
 	renderLeaf: (leaf: TLeafData, nestingLevel: number) => React.ReactNode
 	nestingLevel: number
 }
 
-function CollapsibleTreeNodeSingle<TLeafData, TNodeMeta>({
+const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TLeafData, TNodeMeta>({
 	node,
-	expandedNodeIds,
-	toggleNodeExpanded,
+	collapseHelper,
 	renderGroupHeader,
 	renderLeaf,
 	nestingLevel,
 }: CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta>): React.JSX.Element {
-	const isExpanded = expandedNodeIds.has(node.id)
-	const doToggle = useCallback(() => toggleNodeExpanded(node.id), [toggleNodeExpanded, node.id])
+	// If collapseHelper is null, all nodes are force-expanded (e.g. during search)
+	const isExpanded = collapseHelper ? !collapseHelper.isPanelCollapsed(null, node.id) : true
+	const doToggle = useCallback(() => collapseHelper?.togglePanelCollapsed(null, node.id), [collapseHelper, node.id])
 
 	return (
 		<>
@@ -161,8 +161,7 @@ function CollapsibleTreeNodeSingle<TLeafData, TNodeMeta>({
 				<>
 					<CollapsibleTreeNodeList
 						nodes={node.children}
-						expandedNodeIds={expandedNodeIds}
-						toggleNodeExpanded={toggleNodeExpanded}
+						collapseHelper={collapseHelper}
 						renderGroupHeader={renderGroupHeader}
 						renderLeaf={renderLeaf}
 						nestingLevel={nestingLevel + 1}
@@ -175,7 +174,7 @@ function CollapsibleTreeNodeSingle<TLeafData, TNodeMeta>({
 			)}
 		</>
 	)
-}
+})
 
 export function CollapsibleTreeNesting({
 	nestingLevel,

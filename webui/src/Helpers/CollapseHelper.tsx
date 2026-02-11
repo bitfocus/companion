@@ -239,3 +239,76 @@ export function usePanelCollapseHelperLite(
 		[collapseHelper]
 	)
 }
+
+/**
+ * A non-persisting implementation of PanelCollapseHelper.
+ * Useful for modals or transient UI where localStorage persistence is undesirable.
+ *
+ * Accepts a `defaultCollapsedFn` that determines the default collapsed state per panel ID,
+ * allowing different defaults for different node types (e.g. collections expanded, connections collapsed).
+ */
+class InMemoryPanelCollapseHelper implements PanelCollapseHelper {
+	readonly #ids = observable.map<string, boolean>()
+	readonly #defaultCollapsedFn: (panelId: string) => boolean
+
+	constructor(defaultCollapsedFn: (panelId: string) => boolean) {
+		this.#defaultCollapsedFn = defaultCollapsedFn
+	}
+
+	setAllCollapsed = (parentId: string | null, panelIds: string[]): void => {
+		void parentId
+		runInAction(() => {
+			for (const panelId of panelIds) {
+				this.#ids.set(panelId, true)
+			}
+		})
+	}
+
+	setAllExpanded = (parentId: string | null, panelIds: string[]): void => {
+		void parentId
+		runInAction(() => {
+			for (const panelId of panelIds) {
+				this.#ids.set(panelId, false)
+			}
+		})
+	}
+
+	canExpandAll = (parentId: string | null, panelIds: string[]): boolean => {
+		void parentId
+		return panelIds.some((id) => this.isPanelCollapsed(null, id))
+	}
+
+	canCollapseAll = (parentId: string | null, panelIds: string[]): boolean => {
+		void parentId
+		return panelIds.some((id) => !this.isPanelCollapsed(null, id))
+	}
+
+	setPanelCollapsed = (panelId: string, collapsed: boolean): void => {
+		runInAction(() => {
+			this.#ids.set(panelId, collapsed)
+		})
+	}
+
+	togglePanelCollapsed = (parentId: string | null, panelId: string): void => {
+		void parentId
+		runInAction(() => {
+			this.#ids.set(panelId, !this.isPanelCollapsed(null, panelId))
+		})
+	}
+
+	isPanelCollapsed = (_parentId: string | null, panelId: string): boolean => {
+		return this.#ids.get(panelId) ?? this.#defaultCollapsedFn(panelId)
+	}
+}
+
+/**
+ * Creates an in-memory (non-persisting) collapse helper.
+ *
+ * @param defaultCollapsedFn - determines the default collapsed state per panel ID.
+ *   Receives the panel ID string and returns true if it should be collapsed by default.
+ */
+export function useInMemoryPanelCollapseHelper(
+	defaultCollapsedFn: (panelId: string) => boolean
+): PanelCollapseHelper {
+	return useMemo(() => new InMemoryPanelCollapseHelper(defaultCollapsedFn), [defaultCollapsedFn])
+}

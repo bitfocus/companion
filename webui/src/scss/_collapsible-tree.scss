@@ -33,6 +33,11 @@
 		&:hover {
 			background-color: darken(#f0f0f0, 3%);
 		}
+
+		// Connection nodes get a slightly different style to stand out from collections
+		.collapsible-tree-connection-header {
+			color: #303030;
+		}
 	}
 
 	.collapsible-tree-connection-module {
@@ -50,6 +55,20 @@
 
 		&:hover {
 			background-color: rgba(200, 200, 200, 0.1);
+
+			.collapsible-tree-leaf-add-icon {
+				opacity: 0.6;
+			}
+		}
+
+		.collapsible-tree-leaf-content {
+			display: flex;
+			align-items: center;
+		}
+
+		.collapsible-tree-leaf-text {
+			flex: 1;
+			min-width: 0;
 		}
 
 		.collapsible-tree-leaf-label {
@@ -59,6 +78,13 @@
 		.collapsible-tree-leaf-description {
 			font-size: 0.9em;
 			opacity: 0.7;
+		}
+
+		.collapsible-tree-leaf-add-icon {
+			opacity: 0;
+			margin-left: 10px;
+			flex-shrink: 0;
+			transition: opacity 0.15s ease;
 		}
 	}
 
