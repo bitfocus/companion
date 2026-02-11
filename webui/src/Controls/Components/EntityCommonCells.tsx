@@ -1,7 +1,6 @@
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
-	type FeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import React, { useCallback, useContext } from 'react'
@@ -32,6 +31,7 @@ import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@co
 import type { JsonValue } from 'type-fest'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CopyToClipboard from 'react-copy-to-clipboard'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -84,7 +84,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 				)}
 
 				<CForm className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
-					{!!entity && localVariablePrefix && (
+					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
 								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
@@ -92,10 +92,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 									<InlineHelp help={`The name to give this value as a ${localVariablePrefix} variable`}>
 										<FontAwesomeIcon icon={faQuestionCircle} />
 									</InlineHelp>
-									<CopyToClipboard
-										text={`$(${localVariablePrefix}:${(entity as FeedbackEntityModel).variableName ?? ''})`}
-										onCopy={onCopied}
-									>
+									<CopyToClipboard text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`} onCopy={onCopied}>
 										<CButton size="sm" title="Copy variable name" className="ps-0">
 											<FontAwesomeIcon icon={faCopy} color="#d50215" />
 										</CButton>
@@ -103,10 +100,9 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								</CFormLabel>
 								<CCol sm={8}>
 									<TextInputField
-										// regex?: string TODO - validate value syntax
-										value={(entity as FeedbackEntityModel).variableName ?? ''}
+										value={entity.variableName ?? ''}
 										setValue={service.setVariableName}
-										// setValid?: (valid: boolean) => void
+										checkValid={(str) => str === '' || isLabelValid(str)}
 										disabled={readonly}
 									/>
 								</CCol>
