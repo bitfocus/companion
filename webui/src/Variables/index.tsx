@@ -1,17 +1,58 @@
-import React, { useContext } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
-import { Link, useParams } from '@tanstack/react-router'
-import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { CollapsibleTree, CollapsibleTreeNesting, type CollapsibleTreeNode } from '~/Components/CollapsibleTree.js'
+import { useCollapsibleTreeExpansion } from '~/Components/useCollapsibleTreeExpansion.js'
+import { useConnectionTreeNodes, type ConnectionTreeLeaf } from '~/Components/useConnectionTreeNodes.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 export const ConnectionVariablesPage = observer(function VariablesConnectionList() {
-	const { modules } = useContext(RootAppStoreContext)
+	const { variablesStore } = useContext(RootAppStoreContext)
+	const navigate = useNavigate()
 
-	const sortedConnections = useSortedConnectionsThatHaveVariables()
+	const filterConnection = useCallback(
+		(_connectionId: string, connectionInfo: ClientConnectionConfig) => {
+			const connectionVariables = variablesStore.variables.get(connectionInfo.label)
+			return !!connectionVariables && connectionVariables.size > 0
+		},
+		[variablesStore.variables]
+	)
+
+	const { nodes, ungroupedLeafs } = useConnectionTreeNodes(filterConnection)
+	const collectionExpansion = useCollapsibleTreeExpansion(false)
+
+	// Check if internal has variables
+	const internalVariables = variablesStore.variables.get('internal')
+	const hasInternalVariables = !!internalVariables && internalVariables.size > 0
+
+	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionTreeLeaf>) => {
+		return <span>{node.label ?? node.id}</span>
+	}, [])
+
+	const renderLeaf = useCallback(
+		(leaf: ConnectionTreeLeaf, nestingLevel: number) => {
+			return (
+				<div className="collapsible-tree-leaf-row" key={leaf.connectionId}>
+					<CollapsibleTreeNesting nestingLevel={nestingLevel}>
+						<CButton
+							color="primary"
+							className="w-100 text-start"
+							onClick={() => navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
+						>
+							<h6 className="mb-0">{leaf.connectionLabel}</h6>
+							{leaf.moduleDisplayName && <small>{leaf.moduleDisplayName}</small>}
+						</CButton>
+					</CollapsibleTreeNesting>
+				</div>
+			)
+		},
+		[navigate]
+	)
 
 	return (
 		<CRow>
@@ -34,25 +75,23 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						</CButton>
 					</div>
 
-					<div className="variables-category-grid">
-						<CButton color="primary" as={Link} to="/variables/connection/internal">
-							Internal
-						</CButton>
-						{sortedConnections.map((connectionInfo) => {
-							const compactName = modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)
+					{hasInternalVariables && (
+						<div className="mb-2">
+							<CButton color="primary" as={Link} to="/variables/connection/internal" className="w-100 text-start">
+								<h6 className="mb-0">Internal</h6>
+							</CButton>
+						</div>
+					)}
 
-							return (
-								<CButton
-									key={connectionInfo.id}
-									color="primary"
-									as={Link}
-									to={`/variables/connection/${connectionInfo.label}`}
-								>
-									<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
-								</CButton>
-							)
-						})}
-					</div>
+					<CollapsibleTree
+						nodes={nodes}
+						ungroupedLeafs={ungroupedLeafs}
+						ungroupedLabel="Ungrouped Connections"
+						expandedNodeIds={collectionExpansion.expandedNodeIds}
+						toggleNodeExpanded={collectionExpansion.toggleNodeExpanded}
+						renderGroupHeader={renderGroupHeader}
+						renderLeaf={renderLeaf}
+					/>
 				</div>
 			</CCol>
 		</CRow>

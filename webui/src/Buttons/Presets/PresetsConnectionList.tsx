@@ -1,10 +1,13 @@
-import React, { useContext } from 'react'
+import React, { useCallback } from 'react'
 import { CButton, CCallout } from '@coreui/react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
+import { CollapsibleTree, CollapsibleTreeNesting, type CollapsibleTreeNode } from '~/Components/CollapsibleTree.js'
+import { useCollapsibleTreeExpansion } from '~/Components/useCollapsibleTreeExpansion.js'
+import { useConnectionTreeNodes, type ConnectionTreeLeaf } from '~/Components/useConnectionTreeNodes.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 interface PresetsConnectionListProps {
 	presetsDefinitionsStore: PresetDefinitionsStore
@@ -14,27 +17,43 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	presetsDefinitionsStore,
 	setConnectionId,
 }: PresetsConnectionListProps) {
-	const { modules, connections } = useContext(RootAppStoreContext)
+	const filterConnection = useCallback(
+		(_connectionId: string, _connectionInfo: ClientConnectionConfig) => {
+			const presets = presetsDefinitionsStore.presets.get(_connectionId)
+			return !!presets && presets.size > 0
+		},
+		[presetsDefinitionsStore.presets]
+	)
 
-	// Sort the connections by the same order as the connections list
-	const options = connections.sortedConnections().map((connectionInfo) => {
-		const presets = presetsDefinitionsStore.presets.get(connectionInfo.id)
-		if (!presets || presets.size === 0) return null
+	const { nodes, ungroupedLeafs } = useConnectionTreeNodes(filterConnection)
+	const collectionExpansion = useCollapsibleTreeExpansion(false)
 
-		const moduleInfo = modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
-		const compactName = modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)
+	const hasAnyConnections = nodes.length > 0 || ungroupedLeafs.length > 0
 
-		return (
-			<CButton
-				title={moduleInfo?.display?.name}
-				key={connectionInfo.id}
-				color="primary"
-				onClick={() => setConnectionId(connectionInfo.id)}
-			>
-				<h6>{connectionInfo.label || connectionInfo.id}</h6> <small>{compactName ?? '?'}</small>
-			</CButton>
-		)
-	})
+	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionTreeLeaf>) => {
+		return <span>{node.label ?? node.id}</span>
+	}, [])
+
+	const renderLeaf = useCallback(
+		(leaf: ConnectionTreeLeaf, nestingLevel: number) => {
+			return (
+				<div className="collapsible-tree-leaf-row" key={leaf.connectionId}>
+					<CollapsibleTreeNesting nestingLevel={nestingLevel}>
+						<CButton
+							color="primary"
+							className="w-100 text-start"
+							title={leaf.moduleDisplayName}
+							onClick={() => setConnectionId(leaf.connectionId)}
+						>
+							<h6 className="mb-0">{leaf.connectionLabel}</h6>
+							{leaf.moduleDisplayName && <small>{leaf.moduleDisplayName}</small>}
+						</CButton>
+					</CollapsibleTreeNesting>
+				</div>
+			)
+		},
+		[setConnectionId]
+	)
 
 	return (
 		<div>
@@ -44,12 +63,20 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 				quickly.
 			</p>
 
-			{options.length === 0 ? (
+			{!hasAnyConnections ? (
 				<div style={{ border: '1px solid #e9e9e9', borderRadius: 5 }}>
 					<NonIdealState icon={faLifeRing} text="You have no connections that support presets at the moment." />
 				</div>
 			) : (
-				<div className="preset-category-grid">{options}</div>
+				<CollapsibleTree
+					nodes={nodes}
+					ungroupedLeafs={ungroupedLeafs}
+					ungroupedLabel="Ungrouped Connections"
+					expandedNodeIds={collectionExpansion.expandedNodeIds}
+					toggleNodeExpanded={collectionExpansion.toggleNodeExpanded}
+					renderGroupHeader={renderGroupHeader}
+					renderLeaf={renderLeaf}
+				/>
 			)}
 
 			<CCallout color="warning">
