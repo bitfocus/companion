@@ -366,6 +366,13 @@ form.row > * {
 		}
 	}
 
+	.nav-two-line .nav-link {
+		padding-top: 0.5rem;
+		padding-bottom: 0.5rem;
+
+		line-height: calc(var(--cui-body-line-height) * 0.85);
+	}
+
 	&.sidebar-narrow-unfoldable:not(:hover) {
 		.nav-group-toggle::after {
 			display: none;
