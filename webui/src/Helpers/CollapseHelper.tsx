@@ -212,12 +212,10 @@ export function usePanelCollapseHelper(
 ): PanelCollapseHelper {
 	const store = useMemo(() => new PanelCollapseHelperStore(storageId, defaultCollapsed), [storageId, defaultCollapsed])
 
-	// Clear out any unknown panel IDs (skip if in-memory mode)
+	// Clear out any unknown panel IDs
 	useDeepCompareEffect(() => {
-		if (storageId) {
-			store.clearUnknownIds(knownPanelIds)
-		}
-	}, [store, knownPanelIds, storageId])
+		store.clearUnknownIds(knownPanelIds)
+	}, [store, knownPanelIds])
 
 	return store
 }
