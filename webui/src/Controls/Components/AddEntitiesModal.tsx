@@ -30,7 +30,7 @@ const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
 
 	const meta = node.metadata
 	if (meta.type === 'connection') {
-		const itemCount = node.leafs.length
+		const itemCount = node.leaves.length
 		const itemLabel = itemCount === 1 ? entityTypeLabelContext : `${entityTypeLabelContext}s`
 		return (
 			<span className="collapsible-tree-connection-header">
@@ -123,51 +123,51 @@ export const AddEntitiesModal = observer(
 		)
 
 		// Filter to only connections that have entity definitions matching our entity type + feedback filter
-		const getEntityLeafs = useCallback(
+		const getEntityLeaves = useCallback(
 			(connectionId: string, _connectionInfo: ClientConnectionConfig): EntityLeafItem[] => {
 				const items = definitions.connections.get(connectionId)
 				if (!items || items.size === 0) return []
 
-				const leafs: EntityLeafItem[] = []
+				const leaves: EntityLeafItem[] = []
 				for (const [id, info] of items.entries()) {
 					if (!info || !info.label) continue
 					if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
 
-					leafs.push({
+					leaves.push({
 						fullId: `${connectionId}:${id}`,
 						label: info.label,
 						description: info.description,
 					})
 				}
-				return leafs
+				return leaves
 			},
 			[definitions.connections, feedbackListType]
 		)
 
-		const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeafs)
+		const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeaves)
 
 		// Build internal connection node if it has matching entities
 		const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
 			const internalItems = definitions.connections.get('internal')
 			if (!internalItems || internalItems.size === 0) return null
 
-			const leafs: EntityLeafItem[] = []
+			const leaves: EntityLeafItem[] = []
 			for (const [id, info] of internalItems.entries()) {
 				if (!info || !info.label) continue
 				if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
-				leafs.push({
+				leaves.push({
 					fullId: `internal:${id}`,
 					label: info.label,
 					description: info.description,
 				})
 			}
 
-			if (leafs.length === 0) return null
+			if (leaves.length === 0) return null
 
 			return {
 				id: 'connection:internal',
 				children: [],
-				leafs,
+				leaves,
 				metadata: {
 					type: 'connection',
 					connectionId: 'internal',
@@ -245,7 +245,7 @@ export const AddEntitiesModal = observer(
 
 /**
  * Filter tree nodes by applying fuzzy search to leaf items.
- * Removes nodes with no matching leafs (unless they have children with matches).
+ * Removes nodes with no matching leaves (unless they have children with matches).
  * Preserves the tree structure.
  */
 function filterTreeNodes(
@@ -261,20 +261,20 @@ function filterTreeNodes(
 	): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null {
 		const filteredChildren = node.children.map(filterNode).filter((n) => n !== null)
 
-		const filteredLeafs =
-			node.leafs.length > 0
-				? fuzzySearch(filter, node.leafs, {
+		const filteredLeaves =
+			node.leaves.length > 0
+				? fuzzySearch(filter, node.leaves, {
 						keys: ['label'],
 						threshold: -10_000,
 					}).map((x) => x.obj)
 				: []
 
-		if (filteredChildren.length === 0 && filteredLeafs.length === 0) return null
+		if (filteredChildren.length === 0 && filteredLeaves.length === 0) return null
 
 		return {
 			...node,
 			children: filteredChildren,
-			leafs: filteredLeafs,
+			leaves: filteredLeaves,
 		}
 	}
 

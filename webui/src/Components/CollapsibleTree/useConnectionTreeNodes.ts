@@ -32,14 +32,14 @@ export type ConnectionTreeNodeMeta = CollectionNodeMeta | ConnectionNodeMeta
  * group nodes (they can be expanded to show their content). The consumer
  * provides a function that returns the leaf data for each connection.
  *
- * Empty collections and connections (those where getLeafs returns an empty
+ * Empty collections and connections (those where getLeaves returns an empty
  * array) are omitted from the tree.
  *
- * @param getLeafs - returns leaf data for a given connection, or empty array to exclude it
+ * @param getLeaves - returns leaf data for a given connection, or empty array to exclude it
  * @returns tree nodes, ungrouped connection nodes, and all node IDs for expansion control
  */
 export function useConnectionTreeNodes<TLeafData>(
-	getLeafs: (connectionId: string, connectionInfo: ClientConnectionConfig) => TLeafData[]
+	getLeaves: (connectionId: string, connectionInfo: ClientConnectionConfig) => TLeafData[]
 ): {
 	nodes: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>[]
 	ungroupedNodes: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>[]
@@ -52,16 +52,16 @@ export function useConnectionTreeNodes<TLeafData>(
 	const allConnections = useComputed(() => Array.from(connections.connections.entries()), [connections.connections])
 
 	return useComputed(() => {
-		// Build connection nodes for each connection that has leafs
+		// Build connection nodes for each connection that has leaves
 		const connectionNodes = new Map<string, CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>>()
 		for (const [connectionId, connectionInfo] of allConnections) {
-			const leafs = getLeafs(connectionId, connectionInfo)
-			if (leafs.length === 0) continue
+			const leaves = getLeaves(connectionId, connectionInfo)
+			if (leaves.length === 0) continue
 
 			connectionNodes.set(connectionId, {
 				id: `connection:${connectionId}`,
 				children: [],
-				leafs,
+				leaves,
 				metadata: {
 					type: 'connection',
 					connectionId,
@@ -115,9 +115,9 @@ export function useConnectionTreeNodes<TLeafData>(
 
 			return {
 				id: nodeId,
-				// Connection nodes go as children (sub-groups), not as leafs
+				// Connection nodes go as children (sub-groups), not as leaves
 				children: [...childNodes, ...connNodes],
-				leafs: [],
+				leaves: [],
 				metadata: {
 					type: 'collection',
 					label: collection.label,
@@ -134,5 +134,5 @@ export function useConnectionTreeNodes<TLeafData>(
 		const ungroupedNodes = connectionsByCollection.get(null) ?? []
 
 		return { nodes, ungroupedNodes, allNodeIds }
-	}, [allConnections, rootCollections, getLeafs, modules])
+	}, [allConnections, rootCollections, getLeaves, modules])
 }

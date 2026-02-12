@@ -32,7 +32,7 @@ export function useConnectionLeafTree(
 	filterConnection: (connectionId: string, connectionInfo: ClientConnectionConfig) => boolean
 ): {
 	nodes: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>[]
-	ungroupedLeafs: ConnectionLeafItem[]
+	ungroupedLeaves: ConnectionLeafItem[]
 	allNodeIds: string[]
 } {
 	const { connections, modules } = useContext(RootAppStoreContext)
@@ -88,10 +88,10 @@ export function useConnectionLeafTree(
 				if (childNode) childNodes.push(childNode)
 			}
 
-			const leafs = connectionsByCollection.get(collection.id) ?? []
+			const leaves = connectionsByCollection.get(collection.id) ?? []
 
 			// Skip collections that have no matching connections in their subtree
-			if (childNodes.length === 0 && leafs.length === 0) return null
+			if (childNodes.length === 0 && leaves.length === 0) return null
 
 			const nodeId = `collection:${collection.id}`
 			allNodeIds.push(nodeId)
@@ -99,7 +99,7 @@ export function useConnectionLeafTree(
 			return {
 				id: nodeId,
 				children: childNodes,
-				leafs,
+				leaves,
 				metadata: {
 					label: collection.label,
 				},
@@ -112,8 +112,8 @@ export function useConnectionLeafTree(
 			if (node) nodes.push(node)
 		}
 
-		const ungroupedLeafs = connectionsByCollection.get(null) ?? []
+		const ungroupedLeaves = connectionsByCollection.get(null) ?? []
 
-		return { nodes, ungroupedLeafs, allNodeIds }
+		return { nodes, ungroupedLeaves, allNodeIds }
 	}, [allConnections, rootCollections, filterConnection, modules])
 }

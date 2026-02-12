@@ -66,10 +66,10 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 		[presetsDefinitionsStore.presets]
 	)
 
-	const { nodes, ungroupedLeafs, allNodeIds } = useConnectionLeafTree(filterConnection)
+	const { nodes, ungroupedLeaves, allNodeIds } = useConnectionLeafTree(filterConnection)
 	const collapseHelper = usePanelCollapseHelper('presets-connections', allNodeIds)
 
-	const hasAnyConnections = nodes.length > 0 || ungroupedLeafs.length > 0
+	const hasAnyConnections = nodes.length > 0 || ungroupedLeaves.length > 0
 
 	return (
 		<PresetsStoreContext.Provider value={presetsDefinitionsStore}>
@@ -87,7 +87,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 				) : (
 					<CollapsibleTree
 						nodes={nodes}
-						ungroupedLeafs={ungroupedLeafs}
+						ungroupedLeaves={ungroupedLeaves}
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}
 						HeaderComponent={PresetGroupHeader}

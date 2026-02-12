@@ -61,14 +61,14 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 		[variablesStore.variables]
 	)
 
-	const { nodes, ungroupedLeafs, allNodeIds } = useConnectionLeafTree(filterConnection)
+	const { nodes, ungroupedLeaves, allNodeIds } = useConnectionLeafTree(filterConnection)
 	const collapseHelper = usePanelCollapseHelper('variables-connections', allNodeIds)
 
 	// Check if internal has variables
 	const internalVariables = variablesStore.variables.get('internal')
 	const hasInternalVariables = !!internalVariables && internalVariables.size > 0
 
-	const staticLeafs: ConnectionLeafItem[] = hasInternalVariables
+	const staticLeaves: ConnectionLeafItem[] = hasInternalVariables
 		? [
 				{
 					connectionId: 'internal',
@@ -101,8 +101,8 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 
 					<CollapsibleTree
 						nodes={nodes}
-						staticLeafs={staticLeafs}
-						ungroupedLeafs={ungroupedLeafs}
+						staticLeaves={staticLeaves}
+						ungroupedLeaves={ungroupedLeaves}
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}
 						HeaderComponent={VariableGroupHeader}
