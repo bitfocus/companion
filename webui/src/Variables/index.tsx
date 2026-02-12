@@ -6,10 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import {
-	CollapsibleTree,
-	type CollapsibleTreeNode,
-} from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import { CollapsibleTree, type CollapsibleTreeNode } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionLeafTree,
@@ -17,6 +14,34 @@ import {
 	type CollectionGroupMeta,
 } from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+
+const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
+	const { variablesStore } = useContext(RootAppStoreContext)
+	const variableCount = variablesStore.variables.get(leaf.connectionLabel)?.size ?? 0
+	const variableLabel = variableCount === 1 ? 'variable' : 'variables'
+
+	return (
+		<>
+			<div className="collapsible-tree-leaf-text">
+				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+					<div>
+						<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
+						{leaf.moduleDisplayName && (
+							<>
+								<br />
+								<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
+							</>
+						)}
+					</div>
+					<small style={{ opacity: 0.7, marginLeft: '1em' }}>
+						{variableCount} {variableLabel}
+					</small>
+				</div>
+			</div>
+			<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
+		</>
+	)
+})
 
 export const ConnectionVariablesPage = observer(function VariablesConnectionList() {
 	const { variablesStore } = useContext(RootAppStoreContext)
@@ -51,37 +76,6 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 		return <span>{node.metadata.label}</span>
 	}, [])
 
-	const renderLeaf = useCallback(
-		(leaf: ConnectionLeafItem) => {
-			const variableCount = variablesStore.variables.get(leaf.connectionLabel)?.size ?? 0
-			const variableLabel = variableCount === 1 ? 'variable' : 'variables'
-			return (
-				<>
-					<div className="collapsible-tree-leaf-text">
-						<div
-							style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
-						>
-							<div>
-								<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
-								{leaf.moduleDisplayName && (
-									<>
-										<br />
-										<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
-									</>
-								)}
-							</div>
-							<small style={{ opacity: 0.7, marginLeft: '1em' }}>
-								{variableCount} {variableLabel}
-							</small>
-						</div>
-					</div>
-					<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
-				</>
-			)
-		},
-		[variablesStore.variables]
-	)
-
 	return (
 		<CRow>
 			<CCol xs={12} className="flex-column-layout">
@@ -110,7 +104,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}
 						renderGroupHeader={renderGroupHeader}
-						renderLeaf={renderLeaf}
+						LeafComponent={VariableLeaf}
 						onLeafClick={(leaf) => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
 					/>
 				</div>

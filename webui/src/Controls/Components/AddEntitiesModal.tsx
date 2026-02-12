@@ -7,10 +7,7 @@ import { CModalExt } from '~/Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
-import {
-	CollapsibleTree,
-	type CollapsibleTreeNode,
-} from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import { CollapsibleTree, type CollapsibleTreeNode } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionTreeNodes,
@@ -31,6 +28,28 @@ interface AddEntitiesModalProps {
 export interface AddEntitiesModalRef {
 	show(): void
 }
+
+interface EntityLeafItem {
+	fullId: string
+	label: string
+	description: string | undefined
+}
+
+const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLeafItem }) {
+	return (
+		<>
+			<div className="collapsible-tree-leaf-text">
+				<span className="collapsible-tree-leaf-label">{leaf.label}</span>
+				{leaf.description && (
+					<>
+						<span className="collapsible-tree-leaf-description">{leaf.description}</span>
+					</>
+				)}
+			</div>
+			<FontAwesomeIcon icon={faPlus} className="collapsible-tree-leaf-add-icon" />
+		</>
+	)
+})
 
 export const AddEntitiesModal = observer(
 	forwardRef<AddEntitiesModalRef, AddEntitiesModalProps>(function AddFeedbacksModal(
@@ -155,22 +174,6 @@ export const AddEntitiesModal = observer(
 			[entityTypeLabel]
 		)
 
-		const renderLeaf = useCallback((leaf: EntityLeafItem) => {
-			return (
-				<>
-					<div className="collapsible-tree-leaf-text">
-						<span className="collapsible-tree-leaf-label">{leaf.label}</span>
-						{leaf.description && (
-							<>
-								<span className="collapsible-tree-leaf-description">{leaf.description}</span>
-							</>
-						)}
-					</div>
-					<FontAwesomeIcon icon={faPlus} className="collapsible-tree-leaf-add-icon" />
-				</>
-			)
-		}, [])
-
 		// When filtering, apply fuzzy search to leaf items in each node
 		const filteredNodes = useComputed(() => {
 			const rawNodes = internalNode ? [internalNode, ...nodes] : nodes
@@ -216,7 +219,7 @@ export const AddEntitiesModal = observer(
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={filter ? null : collapseHelper}
 						renderGroupHeader={renderGroupHeader}
-						renderLeaf={renderLeaf}
+						LeafComponent={AddEntityLeaf}
 						onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
 						noContent={filter ? noResultsContent : undefined}
 					/>
@@ -230,12 +233,6 @@ export const AddEntitiesModal = observer(
 		)
 	})
 )
-
-interface EntityLeafItem {
-	fullId: string
-	label: string
-	description: string | undefined
-}
 
 /**
  * Filter tree nodes by applying fuzzy search to leaf items.
