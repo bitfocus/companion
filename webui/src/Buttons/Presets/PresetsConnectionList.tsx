@@ -36,20 +36,20 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	const hasAnyConnections = nodes.length > 0 || ungroupedLeafs.length > 0
 
 	// Count total connections in a collection node (recursively)
-	const countConnectionsInNode = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>): number => {
-		let count = node.leafs.length
-		for (const child of node.children) {
-			count += countConnectionsInNode(child)
-		}
-		return count
-	}, [])
-
-	const renderGroupHeader = useCallback(
-		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
-			return <span>{node.metadata.label}</span>
+	const countConnectionsInNode = useCallback(
+		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>): number => {
+			let count = node.leafs.length
+			for (const child of node.children) {
+				count += countConnectionsInNode(child)
+			}
+			return count
 		},
 		[]
 	)
+
+	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
+		return <span>{node.metadata.label}</span>
+	}, [])
 
 	const renderLeaf = useCallback(
 		(leaf: ConnectionLeafItem, nestingLevel: number) => {
@@ -58,19 +58,24 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 			return (
 				<div className="collapsible-tree-leaf-row" key={leaf.connectionId}>
 					<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
-						<div className="collapsible-tree-leaf-text" onClick={() => setConnectionId(leaf.connectionId)}>
-							<div>
-								<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
-								{leaf.moduleDisplayName && (
-									<>
-										<br />
-										<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
-									</>
-								)}
+						<div className="collapsible-tree-leaf-text">
+							<div
+								style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
+								onClick={() => setConnectionId(leaf.connectionId)}
+							>
+								<div>
+									<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
+									{leaf.moduleDisplayName && (
+										<>
+											<br />
+											<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
+										</>
+									)}
+								</div>
+								<small style={{ opacity: 0.7, marginLeft: '1em' }}>
+									{presetCount} {presetLabel}
+								</small>
 							</div>
-							<small style={{ opacity: 0.7, marginLeft: '1em' }}>
-								{presetCount} {presetLabel}
-							</small>
 						</div>
 						<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
 					</CollapsibleTreeNesting>

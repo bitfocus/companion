@@ -157,7 +157,6 @@ export const AddEntitiesModal = observer(
 								<span className="collapsible-tree-leaf-label">{leaf.label}</span>
 								{leaf.description && (
 									<>
-										<br />
 										<span className="collapsible-tree-leaf-description">{leaf.description}</span>
 									</>
 								)}

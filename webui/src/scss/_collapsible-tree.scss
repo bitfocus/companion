@@ -92,14 +92,19 @@
 		.collapsible-tree-leaf-text {
 			flex: 1;
 			min-width: 0;
-	}
+		}
 
-	.collapsible-tree-leaf-label {
-		display: block;
-	}
+		.collapsible-tree-leaf-label {
+			display: block;
+			font-weight: 600;
+		}
 
-	.collapsible-tree-leaf-description {
-		display: block;
+		.collapsible-tree-leaf-description {
+			display: block;
+			font-size: 0.9em;
+			opacity: 0.7;
+			margin-top: 0;
+		}
 
 		.collapsible-tree-leaf-add-icon {
 			opacity: 0;

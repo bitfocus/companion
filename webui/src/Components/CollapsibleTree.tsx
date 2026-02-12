@@ -70,7 +70,8 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 
 	return (
 		<div className={classNames('collapsible-tree', className)}>
-			{staticLeafs && staticLeafs.map((leaf, index) => <React.Fragment key={index}>{renderLeaf(leaf, 0)}</React.Fragment>)}
+			{staticLeafs &&
+				staticLeafs.map((leaf, index) => <React.Fragment key={index}>{renderLeaf(leaf, 0)}</React.Fragment>)}
 
 			<CollapsibleTreeNodeList
 				nodes={nodes}
