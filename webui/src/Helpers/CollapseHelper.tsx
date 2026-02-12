@@ -10,6 +10,8 @@ interface CollapsedState {
 	ids: Record<string, boolean | undefined>
 }
 
+export type PanelCollapseDefaultCollapsed = boolean | ((panelId: string) => boolean)
+
 export interface PanelCollapseHelper {
 	setAllCollapsed: (parentId: string | null, panelIds: string[]) => void
 	setAllExpanded: (parentId: string | null, panelIds: string[]) => void
@@ -22,16 +24,14 @@ export interface PanelCollapseHelper {
 
 class PanelCollapseHelperStore implements PanelCollapseHelper {
 	readonly #storageId: string | null
-	readonly #defaultCollapsed: boolean
-	readonly #defaultCollapsedFn?: (panelId: string) => boolean
+	readonly #defaultCollapsed: PanelCollapseDefaultCollapsed
 
 	readonly #defaultExpandedAt = observable.map<string | null, boolean>()
 	readonly #ids = observable.map<string, boolean>()
 
-	constructor(storageId: string | null, defaultCollapsed = false, defaultCollapsedFn?: (panelId: string) => boolean) {
+	constructor(storageId: string | null, defaultCollapsed: PanelCollapseDefaultCollapsed = false) {
 		this.#storageId = storageId ? `companion_ui_collapsed_${storageId}` : null
 		this.#defaultCollapsed = defaultCollapsed
-		this.#defaultCollapsedFn = defaultCollapsedFn
 
 		// Try loading the old state (skip if in-memory mode)
 		if (this.#storageId) {
@@ -135,7 +135,7 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 		const parentDefault = this.#defaultExpandedAt.get(parentId)
 		if (parentDefault !== undefined) return parentDefault
 
-		if (this.#defaultCollapsedFn) return this.#defaultCollapsedFn(panelId)
+		if (typeof this.#defaultCollapsed === 'function') return this.#defaultCollapsed(panelId)
 		return this.#defaultCollapsed
 	}
 
@@ -208,13 +208,9 @@ export function PanelCollapseHelperProvider({
 export function usePanelCollapseHelper(
 	storageId: string | null,
 	knownPanelIds: string[],
-	defaultCollapsed = false,
-	defaultCollapsedFn?: (panelId: string) => boolean
+	defaultCollapsed: PanelCollapseDefaultCollapsed = false
 ): PanelCollapseHelper {
-	const store = useMemo(
-		() => new PanelCollapseHelperStore(storageId, defaultCollapsed, defaultCollapsedFn),
-		[storageId, defaultCollapsed, defaultCollapsedFn]
-	)
+	const store = useMemo(() => new PanelCollapseHelperStore(storageId, defaultCollapsed), [storageId, defaultCollapsed])
 
 	// Clear out any unknown panel IDs (skip if in-memory mode)
 	useDeepCompareEffect(() => {

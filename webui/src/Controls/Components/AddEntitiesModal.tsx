@@ -129,7 +129,7 @@ export const AddEntitiesModal = observer(
 
 		// Collections default expanded, connections default collapsed (no localStorage persistence for modals)
 		const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
-		const collapseHelper = usePanelCollapseHelper(null, [], false, defaultCollapsedFn)
+		const collapseHelper = usePanelCollapseHelper(null, [], defaultCollapsedFn)
 
 		const renderGroupHeader = useCallback(
 			(node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>) => {
