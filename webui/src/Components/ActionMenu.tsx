@@ -1,5 +1,5 @@
 import React, { type ElementType, type ReactElement } from 'react'
-import { CDropdownItem, CDropdownDivider } from '@coreui/react'
+import { CDropdownMenu, CDropdownItem, CDropdownDivider } from '@coreui/react'
 import { faExternalLinkSquare } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
@@ -23,6 +23,21 @@ interface MenuSeparatorData {
 }
 
 export type MenuItemData = MenuActiveData | MenuSeparatorData
+
+export interface MenuItemList {
+	readonly menuItems: MenuItemData[]
+	readonly style?: React.CSSProperties
+}
+
+export function ActionMenu({ menuItems, style }: MenuItemList): React.JSX.Element {
+	return (
+		<CDropdownMenu style={style}>
+			{menuItems.map((option, idx) => (
+				<MenuItem key={option.id || `item-${idx}`} data={option} />
+			))}
+		</CDropdownMenu>
+	)
+}
 
 // create menu-entries with (1) optional left-hand icon, (2) label, (3) optional right-side "external link" icon
 // The menu action can be either a URL or a function call

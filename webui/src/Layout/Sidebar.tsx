@@ -54,9 +54,9 @@ import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { trpc } from '~/Resources/TRPC'
 import { useQuery } from '@tanstack/react-query'
-import { ContextMenu } from '~/UserConfig/Components/ContextMenu'
-import { useContextMenuState, MenuSeparator } from '~/UserConfig/Components/useContextMenuProps'
-import { type MenuItemData } from './Header'
+import { ContextMenu } from '~/Components/ContextMenu'
+import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
+import { type MenuItemData } from '~/Components/ActionMenu'
 
 export interface SidebarStateProps {
 	showToggle: boolean

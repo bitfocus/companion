@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CDropdownMenu } from '@coreui/react'
-import { MenuItem } from '~/Layout/Header'
+import { MenuItem } from './ActionMenu'
 import { type ContextMenuProps } from './useContextMenuProps'
 
 export const ContextMenu = ({ visible, position, menuItems = [] }: ContextMenuProps): React.JSX.Element => {
@@ -28,7 +28,9 @@ export const ContextMenu = ({ visible, position, menuItems = [] }: ContextMenuPr
 
 	const noIcons = menuItems.every((item) => 'isSeparator' in item || item.icon === undefined)
 
-	// We use <div> below because CDropdown prevented a interactive positioning or failed to show entirely.
+	console.log(`ContextMenu: visible: ${visible}`)
+
+	// We use <div> below because CDropdown prevented interactive positioning or failed to show entirely.
 	// The following was arrived at with a bit of help from Google's AI, though it too suggested many wrong ways first.
 	// 1. We skip <CDropdown> to avoid Popper.js interference (even though setting popper={false} and portal={true} did not help).
 	// 2. We add the 'display' style-prop to DropdownMenu to force it to render/control visibility.
@@ -37,13 +39,15 @@ export const ContextMenu = ({ visible, position, menuItems = [] }: ContextMenuPr
 			ref={ref}
 			style={{
 				position: 'fixed', // Use 'fixed' so it stays put regardless of scroll
-				top: position.y, // offset from top of parent
+				top: position.y, // offset from top of parent; note that this has to be in the div, not the CDropdown
 				left: position.x,
 				zIndex: 2000, // --cui-sidebar-zindex is 1035, the highest standard cui zindex is 1070 (https://coreui.io/v1/docs/layout/overview/)
 			}}
 			className="context-menu"
 		>
-			<CDropdownMenu style={{ display: visible ? 'block' : 'none', transform: offsets }}>
+			<CDropdownMenu
+				style={{ display: visible ? 'block' : 'none', transform: offsets /* transform has to be on the menu */ }}
+			>
 				{menuItems.map((option, idx) => (
 					<MenuItem key={option.id || `item-${idx}`} data={noIcons ? { ...option, icon: 'none' } : option} />
 				))}{' '}

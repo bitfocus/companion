@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type MouseEventHandler } from 'react'
-import { type MenuItemData } from '~/Layout/Header'
+import { type MenuItemData } from './ActionMenu'
 
 // convenience object
 export const MenuSeparator: MenuItemData = {
