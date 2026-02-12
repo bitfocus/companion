@@ -71,6 +71,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 	const staticLeaves: ConnectionLeafItem[] = hasInternalVariables
 		? [
 				{
+					key: 'internal',
 					connectionId: 'internal',
 					connectionLabel: 'internal',
 					moduleDisplayName: 'Internal',

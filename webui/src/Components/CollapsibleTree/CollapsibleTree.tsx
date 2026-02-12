@@ -60,7 +60,7 @@ interface CollapsibleTreeProps<TLeafData, TNodeMeta> {
  * Unlike CollectionsNestingTable, this does not support drag-and-drop.
  * It is intended for read-only selection UIs like modals and connection pickers.
  */
-export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNodeMeta>({
+export const CollapsibleTree = observer(function CollapsibleTree<TLeafData extends { key: string }, TNodeMeta>({
 	nodes,
 	staticLeaves,
 	ungroupedNodes,
@@ -83,9 +83,9 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 	return (
 		<div className={classNames('collapsible-tree', className)}>
 			{staticLeaves &&
-				staticLeaves.map((leaf, index) => (
+				staticLeaves.map((leaf) => (
 					<CollapsibleTreeLeafWrapper
-						key={index}
+						key={leaf.key}
 						leaf={leaf}
 						nestingLevel={0}
 						LeafComponent={LeafComponent}
@@ -119,9 +119,9 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 				/>
 			)}
 
-			{ungroupedLeaves?.map((leaf, index) => (
+			{ungroupedLeaves?.map((leaf) => (
 				<CollapsibleTreeLeafWrapper
-					key={index}
+					key={leaf.key}
 					leaf={leaf}
 					nestingLevel={0}
 					LeafComponent={LeafComponent}
@@ -146,7 +146,22 @@ function CollapsibleTreeLeafWrapper<TLeafData>({
 	onLeafClick,
 }: CollapsibleTreeLeafWrapperProps<TLeafData>) {
 	return (
-		<div className="collapsible-tree-leaf-row" onClick={onLeafClick ? () => onLeafClick(leaf) : undefined}>
+		<div
+			className="collapsible-tree-leaf-row"
+			role={onLeafClick ? 'button' : undefined}
+			tabIndex={onLeafClick ? 0 : undefined}
+			onKeyDown={
+				onLeafClick
+					? (e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault()
+								onLeafClick(leaf)
+							}
+						}
+					: undefined
+			}
+			onClick={onLeafClick ? () => onLeafClick(leaf) : undefined}
+		>
 			<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
 				<LeafComponent leaf={leaf} />
 			</CollapsibleTreeNesting>
@@ -163,7 +178,10 @@ interface CollapsibleTreeNodeListProps<TLeafData, TNodeMeta> {
 	nestingLevel: number
 }
 
-const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<TLeafData, TNodeMeta>({
+const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<
+	TLeafData extends { key: string },
+	TNodeMeta,
+>({
 	nodes,
 	collapseHelper,
 	HeaderComponent,
@@ -197,7 +215,10 @@ interface CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta> {
 	nestingLevel: number
 }
 
-const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TLeafData, TNodeMeta>({
+const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<
+	TLeafData extends { key: string },
+	TNodeMeta,
+>({
 	node,
 	collapseHelper,
 	HeaderComponent,
@@ -211,7 +232,19 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TL
 
 	return (
 		<>
-			<div className="collapsible-tree-group-row" onClick={doToggle}>
+			<div
+				className="collapsible-tree-group-row"
+				role="button"
+				tabIndex={0}
+				aria-expanded={isExpanded}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault()
+						doToggle()
+					}
+				}}
+				onClick={doToggle}
+			>
 				<CollapsibleTreeNesting nestingLevel={nestingLevel}>
 					<FontAwesomeIcon icon={isExpanded ? faCaretDown : faCaretRight} className="collapsible-tree-caret" />
 					<HeaderComponent node={node} nestingLevel={nestingLevel} />
@@ -229,9 +262,9 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TL
 						nestingLevel={nestingLevel + 1}
 					/>
 
-					{node.leaves.map((leaf, index) => (
+					{node.leaves.map((leaf) => (
 						<CollapsibleTreeLeafWrapper
-							key={index}
+							key={leaf.key}
 							leaf={leaf}
 							nestingLevel={nestingLevel + 1}
 							LeafComponent={LeafComponent}

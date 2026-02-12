@@ -8,6 +8,7 @@ import type { ConnectionCollection, ClientConnectionConfig } from '@companion-ap
  * A connection leaf item in the tree.
  */
 export interface ConnectionLeafItem {
+	key: string
 	connectionId: string
 	connectionLabel: string
 	moduleDisplayName: string | undefined
@@ -44,6 +45,7 @@ export function useConnectionLeafTree(
 			if (!filterConnection(connectionId, connectionInfo)) continue
 
 			const leaf: ConnectionLeafItem = {
+				key: connectionId,
 				connectionId,
 				connectionLabel: connectionInfo.label || connectionId,
 				moduleDisplayName: modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId),

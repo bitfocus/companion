@@ -59,6 +59,7 @@ export interface AddEntitiesModalRef {
 }
 
 interface EntityLeafItem {
+	key: string
 	fullId: string
 	label: string
 	description: string | undefined
@@ -131,6 +132,7 @@ export const AddEntitiesModal = observer(
 					if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
 
 					leaves.push({
+						key: `${connectionId}:${id}`,
 						fullId: `${connectionId}:${id}`,
 						label: info.label,
 						description: info.description,
@@ -153,6 +155,7 @@ export const AddEntitiesModal = observer(
 				if (!info || !info.label) continue
 				if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
 				leaves.push({
+					key: `internal:${id}`,
 					fullId: `internal:${id}`,
 					label: info.label,
 					description: info.description,
