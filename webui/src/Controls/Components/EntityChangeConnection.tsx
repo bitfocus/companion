@@ -22,10 +22,9 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 		const connectionsWithSameType = connectionInfo ? connections.getAllOfModuleId(connectionInfo.moduleId) : []
 
 		return connectionsWithSameType
-			.sort((connectionA, connectionB) => connectionA[1].sortOrder - connectionB[1].sortOrder)
-			.map((connection) => {
-				const [id, info] = connection
-				return { id, label: info.label }
+			.sort((connectionA, connectionB) => connectionA.sortOrder - connectionB.sortOrder)
+			.map((info) => {
+				return { id: info.id, label: info.label }
 			})
 	}, [connections, entityConnectionId])
 

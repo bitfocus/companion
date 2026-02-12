@@ -409,8 +409,8 @@ form.row > * {
 		}
 	}
 
-	.nav-group-toggle-link {
-		padding: 0;
+	.nav-group-toggle {
+		padding-right: 0;
 
 		&::after {
 			// affects the caret
@@ -418,6 +418,10 @@ form.row > * {
 			margin-right: 16px;
 			background-color: white;
 		}
+	}
+
+	.nav-group-toggle-link {
+		padding: 0;
 
 		.nav-link {
 			margin-bottom: 0;

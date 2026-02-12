@@ -7,9 +7,9 @@ import type { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import type { LocalVariablesStore } from './LocalVariablesStore'
+import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
 
 export function InternalModuleField(
 	option: InternalInputField,
@@ -122,10 +122,10 @@ const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropd
 			connectionChoices.push({ id: 'all', label: 'All Connections' })
 		}
 
-		for (const [id, config] of connections.connections.entries()) {
+		for (const config of connections.sortedConnections()) {
 			if (filterActionsRecorder && !config.hasRecordActionsHandler) continue
 
-			connectionChoices.push({ id, label: config.label ?? id })
+			connectionChoices.push({ id: config.id, label: config.label ?? config.id })
 		}
 		return connectionChoices
 	}, [connections, includeAll, filterActionsRecorder])
@@ -454,21 +454,7 @@ const InternalTriggerCollectionDropdown = observer(function InternalTriggerColle
 }: InternalTriggerCollectionDropdownProps) {
 	const { triggersList } = useContext(RootAppStoreContext)
 
-	const choices = useComputed(() => {
-		const choices: DropdownChoice[] = []
-
-		const processCollections = (collections: TriggerCollection[]) => {
-			for (const collection of collections) {
-				choices.push({
-					id: collection.id,
-					label: collection.label || `Collection #${collection.id}`,
-				})
-			}
-		}
-		processCollections(triggersList.rootCollections())
-
-		return choices
-	}, [triggersList])
+	const choices = useCollectionChoices(triggersList)
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
@@ -486,24 +472,7 @@ const InternalConnectionCollectionDropdown = observer(function InternalConnectio
 }: InternalConnectionCollectionDropdownProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const choices = useComputed(() => {
-		const choices: DropdownChoice[] = []
-
-		const processCollections = (collections: ConnectionCollection[]) => {
-			for (const collection of collections) {
-				choices.push({
-					id: collection.id,
-					label: collection.label || `Collection #${collection.id}`,
-				})
-				if (collection.children) {
-					processCollections(collection.children)
-				}
-			}
-		}
-		processCollections(connections.rootCollections())
-
-		return choices
-	}, [connections])
+	const choices = useCollectionChoices(connections)
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
@@ -556,4 +525,25 @@ function InternalDatePicker({ value, setValue, disabled }: InternalDatePickerPro
 			/>
 		</>
 	)
+}
+
+function useCollectionChoices(listStore: GenericCollectionsStore<any>): DropdownChoice[] {
+	return useComputed(() => {
+		const choices: DropdownChoice[] = []
+
+		const processCollections = (collections: ConnectionCollection[]) => {
+			for (const collection of collections) {
+				choices.push({
+					id: collection.id,
+					label: collection.label || `Collection #${collection.id}`,
+				})
+				if (collection.children) {
+					processCollections(collection.children)
+				}
+			}
+		}
+		processCollections(listStore.rootCollections())
+
+		return choices
+	}, [listStore])
 }
