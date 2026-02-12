@@ -122,6 +122,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
@@ -160,6 +161,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0 }],
 				optionsToMonitorForInvalidations: null,
@@ -191,6 +193,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
@@ -227,6 +230,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
@@ -273,6 +277,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{ id: 'field1', type: 'textinput', label: 'Field 1' }, // No useVariables
@@ -309,6 +314,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -346,6 +352,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -392,6 +399,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -428,6 +436,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -465,6 +474,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -502,6 +512,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -554,6 +565,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -600,6 +612,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -636,6 +649,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -674,6 +688,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -727,6 +742,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -769,6 +785,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -806,6 +823,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{
@@ -1196,6 +1214,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal }],
 				optionsToMonitorForInvalidations: null,
@@ -1241,6 +1260,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [
 					{ id: 'text1', type: 'textinput', label: 'Text 1', useVariables: useVariablesMinimal },
@@ -1287,6 +1307,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal }],
 				optionsToMonitorForInvalidations: null,
@@ -1316,6 +1337,7 @@ describe('VariablesAndExpressionParser', () => {
 			const entityDefinition: ClientEntityDefinition = {
 				entityType: EntityModelType.Action,
 				label: 'Test',
+				sortKey: null,
 				description: undefined,
 				options: [],
 				optionsToMonitorForInvalidations: null,

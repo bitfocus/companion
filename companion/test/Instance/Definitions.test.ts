@@ -45,6 +45,7 @@ function makeActionDefinition(overrides: Partial<ClientEntityDefinition> = {}): 
 	return {
 		entityType: EntityModelType.Action,
 		label: 'Test Action',
+		sortKey: null,
 		description: 'A test action',
 		options: [],
 		optionsToMonitorForInvalidations: null,

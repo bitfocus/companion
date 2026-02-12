@@ -62,6 +62,7 @@ interface EntityLeafItem {
 	key: string
 	fullId: string
 	label: string
+	sortKey: string
 	description: string | undefined
 }
 
@@ -135,8 +136,11 @@ export const AddEntitiesModal = observer(
 						key: `${connectionId}:${id}`,
 						fullId: `${connectionId}:${id}`,
 						label: info.label,
+						sortKey: info.sortKey ?? info.label,
 						description: info.description,
 					})
+
+					leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
 				}
 				return leaves
 			},
@@ -158,6 +162,7 @@ export const AddEntitiesModal = observer(
 					key: `internal:${id}`,
 					fullId: `internal:${id}`,
 					label: info.label,
+					sortKey: info.sortKey ?? info.label,
 					description: info.description,
 				})
 			}
