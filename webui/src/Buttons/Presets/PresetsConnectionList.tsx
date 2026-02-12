@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite'
 import { faLifeRing, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
-import { CollapsibleTree, type CollapsibleTreeNode } from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionLeafTree,
@@ -44,6 +44,12 @@ const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeaf
 	)
 })
 
+const PresetGroupHeader = React.memo(function PresetGroupHeader({
+	node,
+}: CollapsibleTreeHeaderProps<ConnectionLeafItem, CollectionGroupMeta>) {
+	return <span>{node.metadata.label}</span>
+})
+
 interface PresetsConnectionListProps {
 	presetsDefinitionsStore: PresetDefinitionsStore
 	setConnectionId: (connectionId: string) => void
@@ -65,10 +71,6 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 
 	const hasAnyConnections = nodes.length > 0 || ungroupedLeafs.length > 0
 
-	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
-		return <span>{node.metadata.label}</span>
-	}, [])
-
 	return (
 		<PresetsStoreContext.Provider value={presetsDefinitionsStore}>
 			<div>
@@ -88,7 +90,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 						ungroupedLeafs={ungroupedLeafs}
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}
-						renderGroupHeader={renderGroupHeader}
+						HeaderComponent={PresetGroupHeader}
 						LeafComponent={PresetLeaf}
 						onLeafClick={(leaf) => setConnectionId(leaf.connectionId)}
 					/>

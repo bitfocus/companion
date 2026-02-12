@@ -7,7 +7,11 @@ import { CModalExt } from '~/Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
-import { CollapsibleTree, type CollapsibleTreeNode } from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import {
+	CollapsibleTree,
+	type CollapsibleTreeNode,
+	type CollapsibleTreeHeaderProps,
+} from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionTreeNodes,
@@ -19,12 +23,40 @@ import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useComputed } from '~/Resources/util'
 
+const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
+	node,
+}: CollapsibleTreeHeaderProps<EntityLeafItem, ConnectionTreeNodeMeta>) {
+	const entityTypeLabelContext = useContext(EntityTypeLabelContext)
+
+	const meta = node.metadata
+	if (meta.type === 'connection') {
+		const itemCount = node.leafs.length
+		const itemLabel = itemCount === 1 ? entityTypeLabelContext : `${entityTypeLabelContext}s`
+		return (
+			<span className="collapsible-tree-connection-header">
+				<span>
+					{meta.connectionLabel}
+					{meta.moduleDisplayName && (
+						<small className="collapsible-tree-connection-module">{meta.moduleDisplayName}</small>
+					)}
+				</span>
+				<small className="collapsible-tree-connection-count">
+					{itemCount} {itemLabel}
+				</small>
+			</span>
+		)
+	}
+	return <span>{meta.label}</span>
+})
+
 interface AddEntitiesModalProps {
 	addEntity: (connectionId: string, definitionId: string) => void
 	feedbackListType: FeedbackEntitySubType | null
 	entityType: EntityModelType
 	entityTypeLabel: string
 }
+const EntityTypeLabelContext = React.createContext<string>('')
+
 export interface AddEntitiesModalRef {
 	show(): void
 }
@@ -149,31 +181,6 @@ export const AddEntitiesModal = observer(
 		const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
 		const collapseHelper = usePanelCollapseHelper(null, [], defaultCollapsedFn)
 
-		const renderGroupHeader = useCallback(
-			(node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>) => {
-				const meta = node.metadata
-				if (meta.type === 'connection') {
-					const itemCount = node.leafs.length
-					const itemLabel = itemCount === 1 ? entityTypeLabel : `${entityTypeLabel}s`
-					return (
-						<span className="collapsible-tree-connection-header">
-							<span>
-								{meta.connectionLabel}
-								{meta.moduleDisplayName && (
-									<small className="collapsible-tree-connection-module">{meta.moduleDisplayName}</small>
-								)}
-							</span>
-							<small className="collapsible-tree-connection-count">
-								{itemCount} {itemLabel}
-							</small>
-						</span>
-					)
-				}
-				return <span>{meta.label}</span>
-			},
-			[entityTypeLabel]
-		)
-
 		// When filtering, apply fuzzy search to leaf items in each node
 		const filteredNodes = useComputed(() => {
 			const rawNodes = internalNode ? [internalNode, ...nodes] : nodes
@@ -199,37 +206,39 @@ export const AddEntitiesModal = observer(
 		)
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
-				<CModalHeader closeButton>
-					<h5>Browse {capitalize(entityTypeLabel)}s</h5>
-				</CModalHeader>
-				<CModalHeader closeButton={false}>
-					<CFormInput
-						type="text"
-						placeholder="Search ..."
-						onChange={(e) => setFilter(e.currentTarget.value)}
-						value={filter}
-						style={{ fontSize: '1.2em' }}
-					/>
-				</CModalHeader>
-				<CModalBody>
-					<CollapsibleTree
-						nodes={filteredNodes.nodes}
-						ungroupedNodes={filteredNodes.ungroupedNodes}
-						ungroupedLabel="Ungrouped Connections"
-						collapseHelper={filter ? null : collapseHelper}
-						renderGroupHeader={renderGroupHeader}
-						LeafComponent={AddEntityLeaf}
-						onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
-						noContent={filter ? noResultsContent : undefined}
-					/>
-				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Done
-					</CButton>
-				</CModalFooter>
-			</CModalExt>
+			<EntityTypeLabelContext.Provider value={entityTypeLabel}>
+				<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
+					<CModalHeader closeButton>
+						<h5>Browse {capitalize(entityTypeLabel)}s</h5>
+					</CModalHeader>
+					<CModalHeader closeButton={false}>
+						<CFormInput
+							type="text"
+							placeholder="Search ..."
+							onChange={(e) => setFilter(e.currentTarget.value)}
+							value={filter}
+							style={{ fontSize: '1.2em' }}
+						/>
+					</CModalHeader>
+					<CModalBody>
+						<CollapsibleTree
+							nodes={filteredNodes.nodes}
+							ungroupedNodes={filteredNodes.ungroupedNodes}
+							ungroupedLabel="Ungrouped Connections"
+							collapseHelper={filter ? null : collapseHelper}
+							HeaderComponent={AddEntityGroupHeader}
+							LeafComponent={AddEntityLeaf}
+							onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
+							noContent={filter ? noResultsContent : undefined}
+						/>
+					</CModalBody>
+					<CModalFooter>
+						<CButton color="secondary" onClick={doClose}>
+							Done
+						</CButton>
+					</CModalFooter>
+				</CModalExt>
+			</EntityTypeLabelContext.Provider>
 		)
 	})
 )

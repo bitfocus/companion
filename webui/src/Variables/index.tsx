@@ -6,7 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import { CollapsibleTree, type CollapsibleTreeNode } from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionLeafTree,
@@ -43,6 +43,12 @@ const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: Connection
 	)
 })
 
+const VariableGroupHeader = React.memo(function VariableGroupHeader({
+	node,
+}: CollapsibleTreeHeaderProps<ConnectionLeafItem, CollectionGroupMeta>) {
+	return <span>{node.metadata.label}</span>
+})
+
 export const ConnectionVariablesPage = observer(function VariablesConnectionList() {
 	const { variablesStore } = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
@@ -72,10 +78,6 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 			]
 		: []
 
-	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
-		return <span>{node.metadata.label}</span>
-	}, [])
-
 	return (
 		<CRow>
 			<CCol xs={12} className="flex-column-layout">
@@ -103,7 +105,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						ungroupedLeafs={ungroupedLeafs}
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}
-						renderGroupHeader={renderGroupHeader}
+						HeaderComponent={VariableGroupHeader}
 						LeafComponent={VariableLeaf}
 						onLeafClick={(leaf) => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
 					/>

@@ -20,6 +20,11 @@ export interface CollapsibleTreeNode<TLeafData = unknown, TNodeMeta = unknown> {
 	metadata: TNodeMeta
 }
 
+export interface CollapsibleTreeHeaderProps<TLeafData, TNodeMeta> {
+	node: CollapsibleTreeNode<TLeafData, TNodeMeta>
+	nestingLevel: number
+}
+
 export interface CollapsibleTreeLeafProps<TLeafData> {
 	leaf: TLeafData
 }
@@ -37,8 +42,8 @@ interface CollapsibleTreeProps<TLeafData, TNodeMeta> {
 	ungroupedLabel?: string
 	/** Collapse helper (handles expand/collapse state). Pass `null` to force all nodes expanded (e.g. during search). */
 	collapseHelper: PanelCollapseHelper | null
-	/** Renders the header content for a group node */
-	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
+	/** Component to render the header content for a group node */
+	HeaderComponent: React.ComponentType<CollapsibleTreeHeaderProps<TLeafData, TNodeMeta>>
 	/** Component to render a single leaf item */
 	LeafComponent: React.ComponentType<CollapsibleTreeLeafProps<TLeafData>>
 	/** Callback for when a leaf item row is clicked */
@@ -62,7 +67,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 	ungroupedLeafs,
 	ungroupedLabel,
 	collapseHelper,
-	renderGroupHeader,
+	HeaderComponent,
 	LeafComponent,
 	onLeafClick,
 	noContent,
@@ -91,7 +96,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 			<CollapsibleTreeNodeList
 				nodes={nodes}
 				collapseHelper={collapseHelper}
-				renderGroupHeader={renderGroupHeader}
+				HeaderComponent={HeaderComponent}
 				LeafComponent={LeafComponent}
 				onLeafClick={onLeafClick}
 				nestingLevel={0}
@@ -107,7 +112,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 				<CollapsibleTreeNodeList
 					nodes={ungroupedNodes}
 					collapseHelper={collapseHelper}
-					renderGroupHeader={renderGroupHeader}
+					HeaderComponent={HeaderComponent}
 					LeafComponent={LeafComponent}
 					onLeafClick={onLeafClick}
 					nestingLevel={0}
@@ -152,7 +157,7 @@ function CollapsibleTreeLeafWrapper<TLeafData>({
 interface CollapsibleTreeNodeListProps<TLeafData, TNodeMeta> {
 	nodes: CollapsibleTreeNode<TLeafData, TNodeMeta>[]
 	collapseHelper: PanelCollapseHelper | null
-	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
+	HeaderComponent: React.ComponentType<CollapsibleTreeHeaderProps<TLeafData, TNodeMeta>>
 	LeafComponent: React.ComponentType<CollapsibleTreeLeafProps<TLeafData>>
 	onLeafClick?: (leaf: TLeafData) => void
 	nestingLevel: number
@@ -161,7 +166,7 @@ interface CollapsibleTreeNodeListProps<TLeafData, TNodeMeta> {
 const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<TLeafData, TNodeMeta>({
 	nodes,
 	collapseHelper,
-	renderGroupHeader,
+	HeaderComponent,
 	LeafComponent,
 	onLeafClick,
 	nestingLevel,
@@ -173,7 +178,7 @@ const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<TLeafD
 					key={node.id}
 					node={node}
 					collapseHelper={collapseHelper}
-					renderGroupHeader={renderGroupHeader}
+					HeaderComponent={HeaderComponent}
 					LeafComponent={LeafComponent}
 					onLeafClick={onLeafClick}
 					nestingLevel={nestingLevel}
@@ -186,7 +191,7 @@ const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<TLeafD
 interface CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta> {
 	node: CollapsibleTreeNode<TLeafData, TNodeMeta>
 	collapseHelper: PanelCollapseHelper | null
-	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
+	HeaderComponent: React.ComponentType<CollapsibleTreeHeaderProps<TLeafData, TNodeMeta>>
 	LeafComponent: React.ComponentType<CollapsibleTreeLeafProps<TLeafData>>
 	onLeafClick?: (leaf: TLeafData) => void
 	nestingLevel: number
@@ -195,7 +200,7 @@ interface CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta> {
 const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TLeafData, TNodeMeta>({
 	node,
 	collapseHelper,
-	renderGroupHeader,
+	HeaderComponent,
 	LeafComponent,
 	onLeafClick,
 	nestingLevel,
@@ -209,7 +214,7 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TL
 			<div className="collapsible-tree-group-row" onClick={doToggle}>
 				<CollapsibleTreeNesting nestingLevel={nestingLevel}>
 					<FontAwesomeIcon icon={isExpanded ? faCaretDown : faCaretRight} className="collapsible-tree-caret" />
-					{renderGroupHeader(node, nestingLevel)}
+					<HeaderComponent node={node} nestingLevel={nestingLevel} />
 				</CollapsibleTreeNesting>
 			</div>
 
@@ -218,7 +223,7 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TL
 					<CollapsibleTreeNodeList
 						nodes={node.children}
 						collapseHelper={collapseHelper}
-						renderGroupHeader={renderGroupHeader}
+						HeaderComponent={HeaderComponent}
 						LeafComponent={LeafComponent}
 						onLeafClick={onLeafClick}
 						nestingLevel={nestingLevel + 1}
