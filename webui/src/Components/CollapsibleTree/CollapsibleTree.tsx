@@ -36,7 +36,9 @@ interface CollapsibleTreeProps<TLeafData, TNodeMeta> {
 	/** Renders the header content for a group node */
 	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
 	/** Renders a single leaf item */
-	renderLeaf: (leaf: TLeafData, nestingLevel: number) => React.ReactNode
+	renderLeaf: (leaf: TLeafData) => React.ReactNode
+	/** Callback for when a leaf item row is clicked */
+	onLeafClick?: (leaf: TLeafData) => void
 	/** Content to show when the tree has no nodes or leafs at all */
 	noContent?: React.ReactNode
 	/** Optional extra class name for the root element */
@@ -58,6 +60,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 	collapseHelper,
 	renderGroupHeader,
 	renderLeaf,
+	onLeafClick,
 	noContent,
 	className,
 }: CollapsibleTreeProps<TLeafData, TNodeMeta>): React.JSX.Element {
@@ -71,13 +74,22 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 	return (
 		<div className={classNames('collapsible-tree', className)}>
 			{staticLeafs &&
-				staticLeafs.map((leaf, index) => <React.Fragment key={index}>{renderLeaf(leaf, 0)}</React.Fragment>)}
+				staticLeafs.map((leaf, index) => (
+					<CollapsibleTreeLeafWrapper
+						key={index}
+						leaf={leaf}
+						nestingLevel={0}
+						renderLeaf={renderLeaf}
+						onLeafClick={onLeafClick}
+					/>
+				))}
 
 			<CollapsibleTreeNodeList
 				nodes={nodes}
 				collapseHelper={collapseHelper}
 				renderGroupHeader={renderGroupHeader}
 				renderLeaf={renderLeaf}
+				onLeafClick={onLeafClick}
 				nestingLevel={0}
 			/>
 
@@ -93,22 +105,52 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 					collapseHelper={collapseHelper}
 					renderGroupHeader={renderGroupHeader}
 					renderLeaf={renderLeaf}
+					onLeafClick={onLeafClick}
 					nestingLevel={0}
 				/>
 			)}
 
 			{ungroupedLeafs?.map((leaf, index) => (
-				<React.Fragment key={index}>{renderLeaf(leaf, 0)}</React.Fragment>
+				<CollapsibleTreeLeafWrapper
+					key={index}
+					leaf={leaf}
+					nestingLevel={0}
+					renderLeaf={renderLeaf}
+					onLeafClick={onLeafClick}
+				/>
 			))}
 		</div>
 	)
 })
 
+interface CollapsibleTreeLeafWrapperProps<TLeafData> {
+	leaf: TLeafData
+	nestingLevel: number
+	renderLeaf: (leaf: TLeafData) => React.ReactNode
+	onLeafClick?: (leaf: TLeafData) => void
+}
+
+function CollapsibleTreeLeafWrapper<TLeafData>({
+	leaf,
+	nestingLevel,
+	renderLeaf,
+	onLeafClick,
+}: CollapsibleTreeLeafWrapperProps<TLeafData>) {
+	return (
+		<div className="collapsible-tree-leaf-row" onClick={onLeafClick ? () => onLeafClick(leaf) : undefined}>
+			<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
+				{renderLeaf(leaf)}
+			</CollapsibleTreeNesting>
+		</div>
+	)
+}
+
 interface CollapsibleTreeNodeListProps<TLeafData, TNodeMeta> {
 	nodes: CollapsibleTreeNode<TLeafData, TNodeMeta>[]
 	collapseHelper: PanelCollapseHelper | null
 	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
-	renderLeaf: (leaf: TLeafData, nestingLevel: number) => React.ReactNode
+	renderLeaf: (leaf: TLeafData) => React.ReactNode
+	onLeafClick?: (leaf: TLeafData) => void
 	nestingLevel: number
 }
 
@@ -117,6 +159,7 @@ const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<TLeafD
 	collapseHelper,
 	renderGroupHeader,
 	renderLeaf,
+	onLeafClick,
 	nestingLevel,
 }: CollapsibleTreeNodeListProps<TLeafData, TNodeMeta>): React.JSX.Element {
 	return (
@@ -128,6 +171,7 @@ const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<TLeafD
 					collapseHelper={collapseHelper}
 					renderGroupHeader={renderGroupHeader}
 					renderLeaf={renderLeaf}
+					onLeafClick={onLeafClick}
 					nestingLevel={nestingLevel}
 				/>
 			))}
@@ -139,7 +183,8 @@ interface CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta> {
 	node: CollapsibleTreeNode<TLeafData, TNodeMeta>
 	collapseHelper: PanelCollapseHelper | null
 	renderGroupHeader: (node: CollapsibleTreeNode<TLeafData, TNodeMeta>, nestingLevel: number) => React.ReactNode
-	renderLeaf: (leaf: TLeafData, nestingLevel: number) => React.ReactNode
+	renderLeaf: (leaf: TLeafData) => React.ReactNode
+	onLeafClick?: (leaf: TLeafData) => void
 	nestingLevel: number
 }
 
@@ -148,6 +193,7 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TL
 	collapseHelper,
 	renderGroupHeader,
 	renderLeaf,
+	onLeafClick,
 	nestingLevel,
 }: CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta>): React.JSX.Element {
 	// If collapseHelper is null, all nodes are force-expanded (e.g. during search)
@@ -170,11 +216,18 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<TL
 						collapseHelper={collapseHelper}
 						renderGroupHeader={renderGroupHeader}
 						renderLeaf={renderLeaf}
+						onLeafClick={onLeafClick}
 						nestingLevel={nestingLevel + 1}
 					/>
 
 					{node.leafs.map((leaf, index) => (
-						<React.Fragment key={index}>{renderLeaf(leaf, nestingLevel + 1)}</React.Fragment>
+						<CollapsibleTreeLeafWrapper
+							key={index}
+							leaf={leaf}
+							nestingLevel={nestingLevel + 1}
+							renderLeaf={renderLeaf}
+							onLeafClick={onLeafClick}
+						/>
 					))}
 				</>
 			)}

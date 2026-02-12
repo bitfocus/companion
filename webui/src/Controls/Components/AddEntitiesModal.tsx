@@ -9,7 +9,6 @@ import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shar
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 import {
 	CollapsibleTree,
-	CollapsibleTreeNesting,
 	type CollapsibleTreeNode,
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
@@ -156,26 +155,21 @@ export const AddEntitiesModal = observer(
 			[entityTypeLabel]
 		)
 
-		const renderLeaf = useCallback(
-			(leaf: EntityLeafItem, nestingLevel: number) => {
-				return (
-					<div className="collapsible-tree-leaf-row" onClick={() => addAndTrackRecentUsage(leaf.fullId)}>
-						<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
-							<div className="collapsible-tree-leaf-text">
-								<span className="collapsible-tree-leaf-label">{leaf.label}</span>
-								{leaf.description && (
-									<>
-										<span className="collapsible-tree-leaf-description">{leaf.description}</span>
-									</>
-								)}
-							</div>
-							<FontAwesomeIcon icon={faPlus} className="collapsible-tree-leaf-add-icon" />
-						</CollapsibleTreeNesting>
+		const renderLeaf = useCallback((leaf: EntityLeafItem) => {
+			return (
+				<>
+					<div className="collapsible-tree-leaf-text">
+						<span className="collapsible-tree-leaf-label">{leaf.label}</span>
+						{leaf.description && (
+							<>
+								<span className="collapsible-tree-leaf-description">{leaf.description}</span>
+							</>
+						)}
 					</div>
-				)
-			},
-			[addAndTrackRecentUsage]
-		)
+					<FontAwesomeIcon icon={faPlus} className="collapsible-tree-leaf-add-icon" />
+				</>
+			)
+		}, [])
 
 		// When filtering, apply fuzzy search to leaf items in each node
 		const filteredNodes = useComputed(() => {
@@ -223,6 +217,7 @@ export const AddEntitiesModal = observer(
 						collapseHelper={filter ? null : collapseHelper}
 						renderGroupHeader={renderGroupHeader}
 						renderLeaf={renderLeaf}
+						onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
 						noContent={filter ? noResultsContent : undefined}
 					/>
 				</CModalBody>

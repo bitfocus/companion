@@ -8,7 +8,6 @@ import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import {
 	CollapsibleTree,
-	CollapsibleTreeNesting,
 	type CollapsibleTreeNode,
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
@@ -53,37 +52,34 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 	}, [])
 
 	const renderLeaf = useCallback(
-		(leaf: ConnectionLeafItem, nestingLevel: number) => {
+		(leaf: ConnectionLeafItem) => {
 			const variableCount = variablesStore.variables.get(leaf.connectionLabel)?.size ?? 0
 			const variableLabel = variableCount === 1 ? 'variable' : 'variables'
 			return (
-				<div className="collapsible-tree-leaf-row" key={leaf.connectionId}>
-					<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
-						<div className="collapsible-tree-leaf-text">
-							<div
-								style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
-								onClick={() => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
-							>
-								<div>
-									<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
-									{leaf.moduleDisplayName && (
-										<>
-											<br />
-											<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
-										</>
-									)}
-								</div>
-								<small style={{ opacity: 0.7, marginLeft: '1em' }}>
-									{variableCount} {variableLabel}
-								</small>
+				<>
+					<div className="collapsible-tree-leaf-text">
+						<div
+							style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
+						>
+							<div>
+								<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
+								{leaf.moduleDisplayName && (
+									<>
+										<br />
+										<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
+									</>
+								)}
 							</div>
+							<small style={{ opacity: 0.7, marginLeft: '1em' }}>
+								{variableCount} {variableLabel}
+							</small>
 						</div>
-						<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
-					</CollapsibleTreeNesting>
-				</div>
+					</div>
+					<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
+				</>
 			)
 		},
-		[navigate, variablesStore.variables]
+		[variablesStore.variables]
 	)
 
 	return (
@@ -115,6 +111,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						collapseHelper={collapseHelper}
 						renderGroupHeader={renderGroupHeader}
 						renderLeaf={renderLeaf}
+						onLeafClick={(leaf) => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
 					/>
 				</div>
 			</CCol>

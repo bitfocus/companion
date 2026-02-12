@@ -6,7 +6,6 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
 import {
 	CollapsibleTree,
-	CollapsibleTreeNesting,
 	type CollapsibleTreeNode,
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
@@ -44,37 +43,32 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	}, [])
 
 	const renderLeaf = useCallback(
-		(leaf: ConnectionLeafItem, nestingLevel: number) => {
+		(leaf: ConnectionLeafItem) => {
 			const presetCount = presetsDefinitionsStore.presets.get(leaf.connectionId)?.size ?? 0
 			const presetLabel = presetCount === 1 ? 'preset' : 'presets'
 			return (
-				<div className="collapsible-tree-leaf-row" key={leaf.connectionId}>
-					<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
-						<div className="collapsible-tree-leaf-text">
-							<div
-								style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
-								onClick={() => setConnectionId(leaf.connectionId)}
-							>
-								<div>
-									<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
-									{leaf.moduleDisplayName && (
-										<>
-											<br />
-											<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
-										</>
-									)}
-								</div>
-								<small style={{ opacity: 0.7, marginLeft: '1em' }}>
-									{presetCount} {presetLabel}
-								</small>
+				<>
+					<div className="collapsible-tree-leaf-text">
+						<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+							<div>
+								<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
+								{leaf.moduleDisplayName && (
+									<>
+										<br />
+										<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
+									</>
+								)}
 							</div>
+							<small style={{ opacity: 0.7, marginLeft: '1em' }}>
+								{presetCount} {presetLabel}
+							</small>
 						</div>
-						<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
-					</CollapsibleTreeNesting>
-				</div>
+					</div>
+					<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
+				</>
 			)
 		},
-		[setConnectionId, presetsDefinitionsStore.presets]
+		[presetsDefinitionsStore.presets]
 	)
 
 	return (
@@ -97,6 +91,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 					collapseHelper={collapseHelper}
 					renderGroupHeader={renderGroupHeader}
 					renderLeaf={renderLeaf}
+					onLeafClick={(leaf) => setConnectionId(leaf.connectionId)}
 				/>
 			)}
 
