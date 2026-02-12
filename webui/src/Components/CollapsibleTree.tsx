@@ -23,6 +23,8 @@ export interface CollapsibleTreeNode<TLeafData = unknown, TNodeMeta = unknown> {
 interface CollapsibleTreeProps<TLeafData, TNodeMeta> {
 	/** The root-level tree nodes to render */
 	nodes: CollapsibleTreeNode<TLeafData, TNodeMeta>[]
+	/** Static leaf items to show at the top (always visible, above everything else) */
+	staticLeafs?: TLeafData[]
 	/** Ungrouped nodes to render at the bottom (shown under a header) */
 	ungroupedNodes?: CollapsibleTreeNode<TLeafData, TNodeMeta>[]
 	/** Ungrouped leaf items to render at the bottom */
@@ -49,6 +51,7 @@ interface CollapsibleTreeProps<TLeafData, TNodeMeta> {
  */
 export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNodeMeta>({
 	nodes,
+	staticLeafs,
 	ungroupedNodes,
 	ungroupedLeafs,
 	ungroupedLabel,
@@ -59,7 +62,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 	className,
 }: CollapsibleTreeProps<TLeafData, TNodeMeta>): React.JSX.Element {
 	const hasUngrouped = (ungroupedNodes && ungroupedNodes.length > 0) || (ungroupedLeafs && ungroupedLeafs.length > 0)
-	const hasContent = nodes.length > 0 || hasUngrouped
+	const hasContent = nodes.length > 0 || hasUngrouped || (staticLeafs && staticLeafs.length > 0)
 
 	if (!hasContent && noContent) {
 		return <>{noContent}</>
@@ -67,6 +70,8 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData, TNod
 
 	return (
 		<div className={classNames('collapsible-tree', className)}>
+			{staticLeafs && staticLeafs.map((leaf, index) => <React.Fragment key={index}>{renderLeaf(leaf, 0)}</React.Fragment>)}
+
 			<CollapsibleTreeNodeList
 				nodes={nodes}
 				collapseHelper={collapseHelper}

@@ -123,20 +123,30 @@ export const AddEntitiesModal = observer(
 		const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
 		const collapseHelper = usePanelCollapseHelper(null, [], false, defaultCollapsedFn)
 
-		const renderGroupHeader = useCallback((node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>) => {
-			const meta = node.metadata
-			if (meta.type === 'connection') {
-				return (
-					<span className="collapsible-tree-connection-header">
-						{meta.connectionLabel}
-						{meta.moduleDisplayName && (
-							<small className="collapsible-tree-connection-module">{meta.moduleDisplayName}</small>
-						)}
-					</span>
-				)
-			}
-			return <span>{meta.label}</span>
-		}, [])
+		const renderGroupHeader = useCallback(
+			(node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>) => {
+				const meta = node.metadata
+				if (meta.type === 'connection') {
+					const itemCount = node.leafs.length
+					const itemLabel = itemCount === 1 ? entityTypeLabel : `${entityTypeLabel}s`
+					return (
+						<span className="collapsible-tree-connection-header">
+							<span>
+								{meta.connectionLabel}
+								{meta.moduleDisplayName && (
+									<small className="collapsible-tree-connection-module">{meta.moduleDisplayName}</small>
+								)}
+							</span>
+							<small className="collapsible-tree-connection-count">
+								{itemCount} {itemLabel}
+							</small>
+						</span>
+					)
+				}
+				return <span>{meta.label}</span>
+			},
+			[entityTypeLabel]
+		)
 
 		const renderLeaf = useCallback(
 			(leaf: EntityLeafItem, nestingLevel: number) => {

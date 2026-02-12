@@ -38,6 +38,24 @@
 		// Connection nodes get a slightly different style to stand out from collections
 		.collapsible-tree-connection-header {
 			color: #303030;
+			display: inline-flex;
+			justify-content: space-between;
+			align-items: center;
+			width: calc(100% - 15px); // Account for caret width
+		}
+
+		// Collection headers also show counts
+		.collapsible-tree-collection-header {
+			display: inline-flex;
+			justify-content: space-between;
+			align-items: center;
+			width: calc(100% - 15px); // Account for caret width
+		}
+
+		.collapsible-tree-connection-count {
+			opacity: 0.6;
+			font-weight: normal;
+			margin-left: 1em;
 		}
 	}
 
@@ -55,10 +73,14 @@
 		cursor: pointer;
 
 		&:hover {
-			background-color: rgba(200, 200, 200, 0.1);
+			background-color: rgba(200, 200, 200, 0.15);
 
 			.collapsible-tree-leaf-add-icon {
 				opacity: 0.6;
+			}
+
+			.collapsible-tree-leaf-arrow-icon {
+				opacity: 0.8;
 			}
 		}
 
@@ -70,19 +92,24 @@
 		.collapsible-tree-leaf-text {
 			flex: 1;
 			min-width: 0;
-		}
+	}
 
-		.collapsible-tree-leaf-label {
-			font-weight: bold;
-		}
+	.collapsible-tree-leaf-label {
+		display: block;
+	}
 
-		.collapsible-tree-leaf-description {
-			font-size: 0.9em;
-			opacity: 0.7;
-		}
+	.collapsible-tree-leaf-description {
+		display: block;
 
 		.collapsible-tree-leaf-add-icon {
 			opacity: 0;
+			margin-left: 10px;
+			flex-shrink: 0;
+			transition: opacity 0.15s ease;
+		}
+
+		.collapsible-tree-leaf-arrow-icon {
+			opacity: 0.3;
 			margin-left: 10px;
 			flex-shrink: 0;
 			transition: opacity 0.15s ease;

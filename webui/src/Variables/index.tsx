@@ -4,7 +4,7 @@ import { VariablesTable } from '~/Components/VariablesTable.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { CollapsibleTree, CollapsibleTreeNesting, type CollapsibleTreeNode } from '~/Components/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
@@ -34,28 +34,65 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 	const internalVariables = variablesStore.variables.get('internal')
 	const hasInternalVariables = !!internalVariables && internalVariables.size > 0
 
-	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
-		return <span>{node.metadata.label}</span>
-	}, [])
+	const staticLeafs: ConnectionLeafItem[] = hasInternalVariables
+		? [
+				{
+					connectionId: 'internal',
+					connectionLabel: 'internal',
+					moduleDisplayName: 'Internal',
+				},
+			]
+		: []
+
+	// Count total connections in a collection node (recursively)
+	const countConnectionsInNode = useCallback(
+		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>): number => {
+			let count = node.leafs.length
+			for (const child of node.children) {
+				count += countConnectionsInNode(child)
+			}
+			return count
+		},
+		[]
+	)
+
+	const renderGroupHeader = useCallback(
+		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
+			return <span>{node.metadata.label}</span>
+		},
+		[]
+	)
 
 	const renderLeaf = useCallback(
 		(leaf: ConnectionLeafItem, nestingLevel: number) => {
+			const variableCount = variablesStore.variables.get(leaf.connectionLabel)?.size ?? 0
+			const variableLabel = variableCount === 1 ? 'variable' : 'variables'
 			return (
 				<div className="collapsible-tree-leaf-row" key={leaf.connectionId}>
-					<CollapsibleTreeNesting nestingLevel={nestingLevel}>
-						<CButton
-							color="primary"
-							className="w-100 text-start"
+					<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
+						<div
+							className="collapsible-tree-leaf-text"
 							onClick={() => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
 						>
-							<h6 className="mb-0">{leaf.connectionLabel}</h6>
-							{leaf.moduleDisplayName && <small>{leaf.moduleDisplayName}</small>}
-						</CButton>
+							<div>
+								<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
+								{leaf.moduleDisplayName && (
+									<>
+										<br />
+										<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
+									</>
+								)}
+							</div>
+							<small style={{ opacity: 0.7, marginLeft: '1em' }}>
+								{variableCount} {variableLabel}
+							</small>
+						</div>
+						<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
 					</CollapsibleTreeNesting>
 				</div>
 			)
 		},
-		[navigate]
+		[navigate, variablesStore.variables]
 	)
 
 	return (
@@ -79,18 +116,11 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						</CButton>
 					</div>
 
-					{hasInternalVariables && (
-						<div className="mb-2">
-							<CButton color="primary" as={Link} to="/variables/connection/internal" className="w-100 text-start">
-								<h6 className="mb-0">Internal</h6>
-							</CButton>
-						</div>
-					)}
-
-					<CollapsibleTree
-						nodes={nodes}
-						ungroupedLeafs={ungroupedLeafs}
-						ungroupedLabel="Ungrouped Connections"
+				<CollapsibleTree
+					nodes={nodes}
+					staticLeafs={staticLeafs}
+					ungroupedLeafs={ungroupedLeafs}
+					ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}
 						renderGroupHeader={renderGroupHeader}
 						renderLeaf={renderLeaf}
