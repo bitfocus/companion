@@ -4,13 +4,17 @@ import { observer } from 'mobx-react-lite'
 import { faLifeRing, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
-import { CollapsibleTree, CollapsibleTreeNesting, type CollapsibleTreeNode } from '~/Components/CollapsibleTree.js'
+import {
+	CollapsibleTree,
+	CollapsibleTreeNesting,
+	type CollapsibleTreeNode,
+} from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionLeafTree,
 	type ConnectionLeafItem,
 	type CollectionGroupMeta,
-} from '~/Components/useConnectionLeafTree.js'
+} from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
@@ -34,18 +38,6 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	const collapseHelper = usePanelCollapseHelper('presets-connections', allNodeIds)
 
 	const hasAnyConnections = nodes.length > 0 || ungroupedLeafs.length > 0
-
-	// Count total connections in a collection node (recursively)
-	const countConnectionsInNode = useCallback(
-		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>): number => {
-			let count = node.leafs.length
-			for (const child of node.children) {
-				count += countConnectionsInNode(child)
-			}
-			return count
-		},
-		[]
-	)
 
 	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
 		return <span>{node.metadata.label}</span>

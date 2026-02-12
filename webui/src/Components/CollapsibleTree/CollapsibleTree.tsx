@@ -112,7 +112,7 @@ interface CollapsibleTreeNodeListProps<TLeafData, TNodeMeta> {
 	nestingLevel: number
 }
 
-function CollapsibleTreeNodeList<TLeafData, TNodeMeta>({
+const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<TLeafData, TNodeMeta>({
 	nodes,
 	collapseHelper,
 	renderGroupHeader,
@@ -133,7 +133,7 @@ function CollapsibleTreeNodeList<TLeafData, TNodeMeta>({
 			))}
 		</>
 	)
-}
+})
 
 interface CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta> {
 	node: CollapsibleTreeNode<TLeafData, TNodeMeta>

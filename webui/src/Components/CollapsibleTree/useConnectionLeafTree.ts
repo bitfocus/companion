@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react'
+import { useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useComputed } from '~/Resources/util.js'
 import type { CollapsibleTreeNode } from './CollapsibleTree.js'
@@ -41,7 +41,7 @@ export function useConnectionLeafTree(
 
 	const allConnections = useComputed(() => Array.from(connections.connections.entries()), [connections.connections])
 
-	return useMemo(() => {
+	return useComputed(() => {
 		// Build leaves for matching connections
 		const matchingConnections = new Map<string, ConnectionLeafItem>()
 		for (const [connectionId, connectionInfo] of allConnections) {

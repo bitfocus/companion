@@ -6,13 +6,17 @@ import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import { CollapsibleTree, CollapsibleTreeNesting, type CollapsibleTreeNode } from '~/Components/CollapsibleTree.js'
+import {
+	CollapsibleTree,
+	CollapsibleTreeNesting,
+	type CollapsibleTreeNode,
+} from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionLeafTree,
 	type ConnectionLeafItem,
 	type CollectionGroupMeta,
-} from '~/Components/useConnectionLeafTree.js'
+} from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 export const ConnectionVariablesPage = observer(function VariablesConnectionList() {
@@ -43,18 +47,6 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				},
 			]
 		: []
-
-	// Count total connections in a collection node (recursively)
-	const countConnectionsInNode = useCallback(
-		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>): number => {
-			let count = node.leafs.length
-			for (const child of node.children) {
-				count += countConnectionsInNode(child)
-			}
-			return count
-		},
-		[]
-	)
 
 	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
 		return <span>{node.metadata.label}</span>
