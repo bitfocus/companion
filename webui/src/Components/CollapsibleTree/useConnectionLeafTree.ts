@@ -37,28 +37,17 @@ export function useConnectionLeafTree(
 } {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const rootCollections = useComputed(() => connections.rootCollections(), [connections.collections])
-
-	const allConnections = useComputed(() => Array.from(connections.connections.entries()), [connections.connections])
-
 	return useComputed(() => {
-		// Build leaves for matching connections
-		const matchingConnections = new Map<string, ConnectionLeafItem>()
-		for (const [connectionId, connectionInfo] of allConnections) {
+		// Group connections by collectionId
+		const connectionsByCollection = new Map<string | null, ConnectionLeafItem[]>()
+		for (const [connectionId, connectionInfo] of connections.connections) {
 			if (!filterConnection(connectionId, connectionInfo)) continue
 
-			matchingConnections.set(connectionId, {
+			const leaf: ConnectionLeafItem = {
 				connectionId,
 				connectionLabel: connectionInfo.label || connectionId,
 				moduleDisplayName: modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId),
-			})
-		}
-
-		// Group connections by collectionId
-		const connectionsByCollection = new Map<string | null, ConnectionLeafItem[]>()
-		for (const [connectionId, connectionInfo] of allConnections) {
-			const leaf = matchingConnections.get(connectionId)
-			if (!leaf) continue
+			}
 
 			const collectionId = connectionInfo.collectionId
 			let list = connectionsByCollection.get(collectionId)
@@ -106,8 +95,9 @@ export function useConnectionLeafTree(
 			}
 		}
 
+		// Build the final tree starting from root collections
 		const nodes: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>[] = []
-		for (const rootCollection of rootCollections) {
+		for (const rootCollection of connections.rootCollections()) {
 			const node = buildCollectionNode(rootCollection)
 			if (node) nodes.push(node)
 		}
@@ -115,5 +105,5 @@ export function useConnectionLeafTree(
 		const ungroupedLeaves = connectionsByCollection.get(null) ?? []
 
 		return { nodes, ungroupedLeaves, allNodeIds }
-	}, [allConnections, rootCollections, filterConnection, modules])
+	}, [filterConnection, connections, modules])
 }

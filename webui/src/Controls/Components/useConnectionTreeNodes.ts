@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useComputed } from '~/Resources/util.js'
-import type { CollapsibleTreeNode } from './CollapsibleTree.js'
+import type { CollapsibleTreeNode } from '../../Components/CollapsibleTree/CollapsibleTree.js'
 import type { ConnectionCollection, ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 /**
@@ -47,18 +47,16 @@ export function useConnectionTreeNodes<TLeafData>(
 } {
 	const { connections, modules } = useContext(RootAppStoreContext)
 
-	const rootCollections = useComputed(() => connections.rootCollections(), [connections.collections])
-
-	const allConnections = useComputed(() => Array.from(connections.connections.entries()), [connections.connections])
-
 	return useComputed(() => {
-		// Build connection nodes for each connection that has leaves
-		const connectionNodes = new Map<string, CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>>()
-		for (const [connectionId, connectionInfo] of allConnections) {
+		const allNodeIds: string[] = []
+
+		// Group connection nodes by collectionId
+		const connectionsByCollection = new Map<string | null, CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>[]>()
+		for (const [connectionId, connectionInfo] of connections.connections) {
 			const leaves = getLeaves(connectionId, connectionInfo)
 			if (leaves.length === 0) continue
 
-			connectionNodes.set(connectionId, {
+			const connNode: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta> = {
 				id: `connection:${connectionId}`,
 				children: [],
 				leaves,
@@ -68,14 +66,8 @@ export function useConnectionTreeNodes<TLeafData>(
 					connectionLabel: connectionInfo.label || connectionId,
 					moduleDisplayName: modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId),
 				},
-			})
-		}
-
-		// Group connection nodes by collectionId
-		const connectionsByCollection = new Map<string | null, CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>[]>()
-		for (const [connectionId, connectionInfo] of allConnections) {
-			const connNode = connectionNodes.get(connectionId)
-			if (!connNode) continue
+			}
+			allNodeIds.push(connNode.id)
 
 			const collectionId = connectionInfo.collectionId
 			let list = connectionsByCollection.get(collectionId)
@@ -84,13 +76,6 @@ export function useConnectionTreeNodes<TLeafData>(
 				connectionsByCollection.set(collectionId, list)
 			}
 			list.push(connNode)
-		}
-
-		const allNodeIds: string[] = []
-
-		// Collect all connection node IDs
-		for (const connNode of connectionNodes.values()) {
-			allNodeIds.push(connNode.id)
 		}
 
 		// Recursively build collection tree nodes
@@ -126,7 +111,7 @@ export function useConnectionTreeNodes<TLeafData>(
 		}
 
 		const nodes: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>[] = []
-		for (const rootCollection of rootCollections) {
+		for (const rootCollection of connections.rootCollections()) {
 			const node = buildCollectionNode(rootCollection)
 			if (node) nodes.push(node)
 		}
@@ -134,5 +119,5 @@ export function useConnectionTreeNodes<TLeafData>(
 		const ungroupedNodes = connectionsByCollection.get(null) ?? []
 
 		return { nodes, ungroupedNodes, allNodeIds }
-	}, [allConnections, rootCollections, getLeaves, modules])
+	}, [getLeaves, connections, modules])
 }

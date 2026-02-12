@@ -13,10 +13,7 @@ import {
 	type CollapsibleTreeHeaderProps,
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
-import {
-	useConnectionTreeNodes,
-	type ConnectionTreeNodeMeta,
-} from '~/Components/CollapsibleTree/useConnectionTreeNodes.js'
+import { useConnectionTreeNodes, type ConnectionTreeNodeMeta } from '~/Controls/Components/useConnectionTreeNodes.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
