@@ -19,6 +19,12 @@ import type { ReadonlyDeep } from 'type-fest'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { VariablesBlinker } from './VariablesBlinker.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type {
+	ExpressionableOptionsObject,
+	ExpressionOrValue,
+	SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 
 // Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
 const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
@@ -30,6 +36,72 @@ export type VariablesCache = Map<string, VariableValue | undefined>
 export interface ParseVariablesResult {
 	text: string
 	variableIds: Set<string>
+}
+
+export interface VisitEntityOptionValueOptions {
+	/** Whether expressions are allowed in the field */
+	allowExpression: boolean
+	/** Whether to parse variables in the field (only applies if not an expression) */
+	parseVariables: boolean
+	/** Force the field to be treated as an expression, even if not marked as such. */
+	forceExpression?: boolean
+}
+
+/**
+ * Visitor function for transforming entity option values based on field variable support.
+ * Determines which fields support variables/expressions and invokes the visitor for each field.
+ * @param definition The entity definition
+ * @param options The raw options object
+ * @param visitor Function to call for each field. fieldType will be null for passthrough fields.
+ */
+export function visitEntityOptionsForVariables<T>(
+	definition: ClientEntityDefinition,
+	options: ExpressionableOptionsObject,
+	visitor: (
+		field: SomeCompanionInputField,
+		value: ExpressionOrValue<any> | undefined,
+		fieldType: VisitEntityOptionValueOptions | null
+	) => T
+): Record<string, T> {
+	const result: Record<string, T> = {}
+
+	if (definition.optionsSupportExpressions) {
+		// Modern approach: check field types
+		for (const field of definition.options) {
+			const fieldType: VisitEntityOptionValueOptions = {
+				allowExpression: !field.disableAutoExpression,
+				parseVariables: false,
+			}
+
+			if (field.type === 'textinput' && field.useVariables) {
+				fieldType.parseVariables = true
+			} else if (field.type === 'expression') {
+				fieldType.forceExpression = true
+			}
+
+			const optionValue = options[field.id]
+			result[field.id] = visitor(field, optionValue, fieldType)
+		}
+	} else {
+		// Legacy approach: only textinput with useVariables
+		for (const field of definition.options) {
+			const optionValue = options[field.id]
+
+			if (field.type === 'textinput' && field.useVariables) {
+				// Parse variables only
+				const fieldType: VisitEntityOptionValueOptions = {
+					allowExpression: false,
+					parseVariables: true,
+				}
+				result[field.id] = visitor(field, optionValue, fieldType)
+			} else {
+				// Field doesn't support variables or expressions, just pass through (null = passthrough)
+				result[field.id] = visitor(field, optionValue, null)
+			}
+		}
+	}
+
+	return result
 }
 
 export function parseVariablesInString(

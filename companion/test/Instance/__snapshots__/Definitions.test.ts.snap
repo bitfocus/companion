@@ -1,0 +1,243 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`InstanceDefinitions > convertPresetToPreviewControlModel > creates preview model with previewStyle override 1`] = `
+{
+  "feedbacks": [
+    {
+      "connectionId": "internal",
+      "definitionId": "check_expression",
+      "id": "mock-id-1",
+      "isInverted": {
+        "isExpression": false,
+        "value": false,
+      },
+      "options": {
+        "expression": {
+          "isExpression": true,
+          "value": "true",
+        },
+      },
+      "style": {
+        "bgcolor": 1122867,
+        "color": 11189196,
+      },
+      "type": "feedback",
+      "upgradeIndex": undefined,
+    },
+  ],
+  "localVariables": [],
+  "options": {
+    "rotaryActions": false,
+    "stepProgression": "auto",
+  },
+  "steps": {
+    "step1": {
+      "action_sets": {
+        "down": [],
+        "rotate_left": undefined,
+        "rotate_right": undefined,
+        "up": [],
+      },
+      "options": {
+        "runWhileHeld": [],
+      },
+    },
+  },
+  "style": {
+    "alignment": "center:center",
+    "bgcolor": 1122867,
+    "color": 11189196,
+    "png64": null,
+    "pngalignment": "center:center",
+    "show_topbar": "default",
+    "size": "auto",
+    "text": "Hello $(conn1:label)",
+    "textExpression": false,
+  },
+  "type": "preset:button",
+}
+`;
+
+exports[`InstanceDefinitions > createEntityItem > creates a feedback with correct structure 1`] = `
+{
+  "connectionId": "conn1",
+  "definitionId": "fb1",
+  "id": "mock-id-1",
+  "isInverted": {
+    "isExpression": false,
+    "value": false,
+  },
+  "options": {
+    "level": {
+      "isExpression": false,
+      "value": 10,
+    },
+  },
+  "style": {},
+  "type": "feedback",
+  "upgradeIndex": 5,
+}
+`;
+
+exports[`InstanceDefinitions > createEntityItem > creates an action with correct structure 1`] = `
+{
+  "connectionId": "conn1",
+  "definitionId": "act1",
+  "id": "mock-id-1",
+  "options": {
+    "myNum": {
+      "isExpression": false,
+      "value": 42,
+    },
+    "myText": {
+      "isExpression": false,
+      "value": "hello",
+    },
+  },
+  "type": "action",
+  "upgradeIndex": 5,
+}
+`;
+
+exports[`InstanceDefinitions > createEventItem > creates an interval event with defaults 1`] = `
+{
+  "enabled": true,
+  "id": "mock-id-1",
+  "options": {
+    "seconds": 10,
+  },
+  "type": "interval",
+}
+`;
+
+exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set → convert → preview → update label → forget 1`] = `
+{
+  "feedbacks": [],
+  "localVariables": [],
+  "options": {
+    "rotaryActions": false,
+    "stepProgression": "auto",
+  },
+  "steps": {
+    "step1": {
+      "action_sets": {
+        "down": [],
+        "rotate_left": undefined,
+        "rotate_right": undefined,
+        "up": [],
+      },
+      "options": {
+        "runWhileHeld": [],
+      },
+    },
+  },
+  "style": {
+    "alignment": "center:center",
+    "bgcolor": 0,
+    "color": 16777215,
+    "png64": null,
+    "pngalignment": "center:center",
+    "show_topbar": "default",
+    "size": "auto",
+    "text": "Status $(conn1:status)",
+    "textExpression": false,
+  },
+  "type": "button",
+}
+`;
+
+exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set → convert → preview → update label → forget 2`] = `
+{
+  "feedbacks": [
+    {
+      "connectionId": "internal",
+      "definitionId": "check_expression",
+      "id": "mock-id-1",
+      "isInverted": {
+        "isExpression": false,
+        "value": false,
+      },
+      "options": {
+        "expression": {
+          "isExpression": true,
+          "value": "true",
+        },
+      },
+      "style": {
+        "bgcolor": 3355443,
+      },
+      "type": "feedback",
+      "upgradeIndex": undefined,
+    },
+  ],
+  "localVariables": [],
+  "options": {
+    "rotaryActions": false,
+    "stepProgression": "auto",
+  },
+  "steps": {
+    "step1": {
+      "action_sets": {
+        "down": [],
+        "rotate_left": undefined,
+        "rotate_right": undefined,
+        "up": [],
+      },
+      "options": {
+        "runWhileHeld": [],
+      },
+    },
+  },
+  "style": {
+    "alignment": "center:center",
+    "bgcolor": 3355443,
+    "color": 16777215,
+    "png64": null,
+    "pngalignment": "center:center",
+    "show_topbar": "default",
+    "size": "auto",
+    "text": "Status $(conn1:status)",
+    "textExpression": false,
+  },
+  "type": "preset:button",
+}
+`;
+
+exports[`InstanceDefinitions > snapshot: full lifecycle > set definitions → create entity → forget → verify cleared 1`] = `
+{
+  "connectionId": "conn1",
+  "definitionId": "doSomething",
+  "id": "mock-id-1",
+  "options": {
+    "text": {
+      "isExpression": false,
+      "value": "hi",
+    },
+  },
+  "type": "action",
+  "upgradeIndex": 5,
+}
+`;
+
+exports[`InstanceDefinitions > snapshot: full lifecycle > set definitions → create entity → forget → verify cleared 2`] = `
+{
+  "connectionId": "conn1",
+  "definitionId": "isOn",
+  "id": "mock-id-2",
+  "isInverted": {
+    "isExpression": false,
+    "value": false,
+  },
+  "options": {
+    "channel": {
+      "isExpression": false,
+      "value": 1,
+    },
+  },
+  "style": {
+    "bgcolor": 65280,
+  },
+  "type": "feedback",
+  "upgradeIndex": 5,
+}
+`;

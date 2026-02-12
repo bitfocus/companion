@@ -4,6 +4,7 @@ import type {
 	CompanionInputFieldCheckboxExtended,
 	CompanionInputFieldCustomVariableExtended,
 	CompanionInputFieldDropdownExtended,
+	CompanionInputFieldExpressionExtended,
 	CompanionInputFieldNumberExtended,
 	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
@@ -234,6 +235,7 @@ export type CompanionSurfaceInputFieldTextInput = Omit<CompanionInputFieldTextIn
 export type CompanionSurfaceConfigField =
 	| CompanionInputFieldStaticTextExtended
 	| CompanionSurfaceInputFieldTextInput
+	| CompanionInputFieldExpressionExtended
 	| CompanionInputFieldDropdownExtended
 	| CompanionInputFieldNumberExtended
 	| CompanionInputFieldCheckboxExtended

@@ -13,7 +13,7 @@ interface InstanceSecretFieldProps {
 
 export function InstanceSecretField({ setValue, definition, value }: InstanceSecretFieldProps): React.JSX.Element {
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(definition, value) === undefined,
+		(value: JsonValue | undefined) => validateInputValue(definition, value).validationError === undefined,
 		[definition]
 	)
 

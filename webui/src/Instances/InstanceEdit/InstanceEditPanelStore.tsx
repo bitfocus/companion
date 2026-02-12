@@ -179,9 +179,9 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 		}
 
 		if (!isConfigFieldSecret(field)) {
-			return !validateInputValue(field, configAndSecrets.config[field.id])
+			return !validateInputValue(field, configAndSecrets.config[field.id]).validationError
 		} else {
-			return !validateInputValue(field, configAndSecrets.secrets[field.id])
+			return !validateInputValue(field, configAndSecrets.secrets[field.id]).validationError
 		}
 	}
 

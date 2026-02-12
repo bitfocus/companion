@@ -215,8 +215,11 @@ The second parameter is an optional value between 0 - 1 which specifies the port
 
 eg `blink(1000)` to flash once a second, on for 500ms then off for 500ms. `blink(1000, 0.25)` flashes once a second, on for 250ms off for 750ms
 
-:::tip
-The 0/1 returned from this can be treated as a boolean, you do not need to explicitly do this yourself
+:::tip[TIPS]
+
+- The 0/1 returned from this function can be treated as a boolean, you do not need to explicitly do this yourself
+- If you prefer specifying the number of flashes per second, use `1000/n` for the first parameter. For example, to flash three times per second write `blink(1000/3)`.
+
 :::
 
 ### Bool operations

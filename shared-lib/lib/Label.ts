@@ -22,7 +22,8 @@ export function isLabelValid(label: string): boolean {
 		label.toLowerCase() === 'companion' ||
 		label.toLowerCase() === 'image' ||
 		label.toLowerCase() === 'custom' ||
-		label.toLowerCase() === 'expression'
+		label.toLowerCase() === 'expression' ||
+		label.toLowerCase() === 'page'
 	)
 		return false
 

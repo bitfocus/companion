@@ -67,7 +67,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 	fieldSupportsExpression,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(option, value) === undefined,
+		(value: JsonValue | undefined) => validateInputValue(option, value).validationError === undefined,
 		[option]
 	)
 	const setExpressionValue = useCallback(
@@ -106,40 +106,44 @@ export const OptionsInputField = observer(function OptionsInputField({
 					option.useVariables === CompanionFieldVariablesSupport.InternalParser,
 			}
 
-			if (option.isExpression) {
-				const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
+			const localVariables = features.local
+				? localVariablesStore?.getOptions(
+						entityType,
+						option.useVariables === CompanionFieldVariablesSupport.InternalParser,
+						isLocatedInGrid
+					)
+				: undefined
 
-				control = (
-					<ExpressionInputField
-						value={basicValue as any}
-						localVariables={localVariables}
-						disabled={readonly}
-						setValue={setExpressionValue}
-					/>
-				)
-			} else {
-				const localVariables = features.local
-					? localVariablesStore?.getOptions(
-							entityType,
-							option.useVariables === CompanionFieldVariablesSupport.InternalParser,
-							isLocatedInGrid
-						)
-					: undefined
-
-				control = (
-					<TextInputField
-						value={basicValue as any}
-						placeholder={option.placeholder}
-						useVariables={features.variables}
-						localVariables={localVariables}
-						disabled={readonly}
-						setValue={setBasicValue}
-						checkValid={checkValid}
-						multiline={option.multiline}
-					/>
-				)
+			control = (
+				<TextInputField
+					value={basicValue as any}
+					placeholder={option.placeholder}
+					useVariables={features.variables}
+					localVariables={localVariables}
+					disabled={readonly}
+					setValue={setBasicValue}
+					checkValid={checkValid}
+					multiline={option.multiline}
+				/>
+			)
+			break
+		}
+		case 'expression': {
+			features = {
+				variables: true,
+				local: true,
 			}
 
+			const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
+
+			control = (
+				<ExpressionInputField
+					value={basicValue as any}
+					localVariables={localVariables}
+					disabled={readonly}
+					setValue={setExpressionValue}
+				/>
+			)
 			break
 		}
 		case 'dropdown': {

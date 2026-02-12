@@ -139,7 +139,7 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 		item.onClick()
 	}
 	return (
-		<CNavItem idx={item.path ?? item.name}>
+		<CNavItem idx={item.path ?? item.name} className={item.subheading ? 'nav-two-line' : undefined}>
 			{item.path ? (
 				<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2} title={item.title}>
 					<SidebarMenuItemLabel {...item} />

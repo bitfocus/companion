@@ -279,7 +279,13 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			const learnTimeout = entityDefinition.learnTimeout
 
 			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
-			const { parsedOptions } = parser.parseEntityOptions(entityDefinition, entity.options)
+			const parseRes = parser.parseEntityOptions(entityDefinition, entity.options)
+			if (!parseRes.ok) {
+				this.logger.warn(
+					`Failed to parse action options for ${entity.type} ${entity.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(`Failed to parse ${entity.type} options. One or more options were invalid`)
+			}
 
 			switch (entity.type) {
 				case EntityModelType.Action: {
@@ -290,7 +296,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								actionId: entity.definitionId,
-								options: parsedOptions,
+								options: parseRes.parsedOptions,
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,
@@ -317,7 +323,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								feedbackId: entity.definitionId,
-								options: parsedOptions,
+								options: parseRes.parsedOptions,
 
 								image: control?.getBitmapSize() ?? undefined,
 
@@ -370,14 +376,20 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 			// Note: for actions, this doesn't need to be reactive
 			const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
-			const actionOptions = parser.parseEntityOptions(actionDefinition, action.options).parsedOptions
+			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+			if (!parseRes.ok) {
+				this.logger.warn(
+					`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(`Failed to parse action options. One or more options were invalid`)
+			}
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
 					id: action.id,
 					controlId: extras?.controlId,
 					actionId: action.definitionId,
-					options: actionOptions,
+					options: parseRes.parsedOptions,
 
 					upgradeIndex: null,
 					disabled: !!action.disabled,

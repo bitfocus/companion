@@ -94,7 +94,10 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
 
 	return (
-		<CHeader position="sticky" className="p-0">
+		// note: position="sticky" is not necessary since the header is never part of a scrolling element.
+		//  if position is sticky, the header is assigned z-index: 1020, which interferes with popups (monaco suggest-details, for example)
+		//  and would likely have to be overridden anyway (to be no more than 40, in the monaco case).
+		<CHeader className="p-0">
 			<CContainer fluid>
 				{showToggle && (
 					<CHeaderToggler className="ps-1" onClick={clickToggle}>
@@ -217,8 +220,11 @@ function HelpMenu() {
 	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,
 	// but worse, if you add it manually, `caret={false}` is ignored, so it's named 'help-toggle' here.
 	return (
-		//note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
-		<CDropdown className="position-static help-menu" offset={[10, 0]}>
+		// note: CDropdown is assigned class btn-group. Previously _common.scss incorrectly assigned "overflow: hidden" to this class
+		//  which caused the dropdown to be clipped out of existence. Leading to the former note... now all is good.
+		//  and the dropdown is automatically assigned z-index: 1000 (--cui-dropdown-zindex)
+		// former note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
+		<CDropdown className="help-menu" offset={[10, 0]}>
 			<CDropdownToggle color="primary" caret={false} className="help-toggle" aria-label="Help and support menu">
 				<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
 			</CDropdownToggle>

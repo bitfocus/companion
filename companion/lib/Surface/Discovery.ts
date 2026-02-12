@@ -86,7 +86,7 @@ export class ServiceSurfaceDiscovery {
 		}
 	}
 	instanceConnectionsFound(instanceId: string, connectionInfos: DiscoveredRemoteSurfaceInfo[]): void {
-		const connections = this.#knownSurfaces.get(instanceId) ?? new Map()
+		const connections = this.#knownSurfaces.get(instanceId) ?? new Map<string, DiscoveredRemoteSurfaceInfo>()
 		this.#knownSurfaces.set(instanceId, connections)
 
 		for (const info of connectionInfos) {

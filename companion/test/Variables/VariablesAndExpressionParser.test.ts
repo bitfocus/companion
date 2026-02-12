@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
+import type { VisitEntityOptionValueOptions, VariableValueData, VariablesCache } from '../../lib/Variables/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	CompanionFieldVariablesSupport,
+	exprExpr,
+	exprVal,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
-import type { VariableValueData, VariablesCache } from '../../lib/Variables/Util.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 
 const useVariablesMinimal = CompanionFieldVariablesSupport.Basic
@@ -143,10 +145,13 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions).toEqual({
-				field1: 'value1',
-				field2: 'option1',
-			})
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions).toEqual({
+					field1: 'value1',
+					field2: 'option1',
+				})
+			}
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
 
@@ -174,7 +179,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions).toEqual({ field1: 42 })
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions).toEqual({ field1: 42 })
+			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
 
@@ -206,9 +214,12 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// field1 should be parsed from empty string
-			expect(result.parsedOptions.field1).toBe('')
-			expect(result.parsedOptions.field2).toBe('option1')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// field1 should be parsed from empty string
+				expect(result.parsedOptions.field1).toBe('')
+				expect(result.parsedOptions.field2).toBe('option1')
+			}
 		})
 
 		it('should not include variables in referencedVariableIds for options in optionsToMonitorForSubscribe', () => {
@@ -241,12 +252,15 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Both field1 and field2 should be parsed for display
-			expect(result.parsedOptions).toEqual({
-				field1: 'value1',
-				field2: 'value2',
-				field3: 'option1',
-			})
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Both field1 and field2 should be parsed for display
+				expect(result.parsedOptions).toEqual({
+					field1: 'value1',
+					field2: 'value2',
+					field3: 'option1',
+				})
+			}
 
 			// Should only reference variables from monitored fields (field2)
 			expect(result.referencedVariableIds.has('test:var2')).toBe(true)
@@ -280,8 +294,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should be passed through unchanged
-			expect(result.parsedOptions.field1).toBe('$(test:var1)')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should be passed through unchanged
+				expect(result.parsedOptions.field1).toBe('$(test:var1)')
+			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
 	})
@@ -296,9 +313,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -318,7 +334,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe(43)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe(43)
+			}
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 		})
 
@@ -331,9 +350,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'exprField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Expression Field',
-						isExpression: true,
 					},
 					{
 						id: 'varField',
@@ -360,10 +378,13 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Expression field should compute
-			expect(result.parsedOptions.exprField).toBe(84)
-			// Variable field should substitute
-			expect(result.parsedOptions.varField).toBe('Hello value1')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Expression field should compute
+				expect(result.parsedOptions.exprField).toBe(84)
+				// Variable field should substitute
+				expect(result.parsedOptions.varField).toBe('Hello value1')
+			}
 		})
 
 		it('should execute expression when isExpression is true in option value', () => {
@@ -375,9 +396,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -397,7 +417,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe(25)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe(25)
+			}
 		})
 
 		it('should handle expressions with string results', () => {
@@ -409,9 +432,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -431,7 +453,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe('value1-suffix')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe('value1-suffix')
+			}
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
 
@@ -444,9 +469,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -466,7 +490,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe(true)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe(true)
+			}
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 		})
 
@@ -479,21 +506,18 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'mathField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Math Field',
-						isExpression: true,
 					},
 					{
 						id: 'stringField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'String Field',
-						isExpression: true,
 					},
 					{
 						id: 'boolField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Bool Field',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -515,9 +539,12 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.mathField).toBe(50)
-			expect(result.parsedOptions.stringField).toBe('value1-suffix')
-			expect(result.parsedOptions.boolField).toBe(true)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.mathField).toBe(50)
+				expect(result.parsedOptions.stringField).toBe('value1-suffix')
+				expect(result.parsedOptions.boolField).toBe(true)
+			}
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
@@ -531,15 +558,13 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'monitoredExpr',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Monitored Expression',
-						isExpression: true,
 					},
 					{
 						id: 'unmonitoredExpr',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Unmonitored Expression',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: ['monitoredExpr'],
@@ -560,8 +585,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.monitoredExpr).toBe('value1 monitored')
-			expect(result.parsedOptions.unmonitoredExpr).toBe('value2 unmonitored')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.monitoredExpr).toBe('value1 monitored')
+				expect(result.parsedOptions.unmonitoredExpr).toBe('value2 unmonitored')
+			}
 			// Only monitored field variables should be tracked
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var2')).toBe(false)
@@ -576,9 +604,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -598,7 +625,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBeUndefined()
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBeUndefined()
+			}
 		})
 
 		it('should handle expression with missing variables', () => {
@@ -610,9 +640,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -632,8 +661,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should substitute '' for unknown variable, then concatenate
-			expect(result.parsedOptions.field1).toBe(' test')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should substitute '' for unknown variable, then concatenate
+				expect(result.parsedOptions.field1).toBe(' test')
+			}
 			expect(result.referencedVariableIds.has('unknown:var')).toBe(true)
 		})
 
@@ -646,9 +678,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'exprField',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Expression Field',
-						isExpression: true,
 					},
 					{
 						id: 'plainField',
@@ -681,9 +712,12 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.exprField).toBe(126)
-			expect(result.parsedOptions.plainField).toBe('$(test:var1) literal')
-			expect(result.parsedOptions.varField).toBe('value1 parsed')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.exprField).toBe(126)
+				expect(result.parsedOptions.plainField).toBe('$(test:var1) literal')
+				expect(result.parsedOptions.varField).toBe('value1 parsed')
+			}
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 		})
@@ -697,9 +731,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -722,7 +755,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe('value1 value2 42')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe('value1 value2 42')
+			}
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var2')).toBe(true)
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
@@ -737,9 +773,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -759,8 +794,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should NOT evaluate when module doesn't support expressions
-			expect(result.parsedOptions.field1).toBe('1 + 1')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should NOT evaluate when module doesn't support expressions
+				expect(result.parsedOptions.field1).toBe('1 + 1')
+			}
 		})
 
 		it('should handle non-expression value in expression field', () => {
@@ -772,9 +810,8 @@ describe('VariablesAndExpressionParser', () => {
 				options: [
 					{
 						id: 'field1',
-						type: 'textinput',
+						type: 'expression',
 						label: 'Field 1',
-						isExpression: true,
 					},
 				],
 				optionsToMonitorForInvalidations: null,
@@ -795,87 +832,340 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should still evaluate because field definition has isExpression: true
-			expect(result.parsedOptions.field1).toBe(2)
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should still evaluate because field definition has isExpression: true
+				expect(result.parsedOptions.field1).toBe(2)
+			}
 		})
 	})
 
 	describe('parseEntityOption', () => {
-		it('should parse expression field type', () => {
-			const parser = createParser()
-			const result = parser.parseEntityOption('$(test:num) + 1', 'expression')
+		const parseExpressionOrVariables: VisitEntityOptionValueOptions = {
+			allowExpression: true,
+			parseVariables: true,
+		}
+		const parseExpressionOnly: VisitEntityOptionValueOptions = {
+			allowExpression: true,
+			parseVariables: false,
+		}
+		const parseVariablesOnly: VisitEntityOptionValueOptions = {
+			allowExpression: false,
+			parseVariables: true,
+		}
+		const parseNothing: VisitEntityOptionValueOptions = {
+			allowExpression: false,
+			parseVariables: false,
+		}
+		const parseForceExpression: VisitEntityOptionValueOptions = {
+			allowExpression: false,
+			parseVariables: false,
+			forceExpression: true,
+		}
 
-			expect(result.value).toBe(43)
-			expect(result.referencedVariableIds.has('test:num')).toBe(true)
+		describe('with undefined/null values', () => {
+			it('should handle undefined value', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(undefined, parseExpressionOrVariables)
+
+				expect(result.value).toBeUndefined()
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should handle undefined with different options', () => {
+				const parser = createParser()
+
+				expect(parser.parseEntityOption(undefined, parseExpressionOnly).value).toBeUndefined()
+				expect(parser.parseEntityOption(undefined, parseVariablesOnly).value).toBeUndefined()
+				expect(parser.parseEntityOption(undefined, parseNothing).value).toBeUndefined()
+				expect(parser.parseEntityOption(undefined, parseForceExpression).value).toBeUndefined()
+			})
 		})
 
-		it('should parse variables field type', () => {
-			const parser = createParser()
-			const result = parser.parseEntityOption('Hello $(test:var1)', 'variables')
+		describe('with exprExpr() values', () => {
+			it('should evaluate expression when allowExpression is true', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprExpr('$(test:num) + 1'), parseExpressionOrVariables)
 
-			expect(result.value).toBe('Hello value1')
-			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+				expect(result.value).toBe(43)
+				expect(result.referencedVariableIds.has('test:num')).toBe(true)
+			})
+
+			it('should evaluate expression when only allowExpression is true', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprExpr('10 * 2'), parseExpressionOnly)
+
+				expect(result.value).toBe(20)
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should treat as string when allowExpression is false', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprExpr('10 * 2'), parseVariablesOnly)
+
+				expect(result.value).toBe('10 * 2')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should parse variables in expression result', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprExpr('concat("Value: ", $(test:var1))'), parseExpressionOrVariables)
+
+				expect(result.value).toBe('Value: value1')
+				expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+			})
 		})
 
-		it('should pass through generic field type unchanged', () => {
-			const parser = createParser()
-			const result = parser.parseEntityOption('$(test:var1)', 'generic')
+		describe('with exprVal() values', () => {
+			it('should parse variables when parseVariables is true', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('Hello $(test:var1)'), parseExpressionOrVariables)
 
-			expect(result.value).toBe('$(test:var1)')
-			expect(result.referencedVariableIds.size).toBe(0)
+				expect(result.value).toBe('Hello value1')
+				expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+			})
+
+			it('should parse variables when only parseVariables is true', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('$(test:var1)-$(test:var2)'), parseVariablesOnly)
+
+				expect(result.value).toBe('value1-value2')
+				expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+				expect(result.referencedVariableIds.has('test:var2')).toBe(true)
+			})
+
+			it('should pass through unchanged when parseVariables is false', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('$(test:var1)'), parseExpressionOnly)
+
+				expect(result.value).toBe('$(test:var1)')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should pass through unchanged when nothing is enabled', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('$(test:var1)'), parseNothing)
+
+				expect(result.value).toBe('$(test:var1)')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should handle plain text without variables', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('plain text'), parseVariablesOnly)
+
+				expect(result.value).toBe('plain text')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
 		})
 
-		it('should handle undefined value', () => {
-			const parser = createParser()
-			const result = parser.parseEntityOption(undefined, 'generic')
+		describe('with ExpressionOrValue objects (isExpression: true)', () => {
+			it('should evaluate when allowExpression is true', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(
+					{ value: '$(test:num) + 10', isExpression: true },
+					parseExpressionOrVariables
+				)
 
-			expect(result.value).toBeUndefined()
-			expect(result.referencedVariableIds.size).toBe(0)
+				expect(result.value).toBe(52)
+				expect(result.referencedVariableIds.has('test:num')).toBe(true)
+			})
+
+			it('should evaluate when only allowExpression is true', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption({ value: '5 * 5', isExpression: true }, parseExpressionOnly)
+
+				expect(result.value).toBe(25)
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should treat as string when allowExpression is false', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption({ value: '5 * 5', isExpression: true }, parseVariablesOnly)
+
+				expect(result.value).toBe('5 * 5')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should evaluate string expressions', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(
+					{ value: 'concat($(test:var1), "-suffix")', isExpression: true },
+					parseExpressionOrVariables
+				)
+
+				expect(result.value).toBe('value1-suffix')
+				expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+			})
+
+			it('should evaluate boolean expressions', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(
+					{ value: '$(test:num) > 40', isExpression: true },
+					parseExpressionOrVariables
+				)
+
+				expect(result.value).toBe(true)
+				expect(result.referencedVariableIds.has('test:num')).toBe(true)
+			})
 		})
 
-		it('should handle ExpressionOrValue objects', () => {
-			const parser = createParser()
-			const expressionValue = {
-				value: '$(test:num) + 10',
-				isExpression: true,
-			}
-			const result = parser.parseEntityOption(expressionValue, 'generic')
+		describe('with ExpressionOrValue objects (isExpression: false)', () => {
+			it('should parse variables when parseVariables is true', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption({ value: '$(test:var1)', isExpression: false }, parseVariablesOnly)
 
-			expect(result.value).toBe(52)
-			expect(result.referencedVariableIds.has('test:num')).toBe(true)
+				expect(result.value).toBe('value1')
+				expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+			})
+
+			it('should parse variables with both options enabled', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(
+					{ value: 'Prefix $(test:var2)', isExpression: false },
+					parseExpressionOrVariables
+				)
+
+				expect(result.value).toBe('Prefix value2')
+				expect(result.referencedVariableIds.has('test:var2')).toBe(true)
+			})
+
+			it('should pass through when parseVariables is false', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption({ value: '$(test:var1)', isExpression: false }, parseExpressionOnly)
+
+				expect(result.value).toBe('$(test:var1)')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should pass through when nothing is enabled', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption({ value: '$(test:var1)', isExpression: false }, parseNothing)
+
+				expect(result.value).toBe('$(test:var1)')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
 		})
 
-		it('should handle ExpressionOrValue with isExpression false', () => {
-			const parser = createParser()
-			const nonExpressionValue = {
-				value: '$(test:var1)',
-				isExpression: false,
-			}
-			// When fieldType is 'variables', it should parse variables
-			const result = parser.parseEntityOption(nonExpressionValue, 'variables')
+		describe('with forceExpression option', () => {
+			it('should force evaluation even when isExpression is false', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption({ value: '$(test:num) + 1', isExpression: false }, parseForceExpression)
 
-			expect(result.value).toBe('value1')
-			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+				expect(result.value).toBe(43)
+				expect(result.referencedVariableIds.has('test:num')).toBe(true)
+			})
+
+			it('should force evaluation with exprVal', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('$(test:num) * 2'), parseForceExpression)
+
+				expect(result.value).toBe(84)
+				expect(result.referencedVariableIds.has('test:num')).toBe(true)
+			})
+
+			it('should force evaluation with complex expressions', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('$(test:num) > 30 ? "high" : "low"'), parseForceExpression)
+
+				expect(result.value).toBe('high')
+				expect(result.referencedVariableIds.has('test:num')).toBe(true)
+			})
 		})
 
-		it('should handle ExpressionOrValue with isExpression false, but as an expression', () => {
-			const parser = createParser()
-			const nonExpressionValue = {
-				value: '$(test:num) + 1',
-				isExpression: false,
-			}
-			// When fieldType is 'variables', it should parse variables
-			const result = parser.parseEntityOption(nonExpressionValue, 'expression')
+		describe('with plain (non-wrapped) values', () => {
+			it('should handle plain strings', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('plain string'), parseExpressionOrVariables)
 
-			expect(result.value).toBe(43)
-			expect(result.referencedVariableIds.has('test:num')).toBe(true)
+				expect(result.value).toBe('plain string')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should handle number values as strings', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal(42), parseExpressionOrVariables)
+
+				expect(result.value).toBe('42')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
+
+			it('should handle boolean values', () => {
+				const parser = createParser()
+				const result1 = parser.parseEntityOption(exprVal(true), parseExpressionOrVariables)
+				const result2 = parser.parseEntityOption(exprVal(false), parseExpressionOrVariables)
+
+				expect(result1.value).toBe('true')
+				expect(result2.value).toBe('false')
+				expect(result1.referencedVariableIds.size).toBe(0)
+				expect(result2.referencedVariableIds.size).toBe(0)
+			})
 		})
 
-		it('should throw error on invalid expression', () => {
-			const parser = createParser()
+		describe('error handling', () => {
+			it('should throw error on invalid expression syntax', () => {
+				const parser = createParser()
 
-			// Unclosed string/parens should cause an error
-			expect(() => parser.parseEntityOption('"unclosed string', 'expression')).toThrow()
+				expect(() =>
+					parser.parseEntityOption({ isExpression: true, value: '"unclosed string' }, parseExpressionOrVariables)
+				).toThrow()
+			})
+
+			it('should throw error on invalid expression with unmatched parens', () => {
+				const parser = createParser()
+
+				expect(() =>
+					parser.parseEntityOption({ isExpression: true, value: '(1 + 2' }, parseExpressionOrVariables)
+				).toThrow()
+			})
+
+			it('should handle invalid syntax gracefully when not in expression mode', () => {
+				const parser = createParser()
+
+				// Invalid expression syntax that would fail if evaluated, but should work when treated as string
+				const result = parser.parseEntityOption(exprVal('1 + + 2'), parseVariablesOnly)
+				expect(result.value).toBe('1 + + 2')
+			})
+		})
+
+		describe('variable tracking', () => {
+			it('should track multiple variables in expressions', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(
+					exprExpr('concat($(test:var1), $(test:var2), $(another:var))'),
+					parseExpressionOrVariables
+				)
+
+				expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+				expect(result.referencedVariableIds.has('test:var2')).toBe(true)
+				expect(result.referencedVariableIds.has('another:var')).toBe(true)
+				expect(result.referencedVariableIds.size).toBe(3)
+			})
+
+			it('should track variables in variable fields', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('$(test:var1) and $(another:var)'), parseVariablesOnly)
+
+				expect(result.referencedVariableIds.has('test:var1')).toBe(true)
+				expect(result.referencedVariableIds.has('another:var')).toBe(true)
+				expect(result.referencedVariableIds.size).toBe(2)
+			})
+
+			it('should track unknown variables', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('$(unknown:var)'), parseVariablesOnly)
+
+				expect(result.value).toBe('$NA')
+				expect(result.referencedVariableIds.has('unknown:var')).toBe(true)
+			})
+
+			it('should not track variables when parsing is disabled', () => {
+				const parser = createParser()
+				const result = parser.parseEntityOption(exprVal('$(test:var1)'), parseNothing)
+
+				expect(result.value).toBe('$(test:var1)')
+				expect(result.referencedVariableIds.size).toBe(0)
+			})
 		})
 	})
 
@@ -924,8 +1214,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// Should convert to string
-			expect(result.parsedOptions.field1).toBe('123')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Should convert to string
+				expect(result.parsedOptions.field1).toBe('123')
+			}
 		})
 
 		it('should handle nested variable references', () => {
@@ -975,12 +1268,15 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions).toEqual({
-				text1: 'value1',
-				num1: 50,
-				text2: 'value2 and another-value',
-				check1: true,
-			})
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions).toEqual({
+					text1: 'value1',
+					num1: 50,
+					text2: 'value2 and another-value',
+					check1: true,
+				})
+			}
 			expect(result.referencedVariableIds.has('test:var1')).toBe(true)
 			expect(result.referencedVariableIds.has('test:var2')).toBe(true)
 			expect(result.referencedVariableIds.has('another:var')).toBe(true)
@@ -1008,7 +1304,10 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			expect(result.parsedOptions.field1).toBe('')
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe('')
+			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
 
@@ -1036,8 +1335,11 @@ describe('VariablesAndExpressionParser', () => {
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
 
-			// No options defined, so nothing to parse
-			expect(result.parsedOptions).toEqual({})
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// No options defined, so nothing to parse
+				expect(result.parsedOptions).toEqual({})
+			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
 	})

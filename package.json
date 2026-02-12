@@ -18,7 +18,7 @@
     "dev:debug": "yarn workspace companion dev:debug",
     "dev:webui": "yarn workspace @companion-app/webui dev",
     "dev:docs": "yarn workspace @companion-app/docs start",
-    "build:ts": "yarn workspaces foreach --all run build:ts",
+    "build:ts": "tsc --build --force",
     "build:whatsnew": "tsx ./tools/build_whatsnew.mts",
     "dist:webui": "run build:ts && run build:whatsnew && yarn workspace @companion-app/webui build",
     "dist": "tsx ./tools/build/complete.mts",
@@ -90,7 +90,7 @@
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "@companion-module/base": "2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d",
+    "@companion-module/base": "2.0.0-0-nightly-feat-2-0-20260211-211219-0f5947a",
     "@companion-module/host": "0.1.0-1-nightly-feat-2-0-20260131-125141-dfad693",
     "node-gyp": "^12.1.0"
   },

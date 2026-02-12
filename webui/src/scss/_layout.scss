@@ -91,6 +91,11 @@ form.row > * {
 	margin-right: 5px;
 }
 
+// uncomment this if CHeader is assigned position=sticky in Header.tsx
+// .header.header-sticky {
+// 	z-index: 40; // monaco-edit's suggest-details pane is buried if z-index > 41; use 40 just as a round number
+// }
+
 .header {
 	.nav-link:hover {
 		color: #ddd;
@@ -119,6 +124,7 @@ form.row > * {
 	--menu-hover-color: #fff;
 	--menu-hover-bg: var(--cui-info);
 	color: var(--menu-color); // this may not affect anything
+	//overflow: visible; // uncomment this if unscoped .btn-group defined in _common.scss needs to make overflow hidden
 
 	// note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed.
 	.help-toggle {
@@ -142,6 +148,7 @@ form.row > * {
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow to the dropdown
 		border-radius: 6px; // Slightly rounded corners
 		min-width: 240px; // Slightly wider for breathing room
+		position: inherit;
 
 		.dropdown-item {
 			font-size: 0.95rem; // Slightly smaller, more refined
@@ -373,6 +380,13 @@ form.row > * {
 				align-self: center;
 			}
 		}
+	}
+
+	.nav-two-line .nav-link {
+		padding-top: 0.5rem;
+		padding-bottom: 0.5rem;
+
+		line-height: calc(var(--cui-body-line-height) * 0.85);
 	}
 
 	&.sidebar-narrow-unfoldable:not(:hover) {

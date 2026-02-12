@@ -1,5 +1,20 @@
 # Bitfocus Companion
 
+## Companion v4.2.4 - Release Notes
+
+### 🐞 BUG FIXES
+
+- support corsair galleon k100 sd
+- add SENTRY_DISABLE env var to disable sentry integration
+- fix: unable to clear local variable name
+- fix: reduce monaco suggest-details line-spacing (#3948)
+- fix: improve presentation of missing values in dropdowns
+- fix: surface table stretching
+- fix: 'internal: User Value' feedback field order refinement
+- fix: added TMPDIR to preserved env vars list (#3929)
+- fix: attempt to suppress mirabox stream dock error flood
+- fix: disable sentry http session tracking
+
 ## Companion v4.2.3 - Release Notes
 
 ### 🐞 BUG FIXES

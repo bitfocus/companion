@@ -1951,13 +1951,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d":
-  version: 2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d
-  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d"
+"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260211-211219-0f5947a":
+  version: 2.0.0-0-nightly-feat-2-0-20260211-211219-0f5947a
+  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260211-211219-0f5947a"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/bf0bfeef7033d1ffffacdb435f40b361648049ac772e1e1f9d80ddc5b61ddf548f2f30bbeb34ee73a5aa72f5e8517da718c00b89295c27f078330cfd76af512a
+  checksum: 10c0/8cccfeb2fb6c21eb1e4292e792cdbe5e52a063530cc894da4f860d6ebb3f3025bb8e0b742ce76b20fb96728d89c935fc9d1052048e1b7772bcacc5bc6a954043
   languageName: node
   linkType: hard
 
@@ -3975,12 +3975,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hono/node-server@npm:^1.19.7":
-  version: 1.19.7
-  resolution: "@hono/node-server@npm:1.19.7"
+"@hono/node-server@npm:^1.19.9":
+  version: 1.19.9
+  resolution: "@hono/node-server@npm:1.19.9"
   peerDependencies:
     hono: ^4
-  checksum: 10c0/293818e02a9100122a9319fba7032a3bae86d5f98f55d1a0ff4843c2b729eb6b471978ea15e29f4fb680c6a0be23a6e5a2132f3790ab31e88fb0b6b6fcc6829e
+  checksum: 10c0/de18c06b6b266dc45fe55fb82053bd1da8fe84939c49b6fbab4d2448b679d54ab5affbf8b15de9bead26f29b1755284d770aafb5ad14a8e4b3cfb4f79334554e
   languageName: node
   linkType: hard
 
@@ -4092,11 +4092,11 @@ __metadata:
   linkType: hard
 
 "@isaacs/brace-expansion@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@isaacs/brace-expansion@npm:5.0.0"
+  version: 5.0.1
+  resolution: "@isaacs/brace-expansion@npm:5.0.1"
   dependencies:
     "@isaacs/balanced-match": "npm:^4.0.1"
-  checksum: 10c0/b4d4812f4be53afc2c5b6c545001ff7a4659af68d4484804e9d514e183d20269bb81def8682c01a22b17c4d6aed14292c8494f7d2ac664e547101c1a905aa977
+  checksum: 10c0/e5d67c7bbf1f17b88132a35bc638af306d48acbb72810d48fa6e6edd8ab375854773108e8bf70f021f7ef6a8273455a6d1f0c3b5aa2aff06ce7894049ab77fb8
   languageName: node
   linkType: hard
 
@@ -4432,10 +4432,10 @@ __metadata:
   linkType: hard
 
 "@modelcontextprotocol/sdk@npm:^1.17.2":
-  version: 1.25.2
-  resolution: "@modelcontextprotocol/sdk@npm:1.25.2"
+  version: 1.26.0
+  resolution: "@modelcontextprotocol/sdk@npm:1.26.0"
   dependencies:
-    "@hono/node-server": "npm:^1.19.7"
+    "@hono/node-server": "npm:^1.19.9"
     ajv: "npm:^8.17.1"
     ajv-formats: "npm:^3.0.1"
     content-type: "npm:^1.0.5"
@@ -4443,14 +4443,15 @@ __metadata:
     cross-spawn: "npm:^7.0.5"
     eventsource: "npm:^3.0.2"
     eventsource-parser: "npm:^3.0.0"
-    express: "npm:^5.0.1"
-    express-rate-limit: "npm:^7.5.0"
-    jose: "npm:^6.1.1"
+    express: "npm:^5.2.1"
+    express-rate-limit: "npm:^8.2.1"
+    hono: "npm:^4.11.4"
+    jose: "npm:^6.1.3"
     json-schema-typed: "npm:^8.0.2"
     pkce-challenge: "npm:^5.0.0"
     raw-body: "npm:^3.0.0"
     zod: "npm:^3.25 || ^4.0"
-    zod-to-json-schema: "npm:^3.25.0"
+    zod-to-json-schema: "npm:^3.25.1"
   peerDependencies:
     "@cfworker/json-schema": ^4.1.1
     zod: ^3.25 || ^4.0
@@ -4459,7 +4460,7 @@ __metadata:
       optional: true
     zod:
       optional: false
-  checksum: 10c0/ffc024398e1b7841fb1ff2dc540e2e84f4b97a2a4058ef48e58836ce6077321c536a3858e9155472b7933c4773975b375167815bd4d721c3ca1e92db62e9488c
+  checksum: 10c0/b4098789d9fbbc4d9e0df240b18ba28867e4990ca4305322d6724fd03bba6685bbf21b39e02578b959da620b5a704ab1d565d3dbf377778ee9e4a0677b790728
   languageName: node
   linkType: hard
 
@@ -13229,12 +13230,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express-rate-limit@npm:^7.5.0":
-  version: 7.5.1
-  resolution: "express-rate-limit@npm:7.5.1"
+"express-rate-limit@npm:^8.2.1":
+  version: 8.2.1
+  resolution: "express-rate-limit@npm:8.2.1"
+  dependencies:
+    ip-address: "npm:10.0.1"
   peerDependencies:
     express: ">= 4.11"
-  checksum: 10c0/b07de84d700a2c07c4bf2f040e7558ed5a1f660f03ed5f30bf8ff7b51e98ba7a85215640e70fc48cbbb9151066ea51239d9a1b41febc9b84d98c7915b0186161
+  checksum: 10c0/54185f211c25655382436b8ad1a2136df0d5dc88f4d9d4438ca7cbc87cef0cd34cb01b8fc62d290445326aa6581470d2ff44502c3f1a34a5ed2c2ce56809fa01
   languageName: node
   linkType: hard
 
@@ -13301,7 +13304,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^5.0.1, express@npm:^5.2.1":
+"express@npm:^5.2.1":
   version: 5.2.1
   resolution: "express@npm:5.2.1"
   dependencies:
@@ -14774,6 +14777,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hono@npm:^4.11.4":
+  version: 4.11.8
+  resolution: "hono@npm:4.11.8"
+  checksum: 10c0/d83b8def88387713b5f7d8e28cc60a0b049f29827a15f9d53c0ea687a27f16520ec1d7997658f53acf48d75153b00f60394e6f1ec5c650dc3d17a749635c0afd
+  languageName: node
+  linkType: hard
+
 "hosted-git-info@npm:^4.1.0":
   version: 4.1.0
   resolution: "hosted-git-info@npm:4.1.0"
@@ -15324,6 +15334,13 @@ __metadata:
   dependencies:
     loose-envify: "npm:^1.0.0"
   checksum: 10c0/5af133a917c0bcf65e84e7f23e779e7abc1cd49cb7fdc62d00d1de74b0d8c1b5ee74ac7766099fb3be1b05b26dfc67bab76a17030d2fe7ea2eef867434362dfc
+  languageName: node
+  linkType: hard
+
+"ip-address@npm:10.0.1":
+  version: 10.0.1
+  resolution: "ip-address@npm:10.0.1"
+  checksum: 10c0/1634d79dae18394004775cb6d699dc46b7c23df6d2083164025a2b15240c1164fccde53d0e08bd5ee4fc53913d033ab6b5e395a809ad4b956a940c446e948843
   languageName: node
   linkType: hard
 
@@ -16116,7 +16133,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jose@npm:^6.1.1":
+"jose@npm:^6.1.3":
   version: 6.1.3
   resolution: "jose@npm:6.1.3"
   checksum: 10c0/b9577b4a7a5e84131011c23823db9f5951eae3ba796771a6a2401ae5dd50daf71104febc8ded9c38146aa5ebe94a92ac09c725e699e613ef26949b9f5a8bc30f
@@ -26247,7 +26264,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:^3.24.6, zod-to-json-schema@npm:^3.25.0":
+"zod-to-json-schema@npm:^3.24.6, zod-to-json-schema@npm:^3.25.1":
   version: 3.25.1
   resolution: "zod-to-json-schema@npm:3.25.1"
   peerDependencies:

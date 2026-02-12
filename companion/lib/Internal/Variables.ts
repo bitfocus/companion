@@ -145,11 +145,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				showInvert: true,
 				options: [
 					{
-						type: 'textinput',
+						type: 'expression',
 						label: 'Expression',
 						id: 'expression',
 						default: '2 > 1',
-						isExpression: true,
 						disableAutoExpression: true,
 						allowInvalidValues: true,
 					},
@@ -165,11 +164,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				showInvert: false,
 				options: [
 					{
-						type: 'textinput',
+						type: 'expression',
 						label: 'Expression',
 						id: 'expression',
 						default: '2 > 1',
-						isExpression: true,
 						disableAutoExpression: true,
 						allowInvalidValues: true,
 					},
@@ -227,6 +225,8 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						default: '',
 						description: 'The raw value will be written to the variable',
 						expressionDescription: 'The expression will be executed with the result written to the variable',
+						allowInvalidValues: true,
+						disableSanitisation: true,
 					},
 				],
 
