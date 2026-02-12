@@ -7,16 +7,9 @@ import { CModalExt } from '~/Components/CModalExt.js'
 import { go as fuzzySearch } from 'fuzzysort'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
-import {
-	CollapsibleTree,
-	CollapsibleTreeNesting,
-	type CollapsibleTreeNode,
-} from '~/Components/CollapsibleTree.js'
-import { useInMemoryPanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
-import {
-	useConnectionTreeNodes,
-	type ConnectionTreeNodeMeta,
-} from '~/Components/useConnectionTreeNodes.js'
+import { CollapsibleTree, CollapsibleTreeNesting, type CollapsibleTreeNode } from '~/Components/CollapsibleTree.js'
+import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
+import { useConnectionTreeNodes, type ConnectionTreeNodeMeta } from '~/Components/useConnectionTreeNodes.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
@@ -128,25 +121,22 @@ export const AddEntitiesModal = observer(
 
 		// Collections default expanded, connections default collapsed (no localStorage persistence for modals)
 		const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
-		const collapseHelper = useInMemoryPanelCollapseHelper(defaultCollapsedFn)
+		const collapseHelper = usePanelCollapseHelper(null, [], false, defaultCollapsedFn)
 
-		const renderGroupHeader = useCallback(
-			(node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>) => {
-				const meta = node.metadata
-				if (meta.type === 'connection') {
-					return (
-						<span className="collapsible-tree-connection-header">
-							{meta.connectionLabel}
-							{meta.moduleDisplayName && (
-								<small className="collapsible-tree-connection-module">{meta.moduleDisplayName}</small>
-							)}
-						</span>
-					)
-				}
-				return <span>{meta.label}</span>
-			},
-			[]
-		)
+		const renderGroupHeader = useCallback((node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>) => {
+			const meta = node.metadata
+			if (meta.type === 'connection') {
+				return (
+					<span className="collapsible-tree-connection-header">
+						{meta.connectionLabel}
+						{meta.moduleDisplayName && (
+							<small className="collapsible-tree-connection-module">{meta.moduleDisplayName}</small>
+						)}
+					</span>
+				)
+			}
+			return <span>{meta.label}</span>
+		}, [])
 
 		const renderLeaf = useCallback(
 			(leaf: EntityLeafItem, nestingLevel: number) => {
@@ -262,4 +252,3 @@ function filterTreeNodes(
 		ungroupedNodes: ungroupedNodes.map(filterNode).filter((n) => n !== null),
 	}
 }
-

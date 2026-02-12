@@ -34,12 +34,9 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 
 	const hasAnyConnections = nodes.length > 0 || ungroupedLeafs.length > 0
 
-	const renderGroupHeader = useCallback(
-		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
-			return <span>{node.metadata.label}</span>
-		},
-		[]
-	)
+	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
+		return <span>{node.metadata.label}</span>
+	}, [])
 
 	const renderLeaf = useCallback(
 		(leaf: ConnectionLeafItem, nestingLevel: number) => {

@@ -183,9 +183,11 @@ export function CollapsibleTreeNesting({
 }: React.PropsWithChildren<{ nestingLevel: number; className?: string }>): React.JSX.Element {
 	return (
 		<div
-			style={{
-				'--collapsible-tree-nesting-level': nestingLevel,
-			} as React.CSSProperties}
+			style={
+				{
+					'--collapsible-tree-nesting-level': nestingLevel,
+				} as React.CSSProperties
+			}
 			className={classNames(className, {
 				'collapsible-tree-nesting': nestingLevel > 0,
 			})}

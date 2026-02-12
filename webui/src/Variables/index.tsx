@@ -34,12 +34,9 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 	const internalVariables = variablesStore.variables.get('internal')
 	const hasInternalVariables = !!internalVariables && internalVariables.size > 0
 
-	const renderGroupHeader = useCallback(
-		(node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
-			return <span>{node.metadata.label}</span>
-		},
-		[]
-	)
+	const renderGroupHeader = useCallback((node: CollapsibleTreeNode<ConnectionLeafItem, CollectionGroupMeta>) => {
+		return <span>{node.metadata.label}</span>
+	}, [])
 
 	const renderLeaf = useCallback(
 		(leaf: ConnectionLeafItem, nestingLevel: number) => {
@@ -49,7 +46,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						<CButton
 							color="primary"
 							className="w-100 text-start"
-							onClick={() => navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
+							onClick={() => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
 						>
 							<h6 className="mb-0">{leaf.connectionLabel}</h6>
 							{leaf.moduleDisplayName && <small>{leaf.moduleDisplayName}</small>}

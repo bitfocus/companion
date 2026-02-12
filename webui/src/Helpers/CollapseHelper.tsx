@@ -21,49 +21,54 @@ export interface PanelCollapseHelper {
 }
 
 class PanelCollapseHelperStore implements PanelCollapseHelper {
-	readonly #storageId: string
+	readonly #storageId: string | null
 	readonly #defaultCollapsed: boolean
+	readonly #defaultCollapsedFn?: (panelId: string) => boolean
 
 	readonly #defaultExpandedAt = observable.map<string | null, boolean>()
 	readonly #ids = observable.map<string, boolean>()
 
-	constructor(storageId: string, defaultCollapsed = false) {
-		this.#storageId = `companion_ui_collapsed_${storageId}`
+	constructor(storageId: string | null, defaultCollapsed = false, defaultCollapsedFn?: (panelId: string) => boolean) {
+		this.#storageId = storageId ? `companion_ui_collapsed_${storageId}` : null
 		this.#defaultCollapsed = defaultCollapsed
+		this.#defaultCollapsedFn = defaultCollapsedFn
 
-		// Try loading the old state
-		runInAction(() => {
-			try {
-				const oldState = window.localStorage.getItem(this.#storageId)
-				if (oldState) {
-					const parsedState: CollapsedState = JSON.parse(oldState)
-					if (typeof parsedState.defaultCollapsed === 'boolean') {
-						this.#defaultExpandedAt.set(null, !parsedState.defaultCollapsed)
-						delete parsedState.defaultCollapsed
-					} else {
-						for (const [key, value] of Object.entries(parsedState.defaultExpandedAt || {})) {
-							if (typeof value === 'boolean') this.#defaultExpandedAt.set(key, value)
+		// Try loading the old state (skip if in-memory mode)
+		if (this.#storageId) {
+			runInAction(() => {
+				try {
+					const oldState = window.localStorage.getItem(this.#storageId!)
+					if (oldState) {
+						const parsedState: CollapsedState = JSON.parse(oldState)
+						if (typeof parsedState.defaultCollapsed === 'boolean') {
+							this.#defaultExpandedAt.set(null, !parsedState.defaultCollapsed)
+							delete parsedState.defaultCollapsed
+						} else {
+							for (const [key, value] of Object.entries(parsedState.defaultExpandedAt || {})) {
+								if (typeof value === 'boolean') this.#defaultExpandedAt.set(key, value)
+							}
+						}
+
+						// Fixup a serialization issue
+						const stringifiedNull = this.#defaultExpandedAt.get('null')
+						if (stringifiedNull !== undefined) {
+							this.#defaultExpandedAt.set(null, stringifiedNull)
+							this.#defaultExpandedAt.delete('null')
+						}
+
+						for (const [key, value] of Object.entries(parsedState.ids)) {
+							if (typeof value === 'boolean') this.#ids.set(key, value)
 						}
 					}
-
-					// Fixup a serialization issue
-					const stringifiedNull = this.#defaultExpandedAt.get('null')
-					if (stringifiedNull !== undefined) {
-						this.#defaultExpandedAt.set(null, stringifiedNull)
-						this.#defaultExpandedAt.delete('null')
-					}
-
-					for (const [key, value] of Object.entries(parsedState.ids)) {
-						if (typeof value === 'boolean') this.#ids.set(key, value)
-					}
+				} catch (_e) {
+					// Ignore
 				}
-			} catch (_e) {
-				// Ignore
-			}
-		})
+			})
+		}
 	}
 
 	#writeState() {
+		if (!this.#storageId) return // In-memory mode, no persistence
 		window.localStorage.setItem(
 			this.#storageId,
 			JSON.stringify({
@@ -124,7 +129,14 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 	}
 
 	isPanelCollapsed = (parentId: string | null, panelId: string): boolean => {
-		return this.#ids.get(panelId) ?? this.#defaultExpandedAt.get(parentId) ?? this.#defaultCollapsed
+		const storedValue = this.#ids.get(panelId)
+		if (storedValue !== undefined) return storedValue
+
+		const parentDefault = this.#defaultExpandedAt.get(parentId)
+		if (parentDefault !== undefined) return parentDefault
+
+		if (this.#defaultCollapsedFn) return this.#defaultCollapsedFn(panelId)
+		return this.#defaultCollapsed
 	}
 
 	clearUnknownIds = (knownPanelIds: string[]): void => {
@@ -194,16 +206,22 @@ export function PanelCollapseHelperProvider({
 }
 
 export function usePanelCollapseHelper(
-	storageId: string,
+	storageId: string | null,
 	knownPanelIds: string[],
-	defaultCollapsed = false
+	defaultCollapsed = false,
+	defaultCollapsedFn?: (panelId: string) => boolean
 ): PanelCollapseHelper {
-	const store = useMemo(() => new PanelCollapseHelperStore(storageId, defaultCollapsed), [storageId, defaultCollapsed])
+	const store = useMemo(
+		() => new PanelCollapseHelperStore(storageId, defaultCollapsed, defaultCollapsedFn),
+		[storageId, defaultCollapsed, defaultCollapsedFn]
+	)
 
-	// Clear out any unknown panel IDs
+	// Clear out any unknown panel IDs (skip if in-memory mode)
 	useDeepCompareEffect(() => {
-		store.clearUnknownIds(knownPanelIds)
-	}, [store, knownPanelIds])
+		if (storageId) {
+			store.clearUnknownIds(knownPanelIds)
+		}
+	}, [store, knownPanelIds, storageId])
 
 	return store
 }
@@ -238,77 +256,4 @@ export function usePanelCollapseHelperLite(
 		}),
 		[collapseHelper]
 	)
-}
-
-/**
- * A non-persisting implementation of PanelCollapseHelper.
- * Useful for modals or transient UI where localStorage persistence is undesirable.
- *
- * Accepts a `defaultCollapsedFn` that determines the default collapsed state per panel ID,
- * allowing different defaults for different node types (e.g. collections expanded, connections collapsed).
- */
-class InMemoryPanelCollapseHelper implements PanelCollapseHelper {
-	readonly #ids = observable.map<string, boolean>()
-	readonly #defaultCollapsedFn: (panelId: string) => boolean
-
-	constructor(defaultCollapsedFn: (panelId: string) => boolean) {
-		this.#defaultCollapsedFn = defaultCollapsedFn
-	}
-
-	setAllCollapsed = (parentId: string | null, panelIds: string[]): void => {
-		void parentId
-		runInAction(() => {
-			for (const panelId of panelIds) {
-				this.#ids.set(panelId, true)
-			}
-		})
-	}
-
-	setAllExpanded = (parentId: string | null, panelIds: string[]): void => {
-		void parentId
-		runInAction(() => {
-			for (const panelId of panelIds) {
-				this.#ids.set(panelId, false)
-			}
-		})
-	}
-
-	canExpandAll = (parentId: string | null, panelIds: string[]): boolean => {
-		void parentId
-		return panelIds.some((id) => this.isPanelCollapsed(null, id))
-	}
-
-	canCollapseAll = (parentId: string | null, panelIds: string[]): boolean => {
-		void parentId
-		return panelIds.some((id) => !this.isPanelCollapsed(null, id))
-	}
-
-	setPanelCollapsed = (panelId: string, collapsed: boolean): void => {
-		runInAction(() => {
-			this.#ids.set(panelId, collapsed)
-		})
-	}
-
-	togglePanelCollapsed = (parentId: string | null, panelId: string): void => {
-		void parentId
-		runInAction(() => {
-			this.#ids.set(panelId, !this.isPanelCollapsed(null, panelId))
-		})
-	}
-
-	isPanelCollapsed = (_parentId: string | null, panelId: string): boolean => {
-		return this.#ids.get(panelId) ?? this.#defaultCollapsedFn(panelId)
-	}
-}
-
-/**
- * Creates an in-memory (non-persisting) collapse helper.
- *
- * @param defaultCollapsedFn - determines the default collapsed state per panel ID.
- *   Receives the panel ID string and returns true if it should be collapsed by default.
- */
-export function useInMemoryPanelCollapseHelper(
-	defaultCollapsedFn: (panelId: string) => boolean
-): PanelCollapseHelper {
-	return useMemo(() => new InMemoryPanelCollapseHelper(defaultCollapsedFn), [defaultCollapsedFn])
 }
