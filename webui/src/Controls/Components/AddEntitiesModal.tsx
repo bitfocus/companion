@@ -14,6 +14,7 @@ import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connect
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { useComputed } from '~/Resources/util'
 
 interface AddEntitiesModalProps {
 	addEntity: (connectionId: string, definitionId: string) => void
@@ -170,9 +171,22 @@ export const AddEntitiesModal = observer(
 		)
 
 		// When filtering, apply fuzzy search to leaf items in each node
-		const filteredNodes = useMemo(() => {
-			if (!filter) return { nodes: internalNode ? [internalNode, ...nodes] : nodes, ungroupedNodes }
-			return filterTreeNodes(filter, internalNode ? [internalNode, ...nodes] : nodes, ungroupedNodes)
+		const filteredNodes = useComputed(() => {
+			const rawNodes = internalNode ? [internalNode, ...nodes] : nodes
+
+			const res = !filter ? { nodes: rawNodes, ungroupedNodes } : filterTreeNodes(filter, rawNodes, ungroupedNodes)
+
+			// If there are no collections visible, merge ungrouped nodes into the main list
+			// This hides the "Ungrouped Connections" header
+			const hasCollections = res.nodes.some((n) => n.metadata.type === 'collection')
+			if (!hasCollections && res.ungroupedNodes.length > 0) {
+				return {
+					nodes: [...res.nodes, ...res.ungroupedNodes],
+					ungroupedNodes: [],
+				}
+			}
+
+			return res
 		}, [filter, nodes, ungroupedNodes, internalNode])
 
 		const noResultsContent = useMemo(
