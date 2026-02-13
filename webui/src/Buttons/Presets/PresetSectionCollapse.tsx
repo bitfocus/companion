@@ -70,7 +70,7 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 				<CCardBody ref={cardRef}>
 					{showContent && (
 						<>
-							{!!section.description && <div className="description">{section.description}</div>}
+							{!!section.description && <div className="description mx-2 mt-1">{section.description}</div>}
 							{groupComponents}
 						</>
 					)}
