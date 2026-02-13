@@ -14,7 +14,7 @@ import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
 import { trpc } from '~/Resources/TRPC'
 import type { PresetDragItem } from './PresetDragItem'
 import { useResizeObserver } from 'usehooks-ts'
-import { useComputed } from '~/Resources/util'
+import { assertNever, useComputed } from '~/Resources/util'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 
@@ -57,6 +57,7 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 			case 'template':
 				return <PresetGroupTemplate key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
 			default:
+				assertNever(grp)
 				return null
 		}
 	})

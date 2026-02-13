@@ -57,12 +57,6 @@ export function ConvertPresetDefinitions(
 
 			uiPresets[section.id] = section
 		})
-
-		if (converter.duplicatePresetIds.size > 0) {
-			logger.warn(
-				`Some preset ids are duplicated. Duplications have been dropped: ${Array.from(converter.duplicatePresetIds).join(', ')}`
-			)
-		}
 	} catch (e) {
 		logger.error(`Converting presets failed: ${stringifyError(e)}`)
 		return {
@@ -98,7 +92,6 @@ class PresetDefinitionConverter {
 	readonly #connectionId: string
 	readonly #connectionUpgradeIndex: number | undefined
 
-	readonly duplicatePresetIds = new Set<string>()
 	readonly referencedPresetIds = new Set<string>()
 	readonly missingPresetIds = new Set<string>()
 	readonly presetDefinitions: Record<string, PresetDefinition> = {}
@@ -247,12 +240,6 @@ class PresetDefinitionConverter {
 	}
 
 	convertPreset(presetId: string, preset: CompanionPresetDefinition): boolean {
-		// Check if an id is duplicated
-		if (this.presetDefinitions[presetId]) {
-			this.duplicatePresetIds.add(presetId)
-			return false
-		}
-
 		const definition = ConvertPresetDefinition(
 			this.#logger,
 			this.#connectionId,

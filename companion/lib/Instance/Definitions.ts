@@ -80,7 +80,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	#feedbackDefinitions: Record<string, Record<string, ClientEntityDefinition>> = {}
 	/**
-	 * The flattened preset definitions
+	 * The preset definitions, to convert into real controls
 	 */
 	#presetDefinitions: Record<string, ReadonlyMap<string, PresetDefinition>> = {}
 	/**
@@ -162,7 +162,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			for (const opt of definition.options) {
 				if (opt.type === 'static-text') continue
 
-				const defaultValue = structuredClone((opt as any).default)
+				const defaultValue = 'default' in opt ? structuredClone(opt.default) : undefined
 				entity.options[opt.id] = {
 					isExpression: false,
 					value: defaultValue,
