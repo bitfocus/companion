@@ -159,7 +159,7 @@
 		.fontawesome {
 			height: 1.5em;
 			width: auto;
-			/* for some reason we don't need display: block here' maybe flex handles it? */
+			/* for some reason we don't need "display: block" here. maybe flex handles it? */
 		}
 
 		.fontawesome-text {
