@@ -28,7 +28,11 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 						<div>
 							<span className="text-muted">
 								Can't find your device?{' '}
-								<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')} className="text-decoration-none">
+								<a
+									target="_blank"
+									href={makeAbsolutePath('/user-guide/config/modules')}
+									className="text-decoration-none"
+								>
 									Check our guidance for getting device support
 								</a>
 							</span>
