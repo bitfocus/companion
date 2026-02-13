@@ -99,11 +99,11 @@ export class ControlButtonPreset
 		deps: ControlDependencies,
 		connectionId: string,
 		presetId: string,
-		matrixHash: string,
+		variablesHash: string,
 		storage: PresetButtonModel
 	) {
-		const controlId = CreatePresetControlId(connectionId, presetId, matrixHash)
-		super(deps, controlId, `Controls/Button/Preset/${connectionId}/${presetId}/${matrixHash}`, true)
+		const controlId = CreatePresetControlId(connectionId, presetId, variablesHash)
+		super(deps, controlId, `Controls/Button/Preset/${connectionId}/${presetId}/${variablesHash}`, true)
 
 		this.#connectionId = connectionId
 		this.#presetId = presetId

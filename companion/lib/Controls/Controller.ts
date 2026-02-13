@@ -709,12 +709,12 @@ export class ControlsController {
 			usedVariableValues = injectOverriddenLocalVariableValues(presetModel.localVariables, variableValues)
 		}
 
-		const matrixHash = usedVariableValues
+		const variablesHash = usedVariableValues
 			? crypto.createHash('sha256').update(createStableObjectHash(usedVariableValues)).digest('hex')
 			: 'default'
 
 		// Check for an existing control that should be reused
-		const controlId = CreatePresetControlId(connectionId, presetId, matrixHash)
+		const controlId = CreatePresetControlId(connectionId, presetId, variablesHash)
 		const control = this.#controls.get(controlId)
 		if (control) return control as ControlButtonPreset
 
@@ -722,7 +722,7 @@ export class ControlsController {
 			this.#createControlDependencies(),
 			connectionId,
 			presetId,
-			matrixHash,
+			variablesHash,
 			presetModel
 		)
 		if (!newControl) return null

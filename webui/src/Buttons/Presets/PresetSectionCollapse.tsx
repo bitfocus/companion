@@ -108,7 +108,7 @@ const PresetGroupSimple = observer(function PresetGroupSimple({ connectionId, gr
 	)
 })
 
-interface PresetGroupMatrixProps {
+interface PresetGroupTemplateProps {
 	connectionId: string
 	grp: UIPresetGroupTemplate
 	isFirst: boolean
@@ -120,8 +120,8 @@ interface TemplateCombination {
 	values: VariableValues
 }
 
-const PresetGroupTemplate = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupMatrixProps) {
-	const matrixCombinations = useComputed((): TemplateCombination[] => {
+const PresetGroupTemplate = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupTemplateProps) {
+	const variableCombinations = useComputed((): TemplateCombination[] => {
 		if (grp.templateValues.length === 0) return []
 
 		return grp.templateValues.map((templateValue): TemplateCombination => {
@@ -142,7 +142,7 @@ const PresetGroupTemplate = observer(function PresetGroup({ connectionId, grp, i
 			{grp.name || grp.description ? <PresetText key={grp.id} grp={grp} /> : null}
 
 			<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
-				{matrixCombinations.map((p) => (
+				{variableCombinations.map((p) => (
 					<PresetIconPreview
 						key={p.hash}
 						connectionId={connectionId}
