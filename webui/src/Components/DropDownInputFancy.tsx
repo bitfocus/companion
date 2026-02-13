@@ -1,11 +1,6 @@
-import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import React from 'react'
 import { components as SelectComponents, type OptionProps } from 'react-select'
-
-export interface DropdownChoiceInt {
-	value: DropdownChoiceId
-	label: string
-}
+import type { DropdownChoiceInt } from './DropdownChoices'
 
 // Formatting for variable pulldown options:
 export const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {

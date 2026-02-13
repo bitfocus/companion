@@ -1,18 +1,18 @@
-import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import classNames from 'classnames'
 import React, { useContext, useMemo, useCallback, useState } from 'react'
 import Select, { createFilter, components, type InputActionMeta } from 'react-select'
 import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
 // import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
-import { useComputed } from '~/Resources/util.js'
 import { observer } from 'mobx-react-lite'
-import { CustomOption, CustomSingleValue } from '~/DropDownInputFancy.js'
+import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
+import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
 	className?: string
-	choices: DropdownChoice[] | Record<string, DropdownChoice>
+	choices: DropdownChoicesOrGroups
 	allowCustom?: boolean
 	disableEditingCustom?: boolean
 	minChoicesForSearch?: number
@@ -26,11 +26,6 @@ interface DropdownInputFieldProps {
 	checkValid?: (value: DropdownChoiceId) => boolean
 	fancyFormat?: boolean
 	searchLabelsOnly?: boolean
-}
-
-interface DropdownChoiceInt {
-	value: any
-	label: DropdownChoiceId
 }
 
 export const DropdownInputField = observer(function DropdownInputField({
@@ -56,21 +51,10 @@ export const DropdownInputField = observer(function DropdownInputField({
 	// If fancy format is enabled, always search full option
 	if (fancyFormat) searchLabelsOnly = false
 
-	const options = useComputed(() => {
-		let options: DropdownChoice[] = []
-		if (options) {
-			if (Array.isArray(choices)) {
-				options = choices
-			} else if (typeof choices === 'object') {
-				options = Object.values(choices)
-			}
-		}
-
-		return options.map((choice): DropdownChoiceInt => ({ value: choice.id, label: choice.label }))
-	}, [choices])
+	const { options, flatOptions } = useDropdownChoicesForSelect(choices)
 
 	const currentValue = useMemo(() => {
-		const entry = options.find((o) => o.value == value) // Intentionally loose for compatibility
+		const entry = flatOptions.find((o) => o.value == value) // Intentionally loose for compatibility
 		if (entry) {
 			return entry
 		} else if (allowCustom) {
@@ -80,7 +64,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 		} else {
 			return { value: value, label: `?? (${value})` }
 		}
-	}, [value, options, allowCustom])
+	}, [value, flatOptions, allowCustom])
 
 	// Compile the regex (and cache)
 	const compiledRegex = useMemo(() => {
@@ -149,7 +133,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 		menuPosition: 'fixed',
 		menuPlacement: 'auto',
 		isClearable: false,
-		isSearchable: minChoicesForSearchNumber <= options.length,
+		isSearchable: minChoicesForSearchNumber <= flatOptions.length,
 		isMulti: false,
 		options: options,
 		value: currentValue,
@@ -184,8 +168,8 @@ export const DropdownInputField = observer(function DropdownInputField({
 		[isValidNewOption]
 	)
 	const isValidNewOptionIgnoreCurrent = useCallback(
-		(newValue: string | number) => !options.find((opt) => opt.value == newValue) && isValidNewOption(newValue),
-		[isValidNewOption, options]
+		(newValue: string | number) => !flatOptions.find((opt) => opt.value == newValue) && isValidNewOption(newValue),
+		[isValidNewOption, flatOptions]
 	)
 	const formatCreateLabel = useCallback((v: string | number) => `Use "${v}"`, [])
 
@@ -202,7 +186,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 
 	const onChangeEditingCustom = useCallback(
 		(e: DropdownChoiceInt) => {
-			setCustomInputValue(e.value)
+			setCustomInputValue(e.value as any)
 			onChange(e)
 		},
 		[onChange]
@@ -238,7 +222,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 			className={classNames(
 				{
 					'select-tooltip': true,
-					'select-invalid': !!checkValid && !checkValid(currentValue?.value),
+					'select-invalid': !!checkValid && !checkValid(currentValue?.value as any),
 				},
 				className
 			)}
