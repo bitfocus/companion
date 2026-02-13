@@ -15,8 +15,8 @@ export type DropdownChoicesOrGroups =
 	| Record<string, DropdownChoice>
 
 export interface DropdownChoiceInt {
-	value: any
-	label: DropdownChoiceId
+	value: DropdownChoiceId
+	label: string
 }
 
 export type OptionsOrGroupsInt = OptionsOrGroups<DropdownChoiceInt, GroupBase<DropdownChoiceInt>>
