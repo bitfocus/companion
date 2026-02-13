@@ -10,6 +10,7 @@ import React, {
 	type CSSProperties,
 	type ReactNode,
 	type MouseEventHandler,
+	type ReactElement,
 } from 'react'
 import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop } from '@coreui/react'
 import {
@@ -35,6 +36,8 @@ import {
 	faStar,
 	faHatWizard,
 	faSquareRootVariable,
+	faArrowsUpToLine,
+	faArrowsDownToLine,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -58,6 +61,9 @@ import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
 import { type MenuItemData } from '~/Components/ActionMenu'
 
+function foldableIcon(foldable: boolean): ReactElement {
+	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
+}
 export interface SidebarStateProps {
 	showToggle: boolean
 	clickToggle: () => void
@@ -173,6 +179,9 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 }
 
 export const MySidebar = memo(function MySidebar() {
+	// This will log every time the component renders (due to state or prop changes)
+	console.log('MySidebar rendered.')
+
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
@@ -243,6 +252,7 @@ export const MySidebar = memo(function MySidebar() {
 			{
 				id: 'hide-sidebar',
 				label: unfoldable ? 'Fixed-width Sidebar' : 'Dynamic-width Sidebar',
+				icon: () => foldableIcon(unfoldable),
 				to: doToggle,
 				tooltip:
 					'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
@@ -250,6 +260,7 @@ export const MySidebar = memo(function MySidebar() {
 			{
 				id: 'hide-help',
 				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
+				icon: hideHelp ? faArrowsUpToLine : faArrowsDownToLine,
 				to: () => setHideHelp(!hideHelp),
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
