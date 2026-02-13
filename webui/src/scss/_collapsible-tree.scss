@@ -1,4 +1,5 @@
 @use 'variables' as *;
+@use 'sass:color';
 
 .collapsible-tree {
 	border: 1px solid #ddd;
@@ -32,7 +33,7 @@
 		}
 
 		&:hover {
-			background-color: darken(#f0f0f0, 3%);
+			background-color: color.adjust(#f0f0f0, $lightness: -3%);
 		}
 
 		// Connection nodes get a slightly different style to stand out from collections

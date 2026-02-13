@@ -164,6 +164,7 @@
 
 // Connection groups styling
 .connection-group-actions {
+	overflow: hidden; // workaround for a coreui "bug" that counts hidden elements as present and therefore applies the wrong border-radius
 	margin-bottom: 1rem;
 }
 
