@@ -19,8 +19,8 @@
 	--companion-navbar-bg: #d50215;
 	--ifm-navbar-height: 3.25rem; /* default is 3.75 */
 	--ifm-navbar-background-color: var(--companion-navbar-bg);
-	--ifm-navbar-link-color: #ffffff;
-	--ifm-navbar-link-hover-color: #ffffff;
+	--ifm-navbar-link-color: white;
+	--ifm-navbar-link-hover-color: white;
 
 	--companion-active-tab-color: var(--ifm-font-color-base);
 	--companion-active-tab-bg: white;
@@ -41,8 +41,8 @@
 	--ifm-color-primary-lightest: #f89aa7;
 
 	--docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 30%);
-	--ifm-navbar-link-color: #ffffff;
-	--ifm-navbar-link-hover-color: #ffffff;
+	--ifm-navbar-link-color: white;
+	--ifm-navbar-link-hover-color: white;
 
 	--companion-active-tab-color: var(--ifm-font-color-base); /* for the pseudo-tab links in the top navbar */
 	--companion-active-tab-bg: var(--ifm-background-color); /* #1b1b1d */
@@ -67,13 +67,15 @@
 }
 
 /* Navbar (the top bar, not the sidebar) link styles 
-   note: `overflow: hidden;` can causes weird text-wrapping when text wraps, and unnecessarily clips button text with nowrap;
+   note: `overflow: hidden;` can cause weird text-wrapping (if wrapping is enabled). It clips button text when wrapping is disabled.
    Note: The margin-bottom/border-bottom adjustment here is made large to make the tabs touch the bottom of the header bar
         Since we're clipping the left-container, the bottom-border needn't be precise -- as long as it's big enough.
+   note 3: ":not(:last-child)" is to prevent tab-highlighting in the app-packaged docs, where there are no tabs.
    */
-.theme-layout-navbar-left .navbar__link {
+.theme-layout-navbar-left .navbar__link,
+.theme-layout-navbar-left .navbar__brand:not(:last-child) {
 	--vertical-padding: 0.5rem; /* make up for the reduced line-height */
-	--margin-bottom: calc(0rem - var(--ifm-navbar-height) / 2); /* move the button down to create the tab-like effect */
+	--margin-bottom: calc(-1 * var(--ifm-navbar-height) / 2); /* move the button down to create the tab-like effect */
 	text-align: center; /* keep labels horizontally centered when they become two lines */
 	line-height: 1; /* keep labels compact when words wrap to two lines (in case we remove nowrap later, below) */
 	padding-top: var(--vertical-padding);
@@ -87,12 +89,24 @@
 	border-radius: 0.5rem 0.5rem 0 0;
 }
 
+.theme-layout-navbar-left .navbar__brand:not(:last-child) {
+	--vertical-padding: 0.1rem;
+	padding-left: 0.25rem;
+	padding-right: 0.25rem;
+	margin-right: 0.5rem; /* split the default 1rem with the padding 0.25 on each side */
+}
+
 /* Make the active link look a like a page-tab (like a browser tab or VS Code editor tabs) */
-.theme-layout-navbar-left .navbar__link--active {
+.theme-layout-navbar-left .navbar__link--active,
+.theme-layout-navbar-left:not(:has(> .navbar__link--active)) > .navbar__brand:not(:last-child) {
 	color: var(--companion-active-tab-color);
 	background-color: var(--companion-active-tab-bg);
 	/* Give the tab a glow  */
 	box-shadow: 0 -4px 10px 1px var(--companion-active-tab-shadow-color);
+
+	.navbar__title {
+		font-weight: var(--ifm-font-weight-semibold); /* for the logo, match other tabs; bold is too strong */
+	}
 }
 
 /* Hover styles for navbar links. 
@@ -100,6 +114,7 @@
 	*/
 .navbar__item.navbar__link:hover:not(.navbar__link--active),
 .navbar-sidebar__brand:hover,
+.navbar__brand:hover:not(:last-child),
 .navbar__toggle:hover {
 	background-color: rgb(255 255 255 / 20%);
 }
