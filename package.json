@@ -90,8 +90,8 @@
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "@companion-module/base": "portal:/home/julus/Projects/companion/companion-module-base/packages/companion-module-base",
-    "@companion-module/host": "portal:/home/julus/Projects/companion/companion-module-base/packages/companion-module-host",
+    "@companion-module/base": "2.0.0-0-nightly-feat-2-0-20260213-225320-440847a",
+    "@companion-module/host": "0.1.0-1-nightly-feat-2-0-20260213-225453-440847a",
     "node-gyp": "^12.1.0"
   },
   "dependenciesMeta": {
