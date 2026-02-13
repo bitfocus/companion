@@ -44,7 +44,7 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 		if (count <= 1) return null
 
 		return groupsOrItems
-	}, [connections])
+	}, [connections, entityConnectionId])
 
 	if (!connectionChoices) return null
 
