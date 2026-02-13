@@ -1,4 +1,4 @@
-import type { DropdownChoiceInt } from '~/DropDownInputFancy.js'
+import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 
 declare module 'monaco-editor' {
 	namespace editor {

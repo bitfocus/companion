@@ -41,25 +41,6 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 			assignedItemIds.add(item)
 		}
 
-		// If this collection has no direct items and no valid child collections, hide it
-		if (groupOptions.length === 0) {
-			// Check if any child collections will have items
-			let hasChildGroups = false
-			if (collection.children) {
-				for (const child of collection.children) {
-					const childGroup = buildGroupForCollection(child, [
-						...parentPath,
-						collection.label || `Collection #${collection.id}`,
-					])
-					if (childGroup) {
-						hasChildGroups = true
-						break
-					}
-				}
-			}
-			if (!hasChildGroups) return null
-		}
-
 		// Only return a group if this collection has direct items
 		if (groupOptions.length === 0) return null
 

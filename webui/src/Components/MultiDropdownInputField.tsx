@@ -6,11 +6,7 @@ import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
 import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
-import {
-	useDropdownChoicesForSelect,
-	type DropdownChoiceInt,
-	type DropdownChoicesOrGroups,
-} from './useDropdownChoicesForSelect.js'
+import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -59,9 +55,9 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 			if (entry) {
 				res.push(entry)
 			} else if (allowCustom) {
-				res.push({ value: val, label: val })
+				res.push({ value: val, label: String(val) })
 			} else {
-				res.push({ value: val, label: allowCustom ? val : `?? (${val})` })
+				res.push({ value: val, label: allowCustom ? String(val) : `?? (${val})` })
 			}
 		}
 		return res

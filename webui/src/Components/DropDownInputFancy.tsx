@@ -1,6 +1,6 @@
 import React from 'react'
 import { components as SelectComponents, type OptionProps } from 'react-select'
-import type { DropdownChoiceInt } from './Components/useDropdownChoicesForSelect'
+import type { DropdownChoiceInt } from './DropdownChoices'
 
 // Formatting for variable pulldown options:
 export const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {

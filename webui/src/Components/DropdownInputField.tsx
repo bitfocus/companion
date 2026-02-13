@@ -6,12 +6,8 @@ import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
 // import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
-import { CustomOption, CustomSingleValue } from '~/DropDownInputFancy.js'
-import {
-	useDropdownChoicesForSelect,
-	type DropdownChoiceInt,
-	type DropdownChoicesOrGroups,
-} from './useDropdownChoicesForSelect.js'
+import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
+import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -190,7 +186,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 
 	const onChangeEditingCustom = useCallback(
 		(e: DropdownChoiceInt) => {
-			setCustomInputValue(e.value)
+			setCustomInputValue(e.value as any)
 			onChange(e)
 		},
 		[onChange]
@@ -226,7 +222,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 			className={classNames(
 				{
 					'select-tooltip': true,
-					'select-invalid': !!checkValid && !checkValid(currentValue?.value),
+					'select-invalid': !!checkValid && !checkValid(currentValue?.value as any),
 				},
 				className
 			)}
