@@ -7,7 +7,6 @@ import {
 	faExternalLink,
 	faPlug,
 	faQuestionCircle,
-	faTimes,
 } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -23,18 +22,21 @@ import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks
 import { Link } from '@tanstack/react-router'
 import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { CloseButton } from '~/UserConfig/Components/Common.js'
 
 interface AddInstancePanelProps {
 	service: AddInstanceService
 
 	title: string
 	description: (storeCount: number) => React.ReactNode
+	isSubpanel?: boolean
 }
 
 export const AddInstancePanel = observer(function AddInstancePanel({
 	service,
 	title,
 	description,
+	isSubpanel,
 }: AddInstancePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
@@ -106,9 +108,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
-					<div className="float_right d-xl-none" onClick={service.closeAddInstance} title="Close">
-						<FontAwesomeIcon icon={faTimes} size="lg" />
-					</div>
+					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'd-xl-none'} />
 				</div>
 			</div>
 
