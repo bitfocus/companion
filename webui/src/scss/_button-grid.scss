@@ -209,6 +209,9 @@
 	position: inherit;
 	display: inline-block;
 
+	> .btn {
+		border-radius: var(--cui-btn-border-radius) !important; // fix coreui bug for toggles w/o caret
+	}
 	.dropdown-item-padding {
 		padding: 0.5rem 1.25rem;
 	}
