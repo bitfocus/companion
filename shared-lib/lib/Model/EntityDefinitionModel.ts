@@ -6,6 +6,7 @@ import type { ObjectsDiff } from './Common.js'
 export interface ClientEntityDefinition {
 	entityType: EntityModelType
 	label: string
+	sortKey: string | null
 	description: string | undefined
 	options: SomeCompanionInputField[]
 	/**

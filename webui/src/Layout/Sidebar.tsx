@@ -48,10 +48,11 @@ import { Link } from '@tanstack/react-router'
 import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
+import { useSortedConnectionsThatHaveVariables, type ClientConnectionConfigWithId } from '~/Stores/Util.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { trpc } from '~/Resources/TRPC'
 import { useQuery } from '@tanstack/react-query'
+import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 
 export interface SidebarStateProps {
 	showToggle: boolean
@@ -134,7 +135,7 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 		item.onClick()
 	}
 	return (
-		<CNavItem idx={item.path ?? item.name}>
+		<CNavItem idx={item.path ?? item.name} className={item.subheading ? 'nav-two-line' : undefined}>
 			{item.path ? (
 				<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2} title={item.title}>
 					<SidebarMenuItemLabel {...item} />
@@ -149,7 +150,7 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 }
 
 interface SidebarMenuItemGroupProps extends SidebarMenuItemProps {
-	children?: Array<React.ReactElement | null>
+	children?: React.ReactNode
 }
 
 function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
@@ -253,21 +254,63 @@ export const MySidebar = memo(function MySidebar() {
 })
 
 const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
-	const { modules } = useContext(RootAppStoreContext)
+	const { modules, connections } = useContext(RootAppStoreContext)
 
 	const sortedConnections = useSortedConnectionsThatHaveVariables()
 
+	// Group connections
+	const { rootConnections, connectionsByCollection } = useMemo(() => {
+		const root: ClientConnectionConfigWithId[] = []
+		const byCol = new Map<string, ClientConnectionConfigWithId[]>()
+
+		for (const conn of sortedConnections) {
+			if (conn.collectionId) {
+				const existing = byCol.get(conn.collectionId)
+				if (existing) existing.push(conn)
+				else byCol.set(conn.collectionId, [conn])
+			} else {
+				root.push(conn)
+			}
+		}
+		return { rootConnections: root, connectionsByCollection: byCol }
+	}, [sortedConnections])
+
+	const renderConnection = (connectionInfo: ClientConnectionConfigWithId) => (
+		<SidebarMenuItem
+			key={connectionInfo.id}
+			name={connectionInfo.label}
+			subheading={modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)}
+			icon={null}
+			path={`/variables/connection/${connectionInfo.label}`}
+		/>
+	)
+
+	// Recursive render
+	const renderCollection = (collection: ConnectionCollection): React.ReactNode => {
+		const childConnections = connectionsByCollection.get(collection.id)
+
+		const childCollectionsRendered = (collection.children || [])
+			.slice()
+			.sort((a, b) => a.sortOrder - b.sortOrder)
+			.map((c) => renderCollection(c))
+			.filter((c): c is NonNullable<typeof c> => !!c) // Filter nulls
+
+		const hasChildren = (childConnections && childConnections.length > 0) || childCollectionsRendered.length > 0
+
+		if (!hasChildren) return null
+
+		return (
+			<SidebarMenuItemGroup key={collection.id} name={collection.label} icon={null} path={undefined}>
+				{childCollectionsRendered}
+				{childConnections?.map(renderConnection)}
+			</SidebarMenuItemGroup>
+		)
+	}
+
 	return (
 		<>
-			{sortedConnections.map((connectionInfo) => (
-				<SidebarMenuItem
-					key={connectionInfo.id}
-					name={connectionInfo.label}
-					subheading={modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)}
-					icon={null}
-					path={`/variables/connection/${connectionInfo.label}`}
-				/>
-			))}
+			{connections.rootCollections().map((c) => renderCollection(c))}
+			{rootConnections.map(renderConnection)}
 		</>
 	)
 })

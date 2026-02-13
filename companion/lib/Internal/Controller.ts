@@ -579,6 +579,7 @@ export class InternalController {
 				for (const [id, action] of Object.entries(fragment.getActionDefinitions())) {
 					actions[id] = {
 						...action,
+						sortKey: action.sortKey ?? null,
 						hasLifecycleFunctions: false,
 						hasLearn: action.hasLearn ?? false,
 						learnTimeout: action.learnTimeout,
@@ -611,6 +612,7 @@ export class InternalController {
 				for (const [id, feedback] of Object.entries(fragment.getFeedbackDefinitions())) {
 					feedbacks[id] = {
 						...feedback,
+						sortKey: feedback.sortKey ?? null,
 						hasLifecycleFunctions: false,
 						showInvert: feedback.showInvert ?? false,
 						hasLearn: feedback.hasLearn ?? false,

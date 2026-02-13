@@ -29,6 +29,7 @@ interface AddEntityOption {
 	isRecent: boolean
 	value: string
 	label: string
+	sortKey: string
 	fuzzy: ReturnType<typeof fuzzyPrepare>
 }
 interface AddEntityGroup {
@@ -63,17 +64,24 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			const entityDefinitions = definitions.connections.get(connectionId)
 			if (!entityDefinitions) return
 
+			const connectionOptions: AddEntityOption[] = []
+
 			for (const [definitionId, definition] of entityDefinitions.entries()) {
 				if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
 
 				const optionLabel = `${label}: ${definition.label}`
-				options.push({
+				connectionOptions.push({
 					isRecent: false,
 					value: `${connectionId}:${definitionId}`,
 					label: optionLabel,
+					sortKey: definition.sortKey ?? definition.label,
 					fuzzy: fuzzyPrepare(optionLabel),
 				})
 			}
+
+			connectionOptions.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
+
+			options.push(...connectionOptions)
 		}
 
 		pushConnection('internal', 'internal')
@@ -100,6 +108,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 							isRecent: true, // Not really, but should behave the same
 							value: `internal:${definitionId}`,
 							label: optionLabel,
+							sortKey: definition.sortKey ?? definition.label,
 							fuzzy: fuzzyPrepare(optionLabel),
 						})
 					}
@@ -127,6 +136,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 					isRecent: true,
 					value: `${connectionId}:${definitionId}`,
 					label: optionLabel,
+					sortKey: definition.sortKey ?? definition.label,
 					fuzzy: fuzzyPrepare(optionLabel),
 				})
 			}

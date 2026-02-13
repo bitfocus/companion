@@ -56,6 +56,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
+				sortKey: rawAction.sortName || null,
 				description: rawAction.description,
 				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action),
 				optionsToMonitorForInvalidations: rawAction.optionsToMonitorForSubscribe || null,
@@ -86,6 +87,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			feedbacks[rawFeedback.id] = {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
+				sortKey: rawFeedback.sortName || null,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback),
 				optionsToMonitorForInvalidations: null,
