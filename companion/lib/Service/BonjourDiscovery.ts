@@ -171,7 +171,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 				protocol: query.protocol,
 				port: query.port,
 				txt: query.txt,
-				addressFamily: query.addressFamily,
+				addressFamily: 'addressFamily' in query ? query.addressFamily : undefined,
 			}
 			if (typeof filter.type !== 'string' || !filter.type) throw new Error('Invalid type for bonjour query')
 			if (typeof filter.protocol !== 'string' || !filter.protocol) throw new Error('Invalid protocol for bonjour query')

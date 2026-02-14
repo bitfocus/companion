@@ -56,6 +56,7 @@ import path from 'path'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { ModuleManifestOldExt } from '@companion-app/shared/Model/ModuleManifest.js'
 
 const execAsync = promisify(exec)
 
@@ -530,7 +531,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.getIdFromLabel(moduleType, label)
 	}
 
-	getManifestForConnection(id: string): ModuleManifest | undefined {
+	getManifestForConnection(id: string): ModuleManifest | ModuleManifestOldExt | undefined {
 		const config = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (!config) return undefined
 

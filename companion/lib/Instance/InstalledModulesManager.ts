@@ -127,6 +127,7 @@ export class InstanceInstalledModulesManager {
 		switch (moduleType) {
 			case ModuleInstanceType.Connection:
 			case 'connection':
+			case 'connection-v1':
 			case undefined:
 				return this.#appInfo.modulesDirs.connection
 			case ModuleInstanceType.Surface:
@@ -507,7 +508,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<SomeModuleManife
 
 					try {
 						const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
-						if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+						if (!parsedManifest.type) parsedManifest.type = 'connection-v1' // Backwards compatibility
 
 						resolve(parsedManifest)
 					} catch (e) {
@@ -584,7 +585,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 
 						try {
 							const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
-							if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+							if (!parsedManifest.type) parsedManifest.type = 'connection-v1' // Backwards compatibility
 
 							moduleInfos.push({
 								subDir: moduleDirName,

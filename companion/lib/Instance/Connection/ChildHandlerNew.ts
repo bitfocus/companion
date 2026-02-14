@@ -297,9 +297,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								controlId: controlId,
 								actionId: entity.definitionId,
 								options: parseRes.parsedOptions,
-
-								upgradeIndex: null,
-								disabled: !!entity.disabled,
 							},
 						},
 						undefined,
@@ -326,9 +323,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								options: parseRes.parsedOptions,
 
 								image: control?.getBitmapSize() ?? undefined,
-
-								upgradeIndex: null,
-								disabled: !!entity.disabled,
 							},
 						},
 						undefined,
@@ -364,6 +358,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
+		if (action.disabled) return
 
 		try {
 			// This means the new flow is being done, and the options must be parsed at this stage
@@ -390,9 +385,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					controlId: extras?.controlId,
 					actionId: action.definitionId,
 					options: parseRes.parsedOptions,
-
-					upgradeIndex: null,
-					disabled: !!action.disabled,
 				},
 
 				surfaceId: extras?.surfaceId,
@@ -725,15 +717,12 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
 
 		for (const [id, value] of actions) {
-			if (value) {
+			if (value && !value.entity.disabled) {
 				updateMessage.actions[id] = {
 					id: value.entity.id,
 					controlId: value.controlId,
 					actionId: value.entity.definitionId,
 					options: value.parsedOptions,
-
-					upgradeIndex: value.entity.upgradeIndex ?? null,
-					disabled: !!value.entity.disabled,
 				}
 			} else {
 				updateMessage.actions[id] = null
@@ -747,7 +736,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
 
 		for (const [id, value] of feedbacks) {
-			if (value) {
+			if (value && !value.entity.disabled) {
 				updateMessage.feedbacks[id] = {
 					id: value.entity.id,
 					controlId: value.controlId,
@@ -755,9 +744,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					options: value.parsedOptions,
 
 					image: value.imageSize,
-
-					upgradeIndex: value.entity.upgradeIndex ?? null,
-					disabled: !!value.entity.disabled,
 				}
 			} else {
 				updateMessage.feedbacks[id] = null
@@ -777,7 +763,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					options: act.entity.options,
 
 					upgradeIndex: act.entity.upgradeIndex ?? null,
-					disabled: !!act.entity.disabled,
 				})),
 				defaultUpgradeIndex: 0, // Unused
 			})
@@ -809,7 +794,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 						: exprVal(!!fb.entity.isInverted),
 
 					upgradeIndex: fb.entity.upgradeIndex ?? null,
-					disabled: !!fb.entity.disabled,
 				})),
 				defaultUpgradeIndex: 0, // Unused
 			})
