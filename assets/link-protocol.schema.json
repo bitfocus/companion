@@ -1,0 +1,347 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "LinkProtocolPayloads",
+	"description": "Companion Link protocol payload definitions. Each $def is a message payload type identified by its message type string. Protocol.ts composes these into discriminated-union message envelopes.",
+	"type": "object",
+	"properties": {
+		"_payloads": {
+			"description": "Reference anchor — ensures all $defs are reachable and generated as TypeScript interfaces.",
+			"type": "object",
+			"properties": {
+				"announcement": { "$ref": "#/$defs/AnnouncementPayload" },
+				"subscribeRequest": { "$ref": "#/$defs/SubscribeRequestPayload" },
+				"subscribeResponse": { "$ref": "#/$defs/SubscribeResponsePayload" },
+				"unsubscribeRequest": { "$ref": "#/$defs/UnsubscribeRequestPayload" },
+				"buttonCommand": { "$ref": "#/$defs/ButtonCommandPayload" },
+				"bitmapUpdate": { "$ref": "#/$defs/BitmapUpdatePayload" },
+				"buttonState": { "$ref": "#/$defs/ButtonStatePayload" },
+				"buttonLocation": { "$ref": "#/$defs/ButtonLocation" },
+				"buttonLocationWithResolution": { "$ref": "#/$defs/ButtonLocationWithResolution" },
+				"subscribeResponseButtonState": { "$ref": "#/$defs/SubscribeResponseButtonState" },
+				"gridSize": { "$ref": "#/$defs/GridSize" }
+			},
+			"additionalProperties": false
+		}
+	},
+	"additionalProperties": false,
+	"$defs": {
+		"GridSize": {
+			"title": "LinkGridSize",
+			"description": "Grid dimensions for an instance.",
+			"type": "object",
+			"properties": {
+				"rows": {
+					"description": "Number of rows in the grid.",
+					"type": "number",
+					"minimum": 0
+				},
+				"cols": {
+					"description": "Number of columns in the grid.",
+					"type": "number",
+					"minimum": 0
+				}
+			},
+			"required": ["rows", "cols"],
+			"additionalProperties": false
+		},
+		"ButtonLocation": {
+			"title": "LinkButtonLocation",
+			"description": "Identifies a button by its page, row, and column.",
+			"type": "object",
+			"properties": {
+				"page": {
+					"description": "Page number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"row": {
+					"description": "Row number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"col": {
+					"description": "Column number.",
+					"type": "number",
+					"minimum": 0
+				}
+			},
+			"required": ["page", "row", "col"],
+			"additionalProperties": false
+		},
+		"ButtonLocationWithResolution": {
+			"title": "LinkButtonLocationWithResolution",
+			"description": "A button location with a requested bitmap resolution.",
+			"type": "object",
+			"properties": {
+				"page": {
+					"description": "Page number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"row": {
+					"description": "Row number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"col": {
+					"description": "Column number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"width": {
+					"description": "Requested bitmap width in pixels.",
+					"type": "number",
+					"minimum": 1
+				},
+				"height": {
+					"description": "Requested bitmap height in pixels.",
+					"type": "number",
+					"minimum": 1
+				}
+			},
+			"required": ["page", "row", "col", "width", "height"],
+			"additionalProperties": false
+		},
+		"AnnouncementPayload": {
+			"title": "LinkAnnouncementPayload",
+			"description": "Discovery announcement from a Companion instance.",
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "Unique instance UUID.",
+					"type": "string"
+				},
+				"name": {
+					"description": "Human-readable instance name.",
+					"type": "string"
+				},
+				"version": {
+					"description": "Companion application version string.",
+					"type": "string"
+				},
+				"protocolVersion": {
+					"description": "Link protocol version number.",
+					"type": "number"
+				},
+				"pageCount": {
+					"description": "Number of pages configured on this instance.",
+					"type": "number",
+					"minimum": 0
+				},
+				"gridSize": {
+					"$ref": "#/$defs/GridSize"
+				},
+				"timestamp": {
+					"description": "Unix timestamp in milliseconds.",
+					"type": "number"
+				}
+			},
+			"required": ["id", "name", "version", "protocolVersion", "pageCount", "gridSize", "timestamp"],
+			"additionalProperties": false
+		},
+		"SubscribeRequestPayload": {
+			"title": "LinkSubscribeRequestPayload",
+			"description": "Request to subscribe to button state updates at specific resolutions.",
+			"type": "object",
+			"properties": {
+				"buttons": {
+					"description": "List of buttons and their requested resolutions.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/ButtonLocationWithResolution"
+					}
+				},
+				"timestamp": {
+					"description": "Unix timestamp in milliseconds.",
+					"type": "number"
+				}
+			},
+			"required": ["buttons", "timestamp"],
+			"additionalProperties": false
+		},
+		"SubscribeResponseButtonState": {
+			"title": "LinkSubscribeResponseButtonState",
+			"description": "Initial state for a subscribed button.",
+			"type": "object",
+			"properties": {
+				"page": {
+					"description": "Page number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"row": {
+					"description": "Row number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"col": {
+					"description": "Column number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"width": {
+					"description": "Bitmap width in pixels.",
+					"type": "number",
+					"minimum": 1
+				},
+				"height": {
+					"description": "Bitmap height in pixels.",
+					"type": "number",
+					"minimum": 1
+				},
+				"dataUrl": {
+					"description": "PNG data URL at the requested resolution, or null if no render is available.",
+					"type": ["string", "null"]
+				},
+				"pressed": {
+					"description": "Whether the button is currently pressed.",
+					"type": "boolean"
+				}
+			},
+			"required": ["page", "row", "col", "width", "height", "dataUrl", "pressed"],
+			"additionalProperties": false
+		},
+		"SubscribeResponsePayload": {
+			"title": "LinkSubscribeResponsePayload",
+			"description": "Response containing initial state for subscribed buttons.",
+			"type": "object",
+			"properties": {
+				"states": {
+					"description": "List of initial button states.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/SubscribeResponseButtonState"
+					}
+				},
+				"timestamp": {
+					"description": "Unix timestamp in milliseconds.",
+					"type": "number"
+				}
+			},
+			"required": ["states", "timestamp"],
+			"additionalProperties": false
+		},
+		"UnsubscribeRequestPayload": {
+			"title": "LinkUnsubscribeRequestPayload",
+			"description": "Request to unsubscribe from button state updates.",
+			"type": "object",
+			"properties": {
+				"buttons": {
+					"description": "List of buttons and resolutions to unsubscribe from.",
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/ButtonLocationWithResolution"
+					}
+				},
+				"timestamp": {
+					"description": "Unix timestamp in milliseconds.",
+					"type": "number"
+				}
+			},
+			"required": ["buttons", "timestamp"],
+			"additionalProperties": false
+		},
+		"ButtonCommandPayload": {
+			"title": "LinkButtonCommandPayload",
+			"description": "Payload for button press or release commands.",
+			"type": "object",
+			"properties": {
+				"page": {
+					"description": "Page number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"row": {
+					"description": "Row number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"col": {
+					"description": "Column number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"timestamp": {
+					"description": "Unix timestamp in milliseconds.",
+					"type": "number"
+				}
+			},
+			"required": ["page", "row", "col", "timestamp"],
+			"additionalProperties": false
+		},
+		"BitmapUpdatePayload": {
+			"title": "LinkBitmapUpdatePayload",
+			"description": "Bitmap update for a subscribed button at a specific resolution.",
+			"type": "object",
+			"properties": {
+				"page": {
+					"description": "Page number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"row": {
+					"description": "Row number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"col": {
+					"description": "Column number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"width": {
+					"description": "Bitmap width in pixels.",
+					"type": "number",
+					"minimum": 1
+				},
+				"height": {
+					"description": "Bitmap height in pixels.",
+					"type": "number",
+					"minimum": 1
+				},
+				"dataUrl": {
+					"description": "PNG data URL at the subscribed resolution.",
+					"type": "string"
+				},
+				"timestamp": {
+					"description": "Unix timestamp in milliseconds.",
+					"type": "number"
+				}
+			},
+			"required": ["page", "row", "col", "width", "height", "dataUrl", "timestamp"],
+			"additionalProperties": false
+		},
+		"ButtonStatePayload": {
+			"title": "LinkButtonStatePayload",
+			"description": "Button pressed/released state notification.",
+			"type": "object",
+			"properties": {
+				"page": {
+					"description": "Page number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"row": {
+					"description": "Row number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"col": {
+					"description": "Column number.",
+					"type": "number",
+					"minimum": 0
+				},
+				"pressed": {
+					"description": "Whether the button is currently pressed.",
+					"type": "boolean"
+				},
+				"timestamp": {
+					"description": "Unix timestamp in milliseconds.",
+					"type": "number"
+				}
+			},
+			"required": ["page", "row", "col", "pressed", "timestamp"],
+			"additionalProperties": false
+		}
+	}
+}

@@ -1,7 +1,41 @@
 /**
  * Companion Link protocol message types
- * Transport-agnostic message definitions
+ *
+ * Payload interfaces are generated from assets/link-protocol.schema.json
+ * via `yarn build:link-schema`. Do NOT hand-edit the payload shapes here —
+ * modify the JSON Schema instead and re-run the generator.
+ *
+ * This file re-exports those generated types, defines the generic message
+ * envelope, composes discriminated-union message types, and provides
+ * MQTT topic helpers.
  */
+
+// ── Re-export generated payload types ──────────────────────
+export type {
+	LinkAnnouncementPayload as AnnouncementPayload,
+	LinkSubscribeRequestPayload as SubscribeRequestPayload,
+	LinkSubscribeResponsePayload as SubscribeResponsePayload,
+	LinkSubscribeResponseButtonState as SubscribeResponseButtonState,
+	LinkUnsubscribeRequestPayload as UnsubscribeRequestPayload,
+	LinkButtonCommandPayload as ButtonCommandPayload,
+	LinkBitmapUpdatePayload as BitmapUpdatePayload,
+	LinkButtonStatePayload as ButtonStatePayload,
+	LinkButtonLocation as ButtonLocation,
+	LinkButtonLocationWithResolution as ButtonLocationWithResolution,
+	LinkGridSize as GridSize,
+} from './LinkProtocolSchema.js'
+
+import type {
+	LinkAnnouncementPayload,
+	LinkSubscribeRequestPayload,
+	LinkSubscribeResponsePayload,
+	LinkUnsubscribeRequestPayload,
+	LinkButtonCommandPayload,
+	LinkBitmapUpdatePayload,
+	LinkButtonStatePayload,
+} from './LinkProtocolSchema.js'
+
+// ── Message envelope ───────────────────────────────────────
 
 /** Base envelope for all Link protocol messages */
 export interface LinkMessage<T extends string = string, P = unknown> {
@@ -13,109 +47,19 @@ export interface LinkMessage<T extends string = string, P = unknown> {
 	payload: P
 }
 
-// ── Discovery ──────────────────────────────────────────────
+// ── Composed message types (envelope + payload) ────────────
 
-export interface AnnouncementPayload {
-	/** Unique instance ID */
-	id: string
-	/** Human-readable instance name */
-	name: string
-	/** Companion app version */
-	version: string
-	/** Link protocol version */
-	protocolVersion: number
-	/** Number of pages configured */
-	pageCount: number
-	/** Grid dimensions */
-	gridSize: { rows: number; cols: number }
-	/** Unix timestamp (ms) */
-	timestamp: number
-}
+export type AnnouncementMessage = LinkMessage<'announcement', LinkAnnouncementPayload>
 
-export type AnnouncementMessage = LinkMessage<'announcement', AnnouncementPayload>
+export type SubscribeRequestMessage = LinkMessage<'subscribe.request', LinkSubscribeRequestPayload>
+export type SubscribeResponseMessage = LinkMessage<'subscribe.response', LinkSubscribeResponsePayload>
+export type UnsubscribeRequestMessage = LinkMessage<'unsubscribe.request', LinkUnsubscribeRequestPayload>
 
-// ── Subscription ───────────────────────────────────────────
+export type ButtonPressMessage = LinkMessage<'button.press', LinkButtonCommandPayload>
+export type ButtonReleaseMessage = LinkMessage<'button.release', LinkButtonCommandPayload>
 
-export interface ButtonLocation {
-	page: number
-	row: number
-	col: number
-}
-
-export interface ButtonLocationWithResolution extends ButtonLocation {
-	resolution: { width: number; height: number }
-}
-
-export interface SubscribeRequestPayload {
-	buttons: ButtonLocationWithResolution[]
-	timestamp: number
-}
-
-export type SubscribeRequestMessage = LinkMessage<'subscribe.request', SubscribeRequestPayload>
-
-export interface SubscribeResponseButtonState {
-	page: number
-	row: number
-	col: number
-	bitmap: string | null
-	pressed: boolean
-}
-
-export interface SubscribeResponsePayload {
-	states: SubscribeResponseButtonState[]
-	timestamp: number
-}
-
-export type SubscribeResponseMessage = LinkMessage<'subscribe.response', SubscribeResponsePayload>
-
-export interface UnsubscribeRequestPayload {
-	buttons: ButtonLocationWithResolution[]
-	timestamp: number
-}
-
-export type UnsubscribeRequestMessage = LinkMessage<'unsubscribe.request', UnsubscribeRequestPayload>
-
-// ── Button Commands ────────────────────────────────────────
-
-export interface ButtonCommandPayload {
-	page: number
-	row: number
-	col: number
-	timestamp: number
-}
-
-export type ButtonPressMessage = LinkMessage<'button.press', ButtonCommandPayload>
-export type ButtonReleaseMessage = LinkMessage<'button.release', ButtonCommandPayload>
-
-// ── Bitmap Updates ─────────────────────────────────────────
-
-export interface BitmapUpdatePayload {
-	page: number
-	row: number
-	col: number
-	width: number
-	height: number
-	/** Base64-encoded PNG */
-	bitmap: string
-	timestamp: number
-}
-
-export type BitmapUpdateMessage = LinkMessage<'bitmap.update', BitmapUpdatePayload>
-
-// ── Chunking ───────────────────────────────────────────────
-
-export interface ChunkHeader {
-	/** Unique message ID for reassembly */
-	id: string
-	/** Chunk index (0-based) */
-	idx: number
-	/** Total number of chunks */
-	total: number
-	/** Total assembled size in bytes */
-	size: number
-	/** CRC32 of this chunk's data */
-	crc: number
-}
+export type BitmapUpdateMessage = LinkMessage<'bitmap.update', LinkBitmapUpdatePayload>
+export type ButtonStateMessage = LinkMessage<'button.state', LinkButtonStatePayload>
 
 // ── Topic Helpers ──────────────────────────────────────────
 
@@ -158,4 +102,44 @@ export function rpcRequestTopic(uuid: string, correlationId: string): string {
 
 export function rpcResponseTopic(uuid: string, correlationId: string): string {
 	return `${LINK_TOPIC_PREFIX}/${uuid}/rpc/${correlationId}/response`
+}
+
+export function chunksTopic(): string {
+	return `${LINK_TOPIC_PREFIX}/chunks`
+}
+
+/**
+ * Wildcard pattern for subscribing to all bitmap topics for a specific instance.
+ * Used by clients that want to receive bitmaps from a remote instance.
+ */
+export function bitmapWildcard(uuid: string): string {
+	return `${LINK_TOPIC_PREFIX}/${uuid}/location/+/+/+/bitmap/+`
+}
+
+/**
+ * Wildcard pattern for subscribing to all state topics for a specific instance.
+ */
+export function stateWildcard(uuid: string): string {
+	return `${LINK_TOPIC_PREFIX}/${uuid}/location/+/+/+/state`
+}
+
+/**
+ * Wildcard pattern for subscribing to all press commands for our instance.
+ */
+export function pressWildcard(uuid: string): string {
+	return `${LINK_TOPIC_PREFIX}/${uuid}/location/+/+/+/press`
+}
+
+/**
+ * Wildcard pattern for subscribing to all release commands for our instance.
+ */
+export function releaseWildcard(uuid: string): string {
+	return `${LINK_TOPIC_PREFIX}/${uuid}/location/+/+/+/release`
+}
+
+/**
+ * Wildcard pattern for subscribing to all RPC requests for our instance.
+ */
+export function rpcRequestWildcard(uuid: string): string {
+	return `${LINK_TOPIC_PREFIX}/${uuid}/rpc/+/request`
 }
