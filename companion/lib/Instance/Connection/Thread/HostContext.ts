@@ -32,7 +32,7 @@ import { ConvertPresetDefinitions } from './Presets.js'
  * The context of methods and properties provided to the surfaces, which they can use to report events or make requests.
  */
 export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig, TSecrets> {
-	readonly #logger = createModuleLogger()
+	readonly #logger = createModuleLogger('HostContext')
 	readonly #ipcWrapper: ModuleChildIpcWrapper
 
 	readonly #connectionId: string
