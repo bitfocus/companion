@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy } from '@fortawesome/free-solid-svg-icons'
-import { CButton } from '@coreui/react'
+import { faCaretDown, faCaretRight, faCopy, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { CAlert, CButton, CPopover } from '@coreui/react'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 
 interface VariableValueDisplay {
@@ -130,8 +130,11 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 
 	const btnstyle = { marginLeft: '4px', borderRadius: '4px' }
 
+	const [expanded, setExpanded] = useState(false)
+	const toggleExpanded = useCallback(() => setExpanded((v) => !v), [])
+
 	return (
-		<div className="variable-value-display" title={invalidReason} {...props}>
+		<div className="variable-value-display" {...props}>
 			<div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
 				<div
 					style={{
@@ -144,7 +147,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 						...(compact
 							? {
 									minWidth: 0,
-									maxWidth: '100%',
+									maxWidth: '300px',
 									alignItems: 'center',
 								}
 							: {
@@ -161,7 +164,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 								verticalAlign: 'top',
 								flexShrink: 0,
 							}}
-							title={invalidReason ?? `Variable type: ${typeDescription}`}
+							title={`Variable type: ${typeDescription}`}
 						>
 							<VariableTypeIcon width={12} height={12} icon={iconPath} fill={color} style={{ verticalAlign: '-1px' }} />
 						</span>
@@ -192,7 +195,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 											whiteSpace: 'pre-wrap',
 										}),
 						}}
-						title={invalidReason ?? compactValue}
+						title={compactValue}
 					>
 						{elms /*displayValue */}
 						{valueStr.length <= TRUNCATE_LENGTH ? (
@@ -207,6 +210,57 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 							</button>
 						)}
 					</code>
+					{compact && (
+						<CPopover
+							visible={expanded}
+							onHide={() => setExpanded(false)}
+							placement="auto"
+							trigger="focus"
+							className="variable-value-expanded"
+							content={
+								<div
+									style={{
+										maxWidth: '500px',
+										maxHeight: '300px',
+										overflowY: 'auto',
+									}}
+								>
+									{invalidReason && (
+										<CAlert color="danger">
+											<FontAwesomeIcon icon={faTriangleExclamation} /> {invalidReason}
+										</CAlert>
+									)}
+									<code
+										style={{
+											whiteSpace: 'pre-wrap',
+											wordBreak: 'break-all',
+											padding: '0.5rem',
+											color: '#212529',
+											backgroundColor: '#f8f9fa',
+											borderRadius: '0.25rem',
+											display: 'block',
+										}}
+									>
+										{valueStr}
+									</code>
+								</div>
+							}
+						>
+							<span
+								style={{
+									padding: '4px 4px 4px 2px',
+									cursor: 'pointer',
+									flexShrink: 0,
+									display: 'flex',
+									alignItems: 'center',
+								}}
+								onClick={toggleExpanded}
+								title={expanded ? 'Collapse' : 'Expand to see full value'}
+							>
+								<FontAwesomeIcon icon={expanded ? faCaretDown : faCaretRight} fixedWidth style={{ fontSize: '10px' }} />
+							</span>
+						</CPopover>
+					)}
 				</div>
 				{showCopy && (
 					<CopyToClipboard text={valueStr} onCopy={onCopied}>

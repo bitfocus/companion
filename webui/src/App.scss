@@ -190,3 +190,16 @@ body {
 	padding-left: 0.75rem;
 	pointer-events: none;
 }
+
+.variable-value-expanded {
+	background-color: #fff;
+
+	.alert {
+		--cui-alert-padding-x: 0.75rem;
+		--cui-alert-padding-y: 0.5rem;
+	}
+
+	.popover-body {
+		padding: 0.75rem;
+	}
+}
