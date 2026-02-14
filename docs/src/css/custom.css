@@ -14,11 +14,21 @@
 	--ifm-color-primary-lighter: #e60c22;
 	--ifm-color-primary-lightest: #ea2336;
 	--ifm-code-font-size: 95%;
-	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+	--docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 10%);
 
-	--ifm-navbar-background-color: #d50215;
-	--ifm-navbar-link-color: #ffffff;
-	--ifm-navbar-link-hover-color: #ffffff;
+	--companion-navbar-bg: #d50215;
+	--ifm-navbar-height: 3.25rem; /* default is 3.75 */
+	--ifm-navbar-background-color: var(--companion-navbar-bg);
+	--ifm-navbar-link-color: white;
+	--ifm-navbar-link-hover-color: white;
+
+	--companion-navbar-item-hover-bg: rgb(255 255 255 / 20%);
+	--companion-active-tab-color: var(--ifm-font-color-base);
+	--companion-active-tab-bg: white;
+	--companion-active-tab-shadow-color: rgb(0 0 0 / 10%);
+	--companion-mode-toggle-bg: rgb(255 255 255 / 40%);
+	--companion-group-border-color: rgb(0 0 0 / 10%);
+	--companion-pulldown-sidebar-bg: white; /* --ifm-background-color is transparent in light mode */
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -31,31 +41,202 @@
 	--ifm-color-primary-lighter: #f47788;
 	--ifm-color-primary-lightest: #f89aa7;
 
-	--docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+	--docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 30%);
+	--ifm-navbar-link-color: white;
+	--ifm-navbar-link-hover-color: white;
+
+	--companion-active-tab-color: var(--ifm-font-color-base); /* for the pseudo-tab links in the top navbar */
+	--companion-active-tab-bg: var(--ifm-background-color); /* #1b1b1d */
+	--companion-active-tab-shadow-color: rgb(125 125 125 / 10%);
+	--companion-mode-toggle-bg: rgb(0 0 0 / 25%);
+	--companion-group-border-color: rgb(255 255 255 / 10%);
+	--companion-pulldown-sidebar-bg: var(--ifm-background-color);
 }
 
-/* Navbar active link styles */
-.navbar__link--active {
-	color: #ffffff !important;
-	background-color: rgba(255, 255, 255, 0.1);
-	border-radius: 0.25rem;
+/* parent of the "tabs" needs slight adjustments: */
+/* The navbar and (implicitly) right container must not hide overflow: or the version dropdown will be clipped. */
+.navbar {
+	padding-top: 0; /* In order to enable tab-like visuals, we need to let the inner elements deal with padding. */
+	padding-bottom: 0;
+	box-shadow: none; /* keeps tab continuous with page content */
 }
 
-.navbar__link--active:hover {
-	color: #ffffff !important;
-	background-color: rgba(255, 255, 255, 0.2);
+/* To get the best tab effect clip overflow so we don't have to precisely calculate the button padding.
+   This also prevents the shadow from interrupting the continuity of the tab to the page contents */
+.theme-layout-navbar-left {
+	overflow: hidden;
 }
 
-[data-theme='dark'] .navbar__link--active {
-	color: #ffffff !important;
-	background-color: rgba(255, 255, 255, 0.15);
+/* Navbar (the top bar, not the sidebar) link styles 
+   note: `overflow: hidden;` can cause weird text-wrapping (if wrapping is enabled). It clips button text when wrapping is disabled.
+   Note: The margin-bottom/border-bottom adjustment here is made large to make the tabs touch the bottom of the header bar
+        Since we're clipping the left-container, the bottom-border needn't be precise -- as long as it's big enough.
+   note 3: ":not(:last-child)" is to prevent tab-highlighting in the app-packaged docs, where there are no tabs.
+   */
+.theme-layout-navbar-left .navbar__link {
+	--vertical-padding: 0.5rem; /* make up for the reduced line-height */
+	--margin-bottom: calc(-1 * var(--ifm-navbar-height) / 2); /* move the button down to create the tab-like effect */
+	text-align: center; /* keep labels horizontally centered when they become two lines */
+	line-height: 1; /* keep labels compact when words wrap to two lines (in case we remove nowrap later, below) */
+	padding-top: var(--vertical-padding);
+	padding-bottom: calc(
+		var(--vertical-padding) - var(--margin-bottom)
+	); /* note that margin-bottom is negative, so padding-bottom is positive and larger in magnitude */
+	margin-bottom: var(--margin-bottom);
+	white-space: nowrap; /* Prevent two-line buttons! If we add more buttons, this may be removed */
+
+	/* Make page-tab links with rounded top corners, but square bottom corners so it visually "fuses" with the page */
+	border-radius: 0.5rem 0.5rem 0 0;
 }
 
-[data-theme='dark'] .navbar__link--active:hover {
-	color: #ffffff !important;
-	background-color: rgba(255, 255, 255, 0.25);
+/* Make the active link look a like a page-tab (like a browser tab or VS Code editor tabs) */
+.theme-layout-navbar-left .navbar__link--active {
+	color: var(--companion-active-tab-color);
+	background-color: var(--companion-active-tab-bg);
+	/* Give the tab a glow  */
+	box-shadow: 0 -4px 10px 1px var(--companion-active-tab-shadow-color);
+
+	.navbar__title {
+		font-weight: var(--ifm-font-weight-semibold); /* for the logo, match other tabs; bold is too strong */
+	}
 }
 
+/* Hover styles for navbar links. 
+	Note: ".navbar__item.navbar__link" excludes dropdown menus, which by default do not highlight, possibly due to dropdown--hoverable
+	*/
+.navbar__item.navbar__link:hover:not(.navbar__link--active),
+.navbar__toggle:hover {
+	background-color: var(--companion-navbar-item-hover-bg);
+}
+
+.navbar__brand:hover,
+.navbar-sidebar__close:hover {
+	opacity: 85%;
+}
+
+/* Make the dark/light mode button stand out better.
+   Unfortunately, it doesn't have a non-serialized classname, but this works. 
+   Can't say if it's better than .clean-btn[title='system mode'], but it's safer from localization */
+.theme-layout-navbar-right .clean-btn:not(:hover),
+.navbar-sidebar__brand .clean-btn:not(:hover) {
+	background-color: var(--companion-mode-toggle-bg);
+}
+
+/* The next two rules adjust spacing for the download, github and light/dark buttons.
+   The first is for the light/dark button when it is grouped with the other two, so only needs to work on the full navbar. */
+.theme-layout-navbar-right .clean-btn {
+	margin: 0 0.25em;
+}
+
+/* when the window is wide, the icons show in the right-header. Don't show text. */
+.theme-layout-navbar-right .navbar__link {
+	padding: 0.25em;
+	border-radius: 0.5rem;
+
+	/* fontawesome-* classes are added in the item definitions in docusaurus.config.ts  */
+	.fontawesome {
+		height: 2rem;
+		width: auto;
+		display: block; /* removes extra spacing below the SVG */
+	}
+	.fontawesome-text {
+		display: none;
+	}
+}
+
+/* when the window is narrow, the right-header icons are in the pull-down sidebar */
+.navbar-sidebar__items {
+	/* fontawesome-* classes were added in the item definitions in docusaurus.config.ts  */
+	.fontawesome-container {
+		display: flex;
+		align-items: center;
+
+		.fontawesome {
+			height: 1.5em;
+			width: auto;
+			/* "display: block" not needed here — flex container eliminates the inline spacing below the SVG */
+		}
+
+		.fontawesome-text {
+			line-height: 1;
+			padding-left: 0.5em;
+		}
+	}
+}
+
+/* Default color for the sidebar toggle is black in light mode and grey in dark mode for some reason; neither look great */
+.navbar__toggle {
+	color: white;
+	padding: 0.5em;
+	border-radius: 0.5em;
+}
+
+/* when window is narrow, the "pull-down" sidebar's class is .navbar-sidebar.
+   Adjust its colors here to match the body/sidebar colors rather than the (top) navbar colors
+   (when the window is wider, the permanent sidebar class is .theme-doc-sidebar-menu)
+ */
+.navbar-sidebar {
+	--ifm-navbar-background-color: var(--companion-pulldown-sidebar-bg);
+}
+
+/* the top of the narrow-win sidebar should be red regardless of theme */
+.navbar-sidebar__brand,
+.navbar-sidebar__brand:hover {
+	background-color: var(--companion-navbar-bg);
+}
+
+/* Close-icon for the drop-down sidebar when the window is narrow */
+.navbar-sidebar__close {
+	padding: 0.5em;
+	border-radius: 0.5em;
+	color: white; /* doesn't do anything currently, because the SVG is hardcoded to: */
+	--ifm-color-emphasis-600: white;
+
+	&:hover {
+		background-color: var(--companion-mode-toggle-bg);
+	}
+}
+
+/* For all sidebars: Make subgroup (aka category) boundaries more distinct.
+   note that the DOM for collapsing lists in the sidebar is:
+    <li class="theme-doc-sidebar-item-category ... menu__list-item menu__list-item--collapsed> 
+		<div class="menu__list-item-collapsible">...</div>
+		<ul class="menu__list> <li class="...menu__list-item">...</li>...   </ul>
+	</li>
+   but the class .menu__list-item--collapsed is removed from the outer <li> and not
+   replaced by another classname, the condition for open is therefore:
+   .theme-doc-sidebar-item-category:not(.menu__list-item--collapsed)
+ */
+
+.theme-doc-sidebar-item-category:not(.menu__list-item--collapsed) {
+	box-shadow: 1px 0 16px -3px var(--companion-group-border-color);
+	border-right: 1px solid var(--companion-group-border-color);
+	border-radius: 0.5rem;
+}
+
+/* move the expand/contract caret to the far left for improved visibility/group offsetting */
+.menu__caret {
+	order: -1;
+	padding-left: 0.45em;
+	padding-right: 0;
+	border-radius: 0.5rem 0 0 0.5rem; /* match the outer box's corner */
+
+	&::before {
+		scale: 0.6;
+	}
+}
+
+/* split the padding between the caret (previous rule) and the text in the category header */
+.menu__link--sublist {
+	padding-left: 0.2em;
+}
+
+/* indent sublists, i.e. list under a category, to  align with the category header */
+.menu__list-item .menu__list-item {
+	margin-left: 0.35em;
+}
+
+/* Main body styling? CodeRabbit says these are safe to prune, but was there an intention to use these? */
 .text-gray-50 {
 	color: #f9fafb;
 }
@@ -63,6 +244,18 @@
 	color: #6b7280;
 }
 
-h2 ~ :not(h1, h2) {
+/* In markdown pages indent all text, including subheaders, under H2 headers */
+.markdown h2 ~ :not(h1, h2) {
 	margin-left: 2rem;
+}
+
+/* Auto-generated TOC heading links should be white, not red */
+.auto-toc-heading a {
+	color: var(--ifm-heading-color);
+	text-decoration: none;
+}
+
+.auto-toc-heading a:hover {
+	color: var(--ifm-heading-color);
+	text-decoration: underline;
 }
