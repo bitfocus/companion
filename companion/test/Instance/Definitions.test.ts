@@ -2185,5 +2185,198 @@ describe('InstanceDefinitions', () => {
 			expect(action.options.number).toEqual(exprVal(42))
 			expect(action.options.checkbox).toEqual(exprVal(true))
 		})
+
+		it('injects local variable values when variableValues parameter is provided', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				options: [
+					{
+						id: 'text',
+						type: 'textinput',
+						label: 'Text',
+						default: '',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					localVariables: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv1',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var1',
+							options: {
+								startup_value: exprVal('default1'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv2',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var2',
+							options: {
+								startup_value: exprVal('default2'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+					],
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											text: exprVal('test'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+
+			// Convert with variable injection
+			const variableValues = {
+				var1: 'injected1',
+				var2: 'injected2',
+			}
+			const result = defs.convertPresetToControlModel('conn1', 'p1', variableValues)
+			expect(result).not.toBeNull()
+
+			// Check that injected values override the defaults
+			expect(result!.localVariables[0].options.startup_value).toEqual(exprVal('injected1'))
+			expect(result!.localVariables[1].options.startup_value).toEqual(exprVal('injected2'))
+		})
+
+		it('does not inject local variable values when variableValues is null', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					localVariables: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv1',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var1',
+							options: {
+								startup_value: exprVal('default1'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv2',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var2',
+							options: {
+								startup_value: exprVal('default2'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+					],
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
+			expect(result).not.toBeNull()
+
+			// Should preserve the original default values
+			expect(result!.localVariables[0].options.startup_value).toEqual(exprVal('default1'))
+			expect(result!.localVariables[1].options.startup_value).toEqual(exprVal('default2'))
+		})
+
+		it('partially injects local variables when only some are provided', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					localVariables: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv1',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var1',
+							options: {
+								startup_value: exprVal('default1'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv2',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var2',
+							options: {
+								startup_value: exprVal('default2'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv3',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var3',
+							options: {
+								startup_value: exprVal('default3'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+					],
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+
+			// Inject only var2
+			const variableValues = {
+				var2: 'injected2',
+			}
+			const result = defs.convertPresetToControlModel('conn1', 'p1', variableValues)
+			expect(result).not.toBeNull()
+
+			// var1 and var3 keep defaults, var2 is injected
+			expect(result!.localVariables[0].options.startup_value).toEqual(exprVal('default1'))
+			expect(result!.localVariables[1].options.startup_value).toEqual(exprVal('injected2'))
+			expect(result!.localVariables[2].options.startup_value).toEqual(exprVal('default3'))
+		})
 	})
 })
