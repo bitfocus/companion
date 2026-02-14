@@ -709,9 +709,10 @@ export class ControlsController {
 			usedVariableValues = injectOverriddenLocalVariableValues(presetModel.localVariables, variableValues)
 		}
 
-		const variablesHash = usedVariableValues
-			? crypto.createHash('sha256').update(createStableObjectHash(usedVariableValues)).digest('hex')
-			: 'default'
+		const variablesHash =
+			usedVariableValues && Object.keys(usedVariableValues).length > 0
+				? crypto.createHash('sha256').update(createStableObjectHash(usedVariableValues)).digest('hex')
+				: 'default'
 
 		// Check for an existing control that should be reused
 		const controlId = CreatePresetControlId(connectionId, presetId, variablesHash)
@@ -725,7 +726,6 @@ export class ControlsController {
 			variablesHash,
 			presetModel
 		)
-		if (!newControl) return null
 
 		this.#controls.set(controlId, newControl)
 

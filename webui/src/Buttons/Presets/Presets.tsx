@@ -12,7 +12,7 @@ interface ConnectionPresetsProps {
 }
 
 export const ConnectionPresets = observer(function ConnectionPresets({ resetToken }: ConnectionPresetsProps) {
-	const { modules, connections } = useContext(RootAppStoreContext)
+	const { connections } = useContext(RootAppStoreContext)
 
 	const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null)
 	const clearSelectedConnectionId = useCallback(() => {
@@ -39,9 +39,6 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 
 	if (selectedConnectionId) {
 		const connectionInfo = connections.getInfo(selectedConnectionId)
-		const moduleInfo = connectionInfo
-			? modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
-			: undefined
 
 		const presets = presetsDefinitionsStore.presets.get(selectedConnectionId)
 
@@ -50,7 +47,6 @@ export const ConnectionPresets = observer(function ConnectionPresets({ resetToke
 				key={selectedConnectionId}
 				presets={presets}
 				connectionInfo={connectionInfo}
-				moduleInfo={moduleInfo}
 				selectedConnectionId={selectedConnectionId}
 				clearSelectedConnectionId={clearSelectedConnectionId}
 			/>

@@ -60,7 +60,7 @@ export function ConvertPresetDefinitions(
 		// This is not very efficient, but probably good enough?
 		const presetsInCategory = rawPresets.filter((p) => p.category === category)
 
-		const groupedPresets = splitPresetsIntoGroups2(presetsInCategory)
+		const groupedPresets = splitPresetsIntoGroups(presetsInCategory)
 		if (groupedPresets.length === 0) return
 
 		uiPresets[category] = {
@@ -79,7 +79,7 @@ export function ConvertPresetDefinitions(
 	}
 }
 
-function splitPresetsIntoGroups2(presets: (CompanionPresetDefinition & { id: string })[]): UIPresetGroupSimple[] {
+function splitPresetsIntoGroups(presets: (CompanionPresetDefinition & { id: string })[]): UIPresetGroupSimple[] {
 	const groups: UIPresetGroupSimple[] = []
 
 	let currentGroup: UIPresetGroupSimple | null = null
@@ -90,7 +90,7 @@ function splitPresetsIntoGroups2(presets: (CompanionPresetDefinition & { id: str
 			// Start a new group with this text preset as the heading
 			currentGroup = {
 				type: 'simple',
-				id: 'unknown',
+				id: `unknown-${groups.length}`,
 				name: preset.name,
 				order: groups.length,
 				description: preset.text,

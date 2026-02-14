@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection } from '@companion-app/shared/Model/Presets.js'
-import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
@@ -16,7 +15,6 @@ import { useComputed } from '~/Resources/util.js'
 interface PresetsSectionsListProps {
 	presets: Record<string, UIPresetSection | undefined> | undefined
 	connectionInfo: ClientConnectionConfig | undefined
-	moduleInfo: ClientModuleInfo | undefined
 	selectedConnectionId: string
 	clearSelectedConnectionId: () => void
 }
@@ -29,9 +27,13 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 	const expandedSection = useMemo(() => observable.box<string | null>(null), [])
 	const [searchQuery, setSearchQuery] = useState('')
 
-	const allSections = Object.values(presets || {})
-		.filter((p) => !!p)
-		.sort((a, b) => a.order - b.order)
+	const allSections = useComputed(
+		() =>
+			Object.values(presets || {})
+				.filter((p) => !!p)
+				.sort((a, b) => a.order - b.order),
+		[presets]
+	)
 
 	// Filter sections and groups based on search query
 	// Groups are shown/hidden as a whole - we don't hide individual presets within a group
