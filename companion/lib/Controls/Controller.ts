@@ -42,6 +42,9 @@ import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRout
 import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
+import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
+import crypto from 'crypto'
+import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
 
 /**
  * The class that manages the controls
@@ -687,17 +690,42 @@ export class ControlsController {
 	 * Find or create a preset temporary control
 	 * These are non-persistent controls that are used to perform the reactive drawing of a preset.
 	 */
-	getOrCreatePresetControl(connectionId: string, presetId: string): ControlButtonPreset | null {
+	getOrCreatePresetControl(
+		connectionId: string,
+		presetId: string,
+		variableValues: VariableValues | null
+	): ControlButtonPreset | null {
+		let presetModel = this.#registry.instance.definitions.convertPresetToPreviewControlModel(connectionId, presetId)
+		if (!presetModel) return null
+
+		// Interleave the values into the preset
+		let usedVariableValues: VariableValues | undefined
+		if (variableValues) {
+			presetModel = {
+				...presetModel,
+				localVariables: structuredClone(presetModel.localVariables),
+			}
+
+			usedVariableValues = injectOverriddenLocalVariableValues(presetModel.localVariables, variableValues)
+		}
+
+		const variablesHash =
+			usedVariableValues && Object.keys(usedVariableValues).length > 0
+				? crypto.createHash('sha256').update(createStableObjectHash(usedVariableValues)).digest('hex')
+				: 'default'
+
 		// Check for an existing control that should be reused
-		const controlId = CreatePresetControlId(connectionId, presetId)
+		const controlId = CreatePresetControlId(connectionId, presetId, variablesHash)
 		const control = this.#controls.get(controlId)
 		if (control) return control as ControlButtonPreset
 
-		const presetModel = this.#registry.instance.definitions.convertPresetToPreviewControlModel(connectionId, presetId)
-		if (!presetModel) return null
-
-		const newControl = new ControlButtonPreset(this.#createControlDependencies(), connectionId, presetId, presetModel)
-		if (!newControl) return null
+		const newControl = new ControlButtonPreset(
+			this.#createControlDependencies(),
+			connectionId,
+			presetId,
+			variablesHash,
+			presetModel
+		)
 
 		this.#controls.set(controlId, newControl)
 

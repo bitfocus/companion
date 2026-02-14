@@ -85,8 +85,7 @@ import type {
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
-import { ConvertPresetDefinition } from './PresetsLegacy.js'
-import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import { ConvertPresetDefinitions } from './PresetsLegacy.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
@@ -893,20 +892,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			const convertedPresets: PresetDefinition[] = []
+			const { presets, uiPresets } = ConvertPresetDefinitions(
+				this.logger,
+				this.connectionId,
+				this.#currentUpgradeIndex ?? undefined,
+				msg.presets
+			)
 
-			for (const rawPreset of msg.presets) {
-				const convertedPreset = ConvertPresetDefinition(
-					this.logger,
-					this.connectionId,
-					this.#currentUpgradeIndex ?? undefined,
-					rawPreset.id,
-					rawPreset
-				)
-				if (convertedPreset) convertedPresets.push(convertedPreset)
-			}
-
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, convertedPresets)
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 

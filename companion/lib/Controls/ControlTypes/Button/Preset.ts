@@ -95,9 +95,15 @@ export class ControlButtonPreset
 		return this.#baseStyle
 	}
 
-	constructor(deps: ControlDependencies, connectionId: string, presetId: string, storage: PresetButtonModel) {
-		const controlId = CreatePresetControlId(connectionId, presetId)
-		super(deps, controlId, `Controls/Button/Preset/${connectionId}/${presetId}`, true)
+	constructor(
+		deps: ControlDependencies,
+		connectionId: string,
+		presetId: string,
+		variablesHash: string,
+		storage: PresetButtonModel
+	) {
+		const controlId = CreatePresetControlId(connectionId, presetId, variablesHash)
+		super(deps, controlId, `Controls/Button/Preset/${connectionId}/${presetId}/${variablesHash}`, true)
 
 		this.#connectionId = connectionId
 		this.#presetId = presetId

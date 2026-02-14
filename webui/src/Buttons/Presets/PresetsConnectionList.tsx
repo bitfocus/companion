@@ -18,7 +18,7 @@ const PresetsStoreContext = React.createContext<PresetDefinitionsStore | null>(n
 
 const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
 	const presetsDefinitionsStore = useContext(PresetsStoreContext)
-	const presetCount = presetsDefinitionsStore?.presets.get(leaf.connectionId)?.size ?? 0
+	const presetCount = Object.keys(presetsDefinitionsStore?.presets.get(leaf.connectionId) ?? {}).length
 	const presetLabel = presetCount === 1 ? 'preset' : 'presets'
 
 	return (
@@ -59,9 +59,9 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	setConnectionId,
 }: PresetsConnectionListProps) {
 	const filterConnection = useCallback(
-		(_connectionId: string, _connectionInfo: ClientConnectionConfig) => {
-			const presets = presetsDefinitionsStore.presets.get(_connectionId)
-			return !!presets && presets.size > 0
+		(connectionId: string, _connectionInfo: ClientConnectionConfig) => {
+			const presets = presetsDefinitionsStore.presets.get(connectionId)
+			return !!presets && Object.keys(presets).length > 0
 		},
 		[presetsDefinitionsStore.presets]
 	)
