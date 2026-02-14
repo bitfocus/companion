@@ -76,8 +76,6 @@ export interface LinkControllerState {
 	enabled: boolean
 	/** This instance's UUID */
 	uuid: string
-	/** This instance's display name */
-	name: string
 }
 
 /** Default MQTT config for new transport instances */

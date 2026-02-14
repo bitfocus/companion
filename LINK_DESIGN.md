@@ -619,6 +619,28 @@ The core protocol remains transport-agnostic. Each transport implementation maps
 
 **Note:** MQTT-specific features (correlation data, QoS) won't map directly to other transports. The MQTT transport class will handle enough abstraction internally to make this work. Implementation details to be determined during development.
 
+### 7. Latency Measurement Per Transport
+
+**Decision:** Measure round-trip latency to each peer over each transport instance.
+
+**Implementation:**
+
+- Send periodic ping/pong messages to discovered peers
+- Track RTT (round-trip time) per (peer, transport) tuple
+- Store in PeerRegistry alongside connection status
+- Display in UI for observability
+
+**Usage:**
+
+- **For now:** Display only - for monitoring and debugging
+- **Future:** May be used for intelligent routing decisions (select fastest N transports per peer)
+- **Note:** Do NOT use for routing in initial implementation - all available transports used equally
+
+**Frequency:**
+
+- Measure every 30-60 seconds (align with announcement interval)
+- Or on-demand when needed for debugging
+
 ---
 
 ## Migration from Cloud

@@ -35,8 +35,14 @@ export function LinkPage(): React.JSX.Element {
 		<div>
 			<h4>Companion Link</h4>
 			<p>
-				Connect multiple Companion instances together. Remote button presses, bitmap streaming, and peer discovery over
-				MQTT.
+				Companion Link is the next generation of Companion Cloud, taking a &ldquo;bring your own infrastructure&rdquo;
+				approach. Instead of relying on a hosted cloud service, you connect your Companion instances together using
+				off-the-shelf MQTT brokers that you deploy and manage yourself. This gives you full control over your data,
+				latency, and network topology.
+			</p>
+			<p className="text-muted">
+				Configure one or more MQTT transports below to enable peer discovery, remote button presses, and bitmap
+				streaming between Companion instances.
 			</p>
 
 			{linkState ? <LinkPageContent state={linkState} /> : <LoadingRetryOrError dataReady={false} design="pulse" />}
@@ -110,7 +116,6 @@ function LinkPageContent({ state }: { state: LinkControllerState }): React.JSX.E
 	const peers = useLinkPeers()
 
 	const setEnabled = useMutationExt(trpc.link.setEnabled.mutationOptions())
-	const setName = useMutationExt(trpc.link.setName.mutationOptions())
 	const regenerateUUID = useMutationExt(trpc.link.regenerateUUID.mutationOptions())
 
 	const handleEnabledChange = useCallback(
@@ -119,19 +124,6 @@ function LinkPageContent({ state }: { state: LinkControllerState }): React.JSX.E
 		},
 		[setEnabled]
 	)
-
-	const [editingName, setEditingName] = useState(false)
-	const [nameValue, setNameValue] = useState(state.name)
-
-	const startEditName = useCallback(() => {
-		setNameValue(state.name)
-		setEditingName(true)
-	}, [state.name])
-
-	const saveName = useCallback(() => {
-		setName.mutate({ name: nameValue })
-		setEditingName(false)
-	}, [setName, nameValue])
 
 	const handleRegenerateUUID = useCallback(() => {
 		if (window.confirm('Are you sure? This will change your instance identity for all peers.')) {
@@ -158,28 +150,10 @@ function LinkPageContent({ state }: { state: LinkControllerState }): React.JSX.E
 							<CFormLabel>Instance Name</CFormLabel>
 						</CCol>
 						<CCol sm={9}>
-							{editingName ? (
-								<div className="d-flex gap-2">
-									<CFormInput
-										value={nameValue}
-										onChange={(e) => setNameValue(e.target.value)}
-										onKeyDown={(e) => e.key === 'Enter' && saveName()}
-									/>
-									<CButton color="primary" size="sm" onClick={saveName}>
-										Save
-									</CButton>
-									<CButton color="secondary" size="sm" onClick={() => setEditingName(false)}>
-										Cancel
-									</CButton>
-								</div>
-							) : (
-								<div className="d-flex gap-2 align-items-center">
-									<span>{state.name}</span>
-									<CButton color="secondary" size="sm" onClick={startEditName}>
-										Edit
-									</CButton>
-								</div>
-							)}
+							<span className="text-muted">
+								This instance will be announced to peers using your <strong>Installation Name</strong> from the Settings
+								page.
+							</span>
 						</CCol>
 					</CRow>
 					<CRow className="mb-3">
@@ -314,10 +288,7 @@ function TransportConfigRow({
 					</CCol>
 				</CRow>
 				{config.type === 'mqtt' && (
-					<MqttConfigFields
-						config={config.config}
-						onUpdate={(mqttUpdates) => onUpdate({ config: mqttUpdates })}
-					/>
+					<MqttConfigFields config={config.config} onUpdate={(mqttUpdates) => onUpdate({ config: mqttUpdates })} />
 				)}
 			</CCardBody>
 		</CCard>
@@ -348,11 +319,7 @@ function MqttConfigFields({
 			</CCol>
 			<CCol sm={3} className="mb-2">
 				<CFormLabel>Password</CFormLabel>
-				<CFormInput
-					type="password"
-					value={config.password}
-					onChange={(e) => onUpdate({ password: e.target.value })}
-				/>
+				<CFormInput type="password" value={config.password} onChange={(e) => onUpdate({ password: e.target.value })} />
 			</CCol>
 		</CRow>
 	)

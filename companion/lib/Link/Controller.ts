@@ -18,11 +18,13 @@ import { TransportManager } from './TransportManager.js'
 import { PeerRegistry } from './PeerRegistry.js'
 import { discoveryTopic, discoveryWildcard, type AnnouncementMessage, type AnnouncementPayload } from './Protocol.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { IPageStore } from '../Page/Store.js'
 
 const LINK_TABLE = 'link'
 
 /** Announcement interval in ms (60 seconds) */
-const ANNOUNCEMENT_INTERVAL = 60_000
+const ANNOUNCEMENT_INTERVAL = 15_000
 
 /** DB schema for the link table */
 interface LinkDbTable {
@@ -33,7 +35,6 @@ interface LinkDbTable {
 
 interface LinkSettings {
 	enabled: boolean
-	name: string
 }
 
 /** Events emitted to the UI via tRPC subscriptions */
@@ -52,6 +53,8 @@ export class LinkController {
 	readonly #logger = LogController.createLogger('Link/Controller')
 
 	readonly #appInfo: AppInfo
+	readonly #userconfig: DataUserConfig
+	readonly #pageStore: IPageStore
 	readonly #dbTable: DataStoreTableView<LinkDbTable>
 	readonly #transportManager: TransportManager
 	readonly #peerRegistry: PeerRegistry
@@ -66,8 +69,10 @@ export class LinkController {
 	/** Announcement interval handle */
 	#announcementInterval: ReturnType<typeof setInterval> | null = null
 
-	constructor(appInfo: AppInfo, db: DataDatabase) {
+	constructor(appInfo: AppInfo, db: DataDatabase, userconfig: DataUserConfig, pageStore: IPageStore) {
 		this.#appInfo = appInfo
+		this.#userconfig = userconfig
+		this.#pageStore = pageStore
 		this.#dbTable = db.getTableView(LINK_TABLE)
 
 		this.#uiEvents.setMaxListeners(0)
@@ -77,10 +82,9 @@ export class LinkController {
 
 		const settings = this.#dbTable.getOrDefault('settings', {
 			enabled: false,
-			name: `Companion (${appInfo.machineId.slice(0, 8)})`,
 		})
 
-		this.#state = { enabled: settings.enabled, uuid, name: settings.name }
+		this.#state = { enabled: settings.enabled, uuid }
 
 		// Load transport configurations
 		this.#transportConfigs = this.#dbTable.getOrDefault('transports', [])
@@ -109,6 +113,24 @@ export class LinkController {
 				this.#logger.error(`Failed to start Link service: ${stringifyError(e)}`)
 			})
 		}
+
+		// Re-announce when Installation Name or gridSize changes
+		this.#userconfig.on('keyChanged', (key) => {
+			if ((key === 'installName' || key === 'gridSize') && this.#state.enabled) {
+				this.#sendAnnouncement().catch((e) => {
+					this.#logger.warn(`Failed to re-announce after ${key} change: ${stringifyError(e)}`)
+				})
+			}
+		})
+
+		// Re-announce when page count changes
+		this.#pageStore.on('pagecount', () => {
+			if (this.#state.enabled) {
+				this.#sendAnnouncement().catch((e) => {
+					this.#logger.warn(`Failed to re-announce after page count change: ${stringifyError(e)}`)
+				})
+			}
+		})
 	}
 
 	createTrpcRouter() {
@@ -162,12 +184,6 @@ export class LinkController {
 				} else {
 					await this.#stop()
 				}
-			}),
-
-			// ── Set instance name ───────────────────────────────────────
-			setName: publicProcedure.input(z.object({ name: z.string().min(1).max(100) })).mutation(({ input }) => {
-				this.#setState({ name: input.name })
-				this.#saveSettings()
 			}),
 
 			// ── Regenerate UUID ──────────────────────────────────────────
@@ -322,13 +338,23 @@ export class LinkController {
 	}
 
 	async #sendAnnouncement(): Promise<void> {
+		const installName = this.#userconfig.getKey('installName') as string
+		const name =
+			installName && installName.length > 0 ? installName : `Companion (${this.#appInfo.machineId.slice(0, 8)})`
+
+		const gridSize = this.#userconfig.getKey('gridSize')
+		const pageCount = this.#pageStore.getPageCount()
+
 		const payload: AnnouncementPayload = {
 			id: this.#state.uuid,
-			name: this.#state.name,
+			name,
 			version: this.#appInfo.appVersion,
 			protocolVersion: 1,
-			pageCount: 0, // TODO: wire to real page count
-			gridSize: { rows: 0, cols: 0 }, // TODO: wire to real grid size
+			pageCount,
+			gridSize: {
+				rows: gridSize.maxRow - gridSize.minRow + 1,
+				cols: gridSize.maxColumn - gridSize.minColumn + 1,
+			},
 			timestamp: Date.now(),
 		}
 
@@ -359,12 +385,15 @@ export class LinkController {
 	#handleDiscoveryMessage(transportId: string, _topic: string, payload: Buffer): void {
 		const payloadStr = payload.toString('utf-8')
 
+		this.#logger.debug(`Received discovery message on ${_topic} from transport ${transportId}`)
+
 		// Empty payload = peer went offline (empty retained message)
 		if (!payloadStr || payloadStr.length === 0) {
 			// Extract peer UUID from topic
 			const parts = _topic.split('/')
 			const peerId = parts[parts.length - 1]
 			if (peerId) {
+				this.#logger.debug(`Peer ${peerId} went offline`)
 				this.#peerRegistry.handlePeerOffline(transportId, peerId)
 			}
 			return
@@ -377,6 +406,7 @@ export class LinkController {
 				return
 			}
 
+			this.#logger.debug(`Processing announcement from peer ${message.payload.id}`)
 			this.#peerRegistry.handleAnnouncement(transportId, message.payload)
 		} catch (e) {
 			this.#logger.warn(`Failed to parse discovery message: ${stringifyError(e)}`)
@@ -400,7 +430,6 @@ export class LinkController {
 	#saveSettings(): void {
 		this.#dbTable.set('settings', {
 			enabled: this.#state.enabled,
-			name: this.#state.name,
 		})
 	}
 

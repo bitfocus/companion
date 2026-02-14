@@ -129,7 +129,14 @@ export function discoveryWildcard(): string {
 	return `${LINK_TOPIC_PREFIX}/discovery/+`
 }
 
-export function bitmapTopic(uuid: string, page: number, row: number, col: number, width: number, height: number): string {
+export function bitmapTopic(
+	uuid: string,
+	page: number,
+	row: number,
+	col: number,
+	width: number,
+	height: number
+): string {
 	return `${LINK_TOPIC_PREFIX}/${uuid}/location/${page}/${row}/${col}/bitmap/${width}x${height}`
 }
 

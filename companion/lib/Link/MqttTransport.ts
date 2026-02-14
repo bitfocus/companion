@@ -43,9 +43,12 @@ export class MqttTransport extends LinkTransport {
 
 			// Resubscribe to all tracked topics on reconnect
 			for (const topic of this.#subscribedTopics) {
+				this.#logger.debug(`Subscribing to ${topic}`)
 				client.subscribe(topic, { qos: 1 }, (err: Error | null) => {
 					if (err) {
 						this.#logger.warn(`Failed to resubscribe to ${topic}: ${stringifyError(err)}`)
+					} else {
+						this.#logger.debug(`Successfully subscribed to ${topic}`)
 					}
 				})
 			}
@@ -113,11 +116,14 @@ export class MqttTransport extends LinkTransport {
 
 		const client = this.#client
 		if (!client?.connected) {
+			this.#logger.debug(`Deferring subscription to ${pattern} until connected`)
 			// Will subscribe on connect via the resubscribe logic
 			return
 		}
 
+		this.#logger.debug(`Subscribing to ${pattern}`)
 		await client.subscribeAsync(pattern, { qos: 1 })
+		this.#logger.debug(`Successfully subscribed to ${pattern}`)
 	}
 
 	async unsubscribe(pattern: string): Promise<void> {
