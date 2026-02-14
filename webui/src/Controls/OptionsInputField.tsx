@@ -25,10 +25,13 @@ import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { JsonValue } from 'type-fest'
 
 interface OptionsInputFieldProps {
 	connectionId: string
+	controlId?: string | null
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
@@ -56,6 +59,7 @@ function OptionLabel({ option, features }: { option: SomeCompanionInputField; fe
 
 export const OptionsInputField = observer(function OptionsInputField({
 	connectionId,
+	controlId,
 	isLocatedInGrid,
 	entityType,
 	option,
@@ -94,6 +98,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 	let control: JSX.Element | string | undefined = undefined
 	let features: InputFeatureIconsProps | undefined = undefined
+	let isInExpressionMode = false
+
 	switch (option.type) {
 		case 'textinput': {
 			features = {
@@ -130,6 +136,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 				variables: true,
 				local: true,
 			}
+
+			isInExpressionMode = true
 
 			const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
 
@@ -283,11 +291,16 @@ export const OptionsInputField = observer(function OptionsInputField({
 			features.local = true
 			features.variables = true
 
+			isInExpressionMode = true
+
 			if (option.expressionDescription !== undefined) {
 				description = option.expressionDescription
 			}
 		}
 	}
+
+	// Determine if we're in expression mode and what the expression string is
+	const expressionString = isInExpressionMode ? (stringifyVariableValue(basicValue) ?? '') : null
 
 	return (
 		<>
@@ -296,6 +309,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
 			>
 				<OptionLabel option={option} features={features} />
+				{expressionString !== null && (
+					<ExpressionValuePreview
+						expression={expressionString}
+						controlId={controlId ?? null}
+						fieldDefinition={option}
+					/>
+				)}
 			</CFormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
 				{control}
