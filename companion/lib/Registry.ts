@@ -4,6 +4,7 @@ import fs from 'fs-extra'
 import express from 'express'
 import LogController, { type Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
+import { LinkController } from './Link/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
 import { GraphicsController } from './Graphics/Controller.js'
 import { DataController } from './Data/Controller.js'
@@ -83,6 +84,10 @@ export class Registry {
 	 * The cloud controller
 	 */
 	cloud!: CloudController
+	/**
+	 * The link controller
+	 */
+	link!: LinkController
 	/**
 	 * The core controls controller
 	 */
@@ -288,6 +293,7 @@ export class Registry {
 				this.graphics,
 				pageStore
 			)
+			this.link = new LinkController(this.#appInfo, this.db)
 			this.usageStatistics = new DataUsageStatistics(
 				this.#appInfo,
 				this.surfaces,

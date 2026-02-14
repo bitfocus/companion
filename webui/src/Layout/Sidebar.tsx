@@ -17,6 +17,7 @@ import {
 	faCog,
 	faClipboardList,
 	faCloud,
+	faLink,
 	faTh,
 	faClock,
 	faPlug,
@@ -224,6 +225,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
+				<SidebarMenuItem name="Link" icon={faLink} path="/link" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
 				{window.localStorage.getItem('show_companion_cloud') === '1' && (
 					<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
