@@ -98,13 +98,9 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 				value={sub.data.value}
 				onCopied={onCopied}
 				showCopy={false}
-				style={validationResult ? { color: '#c83232', backgroundColor: '#f9e5e5' } : undefined}
+				compact
+				invalidReason={validationResult}
 			/>
-			{validationResult && (
-				<CAlert color="warning" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
-					{validationResult}
-				</CAlert>
-			)}
 		</div>
 	)
 }

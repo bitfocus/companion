@@ -29,6 +29,15 @@ interface VariableValueDisplay {
 	/** Will be called when copy is clicked, optional */
 	onCopied: () => void
 
+	/** If set, displays the value in an invalid/error style and shows the reason as a tooltip */
+	invalidReason?: string
+
+	/** If true, constrains to a single line with ellipsis overflow instead of wrapping */
+	compact?: boolean
+
+	/** Limit the number of visible lines. Content beyond this is hidden with ellipsis. Ignored when compact is true. */
+	maxLines?: number
+
 	[prop: string]: any
 }
 
@@ -42,6 +51,9 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	showCopy = true,
 	icon,
 	onCopied = () => {},
+	invalidReason,
+	compact = false,
+	maxLines,
 	...props
 }) => {
 	// Use the collapseHelper if we have all necessary information, otherwise use loal state
@@ -88,18 +100,8 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 		}
 	})
 
-	let color = '#0000c8'
-	let backgroundColor = '#e5e5f9'
-
-	// Use optional colors from style, remove them and reinject it into children
-	if (props?.style?.color) {
-		color = props.style.color
-		delete props.style.color
-	}
-	if (props?.style?.backgroundColor) {
-		backgroundColor = props.style.backgroundColor
-		delete props.style.backgroundColor
-	}
+	const color = invalidReason ? '#c83232' : '#0000c8'
+	const backgroundColor = invalidReason ? '#f9e5e5' : '#e5e5f9'
 
 	let typeDescription = 'unknown'
 	let iconPath: VariableTypeIconType = 'unknown'
@@ -129,16 +131,25 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	const btnstyle = { marginLeft: '4px', borderRadius: '4px' }
 
 	return (
-		<div className="variable-value-display" {...props}>
-			<div style={{ display: 'flex', alignItems: 'center' }}>
+		<div className="variable-value-display" title={invalidReason} {...props}>
+			<div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
 				<div
 					style={{
 						backgroundColor,
 						color,
 						borderRadius: '6px',
-						padding: '4px 12px',
-						display: 'inline-table',
+						padding: '4px 6px',
+						display: compact ? 'flex' : 'inline-table',
 						lineHeight: '14px',
+						...(compact
+							? {
+									minWidth: 0,
+									maxWidth: '100%',
+									alignItems: 'center',
+								}
+							: {
+									maxWidth: '100%',
+								}),
 					}}
 				>
 					{showIcon && (
@@ -146,23 +157,42 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 							style={{
 								padding: '4px',
 								paddingLeft: '6px',
-								display: 'table-cell',
+								display: compact ? 'flex' : 'table-cell',
 								verticalAlign: 'top',
+								flexShrink: 0,
 							}}
-							title={`Variable type: ${typeDescription}`}
+							title={invalidReason ?? `Variable type: ${typeDescription}`}
 						>
 							<VariableTypeIcon width={12} height={12} icon={iconPath} fill={color} style={{ verticalAlign: '-1px' }} />
 						</span>
 					)}
 					<code
 						style={{
-							display: 'table-cell',
+							display: compact ? 'block' : 'table-cell',
 							verticalAlign: 'top',
 							color,
 							padding: '5.5px 6px 5.5px 4px',
-							whiteSpace: 'pre-wrap',
+							...(compact
+								? {
+										whiteSpace: 'nowrap',
+										overflow: 'hidden',
+										textOverflow: 'ellipsis',
+										minWidth: 0,
+									}
+								: maxLines
+									? {
+											whiteSpace: 'pre-wrap',
+											overflow: 'hidden',
+											display: '-webkit-box',
+											WebkitLineClamp: maxLines,
+											WebkitBoxOrient: 'vertical',
+											textOverflow: 'ellipsis',
+										}
+									: {
+											whiteSpace: 'pre-wrap',
+										}),
 						}}
-						title={compactValue}
+						title={invalidReason ?? compactValue}
 					>
 						{elms /*displayValue */}
 						{valueStr.length <= TRUNCATE_LENGTH ? (
