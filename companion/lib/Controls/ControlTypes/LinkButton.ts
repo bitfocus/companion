@@ -17,6 +17,7 @@ import type { ControlDependencies } from '../ControlDependencies.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ParseLocationString } from '../../Internal/Util.js'
 import type { DrawStyleModel, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import { VisitorReferencesUpdaterVisitor } from '../../Resources/Visitors/ReferencesUpdater.js'
 
 /** Custom draw style for Remote Link button visual states. */
 type RemoteLinkDrawStyle =
@@ -93,6 +94,9 @@ export class ControlButtonRemoteLink
 	/** Callback when link config changes (set by LinkController). */
 	#onConfigChanged: ((controlId: string) => void) | null = null
 
+	/** Cached set of variable IDs referenced in the location field. */
+	#cachedVariables: ReadonlySet<string> | null = null
+
 	constructor(deps: ControlDependencies, controlId: string, storage: RemoteLinkButtonModel | null, isImport: boolean) {
 		super(deps, controlId, 'Controls/Button/RemoteLink')
 
@@ -105,6 +109,9 @@ export class ControlButtonRemoteLink
 			this.#config = storage
 			if (isImport) this.commitChange()
 		}
+
+		// Initialize variable cache
+		this.#updateCachedVariables()
 	}
 
 	// ── Public getters for LinkController ────────────────────────
@@ -204,6 +211,7 @@ export class ControlButtonRemoteLink
 		}
 		if (config.location !== undefined && config.location !== this.#config.location) {
 			this.#config = { ...this.#config, location: config.location }
+			this.#updateCachedVariables()
 			changed = true
 		}
 
@@ -318,17 +326,35 @@ export class ControlButtonRemoteLink
 		return { width: 72, height: 72 }
 	}
 
+	/**
+	 * Update the cached set of variable IDs referenced in the location field.
+	 */
+	#updateCachedVariables(): void {
+		const variables = new Set<string>()
+		// Extract variable references from location field
+		// Regex matches $(label:variable) patterns
+		const reg = /\$\(([^:$)]+):([^$)]+)\)/g
+		const matches = this.#config.location.matchAll(reg)
+		for (const match of matches) {
+			variables.add(`${match[1]}:${match[2]}`)
+		}
+		this.#cachedVariables = variables
+	}
+
 	collectReferencedConnectionsAndVariables(
 		_foundConnectionIds: Set<string>,
-		_foundConnectionLabels: Set<string>,
+		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		// Extract variable references from location field
-		// Supports formats like: $(this:page), $(internal:...), $(instance:...)
-		const matches = this.#config.location.matchAll(/\$\(([^:)]+):([^)]+)\)/g)
-		for (const match of matches) {
-			const variableName = `${match[1]}:${match[2]}`
-			foundVariables.add(variableName)
+		// Use cached variables if available
+		if (this.#cachedVariables) {
+			for (const varId of this.#cachedVariables) {
+				foundVariables.add(varId)
+				const colonIndex = varId.indexOf(':')
+				if (colonIndex !== -1) {
+					foundConnectionLabels.add(varId.substring(0, colonIndex))
+				}
+			}
 		}
 	}
 
@@ -357,30 +383,26 @@ export class ControlButtonRemoteLink
 	}
 
 	renameVariables(labelFrom: string, labelTo: string): void {
-		// Replace variable references in location field
-		const pattern = new RegExp(`\\$\\(${labelFrom.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:`, 'g')
-		const replacement = `$(${labelTo}:`
+		// Use the established VisitorReferencesUpdaterVisitor to handle variable renaming
+		const visitor = new VisitorReferencesUpdaterVisitor({ [labelFrom]: labelTo }, undefined)
+		const wrapper = { location: this.#config.location }
+		visitor.visitString(wrapper, 'location')
 
-		const newLocation = this.#config.location.replace(pattern, replacement)
-		if (newLocation !== this.#config.location) {
-			this.#config = { ...this.#config, location: newLocation }
+		if (wrapper.location !== this.#config.location) {
+			this.#config = { ...this.#config, location: wrapper.location }
+			this.#updateCachedVariables()
 			this.commitChange(true)
 			this.#onConfigChanged?.(this.controlId)
 		}
 	}
 
 	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
-		// Collect the variables this control references
-		const referencedVariables = new Set<string>()
-		this.collectReferencedConnectionsAndVariables(new Set(), new Set(), referencedVariables)
+		// Early exit if no cached variables
+		if (!this.#cachedVariables) return
+		// Efficient check: if sets are disjoint (no overlap), no need to trigger update
+		if (this.#cachedVariables.isDisjointFrom(allChangedVariables)) return
 
-		// Check if any of them changed
-		for (const varName of referencedVariables) {
-			if (allChangedVariables.has(varName)) {
-				// Trigger config change to re-sync the subscription in LinkController
-				this.#onConfigChanged?.(this.controlId)
-				return
-			}
-		}
+		// At least one referenced variable changed, trigger config change to re-sync subscription
+		this.#onConfigChanged?.(this.controlId)
 	}
 }
