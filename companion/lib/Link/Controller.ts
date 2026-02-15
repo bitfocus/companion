@@ -690,9 +690,7 @@ export class LinkController {
 		if (!this.#state.enabled) return
 
 		// Get current pressed state
-		const location = { pageNumber: page, row, column: col }
-		const controlId = this.#pageStore.getControlIdAt(location)
-		// TODO: get actual pushed state from the control at this location
+		// TODO: look up actual pushed state via pageStore + controls
 		const pressed = false
 
 		const updateMsg: ButtonUpdateMessage = {

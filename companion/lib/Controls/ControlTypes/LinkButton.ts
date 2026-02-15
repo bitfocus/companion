@@ -7,6 +7,7 @@ import { ControlBase } from '../ControlBase.js'
 import type {
 	ControlWithoutActionSets,
 	ControlWithoutActions,
+	ControlWithoutEntities,
 	ControlWithoutEvents,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
@@ -40,6 +41,7 @@ export class ControlButtonRemoteLink
 	extends ControlBase<RemoteLinkButtonModel>
 	implements
 		ControlWithoutActions,
+		ControlWithoutEntities,
 		ControlWithoutStyle,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,

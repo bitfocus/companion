@@ -673,9 +673,85 @@ Users must:
 
 **Phase 1:** Core architecture + MQTT transport (MVP)
 **Phase 2:** Chunking protocol + bitmap rendering
-**Phase 3:** Internal actions + UI
+**Phase 3:** Remote Link button control type + full wiring
 **Phase 4:** Testing + documentation
 **Phase 5:** Future transports (WebRTC, etc.)
+
+---
+
+## Phase 3 Implementation: Remote Link Button
+
+### Control Type: `remotelinkbutton`
+
+A new button control type that mirrors a button from a remote Companion instance.
+
+**Files:**
+- `shared-lib/lib/Model/ButtonModel.ts` — `RemoteLinkButtonModel`, `RemoteLinkButtonVisualState`, `RemoteLinkButtonRuntimeProps`
+- `companion/lib/Controls/ControlTypes/LinkButton.ts` — `ControlButtonRemoteLink` class
+- `companion/lib/Controls/ControlsTrpcRouter.ts` — `setLinkConfig` endpoint
+- `webui/src/Buttons/EditButton/RemoteLinkButtonEditor.tsx` — Configuration UI
+- `webui/src/Buttons/EditButton/EditButton.tsx` — Renders editor for `remotelinkbutton`
+- `webui/src/Buttons/EditButton/SelectButtonTypeDropdown.tsx` — "Remote Link button" option
+
+### Data Model
+
+```typescript
+interface RemoteLinkButtonModel {
+  type: 'remotelinkbutton'
+  peerUuid: string     // Remote peer UUID (from PeerRegistry)
+  page: string         // Page number (supports variables/expressions)
+  row: string          // Row number (supports variables/expressions)
+  col: string          // Column number (supports variables/expressions)
+}
+```
+
+### Visual States
+
+| State | Appearance | When |
+|-------|-----------|------|
+| `unknown_peer` | "Unknown peer" text, cloud error icon | Peer UUID not found in PeerRegistry |
+| `unreachable` | "Unreachable" text, cloud icon | Peer known but offline |
+| `loading` | "Loading..." text, cloud icon | Subscribed, awaiting first bitmap |
+| `bitmap` | Remote button's rendered bitmap | Receiving updates from remote |
+| `loop_detected` | "Loop detected" text, cloud error icon | Source chain contains our own UUID |
+
+### Controller Wiring (LinkController)
+
+**Inbound flow** (other peers subscribing to our buttons):
+1. Listen for RPC subscribe requests on `rpcRequestWildcard(ourUuid)`
+2. Add to SubscriptionManager → BitmapRenderer watches for changes
+3. BitmapRenderer emits `bitmapReady` → publish `ButtonUpdateMessage` on MQTT
+4. Listen for press/release commands → forward to `ControlsController.pressControl()`
+
+**Outbound flow** (our link buttons subscribing to remote):
+1. `controlCountChanged` event triggers `#syncOutboundSubscriptions()`
+2. For each link button: resolve peer + location → send subscribe request
+3. Subscribe to `updateWildcard(peerUuid)` on MQTT
+4. On receiving `ButtonUpdateMessage`, check sourceChain for loops, feed to link button
+5. On link button press, publish press/release command to remote peer
+
+### Loop Detection
+
+When receiving a `ButtonUpdateMessage`:
+- If `sourceChain` contains our own UUID → set visual state to `loop_detected`
+- Otherwise, display the bitmap normally
+
+When publishing updates:
+- Append our UUID to `sourceChain` so downstream instances can detect loops
+
+### Press Forwarding
+
+When a user presses a remote link button:
+1. `ControlButtonRemoteLink.pressControl()` → calls `#onPress` callback
+2. LinkController resolves the target peer + location
+3. Publishes `ButtonPressMessage`/`ButtonReleaseMessage` on `pressTopic(peerUuid, page, row, col)`
+4. Remote peer's LinkController receives it → calls `controls.pressControl(controlId, pressed, 'link')`
+
+### TODO Items
+- Resolve variables/expressions in page/row/col fields (currently only numeric parsing)
+- Get actual pressed state of local buttons for outbound updates
+- Track requestor UUID in subscribe requests for per-peer subscription management
+- Send proper RPC responses with initial button state
 
 ---
 

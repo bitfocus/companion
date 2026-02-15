@@ -8,11 +8,7 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { ButtonStyleConfig } from '~/Controls/ButtonStyleConfig.js'
 import { ControlOptionsEditor } from '~/Controls/ControlOptionsEditor.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type {
-	NormalButtonModel,
-	RemoteLinkButtonModel,
-	SomeButtonModel,
-} from '@companion-app/shared/Model/ButtonModel.js'
+import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ControlClearButton } from './ControlClearButton.js'
