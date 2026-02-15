@@ -16,10 +16,35 @@ import {
 } from '@companion-app/shared/Model/Link.js'
 import { TransportManager } from './TransportManager.js'
 import { PeerRegistry } from './PeerRegistry.js'
-import { discoveryTopic, discoveryWildcard, type AnnouncementMessage, type AnnouncementPayload } from './Protocol.js'
+import {
+	discoveryTopic,
+	discoveryWildcard,
+	updateTopic,
+	updateWildcard,
+	pressTopic,
+	releaseTopic,
+	pressWildcard,
+	releaseWildcard,
+	rpcRequestTopic,
+	rpcRequestWildcard,
+	LINK_TOPIC_PREFIX,
+	type AnnouncementMessage,
+	type AnnouncementPayload,
+	type SubscribeRequestMessage,
+	type ButtonUpdateMessage,
+	type ButtonPressMessage,
+	type ButtonReleaseMessage,
+	type LinkMessage,
+} from './Protocol.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import { SubscriptionManager } from './SubscriptionManager.js'
+import { BitmapRenderer } from './BitmapRenderer.js'
+import { ControlButtonRemoteLink } from '../Controls/ControlTypes/LinkButton.js'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
 const LINK_TABLE = 'link'
 
@@ -47,7 +72,9 @@ export type LinkUIEvents = {
 
 /**
  * Main orchestrator for the Companion Link system.
- * Manages transports, peer discovery, and announcement lifecycle.
+ * Manages transports, peer discovery, announcement lifecycle,
+ * inbound subscriptions (other peers reading our buttons), and
+ * outbound subscriptions (our link buttons reading remote buttons).
  */
 export class LinkController {
 	readonly #logger = LogController.createLogger('Link/Controller')
@@ -60,6 +87,27 @@ export class LinkController {
 	readonly #peerRegistry: PeerRegistry
 	readonly #uiEvents = new EventEmitter<LinkUIEvents>()
 
+	// Phase 2+3 dependencies
+	readonly #controls: ControlsController
+	readonly #controlEvents: EventEmitter<ControlCommonEvents>
+
+	// Phase 2: Inbound (other peers subscribing to our buttons)
+	readonly #subscriptionManager: SubscriptionManager
+	readonly #bitmapRenderer: BitmapRenderer
+
+	// Phase 3: Outbound (our link buttons subscribing to remote buttons)
+	/** Map of controlId → tracked subscription info */
+	readonly #outboundSubs = new Map<
+		string,
+		{ peerUuid: string; page: number; row: number; col: number; subscribed: boolean }
+	>()
+
+	/** Set of peer UUIDs we are currently listening on for updates */
+	readonly #subscribedUpdatePeers = new Set<string>()
+
+	/** Pending RPC response callbacks keyed by correlationId */
+	readonly #pendingRpc = new Map<string, (msg: LinkMessage) => void>()
+
 	/** Current controller state */
 	#state: LinkControllerState
 
@@ -69,10 +117,20 @@ export class LinkController {
 	/** Announcement interval handle */
 	#announcementInterval: ReturnType<typeof setInterval> | null = null
 
-	constructor(appInfo: AppInfo, db: DataDatabase, userconfig: DataUserConfig, pageStore: IPageStore) {
+	constructor(
+		appInfo: AppInfo,
+		db: DataDatabase,
+		userconfig: DataUserConfig,
+		pageStore: IPageStore,
+		controls: ControlsController,
+		graphics: GraphicsController,
+		controlEvents: EventEmitter<ControlCommonEvents>
+	) {
 		this.#appInfo = appInfo
 		this.#userconfig = userconfig
 		this.#pageStore = pageStore
+		this.#controls = controls
+		this.#controlEvents = controlEvents
 		this.#dbTable = db.getTableView(LINK_TABLE)
 
 		this.#uiEvents.setMaxListeners(0)
@@ -105,6 +163,27 @@ export class LinkController {
 		// Wire peer registry events
 		this.#peerRegistry.on('peersChanged', (peers: LinkPeerInfo[]) => {
 			this.#uiEvents.emit('peers', peers)
+			// Re-evaluate link button states when peer availability changes
+			this.#updateLinkButtonStates()
+		})
+
+		// Phase 2: Inbound subscription system
+		this.#subscriptionManager = new SubscriptionManager()
+		this.#bitmapRenderer = new BitmapRenderer(graphics, this.#subscriptionManager)
+
+		// When BitmapRenderer has a rendered bitmap, publish it
+		this.#bitmapRenderer.on('bitmapReady', (bitmap) => {
+			this.#publishButtonUpdate(bitmap.page, bitmap.row, bitmap.col, bitmap.width, bitmap.height, bitmap.dataUrl)
+		})
+
+		// When a subscription is removed, evict the bitmap cache
+		this.#subscriptionManager.on('subscriptionRemoved', (page, row, col, width, height) => {
+			this.#bitmapRenderer.evictCache(page, row, col, width, height)
+		})
+
+		// Phase 3: React to link button creation/deletion
+		this.#controlEvents.on('controlCountChanged', () => {
+			this.#syncOutboundSubscriptions()
 		})
 
 		// Start if enabled
@@ -307,6 +386,16 @@ export class LinkController {
 		// Subscribe to discovery announcements
 		await this.#transportManager.subscribeAll(discoveryWildcard())
 
+		// Subscribe to inbound RPC requests (other peers subscribing to our buttons)
+		await this.#transportManager.subscribeAll(rpcRequestWildcard(this.#state.uuid))
+
+		// Subscribe to inbound press/release commands for our buttons
+		await this.#transportManager.subscribeAll(pressWildcard(this.#state.uuid))
+		await this.#transportManager.subscribeAll(releaseWildcard(this.#state.uuid))
+
+		// Start the bitmap renderer (listens for button_drawn events)
+		this.#bitmapRenderer.start()
+
 		// Send initial announcement
 		await this.#sendAnnouncement()
 
@@ -316,6 +405,9 @@ export class LinkController {
 				this.#logger.warn(`Failed to send periodic announcement: ${stringifyError(e)}`)
 			})
 		}, ANNOUNCEMENT_INTERVAL)
+
+		// Initial scan for existing link buttons
+		this.#syncOutboundSubscriptions()
 	}
 
 	async #stop(): Promise<void> {
@@ -325,6 +417,17 @@ export class LinkController {
 			clearInterval(this.#announcementInterval)
 			this.#announcementInterval = null
 		}
+
+		// Stop bitmap renderer
+		this.#bitmapRenderer.stop()
+
+		// Clear inbound subscriptions
+		this.#subscriptionManager.clear()
+
+		// Clear outbound subscriptions
+		this.#outboundSubs.clear()
+		this.#subscribedUpdatePeers.clear()
+		this.#pendingRpc.clear()
 
 		// Send empty retained message to signal offline
 		try {
@@ -371,15 +474,462 @@ export class LinkController {
 	// ── Message Handling ──────────────────────────────────────────────
 
 	#handleIncomingMessage(transportId: string, topic: string, payload: Buffer): void {
-		const discoveryPrefix = 'companion-link/discovery/'
+		const prefix = `${LINK_TOPIC_PREFIX}/`
+		if (!topic.startsWith(prefix)) return
 
-		if (topic.startsWith(discoveryPrefix)) {
+		if (topic.startsWith(`${LINK_TOPIC_PREFIX}/discovery/`)) {
 			this.#handleDiscoveryMessage(transportId, topic, payload)
 			return
 		}
 
-		// Future: handle subscribe/unsubscribe, button presses, bitmap updates, etc.
+		// Parse topic: companion-link/<uuid>/...
+		const rest = topic.slice(prefix.length)
+		const slashIdx = rest.indexOf('/')
+		if (slashIdx === -1) return
+
+		const topicUuid = rest.slice(0, slashIdx)
+		const subPath = rest.slice(slashIdx + 1)
+
+		// Inbound RPC requests to our UUID
+		if (topicUuid === this.#state.uuid && subPath.startsWith('rpc/')) {
+			this.#handleRpcRequest(transportId, subPath, payload)
+			return
+		}
+
+		// Inbound press/release commands to our UUID
+		if (topicUuid === this.#state.uuid && subPath.startsWith('location/')) {
+			this.#handleInboundCommand(subPath, payload)
+			return
+		}
+
+		// Inbound RPC responses (to our UUID, for our pending RPC calls)
+		if (topicUuid === this.#state.uuid && subPath.startsWith('rpc/') && subPath.endsWith('/response')) {
+			// Handled above implicitly; but let's be explicit
+			return
+		}
+
+		// Outbound: button update from a remote peer we've subscribed to
+		if (topicUuid !== this.#state.uuid && subPath.startsWith('location/') && subPath.includes('/update/')) {
+			this.#handleRemoteButtonUpdate(topicUuid, subPath, payload)
+			return
+		}
+
 		this.#logger.silly(`Unhandled message on topic: ${topic}`)
+	}
+
+	/**
+	 * Handle an inbound RPC request (subscribe/unsubscribe from another peer).
+	 */
+	#handleRpcRequest(transportId: string, subPath: string, payload: Buffer): void {
+		// subPath format: rpc/<correlationId>/request
+		const match = subPath.match(/^rpc\/([^/]+)\/request$/)
+		if (!match) return
+
+		const correlationId = match[1]
+
+		let message: LinkMessage
+		try {
+			message = JSON.parse(payload.toString('utf-8')) as LinkMessage
+		} catch {
+			this.#logger.warn(`Failed to parse RPC request`)
+			return
+		}
+
+		if (message.type === 'subscribe.request') {
+			this.#handleSubscribeRequest(transportId, correlationId, message as SubscribeRequestMessage)
+		} else if (message.type === 'unsubscribe.request') {
+			this.#handleUnsubscribeRequest(message.payload)
+		} else {
+			this.#logger.warn(`Unknown RPC request type: ${message.type}`)
+		}
+	}
+
+	/**
+	 * Handle a subscribe request from a remote peer.
+	 */
+	#handleSubscribeRequest(_transportId: string, correlationId: string, message: SubscribeRequestMessage): void {
+		const requestorId = message.payload.buttons?.[0] ? 'remote' : 'remote' // We don't track requestor in this initial impl
+
+		const responseButtons: Array<{
+			page: number
+			row: number
+			col: number
+			pressed: boolean
+			dataUrl: string | null
+			sourceChain: string[]
+		}> = []
+
+		for (const btn of message.payload.buttons) {
+			this.#subscriptionManager.subscribe(requestorId, btn.page, btn.row, btn.col, btn.width, btn.height)
+
+			// Get current state
+			const cached = this.#bitmapRenderer.getCached(btn.page, btn.row, btn.col, btn.width, btn.height)
+
+			// Check if the button is currently pressed
+			const location = { pageNumber: btn.page, row: btn.row, column: btn.col }
+			const controlId = this.#pageStore.getControlIdAt(location)
+			const control = controlId ? this.#controls.getControl(controlId) : undefined
+			const pressed = control?.supportsPushed ? false : false // TODO: get actual pressed state
+
+			responseButtons.push({
+				page: btn.page,
+				row: btn.row,
+				col: btn.col,
+				pressed,
+				dataUrl: cached ?? null,
+				sourceChain: [this.#state.uuid],
+			})
+
+			// If no cached render, render on demand
+			if (!cached) {
+				this.#bitmapRenderer
+					.renderOnDemand(btn.page, btn.row, btn.col, btn.width, btn.height)
+					.then((result) => {
+						if (result) {
+							this.#publishButtonUpdate(btn.page, btn.row, btn.col, btn.width, btn.height, result.dataUrl)
+						}
+					})
+					.catch((err) => {
+						this.#logger.warn(`Failed to render on demand: ${stringifyError(err)}`)
+					})
+			}
+		}
+
+		// We can't send a direct response without knowing the requestor's UUID.
+		// For now, the subscribe flow works by the subscriber just subscribing to the update topic.
+		// The initial bitmap will be sent via the on-demand render above.
+		this.#logger.debug(
+			`Processed subscribe request with ${message.payload.buttons.length} buttons (correlationId=${correlationId})`
+		)
+	}
+
+	/**
+	 * Handle an unsubscribe request from a remote peer.
+	 */
+	#handleUnsubscribeRequest(payload: unknown): void {
+		const unsubPayload = payload as {
+			buttons?: Array<{ page: number; row: number; col: number; width: number; height: number }>
+		}
+		if (unsubPayload.buttons) {
+			for (const btn of unsubPayload.buttons) {
+				this.#subscriptionManager.unsubscribe('remote', btn.page, btn.row, btn.col, btn.width, btn.height)
+			}
+		}
+	}
+
+	/**
+	 * Handle an inbound press/release command (remote peer pressing one of our buttons).
+	 */
+	#handleInboundCommand(subPath: string, _payload: Buffer): void {
+		// subPath format: location/<page>/<row>/<col>/press or /release
+		const match = subPath.match(/^location\/(\d+)\/(\d+)\/(\d+)\/(press|release)$/)
+		if (!match) return
+
+		const page = Number(match[1])
+		const row = Number(match[2])
+		const col = Number(match[3])
+		const action = match[4]
+
+		const location = { pageNumber: page, row, column: col }
+		const controlId = this.#pageStore.getControlIdAt(location)
+		if (!controlId) {
+			this.#logger.debug(`No control at page=${page} row=${row} col=${col} for inbound ${action}`)
+			return
+		}
+
+		this.#logger.debug(`Inbound ${action} for control ${controlId} at page=${page} row=${row} col=${col}`)
+		this.#controls.pressControl(controlId, action === 'press', 'link')
+	}
+
+	/**
+	 * Handle a button update message from a remote peer (for our outbound subscriptions).
+	 */
+	#handleRemoteButtonUpdate(peerUuid: string, subPath: string, payload: Buffer): void {
+		// subPath format: location/<page>/<row>/<col>/update/<WxH>
+		const match = subPath.match(/^location\/(\d+)\/(\d+)\/(\d+)\/update\/(\d+)x(\d+)$/)
+		if (!match) return
+
+		const page = Number(match[1])
+		const row = Number(match[2])
+		const col = Number(match[3])
+
+		let message: ButtonUpdateMessage
+		try {
+			message = JSON.parse(payload.toString('utf-8')) as ButtonUpdateMessage
+		} catch {
+			this.#logger.warn(`Failed to parse button update from ${peerUuid}`)
+			return
+		}
+
+		if (message.type !== 'button.update') return
+
+		const updatePayload = message.payload
+
+		// Loop detection: check if our UUID is in the source chain
+		const isLoop = updatePayload.sourceChain?.includes(this.#state.uuid)
+
+		// Find all link buttons targeting this peer + location
+		for (const [controlId, sub] of this.#outboundSubs) {
+			if (sub.peerUuid === peerUuid && sub.page === page && sub.row === row && sub.col === col) {
+				const control = this.#controls.getControl(controlId)
+				if (control instanceof ControlButtonRemoteLink) {
+					if (isLoop) {
+						control.setVisualState('loop_detected')
+					} else if (updatePayload.dataUrl) {
+						control.setBitmap(updatePayload.dataUrl, updatePayload.pressed ?? false)
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Publish a button update for a subscribed location.
+	 */
+	#publishButtonUpdate(page: number, row: number, col: number, width: number, height: number, dataUrl: string): void {
+		if (!this.#state.enabled) return
+
+		// Get current pressed state
+		const location = { pageNumber: page, row, column: col }
+		const controlId = this.#pageStore.getControlIdAt(location)
+		// TODO: get actual pushed state from the control at this location
+		const pressed = false
+
+		const updateMsg: ButtonUpdateMessage = {
+			version: 1,
+			type: 'button.update',
+			payload: {
+				page,
+				row,
+				col,
+				width,
+				height,
+				pressed,
+				dataUrl,
+				sourceChain: [this.#state.uuid],
+				timestamp: Date.now(),
+			},
+		}
+
+		const topic = updateTopic(this.#state.uuid, page, row, col, width, height)
+		this.#transportManager.publishToAll(topic, JSON.stringify(updateMsg)).catch((err) => {
+			this.#logger.warn(`Failed to publish button update: ${stringifyError(err)}`)
+		})
+	}
+
+	// ── Phase 3: Outbound Subscription Management ────────────────────
+
+	/**
+	 * Scan all controls for remotelinkbutton types and synchronize outbound subscriptions.
+	 */
+	#syncOutboundSubscriptions(): void {
+		if (!this.#state.enabled) return
+
+		const allControls = this.#controls.getAllControls()
+		const activeControlIds = new Set<string>()
+
+		// Find all link buttons and register/update subscriptions
+		for (const [controlId, control] of allControls) {
+			if (!(control instanceof ControlButtonRemoteLink)) continue
+
+			activeControlIds.add(controlId)
+
+			const peerUuid = control.peerUuid
+			const pageStr = control.linkPage
+			const rowStr = control.linkRow
+			const colStr = control.linkCol
+
+			// TODO: resolve variables/expressions in page/row/col
+			const page = parseInt(pageStr, 10)
+			const row = parseInt(rowStr, 10)
+			const col = parseInt(colStr, 10)
+
+			if (!peerUuid || isNaN(page) || isNaN(row) || isNaN(col)) {
+				// Not fully configured
+				control.setVisualState('unknown_peer')
+
+				// Set up the press handler even if not configured
+				control.setOnPress((cid, pressed) => {
+					this.#handleLinkButtonPress(cid, pressed)
+				})
+				control.setOnConfigChanged(() => {
+					this.#syncOutboundSubscriptions()
+				})
+
+				// Remove from outbound if previously tracked
+				this.#outboundSubs.delete(controlId)
+				continue
+			}
+
+			// Set up press handler
+			control.setOnPress((cid, pressed) => {
+				this.#handleLinkButtonPress(cid, pressed)
+			})
+
+			// Set up config change handler
+			control.setOnConfigChanged(() => {
+				this.#syncOutboundSubscriptions()
+			})
+
+			// Set peer name from registry
+			const peer = this.#peerRegistry.getPeers().find((p) => p.id === peerUuid)
+			control.setPeerName(peer?.name ?? null)
+
+			// Check peer status
+			if (!peer) {
+				control.setVisualState('unknown_peer')
+				this.#outboundSubs.delete(controlId)
+				continue
+			}
+
+			if (!peer.online) {
+				control.setVisualState('unreachable')
+				this.#outboundSubs.delete(controlId)
+				continue
+			}
+
+			// Track the subscription
+			const existing = this.#outboundSubs.get(controlId)
+			if (
+				!existing ||
+				existing.peerUuid !== peerUuid ||
+				existing.page !== page ||
+				existing.row !== row ||
+				existing.col !== col
+			) {
+				// New or changed subscription
+				this.#outboundSubs.set(controlId, { peerUuid, page, row, col, subscribed: false })
+				control.setVisualState('loading')
+
+				// Ensure we're listening for updates from this peer
+				this.#ensureUpdateSubscription(peerUuid)
+
+				// Send subscribe request
+				this.#sendSubscribeRequest(peerUuid, page, row, col)
+			}
+		}
+
+		// Clean up removed link buttons
+		for (const [controlId] of this.#outboundSubs) {
+			if (!activeControlIds.has(controlId)) {
+				this.#outboundSubs.delete(controlId)
+			}
+		}
+
+		// Clean up update subscriptions for peers no longer referenced
+		this.#cleanUnusedPeerSubscriptions()
+	}
+
+	/**
+	 * Update visual state of link buttons when peer availability changes.
+	 */
+	#updateLinkButtonStates(): void {
+		if (!this.#state.enabled) return
+
+		for (const [controlId, sub] of this.#outboundSubs) {
+			const control = this.#controls.getControl(controlId)
+			if (!(control instanceof ControlButtonRemoteLink)) continue
+
+			const peer = this.#peerRegistry.getPeers().find((p) => p.id === sub.peerUuid)
+			control.setPeerName(peer?.name ?? null)
+
+			if (!peer) {
+				control.setVisualState('unknown_peer')
+			} else if (!peer.online) {
+				control.setVisualState('unreachable')
+			} else if (control.visualState === 'unreachable' || control.visualState === 'unknown_peer') {
+				// Peer came back online, re-subscribe
+				control.setVisualState('loading')
+				this.#ensureUpdateSubscription(sub.peerUuid)
+				this.#sendSubscribeRequest(sub.peerUuid, sub.page, sub.row, sub.col)
+			}
+		}
+	}
+
+	/**
+	 * Ensure we're subscribed to button updates from a specific peer on MQTT.
+	 */
+	#ensureUpdateSubscription(peerUuid: string): void {
+		if (this.#subscribedUpdatePeers.has(peerUuid)) return
+		this.#subscribedUpdatePeers.add(peerUuid)
+
+		this.#transportManager.subscribeAll(updateWildcard(peerUuid)).catch((err) => {
+			this.#logger.warn(`Failed to subscribe to updates from ${peerUuid}: ${stringifyError(err)}`)
+		})
+	}
+
+	/**
+	 * Unsubscribe from peers that are no longer needed.
+	 */
+	#cleanUnusedPeerSubscriptions(): void {
+		const neededPeers = new Set<string>()
+		for (const sub of this.#outboundSubs.values()) {
+			neededPeers.add(sub.peerUuid)
+		}
+
+		for (const peerUuid of this.#subscribedUpdatePeers) {
+			if (!neededPeers.has(peerUuid)) {
+				this.#subscribedUpdatePeers.delete(peerUuid)
+				this.#transportManager.unsubscribeAll(updateWildcard(peerUuid)).catch((err) => {
+					this.#logger.warn(`Failed to unsubscribe from ${peerUuid}: ${stringifyError(err)}`)
+				})
+			}
+		}
+	}
+
+	/**
+	 * Send a subscribe request to a remote peer.
+	 */
+	#sendSubscribeRequest(peerUuid: string, page: number, row: number, col: number): void {
+		const msg: SubscribeRequestMessage = {
+			version: 1,
+			type: 'subscribe.request',
+			payload: {
+				buttons: [
+					{
+						page,
+						row,
+						col,
+						width: 72,
+						height: 72,
+					},
+				],
+				timestamp: Date.now(),
+			},
+		}
+
+		const correlationId = v4()
+		const topic = rpcRequestTopic(peerUuid, correlationId)
+		this.#transportManager.publishToAll(topic, JSON.stringify(msg)).catch((err) => {
+			this.#logger.warn(`Failed to send subscribe request to ${peerUuid}: ${stringifyError(err)}`)
+		})
+	}
+
+	/**
+	 * Handle a press on a local link button — forward press/release to the remote peer.
+	 */
+	#handleLinkButtonPress(controlId: string, pressed: boolean): void {
+		const sub = this.#outboundSubs.get(controlId)
+		if (!sub) return
+
+		const topic = pressed
+			? pressTopic(sub.peerUuid, sub.page, sub.row, sub.col)
+			: releaseTopic(sub.peerUuid, sub.page, sub.row, sub.col)
+
+		const msg: ButtonPressMessage | ButtonReleaseMessage = {
+			version: 1,
+			type: pressed ? 'button.press' : 'button.release',
+			payload: {
+				page: sub.page,
+				row: sub.row,
+				col: sub.col,
+				timestamp: Date.now(),
+			},
+		}
+
+		this.#transportManager.publishToAll(topic, JSON.stringify(msg)).catch((err) => {
+			this.#logger.warn(`Failed to forward press to ${sub.peerUuid}: ${stringifyError(err)}`)
+		})
 	}
 
 	#handleDiscoveryMessage(transportId: string, _topic: string, payload: Buffer): void {

@@ -18,8 +18,7 @@ export type {
 	LinkSubscribeResponseButtonState as SubscribeResponseButtonState,
 	LinkUnsubscribeRequestPayload as UnsubscribeRequestPayload,
 	LinkButtonCommandPayload as ButtonCommandPayload,
-	LinkBitmapUpdatePayload as BitmapUpdatePayload,
-	LinkButtonStatePayload as ButtonStatePayload,
+	LinkButtonUpdatePayload as ButtonUpdatePayload,
 	LinkButtonLocation as ButtonLocation,
 	LinkButtonLocationWithResolution as ButtonLocationWithResolution,
 	LinkGridSize as GridSize,
@@ -31,8 +30,7 @@ import type {
 	LinkSubscribeResponsePayload,
 	LinkUnsubscribeRequestPayload,
 	LinkButtonCommandPayload,
-	LinkBitmapUpdatePayload,
-	LinkButtonStatePayload,
+	LinkButtonUpdatePayload,
 } from './LinkProtocolSchema.js'
 
 // ── Message envelope ───────────────────────────────────────
@@ -58,8 +56,7 @@ export type UnsubscribeRequestMessage = LinkMessage<'unsubscribe.request', LinkU
 export type ButtonPressMessage = LinkMessage<'button.press', LinkButtonCommandPayload>
 export type ButtonReleaseMessage = LinkMessage<'button.release', LinkButtonCommandPayload>
 
-export type BitmapUpdateMessage = LinkMessage<'bitmap.update', LinkBitmapUpdatePayload>
-export type ButtonStateMessage = LinkMessage<'button.state', LinkButtonStatePayload>
+export type ButtonUpdateMessage = LinkMessage<'button.update', LinkButtonUpdatePayload>
 
 // ── Topic Helpers ──────────────────────────────────────────
 
@@ -73,7 +70,7 @@ export function discoveryWildcard(): string {
 	return `${LINK_TOPIC_PREFIX}/discovery/+`
 }
 
-export function bitmapTopic(
+export function updateTopic(
 	uuid: string,
 	page: number,
 	row: number,
@@ -81,11 +78,7 @@ export function bitmapTopic(
 	width: number,
 	height: number
 ): string {
-	return `${LINK_TOPIC_PREFIX}/${uuid}/location/${page}/${row}/${col}/bitmap/${width}x${height}`
-}
-
-export function stateTopic(uuid: string, page: number, row: number, col: number): string {
-	return `${LINK_TOPIC_PREFIX}/${uuid}/location/${page}/${row}/${col}/state`
+	return `${LINK_TOPIC_PREFIX}/${uuid}/location/${page}/${row}/${col}/update/${width}x${height}`
 }
 
 export function pressTopic(uuid: string, page: number, row: number, col: number): string {
@@ -109,18 +102,11 @@ export function chunksTopic(): string {
 }
 
 /**
- * Wildcard pattern for subscribing to all bitmap topics for a specific instance.
- * Used by clients that want to receive bitmaps from a remote instance.
+ * Wildcard pattern for subscribing to all button update topics for a specific instance.
+ * Used by clients that want to receive updates from a remote instance.
  */
-export function bitmapWildcard(uuid: string): string {
-	return `${LINK_TOPIC_PREFIX}/${uuid}/location/+/+/+/bitmap/+`
-}
-
-/**
- * Wildcard pattern for subscribing to all state topics for a specific instance.
- */
-export function stateWildcard(uuid: string): string {
-	return `${LINK_TOPIC_PREFIX}/${uuid}/location/+/+/+/state`
+export function updateWildcard(uuid: string): string {
+	return `${LINK_TOPIC_PREFIX}/${uuid}/location/+/+/+/update/+`
 }
 
 /**

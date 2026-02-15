@@ -8,7 +8,11 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { ButtonStyleConfig } from '~/Controls/ButtonStyleConfig.js'
 import { ControlOptionsEditor } from '~/Controls/ControlOptionsEditor.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	NormalButtonModel,
+	RemoteLinkButtonModel,
+	SomeButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { ControlClearButton } from './ControlClearButton.js'
@@ -21,6 +25,7 @@ import { LocalVariablesEditor } from '../../Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
+import { RemoteLinkButtonEditor } from './RemoteLinkButtonEditor.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -137,6 +142,10 @@ const EditButtonContent = observer(function EditButton({
 
 			{config.type === 'button' && (
 				<NormalButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
+			)}
+
+			{config.type === 'remotelinkbutton' && (
+				<RemoteLinkButtonEditor controlId={controlId} config={config} runtimeProps={runtimeProps} />
 			)}
 		</>
 	)

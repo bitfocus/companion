@@ -18,8 +18,7 @@ export interface LinkProtocolPayloads {
 		subscribeResponse?: LinkSubscribeResponsePayload
 		unsubscribeRequest?: LinkUnsubscribeRequestPayload
 		buttonCommand?: LinkButtonCommandPayload
-		bitmapUpdate?: LinkBitmapUpdatePayload
-		buttonState?: LinkButtonStatePayload
+		buttonUpdate?: LinkButtonUpdatePayload
 		buttonLocation?: LinkButtonLocation
 		buttonLocationWithResolution?: LinkButtonLocationWithResolution
 		subscribeResponseButtonState?: LinkSubscribeResponseButtonState
@@ -152,6 +151,10 @@ export interface LinkSubscribeResponseButtonState {
 	 * Whether the button is currently pressed.
 	 */
 	pressed: boolean
+	/**
+	 * Ordered list of instance UUIDs this button image has passed through, for loop detection.
+	 */
+	sourceChain: string[]
 }
 /**
  * Request to unsubscribe from button state updates.
@@ -188,9 +191,9 @@ export interface LinkButtonCommandPayload {
 	timestamp: number
 }
 /**
- * Bitmap update for a subscribed button at a specific resolution.
+ * Combined bitmap and state update for a subscribed button at a specific resolution.
  */
-export interface LinkBitmapUpdatePayload {
+export interface LinkButtonUpdatePayload {
 	/**
 	 * Page number.
 	 */
@@ -216,30 +219,13 @@ export interface LinkBitmapUpdatePayload {
 	 */
 	dataUrl: string
 	/**
-	 * Unix timestamp in milliseconds.
-	 */
-	timestamp: number
-}
-/**
- * Button pressed/released state notification.
- */
-export interface LinkButtonStatePayload {
-	/**
-	 * Page number.
-	 */
-	page: number
-	/**
-	 * Row number.
-	 */
-	row: number
-	/**
-	 * Column number.
-	 */
-	col: number
-	/**
 	 * Whether the button is currently pressed.
 	 */
 	pressed: boolean
+	/**
+	 * Ordered list of instance UUIDs this button image has passed through, for loop detection. The publishing instance appends its own UUID before sending.
+	 */
+	sourceChain: string[]
 	/**
 	 * Unix timestamp in milliseconds.
 	 */

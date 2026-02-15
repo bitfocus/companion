@@ -293,7 +293,15 @@ export class Registry {
 				this.graphics,
 				pageStore
 			)
-			this.link = new LinkController(this.#appInfo, this.db, this.userconfig, pageStore)
+			this.link = new LinkController(
+				this.#appInfo,
+				this.db,
+				this.userconfig,
+				pageStore,
+				this.controls,
+				this.graphics,
+				controlEvents
+			)
 			this.usageStatistics = new DataUsageStatistics(
 				this.#appInfo,
 				this.surfaces,

@@ -2,6 +2,7 @@ import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
+import { ControlButtonRemoteLink } from './ControlTypes/LinkButton.js'
 import { CreateBankControlId, CreatePresetControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { ActionRunner } from './ActionRunner.js'
 import { ActionRecorder } from './ActionRecorder.js'
@@ -302,6 +303,8 @@ export class ControlsController {
 				return new ControlButtonPageUp(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagedown' || (controlType === 'pagedown' && !controlObj2)) {
 				return new ControlButtonPageDown(this.#createControlDependencies(), controlId, controlObj2, isImport)
+			} else if (controlObj2?.type === 'remotelinkbutton' || (controlType === 'remotelinkbutton' && !controlObj2)) {
+				return new ControlButtonRemoteLink(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			}
 		}
 

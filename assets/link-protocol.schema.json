@@ -13,8 +13,7 @@
 				"subscribeResponse": { "$ref": "#/$defs/SubscribeResponsePayload" },
 				"unsubscribeRequest": { "$ref": "#/$defs/UnsubscribeRequestPayload" },
 				"buttonCommand": { "$ref": "#/$defs/ButtonCommandPayload" },
-				"bitmapUpdate": { "$ref": "#/$defs/BitmapUpdatePayload" },
-				"buttonState": { "$ref": "#/$defs/ButtonStatePayload" },
+				"buttonUpdate": { "$ref": "#/$defs/ButtonUpdatePayload" },
 				"buttonLocation": { "$ref": "#/$defs/ButtonLocation" },
 				"buttonLocationWithResolution": { "$ref": "#/$defs/ButtonLocationWithResolution" },
 				"subscribeResponseButtonState": { "$ref": "#/$defs/SubscribeResponseButtonState" },
@@ -196,9 +195,16 @@
 				"pressed": {
 					"description": "Whether the button is currently pressed.",
 					"type": "boolean"
+				},
+				"sourceChain": {
+					"description": "Ordered list of instance UUIDs this button image has passed through, for loop detection.",
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
 				}
 			},
-			"required": ["page", "row", "col", "width", "height", "dataUrl", "pressed"],
+			"required": ["page", "row", "col", "width", "height", "dataUrl", "pressed", "sourceChain"],
 			"additionalProperties": false
 		},
 		"SubscribeResponsePayload": {
@@ -269,9 +275,9 @@
 			"required": ["page", "row", "col", "timestamp"],
 			"additionalProperties": false
 		},
-		"BitmapUpdatePayload": {
-			"title": "LinkBitmapUpdatePayload",
-			"description": "Bitmap update for a subscribed button at a specific resolution.",
+		"ButtonUpdatePayload": {
+			"title": "LinkButtonUpdatePayload",
+			"description": "Combined bitmap and state update for a subscribed button at a specific resolution.",
 			"type": "object",
 			"properties": {
 				"page": {
@@ -303,44 +309,23 @@
 					"description": "PNG data URL at the subscribed resolution.",
 					"type": "string"
 				},
-				"timestamp": {
-					"description": "Unix timestamp in milliseconds.",
-					"type": "number"
-				}
-			},
-			"required": ["page", "row", "col", "width", "height", "dataUrl", "timestamp"],
-			"additionalProperties": false
-		},
-		"ButtonStatePayload": {
-			"title": "LinkButtonStatePayload",
-			"description": "Button pressed/released state notification.",
-			"type": "object",
-			"properties": {
-				"page": {
-					"description": "Page number.",
-					"type": "number",
-					"minimum": 0
-				},
-				"row": {
-					"description": "Row number.",
-					"type": "number",
-					"minimum": 0
-				},
-				"col": {
-					"description": "Column number.",
-					"type": "number",
-					"minimum": 0
-				},
 				"pressed": {
 					"description": "Whether the button is currently pressed.",
 					"type": "boolean"
 				},
+				"sourceChain": {
+					"description": "Ordered list of instance UUIDs this button image has passed through, for loop detection. The publishing instance appends its own UUID before sending.",
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
 				"timestamp": {
 					"description": "Unix timestamp in milliseconds.",
 					"type": "number"
 				}
 			},
-			"required": ["page", "row", "col", "pressed", "timestamp"],
+			"required": ["page", "row", "col", "width", "height", "dataUrl", "pressed", "sourceChain", "timestamp"],
 			"additionalProperties": false
 		}
 	}
