@@ -166,7 +166,7 @@ export class LinkController {
 		this.#peerRegistry.on('peersChanged', (peers: LinkPeerInfo[]) => {
 			this.#uiEvents.emit('peers', peers)
 			// Re-evaluate link button states when peer availability changes
-			this.#updateLinkButtonStates()
+			this.#syncOutboundSubscriptions()
 		})
 
 		// Phase 2: Inbound subscription system
@@ -501,20 +501,20 @@ export class LinkController {
 		const subPath = rest.slice(slashIdx + 1)
 
 		// Inbound RPC requests to our UUID
-		if (topicUuid === this.#state.uuid && subPath.startsWith('rpc/')) {
+		if (topicUuid === this.#state.uuid && subPath.startsWith('rpc/') && subPath.endsWith('/request')) {
 			this.#handleRpcRequest(transportId, subPath, payload)
+			return
+		}
+
+		// Inbound RPC responses (to our UUID, for our pending RPC calls)
+		if (topicUuid === this.#state.uuid && subPath.startsWith('rpc/') && subPath.endsWith('/response')) {
+			this.#handleRpcResponse(subPath, payload)
 			return
 		}
 
 		// Inbound press/release commands to our UUID
 		if (topicUuid === this.#state.uuid && subPath.startsWith('location/')) {
 			this.#handleInboundCommand(subPath, payload)
-			return
-		}
-
-		// Inbound RPC responses (to our UUID, for our pending RPC calls)
-		if (topicUuid === this.#state.uuid && subPath.startsWith('rpc/') && subPath.endsWith('/response')) {
-			// Handled above implicitly; but let's be explicit
 			return
 		}
 
@@ -551,6 +551,31 @@ export class LinkController {
 			this.#handleUnsubscribeRequest(message.payload)
 		} else {
 			this.#logger.warn(`Unknown RPC request type: ${message.type}`)
+		}
+	}
+
+	/**
+	 * Handle an inbound RPC response from a remote peer.
+	 */
+	#handleRpcResponse(subPath: string, payload: Buffer): void {
+		// subPath format: rpc/<correlationId>/response
+		const match = subPath.match(/^rpc\/([^/]+)\/response$/)
+		if (!match) return
+
+		const correlationId = match[1]
+
+		let message: LinkMessage
+		try {
+			message = JSON.parse(payload.toString('utf-8')) as LinkMessage
+		} catch {
+			this.#logger.warn(`Failed to parse RPC response`)
+			return
+		}
+
+		const callback = this.#pendingRpc.get(correlationId)
+		if (callback) {
+			this.#pendingRpc.delete(correlationId)
+			callback(message)
 		}
 	}
 
@@ -868,32 +893,6 @@ export class LinkController {
 	}
 
 	/**
-	 * Update visual state of link buttons when peer availability changes.
-	 */
-	#updateLinkButtonStates(): void {
-		if (!this.#state.enabled) return
-
-		for (const [controlId, sub] of this.#outboundSubs) {
-			const control = this.#controls.getControl(controlId)
-			if (!(control instanceof ControlButtonRemoteLink)) continue
-
-			const peer = this.#peerRegistry.getPeers().find((p) => p.id === sub.peerUuid)
-			control.setPeerName(peer?.name ?? null)
-
-			if (!peer) {
-				control.setVisualState('unknown_peer')
-			} else if (!peer.online) {
-				control.setVisualState('unreachable')
-			} else if (control.visualState === 'unreachable' || control.visualState === 'unknown_peer') {
-				// Peer came back online, re-subscribe
-				control.setVisualState('loading')
-				this.#ensureUpdateSubscription(sub.peerUuid)
-				this.#sendSubscribeRequest(sub.peerUuid, sub.page, sub.row, sub.col)
-			}
-		}
-	}
-
-	/**
 	 * Ensure we're subscribed to button updates from a specific peer on MQTT.
 	 */
 	#ensureUpdateSubscription(peerUuid: string): void {
@@ -947,10 +946,51 @@ export class LinkController {
 		}
 
 		const correlationId = v4()
+
+		// Register callback to handle the response
+		this.#pendingRpc.set(correlationId, (response: LinkMessage) => {
+			if (response.type === 'subscribe.response') {
+				this.#handleSubscribeResponse(peerUuid, response as SubscribeResponseMessage)
+			}
+		})
+
 		const topic = rpcRequestTopic(peerUuid, correlationId)
 		this.#transportManager.publishToAll(topic, JSON.stringify(msg)).catch((err) => {
 			this.#logger.warn(`Failed to send subscribe request to ${peerUuid}: ${stringifyError(err)}`)
+			this.#pendingRpc.delete(correlationId)
 		})
+	}
+
+	/**
+	 * Handle a subscribe response from a remote peer.
+	 */
+	#handleSubscribeResponse(peerUuid: string, message: SubscribeResponseMessage): void {
+		for (const buttonState of message.payload.states) {
+			const { page, row, col, dataUrl, pressed, sourceChain } = buttonState
+
+			// Check for loop detection
+			const isLoop = sourceChain?.includes(this.#state.uuid)
+
+			// Find all link buttons targeting this peer + location
+			for (const [controlId, sub] of this.#outboundSubs) {
+				if (sub.peerUuid === peerUuid && sub.page === page && sub.row === row && sub.col === col) {
+					const control = this.#controls.getControl(controlId)
+					if (control instanceof ControlButtonRemoteLink) {
+						// Mark subscription as successful
+						sub.subscribed = true
+
+						if (isLoop) {
+							control.setVisualState('loop_detected')
+						} else if (dataUrl) {
+							// Got initial bitmap, display it
+							control.setBitmap(dataUrl, pressed ?? false)
+						}
+						// else: No initial bitmap available yet (button hasn't rendered or existing subscription)
+						// Keep current state (likely 'loading') and wait for first update via transport
+					}
+				}
+			}
+		}
 	}
 
 	/**
