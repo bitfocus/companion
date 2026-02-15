@@ -84,14 +84,12 @@ export interface RemoteLinkButtonModel {
 	/** UUID of the remote peer instance to mirror. Empty string = not configured. */
 	peerUuid: string
 
-	/** Remote page number (may contain variable/expression references). */
-	page: string
-
-	/** Remote row number (may contain variable/expression references). */
-	row: string
-
-	/** Remote column number (may contain variable/expression references). */
-	col: string
+	/**
+	 * Remote button location in standard Companion LocationString format.
+	 * Examples: "1/0/0", "$(this:page)/$(this:row)/$(this:column)", "this"
+	 * Parsed using ParseLocationString with full variable support.
+	 */
+	location: string
 }
 
 /** Runtime (non-persisted) properties sent to the UI for a remote Link button. */

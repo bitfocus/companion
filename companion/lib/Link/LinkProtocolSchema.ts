@@ -73,6 +73,10 @@ export interface LinkGridSize {
  */
 export interface LinkSubscribeRequestPayload {
 	/**
+	 * UUID of the peer making the subscription request.
+	 */
+	requestorId: string
+	/**
 	 * List of buttons and their requested resolutions.
 	 */
 	buttons: LinkButtonLocationWithResolution[]
@@ -185,6 +189,14 @@ export interface LinkButtonCommandPayload {
 	 * Column number.
 	 */
 	col: number
+	/**
+	 * UUID of the instance sending this command.
+	 */
+	sourceUuid: string
+	/**
+	 * Optional surface identifier for long press support. Will be prefixed with source UUID on receiving end.
+	 */
+	surfaceId?: string
 	/**
 	 * Unix timestamp in milliseconds.
 	 */

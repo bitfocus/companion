@@ -26,11 +26,13 @@ import {
 	pressWildcard,
 	releaseWildcard,
 	rpcRequestTopic,
+	rpcResponseTopic,
 	rpcRequestWildcard,
 	LINK_TOPIC_PREFIX,
 	type AnnouncementMessage,
 	type AnnouncementPayload,
 	type SubscribeRequestMessage,
+	type SubscribeResponseMessage,
 	type ButtonUpdateMessage,
 	type ButtonPressMessage,
 	type ButtonReleaseMessage,
@@ -173,7 +175,15 @@ export class LinkController {
 
 		// When BitmapRenderer has a rendered bitmap, publish it
 		this.#bitmapRenderer.on('bitmapReady', (bitmap) => {
-			this.#publishButtonUpdate(bitmap.page, bitmap.row, bitmap.col, bitmap.width, bitmap.height, bitmap.dataUrl)
+			this.#publishButtonUpdate(
+				bitmap.page,
+				bitmap.row,
+				bitmap.col,
+				bitmap.width,
+				bitmap.height,
+				bitmap.dataUrl,
+				bitmap.pressed
+			)
 		})
 
 		// When a subscription is removed, evict the bitmap cache
@@ -548,12 +558,14 @@ export class LinkController {
 	 * Handle a subscribe request from a remote peer.
 	 */
 	#handleSubscribeRequest(_transportId: string, correlationId: string, message: SubscribeRequestMessage): void {
-		const requestorId = message.payload.buttons?.[0] ? 'remote' : 'remote' // We don't track requestor in this initial impl
+		const requestorId = message.payload.requestorId
 
 		const responseButtons: Array<{
 			page: number
 			row: number
 			col: number
+			width: number
+			height: number
 			pressed: boolean
 			dataUrl: string | null
 			sourceChain: string[]
@@ -575,6 +587,8 @@ export class LinkController {
 				page: btn.page,
 				row: btn.row,
 				col: btn.col,
+				width: btn.width,
+				height: btn.height,
 				pressed,
 				dataUrl: cached ?? null,
 				sourceChain: [this.#state.uuid],
@@ -586,7 +600,15 @@ export class LinkController {
 					.renderOnDemand(btn.page, btn.row, btn.col, btn.width, btn.height)
 					.then((result) => {
 						if (result) {
-							this.#publishButtonUpdate(btn.page, btn.row, btn.col, btn.width, btn.height, result.dataUrl)
+							this.#publishButtonUpdate(
+								btn.page,
+								btn.row,
+								btn.col,
+								btn.width,
+								btn.height,
+								result.dataUrl,
+								result.pressed
+							)
 						}
 					})
 					.catch((err) => {
@@ -595,11 +617,23 @@ export class LinkController {
 			}
 		}
 
-		// We can't send a direct response without knowing the requestor's UUID.
-		// For now, the subscribe flow works by the subscriber just subscribing to the update topic.
-		// The initial bitmap will be sent via the on-demand render above.
+		// Send subscribe response back to the requestor
+		const responseMsg: SubscribeResponseMessage = {
+			version: 1,
+			type: 'subscribe.response',
+			payload: {
+				states: responseButtons,
+				timestamp: Date.now(),
+			},
+		}
+
+		const responseTopic = rpcResponseTopic(requestorId, correlationId)
+		this.#transportManager.publishToAll(responseTopic, JSON.stringify(responseMsg)).catch((err) => {
+			this.#logger.warn(`Failed to send subscribe response to ${requestorId}: ${stringifyError(err)}`)
+		})
+
 		this.#logger.debug(
-			`Processed subscribe request with ${message.payload.buttons.length} buttons (correlationId=${correlationId})`
+			`Processed subscribe request from ${requestorId} with ${message.payload.buttons.length} buttons (correlationId=${correlationId})`
 		)
 	}
 
@@ -620,7 +654,7 @@ export class LinkController {
 	/**
 	 * Handle an inbound press/release command (remote peer pressing one of our buttons).
 	 */
-	#handleInboundCommand(subPath: string, _payload: Buffer): void {
+	#handleInboundCommand(subPath: string, payload: Buffer): void {
 		// subPath format: location/<page>/<row>/<col>/press or /release
 		const match = subPath.match(/^location\/(\d+)\/(\d+)\/(\d+)\/(press|release)$/)
 		if (!match) return
@@ -630,6 +664,21 @@ export class LinkController {
 		const col = Number(match[3])
 		const action = match[4]
 
+		// Parse the payload to extract sourceUuid and surfaceId
+		let message: ButtonPressMessage | ButtonReleaseMessage
+		try {
+			message = JSON.parse(payload.toString('utf-8'))
+		} catch {
+			this.#logger.warn(`Failed to parse inbound ${action} command`)
+			return
+		}
+
+		const sourceUuid = message.payload.sourceUuid
+		const remoteSurfaceId = message.payload.surfaceId
+
+		// Prepend source UUID to surfaceId to make it globally unique
+		const surfaceId = remoteSurfaceId ? `${sourceUuid}:${remoteSurfaceId}` : undefined
+
 		const location = { pageNumber: page, row, column: col }
 		const controlId = this.#pageStore.getControlIdAt(location)
 		if (!controlId) {
@@ -637,8 +686,10 @@ export class LinkController {
 			return
 		}
 
-		this.#logger.debug(`Inbound ${action} for control ${controlId} at page=${page} row=${row} col=${col}`)
-		this.#controls.pressControl(controlId, action === 'press', 'link')
+		this.#logger.debug(
+			`Inbound ${action} for control ${controlId} at page=${page} row=${row} col=${col} from ${sourceUuid}`
+		)
+		this.#controls.pressControl(controlId, action === 'press', surfaceId)
 	}
 
 	/**
@@ -686,12 +737,16 @@ export class LinkController {
 	/**
 	 * Publish a button update for a subscribed location.
 	 */
-	#publishButtonUpdate(page: number, row: number, col: number, width: number, height: number, dataUrl: string): void {
+	#publishButtonUpdate(
+		page: number,
+		row: number,
+		col: number,
+		width: number,
+		height: number,
+		dataUrl: string,
+		pressed: boolean
+	): void {
 		if (!this.#state.enabled) return
-
-		// Get current pressed state
-		// TODO: look up actual pushed state via pageStore + controls
-		const pressed = false
 
 		const updateMsg: ButtonUpdateMessage = {
 			version: 1,
@@ -733,25 +788,19 @@ export class LinkController {
 			activeControlIds.add(controlId)
 
 			const peerUuid = control.peerUuid
-			const pageStr = control.linkPage
-			const rowStr = control.linkRow
-			const colStr = control.linkCol
+			const parsedLocation = control.parseLocation(undefined)
 
-			// TODO: resolve variables/expressions in page/row/col
-			const page = parseInt(pageStr, 10)
-			const row = parseInt(rowStr, 10)
-			const col = parseInt(colStr, 10)
+			const page = parsedLocation?.pageNumber
+			const row = parsedLocation?.row
+			const col = parsedLocation?.column
 
-			if (!peerUuid || isNaN(page) || isNaN(row) || isNaN(col)) {
-				// Not fully configured
+			if (!peerUuid || page === undefined || row === undefined || col === undefined) {
+				// Not fully configured or location contains unresolved variables
 				control.setVisualState('unknown_peer')
 
 				// Set up the press handler even if not configured
-				control.setOnPress((cid, pressed) => {
-					this.#handleLinkButtonPress(cid, pressed)
-				})
-				control.setOnConfigChanged(() => {
-					this.#syncOutboundSubscriptions()
+				control.setOnPress((cid, pressed, surfaceId) => {
+					this.#handleLinkButtonPress(cid, pressed, surfaceId)
 				})
 
 				// Remove from outbound if previously tracked
@@ -760,8 +809,8 @@ export class LinkController {
 			}
 
 			// Set up press handler
-			control.setOnPress((cid, pressed) => {
-				this.#handleLinkButtonPress(cid, pressed)
+			control.setOnPress((cid, pressed, surfaceId) => {
+				this.#handleLinkButtonPress(cid, pressed, surfaceId)
 			})
 
 			// Set up config change handler
@@ -883,6 +932,7 @@ export class LinkController {
 			version: 1,
 			type: 'subscribe.request',
 			payload: {
+				requestorId: this.#state.uuid,
 				buttons: [
 					{
 						page,
@@ -906,7 +956,7 @@ export class LinkController {
 	/**
 	 * Handle a press on a local link button — forward press/release to the remote peer.
 	 */
-	#handleLinkButtonPress(controlId: string, pressed: boolean): void {
+	#handleLinkButtonPress(controlId: string, pressed: boolean, surfaceId: string | undefined): void {
 		const sub = this.#outboundSubs.get(controlId)
 		if (!sub) return
 
@@ -921,6 +971,8 @@ export class LinkController {
 				page: sub.page,
 				row: sub.row,
 				col: sub.col,
+				sourceUuid: this.#state.uuid,
+				surfaceId,
 				timestamp: Date.now(),
 			},
 		}

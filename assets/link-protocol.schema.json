@@ -143,6 +143,10 @@
 			"description": "Request to subscribe to button state updates at specific resolutions.",
 			"type": "object",
 			"properties": {
+				"requestorId": {
+					"description": "UUID of the peer making the subscription request.",
+					"type": "string"
+				},
 				"buttons": {
 					"description": "List of buttons and their requested resolutions.",
 					"type": "array",
@@ -155,7 +159,7 @@
 					"type": "number"
 				}
 			},
-			"required": ["buttons", "timestamp"],
+			"required": ["requestorId", "buttons", "timestamp"],
 			"additionalProperties": false
 		},
 		"SubscribeResponseButtonState": {
@@ -267,12 +271,20 @@
 					"type": "number",
 					"minimum": 0
 				},
+				"sourceUuid": {
+					"description": "UUID of the instance sending this command.",
+					"type": "string"
+				},
+				"surfaceId": {
+					"description": "Optional surface identifier for long press support. Will be prefixed with source UUID on receiving end.",
+					"type": "string"
+				},
 				"timestamp": {
 					"description": "Unix timestamp in milliseconds.",
 					"type": "number"
 				}
 			},
-			"required": ["page", "row", "col", "timestamp"],
+			"required": ["page", "row", "col", "sourceUuid", "timestamp"],
 			"additionalProperties": false
 		},
 		"ButtonUpdatePayload": {

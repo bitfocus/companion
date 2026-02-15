@@ -18,6 +18,8 @@ export interface RenderedBitmap {
 	height: number
 	/** PNG data URL string, JSON-safe */
 	dataUrl: string
+	/** Whether the button is currently pressed */
+	pressed: boolean
 }
 
 export type BitmapRendererEvents = {
@@ -84,11 +86,14 @@ export class BitmapRenderer extends EventEmitter<BitmapRendererEvents> {
 		const cached = this.#graphics.getCachedRender(location)
 		if (!cached) return null
 
+		// Extract pressed state from ImageResult style
+		const pressed = typeof cached.style === 'object' && cached.style.style === 'button' ? cached.style.pushed : false
+
 		const dataUrl = await this.#scaleToDataUrl(cached, width, height)
 		const cacheKey = this.#makeCacheKey(page, row, col, width, height)
 		this.#cache.set(cacheKey, dataUrl)
 
-		return { page, row, col, width, height, dataUrl }
+		return { page, row, col, width, height, dataUrl, pressed }
 	}
 
 	/**
@@ -115,6 +120,9 @@ export class BitmapRenderer extends EventEmitter<BitmapRendererEvents> {
 		const row = location.row
 		const col = location.column
 
+		// Extract pressed state from ImageResult style
+		const pressed = typeof render.style === 'object' && render.style.style === 'button' ? render.style.pushed : false
+
 		// Get all resolutions subscribed for this location
 		const resolutions = this.#subscriptionManager.getResolutionsForLocation(page, row, col)
 		if (resolutions.length === 0) return
@@ -125,7 +133,7 @@ export class BitmapRenderer extends EventEmitter<BitmapRendererEvents> {
 				.then((dataUrl) => {
 					const cacheKey = this.#makeCacheKey(page, row, col, width, height)
 					this.#cache.set(cacheKey, dataUrl)
-					this.emit('bitmapReady', { page, row, col, width, height, dataUrl })
+					this.emit('bitmapReady', { page, row, col, width, height, dataUrl, pressed })
 				})
 				.catch((err) => {
 					this.#logger.warn(`Failed to scale bitmap for ${page}/${row}/${col} @ ${width}x${height}: ${err}`)

@@ -308,9 +308,7 @@ export function createControlsTrpcRouter(
 					controlId: z.string(),
 					config: z.object({
 						peerUuid: z.string().optional(),
-						page: z.string().optional(),
-						row: z.string().optional(),
-						col: z.string().optional(),
+						location: z.string().optional(),
 					}),
 				})
 			)

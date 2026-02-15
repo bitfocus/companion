@@ -13,16 +13,30 @@ import type {
 	ControlWithoutPushed,
 	ControlWithoutStyle,
 } from '../IControlFragments.js'
-import type { DrawStyleModel, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ParseLocationString } from '../../Internal/Util.js'
+import type { DrawStyleModel, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+
+/** Custom draw style for Remote Link button visual states. */
+type RemoteLinkDrawStyle =
+	| {
+			type: 'bitmap'
+			dataUrl: string
+			pressed: boolean
+	  }
+	| {
+			type: 'placeholder'
+			text: string
+			fontSize: number
+			isError: boolean
+	  }
 
 /** Default model when creating a new Remote Link button. */
 const DEFAULT_MODEL: RemoteLinkButtonModel = {
 	type: 'remotelinkbutton',
 	peerUuid: '',
-	page: '',
-	row: '',
-	col: '',
+	location: '',
 }
 
 /**
@@ -74,7 +88,7 @@ export class ControlButtonRemoteLink
 	#peerName: string | null = null
 
 	/** Callback for press forwarding (set by LinkController). */
-	#onPress: ((controlId: string, pressed: boolean) => void) | null = null
+	#onPress: ((controlId: string, pressed: boolean, surfaceId: string | undefined) => void) | null = null
 
 	/** Callback when link config changes (set by LinkController). */
 	#onConfigChanged: ((controlId: string) => void) | null = null
@@ -100,19 +114,17 @@ export class ControlButtonRemoteLink
 		return this.#config.peerUuid
 	}
 
-	/** The configured remote page (raw string, may contain variables/expressions). */
-	get linkPage(): string {
-		return this.#config.page
+	/** The configured remote location (raw string, may contain variables/expressions). */
+	get linkLocation(): string {
+		return this.#config.location
 	}
 
-	/** The configured remote row (raw string, may contain variables/expressions). */
-	get linkRow(): string {
-		return this.#config.row
-	}
-
-	/** The configured remote column (raw string, may contain variables/expressions). */
-	get linkCol(): string {
-		return this.#config.col
+	/**
+	 * Parse the configured location with the given press location context.
+	 * Returns null if the location cannot be parsed or variables cannot be resolved.
+	 */
+	parseLocation(pressLocation: ControlLocation | undefined): ControlLocation | null {
+		return ParseLocationString(this.#config.location, pressLocation)
 	}
 
 	/** Current visual state. */
@@ -168,7 +180,7 @@ export class ControlButtonRemoteLink
 	/**
 	 * Set the press handler callback (called by LinkController).
 	 */
-	setOnPress(handler: ((controlId: string, pressed: boolean) => void) | null): void {
+	setOnPress(handler: ((controlId: string, pressed: boolean, surfaceId: string | undefined) => void) | null): void {
 		this.#onPress = handler
 	}
 
@@ -183,23 +195,15 @@ export class ControlButtonRemoteLink
 	 * Update the link configuration fields.
 	 * Called from tRPC when the user edits the control.
 	 */
-	setLinkConfig(config: Partial<Pick<RemoteLinkButtonModel, 'peerUuid' | 'page' | 'row' | 'col'>>): void {
+	setLinkConfig(config: Partial<Pick<RemoteLinkButtonModel, 'peerUuid' | 'location'>>): void {
 		let changed = false
 
 		if (config.peerUuid !== undefined && config.peerUuid !== this.#config.peerUuid) {
 			this.#config = { ...this.#config, peerUuid: config.peerUuid }
 			changed = true
 		}
-		if (config.page !== undefined && config.page !== this.#config.page) {
-			this.#config = { ...this.#config, page: config.page }
-			changed = true
-		}
-		if (config.row !== undefined && config.row !== this.#config.row) {
-			this.#config = { ...this.#config, row: config.row }
-			changed = true
-		}
-		if (config.col !== undefined && config.col !== this.#config.col) {
-			this.#config = { ...this.#config, col: config.col }
+		if (config.location !== undefined && config.location !== this.#config.location) {
+			this.#config = { ...this.#config, location: config.location }
 			changed = true
 		}
 
@@ -212,65 +216,101 @@ export class ControlButtonRemoteLink
 	// ── ControlBase abstract implementations ─────────────────────
 
 	getDrawStyle(): DrawStyleModel {
+		const style = this.#getInternalDrawStyle()
+		return this.#convertToDrawStyleModel(style)
+	}
+
+	/**
+	 * Get the internal draw style (our custom type for link button states).
+	 * This is kept separate from DrawStyleModel to avoid coupling to the legacy button system.
+	 */
+	#getInternalDrawStyle(): RemoteLinkDrawStyle {
 		switch (this.#visualState) {
 			case 'bitmap':
-				return this.#drawBitmapState()
+				return {
+					type: 'bitmap',
+					dataUrl: this.#bitmapDataUrl ?? '',
+					pressed: this.#remotePressed,
+				}
 			case 'unknown_peer':
-				return this.#drawPlaceholderState('Unknown peer', 15)
+				return {
+					type: 'placeholder',
+					text: 'Unknown peer',
+					fontSize: 15,
+					isError: true,
+				}
 			case 'unreachable':
-				return this.#drawPlaceholderState('Unreachable', 12)
+				return {
+					type: 'placeholder',
+					text: 'Unreachable',
+					fontSize: 12,
+					isError: false,
+				}
 			case 'loading':
-				return this.#drawPlaceholderState('Loading...', 14)
+				return {
+					type: 'placeholder',
+					text: 'Loading...',
+					fontSize: 14,
+					isError: false,
+				}
 			case 'loop_detected':
-				return this.#drawPlaceholderState('Loop detected', 11)
+				return {
+					type: 'placeholder',
+					text: 'Loop detected',
+					fontSize: 11,
+					isError: true,
+				}
 		}
 	}
 
-	#drawBitmapState(): DrawStyleButtonModel {
-		return {
-			style: 'button',
-			text: '',
-			textExpression: undefined,
-			size: 'auto',
-			alignment: 'center:center',
-			pngalignment: 'center:center',
-			color: 0xffffff,
-			bgcolor: 0x000000,
-			show_topbar: 'default',
-			png64: this.#bitmapDataUrl,
-			imageBuffers: [],
-			pushed: this.#remotePressed,
-			cloud: true,
-			cloud_error: false,
-			stepCurrent: 1,
-			stepCount: 1,
-			button_status: undefined,
-			action_running: undefined,
-		}
-	}
-
-	#drawPlaceholderState(text: string, size: number): DrawStyleButtonModel {
-		const isError = this.#visualState === 'unknown_peer' || this.#visualState === 'loop_detected'
-
-		return {
-			style: 'button',
-			text,
-			textExpression: undefined,
-			size,
-			alignment: 'center:center',
-			pngalignment: 'center:center',
-			color: 0x999999,
-			bgcolor: 0x000000,
-			show_topbar: 'default',
-			png64: null,
-			imageBuffers: [],
-			pushed: false,
-			cloud: !isError,
-			cloud_error: isError,
-			stepCurrent: 1,
-			stepCount: 1,
-			button_status: undefined,
-			action_running: undefined,
+	/**
+	 * Convert our internal draw style to DrawStyleButtonModel for the graphics renderer.
+	 * This is a minimal conversion - we don't use most of the button style properties.
+	 */
+	#convertToDrawStyleModel(style: RemoteLinkDrawStyle): DrawStyleButtonModel {
+		if (style.type === 'bitmap') {
+			return {
+				style: 'button',
+				text: '',
+				textExpression: undefined,
+				size: 'auto',
+				alignment: 'center:center',
+				pngalignment: 'center:center',
+				color: 0xffffff,
+				bgcolor: 0x000000,
+				show_topbar: 'default',
+				png64: style.dataUrl,
+				imageBuffers: [],
+				pushed: style.pressed,
+				cloud: true,
+				cloud_error: false,
+				stepCurrent: 1,
+				stepCount: 1,
+				button_status: undefined,
+				action_running: undefined,
+			}
+		} else {
+			// Placeholder state
+			return {
+				style: 'button',
+				text: style.text,
+				textExpression: undefined,
+				size: style.fontSize,
+				alignment: 'center:center',
+				pngalignment: 'center:center',
+				color: 0x999999,
+				bgcolor: 0x000000,
+				show_topbar: 'default',
+				png64: null,
+				imageBuffers: [],
+				pushed: false,
+				cloud: !style.isError,
+				cloud_error: style.isError,
+				stepCurrent: 1,
+				stepCount: 1,
+				button_status: undefined,
+				action_running: undefined,
+			}
 		}
 	}
 
@@ -281,9 +321,15 @@ export class ControlButtonRemoteLink
 	collectReferencedConnectionsAndVariables(
 		_foundConnectionIds: Set<string>,
 		_foundConnectionLabels: Set<string>,
-		_foundVariables: Set<string>
+		foundVariables: Set<string>
 	): void {
-		// TODO: parse page/row/col for variable references
+		// Extract variable references from location field
+		// Supports formats like: $(this:page), $(internal:...), $(instance:...)
+		const matches = this.#config.location.matchAll(/\$\(([^:)]+):([^)]+)\)/g)
+		for (const match of matches) {
+			const variableName = `${match[1]}:${match[2]}`
+			foundVariables.add(variableName)
+		}
 	}
 
 	triggerLocationHasChanged(): void {
@@ -292,16 +338,14 @@ export class ControlButtonRemoteLink
 
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Forward press to the LinkController via the callback
-		this.#onPress?.(this.controlId, _pressed)
+		this.#onPress?.(this.controlId, _pressed, _surfaceId)
 	}
 
 	toJSON(_clone = true): RemoteLinkButtonModel {
 		return {
 			type: this.#config.type,
 			peerUuid: this.#config.peerUuid,
-			page: this.#config.page,
-			row: this.#config.row,
-			col: this.#config.col,
+			location: this.#config.location,
 		}
 	}
 
@@ -312,11 +356,31 @@ export class ControlButtonRemoteLink
 		}
 	}
 
-	renameVariables(_labelFrom: string, _labelTo: string): void {
-		// TODO: rename variable references in page/row/col
+	renameVariables(labelFrom: string, labelTo: string): void {
+		// Replace variable references in location field
+		const pattern = new RegExp(`\\$\\(${labelFrom.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:`, 'g')
+		const replacement = `$(${labelTo}:`
+
+		const newLocation = this.#config.location.replace(pattern, replacement)
+		if (newLocation !== this.#config.location) {
+			this.#config = { ...this.#config, location: newLocation }
+			this.commitChange(true)
+			this.#onConfigChanged?.(this.controlId)
+		}
 	}
 
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
-		// TODO: re-evaluate variable references and notify LinkController
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+		// Collect the variables this control references
+		const referencedVariables = new Set<string>()
+		this.collectReferencedConnectionsAndVariables(new Set(), new Set(), referencedVariables)
+
+		// Check if any of them changed
+		for (const varName of referencedVariables) {
+			if (allChangedVariables.has(varName)) {
+				// Trigger config change to re-sync the subscription in LinkController
+				this.#onConfigChanged?.(this.controlId)
+				return
+			}
+		}
 	}
 }

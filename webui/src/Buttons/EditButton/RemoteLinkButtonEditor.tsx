@@ -42,23 +42,9 @@ export function RemoteLinkButtonEditor({
 		[controlId, setLinkConfig]
 	)
 
-	const setPage = useCallback(
+	const setLocation = useCallback(
 		(value: string) => {
-			setLinkConfig.mutate({ controlId, config: { page: value } })
-		},
-		[controlId, setLinkConfig]
-	)
-
-	const setRow = useCallback(
-		(value: string) => {
-			setLinkConfig.mutate({ controlId, config: { row: value } })
-		},
-		[controlId, setLinkConfig]
-	)
-
-	const setCol = useCallback(
-		(value: string) => {
-			setLinkConfig.mutate({ controlId, config: { col: value } })
+			setLinkConfig.mutate({ controlId, config: { location: value } })
 		},
 		[controlId, setLinkConfig]
 	)
@@ -92,35 +78,13 @@ export function RemoteLinkButtonEditor({
 			</CCol>
 
 			<CCol sm={12} className="mb-3">
-				<CFormLabel>Page</CFormLabel>
+				<CFormLabel>Location</CFormLabel>
 				<TextInputField
-					tooltip="Remote page number (supports variables)"
-					value={config.page}
-					setValue={setPage}
+					tooltip="Button location in Companion format. Examples: 1/0/0, $(this:page)/$(this:row)/$(this:column), this"
+					value={config.location}
+					setValue={setLocation}
 					useVariables
-					placeholder="e.g. 1"
-				/>
-			</CCol>
-
-			<CCol sm={12} className="mb-3">
-				<CFormLabel>Row</CFormLabel>
-				<TextInputField
-					tooltip="Remote row number (supports variables)"
-					value={config.row}
-					setValue={setRow}
-					useVariables
-					placeholder="e.g. 0"
-				/>
-			</CCol>
-
-			<CCol sm={12} className="mb-3">
-				<CFormLabel>Column</CFormLabel>
-				<TextInputField
-					tooltip="Remote column number (supports variables)"
-					value={config.col}
-					setValue={setCol}
-					useVariables
-					placeholder="e.g. 0"
+					placeholder="e.g. 1/0/0 or $(this:page)/$(this:row)/$(this:column)"
 				/>
 			</CCol>
 		</>
