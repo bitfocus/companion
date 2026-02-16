@@ -74,6 +74,8 @@ export function getNodeJsPermissionArguments(
 		// Future: This should be scoped to some limited directories as specified by the user in the connection settings
 		args.push('--allow-fs-read=*', '--allow-fs-write=*')
 	}
+	//@ts-expect-error Error expected until PR#189 for companion-module-base merged
+	if (manifestPermissions['insecure-algorithms']) args.push('--openssl-legacy-provider')
 
 	return args
 }
