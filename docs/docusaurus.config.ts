@@ -79,7 +79,7 @@ const config: Config = {
 				{
 					title: 'Companion Website',
 					'aria-label': 'Companion Website',
-					html: `<img src="img/logo-no-black.png" class="fontawesome" /><span class="fontawesome-text">Companion Website</span>`,
+					html: `<img src="${process.env.BASE_URL ?? ''}/user-guide/img/logo-no-black.png" class="fontawesome" /><span class="fontawesome-text">Companion Website</span>`,
 					href: 'https://bitfocus.io/companion',
 					className: 'fontawesome-container', // make it format like the other icons. (classes set here and in the html property)
 					position: 'right',
