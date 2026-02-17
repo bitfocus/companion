@@ -145,7 +145,8 @@
 }
 
 /* when the window is narrow, the right-header icons are in the pull-down sidebar */
-.navbar-sidebar__items {
+.navbar-sidebar__items,
+.theme-layout-navbar-right .dropdown__menu {
 	/* fontawesome-* classes were added in the item definitions in docusaurus.config.ts  */
 	.fontawesome-container {
 		display: flex;
