@@ -37,16 +37,20 @@ export function getNodeJsPermissionArguments(
 	moduleDir: string,
 	enableInspect: boolean
 ): string[] {
-	// Not supported by surfaces
 	const args: string[] = []
+
+	// Not supported by surfaces
 	if (manifest.type === 'surface') return args
 	if (!doesModuleSupportPermissionsModel(moduleApiVersion)) return args
+
 	const manifestPermissions = manifest.runtime.permissions || {}
+
 	//@ts-expect-error until companion-module-base 1.15.0 released and included
 	if (manifestPermissions['insecure-algorithms']) args.push('--openssl-legacy-provider')
+
 	// Not supported by node18
-	if (enableInspect) return args
 	if (manifest.runtime.type === 'node18') return args
+	if (enableInspect) return args
 
 	args.push(
 		'--no-warnings=SecurityWarning',
