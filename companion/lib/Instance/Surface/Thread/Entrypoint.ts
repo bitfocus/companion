@@ -40,6 +40,27 @@ let pluginInitialized = false
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
 const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>(
 	{
+		init: async () => {
+			if (pluginInitialized) throw new Error('Already initialized')
+			if (!plugin) throw new Error('Plugin not loaded')
+
+			await plugin.init()
+
+			pluginInitialized = true
+
+			logger.info('Module initialized successfully')
+		},
+		destroy: async () => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			pluginInitialized = false
+
+			await plugin.destroy()
+
+			// Ensure the process exits after responding to the message
+			setTimeout(() => process.exit(0), 100)
+		},
+
 		openHidDevice: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
@@ -105,16 +126,6 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
 			await plugin.updateConfig(msg.surfaceId, msg.newConfig)
-		},
-		destroy: async () => {
-			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
-
-			pluginInitialized = false
-
-			await plugin.destroy()
-
-			// Ensure the process exits after responding to the message
-			setTimeout(() => process.exit(0), 100)
 		},
 
 		setBrightness: async (msg) => {
@@ -217,15 +228,6 @@ ipcWrapper
 	})
 	.then(async () => {
 		logger.info(`Module-host accepted registration`)
-
-		await plugin.init()
-
-		pluginInitialized = true
-
-		logger.info('Module initialized successfully')
-
-		// Report the plugin is now ready for use
-		ipcWrapper.sendWithNoCb('ready', {})
 	})
 	.catch((err) => {
 		logger.error(`Module registration failed: ${err}`)
