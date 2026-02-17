@@ -38,19 +38,23 @@ export function getNodeJsPermissionArguments(
 	enableInspect: boolean
 ): string[] {
 	// Not supported by surfaces
-	if (manifest.type === 'surface') return []
-
+	const args: string[] = []
+	if (manifest.type === 'surface') return args
+	if (!doesModuleSupportPermissionsModel(moduleApiVersion)) return args
+	const manifestPermissions = manifest.runtime.permissions || {}
+	//@ts-expect-error until companion-module-base 1.15.0 released and included
+	if (manifestPermissions['insecure-algorithms']) args.push('--openssl-legacy-provider')
 	// Not supported by node18
-	if (enableInspect || manifest.runtime.type === 'node18' || !doesModuleSupportPermissionsModel(moduleApiVersion))
-		return []
+	if (enableInspect) return args
+	if (manifest.runtime.type === 'node18') return args
 
-	const args = [
+	args.push(
 		'--no-warnings=SecurityWarning',
 		'--permission',
 		// Always allow read access to the module source directory
 		`--allow-fs-read=${moduleDir}`,
-		`--allow-fs-read=${isPackaged() ? import.meta.dirname : path.join(import.meta.dirname, '../../..')}`, // Allow read access to companion code, because of some esm loader issues
-	]
+		`--allow-fs-read=${isPackaged() ? import.meta.dirname : path.join(import.meta.dirname, '../../..')}` // Allow read access to companion code, because of some esm loader issues
+	)
 
 	if (!isPackaged()) {
 		// Always allow read access to module host package, needed when running a dev version
@@ -64,7 +68,6 @@ export function getNodeJsPermissionArguments(
 		forceReadWriteAll = true
 	}
 
-	const manifestPermissions = manifest.runtime.permissions || {}
 	if (manifestPermissions['worker-threads']) args.push('--allow-worker')
 	if (manifestPermissions['child-process'] || manifestPermissions['native-addons']) args.push('--allow-child-process')
 	if (manifestPermissions['native-addons']) args.push('--allow-addons')
@@ -74,8 +77,6 @@ export function getNodeJsPermissionArguments(
 		// Future: This should be scoped to some limited directories as specified by the user in the connection settings
 		args.push('--allow-fs-read=*', '--allow-fs-write=*')
 	}
-	//@ts-expect-error Error expected until PR#189 for companion-module-base merged
-	if (manifestPermissions['insecure-algorithms']) args.push('--openssl-legacy-provider')
 
 	return args
 }
