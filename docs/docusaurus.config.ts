@@ -128,8 +128,9 @@ const config: Config = {
 							value: '<hr style="margin: 0.5em;"/>',
 						},
 						{
-							title: 'Contribute funds to Bitfocus Companion.',
+							title: 'Help fund Bitfocus Companion.',
 							href: 'https://bfoc.us/ccfbf8wm2x',
+							'aria-label': 'Donate to Companion',
 							className: 'fontawesome-container',
 							html: `<svg class="fontawesome" viewBox="0 0 640 640" fill="currentColor" aria-label="Donate to Companion" xmlns="http://www.w3.org/2000/svg">
 									<!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
