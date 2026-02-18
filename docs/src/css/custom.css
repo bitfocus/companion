@@ -215,8 +215,11 @@
 	border-radius: 0.5rem;
 }
 
-/* move the expand/contract caret to the far left for improved visibility/group offsetting */
-.menu__caret {
+/* move the expand/contract caret to the far left for improved visibility/group offsetting.
+   The second class is active if the subdirectory has no linked-page (so clicking on it just opens the sublist w/o changing the main panel.
+   */
+.menu__caret,
+.menu__link--sublist-caret::after {
 	order: -1;
 	padding-left: 0.45em;
 	padding-right: 0;
@@ -225,6 +228,11 @@
 	&::before {
 		scale: 0.6;
 	}
+}
+
+/* when there's no linked page, the caret is in '::after' itself, not nested within the element. */
+.menu__link--sublist-caret::after {
+	scale: 0.6;
 }
 
 /* split the padding between the caret (previous rule) and the text in the category header */
