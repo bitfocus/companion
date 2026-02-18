@@ -201,8 +201,8 @@ function HelpMenu() {
 			},
 			MenuSeparatorSpec,
 			{
-				id: 'donate',
-				label: 'Donate',
+				id: 'sponsor',
+				label: 'Sponsor Companion',
 				icon: faDollarSign,
 				to: 'https://bfoc.us/ccfbf8wm2x',
 				tooltip: 'Contribute funds to Bitfocus Companion.',

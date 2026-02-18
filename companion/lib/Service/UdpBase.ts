@@ -1,5 +1,4 @@
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
 import { ServiceBase } from './Base.js'
 import dgram from 'dgram'
 
@@ -38,7 +37,7 @@ export abstract class ServiceUdpBase extends ServiceBase {
 					//this.server.close();
 				})
 
-				this.server.bind(this.port, GLOBAL_BIND_ADDRESS)
+				this.server.bind(this.port) // Don't bind to an address, as this is an ipv4 server
 				this.currentState = true
 				this.logger.info('Listening on port ' + this.port)
 			} catch (e) {

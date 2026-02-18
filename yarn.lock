@@ -1951,13 +1951,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260214-154623-08b1aa9":
-  version: 2.0.0-0-nightly-feat-2-0-20260214-154623-08b1aa9
-  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260214-154623-08b1aa9"
+"@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260218-214837-7d58981":
+  version: 2.0.0-0-nightly-feat-2-0-20260218-214837-7d58981
+  resolution: "@companion-module/base@npm:2.0.0-0-nightly-feat-2-0-20260218-214837-7d58981"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/c05afcf360e74b9fd6cc181220b560f19bca8cd2f64f8e2c309ba79c53596e12977fb333a0d4832572cffe4029b4735f4028fbf2d81982e97a4ee3820ff83fe8
+  checksum: 10c0/4b6dbfc43ec7efd8da514d36494f006c37bf7830e6122ff3e2a1fe34b94d7418cec2104aed78415cf7f3aa89cb4a38cbac86a0c65d18aa549e2c7428c7ed8729
   languageName: node
   linkType: hard
 
@@ -20787,11 +20787,11 @@ __metadata:
   linkType: hard
 
 "qs@npm:^6.14.0, qs@npm:^6.14.1, qs@npm:~6.14.0":
-  version: 6.14.1
-  resolution: "qs@npm:6.14.1"
+  version: 6.14.2
+  resolution: "qs@npm:6.14.2"
   dependencies:
     side-channel: "npm:^1.1.0"
-  checksum: 10c0/0e3b22dc451f48ce5940cbbc7c7d9068d895074f8c969c0801ac15c1313d1859c4d738e46dc4da2f498f41a9ffd8c201bd9fb12df67799b827db94cc373d2613
+  checksum: 10c0/646110124476fc9acf3c80994c8c3a0600cbad06a4ede1c9e93341006e8426d64e85e048baf8f0c4995f0f1bf0f37d1f3acc5ec1455850b81978792969a60ef6
   languageName: node
   linkType: hard
 
