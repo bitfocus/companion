@@ -144,9 +144,11 @@
 	}
 }
 
-/* when the window is narrow, the right-header icons are in the pull-down sidebar */
+/* .navbar-sidebar__items: when the window is narrow, the right-header icons are in the pull-down sidebar
+	.navbar__inner .dropdown__menu: for dropdown menus in the navbar. (note, though, that the current design does not allow dropdowns in the left section.)
+	*/
 .navbar-sidebar__items,
-.theme-layout-navbar-right .dropdown__menu {
+.navbar__inner .dropdown__menu {
 	/* fontawesome-* classes were added in the item definitions in docusaurus.config.ts  */
 	.fontawesome-container {
 		display: flex;
@@ -224,15 +226,14 @@
 	padding-left: 0.45em;
 	padding-right: 0;
 	border-radius: 0.5rem 0 0 0.5rem; /* match the outer box's corner */
-
-	&::before {
-		scale: 0.6;
-	}
 }
 
-/* when there's no linked page, the caret is in '::after' itself, not nested within the element. */
+/* The caret is placed differently depending on whether the subdirectory has an index page.
+   The first is when an "index" is present; the second when there's no linked page */
+.menu__caret::before,
 .menu__link--sublist-caret::after {
 	scale: 0.6;
+	margin-left: 0; /* this is currently needed for .menu__link--sublist-caret::after, but is correct for both */
 }
 
 /* split the padding between the caret (previous rule) and the text in the category header */
