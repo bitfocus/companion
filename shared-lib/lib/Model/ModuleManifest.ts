@@ -1,9 +1,12 @@
-import type { ModuleManifest } from '@companion-module/base/manifest'
-import type { ModuleManifest as ModuleManifestOld } from '@companion-module/base-old'
+import type { ModuleManifest, ModuleManifestRuntime } from '@companion-module/base/manifest'
+import type {
+	ModuleManifest as ModuleManifestOld,
+	ModuleManifestRuntime as ModuleManifestOldRuntime,
+} from '@companion-module/base-old'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 
-export interface ModuleManifestOldExt extends ModuleManifestOld {
-	type: undefined | 'connection-v1'
+export type ModuleManifestOldExt = ModuleManifestOld
+export interface ModuleManifestExt extends Omit<ModuleManifest, 'runtime'> {
+	runtime: ModuleManifestRuntime | ModuleManifestOldRuntime
 }
-export type ModuleManifestExt = ModuleManifest
-export type SomeModuleManifest = ModuleManifestExt | ModuleManifestOldExt | SurfaceModuleManifest
+export type SomeModuleManifest = ModuleManifestExt | SurfaceModuleManifest

@@ -2,7 +2,8 @@ import fs from 'fs-extra'
 import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
 import { doesModuleSupportPermissionsModel } from './Connection/ApiVersions.js'
-import type { ModuleManifestExt, SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { ModuleManifestRuntime } from '@companion-module/base/manifest'
 import { createRequire } from 'module'
 
 /**
@@ -45,7 +46,7 @@ export function getNodeJsPermissionArguments(
 	// Check module api is new enough
 	if (!doesModuleSupportPermissionsModel(moduleApiVersion)) return args
 
-	const manifestPermissions: ModuleManifestExt['runtime']['permissions'] = manifest.runtime.permissions || {}
+	const manifestPermissions: ModuleManifestRuntime['permissions'] = manifest.runtime.permissions || {}
 
 	if (manifestPermissions['insecure-algorithms']) args.push('--openssl-legacy-provider')
 

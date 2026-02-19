@@ -68,10 +68,11 @@ export class InstanceModuleScanner {
 			const manifestJson: SomeModuleManifest = JSON.parse(manifestJsonStr.toString())
 
 			// Parse the manifest based on the type
-			if (manifestJson.type === undefined || manifestJson.type === 'connection-v1') {
+			if (manifestJson.type === undefined) {
 				return await this.#parseConnectionManifest(manifestJson, fullpath, isPackaged)
 			} else if (manifestJson.type === 'connection') {
-				return await this.#parseConnectionV2Manifest(manifestJson, fullpath, isPackaged)
+				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+				return await this.#parseConnectionV2Manifest(manifestJson as ModuleManifest, fullpath, isPackaged)
 			} else if (manifestJson.type === 'surface') {
 				return await this.#parseSurfaceManifest(manifestJson, fullpath, isPackaged)
 			} else {
@@ -118,7 +119,7 @@ export class InstanceModuleScanner {
 			versionId: manifestJson.version,
 			manifest: {
 				...manifestJson,
-				type: 'connection-v1',
+				type: 'connection',
 			},
 			basePath: path.resolve(fullpath),
 			helpPath: hasHelp ? helpPath : null,
