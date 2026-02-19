@@ -254,11 +254,6 @@
 	color: #6b7280;
 }
 
-/* In markdown pages indent all text, including subheaders, under H2 headers */
-.markdown h2 ~ :not(h1, h2) {
-	margin-left: 2rem;
-}
-
 /* Auto-generated TOC heading links should be white, not red */
 .auto-toc-heading a {
 	color: var(--ifm-heading-color);
@@ -268,4 +263,33 @@
 .auto-toc-heading a:hover {
 	color: var(--ifm-heading-color);
 	text-decoration: underline;
+}
+
+/* In markdown pages indent all text, including subheaders, under H2 headers */
+.markdown h2 ~ :not(h1, h2) {
+	margin-left: 2rem;
+}
+
+/* Some default numbers: in markdown, the ifm defaults are overridden
+    --ifm-heading-line-height: 1.25;
+    --ifm-h1-font-size: 2rem; but 3rem for top of file (.markdown h1:first-child),
+    --ifm-h2-font-size: 2rem; in markdown (default is 1.5 rem)
+    --ifm-h3-font-size: 1.5 in markdown; normal is 1.25rem;
+    --ifm-h4-font-size: 1rem; (unchanged)
+    --ifm-h5-font-size: 0.875rem;
+    --ifm-h6-font-size: 0.85rem;
+	*/
+.markdown h1 {
+	--ifm-h1-vertical-rhythm-bottom: 1;
+	font-size: 2em; /* setting --ifm-h1-font-size doesn't work (because of specificity?) */
+}
+
+.markdown h2 {
+	--ifm-h2-vertical-rhythm-top: 1; /* default 2 is too much. Also, we already indent everything under H2 to make H2 breaks clear */
+	--ifm-heading-vertical-rhythm-bottom: calc(0.5 / 1.25); /* this is multiplied by --ifm-leading = 1.25 */
+	font-size: 1.5em;
+}
+
+.markdown h3 {
+	font-size: 1.25em;
 }
