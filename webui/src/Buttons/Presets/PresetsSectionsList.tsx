@@ -137,7 +137,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 					<CCallout color="info" className="my-2">
 						<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
 					</CCallout>
-					<div>{sections}</div>
+					<div className="collapsible-tree">{sections}</div>
 				</>
 			)}
 		</div>

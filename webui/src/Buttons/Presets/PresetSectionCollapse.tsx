@@ -1,5 +1,6 @@
-import { CCard, CCardBody, CCollapse } from '@coreui/react'
 import React, { useCallback } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import type {
 	UIPresetGroup,
@@ -13,7 +14,6 @@ import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
 import { trpc } from '~/Resources/TRPC'
 import type { PresetDragItem } from './PresetDragItem'
-import { useResizeObserver } from 'usehooks-ts'
 import { assertNever, useComputed } from '~/Resources/util'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
@@ -42,11 +42,7 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 		})
 	}, [expandedSection, sectionId])
 
-	const cardRef = React.useRef<HTMLDivElement>(null)
-	const { height = 0 } = useResizeObserver({ ref: cardRef })
-
 	const expanded = expandedSection.get() === sectionId
-	const showContent = expanded || height > 0
 
 	const groups = Object.values(section.definitions).sort((a, b) => a.order - b.order)
 
@@ -63,21 +59,26 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 	})
 
 	return (
-		<CCard className={'add-browse-card'}>
-			<div className="header" onClick={doToggleClick}>
+		<>
+			<div
+				className="collapsible-tree-group-row presets-section-row"
+				role="button"
+				tabIndex={0}
+				aria-expanded={expanded}
+				onClick={doToggleClick}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault()
+						doToggleClick()
+					}
+				}}
+			>
+				<FontAwesomeIcon icon={expanded ? faCaretDown : faCaretRight} className="collapsible-tree-caret" />
 				{section.name}
+				{!!section.description && <div className="presets-section-description">{section.description}</div>}
 			</div>
-			<CCollapse visible={expanded}>
-				<CCardBody ref={cardRef}>
-					{showContent && (
-						<>
-							{!!section.description && <div className="description mx-2 mt-1">{section.description}</div>}
-							{groupComponents}
-						</>
-					)}
-				</CCardBody>
-			</CCollapse>
-		</CCard>
+			{expanded && <div className="presets-section-content">{groupComponents}</div>}
+		</>
 	)
 })
 
@@ -94,7 +95,7 @@ const PresetGroupSimple = observer(function PresetGroupSimple({ connectionId, gr
 		<>
 			{grp.name || grp.description ? <PresetText key={grp.id} grp={grp} /> : null}
 
-			<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
+			<div className="presets-icon-grid" style={{ marginTop: !isFirst ? 10 : 0 }}>
 				{presets.map((p) => (
 					<PresetIconPreview
 						key={p.id}
@@ -142,7 +143,7 @@ const PresetGroupTemplate = observer(function PresetGroup({ connectionId, grp, i
 		<>
 			{grp.name || grp.description ? <PresetText key={grp.id} grp={grp} /> : null}
 
-			<div style={{ backgroundColor: '#222', borderRadius: 4, padding: 5, marginTop: !isFirst ? 10 : 0 }}>
+			<div className="presets-icon-grid" style={{ marginTop: !isFirst ? 10 : 0 }}>
 				{variableCombinations.map((p) => (
 					<PresetIconPreview
 						key={p.hash}
@@ -162,9 +163,9 @@ interface PresetTextProps {
 }
 function PresetText({ grp }: Readonly<PresetTextProps>) {
 	return (
-		<div className="mx-2 mt-2">
+		<div className="m-2">
 			<h5>{grp.name}</h5>
-			<p>{grp.description}</p>
+			{grp.description ? <p>{grp.description}</p> : null}
 		</div>
 	)
 }
