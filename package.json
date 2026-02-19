@@ -91,7 +91,7 @@
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
     "@companion-module/base": "2.0.0-0-nightly-feat-2-0-20260218-214837-7d58981",
-    "@companion-module/host": "0.1.0-1-nightly-feat-2-0-20260214-153157-8e947be",
+    "@companion-module/host": "0.1.0-1-nightly-feat-2-0-20260219-231414-06ed89e",
     "node-gyp": "^12.1.0"
   },
   "dependenciesMeta": {

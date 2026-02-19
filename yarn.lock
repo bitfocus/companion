@@ -1961,15 +1961,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260214-153157-8e947be":
-  version: 0.1.0-1-nightly-feat-2-0-20260214-153157-8e947be
-  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260214-153157-8e947be"
+"@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260219-231414-06ed89e":
+  version: 0.1.0-1-nightly-feat-2-0-20260219-231414-06ed89e
+  resolution: "@companion-module/host@npm:0.1.0-1-nightly-feat-2-0-20260219-231414-06ed89e"
   dependencies:
     "@companion-module/base": "npm:~2.0.0-0"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^9.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/e0181d8f6594143175fa351dfe311f22040cebf8bf5bc538343b034e2e131fd9cab681fea35598450841874cf08bbbe0de5e3e39cd6e1d7c86be3a163708f8c2
+  checksum: 10c0/65a496973f64beeaa9a2379e831f99781eac581e73d5411cb2630241016689171ac33ae259ad7ac654fb07bd00c09d486fd6a76f0f6e74c2dd9d8d8f083f5f9a
   languageName: node
   linkType: hard
 
