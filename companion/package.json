@@ -86,7 +86,7 @@
     "semver": "^7.7.3",
     "socketcluster-client": "^20.0.1",
     "supports-color": "^10.2.2",
-    "systeminformation": "^5.30.6",
+    "systeminformation": "^5.30.8",
     "tar-fs": "^3.1.1",
     "tar-stream": "^3.1.7",
     "type-fest": "^5.4.1",
