@@ -107,6 +107,7 @@ export function createTrpcRouter(registry: Registry) {
 		userConfig: registry.userconfig.createTrpcRouter(),
 		instances: registry.instance.createTrpcRouter(),
 		cloud: registry.cloud.createTrpcRouter(),
+		link: registry.link.createTrpcRouter(),
 		usageStatistics: registry.usageStatistics.createTrpcRouter(),
 
 		preview: registry.preview.createTrpcRouter(),

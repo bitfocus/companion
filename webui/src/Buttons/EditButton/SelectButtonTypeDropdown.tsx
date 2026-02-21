@@ -26,8 +26,14 @@ export function SelectButtonTypeDropdown({
 				return
 			}
 
-			if (currentType && currentType !== 'pageup' && currentType !== 'pagedown' && currentType !== 'pagenum') {
-				if (newType === 'pageup' || newType === 'pagedown' || newType === 'pagenum') {
+			if (
+				currentType &&
+				currentType !== 'pageup' &&
+				currentType !== 'pagedown' &&
+				currentType !== 'pagenum' &&
+				currentType !== 'remotelinkbutton'
+			) {
+				if (newType === 'pageup' || newType === 'pagedown' || newType === 'pagenum' || newType === 'remotelinkbutton') {
 					show_warning = true
 				}
 			}
@@ -71,6 +77,7 @@ export function SelectButtonTypeDropdown({
 				<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
+				<CDropdownItem onClick={() => setButtonType('remotelinkbutton')}>Remote Link button</CDropdownItem>
 			</CDropdownMenu>
 		</CDropdown>
 	)

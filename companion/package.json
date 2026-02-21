@@ -71,6 +71,7 @@
     "fast-json-patch": "patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch",
     "fs-extra": "^11.3.3",
     "get-port": "^7.1.0",
+    "mqtt": "^5.12.1",
     "nanoid": "^5.1.6",
     "node-cron": "^4.2.1",
     "node-hid": "^3.3.0",
