@@ -92,7 +92,7 @@ export function filterProducts(allProducts: FuzzyProduct[], filter: string, incl
 
 	const result = fuzzySearch(filter, allProducts, {
 		keys,
-		// threshold is // 0 - 1, where 1 is "perfect".
+		// threshold is 0 - 1, where 1 is "perfect".
 		// But note that even exact word matches may not get a score of 1!
 		// ("Elgato", for example scores 0.8 - 0.9. -- you may need the whole field to match for 1.0...)
 		threshold: 0.3, // tolerates some typos; 0.5 looks like a good "strict" threshold.
