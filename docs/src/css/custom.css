@@ -144,8 +144,11 @@
 	}
 }
 
-/* when the window is narrow, the right-header icons are in the pull-down sidebar */
-.navbar-sidebar__items {
+/* .navbar-sidebar__items: when the window is narrow, the right-header icons are in the pull-down sidebar
+	.navbar__inner .dropdown__menu: for dropdown menus in the navbar. (note, though, that the current design does not allow dropdowns in the left section.)
+	*/
+.navbar-sidebar__items,
+.navbar__inner .dropdown__menu {
 	/* fontawesome-* classes were added in the item definitions in docusaurus.config.ts  */
 	.fontawesome-container {
 		display: flex;
@@ -214,16 +217,23 @@
 	border-radius: 0.5rem;
 }
 
-/* move the expand/contract caret to the far left for improved visibility/group offsetting */
-.menu__caret {
+/* move the expand/contract caret to the far left for improved visibility/group offsetting.
+   The second class is active if the subdirectory has no linked-page (so clicking on it just opens the sublist w/o changing the main panel.
+   */
+.menu__caret,
+.menu__link--sublist-caret::after {
 	order: -1;
 	padding-left: 0.45em;
 	padding-right: 0;
 	border-radius: 0.5rem 0 0 0.5rem; /* match the outer box's corner */
+}
 
-	&::before {
-		scale: 0.6;
-	}
+/* The caret is placed differently depending on whether the subdirectory has an index page.
+   The first is when an "index" is present; the second when there's no linked page */
+.menu__caret::before,
+.menu__link--sublist-caret::after {
+	scale: 0.6;
+	margin-left: 0; /* this is currently needed for .menu__link--sublist-caret::after, but is correct for both */
 }
 
 /* split the padding between the caret (previous rule) and the text in the category header */
@@ -244,11 +254,6 @@
 	color: #6b7280;
 }
 
-/* In markdown pages indent all text, including subheaders, under H2 headers */
-.markdown h2 ~ :not(h1, h2) {
-	margin-left: 2rem;
-}
-
 /* Auto-generated TOC heading links should be white, not red */
 .auto-toc-heading a {
 	color: var(--ifm-heading-color);
@@ -258,4 +263,33 @@
 .auto-toc-heading a:hover {
 	color: var(--ifm-heading-color);
 	text-decoration: underline;
+}
+
+/* In markdown pages indent all text, including subheaders, under H2 headers */
+.markdown h2 ~ :not(h1, h2) {
+	margin-left: 2rem;
+}
+
+/* Some default numbers: in markdown, the ifm defaults are overridden
+    --ifm-heading-line-height: 1.25;
+    --ifm-h1-font-size: 2rem; but 3rem for top of file (.markdown h1:first-child),
+    --ifm-h2-font-size: 2rem; in markdown (default is 1.5 rem)
+    --ifm-h3-font-size: 1.5 in markdown; normal is 1.25rem;
+    --ifm-h4-font-size: 1rem; (unchanged)
+    --ifm-h5-font-size: 0.875rem;
+    --ifm-h6-font-size: 0.85rem;
+	*/
+.markdown h1 {
+	--ifm-h1-vertical-rhythm-bottom: 1;
+	font-size: 2em; /* setting --ifm-h1-font-size doesn't work (because of specificity?) */
+}
+
+.markdown h2 {
+	--ifm-h2-vertical-rhythm-top: 1; /* default 2 is too much. Also, we already indent everything under H2 to make H2 breaks clear */
+	--ifm-heading-vertical-rhythm-bottom: calc(0.5 / 1.25); /* this is multiplied by --ifm-leading = 1.25 */
+	font-size: 1.5em;
+}
+
+.markdown h3 {
+	font-size: 1.25em;
 }
