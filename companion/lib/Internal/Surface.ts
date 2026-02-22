@@ -22,7 +22,7 @@ import type {
 	FeedbackForInternalExecution,
 	ActionForInternalExecution,
 } from './Types.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
@@ -65,11 +65,11 @@ const CHOICES_PAGE: SomeCompanionInputField = {
 export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/Surface')
 
-	readonly #controlsController: ControlsController
+	readonly #controlsController: IControlStore
 	readonly #surfaceController: SurfaceController
 	readonly #pageStore: IPageStore
 
-	constructor(surfaceController: SurfaceController, controlsController: ControlsController, pageStore: IPageStore) {
+	constructor(surfaceController: SurfaceController, controlsController: IControlStore, pageStore: IPageStore) {
 		super()
 
 		this.#surfaceController = surfaceController

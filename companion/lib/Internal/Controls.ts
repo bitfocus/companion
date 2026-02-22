@@ -24,7 +24,7 @@ import type {
 	ActionForInternalExecution,
 } from './Types.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -45,7 +45,7 @@ const ButtonStylePropertiesExt = [
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #graphicsController: GraphicsController
-	readonly #controlsController: ControlsController
+	readonly #controlsController: IControlStore
 	readonly #pageStore: IPageStore
 
 	/**
@@ -60,7 +60,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 	constructor(
 		graphicsController: GraphicsController,
-		controlsController: ControlsController,
+		controlsController: IControlStore,
 		pageStore: IPageStore,
 		controlEvents: EventEmitter<ControlCommonEvents>
 	) {

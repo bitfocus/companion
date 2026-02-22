@@ -45,6 +45,7 @@ import type { NewFeedbackValue } from './Entities/Types.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import crypto from 'crypto'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
+import type { IControlStore } from './IControlStore.js'
 
 /**
  * The class that manages the controls
@@ -61,7 +62,7 @@ import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ControlsController {
+export class ControlsController implements IControlStore {
 	readonly #logger = LogController.createLogger('Controls/Controller')
 
 	readonly #registry: Pick<

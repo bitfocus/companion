@@ -15,7 +15,7 @@ import { oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/Contro
 import { convertPanelIndexToXY } from '../Util.js'
 import { LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
 import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { ControlsController } from '../../Controls/Controller.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { IPageStore } from '../../Page/Store.js'
 import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
@@ -34,13 +34,13 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 		never_lock: true,
 	}
 
-	readonly #controlsController: ControlsController
+	readonly #controlsController: IControlStore
 	readonly #pageStore: IPageStore
 
 	readonly socket: ServiceElgatoPluginSocket
 
 	constructor(
-		controlsController: ControlsController,
+		controlsController: IControlStore,
 		pageStore: IPageStore,
 		deviceId: string,
 		socket: ServiceElgatoPluginSocket

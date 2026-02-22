@@ -14,7 +14,7 @@ import { InstanceProcessManager } from './ProcessManager.js'
 import { InstanceStatus } from './Status.js'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
@@ -87,7 +87,7 @@ export interface InstanceControllerEvents {
 export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #logger = LogController.createLogger('Instance/Controller')
 
-	readonly #controlsController: ControlsController
+	readonly #controlsController: IControlStore
 	readonly #variablesController: VariablesController
 	readonly #surfacesController: SurfaceController
 	readonly #connectionCollectionsController: ConnectionsCollections
@@ -120,7 +120,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		db: DataDatabase,
 		cache: DataCache,
 		apiRouter: express.Router,
-		controls: ControlsController,
+		controls: IControlStore,
 		graphics: GraphicsController,
 		variables: VariablesController,
 		surfaces: SurfaceController,
