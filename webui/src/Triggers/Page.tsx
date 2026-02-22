@@ -81,7 +81,7 @@ export const TriggersPage = observer(function Triggers() {
 		// Perform a fuzzy filter to hide irrelevant items
 		if (filter) {
 			const search = fuzzySingle(filter, item.name)
-			if (!search || search.score < -10000) return null
+			if (!search || search.score < 0.5) return null
 		}
 		return <TriggersTableRow item={item} />
 	}

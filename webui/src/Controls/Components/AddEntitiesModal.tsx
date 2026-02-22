@@ -270,7 +270,7 @@ function filterTreeNodes(
 			node.leaves.length > 0
 				? fuzzySearch(filter, node.leaves, {
 						keys: ['label'],
-						threshold: -10_000,
+						threshold: 0.5, // relatively strict.
 					}).map((x) => x.obj)
 				: []
 
