@@ -46,7 +46,7 @@
   "dependencies": {
     "@companion-app/shared": "*",
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1",
-    "@companion-module/host": "0.1.0-1",
+    "@companion-module/host": "0.2.0",
     "@companion-surface/host": "~1.1.2",
     "@julusian/bonjour-service": "^1.4.2",
     "@julusian/image-rs": "^2.1.1",
