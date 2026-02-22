@@ -26,6 +26,7 @@ import { Route as StandaloneEmulatorRouteImport } from './routes/_standalone/emu
 import { Route as AppTriggersRouteImport } from './routes/_app/triggers.tsx'
 import { Route as AppModulesRouteImport } from './routes/_app/modules.tsx'
 import { Route as AppLogRouteImport } from './routes/_app/log.tsx'
+import { Route as AppLinkRouteImport } from './routes/_app/link.tsx'
 import { Route as AppImportExportRouteImport } from './routes/_app/import-export.tsx'
 import { Route as AppConnectionsRouteImport } from './routes/_app/connections.tsx'
 import { Route as AppCloudRouteImport } from './routes/_app/cloud.tsx'
@@ -159,6 +160,11 @@ const AppModulesRoute = AppModulesRouteImport.update({
 const AppLogRoute = AppLogRouteImport.update({
   id: '/log',
   path: '/log',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLinkRoute = AppLinkRouteImport.update({
+  id: '/link',
+  path: '/link',
   getParentRoute: () => AppRoute,
 } as any)
 const AppImportExportRoute = AppImportExportRouteImport.update({
@@ -433,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/cloud': typeof AppCloudRoute
   '/connections': typeof AppConnectionsRouteWithChildren
   '/import-export': typeof AppImportExportRoute
+  '/link': typeof AppLinkRoute
   '/log': typeof AppLogRoute
   '/modules': typeof AppModulesRouteWithChildren
   '/triggers': typeof AppTriggersRouteWithChildren
@@ -495,6 +502,7 @@ export interface FileRoutesByTo {
   '/buttons': typeof AppButtonsRouteWithChildren
   '/cloud': typeof AppCloudRoute
   '/import-export': typeof AppImportExportRoute
+  '/link': typeof AppLinkRoute
   '/log': typeof AppLogRoute
   '/tablet': typeof StandaloneTabletDotlazyRoute
   '/': typeof AppIndexRoute
@@ -553,6 +561,7 @@ export interface FileRoutesById {
   '/_app/cloud': typeof AppCloudRoute
   '/_app/connections': typeof AppConnectionsRouteWithChildren
   '/_app/import-export': typeof AppImportExportRoute
+  '/_app/link': typeof AppLinkRoute
   '/_app/log': typeof AppLogRoute
   '/_app/modules': typeof AppModulesRouteWithChildren
   '/_app/triggers': typeof AppTriggersRouteWithChildren
@@ -620,6 +629,7 @@ export interface FileRouteTypes {
     | '/cloud'
     | '/connections'
     | '/import-export'
+    | '/link'
     | '/log'
     | '/modules'
     | '/triggers'
@@ -682,6 +692,7 @@ export interface FileRouteTypes {
     | '/buttons'
     | '/cloud'
     | '/import-export'
+    | '/link'
     | '/log'
     | '/tablet'
     | '/'
@@ -739,6 +750,7 @@ export interface FileRouteTypes {
     | '/_app/cloud'
     | '/_app/connections'
     | '/_app/import-export'
+    | '/_app/link'
     | '/_app/log'
     | '/_app/modules'
     | '/_app/triggers'
@@ -918,6 +930,13 @@ declare module '@tanstack/react-router' {
       path: '/log'
       fullPath: '/log'
       preLoaderRoute: typeof AppLogRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/link': {
+      id: '/_app/link'
+      path: '/link'
+      fullPath: '/link'
+      preLoaderRoute: typeof AppLinkRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/import-export': {
@@ -1392,6 +1411,7 @@ interface AppRouteChildren {
   AppCloudRoute: typeof AppCloudRoute
   AppConnectionsRoute: typeof AppConnectionsRouteWithChildren
   AppImportExportRoute: typeof AppImportExportRoute
+  AppLinkRoute: typeof AppLinkRoute
   AppLogRoute: typeof AppLogRoute
   AppModulesRoute: typeof AppModulesRouteWithChildren
   AppTriggersRoute: typeof AppTriggersRouteWithChildren
@@ -1422,6 +1442,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCloudRoute: AppCloudRoute,
   AppConnectionsRoute: AppConnectionsRouteWithChildren,
   AppImportExportRoute: AppImportExportRoute,
+  AppLinkRoute: AppLinkRoute,
   AppLogRoute: AppLogRoute,
   AppModulesRoute: AppModulesRouteWithChildren,
   AppTriggersRoute: AppTriggersRouteWithChildren,

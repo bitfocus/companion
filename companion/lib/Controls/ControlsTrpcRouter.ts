@@ -11,6 +11,7 @@ import type { Logger } from '../Log/Controller.js'
 import type { ControlCommonEvents } from './ControlDependencies.js'
 import type EventEmitter from 'node:events'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
+import { ControlButtonRemoteLink } from './ControlTypes/LinkButton.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createControlsTrpcRouter(
@@ -298,6 +299,28 @@ export function createControlsTrpcRouter(
 					return control.optionsSetField(input.key, input.value)
 				} else {
 					throw new Error(`Control "${input.controlId}" does not support options`)
+				}
+			}),
+
+		setLinkConfig: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					config: z.object({
+						peerUuid: z.string().optional(),
+						location: z.string().optional(),
+					}),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const control = controlsMap.get(input.controlId)
+				if (!control) return false
+
+				if (control instanceof ControlButtonRemoteLink) {
+					control.setLinkConfig(input.config)
+					return true
+				} else {
+					throw new Error(`Control "${input.controlId}" is not a remote link button`)
 				}
 			}),
 	}

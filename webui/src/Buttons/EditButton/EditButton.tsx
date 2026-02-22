@@ -21,6 +21,7 @@ import { LocalVariablesEditor } from '../../Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
+import { RemoteLinkButtonEditor } from './RemoteLinkButtonEditor.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -137,6 +138,10 @@ const EditButtonContent = observer(function EditButton({
 
 			{config.type === 'button' && (
 				<NormalButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
+			)}
+
+			{config.type === 'remotelinkbutton' && (
+				<RemoteLinkButtonEditor controlId={controlId} config={config} runtimeProps={runtimeProps} />
 			)}
 		</>
 	)
