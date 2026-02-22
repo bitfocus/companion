@@ -2,13 +2,13 @@ import React, { useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
+import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import type {
 	UIPresetGroup,
 	UIPresetGroupSimple,
 	UIPresetGroupTemplate,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
-import { runInAction, type IObservableValue } from 'mobx'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useDrag } from 'react-dnd'
 import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
@@ -22,27 +22,13 @@ interface PresetSectionCollapseProps {
 	section: UIPresetSection
 
 	connectionId: string
-
-	expandedSection: IObservableValue<string | null>
 }
 
 export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 	section,
 	connectionId,
-	expandedSection,
 }: PresetSectionCollapseProps) {
-	const sectionId = section.id
-	const doToggleClick = useCallback(() => {
-		runInAction(() => {
-			if (expandedSection.get() === sectionId) {
-				expandedSection.set(null)
-			} else {
-				expandedSection.set(sectionId)
-			}
-		})
-	}, [expandedSection, sectionId])
-
-	const expanded = expandedSection.get() === sectionId
+	const { isCollapsed, toggleCollapsed } = usePanelCollapseHelperContextForPanel(null, section.id)
 
 	const groups = Object.values(section.definitions).sort((a, b) => a.order - b.order)
 
@@ -64,20 +50,20 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 				className="collapsible-tree-group-row presets-section-row"
 				role="button"
 				tabIndex={0}
-				aria-expanded={expanded}
-				onClick={doToggleClick}
+				aria-expanded={!isCollapsed}
+				onClick={toggleCollapsed}
 				onKeyDown={(e) => {
 					if (e.key === 'Enter' || e.key === ' ') {
 						e.preventDefault()
-						doToggleClick()
+						toggleCollapsed()
 					}
 				}}
 			>
-				<FontAwesomeIcon icon={expanded ? faCaretDown : faCaretRight} className="collapsible-tree-caret" />
+				<FontAwesomeIcon icon={!isCollapsed ? faCaretDown : faCaretRight} className="collapsible-tree-caret" />
 				{section.name}
 				{!!section.description && <div className="presets-section-description">{section.description}</div>}
 			</div>
-			{expanded && <div className="presets-section-content">{groupComponents}</div>}
+			{!isCollapsed && <div className="presets-section-content">{groupComponents}</div>}
 		</>
 	)
 })
