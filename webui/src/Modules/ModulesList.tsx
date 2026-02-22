@@ -185,7 +185,11 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							<tr>
 								<td colSpan={4} style={{ padding: '10px 5px' }}>
 									<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-									<strong>{hiddenCount} Modules are ignored</strong>
+									<strong>{hiddenCount} Modules are ignored</strong>. <br /> Enable{' '}
+									{(visibleModules.visibility.installed ? '' : '"Installed" ') +
+										(visibleModules.visibility.available ? '' : '"Available" ') +
+										(visibleModules.visibility.availableDeprecated ? '' : '"Deprecated"') +
+										' to include them in the search'}
 								</td>
 							</tr>
 						)}
