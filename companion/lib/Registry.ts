@@ -23,7 +23,6 @@ import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
-import type { ActionRecorder } from './Controls/ActionRecorder.js'
 import { ServiceApi } from './Service/ServiceApi.js'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
@@ -89,10 +88,6 @@ export class Registry {
 	 * The core controls controller
 	 */
 	controls!: ControlsController
-	/**
-	 * The action recorder
-	 */
-	actionRecorder!: ActionRecorder
 	/**
 	 * The core database library
 	 */
@@ -246,8 +241,6 @@ export class Registry {
 		try {
 			this.controls = new ControlsController(this.controlStore, this, this.#controlEvents)
 
-			this.actionRecorder = this.instance.actionRecorder
-
 			this.internalModule = new InternalController(
 				this.#appInfo,
 				this.controlStore,
@@ -259,8 +252,7 @@ export class Registry {
 				this.graphics,
 				this.userconfig,
 				this.#controlEvents,
-				this.exit.bind(this),
-				this.actionRecorder
+				this.exit.bind(this)
 			)
 
 			this.page = new PageController(this.graphics, this.controls, this.userconfig, this.#pageStore)
@@ -282,7 +274,7 @@ export class Registry {
 				this.#appInfo,
 				this.#pageStore,
 				this.controlStore,
-				this.actionRecorder,
+				this.instance.actionRecorder,
 				this.surfaces,
 				this.variables,
 				this.graphics,

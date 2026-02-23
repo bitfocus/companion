@@ -30,7 +30,7 @@ import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
-import { ActionRecorder } from '../Controls/ActionRecorder.js'
+import { ActionRecorder } from './ActionRecorder.js'
 import type { DataDatabase } from '../Data/Database.js'
 import express from 'express'
 import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
@@ -163,7 +163,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(this.#configStore)
 		this.status = new InstanceStatus()
-		this.actionRecorder = new ActionRecorder({ instance: this }, controlsStore)
+		this.actionRecorder = new ActionRecorder(this, controlsStore)
 		this.modules = new InstanceModules(this, apiRouter, appInfo)
 		this.processManager = new InstanceProcessManager(
 			{
