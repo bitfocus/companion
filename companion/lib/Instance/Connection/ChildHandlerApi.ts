@@ -5,6 +5,7 @@ import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { InstanceDefinitions } from '../Definitions.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
+import type { ActionRecorder } from '../../Controls/ActionRecorder.js'
 import type { VariablesController } from '../../Variables/Controller.js'
 import type { ServiceOscSender } from '../../Service/OscSender.js'
 import type { InstanceSharedUdpManager } from './SharedUdpManager.js'
@@ -15,6 +16,7 @@ import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 
 export interface ConnectionChildHandlerDependencies {
 	readonly controls: IControlStore
+	readonly actionRecorder: ActionRecorder
 	readonly variables: VariablesController
 	readonly oscSender: ServiceOscSender
 

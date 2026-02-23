@@ -23,6 +23,7 @@ import { ImportExportController } from './ImportExport/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import type { PackageJson } from 'type-fest'
+import type { ActionRecorder } from './Controls/ActionRecorder.js'
 import { ServiceApi } from './Service/ServiceApi.js'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
@@ -89,13 +90,17 @@ export class Registry {
 	 */
 	controls!: ControlsController
 	/**
+	 * The action recorder
+	 */
+	actionRecorder!: ActionRecorder
+	/**
 	 * The core database library
 	 */
 	readonly db: DataDatabase
 	/**
 	 * The core graphics controller
 	 */
-	graphics!: GraphicsController
+	readonly graphics: GraphicsController
 	/**
 	 * The core instance controller
 	 */
@@ -119,7 +124,7 @@ export class Registry {
 	/**
 	 * The core device controller
 	 */
-	surfaces!: SurfaceController
+	readonly surfaces: SurfaceController
 	/**
 	 * The core user config manager
 	 */
@@ -156,9 +161,10 @@ export class Registry {
 	#isReady = false
 
 	// Temporary until all constructors moved out of ready
-	controlStore!: ControlStore
+	controlStore: ControlStore
 	readonly #pageStore: PageStore
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
+	readonly #oscSender: ServiceOscSender
 
 	/**
 	 * Create a new application <code>Registry</code>
@@ -201,6 +207,31 @@ export class Registry {
 		this.#pageStore = new PageStore(this.db.getTableView('pages'))
 
 		this.variables = new VariablesController(this.db)
+		this.controlStore = new ControlStore(this.variables.values)
+
+		this.graphics = new GraphicsController(this.controlStore, this.#pageStore, this.userconfig, this.variables.values)
+
+		this.surfaces = new SurfaceController(this.db, {
+			controls: this.controlStore,
+			graphics: this.graphics,
+			pageStore: this.#pageStore,
+			userconfig: this.userconfig,
+			variables: this.variables,
+		})
+
+		this.#oscSender = new ServiceOscSender(this.userconfig)
+
+		this.instance = new InstanceController(
+			this.#appInfo,
+			this.db,
+			this.#data.cache,
+			this.#internalApiRouter,
+			this.controlStore,
+			this.variables,
+			this.surfaces,
+			this.#oscSender
+		)
+		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 	}
 
 	/**
@@ -213,30 +244,9 @@ export class Registry {
 		this.#logger.debug('launching core modules')
 
 		try {
-			this.controlStore = new ControlStore(this)
 			this.controls = new ControlsController(this.controlStore, this, this.#controlEvents)
-			this.graphics = new GraphicsController(this.controlStore, this.#pageStore, this.userconfig, this.variables.values)
 
-			this.surfaces = new SurfaceController(this.db, {
-				controls: this.controlStore,
-				graphics: this.graphics,
-				pageStore: this.#pageStore,
-				userconfig: this.userconfig,
-				variables: this.variables,
-			})
-
-			const oscSender = new ServiceOscSender(this.userconfig)
-			this.instance = new InstanceController(
-				this.#appInfo,
-				this.db,
-				this.#data.cache,
-				this.#internalApiRouter,
-				this.controlStore,
-				this.variables,
-				this.surfaces,
-				oscSender
-			)
-			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
+			this.actionRecorder = this.instance.actionRecorder
 
 			this.internalModule = new InternalController(
 				this.#appInfo,
@@ -249,7 +259,8 @@ export class Registry {
 				this.graphics,
 				this.userconfig,
 				this.#controlEvents,
-				this.exit.bind(this)
+				this.exit.bind(this),
+				this.actionRecorder
 			)
 
 			this.page = new PageController(this.graphics, this.controls, this.userconfig, this.#pageStore)
@@ -271,6 +282,7 @@ export class Registry {
 				this.#appInfo,
 				this.#pageStore,
 				this.controlStore,
+				this.actionRecorder,
 				this.surfaces,
 				this.variables,
 				this.graphics,
@@ -280,7 +292,7 @@ export class Registry {
 			this.services = new ServiceController(
 				serviceApi,
 				this.userconfig,
-				oscSender,
+				this.#oscSender,
 				this.surfaces,
 				this.#pageStore,
 				this.instance,

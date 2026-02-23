@@ -1,7 +1,6 @@
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
-import type { ActionRecorder } from './ActionRecorder.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 
 /**
@@ -54,11 +53,6 @@ export interface IControlStore {
 		controlId: string | null | undefined,
 		overrideVariableValues: VariableValues | null
 	): VariablesAndExpressionParser
-
-	/**
-	 * Action recorder subsystem
-	 */
-	readonly actionRecorder: ActionRecorder
 
 	/**
 	 * Clear any state tracked by controls for a connection (e.g. feedback values)

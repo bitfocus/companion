@@ -43,6 +43,7 @@ import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import type { ActionRecorder } from '../Controls/ActionRecorder.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
 import { InternalInstance } from './Instance.js'
 import { InternalTime } from './Time.js'
@@ -96,7 +97,8 @@ export class InternalController {
 		graphicsController: GraphicsController,
 		userConfigController: DataUserConfig,
 		controlEvents: EventEmitter<ControlCommonEvents>,
-		requestExit: (fromInternal: boolean, restart: boolean) => void
+		requestExit: (fromInternal: boolean, restart: boolean) => void,
+		actionRecorder: ActionRecorder
 	) {
 		this.#controlsController = controlStore
 		this.#actionRunner = controls.actionRunner
@@ -107,7 +109,7 @@ export class InternalController {
 		this.#buildingBlocksFragment = new InternalBuildingBlocks()
 		this.#fragments = [
 			this.#buildingBlocksFragment,
-			new InternalActionRecorder(controlStore.actionRecorder, pageStore),
+			new InternalActionRecorder(actionRecorder, pageStore),
 			new InternalInstance(instanceController),
 			new InternalTime(),
 			new InternalControls(graphicsController, controlStore, pageStore, controlEvents),

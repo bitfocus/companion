@@ -93,7 +93,7 @@ export function createTrpcRouter(registry: Registry) {
 
 		bonjour: registry.services.bonjourDiscovery.createTrpcRouter(),
 
-		actionRecorder: registry.controlStore.actionRecorder.createTrpcRouter(),
+		actionRecorder: registry.actionRecorder.createTrpcRouter(),
 		surfaces: registry.surfaces.createTrpcRouter(),
 
 		controls: registry.controls.createTrpcRouter(),

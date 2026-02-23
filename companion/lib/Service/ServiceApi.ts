@@ -10,7 +10,7 @@ import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
-import type { ActionRecorderEvents } from '../Controls/ActionRecorder.js'
+import type { ActionRecorder, ActionRecorderEvents } from '../Controls/ActionRecorder.js'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import EventEmitter from 'events'
@@ -42,6 +42,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
 	readonly #pageStore: IPageStore
 	readonly #controlController: IControlStore
+	readonly #actionRecorder: ActionRecorder
 	readonly #surfaceController: SurfaceController
 	readonly #variablesController: VariablesController
 	readonly #graphicsController: GraphicsController
@@ -54,6 +55,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		appInfo: AppInfo,
 		pageStore: IPageStore,
 		controlController: IControlStore,
+		actionRecorder: ActionRecorder,
 		surfaceController: SurfaceController,
 		variablesController: VariablesController,
 		graphicsController: GraphicsController,
@@ -63,11 +65,12 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		this.#appInfo = appInfo
 		this.#pageStore = pageStore
 		this.#controlController = controlController
+		this.#actionRecorder = actionRecorder
 		this.#surfaceController = surfaceController
 		this.#variablesController = variablesController
 		this.#graphicsController = graphicsController
 
-		this.#controlController.actionRecorder.on('action_recorder_is_running', (...args) => {
+		this.#actionRecorder.on('action_recorder_is_running', (...args) => {
 			this.emit('action_recorder_is_running', ...args)
 		})
 
@@ -221,15 +224,15 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	actionRecorderDiscardActions(): void {
-		this.#controlController.actionRecorder.discardActions()
+		this.#actionRecorder.discardActions()
 	}
 
 	actionRecorderSetRecording(isRunning: boolean): void {
-		this.#controlController.actionRecorder.setRecording(isRunning)
+		this.#actionRecorder.setRecording(isRunning)
 	}
 
 	actionRecorderGetSession(): RecordSessionInfo {
-		return this.#controlController.actionRecorder.getSession()
+		return this.#actionRecorder.getSession()
 	}
 }
 

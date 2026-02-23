@@ -1,4 +1,3 @@
-import { ActionRecorder } from './ActionRecorder.js'
 import { TriggerEvents } from './TriggerEvents.js'
 import type { IControlStore } from './IControlStore.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -6,7 +5,6 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { VariablesValues } from '../Variables/Values.js'
-import type { Registry } from '../Registry.js'
 
 /**
  * The data-layer implementation of IControlStore.
@@ -22,21 +20,15 @@ export class ControlStore implements IControlStore {
 	readonly controls = new Map<string, SomeControl<any>>()
 
 	/**
-	 * Actions recorder
-	 */
-	readonly actionRecorder: ActionRecorder
-
-	/**
 	 * Triggers event bus
 	 */
 	readonly triggers: TriggerEvents
 
 	readonly #variablesValues: VariablesValues
 
-	constructor(registry: Pick<Registry, 'instance' | 'variables'>) {
+	constructor(variablesValues: VariablesValues) {
 		this.triggers = new TriggerEvents()
-		this.actionRecorder = new ActionRecorder(registry, this)
-		this.#variablesValues = registry.variables.values
+		this.#variablesValues = variablesValues
 	}
 
 	/**
