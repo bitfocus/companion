@@ -3,14 +3,12 @@ import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { CreateBankControlId, CreatePresetControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import { ActionRunner } from './ActionRunner.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { nanoid } from 'nanoid'
 import debounceFn from 'debounce-fn'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControl } from './IControlFragments.js'
-import type { Registry } from '../Registry.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlChangeEvents, ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
@@ -44,6 +42,10 @@ import crypto from 'crypto'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
 import type { ControlStore } from './ControlStore.js'
 import type { TriggerEvents } from './TriggerEvents.js'
+import type { DataDatabase } from '../Data/Database.js'
+import type { Registry } from '../Registry.js'
+
+export type ControlDependenciesTemp = Omit<ControlDependencies, 'dbTable' | 'changeEvents'>
 
 /**
  * The class that manages the controls
@@ -63,21 +65,14 @@ import type { TriggerEvents } from './TriggerEvents.js'
 export class ControlsController {
 	readonly #logger = LogController.createLogger('Controls/Controller')
 
-	readonly #registry: Pick<
-		Registry,
-		'db' | 'page' | 'surfaces' | 'internalModule' | 'instance' | 'variables' | 'userconfig'
-	>
+	readonly #controlDepsTmp: ControlDependenciesTemp
+	readonly #registry: Pick<Registry, 'page'>
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
 	/**
 	 * The control store (IControlStore implementation)
 	 */
 	readonly #store: ControlStore
-
-	/**
-	 * Actions runner
-	 */
-	readonly actionRunner: ActionRunner
 
 	/**
 	 * Active learning store
@@ -95,27 +90,32 @@ export class ControlsController {
 
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
-	constructor(store: ControlStore, registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
+	constructor(
+		db: DataDatabase,
+		store: ControlStore,
+		controlEvents: EventEmitter<ControlCommonEvents>,
+		controlDeps: ControlDependenciesTemp,
+		registry: Pick<Registry, 'page'>
+	) {
 		this.#store = store
-		this.#registry = registry
+		this.#controlDepsTmp = controlDeps
 		this.#controlEvents = controlEvents
+		this.#registry = registry
 
 		this.#triggerCollections = new TriggerCollections(
-			registry.db,
+			db,
 			this.#store.triggerEvents,
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
 			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
 
-		this.#expressionVariableCollections = new ExpressionVariableCollections(registry.db, (validCollectionIds) =>
+		this.#expressionVariableCollections = new ExpressionVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
 		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(
-			this.#registry.variables.values,
+			this.#controlDepsTmp.variables.values,
 			this.#store.controls
 		)
-
-		this.actionRunner = new ActionRunner(registry)
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -148,7 +148,7 @@ export class ControlsController {
 	 * Delegation accessors for consumers that only have a ControlsController reference.
 	 * The authoritative implementations live on the ControlStore.
 	 */
-	get triggers(): TriggerEvents {
+	get triggerEvents(): TriggerEvents {
 		return this.#store.triggerEvents
 	}
 
@@ -175,15 +175,16 @@ export class ControlsController {
 	#createControlDependencies(): ControlDependencies {
 		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
 		return {
+			...this.#controlDepsTmp,
 			dbTable: this.#store.dbTable,
-			surfaces: this.#registry.surfaces,
-			pageStore: this.#registry.page.store,
-			internalModule: this.#registry.internalModule,
-			instance: this.#registry.instance,
-			variables: this.#registry.variables,
-			userconfig: this.#registry.userconfig,
-			actionRunner: this.actionRunner,
-			events: this.#controlEvents,
+			// surfaces: this.#registry.surfaces,
+			// pageStore: this.#registry.page.store,
+			// internalModule: this.#registry.internalModule,
+			// instance: this.#registry.instance,
+			// variables: this.#registry.variables,
+			// userconfig: this.#registry.userconfig,
+			// actionRunner: this.actionRunner,
+			// events: this.#controlEvents,
 			changeEvents: this.#controlChangeEvents,
 		}
 	}
@@ -224,10 +225,10 @@ export class ControlsController {
 				this.#expressionVariableNamesMap,
 				this.#createControlDependencies()
 			),
-			events: createEventsTrpcRouter(this.#store.controls, this.#registry.instance.definitions),
+			events: createEventsTrpcRouter(this.#store.controls, this.#controlDepsTmp.instance.definitions),
 			entities: createEntitiesTrpcRouter(
 				this.#store.controls,
-				this.#registry.instance.definitions,
+				this.#controlDepsTmp.instance.definitions,
 				this.#activeLearningStore
 			),
 			actionSets: createActionSetsTrpcRouter(this.#store.controls),
@@ -237,7 +238,7 @@ export class ControlsController {
 				this.#logger,
 				this.#store.controls,
 				this.#registry.page,
-				this.#registry.instance.definitions,
+				this.#controlDepsTmp.instance.definitions,
 				this.#controlEvents,
 				this
 			),
@@ -299,7 +300,7 @@ export class ControlsController {
 			if (controlObj2?.type === 'trigger' || (controlType === 'trigger' && !controlObj2)) {
 				const trigger = new ControlTrigger(
 					this.#createControlDependencies(),
-					this.triggers,
+					this.triggerEvents,
 					controlId,
 					controlObj2,
 					isImport
@@ -405,7 +406,7 @@ export class ControlsController {
 		}
 
 		// Delete old control at the coordinate
-		const oldControlId = this.#registry.page.store.getControlIdAt(location)
+		const oldControlId = this.#controlDepsTmp.pageStore.getControlIdAt(location)
 		if (oldControlId) {
 			this.deleteControl(oldControlId)
 		}
@@ -534,7 +535,7 @@ export class ControlsController {
 			this.#store.deleteControl(controlId)
 		}
 
-		const location = this.#registry.page.store.getLocationOfControlId(controlId)
+		const location = this.#controlDepsTmp.pageStore.getLocationOfControlId(controlId)
 		if (location) {
 			this.#registry.page.setControlIdAt(location, null)
 
@@ -574,7 +575,7 @@ export class ControlsController {
 	 * @access public
 	 */
 	createButtonControl(location: ControlLocation, newType: string): string | null {
-		if (!this.#registry.page.store.isPageValid(location.pageNumber)) return null
+		if (!this.#controlDepsTmp.pageStore.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
 		const newControl = this.createClassForControl(controlId, 'button', newType, false)
@@ -611,7 +612,10 @@ export class ControlsController {
 		presetId: string,
 		variableValues: VariableValues | null
 	): ControlButtonPreset | null {
-		let presetModel = this.#registry.instance.definitions.convertPresetToPreviewControlModel(connectionId, presetId)
+		let presetModel = this.#controlDepsTmp.instance.definitions.convertPresetToPreviewControlModel(
+			connectionId,
+			presetId
+		)
 		if (!presetModel) return null
 
 		// Interleave the values into the preset
@@ -665,7 +669,7 @@ export class ControlsController {
 	 * @access public
 	 */
 	verifyConnectionIds(): void {
-		const knownConnectionIds = new Set(this.#registry.instance.getAllConnectionIds())
+		const knownConnectionIds = new Set(this.#controlDepsTmp.instance.getAllConnectionIds())
 		knownConnectionIds.add('internal')
 
 		for (const control of this.#store.controls.values()) {

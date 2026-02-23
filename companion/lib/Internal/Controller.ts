@@ -59,6 +59,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
 import type { NewFeedbackValue } from '../Controls/Entities/Types.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
 
 interface FeedbackEntityState {
 	controlId: string
@@ -107,12 +108,13 @@ export class InternalController {
 		graphicsController: GraphicsController,
 		userConfigController: DataUserConfig,
 		controlEvents: EventEmitter<ControlCommonEvents>,
+		actionRunner: ActionRunner,
 		requestExit: (fromInternal: boolean, restart: boolean) => void
 	): void {
 		if (this.#initialized) throw new Error(`InternalController already initialized`)
 		this.#initialized = true
 
-		this.#buildingBlocksFragment = new InternalBuildingBlocks(controls.actionRunner)
+		this.#buildingBlocksFragment = new InternalBuildingBlocks(actionRunner)
 
 		this.#fragments.push(
 			this.#buildingBlocksFragment,

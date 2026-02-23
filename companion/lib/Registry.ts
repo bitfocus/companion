@@ -29,6 +29,7 @@ import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
 import path from 'path'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ActionRunner } from './Controls/ActionRunner.js'
 
 let infoFileName: URL
 // note this could be done in one line, but webpack was having trouble before url processing was disabled.
@@ -241,7 +242,25 @@ export class Registry {
 		this.#logger.debug('launching core modules')
 
 		try {
-			this.controls = new ControlsController(this.controlStore, this, this.#controlEvents)
+			const actionRunner = new ActionRunner(this.instance, this.internalModule)
+
+			this.controls = new ControlsController(
+				this.db,
+				this.controlStore,
+				this.#controlEvents,
+				{
+					surfaces: this.surfaces,
+					pageStore: this.#pageStore,
+					internalModule: this.internalModule,
+					instance: this.instance,
+					variables: this.variables,
+					userconfig: this.userconfig,
+					actionRunner: actionRunner,
+					events: this.#controlEvents, // TODO - deduplicate
+					// changeEvents: this.#controlChangeEvents,
+				},
+				this
+			)
 			this.preview = new PreviewController(this.graphics, this.#pageStore, this.controls, this.#controlEvents)
 
 			this.internalModule.init(
@@ -252,6 +271,7 @@ export class Registry {
 				this.graphics,
 				this.userconfig,
 				this.#controlEvents,
+				actionRunner,
 				this.exit.bind(this)
 			)
 
@@ -377,12 +397,12 @@ export class Registry {
 			// Instances are loaded, start up http
 			const router = createTrpcRouter(this)
 			this.ui.io.bindTrpcRouter(router, () => {
-				this.controls.triggers.emit('client_connect')
+				this.controls.triggerEvents.emit('client_connect')
 			})
 			this.rebindHttp(bindIp, bindPort)
 
 			// Startup has completed, run triggers
-			this.controls.triggers.emit('startup')
+			this.controls.triggerEvents.emit('startup')
 
 			if (process.env.COMPANION_IPC_PARENT) {
 				process.on('message', (msg: any): void => {
@@ -398,7 +418,7 @@ export class Registry {
 						} else if (msg.messageType === 'power-status') {
 							this.instance.powerStatusChange(msg.status)
 						} else if (msg.messageType === 'lock-screen') {
-							this.controls.triggers.emit('locked', !!msg.status)
+							this.controls.triggerEvents.emit('locked', !!msg.status)
 						}
 					} catch (e) {
 						this.#logger.debug(`Failed to handle IPC message: ${e}`)
