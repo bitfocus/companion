@@ -43,7 +43,26 @@
 		}
 
 		.disabled {
+			// the following is applied to the text. The buttons need more specific selectors
 			color: var(--cui-disabled);
+
+			.form-check-input {
+				// indicate that the enable/disable switch is ineffective, but still allow users to change it
+				--cui-form-check-bg: var(--cui-disabled);
+				--cui-border-color: transparent;
+				--cui-form-check-input-checked-bg-color: var(--cui-disabled);
+				--cui-form-check-input-checked-border-color: transparent;
+
+				&:focus {
+					// default focus is a red halo. make it gray
+					border: none;
+					box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.4);
+				}
+			}
+
+			.btn {
+				--cui-btn-color: var(--cui-disabled);
+			}
 		}
 	}
 
