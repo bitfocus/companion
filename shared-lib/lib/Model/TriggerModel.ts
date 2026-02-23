@@ -17,7 +17,6 @@ export interface TriggerModel {
 export type TriggerOptions = {
 	name: string
 	enabled: boolean
-	groupEnabled?: boolean
 	sortOrder: number
 	collectionId?: string
 }
@@ -26,6 +25,7 @@ export interface ClientTriggerData extends TriggerOptions {
 	type: 'trigger'
 	lastExecuted: number | null
 	description: string
+	collectionEnabled?: boolean
 }
 
 export type TriggersUpdate =

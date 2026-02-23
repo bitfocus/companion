@@ -227,7 +227,7 @@ export class ControlTrigger
 		if (source === TriggerExecutionSource.Test) {
 			this.logger.debug(`Test Execute ${this.options.name}`)
 		} else {
-			if (!this.options.enabled) return
+			if (!this.#enabled) return // covers both options.enabled and `#collectionEnabled`
 
 			// Ensure the condition passes when it is not part of the event
 			if (source !== TriggerExecutionSource.ConditionChange) {
@@ -353,6 +353,7 @@ export class ControlTrigger
 			...this.options,
 			lastExecuted: this.#lastExecuted,
 			description: eventStrings.join('<br />'),
+			collectionEnabled: this.#collectionEnabled,
 		}
 	}
 
@@ -556,7 +557,6 @@ export class ControlTrigger
 
 	setCollectionEnabled(enabled: boolean): void {
 		this.#collectionEnabled = !!enabled
-		this.options.groupEnabled = !!enabled // for gui
 		const newEnabled = this.#collectionEnabled && this.options.enabled
 		if (this.#enabled !== newEnabled) {
 			this.#enabled = newEnabled
@@ -565,6 +565,7 @@ export class ControlTrigger
 			// Report the change, for internal feedbacks
 			this.#eventBus.emit('trigger_enabled', this.controlId, this.#enabled)
 		}
+		this.#sendTriggerJsonChange()
 	}
 
 	commitChange(redraw = true): void {
@@ -616,6 +617,7 @@ export class ControlTrigger
 						(runOnFalse && !newStatus && this.#conditionCheckLastValue))
 				) {
 					setImmediate(() => {
+						if (!this.#enabled) return // avoid TOCTOU (note #enabled combines both #collectionEnabled and options.enabled)
 						this.executeActions(Date.now(), TriggerExecutionSource.ConditionChange)
 					})
 				}
