@@ -12,6 +12,7 @@ import {
 	faFileExport,
 	faLayerGroup,
 	faList,
+	faPowerOff,
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
@@ -300,15 +301,20 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 			</div>
 			<div className="action-buttons w-auto">
 				<CButtonGroup>
-					<CFormSwitch
-						className="ms-1"
-						color="success"
-						checked={item.enabled}
-						disabled={collectionDisabled}
-						onChange={doEnableDisable}
-						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
-						size="xl"
-					/>
+					{collectionDisabled ? (
+						<CButton variant="ghost" title="Collection Disabled">
+							<FontAwesomeIcon icon={faPowerOff} className="fa-lg" color="gray" />
+						</CButton>
+					) : (
+						<CFormSwitch
+							className="ms-1"
+							color="success"
+							checked={item.enabled}
+							onChange={doEnableDisable}
+							title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+							size="xl"
+						/>
+					)}
 
 					<CButton
 						color="white"
