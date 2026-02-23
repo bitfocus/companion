@@ -28,7 +28,7 @@ import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
@@ -79,7 +79,7 @@ type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #logger = LogController.createLogger('Graphics/Controller')
 
-	readonly #controlsController: ControlsController
+	readonly controlsStore: IControlStore
 	readonly #pageStore: IPageStore
 	readonly #userConfigController: DataUserConfig
 	readonly #variableValuesController: VariablesValues
@@ -197,14 +197,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	)
 
 	constructor(
-		controlsController: ControlsController,
+		controlsStore: IControlStore,
 		pageStore: IPageStore,
 		userConfigController: DataUserConfig,
 		variableValuesController: VariablesValues
 	) {
 		super()
 
-		this.#controlsController = controlsController
+		this.controlsStore = controlsStore
 		this.#pageStore = pageStore
 		this.#userConfigController = userConfigController
 		this.#variableValuesController = variableValuesController
@@ -227,7 +227,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			async (_id: string, args: RenderArguments, skipInvalidation: boolean) => {
 				try {
 					if (args.type === 'preset') {
-						const control = this.#controlsController.getControl(args.controlId)
+						const control = this.controlsStore.getControl(args.controlId)
 						const buttonStyle = control?.getDrawStyle() ?? undefined
 
 						let render: ImageResult | undefined
@@ -267,7 +267,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						location.row >= gridSize.minRow
 
 					const controlId = this.#pageStore.getControlIdAt(location)
-					const control = controlId ? this.#controlsController.getControl(controlId) : undefined
+					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
 					const buttonStyle = control?.getDrawStyle() ?? undefined
 
 					if (location && locationIsInBounds) {
@@ -407,7 +407,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Redraw the page controls on every page
 	 */
 	invalidatePageControls(): void {
-		const allControls = this.#controlsController.getAllControls()
+		const allControls = this.controlsStore.getAllControls()
 		for (const control of Object.values(allControls)) {
 			if (control.type === 'pageup' || control.type === 'pagedown') {
 				this.invalidateControl(control.controlId)
@@ -573,7 +573,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Compute the target size for the render LRU cache based on control count
 	 */
 	#computeRenderCacheSize(): number {
-		const allControls = this.#controlsController.getAllControls()
+		const allControls = this.controlsStore.getAllControls()
 		const totalControls = Object.keys(allControls).length
 		const computed = Math.ceil(totalControls * RENDER_CACHE_AVG_ACTIVE_STATES * RENDER_CACHE_PER_BUTTON_RATIO)
 		return Math.max(RENDER_CACHE_MIN_SIZE, Math.min(computed, RENDER_CACHE_MAX_SIZE))

@@ -61,13 +61,13 @@ function compareValues(op: any, value: any, value2: any): boolean {
 }
 
 export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
-	readonly #controlsController: IControlStore
+	readonly #controlsStore: IControlStore
 	readonly #pageStore: IPageStore
 
-	constructor(controlsController: IControlStore, pageStore: IPageStore) {
+	constructor(controlsStore: IControlStore, pageStore: IPageStore) {
 		super()
 
-		this.#controlsController = controlsController
+		this.#controlsStore = controlsStore
 		this.#pageStore = pageStore
 	}
 
@@ -324,7 +324,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		}
 		if (!theControlId) return
 
-		const control = this.#controlsController.getControl(theControlId)
+		const control = this.#controlsStore.getControl(theControlId)
 		if (!control || !control.supportsEntities) return
 
 		const variableEntity = control.entities

@@ -34,20 +34,20 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 		never_lock: true,
 	}
 
-	readonly #controlsController: IControlStore
+	readonly #controlsStore: IControlStore
 	readonly #pageStore: IPageStore
 
 	readonly socket: ServiceElgatoPluginSocket
 
 	constructor(
-		controlsController: IControlStore,
+		controlsStore: IControlStore,
 		pageStore: IPageStore,
 		deviceId: string,
 		socket: ServiceElgatoPluginSocket
 	) {
 		super()
 
-		this.#controlsController = controlsController
+		this.#controlsStore = controlsStore
 		this.#pageStore = pageStore
 
 		this.socket = socket
@@ -81,7 +81,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 						row: Number(data.row),
 					})
 					if (controlId) {
-						this.#controlsController.pressControl(controlId, pressed, this.info.surfaceId)
+						this.#controlsStore.pressControl(controlId, pressed, this.info.surfaceId)
 
 						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
 					}
@@ -97,7 +97,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 						row: xy[1],
 					})
 					if (controlId) {
-						this.#controlsController.pressControl(controlId, pressed, this.info.surfaceId)
+						this.#controlsStore.pressControl(controlId, pressed, this.info.surfaceId)
 
 						this.#logger.debug(`${controlId} ${pressed ? 'pressed' : 'released'}`)
 					}
@@ -121,7 +121,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 						row: Number(data.row),
 					})
 					if (controlId) {
-						this.#controlsController.rotateControl(controlId, right, this.info.surfaceId)
+						this.#controlsStore.rotateControl(controlId, right, this.info.surfaceId)
 
 						this.#logger.debug(`${controlId} rotated ${right}`)
 					}
@@ -140,7 +140,7 @@ export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> impl
 						row: xy[1],
 					})
 					if (controlId) {
-						this.#controlsController.rotateControl(controlId, right, this.info.surfaceId)
+						this.#controlsStore.rotateControl(controlId, right, this.info.surfaceId)
 
 						this.#logger.debug(`${controlId} rotated ${right}`)
 					}

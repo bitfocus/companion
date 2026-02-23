@@ -1,4 +1,8 @@
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { SomeControl } from './IControlFragments.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type { ActionRecorder } from './ActionRecorder.js'
+import type { NewFeedbackValue } from './Entities/Types.js'
 
 /**
  * Narrow interface for the controls data layer.
@@ -45,4 +49,24 @@ export interface IControlStore {
 	 * Abort all delayed actions, optionally keeping one exception signal alive
 	 */
 	abortAllDelayedActions(exceptSignal: AbortSignal | null): void
+
+	createVariablesAndExpressionParser(
+		controlId: string | null | undefined,
+		overrideVariableValues: VariableValues | null
+	): VariablesAndExpressionParser
+
+	/**
+	 * Action recorder subsystem
+	 */
+	readonly actionRecorder: ActionRecorder
+
+	/**
+	 * Clear any state tracked by controls for a connection (e.g. feedback values)
+	 */
+	clearConnectionState(connectionId: string): void
+
+	/**
+	 * Update feedback values from a connection
+	 */
+	updateFeedbackValues(connectionId: string, result: NewFeedbackValue[]): void
 }

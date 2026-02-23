@@ -225,7 +225,6 @@ export class Registry {
 				this.#data.cache,
 				this.#internalApiRouter,
 				this.controls,
-				this.graphics,
 				this.variables,
 				this.surfaces,
 				oscSender

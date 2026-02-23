@@ -45,7 +45,7 @@ const ButtonStylePropertiesExt = [
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #graphicsController: GraphicsController
-	readonly #controlsController: IControlStore
+	readonly controlsStore: IControlStore
 	readonly #pageStore: IPageStore
 
 	/**
@@ -60,14 +60,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 	constructor(
 		graphicsController: GraphicsController,
-		controlsController: IControlStore,
+		controlsStore: IControlStore,
 		pageStore: IPageStore,
 		controlEvents: EventEmitter<ControlCommonEvents>
 	) {
 		super()
 
 		this.#graphicsController = graphicsController
-		this.#controlsController = controlsController
+		this.controlsStore = controlsStore
 		this.#pageStore = pageStore
 
 		const pendingLocationInvalidations = new Set<string>()
@@ -498,7 +498,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				this.#pushStateSubscriptions.delete(feedback.id)
 			}
 
-			const control = theControlId && this.#controlsController.getControl(theControlId)
+			const control = theControlId && this.controlsStore.getControl(theControlId)
 			if (control && control.supportsPushed) {
 				let isPushed = !!control.pushed
 
@@ -522,7 +522,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			const theStep = feedback.options.step
 
-			const control = theControlId && this.#controlsController.getControl(theControlId)
+			const control = theControlId && this.controlsStore.getControl(theControlId)
 			if (control && control.supportsActionSets) {
 				return control.actionSets.getActiveStepIndex() + 1 === Number(theStep)
 			} else {
@@ -543,38 +543,38 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			const forcePress = !!action.options.force
 
-			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, forcePress)
-			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, forcePress)
+			this.controlsStore.pressControl(theControlId, true, extras.surfaceId, forcePress)
+			this.controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
 			return true
 		} else if (action.definitionId === 'button_press') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			this.#controlsController.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
+			this.controlsStore.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
 			return true
 		} else if (action.definitionId === 'button_release') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			this.#controlsController.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
+			this.controlsStore.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
 			return true
 		} else if (action.definitionId === 'button_rotate_left') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			this.#controlsController.rotateControl(theControlId, false, extras.surfaceId)
+			this.controlsStore.rotateControl(theControlId, false, extras.surfaceId)
 			return true
 		} else if (action.definitionId === 'button_rotate_right') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			this.#controlsController.rotateControl(theControlId, true, extras.surfaceId)
+			this.controlsStore.rotateControl(theControlId, true, extras.surfaceId)
 			return true
 		} else if (action.definitionId === 'bgcolor') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			const control = this.#controlsController.getControl(theControlId)
+			const control = this.controlsStore.getControl(theControlId)
 			if (control && control.supportsStyle) {
 				const color = parseColorToNumber(action.options.color as any) || 0
 				control.styleSetFields({ bgcolor: color })
@@ -584,7 +584,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			const control = this.#controlsController.getControl(theControlId)
+			const control = this.controlsStore.getControl(theControlId)
 			if (control && control.supportsStyle) {
 				const color = parseColorToNumber(action.options.color as any) || 0
 				control.styleSetFields({ color: color })
@@ -594,7 +594,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			const control = this.#controlsController.getControl(theControlId)
+			const control = this.controlsStore.getControl(theControlId)
 			if (control && control.supportsStyle) {
 				control.styleSetFields({ text: action.options.label })
 			}
@@ -604,14 +604,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			// Special case handling for special modes
 			const rawControlId = stringifyVariableValue(action.options.location)?.trim()?.toLowerCase()
 			if (rawControlId === 'this-run') {
-				const control = this.#controlsController.getControl(extras.controlId)
+				const control = this.controlsStore.getControl(extras.controlId)
 				if (control && control.supportsActions) {
 					control.abortDelayedActionsSingle(Boolean(action.options.unlatch), extras.abortDelayed)
 				}
 
 				return true
 			} else if (rawControlId === 'this-all-runs') {
-				const control = this.#controlsController.getControl(extras.controlId)
+				const control = this.controlsStore.getControl(extras.controlId)
 				if (control && control.supportsActions) {
 					control.abortDelayedActions(Boolean(action.options.unlatch), null)
 				}
@@ -622,7 +622,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			const control = this.#controlsController.getControl(theControlId)
+			const control = this.controlsStore.getControl(theControlId)
 			if (control && control.supportsActions) {
 				control.abortDelayedActions(
 					Boolean(action.options.unlatch),
@@ -642,7 +642,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			for (const controlId of controlIdsOnPage) {
 				if (action.options.ignoreSelf && controlId === extras.controlId) continue
 
-				const control = this.#controlsController.getControl(controlId)
+				const control = this.controlsStore.getControl(controlId)
 				if (control && control.supportsActions) {
 					control.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null)
 				}
@@ -655,7 +655,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			if (controlId === 'self' || controlId?.startsWith('self:')) controlId = extras.controlId
 
 			if (controlId && ParseControlId(controlId)?.type === 'trigger') {
-				const control = this.#controlsController.getControl(controlId)
+				const control = this.controlsStore.getControl(controlId)
 				if (control && control.supportsActions) {
 					if (rawControlId === 'self') {
 						control.abortDelayedActions(false, extras.abortDelayed)
@@ -669,13 +669,13 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			return true
 		} else if (action.definitionId === 'panic') {
-			this.#controlsController.abortAllDelayedActions(action.options.ignoreCurrent ? extras.abortDelayed : null)
+			this.controlsStore.abortAllDelayedActions(action.options.ignoreCurrent ? extras.abortDelayed : null)
 			return true
 		} else if (action.definitionId == 'bank_current_step') {
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			const control = this.#controlsController.getControl(theControlId)
+			const control = this.controlsStore.getControl(theControlId)
 
 			if (control && control.supportsActionSets) {
 				control.actionSets.stepMakeCurrent(Number(action.options.step))
@@ -685,7 +685,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 			if (!theControlId) return true
 
-			const control = this.#controlsController.getControl(theControlId)
+			const control = this.controlsStore.getControl(theControlId)
 
 			if (control && control.supportsActionSets) {
 				control.actionSets.stepAdvanceDelta(Number(action.options.amount))
