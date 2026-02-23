@@ -251,6 +251,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				console.error('failed to toggle trigger state', e)
 			})
 	}, [setOptionsFieldMutation, item.id, item.enabled])
+
 	const doDelete = useCallback(() => {
 		tableContext.deleteModalRef.current?.show(
 			'Delete trigger',
@@ -300,6 +301,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						className="ms-1"
 						color="success"
 						checked={item.enabled}
+						disabled={!(item.groupEnabled ?? true)}
 						onChange={doEnableDisable}
 						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
 						size="xl"

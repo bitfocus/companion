@@ -556,6 +556,7 @@ export class ControlTrigger
 
 	setCollectionEnabled(enabled: boolean): void {
 		this.#collectionEnabled = !!enabled
+		this.options.groupEnabled = !!enabled // for gui
 		const newEnabled = this.#collectionEnabled && this.options.enabled
 		if (this.#enabled !== newEnabled) {
 			this.#enabled = newEnabled

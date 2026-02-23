@@ -17,6 +17,7 @@ export interface TriggerModel {
 export type TriggerOptions = {
 	name: string
 	enabled: boolean
+	groupEnabled?: boolean
 	sortOrder: number
 	collectionId?: string
 }
