@@ -99,7 +99,7 @@ export class Registry {
 	/**
 	 * The core instance controller
 	 */
-	instance!: InstanceController
+	readonly instance: InstanceController
 	/**
 	 * The logger
 	 */
@@ -128,7 +128,7 @@ export class Registry {
 	/**
 	 * The 'internal' module
 	 */
-	internalModule!: InternalController
+	readonly internalModule: InternalController
 
 	importExport!: ImportExportController
 
@@ -227,6 +227,8 @@ export class Registry {
 			this.#oscSender
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
+
+		this.internalModule = new InternalController(this.controlStore, this.#pageStore, this.instance, this.variables)
 	}
 
 	/**
@@ -240,14 +242,12 @@ export class Registry {
 
 		try {
 			this.controls = new ControlsController(this.controlStore, this, this.#controlEvents)
+			this.preview = new PreviewController(this.graphics, this.#pageStore, this.controls, this.#controlEvents)
 
-			this.internalModule = new InternalController(
+			this.internalModule.init(
 				this.#appInfo,
-				this.controlStore,
 				this.controls,
-				this.#pageStore,
 				this.instance,
-				this.variables,
 				this.surfaces,
 				this.graphics,
 				this.userconfig,
@@ -310,8 +310,6 @@ export class Registry {
 				this.services,
 				this.userconfig
 			)
-
-			this.preview = new PreviewController(this.graphics, this.#pageStore, this.controls, this.#controlEvents)
 
 			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
 			this.#controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
