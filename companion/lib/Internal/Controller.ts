@@ -21,6 +21,8 @@ import type {
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -70,7 +72,8 @@ interface FeedbackEntityState {
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
 
-	readonly #controlsController: ControlsController
+	readonly #controlsController: IControlStore
+	readonly #actionRunner: ActionRunner
 	readonly #pageStore: IPageStore
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #variablesController: VariablesController
@@ -84,7 +87,8 @@ export class InternalController {
 
 	constructor(
 		appInfo: AppInfo,
-		controlsController: ControlsController,
+		controlStore: IControlStore,
+		controls: ControlsController,
 		pageStore: IPageStore,
 		instanceController: InstanceController,
 		variablesController: VariablesController,
@@ -94,7 +98,8 @@ export class InternalController {
 		controlEvents: EventEmitter<ControlCommonEvents>,
 		requestExit: (fromInternal: boolean, restart: boolean) => void
 	) {
-		this.#controlsController = controlsController
+		this.#controlsController = controlStore
+		this.#actionRunner = controls.actionRunner
 		this.#pageStore = pageStore
 		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
@@ -102,16 +107,16 @@ export class InternalController {
 		this.#buildingBlocksFragment = new InternalBuildingBlocks()
 		this.#fragments = [
 			this.#buildingBlocksFragment,
-			new InternalActionRecorder(controlsController.actionRecorder, pageStore),
+			new InternalActionRecorder(controlStore.actionRecorder, pageStore),
 			new InternalInstance(instanceController),
 			new InternalTime(),
-			new InternalControls(graphicsController, controlsController, pageStore, controlEvents),
+			new InternalControls(graphicsController, controlStore, pageStore, controlEvents),
 			new InternalCustomVariables(variablesController),
 			new InternalPage(pageStore),
-			new InternalSurface(surfaceController, controlsController, pageStore),
+			new InternalSurface(surfaceController, controlStore, pageStore),
 			new InternalSystem(appInfo, userConfigController, variablesController, requestExit),
-			new InternalTriggers(controlsController),
-			new InternalVariables(controlsController, pageStore),
+			new InternalTriggers(controls),
+			new InternalVariables(controlStore, pageStore),
 		]
 
 		this.#init()
@@ -484,7 +489,7 @@ export class InternalController {
 
 			for (const fragment of this.#fragments) {
 				if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
-					let value = fragment.executeAction(executionAction, extras, this.#controlsController.actionRunner, parser)
+					let value = fragment.executeAction(executionAction, extras, this.#actionRunner, parser)
 					// Only await if it is a promise, to avoid unnecessary async pauses
 					value = value instanceof Promise ? await value : value
 

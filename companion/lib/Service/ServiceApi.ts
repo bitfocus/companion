@@ -1,6 +1,6 @@
 import type { AppInfo } from '../Registry.js'
 import type { IPageStore } from '../Page/Store.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValuesEvents } from '../Variables/Values.js'
@@ -41,7 +41,7 @@ type ServiceApiEvents =
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
 	readonly #pageStore: IPageStore
-	readonly #controlController: ControlsController
+	readonly #controlController: IControlStore
 	readonly #surfaceController: SurfaceController
 	readonly #variablesController: VariablesController
 	readonly #graphicsController: GraphicsController
@@ -53,7 +53,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	constructor(
 		appInfo: AppInfo,
 		pageStore: IPageStore,
-		controlController: ControlsController,
+		controlController: IControlStore,
 		surfaceController: SurfaceController,
 		variablesController: VariablesController,
 		graphicsController: GraphicsController,

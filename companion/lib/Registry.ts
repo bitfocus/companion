@@ -5,6 +5,7 @@ import express from 'express'
 import LogController, { type Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
+import { ControlStore } from './Controls/ControlStore.js'
 import { GraphicsController } from './Graphics/Controller.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
@@ -87,6 +88,10 @@ export class Registry {
 	 * The core controls controller
 	 */
 	controls!: ControlsController
+	/**
+	 * The control store (IControlStore implementation)
+	 */
+	controlStore!: ControlStore
 	/**
 	 * The core database library
 	 */
@@ -207,11 +212,12 @@ export class Registry {
 
 			const pageStore = new PageStore(this.db.getTableView('pages'))
 
-			this.controls = new ControlsController(this, controlEvents)
-			this.graphics = new GraphicsController(this.controls, pageStore, this.userconfig, this.variables.values)
+			this.controlStore = new ControlStore(this)
+			this.controls = new ControlsController(this.controlStore, this, controlEvents)
+			this.graphics = new GraphicsController(this.controlStore, pageStore, this.userconfig, this.variables.values)
 
 			this.surfaces = new SurfaceController(this.db, {
-				controls: this.controls,
+				controls: this.controlStore,
 				graphics: this.graphics,
 				pageStore: pageStore,
 				userconfig: this.userconfig,
@@ -224,7 +230,7 @@ export class Registry {
 				this.db,
 				this.#data.cache,
 				this.#internalApiRouter,
-				this.controls,
+				this.controlStore,
 				this.variables,
 				this.surfaces,
 				oscSender
@@ -233,6 +239,7 @@ export class Registry {
 
 			this.internalModule = new InternalController(
 				this.#appInfo,
+				this.controlStore,
 				this.controls,
 				pageStore,
 				this.instance,
@@ -262,7 +269,7 @@ export class Registry {
 			const serviceApi = new ServiceApi(
 				this.#appInfo,
 				pageStore,
-				this.controls,
+				this.controlStore,
 				this.surfaces,
 				this.variables,
 				this.graphics,
@@ -283,7 +290,7 @@ export class Registry {
 				this.#appInfo,
 				this.db,
 				this.#data.cache,
-				this.controls,
+				this.controlStore,
 				this.graphics,
 				pageStore
 			)

@@ -4,10 +4,8 @@ import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { CreateBankControlId, CreatePresetControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { ActionRunner } from './ActionRunner.js'
-import { ActionRecorder } from './ActionRecorder.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { nanoid } from 'nanoid'
-import { TriggerEvents } from './TriggerEvents.js'
 import debounceFn from 'debounce-fn'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
@@ -45,7 +43,8 @@ import type { NewFeedbackValue } from './Entities/Types.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import crypto from 'crypto'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
-import type { IControlStore } from './IControlStore.js'
+import type { ControlStore } from './ControlStore.js'
+import type { TriggerEvents } from './TriggerEvents.js'
 
 /**
  * The class that manages the controls
@@ -62,7 +61,7 @@ import type { IControlStore } from './IControlStore.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ControlsController implements IControlStore {
+export class ControlsController {
 	readonly #logger = LogController.createLogger('Controls/Controller')
 
 	readonly #registry: Pick<
@@ -72,24 +71,14 @@ export class ControlsController implements IControlStore {
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
 	/**
+	 * The control store (IControlStore implementation)
+	 */
+	readonly #store: ControlStore
+
+	/**
 	 * Actions runner
 	 */
 	readonly actionRunner: ActionRunner
-
-	/**
-	 * Actions recorder
-	 */
-	readonly actionRecorder: ActionRecorder
-
-	/**
-	 * The currently configured controls
-	 */
-	readonly #controls = new Map<string, SomeControl<any>>()
-
-	/**
-	 * Triggers events
-	 */
-	readonly triggers: TriggerEvents
 
 	/**
 	 * Active learning store
@@ -109,16 +98,16 @@ export class ControlsController implements IControlStore {
 
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
-	constructor(registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
+	constructor(store: ControlStore, registry: Registry, controlEvents: EventEmitter<ControlCommonEvents>) {
+		this.#store = store
 		this.#registry = registry
 		this.#controlEvents = controlEvents
 
 		this.#dbTable = registry.db.getTableView('controls')
 
-		this.triggers = new TriggerEvents()
 		this.#triggerCollections = new TriggerCollections(
 			registry.db,
-			this.triggers,
+			this.#store.triggers,
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
 			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
@@ -126,14 +115,16 @@ export class ControlsController implements IControlStore {
 		this.#expressionVariableCollections = new ExpressionVariableCollections(registry.db, (validCollectionIds) =>
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
-		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#registry.variables.values, this.#controls)
+		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(
+			this.#registry.variables.values,
+			this.#store.controls
+		)
 
 		this.actionRunner = new ActionRunner(registry)
-		this.actionRecorder = new ActionRecorder(registry)
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
-		for (const control of this.#controls.values()) {
+		for (const control of this.#store.controls.values()) {
 			if (control instanceof ControlTrigger) {
 				control.checkCollectionIdIsValid(validCollectionIds)
 			}
@@ -141,7 +132,7 @@ export class ControlsController implements IControlStore {
 	}
 
 	#checkTriggerCollectionsEnabled(enabledCollectionIds: ReadonlySet<string>): void {
-		for (const control of this.#controls.values()) {
+		for (const control of this.#store.controls.values()) {
 			if (control instanceof ControlTrigger) {
 				control.setCollectionEnabled(
 					!control.options.collectionId || enabledCollectionIds.has(control.options.collectionId)
@@ -151,7 +142,7 @@ export class ControlsController implements IControlStore {
 	}
 
 	#cleanUnknownExpressionVariableCollectionIds(validCollectionIds: ReadonlySet<string>): void {
-		for (const control of this.#controls.values()) {
+		for (const control of this.#store.controls.values()) {
 			if (control instanceof ControlExpressionVariable) {
 				control.checkCollectionIdIsValid(validCollectionIds)
 			}
@@ -159,14 +150,31 @@ export class ControlsController implements IControlStore {
 	}
 
 	/**
-	 * Abort all delayed actions across all controls
+	 * Delegation accessors for consumers that only have a ControlsController reference.
+	 * The authoritative implementations live on the ControlStore.
 	 */
+	get triggers(): TriggerEvents {
+		return this.#store.triggers
+	}
+
+	getControl(controlId: string): SomeControl<any> | undefined {
+		return this.#store.getControl(controlId)
+	}
+
+	getAllControls(): ReadonlyMap<string, SomeControl<any>> {
+		return this.#store.getAllControls()
+	}
+
+	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
+		return this.#store.pressControl(controlId, pressed, surfaceId, force)
+	}
+
+	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
+		return this.#store.rotateControl(controlId, rightward, surfaceId)
+	}
+
 	abortAllDelayedActions(exceptSignal: AbortSignal | null): void {
-		for (const control of this.#controls.values()) {
-			if (control.supportsActions) {
-				control.abortDelayedActions(false, exceptSignal)
-			}
-		}
+		this.#store.abortAllDelayedActions(exceptSignal)
 	}
 
 	#createControlDependencies(): ControlDependencies {
@@ -190,7 +198,7 @@ export class ControlsController implements IControlStore {
 	 */
 	checkAllStatus = debounceFn(
 		(): void => {
-			for (const control of this.#controls.values()) {
+			for (const control of this.#store.controls.values()) {
 				if (typeof control.checkButtonStatus === 'function') {
 					control.checkButtonStatus()
 				}
@@ -204,17 +212,6 @@ export class ControlsController implements IControlStore {
 		}
 	)
 
-	/**
-	 * Remove any tracked state for a connection
-	 */
-	clearConnectionState(connectionId: string): void {
-		for (const control of this.#controls.values()) {
-			if (control.supportsEntities) {
-				control.entities.clearConnectionState(connectionId)
-			}
-		}
-	}
-
 	createTrpcRouter() {
 		const self = this
 		return router({
@@ -223,30 +220,30 @@ export class ControlsController implements IControlStore {
 				this.#controlChangeEvents,
 				this.#triggerCollections,
 				this.#dbTable,
-				this.#controls,
-				this.triggers,
+				this.#store.controls,
+				this.#store.triggers,
 				this.#createControlDependencies()
 			),
 			expressionVariables: createExpressionVariableTrpcRouter(
 				this.#controlChangeEvents,
 				this.#expressionVariableCollections,
 				this.#dbTable,
-				this.#controls,
+				this.#store.controls,
 				this.#expressionVariableNamesMap,
 				this.#createControlDependencies()
 			),
-			events: createEventsTrpcRouter(this.#controls, this.#registry.instance.definitions),
+			events: createEventsTrpcRouter(this.#store.controls, this.#registry.instance.definitions),
 			entities: createEntitiesTrpcRouter(
-				this.#controls,
+				this.#store.controls,
 				this.#registry.instance.definitions,
 				this.#activeLearningStore
 			),
-			actionSets: createActionSetsTrpcRouter(this.#controls),
-			steps: createStepsTrpcRouter(this.#controls),
+			actionSets: createActionSetsTrpcRouter(this.#store.controls),
+			steps: createStepsTrpcRouter(this.#store.controls),
 
 			...createControlsTrpcRouter(
 				this.#logger,
-				this.#controls,
+				this.#store.controls,
 				this.#registry.page,
 				this.#registry.instance.definitions,
 				this.#controlEvents,
@@ -343,30 +340,12 @@ export class ControlsController implements IControlStore {
 	}
 
 	/**
-	 * Update all controls to forget a connection
-	 */
-	forgetConnection(connectionId: string): void {
-		for (const control of this.#controls.values()) {
-			if (control.supportsEntities) {
-				control.entities.forgetConnection(connectionId)
-			}
-		}
-	}
-
-	/**
-	 * Get all of the populated controls
-	 */
-	getAllControls(): ReadonlyMap<string, SomeControl<any>> {
-		return this.#controls // TODO - readonly?
-	}
-
-	/**
 	 * Get all of the trigger controls
 	 */
 	getAllButtons(): Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> {
 		const buttons: Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> =
 			[]
-		for (const control of this.#controls.values()) {
+		for (const control of this.#store.controls.values()) {
 			if (
 				control instanceof ControlButtonNormal ||
 				control instanceof ControlButtonPageDown ||
@@ -384,7 +363,7 @@ export class ControlsController implements IControlStore {
 	 */
 	getAllTriggers(): ControlTrigger[] {
 		const triggers: ControlTrigger[] = []
-		for (const control of this.#controls.values()) {
+		for (const control of this.#store.controls.values()) {
 			if (control instanceof ControlTrigger) {
 				triggers.push(control)
 			}
@@ -397,7 +376,7 @@ export class ControlsController implements IControlStore {
 	 */
 	getAllExpressionVariables(): ControlExpressionVariable[] {
 		const variables: ControlExpressionVariable[] = []
-		for (const control of this.#controls.values()) {
+		for (const control of this.#store.controls.values()) {
 			if (control instanceof ControlExpressionVariable) {
 				variables.push(control)
 			}
@@ -415,19 +394,11 @@ export class ControlsController implements IControlStore {
 	}
 
 	/**
-	 * Get a control if it has been populated
-	 */
-	getControl(controlId: string): SomeControl<any> | undefined {
-		if (!controlId) return undefined
-		return this.#controls.get(controlId)
-	}
-
-	/**
 	 * Get a Trigger control if it exists
 	 */
 	getTrigger(triggerId: string): ControlTrigger | undefined {
 		const controlId = CreateTriggerControlId(triggerId)
-		const control = this.#controls.get(controlId)
+		const control = this.#store.controls.get(controlId)
 		if (!control || !(control instanceof ControlTrigger)) return undefined
 		return control
 	}
@@ -450,7 +421,7 @@ export class ControlsController implements IControlStore {
 		const newControlId = forceControlId || CreateBankControlId(nanoid())
 		const newControl = this.createClassForControl(newControlId, 'button', definition, true)
 		if (newControl) {
-			this.#controls.set(newControlId, newControl)
+			this.#store.controls.set(newControlId, newControl)
 
 			this.#registry.page.setControlIdAt(location, newControlId)
 
@@ -474,11 +445,11 @@ export class ControlsController implements IControlStore {
 			return false
 		}
 
-		if (this.#controls.has(controlId)) throw new Error(`Trigger ${controlId} already exists`)
+		if (this.#store.controls.has(controlId)) throw new Error(`Trigger ${controlId} already exists`)
 
 		const newControl = this.createClassForControl(controlId, 'trigger', definition, true)
 		if (newControl) {
-			this.#controls.set(controlId, newControl)
+			this.#store.controls.set(controlId, newControl)
 
 			// Ensure it is stored to the db
 			newControl.commitChange()
@@ -501,11 +472,11 @@ export class ControlsController implements IControlStore {
 			return undefined
 		}
 
-		if (this.#controls.has(controlId)) throw new Error(`ExpressionVariable ${controlId} already exists`)
+		if (this.#store.controls.has(controlId)) throw new Error(`ExpressionVariable ${controlId} already exists`)
 
 		const newControl = this.createClassForControl(controlId, 'expression-variable', definition, true)
 		if (newControl) {
-			this.#controls.set(controlId, newControl)
+			this.#store.controls.set(controlId, newControl)
 
 			// Add to names map
 			const expressionVariableControl = newControl as ControlExpressionVariable
@@ -529,7 +500,7 @@ export class ControlsController implements IControlStore {
 		for (const [controlId, controlObj] of Object.entries(config)) {
 			if (controlObj && controlObj.type) {
 				const inst = this.createClassForControl(controlId, 'all', controlObj, false)
-				if (inst) this.#controls.set(controlId, inst)
+				if (inst) this.#store.controls.set(controlId, inst)
 			}
 		}
 
@@ -547,10 +518,10 @@ export class ControlsController implements IControlStore {
 	 */
 	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
-		this.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
+		this.#store.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
 		if (allChangedVariablesSet.size > 0) {
-			for (const control of this.#controls.values()) {
+			for (const control of this.#store.controls.values()) {
 				// If the changes are local variables and from another control, ignore them
 				if (fromControlId && fromControlId !== control.controlId) continue
 
@@ -561,60 +532,13 @@ export class ControlsController implements IControlStore {
 	}
 
 	/**
-	 * Execute a press of a control
-	 * @param controlId Id of the control
-	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that initiated this press
-	 * @param force Trigger actions even if already in the state
-	 */
-	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
-		const control = this.getControl(controlId)
-		if (control) {
-			this.triggers.emit('control_press', controlId, pressed, surfaceId)
-
-			control.pressControl(pressed, surfaceId, force)
-
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Execute rotation of a control
-	 * @param controlId Id of the control
-	 * @param rightward Whether the control is rotated to the right
-	 * @param surfaceId The surface that initiated this rotate
-	 */
-	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
-		const control = this.getControl(controlId)
-		if (control && control.supportsActionSets) {
-			control.rotateControl(rightward, surfaceId)
-			return true
-		}
-
-		return false
-	}
-
-	/**
-	 * Rename a connection for variables used in the controls
-	 * @param labelFrom - the old connection short name
-	 * @param labelTo - the new connection short name
-	 */
-	renameVariables(labelFrom: string, labelTo: string): void {
-		for (const control of this.#controls.values()) {
-			control.renameVariables(labelFrom, labelTo)
-		}
-	}
-
-	/**
 	 * Delete a control
 	 */
 	deleteControl(controlId: string): void {
 		const control = this.getControl(controlId)
 		if (control) {
 			control.destroy()
-			this.#controls.delete(controlId)
+			this.#store.controls.delete(controlId)
 
 			this.#dbTable.delete(controlId)
 		}
@@ -665,7 +589,7 @@ export class ControlsController implements IControlStore {
 		const newControl = this.createClassForControl(controlId, 'button', newType, false)
 		if (!newControl) return null
 
-		this.#controls.set(controlId, newControl)
+		this.#store.controls.set(controlId, newControl)
 		this.#registry.page.setControlIdAt(location, controlId)
 
 		// Notify interested parties
@@ -717,7 +641,7 @@ export class ControlsController implements IControlStore {
 
 		// Check for an existing control that should be reused
 		const controlId = CreatePresetControlId(connectionId, presetId, variablesHash)
-		const control = this.#controls.get(controlId)
+		const control = this.#store.controls.get(controlId)
 		if (control) return control as ControlButtonPreset
 
 		const newControl = new ControlButtonPreset(
@@ -728,7 +652,7 @@ export class ControlsController implements IControlStore {
 			presetModel
 		)
 
-		this.#controls.set(controlId, newControl)
+		this.#store.controls.set(controlId, newControl)
 
 		// Force a redraw
 		this.#controlEvents.emit('invalidateControlRender', controlId)
@@ -742,23 +666,7 @@ export class ControlsController implements IControlStore {
 	 * @param result - object containing new values for the feedbacks that have changed
 	 */
 	updateFeedbackValues(connectionId: string, result: NewFeedbackValue[]): void {
-		if (result.length === 0) return
-
-		const values = new Map<string, Map<string, NewFeedbackValue>>()
-
-		for (const item of result) {
-			const mapEntry = values.get(item.controlId) || new Map<string, NewFeedbackValue>()
-			mapEntry.set(item.entityId, item)
-			values.set(item.controlId, mapEntry)
-		}
-
-		// Pass values to controls
-		for (const [controlId, newValues] of values) {
-			const control = this.getControl(controlId)
-			if (control && control.supportsEntities) {
-				control.entities.updateFeedbackValues(connectionId, newValues)
-			}
-		}
+		this.#store.updateFeedbackValues(connectionId, result)
 	}
 
 	/**
@@ -769,7 +677,7 @@ export class ControlsController implements IControlStore {
 		const knownConnectionIds = new Set(this.#registry.instance.getAllConnectionIds())
 		knownConnectionIds.add('internal')
 
-		for (const control of this.#controls.values()) {
+		for (const control of this.#store.controls.values()) {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)
 		}
@@ -779,13 +687,6 @@ export class ControlsController implements IControlStore {
 		controlId: string | null | undefined,
 		overrideVariableValues: VariableValues | null
 	): VariablesAndExpressionParser {
-		const control = controlId && this.getControl(controlId)
-
-		// If the control exists and supports entities, use its parser for local variables
-		if (control && control.supportsEntities)
-			return control.entities.createVariablesAndExpressionParser(overrideVariableValues)
-
-		// Otherwise create a generic one
-		return this.#registry.variables.values.createVariablesAndExpressionParser(null, null, overrideVariableValues)
+		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues)
 	}
 }

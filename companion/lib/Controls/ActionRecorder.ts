@@ -4,6 +4,7 @@ import { clamp } from '../Resources/Util.js'
 import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
 import type { Registry } from '../Registry.js'
+import type { IControlStore } from './IControlStore.js'
 import type {
 	RecordActionEntityModel,
 	RecordSessionInfo,
@@ -44,7 +45,8 @@ export interface ActionRecorderEvents {
 export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	readonly #logger = LogController.createLogger('Control/ActionRecorder')
 
-	readonly #registry: Pick<Registry, 'instance' | 'controls'>
+	readonly #registry: Pick<Registry, 'instance'>
+	readonly #controlStore: IControlStore
 
 	/**
 	 * The connection ids which are currently informed to be recording
@@ -67,10 +69,11 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	 */
 	#lastSentSessionInfoJsons: Record<string, RecordSessionInfo> = {}
 
-	constructor(registry: Registry) {
+	constructor(registry: Pick<Registry, 'instance'>, controlStore: IControlStore) {
 		super()
 
 		this.#registry = registry
+		this.#controlStore = controlStore
 
 		// create the 'default' session
 		this.#currentSession = {
@@ -476,7 +479,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	saveToControlId(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append'): void {
 		if (mode !== 'replace' && mode !== 'append') throw new Error(`Invalid mode: ${mode}`)
 
-		const control = this.#registry.controls.getControl(controlId)
+		const control = this.#controlStore.getControl(controlId)
 		if (!control) throw new Error(`Unknown control: ${controlId}`)
 
 		if (mode === 'append') {
