@@ -89,10 +89,6 @@ export class Registry {
 	 */
 	controls!: ControlsController
 	/**
-	 * The control store (IControlStore implementation)
-	 */
-	controlStore!: ControlStore
-	/**
 	 * The core database library
 	 */
 	readonly db: DataDatabase
@@ -159,6 +155,11 @@ export class Registry {
 
 	#isReady = false
 
+	// Temporary until all constructors moved out of ready
+	controlStore!: ControlStore
+	readonly #pageStore: PageStore
+	readonly #controlEvents: EventEmitter<ControlCommonEvents>
+
 	/**
 	 * Create a new application <code>Registry</code>
 	 * @param configDir - the configuration path
@@ -190,9 +191,14 @@ export class Registry {
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		LogController.init(this.#appInfo)
 
+		this.#controlEvents = new EventEmitter<ControlCommonEvents>()
+		this.#controlEvents.setMaxListeners(0)
+
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
+
+		this.#pageStore = new PageStore(this.db.getTableView('pages'))
 
 		this.variables = new VariablesController(this.db)
 	}
@@ -207,19 +213,14 @@ export class Registry {
 		this.#logger.debug('launching core modules')
 
 		try {
-			const controlEvents = new EventEmitter<ControlCommonEvents>()
-			controlEvents.setMaxListeners(0)
-
-			const pageStore = new PageStore(this.db.getTableView('pages'))
-
 			this.controlStore = new ControlStore(this)
-			this.controls = new ControlsController(this.controlStore, this, controlEvents)
-			this.graphics = new GraphicsController(this.controlStore, pageStore, this.userconfig, this.variables.values)
+			this.controls = new ControlsController(this.controlStore, this, this.#controlEvents)
+			this.graphics = new GraphicsController(this.controlStore, this.#pageStore, this.userconfig, this.variables.values)
 
 			this.surfaces = new SurfaceController(this.db, {
 				controls: this.controlStore,
 				graphics: this.graphics,
-				pageStore: pageStore,
+				pageStore: this.#pageStore,
 				userconfig: this.userconfig,
 				variables: this.variables,
 			})
@@ -241,17 +242,17 @@ export class Registry {
 				this.#appInfo,
 				this.controlStore,
 				this.controls,
-				pageStore,
+				this.#pageStore,
 				this.instance,
 				this.variables,
 				this.surfaces,
 				this.graphics,
 				this.userconfig,
-				controlEvents,
+				this.#controlEvents,
 				this.exit.bind(this)
 			)
 
-			this.page = new PageController(this.graphics, this.controls, this.userconfig, pageStore)
+			this.page = new PageController(this.graphics, this.controls, this.userconfig, this.#pageStore)
 			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
@@ -268,12 +269,12 @@ export class Registry {
 
 			const serviceApi = new ServiceApi(
 				this.#appInfo,
-				pageStore,
+				this.#pageStore,
 				this.controlStore,
 				this.surfaces,
 				this.variables,
 				this.graphics,
-				controlEvents
+				this.#controlEvents
 			)
 
 			this.services = new ServiceController(
@@ -281,7 +282,7 @@ export class Registry {
 				this.userconfig,
 				oscSender,
 				this.surfaces,
-				pageStore,
+				this.#pageStore,
 				this.instance,
 				this.ui.io,
 				this.ui.express
@@ -292,7 +293,7 @@ export class Registry {
 				this.#data.cache,
 				this.controlStore,
 				this.graphics,
-				pageStore
+				this.#pageStore
 			)
 			this.usageStatistics = new DataUsageStatistics(
 				this.#appInfo,
@@ -306,15 +307,15 @@ export class Registry {
 				this.userconfig
 			)
 
-			this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
+			this.preview = new PreviewController(this.graphics, this.#pageStore, this.controls, this.#controlEvents)
 
 			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
-			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
-			controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
-			controlEvents.on('controlCountChanged', () => this.graphics.triggerCacheResize())
+			this.#controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
+			this.#controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
+			this.#controlEvents.on('controlCountChanged', () => this.graphics.triggerCacheResize())
 
 			this.graphics.on('resubscribeFeedbacks', () => this.instance.processManager.resubscribeAllFeedbacks())
-			this.graphics.on('presetDrawn', (controlId, render) => controlEvents.emit('presetDrawn', controlId, render))
+			this.graphics.on('presetDrawn', (controlId, render) => this.#controlEvents.emit('presetDrawn', controlId, render))
 
 			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
 				setImmediate(() => {
