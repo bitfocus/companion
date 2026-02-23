@@ -668,7 +668,7 @@ export class ControlEntityInstance {
 	 * Prune all entities referencing unknown connections
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
-	verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
+	verifyChildConnectionIds(knownConnectionIds: ReadonlySet<string>): boolean {
 		let changed = false
 		for (const childGroup of this.#children.values()) {
 			if (childGroup.verifyConnectionIds(knownConnectionIds)) {

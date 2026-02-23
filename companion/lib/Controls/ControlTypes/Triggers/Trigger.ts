@@ -158,7 +158,7 @@ export class ControlTrigger
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
-			variableValues: deps.variables.values,
+			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
 		})
 

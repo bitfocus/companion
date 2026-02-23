@@ -116,12 +116,12 @@ export class ControlButtonPreset
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
-				variableValues: deps.variables.values,
+				variableValues: deps.variableValues,
 				pageStore: deps.pageStore,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType, injectedVariableValues) =>
-				deps.variables.values
+				deps.variableValues
 					.createVariablesAndExpressionParser(
 						deps.pageStore.getLocationOfControlId(this.controlId),
 						null, // This doesn't support local variables

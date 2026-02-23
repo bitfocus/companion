@@ -113,7 +113,7 @@ export class ControlsController {
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
 		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(
-			this.#controlDepsTmp.variables.values,
+			this.#controlDepsTmp.variableValues,
 			this.#store.controls
 		)
 	}
@@ -668,10 +668,7 @@ export class ControlsController {
 	 * Prune any items on controls which belong to an unknown connectionId
 	 * @access public
 	 */
-	verifyConnectionIds(): void {
-		const knownConnectionIds = new Set(this.#controlDepsTmp.instance.getAllConnectionIds())
-		knownConnectionIds.add('internal')
-
+	verifyConnectionIds(knownConnectionIds: ReadonlySet<string>): void {
 		for (const control of this.#store.controls.values()) {
 			if (!control.supportsEntities) continue
 			control.entities.verifyConnectionIds(knownConnectionIds)

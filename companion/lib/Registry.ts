@@ -253,7 +253,7 @@ export class Registry {
 					pageStore: this.#pageStore,
 					internalModule: this.internalModule,
 					instance: this.instance,
-					variables: this.variables,
+					variableValues: this.variables.values,
 					userconfig: this.userconfig,
 					actionRunner: actionRunner,
 					events: this.#controlEvents, // TODO - deduplicate
@@ -386,7 +386,10 @@ export class Registry {
 			this.ui.update.startCycle()
 
 			this.controls.init()
-			this.controls.verifyConnectionIds()
+			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
+			knownConnectionIds.add('internal')
+			this.controls.verifyConnectionIds(knownConnectionIds)
+
 			this.variables.custom.init()
 			this.internalModule.firstUpdate()
 			this.graphics.regenerateAll(false)
