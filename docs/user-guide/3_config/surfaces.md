@@ -56,7 +56,7 @@ You can create your groups and program the system ahead of time, then later add 
 
 ## Remote Surfaces
 
-It is possible to connect some surfaces over the network to Companion. This could be with [Companion Satellite](https://user.bitfocus.io/product/companion-satellite), or something like a [Stream Deck Network Dock](https://www.elgato.com/uk/en/p/network-dock-stream-deck)
+It is possible to connect some surfaces over the network to Companion. This could be with [Companion Satellite](https://l.companion.free/q/YH8dZkH1Q), or something like a [Stream Deck Network Dock](https://www.elgato.com/uk/en/p/network-dock-stream-deck)
 
 For some of these, Companion needs to connect to the surface which can be setup in this page.
 

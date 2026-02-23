@@ -6,14 +6,14 @@ description: Modules work as plugins to control external devices.
 
 All the connections in Companion are modules, and a connection is what's used to control an external device or piece of software. Modules used to be built-in to Companion, but starting with 4.0 they are downloadable plugins.
 
-Modules are being added and updated all the time. A complete list of supported devices/modules can be found on the [Support List](https://bfoc.us/m6idfk19cm) page.
+Modules are being added and updated all the time. A complete list of supported devices/modules can be found on the [Support List](https://l.companion.free/q/5LT04sXCC) page.
 
 Most of the modules are written and maintained by the community. If your device or software is missing from this list, there are a few things you can do:
 
 1. If you have any experience writing code, you could make the module yourself, we are happy to accept all contributions. Read more [here](https://companion.free/for-developers/module-development/module-development-101)
-2. Some members on the [Community forum](https://bfoc.us/qjk0reeqmy) are available to hire to implement modules.
+2. Some members on the [Community forum](https://l.companion.free/q/6pc9ciJR5) are available to hire to implement modules.
 3. While the Bitfocus team is small, they are available to implement some modules, [get in touch](https://bitfocus.io/about#intouch) for a price and delivery date.
-4. You can also [ask the open source community](https://bfoc.us/5xcykgx03n) by submitting a request, and hope that someone is willing to do the work for you.
+4. You can also [ask the open source community](https://l.companion.free/q/JZKYplAx4) by submitting a request, and hope that someone is willing to do the work for you.
 
 ## Module List
 
@@ -24,7 +24,7 @@ The table has some filters and is also searchable, so that you can control what 
 
 The 'import module package' button lets you import a module package. This should be a `.tgz` file produced by building a single module, most likely distributed by the module author. With this, you can now easily import a test build of a module, or a module which is internal to your company or organisation.
 
-The 'import offline module bundle' button can be used for the bulk importing of modules. On the [Bitfocus website](https://bitfocus.io/download), you can download an offline module bundle. This is intended for installations which are offline and cannot directly access the store. These bundles are versioned the same as Companion, so you can be sure that the modules contained will work with a specific version of Companion
+The 'import offline module bundle' button can be used for the bulk importing of modules. On the [Bitfocus website](https://l.companion.free/q/lp68nsiV4), you can download an offline module bundle. This is intended for installations which are offline and cannot directly access the store. These bundles are versioned the same as Companion, so you can be sure that the modules contained will work with a specific version of Companion
 
 ## Managing a module
 

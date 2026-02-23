@@ -240,10 +240,30 @@ export const MySidebar = memo(function MySidebar() {
 				<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
 				<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
 				<SidebarMenuItemGroup name="Support" icon={faHeadset}>
-					<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
-					<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
-					<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
-					<SidebarMenuItem name="Sponsor" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
+					<SidebarMenuItem
+						name="Bugs & Features"
+						icon={faBug}
+						path="https://l.companion.free/q/QZbI6mdNd"
+						target="_blank"
+					/>
+					<SidebarMenuItem
+						name="Community Forum"
+						icon={faUsers}
+						path="https://l.companion.free/q/6pc9ciJR5"
+						target="_blank"
+					/>
+					<SidebarMenuItem
+						name="Slack Chat"
+						icon={faComments}
+						path="https://l.companion.free/q/OWxbBnDKG"
+						target="_blank"
+					/>
+					<SidebarMenuItem
+						name="Sponsor"
+						icon={faDollarSign}
+						path="https://l.companion.free/q/6PtdAvZab"
+						target="_blank"
+					/>
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">

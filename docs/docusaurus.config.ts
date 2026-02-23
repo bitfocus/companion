@@ -67,7 +67,7 @@ const config: Config = {
 			items: [
 				{
 					title: 'Download Companion',
-					href: 'https://bfoc.us/djzdpq4g9g',
+					href: 'https://l.companion.free/q/Ig3jbwmCc',
 					'aria-label': 'Download Companion',
 					className: 'fontawesome-container',
 					html: `<svg class="fontawesome" viewBox="0 0 640 640" fill="currentColor" aria-label="Download Companion" xmlns="http://www.w3.org/2000/svg">
@@ -79,7 +79,7 @@ const config: Config = {
 				},
 				{
 					title: 'Companion Website',
-					href: 'https://bitfocus.io/companion',
+					href: 'https://l.companion.free/q/VoMxHIqQq',
 					'aria-label': 'Companion Website',
 					className: 'fontawesome-container', // make it format like the other icons. (classes set here and in the html property)
 					html: `<img src="${process.env.BASE_URL ?? ''}/user-guide/img/logo-no-black.png" class="fontawesome" alt="Companion Website" /><span class="fontawesome-text">Companion Website</span>`,
@@ -92,7 +92,7 @@ const config: Config = {
 					items: [
 						{
 							title: 'Share your experience or ask questions to your Companions.',
-							href: 'https://bfoc.us/qjk0reeqmy',
+							href: 'https://l.companion.free/q/sTXkqJj4k',
 							'aria-label': 'Companion Facebook Group',
 							className: 'fontawesome-container',
 							html: `<svg class="fontawesome" viewBox="0 0 640 640" fill="currentColor" aria-label="Companion Facebook Group" xmlns="http://www.w3.org/2000/svg">
@@ -103,7 +103,7 @@ const config: Config = {
 						},
 						{
 							title: 'Discuss technical issues on Slack.',
-							href: 'https://bfoc.us/ke7e9dqgaz',
+							href: 'https://l.companion.free/q/fUt83sSTZ',
 							'aria-label': 'Companion Slack Group',
 							className: 'fontawesome-container',
 							html: `<svg class="fontawesome" viewBox="0 0 640 640" fill="currentColor" aria-label="Companion Slack Group" xmlns="http://www.w3.org/2000/svg">
@@ -114,7 +114,7 @@ const config: Config = {
 						},
 						{
 							title: 'Report bugs, request features or contribute code on GitHub.',
-							href: 'https://bfoc.us/4orxauukeg',
+							href: 'https://l.companion.free/q/UudZAWUnF',
 							'aria-label': 'Companion GitHub Repo',
 							className: 'fontawesome-container',
 							html: `<svg class="fontawesome" viewBox="0 0 640 640" fill="currentColor" aria-label="Companion GitHub Repo" xmlns="http://www.w3.org/2000/svg">
@@ -129,7 +129,7 @@ const config: Config = {
 						},
 						{
 							title: 'Help fund Bitfocus Companion.',
-							href: 'https://bfoc.us/ccfbf8wm2x',
+							href: 'https://l.companion.free/q/JzGniJbU8',
 							'aria-label': 'Sponsor Companion',
 							className: 'fontawesome-container',
 							html: `<svg class="fontawesome" viewBox="0 0 640 640" fill="currentColor" aria-label="Sponsor Companion" xmlns="http://www.w3.org/2000/svg">

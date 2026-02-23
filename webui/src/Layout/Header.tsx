@@ -110,7 +110,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 
 					{updateData.data?.message ? (
 						<CNavItem className="header-notification-item">
-							<CNavLink target="_blank" href={updateData.data.link || 'https://bitfocus.io/companion/'}>
+							<CNavLink target="_blank" href={updateData.data.link || 'https://companion.free/'}>
 								<div className="flex">
 									<div className="align-self-center">
 										<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
@@ -179,7 +179,7 @@ function HelpMenu() {
 				id: 'fb',
 				label: 'Community Support',
 				icon: faFacebook,
-				to: 'https://bfoc.us/qjk0reeqmy',
+				to: 'https://l.companion.free/q/6pc9ciJR5',
 				tooltip: 'Share your experience or ask questions to your Companions.',
 				inNewTab: true,
 			},
@@ -187,7 +187,7 @@ function HelpMenu() {
 				id: 'slack',
 				label: 'Slack Workspace',
 				icon: faSlack,
-				to: 'https://bfoc.us/ke7e9dqgaz',
+				to: 'https://l.companion.free/q/OWxbBnDKG',
 				tooltip: 'Discuss technical issues on Slack.',
 				inNewTab: true,
 			},
@@ -195,7 +195,7 @@ function HelpMenu() {
 				id: 'github',
 				label: 'Report an Issue',
 				icon: faGithub,
-				to: 'https://bfoc.us/fiobkz0yqs',
+				to: 'https://l.companion.free/q/QZbI6mdNd',
 				tooltip: 'Report bugs or request features on GitHub.',
 				inNewTab: true,
 			},
@@ -204,7 +204,7 @@ function HelpMenu() {
 				id: 'sponsor',
 				label: 'Sponsor Companion',
 				icon: faDollarSign,
-				to: 'https://bfoc.us/ccfbf8wm2x',
+				to: 'https://l.companion.free/q/6PtdAvZab',
 				tooltip: 'Contribute funds to Bitfocus Companion.',
 				inNewTab: true,
 			},

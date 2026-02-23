@@ -42,7 +42,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 					<div>
 						<strong>Connect to hundreds of devices</strong> with Companion modules. Ensure you have an internet
 						connection to search and install modules, or{' '}
-						<a target="_blank" href="https://user.bitfocus.io/download" className="text-decoration-none">
+						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4" className="text-decoration-none">
 							download a module bundle
 						</a>
 					</div>

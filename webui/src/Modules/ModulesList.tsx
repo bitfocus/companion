@@ -142,7 +142,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					</a>
 					.<br />
 					For offline systems, download module bundles from the{' '}
-					<a href="https://user.bitfocus.io/download" target="_blank" className="text-decoration-none">
+					<a href="https://l.companion.free/q/lp68nsiV4" target="_blank" className="text-decoration-none">
 						Bitfocus website
 					</a>
 					.
