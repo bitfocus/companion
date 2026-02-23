@@ -426,10 +426,12 @@ export class ControlTrigger
 					this.#miscEvents.setControlPress(event.id, false)
 					break
 				case 'condition_true':
+					this.#conditionCheckLastValue = this.entities.checkConditionValue()
 					this.#conditionCheckEvents.add(event.id)
 					this.triggerRedraw() // Recheck the condition
 					break
 				case 'condition_false':
+					this.#conditionCheckLastValue = this.entities.checkConditionValue()
 					this.#conditionCheckEvents.add(event.id)
 					this.triggerRedraw() // Recheck the condition
 					break
@@ -599,25 +601,25 @@ export class ControlTrigger
 	 */
 	triggerRedraw = debounceFn(
 		() => {
+			if (!this.#enabled || this.#conditionCheckEvents.size === 0) {
+				// the condition, above, implies !(this.options.enabled && this.#collectionEnabled)
+				// explanation: "condition_true/_false" events don't have a separate place to
+				// disable them, when the collection is disabled (i.e. unlike `event.enabled`), so disable here.
+				// Do this test first so we don't waste resources checking a disabled triggers/events...
+				return
+			}
 			try {
 				const newStatus = this.entities.checkConditionValue()
 
-				// run on true/false events don't have a separate place to disable them when the collection is disabled, so disable here
-				//  we could also test for this.#enabled, but using #collectionEnabled makes the reason clearer.
-				let runOnTrue = this.#collectionEnabled
-				runOnTrue &&= this.events.some((event) => event.enabled && event.type === 'condition_true')
-
-				let runOnFalse = this.#collectionEnabled
-				runOnFalse &&= this.events.some((event) => event.enabled && event.type === 'condition_false')
+				const runOnTrue = this.events.some((event) => event.enabled && event.type === 'condition_true')
+				const runOnFalse = this.events.some((event) => event.enabled && event.type === 'condition_false')
 
 				if (
-					this.options.enabled &&
-					this.#conditionCheckEvents.size > 0 &&
-					((runOnTrue && newStatus && !this.#conditionCheckLastValue) ||
-						(runOnFalse && !newStatus && this.#conditionCheckLastValue))
+					(runOnTrue && newStatus && !this.#conditionCheckLastValue) ||
+					(runOnFalse && !newStatus && this.#conditionCheckLastValue)
 				) {
 					setImmediate(() => {
-						if (!this.#enabled) return // avoid TOCTOU (note #enabled combines both #collectionEnabled and options.enabled)
+						if (!this.#enabled || this.#conditionCheckEvents.size === 0) return // avoid TOCTOU
 						this.executeActions(Date.now(), TriggerExecutionSource.ConditionChange)
 					})
 				}
