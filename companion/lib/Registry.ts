@@ -202,7 +202,7 @@ export class Registry {
 		this.#pageStore = new PageStore(this.db.getTableView('pages'))
 
 		this.variables = new VariablesController(this.db)
-		this.controlStore = new ControlStore(this.variables.values)
+		this.controlStore = new ControlStore(this.db, this.variables.values)
 
 		this.graphics = new GraphicsController(this.controlStore, this.#pageStore, this.userconfig, this.variables.values)
 

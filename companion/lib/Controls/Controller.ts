@@ -15,7 +15,6 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import type { ControlChangeEvents, ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
 import LogController from '../Log/Controller.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
@@ -85,8 +84,6 @@ export class ControlsController {
 	 */
 	readonly #activeLearningStore = new ActiveLearningStore()
 
-	readonly #dbTable: DataStoreTableView<Record<string, SomeControlModel>>
-
 	readonly #triggerCollections: TriggerCollections
 
 	/**
@@ -103,11 +100,9 @@ export class ControlsController {
 		this.#registry = registry
 		this.#controlEvents = controlEvents
 
-		this.#dbTable = registry.db.getTableView('controls')
-
 		this.#triggerCollections = new TriggerCollections(
 			registry.db,
-			this.#store.triggers,
+			this.#store.triggerEvents,
 			(collectionIds) => this.#cleanUnknownTriggerCollectionIds(collectionIds),
 			(enabledCollectionIds) => this.#checkTriggerCollectionsEnabled(enabledCollectionIds)
 		)
@@ -154,7 +149,7 @@ export class ControlsController {
 	 * The authoritative implementations live on the ControlStore.
 	 */
 	get triggers(): TriggerEvents {
-		return this.#store.triggers
+		return this.#store.triggerEvents
 	}
 
 	getControl(controlId: string): SomeControl<any> | undefined {
@@ -180,7 +175,7 @@ export class ControlsController {
 	#createControlDependencies(): ControlDependencies {
 		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
 		return {
-			dbTable: this.#dbTable,
+			dbTable: this.#store.dbTable,
 			surfaces: this.#registry.surfaces,
 			pageStore: this.#registry.page.store,
 			internalModule: this.#registry.internalModule,
@@ -219,16 +214,13 @@ export class ControlsController {
 			triggers: createTriggersTrpcRouter(
 				this.#controlChangeEvents,
 				this.#triggerCollections,
-				this.#dbTable,
-				this.#store.controls,
-				this.#store.triggers,
+				this.#store,
 				this.#createControlDependencies()
 			),
 			expressionVariables: createExpressionVariableTrpcRouter(
 				this.#controlChangeEvents,
 				this.#expressionVariableCollections,
-				this.#dbTable,
-				this.#store.controls,
+				this.#store,
 				this.#expressionVariableNamesMap,
 				this.#createControlDependencies()
 			),
@@ -496,7 +488,7 @@ export class ControlsController {
 	 */
 	init(): void {
 		// Init all the control classes
-		const config = this.#dbTable.all()
+		const config = this.#store.dbTable.all()
 		for (const [controlId, controlObj] of Object.entries(config)) {
 			if (controlObj && controlObj.type) {
 				const inst = this.createClassForControl(controlId, 'all', controlObj, false)
@@ -518,7 +510,7 @@ export class ControlsController {
 	 */
 	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, fromControlId: string | null): void {
 		// Inform triggers of the change
-		this.#store.triggers.emit('variables_changed', allChangedVariablesSet, fromControlId)
+		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, fromControlId)
 
 		if (allChangedVariablesSet.size > 0) {
 			for (const control of this.#store.controls.values()) {
@@ -538,9 +530,8 @@ export class ControlsController {
 		const control = this.getControl(controlId)
 		if (control) {
 			control.destroy()
-			this.#store.controls.delete(controlId)
 
-			this.#dbTable.delete(controlId)
+			this.#store.deleteControl(controlId)
 		}
 
 		const location = this.#registry.page.store.getLocationOfControlId(controlId)

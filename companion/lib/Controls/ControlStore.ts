@@ -5,6 +5,9 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { VariablesValues } from '../Variables/Values.js'
+import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataDatabase } from '../Data/Database.js'
 
 /**
  * The data-layer implementation of IControlStore.
@@ -13,6 +16,8 @@ import type { VariablesValues } from '../Variables/Values.js'
  * into any consumer that only needs the narrow IControlStore interface.
  */
 export class ControlStore implements IControlStore {
+	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
+
 	/**
 	 * The currently configured controls.
 	 * Intentionally public so that ControlsController can mutate it.
@@ -22,13 +27,25 @@ export class ControlStore implements IControlStore {
 	/**
 	 * Triggers event bus
 	 */
-	readonly triggers: TriggerEvents
+	readonly triggerEvents: TriggerEvents
 
 	readonly #variablesValues: VariablesValues
 
-	constructor(variablesValues: VariablesValues) {
-		this.triggers = new TriggerEvents()
+	constructor(db: DataDatabase, variablesValues: VariablesValues) {
+		this.triggerEvents = new TriggerEvents()
 		this.#variablesValues = variablesValues
+
+		this.dbTable = db.getTableView('controls')
+	}
+
+	/**
+	 * Internal: Delete a control by id. Does not emit any events or perform any checks, as this is only used internally by the ControlsController which handles those aspects.
+	 * @param controlId Id of the control to delete
+	 */
+	deleteControl(controlId: string): void {
+		this.controls.delete(controlId)
+
+		this.dbTable.delete(controlId)
 	}
 
 	/**
@@ -78,7 +95,7 @@ export class ControlStore implements IControlStore {
 	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
 		const control = this.getControl(controlId)
 		if (control) {
-			this.triggers.emit('control_press', controlId, pressed, surfaceId)
+			this.triggerEvents.emit('control_press', controlId, pressed, surfaceId)
 
 			control.pressControl(pressed, surfaceId, force)
 
