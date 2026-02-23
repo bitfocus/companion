@@ -562,6 +562,11 @@ export class ControlTrigger
 		const newEnabled = this.#collectionEnabled && this.options.enabled
 		if (this.#enabled !== newEnabled) {
 			this.#enabled = newEnabled
+			if (newEnabled && this.#conditionCheckEvents.size > 0) {
+				// Refresh the last-known condition value so the first triggerRedraw
+				// after re-enabling does not mistake a stale transition for a new edge.
+				this.#conditionCheckLastValue = this.entities.checkConditionValue()
+			}
 			this.#setupEvents(false)
 		} else {
 			// Report the change, for internal feedbacks
