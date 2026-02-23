@@ -599,8 +599,15 @@ export class ControlTrigger
 		() => {
 			try {
 				const newStatus = this.entities.checkConditionValue()
-				const runOnTrue = this.events.some((event) => event.enabled && event.type === 'condition_true')
-				const runOnFalse = this.events.some((event) => event.enabled && event.type === 'condition_false')
+
+				// run on true/false events don't have a separate place to disable them when the collection is disabled, so disable here
+				//  we could also test for this.#enabled, but using #collectionEnabled makes the reason clearer.
+				let runOnTrue = this.#collectionEnabled
+				runOnTrue &&= this.events.some((event) => event.enabled && event.type === 'condition_true')
+
+				let runOnFalse = this.#collectionEnabled
+				runOnFalse &&= this.events.some((event) => event.enabled && event.type === 'condition_false')
+
 				if (
 					this.options.enabled &&
 					this.#conditionCheckEvents.size > 0 &&
