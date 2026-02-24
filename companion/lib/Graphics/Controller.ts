@@ -408,7 +408,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	invalidatePageControls(): void {
 		const allControls = this.controlsStore.getAllControls()
-		for (const control of Object.values(allControls)) {
+		for (const control of allControls.values()) {
 			if (control.type === 'pageup' || control.type === 'pagedown') {
 				this.invalidateControl(control.controlId)
 			}
@@ -574,7 +574,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	#computeRenderCacheSize(): number {
 		const allControls = this.controlsStore.getAllControls()
-		const totalControls = Object.keys(allControls).length
+		const totalControls = allControls.size
 		const computed = Math.ceil(totalControls * RENDER_CACHE_AVG_ACTIVE_STATES * RENDER_CACHE_PER_BUTTON_RATIO)
 		return Math.max(RENDER_CACHE_MIN_SIZE, Math.min(computed, RENDER_CACHE_MAX_SIZE))
 	}

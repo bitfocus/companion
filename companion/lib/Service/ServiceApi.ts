@@ -41,7 +41,7 @@ type ServiceApiEvents =
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
 	readonly #pageStore: IPageStore
-	readonly #controlController: IControlStore
+	readonly #controlStore: IControlStore
 	readonly #actionRecorder: ActionRecorder
 	readonly #surfaceController: SurfaceController
 	readonly #variablesController: VariablesController
@@ -54,7 +54,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	constructor(
 		appInfo: AppInfo,
 		pageStore: IPageStore,
-		controlController: IControlStore,
+		controlStore: IControlStore,
 		actionRecorder: ActionRecorder,
 		surfaceController: SurfaceController,
 		variablesController: VariablesController,
@@ -64,7 +64,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		super()
 		this.#appInfo = appInfo
 		this.#pageStore = pageStore
-		this.#controlController = controlController
+		this.#controlStore = controlStore
 		this.#actionRecorder = actionRecorder
 		this.#surfaceController = surfaceController
 		this.#variablesController = variablesController
@@ -172,15 +172,15 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	pressControl(controlId: string, pressed: boolean, surfaceId: string): boolean {
-		return this.#controlController.pressControl(controlId, pressed, surfaceId)
+		return this.#controlStore.pressControl(controlId, pressed, surfaceId)
 	}
 
 	rotateControl(controlId: string, direction: boolean, surfaceId: string): boolean {
-		return this.#controlController.rotateControl(controlId, direction, surfaceId)
+		return this.#controlStore.rotateControl(controlId, direction, surfaceId)
 	}
 
 	getControl(controlId: string): ServiceApiControl | null {
-		const control = this.#controlController.getControl(controlId)
+		const control = this.#controlStore.getControl(controlId)
 		if (!control) return null
 
 		return {

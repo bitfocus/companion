@@ -8,10 +8,6 @@ import type { NewFeedbackValue } from './Entities/Types.js'
  * Covers the map-level read/write operations and input dispatch that don't
  * require any knowledge of instance, internal module, or other higher-level
  * controllers.
- *
- * Implemented by ControlsController. Allows InstanceController, SurfaceHandler,
- * and other lower-level consumers to avoid a direct dependency on the full
- * ControlsController.
  */
 export interface IControlStore {
 	/**

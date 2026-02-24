@@ -106,7 +106,7 @@ export function createControlsTrpcRouter(
 				controlEvents.emit('invalidateLocationRender', fromLocation)
 				controlEvents.emit('invalidateLocationRender', toLocation)
 
-				return false
+				return true
 			}),
 
 		copyControl: publicProcedure
@@ -194,8 +194,6 @@ export function createControlsTrpcRouter(
 				}
 				if (fromControlId) {
 					controlEvents.emit('controlPlacedAt', toLocation, fromControlId)
-				} else {
-					controlEvents.emit('controlRemovedFrom', toLocation)
 				}
 
 				// Inform the controls they were moved

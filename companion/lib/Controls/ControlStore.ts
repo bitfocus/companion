@@ -11,9 +11,7 @@ import type { DataDatabase } from '../Data/Database.js'
 
 /**
  * The data-layer implementation of IControlStore.
- * Owns the controls map, the action recorder, and the trigger event bus.
- * Instantiated by Registry before ControlsController so it can be injected
- * into any consumer that only needs the narrow IControlStore interface.
+ * Owns the controls map, and the trigger event bus.
  */
 export class ControlStore implements IControlStore {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
