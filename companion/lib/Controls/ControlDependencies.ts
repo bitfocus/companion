@@ -16,9 +16,7 @@ import type {
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { VariablesValues } from '../Variables/Values.js'
 
-export interface ControlDependencies {
-	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
-
+export interface ControlExternalDependencies {
 	readonly surfaces: SurfaceController
 	readonly pageStore: IPageStore
 
@@ -28,6 +26,10 @@ export interface ControlDependencies {
 	readonly userconfig: DataUserConfig
 
 	readonly actionRunner: ActionRunner
+}
+
+export interface ControlDependencies extends ControlExternalDependencies {
+	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
 	readonly events: EventEmitter<ControlCommonEvents>
 

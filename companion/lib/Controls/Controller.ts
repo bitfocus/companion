@@ -11,7 +11,12 @@ import type { TriggerCollection, TriggerModel } from '@companion-app/shared/Mode
 import type { SomeControl } from './IControlFragments.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
-import type { ControlChangeEvents, ControlCommonEvents, ControlDependencies } from './ControlDependencies.js'
+import type {
+	ControlChangeEvents,
+	ControlCommonEvents,
+	ControlDependencies,
+	ControlExternalDependencies,
+} from './ControlDependencies.js'
 import LogController from '../Log/Controller.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -44,8 +49,6 @@ import type { ControlStore } from './ControlStore.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 import type { DataDatabase } from '../Data/Database.js'
 
-export type ControlDependenciesTemp = Omit<ControlDependencies, 'dbTable' | 'changeEvents' | 'events'>
-
 /**
  * The class that manages the controls
  *
@@ -64,7 +67,7 @@ export type ControlDependenciesTemp = Omit<ControlDependencies, 'dbTable' | 'cha
 export class ControlsController {
 	readonly #logger = LogController.createLogger('Controls/Controller')
 
-	readonly #controlDepsTmp: ControlDependenciesTemp
+	readonly #deps: ControlExternalDependencies
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
 	/**
@@ -92,10 +95,10 @@ export class ControlsController {
 		db: DataDatabase,
 		store: ControlStore,
 		controlEvents: EventEmitter<ControlCommonEvents>,
-		controlDeps: ControlDependenciesTemp
+		controlDeps: ControlExternalDependencies
 	) {
 		this.#store = store
-		this.#controlDepsTmp = controlDeps
+		this.#deps = controlDeps
 		this.#controlEvents = controlEvents
 
 		this.#triggerCollections = new TriggerCollections(
@@ -108,10 +111,7 @@ export class ControlsController {
 		this.#expressionVariableCollections = new ExpressionVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
-		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(
-			this.#controlDepsTmp.variableValues,
-			this.#store.controls
-		)
+		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#deps.variableValues, this.#store.controls)
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -169,17 +169,9 @@ export class ControlsController {
 	}
 
 	#createControlDependencies(): ControlDependencies {
-		// This has to be done lazily for now, as the registry is not fully populated at the time of construction
 		return {
-			...this.#controlDepsTmp,
+			...this.#deps,
 			dbTable: this.#store.dbTable,
-			// surfaces: this.#registry.surfaces,
-			// pageStore: this.#registry.page.store,
-			// internalModule: this.#registry.internalModule,
-			// instance: this.#registry.instance,
-			// variables: this.#registry.variables,
-			// userconfig: this.#registry.userconfig,
-			// actionRunner: this.actionRunner,
 			events: this.#controlEvents,
 			changeEvents: this.#controlChangeEvents,
 		}
@@ -221,10 +213,10 @@ export class ControlsController {
 				this.#expressionVariableNamesMap,
 				this.#createControlDependencies()
 			),
-			events: createEventsTrpcRouter(this.#store.controls, this.#controlDepsTmp.instance.definitions),
+			events: createEventsTrpcRouter(this.#store.controls, this.#deps.instance.definitions),
 			entities: createEntitiesTrpcRouter(
 				this.#store.controls,
-				this.#controlDepsTmp.instance.definitions,
+				this.#deps.instance.definitions,
 				this.#activeLearningStore
 			),
 			actionSets: createActionSetsTrpcRouter(this.#store.controls),
@@ -233,8 +225,8 @@ export class ControlsController {
 			...createControlsTrpcRouter(
 				this.#logger,
 				this.#store.controls,
-				this.#controlDepsTmp.pageStore,
-				this.#controlDepsTmp.instance.definitions,
+				this.#deps.pageStore,
+				this.#deps.instance.definitions,
 				this.#controlEvents,
 				this
 			),
@@ -402,7 +394,7 @@ export class ControlsController {
 		}
 
 		// Delete old control at the coordinate
-		const oldControlId = this.#controlDepsTmp.pageStore.getControlIdAt(location)
+		const oldControlId = this.#deps.pageStore.getControlIdAt(location)
 		if (oldControlId) {
 			this.deleteControl(oldControlId)
 		}
@@ -531,7 +523,7 @@ export class ControlsController {
 			this.#store.deleteControl(controlId)
 		}
 
-		const location = this.#controlDepsTmp.pageStore.getLocationOfControlId(controlId)
+		const location = this.#deps.pageStore.getLocationOfControlId(controlId)
 		if (location) {
 			this.#controlEvents.emit('controlRemovedFrom', location)
 
@@ -571,7 +563,7 @@ export class ControlsController {
 	 * @access public
 	 */
 	createButtonControl(location: ControlLocation, newType: string): string | null {
-		if (!this.#controlDepsTmp.pageStore.isPageValid(location.pageNumber)) return null
+		if (!this.#deps.pageStore.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
 		const newControl = this.createClassForControl(controlId, 'button', newType, false)
@@ -608,10 +600,7 @@ export class ControlsController {
 		presetId: string,
 		variableValues: VariableValues | null
 	): ControlButtonPreset | null {
-		let presetModel = this.#controlDepsTmp.instance.definitions.convertPresetToPreviewControlModel(
-			connectionId,
-			presetId
-		)
+		let presetModel = this.#deps.instance.definitions.convertPresetToPreviewControlModel(connectionId, presetId)
 		if (!presetModel) return null
 
 		// Interleave the values into the preset
