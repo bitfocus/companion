@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection } from '@companion-app/shared/Model/Presets.js'
@@ -6,7 +7,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { PresetSectionCollapse } from './PresetSectionCollapse.js'
-import { observable } from 'mobx'
 import { SearchBox } from '../../Components/SearchBox.js'
 import { NonIdealState } from '../../Components/NonIdealState.js'
 import { fuzzyMatch } from './fuzzyMatch.js'
@@ -24,7 +24,6 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 	selectedConnectionId,
 	clearSelectedConnectionId,
 }: Readonly<PresetsSectionsListProps>): React.JSX.Element {
-	const expandedSection = useMemo(() => observable.box<string | null>(null), [])
 	const [searchQuery, setSearchQuery] = useState('')
 
 	const allSections = useComputed(
@@ -104,42 +103,45 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 			.filter((section): section is UIPresetSection => section !== null)
 	}, [allSections, searchQuery])
 
+	const allSectionIds = useMemo(() => allSections.map((s) => s.id), [allSections])
+
 	const sections = visibleSections.map((section) => (
-		<PresetSectionCollapse
-			key={section.id}
-			section={section}
-			connectionId={selectedConnectionId}
-			expandedSection={expandedSection}
-		/>
+		<PresetSectionCollapse key={section.id} section={section} connectionId={selectedConnectionId} />
 	))
 
 	return (
-		<div>
-			<h5>Presets</h5>
-			<div style={{ marginBottom: 10 }}>
-				<CButtonGroup size="sm">
-					<CButton color="primary" onClick={clearSelectedConnectionId}>
-						<FontAwesomeIcon icon={faArrowLeft} />
-						&nbsp; Go back
-					</CButton>
-					<CButton color="secondary" disabled>
-						{connectionInfo?.label || selectedConnectionId}
-					</CButton>
-				</CButtonGroup>
+		<PanelCollapseHelperProvider
+			storageId={`preset-sections-${selectedConnectionId}`}
+			knownPanelIds={allSectionIds}
+			defaultCollapsed={true}
+		>
+			<div>
+				<h5>Presets</h5>
+				<div style={{ marginBottom: 10 }}>
+					<CButtonGroup size="sm">
+						<CButton color="primary" onClick={clearSelectedConnectionId}>
+							<FontAwesomeIcon icon={faArrowLeft} />
+							&nbsp; Go back
+						</CButton>
+						<CButton color="secondary" disabled>
+							{connectionInfo?.label || selectedConnectionId}
+						</CButton>
+					</CButtonGroup>
+				</div>
+				<SearchBox filter={searchQuery} setFilter={setSearchQuery} />
+				{allSections.length === 0 ? (
+					<CAlert color="primary">Connection has no presets.</CAlert>
+				) : visibleSections.length === 0 && searchQuery ? (
+					<NonIdealState icon={faSearch} text="No matching presets" />
+				) : (
+					<>
+						<CCallout color="info" className="my-2">
+							<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
+						</CCallout>
+						<div className="collapsible-tree">{sections}</div>
+					</>
+				)}
 			</div>
-			<SearchBox filter={searchQuery} setFilter={setSearchQuery} />
-			{allSections.length === 0 ? (
-				<CAlert color="primary">Connection has no presets.</CAlert>
-			) : visibleSections.length === 0 && searchQuery ? (
-				<NonIdealState icon={faSearch} text="No matching presets" />
-			) : (
-				<>
-					<CCallout color="info" className="my-2">
-						<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
-					</CCallout>
-					<div className="collapsible-tree">{sections}</div>
-				</>
-			)}
-		</div>
+		</PanelCollapseHelperProvider>
 	)
 })

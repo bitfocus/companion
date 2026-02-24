@@ -715,7 +715,7 @@ export class InstanceProcessManager {
 						const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
 							paths: [moduleInfo.basePath],
 						})
-						const moduleLibPackage = require(moduleLibPackagePath)
+						const moduleLibPackage = JSON.parse(await fs.readFile(moduleLibPackagePath, 'utf-8'))
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
 						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
@@ -762,7 +762,7 @@ export class InstanceProcessManager {
 						const moduleLibPackagePath = require.resolve('@companion-surface/base/package.json', {
 							paths: [moduleInfo.basePath],
 						})
-						const moduleLibPackage = require(moduleLibPackagePath)
+						const moduleLibPackage = JSON.parse(await fs.readFile(moduleLibPackagePath, 'utf-8'))
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
 						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
