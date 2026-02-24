@@ -138,14 +138,11 @@ export class ImportController {
 
 		const mergeConnections = config.connections === 'unchanged'
 
-		// Always Import instances
-		// Import connection collections if provided
-		if (data.connectionCollections && data.connectionCollections.length > 0) {
-			this.#instancesController.connectionCollections.replaceCollections(
-				data.connectionCollections || [],
-				mergeConnections
-			)
-		}
+		// Import connection collections (replace or merge depending on mode)
+		this.#instancesController.connectionCollections.replaceCollections(
+			data.connectionCollections || [],
+			mergeConnections
+		)
 
 		// Always Import instances
 		const preserveRemap: ConnectionRemappings = mergeConnections
