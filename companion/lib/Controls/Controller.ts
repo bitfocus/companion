@@ -43,9 +43,8 @@ import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
 import type { ControlStore } from './ControlStore.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { Registry } from '../Registry.js'
 
-export type ControlDependenciesTemp = Omit<ControlDependencies, 'dbTable' | 'changeEvents'>
+export type ControlDependenciesTemp = Omit<ControlDependencies, 'dbTable' | 'changeEvents' | 'events'>
 
 /**
  * The class that manages the controls
@@ -66,7 +65,6 @@ export class ControlsController {
 	readonly #logger = LogController.createLogger('Controls/Controller')
 
 	readonly #controlDepsTmp: ControlDependenciesTemp
-	readonly #registry: Pick<Registry, 'page'>
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
 	/**
@@ -94,13 +92,11 @@ export class ControlsController {
 		db: DataDatabase,
 		store: ControlStore,
 		controlEvents: EventEmitter<ControlCommonEvents>,
-		controlDeps: ControlDependenciesTemp,
-		registry: Pick<Registry, 'page'>
+		controlDeps: ControlDependenciesTemp
 	) {
 		this.#store = store
 		this.#controlDepsTmp = controlDeps
 		this.#controlEvents = controlEvents
-		this.#registry = registry
 
 		this.#triggerCollections = new TriggerCollections(
 			db,
@@ -184,7 +180,7 @@ export class ControlsController {
 			// variables: this.#registry.variables,
 			// userconfig: this.#registry.userconfig,
 			// actionRunner: this.actionRunner,
-			// events: this.#controlEvents,
+			events: this.#controlEvents,
 			changeEvents: this.#controlChangeEvents,
 		}
 	}
@@ -237,7 +233,7 @@ export class ControlsController {
 			...createControlsTrpcRouter(
 				this.#logger,
 				this.#store.controls,
-				this.#registry.page,
+				this.#controlDepsTmp.pageStore,
 				this.#controlDepsTmp.instance.definitions,
 				this.#controlEvents,
 				this
@@ -416,7 +412,7 @@ export class ControlsController {
 		if (newControl) {
 			this.#store.controls.set(newControlId, newControl)
 
-			this.#registry.page.setControlIdAt(location, newControlId)
+			this.#controlEvents.emit('controlPlacedAt', location, newControlId)
 
 			newControl.triggerRedraw()
 
@@ -537,7 +533,7 @@ export class ControlsController {
 
 		const location = this.#controlDepsTmp.pageStore.getLocationOfControlId(controlId)
 		if (location) {
-			this.#registry.page.setControlIdAt(location, null)
+			this.#controlEvents.emit('controlRemovedFrom', location)
 
 			// Notify interested parties
 			this.#controlEvents.emit('updateButtonState', location, false, undefined)
@@ -582,7 +578,7 @@ export class ControlsController {
 		if (!newControl) return null
 
 		this.#store.controls.set(controlId, newControl)
-		this.#registry.page.setControlIdAt(location, controlId)
+		this.#controlEvents.emit('controlPlacedAt', location, controlId)
 
 		// Notify interested parties
 		this.#controlEvents.emit('updateButtonState', location, false, undefined)

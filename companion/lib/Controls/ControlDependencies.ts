@@ -46,6 +46,16 @@ export interface ControlCommonEvents {
 	 * Emitted when a control is added or removed, to notify that the total control count has changed
 	 */
 	controlCountChanged: []
+
+	/**
+	 * Emitted when a control is placed at a grid location (create or import)
+	 */
+	controlPlacedAt: [location: ControlLocation, controlId: string]
+
+	/**
+	 * Emitted when a control is removed from a grid location (delete)
+	 */
+	controlRemovedFrom: [location: ControlLocation]
 }
 
 export type ControlChangeEvents = {

@@ -244,23 +244,17 @@ export class Registry {
 		try {
 			const actionRunner = new ActionRunner(this.instance, this.internalModule)
 
-			this.controls = new ControlsController(
-				this.db,
-				this.controlStore,
-				this.#controlEvents,
-				{
-					surfaces: this.surfaces,
-					pageStore: this.#pageStore,
-					internalModule: this.internalModule,
-					instance: this.instance,
-					variableValues: this.variables.values,
-					userconfig: this.userconfig,
-					actionRunner: actionRunner,
-					events: this.#controlEvents, // TODO - deduplicate
-					// changeEvents: this.#controlChangeEvents,
-				},
-				this
-			)
+			this.controls = new ControlsController(this.db, this.controlStore, this.#controlEvents, {
+				surfaces: this.surfaces,
+				pageStore: this.#pageStore,
+				internalModule: this.internalModule,
+				instance: this.instance,
+				variableValues: this.variables.values,
+				userconfig: this.userconfig,
+				actionRunner: actionRunner,
+				// events: this.#controlEvents,
+				// changeEvents: this.#controlChangeEvents,
+			})
 			this.preview = new PreviewController(this.graphics, this.#pageStore, this.controls, this.#controlEvents)
 
 			this.internalModule.init(
@@ -275,7 +269,13 @@ export class Registry {
 				this.exit.bind(this)
 			)
 
-			this.page = new PageController(this.graphics, this.controls, this.userconfig, this.#pageStore)
+			this.page = new PageController(
+				this.graphics,
+				this.controls,
+				this.userconfig,
+				this.#controlEvents,
+				this.#pageStore
+			)
 			this.importExport = new ImportExportController(
 				this.#appInfo,
 				this.#internalApiRouter,
