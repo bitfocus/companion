@@ -6,7 +6,6 @@ import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { SetOptional } from 'type-fest'
 import type { ActionEntityModel, FeedbackEntityModel, FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { EventEmitter } from 'events'
 import type { VariableDefinition, VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
@@ -72,7 +71,6 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	executeAction?(
 		action: ActionForInternalExecution,
 		extras: RunActionExtras,
-		actionRunner: ActionRunner,
 		parser: VariablesAndExpressionParser
 	): Promise<boolean> | boolean
 

@@ -13,6 +13,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import z from 'zod'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 
 interface PageControllerEvents {
@@ -53,6 +54,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		graphicsController: GraphicsController,
 		controlsController: ControlsController,
 		userconfigController: DataUserConfig,
+		controlEvents: EventEmitter<ControlCommonEvents>,
 		store: PageStore
 	) {
 		super()
@@ -66,6 +68,14 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		// Listen to store events to emit controller events
 		this.#store.on('controlLocationChanged', (controlId) => {
 			this.emit('controlIdsMoved', [controlId])
+		})
+
+		// Respond to controls being placed/removed at grid locations
+		controlEvents.on('controlPlacedAt', (location, controlId) => {
+			this.setControlIdAt(location, controlId)
+		})
+		controlEvents.on('controlRemovedFrom', (location) => {
+			this.setControlIdAt(location, null)
 		})
 
 		// Check if we need to create a default page

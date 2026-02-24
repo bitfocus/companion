@@ -21,7 +21,7 @@ import type {
 	SurfaceConfig,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from './Controller.js'
@@ -101,7 +101,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * The core controls controller
 	 */
-	readonly #controls: ControlsController
+	readonly #controls: IControlStore
 	/**
 	 * The core graphics controller
 	 */

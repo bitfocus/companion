@@ -648,7 +648,7 @@ export abstract class ControlEntityListPoolBase {
 	 * Prune all entities referencing unknown connections
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): void {
+	verifyConnectionIds(knownConnectionIds: ReadonlySet<string>): void {
 		let changed = false
 
 		for (const list of this.getAllEntityLists()) {

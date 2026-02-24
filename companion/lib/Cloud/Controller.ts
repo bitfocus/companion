@@ -11,7 +11,7 @@ import nodeMachineId from 'node-machine-id'
 import LogController from '../Log/Controller.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { IPageStore } from '../Page/Store.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -72,7 +72,7 @@ export class CloudController {
 	readonly appInfo: AppInfo
 	readonly #dbTable: DataStoreTableView<CloudDbTable>
 	readonly #cacheTable: DataStoreTableView<DataCacheDefaultTable>
-	readonly controls: ControlsController
+	readonly controls: IControlStore
 	readonly #graphics: GraphicsController
 	readonly pageStore: IPageStore
 
@@ -127,7 +127,7 @@ export class CloudController {
 		appInfo: AppInfo,
 		db: DataDatabase,
 		cache: DataCache,
-		controls: ControlsController,
+		controls: IControlStore,
 		graphics: GraphicsController,
 		pageStore: IPageStore
 	) {

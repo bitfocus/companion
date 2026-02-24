@@ -22,7 +22,7 @@ export function parseVariablesInButtonStyle(
 		}
 
 		// Setup the parser
-		const parser = deps.variables.values.createVariablesAndExpressionParser(
+		const parser = deps.variableValues.createVariablesAndExpressionParser(
 			location,
 			entities.getLocalVariableEntities(),
 			overrideVariableValues

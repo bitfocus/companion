@@ -198,7 +198,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		this.#entityManager.start(config.lastUpgradeIndex)
 
 		// Inform action recorder
-		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
+		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
 	}
 
 	/**
@@ -426,7 +426,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
-		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
+		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
 		this.#entityManager.destroy()
@@ -623,7 +623,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		if (isNaN(delay) || delay < 0) delay = 0
 
 		try {
-			this.#deps.controls.actionRecorder.receiveAction(
+			this.#deps.actionRecorder.receiveAction(
 				this.connectionId,
 				msg.actionId,
 				msg.options,

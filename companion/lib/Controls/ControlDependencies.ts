@@ -3,7 +3,6 @@ import type { IPageStore } from '../Page/Store.js'
 import type { InternalController } from '../Internal/Controller.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { ActionRunner } from './ActionRunner.js'
-import type { VariablesController } from '../Variables/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { EventEmitter } from 'events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -15,19 +14,22 @@ import type {
 	ExpressionVariableUpdate,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
+import type { VariablesValues } from '../Variables/Values.js'
 
-export interface ControlDependencies {
-	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
-
+export interface ControlExternalDependencies {
 	readonly surfaces: SurfaceController
 	readonly pageStore: IPageStore
 
 	readonly internalModule: InternalController
 	readonly instance: InstanceController
-	readonly variables: VariablesController
+	readonly variableValues: VariablesValues
 	readonly userconfig: DataUserConfig
 
 	readonly actionRunner: ActionRunner
+}
+
+export interface ControlDependencies extends ControlExternalDependencies {
+	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
 
 	readonly events: EventEmitter<ControlCommonEvents>
 
@@ -46,6 +48,16 @@ export interface ControlCommonEvents {
 	 * Emitted when a control is added or removed, to notify that the total control count has changed
 	 */
 	controlCountChanged: []
+
+	/**
+	 * Emitted when a control is placed at a grid location (create or import)
+	 */
+	controlPlacedAt: [location: ControlLocation, controlId: string]
+
+	/**
+	 * Emitted when a control is removed from a grid location (delete)
+	 */
+	controlRemovedFrom: [location: ControlLocation]
 }
 
 export type ControlChangeEvents = {

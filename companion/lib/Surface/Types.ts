@@ -8,7 +8,7 @@ import type {
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -77,7 +77,7 @@ export interface SurfaceHandlerDependencies {
 	/**
 	 * The core controls controller
 	 */
-	readonly controls: ControlsController
+	readonly controls: IControlStore
 	/**
 	 * The core graphics controller
 	 */

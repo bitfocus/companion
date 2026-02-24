@@ -4,7 +4,7 @@ import z from 'zod'
 import { zodLocation } from '../Preview/Graphics.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { ControlsController } from './Controller.js'
-import type { PageController } from '../Page/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import { CreateBankControlId, formatLocation } from '@companion-app/shared/ControlId.js'
 import { nanoid } from 'nanoid'
 import type { Logger } from '../Log/Controller.js'
@@ -16,7 +16,7 @@ import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 export function createControlsTrpcRouter(
 	logger: Logger,
 	controlsMap: Map<string, SomeControl<any>>,
-	pageController: PageController,
+	pageStore: IPageStore,
 	instanceDefinitions: InstanceDefinitions,
 	controlEvents: EventEmitter<ControlCommonEvents>,
 	controlsController: ControlsController
@@ -52,7 +52,7 @@ export function createControlsTrpcRouter(
 			.mutation(async ({ input }) => {
 				const { location, newType } = input
 
-				const controlId = pageController.store.getControlIdAt(location)
+				const controlId = pageStore.getControlIdAt(location)
 
 				if (controlId) {
 					controlsController.deleteControl(controlId)
@@ -82,21 +82,21 @@ export function createControlsTrpcRouter(
 					return false
 
 				// Make sure target page number is valid
-				if (!pageController.store.isPageValid(toLocation.pageNumber)) return false
+				if (!pageStore.isPageValid(toLocation.pageNumber)) return false
 
 				// Make sure there is something to move
-				const fromControlId = pageController.store.getControlIdAt(fromLocation)
+				const fromControlId = pageStore.getControlIdAt(fromLocation)
 				if (!fromControlId) return false
 
 				// Delete the control at the destination
-				const toControlId = pageController.store.getControlIdAt(toLocation)
+				const toControlId = pageStore.getControlIdAt(toLocation)
 				if (toControlId) {
 					controlsController.deleteControl(toControlId)
 				}
 
 				// Perform the move
-				pageController.setControlIdAt(fromLocation, null)
-				pageController.setControlIdAt(toLocation, fromControlId)
+				controlEvents.emit('controlRemovedFrom', fromLocation)
+				controlEvents.emit('controlPlacedAt', toLocation, fromControlId)
 
 				// Inform the control it was moved
 				const control = controlsMap.get(fromControlId)
@@ -106,7 +106,7 @@ export function createControlsTrpcRouter(
 				controlEvents.emit('invalidateLocationRender', fromLocation)
 				controlEvents.emit('invalidateLocationRender', toLocation)
 
-				return false
+				return true
 			}),
 
 		copyControl: publicProcedure
@@ -128,10 +128,10 @@ export function createControlsTrpcRouter(
 					return false
 
 				// Make sure target page number is valid
-				if (!pageController.store.isPageValid(toLocation.pageNumber)) return false
+				if (!pageStore.isPageValid(toLocation.pageNumber)) return false
 
 				// Make sure there is something to copy
-				const fromControlId = pageController.store.getControlIdAt(fromLocation)
+				const fromControlId = pageStore.getControlIdAt(fromLocation)
 				if (!fromControlId) return false
 
 				const fromControl = controlsMap.get(fromControlId)
@@ -139,7 +139,7 @@ export function createControlsTrpcRouter(
 				const controlJson = fromControl.toJSON(true)
 
 				// Delete the control at the destination
-				const toControlId = pageController.store.getControlIdAt(toLocation)
+				const toControlId = pageStore.getControlIdAt(toLocation)
 				if (toControlId) {
 					controlsController.deleteControl(toControlId)
 				}
@@ -149,7 +149,7 @@ export function createControlsTrpcRouter(
 				if (newControl) {
 					controlsMap.set(newControlId, newControl)
 
-					pageController.setControlIdAt(toLocation, newControlId)
+					controlEvents.emit('controlPlacedAt', toLocation, newControlId)
 
 					newControl.triggerRedraw()
 
@@ -178,20 +178,23 @@ export function createControlsTrpcRouter(
 					return false
 
 				// Make sure both page numbers are valid
-				if (
-					!pageController.store.isPageValid(toLocation.pageNumber) ||
-					!pageController.store.isPageValid(fromLocation.pageNumber)
-				)
+				if (!pageStore.isPageValid(toLocation.pageNumber) || !pageStore.isPageValid(fromLocation.pageNumber))
 					return false
 
 				// Find the ids to move
-				const fromControlId = pageController.store.getControlIdAt(fromLocation)
-				const toControlId = pageController.store.getControlIdAt(toLocation)
+				const fromControlId = pageStore.getControlIdAt(fromLocation)
+				const toControlId = pageStore.getControlIdAt(toLocation)
 
 				// Perform the swap
-				pageController.setControlIdAt(toLocation, null)
-				pageController.setControlIdAt(fromLocation, toControlId)
-				pageController.setControlIdAt(toLocation, fromControlId)
+				controlEvents.emit('controlRemovedFrom', toLocation)
+				if (toControlId) {
+					controlEvents.emit('controlPlacedAt', fromLocation, toControlId)
+				} else {
+					controlEvents.emit('controlRemovedFrom', fromLocation)
+				}
+				if (fromControlId) {
+					controlEvents.emit('controlPlacedAt', toLocation, fromControlId)
+				}
 
 				// Inform the controls they were moved
 				const controlA = fromControlId && controlsMap.get(fromControlId)
@@ -220,7 +223,7 @@ export function createControlsTrpcRouter(
 				)
 				if (!input.surfaceId) throw new Error('Missing surfaceId')
 
-				const controlId = pageController.store.getControlIdAt(input.location)
+				const controlId = pageStore.getControlIdAt(input.location)
 				if (!controlId) return
 
 				controlsController.pressControl(controlId, input.direction, `hot:${input.surfaceId}`)
@@ -239,7 +242,7 @@ export function createControlsTrpcRouter(
 					`being told from gui to hot rotate ${formatLocation(input.location)} ${input.direction} ${input.surfaceId}`
 				)
 
-				const controlId = pageController.store.getControlIdAt(input.location)
+				const controlId = pageStore.getControlIdAt(input.location)
 				if (!controlId) return
 
 				controlsController.rotateControl(
@@ -258,7 +261,7 @@ export function createControlsTrpcRouter(
 			.mutation(async ({ input }) => {
 				logger.silly(`being told from gui to abort actions on ${formatLocation(input.location)}`)
 
-				const controlId = pageController.store.getControlIdAt(input.location)
+				const controlId = pageStore.getControlIdAt(input.location)
 				if (!controlId) return
 
 				controlsController.abortAllDelayedActions(null)
