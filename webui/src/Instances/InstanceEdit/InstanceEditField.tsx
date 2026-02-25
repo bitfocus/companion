@@ -40,7 +40,15 @@ export function InstanceEditField({
 			return <StaticTextFieldText {...definition} allowImages />
 		}
 		case 'textinput':
-			return <TextInputField value={value as any} setValue={setValue} checkValid={checkValid} />
+			return (
+				<TextInputField
+					value={value as any}
+					setValue={setValue}
+					checkValid={checkValid}
+					multiline={definition.multiline}
+					placeholder={definition.placeholder}
+				/>
+			)
 		case 'number':
 			return (
 				<NumberInputField
