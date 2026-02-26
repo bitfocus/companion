@@ -28,13 +28,10 @@ import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { ActionMenu, type MenuItemData } from '~/Components/ActionMenu.js'
+import { MenuSeparator } from '~/Components/useContextMenuProps.js'
 interface MyHeaderProps {
 	canLock: boolean
 	setLocked: (locked: boolean) => void
-}
-
-const MenuSeparator: MenuItemData = {
-	isSeparator: true,
 }
 
 // make our own circleInfo since it's not in the free FontAwesome offering (two options here)

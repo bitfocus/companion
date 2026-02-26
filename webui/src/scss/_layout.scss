@@ -196,7 +196,7 @@ form.row > * {
 
 // override parts that differ from (dropdown) help-menus
 .context-menu {
-	--menu-bg: #f3f4f7; //sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here.
+	--menu-bg: #f3f4f7; // sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here.
 	.dropdown-menu {
 		min-width: 0;
 

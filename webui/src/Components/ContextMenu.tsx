@@ -55,7 +55,7 @@ export const ContextMenu = ({ visible, position, menuItems = [] }: ContextMenuPr
 			<CDropdownMenuWithRef ref={ref} style={{ display: visible ? 'block' : 'none' } /* we need it here */}>
 				{menuItems.map((option, idx) => (
 					<MenuItem key={option.id || `item-${idx}`} data={noIcons ? { ...option, icon: 'none' } : option} />
-				))}{' '}
+				))}
 			</CDropdownMenuWithRef>
 		</div>
 	)
