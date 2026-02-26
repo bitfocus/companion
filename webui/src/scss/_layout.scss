@@ -404,7 +404,8 @@ form.row > * {
 	}
 
 	&.sidebar-narrow-unfoldable:not(:hover) {
-		.nav-group-toggle::after {
+		.nav-group-toggle::after,
+		.context-menu {
 			display: none;
 		}
 	}
