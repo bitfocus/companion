@@ -161,7 +161,7 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 }
 
 interface SidebarMenuItemGroupProps extends SidebarMenuItemProps {
-	children?: Array<React.ReactElement | null>
+	children?: React.ReactNode
 	groupVisible: boolean
 	groupSetVisible: (val: boolean) => void
 }
@@ -230,7 +230,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'collapse-all',
 				label: 'Collapse All Groups',
 				to: () => expandAllGroups(false),
-				tooltip: 'Collapse all groups in the sidebar.',
+				tooltip: 'Collapse all top-level groups in the sidebar.',
 			},
 			{
 				// not sure this is useful
@@ -240,14 +240,15 @@ export const MySidebar = memo(function MySidebar() {
 					expandAllGroups(true)
 					setAccordionMode(false)
 				},
-				tooltip: 'Expand all groups in the sidebar. (Tip: this works best with the sidebar-help hidden.)',
+				tooltip: 'Expand all top-level groups in the sidebar. (Tip: this works best with the sidebar-help hidden.)',
 			},
 			{
 				id: 'accordion-mode',
 				label: 'Auto-Collapse Groups',
 				icon: accordionMode ? faCheck : undefined,
 				to: () => setAccordionMode(!accordionMode),
-				tooltip: 'Allow only one group to be expanded at a time: opening one group closes all others.',
+				tooltip:
+					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
 			MenuSeparator,
 			{
@@ -455,10 +456,10 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 		if (!hasChildren) return null
 
 		return (
-			<SidebarMenuItemGroup key={collection.id} name={collection.label} icon={null} path={undefined}>
+			<SidebarMenuItemSubGroup key={collection.id} name={collection.label} icon={null} path={undefined}>
 				{childCollectionsRendered}
 				{childConnections?.map(renderConnection)}
-			</SidebarMenuItemGroup>
+			</SidebarMenuItemSubGroup>
 		)
 	}
 
@@ -467,6 +468,29 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 			{connections.rootCollections().map((c) => renderCollection(c))}
 			{rootConnections.map(renderConnection)}
 		</>
+	)
+})
+
+interface SidebarMenuItemSubGroupProps extends SidebarMenuItemProps {
+	children?: React.ReactNode
+	// groupVisible: boolean
+	// groupSetVisible: (val: boolean) => void
+}
+
+const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props: SidebarMenuItemSubGroupProps) {
+	// for the moment these won't be controlled by the context menu, which seems more appropriate anyway.
+	const [visible, setVisible] = useState(true)
+
+	return (
+		<SidebarMenuItemGroup
+			name={props.name}
+			icon={props.icon}
+			path={props.path}
+			groupVisible={visible}
+			groupSetVisible={setVisible}
+		>
+			{props.children ?? ''}
+		</SidebarMenuItemGroup>
 	)
 })
 
