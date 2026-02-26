@@ -567,14 +567,15 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 	}, [sidebarState.showToggle])
 
 	const handleOnClick = useCallback(
-		(event: Event) => {
-			const target = event.target as HTMLAnchorElement
-			if (
-				target &&
-				target.classList.contains('nav-link') &&
-				!target.classList.contains('nav-group-toggle') &&
-				sidebarState.showToggle
-			) {
+		(event: MouseEvent) => {
+			const target = event.target as HTMLElement
+			if (target === null || event.button === 2) return // leave context menu alone (note button# is OS-independent)
+
+			// If the user clicked on the text, it's not a nav-link so the original code failed to close the navbar
+			// Instead we search up the DOM for a nav-link.
+			const navLink = target.closest('.nav-link')
+			const navGroupToggle = navLink?.closest('.nav-group-toggle')
+			if (navLink && !navGroupToggle && sidebarState.showToggle) {
 				setVisibleMobile(false)
 			}
 		},
