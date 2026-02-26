@@ -37,6 +37,7 @@ export function useContextMenuState(menuItems: MenuItemData[]): ContextMenuProps
 		const handleOutsideClick = () => setVisible(false)
 
 		document.addEventListener('click', handleOutsideClick)
+		document.addEventListener('auxclick', handleOutsideClick)
 		const handleEsc = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') handleOutsideClick()
 		}
@@ -44,6 +45,7 @@ export function useContextMenuState(menuItems: MenuItemData[]): ContextMenuProps
 
 		return () => {
 			document.removeEventListener('click', handleOutsideClick)
+			document.removeEventListener('auxclick', handleOutsideClick)
 			document.removeEventListener('keydown', handleEsc)
 		}
 	}, [setVisible])

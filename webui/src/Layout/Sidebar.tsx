@@ -180,9 +180,6 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 }
 
 export const MySidebar = memo(function MySidebar() {
-	// This will log every time the component renders (due to state or prop changes)
-	console.log('MySidebar rendered.')
-
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
@@ -734,8 +731,8 @@ function CNavGroup({
 					<Link
 						to={to}
 						className="nav-link"
-						onClick={(e) => {
-							e.stopPropagation()
+						onClick={(_e) => {
+							//e.stopPropagation() // don't stop propagation as it interferes with closing a context-menu
 							setVisible(!visible)
 						}}
 					>
