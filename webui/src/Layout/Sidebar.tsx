@@ -183,6 +183,7 @@ export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
+	const sidebarState = useSidebarState()
 
 	const [hideHelp, setHideHelp] = useLocalStorage('hide_sidebar_help', false)
 	const showHelpButtons = !hideHelp
@@ -248,14 +249,18 @@ export const MySidebar = memo(function MySidebar() {
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
 			MenuSeparator,
-			{
-				id: 'hide-sidebar',
-				label: unfoldable ? 'Fixed-width Sidebar' : 'Dynamic-width Sidebar',
-				icon: () => foldableIcon(unfoldable),
-				to: doToggle,
-				tooltip:
-					'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
-			},
+			...(sidebarState.showToggle
+				? []
+				: [
+						{
+							id: 'hide-sidebar',
+							label: unfoldable ? 'Fixed-width Sidebar' : 'Folding Sidebar',
+							icon: () => foldableIcon(unfoldable),
+							to: doToggle,
+							tooltip:
+								'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
+						},
+					]),
 			{
 				id: 'hide-help',
 				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
@@ -264,7 +269,7 @@ export const MySidebar = memo(function MySidebar() {
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],
-		[unfoldable, doToggle, hideHelp, expandAllGroups, accordionMode, setHideHelp, setAccordionMode]
+		[unfoldable, doToggle, hideHelp, expandAllGroups, accordionMode, setHideHelp, setAccordionMode, sidebarState]
 	)
 
 	// we need the following primarily to provide the onContextMenu callback, which resides in the parent, not the component.
