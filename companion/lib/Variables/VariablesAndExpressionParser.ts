@@ -126,7 +126,10 @@ export class VariablesAndExpressionParser {
 			}
 
 			const parsedValue = this.parseEntityOption(optionValue, fieldType)
-			const { sanitisedValue, validationError } = validateInputValue(field, parsedValue.value, true)
+			const { sanitisedValue, validationError } = validateInputValue(field, parsedValue.value, {
+				skipValidateExpression: true,
+				clampNumbers: true,
+			})
 
 			// Ensure values are valid, or report the error
 			if (!field.allowInvalidValues && validationError) {

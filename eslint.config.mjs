@@ -180,7 +180,18 @@ export default [
 		},
 		rules: {
 			...hookseslint.configs.recommended.rules,
-			'react-refresh/only-export-components': 'warn',
+			'react-refresh/only-export-components': [
+				'warn',
+				{
+					extraHOCs: [
+						// tanstack router
+						'createFileRoute',
+						'createRootRoute',
+						// mobx
+						'observer',
+					],
+				},
+			],
 			'@typescript-eslint/only-throw-error': [
 				'error',
 				{

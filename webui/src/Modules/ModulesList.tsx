@@ -137,12 +137,12 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/user-guide/modules')} className="text-decoration-none">
+					<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')} className="text-decoration-none">
 						Check our guidance for getting device support
 					</a>
 					.<br />
 					For offline systems, download module bundles from the{' '}
-					<a href="https://user.bitfocus.io/download" target="_blank" className="text-decoration-none">
+					<a href="https://l.companion.free/q/lp68nsiV4" target="_blank" className="text-decoration-none">
 						Bitfocus website
 					</a>
 					.
@@ -185,7 +185,11 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							<tr>
 								<td colSpan={4} style={{ padding: '10px 5px' }}>
 									<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-									<strong>{hiddenCount} Modules are ignored</strong>
+									<strong>{hiddenCount} Modules are ignored</strong>. <br /> Enable{' '}
+									{(visibleModules.visibility.installed ? '' : '"Installed" ') +
+										(visibleModules.visibility.available ? '' : '"Available" ') +
+										(visibleModules.visibility.availableDeprecated ? '' : '"Deprecated"') +
+										' to include them in the search'}
 								</td>
 							</tr>
 						)}

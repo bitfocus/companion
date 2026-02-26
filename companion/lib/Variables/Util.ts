@@ -14,17 +14,24 @@ import { ExpressionFunctions } from '@companion-app/shared/Expression/Expression
 import { type GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import {
+	stringifyVariableValue,
+	type VariableValues,
+	type VariableValue,
+} from '@companion-app/shared/Model/Variables.js'
 import type { ReadonlyDeep } from 'type-fest'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { VariablesBlinker } from './VariablesBlinker.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type {
-	ExpressionableOptionsObject,
-	ExpressionOrValue,
-	SomeCompanionInputField,
+import {
+	exprVal,
+	isExpressionOrValue,
+	type ExpressionableOptionsObject,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 // Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
 const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
@@ -188,8 +195,8 @@ export function parseVariablesInString(
 /**
  * Replace all the variables in a string, to reference a new label
  */
-export function replaceAllVariables(string: string, newLabel: string): string {
-	if (string && string.includes('$(')) {
+export function replaceAllVariables(string: string, newLabel: string, preserveLabels: Set<string>): string {
+	if (string && typeof string === 'string' && string.includes('$(')) {
 		let matchCount = 0
 		let matches: RegExpExecArray | null
 		let fromIndex = 0
@@ -203,7 +210,7 @@ export function replaceAllVariables(string: string, newLabel: string): string {
 			// ensure we don't try and match the same thing again
 			fromIndex = matches.index + fromIndex + 1
 
-			if (matches[2] !== undefined) {
+			if (matches[2] !== undefined && !preserveLabels.has(matches[1])) {
 				string = string.replace(matches[0], `$(${newLabel}:${matches[2]})`)
 			}
 		}
@@ -365,4 +372,26 @@ export function executeExpression(
 			variableIds: referencedVariableIds,
 		}
 	}
+}
+
+export function injectOverriddenLocalVariableValues(
+	localVariables: SomeEntityModel[],
+	values: VariableValues
+): VariableValues {
+	const injectedValues: VariableValues = {}
+
+	for (const localVariable of localVariables) {
+		if (localVariable.type !== EntityModelType.Feedback) continue
+
+		const variableName = localVariable.variableName
+		if (!variableName) continue
+
+		const newValue = values[variableName]
+		if (newValue !== undefined) {
+			localVariable.options.startup_value = isExpressionOrValue(newValue) ? newValue : exprVal(newValue)
+			injectedValues[variableName] = newValue
+		}
+	}
+
+	return injectedValues
 }

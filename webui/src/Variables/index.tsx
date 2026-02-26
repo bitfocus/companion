@@ -1,17 +1,83 @@
-import React, { useContext } from 'react'
+import React, { useCallback, useContext } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
-import { Link, useParams } from '@tanstack/react-router'
-import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
+import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
+import {
+	useConnectionLeafTree,
+	type ConnectionLeafItem,
+	type CollectionGroupMeta,
+} from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+
+const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
+	const { variablesStore } = useContext(RootAppStoreContext)
+	const variableCount = variablesStore.variables.get(leaf.connectionLabel)?.size ?? 0
+	const variableLabel = variableCount === 1 ? 'variable' : 'variables'
+
+	return (
+		<>
+			<div className="collapsible-tree-leaf-text">
+				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+					<div>
+						<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
+						{leaf.moduleDisplayName && (
+							<>
+								<br />
+								<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
+							</>
+						)}
+					</div>
+					<small style={{ opacity: 0.7, marginLeft: '1em' }}>
+						{variableCount} {variableLabel}
+					</small>
+				</div>
+			</div>
+			<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
+		</>
+	)
+})
+
+const VariableGroupHeader = React.memo(function VariableGroupHeader({
+	node,
+}: CollapsibleTreeHeaderProps<ConnectionLeafItem, CollectionGroupMeta>) {
+	return <span>{node.metadata.label}</span>
+})
 
 export const ConnectionVariablesPage = observer(function VariablesConnectionList() {
-	const { modules } = useContext(RootAppStoreContext)
+	const { variablesStore } = useContext(RootAppStoreContext)
+	const navigate = useNavigate()
 
-	const sortedConnections = useSortedConnectionsThatHaveVariables()
+	const filterConnection = useCallback(
+		(_connectionId: string, connectionInfo: ClientConnectionConfig) => {
+			const connectionVariables = variablesStore.variables.get(connectionInfo.label)
+			return !!connectionVariables && connectionVariables.size > 0
+		},
+		[variablesStore.variables]
+	)
+
+	const { nodes, ungroupedLeaves, allNodeIds } = useConnectionLeafTree(filterConnection)
+	const collapseHelper = usePanelCollapseHelper('variables-connections', allNodeIds)
+
+	// Check if internal has variables
+	const internalVariables = variablesStore.variables.get('internal')
+	const hasInternalVariables = !!internalVariables && internalVariables.size > 0
+
+	const staticLeaves: ConnectionLeafItem[] = hasInternalVariables
+		? [
+				{
+					key: 'internal',
+					connectionId: 'internal',
+					connectionLabel: 'internal',
+					moduleDisplayName: 'Internal',
+				},
+			]
+		: []
 
 	return (
 		<CRow>
@@ -34,25 +100,16 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						</CButton>
 					</div>
 
-					<div className="variables-category-grid">
-						<CButton color="primary" as={Link} to="/variables/connection/internal">
-							Internal
-						</CButton>
-						{sortedConnections.map((connectionInfo) => {
-							const compactName = modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)
-
-							return (
-								<CButton
-									key={connectionInfo.id}
-									color="primary"
-									as={Link}
-									to={`/variables/connection/${connectionInfo.label}`}
-								>
-									<h6>{connectionInfo?.label ?? '?'}</h6> <small>{compactName ?? '?'}</small>
-								</CButton>
-							)
-						})}
-					</div>
+					<CollapsibleTree
+						nodes={nodes}
+						staticLeaves={staticLeaves}
+						ungroupedLeaves={ungroupedLeaves}
+						ungroupedLabel="Ungrouped Connections"
+						collapseHelper={collapseHelper}
+						HeaderComponent={VariableGroupHeader}
+						LeafComponent={VariableLeaf}
+						onLeafClick={(leaf) => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
+					/>
 				</div>
 			</CCol>
 		</CRow>

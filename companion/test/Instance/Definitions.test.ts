@@ -8,7 +8,14 @@ import {
 	type InstanceConfig,
 	InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
-import type { PresetDefinitionButton, PresetDefinitionText } from '@companion-app/shared/Model/Presets.js'
+import type {
+	PresetDefinition,
+	UIPresetDefinition,
+	UIPresetDefinitionUpdateAdd,
+	UIPresetDefinitionUpdateInit,
+	UIPresetGroupSimple,
+	UIPresetSection,
+} from '@companion-app/shared/Model/Presets.js'
 import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { CompanionFieldVariablesSupport, exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import { EventDefinitions } from '../../lib/Resources/EventDefinitions.js'
@@ -45,6 +52,7 @@ function makeActionDefinition(overrides: Partial<ClientEntityDefinition> = {}): 
 	return {
 		entityType: EntityModelType.Action,
 		label: 'Test Action',
+		sortKey: null,
 		description: 'A test action',
 		options: [],
 		optionsToMonitorForInvalidations: null,
@@ -101,26 +109,49 @@ function makeButtonPresetModel(overrides: Partial<NormalButtonModel> = {}): Norm
 	}
 }
 
-function makeButtonPreset(id: string, overrides: Partial<PresetDefinitionButton> = {}): PresetDefinitionButton {
+function makeButtonPreset(id: string, overrides: Partial<PresetDefinition> = {}): PresetDefinition {
 	return {
 		id,
 		name: `Preset ${id}`,
-		category: 'General',
 		type: 'button',
 		model: makeButtonPresetModel(),
 		previewStyle: undefined,
+		keywords: undefined,
 		...overrides,
 	}
 }
 
-function makeTextPreset(id: string, overrides: Partial<PresetDefinitionText> = {}): PresetDefinitionText {
+function presetsToMap(presets: PresetDefinition[]): ReadonlyMap<string, PresetDefinition> {
+	return new Map(presets.map((p) => [p.id, p]))
+}
+
+function generateUIDefinitions(presets: PresetDefinition[]): Record<string, UIPresetSection> {
+	if (presets.length === 0) return {}
+
+	const uiPresets: Record<string, UIPresetDefinition> = {}
+	presets.forEach((preset, index) => {
+		uiPresets[preset.id] = {
+			id: preset.id,
+			order: index,
+			label: preset.name,
+		}
+	})
+
 	return {
-		id,
-		name: `Text ${id}`,
-		category: 'General',
-		type: 'text',
-		text: 'Hello world',
-		...overrides,
+		default: {
+			id: 'default',
+			name: 'Default',
+			order: 0,
+			definitions: {
+				default: {
+					id: 'default',
+					name: 'Default',
+					order: 0,
+					type: 'simple',
+					presets: uiPresets,
+				},
+			},
+		},
 	}
 }
 
@@ -251,7 +282,7 @@ describe('InstanceDefinitions', () => {
 			defs.on('updatePresets', updatePresetsListener)
 
 			const preset = makeButtonPreset('p1')
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', new Map([[preset.id, preset]]), {})
 
 			expect(updatePresetsListener).toHaveBeenCalledWith('conn1')
 		})
@@ -261,43 +292,53 @@ describe('InstanceDefinitions', () => {
 			const updatePresetsListener = vi.fn()
 			defs.on('updatePresets', updatePresetsListener)
 
-			defs.setPresetDefinitions('unknown', [makeButtonPreset('p1')])
+			const preset = makeButtonPreset('p1')
+			defs.setPresetDefinitions('unknown', new Map([[preset.id, preset]]), {})
 
 			expect(updatePresetsListener).not.toHaveBeenCalled()
 		})
 
-		it('converts array to record keyed by id', () => {
+		it('stores presets in map', () => {
 			const { defs } = createInstanceDefinitions()
 
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1'), makeButtonPreset('p2')])
+			const p1 = makeButtonPreset('p1')
+			const p2 = makeButtonPreset('p2')
+			defs.setPresetDefinitions(
+				'conn1',
+				new Map([
+					[p1.id, p1],
+					[p2.id, p2],
+				]),
+				{}
+			)
 
-			expect(defs.convertPresetToControlModel('conn1', 'p1')).toBeTruthy()
-			expect(defs.convertPresetToControlModel('conn1', 'p2')).toBeTruthy()
+			expect(defs.convertPresetToControlModel('conn1', 'p1', null)).toBeTruthy()
+			expect(defs.convertPresetToControlModel('conn1', 'p2', null)).toBeTruthy()
 		})
 
 		it('stores a structuredClone so mutating input does not affect stored data', () => {
 			const { defs } = createInstanceDefinitions()
 			const preset = makeButtonPreset('p1')
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', new Map([[preset.id, preset]]), {})
 
 			// Mutate the original input
 			preset.model.style.text = 'MUTATED'
 
-			const stored = defs.convertPresetToControlModel('conn1', 'p1')
+			const stored = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(stored).not.toBeNull()
 			expect(stored!.style.text).not.toBe('MUTATED')
 		})
 
-		it('stores empty record when given empty array', () => {
+		it('stores empty map when given empty map', () => {
 			const { defs } = createInstanceDefinitions()
 			const listener = vi.fn()
 			defs.on('updatePresets', listener)
 
-			defs.setPresetDefinitions('conn1', [])
+			defs.setPresetDefinitions('conn1', new Map(), {})
 
 			expect(listener).toHaveBeenCalledWith('conn1')
-			expect(defs.convertPresetToControlModel('conn1', 'p1')).toBeNull()
+			expect(defs.convertPresetToControlModel('conn1', 'p1', null)).toBeNull()
 		})
 	})
 
@@ -309,13 +350,14 @@ describe('InstanceDefinitions', () => {
 
 			defs.setActionDefinitions('conn1', { act1: makeActionDefinition() })
 			defs.setFeedbackDefinitions('conn1', { fb1: makeFeedbackDefinition() })
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1')])
+			const p1 = makeButtonPreset('p1')
+			defs.setPresetDefinitions('conn1', new Map([[p1.id, p1]]), {})
 
 			defs.forgetConnection('conn1')
 
 			expect(defs.getEntityDefinition(EntityModelType.Action, 'conn1', 'act1')).toBeUndefined()
 			expect(defs.getEntityDefinition(EntityModelType.Feedback, 'conn1', 'fb1')).toBeUndefined()
-			expect(defs.convertPresetToControlModel('conn1', 'p1')).toBeNull()
+			expect(defs.convertPresetToControlModel('conn1', 'p1', null)).toBeNull()
 		})
 
 		it('emits updatePresets event', () => {
@@ -678,22 +720,15 @@ describe('InstanceDefinitions', () => {
 		it('returns null for unknown preset', () => {
 			const { defs } = createInstanceDefinitions()
 
-			expect(defs.convertPresetToControlModel('conn1', 'p1')).toBeNull()
-		})
-
-		it('returns null for text presets', () => {
-			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeTextPreset('t1')])
-
-			expect(defs.convertPresetToControlModel('conn1', 't1')).toBeNull()
+			expect(defs.convertPresetToControlModel('conn1', 'p1', null)).toBeNull()
 		})
 
 		it('returns the model for button presets', () => {
 			const { defs } = createInstanceDefinitions()
 			const preset = makeButtonPreset('p1')
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', new Map([[preset.id, preset]]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 
 			// The model is stored as a deep clone, so compare structurally
 			expect(result).toBeTruthy()
@@ -703,7 +738,7 @@ describe('InstanceDefinitions', () => {
 		it('returns null for unknown connectionId', () => {
 			const { defs } = createInstanceDefinitions()
 
-			expect(defs.convertPresetToControlModel('noSuchConn', 'p1')).toBeNull()
+			expect(defs.convertPresetToControlModel('noSuchConn', 'p1', null)).toBeNull()
 		})
 	})
 
@@ -716,16 +751,9 @@ describe('InstanceDefinitions', () => {
 			expect(defs.convertPresetToPreviewControlModel('conn1', 'p1')).toBeNull()
 		})
 
-		it('returns null for text presets', () => {
-			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeTextPreset('t1')])
-
-			expect(defs.convertPresetToPreviewControlModel('conn1', 't1')).toBeNull()
-		})
-
 		it('creates preview model without previewStyle', () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1')])
+			defs.setPresetDefinitions('conn1', presetsToMap([makeButtonPreset('p1')]), {})
 
 			const result = defs.convertPresetToPreviewControlModel('conn1', 'p1')
 
@@ -740,11 +768,15 @@ describe('InstanceDefinitions', () => {
 
 		it('creates preview model with previewStyle override', () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', {
-					previewStyle: { color: 0xaabbcc, bgcolor: 0x112233 },
-				}),
-			])
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('p1', {
+						previewStyle: { color: 0xaabbcc, bgcolor: 0x112233 },
+					}),
+				]),
+				{}
+			)
 
 			const result = defs.convertPresetToPreviewControlModel('conn1', 'p1')
 
@@ -753,12 +785,16 @@ describe('InstanceDefinitions', () => {
 
 		it('appends check_expression feedback when previewStyle is set', () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', {
-					model: makeButtonPresetModel({ feedbacks: [] }),
-					previewStyle: { color: 0xff0000 },
-				}),
-			])
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('p1', {
+						model: makeButtonPresetModel({ feedbacks: [] }),
+						previewStyle: { color: 0xff0000 },
+					}),
+				]),
+				{}
+			)
 
 			const result = defs.convertPresetToPreviewControlModel('conn1', 'p1')
 
@@ -783,23 +819,27 @@ describe('InstanceDefinitions', () => {
 				upgradeIndex: undefined,
 			} as const
 
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', {
-					model: makeButtonPresetModel({
-						steps: {
-							step1: {
-								options: { runWhileHeld: [] },
-								action_sets: {
-									down: [actionEntity],
-									up: [actionEntity],
-									rotate_left: undefined,
-									rotate_right: undefined,
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('p1', {
+						model: makeButtonPresetModel({
+							steps: {
+								step1: {
+									options: { runWhileHeld: [] },
+									action_sets: {
+										down: [actionEntity],
+										up: [actionEntity],
+										rotate_left: undefined,
+										rotate_right: undefined,
+									},
 								},
 							},
-						},
+						}),
 					}),
-				}),
-			])
+				]),
+				{}
+			)
 
 			const result = defs.convertPresetToPreviewControlModel('conn1', 'p1')
 
@@ -819,32 +859,36 @@ describe('InstanceDefinitions', () => {
 				upgradeIndex: undefined,
 			} as const
 
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', {
-					model: makeButtonPresetModel({
-						steps: {
-							stepA: {
-								options: { runWhileHeld: [] },
-								action_sets: {
-									down: [actionEntity],
-									up: [],
-									rotate_left: undefined,
-									rotate_right: undefined,
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('p1', {
+						model: makeButtonPresetModel({
+							steps: {
+								stepA: {
+									options: { runWhileHeld: [] },
+									action_sets: {
+										down: [actionEntity],
+										up: [],
+										rotate_left: undefined,
+										rotate_right: undefined,
+									},
+								},
+								stepB: {
+									options: { runWhileHeld: [500] },
+									action_sets: {
+										down: [actionEntity],
+										up: [actionEntity],
+										rotate_left: undefined,
+										rotate_right: undefined,
+									},
 								},
 							},
-							stepB: {
-								options: { runWhileHeld: [500] },
-								action_sets: {
-									down: [actionEntity],
-									up: [actionEntity],
-									rotate_left: undefined,
-									rotate_right: undefined,
-								},
-							},
-						},
+						}),
 					}),
-				}),
-			])
+				]),
+				{}
+			)
 
 			const result = defs.convertPresetToPreviewControlModel('conn1', 'p1')
 
@@ -871,12 +915,16 @@ describe('InstanceDefinitions', () => {
 				upgradeIndex: undefined,
 			}
 
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', {
-					model: makeButtonPresetModel({ feedbacks: [existingFeedback] }),
-					previewStyle: { bgcolor: 0x111111 },
-				}),
-			])
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('p1', {
+						model: makeButtonPresetModel({ feedbacks: [existingFeedback] }),
+						previewStyle: { bgcolor: 0x111111 },
+					}),
+				]),
+				{}
+			)
 
 			const result = defs.convertPresetToPreviewControlModel('conn1', 'p1')
 
@@ -890,7 +938,7 @@ describe('InstanceDefinitions', () => {
 
 		it('does not append check_expression when previewStyle is undefined', () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1', { previewStyle: undefined })])
+			defs.setPresetDefinitions('conn1', presetsToMap([makeButtonPreset('p1', { previewStyle: undefined })]), {})
 
 			const result = defs.convertPresetToPreviewControlModel('conn1', 'p1')
 
@@ -915,7 +963,7 @@ describe('InstanceDefinitions', () => {
 
 		it('emits updatePresets when presets exist', () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1')])
+			defs.setPresetDefinitions('conn1', presetsToMap([makeButtonPreset('p1')]), {})
 
 			const listener = vi.fn()
 			defs.on('updatePresets', listener)
@@ -928,27 +976,31 @@ describe('InstanceDefinitions', () => {
 
 		it('replaces variable label references in style text', () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', {
-					model: makeButtonPresetModel({
-						style: {
-							text: '$(conn1:status) and $(conn1:volume)',
-							textExpression: false,
-							size: 'auto',
-							alignment: 'center:center',
-							pngalignment: 'center:center',
-							color: 0xffffff,
-							bgcolor: 0x000000,
-							show_topbar: 'default',
-							png64: null,
-						},
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('p1', {
+						model: makeButtonPresetModel({
+							style: {
+								text: '$(conn1:status) and $(conn1:volume)',
+								textExpression: false,
+								size: 'auto',
+								alignment: 'center:center',
+								pngalignment: 'center:center',
+								color: 0xffffff,
+								bgcolor: 0x000000,
+								show_topbar: 'default',
+								png64: null,
+							},
+						}),
 					}),
-				}),
-			])
+				]),
+				{}
+			)
 
 			defs.updateVariablePrefixesForLabel('conn1', 'RenamedConn')
 
-			const model = defs.convertPresetToControlModel('conn1', 'p1')
+			const model = defs.convertPresetToControlModel('conn1', 'p1', null)
 
 			expect(model).not.toBeNull()
 			expect(model!.style.text).toBe('$(RenamedConn:status) and $(RenamedConn:volume)')
@@ -956,28 +1008,32 @@ describe('InstanceDefinitions', () => {
 
 		it('replaces variable references in feedback style.text within presets', () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', {
-					model: makeButtonPresetModel({
-						feedbacks: [
-							{
-								type: EntityModelType.Feedback,
-								id: 'fb-1',
-								connectionId: 'conn1',
-								definitionId: 'some-fb',
-								options: {},
-								isInverted: exprVal(false),
-								style: { text: '$(conn1:level)' },
-								upgradeIndex: undefined,
-							},
-						],
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('p1', {
+						model: makeButtonPresetModel({
+							feedbacks: [
+								{
+									type: EntityModelType.Feedback,
+									id: 'fb-1',
+									connectionId: 'conn1',
+									definitionId: 'some-fb',
+									options: {},
+									isInverted: exprVal(false),
+									style: { text: '$(conn1:level)' },
+									upgradeIndex: undefined,
+								},
+							],
+						}),
 					}),
-				}),
-			])
+				]),
+				{}
+			)
 
 			defs.updateVariablePrefixesForLabel('conn1', 'NewLabel')
 
-			const model = defs.convertPresetToControlModel('conn1', 'p1')
+			const model = defs.convertPresetToControlModel('conn1', 'p1', null)
 
 			expect(model).not.toBeNull()
 			const fb = model!.feedbacks[0]
@@ -987,56 +1043,49 @@ describe('InstanceDefinitions', () => {
 			}
 		})
 
-		it('skips text presets during variable replacement', () => {
-			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeTextPreset('t1', { text: '$(conn1:var)' }), makeButtonPreset('b1')])
-
-			// Should not throw
-			defs.updateVariablePrefixesForLabel('conn1', 'NewLabel')
-
-			// Button still accessible
-			expect(defs.convertPresetToControlModel('conn1', 'b1')).toBeTruthy()
-		})
-
 		it('replaces variables in all presets for a connection', () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', {
-					model: makeButtonPresetModel({
-						style: {
-							text: '$(conn1:a)',
-							textExpression: false,
-							size: 'auto',
-							alignment: 'center:center',
-							pngalignment: 'center:center',
-							color: 0xffffff,
-							bgcolor: 0x000000,
-							show_topbar: 'default',
-							png64: null,
-						},
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('p1', {
+						model: makeButtonPresetModel({
+							style: {
+								text: '$(conn1:a)',
+								textExpression: false,
+								size: 'auto',
+								alignment: 'center:center',
+								pngalignment: 'center:center',
+								color: 0xffffff,
+								bgcolor: 0x000000,
+								show_topbar: 'default',
+								png64: null,
+							},
+						}),
 					}),
-				}),
-				makeButtonPreset('p2', {
-					model: makeButtonPresetModel({
-						style: {
-							text: '$(conn1:b)',
-							textExpression: false,
-							size: 'auto',
-							alignment: 'center:center',
-							pngalignment: 'center:center',
-							color: 0xffffff,
-							bgcolor: 0x000000,
-							show_topbar: 'default',
-							png64: null,
-						},
+					makeButtonPreset('p2', {
+						model: makeButtonPresetModel({
+							style: {
+								text: '$(conn1:b)',
+								textExpression: false,
+								size: 'auto',
+								alignment: 'center:center',
+								pngalignment: 'center:center',
+								color: 0xffffff,
+								bgcolor: 0x000000,
+								show_topbar: 'default',
+								png64: null,
+							},
+						}),
 					}),
-				}),
-			])
+				]),
+				{}
+			)
 
 			defs.updateVariablePrefixesForLabel('conn1', 'X')
 
-			expect(defs.convertPresetToControlModel('conn1', 'p1')!.style.text).toBe('$(X:a)')
-			expect(defs.convertPresetToControlModel('conn1', 'p2')!.style.text).toBe('$(X:b)')
+			expect(defs.convertPresetToControlModel('conn1', 'p1', null)!.style.text).toBe('$(X:a)')
+			expect(defs.convertPresetToControlModel('conn1', 'p2', null)!.style.text).toBe('$(X:b)')
 		})
 	})
 
@@ -1166,31 +1215,6 @@ describe('InstanceDefinitions', () => {
 			await subscription.cleanup()
 		})
 
-		it('presets subscription yields init with simplified presets', async () => {
-			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1', { name: 'My Preset', category: 'Cat' })])
-
-			const caller = createCaller(defs)
-			const subscription = new SubscriptionTester(await caller.presets())
-
-			await subscription.expectValue({
-				type: 'init',
-				definitions: {
-					conn1: {
-						p1: {
-							id: 'p1',
-							order: 0,
-							label: 'My Preset',
-							category: 'Cat',
-							type: 'button',
-						},
-					},
-				},
-			})
-
-			await subscription.cleanup()
-		})
-
 		it('presets subscription yields add on new presets', async () => {
 			const { defs } = createInstanceDefinitions()
 			const caller = createCaller(defs)
@@ -1201,28 +1225,22 @@ describe('InstanceDefinitions', () => {
 			await subscription.next()
 
 			// Add presets
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1', { name: 'New', category: 'C' })])
+			const presets = [makeButtonPreset('p1', { name: 'New' })]
+			defs.setPresetDefinitions('conn1', presetsToMap(presets), generateUIDefinitions(presets))
 
-			await subscription.expectValue({
-				type: 'add',
-				connectionId: 'conn1',
-				definitions: {
-					p1: {
-						id: 'p1',
-						order: 0,
-						label: 'New',
-						category: 'C',
-						type: 'button',
-					},
-				},
-			})
+			const addEvent = await subscription.next()
+
+			expect(addEvent).toHaveProperty('type', 'add')
+			expect(addEvent).toHaveProperty('connectionId', 'conn1')
+			expect(addEvent).toHaveProperty('definitions')
 
 			await subscription.cleanup()
 		})
 
 		it('presets subscription yields remove on forgetConnection', async () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1')])
+			const presets = [makeButtonPreset('p1')]
+			defs.setPresetDefinitions('conn1', presetsToMap(presets), generateUIDefinitions(presets))
 
 			const caller = createCaller(defs)
 			const subscription = new SubscriptionTester(await caller.presets())
@@ -1243,61 +1261,21 @@ describe('InstanceDefinitions', () => {
 		it('presets subscription omits connections with no presets from init', async () => {
 			const { defs } = createInstanceDefinitions()
 			// Set empty presets for a connection
-			defs.setPresetDefinitions('conn1', [])
-			defs.setPresetDefinitions('conn2', [makeButtonPreset('p1')])
+			defs.setPresetDefinitions('conn1', presetsToMap([]), {})
+			const p1Presets = [makeButtonPreset('p1')]
+			defs.setPresetDefinitions('conn2', presetsToMap(p1Presets), generateUIDefinitions(p1Presets))
 
 			const caller = createCaller(defs)
 			const subscription = new SubscriptionTester(await caller.presets())
 
 			const initValue = await subscription.next()
 
-			// conn1 has empty presets, should be omitted from init
+			// conn1 has empty UI definitions, implementation returns it as {}
 			expect(initValue).toHaveProperty('type', 'init')
-			const initDefs = (initValue as { definitions: Record<string, unknown> }).definitions
-			expect(initDefs).not.toHaveProperty('conn1')
-			expect(initDefs).toHaveProperty('conn2')
-
+			const initDefs = (initValue as UIPresetDefinitionUpdateInit).definitions
+			expect(initDefs).toHaveProperty('conn1')
+			expect(initDefs['conn1']).toEqual({})
 			await subscription.cleanup()
-		})
-
-		it('presets subscription includes text presets in simplified form', async () => {
-			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeTextPreset('t1', { name: 'Info', category: 'Cat', text: 'Hello' })])
-
-			const caller = createCaller(defs)
-			const subscription = new SubscriptionTester(await caller.presets())
-
-			await subscription.expectValue({
-				type: 'init',
-				definitions: {
-					conn1: {
-						t1: {
-							id: 't1',
-							order: 0,
-							label: 'Info',
-							category: 'Cat',
-							type: 'text',
-							text: 'Hello',
-						},
-					},
-				},
-			})
-
-			await subscription.cleanup()
-		})
-	})
-
-	// ── mixed preset types ───────────────────────────────────────────────
-
-	describe('mixed preset types', () => {
-		it('handles button and text presets in same connection', () => {
-			const { defs } = createInstanceDefinitions()
-
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('btn1'), makeTextPreset('txt1'), makeButtonPreset('btn2')])
-
-			expect(defs.convertPresetToControlModel('conn1', 'btn1')).toBeTruthy()
-			expect(defs.convertPresetToControlModel('conn1', 'txt1')).toBeNull() // text presets can't be converted
-			expect(defs.convertPresetToControlModel('conn1', 'btn2')).toBeTruthy()
 		})
 	})
 
@@ -1343,28 +1321,32 @@ describe('InstanceDefinitions', () => {
 			defs.on('updatePresets', updateListener)
 
 			// Set presets
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('my-preset', {
-					model: makeButtonPresetModel({
-						style: {
-							text: 'Status $(conn1:status)',
-							textExpression: false,
-							size: 'auto',
-							alignment: 'center:center',
-							pngalignment: 'center:center',
-							color: 0xffffff,
-							bgcolor: 0x000000,
-							show_topbar: 'default',
-							png64: null,
-						},
+			defs.setPresetDefinitions(
+				'conn1',
+				presetsToMap([
+					makeButtonPreset('my-preset', {
+						model: makeButtonPresetModel({
+							style: {
+								text: 'Status $(conn1:status)',
+								textExpression: false,
+								size: 'auto',
+								alignment: 'center:center',
+								pngalignment: 'center:center',
+								color: 0xffffff,
+								bgcolor: 0x000000,
+								show_topbar: 'default',
+								png64: null,
+							},
+						}),
+						previewStyle: { bgcolor: 0x333333 },
 					}),
-					previewStyle: { bgcolor: 0x333333 },
-				}),
-			])
+				]),
+				{}
+			)
 			expect(updateListener).toHaveBeenCalledTimes(1)
 
 			// Convert to control model
-			const controlModel = defs.convertPresetToControlModel('conn1', 'my-preset')
+			const controlModel = defs.convertPresetToControlModel('conn1', 'my-preset', null)
 			expect(controlModel).toMatchSnapshot()
 
 			// Convert to preview model
@@ -1378,7 +1360,7 @@ describe('InstanceDefinitions', () => {
 			// Forget
 			defs.forgetConnection('conn1')
 			expect(updateListener).toHaveBeenCalledTimes(3)
-			expect(defs.convertPresetToControlModel('conn1', 'my-preset')).toBeNull()
+			expect(defs.convertPresetToControlModel('conn1', 'my-preset', null)).toBeNull()
 		})
 	})
 
@@ -1463,7 +1445,8 @@ describe('InstanceDefinitions', () => {
 
 		it('presets subscription yields patch when presets are updated', async () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1', { name: 'First', category: 'C' })])
+			const initialPresets = [makeButtonPreset('p1', { name: 'First' })]
+			defs.setPresetDefinitions('conn1', presetsToMap(initialPresets), generateUIDefinitions(initialPresets))
 
 			const trpcRouter = defs.createTrpcRouter()
 			const caller = t.createCallerFactory(trpcRouter)(testCtx)
@@ -1474,10 +1457,8 @@ describe('InstanceDefinitions', () => {
 			await iter.next()
 
 			// Update presets
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('p1', { name: 'Updated', category: 'C' }),
-				makeButtonPreset('p2', { name: 'New', category: 'C' }),
-			])
+			const updatedPresets = [makeButtonPreset('p1', { name: 'Updated' }), makeButtonPreset('p2', { name: 'New' })]
+			defs.setPresetDefinitions('conn1', presetsToMap(updatedPresets), generateUIDefinitions(updatedPresets))
 
 			const second = await iter.next()
 
@@ -1496,11 +1477,8 @@ describe('InstanceDefinitions', () => {
 
 		it('assigns sequential order values to presets', async () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [
-				makeButtonPreset('a', { name: 'Alpha', category: 'C' }),
-				makeTextPreset('b', { name: 'Beta', category: 'C', text: 'hi' }),
-				makeButtonPreset('c', { name: 'Gamma', category: 'C' }),
-			])
+			const presets = [makeButtonPreset('a', { name: 'Alpha' }), makeButtonPreset('c', { name: 'Gamma' })]
+			defs.setPresetDefinitions('conn1', presetsToMap(presets), generateUIDefinitions(presets))
 
 			const trpcRouter = defs.createTrpcRouter()
 			const caller = t.createCallerFactory(trpcRouter)(testCtx)
@@ -1508,11 +1486,16 @@ describe('InstanceDefinitions', () => {
 			const iter = iterable[Symbol.asyncIterator]()
 
 			const first = await iter.next()
-			const initDefs = (first.value as { definitions: Record<string, Record<string, { order: number }>> }).definitions
+			const initDefs = (first.value as UIPresetDefinitionUpdateInit).definitions
 
-			expect(initDefs['conn1']['a'].order).toBe(0)
-			expect(initDefs['conn1']['b'].order).toBe(1)
-			expect(initDefs['conn1']['c'].order).toBe(2)
+			// Access: conn1 -> default section -> default group -> presets -> preset id
+			const defaultGroup = initDefs['conn1']['default'].definitions['default']
+			expect(defaultGroup.type).toBe('simple')
+			const conn1Presets = (defaultGroup as UIPresetGroupSimple).presets
+
+			// Verify sequential order values
+			expect(conn1Presets['a']).toMatchObject({ id: 'a', label: 'Alpha', order: 0 })
+			expect(conn1Presets['c']).toMatchObject({ id: 'c', label: 'Gamma', order: 1 })
 
 			await iter.return?.()
 		})
@@ -1549,7 +1532,8 @@ describe('InstanceDefinitions', () => {
 
 		it('emits remove on presets subscription', async () => {
 			const { defs } = createInstanceDefinitions()
-			defs.setPresetDefinitions('conn1', [makeButtonPreset('p1')])
+			const presets = [makeButtonPreset('p1')]
+			defs.setPresetDefinitions('conn1', presetsToMap(presets), generateUIDefinitions(presets))
 
 			const trpcRouter = defs.createTrpcRouter()
 			const caller = t.createCallerFactory(trpcRouter)(testCtx)
@@ -1621,9 +1605,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const action = result!.steps.step1.action_sets.down[0]
@@ -1667,9 +1651,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const feedback = result!.feedbacks[0]
@@ -1720,9 +1704,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const action = result!.steps.step1.action_sets.down[0]
@@ -1774,9 +1758,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const action = result!.steps.step1.action_sets.down[0]
@@ -1828,9 +1812,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const action = result!.steps.step1.action_sets.down[0]
@@ -1883,9 +1867,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const action = result!.steps.step1.action_sets.down[0]
@@ -1912,9 +1896,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 			expect(result!.style.text).toBe('Status: $(conn1:state)')
 		})
@@ -1945,9 +1929,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const feedback = result!.feedbacks[0]
@@ -2001,9 +1985,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const action = result!.steps.step1.action_sets.down[0]
@@ -2056,9 +2040,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const action = result!.steps.step1.action_sets.down[0]
@@ -2096,9 +2080,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			// Variable replacement should not happen for missing definitions
@@ -2129,9 +2113,9 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			// Variable replacement should not happen for missing definitions
@@ -2192,14 +2176,207 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', [preset])
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
 
-			const result = defs.convertPresetToControlModel('conn1', 'p1')
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
 			const action = result!.steps.step1.action_sets.down[0]
 			expect(action.options.number).toEqual(exprVal(42))
 			expect(action.options.checkbox).toEqual(exprVal(true))
+		})
+
+		it('injects local variable values when variableValues parameter is provided', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const actionDef = makeActionDefinition({
+				label: 'Test Action',
+				options: [
+					{
+						id: 'text',
+						type: 'textinput',
+						label: 'Text',
+						default: '',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+					},
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: actionDef })
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					localVariables: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv1',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var1',
+							options: {
+								startup_value: exprVal('default1'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv2',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var2',
+							options: {
+								startup_value: exprVal('default2'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+					],
+					steps: {
+						step1: {
+							options: { runWhileHeld: [] },
+							action_sets: {
+								down: [
+									{
+										type: EntityModelType.Action,
+										id: 'action1',
+										connectionId: 'conn1',
+										definitionId: 'act1',
+										options: {
+											text: exprVal('test'),
+										},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+								rotate_left: undefined,
+								rotate_right: undefined,
+							},
+						},
+					},
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+
+			// Convert with variable injection
+			const variableValues = {
+				var1: 'injected1',
+				var2: 'injected2',
+			}
+			const result = defs.convertPresetToControlModel('conn1', 'p1', variableValues)
+			expect(result).not.toBeNull()
+
+			// Check that injected values override the defaults
+			expect(result!.localVariables[0].options.startup_value).toEqual(exprVal('injected1'))
+			expect(result!.localVariables[1].options.startup_value).toEqual(exprVal('injected2'))
+		})
+
+		it('does not inject local variable values when variableValues is null', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					localVariables: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv1',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var1',
+							options: {
+								startup_value: exprVal('default1'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv2',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var2',
+							options: {
+								startup_value: exprVal('default2'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+					],
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+
+			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
+			expect(result).not.toBeNull()
+
+			// Should preserve the original default values
+			expect(result!.localVariables[0].options.startup_value).toEqual(exprVal('default1'))
+			expect(result!.localVariables[1].options.startup_value).toEqual(exprVal('default2'))
+		})
+
+		it('partially injects local variables when only some are provided', () => {
+			const { defs } = createInstanceDefinitions()
+
+			const preset = makeButtonPreset('p1', {
+				model: {
+					...makeButtonPresetModel(),
+					localVariables: [
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv1',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var1',
+							options: {
+								startup_value: exprVal('default1'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv2',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var2',
+							options: {
+								startup_value: exprVal('default2'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+						{
+							type: EntityModelType.Feedback,
+							id: 'lv3',
+							connectionId: 'internal',
+							definitionId: 'user_value',
+							variableName: 'var3',
+							options: {
+								startup_value: exprVal('default3'),
+							},
+							isInverted: exprVal(false),
+							upgradeIndex: undefined,
+						},
+					],
+				},
+			})
+
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+
+			// Inject only var2
+			const variableValues = {
+				var2: 'injected2',
+			}
+			const result = defs.convertPresetToControlModel('conn1', 'p1', variableValues)
+			expect(result).not.toBeNull()
+
+			// var1 and var3 keep defaults, var2 is injected
+			expect(result!.localVariables[0].options.startup_value).toEqual(exprVal('default1'))
+			expect(result!.localVariables[1].options.startup_value).toEqual(exprVal('injected2'))
+			expect(result!.localVariables[2].options.startup_value).toEqual(exprVal('default3'))
 		})
 	})
 })

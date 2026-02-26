@@ -14,7 +14,7 @@ import { InstanceProcessManager } from './ProcessManager.js'
 import { InstanceStatus } from './Status.js'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import { InstanceModules } from './Modules.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
@@ -30,8 +30,8 @@ import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
+import { ActionRecorder } from './ActionRecorder.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
 import express from 'express'
 import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { ModuleStoreService } from './ModuleStore.js'
@@ -56,6 +56,7 @@ import path from 'path'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { ModuleManifestOldExt } from '@companion-app/shared/Model/ModuleManifest.js'
 
 const execAsync = promisify(exec)
 
@@ -86,7 +87,7 @@ export interface InstanceControllerEvents {
 export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #logger = LogController.createLogger('Instance/Controller')
 
-	readonly #controlsController: ControlsController
+	readonly #controlsStore: IControlStore
 	readonly #variablesController: VariablesController
 	readonly #surfacesController: SurfaceController
 	readonly #connectionCollectionsController: ConnectionsCollections
@@ -102,6 +103,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly processManager: InstanceProcessManager
 	readonly modules: InstanceModules
 	readonly sharedUdpManager: InstanceSharedUdpManager
+	readonly actionRecorder: ActionRecorder
 	readonly modulesStore: ModuleStoreService
 	readonly userModulesManager: InstanceInstalledModulesManager
 
@@ -119,8 +121,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		db: DataDatabase,
 		cache: DataCache,
 		apiRouter: express.Router,
-		controls: ControlsController,
-		graphics: GraphicsController,
+		controlsStore: IControlStore,
 		variables: VariablesController,
 		surfaces: SurfaceController,
 		oscSender: ServiceOscSender
@@ -130,7 +131,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.#variablesController = variables
 		this.#surfacesController = surfaces
-		this.#controlsController = controls
+		this.#controlsStore = controlsStore
 		this.#udevRulesDir = appInfo.udevRulesDir
 
 		this.#configStore = new InstanceConfigStore(db, (instanceIds, updateProcessManager) => {
@@ -162,12 +163,14 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.sharedUdpManager = new InstanceSharedUdpManager()
 		this.definitions = new InstanceDefinitions(this.#configStore)
 		this.status = new InstanceStatus()
+		this.actionRecorder = new ActionRecorder(this, controlsStore)
 		this.modules = new InstanceModules(this, apiRouter, appInfo)
 		this.processManager = new InstanceProcessManager(
 			{
-				controls: controls,
+				controls: controlsStore,
 				variables: variables,
 				oscSender: oscSender,
+				actionRecorder: this.actionRecorder,
 
 				instanceDefinitions: this.definitions,
 				instanceStatus: this.status,
@@ -213,8 +216,6 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#configStore
 		)
 		this.modules.listenToStoreEvents(this.modulesStore)
-
-		graphics.on('resubscribeFeedbacks', () => this.processManager.resubscribeAllFeedbacks())
 
 		this.connectionApiRouter.use('/:label', (req, res, _next) => {
 			const label = req.params.label
@@ -442,7 +443,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			connectionConfig.label = values.label
 			this.#variablesController.values.connectionLabelRename(oldLabel, values.label)
 			this.#variablesController.definitions.connectionLabelRename(oldLabel, values.label)
-			this.#controlsController.renameVariables(oldLabel, values.label)
+			this.#controlsStore.renameVariables(oldLabel, values.label)
 			this.definitions.updateVariablePrefixesForLabel(id, values.label)
 		}
 
@@ -530,7 +531,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.getIdFromLabel(moduleType, label)
 	}
 
-	getManifestForConnection(id: string): ModuleManifest | undefined {
+	getManifestForConnection(id: string): ModuleManifest | ModuleManifestOldExt | undefined {
 		const config = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (!config) return undefined
 
@@ -591,7 +592,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.definitions.forgetConnection(connectionId)
 		this.#variablesController.values.forgetConnection(connectionId, label)
 		this.#variablesController.definitions.forgetConnection(connectionId, label)
-		this.#controlsController.forgetConnection(connectionId)
+		this.#controlsStore.forgetConnection(connectionId)
 	}
 
 	async deleteAllConnections(deleteCollections: boolean): Promise<void> {

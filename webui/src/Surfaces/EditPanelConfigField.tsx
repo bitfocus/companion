@@ -10,7 +10,7 @@ import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
-import type { DropdownChoiceInt } from '~/DropDownInputFancy'
+import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import type { JsonValue } from 'type-fest'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 

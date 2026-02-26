@@ -1,6 +1,6 @@
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
 import type { JsonValue } from 'type-fest'
-import type { CompanionOptionValues } from '@companion-module/host'
+import type { CompanionOptionValues, CompanionPresetOptionValues } from '@companion-module/host'
 import z from 'zod'
 
 export const JsonValueSchema: z.ZodType<JsonValue> = z.json()
@@ -304,7 +304,7 @@ export function isExpressionOrValue(input: any): input is ExpressionOrValue<any>
 }
 
 export function optionsObjectToExpressionOptions(
-	options: CompanionOptionValues,
+	options: CompanionOptionValues | CompanionPresetOptionValues<any>,
 	allowExpressions = true
 ): ExpressionableOptionsObject {
 	const res: ExpressionableOptionsObject = {}
@@ -326,7 +326,7 @@ export function convertExpressionOptionsWithoutParsing(options: ExpressionableOp
 	return res
 }
 
-export function exprVal<T extends JsonValue>(value: T): ExpressionOrValue<T> {
+export function exprVal<T extends JsonValue | undefined>(value: T): ExpressionOrValue<T> {
 	return { value: value, isExpression: false }
 }
 export function exprExpr(value: string): ExpressionOrValue<any> {

@@ -85,8 +85,7 @@ import type {
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
-import { ConvertPresetDefinition } from './PresetsLegacy.js'
-import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import { ConvertPresetDefinitions } from './PresetsLegacy.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
@@ -246,7 +245,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#entityManager?.start(config.lastUpgradeIndex)
 
 		// Inform action recorder
-		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
+		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
 	}
 
 	/**
@@ -648,7 +647,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
-		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
+		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
 		this.#entityManager?.destroy()
@@ -759,6 +758,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
+				sortKey: null,
 				description: rawAction.description,
 				options: options,
 				optionsToMonitorForInvalidations: options
@@ -799,6 +799,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			feedbacks[rawFeedback.id] = {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
+				sortKey: null,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback, !!this.#entityManager),
 				optionsToMonitorForInvalidations: null, // All should be monitored
@@ -891,20 +892,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			const convertedPresets: PresetDefinition[] = []
+			const { presets, uiPresets } = ConvertPresetDefinitions(
+				this.logger,
+				this.connectionId,
+				this.#currentUpgradeIndex ?? undefined,
+				msg.presets
+			)
 
-			for (const rawPreset of msg.presets) {
-				const convertedPreset = ConvertPresetDefinition(
-					this.logger,
-					this.connectionId,
-					this.#currentUpgradeIndex ?? undefined,
-					rawPreset.id,
-					rawPreset
-				)
-				if (convertedPreset) convertedPresets.push(convertedPreset)
-			}
-
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, convertedPresets)
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
@@ -956,7 +951,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		if (isNaN(delay) || delay < 0) delay = 0
 
 		try {
-			this.#deps.controls.actionRecorder.receiveAction(
+			this.#deps.actionRecorder.receiveAction(
 				this.connectionId,
 				msg.actionId,
 				msg.options,

@@ -1,4 +1,4 @@
-import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import classNames from 'classnames'
 import React, { useContext, useMemo, useCallback } from 'react'
 import Select, { createFilter } from 'react-select'
@@ -6,12 +6,12 @@ import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
 import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
-import { useComputed } from '~/Resources/util.js'
+import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
 	className?: string
-	choices: DropdownChoice[] | Record<string, DropdownChoice>
+	choices: DropdownChoicesOrGroups
 	allowCustom?: boolean
 	minSelection?: number
 	minChoicesForSearch?: number
@@ -23,11 +23,6 @@ interface MultiDropdownInputFieldProps {
 	checkValid?: (value: DropdownChoiceId[]) => boolean
 	disabled?: boolean
 	onBlur?: () => void
-}
-
-interface DropdownChoiceInt {
-	value: any
-	label: DropdownChoiceId
 }
 
 export const MultiDropdownInputField = observer(function MultiDropdownInputField({
@@ -48,18 +43,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 }: MultiDropdownInputFieldProps) {
 	const menuPortal = useContext(MenuPortalContext)
 
-	const options = useComputed(() => {
-		let options: DropdownChoice[] = []
-		if (options) {
-			if (Array.isArray(choices)) {
-				options = choices
-			} else if (typeof choices === 'object') {
-				options = Object.values(choices)
-			}
-		}
-
-		return options.map((choice): DropdownChoiceInt => ({ value: choice.id, label: choice.label }))
-	}, [choices])
+	const { options, flatOptions } = useDropdownChoicesForSelect(choices)
 
 	if (value === undefined) value = [] as any
 
@@ -67,17 +51,17 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		const selectedValue = Array.isArray(value) ? value : [value]
 		const res: DropdownChoiceInt[] = []
 		for (const val of selectedValue) {
-			const entry = options.find((o) => o.value == val) // Intentionally loose for compatibility
+			const entry = flatOptions.find((o) => o.value == val) // Intentionally loose for compatibility
 			if (entry) {
 				res.push(entry)
 			} else if (allowCustom) {
-				res.push({ value: val, label: val })
+				res.push({ value: val, label: String(val) })
 			} else {
-				res.push({ value: val, label: allowCustom ? val : `?? (${val})` })
+				res.push({ value: val, label: allowCustom ? String(val) : `?? (${val})` })
 			}
 		}
 		return res
-	}, [value, options, allowCustom])
+	}, [value, flatOptions, allowCustom])
 
 	// Compile the regex (and cache)
 	const compiledRegex = useMemo(() => {
@@ -133,7 +117,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		menuPosition: 'fixed',
 		menuPlacement: 'auto',
 		isClearable: false,
-		isSearchable: minChoicesForSearch2 <= options.length,
+		isSearchable: minChoicesForSearch2 <= flatOptions.length,
 		isMulti: true,
 		options: options,
 		value: currentValue,

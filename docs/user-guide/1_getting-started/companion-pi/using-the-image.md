@@ -10,7 +10,7 @@ The easiest way to get Companion running on a Raspberry Pi is to use the prebuil
 
 ## Download the Image
 
-You can download the image from the [Bitfocus website](https://user.bitfocus.io/download).
+You can download the image from the [Bitfocus website](https://l.companion.free/q/lp68nsiV4).
 
 ## Choosing a MicroSD Card
 

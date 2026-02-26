@@ -458,7 +458,7 @@ export class ImportExportController {
 
 						// trigger startup triggers to run
 						setImmediate(() => {
-							this.#controlsController.triggers.emit('startup')
+							this.#controlsController.triggerEvents.emit('startup')
 						})
 					})
 				}),

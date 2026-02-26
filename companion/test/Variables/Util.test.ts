@@ -14,6 +14,7 @@ function createDefinition(
 ): ClientEntityDefinition {
 	return {
 		entityType: EntityModelType.Action,
+		sortKey: null,
 		description: '',
 		optionsToMonitorForInvalidations: [],
 		feedbackType: undefined,

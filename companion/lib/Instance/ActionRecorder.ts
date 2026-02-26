@@ -3,7 +3,8 @@ import jsonPatch from 'fast-json-patch'
 import { clamp } from '../Resources/Util.js'
 import LogController from '../Log/Controller.js'
 import { EventEmitter } from 'events'
-import type { Registry } from '../Registry.js'
+import type { InstanceController } from './Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type {
 	RecordActionEntityModel,
 	RecordSessionInfo,
@@ -42,9 +43,10 @@ export interface ActionRecorderEvents {
  * this program.
  */
 export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
-	readonly #logger = LogController.createLogger('Control/ActionRecorder')
+	readonly #logger = LogController.createLogger('Instance/ActionRecorder')
 
-	readonly #registry: Pick<Registry, 'instance' | 'controls'>
+	readonly #instanceController: InstanceController
+	readonly #controlStore: IControlStore
 
 	/**
 	 * The connection ids which are currently informed to be recording
@@ -67,10 +69,11 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	 */
 	#lastSentSessionInfoJsons: Record<string, RecordSessionInfo> = {}
 
-	constructor(registry: Registry) {
+	constructor(instanceController: InstanceController, controlStore: IControlStore) {
 		super()
 
-		this.#registry = registry
+		this.#instanceController = instanceController
+		this.#controlStore = controlStore
 
 		// create the 'default' session
 		this.#currentSession = {
@@ -411,7 +414,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			const session = this.#currentSession
 
 			if (session.connectionIds.includes(connectionId)) {
-				const currentUpgradeIndex = this.#registry.instance.getInstanceConfigOfType(
+				const currentUpgradeIndex = this.#instanceController.getInstanceConfigOfType(
 					connectionId,
 					ModuleInstanceType.Connection
 				)?.lastUpgradeIndex
@@ -476,7 +479,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	saveToControlId(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append'): void {
 		if (mode !== 'replace' && mode !== 'append') throw new Error(`Invalid mode: ${mode}`)
 
-		const control = this.#registry.controls.getControl(controlId)
+		const control = this.#controlStore.getControl(controlId)
 		if (!control) throw new Error(`Unknown control: ${controlId}`)
 
 		if (mode === 'append') {
@@ -514,7 +517,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	 */
 	setSelectedConnectionIds(connectionIds0: string[]): void {
 		if (!Array.isArray(connectionIds0)) throw new Error('Expected array of connection ids')
-		const allValidIds = new Set(this.#registry.instance.getAllConnectionIds())
+		const allValidIds = new Set(this.#instanceController.getAllConnectionIds())
 		const connectionIds = connectionIds0.filter((id) => allValidIds.has(id))
 
 		this.#currentSession.connectionIds = connectionIds
@@ -540,7 +543,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		// Find ones to start recording
 		for (const connectionId of targetRecordingConnectionIds.values()) {
 			// Future: skip checking if they already know, to make sure they dont get stuck
-			const connection = this.#registry.instance.processManager.getConnectionChild(connectionId)
+			const connection = this.#instanceController.processManager.getConnectionChild(connectionId)
 			if (connection) {
 				ps.push(
 					connection.startStopRecordingActions(true).catch((e) => {
@@ -553,7 +556,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		// Find ones to stop recording
 		for (const connectionId of this.#currentlyRecordingConnectionIds.values()) {
 			if (!targetRecordingConnectionIds.has(connectionId)) {
-				const connection = this.#registry.instance.processManager.getConnectionChild(connectionId)
+				const connection = this.#instanceController.processManager.getConnectionChild(connectionId)
 				if (connection) {
 					ps.push(
 						connection.startStopRecordingActions(false).catch((e) => {

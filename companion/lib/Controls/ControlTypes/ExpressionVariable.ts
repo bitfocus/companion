@@ -108,7 +108,7 @@ export class ControlExpressionVariable
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
-			variableValues: deps.variables.values,
+			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
 		})
 
@@ -318,7 +318,7 @@ export class ControlExpressionVariable
 			// Only emit variable value if this control is the active one for this variable name
 			if (!this.#expressionVariableNameMap.isExpressionVariableActive(this.controlId)) return
 
-			this.deps.variables.values.setVariableValues('expression', [
+			this.deps.variableValues.setVariableValues('expression', [
 				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
 			])
 		},

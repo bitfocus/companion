@@ -1,5 +1,5 @@
 import React, { useCallback, useContext } from 'react'
-import { DropdownInputField, MultiDropdownInputField } from '~/Components/index.js'
+import { DropdownInputField, MultiDropdownInputField, type DropdownChoicesOrGroups } from '~/Components/index.js'
 import { useComputed } from '~/Resources/util.js'
 import TimePicker from 'react-time-picker'
 import DatePicker from 'react-date-picker'
@@ -7,9 +7,11 @@ import type { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
-import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { LocalVariablesStore } from './LocalVariablesStore'
+import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
+import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { groupItemsByCollection } from '~/Helpers/CollectionGrouping.js'
 
 export function InternalModuleField(
 	option: InternalInputField,
@@ -116,18 +118,35 @@ const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropd
 }: Readonly<InternalConnectionIdDropdownProps>) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const choices = useComputed(() => {
-		const connectionChoices = []
+	const choices = useComputed((): DropdownChoicesOrGroups => {
+		const allConnections = connections.sortedConnections()
+
+		// Filter and convert connections to items for grouping
+		const filterItem = (config: ClientConnectionConfig): boolean => {
+			if (filterActionsRecorder && !config.hasRecordActionsHandler) return false
+			return true
+		}
+
+		const getItemChoice = (config: ClientConnectionConfig): DropdownChoice => ({
+			id: config.id,
+			label: config.label ?? config.id,
+		})
+
+		const groupsOrItems = groupItemsByCollection(
+			connections.rootCollections(),
+			allConnections,
+			getItemChoice,
+			filterItem
+		)
+
+		// Add "All Connections" option at the beginning if requested
 		if (includeAll) {
-			connectionChoices.push({ id: 'all', label: 'All Connections' })
+			const allChoice: DropdownChoice = { id: 'all', label: 'All Connections' }
+
+			return [allChoice, ...groupsOrItems]
 		}
 
-		for (const [id, config] of connections.connections.entries()) {
-			if (filterActionsRecorder && !config.hasRecordActionsHandler) continue
-
-			connectionChoices.push({ id, label: config.label ?? id })
-		}
-		return connectionChoices
+		return groupsOrItems
 	}, [connections, includeAll, filterActionsRecorder])
 
 	if (multiple) {
@@ -240,28 +259,40 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 }: Readonly<InternalCustomVariableDropdownProps>) {
 	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
 
-	const choices = useComputed(() => {
-		const choices: DropdownChoice[] = []
-
-		if (includeNone) {
-			choices.push({
-				id: '',
-				label: 'None',
-			})
+	const choices = useComputed((): DropdownChoicesOrGroups => {
+		interface MinimalCustomVariable {
+			id: string
+			description: string
+			collectionId: string | null
 		}
 
-		const customVariablesSorted = Array.from(customVariables.customVariables.entries()).sort(
-			(a, b) => a[1].sortOrder - b[1].sortOrder
+		// Convert custom variables Map to array of objects with id field
+		const allCustomVariables = Array.from(customVariables.customVariables.entries()).map(
+			([id, info]): MinimalCustomVariable => ({
+				id,
+				description: info.description,
+				collectionId: info.collectionId || null,
+			})
 		)
 
-		for (const [id, info] of customVariablesSorted) {
-			choices.push({
-				id,
-				label: info.description,
-			})
+		const getItemChoice = (variable: MinimalCustomVariable): DropdownChoice => ({
+			id: variable.id,
+			label: variable.description,
+		})
+
+		const groupsOrItems = groupItemsByCollection(
+			customVariables.rootCustomVariableCollections(),
+			allCustomVariables,
+			getItemChoice
+		)
+
+		// Add "None" option at the beginning if requested
+		if (includeNone) {
+			const noneChoice: DropdownChoice = { id: '', label: 'None' }
+			return [noneChoice, ...groupsOrItems]
 		}
 
-		return choices
+		return groupsOrItems
 	}, [customVariables, includeNone])
 
 	return (
@@ -417,25 +448,44 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 }: InternalTriggerDropdownProps) {
 	const { triggersList } = useContext(RootAppStoreContext)
 
-	const choices = useComputed(() => {
-		const choices: DropdownChoice[] = []
+	const choices = useComputed((): DropdownChoicesOrGroups => {
+		const selfChoices: DropdownChoice[] = []
+
+		// Add self options if needed
 		if (!isLocatedInGrid && includeSelf) {
 			if (includeSelf === 'abort') {
-				choices.push({ id: 'self', label: 'Current trigger: except this run' })
-				choices.push({ id: 'self:only-this-run', label: 'Current trigger: only this run' })
-				choices.push({ id: 'self:all-runs', label: 'Current trigger: all runs' })
+				selfChoices.push({ id: 'self', label: 'Current trigger: except this run' })
+				selfChoices.push({ id: 'self:only-this-run', label: 'Current trigger: only this run' })
+				selfChoices.push({ id: 'self:all-runs', label: 'Current trigger: all runs' })
 			} else {
-				choices.push({ id: 'self', label: 'Current trigger' })
+				selfChoices.push({ id: 'self', label: 'Current trigger' })
 			}
 		}
 
-		for (const [id, trigger] of triggersList.triggers.entries()) {
-			choices.push({
-				id: id,
-				label: trigger.name || `Trigger #${id}`,
-			})
+		interface MinimalTrigger {
+			id: string
+			name: string
+			collectionId: string | null
 		}
-		return choices
+
+		// Convert triggers Map to array of objects with id field
+		const allTriggers = Array.from(triggersList.triggers.entries()).map(
+			([id, trigger]): MinimalTrigger => ({
+				id,
+				name: trigger.name,
+				collectionId: trigger.collectionId || null,
+			})
+		)
+
+		const getItemChoice = (trigger: MinimalTrigger): DropdownChoice => ({
+			id: trigger.id,
+			label: trigger.name || `Trigger #${trigger.id}`,
+		})
+
+		const groupsOrItems = groupItemsByCollection(triggersList.rootCollections(), allTriggers, getItemChoice)
+
+		// Prepend self choices at the top (before all groups)
+		return [...selfChoices, ...groupsOrItems]
 	}, [triggersList, isLocatedInGrid, includeSelf])
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
@@ -454,21 +504,7 @@ const InternalTriggerCollectionDropdown = observer(function InternalTriggerColle
 }: InternalTriggerCollectionDropdownProps) {
 	const { triggersList } = useContext(RootAppStoreContext)
 
-	const choices = useComputed(() => {
-		const choices: DropdownChoice[] = []
-
-		const processCollections = (collections: TriggerCollection[]) => {
-			for (const collection of collections) {
-				choices.push({
-					id: collection.id,
-					label: collection.label || `Collection #${collection.id}`,
-				})
-			}
-		}
-		processCollections(triggersList.rootCollections())
-
-		return choices
-	}, [triggersList])
+	const choices = useCollectionChoices(triggersList)
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
@@ -486,24 +522,7 @@ const InternalConnectionCollectionDropdown = observer(function InternalConnectio
 }: InternalConnectionCollectionDropdownProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const choices = useComputed(() => {
-		const choices: DropdownChoice[] = []
-
-		const processCollections = (collections: ConnectionCollection[]) => {
-			for (const collection of collections) {
-				choices.push({
-					id: collection.id,
-					label: collection.label || `Collection #${collection.id}`,
-				})
-				if (collection.children) {
-					processCollections(collection.children)
-				}
-			}
-		}
-		processCollections(connections.rootCollections())
-
-		return choices
-	}, [connections])
+	const choices = useCollectionChoices(connections)
 
 	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
@@ -556,4 +575,29 @@ function InternalDatePicker({ value, setValue, disabled }: InternalDatePickerPro
 			/>
 		</>
 	)
+}
+
+function useCollectionChoices(listStore: GenericCollectionsStore<any>): DropdownChoice[] {
+	return useComputed(() => {
+		const choices: DropdownChoice[] = []
+
+		const processCollections = (collections: CollectionBase<any>[], parentPath: string[]) => {
+			for (const collection of collections) {
+				const label = collection.label || `Collection #${collection.id}`
+				const fullPath = [...parentPath, label].join(' / ')
+
+				choices.push({
+					id: collection.id,
+					label: fullPath,
+				})
+
+				if (collection.children) {
+					processCollections(collection.children, [...parentPath, label])
+				}
+			}
+		}
+		processCollections(listStore.rootCollections(), [])
+
+		return choices
+	}, [listStore])
 }

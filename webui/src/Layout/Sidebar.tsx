@@ -53,10 +53,11 @@ import { Link } from '@tanstack/react-router'
 import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useSortedConnectionsThatHaveVariables } from '~/Stores/Util.js'
+import { useSortedConnectionsThatHaveVariables, type ClientConnectionConfigWithId } from '~/Stores/Util.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { trpc } from '~/Resources/TRPC'
 import { useQuery } from '@tanstack/react-query'
+import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
 import { type MenuItemData } from '~/Components/ActionMenu'
@@ -373,10 +374,30 @@ export const MySidebar = memo(function MySidebar() {
 						groupVisible={supportGroupVis}
 						groupSetVisible={(expand) => smartExpand(setSupportGroupVis, expand)}
 					>
-						<SidebarMenuItem name="Bugs & Features" icon={faBug} path="https://bfoc.us/fiobkz0yqs" target="_blank" />
-						<SidebarMenuItem name="Community Forum" icon={faUsers} path="https://bfoc.us/qjk0reeqmy" target="_blank" />
-						<SidebarMenuItem name="Slack Chat" icon={faComments} path="https://bfoc.us/ke7e9dqgaz" target="_blank" />
-						<SidebarMenuItem name="Donate" icon={faDollarSign} path="https://bfoc.us/ccfbf8wm2x" target="_blank" />
+						<SidebarMenuItem
+							name="Bugs & Features"
+							icon={faBug}
+							path="https://l.companion.free/q/QZbI6mdNd"
+							target="_blank"
+						/>
+						<SidebarMenuItem
+							name="Community Forum"
+							icon={faUsers}
+							path="https://l.companion.free/q/6pc9ciJR5"
+							target="_blank"
+						/>
+						<SidebarMenuItem
+							name="Slack Chat"
+							icon={faComments}
+							path="https://l.companion.free/q/OWxbBnDKG"
+							target="_blank"
+						/>
+						<SidebarMenuItem
+							name="Sponsor"
+							icon={faDollarSign}
+							path="https://l.companion.free/q/6PtdAvZab"
+							target="_blank"
+						/>
 					</SidebarMenuItemGroup>
 				</CSidebarNav>
 			)}
@@ -388,21 +409,63 @@ export const MySidebar = memo(function MySidebar() {
 })
 
 const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
-	const { modules } = useContext(RootAppStoreContext)
+	const { modules, connections } = useContext(RootAppStoreContext)
 
 	const sortedConnections = useSortedConnectionsThatHaveVariables()
 
+	// Group connections
+	const { rootConnections, connectionsByCollection } = useMemo(() => {
+		const root: ClientConnectionConfigWithId[] = []
+		const byCol = new Map<string, ClientConnectionConfigWithId[]>()
+
+		for (const conn of sortedConnections) {
+			if (conn.collectionId) {
+				const existing = byCol.get(conn.collectionId)
+				if (existing) existing.push(conn)
+				else byCol.set(conn.collectionId, [conn])
+			} else {
+				root.push(conn)
+			}
+		}
+		return { rootConnections: root, connectionsByCollection: byCol }
+	}, [sortedConnections])
+
+	const renderConnection = (connectionInfo: ClientConnectionConfigWithId) => (
+		<SidebarMenuItem
+			key={connectionInfo.id}
+			name={connectionInfo.label}
+			subheading={modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)}
+			icon={null}
+			path={`/variables/connection/${connectionInfo.label}`}
+		/>
+	)
+
+	// Recursive render
+	const renderCollection = (collection: ConnectionCollection): React.ReactNode => {
+		const childConnections = connectionsByCollection.get(collection.id)
+
+		const childCollectionsRendered = (collection.children || [])
+			.slice()
+			.sort((a, b) => a.sortOrder - b.sortOrder)
+			.map((c) => renderCollection(c))
+			.filter((c): c is NonNullable<typeof c> => !!c) // Filter nulls
+
+		const hasChildren = (childConnections && childConnections.length > 0) || childCollectionsRendered.length > 0
+
+		if (!hasChildren) return null
+
+		return (
+			<SidebarMenuItemGroup key={collection.id} name={collection.label} icon={null} path={undefined}>
+				{childCollectionsRendered}
+				{childConnections?.map(renderConnection)}
+			</SidebarMenuItemGroup>
+		)
+	}
+
 	return (
 		<>
-			{sortedConnections.map((connectionInfo) => (
-				<SidebarMenuItem
-					key={connectionInfo.id}
-					name={connectionInfo.label}
-					subheading={modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId)}
-					icon={null}
-					path={`/variables/connection/${connectionInfo.label}`}
-				/>
-			))}
+			{connections.rootCollections().map((c) => renderCollection(c))}
+			{rootConnections.map(renderConnection)}
 		</>
 	)
 })

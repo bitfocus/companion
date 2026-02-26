@@ -315,6 +315,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 					connectionId: dropData.connectionId,
 					presetId: dropData.presetId,
 					location: { pageNumber: props.pageNumber, column: props.column, row: props.row },
+					variableValues: dropData.variableValues,
 				})
 				.catch(() => {
 					console.error('Preset import failed')

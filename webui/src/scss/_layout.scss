@@ -82,10 +82,22 @@ form.row > * {
 // 	margin: 0 auto;
 // }
 
-// not used? looks like only sidebar-header-toggler is used
-// .header-toggler svg {
-// 	color: #fff;
-// }
+// header-toggler is a coreui/bootstrap built-in class. It refers to the hamburger icon
+// that opens the sidebar in "mobile" mode (narrow window).
+// OTOH, .sidebar-header-toggler (in this file) refers to the toggler at the bottom of the sidebar in the other modes
+.header-toggler {
+	--cui-header-toggler-color: white; // kinder than color: #fff; ?
+	--cui-header-toggler-hover-color: white;
+
+	// the next two keep the hover highlight border more uniform w/o changing spacing
+	padding: var(--cui-header-toggler-padding-y) !important; // !important overrides .ps-1, just in case
+	margin-right: calc(var(--cui-header-toggler-padding-x) - var(--cui-header-toggler-padding-y));
+
+	//  make the color similar to --cui-btn-hover-bg, which is not accessible here;  alt: #{$header-brand-bg} is a bit darker.
+	&:hover {
+		background-color: color.adjust($header-bg, $lightness: -6%);
+	}
+}
 
 .header-right {
 	margin-right: 5px;
@@ -132,6 +144,9 @@ form.row > * {
 		margin-left: 1em; // buffer between this and the lock icon
 		// the following line makes the focus/hover-highlight a square that is the same size as the notification
 		padding: 0.2em 0em;
+		// CDropdownToggle is not assigned class dropdown-toggle because we're not using the caret, so we manually override
+		// override "middle-of-group" rule (this appears to be a recent bug in CoreUI: https://github.com/coreui/coreui-react/issues/455)
+		border-radius: var(--cui-border-radius) !important;
 	}
 
 	// The nesting within .dropdown-menu is mostly for clarity, to emphasize the DOM structure:
@@ -148,6 +163,7 @@ form.row > * {
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow to the dropdown
 		border-radius: 6px; // Slightly rounded corners
 		min-width: 240px; // Slightly wider for breathing room
+		position: inherit;
 
 		.dropdown-item {
 			font-size: 0.95rem; // Slightly smaller, more refined
@@ -409,8 +425,8 @@ form.row > * {
 		}
 	}
 
-	.nav-group-toggle-link {
-		padding: 0;
+	.nav-group-toggle {
+		padding-right: 0;
 
 		&::after {
 			// affects the caret
@@ -418,6 +434,10 @@ form.row > * {
 			margin-right: 16px;
 			background-color: white;
 		}
+	}
+
+	.nav-group-toggle-link {
+		padding: 0;
 
 		.nav-link {
 			margin-bottom: 0;
@@ -597,7 +617,7 @@ form.row > * {
 	margin-right: 12px;
 
 	.secondary-panel-simple-header {
-		background: #e9ecef; /* Darker gray background */
+		background: #dee2e5; /* Darker gray background */
 		border-bottom: 1px solid #dee2e6; /* Subtle border */
 		padding: 1.25rem 1.5rem;
 		display: flex;
@@ -747,23 +767,6 @@ hr.slim {
 
 .entity-category:not(:first-child) {
 	margin-top: 2rem;
-}
-
-.add-browse-card .header {
-	padding: 6px 12px;
-	font-size: 1.6em;
-	font-weight: bold;
-	background-color: $primary;
-	color: white;
-	border-radius: 4px;
-}
-
-.add-browse-card .clickable-add-item {
-	cursor: pointer;
-}
-
-.add-browse-card .clickable-add-item:hover {
-	background-color: rgba(0, 0, 0, 0.1);
 }
 
 .shadow-inset {

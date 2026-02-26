@@ -115,7 +115,6 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 				this.#completeRegistration(msg)
 				return {}
 			},
-			ready: this.#handleReadyMessage.bind(this),
 
 			disconnect: this.#handleDisconnectMessage.bind(this),
 
@@ -197,6 +196,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 	}
 
 	#startStopConnections = (connectionInfo: OutboundSurfaceInfo) => {
+		if (!this.features.supportsRemote) return
 		if (connectionInfo.enabled) {
 			this.#ipcWrapper
 				.sendWithCb('setupRemoteConnections', {
@@ -222,7 +222,10 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 	}
 
 	async init(): Promise<void> {
-		// Nothing to do
+		// Initialize the plugin
+		await this.#ipcWrapper.sendWithCb('init', {})
+
+		this.#deps.instanceStatus.updateInstanceStatus(this.instanceId, 'ok', null)
 	}
 	async ready(): Promise<void> {
 		this.#deps.surfaceController.initInstance(this.instanceId, this.features)
@@ -230,20 +233,24 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		this.#deps.invalidateClientJson(this.instanceId)
 
 		// Start up any existing outbound connections for this instance
-		const remoteConnections = this.#deps.surfaceController.outbound.getAllEnabledConnectionsForInstance(this.instanceId)
-		this.#ipcWrapper
-			.sendWithCb('setupRemoteConnections', {
-				connectionInfos: remoteConnections.map(
-					(conn) =>
-						({
-							connectionId: conn.id,
-							config: conn.config,
-						}) satisfies RemoteSurfaceConnectionInfo
-				),
-			})
-			.catch((e) => {
-				this.logger.warn(`Error setting up initial remote connections: ${e.message}`)
-			})
+		if (this.features.supportsRemote) {
+			const remoteConnections = this.#deps.surfaceController.outbound.getAllEnabledConnectionsForInstance(
+				this.instanceId
+			)
+			this.#ipcWrapper
+				.sendWithCb('setupRemoteConnections', {
+					connectionInfos: remoteConnections.map(
+						(conn) =>
+							({
+								connectionId: conn.id,
+								config: conn.config,
+							}) satisfies RemoteSurfaceConnectionInfo
+					),
+				})
+				.catch((e) => {
+					this.logger.warn(`Error setting up initial remote connections: ${stringifyError(e)}`)
+				})
+		}
 	}
 
 	/**
@@ -448,12 +455,6 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			// TODO - tell the child, as something has gone wrong
 			this.logger.warn(`Error opening surface panel: ${e}`)
 		}
-	}
-
-	async #handleReadyMessage(_msg: Record<string, never>): Promise<void> {
-		this.#deps.instanceStatus.updateInstanceStatus(this.instanceId, 'ok', null)
-
-		// TODO - more?
 	}
 
 	async #handleDisconnectMessage(msg: DisconnectMessage): Promise<void> {
