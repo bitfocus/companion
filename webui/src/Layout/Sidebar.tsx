@@ -27,9 +27,6 @@ import {
 	faGamepad,
 	faExternalLinkSquare,
 	faHeadset,
-	faBug,
-	faUsers,
-	faComments,
 	faSquareCaretRight,
 	faPuzzlePiece,
 	faInfo,
@@ -40,6 +37,7 @@ import {
 	faArrowsDownToLine,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faGithub, faFacebook, faSlack } from '@fortawesome/free-brands-svg-icons'
 import {
 	SurfacesConfiguredTabNotifyIcon,
 	ConnectionsTabNotifyIcon,
@@ -378,25 +376,29 @@ export const MySidebar = memo(function MySidebar() {
 						groupSetVisible={(expand) => smartExpand(setSupportGroupVis, expand)}
 					>
 						<SidebarMenuItem
-							name="Bugs & Features"
-							icon={faBug}
+							name="Report an Issue"
+							title="Report bugs or request features on GitHub."
+							icon={faGithub}
 							path="https://l.companion.free/q/QZbI6mdNd"
 							target="_blank"
 						/>
 						<SidebarMenuItem
 							name="Community Forum"
-							icon={faUsers}
+							title="Share your experience or ask questions to your Companions."
+							icon={faFacebook}
 							path="https://l.companion.free/q/6pc9ciJR5"
 							target="_blank"
 						/>
 						<SidebarMenuItem
 							name="Slack Chat"
-							icon={faComments}
+							title="Discuss technical issues on Slack."
+							icon={faSlack}
 							path="https://l.companion.free/q/OWxbBnDKG"
 							target="_blank"
 						/>
 						<SidebarMenuItem
 							name="Sponsor"
+							title="Contribute funds to Bitfocus Companion."
 							icon={faDollarSign}
 							path="https://l.companion.free/q/6PtdAvZab"
 							target="_blank"
