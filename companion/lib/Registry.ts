@@ -5,6 +5,7 @@ import express from 'express'
 import LogController, { type Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
+import { ControlStore } from './Controls/ControlStore.js'
 import { GraphicsController } from './Graphics/Controller.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
@@ -28,6 +29,7 @@ import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
 import path from 'path'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ActionRunner } from './Controls/ActionRunner.js'
 
 let infoFileName: URL
 // note this could be done in one line, but webpack was having trouble before url processing was disabled.
@@ -82,11 +84,11 @@ export class Registry {
 	/**
 	 * The cloud controller
 	 */
-	cloud!: CloudController
+	readonly cloud: CloudController
 	/**
 	 * The core controls controller
 	 */
-	controls!: ControlsController
+	readonly controls: ControlsController
 	/**
 	 * The core database library
 	 */
@@ -94,11 +96,11 @@ export class Registry {
 	/**
 	 * The core graphics controller
 	 */
-	graphics!: GraphicsController
+	readonly graphics: GraphicsController
 	/**
 	 * The core instance controller
 	 */
-	instance!: InstanceController
+	readonly instance: InstanceController
 	/**
 	 * The logger
 	 */
@@ -106,19 +108,19 @@ export class Registry {
 	/**
 	 * The core page controller
 	 */
-	page!: PageController
+	readonly page: PageController
 	/**
 	 * The core page controller
 	 */
-	preview!: PreviewController
+	readonly preview: PreviewController
 	/**
 	 * The core service controller
 	 */
-	services!: ServiceController
+	readonly services: ServiceController
 	/**
 	 * The core device controller
 	 */
-	surfaces!: SurfaceController
+	readonly surfaces: SurfaceController
 	/**
 	 * The core user config manager
 	 */
@@ -127,11 +129,11 @@ export class Registry {
 	/**
 	 * The 'internal' module
 	 */
-	internalModule!: InternalController
+	readonly internalModule: InternalController
 
-	importExport!: ImportExportController
+	readonly importExport: ImportExportController
 
-	usageStatistics!: DataUsageStatistics
+	readonly usageStatistics: DataUsageStatistics
 
 	/**
 	 * The 'data' controller
@@ -185,11 +187,168 @@ export class Registry {
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		LogController.init(this.#appInfo)
 
+		const controlEvents = new EventEmitter<ControlCommonEvents>()
+		controlEvents.setMaxListeners(0)
+
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 
+		const pageStore = new PageStore(this.db.getTableView('pages'))
+
 		this.variables = new VariablesController(this.db)
+		const controlStore = new ControlStore(this.db, this.variables.values)
+
+		this.graphics = new GraphicsController(controlStore, pageStore, this.userconfig, this.variables.values)
+
+		this.surfaces = new SurfaceController(this.db, {
+			controls: controlStore,
+			graphics: this.graphics,
+			pageStore: pageStore,
+			userconfig: this.userconfig,
+			variables: this.variables,
+		})
+
+		const oscSender = new ServiceOscSender(this.userconfig)
+
+		this.instance = new InstanceController(
+			this.#appInfo,
+			this.db,
+			this.#data.cache,
+			this.#internalApiRouter,
+			controlStore,
+			this.variables,
+			this.surfaces,
+			oscSender
+		)
+		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
+
+		this.internalModule = new InternalController(controlStore, pageStore, this.instance, this.variables)
+
+		const actionRunner = new ActionRunner(this.instance, this.internalModule)
+
+		this.controls = new ControlsController(this.db, controlStore, controlEvents, {
+			surfaces: this.surfaces,
+			pageStore: pageStore,
+			internalModule: this.internalModule,
+			instance: this.instance,
+			variableValues: this.variables.values,
+			userconfig: this.userconfig,
+			actionRunner: actionRunner,
+		})
+		this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
+
+		this.internalModule.init(
+			this.#appInfo,
+			this.controls,
+			this.instance,
+			this.surfaces,
+			this.graphics,
+			this.userconfig,
+			controlEvents,
+			actionRunner,
+			this.exit.bind(this)
+		)
+
+		this.page = new PageController(this.graphics, this.controls, this.userconfig, controlEvents, pageStore)
+
+		this.importExport = new ImportExportController(
+			this.#appInfo,
+			this.#internalApiRouter,
+			this.db,
+			this.controls,
+			this.graphics,
+			this.instance,
+			this.internalModule,
+			this.page,
+			this.surfaces,
+			this.userconfig,
+			this.variables
+		)
+
+		const serviceApi = new ServiceApi(
+			this.#appInfo,
+			pageStore,
+			controlStore,
+			this.instance.actionRecorder,
+			this.surfaces,
+			this.variables,
+			this.graphics,
+			controlEvents
+		)
+
+		this.services = new ServiceController(
+			serviceApi,
+			this.userconfig,
+			oscSender,
+			this.surfaces,
+			pageStore,
+			this.instance,
+			this.ui.io,
+			this.ui.express
+		)
+		this.cloud = new CloudController(this.#appInfo, this.db, this.#data.cache, controlStore, this.graphics, pageStore)
+		this.usageStatistics = new DataUsageStatistics(
+			this.#appInfo,
+			this.surfaces,
+			this.instance,
+			this.page,
+			this.controls,
+			this.variables,
+			this.cloud,
+			this.services,
+			this.userconfig
+		)
+
+		this.instance.status.on('status_change', () => this.controls.checkAllStatus())
+		controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
+		controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
+		controlEvents.on('controlCountChanged', () => this.graphics.triggerCacheResize())
+
+		this.graphics.on('resubscribeFeedbacks', () => this.instance.processManager.resubscribeAllFeedbacks())
+		this.graphics.on('presetDrawn', (controlId, render) => controlEvents.emit('presetDrawn', controlId, render))
+
+		this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
+			setImmediate(() => {
+				// give the change a chance to be pushed to the ui first
+				this.graphics.updateUserConfig(key, value)
+				this.services.updateUserConfig(key, value)
+				this.surfaces.updateUserConfig(key, value)
+				this.usageStatistics.updateUserConfig(key, value)
+			})
+
+			if (checkControlsInBounds) {
+				const controlsToRemove = this.page.findAllOutOfBoundsControls()
+
+				for (const controlId of controlsToRemove) {
+					this.controls.deleteControl(controlId)
+				}
+
+				this.graphics.discardAllOutOfBoundsControls()
+			}
+		})
+
+		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
+			this.internalModule.onVariablesChanged(all_changed_variables_set, null)
+			this.controls.onVariablesChanged(all_changed_variables_set, null)
+			this.instance.processManager.onVariablesChanged(all_changed_variables_set, null)
+			this.preview.onVariablesChanged(all_changed_variables_set, null)
+			this.surfaces.onVariablesChanged(all_changed_variables_set)
+		})
+		this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
+			this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.instance.processManager.onVariablesChanged(all_changed_variables_set, fromControlId)
+			this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+		})
+
+		this.page.on('controlIdsMoved', (controlIds) => {
+			this.preview.onControlIdsLocationChanged(controlIds)
+		})
+
+		this.graphics.on('button_drawn', (location, render) => {
+			this.services.onButtonDrawn(location, render)
+		})
 	}
 
 	/**
@@ -202,162 +361,15 @@ export class Registry {
 		this.#logger.debug('launching core modules')
 
 		try {
-			const controlEvents = new EventEmitter<ControlCommonEvents>()
-			controlEvents.setMaxListeners(0)
-
-			const pageStore = new PageStore(this.db.getTableView('pages'))
-
-			this.controls = new ControlsController(this, controlEvents)
-			this.graphics = new GraphicsController(this.controls, pageStore, this.userconfig, this.variables.values)
-
-			this.surfaces = new SurfaceController(this.db, {
-				controls: this.controls,
-				graphics: this.graphics,
-				pageStore: pageStore,
-				userconfig: this.userconfig,
-				variables: this.variables,
-			})
-
-			const oscSender = new ServiceOscSender(this.userconfig)
-			this.instance = new InstanceController(
-				this.#appInfo,
-				this.db,
-				this.#data.cache,
-				this.#internalApiRouter,
-				this.controls,
-				this.graphics,
-				this.variables,
-				this.surfaces,
-				oscSender
-			)
-			this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
-
-			this.internalModule = new InternalController(
-				this.#appInfo,
-				this.controls,
-				pageStore,
-				this.instance,
-				this.variables,
-				this.surfaces,
-				this.graphics,
-				this.userconfig,
-				controlEvents,
-				this.exit.bind(this)
-			)
-
-			this.page = new PageController(this.graphics, this.controls, this.userconfig, pageStore)
-			this.importExport = new ImportExportController(
-				this.#appInfo,
-				this.#internalApiRouter,
-				this.db,
-				this.controls,
-				this.graphics,
-				this.instance,
-				this.internalModule,
-				this.page,
-				this.surfaces,
-				this.userconfig,
-				this.variables
-			)
-
-			const serviceApi = new ServiceApi(
-				this.#appInfo,
-				pageStore,
-				this.controls,
-				this.surfaces,
-				this.variables,
-				this.graphics,
-				controlEvents
-			)
-
-			this.services = new ServiceController(
-				serviceApi,
-				this.userconfig,
-				oscSender,
-				this.surfaces,
-				pageStore,
-				this.instance,
-				this.ui.io,
-				this.ui.express
-			)
-			this.cloud = new CloudController(
-				this.#appInfo,
-				this.db,
-				this.#data.cache,
-				this.controls,
-				this.graphics,
-				pageStore
-			)
-			this.usageStatistics = new DataUsageStatistics(
-				this.#appInfo,
-				this.surfaces,
-				this.instance,
-				this.page,
-				this.controls,
-				this.variables,
-				this.cloud,
-				this.services,
-				this.userconfig
-			)
-
-			this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
-
-			this.instance.status.on('status_change', () => this.controls.checkAllStatus())
-			controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
-			controlEvents.on('invalidateLocationRender', (location) => this.graphics.invalidateButton(location))
-			controlEvents.on('controlCountChanged', () => this.graphics.triggerCacheResize())
-
-			this.graphics.on('resubscribeFeedbacks', () => this.instance.processManager.resubscribeAllFeedbacks())
-			this.graphics.on('presetDrawn', (controlId, render) => controlEvents.emit('presetDrawn', controlId, render))
-
-			this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
-				setImmediate(() => {
-					// give the change a chance to be pushed to the ui first
-					this.graphics.updateUserConfig(key, value)
-					this.services.updateUserConfig(key, value)
-					this.surfaces.updateUserConfig(key, value)
-					this.usageStatistics.updateUserConfig(key, value)
-				})
-
-				if (checkControlsInBounds) {
-					const controlsToRemove = this.page.findAllOutOfBoundsControls()
-
-					for (const controlId of controlsToRemove) {
-						this.controls.deleteControl(controlId)
-					}
-
-					this.graphics.discardAllOutOfBoundsControls()
-				}
-			})
-
-			this.variables.values.on('variables_changed', (all_changed_variables_set) => {
-				this.internalModule.onVariablesChanged(all_changed_variables_set, null)
-				this.controls.onVariablesChanged(all_changed_variables_set, null)
-				this.instance.processManager.onVariablesChanged(all_changed_variables_set, null)
-				this.preview.onVariablesChanged(all_changed_variables_set, null)
-				this.surfaces.onVariablesChanged(all_changed_variables_set)
-			})
-			this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
-				this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
-				this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
-				this.instance.processManager.onVariablesChanged(all_changed_variables_set, fromControlId)
-				this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
-			})
-
-			this.page.on('controlIdsMoved', (controlIds) => {
-				this.preview.onControlIdsLocationChanged(controlIds)
-			})
-
-			this.graphics.on('button_drawn', (location, render) => {
-				this.services.onButtonDrawn(location, render)
-			})
-
 			// old 'modules_loaded' events
 			this.usageStatistics.startStopCycle()
 			this.ui.update.startCycle()
 
 			this.controls.init()
-			this.controls.verifyConnectionIds()
+			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
+			knownConnectionIds.add('internal')
+			this.controls.verifyConnectionIds(knownConnectionIds)
+
 			this.variables.custom.init()
 			this.internalModule.firstUpdate()
 			this.graphics.regenerateAll(false)
@@ -368,12 +380,12 @@ export class Registry {
 			// Instances are loaded, start up http
 			const router = createTrpcRouter(this)
 			this.ui.io.bindTrpcRouter(router, () => {
-				this.controls.triggers.emit('client_connect')
+				this.controls.triggerEvents.emit('client_connect')
 			})
 			this.rebindHttp(bindIp, bindPort)
 
 			// Startup has completed, run triggers
-			this.controls.triggers.emit('startup')
+			this.controls.triggerEvents.emit('startup')
 
 			if (process.env.COMPANION_IPC_PARENT) {
 				process.on('message', (msg: any): void => {
@@ -389,7 +401,7 @@ export class Registry {
 						} else if (msg.messageType === 'power-status') {
 							this.instance.powerStatusChange(msg.status)
 						} else if (msg.messageType === 'lock-screen') {
-							this.controls.triggers.emit('locked', !!msg.status)
+							this.controls.triggerEvents.emit('locked', !!msg.status)
 						}
 					} catch (e) {
 						this.#logger.debug(`Failed to handle IPC message: ${e}`)

@@ -17,7 +17,12 @@
 
 	/* Override Monaco suggest widget to show details below name */
 	.monaco-editor .suggest-widget {
-		z-index: 10000 !important; /* otherwise the top goes under the top banner in action/feedback expression suggestions */
+		box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+		border-radius: 0.5em;
+
+		.monaco-list .monaco-list-rows {
+			border-radius: 0.5em;
+		}
 
 		.monaco-list .monaco-list-row {
 			align-items: center;
@@ -40,9 +45,12 @@
 					grid-column: 2;
 					grid-row: 1;
 					font-weight: bold;
-					text-decoration: none !important; /* this doesn't work */
 					padding-top: 5px;
-					white-space: pre-wrap !important; /* this doesn't work */
+
+					.label-name {
+						text-decoration: none !important; // don't need important, but we are overriding at this level
+						//white-space: pre-wrap !important; /* this doesn't work; maybe don't even want it? */
+					}
 				}
 
 				/* Right (details/description) moves below name */
@@ -57,20 +65,40 @@
 						// color: #000;
 						display: block !important;
 					}
+					.readMore {
+						visibility: visible !important;
+						margin-top: -0.75em;
+						&::before {
+							font-size: 28px !important;
+							background-color: rgba(255, 255, 255, 0.2);
+						}
+						&:hover::before {
+							background-color: rgba(255, 255, 255, 0.4);
+						}
+					}
 				}
 			}
 		}
 	}
 }
 
-// full path is: .monaco-editor .suggest-widget, .monaco-editor .suggest-details
+// full path is: .monaco-editor .overflowingOverlayWidgets .suggest-details-container .suggest-details
+// .monaco-editor .suggest-details-container sets z-index: 41
 .monaco-editor .suggest-details {
 	line-height: 1.5 !important;
-	min-height: 15em;
+	height: auto !important;
+	overflow-y: auto;
+	max-height: 25em;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+
+	.body {
+		padding: 2px;
+		padding-bottom: 0.5em;
+	}
 
 	.header {
 		padding: 0.5em;
-		background-color: var(--cui-danger-bg-subtle);
+		background-color: var(--cui-info-bg-subtle);
 
 		.type {
 			padding-top: 0 !important;
@@ -78,15 +106,20 @@
 		}
 
 		.codicon-close {
-			height: 1em !important;
-			width: 1em !important;
-			margin-top: -1.5em;
-			margin-right: -1.2em;
+			height: 1.5em !important;
+			width: 1.5em !important;
+			position: absolute !important; // it already is absolute, but just for clarity...
+			top: -1px !important;
+			right: -1px !important; // note: 12px would avoid the scrollbar, but it's unlikely to be used, so this looks better
 			background-color: lightgray;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+
+			&::before {
+				font-size: 1.3em !important;
+			}
 		}
-	}
-	.docs {
-		padding-top: 1em;
-		padding-bottom: 1em;
 	}
 }

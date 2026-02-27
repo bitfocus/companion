@@ -28,7 +28,7 @@ import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Cont
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
 import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
 import { EventEmitter } from 'events'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -61,13 +61,13 @@ function compareValues(op: any, value: any, value2: any): boolean {
 }
 
 export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
-	readonly #controlsController: ControlsController
+	readonly #controlsStore: IControlStore
 	readonly #pageStore: IPageStore
 
-	constructor(controlsController: ControlsController, pageStore: IPageStore) {
+	constructor(controlsStore: IControlStore, pageStore: IPageStore) {
 		super()
 
-		this.#controlsController = controlsController
+		this.#controlsStore = controlsStore
 		this.#pageStore = pageStore
 	}
 
@@ -225,6 +225,8 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						default: '',
 						description: 'The raw value will be written to the variable',
 						expressionDescription: 'The expression will be executed with the result written to the variable',
+						allowInvalidValues: true,
+						disableSanitisation: true,
 					},
 				],
 
@@ -322,7 +324,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		}
 		if (!theControlId) return
 
-		const control = this.#controlsController.getControl(theControlId)
+		const control = this.#controlsStore.getControl(theControlId)
 		if (!control || !control.supportsEntities) return
 
 		const variableEntity = control.entities

@@ -346,7 +346,7 @@ export class ControlEntityList {
 	 * Prune all entities referencing unknown connections
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): boolean {
+	verifyConnectionIds(knownConnectionIds: ReadonlySet<string>): boolean {
 		// Clean out actions
 		const entitiesLength = this.#entities.length
 		this.#entities = this.#entities.filter((entity) => !!entity && knownConnectionIds.has(entity.connectionId))

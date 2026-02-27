@@ -19,7 +19,7 @@ import type {
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
 } from '@companion-module/host'
-import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import type { PresetDefinition, UIPresetSection } from '@companion-app/shared/Model/Presets.js'
 
 export type ModuleIpcWrapper = IpcWrapper<HostToModuleEventsNew, ModuleToHostEventsNew>
 export type ModuleChildIpcWrapper = IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>
@@ -170,7 +170,8 @@ export interface SetVariableDefinitionsMessage {
 }
 
 export interface SetPresetDefinitionsMessage {
-	presets: PresetDefinition[]
+	presets: Record<string, PresetDefinition>
+	uiPresets: Record<string, UIPresetSection>
 }
 
 export interface SetVariableValuesMessage {

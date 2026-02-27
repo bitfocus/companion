@@ -12,6 +12,7 @@ import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import {
 	ExpressionableOptionsObjectSchema,
+	JsonValueSchema,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
 import LogController from '../Log/Controller.js'
@@ -122,10 +123,15 @@ export class PreviewGraphics {
 					z.object({
 						connectionId: z.string(),
 						presetId: z.string(),
+						variableValues: z.record(z.string(), JsonValueSchema.optional()).nullable(),
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
-					const control = self.#controlsController.getOrCreatePresetControl(input.connectionId, input.presetId)
+					const control = self.#controlsController.getOrCreatePresetControl(
+						input.connectionId,
+						input.presetId,
+						input.variableValues
+					)
 					if (!control) throw new Error(`Preset "${input.presetId}" not found for connection "${input.connectionId}"`)
 
 					// track this session on the control
@@ -172,7 +178,10 @@ export class PreviewGraphics {
 						const parser = self.#controlsController.createVariablesAndExpressionParser(controlId, null)
 
 						// Do a resolve of the reference for the starting image
-						const locationValue = parser.parseEntityOption(options.location, 'variables') // This value should be a ExpressionOrValue, and the value mode is variables
+						const locationValue = parser.parseEntityOption(options.location, {
+							allowExpression: true,
+							parseVariables: true,
+						})
 						const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
 
 						// Track the subscription, to allow it to be invalidated
@@ -259,7 +268,10 @@ export class PreviewGraphics {
 			const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.controlId, null)
 
 			// Resolve the new location
-			const locationValue = parser.parseEntityOption(previewSession.options.location, 'variables') // This value should be a ExpressionOrValue, and the value mode is variables
+			const locationValue = parser.parseEntityOption(previewSession.options.location, {
+				allowExpression: true,
+				parseVariables: true,
+			})
 			const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
 
 			const lastResolvedLocation = previewSession.resolvedLocation

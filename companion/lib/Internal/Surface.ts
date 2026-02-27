@@ -22,7 +22,7 @@ import type {
 	FeedbackForInternalExecution,
 	ActionForInternalExecution,
 } from './Types.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
@@ -65,15 +65,15 @@ const CHOICES_PAGE: SomeCompanionInputField = {
 export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #logger = LogController.createLogger('Internal/Surface')
 
-	readonly #controlsController: ControlsController
+	readonly #controlsStore: IControlStore
 	readonly #surfaceController: SurfaceController
 	readonly #pageStore: IPageStore
 
-	constructor(surfaceController: SurfaceController, controlsController: ControlsController, pageStore: IPageStore) {
+	constructor(surfaceController: SurfaceController, controlsStore: IControlStore, pageStore: IPageStore) {
 		super()
 
 		this.#surfaceController = surfaceController
-		this.#controlsController = controlsController
+		this.#controlsStore = controlsStore
 		this.#pageStore = pageStore
 
 		setImmediate(() => {
@@ -479,7 +479,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				if (!surfaceId) return true
 
 				if (extras.controlId && extras.surfaceId == surfaceId) {
-					const control = this.#controlsController.getControl(extras.controlId)
+					const control = this.#controlsStore.getControl(extras.controlId)
 					if (control && control.supportsPushed) {
 						// Make sure the button doesn't show as pressed
 						control.setPushed(false, extras.surfaceId)
@@ -503,7 +503,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		} else if (action.definitionId === 'lockout_all') {
 			if (this.#surfaceController.isPinLockEnabled()) {
 				if (extras.controlId) {
-					const control = this.#controlsController.getControl(extras.controlId)
+					const control = this.#controlsStore.getControl(extras.controlId)
 					if (control && control.supportsPushed) {
 						// Make sure the button doesn't show as pressed
 						control.setPushed(false, extras.surfaceId)

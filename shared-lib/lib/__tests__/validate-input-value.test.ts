@@ -417,6 +417,127 @@ describe('validateInputValue', () => {
 				})
 			})
 		})
+
+		describe('clampNumbers', () => {
+			const definition: CompanionInputFieldNumberExtended = {
+				id: 'test',
+				type: 'number',
+				label: 'Test',
+				default: 0,
+				min: 0,
+				max: 100,
+			}
+
+			it('should clamp value below min to min and return validationError', () => {
+				expect(validateInputValue(definition, -10, { clampNumbers: true })).toEqual({
+					sanitisedValue: 0,
+					validationError: 'Value was clamped to 0',
+				})
+			})
+
+			it('should clamp value above max to max and return validationError', () => {
+				expect(validateInputValue(definition, 150, { clampNumbers: true })).toEqual({
+					sanitisedValue: 100,
+					validationError: 'Value was clamped to 100',
+				})
+			})
+
+			it('should not clamp values within range', () => {
+				expect(validateInputValue(definition, 50, { clampNumbers: true })).toEqual({
+					sanitisedValue: 50,
+					validationError: undefined,
+				})
+			})
+
+			it('should not clamp when allowInvalidValues is set', () => {
+				const allowInvalidDefinition: CompanionInputFieldNumberExtended = {
+					...definition,
+					allowInvalidValues: true,
+				}
+				expect(validateInputValue(allowInvalidDefinition, -10, { clampNumbers: true })).toEqual({
+					sanitisedValue: -10,
+					validationError: 'Value must be greater than or equal to 0',
+				})
+				expect(validateInputValue(allowInvalidDefinition, 150, { clampNumbers: true })).toEqual({
+					sanitisedValue: 150,
+					validationError: 'Value must be less than or equal to 100',
+				})
+			})
+
+			it('should not clamp when clampNumbers is false (default)', () => {
+				expect(validateInputValue(definition, -10)).toEqual({
+					sanitisedValue: -10,
+					validationError: 'Value must be greater than or equal to 0',
+				})
+				expect(validateInputValue(definition, 150)).toEqual({
+					sanitisedValue: 150,
+					validationError: 'Value must be less than or equal to 100',
+				})
+			})
+
+			it('should clamp when only min is defined', () => {
+				const minOnlyDefinition: CompanionInputFieldNumberExtended = {
+					id: 'test',
+					type: 'number',
+					label: 'Test',
+					default: 0,
+					min: 0,
+					max: undefined as unknown as number,
+				}
+				expect(validateInputValue(minOnlyDefinition, -5, { clampNumbers: true })).toEqual({
+					sanitisedValue: 0,
+					validationError: 'Value was clamped to 0',
+				})
+				expect(validateInputValue(minOnlyDefinition, 1000, { clampNumbers: true })).toEqual({
+					sanitisedValue: 1000,
+					validationError: undefined,
+				})
+			})
+
+			it('should clamp when only max is defined', () => {
+				const maxOnlyDefinition: CompanionInputFieldNumberExtended = {
+					id: 'test',
+					type: 'number',
+					label: 'Test',
+					default: 0,
+					min: undefined as unknown as number,
+					max: 100,
+				}
+				expect(validateInputValue(maxOnlyDefinition, -1000, { clampNumbers: true })).toEqual({
+					sanitisedValue: -1000,
+					validationError: undefined,
+				})
+				expect(validateInputValue(maxOnlyDefinition, 200, { clampNumbers: true })).toEqual({
+					sanitisedValue: 100,
+					validationError: 'Value was clamped to 100',
+				})
+			})
+
+			it('should still return error for non-numeric values even with clampNumbers', () => {
+				expect(validateInputValue(definition, 'abc', { clampNumbers: true })).toEqual({
+					sanitisedValue: 'abc',
+					validationError: 'Value must be a number',
+				})
+			})
+
+			it('should still return error for missing values even with clampNumbers', () => {
+				expect(validateInputValue(definition, undefined, { clampNumbers: true })).toEqual({
+					sanitisedValue: undefined,
+					validationError: 'A value must be provided',
+				})
+			})
+
+			it('should clamp coerced string values', () => {
+				expect(validateInputValue(definition, '150', { clampNumbers: true })).toEqual({
+					sanitisedValue: 100,
+					validationError: 'Value was clamped to 100',
+				})
+				expect(validateInputValue(definition, '-5', { clampNumbers: true })).toEqual({
+					sanitisedValue: 0,
+					validationError: 'Value was clamped to 0',
+				})
+			})
+		})
 	})
 
 	describe('checkbox', () => {

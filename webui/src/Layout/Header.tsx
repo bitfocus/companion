@@ -89,7 +89,10 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
 
 	return (
-		<CHeader position="sticky" className="p-0">
+		// note: position="sticky" is not necessary since the header is never part of a scrolling element.
+		//  if position is sticky, the header is assigned z-index: 1020, which interferes with popups (monaco suggest-details, for example)
+		//  and would likely have to be overridden anyway (to be no more than 40, in the monaco case).
+		<CHeader className="p-0">
 			<CContainer fluid>
 				{showToggle && (
 					<CHeaderToggler className="ps-1" onClick={clickToggle}>
@@ -107,7 +110,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 
 					{updateData.data?.message ? (
 						<CNavItem className="header-notification-item">
-							<CNavLink target="_blank" href={updateData.data.link || 'https://bitfocus.io/companion/'}>
+							<CNavLink target="_blank" href={updateData.data.link || 'https://companion.free/'}>
 								<div className="flex">
 									<div className="align-self-center">
 										<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
@@ -176,7 +179,7 @@ function HelpMenu() {
 				id: 'fb',
 				label: 'Community Support',
 				icon: faFacebook,
-				to: 'https://bfoc.us/qjk0reeqmy',
+				to: 'https://l.companion.free/q/6pc9ciJR5',
 				tooltip: 'Share your experience or ask questions to your Companions.',
 				inNewTab: true,
 			},
@@ -184,7 +187,7 @@ function HelpMenu() {
 				id: 'slack',
 				label: 'Slack Workspace',
 				icon: faSlack,
-				to: 'https://bfoc.us/ke7e9dqgaz',
+				to: 'https://l.companion.free/q/OWxbBnDKG',
 				tooltip: 'Discuss technical issues on Slack.',
 				inNewTab: true,
 			},
@@ -192,16 +195,16 @@ function HelpMenu() {
 				id: 'github',
 				label: 'Report an Issue',
 				icon: faGithub,
-				to: 'https://bfoc.us/fiobkz0yqs',
+				to: 'https://l.companion.free/q/QZbI6mdNd',
 				tooltip: 'Report bugs or request features on GitHub.',
 				inNewTab: true,
 			},
 			MenuSeparatorSpec,
 			{
-				id: 'donate',
-				label: 'Donate',
+				id: 'sponsor',
+				label: 'Sponsor Companion',
 				icon: faDollarSign,
-				to: 'https://bfoc.us/ccfbf8wm2x',
+				to: 'https://l.companion.free/q/6PtdAvZab',
 				tooltip: 'Contribute funds to Bitfocus Companion.',
 				inNewTab: true,
 			},
@@ -212,8 +215,11 @@ function HelpMenu() {
 	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,
 	// but worse, if you add it manually, `caret={false}` is ignored, so it's named 'help-toggle' here.
 	return (
-		//note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
-		<CDropdown className="position-static help-menu" offset={[10, 0]}>
+		// note: CDropdown is assigned class btn-group. Previously _common.scss incorrectly assigned "overflow: hidden" to this class
+		//  which caused the dropdown to be clipped out of existence. Leading to the former note... now all is good.
+		//  and the dropdown is automatically assigned z-index: 1000 (--cui-dropdown-zindex)
+		// former note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
+		<CDropdown className="help-menu" offset={[10, 0]}>
 			<CDropdownToggle color="primary" caret={false} className="help-toggle" aria-label="Help and support menu">
 				<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
 			</CDropdownToggle>

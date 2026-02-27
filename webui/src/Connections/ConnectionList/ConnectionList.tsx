@@ -99,20 +99,18 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
 
-				<div className="connection-group-actions mb-2">
-					<CButtonGroup>
-						<CButton
-							color="primary"
-							size="sm"
-							className="d-xl-none"
-							onClick={() => void navigate({ to: '/connections/add' })}
-						>
-							<FontAwesomeIcon icon={faPlug} className="me-1" />
-							Add Connection
-						</CButton>
-						<CreateCollectionButton />
-					</CButtonGroup>
-				</div>
+				<CButtonGroup className="connection-group-actions mb-2">
+					<CButton
+						color="primary"
+						size="sm"
+						className="d-xl-none"
+						onClick={() => void navigate({ to: '/connections/add' })}
+					>
+						<FontAwesomeIcon icon={faPlug} className="me-1" />
+						Add Connection
+					</CButton>
+					<CreateCollectionButton />
+				</CButtonGroup>
 			</div>
 
 			<div className="connections-list-table-container scrollable-content">

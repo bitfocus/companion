@@ -1,5 +1,5 @@
 import type { languages, IRange } from 'monaco-editor'
-import type { DropdownChoiceInt } from '~/DropDownInputFancy.js'
+import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.d.ts' // In theory importable with import type { Monaco } from '@monaco-editor/react'
 
 export const COMPANION_EXPRESSION_LANGUAGE_ID = 'companionExpression'

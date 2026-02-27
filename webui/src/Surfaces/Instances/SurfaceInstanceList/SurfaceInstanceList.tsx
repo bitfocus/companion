@@ -109,20 +109,18 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="connection-group-actions mb-2 mx-1">
-					<CButtonGroup>
-						<CButton
-							color="primary"
-							size="sm"
-							className={toDir ? undefined : 'd-xl-none'}
-							onClick={() => void navigate({ to: `/surfaces/${toDir ?? 'integrations'}/add` })}
-						>
-							<FontAwesomeIcon icon={faPlug} className="me-1" />
-							Add Surface Integration
-						</CButton>
-						<CreateCollectionButton />
-					</CButtonGroup>
-				</div>
+				<CButtonGroup className="connection-group-actions mb-2 mx-1">
+					<CButton
+						color="primary"
+						size="sm"
+						className={toDir ? undefined : 'd-xl-none'}
+						onClick={() => void navigate({ to: `/surfaces/${toDir ?? 'integrations'}/add` })}
+					>
+						<FontAwesomeIcon icon={faPlug} className="me-1" />
+						Add Surface Integration
+					</CButton>
+					<CreateCollectionButton />
+				</CButtonGroup>
 			</div>
 
 			<div className="connections-list-table-container scrollable-content">

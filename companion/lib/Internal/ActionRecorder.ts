@@ -10,7 +10,7 @@
  */
 
 import LogController from '../Log/Controller.js'
-import type { ActionRecorder } from '../Controls/ActionRecorder.js'
+import type { ActionRecorder } from '../Instance/ActionRecorder.js'
 import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForVisitor,

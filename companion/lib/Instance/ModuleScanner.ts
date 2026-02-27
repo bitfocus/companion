@@ -2,6 +2,10 @@ import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
 import { validateManifest, type ModuleManifest } from '@companion-module/base/manifest'
+import {
+	validateManifest as validateManifestOld,
+	type ModuleManifest as ModuleManifestOld,
+} from '@companion-module/base-old'
 import type { ConnectionModuleVersionInfo, SomeModuleVersionInfo, SurfaceModuleVersionInfo } from './Types.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
@@ -64,8 +68,11 @@ export class InstanceModuleScanner {
 			const manifestJson: SomeModuleManifest = JSON.parse(manifestJsonStr.toString())
 
 			// Parse the manifest based on the type
-			if (manifestJson.type === undefined || manifestJson.type === 'connection') {
+			if (manifestJson.type === undefined) {
 				return await this.#parseConnectionManifest(manifestJson, fullpath, isPackaged)
+			} else if (manifestJson.type === 'connection') {
+				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+				return await this.#parseConnectionV2Manifest(manifestJson as ModuleManifest, fullpath, isPackaged)
 			} else if (manifestJson.type === 'surface') {
 				return await this.#parseSurfaceManifest(manifestJson, fullpath, isPackaged)
 			} else {
@@ -80,6 +87,58 @@ export class InstanceModuleScanner {
 	}
 
 	async #parseConnectionManifest(
+		manifestJson: ModuleManifestOld,
+		fullpath: string,
+		isPackaged: boolean
+	): Promise<ConnectionModuleVersionInfo> {
+		// Treat as connection manifest if we reach here
+
+		validateManifestOld(manifestJson, true)
+
+		const helpPath = path.join(fullpath, 'companion/HELP.md')
+		const hasHelp = await fs.pathExists(helpPath)
+
+		let products = manifestJson.products.map((p) => `${manifestJson.manufacturer}: ${p}`)
+		if (products.length === 0) {
+			products = [manifestJson.manufacturer]
+		}
+
+		const moduleDisplay: ModuleDisplayInfo = {
+			id: manifestJson.id,
+			name: products.join('; '),
+			// version: manifestJson.version,
+			helpPath: getHelpPathForInstalledModule(ModuleInstanceType.Connection, manifestJson.id, manifestJson.version),
+			bugUrl: manifestJson.bugs || manifestJson.repository,
+			shortname: manifestJson.shortname,
+			products: products,
+			keywords: manifestJson.keywords,
+		}
+
+		const moduleManifestExt: ConnectionModuleVersionInfo = {
+			type: ModuleInstanceType.Connection,
+			versionId: manifestJson.version,
+			manifest: {
+				...manifestJson,
+				type: 'connection',
+			},
+			basePath: path.resolve(fullpath),
+			helpPath: hasHelp ? helpPath : null,
+			display: moduleDisplay,
+			isPackaged: isPackaged,
+			isLegacy: false,
+			isBeta: !!manifestJson.isPrerelease,
+		}
+
+		// Make sure the versionId is valid semver
+		if (!semver.parse(moduleManifestExt.versionId, { loose: true }))
+			throw new Error(`Invalid version "${moduleManifestExt.versionId}" `)
+
+		this.#logger.silly(`found module ${moduleDisplay.id}@${manifestJson.version}`)
+
+		return moduleManifestExt
+	}
+
+	async #parseConnectionV2Manifest(
 		manifestJson: ModuleManifest,
 		fullpath: string,
 		isPackaged: boolean

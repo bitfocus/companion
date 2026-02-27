@@ -9,13 +9,19 @@ import isEqual from 'fast-deep-equal'
  * Check if a value is valid for a given input field definition
  * @param definition The input field definition
  * @param value The value to validate
- * @param skipValidateExpression If true, skip validating expression fields
+ * @param options Optional validation options
+ * @param options.skipValidateExpression If true, skip validating expression fields
+ * @param options.clampNumbers If true, clamp out-of-range number values to the min/max bounds instead of just reporting an error.
+ *   Clamping is skipped when the field has `allowInvalidValues` set. A validationError is still returned when clamping occurs.
  * @returns An error message if invalid, or undefined if valid
  */
 export function validateInputValue(
 	definition: SomeCompanionInputField,
 	value: JsonValue | undefined,
-	skipValidateExpression: boolean = false
+	options?: {
+		skipValidateExpression?: boolean
+		clampNumbers?: boolean
+	}
 ): {
 	sanitisedValue: JsonValue | undefined
 	validationError: string | undefined
@@ -26,6 +32,8 @@ export function validateInputValue(
 			return { sanitisedValue: undefined, validationError: undefined }
 
 		case 'textinput': {
+			if (definition.disableSanitisation) return { sanitisedValue: value, validationError: undefined }
+
 			const sanitisedValue = stringifyVariableValue(value ?? '') ?? ''
 
 			if (definition.minLength !== undefined && sanitisedValue.length < definition.minLength) {
@@ -44,7 +52,7 @@ export function validateInputValue(
 
 		case 'expression': {
 			// Skip validating the expression as it has already been parsed
-			if (skipValidateExpression) return { sanitisedValue: value, validationError: undefined }
+			if (options?.skipValidateExpression) return { sanitisedValue: value, validationError: undefined }
 
 			const sanitisedValue = stringifyVariableValue(value ?? '') ?? ''
 
@@ -81,16 +89,28 @@ export function validateInputValue(
 			}
 
 			// Coerce to number
-			const sanitisedValue = typeof value === 'number' ? value : Number(value)
+			let sanitisedValue = typeof value === 'number' ? value : Number(value)
 			if (isNaN(sanitisedValue)) {
 				return { sanitisedValue: value, validationError: 'Value must be a number' }
 			}
 
 			// Verify the value range
 			if (definition.min !== undefined && sanitisedValue < definition.min) {
+				// Clamp to min when requested and the field doesn't allow invalid values
+				if (options?.clampNumbers && !definition.allowInvalidValues) {
+					const validationError = `Value was clamped to ${definition.min}`
+					sanitisedValue = definition.min
+					return { sanitisedValue, validationError }
+				}
 				return { sanitisedValue, validationError: `Value must be greater than or equal to ${definition.min}` }
 			}
 			if (definition.max !== undefined && sanitisedValue > definition.max) {
+				// Clamp to max when requested and the field doesn't allow invalid values
+				if (options?.clampNumbers && !definition.allowInvalidValues) {
+					const validationError = `Value was clamped to ${definition.max}`
+					sanitisedValue = definition.max
+					return { sanitisedValue, validationError }
+				}
 				return { sanitisedValue, validationError: `Value must be less than or equal to ${definition.max}` }
 			}
 

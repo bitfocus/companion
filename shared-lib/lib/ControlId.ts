@@ -59,8 +59,8 @@ export function CreateExpressionVariableControlId(variableId: string): string {
 /**
  * Create preset control id
  */
-export function CreatePresetControlId(connectionId: string, presetId: string): string {
-	return `preset:${connectionId}:${presetId}`
+export function CreatePresetControlId(connectionId: string, presetId: string, variablesHash: string): string {
+	return `preset:${connectionId}:${presetId}:${variablesHash}`
 }
 
 export interface ParsedControlIdBank {
@@ -79,6 +79,7 @@ export interface ParsedControlIdPreset {
 	type: 'preset'
 	connectionId: string
 	presetId: string
+	variablesHash: string
 }
 export type ParsedControlIdType =
 	| ParsedControlIdBank
@@ -115,12 +116,13 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			}
 		}
 
-		const matchPreset = controlId.match(/^preset:(.*?):(.*)$/)
+		const matchPreset = controlId.match(/^preset:(.*?):(.*):(.*)$/)
 		if (matchPreset) {
 			return {
 				type: 'preset',
 				connectionId: matchPreset[1],
 				presetId: matchPreset[2],
+				variablesHash: matchPreset[3],
 			}
 		}
 	}

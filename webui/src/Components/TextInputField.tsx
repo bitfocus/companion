@@ -10,7 +10,8 @@ import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from 'react-windowed-select'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { CustomOption, type DropdownChoiceInt } from '~/DropDownInputFancy.js'
+import { CustomOption } from './DropDownInputFancy.js'
+import type { DropdownChoiceInt } from './DropdownChoices.js'
 
 interface TextInputFieldProps {
 	tooltip?: string

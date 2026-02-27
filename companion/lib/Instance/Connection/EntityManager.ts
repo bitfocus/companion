@@ -10,7 +10,7 @@ import {
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { nanoid } from 'nanoid'
-import type { ControlsController } from '../../Controls/Controller.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -77,7 +77,7 @@ export class ConnectionEntityManager {
 	readonly #logger: Logger
 
 	readonly #adapter: EntityManagerAdapter
-	readonly #controlsController: ControlsController
+	readonly controlsStore: IControlStore
 
 	readonly #entities = new Map<string, EntityWrapper>()
 
@@ -85,10 +85,10 @@ export class ConnectionEntityManager {
 	#ready = false
 	#currentUpgradeIndex = 0
 
-	constructor(adapter: EntityManagerAdapter, controlsController: ControlsController, connectionId: string) {
+	constructor(adapter: EntityManagerAdapter, controlsStore: IControlStore, connectionId: string) {
 		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
 		this.#adapter = adapter
-		this.#controlsController = controlsController
+		this.controlsStore = controlsStore
 	}
 
 	readonly #debounceProcessPending = debounceFn(
@@ -178,7 +178,7 @@ export class ConnectionEntityManager {
 							let updateOptions: CompanionOptionValues | undefined
 							try {
 								// Parse the options and track the variables referenced
-								const parser = this.#controlsController.createVariablesAndExpressionParser(wrapper.controlId, null)
+								const parser = this.controlsStore.createVariablesAndExpressionParser(wrapper.controlId, null)
 								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
 								if (!parseRes.ok) {
 									this.#logger.warn(
@@ -212,7 +212,7 @@ export class ConnectionEntityManager {
 									if (controlImageSizeCache.has(wrapper.controlId)) {
 										imageSize = controlImageSizeCache.get(wrapper.controlId)
 									} else {
-										const control = this.#controlsController.getControl(wrapper.controlId)
+										const control = this.controlsStore.getControl(wrapper.controlId)
 										imageSize = control?.getBitmapSize() ?? undefined
 										controlImageSizeCache.set(wrapper.controlId, imageSize)
 									}
@@ -386,7 +386,7 @@ export class ConnectionEntityManager {
 					// It has been upgraded, so we can update the entity
 
 					// We need to do this via the EntityPool method, so that it gets persisted correctly
-					const control = this.#controlsController.getControl(wrapper.controlId)
+					const control = this.controlsStore.getControl(wrapper.controlId)
 					if (!control || !control.supportsEntities) {
 						this.#logger.warn(`Control ${wrapper.controlId} not found`)
 						continue

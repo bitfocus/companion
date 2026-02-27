@@ -42,7 +42,7 @@ if (typeof verificationToken !== 'string' || !verificationToken)
 
 const logger = createModuleLogger('Entrypoint')
 
-let instance: InstanceWrapper<any, any> | null = null
+let instance: InstanceWrapper<any> | null = null
 let instanceInitialized = false
 
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out

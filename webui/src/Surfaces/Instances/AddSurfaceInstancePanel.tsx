@@ -45,7 +45,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 					<div>
 						<strong>You can use many different surfaces to control</strong> Companion. Ensure you have an internet
 						connection to search and install modules, or{' '}
-						<a target="_blank" href="https://user.bitfocus.io/download" className="text-decoration-none">
+						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4" className="text-decoration-none">
 							download a module bundle
 						</a>
 					</div>

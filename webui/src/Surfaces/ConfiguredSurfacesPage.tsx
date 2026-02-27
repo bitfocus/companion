@@ -111,7 +111,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				<div className="fixed-header">
 					<CCallout color="info">
 						Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-						<a target="_blank" rel="noreferrer" href="https://bfoc.us/70n2m47akw">
+						<a target="_blank" rel="noreferrer" href="https://l.companion.free/q/YH8dZkH1Q">
 							Companion Satellite
 						</a>
 						?
