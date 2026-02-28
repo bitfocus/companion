@@ -136,7 +136,6 @@ if (process.env.ELECTRON !== '0') {
 			appId: 'test-companion.bitfocus.no',
 			dmg: {
 				artifactName: 'companion-mac-${arch}.dmg',
-				sign: !!process.env.CSC_LINK, // Only sign in ci
 			},
 			mac: {
 				target: 'dmg',
@@ -152,6 +151,7 @@ if (process.env.ELECTRON !== '0') {
 				entitlements: 'launcher/entitlements.mac.plist',
 				entitlementsInherit: 'launcher/entitlements.mac.plist',
 				icon: 'icon-macos-glass.icon',
+				identity: process.env.CSC_LINK ? undefined : null, // Disable signing when CSC_LINK is not set
 			},
 			win: {
 				target: 'nsis',
