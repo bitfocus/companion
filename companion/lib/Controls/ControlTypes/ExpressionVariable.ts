@@ -223,7 +223,8 @@ export class ControlExpressionVariable
 		if (key === 'variableName') {
 			// Make sure the new name is valid
 			if (value != '' && !isLabelValid(value)) {
-				throw new Error(`Invalid variable name "${value}"`)
+				// throw new Error(`Invalid variable name "${value}"`)
+				return false
 			}
 
 			const oldVariableName = this.options.variableName
