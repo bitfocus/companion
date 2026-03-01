@@ -59,7 +59,12 @@ export function useContextMenuState(menuItems: MenuItemData[]): ContextMenuProps
 			} else {
 				e.preventDefault()
 				e.stopPropagation()
-				//console.log(JSON.stringify(e)) // throws error! (circular reference)
+
+				// GoogleAI says his is the key for macOS/Linux:
+				// It prevents the native mouseup/click from bubbling up to
+				// global "close menu" listeners in the browser.
+				e.nativeEvent.stopImmediatePropagation()
+
 				setPosition({ x: e.clientX, y: e.clientY })
 				setVisible(true)
 			}
