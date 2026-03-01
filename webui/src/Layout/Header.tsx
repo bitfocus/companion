@@ -1,4 +1,4 @@
-import React, { type ElementType, type ReactElement, useCallback, useContext, useMemo } from 'react'
+import React, { type ReactElement, useCallback, useContext, useMemo } from 'react'
 import {
 	CHeader,
 	CHeaderBrand,
@@ -9,9 +9,6 @@ import {
 	CContainer,
 	CDropdownToggle,
 	CDropdown,
-	CDropdownItem,
-	CDropdownMenu,
-	CDropdownDivider,
 } from '@coreui/react'
 import {
 	faBars,
@@ -25,34 +22,16 @@ import {
 import { faCircleQuestion, faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import { faSlack, faFacebook, faGithub } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { type IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { Link } from '@tanstack/react-router'
-
+import { ActionMenu, type MenuItemData } from '~/Components/ActionMenu.js'
+import { MenuSeparator } from '~/Components/useContextMenuProps.js'
 interface MyHeaderProps {
 	canLock: boolean
 	setLocked: (locked: boolean) => void
-}
-
-// provide a declarative menu specification:
-interface MenuItemData {
-	readonly label: string
-	readonly to: string | (() => void) // URL string or action callback
-	readonly id?: string // used for key and to allow individually styled items, see code
-	readonly icon?: IconDefinition | (() => ReactElement)
-	readonly tooltip?: string
-	readonly inNewTab?: boolean
-	readonly isSeparator?: boolean // currently, everything else is ignored if this is true
-}
-
-const MenuSeparatorSpec: MenuItemData = {
-	label: '',
-	to: '',
-	isSeparator: true,
 }
 
 // make our own circleInfo since it's not in the free FontAwesome offering (two options here)
@@ -174,7 +153,7 @@ function HelpMenu() {
 				tooltip: 'Show the current release notes.',
 				inNewTab: false,
 			},
-			{ ...MenuSeparatorSpec, label: 'Additional Support' },
+			{ ...MenuSeparator, label: 'Additional Support' },
 			{
 				id: 'fb',
 				label: 'Community Support',
@@ -199,7 +178,7 @@ function HelpMenu() {
 				tooltip: 'Report bugs or request features on GitHub.',
 				inNewTab: true,
 			},
-			MenuSeparatorSpec,
+			MenuSeparator,
 			{
 				id: 'sponsor',
 				label: 'Sponsor Companion',
@@ -224,61 +203,7 @@ function HelpMenu() {
 				<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
 			</CDropdownToggle>
 
-			<CDropdownMenu>
-				{helpMenuItems.map((option, idx) => (
-					<MenuItem key={option.id || `item-${idx}`} data={option} />
-				))}
-			</CDropdownMenu>
+			<ActionMenu menuItems={helpMenuItems} />
 		</CDropdown>
 	)
-}
-
-// create menu-entries with (1) optional left-hand icon, (2) label, (3) optional right-side "external link" icon
-// The menu action can be either a URL or a function call
-function MenuItem({ data }: { data: MenuItemData }) {
-	if (data.isSeparator) {
-		return (
-			<div className={data.id && `dropdown-sep-${data.id}`}>
-				<CDropdownDivider />
-				{data.label && <div className="dropdown-group-label">{data.label}</div>}
-			</div>
-		)
-	} else {
-		const isUrl = typeof data.to === 'string'
-		const isHTTP = isUrl && /^https?:\/\//i.test(data.to) // "http://" or "https://"
-
-		const navProps = isUrl
-			? {
-					...(isHTTP ? { href: data.to, as: 'a' as ElementType } : { to: data.to, as: Link }),
-					rel: 'noopener noreferrer',
-					target: data.inNewTab ? '_blank' : '_self',
-				}
-			: { as: 'button' as ElementType, onClick: data.to }
-
-		// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]]
-		return (
-			// note: CDropdownItem has CSS class: dropdown-item. Here we only add the optional item-specific class
-			<CDropdownItem
-				type={isUrl ? undefined : 'button'}
-				className={'d-flex justify-content-start' + (data.id ? ` dropdown-item-${data.id}` : '')}
-				title={data.tooltip}
-				{...navProps}
-			>
-				<span className="dropdown-item-icon">
-					{typeof data.icon === 'function' ? (
-						data.icon()
-					) : (
-						<FontAwesomeIcon
-							icon={data.icon ? data.icon : faOpenCircle}
-							className={data.icon ? 'visible' : 'invisible'}
-						/>
-					)}
-				</span>
-
-				<span className="dropdown-item-label">{data.label}</span>
-
-				{data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
-			</CDropdownItem>
-		)
-	}
 }
