@@ -308,16 +308,22 @@ export class TriggersEventTimer {
 
 		// Modified function to calculate the sunrise/set time by adam-carter-fms
 		// https://gist.github.com/adam-carter-fms/a44a14c0a8cdacbbc38276f6d553e024#file-sunriseset-js-L12
+		//
+		// FIX for issue #3737 (DST sunset/sunrise timing bug):
+		// The original code used: `const diff = now - start + (start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000`
+		// This caused sunset times to jump 60+ minutes across DST boundaries because getTimezoneOffset()
+		// changes during DST transitions. The fix: calculate day of year using UTC dates to eliminate
+		// timezone offset issues entirely. UTC never observes DST, so there's no offset change.
 		function getSunEvent(sunset: boolean, latitude: number, longitude: number, offset: number, nextDay: number): Date {
 			const res = new Date()
 			res.setDate(res.getDate() + nextDay)
 			const now = res
 
-			const start = new Date(now.getFullYear(), 0, 0)
-			// @ts-expect-error TS claims dates can't be subtracted, this should be revisited but I don't want to touch what works
-			const diff = now - start + (start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000
-			const oneDay = 1000 * 60 * 60 * 24
-			const day = Math.floor(diff / oneDay)
+			// Calculate day of year using dayjs to avoid any DST/timezone issues
+			// dayjs handles calendar calculations correctly regardless of DST
+			const jan1 = dayjs(new Date(now.getFullYear(), 0, 1))
+			const today = dayjs(new Date(now.getFullYear(), now.getMonth(), now.getDate()))
+			const day = today.diff(jan1, 'day')
 
 			const zenith = 90.83333333333333
 			const D2R = Math.PI / 180
@@ -383,17 +389,22 @@ export class TriggersEventTimer {
 				UT = UT + 24
 			}
 
-			const ms = UT * 60 * 60 * 1000
+			// UT is the UTC time as decimal hours when sunset occurs
+			const utHours = Math.floor(UT)
+			const utMinutes = Math.floor((UT - utHours) * 60)
 
-			const sunEventTime = new Date(ms)
-			sunEventTime.setFullYear(now.getFullYear())
-			sunEventTime.setMonth(now.getMonth())
-			sunEventTime.setDate(now.getDate())
+			// Get the UTC date that corresponds to this local date
+			const localDateAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+			const utcYear = localDateAtMidnight.getUTCFullYear()
+			const utcMonth = localDateAtMidnight.getUTCMonth()
+			const utcDate = localDateAtMidnight.getUTCDate()
 
-			const temp_minutes = sunEventTime.getMinutes()
+			// Create the date at the UTC time using Date.UTC
+			const sunEventTime = new Date(Date.UTC(utcYear, utcMonth, utcDate, utHours, utMinutes, 0))
 
-			// add offset to time
-			sunEventTime.setMinutes(temp_minutes + 60 + offset)
+			// Apply the offset in minutes using UTC to avoid DST issues
+			sunEventTime.setUTCMinutes(sunEventTime.getUTCMinutes() + offset)
+
 			return sunEventTime
 		}
 	}
@@ -581,11 +592,23 @@ export class TriggersEventTimer {
 	setSun(id: string, params: CompanionOptionValues): void {
 		this.clearSun(id)
 
+		const nextExecute = this.#getNextSunExecuteTime(params)
 		this.#sunEvents.push({
 			id,
 			params,
-			nextExecute: this.#getNextSunExecuteTime(params),
+			nextExecute,
 		})
+
+		// Debug logging for sun event scheduling
+		const eventType = params.type === 'sunset' ? 'Sunset' : 'Sunrise'
+		const location = `${params.latitude}°, ${params.longitude}°`
+		const nextTimeDate = new Date(nextExecute)
+		const nextTimeLocal = nextTimeDate.toLocaleString()
+		const nextTimeUTC = nextTimeDate.toUTCString()
+		const offset = params.offset || 0
+		this.#logger.debug(
+			`${eventType} trigger '${id}' saved (${location}, offset: ${offset}min) - Next scheduled: ${nextTimeLocal} (UTC: ${nextTimeUTC})`
+		)
 	}
 
 	/**
@@ -593,5 +616,15 @@ export class TriggersEventTimer {
 	 */
 	clearSun(id: string): void {
 		this.#sunEvents = this.#sunEvents.filter((sun) => sun.id !== id)
+	}
+
+	/**
+	 * Get the next execute time for a sun event (for testing purposes)
+	 * @param id Id of the event
+	 * @returns Unix timestamp in milliseconds, or null if event not found
+	 */
+	getSunNextExecuteTime(id: string): number | null {
+		const sunEvent = this.#sunEvents.find((sun) => sun.id === id)
+		return sunEvent?.nextExecute ?? null
 	}
 }
