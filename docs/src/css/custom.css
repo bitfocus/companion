@@ -294,7 +294,7 @@
 	font-size: 1.25em;
 }
 
-.markdown p > img:last-child {
+.markdown img:last-child {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
