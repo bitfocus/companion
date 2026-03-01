@@ -1,18 +1,24 @@
 import React, { useMemo } from 'react'
 import { observer } from 'mobx-react-lite'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useLocation } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
 import type { AddInstanceService } from '~/Instances/AddInstanceService'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
-export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel() {
+interface AddSurfaceInstancePanelProps {
+	isSubpanel?: boolean
+}
+export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel({
+	isSubpanel,
+}: AddSurfaceInstancePanelProps) {
 	const service = useAddSurfaceInstanceService()
 
 	return (
 		<AddInstancePanel
 			service={service}
+			isSubpanel={!!isSubpanel}
 			title="Add Surface Integration"
 			description={(storeCount) =>
 				storeCount > 0 ? (
@@ -50,18 +56,30 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 })
 
 function useAddSurfaceInstanceService(): AddInstanceService {
-	const navigate = useNavigate({ from: '/surfaces/integrations' })
 	const addMutation = useMutationExt(trpc.instances.surfaces.add.mutationOptions())
+	const navigate = useNavigate() // from: is only needed to resolve relative paths, so not needed here...
+	const { pathname } = useLocation()
+
+	const homepage = pathname.split('/', 3).join('/') // first two elements of the path ex: /surfaces/configured
+	// this is not pretty but should do for the moment
+	let instancePage: string
+	if (pathname.endsWith('add')) {
+		// /surfaces/configured/integration/add
+		instancePage = pathname.replace('add', '$instanceId') // replace the filename part of the path
+	} else {
+		// /surfaces/integrations
+		instancePage = homepage + '/$instanceId' // add to the path
+	}
 
 	return useMemo(
 		() => ({
 			moduleType: ModuleInstanceType.Surface,
 
 			closeAddInstance: () => {
-				void navigate({ to: '/surfaces/integrations' })
+				void navigate({ to: homepage })
 			},
 			openConfigureInstance: (instanceId) => {
-				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
+				void navigate({ to: instancePage, params: { instanceId } })
 			},
 
 			performAddInstance: async (moduleInfo, label, versionId) => {
@@ -77,6 +95,6 @@ function useAddSurfaceInstanceService(): AddInstanceService {
 				return moduleInfo.shortname
 			},
 		}),
-		[navigate, addMutation]
+		[navigate, addMutation, homepage, instancePage]
 	)
 }

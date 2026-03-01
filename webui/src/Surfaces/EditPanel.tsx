@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { CForm, CFormSelect, CCol, CFormLabel, CFormSwitch } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
-import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import type {
@@ -21,6 +21,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { InlineHelp } from '~/Components/InlineHelp'
 import type { JsonValue } from 'type-fest'
+import { CloseButton } from '~/UserConfig/Components/Common'
 
 type SurfaceInfo = ClientSurfaceItem & { groupId: string | null }
 
@@ -75,9 +76,7 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 					Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}
 				</h4>
 				<div className="header-buttons">
-					<div className="float_right d-xl-none" onClick={doCloseSurface} title="Close">
-						<FontAwesomeIcon icon={faTimes} size="lg" />
-					</div>
+					<CloseButton closeFn={doCloseSurface} />
 				</div>
 			</div>
 

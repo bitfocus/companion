@@ -35,7 +35,7 @@ export const DataCollectionConfig = observer(function DataCollectionConfig(props
 			<tr>
 				<td>View data being collected</td>
 				<td className="text-end">
-					<CButton color="primary" size="sm" onClick={() => setShowModal(true)}>
+					<CButton color="primary" size="sm" onClick={() => setShowModal(true)} className="uc-button">
 						View Data
 					</CButton>
 				</td>

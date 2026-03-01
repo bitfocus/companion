@@ -16,7 +16,7 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import { SurfaceInstancesListContextProvider, useSurfaceInstancesListContext } from './SurfaceInstancesListContext.js'
 import { useComputed } from '~/Resources/util.js'
 import { SurfaceInstanceTableRow } from './SurfaceInstanceTableRow.js'
-import { useNavigate } from '@tanstack/react-router'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type {
@@ -35,23 +35,29 @@ export interface VisibleSurfaceInstancesState {
 
 interface SurfaceInstancesListProps {
 	selectedInstanceId: string | null
+	toDir?: string
 }
 
 export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	selectedInstanceId,
+	toDir,
 }: SurfaceInstancesListProps) {
 	const { surfaceInstances, instanceStatuses } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: '/surfaces/integrations' })
+	const { pathname } = useLocation()
+	const homepage = pathname.split('/', 3).join('/') // first two elements of the path ex: /surfaces/configured
+
+	const navigate = useNavigate()
+
 	const doConfigureInstance = useCallback(
 		(instanceId: string | null) => {
 			if (!instanceId) {
-				void navigate({ to: '/surfaces/integrations' })
+				void navigate({ to: homepage })
 			} else {
-				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
+				void navigate({ to: `/surfaces/${toDir ?? 'integrations'}/$instanceId`, params: { instanceId } })
 			}
 		},
-		[navigate]
+		[navigate, toDir, homepage]
 	)
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
@@ -85,23 +91,30 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	return (
 		<div className="connections-list-container flex-column-layout">
 			<div className="connections-list-header fixed-header">
-				<h4>Surface Integrations</h4>
+				{toDir ? (
+					''
+				) : (
+					<>
+						<h4>Surface Integrations</h4>
 
-				<p>
-					Similar to connections, surface integrations represent the ability to use different hardware or virtual
-					surfaces to trigger buttons in Companion. Here you enable and configure the types of surfaces you want to use.
-				</p>
+						<p>
+							Similar to connections, surface integrations represent the ability to use different hardware or virtual
+							surfaces to trigger buttons in Companion. Here you enable and configure the types of surfaces you want to
+							use.
+						</p>
+					</>
+				)}
 
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<CButtonGroup className="connection-group-actions mb-2">
+				<CButtonGroup className="connection-group-actions mb-2 mx-1">
 					<CButton
 						color="primary"
 						size="sm"
-						className="d-xl-none"
-						onClick={() => void navigate({ to: '/surfaces/integrations/add' })}
+						className={toDir ? undefined : 'd-xl-none'}
+						onClick={() => void navigate({ to: `/surfaces/${toDir ?? 'integrations'}/add` })}
 					>
 						<FontAwesomeIcon icon={faPlug} className="me-1" />
 						Add Surface Integration
