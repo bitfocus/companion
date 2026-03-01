@@ -227,7 +227,7 @@ export class ControlTrigger
 		if (source === TriggerExecutionSource.Test) {
 			this.logger.debug(`Test Execute ${this.options.name}`)
 		} else {
-			if (!this.options.enabled) return
+			if (!this.#enabled) return // covers both options.enabled and `#collectionEnabled`
 
 			// Ensure the condition passes when it is not part of the event
 			if (source !== TriggerExecutionSource.ConditionChange) {
@@ -353,6 +353,7 @@ export class ControlTrigger
 			...this.options,
 			lastExecuted: this.#lastExecuted,
 			description: eventStrings.join('<br />'),
+			collectionEnabled: this.#collectionEnabled,
 		}
 	}
 
@@ -425,10 +426,12 @@ export class ControlTrigger
 					this.#miscEvents.setControlPress(event.id, false)
 					break
 				case 'condition_true':
+					this.#conditionCheckLastValue = this.entities.checkConditionValue()
 					this.#conditionCheckEvents.add(event.id)
 					this.triggerRedraw() // Recheck the condition
 					break
 				case 'condition_false':
+					this.#conditionCheckLastValue = this.entities.checkConditionValue()
 					this.#conditionCheckEvents.add(event.id)
 					this.triggerRedraw() // Recheck the condition
 					break
@@ -559,11 +562,17 @@ export class ControlTrigger
 		const newEnabled = this.#collectionEnabled && this.options.enabled
 		if (this.#enabled !== newEnabled) {
 			this.#enabled = newEnabled
+			if (newEnabled && this.#conditionCheckEvents.size > 0) {
+				// Refresh the last-known condition value so the first triggerRedraw
+				// after re-enabling does not mistake a stale transition for a new edge.
+				this.#conditionCheckLastValue = this.entities.checkConditionValue()
+			}
 			this.#setupEvents(false)
 		} else {
 			// Report the change, for internal feedbacks
 			this.#eventBus.emit('trigger_enabled', this.controlId, this.#enabled)
 		}
+		this.#sendTriggerJsonChange()
 	}
 
 	commitChange(redraw = true): void {
@@ -597,17 +606,25 @@ export class ControlTrigger
 	 */
 	triggerRedraw = debounceFn(
 		() => {
+			if (!this.#enabled || this.#conditionCheckEvents.size === 0) {
+				// the condition, above, implies !(this.options.enabled && this.#collectionEnabled)
+				// explanation: "condition_true/_false" events don't have a separate place to
+				// disable them, when the collection is disabled (i.e. unlike `event.enabled`), so disable here.
+				// Do this test first so we don't waste resources checking a disabled triggers/events...
+				return
+			}
 			try {
 				const newStatus = this.entities.checkConditionValue()
+
 				const runOnTrue = this.events.some((event) => event.enabled && event.type === 'condition_true')
 				const runOnFalse = this.events.some((event) => event.enabled && event.type === 'condition_false')
+
 				if (
-					this.options.enabled &&
-					this.#conditionCheckEvents.size > 0 &&
-					((runOnTrue && newStatus && !this.#conditionCheckLastValue) ||
-						(runOnFalse && !newStatus && this.#conditionCheckLastValue))
+					(runOnTrue && newStatus && !this.#conditionCheckLastValue) ||
+					(runOnFalse && !newStatus && this.#conditionCheckLastValue)
 				) {
 					setImmediate(() => {
+						if (!this.#enabled || this.#conditionCheckEvents.size === 0) return // avoid TOCTOU
 						this.executeActions(Date.now(), TriggerExecutionSource.ConditionChange)
 					})
 				}

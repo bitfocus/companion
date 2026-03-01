@@ -29,6 +29,7 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import classNames from 'classnames'
 
 export const TriggersPage = observer(function Triggers() {
 	const { triggersList } = useContext(RootAppStoreContext)
@@ -251,6 +252,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				console.error('failed to toggle trigger state', e)
 			})
 	}, [setOptionsFieldMutation, item.id, item.enabled])
+
 	const doDelete = useCallback(() => {
 		tableContext.deleteModalRef.current?.show(
 			'Delete trigger',
@@ -287,8 +289,10 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 		[item.description]
 	)
 
+	const collectionDisabled = !(item.collectionEnabled ?? true)
+
 	return (
-		<div className="flex flex-row align-items-center gap-2 hand">
+		<div className={classNames('flex flex-row align-items-center gap-2 hand', { disabled: collectionDisabled })}>
 			<div className="flex flex-column grow" style={{ minWidth: 0 }} onClick={doEdit}>
 				<b>{item.name}</b>
 				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
@@ -301,7 +305,10 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						color="success"
 						checked={item.enabled}
 						onChange={doEnableDisable}
-						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+						title={
+							(item.enabled ? 'Disable trigger' : 'Enable trigger') +
+							(collectionDisabled ? ' when collection is enabled.' : '')
+						}
 						size="xl"
 					/>
 
