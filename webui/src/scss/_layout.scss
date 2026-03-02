@@ -403,7 +403,7 @@ form.row > * {
 		line-height: calc(var(--cui-body-line-height) * 0.85);
 	}
 
-	&.sidebar-narrow-unfoldable:not(:hover) {
+	&.sidebar-narrow-unfoldable:not(.show):not(:hover) {
 		.nav-group-toggle::after,
 		.context-menu {
 			display: none;
