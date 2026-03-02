@@ -65,7 +65,7 @@ export function useContextMenuState(menuItems: MenuItemData[]): ContextMenuProps
 		}
 		document.addEventListener('keydown', handleEsc)
 
-		// because we transfered hiding (conditionally) to mousedown, we now need a mouseup handler
+		// because we transferred hiding (conditionally) to mousedown, we now need a mouseup handler
 		// to close the menu when the user clicks inside it!
 		document.addEventListener('mouseup', handleInsideClick)
 
