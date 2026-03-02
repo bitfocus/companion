@@ -582,11 +582,12 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 			const navGroupToggle = navLink?.closest('.nav-group-toggle')
 			if (!navLink || navGroupToggle) return // only act for click on sidebar elements (excludes the context-menu)
 
+			const toggler = target.closest('.sidebar-header-toggler')
 			// if we got here the user clicked on a nav-link, not a group-toggle or context-menu item
 			if (sidebarState.showToggle) {
 				// Mobile mode ("hamburger" toggle reveals sidebar; click on item hides sidebar)
 				setVisibleMobile(false)
-			} else if (unfoldable) {
+			} else if ((unfoldable && !toggler) || (!unfoldable && toggler)) {
 				// Folding mode: make the sidebar narrow momentarily (see handleTransitionEnd) so it can collapse
 				setNarrow(true)
 			}
