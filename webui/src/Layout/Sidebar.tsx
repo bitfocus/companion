@@ -213,7 +213,7 @@ export const MySidebar = memo(function MySidebar() {
 
 	const smartExpand = useCallback(
 		(setter: (val: boolean) => void, expand: boolean) => {
-			if (accordionMode) expandAllGroups(false)
+			if (accordionMode && expand) expandAllGroups(false)
 			setter(expand)
 		},
 		[accordionMode, expandAllGroups]
