@@ -572,8 +572,8 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 
 	const handleOnClick = useCallback(
 		(event: MouseEvent) => {
-			const target = event.target as HTMLElement
-			if (target === null || event.button === 2) return // leave context menu alone (note button# is OS-independent)
+			const target = event.target
+			if (!(target instanceof Element) || event.button === 2) return // leave context menu alone (note button# is OS-independent)
 
 			// If the user clicked on the text, it's not a nav-link so the original code failed to close the navbar
 			// Instead we search up the DOM for a nav-link.
@@ -690,6 +690,7 @@ function CNavGroup({
 
 	const handleTogglerOnCLick = (event: React.MouseEvent<HTMLElement>) => {
 		event.preventDefault()
+		// but don't stop propagation, or it will prevent context-menus
 		setVisible(!visible)
 	}
 
@@ -735,14 +736,7 @@ function CNavGroup({
 					className="nav-link nav-group-toggle nav-group-toggle-link"
 					onClick={(event) => handleTogglerOnCLick(event)}
 				>
-					<Link
-						to={to}
-						className="nav-link"
-						onClick={(_e) => {
-							//e.stopPropagation() // don't stop propagation as it interferes with closing a context-menu
-							setVisible(!visible)
-						}}
-					>
+					<Link to={to} className="nav-link">
 						{toggler}
 					</Link>
 				</div>

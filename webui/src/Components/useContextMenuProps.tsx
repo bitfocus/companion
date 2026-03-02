@@ -35,6 +35,8 @@ export function useContextMenuState(menuItems: MenuItemData[]): ContextMenuProps
 	const menuRef = useRef<HTMLDivElement>(null) // to get the ContextMenu's ref for event handling here
 
 	useEffect(() => {
+		if (!visible) return
+
 		// Close menu when clicking anywhere else
 		const handleOutsideClick = (e?: Event) => {
 			if (e && menuRef.current && menuRef.current.contains(e.target as Node)) {
@@ -75,7 +77,7 @@ export function useContextMenuState(menuItems: MenuItemData[]): ContextMenuProps
 			// document.removeEventListener('auxclick', handleOutsideClick) // don't use this
 			document.removeEventListener('keydown', handleEsc)
 		}
-	}, [setVisible])
+	}, [visible])
 
 	const onContextMenu: MouseEventHandler<HTMLDivElement> = useCallback(
 		(e) => {
