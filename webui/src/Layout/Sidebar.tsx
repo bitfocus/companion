@@ -493,7 +493,7 @@ const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props:
 			groupVisible={visible}
 			groupSetVisible={setVisible}
 		>
-			{props.children ?? ''}
+			{props.children}
 		</SidebarMenuItemGroup>
 	)
 })
