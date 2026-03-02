@@ -551,6 +551,7 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 	const sidebarRef = useRef<HTMLDivElement>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
+	const [narrow, setNarrow] = useState(false)
 
 	const sidebarState = useSidebarState()
 
@@ -579,12 +580,43 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 			// Instead we search up the DOM for a nav-link.
 			const navLink = target.closest('.nav-link')
 			const navGroupToggle = navLink?.closest('.nav-group-toggle')
-			if (navLink && !navGroupToggle && sidebarState.showToggle) {
+			if (!navLink || navGroupToggle) return // only act for click on sidebar elements (excludes the context-menu)
+
+			// if we got here the user clicked on a nav-link, not a group-toggle or context-menu item
+			if (sidebarState.showToggle) {
+				// Mobile mode ("hamburger" toggle reveals sidebar; click on item hides sidebar)
 				setVisibleMobile(false)
+			} else if (unfoldable) {
+				// Folding mode: make the sidebar narrow momentarily (see handleTransitionEnd) so it can collapse
+				setNarrow(true)
 			}
 		},
-		[sidebarState.showToggle]
+		[sidebarState.showToggle, unfoldable]
 	)
+
+	const handleTransitionEnd = useCallback(
+		(e: React.TransitionEvent<HTMLDivElement>) => {
+			// make the narrow effect from handleOnClick be momentary, so it responds to the next hover
+			// Some pages take a while to load (Modules), so wait for the repaint to finish before resetting `narrow`
+
+			// To ensure that the redraw is truly complete, only trigger if the event came from THIS div, not a child
+			// and if it's for a width property.
+			if (e.target !== e.currentTarget) return
+			if (e.propertyName !== 'width' && e.propertyName !== 'max-width') return
+			if (narrow) {
+				setNarrow(false)
+			}
+		},
+		[narrow]
+	)
+
+	// Fallback for reduced motion or if transition doesn't fire (both very rare cases)
+	// Note: the only time narrow is true is after the user clicked a nav-link when sidebar-narrow-unfoldable (i.e. unfoldable is true)
+	useEffect(() => {
+		if (!narrow) return
+		const timeout = setTimeout(() => setNarrow(false), 1000) // some transitions can be delayed, and there's no harm in waiting a bit longer here since we're in unfoldable mode.
+		return () => clearTimeout(timeout)
+	}, [narrow])
 
 	const handleKeyup = useCallback(
 		(event: Event) => {
@@ -624,17 +656,19 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 			<div
 				className={classNames('sidebar sidebar-dark sidebar-fixed', {
 					// [`sidebar-${colorScheme}`]: colorScheme,
-					// 'sidebar-narrow': narrow,
+					'sidebar-narrow': narrow,
+					//'no-transition-all': narrow, // optional, but this works only after very long transitions (modules page)
 					// 'sidebar-overlaid': overlaid,
 					// [`sidebar-${placement}`]: placement,
 					// [`sidebar-${position}`]: position,
 					// [`sidebar-${size}`]: size,
-					'sidebar-narrow-unfoldable': unfoldable, // // unfold-able. This is a CoreUI class so can't be renamed.
+					'sidebar-narrow-unfoldable': unfoldable && !narrow, // // unfold-able. This is a CoreUI class so can't be renamed.
 					show: sidebarState.showToggle && visibleMobile,
 					// hide: visibleDesktop === false && !sidebarState.showToggle && !overlaid,
 				})}
 				ref={sidebarRef}
 				onContextMenu={onContextMenu}
+				onTransitionEnd={handleTransitionEnd}
 			>
 				{children}
 			</div>
