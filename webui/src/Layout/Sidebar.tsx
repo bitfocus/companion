@@ -406,7 +406,7 @@ export const MySidebar = memo(function MySidebar() {
 					</SidebarMenuItemGroup>
 				</CSidebarNav>
 			)}
-			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
+			<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
 				<SidebarTogglerAndVersion doToggle={doToggle} />
 			</CSidebarHeader>
 		</CSidebar>
@@ -521,7 +521,7 @@ const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ do
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
-			<span className="nav-icon-wrapper" onClick={doToggle}>
+			<span className="nav-icon-wrapper d-none d-lg-flex" onClick={doToggle}>
 				<span className="nav-icon sidebar-toggler"></span>
 			</span>
 
@@ -584,8 +584,10 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 			const navGroupToggle = navLink?.closest('.nav-group-toggle')
 			if (!navLink || navGroupToggle) return // only act for click on sidebar elements (excludes the context-menu)
 
-			const toggler = target.closest('.sidebar-header-toggler')
-			// if we got here the user clicked on a nav-link, not a group-toggle or context-menu item
+			const toggler = target.closest('.sidebar-header-toggler') // the latter isn't strictly necessary, but makes the intent clear
+			if (toggler && !target.closest(' .nav-icon-wrapper')) return // ignore clicks on version text, etc.
+
+			// if we got here the user clicked on a nav-link, not a non-active area, group-toggle or context-menu item
 			if (sidebarState.showToggle) {
 				// Mobile mode ("hamburger" toggle reveals sidebar; click on item hides sidebar)
 				setVisibleMobile(false)
