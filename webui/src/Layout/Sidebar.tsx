@@ -219,7 +219,7 @@ export const MySidebar = memo(function MySidebar() {
 		[accordionMode, expandAllGroups]
 	)
 
-	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
+	// note: the context menu has to be defined inside the component to use the internal states as well as `whatsNewOpen` which is a useCallback
 	const contextMenuItems: MenuItemData[] = useMemo(
 		() => [
 			{

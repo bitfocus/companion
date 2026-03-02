@@ -51,11 +51,11 @@ export function MenuItem({ data }: { data: MenuItemData }): React.JSX.Element {
 		)
 	} else {
 		const isUrl = typeof data.to === 'string'
-		const isHTTP = isUrl && /^https?:\/\//i.test(data.to) // "http://" or "https://"
+		const isExternalLink = isUrl && /^https?:\/\//i.test(data.to) // "http://" or "https://"
 
 		const navProps = isUrl
 			? {
-					...(isHTTP ? { href: data.to, as: 'a' as ElementType } : { to: data.to, as: Link }),
+					...(isExternalLink ? { href: data.to, as: 'a' as ElementType } : { to: data.to, as: Link }),
 					rel: 'noopener noreferrer',
 					target: data.inNewTab ? '_blank' : '_self',
 				}

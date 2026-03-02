@@ -1,9 +1,10 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react'
+import React, { useLayoutEffect, useState } from 'react'
 import { CDropdownMenu } from '@coreui/react'
+import { useWindowSize } from 'usehooks-ts'
 import { MenuItem } from './ActionMenu'
 import { type ContextMenuProps } from './useContextMenuProps'
 
-// CDropdownMenu accepts ref but CoreUI didn't explicitly type it so...
+// CDropdownMenu accepts ref but CoreUI didn't explicitly export the type so, we just let TS know:
 // Create a typed version of CDropdownMenu that explicitly accepts a ref
 const CDropdownMenuWithRef = CDropdownMenu as unknown as React.ForwardRefExoticComponent<
 	React.ComponentPropsWithoutRef<typeof CDropdownMenu> & React.RefAttributes<HTMLDivElement>
@@ -12,7 +13,7 @@ const CDropdownMenuWithRef = CDropdownMenu as unknown as React.ForwardRefExoticC
 export const ContextMenu = ({ visible, position, menuRef, menuItems = [] }: ContextMenuProps): React.JSX.Element => {
 	// All the code before the return statement is to make sure the menu doesn't get clipped.
 	//  note that the CSS transform doesn't work on the outer div. I don't know why.
-	const win = useWindowDimensions()
+	const win = useWindowSize()
 
 	const [coords, setCoords] = useState({ x: 0, y: 0 })
 
@@ -58,33 +59,4 @@ export const ContextMenu = ({ visible, position, menuRef, menuItems = [] }: Cont
 			</CDropdownMenuWithRef>
 		</div>
 	)
-}
-
-// Taken from https://stackoverflow.com/questions/36862334/get-viewport-window-height-in-reactjs
-interface windowSize {
-	width: number
-	height: number
-}
-
-function getWindowDimensions(): windowSize {
-	const { innerWidth: width, innerHeight: height } = window
-	return {
-		width,
-		height,
-	}
-}
-
-function useWindowDimensions(): windowSize {
-	const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions())
-
-	useEffect(() => {
-		function handleResize() {
-			setWindowDimensions(getWindowDimensions())
-		}
-
-		window.addEventListener('resize', handleResize)
-		return () => window.removeEventListener('resize', handleResize)
-	}, [])
-
-	return windowDimensions
 }
