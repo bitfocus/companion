@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useState } from 'react'
 import { CDropdownMenu } from '@coreui/react'
 import { MenuItem } from './ActionMenu'
 import { type ContextMenuProps } from './useContextMenuProps'
@@ -9,19 +9,18 @@ const CDropdownMenuWithRef = CDropdownMenu as unknown as React.ForwardRefExoticC
 	React.ComponentPropsWithoutRef<typeof CDropdownMenu> & React.RefAttributes<HTMLDivElement>
 >
 
-export const ContextMenu = ({ visible, position, menuItems = [] }: ContextMenuProps): React.JSX.Element => {
+export const ContextMenu = ({ visible, position, menuRef, menuItems = [] }: ContextMenuProps): React.JSX.Element => {
 	// All the code before the return statement is to make sure the menu doesn't get clipped.
 	//  note that the CSS transform doesn't work on the outer div. I don't know why.
-	const ref = useRef<HTMLDivElement>(null)
 	const win = useWindowDimensions()
 
 	const [coords, setCoords] = useState({ x: 0, y: 0 })
 
 	useLayoutEffect(() => {
 		// Only run if the menu is supposed to be visible
-		if (!visible || !ref.current) return
+		if (!visible || !menuRef.current) return
 
-		const menuDims = ref.current.getBoundingClientRect() // Total dims including padding/border; alt: offsetHeight/Width
+		const menuDims = menuRef.current.getBoundingClientRect() // Total dims including padding/border; alt: offsetHeight/Width
 
 		// Ensure menu stays in window (if window is shorter/narrower than menu, it will be the best it can be w/o scrolling... but this is an unlikely edge-case)
 		const margin = 5 // or use something in CSS?
@@ -32,7 +31,7 @@ export const ContextMenu = ({ visible, position, menuItems = [] }: ContextMenuPr
 		// 	`pos: ${position.x}, ${position.y}; menu: ${menuDims.width}, ${menuDims.height}; coords: ${x}, ${y}; win: ${win.width}, ${win.height}`
 		// )
 		setCoords({ x, y })
-	}, [position.x, position.y, visible, win.width, win.height]) // Only re-run when the click moves (or window size changes)
+	}, [position.x, position.y, visible, win.width, win.height, menuRef]) // Only re-run when the click moves (or window size changes)
 
 	const noIcons = menuItems.every((item) => 'isSeparator' in item || item.icon === undefined)
 
@@ -52,7 +51,7 @@ export const ContextMenu = ({ visible, position, menuItems = [] }: ContextMenuPr
 			}}
 			className="context-menu"
 		>
-			<CDropdownMenuWithRef ref={ref} style={{ display: visible ? 'block' : 'none' } /* we need it here */}>
+			<CDropdownMenuWithRef ref={menuRef} style={{ display: visible ? 'block' : 'none' } /* we need it here */}>
 				{menuItems.map((option, idx) => (
 					<MenuItem key={option.id || `item-${idx}`} data={noIcons ? { ...option, icon: 'none' } : option} />
 				))}
