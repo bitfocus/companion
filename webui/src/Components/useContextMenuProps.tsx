@@ -71,7 +71,7 @@ export function useContextMenuState(menuItems: MenuItemData[]): ContextMenuProps
 
 		return () => {
 			document.removeEventListener('mousedown', handleOutsideClick)
-			document.removeEventListener('mouseup', handleOutsideClick)
+			document.removeEventListener('mouseup', handleInsideClick)
 			// document.removeEventListener('auxclick', handleOutsideClick) // don't use this
 			document.removeEventListener('keydown', handleEsc)
 		}
