@@ -574,6 +574,8 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 	const handleOnClick = useCallback(
 		(event: MouseEvent) => {
 			const target = event.target
+			// note: middle-click currently opens the nav-link target in a new tab, so it makes sense to close the sidebar
+			// only context-menu should leave the sidebar alone, since it is acting on the current sidebar, hence "event.button === 2".
 			if (!(target instanceof Element) || event.button === 2) return // leave context menu alone (note button# is OS-independent)
 
 			// If the user clicked on the text, it's not a nav-link so the original code failed to close the navbar
@@ -589,6 +591,7 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 				setVisibleMobile(false)
 			} else if ((unfoldable && !toggler) || (!unfoldable && toggler)) {
 				// Folding mode: make the sidebar narrow momentarily (see handleTransitionEnd) so it can collapse
+				// note: we reverse the logic for clicks on the sidebar toggler, because the toggler will have flipped the state by the time this runs
 				setNarrow(true)
 			}
 		},
