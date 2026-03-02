@@ -52,7 +52,7 @@
     "@julusian/image-rs": "^2.1.1",
     "@julusian/segfault-raub": "^2.3.2",
     "@napi-rs/canvas": "0.1.94",
-    "@sentry/node": "^10.39.0",
+    "@sentry/node": "^10.40.0",
     "@trpc/server": "^11.10.0",
     "better-sqlite3": "^12.6.2",
     "bufferutil": "^4.1.0",
