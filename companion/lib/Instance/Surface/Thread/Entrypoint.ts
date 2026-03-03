@@ -194,8 +194,14 @@ registerLoggingSink((source, level, message) => {
 })
 
 const moduleImport = await importModuleFromPath(moduleEntrypoint)
-const moduleConstructor = typeof moduleImport === 'function' ? moduleImport : moduleImport.default
-if (typeof moduleConstructor !== 'object' || !moduleConstructor || typeof moduleConstructor.init !== 'function')
+
+const isSurfaceModule = (obj: any) => {
+	if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) return false
+	return typeof obj.init === 'function' && typeof obj.destroy === 'function'
+}
+
+const moduleConstructor = isSurfaceModule(moduleImport) ? moduleImport : moduleImport.default
+if (!isSurfaceModule(moduleConstructor))
 	throw new Error(`Module entrypoint did not return a valid constructor function`)
 
 // Now load the plugin
