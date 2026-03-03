@@ -94,6 +94,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          archive: false
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
@@ -173,6 +174,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          archive: false
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
@@ -262,6 +264,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          archive: false
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
@@ -344,6 +347,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          archive: false
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
@@ -437,6 +441,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          archive: false
           name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
