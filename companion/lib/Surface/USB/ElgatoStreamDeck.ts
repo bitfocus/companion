@@ -24,7 +24,13 @@ import {
 } from '../CommonConfigFields.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { LcdPosition, StreamDeckLcdSegmentControlDefinition, StreamDeckTcp } from '@elgato-stream-deck/tcp'
+import type {
+	Dimension,
+	LcdPosition,
+	StreamDeckControlDefinition,
+	StreamDeckLcdSegmentControlDefinition,
+	StreamDeckTcp,
+} from '@elgato-stream-deck/tcp'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { SemVer } from 'semver'
 
@@ -46,7 +52,7 @@ function getConfigFields(streamDeck: StreamDeck): CompanionSurfaceConfigField[] 
 	)
 	if (hasBrightness) fields.push(BrightnessConfigField)
 
-	if (streamDeck.MODEL === DeviceModelId.PLUS) {
+	if (streamDeck.MODEL === DeviceModelId.PLUS || streamDeck.MODEL === DeviceModelId.PLUS_XL) {
 		// place it above offset, etc.
 		fields.push({
 			id: 'swipe_can_change_page',
@@ -113,6 +119,8 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 
 	readonly sdPlusLcdButtonOffset = 25
 	readonly sdPlusLcdButtonSpacing = 216.666
+	readonly sdPlusXlLcdButtonOffset = 20
+	readonly sdPlusXlLcdButtonSpacing = 212
 	// readonly sdPlusLcdButtonWidth = 100  // not currently used, but could, if we wanted to be more precise about button locations
 
 	constructor(devicePath: string, streamDeck: StreamDeck | StreamDeckTcp) {
@@ -227,13 +235,25 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 					drawY = Math.floor((control.pixelSize.height - targetSize) / 2)
 				} else {
 					const drawColumn = x - control.column
-					const columnWidth = control.pixelSize.width / control.columnSpan
-					drawX = drawColumn * columnWidth
+
+					const { columns, pixelSize } = getLcdCellSize(this.#streamDeck.MODEL, this.#streamDeck.CONTROLS, control)
+
+					const columnIndex = columns.indexOf(drawColumn)
+					if (columnIndex === -1) {
+						// In this implementation this gets hit a lot, so don't log it
+						// this.#logger.error(`Column ${drawColumn} not valid for controlId ${control.id}`)
+						return
+					}
+
+					drawX = columnIndex * pixelSize.width
 					if (this.#streamDeck.MODEL === DeviceModelId.PLUS) {
 						// Position aligned with the buttons/encoders
-						drawX = drawColumn * this.sdPlusLcdButtonSpacing + this.sdPlusLcdButtonOffset
+						drawX = columnIndex * this.sdPlusLcdButtonSpacing + this.sdPlusLcdButtonOffset
+					} else if (this.#streamDeck.MODEL === DeviceModelId.PLUS_XL) {
+						// Position aligned with the buttons/encoders
+						drawX = columnIndex * this.sdPlusXlLcdButtonSpacing + this.sdPlusXlLcdButtonOffset
 					}
-					targetSize = control.pixelSize.height
+					targetSize = pixelSize.height
 					drawY = 0
 				}
 
@@ -310,12 +330,19 @@ export class SurfaceUSBElgatoStreamDeck extends EventEmitter<SurfacePanelEvents>
 		})
 
 		const getLCDButton = (control: StreamDeckLcdSegmentControlDefinition, x: number) => {
+			let columns = new Array(control.columnSpan).fill(0).map((_, i) => i)
+			if (this.#streamDeck.MODEL === DeviceModelId.PLUS_XL) {
+				// Align with the encoders
+				columns = this.#streamDeck.CONTROLS.filter((c) => c.type === 'encoder').map((c) => c.column)
+				if (columns.length === 0) return control.column // Fallback
+			}
+
 			// Button assignment is very permissive, but maybe more compatible with the graphics overhaul?
 			// note: this doesn't take into account the SD Plus button offset, but that gives a little margin to the left, so maybe OK.
 			// TODO: reexamine when double-width buttons are implemented?
 			//   if using the margin, add Math.max(0, Math.min(control.columnSpan-1, ... ))
-			const columnOffset = Math.floor((x / control.pixelSize.width) * control.columnSpan)
-			return control.column + columnOffset
+			const columnOffset = Math.floor((x / control.pixelSize.width) * columns.length)
+			return control.column + columns[columnOffset]
 		}
 		const lcdPress = (control: StreamDeckLcdSegmentControlDefinition, position: LcdPosition) => {
 			const buttonCol = getLCDButton(control, position.x)
@@ -512,4 +539,31 @@ function parseVersion(rawVersion: string): SemVer | null {
 	if (parts.length !== 3) return null
 
 	return new SemVer(`${parseInt(parts[0])}.${parseInt(parts[1])}.${parseInt(parts[2])}`)
+}
+
+function getLcdCellSize(
+	model: DeviceModelId,
+	allControls: Readonly<StreamDeckControlDefinition[]>,
+	control: StreamDeckLcdSegmentControlDefinition
+): {
+	columns: number[]
+	pixelSize: Dimension
+} {
+	if (model === DeviceModelId.GALLEON_K100) {
+		return {
+			columns: [0, 2],
+			pixelSize: {
+				width: control.pixelSize.width / 2,
+				height: control.pixelSize.height,
+			},
+		}
+	} else {
+		return {
+			columns: allControls.filter((c) => c.type === 'encoder').map((e) => e.column),
+			pixelSize: {
+				width: control.pixelSize.height, // Future: Support non-square segments
+				height: control.pixelSize.height,
+			},
+		}
+	}
 }
