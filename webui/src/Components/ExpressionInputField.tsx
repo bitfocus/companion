@@ -60,9 +60,6 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, _monaco: Monaco) => {
 		setEditor(editor)
 
-		editor.onDidFocusEditorText(() => {
-			setTmpValue(editor.getValue())
-		})
 		editor.onDidBlurEditorText(() => {
 			setTmpValue(null)
 		})
