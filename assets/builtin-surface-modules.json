@@ -2,7 +2,7 @@
 	"elgato-stream-deck": {
 		"version": "v1.2.0",
 		"tarUrl": "https://s4.bitfocus.io/developer-module-builds/surface/elgato-stream-deck/v1.2.0-2bc32e71976f9d67f424f7abfa263d0b5788083b/elgato-stream-deck-v1.2.0.tgz",
-		"tarSha": "f7daf3c622962286842e51bb7d197f21f99293519a5722953d027945c6005237"
+		"tarSha": "97924baf27f4063956a36412da3a1b46c091bca232d552867d0c89fddd4c6b01"
 	},
 	"xkeys": {
 		"version": "v1.0.2",
