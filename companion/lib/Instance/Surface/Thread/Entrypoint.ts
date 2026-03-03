@@ -194,9 +194,8 @@ registerLoggingSink((source, level, message) => {
 })
 
 const moduleImport = await importModuleFromPath(moduleEntrypoint)
-
 const moduleConstructor = typeof moduleImport === 'function' ? moduleImport : moduleImport.default
-if (typeof moduleConstructor !== 'function')
+if (typeof moduleConstructor !== 'object' || !moduleConstructor || typeof moduleConstructor.init !== 'function')
 	throw new Error(`Module entrypoint did not return a valid constructor function`)
 
 // Now load the plugin
