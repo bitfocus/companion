@@ -1,5 +1,15 @@
 # Bitfocus Companion
 
+## Companion v4.2.5 - Release Notes
+
+- support stream deck + xl
+- improve import resiliency/performance for large configs
+- ux issues in the expression editor
+- better respect collections when ordering connections
+- incorrect urls into module docs
+- suppress some unnecessary errors
+- allow connection configs to use multiline input fields
+
 ## Companion v4.2.4 - Release Notes
 
 ### 🐞 BUG FIXES
