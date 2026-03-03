@@ -11,6 +11,7 @@ import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
 import { convertOpenDeviceResult } from './Util.js'
+import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')
@@ -192,23 +193,14 @@ registerLoggingSink((source, level, message) => {
 	}
 })
 
-const ensureFileUrl = (url: string) => {
-	if (process.platform === 'win32' && !url.startsWith('file://')) {
-		// Windows is picky about import paths, this is a crude hack to 'fix' it
-		return `file://${url}`
-	} else {
-		return url
-	}
-}
+const moduleImport = await importModuleFromPath(moduleEntrypoint)
+
+const moduleConstructor = typeof moduleImport === 'function' ? moduleImport : moduleImport.default
+if (typeof moduleConstructor !== 'function')
+	throw new Error(`Module entrypoint did not return a valid constructor function`)
 
 // Now load the plugin
-plugin = new PluginWrapper(
-	new HostContext(ipcWrapper),
-	// Future: Once webpacked, the dynamic import() doesn't work, so fallback to require()
-	typeof __non_webpack_require__ === 'function'
-		? __non_webpack_require__(moduleEntrypoint)
-		: (await import(ensureFileUrl(moduleEntrypoint))).default
-)
+plugin = new PluginWrapper(new HostContext(ipcWrapper), moduleConstructor)
 
 const pluginFeatures = plugin.getPluginFeatures()
 ipcWrapper
