@@ -144,6 +144,10 @@ function HelpMenu() {
 	}, [versionName, versionSubheading])
 
 	const copyVersionToClipboard = useCallback(() => {
+		if (!navigator.clipboard?.writeText) {
+			console.warn('Clipboard API unavailable; cannot copy version info to clipboard')
+			return
+		}
 		navigator.clipboard.writeText(versionString).catch(() => {
 			console.warn('Failed to copy version-string to the clipboard') // is there a better Companion way to do this? do we care?
 		})
