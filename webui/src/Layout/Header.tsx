@@ -1,4 +1,4 @@
-import React, { type ReactElement, useCallback, useContext, useMemo } from 'react'
+import React, { type ReactElement, useCallback, useContext, useMemo, useState } from 'react'
 import {
 	CHeader,
 	CHeaderBrand,
@@ -9,6 +9,9 @@ import {
 	CContainer,
 	CDropdownToggle,
 	CDropdown,
+	CToast,
+	CToastBody,
+	CToaster,
 } from '@coreui/react'
 import {
 	faBars,
@@ -130,10 +133,22 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 	)
 })
 
+const toastCopied = () => {
+	return (
+		<CToast autohide={true} delay={1000} visible={true} className="w-auto">
+			<CToastBody>Version info copied!</CToastBody>
+		</CToast>
+	)
+}
+
 function HelpMenu() {
 	// We could add the config wizard (showWizard) to the help menu in this useContext...
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
+
+	// add a toast notification when copied to clipboard. (Should this be done with Notifications.tsx? I couldn't figure it out.)
+	const [toast, setToast] = useState<React.JSX.Element>()
+
 	const { versionName, versionSubheading } = useCompanionVersion()
 	const versionString = useMemo(() => {
 		let version = versionName || 'version unknown'
@@ -148,9 +163,12 @@ function HelpMenu() {
 			console.warn('Clipboard API unavailable; cannot copy version info to clipboard')
 			return
 		}
-		navigator.clipboard.writeText(versionString).catch(() => {
-			console.warn('Failed to copy version-string to the clipboard') // is there a better Companion way to do this? do we care?
-		})
+		navigator.clipboard
+			.writeText(versionString)
+			.then(() => setToast(toastCopied()))
+			.catch(() => {
+				console.warn('Failed to copy version-string to the clipboard') // is there a better Companion way to do this? do we care?
+			})
 	}, [versionString])
 
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
@@ -230,6 +248,7 @@ function HelpMenu() {
 			</CDropdownToggle>
 
 			<ActionMenu menuItems={helpMenuItems} />
+			<CToaster className="p-3" placement="top-end" push={toast} />
 		</CDropdown>
 	)
 }
