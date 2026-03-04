@@ -225,6 +225,9 @@ export const OptionsInputField = observer(function OptionsInputField({
 			break
 		}
 		case 'static-text': {
+			// Force the field to not offer toggling to an expression
+			fieldSupportsExpression = false
+
 			control = <StaticTextFieldText {...option} />
 			break
 		}
