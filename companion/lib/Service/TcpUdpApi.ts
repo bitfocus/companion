@@ -1,6 +1,5 @@
 import { parseColorToNumber } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { RegexRouter } from './RegexRouter.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -488,7 +487,7 @@ export class ServiceTcpUdpApi {
 		if (result === undefined) {
 			throw new ApiMessageError('Variable not found')
 		}
-		return stringifyVariableValue(result) ?? ''
+		return JSON.stringify(result) ?? ''
 	}
 
 	/**
