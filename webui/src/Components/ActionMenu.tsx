@@ -12,6 +12,7 @@ interface MenuActiveData {
 	readonly to: string | (() => void) // URL string or action callback
 	readonly id?: string // used for key and to allow individually styled items, see code
 	readonly icon?: IconDefinition | (() => ReactElement) | 'none'
+	readonly fullWidth?: boolean
 	readonly tooltip?: string
 	readonly inNewTab?: boolean
 }
@@ -70,7 +71,7 @@ export function MenuItem({ data }: { data: MenuItemData }): React.JSX.Element {
 				title={data.tooltip}
 				{...navProps}
 			>
-				{data.icon !== 'none' && (
+				{!data.fullWidth && data.icon !== 'none' && (
 					<span className="dropdown-item-icon">
 						{typeof data.icon === 'function' ? (
 							data.icon()
@@ -84,7 +85,7 @@ export function MenuItem({ data }: { data: MenuItemData }): React.JSX.Element {
 				)}
 				<span className="dropdown-item-label">{data.label}</span>
 
-				{data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
+				{!data.fullWidth && (data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' ')}
 			</CDropdownItem>
 		)
 	}

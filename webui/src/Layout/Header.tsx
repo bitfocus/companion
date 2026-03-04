@@ -27,6 +27,7 @@ import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useCompanionVersion } from './useCompanionVersion.js'
 import { ActionMenu, type MenuItemData } from '~/Components/ActionMenu.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
 interface MyHeaderProps {
@@ -133,6 +134,20 @@ function HelpMenu() {
 	// We could add the config wizard (showWizard) to the help menu in this useContext...
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
+	const { versionName, versionSubheading } = useCompanionVersion()
+	const versionString = useMemo(() => {
+		let version = versionName || 'version unknown'
+		if (versionSubheading) {
+			version += '\n' + versionSubheading
+		}
+		return version
+	}, [versionName, versionSubheading])
+
+	const copyVersionToClipboard = useCallback(() => {
+		navigator.clipboard.writeText(versionString).catch(() => {
+			console.warn('Failed to copy version-string to the clipboard') // is there a better Companion way to do this? do we care?
+		})
+	}, [versionString])
 
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
 	const helpMenuItems: MenuItemData[] = useMemo(
@@ -187,8 +202,15 @@ function HelpMenu() {
 				tooltip: 'Contribute funds to Bitfocus Companion.',
 				inNewTab: true,
 			},
+			{
+				id: 'version',
+				label: versionString,
+				fullWidth: true,
+				to: copyVersionToClipboard,
+				tooltip: 'Click to copy version info to the clipboard.',
+			},
 		],
-		[whatsNewOpen]
+		[copyVersionToClipboard, versionString, whatsNewOpen]
 	)
 
 	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,

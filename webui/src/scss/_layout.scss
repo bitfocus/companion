@@ -191,6 +191,22 @@ form.row > * {
 			padding-left: 0.75em;
 			color: rgba(0, 0, 0, 0.5);
 		}
+
+		.dropdown-item-version {
+			white-space: pre; // or pre-wrap to keep narrow but show all?
+			background-color: #ccc;
+
+			.dropdown-item-label {
+				font-size: 0.85em;
+				max-width: 20em; // 16em will prevent widening the menu, but most likely the version string on releases doesn't even have a second line?
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			&:hover {
+				background-color: var(--menu-hover-bg);
+			}
+		}
 	}
 }
 
