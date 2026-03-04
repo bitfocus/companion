@@ -1,5 +1,6 @@
 import { parseColorToNumber } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { RegexRouter } from './RegexRouter.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -263,6 +264,7 @@ export class ServiceTcpUdpApi {
 
 		// custom variables
 		this.#router.addPath('custom-variable :name set-value {*value}', this.#customVariableSetValue)
+		this.#router.addPath('custom-variable :name get-value', this.#customVariableGetValue)
 	}
 
 	/**
@@ -476,6 +478,17 @@ export class ServiceTcpUdpApi {
 		if (result) {
 			throw new ApiMessageError(result)
 		}
+	}
+
+	/**
+	 * Perform custom variable get value
+	 */
+	#customVariableGetValue = (match: Record<string, string>): string => {
+		const result = this.#serviceApi.getCustomVariableValue(match.name)
+		if (result === undefined) {
+			throw new ApiMessageError('Variable not found')
+		}
+		return stringifyVariableValue(result) ?? ''
 	}
 
 	/**
