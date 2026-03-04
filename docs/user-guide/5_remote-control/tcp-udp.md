@@ -41,6 +41,8 @@ TCP commands must be terminated with a newline character, i.e., \n (0x0A) or \r\
 
 - `CUSTOM-VARIABLE <name> SET-VALUE <value>`  
   _Change custom variable value_
+- `CUSTOM-VARIABLE <name> GET-VALUE`
+  _Get custom variable value_
 - `SURFACES RESCAN`
   _Make Companion rescan for USB surfaces_
 
