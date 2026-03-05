@@ -43,8 +43,8 @@ right mouse-click).
 ## Help Menu
 
 Starting with version 4.3, you can access help from a menu in the top-right corner of the window (right end of the red
-header banner), similarly to other popular browser-based apps. The options here are the same as have been available in
-the lower part of the sidebar. See the previous section to learn how to remove the sidebar help options to save space
-there.
+header banner), similarly to other popular browser-based apps. The options here are the same as those seen in
+the lower part of the sidebar. The [Sidebar Options](#sidebar-options) section, above, describes how to free up space
+in the sidebar by hiding the duplicated help entries.
 
 ![Header help-menu](./images/header-help-menu.png 'Header help menu')
