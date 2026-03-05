@@ -612,7 +612,7 @@ export class ExportController {
 	#collectReferencedCollectionIds<TItem extends { collectionId?: string }>(items: TItem[]): Set<string> {
 		const referencedCollectionIds = new Set<string>()
 		for (const item of items) {
-			if (item.collectionId) {
+			if (item && item.collectionId) {
 				referencedCollectionIds.add(item.collectionId)
 			}
 		}
