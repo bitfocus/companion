@@ -1,4 +1,4 @@
-import React, { type ReactElement, useCallback, useContext, useMemo, useState } from 'react'
+import React, { type ReactElement, useCallback, useContext, useMemo } from 'react'
 import {
 	CHeader,
 	CHeaderBrand,
@@ -9,9 +9,6 @@ import {
 	CContainer,
 	CDropdownToggle,
 	CDropdown,
-	CToast,
-	CToastBody,
-	CToaster,
 } from '@coreui/react'
 import {
 	faBars,
@@ -133,21 +130,13 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 	)
 })
 
-const SimpleToast = ({ children }: React.PropsWithChildren) => {
-	return (
-		<CToast autohide={true} delay={1000} visible={true} className="w-auto">
-			<CToastBody>{children}</CToastBody>
-		</CToast>
-	)
-}
-
 function HelpMenu() {
 	// We could add the config wizard (showWizard) to the help menu in this useContext...
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
 	// add a toast notification when copied to clipboard. (Should this be done with Notifications.tsx? I couldn't figure it out.)
-	const [toast, showToast] = useState<React.JSX.Element>()
+	const { notifier } = useContext(RootAppStoreContext)
 
 	const { versionName, versionSubheading } = useCompanionVersion()
 	const versionString = useMemo(() => {
@@ -164,28 +153,11 @@ function HelpMenu() {
 			onCopy: (_text, result) => {
 				const success = 'Version info copied!'
 				const failure = 'Failed to copy version-string to the clipboard'
-				showToast(<SimpleToast>{result ? success : failure}</SimpleToast>)
+				notifier.show('', result ? success : failure, 1000)
 			},
 		}),
-		[versionString]
+		[versionString, notifier]
 	)
-
-	useCallback(() => {
-		if (!navigator.clipboard?.writeText) {
-			const warningText = 'Clipboard API unavailable; cannot copy version info to clipboard'
-			console.warn(warningText)
-			showToast(<SimpleToast>{warningText}</SimpleToast>)
-			return
-		}
-		navigator.clipboard
-			.writeText(versionString)
-			.then(() => showToast(<SimpleToast>Version info copied!</SimpleToast>))
-			.catch(() => {
-				const errText = 'Failed to copy version-string to the clipboard'
-				showToast(<SimpleToast>{errText}</SimpleToast>)
-				console.warn(errText) // is there a better Companion way to do this? do we care?
-			})
-	}, [versionString])
 
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
 	const helpMenuItems: MenuItemData[] = useMemo(
@@ -265,7 +237,6 @@ function HelpMenu() {
 			</CDropdownToggle>
 
 			<ActionMenu menuItems={helpMenuItems} />
-			<CToaster className="p-3" placement="top-end" push={toast} />
 		</CDropdown>
 	)
 }
