@@ -293,3 +293,9 @@
 .markdown h3 {
 	font-size: 1.25em;
 }
+
+.markdown img:last-child {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}

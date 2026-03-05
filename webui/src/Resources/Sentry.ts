@@ -17,7 +17,7 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 					for (const f of frames) {
 						const name = String(f.filename || f.abs_path || f.module || '')
 						if (/monaco|monaco-editor|vs\/editor|loader\.js|_deps\/monaco/i.test(name)) monaco++
-						if (/\/src\/|\/assets\/|webui|app\.|bundle/i.test(name)) app++
+						if (/\/src\/|\/assets\/|webui|app\.|bundle/i.test(name) && !/node_modules/i.test(name)) app++
 						if (monaco > 0 && app > 0) break
 					}
 					if (monaco > 0 && app === 0) return null

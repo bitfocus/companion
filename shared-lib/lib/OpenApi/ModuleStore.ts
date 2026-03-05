@@ -144,6 +144,86 @@ export interface paths {
 		patch?: never
 		trace?: never
 	}
+	'/v1/public/modules/{moduleType}': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get a list of all modules
+		 * @description Get a list of all modules of a given type, with basic info for listing
+		 */
+		get: operations['getPublicModules']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
+	'/v1/public/modules/{moduleType}/{moduleName}': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get detailed info about a module
+		 * @description Get detailed information about a specific module, including tags, successor/predecessor info, images, etc.
+		 */
+		get: operations['getPublicModuleDetails']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
+	'/v1/public/modules/{moduleType}/{moduleName}/versions': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get versions of a module
+		 * @description Get all versions of a specific module, including published and unpublished
+		 */
+		get: operations['getPublicModuleVersions']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
+	'/v1/modules-pending-review': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get a list of module versions pending review
+		 * @description Get a list of all module versions that are currently pending review, across all module types
+		 */
+		get: operations['getModulesPendingReview']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -193,6 +273,10 @@ export interface components {
 			latestHelpUrl?: string
 			/** @description The latest version number of the module */
 			latestVersionNumber?: string
+			/** @description Url to the module help markdown. This may reference other assets in the same folder */
+			prereleaseHelpUrl?: string
+			/** @description The latest prerelease version number of the module */
+			prereleaseVersionNumber?: string
 			/** @description Old module ids that this module replaces */
 			legacyIds?: string[]
 			/** @description Reason for deprecation (if deprecated) */
@@ -322,6 +406,80 @@ export interface components {
 			 * @description When the connection feature expires
 			 */
 			featuredExpiry?: string | null
+		}
+		PendingModuleVersionInfo: {
+			/** @description Name of the module */
+			moduleName: string
+			/** @description Type of the module (e.g. companion-connection, companion-surface) */
+			moduleType: string
+			/** @description Git tag of the pending version */
+			gitTag: string
+			/** @description Unix timestamp (milliseconds) when the version was submitted */
+			createdAt: number
+		}
+		TagInfo: {
+			/** @description Unique identifier for the tag */
+			id: string
+			/** @description Display name of the tag */
+			name: string
+			/** @description URL to the tag icon image */
+			icon?: string | null
+		}
+		PublicModuleListInfo: {
+			/** @description Name of the module */
+			name: string
+			/** @description The type of module (e.g. companion-connection, companion-surface) */
+			type: string
+			/** @description Whether the module is deprecated */
+			deprecated: boolean
+			/**
+			 * Format: date-time
+			 * @description Date when the module was last published
+			 */
+			lastPublish?: string | null
+		}
+		PublicModuleDetailsInfo: {
+			/** @description Reason for deprecation (if deprecated) */
+			deprecationReason?: string | null
+			/** @description Name of the successor module (if module was renamed/replaced) */
+			successorName?: string | null
+			/** @description Tags assigned to this module */
+			assignedTags: components['schemas']['TagInfo'][]
+			predecessors: {
+				/** @description Id of the predecessor module */
+				id: number
+				/** @description Name of the predecessor module */
+				name: string
+				/** @description Type of the predecessor module */
+				type: string
+				/** @description Reason for deprecation of the predecessor */
+				deprecationReason: string | null
+			}[]
+		}
+		PublicModuleVersionInfo: {
+			/** @description Internal version id */
+			id: number
+			/** @description Git tag of the version */
+			gitTag: string
+			/** @description Whether this version is a prerelease */
+			isPrerelease: boolean
+			/** @description Current status of the version */
+			status: string
+			/** @description Whether this version has been published (has a package) */
+			published: boolean
+			/** @description URL to the published package tarball */
+			packageUrl?: string | null
+			/** @description URL to the build log */
+			buildLogUrl?: string | null
+			/** @description Reason for deprecation (if deprecated) */
+			deprecationReason?: string | null
+			/**
+			 * Format: date-time
+			 * @description When the version was created
+			 */
+			createdAt: string
+			/** @description Tags assigned to this version */
+			assignedTags: components['schemas']['TagInfo'][]
 		}
 	}
 	responses: never
@@ -527,6 +685,123 @@ export interface operations {
 				}
 				content: {
 					'application/json': components['schemas']['ErrorResponse']
+				}
+			}
+		}
+	}
+	getPublicModules: {
+		parameters: {
+			query?: never
+			header?: never
+			path: {
+				/** @description Type of module to get */
+				moduleType: 'companion-connection' | 'companion-surface'
+			}
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						modules: components['schemas']['PublicModuleListInfo'][]
+					}
+				}
+			}
+		}
+	}
+	getPublicModuleDetails: {
+		parameters: {
+			query?: never
+			header?: never
+			path: {
+				/** @description Type of module to get */
+				moduleType: 'companion-connection' | 'companion-surface'
+				/** @description Name of module to get */
+				moduleName: string
+			}
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': components['schemas']['PublicModuleDetailsInfo']
+				}
+			}
+			/** @description Module not found */
+			404: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': components['schemas']['ErrorResponse']
+				}
+			}
+		}
+	}
+	getPublicModuleVersions: {
+		parameters: {
+			query?: never
+			header?: never
+			path: {
+				/** @description Type of module to get */
+				moduleType: 'companion-connection' | 'companion-surface'
+				/** @description Name of module to get */
+				moduleName: string
+			}
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						versions: components['schemas']['PublicModuleVersionInfo'][]
+					}
+				}
+			}
+			/** @description Module not found */
+			404: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': components['schemas']['ErrorResponse']
+				}
+			}
+		}
+	}
+	getModulesPendingReview: {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						versions: components['schemas']['PendingModuleVersionInfo'][]
+					}
 				}
 			}
 		}

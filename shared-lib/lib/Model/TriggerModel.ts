@@ -25,6 +25,7 @@ export interface ClientTriggerData extends TriggerOptions {
 	type: 'trigger'
 	lastExecuted: number | null
 	description: string
+	collectionEnabled?: boolean
 }
 
 export type TriggersUpdate =

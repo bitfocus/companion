@@ -24,7 +24,6 @@ import jsonPatch from 'fast-json-patch'
 import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { JsonValue } from 'type-fest'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 /**
  * Class for an expression variable.
@@ -225,7 +224,8 @@ export class ControlExpressionVariable
 		if (key === 'variableName') {
 			// Make sure the new name is valid
 			if (value != '' && (typeof value !== 'string' || !isLabelValid(value))) {
-				throw new Error(`Invalid variable name "${stringifyVariableValue(value)}"`)
+				// throw new Error(`Invalid variable name "${stringifyVariableValue(value)}"`)
+				return false
 			}
 
 			const oldVariableName = this.options.variableName
