@@ -31,7 +31,7 @@ import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useCompanionVersion } from './useCompanionVersion.js'
-import { ActionMenu, type MenuItemData } from '~/Components/ActionMenu.js'
+import { ActionMenu, type MenuActiveData, type MenuItemData } from '~/Components/ActionMenu.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
 interface MyHeaderProps {
 	canLock: boolean
@@ -158,7 +158,19 @@ function HelpMenu() {
 		return version
 	}, [versionName, versionSubheading])
 
-	const copyVersionToClipboard = useCallback(() => {
+	const copyVersionToClipboard = useMemo(
+		(): MenuActiveData['copyToClipboard'] => ({
+			text: versionString,
+			onCopy: (_text, result) => {
+				const success = 'Version info copied!'
+				const failure = 'Failed to copy version-string to the clipboard'
+				showToast(<SimpleToast>{result ? success : failure}</SimpleToast>)
+			},
+		}),
+		[versionString]
+	)
+
+	useCallback(() => {
 		if (!navigator.clipboard?.writeText) {
 			const warningText = 'Clipboard API unavailable; cannot copy version info to clipboard'
 			console.warn(warningText)
@@ -232,8 +244,9 @@ function HelpMenu() {
 				id: 'version',
 				label: versionString,
 				fullWidth: true,
-				to: copyVersionToClipboard,
+				to: () => {}, // no additional action needed
 				tooltip: 'Click to copy version info to the clipboard.',
+				copyToClipboard: copyVersionToClipboard,
 			},
 		],
 		[copyVersionToClipboard, versionString, whatsNewOpen]
