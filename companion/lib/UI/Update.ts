@@ -87,6 +87,9 @@ export class UIUpdate {
 					message2: undefined,
 					...res.data,
 				}
+				if (!this.#appInfo.notifications) {
+					this.#latestUpdateData.message = ''
+				}
 				this.#updateEvents.emit('info', this.#latestUpdateData)
 			},
 			{
