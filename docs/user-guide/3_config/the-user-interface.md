@@ -12,7 +12,7 @@ buttons, variables or triggers; or performing other tasks and diagnostics.
 - You navigate to pages from the left Sidebar.
 - The header at the top of the page may show notifications, such as the availability of new versions of Companion, and
   also provides quick access to help and support. (If you are using the
-  [Admin Password](./3_config/settings.md#admin-ui-password) feature, a lock-icon appears in the header allowing you to
+  [Admin Password](./settings.md#admin-ui-password) feature, a lock-icon appears in the header allowing you to
   lock the Admin interface with a single click.)
 - The main area of the page is typically split into a large main panel (left) for primary tasks and a secondary panel
   (right) for details, previews, or contextual settings.
@@ -33,7 +33,7 @@ right mouse-click).
 - **Auto-Collapse Groups** will allow only a single top-level group to be open at a time. Opening one group will close
   all others (this is sometimes called accordion mode). When active, a check-mark is shown beside it in the
   context-menu.
-- **Folding Sidebar**/**Fixed-Width Sidebar** toggles between these two modes. When in Folding mode, the sidebar is
+- **Folding Sidebar**/**Fixed-Width Sidebar** toggles between these two modes. When in Folding mode, the sidebar
   shows only the icons until you hover over it. (You can also toggle these modes from the icon in the bottom-left of the
   sidebar.) Note that this option is not available if the window is very narrow (mobile-mode).
 - **Show/Hide Sidebar Help** toggles visibility of the Help and Support options in the lower non-scrolling section of
