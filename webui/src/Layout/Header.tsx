@@ -133,10 +133,10 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 	)
 })
 
-const toastCopied = () => {
+const SimpleToast = ({ children }: React.PropsWithChildren) => {
 	return (
 		<CToast autohide={true} delay={1000} visible={true} className="w-auto">
-			<CToastBody>Version info copied!</CToastBody>
+			<CToastBody>{children}</CToastBody>
 		</CToast>
 	)
 }
@@ -147,7 +147,7 @@ function HelpMenu() {
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
 	// add a toast notification when copied to clipboard. (Should this be done with Notifications.tsx? I couldn't figure it out.)
-	const [toast, setToast] = useState<React.JSX.Element>()
+	const [toast, showToast] = useState<React.JSX.Element>()
 
 	const { versionName, versionSubheading } = useCompanionVersion()
 	const versionString = useMemo(() => {
@@ -160,14 +160,18 @@ function HelpMenu() {
 
 	const copyVersionToClipboard = useCallback(() => {
 		if (!navigator.clipboard?.writeText) {
-			console.warn('Clipboard API unavailable; cannot copy version info to clipboard')
+			const warningText = 'Clipboard API unavailable; cannot copy version info to clipboard'
+			console.warn(warningText)
+			showToast(<SimpleToast>{warningText}</SimpleToast>)
 			return
 		}
 		navigator.clipboard
 			.writeText(versionString)
-			.then(() => setToast(toastCopied()))
+			.then(() => showToast(<SimpleToast>Version info copied!</SimpleToast>))
 			.catch(() => {
-				console.warn('Failed to copy version-string to the clipboard') // is there a better Companion way to do this? do we care?
+				const errText = 'Failed to copy version-string to the clipboard'
+				showToast(<SimpleToast>{errText}</SimpleToast>)
+				console.warn(errText) // is there a better Companion way to do this? do we care?
 			})
 	}, [versionString])
 
