@@ -48,14 +48,10 @@ export function useCompanionVersion(): CompanionVersion {
 		const parser = new UAParser()
 		// Asynchronous call to get accurate version via Client Hints
 		const fetchFullSpecs = async () => {
-			// withClientHints() returns a Promise with more accurate data that usually
-			// correctly identifies Windows 11 vs 10 (doesn't seem to work with Firefox)
+			// withClientHints() returns a Promise with more accurate data that
+			// usually distinguishes Windows 11 from 10 (doesn't seem to work with Firefox)
 			const result = await parser.getResult().withClientHints()
-
-			const browserName = result.browser.name || 'Unknown Browser'
-			const browserVersion = result.browser.version || 'Unknown Version'
-
-			setBrowserString(`${browserName} v${browserVersion} running on: ${result.os.name} ${result.os.version ?? ''}`)
+			setBrowserString(formatBrowserString(result))
 		}
 
 		fetchFullSpecs().catch(console.error)
