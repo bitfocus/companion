@@ -10,12 +10,19 @@ export interface CompanionVersion {
 	browser: string
 }
 
+function formatBrowserString(parser: UAParser.IResult): string {
+	const browserName = parser.browser.name || 'Unknown Browser'
+	const browserVersion = parser.browser.version || 'Unknown Version'
+	const browserOS = `${parser.os.name} ${parser.os.version ?? ''}`
+	return `${browserName} v${browserVersion} running on: ${browserOS}`
+}
+
 /*
  *  Get Companion Version info
  */
 export function useCompanionVersion(): CompanionVersion {
+	// 1. Companion Version info
 	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
-
 	let versionName = ''
 	let versionBuild = ''
 
@@ -34,14 +41,15 @@ export function useCompanionVersion(): CompanionVersion {
 		}
 	}
 
-	const [browserString, setBrowserString] = useState<string>('processing...')
+	// 2. Browser Info
+	const [browserString, setBrowserString] = useState(formatBrowserString(new UAParser().getResult()))
 
 	useEffect(() => {
 		const parser = new UAParser()
 		// Asynchronous call to get accurate version via Client Hints
 		const fetchFullSpecs = async () => {
-			// 2. withClientHints() returns a Promise with accurate data
-			// This is what correctly identifies Windows 11 vs 10
+			// withClientHints() returns a Promise with more accurate data that usually
+			// correctly identifies Windows 11 vs 10 (doesn't seem to work with Firefox)
 			const result = await parser.getResult().withClientHints()
 
 			const browserName = result.browser.name || 'Unknown Browser'
@@ -53,9 +61,8 @@ export function useCompanionVersion(): CompanionVersion {
 		fetchFullSpecs().catch(console.error)
 	}, []) // Run once on mount
 
-	//const betterOS = await parser.getOS().withClientHints()
-	//.then(os => {
-	//console.log(`Accurate OS: ${os.name} ${os.version}`);
+	// 3. Server OS info:
+	const osString = versionInfo.data?.os ?? 'unknown'
 
-	return { versionName, versionBuild, browser: browserString, os: versionInfo.data?.os ?? 'unknown' }
+	return { versionName, versionBuild, browser: browserString, os: osString }
 }
