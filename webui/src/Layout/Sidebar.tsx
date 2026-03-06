@@ -498,7 +498,7 @@ const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props:
 })
 
 const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ doToggle }: { doToggle: () => void }) {
-	const { versionName, versionSubheading } = useCompanionVersion()
+	const { versionName, versionBuild: versionSubheading } = useCompanionVersion()
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">

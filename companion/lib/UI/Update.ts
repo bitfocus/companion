@@ -113,6 +113,7 @@ export class UIUpdate {
 				return {
 					appVersion: this.#appInfo.appVersion,
 					appBuild: this.#appInfo.appBuild,
+					os: this.#appInfo.os,
 				}
 			}),
 

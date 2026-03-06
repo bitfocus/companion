@@ -30,6 +30,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { useCompanionVersion } from './useCompanionVersion.js'
 import { ActionMenu, type MenuActiveData, type MenuItemData } from '~/Components/ActionMenu.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
+
 interface MyHeaderProps {
 	canLock: boolean
 	setLocked: (locked: boolean) => void
@@ -138,25 +139,29 @@ function HelpMenu() {
 	// add a toast notification when copied to clipboard. (Should this be done with Notifications.tsx? I couldn't figure it out.)
 	const { notifier } = useContext(RootAppStoreContext)
 
-	const { versionName, versionSubheading } = useCompanionVersion()
-	const versionString = useMemo(() => {
+	const { versionName, versionBuild, os, browser } = useCompanionVersion()
+	const sysinfo = useMemo(() => {
 		let version = versionName || 'version unknown'
-		if (versionSubheading) {
-			version += '\n' + versionSubheading
+		let versionPlus = version
+		if (versionBuild) {
+			version += '\n' + versionBuild
+			versionPlus += ' ' + versionBuild
 		}
-		return version
-	}, [versionName, versionSubheading])
+		versionPlus += `\nOS: ${os}\nBrowser: ${browser}\n`
+		return { version, versionPlus }
+	}, [versionName, versionBuild, os, browser])
 
 	const copyVersionToClipboard = useMemo(
+		// return a props object to be passed to <CopyToClipboard>
 		(): MenuActiveData['copyToClipboard'] => ({
-			text: versionString,
+			text: sysinfo.versionPlus,
 			onCopy: (_text, result) => {
 				const success = 'Version info copied!'
 				const failure = 'Failed to copy version-string to the clipboard'
 				notifier.show('', result ? success : failure, 1000)
 			},
 		}),
-		[versionString, notifier]
+		[sysinfo, notifier]
 	)
 
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
@@ -214,14 +219,14 @@ function HelpMenu() {
 			},
 			{
 				id: 'version',
-				label: versionString,
+				label: sysinfo.version,
 				fullWidth: true,
 				to: () => {}, // no additional action needed
-				tooltip: 'Click to copy version info to the clipboard.',
+				tooltip: 'Click to copy version info including OS and browser to the clipboard.',
 				copyToClipboard: copyVersionToClipboard,
 			},
 		],
-		[copyVersionToClipboard, versionString, whatsNewOpen]
+		[copyVersionToClipboard, sysinfo, whatsNewOpen]
 	)
 
 	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,
