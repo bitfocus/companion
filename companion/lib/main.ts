@@ -53,6 +53,7 @@ program
 	.option('--syslog-port <string>', 'Port on syslog server to write to')
 	.option('--syslog-tcp', 'Use TCP for transport (default: udp)')
 	.option('--syslog-localhost <string>', 'Hostname of this machine')
+	.option('--no-notifications', "Don't show version-related notifications in the header.")
 
 program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const options = program.opts()
@@ -244,6 +245,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		},
 		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
 		machineId,
+		notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
 	})
 
 	registry

@@ -164,7 +164,10 @@ export class Registry {
 	 * @param machineId - the machine uuid
 	 */
 	constructor(
-		baseAppInfo: Pick<AppInfo, 'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId'>
+		baseAppInfo: Pick<
+			AppInfo,
+			'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'notifications'
+		>
 	) {
 		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
 		if (!baseAppInfo.machineId) throw new Error(`Missing machineId`)
@@ -512,4 +515,5 @@ export interface AppInfo {
 	appVersion: string
 	appBuild: string
 	pkgInfo: PackageJson
+	notifications: boolean
 }

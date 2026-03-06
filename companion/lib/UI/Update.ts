@@ -82,6 +82,13 @@ export class UIUpdate {
 				}
 
 				this.#logger.debug(`fresh update data received ${JSON.stringify(res.data)}`)
+				if (!this.#appInfo.notifications) {
+					this.#logger.debug(
+						'Notification display has been disabled by the command-line: not showing the update message.'
+					)
+					return
+				}
+
 				this.#latestUpdateData = {
 					link: res.data.link,
 					message2: undefined,
