@@ -4,7 +4,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { useComputed } from '~/Resources/util'
 import { SurfaceInstanceEditPanel } from '~/Surfaces/Instances/SurfaceInstanceEdit/SurfaceInstanceEditPanel'
 
-export const Route = createFileRoute('/_app/surfaces/configured/integration/$instanceId')({
+export const Route = createFileRoute('/_app/surfaces/configured/integrations/$instanceId')({
 	component: ModuleConfigComponent,
 })
 

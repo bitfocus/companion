@@ -64,7 +64,7 @@ function useAddSurfaceInstanceService(): AddInstanceService {
 	// this is not pretty but should do for the moment
 	let instancePage: string
 	if (pathname.endsWith('add')) {
-		// /surfaces/configured/integration/add
+		// /surfaces/configured/integrations/add
 		instancePage = pathname.replace('add', '$instanceId') // replace the filename part of the path
 	} else {
 		// /surfaces/integrations

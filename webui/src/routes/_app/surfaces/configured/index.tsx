@@ -62,7 +62,7 @@ function SurfaceSettingsPanel() {
 				</table>
 				{/* Putting this in the table changes the spacing between the buttons and the integrations table, so do it this way instead... */}
 				<div style={{ border: '1px solid var(--cui-border-color)', borderTop: 0 }}>
-					<SurfaceInstancesList selectedInstanceId={null} toDir="configured/integration" />
+					<SurfaceInstancesList selectedInstanceId={null} toDir="configured/integrations" />
 					{userConfigProps && (
 						<table className="table table-responsive-sm table-settings ms-3">
 							<tbody>
@@ -100,7 +100,7 @@ function SettingsPanelTitleBar() {
 
 	return (
 		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Surface/Integration Settings</h4>
+			<h4 className="panel-title">Surface/Integrations Settings</h4>
 			<div className="header-buttons">
 				<ContextHelpButton
 					hoverText="Manage global surface settings and surface integrations here."
