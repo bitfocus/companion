@@ -13,7 +13,7 @@ function ModuleConfigComponent() {
 
 	const { surfaceInstances } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate()
+	const navigate = useNavigate() //({ from: '/surfaces/configured/integrations/$instanceId' })
 
 	// Ensure the selected instance is valid
 	useComputed(() => {

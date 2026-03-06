@@ -68,7 +68,7 @@ function useInstanceEditPanelService(
 	const { surfaceInstances } = useContext(RootAppStoreContext)
 
 	// from: is only needed to resolve relative paths (and using string var caused problems)...
-	const navigate = useNavigate() //{ from: `/surfaces/integrations/$instanceId` }
+	const navigate = useNavigate() //{ from: `/surfaces/configured/integrations/$instanceId` }
 	const { pathname } = useLocation()
 	const homepage = pathname.split('/', 3).join('/') // first two elements of the path ex: /surfaces/configured
 

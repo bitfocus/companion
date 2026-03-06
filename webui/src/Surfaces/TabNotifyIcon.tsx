@@ -24,32 +24,6 @@ export const SurfacesTabNotifyIcon = observer(function SurfacesTabNotifyIcon(): 
 	)
 })
 
-export const SurfacesConfiguredTabNotifyIcon = observer(function SurfacesConfiguredTabNotifyIcon(): JSX.Element | null {
-	const { surfaces } = useContext(RootAppStoreContext)
-
-	const updateCount = surfaces.countFirmwareUpdates()
-	if (updateCount === 0) return null
-
-	return (
-		<span className="notification-count" title={`${updateCount} surfaces have firmware updates available`}>
-			{updateCount}
-		</span>
-	)
-})
-
-export const SurfacesInstancesTabNotifyIcon = observer(function SurfacesInstancesTabNotifyIcon(): JSX.Element | null {
-	const { surfaceInstances } = useContext(RootAppStoreContext)
-
-	const missingCount = useMissingVersionsCount(ModuleInstanceType.Surface, surfaceInstances.instances)
-	if (missingCount === 0) return null
-
-	return (
-		<span className="notification-count" title={`Missing ${missingCount} needed modules`}>
-			{missingCount}
-		</span>
-	)
-})
-
 export const ConnectionsTabNotifyIcon = observer(function ConnectionsTabNotifyIcon(): JSX.Element | null {
 	const { connections } = useContext(RootAppStoreContext)
 
