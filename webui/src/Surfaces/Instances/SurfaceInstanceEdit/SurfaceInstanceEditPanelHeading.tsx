@@ -4,7 +4,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
-import { CloseButton, ContextHelpButton } from '~/UserConfig/Components/Common'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelHeaderIcons.js'
 
 interface SurfaceInstanceEditPanelHeadingProps {
 	instanceInfo: ClientSurfaceInstanceConfig

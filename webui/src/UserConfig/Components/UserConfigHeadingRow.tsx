@@ -5,7 +5,7 @@ import { InlineHelp } from '~/Components/InlineHelp'
 
 interface UserConfigHeadingRowProps {
 	label: string
-	tooltip?: string
+	tooltip?: string | React.ReactNode
 }
 export function UserConfigHeadingRow({ label, tooltip }: UserConfigHeadingRowProps): React.JSX.Element {
 	return (

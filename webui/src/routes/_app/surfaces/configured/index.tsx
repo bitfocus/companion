@@ -7,7 +7,7 @@ import { useUserConfigProps } from '~/UserConfig/Context'
 import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
 import { useConfiguredSurfaceContext } from '~/Surfaces/ConfiguredSurfacesContext'
 import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
-import { CloseButton, ContextHelpButton } from '~/UserConfig/Components/Common'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelHeaderIcons'
 
 export const Route = createFileRoute('/_app/surfaces/configured/')({
 	component: SurfaceSettingsPanel,
@@ -49,7 +49,15 @@ function SurfaceSettingsPanel() {
 					<thead>
 						<UserConfigHeadingRow
 							label="Surface Integrations (Plugins)"
-							tooltip="Similar to connections, surface integrations represent the ability to use different hardware or virtual surfaces to trigger buttons in Companion."
+							tooltip={
+								<>
+									<p>
+										Similar to connections, surface integrations represent the ability to use different hardware or
+										virtual surfaces to trigger buttons in Companion.
+									</p>
+									<p>Click on any row to configure the integration.</p>
+								</>
+							}
 						/>
 					</thead>
 					<tbody>

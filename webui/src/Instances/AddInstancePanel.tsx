@@ -22,7 +22,7 @@ import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks
 import { Link } from '@tanstack/react-router'
 import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { CloseButton } from '~/UserConfig/Components/Common.js'
+import { CloseButton } from '~/Layout/PanelHeaderIcons.js'
 
 interface AddInstancePanelProps {
 	service: AddInstanceService
