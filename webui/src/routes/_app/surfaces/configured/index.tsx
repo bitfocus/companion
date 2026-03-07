@@ -21,11 +21,63 @@ function SurfaceSettingsPanel() {
 	return (
 		<>
 			<SettingsPanelTitleBar />
-			<div className="secondary-panel-simple-body" style={{ paddingTop: '0.5em', paddingRight: '1.25em' }}>
-				<p style={{ marginBottom: '0em', fontStyle: 'italic' }}>
-					The following are global surface settings. To configure a known surface, select an item in the{' '}
-					<strong>Configured Surfaces</strong> table to the left.
-				</p>
+			<p style={{ marginBottom: '0em', fontStyle: 'italic', padding: '0.5em 2em' }}>
+				To configure a surface integration, select an item from the table below. For a specific surface, select it in
+				the Configured Surfaces table to the left.
+			</p>
+			<div className="secondary-panel-simple-body" style={{ paddingTop: 0, paddingRight: '1.25em' }}>
+				<table
+					className="table table-responsive-sm table-settings mb-0"
+					style={{ border: '1px solid var(--cui-border-color)', borderBottom: 0 }}
+				>
+					<thead>
+						<UserConfigHeadingRow
+							label="Surface Integrations (Plugins)"
+							tooltip={
+								<>
+									<p>
+										Surface integrations are like connections: they provide the ability to use different hardware or
+										virtual surfaces to trigger buttons in Companion.
+									</p>
+									<p>Click on any row to configure the integration.</p>
+								</>
+							}
+						/>
+					</thead>
+					<tbody></tbody>
+				</table>
+				{/* Putting this in the table changes the spacing between the buttons and the integrations table, so do it this way instead... */}
+				<div style={{ border: '1px solid var(--cui-border-color)', borderTop: 0, paddingTop: '0.5em' }}>
+					<SurfaceInstancesList selectedInstanceId={null} toDir="configured/integrations" />
+					{userConfigProps && (
+						<>
+							<table>
+								<tbody>
+									<tr>
+										<td>
+											<div style={{ minWidth: '2em' }}></div>
+										</td>
+										<td style={{ width: '100%' }}>
+											<table className="table table-responsive-sm table-settings elgato-plugin">
+												<tbody>
+													<UserConfigSwitchRow
+														userConfig={userConfigProps}
+														label={<strong>Enable Elgato software Plugin support</strong>}
+														field="elgato_plugin_enable"
+													/>
+												</tbody>
+											</table>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</>
+					)}
+				</div>
+
+				<br />
+
+				<p style={{ marginBottom: '0em', fontStyle: 'italic' }}>The following settings affect all surfaces.</p>
 				<hr style={{ marginTop: '0.5em', marginBottom: 0 }} />
 				{userConfigProps && (
 					<table className="table table-responsive-sm table-settings">
@@ -37,57 +89,6 @@ function SurfaceSettingsPanel() {
 								label="Auto-enable newly discovered surfaces"
 								field="auto_enable_discovered_surfaces"
 							/>
-						</tbody>
-					</table>
-				)}
-
-				<br />
-				<table
-					className="table table-responsive-sm table-settings mb-0"
-					style={{ border: '1px solid var(--cui-border-color)', borderBottom: 0 }}
-				>
-					<thead>
-						<UserConfigHeadingRow
-							label="Surface Integrations (Plugins)"
-							tooltip={
-								<>
-									<p>
-										Similar to connections, surface integrations represent the ability to use different hardware or
-										virtual surfaces to trigger buttons in Companion.
-									</p>
-									<p>Click on any row to configure the integration.</p>
-								</>
-							}
-						/>
-					</thead>
-					<tbody>
-						<tr>
-							<td style={{ borderBottom: 0 }}>
-								<em>Add, configure and enable the types of surfaces you want to use.</em>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-				{/* Putting this in the table changes the spacing between the buttons and the integrations table, so do it this way instead... */}
-				<div style={{ border: '1px solid var(--cui-border-color)', borderTop: 0 }}>
-					<SurfaceInstancesList selectedInstanceId={null} toDir="configured/integrations" />
-					{userConfigProps && (
-						<table className="table table-responsive-sm table-settings ms-3">
-							<tbody>
-								<UserConfigSwitchRow
-									userConfig={userConfigProps}
-									label={<strong>Enable Elgato software Plugin support</strong>}
-									field="elgato_plugin_enable"
-								/>
-							</tbody>
-						</table>
-					)}
-				</div>
-
-				<br />
-				{userConfigProps && (
-					<table className="table table-responsive-sm table-settings">
-						<tbody>
 							<PinLockoutConfig {...userConfigProps} />
 						</tbody>
 					</table>
