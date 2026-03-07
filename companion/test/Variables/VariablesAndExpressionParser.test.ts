@@ -404,6 +404,39 @@ describe('VariablesAndExpressionParser', () => {
 				expect(result.parsedOptions.num1).toBe(50)
 			}
 		})
+
+		it('should not clamp number field when optionsSupportExpressions is false (passthrough path)', () => {
+			const parser = createParser()
+			const entityDefinition: ClientEntityDefinition = {
+				entityType: EntityModelType.Action,
+				label: 'Test',
+				sortKey: null,
+				description: undefined,
+				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
+				optionsToMonitorForInvalidations: null,
+				feedbackType: null,
+				feedbackStyle: undefined,
+				hasLifecycleFunctions: true,
+				hasLearn: false,
+				learnTimeout: undefined,
+				showInvert: false,
+				optionsSupportExpressions: false, // legacy path: number fields are passed through without validation
+				showButtonPreview: false,
+				supportsChildGroups: [],
+			}
+			const options: ExpressionableOptionsObject = {
+				field1: { isExpression: false, value: 200 }, // above max, but clamping is intentionally skipped
+			}
+
+			const result = parser.parseEntityOptions(entityDefinition, options)
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// In the legacy (optionsSupportExpressions: false) path, number fields are treated as
+				// passthrough — validateInputValue is never called, so clampValues has no effect.
+				expect(result.parsedOptions.field1).toBe(200)
+			}
+		})
 	})
 
 	describe('parseEntityOptions with expressions', () => {
