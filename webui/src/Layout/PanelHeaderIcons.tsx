@@ -13,7 +13,7 @@ interface CloseButtonProps {
 
 interface ContextHelpButtonProps {
 	hoverText: string
-	userGuide: string | (() => void) // could string be made more specific with a TanStack type?
+	userGuide: `/user-guide/${string}` | (() => void) // could string be made more specific with a TanStack type?
 	size?: SizeProp
 }
 

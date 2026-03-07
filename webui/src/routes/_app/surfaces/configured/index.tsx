@@ -74,13 +74,11 @@ function SurfaceSettingsPanel() {
 					{userConfigProps && (
 						<table className="table table-responsive-sm table-settings ms-3">
 							<tbody>
-								<b>
-									<UserConfigSwitchRow
-										userConfig={userConfigProps}
-										label="Enable Elgato software Plugin support"
-										field="elgato_plugin_enable"
-									/>
-								</b>
+								<UserConfigSwitchRow
+									userConfig={userConfigProps}
+									label={<strong>Enable Elgato software Plugin support</strong>}
+									field="elgato_plugin_enable"
+								/>
 							</tbody>
 						</table>
 					)}

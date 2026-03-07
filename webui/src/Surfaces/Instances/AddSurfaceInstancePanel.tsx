@@ -67,8 +67,8 @@ function useAddSurfaceInstanceService(): AddInstanceService {
 		// /surfaces/configured/integrations/add
 		instancePage = pathname.replace('add', '$instanceId') // replace the filename part of the path
 	} else {
-		// /surfaces/integrations
-		instancePage = homepage + '/$instanceId' // add to the path
+		// /surfaces/configured/integrations
+		instancePage = homepage + '/integrations/$instanceId' // add to the path
 	}
 
 	return useMemo(
