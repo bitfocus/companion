@@ -194,6 +194,8 @@ function translateNumberField(
 		range: field.range,
 		showMinAsNegativeInfinity: field.showMinAsNegativeInfinity,
 		showMaxAsPositiveInfinity: field.showMaxAsPositiveInfinity,
+		clampValues: field.clampValues,
+		asInteger: field.asInteger,
 	}
 }
 function translateDropdownField(
