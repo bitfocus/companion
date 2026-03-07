@@ -2,6 +2,7 @@
 import EventEmitter from 'events'
 import fs from 'fs-extra'
 import express from 'express'
+import os from 'os'
 import LogController, { type Logger } from './Log/Controller.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ControlsController } from './Controls/Controller.js'
@@ -180,6 +181,7 @@ export class Registry {
 
 		this.#appInfo = {
 			...baseAppInfo,
+			os: `${os.version()} (v${os.release()}; ${os.arch()})`,
 			appVersion: pkgInfo.version!,
 			appBuild: buildNumber,
 			pkgInfo: pkgInfo,
@@ -509,6 +511,7 @@ export interface AppInfo {
 	/** The path to store generated udev rules */
 	udevRulesDir: string
 	machineId: string
+	os: string
 	appVersion: string
 	appBuild: string
 	pkgInfo: PackageJson

@@ -58,6 +58,7 @@ body:
     attributes:
       label: Environment (please complete the following information)
       description: |
+        If you are using Companion v4.3 or later just tap/click the version info in the help menu (right-side of the header) and it will copy the information ready to paste here.
         examples:
           - **OS**: Windows 10
           - **Browser**: Chrome 94

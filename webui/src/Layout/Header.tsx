@@ -27,8 +27,10 @@ import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { ActionMenu, type MenuItemData } from '~/Components/ActionMenu.js'
+import { useCompanionVersion } from './useCompanionVersion.js'
+import { ActionMenu, type MenuActiveData, type MenuItemData } from '~/Components/ActionMenu.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
+
 interface MyHeaderProps {
 	canLock: boolean
 	setLocked: (locked: boolean) => void
@@ -134,6 +136,34 @@ function HelpMenu() {
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
+	// add a toast notification when copied to clipboard. (Should this be done with Notifications.tsx? I couldn't figure it out.)
+	const { notifier } = useContext(RootAppStoreContext)
+
+	const { versionName, versionBuild, os, browser } = useCompanionVersion()
+	const sysinfo = useMemo(() => {
+		let version = versionName || 'version unknown'
+		let versionPlus = version
+		if (versionBuild) {
+			version += '\n' + versionBuild
+			versionPlus += ' ' + versionBuild
+		}
+		versionPlus += `\nOS: ${os}\nBrowser: ${browser}\n`
+		return { version, versionPlus }
+	}, [versionName, versionBuild, os, browser])
+
+	const copyVersionToClipboard = useMemo(
+		// return a props object to be passed to <CopyToClipboard>
+		(): MenuActiveData['copyToClipboard'] => ({
+			text: sysinfo.versionPlus,
+			onCopy: (_text, result) => {
+				const success = 'Version info copied!'
+				const failure = 'Failed to copy version-string to the clipboard'
+				notifier.show('', result ? success : failure, 1000)
+			},
+		}),
+		[sysinfo, notifier]
+	)
+
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
 	const helpMenuItems: MenuItemData[] = useMemo(
 		() => [
@@ -187,8 +217,16 @@ function HelpMenu() {
 				tooltip: 'Contribute funds to Bitfocus Companion.',
 				inNewTab: true,
 			},
+			{
+				id: 'version',
+				label: sysinfo.version,
+				fullWidth: true,
+				to: () => {}, // no additional action needed
+				tooltip: 'Click to copy version info including OS and browser to the clipboard.',
+				copyToClipboard: copyVersionToClipboard,
+			},
 		],
-		[whatsNewOpen]
+		[copyVersionToClipboard, sysinfo, whatsNewOpen]
 	)
 
 	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,

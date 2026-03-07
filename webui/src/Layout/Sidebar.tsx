@@ -53,8 +53,7 @@ import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables, type ClientConnectionConfigWithId } from '~/Stores/Util.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
-import { trpc } from '~/Resources/TRPC'
-import { useQuery } from '@tanstack/react-query'
+import { useCompanionVersion } from './useCompanionVersion'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
@@ -499,25 +498,7 @@ const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props:
 })
 
 const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ doToggle }: { doToggle: () => void }) {
-	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
-
-	let versionString = ''
-	let versionSubheading = ''
-
-	if (versionInfo.data) {
-		if (versionInfo.data.appBuild.includes('-stable-')) {
-			versionString = `v${versionInfo.data.appVersion}`
-		} else {
-			// split appBuild into parts.
-			const splitPoint = versionInfo.data.appBuild.indexOf('-')
-			if (splitPoint === -1) {
-				versionString = `v${versionInfo.data.appBuild}`
-			} else {
-				versionString = `v${versionInfo.data.appBuild.substring(0, splitPoint)}`
-				versionSubheading = versionInfo.data.appBuild.substring(splitPoint + 1)
-			}
-		}
-	}
+	const { versionName, versionBuild: versionSubheading } = useCompanionVersion()
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
@@ -526,7 +507,7 @@ const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ do
 			</span>
 
 			<span className="flex-fill text-truncate">
-				<span className="version">{versionString || 'Unknown'}</span>
+				<span className="version">{versionName || 'Unknown'}</span>
 				{/* <br /> */}
 				<span className="version-sub">{versionSubheading}</span>
 			</span>
