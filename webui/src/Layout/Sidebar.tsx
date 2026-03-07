@@ -406,7 +406,7 @@ export const MySidebar = memo(function MySidebar() {
 					</SidebarMenuItemGroup>
 				</CSidebarNav>
 			)}
-			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
+			<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
 				<SidebarTogglerAndVersion doToggle={doToggle} />
 			</CSidebarHeader>
 		</CSidebar>
@@ -521,7 +521,7 @@ const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ do
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
-			<span className="nav-icon-wrapper" onClick={doToggle}>
+			<span className="nav-icon-wrapper d-none d-lg-flex" onClick={doToggle}>
 				<span className="nav-icon sidebar-toggler"></span>
 			</span>
 
@@ -551,6 +551,7 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 	const sidebarRef = useRef<HTMLDivElement>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
+	const [narrow, setNarrow] = useState(false)
 
 	const sidebarState = useSidebarState()
 
@@ -573,18 +574,55 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 	const handleOnClick = useCallback(
 		(event: MouseEvent) => {
 			const target = event.target
+			// note: middle-click currently opens the nav-link target in a new tab, so it makes sense to close the sidebar
+			// only context-menu should leave the sidebar alone, since it is acting on the current sidebar, hence "event.button === 2".
 			if (!(target instanceof Element) || event.button === 2) return // leave context menu alone (note button# is OS-independent)
 
 			// If the user clicked on the text, it's not a nav-link so the original code failed to close the navbar
 			// Instead we search up the DOM for a nav-link.
 			const navLink = target.closest('.nav-link')
 			const navGroupToggle = navLink?.closest('.nav-group-toggle')
-			if (navLink && !navGroupToggle && sidebarState.showToggle) {
+			if (!navLink || navGroupToggle) return // only act for click on sidebar elements (excludes the context-menu)
+
+			const toggler = target.closest('.sidebar-header-toggler') // the latter isn't strictly necessary, but makes the intent clear
+			if (toggler && !target.closest(' .nav-icon-wrapper')) return // ignore clicks on version text, etc.
+
+			// if we got here the user clicked on a nav-link, not a non-active area, group-toggle or context-menu item
+			if (sidebarState.showToggle) {
+				// Mobile mode ("hamburger" toggle reveals sidebar; click on item hides sidebar)
 				setVisibleMobile(false)
+			} else if ((unfoldable && !toggler) || (!unfoldable && toggler)) {
+				// Folding mode: make the sidebar narrow momentarily (see handleTransitionEnd) so it can collapse
+				// note: we reverse the logic for clicks on the sidebar toggler, because the toggler will have flipped the state by the time this runs
+				setNarrow(true)
 			}
 		},
-		[sidebarState.showToggle]
+		[sidebarState.showToggle, unfoldable]
 	)
+
+	const handleTransitionEnd = useCallback(
+		(e: React.TransitionEvent<HTMLDivElement>) => {
+			// make the narrow effect from handleOnClick be momentary, so it responds to the next hover
+			// Some pages take a while to load (Modules), so wait for the repaint to finish before resetting `narrow`
+
+			// To ensure that the redraw is truly complete, only trigger if the event came from THIS div, not a child
+			// and if it's for a width property.
+			if (e.target !== e.currentTarget) return
+			if (e.propertyName !== 'width' && e.propertyName !== 'max-width') return
+			if (narrow) {
+				setNarrow(false)
+			}
+		},
+		[narrow]
+	)
+
+	// Fallback for reduced motion or if transition doesn't fire (both very rare cases)
+	// Note: the only time narrow is true is after the user clicked a nav-link when sidebar-narrow-unfoldable (i.e. unfoldable is true)
+	useEffect(() => {
+		if (!narrow) return
+		const timeout = setTimeout(() => setNarrow(false), 1000) // some transitions can be delayed, and there's no harm in waiting a bit longer here since we're in unfoldable mode.
+		return () => clearTimeout(timeout)
+	}, [narrow])
 
 	const handleKeyup = useCallback(
 		(event: Event) => {
@@ -624,17 +662,19 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 			<div
 				className={classNames('sidebar sidebar-dark sidebar-fixed', {
 					// [`sidebar-${colorScheme}`]: colorScheme,
-					// 'sidebar-narrow': narrow,
+					'sidebar-narrow': narrow,
+					//'no-transition-all': narrow, // optional, but this works only after very long transitions (modules page)
 					// 'sidebar-overlaid': overlaid,
 					// [`sidebar-${placement}`]: placement,
 					// [`sidebar-${position}`]: position,
 					// [`sidebar-${size}`]: size,
-					'sidebar-narrow-unfoldable': unfoldable, // // unfold-able. This is a CoreUI class so can't be renamed.
+					'sidebar-narrow-unfoldable': unfoldable && !narrow, // // unfold-able. This is a CoreUI class so can't be renamed.
 					show: sidebarState.showToggle && visibleMobile,
 					// hide: visibleDesktop === false && !sidebarState.showToggle && !overlaid,
 				})}
 				ref={sidebarRef}
 				onContextMenu={onContextMenu}
+				onTransitionEnd={handleTransitionEnd}
 			>
 				{children}
 			</div>
