@@ -11,8 +11,6 @@ import isEqual from 'fast-deep-equal'
  * @param value The value to validate
  * @param options Optional validation options
  * @param options.skipValidateExpression If true, skip validating expression fields
- * @param options.clampNumbers If true, clamp out-of-range number values to the min/max bounds instead of just reporting an error.
- *   Clamping is skipped when the field has `allowInvalidValues` set. A warning is added to `validationWarnings` when clamping occurs.
  * @returns An object with the sanitised value, an optional error message, and an array of warnings
  */
 export function validateInputValue(
@@ -20,7 +18,6 @@ export function validateInputValue(
 	value: JsonValue | undefined,
 	options?: {
 		skipValidateExpression?: boolean
-		clampNumbers?: boolean
 	}
 ): {
 	sanitisedValue: JsonValue | undefined
@@ -115,10 +112,18 @@ export function validateInputValue(
 				return { sanitisedValue: value, validationError: 'Value must be a number', validationWarnings }
 			}
 
-			// Verify the value range
+			// Round to integer if required
+			const isNotInteger = definition.asInteger && !Number.isInteger(sanitisedValue)
+			if (isNotInteger) {
+				validationWarnings.push('Value was rounded to nearest integer')
+				sanitisedValue = Math.round(sanitisedValue)
+			}
+
+			// Verify the value range - allowInvalidValues takes priority over clampValues
 			if (definition.min !== undefined && sanitisedValue < definition.min) {
-				// Clamp to min when requested and the field doesn't allow invalid values
-				if (options?.clampNumbers && !definition.allowInvalidValues) {
+				if (definition.allowInvalidValues) {
+					validationWarnings.push(`Value is below ${definition.min}`)
+				} else if (definition.clampValues) {
 					sanitisedValue = definition.min
 					validationWarnings.push(`Value was clamped to ${definition.min}`)
 				} else {
@@ -130,8 +135,9 @@ export function validateInputValue(
 				}
 			}
 			if (definition.max !== undefined && sanitisedValue > definition.max) {
-				// Clamp to max when requested and the field doesn't allow invalid values
-				if (options?.clampNumbers && !definition.allowInvalidValues) {
+				if (definition.allowInvalidValues) {
+					validationWarnings.push(`Value is above ${definition.max}`)
+				} else if (definition.clampValues) {
 					sanitisedValue = definition.max
 					validationWarnings.push(`Value was clamped to ${definition.max}`)
 				} else {

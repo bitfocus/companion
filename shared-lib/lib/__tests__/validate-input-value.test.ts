@@ -461,7 +461,7 @@ describe('validateInputValue', () => {
 			})
 		})
 
-		describe('clampNumbers', () => {
+		describe('clampValues', () => {
 			const definition: CompanionInputFieldNumberExtended = {
 				id: 'test',
 				type: 'number',
@@ -469,10 +469,11 @@ describe('validateInputValue', () => {
 				default: 0,
 				min: 0,
 				max: 100,
+				clampValues: true,
 			}
 
 			it('should clamp value below min to min and return validationWarning', () => {
-				expect(validateInputValue(definition, -10, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(definition, -10)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
 					validationWarnings: ['Value was clamped to 0'],
@@ -480,7 +481,7 @@ describe('validateInputValue', () => {
 			})
 
 			it('should clamp value above max to max and return validationWarning', () => {
-				expect(validateInputValue(definition, 150, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(definition, 150)).toEqual({
 					sanitisedValue: 100,
 					validationError: undefined,
 					validationWarnings: ['Value was clamped to 100'],
@@ -488,37 +489,45 @@ describe('validateInputValue', () => {
 			})
 
 			it('should not clamp values within range', () => {
-				expect(validateInputValue(definition, 50, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(definition, 50)).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
 					validationWarnings: [],
 				})
 			})
 
-			it('should not clamp when allowInvalidValues is set', () => {
-				const allowInvalidDefinition: CompanionInputFieldNumberExtended = {
+			it('should not clamp when allowInvalidValues is also set (allowInvalidValues takes priority)', () => {
+				const clampAndAllowInvalid: CompanionInputFieldNumberExtended = {
 					...definition,
 					allowInvalidValues: true,
 				}
-				expect(validateInputValue(allowInvalidDefinition, -10, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(clampAndAllowInvalid, -10)).toEqual({
 					sanitisedValue: -10,
-					validationError: 'Value must be greater than or equal to 0',
-					validationWarnings: [],
+					validationError: undefined,
+					validationWarnings: ['Value is below 0'],
 				})
-				expect(validateInputValue(allowInvalidDefinition, 150, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(clampAndAllowInvalid, 150)).toEqual({
 					sanitisedValue: 150,
-					validationError: 'Value must be less than or equal to 100',
-					validationWarnings: [],
+					validationError: undefined,
+					validationWarnings: ['Value is above 100'],
 				})
 			})
 
-			it('should not clamp when clampNumbers is false (default)', () => {
-				expect(validateInputValue(definition, -10)).toEqual({
+			it('should return error when clampValues is not set (default behavior)', () => {
+				const noClampDefinition: CompanionInputFieldNumberExtended = {
+					id: 'test',
+					type: 'number',
+					label: 'Test',
+					default: 0,
+					min: 0,
+					max: 100,
+				}
+				expect(validateInputValue(noClampDefinition, -10)).toEqual({
 					sanitisedValue: -10,
 					validationError: 'Value must be greater than or equal to 0',
 					validationWarnings: [],
 				})
-				expect(validateInputValue(definition, 150)).toEqual({
+				expect(validateInputValue(noClampDefinition, 150)).toEqual({
 					sanitisedValue: 150,
 					validationError: 'Value must be less than or equal to 100',
 					validationWarnings: [],
@@ -533,13 +542,14 @@ describe('validateInputValue', () => {
 					default: 0,
 					min: 0,
 					max: undefined as unknown as number,
+					clampValues: true,
 				}
-				expect(validateInputValue(minOnlyDefinition, -5, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(minOnlyDefinition, -5)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
 					validationWarnings: ['Value was clamped to 0'],
 				})
-				expect(validateInputValue(minOnlyDefinition, 1000, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(minOnlyDefinition, 1000)).toEqual({
 					sanitisedValue: 1000,
 					validationError: undefined,
 					validationWarnings: [],
@@ -554,29 +564,30 @@ describe('validateInputValue', () => {
 					default: 0,
 					min: undefined as unknown as number,
 					max: 100,
+					clampValues: true,
 				}
-				expect(validateInputValue(maxOnlyDefinition, -1000, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(maxOnlyDefinition, -1000)).toEqual({
 					sanitisedValue: -1000,
 					validationError: undefined,
 					validationWarnings: [],
 				})
-				expect(validateInputValue(maxOnlyDefinition, 200, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(maxOnlyDefinition, 200)).toEqual({
 					sanitisedValue: 100,
 					validationError: undefined,
 					validationWarnings: ['Value was clamped to 100'],
 				})
 			})
 
-			it('should still return error for non-numeric values even with clampNumbers', () => {
-				expect(validateInputValue(definition, 'abc', { clampNumbers: true })).toEqual({
+			it('should still return error for non-numeric values even with clampValues', () => {
+				expect(validateInputValue(definition, 'abc')).toEqual({
 					sanitisedValue: 'abc',
 					validationError: 'Value must be a number',
 					validationWarnings: [],
 				})
 			})
 
-			it('should still return error for missing values even with clampNumbers', () => {
-				expect(validateInputValue(definition, undefined, { clampNumbers: true })).toEqual({
+			it('should still return error for missing values even with clampValues', () => {
+				expect(validateInputValue(definition, undefined)).toEqual({
 					sanitisedValue: undefined,
 					validationError: 'A value must be provided',
 					validationWarnings: [],
@@ -584,12 +595,12 @@ describe('validateInputValue', () => {
 			})
 
 			it('should clamp coerced string values', () => {
-				expect(validateInputValue(definition, '150', { clampNumbers: true })).toEqual({
+				expect(validateInputValue(definition, '150')).toEqual({
 					sanitisedValue: 100,
 					validationError: undefined,
 					validationWarnings: ['Value was clamped to 100'],
 				})
-				expect(validateInputValue(definition, '-5', { clampNumbers: true })).toEqual({
+				expect(validateInputValue(definition, '-5')).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
 					validationWarnings: ['Value was clamped to 0'],
@@ -607,11 +618,114 @@ describe('validateInputValue', () => {
 					default: 50,
 					min: 100,
 					max: 0,
+					clampValues: true,
 				}
-				expect(validateInputValue(invertedDefinition, 50, { clampNumbers: true })).toEqual({
+				expect(validateInputValue(invertedDefinition, 50)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
 					validationWarnings: ['Value was clamped to 100', 'Value was clamped to 0'],
+				})
+			})
+		})
+
+		describe('allowInvalidValues', () => {
+			const definition: CompanionInputFieldNumberExtended = {
+				id: 'test',
+				type: 'number',
+				label: 'Test',
+				default: 0,
+				min: 0,
+				max: 100,
+				allowInvalidValues: true,
+			}
+
+			it('should allow value below min with a warning', () => {
+				expect(validateInputValue(definition, -10)).toEqual({
+					sanitisedValue: -10,
+					validationError: undefined,
+					validationWarnings: ['Value is below 0'],
+				})
+			})
+
+			it('should allow value above max with a warning', () => {
+				expect(validateInputValue(definition, 150)).toEqual({
+					sanitisedValue: 150,
+					validationError: undefined,
+					validationWarnings: ['Value is above 100'],
+				})
+			})
+
+			it('should allow value within range with no warning', () => {
+				expect(validateInputValue(definition, 50)).toEqual({
+					sanitisedValue: 50,
+					validationError: undefined,
+					validationWarnings: [],
+				})
+			})
+
+			it('should collect both below and above warnings when both bounds are exceeded (inverted range)', () => {
+				const invertedDefinition: CompanionInputFieldNumberExtended = {
+					id: 'test',
+					type: 'number',
+					label: 'Test',
+					default: 50,
+					min: 100,
+					max: 0,
+					allowInvalidValues: true,
+				}
+				// Value 50 is below min (100) and above max (0): both warnings collected
+				expect(validateInputValue(invertedDefinition, 50)).toEqual({
+					sanitisedValue: 50,
+					validationError: undefined,
+					validationWarnings: ['Value is below 100', 'Value is above 0'],
+				})
+			})
+		})
+
+		describe('asInteger', () => {
+			const definition: CompanionInputFieldNumberExtended = {
+				id: 'test',
+				type: 'number',
+				label: 'Test',
+				default: 0,
+				min: 0,
+				max: 100,
+				asInteger: true,
+			}
+
+			it('should round a float to the nearest integer and warn', () => {
+				expect(validateInputValue(definition, 50.6)).toEqual({
+					sanitisedValue: 51,
+					validationError: undefined,
+					validationWarnings: ['Value was rounded to nearest integer'],
+				})
+				expect(validateInputValue(definition, 50.4)).toEqual({
+					sanitisedValue: 50,
+					validationError: undefined,
+					validationWarnings: ['Value was rounded to nearest integer'],
+				})
+			})
+
+			it('should not warn for an already-integer value', () => {
+				expect(validateInputValue(definition, 50)).toEqual({
+					sanitisedValue: 50,
+					validationError: undefined,
+					validationWarnings: [],
+				})
+			})
+
+			it('should round before checking range bounds', () => {
+				// 100.4 rounds to 100, which is at the boundary — no range error
+				expect(validateInputValue(definition, 100.4)).toEqual({
+					sanitisedValue: 100,
+					validationError: undefined,
+					validationWarnings: ['Value was rounded to nearest integer'],
+				})
+				// 100.6 rounds to 101, which exceeds max — range error
+				expect(validateInputValue(definition, 100.6)).toEqual({
+					sanitisedValue: 101,
+					validationError: 'Value must be less than or equal to 100',
+					validationWarnings: ['Value was rounded to nearest integer'],
 				})
 			})
 		})
